@@ -33,7 +33,37 @@
 
 namespace ore {
 namespace analytics {
-using QuantLib::Size;
+
+class MarketRiskConfiguration {
+public:
+    virtual ~MarketRiskConfiguration() {}
+
+    /*! Risk class types in VaR plus an All type for convenience
+
+        \warning The ordering here matters. It is used in indexing in to
+                 correlation matrices for the correlation between risk classes.
+
+        \warning Internal methods rely on the first element being 'All'
+    */
+    enum class RiskClass { All, InterestRate, Inflation, Credit, Equity, FX, Commodity};
+
+    /*! Risk Type types in VaR plus an All type for convenience
+        \warning Internal methods rely on the first element being 'All'
+    */
+    enum class RiskType { All, DeltaGamma, Vega, BaseCorrelation };
+
+    //! Give back a set containing the RiskClass values optionally excluding 'All'
+    static std::set<RiskClass> riskClasses(bool includeAll = false);
+
+    //! Give back a set containing the RiskType values optionally excluding 'All'
+    static std::set<RiskType> riskTypes(bool includeAll = false);
+};
+
+std::ostream& operator<<(std::ostream& out, const MarketRiskConfiguration::RiskClass& rc);
+std::ostream& operator<<(std::ostream& out, const MarketRiskConfiguration::RiskType& rt);
+
+MarketRiskConfiguration::RiskClass parseVarRiskClass(const std::string& rc);
+MarketRiskConfiguration::RiskType parseVarRiskType(const std::string& rt);
 
 //! Risk Filter
 /*! The risk filter class groups risk factor keys w.r.t. a risk class (IR, FX, EQ...) and a risk type (delta-gamma,
@@ -41,20 +71,10 @@ using QuantLib::Size;
  */
 class RiskFilter : public ScenarioFilter {
 public:
-    //! for both risk class and risk type, index 0 stands for "all"
-    RiskFilter(const Size riskClassIndex, const Size riskTypeIndex);
-
+    RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, const MarketRiskConfiguration::RiskType& riskType);
     bool allow(const RiskFactorKey& t) const override;
-    const std::string& riskClassLabel() const { return riskClassLabel_[riskClassIndex_]; }
-    const std::string& riskTypeLabel() const { return riskTypeLabel_[riskTypeIndex_]; }
-
-    static Size numberOfRiskClasses() { return riskClassLabel_.size(); }
-    static Size numberOfRiskTypes() { return riskTypeLabel_.size(); }
 
 private:
-    static const std::vector<std::string> riskClassLabel_;
-    static const std::vector<std::string> riskTypeLabel_;
-    const Size riskClassIndex_, riskTypeIndex_;
     std::set<RiskFactorKey::KeyType> allowed_;
     bool neg_;
 };

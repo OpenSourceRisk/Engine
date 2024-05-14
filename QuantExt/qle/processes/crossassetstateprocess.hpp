@@ -41,10 +41,7 @@ class CrossAssetModel;
  */
 class CrossAssetStateProcess : public StochasticProcess {
 public:
-    enum discretization { exact, euler };
-
-    CrossAssetStateProcess(const CrossAssetModel* const model, discretization disc,
-                           SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::Spectral);
+    CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model);
 
     /*! StochasticProcess interface */
     Size size() const override;
@@ -54,67 +51,59 @@ public:
     Matrix diffusion(Time t, const Array& x) const override;
     Array evolve(Time t0, const Array& x0, Time dt, const Array& dw) const override;
 
-    /*! specific members */
-    virtual void flushCache() const;
+    // enables and resets the cache, once enabled the simulated times must stay the stame
+    void resetCache(const Size timeSteps) const;
 
 protected:
     virtual Matrix diffusionOnCorrelatedBrownians(Time t, const Array& x) const;
     virtual Matrix diffusionOnCorrelatedBrowniansImpl(Time t, const Array& x) const;
     void updateSqrtCorrelation() const;
 
-    const CrossAssetModel* const model_;
-    std::vector<boost::shared_ptr<StochasticProcess>> crCirpp_;
-    const discretization disc_;
-    SalvagingAlgorithm::Type salvaging_;
+    QuantLib::ext::shared_ptr<const CrossAssetModel> model_;
+
+    std::vector<QuantLib::ext::shared_ptr<StochasticProcess>> crCirpp_;
     Size cirppCount_;
+
     mutable Matrix sqrtCorrelation_;
 
     class ExactDiscretization : public StochasticProcess::discretization {
     public:
-        ExactDiscretization(const CrossAssetModel* const model,
+        ExactDiscretization(QuantLib::ext::shared_ptr<const CrossAssetModel> model,
                             SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::Spectral);
         virtual Array drift(const StochasticProcess&, Time t0, const Array& x0, Time dt) const override;
         virtual Matrix diffusion(const StochasticProcess&, Time t0, const Array& x0, Time dt) const override;
         virtual Matrix covariance(const StochasticProcess&, Time t0, const Array& x0, Time dt) const override;
-        void flushCache() const;
+        void resetCache(const Size timeSteps) const;
 
     protected:
         virtual Array driftImpl1(const StochasticProcess&, Time t0, const Array& x0, Time dt) const;
         virtual Array driftImpl2(const StochasticProcess&, Time t0, const Array& x0, Time dt) const;
         virtual Matrix covarianceImpl(const StochasticProcess&, Time t0, const Array& x0, Time dt) const;
 
-        const CrossAssetModel* const model_;
+        QuantLib::ext::shared_ptr<const CrossAssetModel> model_;
         SalvagingAlgorithm::Type salvaging_;
 
-        // cache for exact discretization
-        struct cache_key {
-            double t0, dt;
-            bool operator==(const cache_key& o) const { return (t0 == o.t0) && (dt == o.dt); }
-        };
-
-        struct cache_hasher {
-            std::size_t operator()(cache_key const& x) const {
-                std::size_t seed = 0;
-                boost::hash_combine(seed, x.t0);
-                boost::hash_combine(seed, x.dt);
-                return seed;
-            }
-        };
-        mutable boost::unordered_map<cache_key, Array, cache_hasher> cache_m_;
-        mutable boost::unordered_map<cache_key, Matrix, cache_hasher> cache_v_, cache_d_;
+        mutable bool cacheNotReady_m_ = true;
+        mutable bool cacheNotReady_d_ = true;
+        mutable bool cacheNotReady_v_ = true;
+        mutable Size timeStepsToCache_m_ = 0;
+        mutable Size timeStepsToCache_d_ = 0;
+        mutable Size timeStepsToCache_v_ = 0;
+        mutable Size timeStepCache_m_ = 0;
+        mutable Size timeStepCache_d_ = 0;
+        mutable Size timeStepCache_v_ = 0;
+        mutable std::vector<Array> cache_m_;
+        mutable std::vector<Matrix> cache_v_, cache_d_;
     }; // ExactDiscretization
 
-    // cache for process drift and diffusion (e.g. used in Euler discretization)
-    struct cache_hasher {
-        std::size_t operator()(double const& x) const {
-            std::size_t seed = 0;
-            boost::hash_combine(seed, x);
-            return seed;
-        }
-    };
-
-    mutable boost::unordered_map<double, Array, cache_hasher> cache_m_;
-    mutable boost::unordered_map<double, Matrix, cache_hasher> cache_d_;
+    mutable bool cacheNotReady_m_ = true;
+    mutable bool cacheNotReady_d_ = true;
+    mutable Size timeStepsToCache_m_ = 0;
+    mutable Size timeStepCache_m_ = 0;
+    mutable Size timeStepsToCache_d_ = 0;
+    mutable Size timeStepCache_d_ = 0;
+    mutable std::vector<Array> cache_m_;
+    mutable std::vector<Matrix> cache_d_;
 }; // CrossAssetStateProcess
 
 } // namespace QuantExt

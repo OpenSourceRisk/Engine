@@ -21,6 +21,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 #include <qle/indexes/fxindex.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
@@ -125,7 +126,7 @@ Handle<Quote> Market::getFxBaseQuote(const string& ccy, const string& config) co
         TLOG("PseudoCurrencyMarket building DerivedPriceQuote for "
              << ccy << "/" << GlobalPseudoCurrencyMarketParameters::instance().get().baseCurrency
              << " with curve that has minTime of " << priceCurve->minTime());
-        return Handle<Quote>(boost::make_shared<QuantExt::DerivedPriceQuote>(priceCurve));
+        return Handle<Quote>(QuantLib::ext::make_shared<QuantExt::DerivedPriceQuote>(priceCurve));
     } else {
         return fxRateImpl(ccy + GlobalPseudoCurrencyMarketParameters::instance().get().baseCurrency, config);
     }
@@ -141,7 +142,7 @@ Handle<Quote> Market::getFxSpotBaseQuote(const string& ccy, const string& config
         TLOG("PseudoCurrencyMarket building DerivedPriceQuote for "
              << ccy << "/" << GlobalPseudoCurrencyMarketParameters::instance().get().baseCurrency
              << " with curve that has minTime of " << priceCurve->minTime());
-        return Handle<Quote>(boost::make_shared<QuantExt::DerivedPriceQuote>(priceCurve));
+        return Handle<Quote>(QuantLib::ext::make_shared<QuantExt::DerivedPriceQuote>(priceCurve));
     } else {
         return fxSpotImpl(ccy + GlobalPseudoCurrencyMarketParameters::instance().get().baseCurrency, config);
     }
@@ -174,7 +175,7 @@ QuantLib::Handle<QuantExt::FxIndex> Market::fxIndex(const string& fxIndex, const
         // if no index found we build it
         if (it == fxIndicesCache_.end()) {
             // Parse the index we have with no term structures
-            boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(index);
+            QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(index);
 
             string source = fxIndexBase->sourceCurrency().code();
             string target = fxIndexBase->targetCurrency().code();
@@ -190,18 +191,14 @@ QuantLib::Handle<QuantExt::FxIndex> Market::fxIndex(const string& fxIndex, const
             Calendar calendar = NullCalendar();
 
             if (source != target) {
-                const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-                // first check if we have a convention specific to the pair (e.g. XAUUSD), otherwise use
                 try {
-                    auto comCon =
-                        boost::dynamic_pointer_cast<data::CommodityForwardConvention>(conventions->get(fxIndex));
-                    calendar = comCon->advanceCalendar();
+                    auto [sDays, cal, _] = getFxIndexConventions(fxIndex);
+                    calendar = cal;
                 } catch (...) {
-                    WLOG("Market::fxIndex Cannot find commodity conventions for " << fxIndex);
+                    WLOG("Market::fxIndex Cannot find commodity conventions for " << fxIndex);   
                 }
             }
-
-            fxInd = Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+            fxInd = Handle<QuantExt::FxIndex>(QuantLib::ext::make_shared<QuantExt::FxIndex>(
                 fxIndexBase->familyName(), spotDays, fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(),
                 calendar, spot, sorTS, tarTS));
             // add it to the cache
@@ -231,7 +228,7 @@ Handle<Quote> Market::fxRate(const string& pair, const string& config) const {
             // and cause the configuration builder to go off building XAU-IN-USD and the like.
             auto forBaseSpot = getFxBaseQuote(pair.substr(0, 3), config);
             auto domBaseSpot = getFxBaseQuote(pair.substr(3), config);
-            auto fx = Handle<Quote>(boost::make_shared<CompositeQuote<std::function<Real(Real, Real)>>>(
+            auto fx = Handle<Quote>(QuantLib::ext::make_shared<CompositeQuote<std::function<Real(Real, Real)>>>(
                 forBaseSpot, domBaseSpot, [](Real a, Real b) { return b > 0.0 ? a / b : 0.0; }));
             DLOG("Market returning " << fx->value() << " for " << pair << ".");
             fxRateCache_[pair] = fx;
@@ -256,7 +253,7 @@ Handle<Quote> Market::fxSpot(const string& pair, const string& config) const {
             // and cause the configuration builder to go off building XAU-IN-USD and the like.
             auto forBaseSpot = getFxSpotBaseQuote(pair.substr(0, 3), config);
             auto domBaseSpot = getFxSpotBaseQuote(pair.substr(3), config);
-            auto fx = Handle<Quote>(boost::make_shared<CompositeQuote<std::function<Real(Real, Real)>>>(
+            auto fx = Handle<Quote>(QuantLib::ext::make_shared<CompositeQuote<std::function<Real(Real, Real)>>>(
                 forBaseSpot, domBaseSpot, [](Real a, Real b) { return b > 0.0 ? a / b : 0.0; }));
             DLOG("Market returning " << fx->value() << " for " << pair << ".");
             spotCache_[pair] = fx;
@@ -311,7 +308,7 @@ Handle<BlackVolTermStructure> Market::fxVol(const string& pair, const string& co
                     vol = comVol;
                 else
                     vol = Handle<BlackVolTermStructure>(
-                        boost::make_shared<QuantExt::BlackInvertedVolTermStructure>(comVol));
+                        QuantLib::ext::make_shared<QuantExt::BlackInvertedVolTermStructure>(comVol));
             } else {
 
                 // otherwise we must triangulate - we get both surfaces vs baseCcy
@@ -330,7 +327,7 @@ Handle<BlackVolTermStructure> Market::fxVol(const string& pair, const string& co
                     if (GlobalPseudoCurrencyMarketParameters::instance().get().defaultCorrelation != Null<Real>()) {
                         WLOG("Using default correlation value "
                              << GlobalPseudoCurrencyMarketParameters::instance().get().defaultCorrelation);
-                        rho = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<QuantExt::FlatCorrelation>(
+                        rho = Handle<QuantExt::CorrelationTermStructure>(QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(
                             asofDate(), GlobalPseudoCurrencyMarketParameters::instance().get().defaultCorrelation,
                             ActualActual(ActualActual::ISDA)));
                     } else {
@@ -340,7 +337,7 @@ Handle<BlackVolTermStructure> Market::fxVol(const string& pair, const string& co
 
                 // build and return triangulation
                 vol = Handle<BlackVolTermStructure>(
-                    boost::make_shared<QuantExt::BlackTriangulationATMVolTermStructure>(forBaseVol, domBaseVol, rho));
+                    QuantLib::ext::make_shared<QuantExt::BlackTriangulationATMVolTermStructure>(forBaseVol, domBaseVol, rho));
             }
 
             DLOG("Market returning vol surface for " << pair << ".");
@@ -365,7 +362,7 @@ Handle<YieldTermStructure> Market::discountCurve(const string& ccy, const string
             QL_REQUIRE(!priceCurve.empty(),
                        "Failed to get Commodity Price curve for " << ccy << " using " << commodityCurveLookup(ccy));
             discountCurveCache_[ccy] =
-                Handle<YieldTermStructure>(boost::make_shared<QuantExt::PriceTermStructureAdapter>(
+                Handle<YieldTermStructure>(QuantLib::ext::make_shared<QuantExt::PriceTermStructureAdapter>(
                     priceCurve.currentLink(), baseDiscount.currentLink(), fxRate(ccy + baseCcy, config)));
             discountCurveCache_[ccy]->enableExtrapolation();
         }

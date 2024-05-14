@@ -1,0 +1,158 @@
+\documentclass[12pt, a4paper]{article}
+
+\setcounter{tocdepth}{4}
+\setcounter{secnumdepth}{4}
+
+\usepackage[hyphens]{url}
+\usepackage[urlcolor=blue]{hyperref}
+%\usepackage[disable]{todonotes}
+\usepackage[colorinlistoftodos,prependcaption]{todonotes}
+\usepackage{amsmath}%
+\usepackage{amsfonts}%
+\usepackage{amssymb}%
+\usepackage{graphicx}
+%\usepackage[miktex]{gnuplottex}
+%\ShellEscapetrue
+\usepackage{epstopdf}
+\usepackage{longtable}
+\usepackage{floatrow}
+\usepackage{minted}
+\usepackage{textcomp}
+\usepackage{color,soul}
+\usepackage[font={small,it}]{caption}
+\floatsetup[listing]{style=Plaintop}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true, %set true if you want colored links
+    linktoc=all,     %set to all if you want both sections and subsections linked
+    linkcolor=blue,  %choose some color if you want links to stand out
+}
+
+% Turn off indentation but allow \indent command to still work.
+\newlength\tindent
+\setlength{\tindent}{\parindent}
+\setlength{\parindent}{0pt}
+\renewcommand{\indent}{\hspace*{\tindent}}
+
+\addtolength{\textwidth}{0.8in}
+\addtolength{\oddsidemargin}{-.4in}
+\addtolength{\evensidemargin}{-.4in}
+\addtolength{\textheight}{1.6in}
+\addtolength{\topmargin}{-.8in}
+
+\usepackage{longtable,supertabular}
+\usepackage{listings}
+\lstset{
+  frame=top,frame=bottom,
+  basicstyle=\ttfamily,
+  language=XML,
+  tabsize=2,
+  belowskip=2\medskipamount
+}
+
+\usepackage{tabu}
+\tabulinesep=1.0mm
+\restylefloat{table}
+
+\usepackage{siunitx}
+
+\renewcommand\P{\ensuremath{\mathbb{P}}}
+\newcommand\E{\ensuremath{\mathbb{E}}}
+\newcommand\Q{\ensuremath{\mathbb{Q}}}
+\newcommand\I{\mathds{1}}
+\newcommand\F{\ensuremath{\mathcal F}}
+\newcommand\V{\ensuremath{\mathbb{V}}}
+\newcommand\YOY{{\rm YOY}}
+\newcommand\Prob{\ensuremath{\mathbb{P}}}
+\newcommand{\D}[1]{\mbox{d}#1}
+\newcommand{\VR}{\mathit{VR}}
+\newcommand{\NPV}{\mathit{NPV}}
+\newcommand{\CMS}{\mathit{CMS}}
+\newcommand{\CDS}{\mathit{CDS}}
+\newcommand{\CVA}{\mathit{CVA}}
+\newcommand{\DVA}{\mathit{DVA}}
+\newcommand{\FVA}{\mathit{FVA}}
+\newcommand{\COLVA}{\mathit{COLVA}}
+\newcommand{\FCA}{\mathit{FCA}}
+\newcommand{\FBA}{\mathit{FBA}}
+\newcommand{\KVA}{\mathit{KVA}}
+\newcommand{\MVA}{\mathit{MVA}}
+\newcommand{\PFE}{\mathit{PFE}}
+\newcommand{\EE}{\mathit{EE}}
+\newcommand{\EPE}{\mathit{EPE}}
+\newcommand{\ENE}{\mathit{ENE}}
+\newcommand{\PD}{\mathit{PD}}
+\newcommand{\LGD}{\mathit{LGD}}
+\newcommand{\DIM}{\mathit{DIM}}
+\newcommand{\IM}{\mathit{IM}}
+\newcommand{\bs}{\textbackslash}
+\newcommand{\REDY}{\color{red}Y}
+\newcommand{\flt}{\mathit{flt}}
+\newcommand{\fix}{\mathit{fix}}
+\newcommand{\form}{\mathit{form}}
+\newcommand{\OIS}{\mathit{OIS}}
+\newcommand{\ON}{\mathit{ON}}
+
+\begin{document}
+
+\title{ORE+ Scripted Trade Library - Plausibility Analysis}
+\author{Quaternion Risk Management}
+\date{28 November 2019}
+\maketitle
+
+\newpage
+
+%-------------------------------------------------------------------------------
+\section*{Document History}
+
+\begin{supertabular}{|l|l|l|p{7cm}|}
+\hline
+Version & Date & Author & Comment \\
+\hline
+0.1 & 28 November 2019 & Niall O'Sullivan & Initial placeholder \\
+\hline
+\end{supertabular}
+
+
+\vspace*{\fill}
+
+\textcircled{c} 2019 Quaternion Risk Management Limited.  All rights reserved.
+Quaternion\textsuperscript{\textregistered} is a trademark of Quaternion Risk Management Limited and is also registered
+at the UK Intellectual Property Office and the U.S. Patent and Trademark Office.  All other trademarks are the property
+of their respective owners. Open Source Risk Engine\textsuperscript{\textcircled{c}} (ORE) is sponsored by Quaternion
+Risk Management Limited.
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{Summary}
+
+This document describes the library of officially supported ORE+ scripts that can be used via the scripted library. Other client and project scripts can be used and these are not covered here. This document contains a list of these scripts, the master location (typically an OpenXVA RegressionTest) and a short section describing the testing and plausibility analysis that was done.
+
+\vspace{3mm}
+\noindent
+This document is intended for internal Quaternion usage and should not be routinely shared externally.
+
+\subsection{Official Scripts}
+
+The following scripts are supported by ORE+
+
+\begin{itemize}
+\item Accumulator
+\item WindowBarrier
+\item TaRF
+\end{itemize}
+
+\section{Scripts}
+
+Each script is described individually here
+
+% Each script gets it's own subsection here detailing it's location and analysis.
+\input{accumulator.tex}
+\input{windowbarrier.tex}
+\input{tarf.tex}
+\end{document}

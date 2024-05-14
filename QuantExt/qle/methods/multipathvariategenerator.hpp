@@ -30,7 +30,7 @@ namespace QuantExt {
 
 class MultiPathVariateGeneratorBase {
 public:
-    MultiPathVariateGeneratorBase(const Size dimension, const TimeGrid& grid);
+    MultiPathVariateGeneratorBase(const Size dimension, const Size timeSteps);
     virtual ~MultiPathVariateGeneratorBase() {}
     virtual Sample<std::vector<Array>> next() const;
     virtual void reset() = 0;
@@ -39,12 +39,12 @@ protected:
     virtual Sample<std::vector<Real>> nextSequence() const = 0;
 
     Size dimension_;
-    TimeGrid grid_;
+    Size  timeSteps_;
 };
 
 class MultiPathVariateGeneratorMersenneTwister : public MultiPathVariateGeneratorBase {
 public:
-    MultiPathVariateGeneratorMersenneTwister(const Size dimension, const TimeGrid& grid, BigNatural seed = 0,
+    MultiPathVariateGeneratorMersenneTwister(const Size dimension, const Size timeSteps, BigNatural seed = 0,
                                              bool antitheticSampling = false);
     void reset() override;
 
@@ -55,18 +55,18 @@ private:
     bool antitheticSampling_;
     mutable bool antitheticVariate_;
 
-    boost::shared_ptr<PseudoRandom::rsg_type> rsg_;
+    QuantLib::ext::shared_ptr<PseudoRandom::rsg_type> rsg_;
 };
 
 class MultiPathVariateGeneratorMersenneTwisterAntithetic : public MultiPathVariateGeneratorMersenneTwister {
 public:
-    MultiPathVariateGeneratorMersenneTwisterAntithetic(const Size dimension, const TimeGrid& grid, BigNatural seed = 0)
-        : MultiPathVariateGeneratorMersenneTwister(dimension, grid, seed, true){};
+    MultiPathVariateGeneratorMersenneTwisterAntithetic(const Size dimension, const Size timeSteps, BigNatural seed = 0)
+        : MultiPathVariateGeneratorMersenneTwister(dimension, timeSteps, seed, true){};
 };
 
 class MultiPathVariateGeneratorSobol : public MultiPathVariateGeneratorBase {
 public:
-    MultiPathVariateGeneratorSobol(const Size dimension, const TimeGrid&, BigNatural seed = 0,
+    MultiPathVariateGeneratorSobol(const Size dimension, const Size timeSteps, BigNatural seed = 0,
                                    SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
     void reset() override;
 
@@ -76,31 +76,66 @@ private:
     BigNatural seed_;
     SobolRsg::DirectionIntegers directionIntegers_;
 
-    boost::shared_ptr<LowDiscrepancy::rsg_type> rsg_;
+    QuantLib::ext::shared_ptr<LowDiscrepancy::rsg_type> rsg_;
 };
 
-class MultiPathVariateGeneratorSobolBrownianBridge : public MultiPathVariateGeneratorBase {
+class MultiPathVariateGeneratorBurley2020Sobol : public MultiPathVariateGeneratorBase {
 public:
-    MultiPathVariateGeneratorSobolBrownianBridge(
-        const Size dimension, const TimeGrid&,
-        SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps, BigNatural seed = 0,
-        SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
-    Sample<std::vector<Array>> next() const override;
+    MultiPathVariateGeneratorBurley2020Sobol(const Size dimension, const Size timeSteps, BigNatural seed = 42,
+                                             SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7, BigNatural scrambleSeed = 43);
     void reset() override;
 
 private:
+    Sample<std::vector<Real>> nextSequence() const override;
+
+    BigNatural seed_;
+    SobolRsg::DirectionIntegers directionIntegers_;
+    BigNatural scrambleSeed_;
+
+    QuantLib::ext::shared_ptr<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>> rsg_;
+};
+
+class MultiPathVariateGeneratorSobolBrownianBridgeBase : public MultiPathVariateGeneratorBase {
+public:
+    MultiPathVariateGeneratorSobolBrownianBridgeBase(
+        const Size dimension, const Size timeSteps,
+        SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps, BigNatural seed = 0,
+        SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
+    Sample<std::vector<Array>> next() const override;
+
+protected:
     Sample<std::vector<Real>> nextSequence() const override;
 
     SobolBrownianGenerator::Ordering ordering_;
     BigNatural seed_;
     SobolRsg::DirectionIntegers directionIntegers_;
 
-    boost::shared_ptr<SobolBrownianGenerator> gen_;
+    QuantLib::ext::shared_ptr<SobolBrownianGeneratorBase> gen_;
 };
 
-boost::shared_ptr<MultiPathVariateGeneratorBase>
-makeMultiPathVariateGenerator(const SequenceType s, const Size dimension, const TimeGrid& timeGrid,
-                              const BigNatural seed,
+class MultiPathVariateGeneratorSobolBrownianBridge : public MultiPathVariateGeneratorSobolBrownianBridgeBase {
+public:
+    MultiPathVariateGeneratorSobolBrownianBridge(
+        const Size dimension, const Size timeSteps,
+        SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps, BigNatural seed = 42,
+        SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
+    void reset() override final;
+};
+
+class MultiPathVariateGeneratorBurley2020SobolBrownianBridge : public MultiPathVariateGeneratorSobolBrownianBridgeBase {
+public:
+    MultiPathVariateGeneratorBurley2020SobolBrownianBridge(
+        const Size dimension, const Size timeSteps,
+        SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps, BigNatural seed = 42,
+        SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7, BigNatural scrambleSeed = 43);
+    void reset() override final;
+
+protected:
+    BigNatural scrambleSeed_;
+};
+
+QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>
+makeMultiPathVariateGenerator(const SequenceType s, const Size dimension, const Size timeSteps, const BigNatural seed,
                               const SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                               const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
 

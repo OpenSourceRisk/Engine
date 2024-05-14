@@ -18,14 +18,16 @@
 
 #include <qle/indexes/compositeindex.hpp>
 
-#include <qle/calendars/largejointcalendar.hpp>
+#include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/genericindex.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 
 namespace QuantExt {
 
-CompositeIndex::CompositeIndex(const std::string& name, const std::vector<boost::shared_ptr<QuantLib::Index>>& indices,
+CompositeIndex::CompositeIndex(const std::string& name, const std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>>& indices,
                                const std::vector<Real>& weights,
-                               const std::vector<boost::shared_ptr<FxIndex>>& fxConversion)
+                               const std::vector<QuantLib::ext::shared_ptr<FxIndex>>& fxConversion)
     : name_(name), indices_(indices), weights_(weights), fxConversion_(fxConversion) {
     QL_REQUIRE(indices_.size() == weights_.size(), "CompositeIndex: indices size (" << indices_.size()
                                                                                     << ") must match weights size ("
@@ -44,7 +46,7 @@ CompositeIndex::CompositeIndex(const std::string& name, const std::vector<boost:
         cals.push_back(i->fixingCalendar());
     }
 
-    fixingCalendar_ = LargeJointCalendar(cals);
+    fixingCalendar_ = JointCalendar(cals);
 }
 
 std::string CompositeIndex::name() const { return name_; }
@@ -58,8 +60,19 @@ bool CompositeIndex::isValidFixingDate(const Date& fixingDate) const {
 Real CompositeIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
     Real result = 0.0;
     for (Size i = 0; i < indices_.size(); ++i) {
+        Real indexFixing;
+        try {
+            indexFixing = indices_[i]->fixing(fixingDate, forecastTodaysFixing);
+        } catch (const std::exception&) {
+            auto gi = QuantLib::ext::dynamic_pointer_cast<QuantExt::GenericIndex>(indices_[i]);
+            if (gi && gi->expiry() != Date() && fixingDate >= gi->expiry())
+                indexFixing = 0.0; 
+            else
+                throw;
+        }
+
         // if the fixing date is not a valid fx fixing date, adjust the latter to the preceding valid date
-        result += indices_[i]->fixing(fixingDate, forecastTodaysFixing) * weights_[i] *
+        result += indexFixing * weights_[i] *
                   (fxConversion_.empty() || fxConversion_[i] == nullptr
                        ? 1.0
                        : fxConversion_[i]->fixing(fxConversion_[i]->fixingCalendar().adjust(fixingDate, Preceding),
@@ -72,7 +85,7 @@ Real CompositeIndex::dividendsBetweenDates(const Date& startDate, const Date& en
     const Date& today = Settings::instance().evaluationDate();
     Real dividends = 0.0;
     for (Size i = 0; i < indices_.size(); ++i) {
-        if (auto ei = boost::dynamic_pointer_cast<EquityIndex>(indices_[i])) {
+        if (auto ei = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(indices_[i])) {
             for (auto const& d : ei->dividendFixings()) {
                 if (d.exDate >= startDate && d.exDate <= std::min(endDate, today)) {
                     // if the fixing date is not a valid fx fixing date, adjust the latter to the preceding valid date
@@ -94,7 +107,7 @@ std::vector<std::pair<QuantLib::Date, std::string>> CompositeIndex::dividendFixi
     std::vector<std::pair<QuantLib::Date, std::string>> fixings;
     const Date& eDate = endDate == Date() ? Settings::instance().evaluationDate() : endDate;
     for (Size i = 0; i < indices_.size(); ++i) {
-        if (boost::dynamic_pointer_cast<EquityIndex>(indices_[i]) && !fxConversion_.empty() && fxConversion_[i]) {
+        if (QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(indices_[i]) && !fxConversion_.empty() && fxConversion_[i]) {
             Date d = fxConversion_[i]->fixingCalendar().adjust(startDate, Preceding);
             while (d <= eDate) {
                 fixings.push_back(std::make_pair<Date, std::string>(

@@ -87,16 +87,16 @@ public:
 	by priceQuoteBaseValue before returning it.
     */
     BondIndex(const std::string& securityName, const bool dirty = false, const bool relative = true,
-              const Calendar& fixingCalendar = NullCalendar(), const boost::shared_ptr<QuantLib::Bond>& bond = nullptr,
+              const Calendar& fixingCalendar = NullCalendar(), const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond = nullptr,
               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
               const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
               const Handle<Quote>& recoveryRate = Handle<Quote>(),
               const Handle<Quote>& securitySpread = Handle<Quote>(),
               const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-              const bool conditionalOnSurvival = true,
+              const bool conditionalOnSurvival = true, const Date& issueDate = Date(),
               const PriceQuoteMethod priceQuoteMethod = PriceQuoteMethod::PercentageOfPar,
               const double priceQuoteBaseValue = 1.0, const bool isInflationLinked = false,
-              const double bidAskAdjustment = 0.0);
+              const double bidAskAdjustment = 0.0, const bool bondIssueDateFallback = false);
 
     //! \name Index interface
     //@{
@@ -122,13 +122,14 @@ public:
     const std::string& securityName() const { return securityName_; }
     bool dirty() const { return dirty_; }
     bool relative() const { return relative_; }
-    boost::shared_ptr<QuantLib::Bond> bond() const { return bond_; }
+    QuantLib::ext::shared_ptr<QuantLib::Bond> bond() const { return bond_; }
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; }
     Handle<DefaultProbabilityTermStructure> defaultCurve() const { return defaultCurve_; }
     Handle<Quote> recoveryRate() const { return recoveryRate_; }
     Handle<Quote> securitySpread() const { return securitySpread_; }
     Handle<YieldTermStructure> incomeCurve() const { return incomeCurve_; }
     bool conditionalOnSurvival() const { return conditionalOnSurvival_; }
+    Date issueDate() const { return issueDate_; }
     PriceQuoteMethod priceQuoteMethod() const { return priceQuoteMethod_; }
     double priceQuoteBaseValue() const { return priceQuoteBaseValue_; }
     //@}
@@ -137,18 +138,20 @@ protected:
     std::string securityName_;
     bool dirty_, relative_;
     Calendar fixingCalendar_;
-    boost::shared_ptr<QuantLib::Bond> bond_;
+    QuantLib::ext::shared_ptr<QuantLib::Bond> bond_;
     Handle<YieldTermStructure> discountCurve_;
     Handle<DefaultProbabilityTermStructure> defaultCurve_;
     Handle<Quote> recoveryRate_;
     Handle<Quote> securitySpread_;
     Handle<YieldTermStructure> incomeCurve_;
     bool conditionalOnSurvival_;
+    Date issueDate_;
     PriceQuoteMethod priceQuoteMethod_;
     double priceQuoteBaseValue_;
     bool isInflationLinked_;
     double bidAskAdjustment_;
-    boost::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
+    QuantLib::ext::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
+    bool bondIssueDateFallback_ = false;
 };
 
 //! Bond Futures Index
@@ -158,12 +161,12 @@ public:
     BondFuturesIndex(
         const QuantLib::Date& expiryDate, const std::string& securityName, const bool dirty = false,
         const bool relative = true, const Calendar& fixingCalendar = NullCalendar(),
-        const boost::shared_ptr<QuantLib::Bond>& bond = nullptr,
+        const QuantLib::ext::shared_ptr<QuantLib::Bond>& bond = nullptr,
         const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
         const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
         const Handle<Quote>& recoveryRate = Handle<Quote>(), const Handle<Quote>& securitySpread = Handle<Quote>(),
         const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-        const bool conditionalOnSurvival = true,
+        const bool conditionalOnSurvival = true, const Date& issueDate = Date(),
         const PriceQuoteMethod priceQuoteMethod = PriceQuoteMethod::PercentageOfPar,
         const double priceQuoteBaseValue = 1.0);
 

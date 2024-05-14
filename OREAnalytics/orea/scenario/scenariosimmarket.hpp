@@ -30,56 +30,6 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/iborfallbackconfig.hpp>
-#include <ql/quotes/all.hpp>
-#include <ql/termstructures/credit/defaultprobabilityhelpers.hpp>
-#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
-#include <qle/termstructures/averageoisratehelper.hpp>
-#include <qle/termstructures/basistwoswaphelper.hpp>
-#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
-#include <qle/termstructures/blackvariancecurve3.hpp>
-#include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
-#include <qle/termstructures/blackvolsurfacewithatm.hpp>
-#include <qle/termstructures/crossccybasisswaphelper.hpp>
-#include <qle/termstructures/datedstrippedoptionlet.hpp>
-#include <qle/termstructures/datedstrippedoptionletadapter.hpp>
-#include <qle/termstructures/datedstrippedoptionletbase.hpp>
-#include <qle/termstructures/discountratiomodifiedcurve.hpp>
-#include <qle/termstructures/dynamicblackvoltermstructure.hpp>
-#include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
-#include <qle/termstructures/dynamicstype.hpp>
-#include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
-#include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
-#include <qle/termstructures/fxblackvolsurface.hpp>
-#include <qle/termstructures/fxsmilesection.hpp>
-#include <qle/termstructures/fxvannavolgasmilesection.hpp>
-#include <qle/termstructures/hazardspreadeddefaulttermstructure.hpp>
-#include <qle/termstructures/immfraratehelper.hpp>
-#include <qle/termstructures/interpolateddiscountcurve.hpp>
-#include <qle/termstructures/interpolateddiscountcurve2.hpp>
-#include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
-#include <qle/termstructures/oibasisswaphelper.hpp>
-#include <qle/termstructures/oiccbasisswaphelper.hpp>
-#include <qle/termstructures/oisratehelper.hpp>
-#include <qle/termstructures/optionletstripper1.hpp>
-#include <qle/termstructures/optionletstripper2.hpp>
-#include <qle/termstructures/pricecurve.hpp>
-#include <qle/termstructures/pricetermstructure.hpp>
-#include <qle/termstructures/pricetermstructureadapter.hpp>
-#include <qle/termstructures/spreadedoptionletvolatility.hpp>
-#include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
-#include <qle/termstructures/strippedoptionletadapter2.hpp>
-#include <qle/termstructures/subperiodsswaphelper.hpp>
-#include <qle/termstructures/survivalprobabilitycurve.hpp>
-#include <qle/termstructures/swaptionvolatilityconverter.hpp>
-#include <qle/termstructures/swaptionvolconstantspread.hpp>
-#include <qle/termstructures/swaptionvolcube2.hpp>
-#include <qle/termstructures/swaptionvolcubewithatm.hpp>
-#include <qle/termstructures/tenorbasisswaphelper.hpp>
-#include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
-#include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
-#include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
-#include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
-#include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 
 #include <map>
 
@@ -120,8 +70,8 @@ public:
     //! Constructor
     explicit ScenarioSimMarket(const bool handlePseudoCurrencies) : SimMarket(handlePseudoCurrencies) {}
 
-    ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
-                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
+    ScenarioSimMarket(const QuantLib::ext::shared_ptr<Market>& initMarket,
+                      const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& parameters,
                       const std::string& configuration = Market::defaultConfiguration,
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
@@ -130,9 +80,9 @@ public:
                       const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                       const bool handlePseudoCurrencies = true);
 
-    ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
-                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
-                      const boost::shared_ptr<FixingManager>& fixingManager,
+    ScenarioSimMarket(const QuantLib::ext::shared_ptr<Market>& initMarket,
+                      const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& parameters,
+                      const QuantLib::ext::shared_ptr<FixingManager>& fixingManager,
                       const std::string& configuration = Market::defaultConfiguration,
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
@@ -142,19 +92,19 @@ public:
                       const bool handlePseudoCurrencies = true);
 
     //! Set scenario generator
-    virtual boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
+    virtual QuantLib::ext::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
     //! Get scenario generator
-    virtual const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() const { return scenarioGenerator_; }
+    virtual const QuantLib::ext::shared_ptr<ScenarioGenerator>& scenarioGenerator() const { return scenarioGenerator_; }
 
     //! Set aggregation data
-    virtual boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() { return asd_; }
+    virtual QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData() { return asd_; }
     //! Get aggregation data
-    virtual const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() const { return asd_; }
+    virtual const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData() const { return asd_; }
 
     //! Set scenarioFilter
-    virtual boost::shared_ptr<ScenarioFilter>& filter() { return filter_; }
+    virtual QuantLib::ext::shared_ptr<ScenarioFilter>& filter() { return filter_; }
     //! Get scenarioFilter
-    virtual const boost::shared_ptr<ScenarioFilter>& filter() const { return filter_; }
+    virtual const QuantLib::ext::shared_ptr<ScenarioFilter>& filter() const { return filter_; }
 
     //! Update
     // virtual void update(const Date&) override;
@@ -172,25 +122,31 @@ public:
       spread values for all risk factor keys which support spreaded term structures and absolute values for the other
       risk factor keys. The spread values will typically be zero (e.g. for vol risk factors) or 1 (e.g. for rate curve
       risk factors, since we use discount factors there). */
-    virtual boost::shared_ptr<Scenario> baseScenario() const { return baseScenario_; }
+    virtual QuantLib::ext::shared_ptr<Scenario> baseScenario() const { return baseScenario_; }
 
     /*! Scenario representing the initial state of the market. This scenario contains absolute values for all risk factor
       types, no matter whether useSpreadedTermStructures is true or false. */
-    virtual boost::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
+    virtual QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
+
+    /*! Return true if this instance uses spreaded term structures */
+    bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
 
     //! Return the fixing manager
-    const boost::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
+    const QuantLib::ext::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
 
     //! is risk factor key simulated by this sim market instance?
     virtual bool isSimulated(const RiskFactorKey::KeyType& factor) const;
 
+    void applyScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario);
+
 protected:
-    virtual void applyScenario(const boost::shared_ptr<Scenario>& scenario);
+    
 
-    void writeSimData(std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>>& simDataTmp,
-                      std::map<RiskFactorKey, Real>& absoluteSimDataTmp);
+    void writeSimData(std::map<RiskFactorKey, QuantLib::ext::shared_ptr<SimpleQuote>>& simDataTmp,
+                      std::map<RiskFactorKey, Real>& absoluteSimDataTmp, const RiskFactorKey::KeyType keyType,
+                      const std::string& name, const std::vector<std::vector<Real>>& coordinates);
 
-    void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
+    void addYieldCurve(const QuantLib::ext::shared_ptr<Market>& initMarket, const std::string& configuration,
                        const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
                        bool& simDataWritten, bool simulate = true, bool spreaded = false);
 
@@ -200,23 +156,24 @@ protected:
     */
     QuantLib::Handle<QuantLib::YieldTermStructure>
     getYieldCurve(const std::string& yieldSpecId, const ore::data::TodaysMarketParameters& todaysMarketParams,
-                  const std::string& configuration, const boost::shared_ptr<ore::data::Market>& market = nullptr) const;
+                  const std::string& configuration, const QuantLib::ext::shared_ptr<ore::data::Market>& market = nullptr) const;
 
     /*! add a single swap index to the market, return true if successful */
     bool addSwapIndexToSsm(const std::string& indexName, const bool continueOnError);
 
-    const boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
-    boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
-    boost::shared_ptr<AggregationScenarioData> asd_;
-    boost::shared_ptr<FixingManager> fixingManager_;
-    boost::shared_ptr<ScenarioFilter> filter_;
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> parameters_;
+    QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
+    QuantLib::ext::shared_ptr<AggregationScenarioData> asd_;
+    QuantLib::ext::shared_ptr<FixingManager> fixingManager_;
+    QuantLib::ext::shared_ptr<ScenarioFilter> filter_;
 
-    std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simData_;
-    boost::shared_ptr<Scenario> baseScenario_;
-    boost::shared_ptr<Scenario> baseScenarioAbsolute_;
+    std::map<RiskFactorKey, QuantLib::ext::shared_ptr<SimpleQuote>> simData_;
+    QuantLib::ext::shared_ptr<Scenario> baseScenario_;
+    QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute_;
 
-    std::vector<boost::shared_ptr<SimpleQuote>> cachedSimData_;
+    std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> cachedSimData_;
     std::vector<bool> cachedSimDataActive_;
+    std::size_t cachedSimDataKeysHash_ = 0;
 
     std::set<RiskFactorKey::KeyType> nonSimulatedFactors_;
 
@@ -225,11 +182,17 @@ protected:
     bool useSpreadedTermStructures_;
     std::map<RiskFactorKey, Real> absoluteSimData_;
 
+    // hold meta data for the scenarios stored in simData_, absoluteSimData_
+    std::set<std::tuple<RiskFactorKey::KeyType, std::string, std::vector<std::vector<Real>>>> coordinatesData_;
+
     bool cacheSimData_;
     bool allowPartialScenarios_;
     IborFallbackConfig iborFallbackConfig_;
 
-    mutable boost::shared_ptr<Scenario> currentScenario_;
+    // for delta scenario application
+    std::set<ore::analytics::RiskFactorKey> diffToBaseKeys_;
+
+    mutable QuantLib::ext::shared_ptr<Scenario> currentScenario_;
 };
 } // namespace analytics
 } // namespace ore

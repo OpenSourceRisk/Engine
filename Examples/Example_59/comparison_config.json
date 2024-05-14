@@ -1,0 +1,12 @@
+{
+  "csv_settings": {
+    "files": {
+      "scenario.csv": {
+        "keys": [
+          "Date", 
+		  "Scenario"
+        ]
+      }
+    }
+  }
+}

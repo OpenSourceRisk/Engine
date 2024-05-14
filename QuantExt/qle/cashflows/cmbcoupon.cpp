@@ -92,8 +92,9 @@ void CmbCoupon::setPricer(const ext::shared_ptr<FloatingRateCouponPricer>& price
 CmbLeg::CmbLeg(Schedule schedule, std::vector<ext::shared_ptr<ConstantMaturityBondIndex>> bondIndices)
     : schedule_(std::move(schedule)), bondIndices_(bondIndices),
       paymentAdjustment_(Following), inArrears_(false), zeroPayments_(false) {
-    QL_REQUIRE(bondIndices_.size() == schedule.size() - 1,
-	       "vector size mismatch between schedule (" << schedule.size() << ") and bond indices (" << bondIndices_.size() << ")");
+    QL_REQUIRE(bondIndices_.size() == schedule_.size() - 1, "vector size mismatch between schedule ("
+                                                                << schedule_.size() << ") and bond indices ("
+                                                                << bondIndices_.size() << ")");
 }
 
 CmbLeg& CmbLeg::withNotionals(Real notional) {
@@ -196,11 +197,11 @@ CmbLeg::operator Leg() const {
     Leg leg;
     for (Size i = 0; i < schedule_.size() - 1; i++) {
         Date paymentDate = paymentCalendar_.adjust(schedule_[i + 1], paymentAdjustment_);
-	boost::shared_ptr<CmbCoupon> coupon
-	    = boost::make_shared<CmbCoupon>(paymentDate, notionals_[i], schedule_[i], schedule_[i + 1],
+	QuantLib::ext::shared_ptr<CmbCoupon> coupon
+	    = QuantLib::ext::make_shared<CmbCoupon>(paymentDate, notionals_[i], schedule_[i], schedule_[i + 1],
 					    fixingDays_[i], bondIndices_[i], gearings_[i], spreads_[i], Date(), Date(),
 					    paymentDayCounter_, inArrears_);	
-	auto pricer = boost::make_shared<CmbCouponPricer>();
+	auto pricer = QuantLib::ext::make_shared<CmbCouponPricer>();
 	coupon->setPricer(pricer);
 	leg.push_back(coupon);
     }

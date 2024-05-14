@@ -22,7 +22,6 @@
 #include <ql/index.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/calendars/unitedstates.hpp>
-#include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/indexes/ibor/chfsaron.hpp>
 #include <qle/indexes/ibor/chftois.hpp>
@@ -35,7 +34,6 @@
 #include <qle/indexes/ibor/dkkcibor.hpp>
 #include <qle/indexes/ibor/dkkcita.hpp>
 #include <qle/indexes/ibor/dkkois.hpp>
-#include <qle/indexes/ibor/ester.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
@@ -51,15 +49,12 @@
 #include <qle/indexes/ibor/noknibor.hpp>
 #include <qle/indexes/ibor/nzdbkbm.hpp>
 #include <qle/indexes/ibor/phpphiref.hpp>
-#include <qle/indexes/ibor/plnwibor.hpp>
-#include <qle/indexes/ibor/rubmosprime.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
 #include <qle/indexes/ibor/sekstibor.hpp>
 #include <qle/indexes/ibor/sekstina.hpp>
 #include <qle/indexes/ibor/sgdsibor.hpp>
 #include <qle/indexes/ibor/sgdsor.hpp>
 #include <qle/indexes/ibor/skkbribor.hpp>
-#include <qle/indexes/ibor/sofr.hpp>
 #include <qle/indexes/ibor/sora.hpp>
 #include <qle/indexes/ibor/thbbibor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
@@ -91,7 +86,6 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
     Period pd(3, Months);
 
     IndTestData data[] = {
-        { AUDbbsw(pd), "AUD-BBSW", Australia().name(), AUDCurrency().name() },
         { CHFTois(), "CHF-TOIS", Switzerland().name(), CHFCurrency().name() },
         { CHFSaron(), "CHF-SARON", Switzerland().name(), CHFCurrency().name() },
         { CORRA(), "CORRA", Canada().name(), CADCurrency().name() },
@@ -110,7 +104,6 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
         { MXNTiie(pd), "MXN-TIIE", Mexico().name(), MXNCurrency().name() },
         { NOKNibor(pd), "NOK-NIBOR", Norway().name(), NOKCurrency().name() },
         { NZDBKBM(pd), "NZD-BKBM", NewZealand().name(), NZDCurrency().name() },
-        { PLNWibor(pd), "PLN-WIBOR", Poland().name(), PLNCurrency().name() },
         { SEKStibor(pd), "SEK-STIBOR", Sweden().name(), SEKCurrency().name() },
         { SEKStina(), "SEK-STINA", Sweden().name(), SEKCurrency().name() },
         { SEKSior(), "SEK-SIOR", Sweden().name(), SEKCurrency().name() },
@@ -123,8 +116,6 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
         { KRWKoribor(pd), "KRW-KORIBOR", SouthKorea(SouthKorea::Settlement).name(), KRWCurrency().name() },
         { MYRKlibor(pd), "MYR-KLIBOR", Malaysia().name(), MYRCurrency().name() },
         { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() },
-        { Ester(), "Ester", TARGET().name(), EURCurrency().name() },
-        { Sofr(), "SOFR", UnitedStates(UnitedStates::GovernmentBond).name(), USDCurrency().name() },
         { CNYRepoFix(pd), "CNY-REPOFIX", China(China::IB).name(), CNYCurrency().name() }
     };
 

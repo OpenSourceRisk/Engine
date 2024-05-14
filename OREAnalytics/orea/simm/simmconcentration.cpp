@@ -32,9 +32,11 @@ namespace ore {
 namespace analytics {
 
 // Ease syntax
-using RiskType = SimmConfiguration::RiskType;
+using RiskType = CrifRecord::RiskType;
+using RiskClass = SimmConfiguration::RiskClass;
+using IRFXConcentrationThresholds = SimmCalibration::RiskClassData::IRFXConcentrationThresholds;
 
-Real SimmConcentrationBase::thresholdImpl(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+Real SimmConcentrationBase::thresholdImpl(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                           const RiskType& riskType, const string& qualifier) const {
 
     // Deal with some specific cases first

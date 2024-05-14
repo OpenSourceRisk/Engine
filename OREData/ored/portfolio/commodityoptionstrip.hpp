@@ -52,13 +52,12 @@ public:
                          const bool isDigital = false, 
                          Real payoffPerUnit = 0.0);
 
-
     //! Implement the build method
-    void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
 
     //! Add underlying Commodity names
     std::map<ore::data::AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! \name Inspectors
     //@{
@@ -67,9 +66,7 @@ public:
     const std::vector<QuantLib::Real>& callStrikes() const { return callStrikes_; }
     const std::vector<QuantLib::Position::Type>& putPositions() const { return putPositions_; }
     const std::vector<QuantLib::Real>& putStrikes() const { return putStrikes_; }
-    QuantLib::Real premium() const { return premium_; }
-    const std::string& premiumCurrency() const { return premiumCurrency_; }
-    const QuantLib::Date& premiumPayDate() const { return premiumPayDate_; }
+    const PremiumData& premiumDate() const { return premiumData_; }
     const std::string& style() const { return style_; }
     const std::string& settlement() const { return settlement_; }
     const std::string& fxIndex() const { return fxIndex_; }
@@ -82,7 +79,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(ore::data::XMLNode* node) override;
-    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
     //! \name Trade
@@ -96,9 +93,7 @@ private:
     std::vector<QuantLib::Real> callStrikes_;
     std::vector<QuantLib::Position::Type> putPositions_;
     std::vector<QuantLib::Real> putStrikes_;
-    QuantLib::Real premium_;
-    std::string premiumCurrency_;
-    QuantLib::Date premiumPayDate_;
+    PremiumData premiumData_;
     std::string style_;
     std::string settlement_;
     BarrierData callBarrierData_;
@@ -107,14 +102,14 @@ private:
     bool isDigital_;
     Real unaryPayoff_;
 
-    boost::shared_ptr<CommodityFloatingLegData> commLegData_;
+    QuantLib::ext::shared_ptr<CommodityFloatingLegData> commLegData_;
 
     //! Build an average price option strip
-    void buildAPOs(const QuantLib::Leg& leg, const boost::shared_ptr<ore::data::EngineFactory>& engineFactory);
+    void buildAPOs(const QuantLib::Leg& leg, const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory);
 
     //! Build a standard option strip
     void buildStandardOptions(const QuantLib::Leg& leg,
-                              const boost::shared_ptr<ore::data::EngineFactory>& engineFactory);
+                              const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory);
 
     //! Perform checks before building
     void check(QuantLib::Size numberPeriods) const;

@@ -1,0 +1,69 @@
+<TodaysMarket>
+	<Configuration id="default">
+		<YieldCurvesId>default</YieldCurvesId>
+		<DiscountingCurvesId>default</DiscountingCurvesId>
+		<IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+		<SwapIndexCurvesId>default</SwapIndexCurvesId>
+		<ZeroInflationIndexCurvesId>default</ZeroInflationIndexCurvesId>
+		<ZeroInflationCapFloorVolatilitiesId>default</ZeroInflationCapFloorVolatilitiesId>
+		<YYInflationIndexCurvesId>default</YYInflationIndexCurvesId>
+		<FxSpotsId>default</FxSpotsId>
+		<BaseCorrelationsId>default</BaseCorrelationsId>
+		<FxVolatilitiesId>default</FxVolatilitiesId>
+		<SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
+		<YieldVolatilitiesId>default</YieldVolatilitiesId>
+		<CapFloorVolatilitiesId>default</CapFloorVolatilitiesId>
+		<CDSVolatilitiesId>default</CDSVolatilitiesId>
+		<DefaultCurvesId>default</DefaultCurvesId>
+		<YYInflationCapFloorVolatilitiesId>default</YYInflationCapFloorVolatilitiesId>
+		<EquityCurvesId>default</EquityCurvesId>
+		<EquityVolatilitiesId>default</EquityVolatilitiesId>
+		<SecuritiesId>default</SecuritiesId>
+		<CommodityCurvesId>default</CommodityCurvesId>
+		<CommodityVolatilitiesId>default</CommodityVolatilitiesId>
+		<CorrelationsId>default</CorrelationsId>
+	</Configuration>
+	<YieldCurves id="default"/>
+	<DiscountingCurves id="default">
+		<DiscountingCurve currency="EUR">Yield/EUR/EUR-EONIA</DiscountingCurve>
+		<DiscountingCurve currency="USD">Yield/USD/USD-IN-EUR</DiscountingCurve>
+	</DiscountingCurves>
+	<IndexForwardingCurves id="default">
+		<Index name="EUR-EONIA">Yield/EUR/EUR-EONIA</Index>
+		<Index name="EUR-EURIBOR-3M">Yield/EUR/EUR-EURIBOR-3M</Index>
+		<Index name="EUR-EURIBOR-6M">Yield/EUR/EUR-EURIBOR-6M</Index>
+		<Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
+		<Index name="USD-LIBOR-3M">Yield/USD/USD-LIBOR-3M</Index>
+	</IndexForwardingCurves>
+	<FxSpots id="default">
+		<FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
+	</FxSpots>
+	<FxVolatilities id="default">
+		<FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
+	</FxVolatilities>
+	<DefaultCurves id="default">
+		<DefaultCurve name="CPTY_1">Default/EUR/CPTY_1_SR_EUR</DefaultCurve>
+		<DefaultCurve name="CPTY_2">Default/EUR/CPTY_2_SR_EUR</DefaultCurve>
+		<DefaultCurve name="CPTY_3">Default/EUR/CPTY_3_SR_EUR</DefaultCurve>
+		<DefaultCurve name="CPTY_4">Default/EUR/CPTY_4_SR_EUR</DefaultCurve>
+		<DefaultCurve name="CPTY_5">Default/EUR/CPTY_5_SR_EUR</DefaultCurve>
+		<DefaultCurve name="CPTY_6">Default/EUR/CPTY_6_SR_EUR</DefaultCurve>
+		<DefaultCurve name="CPTY_7">Default/EUR/CPTY_7_SR_EUR</DefaultCurve>
+		<DefaultCurve name="CPTY_8">Default/EUR/CPTY_8_SR_EUR</DefaultCurve>
+		<DefaultCurve name="CPTY_9">Default/EUR/CPTY_9_SR_EUR</DefaultCurve>
+		<DefaultCurve name="CPTY_10">Default/EUR/CPTY_10_SR_EUR</DefaultCurve>
+	</DefaultCurves>
+	<Securities id="default">
+		<Security name="SECURITY_1">Security/SECURITY_1</Security>
+		<Security name="SECURITY_2">Security/SECURITY_2</Security>
+		<Security name="SECURITY_3">Security/SECURITY_3</Security>
+		<Security name="SECURITY_4">Security/SECURITY_4</Security>
+		<Security name="SECURITY_5">Security/SECURITY_5</Security>
+		<Security name="SECURITY_6">Security/SECURITY_6</Security>
+		<Security name="SECURITY_7">Security/SECURITY_7</Security>
+		<Security name="SECURITY_8">Security/SECURITY_8</Security>
+		<Security name="SECURITY_9">Security/SECURITY_9</Security>
+		<Security name="SECURITY_10">Security/SECURITY_10</Security>
+	</Securities>
+</TodaysMarket>
+

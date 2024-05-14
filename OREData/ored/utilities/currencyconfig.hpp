@@ -25,6 +25,7 @@
 
 #include <map>
 #include <ored/utilities/xmlutils.hpp>
+#include <qle/currencies/configurablecurrency.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/currency.hpp>
 #include <ql/utilities/dataparsers.hpp>
@@ -34,6 +35,7 @@
 
 namespace ore {
 namespace data {
+using QuantExt::ConfigurableCurrency;
 using QuantLib::Currency;
 using std::map;
 using std::set;
@@ -50,13 +52,13 @@ public:
     CurrencyConfig();
 
     //! check out any configured currencies
-    const vector<Currency>& getCurrencies() const { return currencies_; }
+    const vector<ConfigurableCurrency>& getCurrencies() const { return currencies_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
-    vector<Currency> currencies_;
+    vector<ConfigurableCurrency> currencies_;
 };
 
 } // namespace data

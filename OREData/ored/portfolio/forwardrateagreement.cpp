@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2017, 2023 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
-#include <ored/portfolio/builders/forwardrateagreement.hpp>
-
-#include <qle/indexes/fallbackiborindex.hpp>
-#include <qle/instruments/forwardrateagreement.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <qle/cashflows/iborfracoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -28,48 +28,51 @@ using namespace std;
 namespace ore {
 namespace data {
 
-void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    const boost::shared_ptr<Market> market = engineFactory->market();
-
-    Date startDate = parseDate(startDate_);
-    Date endDate = parseDate(endDate_);
-    Position::Type positionType = parsePositionType(longShort_);
-
-    Handle<YieldTermStructure> discountTS = market->discountCurve(currency_);
-    Handle<QuantLib::IborIndex> index = market->iborIndex(index_);
-
-    boost::shared_ptr<QuantExt::ForwardRateAgreement> fra(
-        new QuantExt::ForwardRateAgreement(startDate, endDate, positionType, strike_, amount_, *index, discountTS));
-
-    Currency npvCcy = parseCurrency(currency_);
-    if (engineFactory->engineData()->hasProduct("ForwardRateAgreement")) {
-        // engine is optional for FRA instrument
-        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("ForwardRateAgreement");
-        boost::shared_ptr<FraEngineBuilderBase> fraBuilder =
-            boost::dynamic_pointer_cast<FraEngineBuilderBase>(builder);
-        QL_REQUIRE(fraBuilder, "No Builder found for ForwardRateAgreement " << id());
-        fra->setPricingEngine(fraBuilder->engine(npvCcy));
-    }
-
-    instrument_.reset(new VanillaInstrument(fra));
-    npvCurrency_ = currency_;
-    maturity_ = endDate;
-    instrument_->qlInstrument()->update();
-    notional_ = amount_;
-    notionalCurrency_ = currency_;
-    // the QL instrument reads the fixing in setupExpired() (bug?), so we don't add a payment date here to be safe
-    requiredFixings_.addFixingDate(fra->fixingDate(), index_);
-    // add required fixings for an Ibor fallback index
-    if (auto fallback = boost::dynamic_pointer_cast<QuantExt::FallbackIborIndex>(*index)) {
-        requiredFixings_.addFixingDates(fallback->onCoupon(fra->fixingDate())->fixingDates(),
-                                        engineFactory->iborFallbackConfig().fallbackData(index_).rfrIndex);
-    }
+void ForwardRateAgreement::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Interest Rate");
     additionalData_["isdaBaseProduct"] = string("FRA");
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+
+    Date startDate = parseDate(startDate_);
+    Date endDate = parseDate(endDate_);
+    Position::Type positionType = parsePositionType(longShort_);
+    auto index = market->iborIndex(index_);
+    
+    QuantLib::ext::shared_ptr<FloatingRateCoupon> cpn;
+    if (auto overnightIndex = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(*index)) {
+        cpn = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(endDate, amount_, startDate, endDate, overnightIndex,
+                                                                   1.0, -strike_);
+        cpn->setPricer(QuantLib::ext::make_shared<QuantExt::OvernightIndexedCouponPricer>());
+    } else {
+        bool useIndexedCoupon = true;
+        cpn = QuantLib::ext::make_shared<QuantExt::IborFraCoupon>(startDate, endDate, amount_, *index, strike_);
+        cpn->setPricer(QuantLib::ext::make_shared<BlackIborCouponPricer>(
+            Handle<OptionletVolatilityStructure>(), BlackIborCouponPricer::TimingAdjustment::Black76,
+            Handle<Quote>(ext::shared_ptr<Quote>(new SimpleQuote(1.0))), useIndexedCoupon));
+    }
+    legs_.push_back({cpn});
+
+    Currency npvCcy = parseCurrency(currency_);
+    legCurrencies_.push_back(npvCcy.code());
+    legPayers_ = vector<bool>(1, positionType == Position::Type::Short);
+    isXCCY_ = false;
+    notional_ = amount_;
+    npvCurrency_ = npvCcy.code();
+    notionalCurrency_ = npvCcy.code();
+
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("Swap");
+    QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+    QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
+    swap->setPricingEngine(swapBuilder->engine(npvCcy, std::string(), std::string()));
+    setSensitivityTemplate(*swapBuilder);
+    instrument_.reset(new VanillaInstrument(swap));
+    maturity_ = endDate;
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {
@@ -84,7 +87,7 @@ void ForwardRateAgreement::fromXML(XMLNode* node) {
     amount_ = XMLUtils::getChildValueAsDouble(fNode, "Notional", true);
 }
 
-XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) {
+XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fNode = doc.allocNode("ForwardRateAgreementData");
     XMLUtils::appendNode(node, fNode);

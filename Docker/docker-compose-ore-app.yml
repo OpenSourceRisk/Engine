@@ -3,8 +3,11 @@ version: '3'
 services:
   ore_app:
     image: ore_app:${ORE_TAG}
+    cap_drop:
+      - NET_RAW
     build:
       context: ../
       dockerfile: Docker/Dockerfile-ORE-App
       args:
         - ore_version=${ORE_TAG}
+        - cmake_build_type=${CMAKE_BUILD_TYPE}

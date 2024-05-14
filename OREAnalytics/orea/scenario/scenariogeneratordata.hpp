@@ -51,21 +51,18 @@ using namespace QuantExt;
  */
 class ScenarioGeneratorData : public XMLSerializable {
 public:
-
-    enum MporCashFlowMode { NonePay, BothPay, WePay, TheyPay };
-
     ScenarioGeneratorData()
-        : grid_(boost::make_shared<DateGrid>()), sequenceType_(SobolBrownianBridge), seed_(0), samples_(0),
+        : grid_(QuantLib::ext::make_shared<DateGrid>()), sequenceType_(SobolBrownianBridge), seed_(0), samples_(0),
           ordering_(SobolBrownianGenerator::Steps), directionIntegers_(SobolRsg::JoeKuoD7), withCloseOutLag_(false),
-          withMporStickyDate_(false), mporCashFlowMode_(MporCashFlowMode::BothPay) {}
+          withMporStickyDate_(false) {}
 
     //! Constructor
-    ScenarioGeneratorData(boost::shared_ptr<DateGrid> dateGrid, SequenceType sequenceType, long seed, Size samples,
+    ScenarioGeneratorData(QuantLib::ext::shared_ptr<DateGrid> dateGrid, SequenceType sequenceType, long seed, Size samples,
                           SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                           SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
-                          bool withCloseOutLag = false, bool withMporStickyDate = false, MporCashFlowMode mporCashFlowMode = MporCashFlowMode::BothPay)
+                          bool withCloseOutLag = false, bool withMporStickyDate = false)
         : sequenceType_(sequenceType), seed_(seed), samples_(samples), ordering_(ordering),
-          directionIntegers_(directionIntegers), withCloseOutLag_(false), withMporStickyDate_(false), mporCashFlowMode_(mporCashFlowMode) {
+          directionIntegers_(directionIntegers), withCloseOutLag_(false), withMporStickyDate_(false) {
         setGrid(dateGrid);
     }
 
@@ -75,26 +72,25 @@ public:
     virtual void fromXML(XMLNode* node) override;
 
     //! Write members to XML
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<DateGrid> getGrid() const { return grid_; }
+    QuantLib::ext::shared_ptr<DateGrid> getGrid() const { return grid_; }
     SequenceType sequenceType() const { return sequenceType_; }
     long seed() const { return seed_; }
     Size samples() const { return samples_; }
     SobolBrownianGenerator::Ordering ordering() const { return ordering_; }
     SobolRsg::DirectionIntegers directionIntegers() const { return directionIntegers_; }
-    boost::shared_ptr<DateGrid> closeOutDateGrid() const { return closeOutDateGrid_; }
+    QuantLib::ext::shared_ptr<DateGrid> closeOutDateGrid() const { return closeOutDateGrid_; }
     bool withCloseOutLag() const { return withCloseOutLag_; }
     bool withMporStickyDate() const { return withMporStickyDate_; }
     Period closeOutLag() const { return closeOutLag_; }
-    MporCashFlowMode mporCashFlowMode() const {  return mporCashFlowMode_; }
     //@}
 
     //! \name Setters
     //@{
-    void setGrid(boost::shared_ptr<DateGrid> grid);
+    void setGrid(QuantLib::ext::shared_ptr<DateGrid> grid);
     SequenceType& sequenceType() { return sequenceType_; }
     long& seed() { return seed_; }
     Size& samples() { return samples_; }
@@ -103,16 +99,15 @@ public:
     bool& withCloseOutLag() { return withCloseOutLag_; }
     bool& withMporStickyDate() { return withMporStickyDate_; }
     Period& closeOutLag() { return closeOutLag_; }
-    MporCashFlowMode& mporCashFlowMode() {  return mporCashFlowMode_; }
     //@}
 private:
-    boost::shared_ptr<DateGrid> grid_;
+    QuantLib::ext::shared_ptr<DateGrid> grid_;
     SequenceType sequenceType_;
     long seed_;
     Size samples_;
     SobolBrownianGenerator::Ordering ordering_;
     SobolRsg::DirectionIntegers directionIntegers_;
-    boost::shared_ptr<DateGrid> closeOutDateGrid_;
+    QuantLib::ext::shared_ptr<DateGrid> closeOutDateGrid_;
     bool withCloseOutLag_;
     bool withMporStickyDate_;
     Period closeOutLag_;
@@ -120,7 +115,5 @@ private:
     string gridString_;
 };
 
-//! Convert text representation to CollateralExposureHelper::CalculationType
-ScenarioGeneratorData::MporCashFlowMode parseMporCashFlowMode(const string& s);
 } // namespace analytics
 } // namespace ore

@@ -17,9 +17,9 @@
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
-    <Parameter name="fxcalibration">collateral_eur</Parameter>
-    <Parameter name="pricing">collateral_eur</Parameter>
-    <Parameter name="simulation">collateral_eur</Parameter>
+    <Parameter name="fxcalibration">xois_eur</Parameter>
+    <Parameter name="pricing">xois_eur</Parameter>
+    <Parameter name="simulation">xois_eur</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">
@@ -50,6 +50,7 @@
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting_threshold.xml</Parameter>
+      <!-- <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter> -->
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>

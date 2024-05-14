@@ -46,7 +46,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(ore::data::XMLNode* node) override;
-    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
     //! \name Setters
@@ -86,7 +86,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 };
 
@@ -117,7 +117,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:
@@ -140,11 +140,12 @@ public:
     QuantLib::Size futureMonthOffset() const { return futureMonthOffset_; }
     QuantLib::Size deliveryRollDays() const { return deliveryRollDays_; }
     const std::string& deliveryRollCalendar() const { return deliveryRollCalendar_; }
-
+    const std::string& futureContractMonth() const { return futureContractMonth_; }
+    const std::string& futureExpiryDate() const { return futureExpiryDate_;  }
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:
@@ -152,6 +153,8 @@ private:
     QuantLib::Size futureMonthOffset_ = QuantLib::Null<QuantLib::Size>();
     QuantLib::Size deliveryRollDays_ = QuantLib::Null<QuantLib::Size>();
     std::string deliveryRollCalendar_;
+    std::string futureContractMonth_;
+    std::string futureExpiryDate_;
 };
 
 class FXUnderlying : public Underlying {
@@ -166,7 +169,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 };
 
@@ -182,7 +185,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 };
 
@@ -200,7 +203,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
     QuantLib::CPI::InterpolationType interpolation_;
@@ -218,7 +221,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 };
 
@@ -244,7 +247,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:
@@ -258,13 +261,13 @@ public:
                                const std::string& basicUnderlyingNodeName = "Name")
         : nodeName_(nodeName), basicUnderlyingNodeName_(basicUnderlyingNodeName) {}
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
-    const boost::shared_ptr<Underlying>& underlying() { return underlying_; };
+    const QuantLib::ext::shared_ptr<Underlying>& underlying() { return underlying_; };
 
 private:
     const std::string nodeName_, basicUnderlyingNodeName_;
-    boost::shared_ptr<Underlying> underlying_;
+    QuantLib::ext::shared_ptr<Underlying> underlying_;
 };
 
 } // namespace data

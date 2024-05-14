@@ -42,7 +42,7 @@ Real AdjustmentFactors::getFactor(const string& name, const QuantLib::Date& d) c
         if (d < f.first && asof_ > f.first) {
             baseFactor = baseFactor * f.second;
         }
-        if (asof_ < f.first && f.first < d) {
+        if (asof_ < f.first && f.first <= d) {
             baseFactor = baseFactor / f.second;
         }
     }
@@ -67,7 +67,7 @@ void AdjustmentFactors::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* AdjustmentFactors::toXML(ore::data::XMLDocument& doc) {
+XMLNode* AdjustmentFactors::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("AdjustmentFactors");
     for (auto d : data_) {
         for (auto f : d.second) {

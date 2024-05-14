@@ -58,10 +58,17 @@ EquityTouchOption::EquityTouchOption(Envelope& env, OptionData option, BarrierDa
     }
 }
 
-void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Other");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
 
     Date today = Settings::instance().evaluationDate();
-    const boost::shared_ptr<Market> market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
     // Parse trade data
     string assetName = equityName();
@@ -80,7 +87,7 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
     Date start = ore::data::parseDate(startDate_);
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for EquityOption");
-    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
+    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
     QL_REQUIRE(barrier_.levels().size() == 1, "Double barriers not supported for EquityTouchOptions");
     QL_REQUIRE(barrier_.style().empty() || barrier_.style() == "American", "Only american barrier style suppported");
     QL_REQUIRE(rebate == 0, "Rebates not supported for EquityTouchOptions");
@@ -88,20 +95,20 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
                "Payoff at hit not supported for EquityNoTouchOptions");
 
     // create payoff and exercise, as well as leg of underlying instrument
-    boost::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, level, 1.0));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, level, 1.0));
     Leg leg;
 
-    leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(1.0, expiryDate)));
+    leg.push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(1.0, expiryDate)));
 
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<AmericanExercise>(expiryDate, payoffAtExpiry);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<AmericanExercise>(expiryDate, payoffAtExpiry);
 
-    boost::shared_ptr<Instrument> barrier = boost::make_shared<VanillaOption>(payoff, exercise);
-    boost::shared_ptr<Instrument> underlying = boost::make_shared<Swap>(Leg(), leg);
+    QuantLib::ext::shared_ptr<Instrument> barrier = QuantLib::ext::make_shared<VanillaOption>(payoff, exercise);
+    QuantLib::ext::shared_ptr<Instrument> underlying = QuantLib::ext::make_shared<Swap>(Leg(), leg);
 
     QL_REQUIRE(eqIndex_ != "", "No eqIndex provided");
     QL_REQUIRE(calendar_ != "", "No calendar provided");
 
-    boost::shared_ptr<QuantExt::EquityIndex> eqIndex = parseEquityIndex(eqIndex_);
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> eqIndex = parseEquityIndex(eqIndex_);
 
     // check if the barrier has been triggered already
     bool triggered = false;
@@ -126,31 +133,32 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
     }
 
     // set pricing engines
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<EquityTouchOptionEngineBuilder> eqTouchOptBuilder =
-        boost::dynamic_pointer_cast<EquityTouchOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<EquityTouchOptionEngineBuilder> eqTouchOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<EquityTouchOptionEngineBuilder>(builder);
     barrier->setPricingEngine(eqTouchOptBuilder->engine(assetName, ccy, type_));
+    setSensitivityTemplate(*eqTouchOptBuilder);
     if (type_ == "One-Touch") {
         // if a one-touch option is triggered it becomes a simple forward cashflow
         // which we price as a swap
         builder = engineFactory->builder("Swap");
         QL_REQUIRE(builder, "No builder found for Swap");
-        boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
-            boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        underlying->setPricingEngine(swapBuilder->engine(ccy));
+        QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+            QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+        underlying->setPricingEngine(swapBuilder->engine(ccy, std::string(), std::string()));
     }
 
     bool isLong = (positionType == Position::Long) ? true : false;
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, payoffAmount_, option_.premiumData(),
-                    isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(
+        additionalInstruments, additionalMultipliers, (isLong ? 1.0 : -1.0) * payoffAmount_, option_.premiumData(),
+        isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->equitySpot(assetName);
-    instrument_ = boost::make_shared<SingleBarrierOptionWrapper>(
+    instrument_ = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
         barrier, isLong, expiryDate, false, underlying, barrierType, spot, level, rebate, ccy, start, eqIndex, cal, payoffAmount_,
         payoffAmount_, additionalInstruments, additionalMultipliers);
     npvCurrency_ = payoffCurrency_;
@@ -165,13 +173,6 @@ void EquityTouchOption::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("Other");
-    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");
 }
 
 bool EquityTouchOption::checkBarrier(Real spot, Barrier::Type type, Real barrier) {
@@ -218,7 +219,7 @@ void EquityTouchOption::fromXML(XMLNode* node) {
     eqIndex_ = XMLUtils::getChildValue(eqNode, "EQIndex", false);
 }
 
-XMLNode* EquityTouchOption::toXML(XMLDocument& doc) {
+XMLNode* EquityTouchOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityTouchOptionData");
     XMLUtils::appendNode(node, eqNode);

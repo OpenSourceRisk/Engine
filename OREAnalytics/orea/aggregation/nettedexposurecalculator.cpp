@@ -30,43 +30,32 @@ namespace ore {
 namespace analytics {
 
 NettedExposureCalculator::NettedExposureCalculator(
-    const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<Market>& market,
-    const boost::shared_ptr<NPVCube>& cube,
-    const string& baseCurrency, const string& configuration, const Real quantile,
-    const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
-    const boost::shared_ptr<NettingSetManager>& nettingSetManager,
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<Market>& market,
+    const QuantLib::ext::shared_ptr<NPVCube>& cube, const string& baseCurrency, const string& configuration,
+    const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
+    const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
+    const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
     const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
     const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
     const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow,
     const map<string, vector<vector<Real>>>& nettingSetMporNegativeFlow,
-    const boost::shared_ptr<AggregationScenarioData>& scenarioData,
-    const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
-    const bool applyInitialMargin,
-    const boost::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
-    const bool fullInitialCollateralisation,
-    const bool marginalAllocation,
-    const Real marginalAllocationLimit,
-    const boost::shared_ptr<NPVCube>& tradeExposureCube,
-    const Size allocatedEpeIndex,
-    const Size allocatedEneIndex, 
-    const bool flipViewXVA,
-    const bool withMporStickyDate,
-    const ScenarioGeneratorData::MporCashFlowMode& mporCashFlowMode)
-    : portfolio_(portfolio), market_(market), cube_(cube),
-      baseCurrency_(baseCurrency), configuration_(configuration),
-      quantile_(quantile), calcType_(calcType),
-      multiPath_(multiPath), nettingSetManager_(nettingSetManager),
-      nettingSetDefaultValue_(nettingSetDefaultValue),
-      nettingSetCloseOutValue_(nettingSetCloseOutValue),
-      nettingSetMporPositiveFlow_(nettingSetMporPositiveFlow),
-      nettingSetMporNegativeFlow_(nettingSetMporNegativeFlow),
-      scenarioData_(scenarioData), cubeInterpretation_(cubeInterpretation),
-      applyInitialMargin_(applyInitialMargin), dimCalculator_(dimCalculator),
-      fullInitialCollateralisation_(fullInitialCollateralisation),
-      marginalAllocation_(marginalAllocation),
-      marginalAllocationLimit_(marginalAllocationLimit),
+    const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
+    const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation, const bool applyInitialMargin,
+    const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator, const bool fullInitialCollateralisation,
+    const bool marginalAllocation, const Real marginalAllocationLimit,
+    const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex, const Size allocatedEneIndex,
+    const bool flipViewXVA, const bool withMporStickyDate, const MporCashFlowMode mporCashFlowMode)
+    : portfolio_(portfolio), market_(market), cube_(cube), baseCurrency_(baseCurrency), configuration_(configuration),
+      quantile_(quantile), calcType_(calcType), multiPath_(multiPath), nettingSetManager_(nettingSetManager),
+      collateralBalances_(collateralBalances),
+      nettingSetDefaultValue_(nettingSetDefaultValue), nettingSetCloseOutValue_(nettingSetCloseOutValue),
+      nettingSetMporPositiveFlow_(nettingSetMporPositiveFlow), nettingSetMporNegativeFlow_(nettingSetMporNegativeFlow),
+      scenarioData_(scenarioData), cubeInterpretation_(cubeInterpretation), applyInitialMargin_(applyInitialMargin),
+      dimCalculator_(dimCalculator), fullInitialCollateralisation_(fullInitialCollateralisation),
+      marginalAllocation_(marginalAllocation), marginalAllocationLimit_(marginalAllocationLimit),
       tradeExposureCube_(tradeExposureCube), allocatedEpeIndex_(allocatedEpeIndex),
-      allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA), withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode) {
+      allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA), withMporStickyDate_(withMporStickyDate),
+      mporCashFlowMode_(mporCashFlowMode) {
 
     set<string> nettingSetIds;
     for (auto nettingSet : nettingSetDefaultValue) {
@@ -78,15 +67,15 @@ NettedExposureCalculator::NettedExposureCalculator(
         }
     }
 
-    nettedCube_= boost::make_shared<SinglePrecisionInMemoryCube>(
+    nettedCube_= QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(
             market_->asofDate(), nettingSetIds, cube->dates(),
             cube->samples()); // Exposure after collateral
     if (multiPath) {
-        exposureCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(
+        exposureCube_ = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(
             market_->asofDate(), nettingSetIds, cube->dates(),
             cube->samples(), EXPOSURE_CUBE_DEPTH); // EPE, ENE
     } else {
-        exposureCube_ = boost::make_shared<DoublePrecisionInMemoryCubeN>(
+        exposureCube_ = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(
             market_->asofDate(), nettingSetIds, cube->dates(),
             1, EXPOSURE_CUBE_DEPTH); // EPE, ENE
     }
@@ -143,7 +132,15 @@ void NettedExposureCalculator::build() {
     for (auto n : nettingSetDefaultValue_) {
         string nettingSetId = n.first;
         vector<vector<Real>> data = n.second;
-        boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
+        QuantLib::ext::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
+
+        // retrieve collateral balances object, if possible
+        QuantLib::ext::shared_ptr<CollateralBalance> balance = nullptr;
+        if (collateralBalances_ && collateralBalances_->has(nettingSetId)) {
+            balance = collateralBalances_->get(nettingSetId);
+            DLOG("got collateral balances for netting set " << nettingSetId);
+        }
+        
         //only for active CSA and calcType == NoLag close-out value is relevant
         if (netting->activeCsaFlag() && calcType_ == CollateralExposureHelper::CalculationType::NoLag) 
             data = nettingSetCloseOutValue_[nettingSetId];
@@ -154,7 +151,7 @@ void NettedExposureCalculator::build() {
         LOG("Aggregate exposure for netting set " << nettingSetId);
         // Get the collateral account balance paths for the netting set.
         // The pointer may remain empty if there is no CSA or if it is inactive.
-        boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> collateral =
+        QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>> collateral =
             collateralPaths(nettingSetId,
                             nettingSetValueToday[nettingSetId],
                             nettingSetDefaultValue_[nettingSetId],
@@ -188,6 +185,27 @@ void NettedExposureCalculator::build() {
                 ALOG("ApplyInitialMargin deactivated in analytics, but active at netting set level " << nettingSetId);
         }
 
+        // Retrieve the constant independent amount from the CSA data and the VM balance
+        // This is used below to reduce the exposure across all paths and time steps.
+        // See below for the conversion to base currency.
+        Real initialVM = 0, initialVMbase = 0;
+        Real initialIM = 0, initialIMbase = 0;
+        string csaCurrency = "";
+        if (netting->activeCsaFlag() && balance) {
+            initialVM = balance->variationMargin();
+            initialIM = balance->initialMargin();
+            double fx = 1.0;
+            if (baseCurrency_ != balance->currency())
+                fx = market_->fxSpot(balance->currency() + baseCurrency_)->value();
+            initialVMbase = fx * initialVM;
+            initialIMbase = fx * initialIM;
+            DLOG("Netting set " << nettingSetId << ", initial VM: " << initialVMbase << " " << baseCurrency_);
+            DLOG("Netting set " << nettingSetId << ", initial IM: " << initialIMbase << " " << baseCurrency_);
+        }
+        else {
+            DLOG("Netting set " << nettingSetId << ", IA base = VM base = 0");
+        }
+        
         Handle<YieldTermStructure> curve = market_->discountCurve(baseCurrency_, configuration_);
         vector<Real> epe(cube_->dates().size() + 1, 0.0);
         vector<Real> ene(cube_->dates().size() + 1, 0.0);
@@ -208,13 +226,13 @@ void NettedExposureCalculator::build() {
             ene[0] = 0;
             pfe[0] = 0;
         } else {
-            epe[0] = std::max(npv, 0.0);
-            ene[0] = std::max(-npv, 0.0);
-            pfe[0] = std::max(npv, 0.0);
+            epe[0] = std::max(npv - initialVMbase - initialIMbase, 0.0);
+            ene[0] = std::max(-npv + initialVMbase, 0.0);
+            pfe[0] = std::max(npv - initialVMbase - initialIMbase, 0.0);
         }
         // The fullInitialCollateralisation flag doesn't affect the eab, which feeds into the "ExpectedCollateral"
         // column of the 'exposure_nettingset_*' reports.  We always assume the full collateral here.
-        eab[0] = -npv;
+        eab[0] = npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
         nettedCube_->setT0(npv, nettingSetCount);
@@ -237,20 +255,32 @@ void NettedExposureCalculator::build() {
                         balance *= fxRate;
                     }
                 }
+                
                 eab[j + 1] += balance / cube_->samples();
                 
                 Real mporCashFlow = 0;
                 // If ActualDate is active, then the cash flows over mpor can be configured.
                 // Otherwise (StickyDate is active), it is assumed that no cash flow over mpor is paid out.
-                if (!withMporStickyDate_){
-                    if (mporCashFlowMode_ == ScenarioGeneratorData::MporCashFlowMode::BothPay) // in cube generation -actual date- the (+/-) cashflows over mpor are payed out, i.e. are not part of the exposure . 
-                        mporCashFlow = 0; 
-                    else if (mporCashFlowMode_ == ScenarioGeneratorData::MporCashFlowMode::NonePay) // +/- cashflows is to be incorporated in the exposure
+                if (!withMporStickyDate_) {
+                    if (mporCashFlowMode_ == MporCashFlowMode::BothPay) {
+                        // in cube generation -actual date- the (+/-) cashflows over mpor are
+                        // payed out, i.e. are not part of the exposure .
+                        mporCashFlow = 0;
+                    } else if (mporCashFlowMode_ == MporCashFlowMode::NonePay) {
+                        // +/- cashflows is to be incorporated in the exposure
                         mporCashFlow = (nettingSetMporPositiveFlow[j][k] + nettingSetMporNegativeFlow[j][k]);
-                    else if (mporCashFlowMode_ == ScenarioGeneratorData::MporCashFlowMode::WePay) // only positive cash flows (i.e. cp's cashflows) is to be incorporated in the exposure, since cp does not pay out cash flows
+                    } else if (mporCashFlowMode_ ==
+                               MporCashFlowMode::WePay) { 
+                        // only positive cash flows (i.e. cp's cashflows) is to be
+                        // incorporated in the exposure, since cp does not pay out cash
+                        // flows
                         mporCashFlow = nettingSetMporPositiveFlow[j][k];
-                    else if (mporCashFlowMode_ == ScenarioGeneratorData::MporCashFlowMode::TheyPay) // onyl negative cash flows (i.e. our cashflows)  is to be incorporated in the exposure,  ince we do not pay out cash flows
+                    } else if (mporCashFlowMode_ ==
+                               MporCashFlowMode::TheyPay) { // onyl negative cash flows (i.e. our cashflows)  is to be
+                        // incorporated in the exposure,  ince we do not pay out cash
+                        // flows
                         mporCashFlow = nettingSetMporNegativeFlow[j][k];
+                    }
                 }
                 Real exposure = data[j][k] - balance + mporCashFlow;
                 Real dim = 0.0;
@@ -269,18 +299,26 @@ void NettedExposureCalculator::build() {
                     dim_epe = dim;
                 if (initialMarginType != CSA::Type::CallOnly)
                     dim_ene = dim;
-                epe[j + 1] += std::max(exposure - dim_epe, 0.0) /
-                              cube_->samples(); // dim here represents the held IM, and is expressed as a positive number
-                ene[j + 1] += std::max(-exposure - dim_ene, 0.0) /
-                              cube_->samples(); // dim here represents the posted IM, and is expressed as a positive number
-                distribution[k] = exposure;
+                
+                // dim here represents the held IM, and is expressed as a positive number
+                epe[j + 1] += std::max(exposure - dim_epe, 0.0) / cube_->samples(); 
+                // dim here represents the posted IM, and is expressed as a positive number
+                ene[j + 1] += std::max(-exposure - dim_ene, 0.0) / cube_->samples(); 
+                distribution[k] = exposure - dim_epe;
                 nettedCube_->set(exposure, nettingSetCount, j, k);
-
+                
+                Real epeIncrement = std::max(exposure - dim_epe, 0.0) / cube_->samples();
+                DLOG("sample " << k << " date " << j << fixed << showpos << setprecision(2)
+                     << ": VM "  << setw(15) << balance
+                     << ": NPV " << setw(15) << data[j][k]
+                     << ": NPV-C " << setw(15) << distribution[k]
+                     << ": EPE " << setw(15) << epeIncrement);
+                
                 if (multiPath_) {
                     exposureCube_->set(std::max(exposure - dim_epe, 0.0), nettingSetCount, j, k, ExposureIndex::EPE);
                     exposureCube_->set(std::max(-exposure - dim_ene, 0.0), nettingSetCount, j, k, ExposureIndex::ENE);
                 }
-
+ 
                 if (netting->activeCsaFlag()) {
                     Real indexValue = 0.0;
                     DayCounter dc = ActualActual(ActualActual::ISDA);
@@ -392,22 +430,29 @@ void NettedExposureCalculator::build() {
     }
 }
 
-boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>>
+QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>>
 NettedExposureCalculator::collateralPaths(
     const string& nettingSetId,
     const Real& nettingSetValueToday,
     const vector<vector<Real>>& nettingSetValue,
     const Date& nettingSetMaturity) {
 
-    boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> collateral;
+    QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>> collateral;
 
     if (!nettingSetManager_->has(nettingSetId) || !nettingSetManager_->get(nettingSetId)->activeCsaFlag()) {
         LOG("CSA missing or inactive for netting set " << nettingSetId);
         return collateral;
     }
 
+    // retrieve collateral balances object, if possible
+    QuantLib::ext::shared_ptr<CollateralBalance> balance = nullptr;
+    if (collateralBalances_ && collateralBalances_->has(nettingSetId)) {
+        balance = collateralBalances_->get(nettingSetId);
+        LOG("got collateral balances for netting set " << nettingSetId);
+    }
+    
     LOG("Build collateral account balance paths for netting set " << nettingSetId);
-    boost::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
+    QuantLib::ext::shared_ptr<NettingSetDefinition> netting = nettingSetManager_->get(nettingSetId);
     string csaFxPair = netting->csaDetails()->csaCurrency() + baseCurrency_;
     Real csaFxRateToday = 1.0;
     if (netting->csaDetails()->csaCurrency() != baseCurrency_)
@@ -460,7 +505,8 @@ NettedExposureCalculator::collateralPaths(
         csaScenFxRates,       // matrix of fx rates by date and sample, possibly 1
         csaRateToday,         // today's collateral compounding rate in CSA currency
         csaScenRates,         // matrix of CSA ccy short rates by date and sample
-        calcType_);
+        calcType_,
+        balance);             // initial collateral balances (VM, IM, IA) for the netting set
     LOG("Collateral account balance paths for netting set " << nettingSetId << " done");
 
     return collateral;

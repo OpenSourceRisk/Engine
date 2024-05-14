@@ -20,9 +20,11 @@
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
 #include <ored/portfolio/bondutils.hpp>
+#include <ored/utilities/bondindexbuilder.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 
+#include <qle/cashflows/bondtrscashflow.hpp>
 #include <qle/instruments/convertiblebond2.hpp>
 
 #include <ql/cashflows/cashflows.hpp>
@@ -39,7 +41,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 std::map<AssetClass, std::set<std::string>>
-ConvertibleBond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+ConvertibleBond::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     data_ = originalData_;
     data_.populateFromBondReferenceData(referenceDataManager);
     std::map<AssetClass, std::set<std::string>> result;
@@ -150,13 +152,46 @@ buildConversionRatioData(const ConvertibleBondData::ConversionData& conversionDa
     return result;
 } // buildConversionRatioData()
 
+std::vector<ConvertibleBond2::ConversionRatioData>
+buildConversionFixedAmountData(const ConvertibleBondData::ConversionData& conversionData) {
+    std::vector<ConvertibleBond2::ConversionRatioData> result;
+    std::set<Date> tmp;
+    if (conversionData.initialised()) {
+        for (Size i = 0; i < conversionData.fixedAmountConversionData().amounts().size(); ++i) {
+            Date d = conversionData.fixedAmountConversionData().amountDates()[i].empty()
+                         ? Date::minDate()
+                         : parseDate(conversionData.fixedAmountConversionData().amountDates()[i]);
+            result.push_back({d, conversionData.fixedAmountConversionData().amounts()[i]});
+            tmp.insert(d);
+        }
+    }
+    // check that we have unique dates
+    QL_REQUIRE(tmp.size() == result.size(), "Found " << result.size()
+                                                     << " conversion fixed amount definitions, but only " << tmp.size()
+                                                     << " unique start dates, please check for duplicates");
+    return result;
+} // buildConversionFixedAmountData()
+
+namespace {
+Calendar getEqFxFixingCalendar(const QuantLib::ext::shared_ptr<EquityIndex2>& equity, const QuantLib::ext::shared_ptr<FxIndex>& fx) {
+    if (fx == nullptr && equity == nullptr) {
+        return NullCalendar();
+    } else if (fx == nullptr && equity != nullptr) {
+        return equity->fixingCalendar();
+    } else if (fx != nullptr && equity == nullptr) {
+        return fx->fixingCalendar();
+    } else {
+        return JointCalendar(equity->fixingCalendar(), fx->fixingCalendar());
+    }
+}
+} // namespace
+
 std::vector<ConvertibleBond2::ConversionData>
 buildConversionData(const ConvertibleBondData::ConversionData& conversionData, RequiredFixings& requiredFixings,
-                    const boost::shared_ptr<EquityIndex>& equity, const boost::shared_ptr<FxIndex>& fx,
+                    const QuantLib::ext::shared_ptr<EquityIndex2>& equity, const QuantLib::ext::shared_ptr<FxIndex>& fx,
                     const std::string& fxIndexName, const Date& openEndDateReplacement) {
     std::vector<ConvertibleBond2::ConversionData> result;
-    Calendar fixingCalendar =
-        fx == nullptr ? equity->fixingCalendar() : JointCalendar(equity->fixingCalendar(), fx->fixingCalendar());
+    auto fixingCalendar = getEqFxFixingCalendar(equity, fx);
     if (conversionData.initialised() && conversionData.dates().hasData()) {
         QuantLib::Schedule schedule = makeSchedule(conversionData.dates(), openEndDateReplacement);
         std::vector<Date> conversionDatesPlusInf = schedule.dates();
@@ -190,6 +225,8 @@ buildConversionData(const ConvertibleBondData::ConversionData& conversionData, R
                 QL_FAIL("invalid exercise style '" << styles[i] << "', expected Bermudan, American (conversion data)");
             }
 
+            QL_REQUIRE(equity != nullptr || cocoObservations[i] == "None",
+                       "coco observations must be none if no equity underlying is given.");
             if (cocoObservations[i] == "Spot" ||
                 exerciseType == ConvertibleBond2::ConversionData::ExerciseType::OnThisDate) {
                 cocoType = ConvertibleBond2::ConversionData::CocoType::Spot;
@@ -239,12 +276,13 @@ buildMandatoryConversionData(const ConvertibleBondData::ConversionData& conversi
 
 std::vector<ConvertibleBond2::ConversionResetData>
 buildConversionResetData(const ConvertibleBondData::ConversionData& conversionData, RequiredFixings& requiredFixings,
-                         const boost::shared_ptr<EquityIndex>& equity, const boost::shared_ptr<FxIndex>& fx,
+                         const QuantLib::ext::shared_ptr<EquityIndex2>& equity, const QuantLib::ext::shared_ptr<FxIndex>& fx,
                          const std::string& fxIndexName, const Date& openEndDateReplacement) {
     std::vector<ConvertibleBond2::ConversionResetData> result;
-    Calendar fixingCalendar =
-        fx == nullptr ? equity->fixingCalendar() : JointCalendar(equity->fixingCalendar(), fx->fixingCalendar());
+    auto fixingCalendar = getEqFxFixingCalendar(equity, fx);
     if (conversionData.initialised() && conversionData.conversionResetData().initialised()) {
+        QL_REQUIRE(equity != nullptr || !conversionData.conversionResetData().initialised(),
+                   "no conversion reset data must be specified if no equity underlying is given.");
         QuantLib::Schedule schedule =
             makeSchedule(conversionData.conversionResetData().dates(), openEndDateReplacement);
         std::vector<Date> resetDatesPlusInf = schedule.dates();
@@ -298,12 +336,13 @@ buildConversionResetData(const ConvertibleBondData::ConversionData& conversionDa
 
 std::vector<ConvertibleBond2::DividendProtectionData>
 buildDividendProtectionData(const ConvertibleBondData::DividendProtectionData& dividendProtectionData,
-                            RequiredFixings& requiredFixings, const boost::shared_ptr<EquityIndex>& equity,
-                            const boost::shared_ptr<FxIndex>& fx, const std::string& fxIndexName,
+                            RequiredFixings& requiredFixings, const QuantLib::ext::shared_ptr<EquityIndex2>& equity,
+                            const QuantLib::ext::shared_ptr<FxIndex>& fx, const std::string& fxIndexName,
                             const Date& openEndDateReplacement) {
     std::vector<ConvertibleBond2::DividendProtectionData> result;
-    Calendar fixingCalendar =
-        fx == nullptr ? equity->fixingCalendar() : JointCalendar(equity->fixingCalendar(), fx->fixingCalendar());
+    auto fixingCalendar = getEqFxFixingCalendar(equity, fx);
+    QL_REQUIRE(equity != nullptr || !dividendProtectionData.initialised(),
+               "no dividend protection data must be given if no equity underlying is given.");
     if (dividendProtectionData.initialised()) {
         Schedule schedule = makeSchedule(dividendProtectionData.dates(), openEndDateReplacement);
         QL_REQUIRE(
@@ -375,10 +414,17 @@ buildDividendProtectionData(const ConvertibleBondData::DividendProtectionData& d
 
 } // namespace
 
-void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void ConvertibleBond::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     DLOG("ConvertibleBond::build() called for trade " << id());
 
-    auto builder = boost::dynamic_pointer_cast<ConvertibleBondEngineBuilder>(engineFactory->builder("ConvertibleBond"));
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has Convertible Bond underlyings
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
+    auto builder = QuantLib::ext::dynamic_pointer_cast<ConvertibleBondEngineBuilder>(engineFactory->builder("ConvertibleBond"));
     QL_REQUIRE(builder, "ConvertibleBond::build(): could not cast to ConvertibleBondBuilder, this is unexpected");
 
     data_ = originalData_;
@@ -389,18 +435,18 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
     ore::data::Bond underlyingBond(Envelope(), data_.bondData());
     underlyingBond.build(engineFactory);
     requiredFixings_.addData(underlyingBond.requiredFixings());
-    auto qlUnderlyingBond = boost::dynamic_pointer_cast<QuantLib::Bond>(underlyingBond.instrument()->qlInstrument());
+    auto qlUnderlyingBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlyingBond.instrument()->qlInstrument());
     QL_REQUIRE(qlUnderlyingBond,
                "ConvertibleBond::build(): internal error, could not cast underlying bond to QuantLib::Bond");
     auto qlUnderlyingBondCoupons = qlUnderlyingBond->cashflows();
     qlUnderlyingBondCoupons.erase(
         std::remove_if(qlUnderlyingBondCoupons.begin(), qlUnderlyingBondCoupons.end(),
-                       [](boost::shared_ptr<CashFlow> c) { return boost::dynamic_pointer_cast<Coupon>(c) == nullptr; }),
+                       [](QuantLib::ext::shared_ptr<CashFlow> c) { return QuantLib::ext::dynamic_pointer_cast<Coupon>(c) == nullptr; }),
         qlUnderlyingBondCoupons.end());
 
     // get open end date replacement from vanilla builder to handle perpetuals
 
-    boost::shared_ptr<EngineBuilder> vanillaBuilder = engineFactory->builder("Bond");
+    QuantLib::ext::shared_ptr<EngineBuilder> vanillaBuilder = engineFactory->builder("Bond");
     QL_REQUIRE(builder, "ConvertibleBond::build(): internal error, vanilla builder is null");
     std::string openEndDateStr = vanillaBuilder->modelParameter("OpenEndDateReplacement", {}, false, "");
     Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, parseCalendar(data_.bondData().calendar()));
@@ -420,11 +466,18 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
 
     auto config = builder->configuration(MarketContext::pricing);
 
-    boost::shared_ptr<EquityIndex> equity =
-        *engineFactory->market()->equityCurve(data_.conversionData().equityUnderlying().name(), config);
+    QuantLib::ext::shared_ptr<EquityIndex2> equity;
+    if (!data_.conversionData().equityUnderlying().name().empty()) {
+        equity = *engineFactory->market()->equityCurve(data_.conversionData().equityUnderlying().name(), config);
+    }
 
-    boost::shared_ptr<FxIndex> fx;
-    if (!equity->currency().empty()) {
+    QL_REQUIRE((equity == nullptr && data_.conversionData().fixedAmountConversionData().initialised()) ||
+                   (equity != nullptr && !data_.conversionData().fixedAmountConversionData().initialised()),
+               "ConvertibleBondEngineBuilder::build(): exactly one of equity underlying or fixed amount conversion "
+               "must be specified");
+
+    QuantLib::ext::shared_ptr<FxIndex> fx;
+    if (equity != nullptr && !equity->currency().empty()) {
         if (equity->currency().code() != data_.bondData().currency()) {
             QL_REQUIRE(!data_.conversionData().fxIndex().empty(),
                        "ConvertibleBondEngineBuilder::build(): FXIndex required in conversion data, since eq ccy ("
@@ -433,9 +486,20 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
             fx = buildFxIndex(data_.conversionData().fxIndex(), data_.bondData().currency(), equity->currency().code(),
                               engineFactory->market(), config);
         }
+    } else if (equity == nullptr && data_.conversionData().fixedAmountConversionData().initialised()) {
+        if (data_.conversionData().fixedAmountConversionData().currency() != data_.bondData().currency()) {
+            QL_REQUIRE(!data_.conversionData().fxIndex().empty(),
+                       "ConvertibleBondEngineBuilder::build(): FXIndex required in conversion data, since fixed amount "
+                       "conversion  ccy ("
+                           << data_.conversionData().fixedAmountConversionData().currency() << ") not equal bond ccy ("
+                           << data_.bondData().currency() << ")");
+            fx = buildFxIndex(data_.conversionData().fxIndex(), data_.bondData().currency(),
+                              data_.conversionData().fixedAmountConversionData().currency(), engineFactory->market(),
+                              config);
+        }
     }
 
-    // for cross currency, add required FX fixings for dividend history
+    // for cross currency, add required FX fixings for conversion and dividend history
 
     if (fx != nullptr) {
 
@@ -443,11 +507,13 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
         Date d1 = qlUnderlyingBond->maturityDate();
 
         // FIXME, the following only works, if we have the dividends loaded at this point...
-        auto div = equity->dividendFixings();
-        for (auto const& d : div) {
-            if (d.exDate >= d0) {
-                requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(d.exDate, Preceding),
-                                               data_.conversionData().fxIndex());
+        if (equity != nullptr) {
+            auto div = equity->dividendFixings();
+            for (auto const& d : div) {
+                if (d.exDate >= d0) {
+                    requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(d.exDate, Preceding),
+                                                   data_.conversionData().fxIndex());
+                }
             }
         }
 
@@ -455,8 +521,10 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
         d0 = std::min(d0, today);
 
         // ...as a workaround, we add all fx fixings from min(today, bond start date) to maturity
+        // -> this also covers the required fx fixings for conversion, so we don't have to add them separately
         for (Date d = d0; d <= d1; ++d) {
-            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(d, Preceding), data_.conversionData().fxIndex());
+            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(d, Preceding), data_.conversionData().fxIndex(),
+                                           Date::maxDate(), false, false);
         }
     }
 
@@ -472,8 +540,11 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
     ConvertibleBond2::MakeWholeData makeWholeCrIncreaseData = buildMakeWholeData(data_.callData());
     std::vector<ConvertibleBond2::CallabilityData> putData =
         buildCallabilityData(data_.putData(), openEndDateReplacement);
+    // for fixed amounts the model will provide an equity with constant unit spot rate, so that
+    // we can treat the amount as a ratio
     std::vector<ConvertibleBond2::ConversionRatioData> conversionRatioData =
-        buildConversionRatioData(data_.conversionData());
+        equity != nullptr ? buildConversionRatioData(data_.conversionData())
+                          : buildConversionFixedAmountData(data_.conversionData());
     std::vector<ConvertibleBond2::ConversionData> conversionData = buildConversionData(
         data_.conversionData(), requiredFixings_, equity, fx, data_.conversionData().fxIndex(), openEndDateReplacement);
     std::vector<ConvertibleBond2::MandatoryConversionData> mandatoryConversionData =
@@ -493,7 +564,7 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
     }
 
     QL_REQUIRE(data_.conversionData().initialised(), "ConvertibleBond::build(): conversion data required");
-    auto qlConvertible = boost::make_shared<ConvertibleBond2>(
+    auto qlConvertible = QuantLib::ext::make_shared<ConvertibleBond2>(
         qlUnderlyingBond->settlementDays(), qlUnderlyingBond->calendar(), qlUnderlyingBond->issueDate(),
         qlUnderlyingBondCoupons, exchangeableData, callData, makeWholeCrIncreaseData, putData, conversionRatioData,
         conversionData, mandatoryConversionData, conversionResetData, dividendProtectionData,
@@ -502,24 +573,17 @@ void ConvertibleBond::build(const boost::shared_ptr<ore::data::EngineFactory>& e
         id(), data_.bondData().currency(), data_.bondData().creditCurveId(), data_.bondData().hasCreditRisk(),
         data_.bondData().securityId(), data_.bondData().referenceCurveId(), exchangeableData.isExchangeable, equity, fx,
         data_.conversionData().exchangeableData().equityCreditCurve(), qlUnderlyingBond->startDate(), lastDate));
+    setSensitivityTemplate(*builder);
 
     // set up other trade member variables
 
-    instrument_ = boost::make_shared<VanillaInstrument>(qlConvertible, multiplier);
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qlConvertible, multiplier);
     npvCurrency_ = notionalCurrency_ = data_.bondData().currency();
     maturity_ = qlUnderlyingBond->maturityDate();
     notional_ = qlUnderlyingBond->notional();
     legs_ = {qlUnderlyingBond->cashflows()};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {data_.bondData().isPayer()};
-
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has Convertible Bond underlyings
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
-
 }
 
 void ConvertibleBond::fromXML(XMLNode* node) {
@@ -528,42 +592,50 @@ void ConvertibleBond::fromXML(XMLNode* node) {
     data_ = originalData_;
 }
 
-XMLNode* ConvertibleBond::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBond::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, originalData_.toXML(doc));
     return node;
 }
 
 void ConvertibleBondTrsUnderlyingBuilder::build(
-    const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates,
-    const boost::shared_ptr<EngineFactory>& engineFactory, boost::shared_ptr<QuantLib::Index>& underlyingIndex,
+    const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates,
+    const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex,
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
     std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
-    const std::function<boost::shared_ptr<QuantExt::FxIndex>(
-        const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-        const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+    const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+        const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+        const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
-    const std::string& underlyingDerivativeId) const {
-    auto t = boost::dynamic_pointer_cast<ore::data::ConvertibleBond>(underlying);
+    const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
+    auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::ConvertibleBond>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::Bond, this is unexpected");
-    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
+    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying->instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "expected QuantLib::Bond, could not cast");
-    underlyingIndex = boost::make_shared<QuantExt::BondIndex>(
-        t->data().bondData().securityId(), true, false, NullCalendar(), qlBond, Handle<YieldTermStructure>(),
-        Handle<DefaultProbabilityTermStructure>(), Handle<Quote>(), Handle<Quote>(), Handle<YieldTermStructure>(), true,
-        t->data().bondData().priceQuoteMethod(), t->data().bondData().priceQuoteBaseValue(), false, 0.0);
+
+    BondIndexBuilder bondIndexBuilder(t->bondData(), true, false, NullCalendar(), true, engineFactory);
+    underlyingIndex = bondIndexBuilder.bondIndex();
+
+    underlyingIndex = bondIndexBuilder.bondIndex();
     underlyingMultiplier = t->data().bondData().bondNotional();
-    indexQuantities["BOND-" + t->data().bondData().securityId()] = underlyingMultiplier;
-    Real adj = t->data().bondData().priceQuoteMethod() == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
-                   ? 1.0 / t->bondData().priceQuoteBaseValue()
-                   : 1.0;
-    DLOG("ConvertibleBondTrsUnderlyingBuilder: price quote method adjustment for " << t->bondData().securityId()
-                                                                                   << " is " << adj);
+
+    indexQuantities[underlyingIndex->name()] = underlyingMultiplier;
     if (initialPrice != Null<Real>())
-        initialPrice = initialPrice * qlBond->notional(valuationDates.front()) * adj;
+        initialPrice = qlBond->notional(valuationDates.front()) * bondIndexBuilder.priceAdjustment(initialPrice);
+
     assetCurrency = t->data().bondData().currency();
+    auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
+                              assetCurrency, fundingCurrency, fxIndices);
+    auto returnLeg =
+        makeBondTRSLeg(valuationDates, paymentDates, bondIndexBuilder, initialPrice, fxIndex);
+
+    // add required bond and fx fixings for bondIndex
+    returnLegs.push_back(returnLeg);
+    bondIndexBuilder.addRequiredFixings(fixings, returnLeg);
+
     creditRiskCurrency = t->data().bondData().currency();
     creditQualifierMapping[securitySpecificCreditCurveName(t->bondData().securityId(), t->bondData().creditCurveId())] =
         SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup());
@@ -573,8 +645,8 @@ void ConvertibleBondTrsUnderlyingBuilder::build(
     maturity = qlBond->maturityDate();
 }
 
-void ConvertibleBondTrsUnderlyingBuilder::updateUnderlying(const boost::shared_ptr<ReferenceDataManager>& refData,
-                                                           boost::shared_ptr<Trade>& underlying,
+void ConvertibleBondTrsUnderlyingBuilder::updateUnderlying(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData,
+                                                           QuantLib::ext::shared_ptr<Trade>& underlying,
                                                            const std::string& parentId) const {
 
     /* If the underlying is a bond, but the security id is actually pointing to reference data of a non-vanilla bond
@@ -582,21 +654,21 @@ void ConvertibleBondTrsUnderlyingBuilder::updateUnderlying(const boost::shared_p
        here on the fly. This way we can reference a bond from a TRS without knowing its flavour. */
 
     if (underlying->tradeType() == "Bond") {
-        auto bond = boost::dynamic_pointer_cast<ore::data::Bond>(underlying);
+        auto bond = QuantLib::ext::dynamic_pointer_cast<ore::data::Bond>(underlying);
         QL_REQUIRE(bond, "TRS::build(): internal error, could not cast underlying trade to bond");
         if (refData != nullptr &&
             refData->hasData(ConvertibleBondReferenceDatum::TYPE, bond->bondData().securityId())) {
             DLOG("Underlying trade type is bond, but security id '"
                  << bond->bondData().securityId()
                  << "' points to convertible bond in ref data, so we change the underlying trade type accordingly.");
-            underlying = boost::make_shared<ConvertibleBond>(Envelope(), ConvertibleBondData(bond->bondData()));
+            underlying = QuantLib::ext::make_shared<ConvertibleBond>(Envelope(), ConvertibleBondData(bond->bondData()));
             underlying->id() = parentId + "_underlying";
         }
     }
 }
 
-BondBuilder::Result ConvertibleBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                  const boost::shared_ptr<ReferenceDataManager>& referenceData,
+BondBuilder::Result ConvertibleBondBuilder::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                                  const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                                   const std::string& securityId) const {
     static long id = 0;
     ConvertibleBondData data(BondData(securityId, 1.0));
@@ -606,7 +678,7 @@ BondBuilder::Result ConvertibleBondBuilder::build(const boost::shared_ptr<Engine
     bond.build(engineFactory);
 
     QL_REQUIRE(bond.instrument(), "ConvertibleBondBuilder: constructed bond is null, this is unexpected");
-    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
 
     QL_REQUIRE(
         bond.instrument() && bond.instrument()->qlInstrument(),
@@ -625,7 +697,7 @@ BondBuilder::Result ConvertibleBondBuilder::build(const boost::shared_ptr<Engine
 
     auto builders = engineFactory->modelBuilders();
     auto b = std::find_if(builders.begin(), builders.end(),
-                          [&bond](const std::pair<const std::string&, const boost::shared_ptr<ModelBuilder>>& p) {
+                          [&bond](const std::pair<const std::string&, const QuantLib::ext::shared_ptr<ModelBuilder>>& p) {
                               return bond.id() == p.first;
                           });
     QL_REQUIRE(b != builders.end(), "ConvertibleBondBuilder: could not get model builder for bond '"

@@ -31,7 +31,7 @@ void SimmAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
 }
 
-void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
     if (!analytic()->match(runTypes))
         return;
@@ -46,30 +46,35 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
     LOG("Get CRIF records from CRIF loader and fill amountUSD");        
     simmAnalytic->loadCrifRecords(loader);
 
-    auto simmConfiguration = inputs_->crifLoader()->simmConfiguration();
-
     if (analytic()->getWriteIntermediateReports()) {
-        boost::shared_ptr<InMemoryReport> crifReport = boost::make_shared<InMemoryReport>();
-        ReportWriter(inputs_->reportNaString())
-            .writeCrifReport(crifReport, *simmAnalytic->crifRecords());
+        QuantLib::ext::shared_ptr<InMemoryReport> crifReport = QuantLib::ext::make_shared<InMemoryReport>();
+        ReportWriter(inputs_->reportNaString()).writeCrifReport(crifReport, simmAnalytic->crif());
         analytic()->reports()[LABEL]["crif"] = crifReport;
         LOG("CRIF report generated");
 
-        auto crifLoader = boost::make_shared<CrifLoader>(simmConfiguration, CrifRecord::additionalHeaders, true, true);
-        for (const auto& cr : *simmAnalytic->crifRecords())
-            crifLoader->add(cr);
-        boost::shared_ptr<InMemoryReport> simmDataReport = boost::make_shared<InMemoryReport>();
+        Crif simmDataCrif = simmAnalytic->crif().aggregate();
+        QuantLib::ext::shared_ptr<InMemoryReport> simmDataReport = QuantLib::ext::make_shared<InMemoryReport>();
         ReportWriter(inputs_->reportNaString())
-            .writeSIMMData(crifLoader->netRecords(true), simmDataReport);
+            .writeSIMMData(simmAnalytic->crif(), simmDataReport);
         analytic()->reports()[LABEL]["simm_data"] = simmDataReport;
         LOG("SIMM data report generated");
     }
     MEM_LOG;
 
+    LOG("Calculating SIMM");
+
+    // Save SIMM calibration data to output
+    if (inputs_->simmCalibrationData())
+        inputs_->simmCalibrationData()->toFile((inputs_->resultsPath() / "simmcalibration.xml").string());
+
+    auto simmConfig = inputs_->getSimmConfiguration();
+    simmConfig->bucketMapper()->updateFromCrif(simmAnalytic->crif());
+
     // Calculate SIMM
-    auto simm = boost::make_shared<SimmCalculator>(*simmAnalytic->crifRecords(),
-                                                   simmConfiguration,
-                                                   inputs_->simmCalculationCurrency(),
+    auto simm = QuantLib::ext::make_shared<SimmCalculator>(simmAnalytic->crif(),
+                                                   simmConfig,
+                                                   inputs_->simmCalculationCurrencyCall(),
+                                                   inputs_->simmCalculationCurrencyPost(),
                                                    inputs_->simmResultCurrency(),
                                                    analytic()->market(),
                                                    simmAnalytic->determineWinningRegulations(),
@@ -83,32 +88,33 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
         LOG("SIMM reporting currency is " << inputs_->simmReportingCurrency() << " with fxSpot " << fxSpot);
     }
 
-    boost::shared_ptr<InMemoryReport> simmRegulationBreakdownReport = boost::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> simmRegulationBreakdownReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
         .writeSIMMReport(simm->simmResults(), simmRegulationBreakdownReport, simmAnalytic->hasNettingSetDetails(),
-                         inputs_->simmResultCurrency(), inputs_->simmReportingCurrency(), false, fxSpot);
+                         inputs_->simmResultCurrency(), inputs_->simmCalculationCurrencyCall(),
+                         inputs_->simmCalculationCurrencyPost(), inputs_->simmReportingCurrency(), false, fxSpot);
     LOG("SIMM regulation breakdown report generated");
-    analytic()->reports()[LABEL]["simm_regulation_breakdown"] = simmRegulationBreakdownReport;
+    analytic()->reports()[LABEL]["regulation_breakdown_simm"] = simmRegulationBreakdownReport;
 
 
-    boost::shared_ptr<InMemoryReport> simmReport = boost::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> simmReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
         .writeSIMMReport(simm->finalSimmResults(), simmReport, simmAnalytic->hasNettingSetDetails(),
-                         inputs_->simmResultCurrency(), inputs_->simmReportingCurrency(), fxSpot);
+                         inputs_->simmResultCurrency(), inputs_->simmCalculationCurrencyCall(),
+                         inputs_->simmCalculationCurrencyPost(), inputs_->simmReportingCurrency(), fxSpot);
     analytic()->reports()[LABEL]["simm"] = simmReport;
     LOG("SIMM report generated");
     MEM_LOG;
 
 }
 
-void SimmAnalytic::loadCrifRecords(const boost::shared_ptr<ore::data::InMemoryLoader>& loader) {
+void SimmAnalytic::loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     QL_REQUIRE(inputs_, "Inputs not set");
-    QL_REQUIRE(inputs_->crifLoader(), "CRIF loader not set");
-    QL_REQUIRE(inputs_->crifLoader()->hasCrifRecords(), "CRIF loader does not contain any records");
+    QL_REQUIRE(!inputs_->crif().empty(), "CRIF loader does not contain any records");
         
-    inputs_->crifLoader()->fillAmountUsd(market());
-    crifRecords_ = boost::make_shared<SimmNetSensitivities>(inputs_->crifLoader()->netRecords(true));
-    hasNettingSetDetails_ = inputs_->crifLoader()->hasNettingSetDetails();
+    crif_ = inputs_->crif();
+    crif_.fillAmountUsd(market());
+    hasNettingSetDetails_ = crif_.hasNettingSetDetails();
 }
 
 } // namespace analytics

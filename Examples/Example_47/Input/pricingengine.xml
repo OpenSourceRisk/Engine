@@ -1,0 +1,8 @@
+<PricingEngines>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters />
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters />
+  </Product>
+</PricingEngines>

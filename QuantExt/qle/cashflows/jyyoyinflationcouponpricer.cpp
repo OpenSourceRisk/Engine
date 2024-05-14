@@ -27,7 +27,7 @@ using QuantLib::Size;
 
 namespace QuantExt {
 
-JyYoYInflationCouponPricer::JyYoYInflationCouponPricer(const boost::shared_ptr<CrossAssetModel>& model, Size index)
+JyYoYInflationCouponPricer::JyYoYInflationCouponPricer(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index)
     : YoYInflationCouponPricer(model->irlgm1f(model->ccyIndex(model->infjy(index)->currency()))->termStructure()),
       model_(model), index_(index) {
 
@@ -43,9 +43,9 @@ Real JyYoYInflationCouponPricer::optionletRate(Option::Type optionType, Real eff
 }
 
 Rate JyYoYInflationCouponPricer::adjustedFixing(Rate) const {
-    
+
     // We only need to use the Jarrow Yildrim model if both I(T) and I(S) are not yet known (i.e. published).
-    // If only I(S) is known, we have a ZCIIS. If both are known, we just use the published values. In either case, 
+    // If only I(S) is known, we have a ZCIIS. If both are known, we just use the published values. In either case,
     // we can just ask the inflation index for its fixing.
 
     // Fixing date associated with numerator inflation index value i.e. I(T). Incorporates the observation lag.
@@ -74,7 +74,8 @@ Rate JyYoYInflationCouponPricer::adjustedFixing(Rate) const {
     return jyExpectedIndexRatio(model_, index_, S, T, index->interpolated()) - 1;
 }
 
-Real jyExpectedIndexRatio(const boost::shared_ptr<CrossAssetModel>& model, Size index, Time S, Time T, bool indexIsInterpolated) {
+Real jyExpectedIndexRatio(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, Time S, Time T,
+                          bool indexIsInterpolated) {
 
     using namespace CrossAssetAnalytics;
     auto irIdx = model->ccyIndex(model->infjy(index)->currency());
@@ -91,13 +92,15 @@ Real jyExpectedIndexRatio(const boost::shared_ptr<CrossAssetModel>& model, Size 
     auto H_n_S = model->irlgm1f(irIdx)->H(S);
 
     auto c = H_r_S * rrParam->zeta(S);
-    c -= H_n_S * integral(model.get(), P(rzy(irIdx, index, 0), az(irIdx), ay(index)), 0.0, S);
-    c += integral(model.get(), LC(0.0, -1.0, P(ay(index), ay(index), Hy(index)),
-        1.0, P(rzy(irIdx, index, 0), az(irIdx), ay(index), Hz(irIdx)),
-        -1.0, P(ryy(index, index, 0, 1), ay(index), sy(index))), 0.0, S);
+    c -= H_n_S * integral(*model, P(rzy(irIdx, index, 0), az(irIdx), ay(index)), 0.0, S);
+    c += integral(*model,
+                  LC(0.0, -1.0, P(ay(index), ay(index), Hy(index)), 1.0,
+                     P(rzy(irIdx, index, 0), az(irIdx), ay(index), Hz(irIdx)), -1.0,
+                     P(ryy(index, index, 0, 1), ay(index), sy(index))),
+                  0.0, S);
     c *= (H_r_S - H_r_T);
 
     return growthRatio * exp(c);
 }
 
-}
+} // namespace QuantExt

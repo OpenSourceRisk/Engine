@@ -26,10 +26,26 @@ using namespace QuantLib;
 ConfigurableCurrency::ConfigurableCurrency(const std::string& name, const std::string& code, Integer numericCode,
                                            const std::string& symbol, const std::string& fractionSymbol,
                                            Integer fractionsPerUnit, const Rounding& rounding,
-                                           const std::string& formatString,
-                                           const std::set<std::string>& minorUnitCodes) {
-    data_ = boost::make_shared<Currency::Data>(name, code, numericCode, symbol, fractionSymbol, fractionsPerUnit,
+                                           const std::string& formatString, const std::set<std::string>& minorUnitCodes,
+                                           ConfigurableCurrency::Type currencyType)
+    : Currency(name, code, numericCode, symbol, fractionSymbol, fractionsPerUnit, rounding, formatString, Currency(),
+               minorUnitCodes),
+      currencyType_(currencyType) {
+    data_ = QuantLib::ext::make_shared<Currency::Data>(name, code, numericCode, symbol, fractionSymbol, fractionsPerUnit,
                                                rounding, formatString, Currency(), minorUnitCodes);
+}
+
+std::ostream& operator<<(std::ostream& os, ConfigurableCurrency::Type ccytype) {
+    switch (ccytype) {
+		case ConfigurableCurrency::Type::Major:
+			return os << "Major";
+        case ConfigurableCurrency::Type::Metal:
+            return os <<"Metal";
+        case ConfigurableCurrency::Type::Crypto:
+            return os << "Crypto";
+        default:
+            QL_FAIL("Unknown AssetClass");
+    }
 }
 
 } // namespace QuantExt

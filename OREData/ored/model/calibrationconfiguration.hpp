@@ -58,7 +58,7 @@ public:
         Currently, only boundary constraints are supported. If the parameter \name does not have a constraint, a 
         NoConstraint instance is returned.
     */
-    boost::shared_ptr<QuantLib::Constraint> constraint(const std::string& name) const;
+    QuantLib::ext::shared_ptr<QuantLib::Constraint> constraint(const std::string& name) const;
 
     /*! Return the boundaries for the parameter \p name.
 
@@ -75,7 +75,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 protected:

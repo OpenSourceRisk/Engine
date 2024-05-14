@@ -69,7 +69,7 @@ public:
 
     /*! Build QuantLib/QuantExt instrument, link pricing engine. If build() is called multiple times, reset() should
         be called between these calls. */
-    virtual void build(const boost::shared_ptr<EngineFactory>&) = 0;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) = 0;
 
     /*! Return the fixings that will be requested in order to price this Trade given the \p settlementDate.
 
@@ -81,7 +81,7 @@ public:
 
         \warning This method will return an empty map if the Trade has not been built.
     */
-    virtual std::map<std::string, std::set<QuantLib::Date>>
+    virtual std::map<std::string,  RequiredFixings::FixingDates>
     fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const {
         return requiredFixings_.fixingDatesIndices(settlementDate);
     }
@@ -90,14 +90,14 @@ public:
     const RequiredFixings& requiredFixings() const { return requiredFixings_; }
 
     virtual std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const {
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const {
         return {};
     }
 
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! Reset trade, clear all base class data. This does not reset accumulated timings for this trade.
@@ -118,7 +118,9 @@ public:
     string& id() { return id_; }
 
     //! Set the envelope with counterparty and portfolio info
-    Envelope& envelope() { return envelope_; }
+    void setEnvelope(const Envelope& envelope);
+
+    void setAdditionalData(const std::map<std::string, boost::any>& additionalData);
 
     //! Set the trade actions
     TradeActions& tradeActions() { return tradeActions_; }
@@ -136,7 +138,7 @@ public:
 
     const TradeActions& tradeActions() const { return tradeActions_; }
 
-    const boost::shared_ptr<InstrumentWrapper>& instrument() const { return instrument_; }
+    const QuantLib::ext::shared_ptr<InstrumentWrapper>& instrument() const { return instrument_; }
 
     const std::vector<QuantLib::Leg>& legs() const { return legs_; }
 
@@ -154,6 +156,8 @@ public:
 
     const Date& maturity() const { return maturity_; }
 
+    virtual bool isExpired(const Date& d) { return d >= maturity_; }
+
     const string& issuer() const { return issuer_; }
 
     //! returns any additional datum.
@@ -161,6 +165,9 @@ public:
     //! returns all additional data returned by the trade once built
     const virtual std::map<std::string,boost::any>& additionalData() const;
 
+    /*! returns the sensi template, e.g. "IR_Analytical" for this trade,
+        this is only available after build() has been called */
+    const std::string& sensitivityTemplate() const;
     //@}
 
     //! \name Utility
@@ -187,7 +194,7 @@ public:
 
 protected:
     string tradeType_; // class name of the derived class
-    boost::shared_ptr<InstrumentWrapper> instrument_;
+    QuantLib::ext::shared_ptr<InstrumentWrapper> instrument_;
     std::vector<QuantLib::Leg> legs_;
     std::vector<string> legCurrencies_;
     std::vector<bool> legPayers_;
@@ -196,6 +203,8 @@ protected:
     string notionalCurrency_;
     Date maturity_;
     string issuer_;
+    string sensitivityTemplate_;
+    bool sensitivityTemplateSet_ = false;
 
     std::size_t savedNumberOfPricings_ = 0;
     boost::timer::nanosecond_type savedCumulativePricingTime_ = 0;
@@ -206,9 +215,9 @@ protected:
     // into the InstrumentWrapper. This utility creates the additional instrument. The actual insertion into the
     // instrument wrapper is done in the individual trade builders when they instantiate the InstrumentWrapper.
     // The returned date is the latest premium payment date added.
-    Date addPremiums(std::vector<boost::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
+    Date addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
                      const Real tradeMultiplier, const PremiumData& premiumData, const Real premiumMultiplier,
-                     const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
+                     const Currency& tradeCurrency, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
                      const string& configuration);
 
     RequiredFixings requiredFixings_;
@@ -218,6 +227,10 @@ protected:
        as "legNo + 1", i.e. starting with 1 (1, 2, ...). The result leg id can be overwriten using the second
        parameter resultLegId. */
     void setLegBasedAdditionalData(const Size legNo, Size resultLegId = Null<Size>()) const;
+
+    /* sets the sensitivity template for this trade */
+    void setSensitivityTemplate(const EngineBuilder& builder);
+    void setSensitivityTemplate(const std::string& id);
 
 private:
     string id_;

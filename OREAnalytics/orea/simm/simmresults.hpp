@@ -37,12 +37,13 @@ namespace analytics {
 */
 class SimmResults {
 public:
-    typedef SimmConfiguration::ProductClass ProductClass;
+    typedef CrifRecord::ProductClass ProductClass;
     typedef SimmConfiguration::RiskClass RiskClass;
     typedef SimmConfiguration::MarginType MarginType;
     typedef std::tuple<ProductClass, RiskClass, MarginType, std::string> Key;
 
-    SimmResults(const std::string& ccy = "") : ccy_(ccy){};
+    SimmResults(const std::string& resultCcy = "", const std::string& calcCcy = "")
+        : resultCcy_(resultCcy), calcCcy_(calcCcy){};
 
     /*! Add initial margin value \p im to the results container for the given combination of
         SIMM <em>product class</em>, <em>risk class</em> and <em>margin type</em>
@@ -51,12 +52,15 @@ public:
                 overwritten if overwrite=true. Otherwise, the amounts are added together.
                 Can check this using the <code>has</code> method before adding.
     */
-    void add(const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
+    void add(const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
              const SimmConfiguration::MarginType& mt, const std::string& b, QuantLib::Real im,
+             const std::string& resultCurrency, const std::string& calculationCurrency, const bool overwrite);
+
+    void add(const Key& key, QuantLib::Real im, const std::string& resultCurrency,
              const std::string& calculationCurrency, const bool overwrite);
 
     //! Convert SIMM amounts to a different currency
-    void convert(const boost::shared_ptr<ore::data::Market>& market, const std::string& currency);
+    void convert(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const std::string& currency);
     void convert(QuantLib::Real fxSpot, const std::string& currency);
 
     /*! Get the initial margin value from the results container for the given combination of
@@ -66,13 +70,13 @@ public:
                  value in the results for the given combination. Can avoid this by first checking
                  the results using the <code>has</code> method.
     */
-    QuantLib::Real get(const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
+    QuantLib::Real get(const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
                        const SimmConfiguration::MarginType& mt, const std::string b) const;
 
     /*! Check if there is an initial margin value in the results container for the given combination of
         SIMM <em>product class</em>, <em>risk class</em> and <em>margin type</em>
     */
-    bool has(const SimmConfiguration::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
+    bool has(const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
              const SimmConfiguration::MarginType& mt, const std::string b) const;
 
     //! Return true if the container is empty, otherwise false
@@ -86,14 +90,18 @@ public:
     // allows to iterate over results cleanly. Would be better to subclass
     // std::iterator in this class.
     const std::map<Key, QuantLib::Real>& data() const { return data_; }
+    std::map<Key, QuantLib::Real>& data() { return data_; }
 
-    const std::string& currency() const { return ccy_; }
+    std::string& resultCurrency() { return resultCcy_; }
+    const std::string& resultCurrency() const { return resultCcy_; }
 
-    std::string& currency() { return ccy_; }
+    std::string& calculationCurrency() { return calcCcy_; }
+    const std::string& calculationCurrency() const { return calcCcy_; }
 
 private:
     std::map<Key, QuantLib::Real> data_;
-    std::string ccy_;
+    std::string resultCcy_;
+    std::string calcCcy_;
 };
 
 //! Enable writing of Key

@@ -47,24 +47,37 @@ class SensitivityScenarioData : public XMLSerializable {
 public:
     struct ShiftData {
         virtual ~ShiftData() {}
-        ShiftData() : shiftSize(0.0) {}
-        string shiftType;
-        Real shiftSize;
+
+        // default shift size, type (Absolute, Relative) and scheme (Forward, Backward, Central)
+        ShiftType shiftType = ShiftType::Absolute;
+        Real shiftSize = 0.0;
+        ShiftScheme shiftScheme = ShiftScheme::Forward;
+
+        // product specific shift size, type, scheme
+        map<string, ShiftType> keyedShiftType;
+        map<string, Real> keyedShiftSize;
+        map<string, ShiftScheme> keyedShiftScheme;
     };
 
     struct CurveShiftData : ShiftData {
+        CurveShiftData() : ShiftData() {}
+        CurveShiftData(const ShiftData& d) : ShiftData(d) {}
         virtual ~CurveShiftData() {}
         vector<Period> shiftTenors;
     };
 
-    struct SpotShiftData : ShiftData {};
+    using SpotShiftData = ShiftData;
 
     struct CdsVolShiftData : ShiftData {
+        CdsVolShiftData() : ShiftData() {}
+        CdsVolShiftData(const ShiftData& d) : ShiftData(d) {}
         string ccy;
         vector<Period> shiftExpiries;
     };
 
     struct BaseCorrelationShiftData : ShiftData {
+        BaseCorrelationShiftData() : ShiftData() {}
+        BaseCorrelationShiftData(const ShiftData& d) : ShiftData(d) {}
         vector<Period> shiftTerms;
         vector<Real> shiftLossLevels;
         string indexName;
@@ -72,26 +85,27 @@ public:
 
     struct VolShiftData : ShiftData {
         VolShiftData() : shiftStrikes({0.0}), isRelative(false) {}
+        VolShiftData(const ShiftData& d) : ShiftData(d), shiftStrikes({0.0}), isRelative(false) {}
         vector<Period> shiftExpiries;
         vector<Real> shiftStrikes;
         bool isRelative;
     };
 
     struct CapFloorVolShiftData : VolShiftData {
+        CapFloorVolShiftData() : VolShiftData() {}
+        CapFloorVolShiftData(const VolShiftData& d) : VolShiftData(d) {}
         string indexName;
     };
 
     struct GenericYieldVolShiftData : VolShiftData {
+        GenericYieldVolShiftData() : VolShiftData() {}
+        GenericYieldVolShiftData(const VolShiftData& d) : VolShiftData(d) {}
         vector<Period> shiftTerms;
     };
 
-    struct CurveShiftParData : SensitivityScenarioData::CurveShiftData {
-        CurveShiftParData(SensitivityScenarioData::CurveShiftData c) {
-            shiftType = c.shiftType;
-            shiftSize = c.shiftSize;
-            shiftTenors = c.shiftTenors;
-        }
-        CurveShiftParData() {}
+    struct CurveShiftParData : CurveShiftData {
+        CurveShiftParData() : CurveShiftData() {}
+        CurveShiftParData(const CurveShiftData& c) : CurveShiftData(c) {}
         vector<string> parInstruments;
         bool parInstrumentSingleCurve = true;
 
@@ -108,15 +122,9 @@ public:
         map<string, string> parInstrumentConventions;
     };
 
-    struct CapFloorVolShiftParData : SensitivityScenarioData::CapFloorVolShiftData {
-        CapFloorVolShiftParData(SensitivityScenarioData::CapFloorVolShiftData c) {
-            shiftType = c.shiftType;
-            shiftSize = c.shiftSize;
-            shiftExpiries = c.shiftExpiries;
-            shiftStrikes = c.shiftStrikes;
-            indexName = c.indexName;
-        }
-        CapFloorVolShiftParData() {}
+    struct CapFloorVolShiftParData : CapFloorVolShiftData {
+        CapFloorVolShiftParData() : CapFloorVolShiftData() {}
+        CapFloorVolShiftParData(const CapFloorVolShiftData& c) : CapFloorVolShiftData(c) {}
         vector<string> parInstruments;
         bool parInstrumentSingleCurve = true;
 
@@ -134,13 +142,13 @@ public:
 
     //! \name Inspectors
     //@{
-    const map<string, boost::shared_ptr<CurveShiftData>>& discountCurveShiftData() const {
+    const map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& discountCurveShiftData() const {
         return discountCurveShiftData_;
     }
-    const map<string, boost::shared_ptr<CurveShiftData>>& indexCurveShiftData() const { return indexCurveShiftData_; }
-    const map<string, boost::shared_ptr<CurveShiftData>>& yieldCurveShiftData() const { return yieldCurveShiftData_; }
+    const map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& indexCurveShiftData() const { return indexCurveShiftData_; }
+    const map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& yieldCurveShiftData() const { return yieldCurveShiftData_; }
     const map<string, SpotShiftData>& fxShiftData() const { return fxShiftData_; }
-    const map<string, boost::shared_ptr<CapFloorVolShiftData>>& capFloorVolShiftData() const {
+    const map<string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>>& capFloorVolShiftData() const {
         return capFloorVolShiftData_;
     }
     const map<string, GenericYieldVolShiftData>& swaptionVolShiftData() const { return swaptionVolShiftData_; }
@@ -148,27 +156,27 @@ public:
     const map<string, VolShiftData>& fxVolShiftData() const { return fxVolShiftData_; }
     const map<string, CdsVolShiftData>& cdsVolShiftData() const { return cdsVolShiftData_; }
     const map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() const { return baseCorrelationShiftData_; }
-    const map<string, boost::shared_ptr<CurveShiftData>>& zeroInflationCurveShiftData() const {
+    const map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& zeroInflationCurveShiftData() const {
         return zeroInflationCurveShiftData_;
     }
-    const map<string, boost::shared_ptr<CurveShiftData>>& yoyInflationCurveShiftData() const {
+    const map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& yoyInflationCurveShiftData() const {
         return yoyInflationCurveShiftData_;
     }
-    const map<string, boost::shared_ptr<CapFloorVolShiftData>>& yoyInflationCapFloorVolShiftData() const {
+    const map<string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>>& yoyInflationCapFloorVolShiftData() const {
         return yoyInflationCapFloorVolShiftData_;
     }
-    const map<string, boost::shared_ptr<CapFloorVolShiftData>>& zeroInflationCapFloorVolShiftData() const {
+    const map<string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>>& zeroInflationCapFloorVolShiftData() const {
         return zeroInflationCapFloorVolShiftData_;
     }
     const map<string, string>& creditCcys() const { return creditCcys_; }
-    const map<string, boost::shared_ptr<CurveShiftData>>& creditCurveShiftData() const { return creditCurveShiftData_; }
+    const map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& creditCurveShiftData() const { return creditCurveShiftData_; }
     const map<string, SpotShiftData>& equityShiftData() const { return equityShiftData_; }
     const map<string, VolShiftData>& equityVolShiftData() const { return equityVolShiftData_; }
-    const map<string, boost::shared_ptr<CurveShiftData>>& dividendYieldShiftData() const {
+    const map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& dividendYieldShiftData() const {
         return dividendYieldShiftData_;
     }
     const map<string, string>& commodityCurrencies() const { return commodityCurrencies_; }
-    const map<string, boost::shared_ptr<CurveShiftData>>& commodityCurveShiftData() const {
+    const map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& commodityCurveShiftData() const {
         return commodityCurveShiftData_;
     }
     const map<string, VolShiftData>& commodityVolShiftData() const { return commodityVolShiftData_; }
@@ -181,46 +189,39 @@ public:
 
     //! Give back the shift data for the given risk factor type, \p keyType, with the given \p name
     const ShiftData& shiftData(const ore::analytics::RiskFactorKey::KeyType& keyType, const std::string& name) const;
-
-    //! Check if a two sided delta has been configured for the given risk factor key type, \p keyType.
-    bool twoSidedDelta(const RiskFactorKey::KeyType& keyType) const;
-
-    //! Return the set of risk factor key types configured for two sided delta.
-    const std::set<RiskFactorKey::KeyType>& twoSidedDeltas() const { return twoSidedDeltas_; }
-
     //@}
 
     //! \name Setters
     //@{
     bool& parConversion() { return parConversion_; }
 
-    map<string, boost::shared_ptr<CurveShiftData>>& discountCurveShiftData() { return discountCurveShiftData_; }
-    map<string, boost::shared_ptr<CurveShiftData>>& indexCurveShiftData() { return indexCurveShiftData_; }
-    map<string, boost::shared_ptr<CurveShiftData>>& yieldCurveShiftData() { return yieldCurveShiftData_; }
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& discountCurveShiftData() { return discountCurveShiftData_; }
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& indexCurveShiftData() { return indexCurveShiftData_; }
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& yieldCurveShiftData() { return yieldCurveShiftData_; }
     map<string, SpotShiftData>& fxShiftData() { return fxShiftData_; }
     map<string, GenericYieldVolShiftData>& swaptionVolShiftData() { return swaptionVolShiftData_; }
     map<string, GenericYieldVolShiftData>& yieldVolShiftData() { return yieldVolShiftData_; }
-    map<string, boost::shared_ptr<CapFloorVolShiftData>>& capFloorVolShiftData() { return capFloorVolShiftData_; }
+    map<string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>>& capFloorVolShiftData() { return capFloorVolShiftData_; }
     map<string, VolShiftData>& fxVolShiftData() { return fxVolShiftData_; }
     map<string, CdsVolShiftData>& cdsVolShiftData() { return cdsVolShiftData_; }
     map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() { return baseCorrelationShiftData_; }
-    map<string, boost::shared_ptr<CurveShiftData>>& zeroInflationCurveShiftData() {
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& zeroInflationCurveShiftData() {
         return zeroInflationCurveShiftData_;
     }
     map<string, string>& creditCcys() { return creditCcys_; }
-    map<string, boost::shared_ptr<CurveShiftData>>& creditCurveShiftData() { return creditCurveShiftData_; }
-    map<string, boost::shared_ptr<CurveShiftData>>& yoyInflationCurveShiftData() { return yoyInflationCurveShiftData_; }
-    map<string, boost::shared_ptr<CapFloorVolShiftData>>& yoyInflationCapFloorVolShiftData() {
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& creditCurveShiftData() { return creditCurveShiftData_; }
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& yoyInflationCurveShiftData() { return yoyInflationCurveShiftData_; }
+    map<string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>>& yoyInflationCapFloorVolShiftData() {
         return yoyInflationCapFloorVolShiftData_;
     }
-    map<string, boost::shared_ptr<CapFloorVolShiftData>>& zeroInflationCapFloorVolShiftData() {
+    map<string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>>& zeroInflationCapFloorVolShiftData() {
         return zeroInflationCapFloorVolShiftData_;
     }
     map<string, SpotShiftData>& equityShiftData() { return equityShiftData_; }
-    map<string, boost::shared_ptr<CurveShiftData>>& dividendYieldShiftData() { return dividendYieldShiftData_; }
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& dividendYieldShiftData() { return dividendYieldShiftData_; }
     map<string, VolShiftData>& equityVolShiftData() { return equityVolShiftData_; }
     map<string, string>& commodityCurrencies() { return commodityCurrencies_; }
-    map<string, boost::shared_ptr<CurveShiftData>>& commodityCurveShiftData() { return commodityCurveShiftData_; }
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>>& commodityCurveShiftData() { return commodityCurveShiftData_; }
     map<string, VolShiftData>& commodityVolShiftData() { return commodityVolShiftData_; }
     map<string, VolShiftData>& correlationShiftData() { return correlationShiftData_; }
     map<string, SpotShiftData>& securityShiftData() { return securityShiftData_; }
@@ -228,14 +229,12 @@ public:
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
     bool& computeGamma() { return computeGamma_; }
     bool& useSpreadedTermStructures() { return useSpreadedTermStructures_; }
-
-    std::set<RiskFactorKey::KeyType>& twoSidedDeltas() { return twoSidedDeltas_; }
     //@}
 
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
     //! \name Equality Operators
@@ -261,28 +260,28 @@ protected:
     void volShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const VolShiftData& data) const;
     //@}
 
-    map<string, boost::shared_ptr<CurveShiftData>> discountCurveShiftData_;     // key: ccy
-    map<string, boost::shared_ptr<CurveShiftData>> indexCurveShiftData_;        // key: indexName
-    map<string, boost::shared_ptr<CurveShiftData>> yieldCurveShiftData_;        // key: yieldCurveName
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>> discountCurveShiftData_;     // key: ccy
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>> indexCurveShiftData_;        // key: indexName
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>> yieldCurveShiftData_;        // key: yieldCurveName
     map<string, SpotShiftData> fxShiftData_;                                    // key: ccy pair
-    map<string, boost::shared_ptr<CapFloorVolShiftData>> capFloorVolShiftData_; // key: ccy
+    map<string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>> capFloorVolShiftData_; // key: ccy
     map<string, GenericYieldVolShiftData> swaptionVolShiftData_;                // key: ccy
     map<string, GenericYieldVolShiftData> yieldVolShiftData_;                   // key: securityId
     map<string, VolShiftData> fxVolShiftData_;                                  // key: ccy pair
     map<string, CdsVolShiftData> cdsVolShiftData_;                              // key: ccy pair
     map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;
-    map<string, boost::shared_ptr<CurveShiftData>> zeroInflationCurveShiftData_; // key: inflation index name
-    map<string, boost::shared_ptr<CurveShiftData>> yoyInflationCurveShiftData_;  // key: yoy inflation index name
-    map<string, boost::shared_ptr<CapFloorVolShiftData>> yoyInflationCapFloorVolShiftData_; // key: inflation index name
-    map<string, boost::shared_ptr<CapFloorVolShiftData>>
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>> zeroInflationCurveShiftData_; // key: inflation index name
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>> yoyInflationCurveShiftData_;  // key: yoy inflation index name
+    map<string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>> yoyInflationCapFloorVolShiftData_; // key: inflation index name
+    map<string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>>
         zeroInflationCapFloorVolShiftData_; // key: inflation index name
     map<string, string> creditCcys_;
-    map<string, boost::shared_ptr<CurveShiftData>> creditCurveShiftData_;   // key: credit name
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>> creditCurveShiftData_;   // key: credit name
     map<string, SpotShiftData> equityShiftData_;                            // key: equity name
     map<string, VolShiftData> equityVolShiftData_;                          // key: equity name
-    map<string, boost::shared_ptr<CurveShiftData>> dividendYieldShiftData_; // key: equity name
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>> dividendYieldShiftData_; // key: equity name
     map<string, std::string> commodityCurrencies_;
-    map<string, boost::shared_ptr<CurveShiftData>> commodityCurveShiftData_;
+    map<string, QuantLib::ext::shared_ptr<CurveShiftData>> commodityCurveShiftData_;
     map<string, VolShiftData> correlationShiftData_;
     map<string, VolShiftData> commodityVolShiftData_;
     map<string, SpotShiftData> securityShiftData_; // key: security name
@@ -292,15 +291,15 @@ protected:
     bool useSpreadedTermStructures_;
     bool parConversion_;
 
-    /*! Set of risk factor keys for which a two sided delta has been configured.
-    */
-    std::set<RiskFactorKey::KeyType> twoSidedDeltas_;
-
 private:
     void parDataFromXML(XMLNode* child, CurveShiftParData& data);
 
     //! toXML helper method
-    XMLNode* parDataToXML(ore::data::XMLDocument& doc, const boost::shared_ptr<CurveShiftData>& csd) const;
+    XMLNode* parDataToXML(ore::data::XMLDocument& doc, const QuantLib::ext::shared_ptr<CurveShiftData>& csd) const;
 };
+
+// Utility to extract the set of keys that are used in a sensi config to qualiffy shift specs
+std::set<std::string> getShiftSpecKeys(const SensitivityScenarioData& d);
+
 } // namespace analytics
 } // namespace ore

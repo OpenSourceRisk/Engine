@@ -111,9 +111,9 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
     /* Create the interpolation object */
 
     if (smileInterpolation_ == BlackVolatilitySurfaceBFRR::SmileInterpolation::Linear) {
-        interpolation_ = boost::make_shared<LinearInterpolation>(x_.begin(), x_.end(), y_.begin());
+        interpolation_ = QuantLib::ext::make_shared<LinearInterpolation>(x_.begin(), x_.end(), y_.begin());
     } else if (smileInterpolation_ == BlackVolatilitySurfaceBFRR::SmileInterpolation::Cubic) {
-        interpolation_ = boost::make_shared<CubicInterpolation>(
+        interpolation_ = QuantLib::ext::make_shared<CubicInterpolation>(
             x_.begin(), x_.end(), y_.begin(), CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative,
             0.0, CubicInterpolation::SecondDerivative, 0.0);
     } else {
@@ -176,8 +176,11 @@ Real SimpleDeltaInterpolatedSmile::atmStrike(const DeltaVolQuote::DeltaType dt, 
     return result;
 }
 
-Real SimpleDeltaInterpolatedSmile::volatilityAtSimpleDelta(const Real tnp) {
-    return untransformVol((*interpolation_)(tnp));
+Real SimpleDeltaInterpolatedSmile::volatilityAtSimpleDelta(const Real simpleDelta) {
+    Real tmp = untransformVol((*interpolation_)(simpleDelta));
+    QL_REQUIRE(std::isfinite(tmp), "SimpleDeltaInterpolatedSmile::volatilityAtSimpleDelta() non-finite result ("
+                                       << tmp << ") for simple delta " << simpleDelta);
+    return tmp;
 }
 
 Real SimpleDeltaInterpolatedSmile::volatility(const Real strike) {
@@ -202,7 +205,7 @@ Real SimpleDeltaInterpolatedSmile::simpleDeltaFromStrike(const Real strike) cons
     return Phi(std::log(strike / forward_) / (atmVol_ * std::sqrt(expiryTime_)));
 }
 
-boost::shared_ptr<SimpleDeltaInterpolatedSmile>
+QuantLib::ext::shared_ptr<SimpleDeltaInterpolatedSmile>
 createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real expiryTime,
             const std::vector<Real>& deltas, const std::vector<Real>& bfQuotes, const std::vector<Real>& rrQuotes,
             const Real atmVol, const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at,
@@ -210,6 +213,7 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
             const BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation) {
 
     Real phirr = riskReversalInFavorOf == Option::Call ? 1.0 : -1.0;
+    QuantLib::ext::shared_ptr<SimpleDeltaInterpolatedSmile> resultSmile;
 
     if (!butterflyIsBrokerStyle) {
 
@@ -228,8 +232,8 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
 
         // ... and set up the interpolated smile
 
-        return boost::make_shared<SimpleDeltaInterpolatedSmile>(spot, domDisc, forDisc, expiryTime, deltas, vol_p,
-                                                                vol_c, atmVol, dt, at, smileInterpolation);
+        resultSmile = QuantLib::ext::make_shared<SimpleDeltaInterpolatedSmile>(
+            spot, domDisc, forDisc, expiryTime, deltas, vol_p, vol_c, atmVol, dt, at, smileInterpolation);
 
     } else {
 
@@ -281,7 +285,7 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
             BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation;
 
             mutable Real bestValue = QL_MAX_REAL;
-            mutable boost::shared_ptr<SimpleDeltaInterpolatedSmile> bestSmile;
+            mutable QuantLib::ext::shared_ptr<SimpleDeltaInterpolatedSmile> bestSmile;
 
             Array values(const Array& x) const override {
 
@@ -306,9 +310,9 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
 
                 // ... set up the interpolated smile ...
 
-                boost::shared_ptr<SimpleDeltaInterpolatedSmile> tmpSmile;
+                QuantLib::ext::shared_ptr<SimpleDeltaInterpolatedSmile> tmpSmile;
                 try {
-                    tmpSmile = boost::make_shared<SimpleDeltaInterpolatedSmile>(
+                    tmpSmile = QuantLib::ext::make_shared<SimpleDeltaInterpolatedSmile>(
                         spot, domDisc, forDisc, expiryTime, deltas, vol_p, vol_c, atmVol, dt, at, smileInterpolation);
                 } catch (...) {
                     // if we run into a problem we return max error and continue with the optimization
@@ -365,8 +369,20 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
                                                         << expiryTime << " failed: target function value ("
                                                         << problem.functionValue() << ") not close to zero");
 
-        return targetFunction.bestSmile;
+        resultSmile = targetFunction.bestSmile;
     }
+
+    // sanity check of result smile before return it
+
+    static const std::vector<Real> samplePoints = {0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.99};
+    for (auto const& simpleDelta : samplePoints) {
+        Real vol = resultSmile->volatilityAtSimpleDelta(simpleDelta);
+        QL_REQUIRE(vol > 0.0001 && vol < 5.0, "createSmile at expiry " << expiryTime << ": volatility at simple delta "
+                                                                       << simpleDelta << " (" << vol
+                                                                       << ") is not plausible.");
+    }
+
+    return resultSmile;
 }
 
 } // namespace detail
@@ -685,10 +701,10 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
         but the best we can realistically do in this context, because we don't have a date
         corresponding to t) */
 
-    boost::shared_ptr<detail::SimpleDeltaInterpolatedSmile> smile;
+    QuantLib::ext::shared_ptr<detail::SimpleDeltaInterpolatedSmile> smile;
 
     try {
-        smile = boost::make_shared<detail::SimpleDeltaInterpolatedSmile>(
+        smile = QuantLib::ext::make_shared<detail::SimpleDeltaInterpolatedSmile>(
             spot_->value(), domesticTS_->discount(t + settlLag_) / settlDomDisc_,
             foreignTS_->discount(t + settlLag_) / settlForDisc_, t, currentDeltas_, putVols_i, callVols_i, atmVol_i,
             dt_c, at_c, smileInterpolation_);

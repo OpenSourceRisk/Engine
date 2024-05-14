@@ -8,7 +8,25 @@ from ore_examples_helper import OreExample
 
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
-# whithout collateral
+# Run quick example with 0 IAH
+oreex.print_headline("Run ORE to produce NPV cube and exposures, with IAH=0")
+oreex.run("Input/ore_iah_0.xml")
+
+# Re-run with IAH=1m
+oreex.print_headline("Run ORE to postprocess the NPV cube, with IAH=1m")
+oreex.run("Input/ore_iah_1.xml")
+
+# Plot IAH results 
+oreex.print_headline("Plot IAH results")
+oreex.setup_plot("Exposures_IAH")
+oreex.plot("collateral_iah_0/exposure_nettingset_CPTY_A.csv", 2, 3, 'b', "EPE IAH=0")
+oreex.plot("collateral_iah_1/exposure_nettingset_CPTY_A.csv", 2, 3, 'g', "EPE IAH=1m")
+oreex.plot("collateral_iah_0/exposure_nettingset_CPTY_A.csv", 2, 5, 'r', "PFE IAH=0")
+oreex.plot("collateral_iah_1/exposure_nettingset_CPTY_A.csv", 2, 5, 'y', "PFE IAH=1m")
+oreex.decorate_plot(title="IAH Example")
+oreex.save_plot_to_file()
+
+# Run time-consuming example whithout collateral
 oreex.print_headline("Run ORE to produce NPV cube and exposures, without collateral")
 oreex.run("Input/ore.xml")
 oreex.get_times("Output/log.txt")

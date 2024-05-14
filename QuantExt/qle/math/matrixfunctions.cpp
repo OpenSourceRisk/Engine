@@ -23,11 +23,13 @@
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-conversion"
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
 #include <unsupported/Eigen/MatrixFunctions>
 
 #if defined(__GNUC__)
+#pragma GCC diagnostic pop
 #pragma GCC diagnostic pop
 #endif
 
@@ -69,7 +71,7 @@ QuantLib::Matrix Expm(const QuantLib::Matrix& m) {
 
 #else
 
-#include <ql/experimental/math/expm.hpp>
+#include <ql/math/matrixutilities/expm.hpp>
 
 namespace QuantExt {
 

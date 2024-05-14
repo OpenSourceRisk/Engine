@@ -24,6 +24,7 @@
 #define quantext_commodity_cash_flow_hpp
 
 #include <ql/cashflow.hpp>
+#include <ql/patterns/visitor.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
@@ -93,6 +94,11 @@ public:
     virtual QuantLib::Real periodQuantity() const = 0;
     // Return the price fixing
     virtual QuantLib::Real fixing() const = 0;
+
+    //! \name Visitability
+    //@{
+    void accept(QuantLib::AcyclicVisitor& v) override;
+    //@}
 
 protected:
     QuantLib::Real quantity_;

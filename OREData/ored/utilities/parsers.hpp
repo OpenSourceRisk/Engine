@@ -28,11 +28,21 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/portfolio/types.hpp>
 #include <ored/utilities/log.hpp>
+
+#include <qle/cashflows/commoditycashflow.hpp>
+#include <qle/currencies/configurablecurrency.hpp>
+#include <qle/indexes/bondindex.hpp>
+#include <qle/instruments/cdsoption.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/models/crossassetmodel.hpp>
+#include <qle/pricingengines/mcmultilegbaseengine.hpp>
+#include <qle/termstructures/sabrparametricvolatility.hpp>
+
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
-#include <ql/experimental/barrieroption/doublebarriertype.hpp>
+#include <ql/instruments/doublebarriertype.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/instruments/averagetype.hpp>
 #include <ql/instruments/barriertype.hpp>
@@ -53,13 +63,6 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
-#include <qle/cashflows/commoditycashflow.hpp>
-#include <qle/currencies/configurablecurrency.hpp>
-#include <qle/indexes/bondindex.hpp>
-#include <qle/instruments/cdsoption.hpp>
-#include <qle/methods/multipathgeneratorbase.hpp>
-#include <qle/models/crossassetmodel.hpp>
-
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/variant.hpp>
@@ -79,6 +82,12 @@ QuantLib::Date parseDate(const string& s);
   \ingroup utilities
 */
 QuantLib::Real parseReal(const string& s);
+
+//! Convert text to Real, empty string to Null<Real>()
+/*!
+  \ingroup utilities
+*/
+Real parseRealOrNull(const string& s);
 
 //! Attempt to convert text to Real
 /*! Attempts to convert text to Real
@@ -140,6 +149,12 @@ QuantLib::DayCounter parseDayCounter(const string& s);
  */
 QuantLib::Currency parseCurrency(const string& s);
 
+//! Convert text to QuantExt::ConfigurableCurrency::Type (Major, Minor, Metal, Crypto)
+/*!
+  \ingroup utilities
+ */
+QuantExt::ConfigurableCurrency::Type parseCurrencyType(const string& s);
+
 //! Convert text to QuantLib::Currency for minor currencies e.g GBp -> GBPCurrency()
 /*!
   \ingroup utilities
@@ -151,6 +166,12 @@ QuantLib::Currency parseMinorCurrency(const string& s);
   \ingroup utilities
  */
 QuantLib::Currency parseCurrencyWithMinors(const string& s);
+
+//! Convert text to std::pair<QuantLib::Currency, QuantLib::Currency>
+/*!
+  \ingroup utilities
+ */
+std::pair<QuantLib::Currency, QuantLib::Currency> parseCurrencyPair(const string& s, const string& delimiters);
 
 //! check for vaid currency code, including minors and pseudo currencies
 /*!
@@ -259,6 +280,12 @@ void parseDateOrPeriod(const string& s, QuantLib::Date& d, QuantLib::Period& p, 
 \ingroup utilities
 */
 QuantLib::LsmBasisSystem::PolynomialType parsePolynomType(const std::string& s);
+
+//! Write QuantLib::LsmBasisSystem::PolynomialType to stream
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, QuantLib::LsmBasisSystem::PolynomialType a);
 
 //! Convert text to QuantLib::SobolBrownianGenerator::Ordering
 /*!
@@ -397,7 +424,7 @@ QuantLib::DoubleBarrier::Type parseDoubleBarrierType(const string& s);
 
     \ingroup utilities
 */
-template <class T> bool tryParse(const std::string& str, T& obj, std::function<T(std::string)> parser) {
+template <class T> bool tryParse(const std::string& str, T& obj, std::function<T(const std::string&)> parser) {
     DLOG("tryParse: attempting to parse " << str);
     try {
         obj = parser(str);
@@ -551,6 +578,44 @@ std::ostream& operator<<(std::ostream& os, const CreditPortfolioSensitivityDecom
 \ingroup utilities
 */
 QuantLib::Pillar::Choice parsePillarChoice(const std::string& s);
+
+//! Convert text to QuantExt::McMultiLegBaseEngine::RegressorModel
+/*!
+\ingroup utilities
+*/
+QuantExt::McMultiLegBaseEngine::RegressorModel parseRegressorModel(const std::string& s);
+
+enum MporCashFlowMode { Unspecified, NonePay, BothPay, WePay, TheyPay };
+
+//! Convert text to MporCashFlowMode
+/*!
+\ingroup utilities
+*/
+MporCashFlowMode parseMporCashFlowMode(const std::string& s);
+
+//! Write MporCashFlowMode to stream
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, MporCashFlowMode t);
+
+//! Parse SabrParametricVolatility::ModelVariant
+/*!
+\ingroup utilities
+*/
+QuantExt::SabrParametricVolatility::ModelVariant parseSabrParametricVolatilityModelVariant(const std::string& s);
+
+//! Write SabrParametricVolatility::ModelVariant
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& out, QuantExt::SabrParametricVolatility::ModelVariant m);
+
+//! Write QuantLib::Exercise::Type
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, QuantLib::Exercise::Type type);
 
 } // namespace data
 } // namespace ore

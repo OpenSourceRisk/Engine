@@ -116,7 +116,7 @@ void CommodityIndexedCashFlow::accept(AcyclicVisitor& v) {
     if (Visitor<CommodityIndexedCashFlow>* v1 = dynamic_cast<Visitor<CommodityIndexedCashFlow>*>(&v))
         v1->visit(*this);
     else
-        CashFlow::accept(v);
+        CommodityCashFlow::accept(v);
 }
 
 void CommodityIndexedCashFlow::setPeriodQuantity(Real periodQuantity) { periodQuantity_ = periodQuantity; }

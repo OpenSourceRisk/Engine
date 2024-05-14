@@ -34,12 +34,17 @@ using std::string;
 namespace ore {
 namespace analytics {
 
-ZeroToParCube::ZeroToParCube(const boost::shared_ptr<SensitivityCube>& zeroCube,
-                             const boost::shared_ptr<ParSensitivityConverter>& parConverter,
-                             const set<RiskFactorKey::KeyType>& typesDisabled,
-                             const bool continueOnError)
-    : zeroCube_(zeroCube), parConverter_(parConverter), typesDisabled_(typesDisabled),
-    continueOnError_(continueOnError) {
+ZeroToParCube::ZeroToParCube(const QuantLib::ext::shared_ptr<SensitivityCube>& zeroCube,
+                             const QuantLib::ext::shared_ptr<ParSensitivityConverter>& parConverter,
+                             const set<RiskFactorKey::KeyType>& typesDisabled, const bool continueOnError)
+    : ZeroToParCube(std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>{zeroCube}, parConverter, typesDisabled,
+                    continueOnError) {}
+
+ZeroToParCube::ZeroToParCube(const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& zeroCubes,
+                             const QuantLib::ext::shared_ptr<ParSensitivityConverter>& parConverter,
+                             const set<RiskFactorKey::KeyType>& typesDisabled, const bool continueOnError)
+    : zeroCubes_(zeroCubes), parConverter_(parConverter), typesDisabled_(typesDisabled),
+      continueOnError_(continueOnError) {
 
     Size counter = 0;
     for (auto const& k : parConverter_->rawKeys()) {
@@ -47,7 +52,7 @@ ZeroToParCube::ZeroToParCube(const boost::shared_ptr<SensitivityCube>& zeroCube,
     }
 }
 
-map<RiskFactorKey, Real> ZeroToParCube::parDeltas(QuantLib::Size tradeIdx) const {
+map<RiskFactorKey, Real> ZeroToParCube::parDeltas(QuantLib::Size cubeIdx, QuantLib::Size tradeIdx) const {
 
     DLOG("Calculating par deltas for trade index " << tradeIdx);
 
@@ -55,29 +60,35 @@ map<RiskFactorKey, Real> ZeroToParCube::parDeltas(QuantLib::Size tradeIdx) const
 
     // Get the "par-convertible" zero deltas
     boost::numeric::ublas::vector<Real> zeroDeltas(parConverter_->rawKeys().size(), 0.0);
-    const boost::shared_ptr<NPVSensiCube>& sensiCube = zeroCube_->npvCube();
 
+    QL_REQUIRE(cubeIdx < zeroCubes_.size(),
+               "ZeroToParCube::parDeltas(): cubeIdx (" << cubeIdx << ") out of range 0..." << (zeroCubes_.size() - 1));
+
+    const QuantLib::ext::shared_ptr<SensitivityCube>& zeroCube = zeroCubes_[cubeIdx];
+    const QuantLib::ext::shared_ptr<NPVSensiCube>& sensiCube = zeroCube->npvCube();
+
+    std::set<RiskFactorKey> rkeys;
     for (auto const& kv : sensiCube->getTradeNPVs(tradeIdx)) {
-        auto factor = zeroCube_->upFactor(kv.first);
-        // index might not belong to an up/down scenario
-        if (factor.keytype != RiskFactorKey::KeyType::None) {
-            auto it = factorToIndex_.find(factor);
-            if (it == factorToIndex_.end()) {
-                if (ParSensitivityAnalysis::isParType(factor.keytype) && typesDisabled_.count(factor.keytype) != 1) {
-                    if (continueOnError_) {
-                        ALOG(StructuredAnalyticsErrorMessage("Par conversion", "", "Par factor " + ore::data::to_string(factor) + " not found in factorToIndex map"));
-                    } else {
-                        QL_REQUIRE(!ParSensitivityAnalysis::isParType(factor.keytype) ||
-                                typesDisabled_.count(factor.keytype) == 1,
-                                "ZeroToParCube::parDeltas(): par factor " << factor << " not found in factorToIndex map");
-                    }
+        if (auto k = zeroCube->upDownFactor(kv.first); k.keytype != RiskFactorKey::KeyType::None)
+            rkeys.insert(k);
+    }
+
+    for (auto const& rk : rkeys) {
+        auto it = factorToIndex_.find(rk);
+        if (it == factorToIndex_.end()) {
+            if (ParSensitivityAnalysis::isParType(rk.keytype) && typesDisabled_.count(rk.keytype) != 1) {
+                if (continueOnError_) {
+                    StructuredAnalyticsErrorMessage("Par conversion", "",
+                                                    "Par factor " + ore::data::to_string(rk) +
+                                                        " not found in factorToIndex map")
+                        .log();
+                } else {
+                    QL_REQUIRE(!ParSensitivityAnalysis::isParType(rk.keytype) || typesDisabled_.count(rk.keytype) == 1,
+                               "ZeroToParCube::parDeltas(): par factor " << rk << " not found in factorToIndex map");
                 }
-            } else if (!zeroCube_->twoSidedDelta(factor.keytype)) {
-                zeroDeltas[it->second] = zeroCube_->delta(tradeIdx, kv.first);
-            } else {
-                Size downIdx = zeroCube_->downFactors().at(factor).index;
-                zeroDeltas[it->second] = zeroCube_->delta(tradeIdx, kv.first, downIdx);
             }
+        } else {
+            zeroDeltas[it->second] = zeroCube->delta(tradeIdx, rk);
         }
     }
 
@@ -92,22 +103,16 @@ map<RiskFactorKey, Real> ZeroToParCube::parDeltas(QuantLib::Size tradeIdx) const
     }
 
     // Add non-zero deltas that do not need to be converted from underlying zero cube
-    for (const auto& key : zeroCube_->upFactors()) {
-        if (!ParSensitivityAnalysis::isParType(key.first.keytype) || typesDisabled_.count(key.first.keytype) == 1) {
-            Real delta = 0.0;
-            if (!zeroCube_->twoSidedDelta(key.first.keytype)) {
-                delta = zeroCube_->delta(tradeIdx, key.second.index);
-            } else {
-                Size downIdx = zeroCube_->downFactors().at(key.first).index;
-                delta = zeroCube_->delta(tradeIdx, key.second.index, downIdx);
-            }
+    for (const auto& f : rkeys) {
+        if (!ParSensitivityAnalysis::isParType(f.keytype) || typesDisabled_.count(f.keytype) == 1) {
+            Real delta = zeroCube->delta(tradeIdx, f);
             if (!close(delta, 0.0)) {
-                result[key.first] = delta;
+                result[f] = delta;
             }
         }
     }
 
-    DLOG("Finished calculating par deltas for trade index " << tradeIdx);
+    DLOG("Finished calculating par deltas for cube index " << cubeIdx << ", trade index " << tradeIdx);
 
     return result;
 }
@@ -116,7 +121,20 @@ map<RiskFactorKey, Real> ZeroToParCube::parDeltas(const string& tradeId) const {
 
     DLOG("Calculating par deltas for trade " << tradeId);
     map<RiskFactorKey, Real> result;
-    result = parDeltas(zeroCube_->npvCube()->getTradeIndex(tradeId));
+
+    Size cubeIdx;
+    Size tradeIdx = Null<Size>();
+    for (cubeIdx = 0; cubeIdx < zeroCubes_.size() && tradeIdx == Null<Size>(); ++cubeIdx) {
+        try {
+            tradeIdx = zeroCubes_[cubeIdx]->npvCube()->getTradeIndex(tradeId);
+            break;
+        } catch (...) {
+        }
+    }
+    QL_REQUIRE(tradeIdx != Null<Size>(), "ZeroToParCube::parDeltas(): tradeId '"
+                                             << tradeId << "' not found in " << zeroCubes_.size() << " zero cubes.");
+
+    result = parDeltas(cubeIdx, tradeIdx);
 
     DLOG("Finished calculating par deltas for trade " << tradeId);
 

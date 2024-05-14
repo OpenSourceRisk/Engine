@@ -1,0 +1,8 @@
+{ "@timestamp": "2024-02-06T18:33:31.365396", "key": "Running XVA Analytic", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-02-06T18:33:31.366397", "key": "XVA: Build Today's Market", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-02-06T18:33:31.771390", "key": "XVA: Build Today's Market", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-02-06T18:33:31.801389", "key": "XVA: Build Portfolio", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-02-06T18:33:31.803388", "key": "XVA: Build Portfolio", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-02-06T18:33:32.525372", "detail": "1 trade, 1 sample", "key": "XVA: Building cube", "progress": 0, "total": 1 }
+{ "@timestamp": "2024-02-06T18:33:32.529374", "detail": "1 trade, 1 sample", "key": "XVA: Building cube", "progress": 1, "total": 1 }
+{ "@timestamp": "2024-02-06T18:33:32.839366", "key": "Running XVA Analytic", "progress": 1, "total": 1 }

@@ -76,7 +76,7 @@ void EngineData::fromXML(XMLNode* root) {
     }
 }
 
-XMLNode* EngineData::toXML(XMLDocument& doc) {
+XMLNode* EngineData::toXML(XMLDocument& doc) const {
 
     XMLNode* pricingEnginesNode = doc.allocNode("PricingEngines");
 
@@ -93,19 +93,19 @@ XMLNode* EngineData::toXML(XMLDocument& doc) {
 
         XMLNode* productNode = XMLUtils::addChild(doc, pricingEnginesNode, "Product");
         XMLUtils::addAttribute(doc, productNode, "type", modelIterator->first);
-
-        XMLUtils::addChild(doc, productNode, "Model", model_[modelIterator->first]);
-        XMLUtils::addChild(doc, productNode, "Engine", engine_[modelIterator->first]);
+        auto engineIterator = engine_.find(modelIterator->first);
+        XMLUtils::addChild(doc, productNode, "Model", modelIterator->second);
+        XMLUtils::addChild(doc, productNode, "Engine", engineIterator->second);
         XMLNode* modelParametersNode = XMLUtils::addChild(doc, productNode, "ModelParameters");
-        for (auto modelParamsIterator = modelParams_[modelIterator->first].begin();
-             modelParamsIterator != modelParams_[modelIterator->first].end(); modelParamsIterator++) {
+        for (auto modelParamsIterator = modelParams_.find(modelIterator->first)->second.begin();
+             modelParamsIterator != modelParams_.find(modelIterator->first)->second.end(); modelParamsIterator++) {
             XMLNode* parameterNode = doc.allocNode("Parameter", modelParamsIterator->second);
             XMLUtils::appendNode(modelParametersNode, parameterNode);
             XMLUtils::addAttribute(doc, parameterNode, "name", modelParamsIterator->first);
         }
         XMLNode* engineParametersNode = XMLUtils::addChild(doc, productNode, "EngineParameters");
-        for (auto engineParamsIterator = engineParams_[modelIterator->first].begin();
-             engineParamsIterator != engineParams_[modelIterator->first].end(); engineParamsIterator++) {
+        for (auto engineParamsIterator = engineParams_.find(modelIterator->first)->second.begin();
+             engineParamsIterator != engineParams_.find(modelIterator->first)->second.end(); engineParamsIterator++) {
             XMLNode* parameterNode = doc.allocNode("Parameter", engineParamsIterator->second);
             XMLUtils::appendNode(engineParametersNode, parameterNode);
             XMLUtils::addAttribute(doc, parameterNode, "name", engineParamsIterator->first);

@@ -17,6 +17,7 @@ sensitivityanalysis.cpp
 sensitivityanalysisanalytic.cpp
 sensitivityperformance.cpp
 sensitivityperformanceplus.cpp
+sensitivityvsanalytic.cpp
 shiftscenariogenerator.cpp
 simulationmeasures.cpp
 stresstest.cpp
@@ -37,4 +38,5 @@ add_test(NAME orea-test-suite WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} COMMAN
 install(TARGETS orea-test-suite
         RUNTIME DESTINATION bin
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        OPTIONAL
         )

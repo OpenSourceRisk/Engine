@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/engine/varcalculator.hpp>
@@ -46,8 +47,6 @@ namespace analytics {
 using QuantLib::Array;
 using QuantLib::Matrix;
 
-typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
-
 class HistoricalSimulationVarCalculator : public VarCalculator {
 public:
     HistoricalSimulationVarCalculator(const std::vector<QuantLib::Real>& pnls) : pnls_(pnls) {}
@@ -57,6 +56,30 @@ public:
 
 private:
     const std::vector<QuantLib::Real>& pnls_;
+};
+
+//! HistoricalSimulation VaR Calculator
+/*! This class takes sensitivity data and a covariance matrix as an input and computes a Historical Simulation value at risk. The
+ * output can be broken down by portfolios, risk classes (IR, FX, EQ, ...) and risk types (delta-gamma, vega, ...). */
+class HistoricalSimulationVarReport : public VarReport {
+public:
+    virtual ~HistoricalSimulationVarReport() {}
+
+    HistoricalSimulationVarReport(const std::string& baseCurrency,
+                                  const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                                  const std::string& portfolioFilter, 
+        const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
+        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr, 
+        std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, const bool breakdown = false);
+
+protected:
+    void createVarCalculator() override;
+    void handleFullRevalResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
+        const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup, 
+        const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
+
+private:
+    std::vector<QuantLib::Real> pnls_;
 };
 
 } // namespace analytics

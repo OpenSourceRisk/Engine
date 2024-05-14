@@ -30,6 +30,9 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                     </Floors>
                     <NakedOption>false</NakedOption>
                     <LocalCapFloor>false</LocalCapFloor>
+                    <HistoricalFixings>
+            			<Fixing fixingDate="2016-02-01">0.2</Fixing>
+			        </HistoricalFixings>
                 </FloatingLegData>
 \end{minted}
 \caption{Floating leg data}
@@ -247,7 +250,7 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
 
 \item Caps [Optional]: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is
   capped at the given rate (after applying gearing and spread, if any). The mode of specification is analogous to
-  spreads, see above. Caps / Floors are supported for Ibor and compounded / averaged OIS coupons, but not for coupons
+  spreads, see above. Caps / Floors are supported for Ibor, SIFMA, compounded / averaged OIS coupons, but not for coupons
   with subperiods.
 
   For OIS coupons notice how the gearing $g$ and spread $s$ enter the calculation of the coupon amount $A$ dependent on
@@ -293,4 +296,15 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
 
  Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 
+\item \lstinline!FixingSchedule! [Optional]: This node allows for the specification of an explicit fixing schedule, see
+  \ref{ss:schedule_data}. Supported for underlying IBOR / term rate index. A given fixing will become effective as
+  specified by FixingDays relative to the fixing schedule or by an explicit ResetSchedule.
+
+\item \lstinline!ResetSchedule! [Optional]: This node allows for the specification of an explicit reset schedule, see
+  \ref{ss:schedule_data}, i.e. the dates on which fixings become effective. Supported for underlying IBOR / term rate
+  index. Can be given together with FixingSchedule or FixingDays. In the latter case, the fixing dates are derived from
+  the reset schedule.
+
+\item \lstinline!HistoricalFixings! [Optional]: This node allows for the specification of an custom trade specific fixings. Supported for underlying OIS / IBOR / term rate
+  index. If a historical fixing for date in the provided list is needed for pricing,  the custom fixings will be used instead of an exisiting global index fixings.
 \end{itemize}

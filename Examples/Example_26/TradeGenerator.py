@@ -232,24 +232,24 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
                 maturity = details [5]
                 convention = basisConventions[curve]
                 calendar = currency
-                shortPayTenor = convention.find("ShortPayTenor")
+                receiveFrequency = convention.find("ReceiveFrequency")
                 fixingDays = getFixingDaysForCCY(currency)
                 spotLag = fixingDays
                 if (payer):
-                    index = convention.find("ShortIndex").text
-                    if shortPayTenor is not None:
-                        tenor = shortPayTenor.text
+                    index = convention.find("ReceiveIndex").text
+                    if receiveFrequency is not None:
+                        tenor = receiveFrequency.text
                     else:
                         tenor = index.split("-")[2]
-                        shortPayTenor = tenor
+                        receiveFrequency = tenor
                     spread = marketData[tradeQuote]
                 else:
-                    index = convention.find("LongIndex").text
+                    index = convention.find("PayIndex").text
                     tenor = index.split("-")[2]
                     spread = "0"
 
-                if (shortPayTenor is not None) and payer:
-                    hasSubPeriods = "true" if shortPayTenor > tenor else "false"
+                if (receiveFrequency is not None) and payer:
+                    hasSubPeriods = "true" if receiveFrequency > tenor else "false"
                     subPeriodsCouponType =  convention.find("SubPeriodsCouponType").text \
                         if convention.find("SubPeriodsCouponType") is not None else "Compounding"
                     isAveraged = "true" if subPeriodsCouponType == "Average" else "false"
@@ -259,6 +259,7 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
         else:
             spotLag = details[3][0:-1]
             currency = details[2]
+            dayCounter = currencyDaycountConvention(currency)
             if tradeType == "Swap":
                 convention = swapConventions[curve]
                 calendar = convention.find("FixedCalendar").text
@@ -267,6 +268,8 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
             elif tradeType == "OIS":
                 if currency == "USD":
                     calendar = "US-FED"
+                if currency == "JPY":
+                    dayCounter = "A365F"
                 convention = oisConventions[curve]
                 rule = convention.find("Rule").text
                 spotLag = convention.find("SpotLag").text
@@ -279,7 +282,6 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
                 return False
             index = convention.find("Index").text
 
-            dayCounter = currencyDaycountConvention(currency)
             payer = True
 
             payConvention = convention.find("FixedConvention").text

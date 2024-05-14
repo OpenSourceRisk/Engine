@@ -33,7 +33,9 @@ void AnalyticEuropeanEngine::calculate() const {
     QuantLib::AnalyticEuropeanEngine::calculate();
 
     if (flipResults_) {
+
         // Invert strike, spot, forward
+
         auto resToInvert = vector<string>({"spot", "forward", "strike"});
         for (const string& res : resToInvert) {
             auto it = results_.additionalResults.find(res);
@@ -41,15 +43,19 @@ void AnalyticEuropeanEngine::calculate() const {
                 it->second = 1. / boost::any_cast<Real>(it->second);
         }
 
-        // Swap riskFreeDiscount/discountFactor and dividendDiscount
-        auto rfDiscountIt = results_.additionalResults.find("riskFreeDiscount");
-        auto divDiscountIt = results_.additionalResults.find("dividendDiscount");
-        if (rfDiscountIt != results_.additionalResults.end() && divDiscountIt != results_.additionalResults.end())
-            std::swap(rfDiscountIt->second, divDiscountIt->second);
+        // Swap riskFreeDiscount and dividendDiscount, discountFactor stays what it is
 
-        auto discFactorIt = results_.additionalResults.find("discountFactor");
-        if (rfDiscountIt != results_.additionalResults.end() && discFactorIt != results_.additionalResults.end())
-            discFactorIt->second = boost::any_cast<Real>(rfDiscountIt->second);
+        Real rfDiscount = Null<Real>();
+        Real divDiscount = Null<Real>();
+
+        if (auto tmp = results_.additionalResults.find("riskFreeDiscount"); tmp != results_.additionalResults.end())
+            rfDiscount = boost::any_cast<Real>(tmp->second);
+        if (auto tmp = results_.additionalResults.find("dividendDiscount"); tmp != results_.additionalResults.end())
+            divDiscount = boost::any_cast<Real>(tmp->second);
+
+       results_.additionalResults["riskFreeDiscount"] = divDiscount;
+       results_.additionalResults["dividendDiscount"] = rfDiscount;
+
     }
 }
 

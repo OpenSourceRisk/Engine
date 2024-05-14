@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(testGeneralAggregationSetCategories) {
     BOOST_TEST_MESSAGE("Testing general aggregation using sets of trades for categories");
 
     // Streamer
-    SensitivityInMemoryStream ss(records);
+    SensitivityInMemoryStream ss(records.begin(), records.end());
 
     // Categories for aggregator
     map<string, set<std::pair<std::string, QuantLib::Size>>> categories;
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(testGeneralAggregationFunctionCategories) {
     BOOST_TEST_MESSAGE("Testing general aggregation using functions for categories");
 
     // Streamer
-    SensitivityInMemoryStream ss(records);
+    SensitivityInMemoryStream ss(records.begin(), records.end());
 
     // Category functions for aggregator
     map<string, function<bool(string)>> categories;

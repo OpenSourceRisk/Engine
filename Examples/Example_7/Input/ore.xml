@@ -11,15 +11,15 @@
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
-    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
-    <Parameter name="fxcalibration">collateral_eur</Parameter>
-    <Parameter name="pricing">collateral_eur</Parameter>
-    <Parameter name="simulation">collateral_eur</Parameter>
+    <Parameter name="fxcalibration">xois_eur</Parameter>
+    <Parameter name="pricing">xois_eur</Parameter>
+    <Parameter name="simulation">xois_eur</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">

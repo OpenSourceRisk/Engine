@@ -107,7 +107,7 @@ public:
     */
     template <class I1, class I2, class Kernel>
     NadarayaWatson(const I1& xBegin, const I1& xEnd, const I2& yBegin, const Kernel& kernel) {
-        impl_ = boost::make_shared<detail::NadarayaWatsonImpl<I1, I2, Kernel> >(xBegin, xEnd, yBegin, kernel);
+        impl_ = QuantLib::ext::make_shared<detail::NadarayaWatsonImpl<I1, I2, Kernel> >(xBegin, xEnd, yBegin, kernel);
     }
 
     Real operator()(Real x) const { return impl_->value(x); }
@@ -115,7 +115,7 @@ public:
     Real standardDeviation(Real x) const { return impl_->standardDeviation(x); }
 
 private:
-    boost::shared_ptr<detail::RegressionImpl> impl_;
+    QuantLib::ext::shared_ptr<detail::RegressionImpl> impl_;
 };
 
 } // namespace QuantExt

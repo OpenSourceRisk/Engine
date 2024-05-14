@@ -40,8 +40,8 @@ public:
     //! Default constructor
     FxOption() : VanillaOptionTrade(AssetClass::FX) { tradeType_ = "FxOption"; }
     //! Constructor
-    FxOption(Envelope& env, OptionData option, string boughtCurrency, double boughtAmount, string soldCurrency,
-             double soldAmount, const std::string& fxIndex = "")
+    FxOption(const Envelope& env, const OptionData& option, const string& boughtCurrency, double boughtAmount,
+             const string& soldCurrency, double soldAmount, const std::string& fxIndex = "")
         : VanillaOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, boughtAmount,
                              TradeStrike(soldAmount / boughtAmount, soldCurrency)),
           fxIndex_(fxIndex) {
@@ -49,7 +49,7 @@ public:
     }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! \name Inspectors
     //@{
@@ -63,7 +63,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:

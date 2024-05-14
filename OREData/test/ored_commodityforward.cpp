@@ -51,15 +51,15 @@ public:
         Actual365Fixed dayCounter;
 
         // Add USD discount curve, discount = 1.0 everywhere
-        Handle<YieldTermStructure> discount(boost::make_shared<FlatForward>(asof_, 0.0, dayCounter));
+        Handle<YieldTermStructure> discount(QuantLib::ext::make_shared<FlatForward>(asof_, 0.0, dayCounter));
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = discount;
 
         // Add GOLD_USD price curve
         vector<Date> dates = {asof_, Date(19, Feb, 2019)};
         vector<Real> prices = {1346.0, 1348.0};
         Handle<PriceTermStructure> priceCurve(
-            boost::make_shared<InterpolatedPriceCurve<Linear>>(asof_, dates, prices, dayCounter, USDCurrency()));
-        Handle<CommodityIndex> commIdx(boost::make_shared<CommoditySpotIndex>("GOLD_USD", NullCalendar(), priceCurve));
+            QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear>>(asof_, dates, prices, dayCounter, USDCurrency()));
+        Handle<CommodityIndex> commIdx(QuantLib::ext::make_shared<CommoditySpotIndex>("GOLD_USD", NullCalendar(), priceCurve));
         commodityIndices_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = commIdx;
     }
 };
@@ -75,14 +75,14 @@ BOOST_AUTO_TEST_CASE(testCommodityForwardTradeBuilding) {
     BOOST_TEST_MESSAGE("Testing commodity forward trade building");
 
     // Create market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Settings::instance().evaluationDate() = market->asofDate();
 
     // Create engine factory
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("CommodityForward") = "DiscountedCashflows";
     engineData->engine("CommodityForward") = "DiscountingCommodityForwardEngine";
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // Base commodity values
     string position = "Long";
@@ -94,14 +94,14 @@ BOOST_AUTO_TEST_CASE(testCommodityForwardTradeBuilding) {
 
     // Test the building of a commodity forward doesn't throw
     Envelope envelope;
-    boost::shared_ptr<ore::data::CommodityForward> forward = boost::make_shared<ore::data::CommodityForward>(
+    QuantLib::ext::shared_ptr<ore::data::CommodityForward> forward = QuantLib::ext::make_shared<ore::data::CommodityForward>(
         envelope, position, commodityName, currency, quantity, maturity, strike);
     BOOST_CHECK_NO_THROW(forward->build(engineFactory));
 
     // Check the instrument was built as expected
-    boost::shared_ptr<Instrument> qlInstrument = forward->instrument()->qlInstrument();
-    boost::shared_ptr<QuantExt::CommodityForward> commodityForward =
-        boost::dynamic_pointer_cast<QuantExt::CommodityForward>(qlInstrument);
+    QuantLib::ext::shared_ptr<Instrument> qlInstrument = forward->instrument()->qlInstrument();
+    QuantLib::ext::shared_ptr<QuantExt::CommodityForward> commodityForward =
+        QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityForward>(qlInstrument);
     BOOST_CHECK(commodityForward);
     BOOST_CHECK_EQUAL(commodityForward->position(), Position::Type::Long);
     BOOST_CHECK_EQUAL(commodityForward->index()->name(), "COMM-GOLD_USD");
@@ -114,27 +114,27 @@ BOOST_AUTO_TEST_CASE(testCommodityForwardTradeBuilding) {
     BOOST_CHECK_CLOSE(commodityForward->NPV(), 800.0, testTolerance);
 
     // Check short
-    forward = boost::make_shared<ore::data::CommodityForward>(envelope, "Short", commodityName, currency, quantity,
+    forward = QuantLib::ext::make_shared<ore::data::CommodityForward>(envelope, "Short", commodityName, currency, quantity,
                                                               maturity, strike);
     BOOST_CHECK_NO_THROW(forward->build(engineFactory));
     qlInstrument = forward->instrument()->qlInstrument();
-    commodityForward = boost::dynamic_pointer_cast<QuantExt::CommodityForward>(qlInstrument);
+    commodityForward = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityForward>(qlInstrument);
     BOOST_CHECK(commodityForward);
     BOOST_CHECK_EQUAL(commodityForward->position(), Position::Type::Short);
     BOOST_CHECK_CLOSE(commodityForward->NPV(), -800.0, testTolerance);
 
     // Check that negative quantity throws an error
-    forward = boost::make_shared<ore::data::CommodityForward>(envelope, position, commodityName, currency, -quantity,
+    forward = QuantLib::ext::make_shared<ore::data::CommodityForward>(envelope, position, commodityName, currency, -quantity,
                                                               maturity, strike);
     BOOST_CHECK_THROW(forward->build(engineFactory), Error);
 
     // Check that negative strike throws an error
-    forward = boost::make_shared<ore::data::CommodityForward>(envelope, position, commodityName, currency, quantity,
+    forward = QuantLib::ext::make_shared<ore::data::CommodityForward>(envelope, position, commodityName, currency, quantity,
                                                               maturity, -strike);
     BOOST_CHECK_THROW(forward->build(engineFactory), Error);
 
     // Check that build fails when commodity name does not match that in the market
-    forward = boost::make_shared<ore::data::CommodityForward>(envelope, position, "GOLD", currency, quantity, maturity,
+    forward = QuantLib::ext::make_shared<ore::data::CommodityForward>(envelope, position, "GOLD", currency, quantity, maturity,
                                                               strike);
     BOOST_CHECK_THROW(forward->build(engineFactory), Error);
 }
@@ -169,9 +169,9 @@ BOOST_AUTO_TEST_CASE(testCommodityForwardFromXml) {
     portfolio.fromXMLString(tradeXml);
 
     // Extract CommodityForward trade from portfolio
-    boost::shared_ptr<Trade> trade = portfolio.trades().begin()->second;
-    boost::shared_ptr<ore::data::CommodityForward> commodityForward =
-        boost::dynamic_pointer_cast<ore::data::CommodityForward>(trade);
+    QuantLib::ext::shared_ptr<Trade> trade = portfolio.trades().begin()->second;
+    QuantLib::ext::shared_ptr<ore::data::CommodityForward> commodityForward =
+        QuantLib::ext::dynamic_pointer_cast<ore::data::CommodityForward>(trade);
 
     // Check fields after checking that the cast was successful
     BOOST_CHECK(commodityForward);

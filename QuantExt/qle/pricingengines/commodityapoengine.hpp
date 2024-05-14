@@ -35,7 +35,7 @@ namespace QuantExt {
 
 namespace CommodityAveragePriceOptionMomementMatching {
 
-// Return the the atm forward - accruals and the the volatility of
+// Return the atm forward - accruals and the volatility of
 struct MomentMatchingResults {
     Time tn;
     Real forward;

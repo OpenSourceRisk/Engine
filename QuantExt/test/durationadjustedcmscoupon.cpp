@@ -50,26 +50,26 @@ BOOST_AUTO_TEST_CASE(testAgainstCmsCoupon) {
     Settings::instance().evaluationDate() = today;
 
     Handle<YieldTermStructure> discountCurve(
-        boost::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
-    Handle<YieldTermStructure> forwardCurve(boost::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
-    Handle<SwaptionVolatilityStructure> swaptionVol(boost::make_shared<ConstantSwaptionVolatility>(
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+    Handle<YieldTermStructure> forwardCurve(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
+    Handle<SwaptionVolatilityStructure> swaptionVol(QuantLib::ext::make_shared<ConstantSwaptionVolatility>(
         0, NullCalendar(), Unadjusted, 0.0050, Actual365Fixed(), Normal));
-    Handle<Quote> reversion(boost::make_shared<SimpleQuote>(0.01));
+    Handle<Quote> reversion(QuantLib::ext::make_shared<SimpleQuote>(0.01));
 
     Date startDate = Date(25, January, 2025);
     Date endDate = Date(25, January, 2026);
     Date payDate = Date(27, January, 2026);
     Size fixingDays = 2;
-    auto index = boost::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardCurve, discountCurve);
+    auto index = QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardCurve, discountCurve);
 
     CmsCoupon cmsCoupon(payDate, 1.0, startDate, endDate, fixingDays, index);
     DurationAdjustedCmsCoupon durationAdjustedCmsCoupon(payDate, 1.0, startDate, endDate, fixingDays, index, 0);
 
-    auto cmsPricer = boost::make_shared<LinearTsrPricer>(swaptionVol, reversion, discountCurve,
+    auto cmsPricer = QuantLib::ext::make_shared<LinearTsrPricer>(swaptionVol, reversion, discountCurve,
                                                          LinearTsrPricer::Settings().withRateBound(-2.0, 2.0));
 
-    auto durationAdjustedCmsPricer = boost::make_shared<DurationAdjustedCmsCouponTsrPricer>(
-        swaptionVol, boost::make_shared<LinearAnnuityMappingBuilder>(reversion), -2.0, 2.0);
+    auto durationAdjustedCmsPricer = QuantLib::ext::make_shared<DurationAdjustedCmsCouponTsrPricer>(
+        swaptionVol, QuantLib::ext::make_shared<LinearAnnuityMappingBuilder>(reversion), -2.0, 2.0);
 
     cmsCoupon.setPricer(cmsPricer);
     durationAdjustedCmsCoupon.setPricer(durationAdjustedCmsPricer);
@@ -98,10 +98,10 @@ BOOST_AUTO_TEST_CASE(testHistoricalValues) {
     Size fixingDays = 2;
 
     Handle<YieldTermStructure> discountCurve(
-        boost::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
-    Handle<YieldTermStructure> forwardCurve(boost::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+    Handle<YieldTermStructure> forwardCurve(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
 
-    auto index = boost::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardCurve, discountCurve);
+    auto index = QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardCurve, discountCurve);
 
     Date fixingDate = index->fixingCalendar().advance(startDate, -(fixingDays * Days), Preceding);
     Real fixingValue = 0.01;
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(testHistoricalValues) {
 
     // we do not need a vol surface or an annuity mapping builder, since the coupon amount is deterministic
     auto pricer =
-        boost::make_shared<DurationAdjustedCmsCouponTsrPricer>(Handle<SwaptionVolatilityStructure>(), nullptr);
+        QuantLib::ext::make_shared<DurationAdjustedCmsCouponTsrPricer>(Handle<SwaptionVolatilityStructure>(), nullptr);
 
     DurationAdjustedCmsCoupon cpn0(payDate, 1.0, startDate, endDate, fixingDays, index, 0);
     DurationAdjustedCmsCoupon cpn1(payDate, 1.0, startDate, endDate, fixingDays, index, 1);

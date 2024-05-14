@@ -48,7 +48,7 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : swapVolIsCube_({{"", false}}), swapVolSimulateATMOnly_(false), swapVolStrikeSpreads_({{"", {0.0}}}),
+        : swapVolIsCube_({{"", false}}), swapVolStrikeSpreads_({{"", {0.0}}}),
           capFloorVolAdjustOptionletPillars_(false), capFloorVolUseCapAtm_(false), cprSimulate_(false),
           correlationIsSurface_(false), correlationStrikes_({0.0}) {
         setDefaults();
@@ -394,7 +394,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
     //! \name Equality Operators
@@ -418,7 +418,7 @@ private:
     string extrapolation_;
 
     map<string, bool> swapVolIsCube_;
-    bool swapVolSimulateATMOnly_;
+    bool swapVolSimulateATMOnly_ = false;
     map<string, vector<Period>> swapVolTerms_;
     map<string, vector<Period>> swapVolExpiries_;
     map<string, vector<Real>> swapVolStrikeSpreads_;

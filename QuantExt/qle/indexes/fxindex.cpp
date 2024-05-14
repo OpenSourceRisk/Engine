@@ -84,8 +84,8 @@ Real FxSpotQuote::value() const {
     if (fixingDays_ == 0)
         return todaysQuote_->value();
     else {
-        QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(),
-                   "FxSpotQuote: empty curve handles, need curve to compound from today to spot");
+        if(sourceYts_.empty() || targetYts_.empty())
+            return todaysQuote_->value();
         Date today = sourceYts_->referenceDate();
         Date refValueDate = fixingCalendar_.advance(today, fixingDays_, Days);
         return todaysQuote_->value() / targetYts_->discount(refValueDate) * sourceYts_->discount(refValueDate);
@@ -93,7 +93,7 @@ Real FxSpotQuote::value() const {
 }
 
 bool FxSpotQuote::isValid() const {
-    return !todaysQuote_.empty() && todaysQuote_->isValid() && !sourceYts_.empty() && !targetYts_.empty();
+    return !todaysQuote_.empty() && todaysQuote_->isValid();
 }
 
 void FxSpotQuote::update() { notifyObservers(); }
@@ -141,14 +141,14 @@ const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {
         if (fxRate_.empty()) {
             Handle<Quote> tmpQuote;
             if (!useQuote_)
-                tmpQuote = Handle<Quote>(boost::make_shared<SimpleQuote>(
+                tmpQuote = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(
                     ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate()));
             else
                 tmpQuote = fxSpot_;
 
             // adjust for spot
             fxRate_ = Handle<Quote>(
-                boost::make_shared<FxRateQuote>(tmpQuote, sourceYts_, targetYts_, fixingDays_, fixingCalendar_));
+                QuantLib::ext::make_shared<FxRateQuote>(tmpQuote, sourceYts_, targetYts_, fixingDays_, fixingCalendar_));
         }
         quote = fxRate_;
     }
@@ -254,13 +254,13 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     return forward;
 }
 
-boost::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
+QuantLib::ext::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
                                           const Handle<YieldTermStructure>& targetYts, const string& familyName) {
     Handle<Quote> quote = fxQuote.empty() ? fxSpot_ : fxQuote;
     Handle<YieldTermStructure> source = sourceYts.empty() ? sourceYts_ : sourceYts;
     Handle<YieldTermStructure> target = targetYts.empty() ? targetYts_ : targetYts;
     string famName = familyName.empty() ? familyName_ : familyName;
-    return boost::make_shared<FxIndex>(famName, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_, quote,
+    return QuantLib::ext::make_shared<FxIndex>(famName, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_, quote,
                                        source, target);
 }
 

@@ -14,11 +14,19 @@ option(ORE_USE_ZLIB "Use compression for boost::iostreams" OFF)
 
 include(CTest)
 
-include("cmake/commonSettings.cmake")
+# Path for local cmake modules
+if(NOT "${CMAKE_CURRENT_LIST_DIR}/cmake" IN_LIST CMAKE_MODULE_PATH)
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+endif()
+include(commonSettings)
 
 set(USE_GLOBAL_ORE_BUILD ON)
 
+# work around boost issue https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=271488
+set(CMAKE_CXX_STANDARD 14)
 add_subdirectory("QuantLib")
+set(CMAKE_CXX_STANDARD 17)
+
 add_subdirectory("QuantExt")
 add_subdirectory("OREData")
 add_subdirectory("OREAnalytics")

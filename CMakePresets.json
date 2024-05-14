@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "configurePresets": [
     {
       "name": "windows-ninja-x64-debug",
@@ -15,7 +15,37 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": false,
-        "ENABLE_SESSIONS": true,
+        "QL_ENABLE_SESSIONS": true,
+        "ORE_BUILD_DOC": false
+      },
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-msvc-x64",
+          "hostOS": [
+            "Windows"
+          ]
+        }
+      }
+    },
+    {
+      "name": "windows-ninja-x64-release",
+      "binaryDir": "${sourceDir}/build",
+      "generator": "Ninja Multi-Config",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_BUILD_TYPE": "Release",
+        "BOOST_INCLUDEDIR": "$env{BOOST}",
+        "BOOST_LIBRARYDIR": "$env{BOOST_LIB64}",
+        "QL_BUILD_EXAMPLES": false,
+        "QL_BUILD_TEST_SUITE": false,
+        "QL_BUILD_BENCHMARK": false,
+        "MSVC_LINK_DYNAMIC_RUNTIME": true,
+        "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
+        "QL_ENABLE_SESSIONS": true,
         "ORE_BUILD_DOC": false
       },
       "architecture": {
@@ -45,7 +75,7 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
-        "ENABLE_SESSIONS": true,
+        "QL_ENABLE_SESSIONS": true,
         "ORE_BUILD_DOC": false
       },
       "architecture": {
@@ -73,7 +103,7 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": true,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": false,
-        "ENABLE_SESSIONS": true,
+        "QL_ENABLE_SESSIONS": true,
         "ORE_BUILD_DOC": false
       },
       "architecture": {
@@ -101,7 +131,7 @@
         "QL_BUILD_BENCHMARK": false,
         "MSVC_LINK_DYNAMIC_RUNTIME": false,
         "MSVC_WHOLE_PROGRAM_OPTIMIZATION": true,
-        "ENABLE_SESSIONS": true,
+        "QL_ENABLE_SESSIONS": true,
         "ORE_BUILD_DOC": false
       },
       "architecture": {
@@ -116,9 +146,156 @@
           ]
         }
       }
+    },
+    {
+      "name": "linux-gcc-base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++",
+        "BOOST_ROOT": "$env{BOOST}",
+        "QL_BUILD_EXAMPLES": false,
+        "QL_BUILD_TEST_SUITE": false,
+        "QL_BUILD_BENCHMARK": false,
+        "QL_ENABLE_SESSIONS": true,
+        "ORE_BUILD_DOC": false,
+        "BUILD_SHARED_LIBS": false
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-clang-base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++",
+        "BOOST_ROOT": "$env{BOOST}",
+        "QL_BUILD_EXAMPLES": false,
+        "QL_BUILD_TEST_SUITE": false,
+        "QL_BUILD_BENCHMARK": false,
+        "QL_ENABLE_SESSIONS": true,
+        "ORE_BUILD_DOC": false
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "_release",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "_debug",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "_relwithdebinfo",
+      "hidden": true,
+      "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "_ninja",
+      "hidden": true,
+      "generator": "Ninja"
+    },
+    {
+      "name": "_make",
+      "hidden": true,
+      "generator": "Unix Makefiles"
+    },
+    {
+      "name": "linux-gcc-ninja-debug",
+      "inherits": [
+        "linux-gcc-base",
+        "_ninja",
+        "_debug"
+      ]
+    },
+    {
+      "name": "linux-gcc-ninja-release",
+      "inherits": [
+        "linux-gcc-base",
+        "_ninja",
+        "_release"
+      ]
+    },
+    {
+      "name": "linux-gcc-ninja-relwithdebinfo",
+      "inherits": [
+        "linux-gcc-base",
+        "_ninja",
+        "_relwithdebinfo"
+      ]
+    },
+    {
+      "name": "linux-clang-debug",
+      "inherits": [
+        "linux-clang-base",
+        "_make",
+        "_debug"
+      ]
+    },
+    {
+      "name": "linux-clang-release",
+      "inherits": [
+        "linux-clang-base",
+        "_make",
+        "_release"
+      ]
+    },
+    {
+      "name": "linux-clang-relwithdebinfo",
+      "inherits": [
+        "linux-clang-base",
+        "_make",
+        "_relwithdebinfo"
+      ]
+    },
+    {
+      "name": "linux-clang-ninja-debug",
+      "inherits": [
+        "linux-clang-base",
+        "_ninja",
+        "_debug"
+      ]
+    },
+    {
+      "name": "linux-clang-ninja-release",
+      "inherits": [
+        "linux-clang-base",
+        "_ninja",
+        "_release"
+      ]
+    },
+    {
+      "name": "linux-clang-ninja-relwithdebinfo",
+      "inherits": [
+        "linux-clang-base",
+        "_ninja",
+        "_relwithdebinfo"
+      ]
     }
   ],
   "buildPresets": [
+    {
+      "name": "windows-ninja-x64-release",
+      "configurePreset": "windows-ninja-x64-release",
+      "configuration": "Release"
+    },
     {
       "name": "windows-ninja-x64-relWithDebInfo",
       "configurePreset": "windows-ninja-x64-relWithDebInfo",
@@ -128,6 +305,14 @@
       "name": "windows-ninja-x64-debug",
       "configurePreset": "windows-ninja-x64-debug",
       "configuration": "Debug"
+    },
+    {
+      "name": "windows-msvc-x64-release",
+      "configurePreset": "windows-msvc-x64",
+      "configuration": "Release",
+      "nativeToolOptions": [
+        "-m"
+      ]
     },
     {
       "name": "windows-msvc-x64-relWithDebInfo",
@@ -141,6 +326,14 @@
       "name": "windows-msvc-x64-debug",
       "configurePreset": "windows-msvc-x64",
       "configuration": "Debug",
+      "nativeToolOptions": [
+        "-m"
+      ]
+    },
+    {
+      "name": "windows-msvc-x64-static-release",
+      "configurePreset": "windows-msvc-x64-static",
+      "configuration": "Release",
       "nativeToolOptions": [
         "-m"
       ]

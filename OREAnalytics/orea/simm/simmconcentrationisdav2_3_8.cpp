@@ -30,9 +30,9 @@ namespace ore {
 namespace analytics {
 
 // Ease syntax
-using RiskType = SimmConfiguration::RiskType;
+using RiskType = CrifRecord::RiskType;
 
-SimmConcentration_ISDA_V2_3_8::SimmConcentration_ISDA_V2_3_8(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper)
+SimmConcentration_ISDA_V2_3_8::SimmConcentration_ISDA_V2_3_8(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper)
     : simmBucketMapper_(simmBucketMapper) {
 
     // Populate IR categories that are used for concentration thresholds

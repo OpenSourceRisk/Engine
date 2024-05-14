@@ -44,7 +44,7 @@ using namespace QuantLib;
 
 class DynamicSwaptionVolatilityMatrix : public SwaptionVolatilityStructure {
 public:
-    DynamicSwaptionVolatilityMatrix(const boost::shared_ptr<SwaptionVolatilityStructure>& source,
+    DynamicSwaptionVolatilityMatrix(const QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>& source,
                                     Natural settlementDays, const Calendar& calendar,
                                     ReactionToTimeDecay decayMode = ConstantVariance);
 
@@ -52,7 +52,7 @@ protected:
     /* SwaptionVolatilityStructure interface */
     const Period& maxSwapTenor() const override;
 
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
 
     Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const override;
 
@@ -69,7 +69,7 @@ protected:
     VolatilityType volatilityType() const override;
 
 private:
-    const boost::shared_ptr<SwaptionVolatilityStructure> source_;
+    const QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> source_;
     ReactionToTimeDecay decayMode_;
     const Date originalReferenceDate_;
     VolatilityType volatilityType_;

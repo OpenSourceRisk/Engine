@@ -46,6 +46,7 @@
  \emph{P, Preceding, PRECEDING}\\ 
  \emph{MP, ModifiedPreceding, Modified Preceding, MODIFIEDP}\\ 
  \emph{U, Unadjusted, INDIFF } \\
+ \emph{HMMF, HalfMonthModifiedFollowing, HalfMonthMF, Half Month Modified Following, HALFMONTHMF}\\
  \emph{NEAREST } (takes future date in case of equal distance) } \\ \hline
   \caption{Allowable Values for Roll Conventions}
   \label{tab:convention}
@@ -75,7 +76,7 @@ SVC,SYP,SZL,THB,TJS,TMT,TND,TOP,TRY,TTD,
 TWD,TZS,UAH,UGX,USD,USN,UYI,UYU,UYW,UZS,
 VES,VND,VUV,WST,XAF,XAU,XCD,XOF,
 XPF,XSU,XUA,YER,ZAR,ZMW,ZWL}
-\\ \hline Minor Currencies &  \makecell[l]{\emph{GBp, GBX} (for pennies of GBP) \\ \emph{ILa, ILX} (for agorot of ILS)  \\ \emph{ZAc, ZAC, ZAX} (for cents of ZAR) \\ 
+\\ \hline Minor Currencies &  \makecell[l]{\emph{GBp, GBX} (for pennies of GBP) \\ \emph{ILa, ILX, ILs, ILA} (for agorot of ILS)  \\ \emph{ZAc, ZAC, ZAX} (for cents of ZAR) \\ 
     Note: Minor Currency codes are only supported for equity products. } \\ \hline
 %Pre-Eurozone Currencies   &  \emph{ATS, BEF, DEM, ESP, FIM, FRF, GRD, IEP, ITL, LUF, NLG, PTE} \\ \hline
 Precious Metals treated as Currencies   &   \emph{XAG, XAU, XPD, XPT}  \\ \hline
@@ -123,9 +124,11 @@ Note: Currency codes must also match available currencies in the {\tt simulation
 \emph{OldCDS}   &   Same as TwentiethIMM with unrestricted date ends and long/short stub coupon period (old CDS convention).\\ \hline
 \emph{CDS}   &    \makecell[tl]{Credit derivatives standard rule defined in 'Big Bang' changes in 2009. \\ \\ For quarterly periods (\lstinline!Tenor! set to \emph{3M}): \\ (Assuming no \lstinline!FirstDate!/\lstinline!LastDate!) \\ Dates fall on 20th of March, June, September, December. A \emph{Following} \\ roll convention will be applied if the 20th falls on a non-business day. \\ If the \lstinline!EndDate! in the schedule is set to a date beyond the rolled \\ quarterly CDS date, the actual trade termination date will be on the \\ following quarterly CDS date. \\ The first coupon will be paid on the quarterly CDS date following the \\ \lstinline!StartDate!, and be for the period since the previous quarterly CDS \\ date.  \\ \\ For monthly periods (\lstinline!Tenor! set to \emph{1M}): \\ (Assuming no \lstinline!FirstDate!/\lstinline!LastDate!)\\ Dates fall on 20th of each month, but the termination is still adjusted \\ to be in line with quarterly periods. \\ If the \lstinline!EndDate! in the schedule is set to a date beyond the rolled \\ quarterly CDS date (i.e. the 20th+roll Mar, Jun, Sep, Dec), \\ the actual termination date will be on the following quarterly CDS \\ date, causing a long final stub. \\ The first coupon will be paid on the next 20th monthly following the \\ \lstinline!StartDate!, and be for the period since the previous month's 20th.}\\ \hline
 \emph{CDS2015}   &    \makecell[tl]{Credit derivatives standard rule updated in 2015. \\ Same as  \emph{CDS} but with termination dates adjusted to \\ 20th June and 20th December. \\ For schedule \lstinline!EndDates!  from the 20th of March to the 19th September, \\ both included, the termination date will fall on the 20th June (with \\  \emph{Following} roll). \\ For schedule \lstinline!EndDates! from the 20th September to the 19th March, \\ both included, the termination date will fall on the 20th December \\ (with \emph{Following} roll).} \\ \hline
-  \caption{Allowable Values for Rule}
-  \label{tab:rule}
-  \end{longtable}
+\emph{EveryThursday}   &  If FirstDate is not given, all thursdays between start and end date.
+                          If FirstDate is given, FirstDate plus all thursdays between FirstDate and end date. \\ \hline
+\caption{Allowable Values for Rule}
+\label{tab:rule}
+\end{longtable}
 
 \begin{longtable}{| p{.30\textwidth} | p{.70\textwidth} |}
     \hline
@@ -189,6 +192,7 @@ Note: Currency codes must also match available currencies in the {\tt simulation
     \emph{TH, THA, THB} & Thailand Calendar \\ \hline
     \emph{TR, TUR, TRY} & Turkey Calendar \\ \hline
     \emph{UA, UKR, UAH} & Ukraine Calendar \\ \hline
+    \emph{XASX} & Australian Securities Exchange Calendar \\ \hline
     \emph{BVMF} & Brazil Bovespa Calendar \\ \hline
     \emph{XTSE} & Canada Toronto Stock Exchange Calendar \\ \hline
     \emph{XSHG} & China Shanghai Stock Exchange Calendar \\ \hline
@@ -249,16 +253,19 @@ Note: Currency codes must also match available currencies in the {\tt simulation
     \emph{A364, Actual/364, Act/364, ACT/364}& Actual 364  \\ \hline
     \emph{Actual/365 (No Leap), Act/365 (NL), NL/365, Actual/365 (JGB)} & Actual 365 Fixed (No Leap Year)\\ \hline
     \emph{Act/365 (Canadian Bond)} & Actual 365 Fixed (Canadian Bond)\\ \hline
-    \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT, 30/360 US, 30U/360, 30US/360} & Thirty 360 (US) \\ \hline
+    \emph{T360, 30/360, ACT/nACT, 30/360 US, 30/360 (US), 30U/360, 30US/360} & Thirty 360 (US) \\ \hline
+    \emph{30/360 (Bond Basis)} & Thirty 360 (Bond Basis) \\ \hline
     \emph{30E/360 (Eurobond Basis), 30E/360, 30/360 AIBD (Euro), 30E/360.ICMA, 30E/360 ICMA} & Thirty 360 (European) \\ \hline
     \emph{30E/360E, 30E/360 ISDA, 30E/360.ISDA, 30/360 German, 30/360 (German)} & Thirty 360 (German) \\ \hline
     \emph{30/360 Italian, 30/360 (Italian)} & Thirty 360 (Italian) \\ \hline
-    \emph{ActActISDA, ACT/ACT.ISDA, Actual/Actual (ISDA), ActualActual (ISDA), ACT/ACT, ACT} & Actual Actual (ISDA) \\ \hline
+    \emph{ActActISDA, ACT/ACT.ISDA, Actual/Actual (ISDA), ActualActual (ISDA), ACT/ACT, Act/Act, ACT} & Actual Actual (ISDA) \\ \hline
     \emph{ActActISMA, Actual/Actual (ISMA), ActualActual (ISMA), ACT/ACT.ISMA} & Actual Actual (ISMA) \\ \hline
     \emph{ActActICMA, Actual/Actual (ICMA), ActualActual (ICMA), ACT/ACT.ICMA} & Actual Actual (ICMA) \\ \hline
-    \emph{ActActAFB, ACT/ACT.AFB, Actual/Actual (AFB)} & Actual Actual (AFB) \\ \hline
+    \emph{ActActAFB, ACT/ACT.AFB, Actual/Actual (AFB), ACT29} & Actual Actual (AFB) \\ \hline
     \emph{BUS/252, Business/252} & Brazilian Bus/252 \\ \hline
     \emph{1/1} & 1/1  \\ \hline
+    \emph{Simple} & Simple Day Counter  \\ \hline
+    \emph{Year} & Year Counter  \\ \hline
   \end{tabular}
   \caption{Allowable Values for DayCount Convention}
   \label{tab:daycount}

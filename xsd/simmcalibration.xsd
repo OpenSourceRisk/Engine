@@ -1,0 +1,743 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="SIMMCalibrationData">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="simmCalibration" name="SIMMCalibration" maxOccurs="unbounded" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="simmCalibration">
+    <xs:all>
+      <xs:element name="VersionNames">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Name" type="xs:string" maxOccurs="unbounded" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="AdditionalFields" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="interestRate" name="InterestRate" />
+      <xs:element type="creditQualifying" name="CreditQualifying" />
+      <xs:element type="creditNonQualifying" name="CreditNonQualifying" />
+      <xs:element type="equity" name="Equity" />
+      <xs:element type="commodity" name="Commodity" />
+      <xs:element type="fx" name="FX" />
+      <xs:element name="RiskClassCorrelations">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Correlation" maxOccurs="unbounded" >
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal">
+                    <xs:attribute name="label1" type="xs:string"/>
+                    <xs:attribute name="label2" type="xs:string"/>
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+    <xs:attribute name="id" type="xs:string" />
+  </xs:complexType>
+
+  <!-- InterestRate SIMM calibration -->
+  <xs:complexType name="interestRate">
+    <xs:sequence>
+
+      <!-- InterestRate risk weights -->
+      <xs:element name="RiskWeights">
+        <xs:complexType>
+          <xs:choice maxOccurs="unbounded">
+            <!-- InterestRate delta risk weights -->
+            <xs:element name="Delta">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Weight" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="bucket" type="xs:integer" use="required" />
+                          <xs:attribute name="label1" type="xs:string" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="mporDays" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+
+            <!-- InterestRate vega risk weight -->
+            <xs:element name="Vega">
+              <xs:complexType>
+                <xs:all>
+                  <xs:element name="Weight" type="xs:decimal" />
+                </xs:all>
+                <xs:attribute name="mporDays" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+
+            <!-- InterestRate historical volatility ratio -->
+            <xs:element name="HistoricalVolatilityRatio" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal" >
+                    <xs:attribute name="mporDays" type="xs:integer" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- InterestRate Inflation risk weight -->
+            <xs:element name="Inflation">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal" >
+                    <xs:attribute name="mporDays" type="xs:integer" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- InterestRate XCcyBasis risk weight -->
+            <xs:element name="XCcyBasis">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal" >
+                    <xs:attribute name="mporDays" type="xs:integer" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- InterestRate Currency groups -->
+            <xs:element name="CurrencyLists" type="currencyLists" />
+
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+     
+      <!-- InterestRate correlations -->
+      <xs:element name="Correlations">
+        <xs:complexType>
+          <xs:all>
+            <!-- InterestRate intra-bucket correlations -->
+            <xs:element name="IntraBucket">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Correlation" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="label1" type="xs:string" use="required" />
+                          <xs:attribute name="label2" type="xs:string" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- InterestRate sub-curves correlation -->
+            <xs:element name="SubCurves" type="xs:decimal" />
+
+            <!-- InterestRate Inflation correlation -->
+            <xs:element name="Inflation" type="xs:decimal" />
+
+            <!-- InterestRate cross-currency basis correlation -->
+            <xs:element name="XCcyBasis" type="xs:decimal" />
+
+            <!-- InterestRate cross-currency basis correlation -->
+            <xs:element name="Outer" type="xs:decimal" />
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+
+      <!-- InterestRate concentration thresholds -->
+      <xs:element name="ConcentrationThresholds" type="irfxConcentrationThresholds" />
+
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- CreditQualifying SIMM calibration -->
+  <xs:complexType name="creditQualifying">
+    <xs:sequence>
+
+      <!-- CreditQualifying risk weights -->
+      <xs:element name="RiskWeights">
+        <xs:complexType>
+          <xs:choice maxOccurs="unbounded">
+            <!-- CreditQualifying delta risk weights -->
+            <xs:element name="Delta">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Weight" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="bucket" type="xs:string" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="mporDays" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+
+            <!-- CreditQualifying vega risk weights -->
+            <xs:element name="Vega">
+              <xs:complexType>
+                <xs:all>
+                  <xs:element name="Weight" type="xs:decimal" />
+                </xs:all>
+                <xs:attribute name="mporDays" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+
+            <!-- CreditQualifying base correlation -->
+            <xs:element name="BaseCorrelation" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal" >
+                    <xs:attribute name="mporDays" type="xs:integer" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+
+      <!-- CreditQualifying correlations -->
+      <xs:element name="Correlations">
+        <xs:complexType>
+          <xs:all>
+            <!-- CreditQualifying intra-bucket correlations -->
+            <xs:element name="IntraBucket">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Correlation" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="label1" type="xs:string" use="required" />
+                          <xs:attribute name="label2" type="xs:string" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- CreditQualifying inter-bucket correlations -->
+            <xs:element name="InterBucket">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Correlation" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="label1" type="xs:integer" use="required" />
+                          <xs:attribute name="label2" type="xs:integer" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- CreditQualifying base correlation correlation -->
+            <xs:element name="BaseCorrelation" type="xs:decimal" />
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+
+      <!-- CreditQualifying concentration thresholds -->
+      <xs:element name="ConcentrationThresholds" type="concentrationThresholds" />
+    </xs:sequence>
+  </xs:complexType>
+
+
+  <!-- CreditNonQualifying SIMM calibration -->
+  <xs:complexType name="creditNonQualifying">
+    <xs:sequence>
+
+      <!-- CreditNonQualifying risk weights -->
+      <xs:element name="RiskWeights">
+        <xs:complexType>
+          <xs:choice maxOccurs="unbounded">
+            <xs:element name="Delta">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Weight" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="bucket" type="xs:string" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="mporDays" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+
+            <xs:element name="Vega">
+              <xs:complexType>
+                <xs:all>
+                  <xs:element name="Weight" type="xs:decimal" />
+                </xs:all>
+                <xs:attribute name="mporDays" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+
+      <!-- CreditNonQualifying correlations -->
+      <xs:element name="Correlations">
+        <xs:complexType>
+          <xs:all>
+            <!-- CreditNonQualifying intra-bucket correlations -->
+            <xs:element name="IntraBucket">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Correlation" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="label1" type="xs:string" use="required" />
+                          <xs:attribute name="label2" type="xs:string" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- CreditNonQualifying inter-bucket correlations -->
+            <xs:element name="InterBucket">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Correlation" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="label1" type="xs:integer" use="required" />
+                          <xs:attribute name="label2" type="xs:integer" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+
+      <!-- CreditNonQualifying concentration thresholds -->
+      <xs:element name="ConcentrationThresholds" type="concentrationThresholds" />
+
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Equity SIMM calibration -->
+  <xs:complexType name="equity">
+    <xs:sequence>
+
+      <!-- Equity risk weights -->
+      <xs:element name="RiskWeights">
+        <xs:complexType>
+          <xs:choice maxOccurs="unbounded">
+            <!-- Equity delta risk weights -->
+            <xs:element name="Delta">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Weight" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="bucket" type="xs:string" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="mporDays" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+
+            <!-- Equity vega risk weights -->
+            <xs:element name="Vega">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Weight" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="bucket" type="xs:string" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="mporDays" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+
+            <!-- Equity historical volatility ratio -->
+            <xs:element name="HistoricalVolatilityRatio" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal" >
+                    <xs:attribute name="mporDays" type="xs:integer" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+
+      <!-- Equity correlations -->
+      <xs:element name="Correlations">
+        <xs:complexType>
+          <xs:all>
+            <!-- Equity intra-bucket correlations -->
+            <xs:element name="IntraBucket">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Correlation" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="bucket" type="xs:string" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- Equity inter-bucket correlations -->
+            <xs:element name="InterBucket">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Correlation" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="label1" type="xs:integer" use="required" />
+                          <xs:attribute name="label2" type="xs:integer" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+
+      <!-- Equity concentration thresholds -->
+      <xs:element name="ConcentrationThresholds" type="concentrationThresholds" />
+
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Commodity SIMM calibration -->
+  <xs:complexType name="commodity">
+    <xs:sequence>
+
+      <!-- Commodity risk weights -->
+      <xs:element name="RiskWeights">
+        <xs:complexType>
+          <xs:choice maxOccurs="unbounded">
+            <!-- Commodity delta risk weights -->
+            <xs:element name="Delta">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Weight" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="bucket" type="xs:string" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="mporDays" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+
+            <!-- Commodity vega risk weights -->
+            <xs:element name="Vega">
+              <xs:complexType>
+                <xs:all>
+                  <xs:element name="Weight" type="xs:decimal" />
+                </xs:all>
+                <xs:attribute name="mporDays" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+
+            <!-- Commodity historical volatility ratio -->
+            <xs:element name="HistoricalVolatilityRatio">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal" >
+                    <xs:attribute name="mporDays" type="xs:integer" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+
+      <!-- Commodity correlations -->
+      <xs:element name="Correlations">
+        <xs:complexType>
+          <xs:all>
+            <!-- Commodity intra-bucket correlations -->
+            <xs:element name="IntraBucket">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Correlation" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="bucket" type="xs:string" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- Commodity inter-bucket correlations -->
+            <xs:element name="InterBucket">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Correlation" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="label1" type="xs:integer" use="required" />
+                          <xs:attribute name="label2" type="xs:integer" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+
+      <!-- Commodity concentration thresholds -->
+      <xs:element name="ConcentrationThresholds" type="concentrationThresholds" />
+
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- FX SIMM calibration -->
+  <xs:complexType name="fx">
+    <xs:sequence>
+
+      <!-- FX risk weights -->
+      <xs:element name="RiskWeights">
+        <xs:complexType>
+          <xs:choice maxOccurs="unbounded">
+            <!-- FX delta risk weights -->
+            <xs:element name="Delta">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Weight" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="label1" type="xs:integer" use="required" />
+                          <xs:attribute name="label2" type="xs:integer" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="mporDays" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+
+            <!-- FX vega risk weight -->
+            <xs:element name="Vega">
+              <xs:complexType>
+                <xs:all>
+                  <xs:element name="Weight" type="xs:decimal" />
+                </xs:all>
+                <xs:attribute name="mporDays" type="xs:integer" />
+              </xs:complexType>
+            </xs:element>
+
+            <!-- FX historical volatility ratio -->
+            <xs:element name="HistoricalVolatilityRatio" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal" >
+                    <xs:attribute name="mporDays" type="xs:integer" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- FX Inflation risk weight -->
+            <xs:element name="Inflation">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal" >
+                    <xs:attribute name="mporDays" type="xs:integer" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- FX XCcyBasis risk weight -->
+            <xs:element name="XCcyBasis">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal" >
+                    <xs:attribute name="mporDays" type="xs:integer" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- FX Currency groups -->
+            <xs:element name="CurrencyLists" type="currencyLists" />
+
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+
+      <!-- FX correlations -->
+      <xs:element name="Correlations">
+        <xs:complexType>
+          <xs:all>
+            <!-- FX intra-bucket correlations -->
+            <xs:element name="IntraBucket">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Correlation" maxOccurs="unbounded">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:decimal">
+                          <xs:attribute name="bucket" type="xs:integer" use="required" />
+                          <xs:attribute name="label1" type="xs:integer" use="required" />
+                          <xs:attribute name="label2" type="xs:integer" use="required" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+
+            <!-- FX Volatility correlation -->
+            <xs:element name="Volatility" type="xs:decimal" />
+
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+
+      <!-- FX concentration thresholds -->
+      <xs:element name="ConcentrationThresholds" type="irfxConcentrationThresholds" />
+
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="currencyLists">
+    <xs:sequence>
+      <xs:element name="Currency" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute name="bucket" type="xs:integer" use="required" />
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="concentrationThresholds">
+    <xs:sequence>
+      <xs:element name="Delta">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Threshold" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal">
+                    <xs:attribute name="bucket" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Vega">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Threshold" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:decimal">
+                    <xs:attribute name="bucket" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="irfxConcentrationThresholds">
+    <xs:complexContent>
+      <xs:extension base="concentrationThresholds">
+        <xs:sequence>
+          <xs:element name="CurrencyLists" type="currencyLists" />
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+</xs:schema>

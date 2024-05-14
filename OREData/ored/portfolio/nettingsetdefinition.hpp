@@ -52,13 +52,15 @@ public:
         const Real& iaHeld, const string& iaType, const Period& marginCallFreq, const Period& marginPostFreq,
         const Period& mpr, const Real& collatSpreadPay, const Real& collatSpreadRcv,
         const vector<string>& eligCollatCcys, // vector of three letter ISO codes
-        bool applyInitialMargin, Type initialMarginType, const bool calculateIMAmount, const bool calculateVMAmount)
+        bool applyInitialMargin, Type initialMarginType, const bool calculateIMAmount, const bool calculateVMAmount,
+        const string& nonExemptIMRegulations)
         : type_(type), csaCurrency_(csaCurrency), index_(index), thresholdPay_(thresholdPay),
           thresholdRcv_(thresholdRcv), mtaPay_(mtaPay), mtaRcv_(mtaRcv), iaHeld_(iaHeld), iaType_(iaType),
           marginCallFreq_(marginCallFreq), marginPostFreq_(marginPostFreq), mpr_(mpr),
           collatSpreadPay_(collatSpreadPay), collatSpreadRcv_(collatSpreadRcv), eligCollatCcys_(eligCollatCcys),
           applyInitialMargin_(applyInitialMargin), initialMarginType_(initialMarginType),
-          calculateIMAmount_(calculateIMAmount), calculateVMAmount_(calculateVMAmount) {}
+          calculateIMAmount_(calculateIMAmount), calculateVMAmount_(calculateVMAmount),
+          nonExemptIMRegulations_(nonExemptIMRegulations) {}
 
     //! Inspectors
     //@{
@@ -101,7 +103,9 @@ public:
     bool calculateIMAmount() { return calculateIMAmount_; }
     /*! Calculate VM from NPV (currently used only for SA-CCR) */
     bool calculateVMAmount() { return calculateVMAmount_; }
-     
+    /*! IM regulations (whose trade sensitivities are usually exempt from margin/sensi calc) that we wish to include
+        (currently used only for SA-CCR) */
+    const string& nonExemptIMRegulations() { return nonExemptIMRegulations_; } 
     /*! invert all relevant aspects of the CSA */
     void invertCSA();
 
@@ -126,6 +130,7 @@ private:
     bool applyInitialMargin_;
     Type initialMarginType_;
     bool calculateIMAmount_, calculateVMAmount_;
+    string nonExemptIMRegulations_;
 };
 
 CSA::Type parseCsaType(const string& s);
@@ -165,7 +170,8 @@ public:
                          const Real& collatSpreadPay, const Real& collatSpreadRcv,
                          const vector<string>& eligCollatCcys, // vector of three letter ISO codes
                          bool applyInitialMargin = false, const string& initialMarginType = "Bilateral",
-                         const bool calculateIMAmount = false, const bool calculateVMAmount = false);
+                         const bool calculateIMAmount = false, const bool calculateVMAmount = false,
+                         const string& nonExemptIMRegulations = "");
 
     NettingSetDefinition(const string& nettingSetId, const string& bilateral,
                          const string& csaCurrency, // three letter ISO code
@@ -177,11 +183,12 @@ public:
                          const Real& collatSpreadPay, const Real& collatSpreadRcv,
                          const vector<string>& eligCollatCcys, // vector of three letter ISO codes
                          bool applyInitialMargin = false, const string& initialMarginType = "Bilateral",
-                         const bool calculateIMAmount = false, const bool calculateVMAmount = false)
+                         const bool calculateIMAmount = false, const bool calculateVMAmount = false,
+                         const string& nonExemptIMRegulations = "")
         : NettingSetDefinition(NettingSetDetails(nettingSetId), bilateral, csaCurrency, index, thresholdPay,
                                thresholdRcv, mtaPay, mtaRcv, iaHeld, iaType, marginCallFreq, marginPostFreq, mpr,
                                collatSpreadPay, collatSpreadRcv, eligCollatCcys, applyInitialMargin, initialMarginType,
-                               calculateIMAmount, calculateVMAmount) {}
+                               calculateIMAmount, calculateVMAmount, nonExemptIMRegulations) {}
 
     /*!
       loads NettingSetDefinition object from XML
@@ -190,7 +197,7 @@ public:
     /*!
       writes object to XML
     */
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     /*!
       validate the netting set definition including CSA details
@@ -208,7 +215,7 @@ public:
     /*! boolean specifying if ISDA agreement is covered by a Credit Support Annex */
     bool activeCsaFlag() const { return activeCsaFlag_; }
     /*! CSA details, if active */
-    const boost::shared_ptr<CSA>& csaDetails() { return csa_; }
+    const QuantLib::ext::shared_ptr<CSA>& csaDetails() { return csa_; }
 
     // /*! Nature of CSA margining agreement (e.g. Bilateral, PostOnly, CallOnly) */
     // CSAType csaType() const {
@@ -252,7 +259,7 @@ private:
     string nettingSetId_;
     NettingSetDetails nettingSetDetails_;
     bool activeCsaFlag_;
-    boost::shared_ptr<CSA> csa_;
+    QuantLib::ext::shared_ptr<CSA> csa_;
 
     // string csaTypeStr_;                // staging value for csaType_
     // boost::optional<CSAType> csaType_; // initialised during build()

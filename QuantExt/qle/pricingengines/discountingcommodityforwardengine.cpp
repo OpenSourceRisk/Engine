@@ -55,16 +55,20 @@ void DiscountingCommodityForwardEngine::calculate() const {
 
         Real buySell = arguments_.position == Position::Long ? 1.0 : -1.0;
         Real forwardPrice = index->fixing(maturity);
-        auto value = arguments_.quantity * buySell * (forwardPrice - arguments_.strike) *
-                     discountCurve_->discount(paymentDate) / discountCurve_->discount(npvDate);
+        Real discountPaymentDate = discountCurve_->discount(paymentDate);
+        auto value = arguments_.quantity * buySell * (forwardPrice - arguments_.strike) * discountPaymentDate /
+                     discountCurve_->discount(npvDate);
         if(arguments_.fxIndex && (arguments_.fixingDate!=Date()) && (arguments_.payCcy!=arguments_.currency)){ // NDF
             auto fxRate = arguments_.fxIndex->fixing(arguments_.fixingDate);
             value*=fxRate;
             results_.additionalResults["productCurrency"] = arguments_.currency;
             results_.additionalResults["settlementCurrency"] = arguments_.payCcy;
+            results_.additionalResults["fxRate"] = fxRate;
         }
         results_.value = value;
+        results_.additionalResults["forwardPrice"] = forwardPrice;
         results_.additionalResults["currentNotional"] = forwardPrice * arguments_.quantity;
+        results_.additionalResults["discountPaymentDate"] = discountPaymentDate;
     }
 }
 

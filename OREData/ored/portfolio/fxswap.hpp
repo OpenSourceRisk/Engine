@@ -39,7 +39,7 @@ public:
     FxSwap()
         : Trade("FxSwap"), nearBoughtAmount_(0.0), nearSoldAmount_(0.0), farBoughtAmount_(0.0), farSoldAmount_(0.0) {}
     //! Constructor
-    FxSwap(Envelope& env, const string& nearDate, const string& farDate, const string& nearBoughtCurrency,
+    FxSwap(const Envelope& env, const string& nearDate, const string& farDate, const string& nearBoughtCurrency,
            double nearBoughtAmount, const string& nearSoldCurrency, double nearSoldAmount, double farBoughtAmount,
            double farSoldAmount, const string& settlement = "Physical")
         : Trade("FxSwap", env), nearDate_(nearDate), farDate_(farDate), nearBoughtCurrency_(nearBoughtCurrency),
@@ -51,7 +51,7 @@ public:
     */
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
     std::string notionalCurrency() const override;
 
@@ -72,7 +72,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
     string nearDate_;
@@ -84,7 +84,7 @@ private:
     double farBoughtAmount_;
     double farSoldAmount_;
     string settlement_;
-    boost::shared_ptr<QuantLib::Instrument> instNear_, instFar_;
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> instNear_, instFar_;
 };
 } // namespace data
 } // namespace ore

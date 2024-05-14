@@ -25,7 +25,7 @@ using QuantExt::OptionPriceSurface;
 namespace ore {
 namespace analytics {
 
-void MarketDataCsvLoaderImpl::loadCorporateActionData(boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void MarketDataCsvLoaderImpl::loadCorporateActionData(QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                                   const map<string, string>& equities) {
     for (const auto& div : csvLoader_->loadDividends()) {
         for (const auto& it : equities) {
@@ -36,7 +36,7 @@ void MarketDataCsvLoaderImpl::loadCorporateActionData(boost::shared_ptr<ore::dat
 }
 
 void MarketDataCsvLoaderImpl::retrieveMarketData(
-    const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
     const map<Date, set<string>>& quotes,
     const Date& requestDate) {        
     // load csvLoader quotes and add to loader if valid
@@ -52,10 +52,11 @@ void MarketDataCsvLoaderImpl::retrieveMarketData(
                 if (!wc.hasWildcard()) {
                     // if we don't have it, it's probably optional, just leave it out for now
                     if (csvLoader_->has(q, d)) {
-                        boost::shared_ptr<MarketDatum> datum = csvLoader_->get(q, d);
+                        QuantLib::ext::shared_ptr<MarketDatum> datum = csvLoader_->get(q, d);
                         loader->add(d, datum->name(), datum->quote()->value());
                     } else {
-                        WLOG("Missing required quote " << q << " for date " << d);
+                        LOG("Requested quote " << q << " for date " << d
+                                               << " not in csv file. This is not necessarily an error.");
                     }
 
                 } else {
@@ -70,8 +71,8 @@ void MarketDataCsvLoaderImpl::retrieveMarketData(
     }
 }
 
-void MarketDataCsvLoaderImpl::retrieveFixings(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
-        map<string, set<Date>> fixings,
+void MarketDataCsvLoaderImpl::retrieveFixings(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+        ore::analytics::FixingMap fixings,
         map<pair<string, Date>, set<Date>> lastAvailableFixingLookupMap) {
 
     LOG("MarketDataCsvLoader::retrieveFixings called: all fixings ? " << (inputs_->allFixings() ? "Y" : "N"));
@@ -85,11 +86,10 @@ void MarketDataCsvLoaderImpl::retrieveFixings(const boost::shared_ptr<ore::data:
         // Filter by required fixing data
         
         // Loop over the relevant fixings and add only them to the InMemoryLoader
-        for (auto kv : fixings) {
+        for (const auto& [name, fixingDates] : fixings) {
             // LOG("fixings are required for index " << kv.first << " and " << kv.second.size() << " dates"); 
             // map<string, set<Date>>
-            const string& name = kv.first;
-            for (const auto& date : kv.second) {
+            for (const auto& [date, mandatory] : fixingDates) {
                 // lazy loop over all of them...
                 for (const auto& fix : csvLoader_->loadFixings()) {
                     if (fix.name == name && fix.date == date) {

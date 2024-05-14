@@ -26,11 +26,11 @@
 namespace ore {
 namespace analytics {
 
-JointNPVSensiCube::JointNPVSensiCube(const boost::shared_ptr<NPVSensiCube>& cube1,
-                                     const boost::shared_ptr<NPVSensiCube>& cube2, const std::set<std::string>& ids)
+JointNPVSensiCube::JointNPVSensiCube(const QuantLib::ext::shared_ptr<NPVSensiCube>& cube1,
+                                     const QuantLib::ext::shared_ptr<NPVSensiCube>& cube2, const std::set<std::string>& ids)
     : JointNPVSensiCube({cube1, cube2}, ids) {}
 
-JointNPVSensiCube::JointNPVSensiCube(const std::vector<boost::shared_ptr<NPVSensiCube>>& cubes,
+JointNPVSensiCube::JointNPVSensiCube(const std::vector<QuantLib::ext::shared_ptr<NPVSensiCube>>& cubes,
                                      const std::set<std::string>& ids)
     : NPVSensiCube(), cubes_(cubes) {
 
@@ -101,7 +101,7 @@ const std::vector<QuantLib::Date>& JointNPVSensiCube::dates() const { return cub
 
 QuantLib::Date JointNPVSensiCube::asof() const { return cubes_[0]->asof(); }
 
-const std::pair<boost::shared_ptr<NPVSensiCube>, Size>& JointNPVSensiCube::cubeAndId(Size id) const {
+const std::pair<QuantLib::ext::shared_ptr<NPVSensiCube>, Size>& JointNPVSensiCube::cubeAndId(Size id) const {
     QL_REQUIRE(id < cubeAndId_.size(),
                "JointNPVSensiCube: id (" << id << ") out of range, have " << cubeAndId_.size() << " ids");
     return cubeAndId_[id];

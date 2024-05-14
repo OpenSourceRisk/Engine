@@ -29,7 +29,7 @@ void populateFromBondReferenceData(std::string& subType,
                                    std::string& creditCurveId, std::string& creditGroup, std::string& referenceCurveId,
                                    std::string& incomeCurveId, std::string& volatilityCurveId,
                                    std::vector<LegData>& coupons, const std::string& name,
-                                   const boost::shared_ptr<BondReferenceDatum>& bondRefData,
+                                   const QuantLib::ext::shared_ptr<BondReferenceDatum>& bondRefData,
                                    const std::string& startDate, const std::string& endDate) {
     DLOG("populating data bond from reference data");
     QL_REQUIRE(bondRefData, "populateFromBondReferenceData(): empty bond reference datum given");
@@ -93,8 +93,9 @@ void populateFromBondReferenceData(std::string& subType,
 	    DLOG("Modified start date " << oldStart << " -> " << newStart);
 	}
 	else {
-	  ALOG(StructuredTradeErrorMessage(bondRefData->bondData().issuerId, "Bond-linked", "update reference data",
-					   "modifified start date cannot be applied to multiple legs/schedules"));
+	  StructuredTradeErrorMessage(bondRefData->bondData().issuerId, "Bond-linked", "update reference data",
+                                        "modifified start date cannot be applied to multiple legs/schedules")
+                .log();
 	}
     }
     if (!endDate.empty()) {
@@ -105,8 +106,9 @@ void populateFromBondReferenceData(std::string& subType,
 	    DLOG("Modified end date " << oldEnd << " -> " << newEnd);
 	}
 	else {
-	  ALOG(StructuredTradeErrorMessage(bondRefData->bondData().issuerId, "Bond-linked", "update reference data",
-					   "modifified end date cannot be applied to multiple legs/schedules"));
+	  StructuredTradeErrorMessage(bondRefData->bondData().issuerId, "Bond-linked", "update reference data",
+                                        "modifified end date cannot be applied to multiple legs/schedules")
+                .log();
 	}
     }
       

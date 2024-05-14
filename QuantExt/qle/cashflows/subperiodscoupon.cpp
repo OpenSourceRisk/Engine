@@ -29,7 +29,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 SubPeriodsCoupon1::SubPeriodsCoupon1(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
-                                     const boost::shared_ptr<InterestRateIndex>& index, Type type,
+                                     const QuantLib::ext::shared_ptr<InterestRateIndex>& index, Type type,
                                      BusinessDayConvention convention, Spread spread, const DayCounter& dayCounter,
                                      bool includeSpread, Real gearing)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, index->fixingDays(), index, gearing, spread, Date(),
@@ -85,7 +85,7 @@ void SubPeriodsCoupon1::accept(AcyclicVisitor& v) {
     }
 }
 
-SubPeriodsLeg1::SubPeriodsLeg1(const Schedule& schedule, const boost::shared_ptr<InterestRateIndex>& index)
+SubPeriodsLeg1::SubPeriodsLeg1(const Schedule& schedule, const QuantLib::ext::shared_ptr<InterestRateIndex>& index)
     : schedule_(schedule), index_(index), notionals_(std::vector<Real>(1, 1.0)), paymentAdjustment_(Following),
       paymentCalendar_(Calendar()), type_(SubPeriodsCoupon1::Compounding) {}
 
@@ -173,7 +173,7 @@ SubPeriodsLeg1::operator Leg() const {
         // of identifying it except parsing the exception text, which isn't a
         // clean solution either
         try {
-            boost::shared_ptr<SubPeriodsCoupon1> cashflow(
+            QuantLib::ext::shared_ptr<SubPeriodsCoupon1> cashflow(
                 new SubPeriodsCoupon1(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
                                      index_, type_, paymentAdjustment_, detail::get(spreads_, i, 0.0),
                                      paymentDayCounter_, includeSpread_, detail::get(gearings_, i, 1.0)));
@@ -184,7 +184,7 @@ SubPeriodsLeg1::operator Leg() const {
         }
     }
 
-    boost::shared_ptr<SubPeriodsCouponPricer1> pricer(new SubPeriodsCouponPricer1);
+    QuantLib::ext::shared_ptr<SubPeriodsCouponPricer1> pricer(new SubPeriodsCouponPricer1);
     QuantExt::setCouponPricer(cashflows, pricer);
 
     return cashflows;

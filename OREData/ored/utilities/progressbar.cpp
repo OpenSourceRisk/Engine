@@ -24,19 +24,19 @@
 namespace ore {
 namespace data {
 
-void ProgressReporter::registerProgressIndicator(const boost::shared_ptr<ProgressIndicator>& indicator) {
+void ProgressReporter::registerProgressIndicator(const QuantLib::ext::shared_ptr<ProgressIndicator>& indicator) {
     indicators_.insert(indicator);
 }
 
-void ProgressReporter::unregisterProgressIndicator(const boost::shared_ptr<ProgressIndicator>& indicator) {
+void ProgressReporter::unregisterProgressIndicator(const QuantLib::ext::shared_ptr<ProgressIndicator>& indicator) {
     indicators_.erase(indicator);
 }
 
 void ProgressReporter::unregisterAllProgressIndicators() { indicators_.clear(); }
 
-void ProgressReporter::updateProgress(const unsigned long progress, const unsigned long total) {
+void ProgressReporter::updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail) {
     for (const auto& i : indicators_)
-        i->updateProgress(progress, total);
+        i->updateProgress(progress, total, detail);
 }
 
 void ProgressReporter::resetProgress() {
@@ -46,24 +46,24 @@ void ProgressReporter::resetProgress() {
 
 SimpleProgressBar::SimpleProgressBar(const std::string& message, const QuantLib::Size messageWidth,
                                      const QuantLib::Size barWidth, const QuantLib::Size numberOfScreenUpdates)
-    : message_(message), messageWidth_(messageWidth), barWidth_(barWidth),
+    : key_(message), messageWidth_(messageWidth), barWidth_(barWidth),
       numberOfScreenUpdates_(numberOfScreenUpdates), updateCounter_(0), finalized_(false) {
-    updateProgress(0, 1);
+    updateProgress(0, 1, "");
     updateCounter_--;
 }
 
-void SimpleProgressBar::updateProgress(const unsigned long progress, const unsigned long total) {
+void SimpleProgressBar::updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail) {
     if (!ConsoleLog::instance().enabled())
         return; 
     if (finalized_)
         return;
     double ratio = static_cast<double>(progress) / static_cast<double>(total);
     if (progress >= total) {
-        std::cout << "\r" << std::setw(messageWidth_) << std::left << message_;
+        std::cout << "\r" << std::setw(messageWidth_) << std::left << key_;
         for (unsigned int i = 0; i < barWidth_; ++i)
             std::cout << " ";
         std::cout << "       \r";
-        std::cout << std::setw(messageWidth_) << std::left << message_;
+        std::cout << std::setw(messageWidth_) << std::left << key_;
         std::cout.flush();
         finalized_ = true;
         return;
@@ -71,7 +71,7 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
     if (updateCounter_ > 0 && progress * numberOfScreenUpdates_ < updateCounter_ * total) {
         return;
     }
-    std::cout << "\r" << std::setw(messageWidth_) << std::left << message_;
+    std::cout << "\r" << std::setw(messageWidth_) << std::left << key_;
     if (barWidth_ > 0)
         std::cout << "[";
     unsigned int pos = static_cast<unsigned int>(static_cast<double>(barWidth_) * ratio);
@@ -95,36 +95,42 @@ void SimpleProgressBar::reset() {
     finalized_ = false;
 }
 
-ProgressLog::ProgressLog(const std::string& message, const unsigned int numberOfMessages, const int logLevel)
-    : message_(message), numberOfMessages_(numberOfMessages), logLevel_(logLevel), messageCounter_(0) {}
+ProgressLog::ProgressLog(const std::string& message, const unsigned int numberOfMessages, const oreSeverity logLevel)
+    : key_(message), numberOfMessages_(numberOfMessages), logLevel_(logLevel), messageCounter_(0) {}
 
-void ProgressLog::updateProgress(const unsigned long progress, const unsigned long total) {
+void ProgressLog::updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail) {
     if (messageCounter_ > 0 && progress * numberOfMessages_ < (messageCounter_ * total)) {
         return;
     }
-    MLOG(logLevel_, message_ << " " << progress << " out of " << total << " steps ("
+    MLOG(logLevel_, key_ << " (" << detail << "): " << progress << " out of " << total << " steps ("
                              << static_cast<int>(static_cast<double>(progress) / static_cast<double>(total) * 100.0)
                              << "%) completed");
+    ProgressMessage(key_, progress, total, detail).log();
     messageCounter_++;
 }
 
 void ProgressLog::reset() { messageCounter_ = 0; }
 
 MultiThreadedProgressIndicator::MultiThreadedProgressIndicator(
-    const std::set<boost::shared_ptr<ProgressIndicator>>& indicators)
+    const std::set<QuantLib::ext::shared_ptr<ProgressIndicator>>& indicators)
     : indicators_(indicators) {}
 
-void MultiThreadedProgressIndicator::updateProgress(const unsigned long progress, const unsigned long total) {
+void MultiThreadedProgressIndicator::updateProgress(const unsigned long progress, const unsigned long total, const std::string& detail) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    threadData_[std::this_thread::get_id()] = std::make_pair(progress, total);
+    threadData_[std::this_thread::get_id()] = std::make_tuple(progress, total, detail);
     unsigned long progressTmp = 0;
     unsigned long totalTmp = 0;
+    std::ostringstream detailTmp;
     for (auto const& d : threadData_) {
-        progressTmp += d.second.first;
-        totalTmp += d.second.second;
+        progressTmp += std::get<0>(d.second);
+        totalTmp += std::get<1>(d.second);
+
+        if (detailTmp.tellp() != 0)
+            detailTmp << "|";
+        detailTmp << std::get<2>(d.second);
     }
     for (auto& i : indicators_)
-        i->updateProgress(progressTmp, totalTmp);
+        i->updateProgress(progressTmp, totalTmp, detailTmp.str());
 }
 
 void MultiThreadedProgressIndicator::reset() {

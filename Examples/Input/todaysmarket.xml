@@ -47,6 +47,7 @@
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
     <YieldCurve name="BOND_YIELD_EUR">Yield/EUR/BOND_YIELD_EUR</YieldCurve>
     <YieldCurve name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</YieldCurve>
+    <YieldCurve name="BENCHMARK-EUR-6M">Yield/EUR/EURBMB</YieldCurve>
   </YieldCurves>
   <!-- discounting curve definition (in ccy swap discounting) -->
   <DiscountingCurves id="inccy_swap">

@@ -5,6 +5,7 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -17,9 +18,9 @@
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
-    <Parameter name="fxcalibration">collateral_eur</Parameter>
-    <Parameter name="pricing">collateral_eur</Parameter>
-    <Parameter name="simulation">collateral_eur</Parameter>
+    <Parameter name="fxcalibration">xois_eur</Parameter>
+    <Parameter name="pricing">xois_eur</Parameter>
+    <Parameter name="simulation">xois_eur</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">
@@ -50,6 +51,7 @@
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
+      <!-- <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter> -->
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>

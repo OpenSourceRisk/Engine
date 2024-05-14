@@ -1,0 +1,144 @@
+\subsubsection{Collateral Bond Obligation CBO}
+\label{ss:CBOData} 
+
+A Cashflow CDO or Collateral Bond Obligation CBO (trade type \emph{CBO}) can be set up in a short version 
+referencing the underlying CBO structure in a static CBO reference datum or a long version, where the CBO structure is specified explicitly.
+
+The main building block is the {\tt CBOData} block as shown in listing 
+\ref{lst:cbodata}. The {\tt CBOData} requires the two components {\tt CBOInvestment} and {\tt CBOStructure}. 
+Where the latter represents the general structure, the former specfies the actual investment. 
+For the short version, the CBO is fully specified using the component {\tt CBOInvestment} only, 
+the component {\tt CBOStructure} can be omitted. 
+
+Listing \ref{lst:cbodata} exhibits the long version: 
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CBOData>
+      <CBOInvestment>
+        <TrancheName>JuniorNote</TrancheName>
+        <Notional>4000000.00</Notional>
+        <StructureId>Constellation</StructureId>
+      </CBOInvestment>
+      <CBOStructure>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <Currency>EUR</Currency>
+        <ReinvestmentEndDate>2019-12-31</ReinvestmentEndDate>
+        <SeniorFee>0.01</SeniorFee>
+        <FeeDayCounter>A365</FeeDayCounter>
+        <SubordinatedFee>0.02</SubordinatedFee>
+        <EquityKicker>0.25</EquityKicker>
+        <BondBasketData>
+          ...
+        </BondBasketData>
+        <CBOTranches>
+          ...
+        </CBOTranches>
+        <ScheduleData>
+          ...
+        </ScheduleData>
+      </CBOStructure>
+    </CBOData>
+\end{minted}
+\caption{CBO Data}
+\label{lst:cbodata}
+\end{listing}
+
+The meanings of the elements of the {\tt CBOData} node follow below:
+
+\begin{itemize}
+
+\item TrancheName: Specifies of which tranche, results are shown in the report files (NPV, Sensitivity, ...). 
+The name needs to match one the names specified in {\tt CBOTranches}.
+
+\item Notional: Is the invested amount into the tranche specified above. 
+The value is used to scale the NPV from the general tranche NPV, so it may be different to the face amount specified in {\tt CBOTranches}. 
+
+\item StructureId: if details of the cbo are read from the reference data, StructureId is used as a key. 
+
+\item DayCounter: The day count convention of the tranches.
+Allowable values: See table \ref{tab:daycount}.
+
+\item PaymentConvention: The payment convention of the tranches.
+Allowable values: See Table \ref{tab:convention} Roll Convention.
+
+\item Currency: Defines the currency of the trade, i.e. the currency of the tranches. 
+Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item ReinvestmentEndDate: Defines the end of the reinvestment period. 
+During the reinvestment period, principal proceeds are used to reinvest in eliglible assets rather than to redeem CBO notes.
+Currently the model cannot handle underlying bonds with full amortisation within the reinvestment period. 
+In case the underlying bonds amortise only parts of their full notional (during that period), 
+the model will leave outstanding balance  constant until the end of the reinvestment period. 
+Therafter the underyling bonds amortises at a higher speed. 
+
+\item SeniorFee: The fee, expressed as rate, paid before all other obligations, top of the waterfall.
+
+\item FeeDayCounter: The day count convention for the fees.
+Allowable values: See table \ref{tab:daycount}.
+
+\item SubordinatedFee: The fee, expressed as rate, paid after all other obligations.
+
+\item EquityKicker: Fraction x of the residual payment, that will be split among the senior fee receiver (x) and the equity piece (1-x). 
+
+\item BondBasketData: All specifications of the underlying bond basket. 
+Uses the sub node BondBasketData as described in section \ref{ss:bondbasketdata}.
+
+\item CBOTranches: All required instrument data for the tranches of the CBO. 
+Uses the sub node CBOTranches as described in section \ref{ss:cbotranches}.
+
+\item ScheduleData: This is a trade component sub-node outlined in section \ref{ss:schedule_data} Schedule Data and Dates.
+
+\end{itemize}
+
+
+Listing \ref{lst:cboReferenceData} exhibits the reference data in conjunction with short version of the {\tt CBOData} in listing \ref{lst:cboInvestment}.
+The element meanings are the same as in the long version. 
+
+\begin{listing}[H]
+  %\hrule\medskip
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <ReferenceDatum id="Constellation">
+        <Type>CBO</Type>
+        <CboReferenceData>
+            <Currency>USD</Currency>
+            <DayCounter>A365</DayCounter>
+            <PaymentConvention>F</PaymentConvention>
+            <SeniorFee>0.001</SeniorFee>
+            <FeeDayCounter>A365</FeeDayCounter>
+            <SubordinatedFee>0.005</SubordinatedFee>
+            <EquityKicker>0.01</EquityKicker>
+            <CBOTranches>
+                ...
+            </CBOTranches>
+            <ScheduleData>
+                ...
+            </ScheduleData>
+            <BondBasketData>
+                ...
+            </BondBasketData>
+        </CboReferenceData>
+    </ReferenceDatum>
+\end{minted}
+\caption{CboReferenceData}
+\label{lst:cboReferenceData}
+\end{listing}
+
+
+\begin{listing}[H]
+  %\hrule\medskip
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <CBOData>
+      <CBOInvestment>
+        <TrancheName>JuniorNote</TrancheName>
+        <Notional>4000000.00</Notional>
+        <StructureId>Constellation</StructureId>
+      </CBOInvestment>
+    </CBOData>
+\end{minted}
+\caption{CBOInvestment}
+\label{lst:cboInvestment}
+\end{listing}
+

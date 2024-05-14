@@ -59,25 +59,25 @@ class SimmBucketMapperBase : public SimmBucketMapper, public ore::data::XMLSeria
 public:
     //! Default constructor that adds fixed known mappings
     SimmBucketMapperBase(
-        const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
-        const boost::shared_ptr<SimmBasicNameMapper>& nameMapper = nullptr);
+        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
+        const QuantLib::ext::shared_ptr<SimmBasicNameMapper>& nameMapper = nullptr);
 
     /*! Return the SIMM <em>bucket</em> for a given SIMM <em>RiskType</em> and
         SIMM <em>Qualifier</em>. An error is thrown if there is no <em>bucket</em>
         for the combination.
     */
-    std::string bucket(const SimmConfiguration::RiskType& riskType, const std::string& qualifier) const override;
+    std::string bucket(const CrifRecord::RiskType& riskType, const std::string& qualifier) const override;
 
     //! Check if the given SIMM <em>RiskType</em> has a bucket structure.
-    bool hasBuckets(const SimmConfiguration::RiskType& riskType) const override;
+    bool hasBuckets(const CrifRecord::RiskType& riskType) const override;
 
     //! Check if the given \p riskType and \p qualifier has a valid mapping
-    bool has(const SimmConfiguration::RiskType& riskType, const std::string& qualifier,
+    bool has(const CrifRecord::RiskType& riskType, const std::string& qualifier,
              boost::optional<bool> fallback = boost::none) const override;
 
     //! \name Serialisation
     //@{
-    ore::data::XMLNode* toXML(ore::data::XMLDocument&) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument&) const override;
     void fromXML(ore::data::XMLNode* node) override;
     //@}
 
@@ -86,14 +86,14 @@ public:
               mappings e.g. <code>addMappingRange</code> that adds a range of
               mappings at once
     */
-    void addMapping(const SimmConfiguration::RiskType& riskType, const std::string& qualifier,
+    void addMapping(const CrifRecord::RiskType& riskType, const std::string& qualifier,
                     const std::string& bucket, const std::string& validFrom = "", const std::string& validTo = "", bool fallback = false) override;
 
     //! Set the Reference data manager
-    void setSimmNameMapper(const boost::shared_ptr<SimmBasicNameMapper> nameMapper) { nameMapper_ = nameMapper; }
+    void setSimmNameMapper(const QuantLib::ext::shared_ptr<SimmBasicNameMapper> nameMapper) { nameMapper_ = nameMapper; }
 
     //! Set the Reference data manager
-    void setRefDataManger(const boost::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager) { refDataManager_ = refDataManager; }
+    void setRefDataManger(const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager) { refDataManager_ = refDataManager; }
 
     const std::set<FailedMapping>& failedMappings() const override { return failedMappings_; }
 
@@ -104,25 +104,27 @@ protected:
     virtual std::string irBucket(const std::string& qualifier) const;
 
     //! Check the risk type before adding a mapping entry
-    void checkRiskType(const SimmConfiguration::RiskType& riskType) const;
+    void checkRiskType(const CrifRecord::RiskType& riskType) const;
 
     /*! Map from SIMM <em>RiskType</em> to another map that holds the
         SIMM <em>Qualifier</em> to SIMM <em>bucket</em> mappings
     */
-    std::map<SimmConfiguration::RiskType, std::map<std::string, std::set<BucketMapping>>> bucketMapping_;
+    std::map<CrifRecord::RiskType, std::map<std::string, std::set<BucketMapping>>> bucketMapping_;
 
     //! Set of SIMM risk types that have buckets
-    std::set<SimmConfiguration::RiskType> rtWithBuckets_;
+    std::set<CrifRecord::RiskType> rtWithBuckets_;
 
 private:
+    mutable std::map<std::pair<CrifRecord::RiskType, std::string>, std::string> cache_;
+
     //! Reset the SIMM bucket mapper i.e. clears all mappings and adds the initial hard-coded commodity mappings
     void reset();
 
     //! Reference data manager
-    boost::shared_ptr<ore::data::ReferenceDataManager> refDataManager_;
+    QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> refDataManager_;
 
     //! Simm Name Mapper
-    boost::shared_ptr<SimmBasicNameMapper> nameMapper_;
+    QuantLib::ext::shared_ptr<SimmBasicNameMapper> nameMapper_;
 
     mutable std::set<FailedMapping> failedMappings_;
 };

@@ -27,7 +27,6 @@
       <xs:element type="SobolRsgDirectionIntegers" name="DirectionIntegers" minOccurs="0"/>
       <xs:element type="xs:string" name="CloseOutLag" minOccurs="0"/>
       <xs:element type="mporMode" name="MporMode" minOccurs="0"/>
-       <xs:element type="mporCashFlowMode" name="MporCashFlowMode" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -35,15 +34,6 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="ActualDate"/>
       <xs:enumeration value="StickyDate"/>
-    </xs:restriction>
-  </xs:simpleType>
-
-  <xs:simpleType name="mporCashFlowMode">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="NonePay"/>
-      <xs:enumeration value="BothPay"/>
-      <xs:enumeration value="WePay"/>
-      <xs:enumeration value="TheyPay"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -83,6 +73,7 @@
       <xs:enumeration value="MersenneTwisterAntithetic"/>
       <xs:enumeration value="Sobol"/>
       <xs:enumeration value="SobolBrownianBridge"/>
+      <xs:enumeration value="Burley2020SobolBrownianBridge"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -863,7 +854,7 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-            <xs:element name="SmileDynamics" minOccurs="0">
+            <xs:element name="SmileDynamics" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
@@ -877,7 +868,7 @@
       </xs:element>
       <xs:element name="YieldVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
-          <xs:all>
+          <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Names">
@@ -889,10 +880,10 @@
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
             <xs:element type="xs:string" name="Terms"/>
+            <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
             <xs:element name="Cube" minOccurs="0">
               <xs:complexType>
                 <xs:all>
-                  <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
                   <xs:element type="xs:string" name="StrikeSpreads" maxOccurs="1" minOccurs="0"/>
                 </xs:all>
               </xs:complexType>
@@ -912,7 +903,7 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-            <xs:element name="SmileDynamics" minOccurs="0">
+            <xs:element name="SmileDynamics" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
@@ -921,7 +912,7 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
-          </xs:all>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="CapFloorVolatilities" minOccurs="0" maxOccurs="1">
@@ -981,7 +972,7 @@
             </xs:element>
             <xs:element type="bool" name="AdjustOptionletPillars" maxOccurs="1" minOccurs="0"/>
             <xs:element type="bool" name="UseCapAtm" maxOccurs="1" minOccurs="0"/>
-            <xs:element name="SmileDynamics" minOccurs="0">
+            <xs:element name="SmileDynamics" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
@@ -995,7 +986,7 @@
       </xs:element>
       <xs:element name="CDSVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
-          <xs:all>
+          <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Names">
@@ -1006,7 +997,7 @@
               </xs:complexType>
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
-            <xs:element name="SmileDynamics" minOccurs="0">
+            <xs:element name="SmileDynamics" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
@@ -1015,7 +1006,7 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
-          </xs:all>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="FxVolatilities" minOccurs="0" maxOccurs="1">
@@ -1039,6 +1030,7 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
+            <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
             <xs:element name="Surface" minOccurs="0">
               <xs:complexType>
                 <xs:choice>
@@ -1078,7 +1070,7 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-            <xs:element name="SmileDynamics" minOccurs="0">
+            <xs:element name="SmileDynamics" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
@@ -1111,10 +1103,10 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
+            <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
             <xs:element name="Surface" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
                   <xs:element name="Moneyness" maxOccurs="unbounded" minOccurs="0">
                     <xs:complexType>
                       <xs:simpleContent>
@@ -1151,7 +1143,7 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-            <xs:element name="SmileDynamics" minOccurs="0">
+            <xs:element name="SmileDynamics" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
@@ -1272,7 +1264,7 @@
       </xs:element>
       <xs:element name="CPICapFloorVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
-          <xs:all>
+          <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Names">
@@ -1284,7 +1276,7 @@
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
             <xs:element type="xs:string" name="Strikes"/>
-            <xs:element name="SmileDynamics" minOccurs="0">
+            <xs:element name="SmileDynamics" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
@@ -1293,12 +1285,12 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
-          </xs:all>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="YYCapFloorVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
-          <xs:all>
+          <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Names">
@@ -1310,7 +1302,7 @@
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
             <xs:element type="xs:string" name="Strikes"/>
-            <xs:element name="SmileDynamics" minOccurs="0">
+            <xs:element name="SmileDynamics" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
@@ -1319,7 +1311,7 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
-          </xs:all>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="Commodities" maxOccurs="1" minOccurs="0">
@@ -1362,7 +1354,7 @@
       </xs:element>
       <xs:element name="CommodityVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
-          <xs:all>
+          <xs:sequence>
             <xs:element type="bool" name="Simulate"  maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Names">
@@ -1381,7 +1373,7 @@
               </xs:complexType>
             </xs:element>
             <xs:element type="xs:string" name="DayCounter" maxOccurs="1" minOccurs="0"/>
-            <xs:element name="SmileDynamics" minOccurs="0">
+            <xs:element name="SmileDynamics" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
@@ -1390,7 +1382,7 @@
                 </xs:simpleContent>
               </xs:complexType>
             </xs:element>
-          </xs:all>
+          </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="AggregationScenarioDataCurrencies" minOccurs="0" maxOccurs="1">

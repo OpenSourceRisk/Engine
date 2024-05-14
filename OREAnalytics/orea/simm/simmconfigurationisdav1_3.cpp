@@ -32,14 +32,16 @@ using std::vector;
 namespace ore {
 namespace analytics {
 
-SimmConfiguration_ISDA_V1_3::SimmConfiguration_ISDA_V1_3(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+typedef CrifRecord::RiskType RiskType; 
+
+SimmConfiguration_ISDA_V1_3::SimmConfiguration_ISDA_V1_3(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
                                                          const std::string& name, const std::string version)
     : SimmConfiguration_ISDA_V1_0(simmBucketMapper, name, version) {
 
     // Now add/modify the pieces that we need to amend
 
     // Set up the correct concentration threshold getter
-    simmConcentration_ = boost::make_shared<SimmConcentration_ISDA_V1_3>(simmBucketMapper_);
+    simmConcentration_ = QuantLib::ext::make_shared<SimmConcentration_ISDA_V1_3>(simmBucketMapper_);
 
     // clang-format off
 

@@ -38,17 +38,22 @@ namespace analytics {
 class ZeroToParCube {
 public:
     //! Constructor
-    ZeroToParCube(const boost::shared_ptr<ore::analytics::SensitivityCube>& zeroCube,
-                  const boost::shared_ptr<ParSensitivityConverter>& parConverter,
+    ZeroToParCube(const QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>& zeroCube,
+                  const QuantLib::ext::shared_ptr<ParSensitivityConverter>& parConverter,
+                  const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled = {},
+                  const bool continueOnError = false);
+    //! Another Constructor!
+    ZeroToParCube(const std::vector<QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>>& zeroCubes,
+                  const QuantLib::ext::shared_ptr<ParSensitivityConverter>& parConverter,
                   const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled = {},
                   const bool continueOnError = false);
 
     //! Inspectors
     //@{
-    //! Underlying zero sensitivity cube
-    const boost::shared_ptr<ore::analytics::SensitivityCube>& zeroCube() const { return zeroCube_; }
+    //! Underlying zero sensitivity cubes
+    const std::vector<QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>>& zeroCubes() const { return zeroCubes_; }
     //! Par converter object
-    const boost::shared_ptr<ParSensitivityConverter>& parConverter() const { return parConverter_; }
+    const QuantLib::ext::shared_ptr<ParSensitivityConverter>& parConverter() const { return parConverter_; }
     //! The par risk factor types that are disabled for this instance of ZeroToParCube.
     const std::set<ore::analytics::RiskFactorKey::KeyType>& typesDisabled() const { return typesDisabled_; }
     //@}
@@ -56,12 +61,13 @@ public:
     //! Return the non-zero par deltas for the given \p tradeId
     std::map<ore::analytics::RiskFactorKey, QuantLib::Real> parDeltas(const std::string& tradeId) const;
 
-    //! Return the non-zero par deltas for the given trade index
-    std::map<ore::analytics::RiskFactorKey, QuantLib::Real> parDeltas(QuantLib::Size tradeIdx) const;
+    //! Return the non-zero par deltas for the given cube and trade index
+    std::map<ore::analytics::RiskFactorKey, QuantLib::Real> parDeltas(QuantLib::Size cubeIdx,
+                                                                      QuantLib::Size tradeIdx) const;
 
 private:
-    boost::shared_ptr<ore::analytics::SensitivityCube> zeroCube_;
-    boost::shared_ptr<ParSensitivityConverter> parConverter_;
+    std::vector<QuantLib::ext::shared_ptr<ore::analytics::SensitivityCube>> zeroCubes_;
+    QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter_;
     std::map<ore::analytics::RiskFactorKey, Size> factorToIndex_;
 
     //! Set of risk factor types available for par conversion but that are disabled for this instance of ZeroToParCube.

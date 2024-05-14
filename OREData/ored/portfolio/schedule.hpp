@@ -39,13 +39,14 @@ public:
     //! Default constructor
     ScheduleRules() {}
 
-    ScheduleRules(const string& startDate, const string& endDate, const string& tenor,
-                                 const string& calendar, const string& convention, const string& termConvention, const string& rule,
-                  const string& endOfMonth = "N", const string& firstDate = "", const string& lastDate = "")
+    ScheduleRules(const string& startDate, const string& endDate, const string& tenor, const string& calendar,
+                  const string& convention, const string& termConvention, const string& rule,
+                  const string& endOfMonth = "N", const string& firstDate = "", const string& lastDate = "",
+                  const bool removeFirstDate = false, const bool removeLastDate = false)
         : startDate_(startDate), endDate_(endDate), tenor_(tenor), calendar_(calendar), convention_(convention),
           termConvention_(termConvention), rule_(rule), endOfMonth_(endOfMonth), firstDate_(firstDate),
-          lastDate_(lastDate) {}
-    
+          lastDate_(lastDate), removeFirstDate_(removeFirstDate), removeLastDate_(removeLastDate) {}
+
     //! Check if key attributes are empty
     const bool hasData() const { return !startDate_.empty() && !tenor_.empty(); }
 
@@ -62,6 +63,8 @@ public:
     const string& endOfMonth() const { return endOfMonth_; }
     const string& firstDate() const { return firstDate_; }
     const string& lastDate() const { return lastDate_; }
+    bool removeFirstDate() const { return removeFirstDate_; }
+    bool removeLastDate() const { return removeLastDate_; }
     //@}
 
     //! \name Modifiers
@@ -76,7 +79,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
     string startDate_;
@@ -90,6 +93,9 @@ private:
     string firstDate_;
     string lastDate_;
     bool adjustEndDateToPreviousMonthEnd_{false};
+    bool removeFirstDate_ = false;
+    bool removeLastDate_ = false;
+    bool was1T_ = false;
 };
 
 //! Serializable object holding schedule Dates data
@@ -125,7 +131,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
     string calendar_;
@@ -133,6 +139,7 @@ private:
     string tenor_;
     string endOfMonth_;
     vector<string> dates_;
+    bool was1T_ = false;
 };
 
 //! Serializable object holding Derived schedule data
@@ -144,8 +151,10 @@ public:
     //! Default constructor
     ScheduleDerived() {}
     //! Constructor
-    ScheduleDerived(const string& baseSchedule, const string& calendar, const string& convention, const string& shift)
-        : baseSchedule_(baseSchedule), calendar_(calendar), convention_(convention), shift_(shift) {}
+    ScheduleDerived(const string& baseSchedule, const string& calendar, const string& convention, const string& shift,
+                    const bool removeFirstDate = false, const bool removeLastDate = false)
+        : baseSchedule_(baseSchedule), calendar_(calendar), convention_(convention), shift_(shift),
+          removeFirstDate_(removeFirstDate), removeLastDate_(removeLastDate) {}
 
     //! \name Inspectors
     //@{
@@ -153,6 +162,8 @@ public:
     const string& calendar() const { return calendar_; }
     const string& convention() const { return convention_; }
     const string& shift() const { return shift_; }
+    bool removeFirstDate() const { return removeFirstDate_; }
+    bool removeLastDate() const { return removeLastDate_; }
     //@}
 
     //! \name Modifiers
@@ -165,13 +176,15 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
     string baseSchedule_;
     string calendar_;
     string convention_;
     string shift_;
+    bool removeFirstDate_ = false;
+    bool removeLastDate_ = false;
 };
 
 //! Serializable schedule data
@@ -221,7 +234,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
     vector<ScheduleDates> dates_;

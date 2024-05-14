@@ -81,7 +81,10 @@ void DiscountingFxForwardEngine::calculate() const {
     results_.additionalResults["currency[1]"] = ccy1_.code();
     results_.additionalResults["currency[2]"] = ccy2_.code();
 
-    if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+    // The instrument flag overrides what is passed to the engine c'tor
+    bool includeSettlementDateFlows = arguments_.includeSettlementDateFlows;
+    
+    if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeSettlementDateFlows)) {
         Real disc1near = currency1Discountcurve_->discount(npvDate);
         Real disc1far = currency1Discountcurve_->discount(arguments_.payDate);
         Real disc2near = currency2Discountcurve_->discount(npvDate);
@@ -97,7 +100,7 @@ void DiscountingFxForwardEngine::calculate() const {
         Real fx1 = settleCcy1 ? 1.0 : fxfwd;
         Real fx2 = settleCcy1 ? 1 / fxfwd : 1.0;
 
-        QL_REQUIRE(!arguments_.isPhysicallySettled || arguments_.payDate <= arguments_.fixingDate ||
+        QL_REQUIRE(arguments_.isPhysicallySettled || arguments_.payDate <= arguments_.fixingDate ||
                        arguments_.fxIndex != nullptr,
                    "If pay date (" << arguments_.payDate << ") is strictly after fixing date (" << arguments_.fixingDate
                                    << "), an FX Index must be given for a cash-settled FX Forward.");
@@ -147,7 +150,7 @@ void DiscountingFxForwardEngine::calculate() const {
 
         results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * discFar / discNear * (tmpNominal1 / fx1 - tmpNominal2 / fx2);
 
-        results_.npv = Money(arguments_.payCcy, results_.value);
+        results_.npv = Money(settleCcy, results_.value);
 
         results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
         results_.additionalResults["fairForwardRate"] = fxfwd;

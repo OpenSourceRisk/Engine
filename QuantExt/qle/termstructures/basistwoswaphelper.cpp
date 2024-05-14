@@ -16,28 +16,23 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/instruments/makevanillaswap.hpp>
-#ifdef QL_USE_INDEXED_COUPON
 #include <ql/cashflows/floatingratecoupon.hpp>
-#endif
-
+#include <ql/cashflows/iborcoupon.hpp>
+#include <ql/instruments/makevanillaswap.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
 
 namespace QuantExt {
-
-namespace {
-void no_deletion(YieldTermStructure*) {}
-} // namespace
 
 BasisTwoSwapHelper::BasisTwoSwapHelper(const Handle<Quote>& spread, const Period& swapTenor, const Calendar& calendar,
                                        // Long tenor swap
                                        Frequency longFixedFrequency, BusinessDayConvention longFixedConvention,
                                        const DayCounter& longFixedDayCount,
-                                       const boost::shared_ptr<IborIndex>& longIndex,
+                                       const QuantLib::ext::shared_ptr<IborIndex>& longIndex,
                                        // Short tenor swap
                                        Frequency shortFixedFrequency, BusinessDayConvention shortFixedConvention,
                                        const DayCounter& shortFixedDayCount,
-                                       const boost::shared_ptr<IborIndex>& shortIndex, bool longMinusShort,
+                                       const QuantLib::ext::shared_ptr<IborIndex>& shortIndex, bool longMinusShort,
                                        // Discount curve
                                        const Handle<YieldTermStructure>& discountingCurve)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), calendar_(calendar),
@@ -100,29 +95,29 @@ void BasisTwoSwapHelper::initializeDates() {
 
 /* May need to adjust latestDate_ if you are projecting libor based
    on tenor length rather than from accrual date to accrual date. */
-#ifdef QL_USE_INDEXED_COUPON
-    if (termStructureHandle_ == shortIndex_->forwardingTermStructure()) {
-        boost::shared_ptr<FloatingRateCoupon> lastFloating =
-            boost::dynamic_pointer_cast<FloatingRateCoupon>(shortSwap_->floatingLeg().back());
-        Date fixingValueDate = shortIndex_->valueDate(lastFloating->fixingDate());
-        Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
-        latestDate_ = std::max(latestDate_, endValueDate);
+    if (!IborCoupon::Settings::instance().usingAtParCoupons()) {
+        if (termStructureHandle_ == shortIndex_->forwardingTermStructure()) {
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
+                QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(shortSwap_->floatingLeg().back());
+            Date fixingValueDate = shortIndex_->valueDate(lastFloating->fixingDate());
+            Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
+            latestDate_ = std::max(latestDate_, endValueDate);
+        }
+        if (termStructureHandle_ == longIndex_->forwardingTermStructure()) {
+            QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
+                QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(longSwap_->floatingLeg().back());
+            Date fixingValueDate = longIndex_->valueDate(lastFloating->fixingDate());
+            Date endValueDate = longIndex_->maturityDate(fixingValueDate);
+            latestDate_ = std::max(latestDate_, endValueDate);
+        }
     }
-    if (termStructureHandle_ == longIndex_->forwardingTermStructure()) {
-        boost::shared_ptr<FloatingRateCoupon> lastFloating =
-            boost::dynamic_pointer_cast<FloatingRateCoupon>(longSwap_->floatingLeg().back());
-        Date fixingValueDate = longIndex_->valueDate(lastFloating->fixingDate());
-        Date endValueDate = longIndex_->maturityDate(fixingValueDate);
-        latestDate_ = std::max(latestDate_, endValueDate);
-    }
-#endif
 }
 
 void BasisTwoSwapHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
 
-    boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
     if (discountHandle_.empty())

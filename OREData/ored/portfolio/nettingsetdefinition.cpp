@@ -21,6 +21,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/utilities/dataparsers.hpp>
+#include <utility>
 
 namespace ore {
 namespace data {
@@ -57,11 +58,11 @@ void CSA::invertCSA() {
     if (initialMarginType_ != Bilateral) {
         initialMarginType_ = (initialMarginType_ == CallOnly ? PostOnly : CallOnly);
     }
-    std::swap<Real>(collatSpreadPay_, collatSpreadRcv_);
-    std::swap<Real>(thresholdPay_, thresholdRcv_);
-    std::swap<Real>(mtaPay_, mtaRcv_);
+    std::swap(collatSpreadPay_, collatSpreadRcv_);
+    std::swap(thresholdPay_, thresholdRcv_);
+    std::swap(mtaPay_, mtaRcv_);
     iaHeld_ *= -1;
-    std::swap<Period>(marginCallFreq_, marginPostFreq_);
+    std::swap(marginCallFreq_, marginPostFreq_);
 }
 
 void CSA::validate() {
@@ -123,13 +124,15 @@ NettingSetDefinition::NettingSetDefinition(const NettingSetDetails& nettingSetDe
                                            const string& marginPostFreq, const string& mpr, const Real& collatSpreadPay,
                                            const Real& collatSpreadRcv, const vector<string>& eligCollatCcys,
                                            bool applyInitialMargin, const string& initialMarginType,
-                                           const bool calculateIMAmount, const bool calculateVMAmount)
+                                           const bool calculateIMAmount, const bool calculateVMAmount,
+                                           const string& nonExemptIMRegulations)
     : nettingSetDetails_(nettingSetDetails), activeCsaFlag_(true) {
 
-    csa_ = boost::make_shared<CSA>(
+    csa_ = QuantLib::ext::make_shared<CSA>(
         parseCsaType(bilateral), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay, mtaRcv, iaHeld, iaType,
         parsePeriod(marginCallFreq), parsePeriod(marginPostFreq), parsePeriod(mpr), collatSpreadPay, collatSpreadRcv,
-        eligCollatCcys, applyInitialMargin, parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount);
+        eligCollatCcys, applyInitialMargin, parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount,
+        nonExemptIMRegulations);
 
     validate();
     DLOG(nettingSetDetails_ << ": collateralised NettingSetDefinition built. ");
@@ -203,17 +206,20 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         bool calculateIMAmount = XMLUtils::getChildValueAsBool(csaChild, "CalculateIMAmount", false, false);
         bool calculateVMAmount = XMLUtils::getChildValueAsBool(csaChild, "CalculateVMAmount", false, false);
 
-        csa_ = boost::make_shared<CSA>(parseCsaType(csaTypeStr), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay,
+        string nonExemptIMRegulations = XMLUtils::getChildValue(csaChild, "NonExemptIMRegulations", false);
+
+        csa_ = QuantLib::ext::make_shared<CSA>(parseCsaType(csaTypeStr), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay,
                                        mtaRcv, iaHeld, iaType, parsePeriod(marginCallFreqStr),
                                        parsePeriod(marginPostFreqStr), parsePeriod(mprStr), collatSpreadPay,
                                        collatSpreadRcv, eligCollatCcys, applyInitialMargin,
-                                       parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount);
+                                       parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount,
+                                       nonExemptIMRegulations);
     }
 
     validate();
 }
 
-XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
+XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) const {
     // Allocate a node.
     XMLNode* node = doc.allocNode("NettingSet");
 
@@ -259,6 +265,7 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, csaSubNode, "InitialMarginType", to_string(csa_->initialMarginType()));
         XMLUtils::addChild(doc, csaSubNode, "CalculateIMAmount", csa_->calculateIMAmount());
         XMLUtils::addChild(doc, csaSubNode, "CalculateVMAmount", csa_->calculateVMAmount());
+        XMLUtils::addChild(doc, csaSubNode, "NonExemptIMRegulations", csa_->nonExemptIMRegulations());
     }
 
     return node;

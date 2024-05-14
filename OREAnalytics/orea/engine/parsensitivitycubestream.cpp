@@ -29,9 +29,10 @@ namespace analytics {
 
 // Note: iterator initialisation below works because currentDeltas_ is
 //       (empty) initialised before itCurrent_
-ParSensitivityCubeStream::ParSensitivityCubeStream(const boost::shared_ptr<ZeroToParCube>& cube, const string& currency)
-    : cube_(cube), currency_(currency), tradeIdx_(cube_->zeroCube()->tradeIdx().begin()), itCurrent_(currentDeltas_.begin()) {
-    // Call init
+ParSensitivityCubeStream::ParSensitivityCubeStream(const QuantLib::ext::shared_ptr<ZeroToParCube>& cube, const string& currency)
+    : zeroCubeIdx_(0), cube_(cube), currency_(currency), itCurrent_(currentDeltas_.begin()) {
+    QL_REQUIRE(!cube_->zeroCubes().empty(), "ParSensitivityCubeStream: cube contains no zero cubes");
+    tradeIdx_ = cube_->zeroCubes().front()->tradeIdx().begin();
     init();
 }
 
@@ -39,44 +40,48 @@ SensitivityRecord ParSensitivityCubeStream::next() {
 
     SensitivityRecord sr;
 
-    while (itCurrent_ == currentDeltas_.end() && tradeIdx_ != cube_->zeroCube()->tradeIdx().end()) {
+    while (itCurrent_ == currentDeltas_.end() && tradeIdx_ != cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().end()) {
         // Move to next trade
         tradeIdx_++;
         // update par deltas
-        if (tradeIdx_ != cube_->zeroCube()->tradeIdx().end()) {
+        if (tradeIdx_ != cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().end()) {
             DLOG("Retrieving par deltas for trade " << tradeIdx_->first);
-            currentDeltas_ = cube_->parDeltas(tradeIdx_->second);
+            currentDeltas_ = cube_->parDeltas(zeroCubeIdx_, tradeIdx_->second);
             itCurrent_ = currentDeltas_.begin();
             DLOG("There are " << currentDeltas_.size() << " par deltas for trade " << tradeIdx_->first);
         }
-
     }
-    if (tradeIdx_ != cube_->zeroCube()->tradeIdx().end()) {
+
+    if (tradeIdx_ != cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().end()) {
         // Populate current sensitivity record
-        
         sr.tradeId = tradeIdx_->first;
         sr.isPar = true;
         sr.currency = currency_;
-        sr.baseNpv = cube_->zeroCube()->npv(tradeIdx_->second);
-
+        sr.baseNpv = cube_->zeroCubes()[zeroCubeIdx_]->npv(tradeIdx_->second);
         if (itCurrent_ != currentDeltas_.end()) {
             DLOG("Processing par delta [" << itCurrent_->first << ", " << itCurrent_->second << "]");
             sr.key_1 = itCurrent_->first;
-            auto fullDescription = cube_->zeroCube()->factorDescription(sr.key_1);
+            auto fullDescription = cube_->zeroCubes()[zeroCubeIdx_]->factorDescription(sr.key_1);
             sr.desc_1 = deconstructFactor(fullDescription).second;
-            sr.shift_1 = cube_->zeroCube()->shiftSize(sr.key_1);
+            sr.shift_1 = cube_->zeroCubes()[zeroCubeIdx_]->targetShiftSize(sr.key_1);
             sr.delta = itCurrent_->second;
             sr.gamma = Null<Real>();
             // Move iterator to next par delta
             itCurrent_++;
         }
-    } 
+    } else if (zeroCubeIdx_ < cube_->zeroCubes().size() - 1) {
+        ++zeroCubeIdx_;
+        init();
+        return next();
+    }
+
     return sr;
 }
 
 void ParSensitivityCubeStream::reset() {
     // Reset all
-    tradeIdx_ = cube_->zeroCube()->tradeIdx().begin();
+    zeroCubeIdx_ = 0;
+    tradeIdx_ = cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().begin();
     currentDeltas_ = {};
     itCurrent_ = currentDeltas_.begin();
     // Call init
@@ -85,10 +90,10 @@ void ParSensitivityCubeStream::reset() {
 
 void ParSensitivityCubeStream::init() {
     // If we have trade IDs in the underlying cube
-    if (!cube_->zeroCube()->tradeIdx().empty()) {
-        tradeIdx_ = cube_->zeroCube()->tradeIdx().begin();
+    if (!cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().empty()) {
+        tradeIdx_ = cube_->zeroCubes()[zeroCubeIdx_]->tradeIdx().begin();
         DLOG("Retrieving par deltas for trade " << tradeIdx_->first);
-        currentDeltas_ = cube_->parDeltas(tradeIdx_->second);
+        currentDeltas_ = cube_->parDeltas(zeroCubeIdx_, tradeIdx_->second);
         itCurrent_ = currentDeltas_.begin();
         DLOG("There are " << currentDeltas_.size() << " par deltas for trade " << tradeIdx_->first);
     }

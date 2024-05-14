@@ -30,15 +30,25 @@ namespace analytics {
 
 using crossPair = SensitivityCube::crossPair;
 
-SensitivityCubeStream::SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const string& currency)
-    : cube_(cube), currency_(currency), canComputeGamma_(false) {
+SensitivityCubeStream::SensitivityCubeStream(const QuantLib::ext::shared_ptr<SensitivityCube>& cube, const string& currency)
+    : SensitivityCubeStream(std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>{cube}, currency) {}
+
+SensitivityCubeStream::SensitivityCubeStream(const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& cubes,
+                                             const string& currency)
+    : cubes_(cubes), currency_(currency), canComputeGamma_(false) {
 
     // Set the value of canComputeGamma_ based on up and down risk factors.
-    const auto& upFactors = cube_->upFactors();
-    const auto& downFactors = cube_->downFactors();
-    if (upFactors.size() == downFactors.size()) {
-        canComputeGamma_ = equal(upFactors.begin(), upFactors.end(), downFactors.begin(),
-                                 [](const auto& a, const auto& b) { return a.first == b.first; });
+
+    canComputeGamma_ = true;
+    for (const auto& cube : cubes_) {
+        const auto& upFactors = cube->upFactors();
+        const auto& downFactors = cube->downFactors();
+        if (upFactors.size() == downFactors.size() &&
+            equal(upFactors.begin(), upFactors.end(), downFactors.begin(),
+                  [](const auto& a, const auto& b) { return a.first == b.first; }))
+            continue;
+        canComputeGamma_ = false;
+        break;
     }
 
     reset();
@@ -46,42 +56,53 @@ SensitivityCubeStream::SensitivityCubeStream(const boost::shared_ptr<Sensitivity
 
 SensitivityRecord SensitivityCubeStream::next() {
 
-    while (tradeIdx_ != cube_->tradeIdx().end() && currentDeltaKey_ == currentDeltaKeys_.end() &&
+    if (cubes_.size() == 0)
+        return SensitivityRecord();
+
+    while (tradeIdx_ != cubes_[currentCubeIdx_]->tradeIdx().end() && currentDeltaKey_ == currentDeltaKeys_.end() &&
            currentCrossGammaKey_ == currentCrossGammaKeys_.end()) {
         ++tradeIdx_;
         updateForNewTrade();
     }
 
-    if (tradeIdx_ == cube_->tradeIdx().end())
-        return SensitivityRecord();
+    if (tradeIdx_ == cubes_[currentCubeIdx_]->tradeIdx().end()) {
+        if (currentCubeIdx_ < cubes_.size() - 1) {
+            ++currentCubeIdx_;
+            tradeIdx_ = cubes_[currentCubeIdx_]->tradeIdx().begin();
+            updateForNewTrade();
+            return next();
+        } else {
+            return SensitivityRecord();
+        }
+    }
 
     SensitivityRecord sr;
     Size tradeIdx = tradeIdx_->second;
     sr.tradeId = tradeIdx_->first;
     sr.isPar = false;
     sr.currency = currency_;
-    sr.baseNpv = cube_->npv(tradeIdx);
+    sr.baseNpv = cubes_[currentCubeIdx_]->npv(tradeIdx);
 
     if (currentDeltaKey_ != currentDeltaKeys_.end()) {
-        auto fd = cube_->upFactors().at(*currentDeltaKey_);
+        auto fd = cubes_[currentCubeIdx_]->upFactors().at(*currentDeltaKey_);
         sr.key_1 = *currentDeltaKey_;
         sr.desc_1 = fd.factorDesc;
-        sr.shift_1 = fd.shiftSize;
-        sr.delta = cube_->delta(tradeIdx_->first, *currentDeltaKey_);
+        sr.shift_1 = fd.targetShiftSize;
+        sr.delta = cubes_[currentCubeIdx_]->delta(tradeIdx_->first, *currentDeltaKey_);
         if (canComputeGamma_)
-            sr.gamma = cube_->gamma(tradeIdx_->first, *currentDeltaKey_);
+            sr.gamma = cubes_[currentCubeIdx_]->gamma(tradeIdx_->first, *currentDeltaKey_);
         else
             sr.gamma = Null<Real>();
         ++currentDeltaKey_;
     } else if (currentCrossGammaKey_ != currentCrossGammaKeys_.end()) {
-        auto fd = cube_->crossFactors().at(*currentCrossGammaKey_);
+        auto fd = cubes_[currentCubeIdx_]->crossFactors().at(*currentCrossGammaKey_);
         sr.key_1 = currentCrossGammaKey_->first;
         sr.desc_1 = std::get<0>(fd).factorDesc;
-        sr.shift_1 = std::get<0>(fd).shiftSize;
+        sr.shift_1 = std::get<0>(fd).targetShiftSize;
         sr.key_2 = currentCrossGammaKey_->second;
         sr.desc_2 = std::get<1>(fd).factorDesc;
-        sr.shift_2 = std::get<1>(fd).shiftSize;
-        sr.gamma = cube_->crossGamma(tradeIdx_->first, *currentCrossGammaKey_);
+        sr.shift_2 = std::get<1>(fd).targetShiftSize;
+        sr.gamma = cubes_[currentCubeIdx_]->crossGamma(tradeIdx_->first, *currentCrossGammaKey_);
         ++currentCrossGammaKey_;
     }
 
@@ -93,22 +114,21 @@ void SensitivityCubeStream::updateForNewTrade() {
     currentDeltaKeys_.clear();
     currentCrossGammaKeys_.clear();
 
-    if (tradeIdx_ != cube_->tradeIdx().end()) {
+    if (tradeIdx_ != cubes_[currentCubeIdx_]->tradeIdx().end()) {
 
         // add delta keys
 
-        for (auto const& [idx, _] : cube_->npvCube()->getTradeNPVs(tradeIdx_->second)) {
-            if (auto k = cube_->upFactor(idx); k.keytype != RiskFactorKey::KeyType::None)
-                currentDeltaKeys_.insert(k);
-            else if (auto k = cube_->downFactor(idx); k.keytype != RiskFactorKey::KeyType::None)
+        for (auto const& [idx, _] : cubes_[currentCubeIdx_]->npvCube()->getTradeNPVs(tradeIdx_->second)) {
+            if (auto k = cubes_[currentCubeIdx_]->upDownFactor(idx); k.keytype != RiskFactorKey::KeyType::None)
                 currentDeltaKeys_.insert(k);
         }
 
         // add cross gamma keys
 
-        for (auto const& [crossPair, data] : cube_->crossFactors()) {
-            if (!close_enough(cube_->crossGamma(tradeIdx_->second, std::get<0>(data).index, std::get<1>(data).index,
-                                                std::get<2>(data)),
+        for (auto const& [crossPair, data] : cubes_[currentCubeIdx_]->crossFactors()) {
+            // scaling of cross gamma is not relevant here, so we use 1
+            if (!close_enough(cubes_[currentCubeIdx_]->crossGamma(tradeIdx_->second, std::get<0>(data).index,
+                                                                  std::get<1>(data).index, std::get<2>(data), 1.0, 1.0),
                               0.0)) {
                 currentCrossGammaKeys_.insert(crossPair);
 
@@ -125,8 +145,11 @@ void SensitivityCubeStream::updateForNewTrade() {
 }
 
 void SensitivityCubeStream::reset() {
-    tradeIdx_ = cube_->tradeIdx().begin();
-    updateForNewTrade();
+    currentCubeIdx_ = 0;
+    if (cubes_.size() > 0) {
+        tradeIdx_ = cubes_[currentCubeIdx_]->tradeIdx().begin();
+        updateForNewTrade();
+    }
 }
 
 } // namespace analytics

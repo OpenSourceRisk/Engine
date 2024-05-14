@@ -22,8 +22,8 @@ class CurrencyHedgedEquityIndexDecomposition {
 public:
     CurrencyHedgedEquityIndexDecomposition(
         const std::string indexName,
-        const boost::shared_ptr<ore::data::CurrencyHedgedEquityIndexReferenceDatum>& indexRefData,
-        const boost::shared_ptr<ore::data::EquityIndexReferenceDatum> underlyingRefData,
+        const QuantLib::ext::shared_ptr<ore::data::CurrencyHedgedEquityIndexReferenceDatum>& indexRefData,
+        const QuantLib::ext::shared_ptr<ore::data::EquityIndexReferenceDatum> underlyingRefData,
         const std::string& indexCurrency, const std::string& underlyingIndexCurrency, const std::string& fxIndexName,
         const std::map<std::string, std::pair<double, std::string>>& currencyWeightsAndFxIndexNames)
         : name_(indexName), indexRefData_(indexRefData), underlyingRefData_(underlyingRefData),
@@ -53,45 +53,45 @@ public:
 
     QuantLib::Date rebalancingDate(const QuantLib::Date& asof) const;
 
-    static QuantLib::Date referenceDate(const boost::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum>& refData,
+    static QuantLib::Date referenceDate(const QuantLib::ext::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum>& refData,
                                         const QuantLib::Date& asof);
 
-    static QuantLib::Date rebalancingDate(const boost::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum>& refData,
+    static QuantLib::Date rebalancingDate(const QuantLib::ext::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum>& refData,
                                           const QuantLib::Date& asof);
 
     const std::map<std::string, std::pair<double, std::string>>& currencyWeightsAndFxIndexNames() const {
         return currencyWeightsAndFxIndexNames_;
     }
 
-    std::map<std::string, double>
-    fxSpotRiskFromForwards(const double quantity, const QuantLib::Date& asof,
-                           const boost::shared_ptr<ore::data::Market>& todaysMarket) const;
+    std::map<std::string, double> fxSpotRiskFromForwards(
+        const double quantity, const QuantLib::Date& asof,
+        const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket, const double shiftsize) const;
 
-    double unhedgedDelta(double hedgedDelta, const double quantity, const QuantLib::Date& asof,
-                         const boost::shared_ptr<ore::data::Market>& todaysMarket) const;
+    double unhedgedSpotExposure(double hedgedExposure, const double quantity, const QuantLib::Date& asof,
+                         const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket) const;
 
-    boost::shared_ptr<ore::data::EquityIndexReferenceDatum> underlyingRefData() const { return underlyingRefData_; }
+    QuantLib::ext::shared_ptr<ore::data::EquityIndexReferenceDatum> underlyingRefData() const { return underlyingRefData_; }
 
-    boost::shared_ptr<ore::data::CurrencyHedgedEquityIndexReferenceDatum> indexRefData() const { return indexRefData_; }
+    QuantLib::ext::shared_ptr<ore::data::CurrencyHedgedEquityIndexReferenceDatum> indexRefData() const { return indexRefData_; }
 
     void
     addAdditionalFixingsForEquityIndexDecomposition(const QuantLib::Date& asof,
-                                                    std::map<std::string, std::set<QuantLib::Date>>& fixings) const;
+                                                    std::map<std::string, RequiredFixings::FixingDates>& fixings) const;
 
 private:
     std::string name_;
-    boost::shared_ptr<ore::data::CurrencyHedgedEquityIndexReferenceDatum> indexRefData_;
-    boost::shared_ptr<ore::data::EquityIndexReferenceDatum> underlyingRefData_;
+    QuantLib::ext::shared_ptr<ore::data::CurrencyHedgedEquityIndexReferenceDatum> indexRefData_;
+    QuantLib::ext::shared_ptr<ore::data::EquityIndexReferenceDatum> underlyingRefData_;
     std::string indexCurrency_;
     std::string underlyingIndexCurrency_;
     std::string fxIndexName_;
     std::map<std::string, std::pair<double, std::string>> currencyWeightsAndFxIndexNames_;
 };
 
-boost::shared_ptr<CurrencyHedgedEquityIndexDecomposition>
+QuantLib::ext::shared_ptr<CurrencyHedgedEquityIndexDecomposition>
 loadCurrencyHedgedIndexDecomposition(const std::string& name,
-                                     const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataMgr,
-                                     const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs);
+                                     const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataMgr,
+                                     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs);
 
 } // namespace data
 } // namespace ore

@@ -54,7 +54,7 @@ namespace CrossAssetAnalytics {
   This function covers the latter three integrals, the state-independent part.
 
 */
-Real ir_expectation_1(const CrossAssetModel* model, const Size i, const Time t0, const Real dt);
+Real ir_expectation_1(const CrossAssetModel& model, const Size i, const Time t0, const Real dt);
 
 /*! IR state expectation
   This function evaluates the state-dependent part of the expectation
@@ -69,18 +69,18 @@ Real ir_expectation_1(const CrossAssetModel* model, const Size i, const Time t0,
   i.e. simply the first contribution \f$ z_i(t_0) \f$.
 
 */
-Real ir_expectation_2(const CrossAssetModel* model, const Size i, const Real zi_0);
+Real ir_expectation_2(const CrossAssetModel& model, const Size i, const Real zi_0);
 
 /*! State independent portion of the JY inflation drift. The first element of the pair relates to the real rate
     process and the second element of the pair relates to the inflation index process.
 */
-std::pair<QuantLib::Real, QuantLib::Real> inf_jy_expectation_1(const CrossAssetModel* model, QuantLib::Size i,
+std::pair<QuantLib::Real, QuantLib::Real> inf_jy_expectation_1(const CrossAssetModel& model, QuantLib::Size i,
                                                                QuantLib::Time t0, QuantLib::Real dt);
 
 /*! State dependent portion of the JY inflation drift. The first element of the pair relates to the real rate
     process and the second element of the pair relates to the inflation index process.
 */
-std::pair<QuantLib::Real, QuantLib::Real> inf_jy_expectation_2(const CrossAssetModel* model, QuantLib::Size i,
+std::pair<QuantLib::Real, QuantLib::Real> inf_jy_expectation_2(const CrossAssetModel& model, QuantLib::Size i,
                                                                QuantLib::Time t0,
                                                                const std::pair<QuantLib::Real, QuantLib::Real>& state_0,
                                                                QuantLib::Real zi_i_0, QuantLib::Real dt);
@@ -121,13 +121,13 @@ std::pair<QuantLib::Real, QuantLib::Real> inf_jy_expectation_2(const CrossAssetM
 
   This function covers the latter state-independent part of the FX expectation.
 */
-Real fx_expectation_1(const CrossAssetModel* model, const Size i, const Time t0, const Real dt);
+Real fx_expectation_1(const CrossAssetModel& model, const Size i, const Time t0, const Real dt);
 
 /*! FX state expectation.
 
   This function covers the state-dependent part of the FX expectation.
 */
-Real fx_expectation_2(const CrossAssetModel* model, const Size i, const Time t0, const Real xi_0, const Real zi_0,
+Real fx_expectation_2(const CrossAssetModel& model, const Size i, const Time t0, const Real xi_0, const Real zi_0,
                       const Real z0_0, const Real dt);
 
 /*! EQ state expectation
@@ -152,13 +152,13 @@ Real fx_expectation_2(const CrossAssetModel* model, const Size i, const Time t0,
 
     This function covers the state-independent part of the EQ expectation
 */
-Real eq_expectation_1(const CrossAssetModel* model, const Size i, const Time t0, const Real dt);
+Real eq_expectation_1(const CrossAssetModel& model, const Size i, const Time t0, const Real dt);
 
 /*! EQ state expectation
 
 This function covers the state-dependent part of the EQ expectation (see overall expression above).
 */
-Real eq_expectation_2(const CrossAssetModel* model, const Size k, const Time t0, const Real si_0, const Real zi_0,
+Real eq_expectation_2(const CrossAssetModel& model, const Size k, const Time t0, const Real si_0, const Real zi_0,
                       const Real dt);
 
 /*! IR-IR Covariance
@@ -171,7 +171,7 @@ Real eq_expectation_2(const CrossAssetModel* model, const Size k, const Time t0,
 
       on the time interval from \f$ s= t_0\f$ to \f$ t=t_0+\Delta t\f$.
 */
-Real ir_ir_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real ir_ir_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! IR-FX Covariance
 
@@ -187,7 +187,7 @@ Real ir_ir_covariance(const CrossAssetModel* model, const Size i, const Size j, 
       on the time interval from \f$ s= t_0\f$ to \f$ t=t_0+\Delta t\f$.
 
 */
-Real ir_fx_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real ir_fx_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! FX-FX covariance
 
@@ -259,61 +259,61 @@ Real ir_fx_covariance(const CrossAssetModel* model, const Size i, const Size j, 
       \f]
 
 */
-Real fx_fx_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real fx_fx_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! infz-infz covariance */
-Real infz_infz_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real infz_infz_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! infz-infy covariance */
-Real infz_infy_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real infz_infy_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! infy-infy covariance */
-Real infy_infy_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real infy_infy_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! ir-infz covariance */
-Real ir_infz_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real ir_infz_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! ir-infy covariance */
-Real ir_infy_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real ir_infy_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! fx-infz covariance */
-Real fx_infz_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real fx_infz_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! fx-infy covariance */
-Real fx_infy_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real fx_infy_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! crz-crz covariance */
-Real crz_crz_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real crz_crz_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! crz-cry covariance */
-Real crz_cry_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real crz_cry_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! cry-cry covariance */
-Real cry_cry_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real cry_cry_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! ir-crz covariance */
-Real ir_crz_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real ir_crz_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! ir-cry covariance */
-Real ir_cry_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real ir_cry_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! fx-crz covariance */
-Real fx_crz_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real fx_crz_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! fx-cry covariance */
-Real fx_cry_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real fx_cry_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! infz-crz covariance */
-Real infz_crz_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real infz_crz_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! infz-cry covariance */
-Real infz_cry_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real infz_cry_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! infy-crz covariance */
-Real infy_crz_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real infy_crz_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! infy-cry covariance */
-Real infy_cry_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real infy_cry_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! IR-EQ Covariance
     \f{eqnarray}{
@@ -322,7 +322,7 @@ Real infy_cry_covariance(const CrossAssetModel* model, const Size i, const Size 
     &&+ \rho_{s_i,z_j} \int_{s}^{t} \sigma_{s_i} (u) \alpha_j (u) du\\
     \f}
 */
-Real ir_eq_covariance(const CrossAssetModel* model, const Size irIdx, const Size eqIdx, const Time t0, const Time dt);
+Real ir_eq_covariance(const CrossAssetModel& model, const Size irIdx, const Size eqIdx, const Time t0, const Time dt);
 
 /*! FX-EQ Covariance
 
@@ -338,19 +338,19 @@ Cov \left[\Delta ln[s_i], \Delta ln[x_j] \right] &=&
 &&+ \rho_{s_i,x_j} \int_{s}^{t} \sigma_{s_i}(u) \sigma_{x_j}(u) du\\
 \f}
 */
-Real fx_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real fx_eq_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! infz-eq covariance */
-Real infz_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real infz_eq_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! infy-eq covariance */
-Real infy_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real infy_eq_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! crz-eq covariance */
-Real crz_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real crz_eq_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! cry-eq covariance */
-Real cry_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real cry_eq_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! EQ-EQ Covariance
 \f{eqnarray}{
@@ -362,7 +362,7 @@ Cov \left[\Delta ln[s_i], \Delta ln[s_j] \right] &=&
 &&+ \rho_{s_i,s_j} \int_{s}^{t} \sigma_{s_i}(u) \sigma_{s_j}(u) du\\
 \f}
 */
-Real eq_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real eq_eq_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! AUX-AUX Covariance
 
@@ -374,7 +374,7 @@ Real eq_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, 
 
       on the time interval from \f$ s= t_0\f$ to \f$ t=t_0+\Delta t\f$.
 */
-Real aux_aux_covariance(const CrossAssetModel* model, const Time t0, const Time dt);
+Real aux_aux_covariance(const CrossAssetModel& model, const Time t0, const Time dt);
 
 /*! AUX-IR Covariance
 
@@ -387,7 +387,7 @@ Real aux_aux_covariance(const CrossAssetModel* model, const Time t0, const Time 
 
       on the time interval from \f$ s= t_0\f$ to \f$ t=t_0+\Delta t\f$.
 */
-Real aux_ir_covariance(const CrossAssetModel* model, const Size j, const Time t0, const Time dt);
+Real aux_ir_covariance(const CrossAssetModel& model, const Size j, const Time t0, const Time dt);
 
 /*! AUX-FX Covariance
 
@@ -403,7 +403,7 @@ Real aux_ir_covariance(const CrossAssetModel* model, const Size j, const Time t0
       on the time interval from \f$ s= t_0\f$ to \f$ t=t_0+\Delta t\f$.
 
 */
-Real aux_fx_covariance(const CrossAssetModel* model, const Size j, const Time t0, const Time dt);
+Real aux_fx_covariance(const CrossAssetModel& model, const Size j, const Time t0, const Time dt);
 
 /*! COM-COM state variable covariance, mean-reverting single-factor case
 \f{eqnarray}{
@@ -411,58 +411,58 @@ Cov \left[\Delta Y_i, \Delta Y_j] \right] &=&
  \rho_{Y_i,Y_j} \int_{s}^{t} \sigma_{Y_i}(u) \exp(\kappa_i u) \sigma_{Y_j}(u) \exp(\kappa_j u) du\\
 \f}
 */
-Real com_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real com_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! TODO: COM covariance with all other risk factors */
-Real ir_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
-Real fx_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
-Real infz_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
-Real infy_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
-Real cry_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
-Real crz_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
-Real eq_com_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real ir_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
+Real fx_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
+Real infz_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
+Real infy_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
+Real cry_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
+Real crz_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
+Real eq_com_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! IR_CrState Covariance */
-Real ir_crstate_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real ir_crstate_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! FX_CrState Covariance */
-Real fx_crstate_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real fx_crstate_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 #/*! CrState_CrState Covariance */
-Real crstate_crstate_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real crstate_crstate_covariance(const CrossAssetModel& model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! IR H component */
 struct Hz {
     Hz(const Size i) : i_(i) {}
-    Real eval(const CrossAssetModel* x, const Real t) const { return x->irlgm1f(i_)->H(t); }
+    Real eval(const CrossAssetModel& x, const Real t) const { return x.irlgm1f(i_)->H(t); }
     const Size i_;
 };
 
 /*! IR alpha component */
 struct az {
     az(const Size i) : i_(i) {}
-    Real eval(const CrossAssetModel* x, const Real t) const { return x->irlgm1f(i_)->alpha(t); }
+    Real eval(const CrossAssetModel& x, const Real t) const { return x.irlgm1f(i_)->alpha(t); }
     const Size i_;
 };
 
 /*! IR zeta component */
 struct zetaz {
     zetaz(const Size i) : i_(i) {}
-    Real eval(const CrossAssetModel* x, const Real t) const { return x->irlgm1f(i_)->zeta(t); }
+    Real eval(const CrossAssetModel& x, const Real t) const { return x.irlgm1f(i_)->zeta(t); }
     const Size i_;
 };
 
 /*! FX sigma component */
 struct sx {
     sx(const Size i) : i_(i) {}
-    Real eval(const CrossAssetModel* x, const Real t) const { return x->fxbs(i_)->sigma(t); }
+    Real eval(const CrossAssetModel& x, const Real t) const { return x.fxbs(i_)->sigma(t); }
     const Size i_;
 };
 
 /*! FX variance component */
 struct vx {
     vx(const Size i) : i_(i) {}
-    Real eval(const CrossAssetModel* x, const Real t) const { return x->fxbs(i_)->variance(t); }
+    Real eval(const CrossAssetModel& x, const Real t) const { return x.fxbs(i_)->variance(t); }
     const Size i_;
 };
 
@@ -470,11 +470,11 @@ struct vx {
 struct Hy {
     Hy(QuantLib::Size i) : i_(i) {}
 
-    QuantLib::Real eval(const CrossAssetModel* x, const QuantLib::Real t) const {
-        if (x->modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::DK)
-            return x->infdk(i_)->H(t);
-        else if (x->modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
-            return x->infjy(i_)->realRate()->H(t);
+    QuantLib::Real eval(const CrossAssetModel& x, const QuantLib::Real t) const {
+        if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::DK)
+            return x.infdk(i_)->H(t);
+        else if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
+            return x.infjy(i_)->realRate()->H(t);
         else
             QL_FAIL("Expected inflation model to be JY or DK");
     }
@@ -486,11 +486,11 @@ struct Hy {
 struct ay {
     ay(QuantLib::Size i) : i_(i) {}
 
-    QuantLib::Real eval(const CrossAssetModel* x, const QuantLib::Real t) const {
-        if (x->modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::DK)
-            return x->infdk(i_)->alpha(t);
-        else if (x->modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
-            return x->infjy(i_)->realRate()->alpha(t);
+    QuantLib::Real eval(const CrossAssetModel& x, const QuantLib::Real t) const {
+        if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::DK)
+            return x.infdk(i_)->alpha(t);
+        else if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
+            return x.infjy(i_)->realRate()->alpha(t);
         else
             QL_FAIL("Expected inflation model to be JY or DK");
     }
@@ -502,11 +502,11 @@ struct ay {
 struct zetay {
     zetay(const Size i) : i_(i) {}
 
-    Real eval(const CrossAssetModel* x, const Real t) const {
-        if (x->modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::DK)
-            return x->infdk(i_)->zeta(t);
-        else if (x->modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
-            return x->infjy(i_)->realRate()->zeta(t);
+    Real eval(const CrossAssetModel& x, const Real t) const {
+        if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::DK)
+            return x.infdk(i_)->zeta(t);
+        else if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
+            return x.infjy(i_)->realRate()->zeta(t);
         else
             QL_FAIL("Expected inflation model to be JY or DK");
     }
@@ -518,9 +518,9 @@ struct zetay {
 struct sy {
     sy(QuantLib::Size i) : i_(i) {}
 
-    QuantLib::Real eval(const CrossAssetModel* x, const QuantLib::Real t) const {
-        if (x->modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
-            return x->infjy(i_)->index()->sigma(t);
+    QuantLib::Real eval(const CrossAssetModel& x, const QuantLib::Real t) const {
+        if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
+            return x.infjy(i_)->index()->sigma(t);
         else
             QL_FAIL("Inflation index sigma only valid for JY model.");
     }
@@ -532,9 +532,9 @@ struct sy {
 struct vy {
     vy(QuantLib::Size i) : i_(i) {}
 
-    QuantLib::Real eval(const CrossAssetModel* x, const QuantLib::Real t) const {
-        if (x->modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
-            return x->infjy(i_)->index()->variance(t);
+    QuantLib::Real eval(const CrossAssetModel& x, const QuantLib::Real t) const {
+        if (x.modelType(CrossAssetModel::AssetType::INF, i_) == CrossAssetModel::ModelType::JY)
+            return x.infjy(i_)->index()->variance(t);
         else
             QL_FAIL("Inflation index variance only valid for JY model.");
     }
@@ -545,50 +545,50 @@ struct vy {
 /*! CR H component */
 struct Hl {
     Hl(const Size i) : i_(i) {}
-    Real eval(const CrossAssetModel* x, const Real t) const { return x->crlgm1f(i_)->H(t); }
+    Real eval(const CrossAssetModel& x, const Real t) const { return x.crlgm1f(i_)->H(t); }
     const Size i_;
 };
 
 /*! CR alpha component */
 struct al {
     al(const Size i) : i_(i) {}
-    Real eval(const CrossAssetModel* x, const Real t) const { return x->crlgm1f(i_)->alpha(t); }
+    Real eval(const CrossAssetModel& x, const Real t) const { return x.crlgm1f(i_)->alpha(t); }
     const Size i_;
 };
 
 /*! CR zeta component */
 struct zetal {
     zetal(const Size i) : i_(i) {}
-    Real eval(const CrossAssetModel* x, const Real t) const { return x->crlgm1f(i_)->zeta(t); }
+    Real eval(const CrossAssetModel& x, const Real t) const { return x.crlgm1f(i_)->zeta(t); }
     const Size i_;
 };
 
 /*! EQ sigma component */
 struct ss {
     ss(const Size i) : i_(i) {}
-    Real eval(const CrossAssetModel* x, const Real t) const { return x->eqbs(i_)->sigma(t); }
+    Real eval(const CrossAssetModel& x, const Real t) const { return x.eqbs(i_)->sigma(t); }
     const Size i_;
 };
 
 /*! EQ variance component */
 struct vs {
     vs(const Size i) : i_(i) {}
-    Real eval(const CrossAssetModel* x, const Real t) const { return x->eqbs(i_)->variance(t); }
+    Real eval(const CrossAssetModel& x, const Real t) const { return x.eqbs(i_)->variance(t); }
     const Size i_;
 };
 
 /*! COM sigma component, non mean-reverting single-factor case */
 struct coms {
     coms(const Size i) : i_(i) {}
-    Real eval(const CrossAssetModel* x, const Real t) const { return x->combs(i_)->sigma(t); }
+    Real eval(const CrossAssetModel& x, const Real t) const { return x.combs(i_)->sigma(t); }
     const Size i_;
 };
 
 /*! IR-IR correlation component */
 struct rzz {
     rzz(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::IR, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::IR, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -596,8 +596,8 @@ struct rzz {
 /*! IR-FX correlation component */
 struct rzx {
     rzx(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::FX, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::FX, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -605,8 +605,8 @@ struct rzx {
 /*! FX-FX correlation component */
 struct rxx {
     rxx(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::FX, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::FX, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -622,9 +622,9 @@ struct ryy {
     ryy(QuantLib::Size i, QuantLib::Size j, QuantLib::Size iOffset = 0, QuantLib::Size jOffset = 0)
         : i_(i), j_(j), iOffset_(iOffset), jOffset_(jOffset) {}
 
-    QuantLib::Real eval(const CrossAssetModel* x, const QuantLib::Real) const {
-        return x->correlation(CrossAssetModel::AssetType::INF, i_, CrossAssetModel::AssetType::INF, j_, iOffset_,
-                              jOffset_);
+    QuantLib::Real eval(const CrossAssetModel& x, const QuantLib::Real) const {
+        return x.correlation(CrossAssetModel::AssetType::INF, i_, CrossAssetModel::AssetType::INF, j_, iOffset_,
+                             jOffset_);
     }
 
     QuantLib::Size i_;
@@ -637,8 +637,8 @@ struct ryy {
 struct rzy {
     rzy(const Size i, const Size j, QuantLib::Size jOffset = 0) : i_(i), j_(j), jOffset_(jOffset) {}
 
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::INF, j_, 0, jOffset_);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::INF, j_, 0, jOffset_);
     }
 
     const Size i_, j_;
@@ -649,8 +649,8 @@ struct rzy {
 struct rxy {
     rxy(const Size i, const Size j, QuantLib::Size jOffset = 0) : i_(i), j_(j), jOffset_(jOffset) {}
 
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::INF, j_, 0, jOffset_);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::INF, j_, 0, jOffset_);
     }
 
     const Size i_, j_;
@@ -660,8 +660,8 @@ struct rxy {
 /*! CR-CR correlation component */
 struct rll {
     rll(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::CR, i_, CrossAssetModel::AssetType::CR, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::CR, i_, CrossAssetModel::AssetType::CR, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -669,8 +669,8 @@ struct rll {
 /*! IR-CR correlation component */
 struct rzl {
     rzl(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::CR, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::CR, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -678,8 +678,8 @@ struct rzl {
 /*! FX-CR correlation component */
 struct rxl {
     rxl(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::CR, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::CR, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -688,8 +688,8 @@ struct rxl {
 struct ryl {
     ryl(const Size i, const Size j, QuantLib::Size iOffset = 0) : i_(i), j_(j), iOffset_(iOffset) {}
 
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::INF, i_, CrossAssetModel::AssetType::CR, j_, iOffset_, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::INF, i_, CrossAssetModel::AssetType::CR, j_, iOffset_, 0);
     }
 
     const Size i_, j_;
@@ -699,8 +699,8 @@ struct ryl {
 /*! EQ-EQ correlation component */
 struct rss {
     rss(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::EQ, i_, CrossAssetModel::AssetType::EQ, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::EQ, i_, CrossAssetModel::AssetType::EQ, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -708,8 +708,8 @@ struct rss {
 /*! IR-EQ correlation component */
 struct rzs {
     rzs(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::EQ, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::EQ, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -717,8 +717,8 @@ struct rzs {
 /*! FX-EQ correlation component */
 struct rxs {
     rxs(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::EQ, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::EQ, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -727,8 +727,8 @@ struct rxs {
 struct rys {
     rys(const Size i, const Size j, QuantLib::Size iOffset = 0) : i_(i), j_(j), iOffset_(iOffset) {}
 
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::INF, i_, CrossAssetModel::AssetType::EQ, j_, iOffset_, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::INF, i_, CrossAssetModel::AssetType::EQ, j_, iOffset_, 0);
     }
 
     const Size i_, j_;
@@ -738,8 +738,8 @@ struct rys {
 /*! CR-EQ correlation component */
 struct rls {
     rls(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::CR, i_, CrossAssetModel::AssetType::EQ, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::CR, i_, CrossAssetModel::AssetType::EQ, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -747,8 +747,8 @@ struct rls {
 /*! COM-COM correlation component, single-factor case */
 struct rcc {
     rcc(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::COM, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::COM, i_, CrossAssetModel::AssetType::COM, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -756,7 +756,7 @@ struct rcc {
 /*! H(t+T)-H(t) component (needed for analytical covariances of zero rates) */
 struct HTtz {
     HTtz(const Size i, const Real T) : i_(i), T_(T) {}
-    Real eval(const CrossAssetModel* x, const Real t) const { return x->irlgm1f(i_)->H(T_ + t) - x->irlgm1f(i_)->H(t); }
+    Real eval(const CrossAssetModel& x, const Real t) const { return x.irlgm1f(i_)->H(T_ + t) - x.irlgm1f(i_)->H(t); }
     const Size i_;
     const Real T_;
 };
@@ -764,8 +764,8 @@ struct HTtz {
 /*! IR-CrState correlation component */
 struct rzcrs {
     rzcrs(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::CrState, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::IR, i_, CrossAssetModel::AssetType::CrState, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -773,8 +773,8 @@ struct rzcrs {
 /*! FX-CrState correlation component */
 struct rxcrs {
     rxcrs(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::CrState, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::FX, i_, CrossAssetModel::AssetType::CrState, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -782,8 +782,8 @@ struct rxcrs {
 /*! CrState-CrState correlation component */
 struct rccrs {
     rccrs(const Size i, const Size j) : i_(i), j_(j) {}
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(CrossAssetModel::AssetType::CrState, i_, CrossAssetModel::AssetType::CrState, j_, 0, 0);
+    Real eval(const CrossAssetModel& x, const Real) const {
+        return x.correlation(CrossAssetModel::AssetType::CrState, i_, CrossAssetModel::AssetType::CrState, j_, 0, 0);
     }
     const Size i_, j_;
 };

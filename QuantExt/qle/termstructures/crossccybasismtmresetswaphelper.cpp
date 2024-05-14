@@ -15,10 +15,9 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+#include <ql/cashflows/iborcoupon.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
-#ifdef QL_USE_INDEXED_COUPON
-#include <ql/cashflows/floatingratecoupon.hpp>
-#endif
 
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 
@@ -26,15 +25,11 @@
 
 namespace QuantExt {
 
-namespace {
-void no_deletion(YieldTermStructure*) {}
-} // namespace
-
 CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
     const Calendar& settlementCalendar, const Period& swapTenor, BusinessDayConvention rollConvention,
-    const boost::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
-    const boost::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
     const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
     const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
     const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve,
@@ -142,18 +137,18 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
     Real foreignNominal = 1.0;
     // build an FX index for forward rate projection (TODO - review settlement and calendar)
 
-    boost::shared_ptr<FxIndex> fxIdx =
-        boost::make_shared<FxIndex>("dummy", settlementDays_, foreignCurrency_, domesticCurrency_, settlementCalendar_,
+    QuantLib::ext::shared_ptr<FxIndex> fxIdx =
+        QuantLib::ext::make_shared<FxIndex>("dummy", settlementDays_, foreignCurrency_, domesticCurrency_, settlementCalendar_,
                                     spotFX_, foreignCcyFxFwdRateCurveRLH_, domesticCcyFxFwdRateCurveRLH_);
 
-    swap_ = boost::make_shared<CrossCcyBasisMtMResetSwap>(
+    swap_ = QuantLib::ext::make_shared<CrossCcyBasisMtMResetSwap>(
         foreignNominal, foreignCurrency_, foreignLegSchedule, foreignCcyIndex_, 0.0, domesticCurrency_,
         domesticLegSchedule, domesticCcyIndex_, 0.0, fxIdx, true, foreignPaymentLag_, domesticPaymentLag_,
         foreignIncludeSpread_, foreignLookback_, foreignFixingDays_, foreignRateCutoff_, foreignIsAveraged_,
         domesticIncludeSpread_, domesticLookback_, domesticFixingDays_, domesticRateCutoff_, domesticIsAveraged_,
         telescopicValueDates_);
 
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<CrossCcySwapEngine>(
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(
         domesticCurrency_, domesticDiscountRLH_, foreignCurrency_, foreignDiscountRLH_, spotFX_);
     swap_->setPricingEngine(engine);
 
@@ -162,52 +157,52 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
 
 /* May need to adjust latestDate_ if you are projecting libor based
    on tenor length rather than from accrual date to accrual date. */
-#ifdef QL_USE_INDEXED_COUPON
-    if (termStructureHandle_ == foreignCcyIndex_->forwardingTermStructure()) {
-        Size numCashflows = swap_->leg(0).size();
-        Date endDate = latestDate_;
-        if (numCashflows > 0) {
-            for (Size i = numCashflows - 1; i >= 0; i--) {
-                boost::shared_ptr<FloatingRateCoupon> lastFloating =
-                    boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(0)[i]);
-                if (!lastFloating)
-                    continue;
-                else {
-                    Date fixingValueDate = foreignCcyIndex_->valueDate(lastFloating->fixingDate());
-                    endDate = domesticCcyIndex_->maturityDate(fixingValueDate);
-                    Date endValueDate = foreignCcyIndex_->maturityDate(fixingValueDate);
-                    latestDate_ = std::max(latestDate_, endValueDate);
-                    break;
+    if (!IborCoupon::Settings::instance().usingAtParCoupons()) {
+        if (termStructureHandle_ == foreignCcyIndex_->forwardingTermStructure()) {
+            Size numCashflows = swap_->leg(0).size();
+            Date endDate = latestDate_;
+            if (numCashflows > 0) {
+                for (Size i = numCashflows - 1; i >= 0; i--) {
+                    QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
+                        QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(0)[i]);
+                    if (!lastFloating)
+                        continue;
+                    else {
+                        Date fixingValueDate = foreignCcyIndex_->valueDate(lastFloating->fixingDate());
+                        endDate = domesticCcyIndex_->maturityDate(fixingValueDate);
+                        Date endValueDate = foreignCcyIndex_->maturityDate(fixingValueDate);
+                        latestDate_ = std::max(latestDate_, endValueDate);
+                        break;
+                    }
+                }
+            }
+        }
+        if (termStructureHandle_ == domesticCcyIndex_->forwardingTermStructure()) {
+            Size numCashflows = swap_->leg(1).size();
+            Date endDate = latestDate_;
+            if (numCashflows > 0) {
+                for (Size i = numCashflows - 1; i >= 0; i--) {
+                    QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
+                        QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[i]);
+                    if (!lastFloating)
+                        continue;
+                    else {
+                        Date fixingValueDate = domesticCcyIndex_->valueDate(lastFloating->fixingDate());
+                        endDate = domesticCcyIndex_->maturityDate(fixingValueDate);
+                        Date endValueDate = domesticCcyIndex_->maturityDate(fixingValueDate);
+                        latestDate_ = std::max(latestDate_, endValueDate);
+                        break;
+                    }
                 }
             }
         }
     }
-    if (termStructureHandle_ == domesticCcyIndex_->forwardingTermStructure()) {
-        Size numCashflows = swap_->leg(1).size();
-        Date endDate = latestDate_;
-        if (numCashflows > 0) {
-            for (Size i = numCashflows - 1; i >= 0; i--) {
-                boost::shared_ptr<FloatingRateCoupon> lastFloating =
-                    boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[i]);
-                if (!lastFloating)
-                    continue;
-                else {
-                    Date fixingValueDate = domesticCcyIndex_->valueDate(lastFloating->fixingDate());
-                    endDate = domesticCcyIndex_->maturityDate(fixingValueDate);
-                    Date endValueDate = domesticCcyIndex_->maturityDate(fixingValueDate);
-                    latestDate_ = std::max(latestDate_, endValueDate);
-                    break;
-                }
-            }
-        }
-    }
-#endif
 }
 
 void CrossCcyBasisMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
-    boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
 
     termStructureHandle_.linkTo(temp, observer);
 

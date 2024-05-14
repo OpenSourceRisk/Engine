@@ -29,6 +29,14 @@ elements. An example structure of the \lstinline!OptionData! trade component nod
     <ExerciseDate>2019-04-20</ExerciseDate>
     <ExerciseDate>2020-04-20</ExerciseDate>
   </ExerciseDates>
+  <!-- Alternative format for exercise dates using Schedule format -->
+  <ExerciseSchedule>
+    <Rules>
+      <StartDate>2019-04-20</StartDate>
+      <EndDate>2024-04-20</EndDate>
+      <Tenor>3M</Tenor>
+    </Rules>
+  </ExerciseSchedule>
   <Premiums>
     <Premium>
       <Amount>100000</Amount>
@@ -103,8 +111,8 @@ Ascot &  \emph{Call} has payout: $$ \max(0, convertiblePrice - Strike) $$ \emph{
 
   Allowable values: \emph{European} or \emph{American} or \emph{Bermudan}. 
   
-  Note that trade types IR Swaption and CallableSwap can have style
-  \emph{European} or \emph{Bermudan}, but not \emph{American}.  
+  Note that trade types IR Swaption and CallableSwap can have all three styles:
+  \emph{European}, \emph{Bermudan}, or \emph{American}.  
   
   FX, Equity and Commodity vanilla options can have styles \emph{European}
   or \emph{American}, but not \emph{Bermudan}. 
@@ -195,11 +203,16 @@ Note that for \lstinline!IndexCreditDefaultSwapOption! PayOffAtExpiry must be se
   Allowable values: See Table \ref{tab:convention} Roll Convention.
 
 \item ExerciseDates: This node contains child elements of type
-  \lstinline!ExerciseDate!.  Options of style \emph{European} or
+  \lstinline!ExerciseDate!. Options of style \emph{European} or
   \emph{American} require a single exercise date expressed by one
   single \lstinline!ExerciseDate! child element.  \emph{Bermudan}
   style options must have two or more \lstinline!ExerciseDate! child
-  elements.
+  elements. One can alternatively use \lstinline!ExerciseSchedule! to
+  specify the option exercise dates.
+
+\item ExerciseSchedule [Optional]: This node can be provided instead of \lstinline!ExerciseDates! and
+should be specified in the same format as a Schedule (see Section \ref{ss:schedule_data}), e.g.\ for
+a list of Bermudan exercise dates.
 
 \item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
 

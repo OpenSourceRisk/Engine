@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
-#include <qle/models/crossassetanalytics.hpp>
-#include <ql/pricingengines/blackformula.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <ql/pricingengines/blackformula.hpp>
+#include <qle/models/crossassetanalytics.hpp>
+#include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
 
 using namespace QuantExt::CrossAssetAnalytics;
 using QuantLib::DiscountFactor;
@@ -32,8 +32,7 @@ using std::sqrt;
 
 namespace QuantExt {
 
-AnalyticJyCpiCapFloorEngine::AnalyticJyCpiCapFloorEngine(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index)
+AnalyticJyCpiCapFloorEngine::AnalyticJyCpiCapFloorEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index)
     : model_(model), index_(index) {}
 
 void AnalyticJyCpiCapFloorEngine::calculate() const {
@@ -51,12 +50,12 @@ void AnalyticJyCpiCapFloorEngine::calculate() const {
 
     QL_DEPRECATED_DISABLE_WARNING
     bool interpolate = arguments_.observationInterpolation == CPI::Linear ||
-        (arguments_.observationInterpolation == CPI::AsIndex && arguments_.index->interpolated());
+                       (arguments_.observationInterpolation == CPI::AsIndex && arguments_.index->interpolated());
     QL_DEPRECATED_ENABLE_WARNING
     // Get the time to expiry. This determines if we use the JY model or look for an inflation index fixing.
     auto zts = model_->infjy(index_)->realRate()->termStructure();
-    Real t = inflationYearFraction(arguments_.index->frequency(), interpolate,
-        zts->dayCounter(), zts->baseDate(), arguments_.fixDate);
+    Real t = inflationYearFraction(arguments_.index->frequency(), interpolate, zts->dayCounter(), zts->baseDate(),
+                                   arguments_.fixDate);
 
     // If time to expiry is non-positive, we return the discounted value of the settled amount.
     // CPICapFloor should really have its own day counter for going from strike rate to k. We use t here.
@@ -72,21 +71,23 @@ void AnalyticJyCpiCapFloorEngine::calculate() const {
         return;
     }
 
-    // Section 13, Book. ZCII Cap. Note that there is a difference between the base CPI value associated with the 
-    // inflation term structures and used as a starting point in the CAM evolution vs. the contractual base CPI in 
+    // Section 13, Book. ZCII Cap. Note that there is a difference between the base CPI value associated with the
+    // inflation term structures and used as a starting point in the CAM evolution vs. the contractual base CPI in
     // the CPICapFloor instrument. The former is curveBaseCpi below and the latter is arguments_.baseCPI.
-    const CrossAssetModel* x = model_.get();
 
     // Calculate the variance, \Sigma^2_I in the book.
-    Real H_n_t = Hz(irIdx).eval(x, t);
-    Real H_r_t = Hy(index_).eval(x, t);
-    Real v = integral(x, P(LC(H_n_t, -1.0, Hz(irIdx)), LC(H_n_t, -1.0, Hz(irIdx)), az(irIdx), az(irIdx)), 0.0, t);
-    v += integral(x, P(LC(H_r_t, -1.0, Hy(index_)), LC(H_r_t, -1.0, Hy(index_)), ay(index_), ay(index_)), 0.0, t);
-    v += integral(x, P(sy(index_), sy(index_)), 0.0, t);
-    v -= 2 * integral(x, P(rzy(irIdx, index_), LC(H_r_t, -1.0, Hy(index_)), LC(H_n_t, -1.0, Hz(irIdx)),
-        ay(index_), az(irIdx)), 0.0, t);
-    v += 2 * integral(x, P(rzy(irIdx, index_, 1), LC(H_n_t, -1.0, Hz(irIdx)), az(irIdx), sy(index_)), 0.0, t);
-    v -= 2 * integral(x, P(ryy(index_, index_, 0, 1), LC(H_r_t, -1.0, Hy(index_)), ay(index_), sy(index_)), 0.0, t);
+    Real H_n_t = Hz(irIdx).eval(*model_, t);
+    Real H_r_t = Hy(index_).eval(*model_, t);
+    Real v = integral(*model_, P(LC(H_n_t, -1.0, Hz(irIdx)), LC(H_n_t, -1.0, Hz(irIdx)), az(irIdx), az(irIdx)), 0.0, t);
+    v += integral(*model_, P(LC(H_r_t, -1.0, Hy(index_)), LC(H_r_t, -1.0, Hy(index_)), ay(index_), ay(index_)), 0.0, t);
+    v += integral(*model_, P(sy(index_), sy(index_)), 0.0, t);
+    v -= 2 *
+         integral(*model_,
+                  P(rzy(irIdx, index_), LC(H_r_t, -1.0, Hy(index_)), LC(H_n_t, -1.0, Hz(irIdx)), ay(index_), az(irIdx)),
+                  0.0, t);
+    v += 2 * integral(*model_, P(rzy(irIdx, index_, 1), LC(H_n_t, -1.0, Hz(irIdx)), az(irIdx), sy(index_)), 0.0, t);
+    v -= 2 *
+         integral(*model_, P(ryy(index_, index_, 0, 1), LC(H_r_t, -1.0, Hy(index_)), ay(index_), sy(index_)), 0.0, t);
 
     // Calculate the forward CPI, F_I(0,T) in the book.
     Real fwd = arguments_.index->fixing(arguments_.fixDate);
@@ -98,4 +99,4 @@ void AnalyticJyCpiCapFloorEngine::calculate() const {
     results_.value = adjNominal * blackFormula(arguments_.type, adjStrike, fwd, sqrt(v), df);
 }
 
-}
+} // namespace QuantExt

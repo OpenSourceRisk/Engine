@@ -4,8 +4,8 @@ project(OREData CXX)
 
 enable_testing()
 
-include("../cmake/writeAll.cmake")
-include("../cmake/commonSettings.cmake")
+include(writeAll)
+include(commonSettings)
 
 get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantExt" QLE_LIB_NAME)
@@ -16,7 +16,7 @@ if (ORE_BUILD_TESTS)
 else()
     SET(COMPONENTS_CONDITIONAL "")
 endif()
-find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} regex system date_time serialization filesystem timer OPTIONAL_COMPONENTS chrono)
+find_package (Boost REQUIRED COMPONENTS ${COMPONENTS_CONDITIONAL} regex system date_time serialization filesystem timer log OPTIONAL_COMPONENTS chrono)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})

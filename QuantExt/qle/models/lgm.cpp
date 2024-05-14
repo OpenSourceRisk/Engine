@@ -23,10 +23,14 @@
 
 namespace QuantExt {
 
-LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization,
-                                               const boost::shared_ptr<Integrator>& integrator)
-    : parametrization_(parametrization) {
-    stateProcess_ = boost::make_shared<IrLgm1fStateProcess>(parametrization_);
+LinearGaussMarkovModel::LinearGaussMarkovModel(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization,
+                                               const Measure measure, const Discretization discretization,
+                                               const bool evaluateBankAccount,
+                                               const QuantLib::ext::shared_ptr<Integrator>& integrator)
+    : parametrization_(parametrization), measure_(measure), discretization_(discretization),
+      evaluateBankAccount_(evaluateBankAccount) {
+    QL_REQUIRE(parametrization_ != nullptr, "HwModel: parametrization is null");
+    stateProcess_ = QuantLib::ext::make_shared<IrLgm1fStateProcess>(parametrization_);
     arguments_.resize(2);
     arguments_[0] = parametrization_->parameter(0);
     arguments_[1] = parametrization_->parameter(1);
@@ -37,7 +41,7 @@ LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fPa
         allTimes.insert(allTimes.end(), parametrization_->parameterTimes(i).begin(),
                         parametrization_->parameterTimes(i).end());
 
-    integrator_ = boost::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
+    integrator_ = QuantLib::ext::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
 }
 
 Real LinearGaussMarkovModel::bankAccountNumeraire(const Time t, const Real x, const Real y,
@@ -49,6 +53,13 @@ Real LinearGaussMarkovModel::bankAccountNumeraire(const Time t, const Real x, co
     Real Vt = 0.5 * (Ht * Ht * zeta0 + zeta2);
     return std::exp(Ht * x - y + Vt) /
            (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
+}
+
+Size LinearGaussMarkovModel::n() const { return 1; }
+Size LinearGaussMarkovModel::m() const { return 1; }
+Size LinearGaussMarkovModel::n_aux() const { return evaluateBankAccount_ && measure_ == Measure::BA ? 1 : 0; }
+Size LinearGaussMarkovModel::m_aux() const {
+    return evaluateBankAccount_ && measure_ == Measure::BA && discretization_ == Discretization::Exact ? 1 : 0;
 }
 
 } // namespace QuantExt

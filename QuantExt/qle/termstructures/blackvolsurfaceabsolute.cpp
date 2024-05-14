@@ -17,6 +17,7 @@
 */
 
 #include <qle/termstructures/blackvolsurfaceabsolute.hpp>
+#include <qle/math/flatextrapolation.hpp>
 
 #include <ql/experimental/fx/blackdeltacalculator.hpp>
 #include <ql/math/comparison.hpp>
@@ -28,17 +29,17 @@
 namespace QuantExt {
 
 BlackVolatilitySurfaceAbsolute::BlackVolatilitySurfaceAbsolute(
-    Date referenceDate, const std::vector<Date>& dates,
-    const std::vector<std::vector<Real>>& strikes, const std::vector<std::vector<Real>>& strikeQuotes,
-    const DayCounter& dayCounter, const Calendar& calendar,
+    Date referenceDate, const std::vector<Date>& dates, const std::vector<std::vector<Real>>& strikes,
+    const std::vector<std::vector<Real>>& strikeQuotes, const DayCounter& dayCounter, const Calendar& calendar,
     const Handle<Quote>& spot, const Size spotDays, const Calendar spotCalendar,
     const Handle<YieldTermStructure>& domesticTS, const Handle<YieldTermStructure>& foreignTS,
     const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at, const Period& switchTenor,
-    const DeltaVolQuote::DeltaType ltdt, const DeltaVolQuote::AtmType ltat, const SmileInterpolation smileInterpolation)
+    const DeltaVolQuote::DeltaType ltdt, const DeltaVolQuote::AtmType ltat, const SmileInterpolation smileInterpolation,
+    const bool flatExtrapolation)
     : BlackVolatilityTermStructure(referenceDate, calendar, Following, dayCounter), dates_(dates), strikes_(strikes),
-      strikeQuotes_(strikeQuotes), spot_(spot), spotDays_(spotDays),
-      spotCalendar_(spotCalendar), domesticTS_(domesticTS), foreignTS_(foreignTS), dt_(dt), at_(at),
-      switchTenor_(switchTenor), ltdt_(ltdt), ltat_(ltat), smileInterpolation_(smileInterpolation) {
+      strikeQuotes_(strikeQuotes), spot_(spot), spotDays_(spotDays), spotCalendar_(spotCalendar),
+      domesticTS_(domesticTS), foreignTS_(foreignTS), dt_(dt), at_(at), switchTenor_(switchTenor), ltdt_(ltdt),
+      ltat_(ltat), smileInterpolation_(smileInterpolation), flatExtrapolation_(flatExtrapolation) {
 
     // checks
 
@@ -81,16 +82,20 @@ BlackVolatilitySurfaceAbsolute::BlackVolatilitySurfaceAbsolute(
     for (Size i = 0; i < strikeQuotes_.size(); ++i) {
         if (strikes_[i].size() > 1) {
             if (smileInterpolation_ == BlackVolatilitySurfaceAbsolute::SmileInterpolation::Linear) {
-                interpolation_[i] = boost::make_shared<LinearInterpolation>(strikes_[i].begin(), strikes_[i].end(),
+                interpolation_[i] = QuantLib::ext::make_shared<LinearInterpolation>(strikes_[i].begin(), strikes_[i].end(),
                                                                             strikeQuotes_[i].begin());
                 interpolation_[i]->enableExtrapolation();
             } else if (smileInterpolation_ == BlackVolatilitySurfaceAbsolute::SmileInterpolation::Cubic) {
-                interpolation_[i] = boost::make_shared<CubicInterpolation>(strikes_[i].begin(), strikes_[i].end(), strikeQuotes_[i].begin(), CubicInterpolation::Spline, false,
+                interpolation_[i] = QuantLib::ext::make_shared<CubicInterpolation>(strikes_[i].begin(), strikes_[i].end(), strikeQuotes_[i].begin(), CubicInterpolation::Spline, false,
                     CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative, 0.0);
                 interpolation_[i]->enableExtrapolation();
             } else {
                 QL_FAIL("BlackVolatilitySurfaceAbsolute: Invalid interpolation type.");
             }
+        }
+        if (flatExtrapolation_) {
+            interpolation_[i] = QuantLib::ext::make_shared<FlatExtrapolation>(interpolation_[i]);
+            interpolation_[i]->enableExtrapolation();
         }
     }
 
@@ -129,7 +134,7 @@ Volatility BlackVolatilitySurfaceAbsolute::blackVolImpl(Time t, Real strike) con
         index_p = Null<Size>();
 
     /* build the smiles on the indices, if we do not have them yet */
-    Volatility vol_p, vol_m;
+    Volatility vol_p = 0, vol_m = 0;
     if (index_p != Null<Size>()) {
         if (strikeQuotes_[index_p].size() == 1) {
             vol_p = strikeQuotes_[index_p][0];

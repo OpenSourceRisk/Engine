@@ -1,0 +1,113 @@
+\subsubsection{Accumulator}
+This script is stored in OpenXVA \textbf{Scripts/scriptlibrary.xml}. 
+The following plausibility checks were done for to assess the correctness of the CRIF and NPV results for this script for FX indices.
+For all of these checks the 10,000 samples were used.
+
+\begin{itemize}
+\item \textbf{Check 1}: An Fx Accumulator with no knockOut barrier, one leverage range and one fixing date should be equivalent to an FxForward.
+This check was performed on a EUR-USD trade with fixingAmount 1,000,000, an identical trade with twice the fixingAmount, and an identical trade with twice the leverage.
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|c|c|c|c|}
+    \hline
+  & \bfseries{NPV Trade 1 (EUR)} & \bfseries{NPV Trade 2 (EUR)} & \bfseries{NPV Trade 3 (EUR)} \\
+    \hline
+  \bfseries{FxAccumlator} & 209,390 & 418,780 & 418,780\\
+  \bfseries{FxForward} & 209,316 & 418,632 & 418,632\\
+  \bfseries{\%Diff} & 0.007\% & 0.007\%  & 0.007\% \\ 
+  \hline
+  \end{tabular}
+  \caption{Accumulator NPV comparison with FxForward}
+\end{table}
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|c|c|c|}
+    \hline
+  & \bfseries{Total CRIF Trade 1} & \bfseries{Total CRIF Trade 2} \\
+    \hline
+  \bfseries{FxAccumlator} & 1,032 & 2,074 \\
+  \bfseries{FxForward} & 1,015 & 2,031 \\
+  \bfseries{\%Diff} & 0.002\% & 0.002\%  \\ 
+  \hline
+  \end{tabular}
+  \caption{Accumulator Total CRIF comparison with FxForward}
+\end{table}
+
+There is little difference in the NPV or Total CRIF value. The values scaled as expected with increased notional.
+The shape of the CRIF's match except for a small FXVol value. This FXVol value is an artifact of the MC engine and decreases as the number of samples increase.
+
+\item \textbf{Check 2}:  An Fx Accumulator with no knockOut barrier, one leverage range and several fixing dates should be equivalent to the sum of FxForwards.
+This check was performed on a EUR-USD Accumulator trade with fixingAmount 1,000,000 and 3 fixing dates. It was compared against a portfolio of 3 FxForwards with matching dates.
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|c|c|}
+    \hline
+  & \bfseries{NPV (EUR)}  \\
+    \hline
+  \bfseries{FxAccumlator} & 455,820 \\
+  \bfseries{FxForward Portfolio} & 455,673 \\
+  \bfseries{\%Diff} & 0.0015\% \\ 
+  \hline
+  \end{tabular}
+  \caption{Accumulator NPV comparison with FxForward Portfolio}
+\end{table}
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|c|c|}
+    \hline
+  & \bfseries{Total CRIF}  \\
+    \hline
+  \bfseries{FxAccumlator} & 2,704 \\
+  \bfseries{FxForward Portfolio} &  2,672\\
+  \bfseries{\%Diff} & 0.003\% \\ 
+  \hline
+  \end{tabular}
+  \caption{Accumulator Total CRIF comparison with FxForward Portfolio}
+\end{table}
+
+\item \textbf{Check 3}: The FXVol sensitivity should increase has the knockOut barrier level decreases from infinity, and then decrease again as knocking out becomes inevitable.
+This check was performed on a EUR-USD Accumulator trade with fixingAmount 1,000,000 and 3 fixing dates. The fixingDates were at approx. 1Y, 6Y, and 10Y.
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|c|c|c| c|c|c| c|c|c|c|}
+    \hline
+  & \bfseries{10}  & 5 & 3 & 2 & 1.5 & 1.3 & 1.1 & 1 & 0.5\\
+    \hline
+  \bfseries{10Y} & 3 & 3 & -1,906 & -20,700 & -19,115 & -9,404 & -1,576 & -155 & 0\\
+  \bfseries{15Y} & 0 & 0 & -61 & -684 & -615 & -416 & -1,39 & -4 & 0\\
+  \bfseries{1Y} & 15 & 15 & 14 & -276 & -914 & -5,271 & -3,618 & -2,183 & 0\\
+  \bfseries{2Y} & 6 & 6 & 6 & 172 & -448 & -2,620 & -1,478 & -813 & 0\\
+  \bfseries{5Y} & 7 & 7 & -108 & -4,492 & -8,442 & -4,409 & -1,304 & -131 & 0\\
+  \hline
+  \end{tabular}
+  \caption{Accumulator FxVol CRIF values: BarrierLevel vs. Tenor}
+\end{table}
+
+The sign is correct, as knockout becomes more likely we miss out on notional payments on some paths. The correct tenors are affected with the largest values for 1Y, 5Y and 10Y.
+The value increases and then decreases as expected.
+
+\item \textbf{Check 4}: The value of a trade with varying leverage ranges should be the sum of the values of trades with those individual ranges (and zero for the other ranges).
+
+A EUR-USD Fx Accumulator was set up with three ranges with leverages \{1,2,3\}. This was compared with a portfolio of three FX accumulators with ranges with leverages \{1,0,0\}, \{0,2,0\} and \{0,0,3\}.
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|c|c|}
+    \hline
+  & \bfseries{NPV (EUR)}  \\
+    \hline
+  \bfseries{FxAccumlator} & 734,527 \\
+  \bfseries{FxAccumlator Portfolio} & 734,527 \\
+  \bfseries{\%Diff} & 0\% \\ 
+  \hline
+  \end{tabular}
+  \caption{Accumulator NPV comparison with FxAccumlator Portfolio}
+\end{table}
+
+\end{itemize}
+

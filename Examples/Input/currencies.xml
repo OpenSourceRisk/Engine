@@ -9,6 +9,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Afghan afghani</Name>
@@ -20,6 +21,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Albanian lek</Name>
@@ -31,6 +33,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Armenian dram</Name>
@@ -42,6 +45,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Netherlands Antillean guilder</Name>
@@ -53,6 +57,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Angolan kwanza</Name>
@@ -64,6 +69,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Argentine peso</Name>
@@ -75,6 +81,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Australian dollar</Name>
@@ -86,6 +93,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Aruban florin</Name>
@@ -97,6 +105,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Azerbaijani manat</Name>
@@ -108,6 +117,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Bosnia and Herzegovina convertible mark</Name>
@@ -119,6 +129,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Barbados dollar</Name>
@@ -130,6 +141,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Bangladeshi taka</Name>
@@ -141,6 +153,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Bulgarian lev</Name>
@@ -152,6 +165,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Bahraini dinar</Name>
@@ -163,6 +177,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>3</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Burundian franc</Name>
@@ -174,6 +189,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Bermudian dollar</Name>
@@ -185,6 +201,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Brunei dollar</Name>
@@ -196,6 +213,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Boliviano</Name>
@@ -207,6 +225,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Bolivian Mvdol (funds code)</Name>
@@ -218,6 +237,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Brazilian real</Name>
@@ -229,6 +249,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Bahamian dollar</Name>
@@ -240,6 +261,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Bhutanese ngultrum</Name>
@@ -251,6 +273,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Botswana pula</Name>
@@ -262,6 +285,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Belarusian ruble</Name>
@@ -273,6 +297,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Belize dollar</Name>
@@ -284,6 +309,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Canadian dollar</Name>
@@ -295,6 +321,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Congolese franc</Name>
@@ -306,6 +333,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>WIR euro (complementary currency)</Name>
@@ -317,6 +345,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Swiss franc</Name>
@@ -328,6 +357,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>WIR franc (complementary currency)</Name>
@@ -339,6 +369,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Unidad de Fomento (funds code)</Name>
@@ -350,6 +381,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>4</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Chilean peso</Name>
@@ -361,6 +393,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Offshore Chinese Yuan traded in Hong Kong (Non-ISO)</Name>
@@ -372,6 +405,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Offshore Chinese Yuan traded in Taiwan (Non-ISO)</Name>
@@ -383,6 +417,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Chinese yuan</Name>
@@ -394,6 +429,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Colombian peso</Name>
@@ -405,6 +441,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Unidad de Valor Real (UVR) (funds code)</Name>
@@ -416,6 +453,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Costa Rican colon</Name>
@@ -427,6 +465,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Cuban convertible peso</Name>
@@ -438,6 +477,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Cuban peso</Name>
@@ -449,6 +489,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Cape Verdean escudo</Name>
@@ -460,6 +501,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Czech koruna</Name>
@@ -471,6 +513,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Djiboutian franc</Name>
@@ -482,6 +525,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Danish krone</Name>
@@ -493,6 +537,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Dominican peso</Name>
@@ -504,6 +549,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Algerian dinar</Name>
@@ -515,6 +561,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Egyptian pound</Name>
@@ -526,6 +573,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Eritrean nakfa</Name>
@@ -537,6 +585,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Ethiopian birr</Name>
@@ -548,6 +597,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Euro</Name>
@@ -559,6 +609,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Fiji dollar</Name>
@@ -570,6 +621,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Falkland Islands pound</Name>
@@ -581,6 +633,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Pound sterling</Name>
@@ -592,6 +645,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Georgian lari</Name>
@@ -603,6 +657,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Guernsey Pound (Non-ISO)</Name>
@@ -614,6 +669,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Ghanaian cedi</Name>
@@ -625,6 +681,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Gibraltar pound</Name>
@@ -636,6 +693,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Gambian dalasi</Name>
@@ -647,6 +705,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Guinean franc</Name>
@@ -658,6 +717,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Guatemalan quetzal</Name>
@@ -669,6 +729,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Guyanese dollar</Name>
@@ -680,6 +741,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Hong Kong dollar</Name>
@@ -691,6 +753,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Honduran lempira</Name>
@@ -702,6 +765,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Croatian kuna</Name>
@@ -713,6 +777,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Haitian gourde</Name>
@@ -724,6 +789,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Hungarian forint</Name>
@@ -735,6 +801,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Indonesian rupiah</Name>
@@ -746,6 +813,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Israeli new shekel</Name>
@@ -757,6 +825,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Isle of Man Pound (Non-ISO)</Name>
@@ -768,6 +837,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Indian rupee</Name>
@@ -779,6 +849,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Iraqi dinar</Name>
@@ -790,6 +861,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>3</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Iranian rial</Name>
@@ -801,6 +873,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Icelandic krona</Name>
@@ -812,6 +885,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Jersey Pound (Non-ISO)</Name>
@@ -823,6 +897,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Jamaican dollar</Name>
@@ -834,6 +909,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Jordanian dinar</Name>
@@ -845,6 +921,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>3</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Japanese yen</Name>
@@ -856,6 +933,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Kenyan shilling</Name>
@@ -867,6 +945,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Kyrgyzstani som</Name>
@@ -878,6 +957,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Cambodian riel</Name>
@@ -889,6 +969,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Kiribati dollar (Non-ISO)</Name>
@@ -900,6 +981,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Comoro franc</Name>
@@ -911,6 +993,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>North Korean won</Name>
@@ -922,6 +1005,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>South Korean won</Name>
@@ -933,6 +1017,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Kuwaiti dinar</Name>
@@ -944,6 +1029,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>3</RoundingPrecision>
     <Format></Format>
+	  <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Cayman Islands dollar</Name>
@@ -955,6 +1041,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Kazakhstani tenge</Name>
@@ -966,6 +1053,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Lao kip</Name>
@@ -977,6 +1065,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Lebanese pound</Name>
@@ -988,6 +1077,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Sri Lankan rupee</Name>
@@ -999,6 +1089,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Liberian dollar</Name>
@@ -1010,6 +1101,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Lesotho loti</Name>
@@ -1021,6 +1113,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Libyan dinar</Name>
@@ -1032,6 +1125,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>3</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Moroccan dirham</Name>
@@ -1043,6 +1137,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Moldovan leu</Name>
@@ -1054,6 +1149,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Malagasy ariary</Name>
@@ -1065,6 +1161,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Macedonian denar</Name>
@@ -1076,6 +1173,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Myanmar kyat</Name>
@@ -1087,6 +1185,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Mongolian toegroeg</Name>
@@ -1098,6 +1197,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Macanese pataca</Name>
@@ -1109,6 +1209,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Mauritanian ouguiya</Name>
@@ -1120,6 +1221,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Mauritian rupee</Name>
@@ -1131,6 +1233,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Maldivian rufiyaa</Name>
@@ -1142,6 +1245,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Malawian kwacha</Name>
@@ -1153,6 +1257,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Mexican peso</Name>
@@ -1164,6 +1269,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Mexican Unidad de Inversion (UDI) (funds code)</Name>
@@ -1175,6 +1281,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Malaysian ringgit</Name>
@@ -1186,6 +1293,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Mozambican metical</Name>
@@ -1197,6 +1305,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Namibian dollar</Name>
@@ -1208,6 +1317,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Nigerian naira</Name>
@@ -1219,6 +1329,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Nicaraguan cordoba</Name>
@@ -1230,6 +1341,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Norwegian krone</Name>
@@ -1241,6 +1353,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Nepalese rupee</Name>
@@ -1252,6 +1365,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>New Zealand dollar</Name>
@@ -1263,6 +1377,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Omani rial</Name>
@@ -1274,6 +1389,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>3</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Panamanian balboa</Name>
@@ -1285,6 +1401,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Peruvian sol</Name>
@@ -1296,6 +1413,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Papua New Guinean kina</Name>
@@ -1307,6 +1425,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Philippine peso</Name>
@@ -1318,6 +1437,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Pakistani rupee</Name>
@@ -1329,6 +1449,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Polish z_oty</Name>
@@ -1340,6 +1461,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Paraguayan guarani</Name>
@@ -1351,6 +1473,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Qatari riyal</Name>
@@ -1362,6 +1485,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Romanian leu</Name>
@@ -1373,6 +1497,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Serbian dinar</Name>
@@ -1384,6 +1509,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Russian ruble</Name>
@@ -1395,6 +1521,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Rwandan franc</Name>
@@ -1406,6 +1533,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Saudi riyal</Name>
@@ -1417,6 +1545,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Solomon Islands dollar</Name>
@@ -1428,6 +1557,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Seychelles rupee</Name>
@@ -1439,6 +1569,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Sudanese pound</Name>
@@ -1450,6 +1581,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Swedish krona/kronor</Name>
@@ -1461,6 +1593,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Singapore dollar</Name>
@@ -1472,6 +1605,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Saint Helena pound</Name>
@@ -1483,6 +1617,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Sierra Leonean leone</Name>
@@ -1494,6 +1629,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Somali shilling</Name>
@@ -1505,6 +1641,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Surinamese dollar</Name>
@@ -1516,6 +1653,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>South Sudanese pound</Name>
@@ -1527,6 +1665,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Sao Tome and Principe dobra</Name>
@@ -1538,6 +1677,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Salvadoran colon</Name>
@@ -1549,6 +1689,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Syrian pound</Name>
@@ -1560,6 +1701,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Swazi lilangeni</Name>
@@ -1571,6 +1713,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Thai baht</Name>
@@ -1582,6 +1725,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Tajikistani somoni</Name>
@@ -1593,6 +1737,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Turkmenistan manat</Name>
@@ -1604,6 +1749,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Tunisian dinar</Name>
@@ -1615,6 +1761,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>3</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Tongan pa_anga</Name>
@@ -1626,6 +1773,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Turkish lira</Name>
@@ -1637,6 +1785,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Trinidad and Tobago dollar</Name>
@@ -1648,6 +1797,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>New Taiwan dollar</Name>
@@ -1659,6 +1809,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Tanzanian shilling</Name>
@@ -1670,6 +1821,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Ukrainian hryvnia</Name>
@@ -1681,6 +1833,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Ugandan shilling</Name>
@@ -1692,6 +1845,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>United States dollar</Name>
@@ -1703,6 +1857,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>United States dollar (next day) (funds code)</Name>
@@ -1714,6 +1869,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Uruguay Peso en Unidades Indexadas (URUIURUI) (funds code)</Name>
@@ -1725,6 +1881,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Uruguayan peso</Name>
@@ -1736,6 +1893,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Unidad previsional</Name>
@@ -1747,6 +1905,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>4</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Uzbekistan som</Name>
@@ -1758,6 +1917,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Venezuelan bolivar soberano</Name>
@@ -1769,6 +1929,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Vietnamese dong</Name>
@@ -1780,6 +1941,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Vanuatu vatu</Name>
@@ -1791,6 +1953,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Samoan tala</Name>
@@ -1802,6 +1965,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>CFA franc BEAC</Name>
@@ -1813,6 +1977,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Silver (one troy ounce)</Name>
@@ -1824,6 +1989,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Gold (one troy ounce)</Name>
@@ -1835,6 +2001,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>East Caribbean dollar</Name>
@@ -1846,6 +2013,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>CFA franc BCEAO</Name>
@@ -1857,6 +2025,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Palladium (one troy ounce)</Name>
@@ -1868,6 +2037,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Metal</CurrencyType>
   </Currency>
   <Currency>
     <Name>CFP franc (franc Pacifique)</Name>
@@ -1879,6 +2049,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Platinum (one troy ounce)</Name>
@@ -1890,6 +2061,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Metal</CurrencyType>
   </Currency>
   <Currency>
     <Name>SUCRE</Name>
@@ -1901,6 +2073,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>ADB Unit of Account</Name>
@@ -1923,6 +2096,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>South African rand</Name>
@@ -1934,6 +2108,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Zambian kwacha</Name>
@@ -1945,6 +2120,7 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
   </Currency>
   <Currency>
     <Name>Zimbabwean dollar</Name>
@@ -1956,5 +2132,18 @@
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
+    <CurrencyType>Major</CurrencyType>
+  </Currency>
+  <Currency>
+    <Name>Bitcoin</Name>
+    <ISOCode>BTC</ISOCode>
+    <NumericCode>000</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100000000</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+    <Format></Format>
+    <CurrencyType>Crypto</CurrencyType>
   </Currency>
 </CurrencyConfig>

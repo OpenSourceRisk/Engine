@@ -25,7 +25,7 @@ The TotalReturnSwapData (ContractForDifferenceData) block is comprised of four s
       coupon, this price is converted to the funding currency using the FX rate on this same valuation date for compo /
       cross currency swaps (see below)
     \item ``DailyReset'': the underlying price on each day of the accrual period, again converted to the funding
-      currency using the FX rate the the same date for compo / cross currency swaps. This notional type is only
+      currency using the FX rate of the same date for compo / cross currency swaps. This notional type is only
       supported for fixed rate funding legs.
     \item ``Fixed'': a fixed notional given explicitly in the funding leg
   \end{itemize}
@@ -52,6 +52,7 @@ indices.
   \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node.
   \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node.
   \item CBO: See \ref{ss:CBOData}, the trade data is given in a CBOData sub node.
+  \item CommodityPosition: See \ref{ss:commodity_position}, the trade data is given in a CommodityPositionData sub node.
   \item ConvertibleBond: See \ref{ss:convertible_bond}, the trade data is given in a ConvertibleBondData sub
     node. When using reference data, a TRS on a convertible bond can also be captured as a TRS on a bond, i.e. there is
     no need to distinguish between a TRS on a Bond and a TRS on a convertible Bond in this case, the pricer will figure
@@ -62,11 +63,11 @@ indices.
   \item EquityOptionPosition: See \ref{ss:equity_option_position}, the trade data is given in a EquityOptionPositionData
     sub node.
   \item BondPosition: See \ref{ss:bond_position}, the trade data is given in a BondBasketData sub node.
-  \item Derivative: An arbitrary underlying derivative trade (swaption, variance swap). The derivative subnode has
+  \item Derivative: An arbitrary underlying derivative trade (of any type covered by ORE), allowing the set up of a so called Portfolio Swap with multiple underlying derivatives. The derivative subnode has
     exactly two subnodes
     \begin{itemize}
       \item Id: A unqiue identifier for the derivative position. Historical prices must be given under the fixing name
-        ``GENERIC-<Id>''.
+        ``GENERIC-$<Id>$''.
       \item Trade: The root node of a derivative trade.
     \end{itemize}
 
@@ -150,7 +151,7 @@ indices.
         of the bond worth (say) $50.0$ USD.
       \end{itemize}
       \item the weighted price of one unit of the bond underlying basket, notice that this is always a ``percentage of
-        par'' price regardless of the quotation style of the the single bonds in the basket
+        par'' price regardless of the quotation style of the single bonds in the basket
       \item the (weighted) price of (one unit of) the equity underlying (basket)
       \item the (weighted) price of (one unit of) the equity option underlying (basket)
       \item an {\em absolute amount in the initial price ccy (``dollar amount'')} if more than one underlying is
@@ -171,15 +172,15 @@ indices.
     (funding currency) or the currency of the underlying asset. Defaults to the return currency if omitted.
 
   \item FXTerms [Mandatory when underlying asset / return / additional cashflow / funding currencies differ]: If the
-    underlying currency is different from the funding currency, a node for the conversion underlying / funding currency
-    must be given. The same holds for the return and additional cashflow currencies: Whenever one of these currencies
-    are different from the funding currency, an FXIndex node for the conversion to the funding currency must be given. If multiple currencies differ, 
-    multiple FXIndex nodes must be given.
+    underlying asset currency is different from the return currency, an FXIndex for the conversion underlying / return currency
+    must be given. The same holds for the funding and additional cashflow currencies: Whenever one of these currencies
+    are different from the underlying currency, an FXIndex for the conversion to the underlying currency must be given. If multiple currencies differ, 
+    multiple FXIndex elements must be given.
 
     \begin{itemize}
-    \item FXIndex: The fx index to use for the conversion, this must contain the underlying asset / return / additional cashflow
-      currency and the funding leg currency (in the order defined in table \ref{tab:fxindex_data}, i.e. it does not
-      matter which one is the asset / return / additional cashflow currency and which is the funding currency)
+    \item FXIndex: The fx index to use for the conversion, this must contain the funding / return / additional cashflow
+      currency and the underlying asset currency (in the order defined in table \ref{tab:fxindex_data}, i.e. it does not
+      matter which one is the funding / return / additional cashflow currency and which is the underlying currency)
         
         Allowable values: see \ref{tab:fxindex_data}
     \end{itemize}
@@ -232,7 +233,7 @@ indices.
       date before or on the accrual start date of the relevant funding coupon, this price is converted to the funding
       currency using the FX rate on this same valuation date for compo / cross currency swaps.
     \item ``DailyReset'': the notional of a funding period is determined by the underlying price on each day of the
-      accrual period, again converted to the funding currency using the FX rate the the same date for compo / cross
+      accrual period, again converted to the funding currency using the FX rate of the same date for compo / cross
       currency swaps. This notional type is only supported for fixed rate funding legs.
     \item ``Fixed'': The notional is explicitly given in the leg data.
   \end{itemize}
@@ -414,6 +415,33 @@ indices.
 \end{minted}
 \caption{Generic Total Return Swap on a derivative underlying}
 \label{lst:trsdata4}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <TotalReturnSwapData>
+      <UnderlyingData>
+        <Trade>
+          <TradeType>CommodityPosition</TradeType>
+          <CommodityPositionData>
+            <!-- basket price = quantity x sum_i ( weight_i x price_i x fx_i ) -->
+            <Quantity>1000</Quantity>
+            <Underlying>
+              <Type>Commodity</Type>
+              <Name>RIC:.BCOM</Name>
+              <Weight>1.0</Weight>
+              <PriceType>Spot</PriceType>
+            </Underlying>
+          </CommodityPositionData>
+        </Trade>
+      </UnderlyingData>
+      <!-- omitting ReturnData, FundingData, AdditionalCashflowData -->
+    </TotalReturnSwapData>
+  </Trade>
+\end{minted}
+\caption{Generic Total Return Swap on a commodity index underlying}
+\label{lst:trsdata5}
 \end{listing}
 
 \begin{listing}[H]

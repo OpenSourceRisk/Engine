@@ -32,7 +32,7 @@ namespace ore {
 namespace data {
 
 //! CouponPricer Builder for CapFlooredOvernightIndexedCouponLeg
-/*! The coupon pricers are cached by currency
+/*! The coupon pricers are cached by index / rate comp period
  \ingroup builders
  */
 class CapFlooredOvernightIndexedCouponLegEngineBuilder
@@ -44,7 +44,7 @@ public:
 
 protected:
     string keyImpl(const string& index, const QuantLib::Period& rateComputationPeriod) override;
-    boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& index,
+    QuantLib::ext::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& index,
                                                            const QuantLib::Period& rateComputationPeriod) override;
 };
 } // namespace data

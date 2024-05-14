@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2023 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -33,7 +34,7 @@
 
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 #include <set>
 #include <map>
@@ -77,7 +78,8 @@ public:
         FittedBond,
         WeightedAverage,
         YieldPlusDefault,
-        IborFallback
+        IborFallback,
+        BondYieldShifted
     };
     //! Default destructor
     virtual ~YieldCurveSegment() {}
@@ -85,7 +87,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -95,6 +97,8 @@ public:
     const string& typeID() const { return typeID_; }
     const string& conventionsID() const { return conventionsID_; }
     const QuantLib::Pillar::Choice pillarChoice() const { return pillarChoice_; }
+    Size priority() const { return priority_; }
+    Size minDistance() const { return minDistance_; }
     const vector<pair<string, bool>>& quotes() const { return quotes_; }
     //@}
 
@@ -118,16 +122,14 @@ protected:
     //! Utility to build a quote, optional flag defaults to false
     pair<string, bool> quote(const string& name, bool opt = false) { return make_pair(name, opt); }
 
-    //! Utility method to read quotes from XML
-    void loadQuotesFromXML(XMLNode* node);
-    //! Utility method to write quotes to XML
-
 private:
     // TODO: why type and typeID?
     Type type_;
     string typeID_;
     string conventionsID_;
     QuantLib::Pillar::Choice pillarChoice_ = QuantLib::Pillar::LastRelevantDate;
+    Size priority_ = 0;
+    Size minDistance_ = 1;
 };
 
 //! Direct yield curve segment
@@ -152,7 +154,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Visitability
@@ -184,7 +186,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -226,7 +228,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -259,7 +261,7 @@ public:
     TenorBasisYieldCurveSegment() {}
     //! Detailed constructor
     TenorBasisYieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes,
-                                const string& shortProjectionCurveID, const string& longProjectionCurveID);
+                                const string& receiveProjectionCurveID, const string& payProjectionCurveID);
     //! Default destructor
     virtual ~TenorBasisYieldCurveSegment() {}
     //@}
@@ -267,13 +269,13 @@ public:
     //!\name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
     //@{
-    const string& shortProjectionCurveID() const { return shortProjectionCurveID_; }
-    const string& longProjectionCurveID() const { return longProjectionCurveID_; }
+    const string& receiveProjectionCurveID() const { return receiveProjectionCurveID_; }
+    const string& payProjectionCurveID() const { return payProjectionCurveID_; }
     //@}
 
     //! \name Visitability
@@ -282,8 +284,8 @@ public:
     //@}
 
 private:
-    string shortProjectionCurveID_;
-    string longProjectionCurveID_;
+    string receiveProjectionCurveID_;
+    string payProjectionCurveID_;
 };
 
 //! Cross Currency yield curve segment
@@ -314,7 +316,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -360,7 +362,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -398,7 +400,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -442,7 +444,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -484,7 +486,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -530,7 +532,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -568,7 +570,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -591,6 +593,52 @@ private:
     boost::optional<Real> spread_;
 };
 
+//! Bond yield shifted yield curve segment
+/*!
+  An average spread between curve and bond's yield is used to shift an existing yield curve.
+
+  \ingroup configuration
+*/
+class BondYieldShiftedYieldCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    BondYieldShiftedYieldCurveSegment() {}
+    //! Detailed constructor
+    BondYieldShiftedYieldCurveSegment(const string& typeID, const string& referenceCurveID, const vector<string>& quotes,
+                                      const map<string, string>& iborIndexCurves, const bool extrapolateFlat);
+
+    //! Default destructor
+    virtual ~BondYieldShiftedYieldCurveSegment() {}
+    //@}
+    
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const string& referenceCurveID() const { return referenceCurveID_; }
+    const map<string, string>& iborIndexCurves() const { return iborIndexCurves_; }
+    const bool extrapolateFlat() const { return extrapolateFlat_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&) override;
+    //@}
+
+private:
+    string referenceCurveID_;
+    map<string, string> iborIndexCurves_;
+    bool extrapolateFlat_;
+    boost::optional<Real> spread_;
+    boost::optional<Real> bondYield_;
+};
+
 //! Yield Curve configuration
 /*!
   Wrapper class containing all yield curve segments needed to build a yield curve.
@@ -605,10 +653,11 @@ public:
     YieldCurveConfig() {}
     //! Detailed constructor
     YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                     const string& discountCurveID, const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments,
+                     const string& discountCurveID, const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                      const string& interpolationVariable = "Discount", const string& interpolationMethod = "LogLinear",
                      const string& zeroDayCounter = "A365", bool extrapolation = true,
-                     const BootstrapConfig& bootstrapConfig = BootstrapConfig());
+                     const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
+                     const Size mixedInterpolationCutoff = 1);
     //! Default destructor
     virtual ~YieldCurveConfig() {}
     //@}
@@ -616,16 +665,17 @@ public:
     //! \name Serialization
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
     //@{
     const string& currency() const { return currency_; }
     const string& discountCurveID() const { return discountCurveID_; }
-    const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments() const { return curveSegments_; }
+    const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments() const { return curveSegments_; }
     const string& interpolationVariable() const { return interpolationVariable_; }
     const string& interpolationMethod() const { return interpolationMethod_; }
+    Size mixedInterpolationCutoff() const { return mixedInterpolationCutoff_; }
     const string& zeroDayCounter() const { return zeroDayCounter_; }
     bool extrapolation() const { return extrapolation_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
@@ -635,6 +685,7 @@ public:
     //@{
     string& interpolationVariable() { return interpolationVariable_; }
     string& interpolationMethod() { return interpolationMethod_; }
+    Size& mixedInterpolationCutoff() { return mixedInterpolationCutoff_; }
     string& zeroDayCounter() { return zeroDayCounter_; }
     bool& extrapolation() { return extrapolation_; }
     void setBootstrapConfig(const BootstrapConfig& bootstrapConfig) { bootstrapConfig_ = bootstrapConfig; }
@@ -648,7 +699,7 @@ private:
     // Mandatory members
     string currency_;
     string discountCurveID_;
-    vector<boost::shared_ptr<YieldCurveSegment>> curveSegments_;
+    vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> curveSegments_;
 
     // Optional members
     string interpolationVariable_;
@@ -656,10 +707,11 @@ private:
     string zeroDayCounter_;
     bool extrapolation_;
     BootstrapConfig bootstrapConfig_;
+    Size mixedInterpolationCutoff_;
 };
 
 // Map form curveID to YieldCurveConfig
-using YieldCurveConfigMap = std::map<string, boost::shared_ptr<YieldCurveConfig>>;
+using YieldCurveConfigMap = std::map<string, QuantLib::ext::shared_ptr<YieldCurveConfig>>;
 
 } // namespace data
 } // namespace ore

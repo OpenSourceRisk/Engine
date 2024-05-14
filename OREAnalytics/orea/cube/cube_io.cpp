@@ -29,6 +29,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 
 #include <iomanip>
+#include <regex>
 
 namespace ore {
 namespace analytics {
@@ -46,20 +47,22 @@ bool use_compression(const std::string& filename) {
 #endif
 }
 
-std::string getMetaData(const std::string& line, const std::string& tag) {
+std::string getMetaData(const std::string& line, const std::string& tag, const bool mandatory = true) {
 
     // assuming a fixed width format "# tag        : <value>"
 
-    QL_REQUIRE(line.substr(0, 1) == "#",
+    QL_REQUIRE(!mandatory || line.substr(0, 1) == "#",
                "internal error: getMetaData(" << line << ", " << tag << "): line does not start with #");
-    QL_REQUIRE(line.substr(2, tag.size()) == tag,
+    QL_REQUIRE(!mandatory || line.substr(2, tag.size()) == tag,
                "internal error: getMetaData(" << line << ", " << tag << ") failed, tag is not matched.");
-    return line.substr(15);
+    return line.substr(0, 1) == "#" && line.substr(2, tag.size()) == tag ? line.substr(15) : std::string();
 }
 
 } // namespace
 
-boost::shared_ptr<NPVCube> loadCube(const std::string& filename, const bool doublePrecision) {
+NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePrecision) {
+
+    NPVCubeWithMetaData result;
 
     // open file
 
@@ -103,18 +106,37 @@ boost::shared_ptr<NPVCube> loadCube(const std::string& filename, const bool doub
         ids.insert(line.substr(2));
     }
 
-    boost::shared_ptr<NPVCube> result;
-    if (doublePrecision && depth <= 1) {
-        result = boost::make_shared<DoublePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0);
-    } else if (doublePrecision && depth > 1) {
-        result = boost::make_shared<DoublePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0);
-    } else if (!doublePrecision && depth <= 1) {
-        result = boost::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
-    } else if (!doublePrecision && depth > 1) {
-        result = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0f);
+    std::getline(in, line);
+    if (std::string md = getMetaData(line, "scenGenDta", false); !md.empty()) {
+        result.scenarioGeneratorData = QuantLib::ext::make_shared<ScenarioGeneratorData>();
+        result.scenarioGeneratorData->fromXMLString(md);
+        std::getline(in, line);
+        DLOG("overwrite scenario generator data with meta data from cube: " << md);
     }
 
-    std::getline(in, line); // header line for data
+    if (std::string md = getMetaData(line, "storeFlows", false); !md.empty()) {
+        result.storeFlows = parseBool(md);
+        std::getline(in, line);
+        DLOG("overwrite storeFlows with meta data from cube: " << md);
+    }
+
+    if (std::string md = getMetaData(line, "storeCrSt", false); !md.empty()) {
+        result.storeCreditStateNPVs = parseInteger(md);
+        std::getline(in, line);
+        DLOG("overwrite storeCreditStateNPVs with meta data from cube: " << md);
+    }
+
+    QuantLib::ext::shared_ptr<NPVCube> cube;
+    if (doublePrecision && depth <= 1) {
+        cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0);
+    } else if (doublePrecision && depth > 1) {
+        cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0);
+    } else if (!doublePrecision && depth <= 1) {
+        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+    } else if (!doublePrecision && depth > 1) {
+        cube = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0f);
+    }
+    result.cube = cube;
 
     vector<string> tokens;
     Size nData = 0;
@@ -130,9 +152,9 @@ boost::shared_ptr<NPVCube> loadCube(const std::string& filename, const bool doub
         Size depth = ore::data::parseInteger(tokens[3]);
         double value = ore::data::parseReal(tokens[4]);
         if (date == 0)
-            result->setT0(value, id, depth);
+            cube->setT0(value, id, depth);
         else
-            result->set(value, id, date - 1, sample, depth);
+            cube->set(value, id, date - 1, sample, depth);
         ++nData;
     }
 
@@ -142,7 +164,7 @@ boost::shared_ptr<NPVCube> loadCube(const std::string& filename, const bool doub
     return result;
 }
 
-void saveCube(const std::string& filename, const NPVCube& cube, const bool doublePrecision) {
+void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, const bool doublePrecision) {
 
     // open file
 
@@ -157,22 +179,34 @@ void saveCube(const std::string& filename, const NPVCube& cube, const bool doubl
 
     // write meta data (tag width is hardcoded and used in getMetaData())
 
-    out << "# asof       : " << ore::data::to_string(cube.asof()) << "\n";
-    out << "# numIds     : " << std::to_string(cube.numIds()) << "\n";
-    out << "# numDates   : " << std::to_string(cube.numDates()) << "\n";
-    out << "# samples    : " << ore::data::to_string(cube.samples()) << "\n";
-    out << "# depth      : " << ore::data::to_string(cube.depth()) << "\n";
+    out << "# asof       : " << ore::data::to_string(cube.cube->asof()) << "\n";
+    out << "# numIds     : " << std::to_string(cube.cube->numIds()) << "\n";
+    out << "# numDates   : " << std::to_string(cube.cube->numDates()) << "\n";
+    out << "# samples    : " << ore::data::to_string(cube.cube->samples()) << "\n";
+    out << "# depth      : " << ore::data::to_string(cube.cube->depth()) << "\n";
     out << "# dates      : \n";
-    for (auto const& d : cube.dates())
+    for (auto const& d : cube.cube->dates())
         out << "# " << ore::data::to_string(d) << "\n";
 
     out << "# ids        : \n";
     std::map<Size, std::string> ids;
-    for (auto const& d : cube.idsAndIndexes()) {
+    for (auto const& d : cube.cube->idsAndIndexes()) {
         ids[d.second] = d.first;
     }
     for (auto const& d : ids) {
         out << "# " << d.second << "\n";
+    }
+
+    if (cube.scenarioGeneratorData) {
+        std::string scenGenDataXml =
+            std::regex_replace(cube.scenarioGeneratorData->toXMLString(), std::regex("\\r\\n|\\r|\\n|\\t"), "");
+        out << "# scenGenDta : " << scenGenDataXml << "\n";
+    }
+    if (cube.storeFlows) {
+        out << "# storeFlows : " << std::boolalpha << *cube.storeFlows << "\n";
+    }
+    if (cube.storeCreditStateNPVs) {
+        out << "# storeCrSt  : " << *cube.storeCreditStateNPVs << "\n";
     }
 
     // set precision
@@ -183,12 +217,12 @@ void saveCube(const std::string& filename, const NPVCube& cube, const bool doubl
     // write cube data
 
     out << "#id,date,sample,depth,value\n";
-    for (Size i = 0; i < cube.numIds(); ++i) {
-        out << i << ",0,0,0," << cube.getT0(i) << "\n";
-        for (Size j = 0; j < cube.numDates(); ++j) {
-            for (Size k = 0; k < cube.samples(); ++k) {
-                for (Size d = 0; d < cube.depth(); ++d) {
-                    double value = cube.get(i, j, k, d);
+    for (Size i = 0; i < cube.cube->numIds(); ++i) {
+        out << i << ",0,0,0," << cube.cube->getT0(i) << "\n";
+        for (Size j = 0; j < cube.cube->numDates(); ++j) {
+            for (Size k = 0; k < cube.cube->samples(); ++k) {
+                for (Size d = 0; d < cube.cube->depth(); ++d) {
+                    double value = cube.cube->get(i, j, k, d);
                     if (value != 0.0)
                         out << i << "," << (j + 1) << "," << k << "," << d << "," << value << "\n";
                 }
@@ -197,7 +231,7 @@ void saveCube(const std::string& filename, const NPVCube& cube, const bool doubl
     }
 }
 
-boost::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename) {
+QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename) {
 
     // open file
 
@@ -234,8 +268,8 @@ boost::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std
 
     std::getline(in, line); // header line for data
 
-    boost::shared_ptr<InMemoryAggregationScenarioData> result =
-        boost::make_shared<InMemoryAggregationScenarioData>(dimDates, dimSamples);
+    QuantLib::ext::shared_ptr<InMemoryAggregationScenarioData> result =
+        QuantLib::ext::make_shared<InMemoryAggregationScenarioData>(dimDates, dimSamples);
 
     std::getline(in, line); // header line for data
 

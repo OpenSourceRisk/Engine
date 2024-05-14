@@ -25,14 +25,28 @@
 
 #include <orea/cube/npvcube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
+#include <orea/scenario/scenariogeneratordata.hpp>
 
 namespace ore {
 namespace analytics {
 
-boost::shared_ptr<NPVCube> loadCube(const std::string& filename, const bool doublePrecision = false);
-void saveCube(const std::string& filename, const NPVCube& cube, const bool doublePrecision = false);
+/*! We save / load the npv cube data toegther with some meta data that is used to set up the CubeInterpretation. This is
+    to ensure that the cube interpretation is consistent with the cube that we load from disk. The meta data overwrites
+    the config in ore.xml / simulation.xml. All meta data is optional, i.e. if not given in the cube file, the original
+    config will be used. */
 
-boost::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename);
+struct NPVCubeWithMetaData {
+    QuantLib::ext::shared_ptr<NPVCube> cube;
+    // all of the following members are optional
+    QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData;
+    boost::optional<bool> storeFlows;
+    boost::optional<Size> storeCreditStateNPVs;
+};
+
+NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePrecision = false);
+void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, const bool doublePrecision = false);
+
+QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename);
 void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube);
 
 } // namespace analytics

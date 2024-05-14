@@ -46,10 +46,10 @@ namespace ore {
 namespace analytics {
 
 RegressionDynamicInitialMarginCalculator::RegressionDynamicInitialMarginCalculator(
-    const boost::shared_ptr<InputParameters>& inputs,
-    const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NPVCube>& cube,
-    const boost::shared_ptr<CubeInterpretation>& cubeInterpretation,
-    const boost::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays,
+    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NPVCube>& cube,
+    const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
+    const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays,
     Size regressionOrder, std::vector<std::string> regressors, Size localRegressionEvaluations,
     Real localRegressionBandWidth, const std::map<std::string, Real>& currentIM)
 : DynamicInitialMarginCalculator(inputs, portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays,
@@ -151,7 +151,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
                             dimCube_->set(value, nettingSetCount, j, k);
                             nettingSetDIM_[n][j][k] = value;
                         }
-                    } catch(std::exception& e) {
+                    } catch(std::exception& ) {
                         QL_FAIL("Failed to lookup external IM for netting set " << n
                                 << " at date " << io::iso_date(d));
                     }
@@ -194,7 +194,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
             Size mporCalendarDays = cubeInterpretation_->getMporCalendarDays(cube_, j);
             Real horizonScaling = sqrt(1.0 * horizonCalendarDays_ / mporCalendarDays);
 
-            Real stdevDiff = sqrt(variance(accDiff));
+            Real stdevDiff = sqrt(boost::accumulators::variance(accDiff));
             Real E_OneOverNumeraire =
                 mean(accOneOverNumeraire); // "re-discount" (the stdev is calculated on non-discounted deltaNPVs)
 
@@ -344,8 +344,8 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
             // the first date greater than t0+MPOR, check if it is closest
             Size lastIdx = (i == 0) ? 0 : (i - 1);
             Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
-            int daysFromT0CloseOut = daysFromT0 - horizonCalendarDays_;
-            int prevDaysFromT0CloseOut = lastDaysFromT0 - horizonCalendarDays_;
+            int daysFromT0CloseOut = static_cast<int>(daysFromT0 - horizonCalendarDays_);
+            int prevDaysFromT0CloseOut = static_cast<int>(lastDaysFromT0 - horizonCalendarDays_);
             if (std::abs(daysFromT0CloseOut) <= std::abs(prevDaysFromT0CloseOut)) {
                 relevantDateIdx = i;
                 sqrtTimeScaling = std::sqrt(Real(horizonCalendarDays_) / Real(daysFromT0));
@@ -388,7 +388,7 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
             acc_OneOverNum(1.0 / numeraire);
         }
         Real E_OneOverNumeraire = mean(acc_OneOverNum);
-        Real variance_t0 = variance(acc_delMtm);
+        Real variance_t0 = boost::accumulators::variance(acc_delMtm);
         Real sqrt_t0 = sqrt(variance_t0);
         t0dimReg[key] = (sqrt_t0 * confidenceLevel * E_OneOverNumeraire);
         std::sort(t0_delMtM_dist.begin(), t0_delMtM_dist.end());
@@ -402,7 +402,7 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
     return t0dimReg;
 }
 
-void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) {
+void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) const {
 
     Size samples = dimCube_->samples();
     Size stopDatesLoop = datesLoopSize_;
@@ -424,7 +424,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
         for (Size i = 0; i < stopDatesLoop; ++i) {
             Real expectedFlow = 0.0;
             for (Size j = 0; j < samples; ++j) {
-                expectedFlow += nettingSetFLOW_[nettingSet][i][j] / samples;
+                expectedFlow += nettingSetFLOW_.find(nettingSet)->second[i][j] / samples;
             }
 
             Date defaultDate = dimCube_->dates()[i];
@@ -434,10 +434,10 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
                 .add(i)
                 .add(defaultDate)
                 .add(days)
-                .add(nettingSetZeroOrderDIM_[nettingSet][i])
-                .add(nettingSetExpectedDIM_[nettingSet][i])
+                .add(nettingSetZeroOrderDIM_.find(nettingSet)->second[i])
+                .add(nettingSetExpectedDIM_.find(nettingSet)->second[i])
                 .add(expectedFlow)
-                .add(nettingSetSimpleDIMh_[nettingSet][i])
+                .add(nettingSetSimpleDIMh_.find(nettingSet)->second[i])
                 .add(nettingSet)
                 .add(t);
         }
@@ -448,7 +448,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
 
 void RegressionDynamicInitialMarginCalculator::exportDimRegression(
     const std::string& nettingSet, const std::vector<Size>& timeSteps,
-    const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports) {
+    const std::vector<QuantLib::ext::shared_ptr<ore::data::Report>>& dimRegReports) {
 
     QL_REQUIRE(dimRegReports.size() == timeSteps.size(),
                "number of file names (" << dimRegReports.size() << ") does not match number of time steps ("
@@ -480,7 +480,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimRegression(
         vector<Real> delta = apply_permutation(nettingSetDeltaNPV_[nettingSet][timeStep], p);
         vector<Real> num = apply_permutation(numeraires, p);
 
-        boost::shared_ptr<ore::data::Report> regReport = dimRegReports[ii];
+        QuantLib::ext::shared_ptr<ore::data::Report> regReport = dimRegReports[ii];
         regReport->addColumn("Sample", Size());
         for (Size k = 0; k < reg[0].size(); ++k) {
             ostringstream o;

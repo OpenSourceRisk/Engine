@@ -1,0 +1,114 @@
+\subsection{Errors during parsing}
+
+The log file contains errors that occur during parsing showing the code context and type of error, e.g.
+
+\begin{minted}[fontsize=\footnotesize]{text}
+DEBUG  Getting script 'EuropeanOption' from library
+DEBUG  parsing script (size 313)
+ALERT  an error occured during script parsing:
+NOTICE parsing stopped at L1:1:0
+NOTICE expected ")" in L4:68:0:
+NOTICE       Option = LongShort * Quantity * PAY(( max( Payoff, 0 ), Expiry, Settlement, PayCcy);
+NOTICE                                                             ^--- here
+ALERT  [STEM] scripted trade could not be built due to parser errors, see log for more details.
+\end{minted}
+
+\subsection{Errors during runtime}
+
+The log file also contains errors that occur during the script execution, e.g.
+
+\begin{minted}[fontsize=\footnotesize]{text}
+<<<<<<<<<<
+             Payoff = PutCall * (Underlying(Expiry) - Strike);
+             ======
+>>>>>>>>>>
+Error during script execution: variable 'Payoff' is not defined. at L3:14:6
+\end{minted}
+
+\subsection{Tracing}
+
+If tracing is enabled in the engine parameters, the AST resulting from parsing is dumped to the log file, e.g.
+
+\begin{minted}[fontsize=\footnotesize]{text}
+ Sequence at L2:14:289
+   DeclarationNumber at L2:14:35
+     Variable(Payoff) at L2:21:6
+       -
+     Variable(ExerciseProbability) at L2:29:19
+       -
+   Assignment at L3:14:49
+     Variable(Payoff) at L3:14:6
+       -
+     OperatorMultiply at L3:23:39
+       Variable(PutCall) at L3:23:7
+         -
+       OperatorMinus at L3:33:29
+         VarEvaluation at L3:34:18
+           Variable(Underlying) at L3:34:10
+             -
+           Variable(Expiry) at L3:45:6
+             -
+         Variable(Strike) at L3:55:6
+           -
+   Assignment at L4:14:83
+     Variable(Option) at L4:14:6
+       -
+     OperatorMultiply at L4:23:73
+       Variable(LongShort) at L4:23:9
+         -
+       OperatorMultiply at L4:35:61
+         Variable(Quantity) at L4:35:8
+           -
+         FunctionPay at L4:46:50
+           FunctionMax at L4:51:16
+             Variable(Payoff) at L4:56:6
+               -
+             ...
+\end{minted}
+
+This can be used to track down parsing errors at a low level. Furthermore the context before the script engine is run is
+logged containing the variables from the data node of the scripted trade, e.g.
+
+\begin{minted}[fontsize=\footnotesize]{text}
+run script engine, context before run is:
+Expiry                        (Event   )    const    February 9th, 2020
+LongShort                     (Number  )    const    1.000000 (10000 det)
+Option                        (Number  )             0.000000 (10000 det)
+PayCcy                        (Currency)    const    USD
+PutCall                       (Number  )    const    1.000000 (10000 det)
+Quantity                      (Number  )    const    1000.000000 (10000 det)
+Settlement                    (Event   )    const    February 9th, 2020
+Strike                        (Number  )    const    2147.560000 (10000 det)
+TODAY                         (Event   )    const    February 5th, 2016
+Underlying                    (Index   )    const    EQ-SPX
+\end{minted}
+
+which can be used to verify the input data used for the concrete trade pricing. Finally each execution step is logged
+with the AST node type currently processed, the value of the current evaluation and the code context which produced it
+
+\begin{minted}[fontsize=\footnotesize]{text}
+...
+variable( Expiry ) at L3:45:6
+expr value = February 9th, 2020
+<<<<<<<<<<
+             Payoff = PutCall * (Underlying(Expiry) - Strike);
+                                            ======
+>>>>>>>>>>
+
+indexEval( EQ-SPX, February 9th, 2020 ) at L3:34:18
+expr value = [1807.87,2534.44,1289.6,1541.2,3216.55,2120.7,1016.12,1159.3,2309.33,3898.24...]
+<<<<<<<<<<
+             Payoff = PutCall * (Underlying(Expiry) - Strike);
+                                 ==================
+>>>>>>>>>>
+...
+\end{minted}
+
+If the Interactive flag is set in the engine parameters, the single execution steps are displayed on the console output
+and the user is prompted for a command input which can be
+
+\begin{itemize}
+\item (c) to display the current state of the variables (context)
+\item (q) to continue the script execution without being promted any further
+\item return to execute the next step in the script
+\end{itemize}

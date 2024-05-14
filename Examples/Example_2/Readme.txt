@@ -8,7 +8,7 @@
 
 3) Pricing
 
-   Dual curve, Eonia Discounting, Euribor Forwards 
+   Dual curve, Eonia Discounting, Euribor Forwards  
 
 4) Analytics
 

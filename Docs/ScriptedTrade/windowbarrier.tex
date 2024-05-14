@@ -1,0 +1,99 @@
+\subsection{Window Barrier Option}
+
+We assume the following unless specified
+
+\begin{itemize}
+\item Today: 2018-12-31
+\item Expiry: 2026-03-01
+\item Settlement: 2026-03-01
+\item Spot Level: 1.1469
+\item Barrier Type: Up \& Out
+\item Barrier Level: 1.30
+\item Window Start: 2023-03-01
+\item Window End: 2024-03-01
+\item Option Type: Call
+\item Option Strike: 1.10
+\item Sample Size: 10,000
+\item Notional: 1,000,000
+\end{itemize}
+
+
+\subsubsection{Convergence of NPV}
+We test the convergence of the NPV when sample size grows. As we can see in Table \ref{window_barrier_npv_sample_convergence},
+standard error of NPV decreases by a factor of $n$ when Sample Size increases by a factor of $n^2$. For this particular trade,
+in order to achieve standard error less than 1 bps of Notional, a minimum of 500,000 samples are required.
+
+\begin{table}[!htbp]
+  \centering
+  \begin{tabular}{l | r | r | r | r}
+    Sample Size ('000) & NPV & Run Time (s) & Std. Error & Std. Error \% of NPV \\ \hline
+     1 & 27,252.91 & 2.78 & 2,210.62 & 8.11 \\
+     5 & 26,700.96 & 9.91 & 981.75 & 3.68 \\
+     10 & 26,359.18 & 17.79 & 684.78 & 2.60 \\
+     50 & 26,559.07 & 79.41 & 307.12 & 1.16 \\
+     100 & 26,365.00 & 152.89 & 216.60 & 0.82
+  \end{tabular}
+  \caption{NPV of Window Barrier Option for different sample size}
+  \label{window_barrier_npv_sample_convergence}
+\end{table}
+
+\subsubsection{Convergence to Vanilla Option and Barrier Option}
+We want to know if the NPV from the ScriptedTrade engine is consistent with the analytical NPV.
+Since we do not have an analytical pricer for Window Barrier Option implemented in ORE, we can only compare
+the results to the analytical NPV of Vanilla Option and Barrier Option. We have illustrated the results in
+Table \ref{window_barrier_npv_window_convergence} and Table \ref{window_barrier_analytical_npv}. For the Vanilla case,
+the analytical NPV is not very far from Scripted NPV with 10,000 paths. If we increase the sample size to
+1,000,000, we can obtain an even closer NPV 233,865.15. For the Barrier case, there are expected difference
+between the two NPVs because in the analytical case, barrier is monitored continuously while in script, barrier
+is monitored daily. As a result, a knock-out option modelled in ScriptedTrade is expected to have a high NPV
+(less chance of being knocked out). In Table \ref{window_barrier_npv_level_convergence}, we observe that
+NPV is getting closer to Vanilla price when Up\&Out barrier level increases.
+
+\begin{table}[!htbp]
+  \centering
+  \begin{tabular}{r | r | r | r | r | r}
+    Window Start & Window End & NPV & Run Time (s) & Std. Error & Std. Error \% of NPV \\ \hline
+    2018-12-31 & 2018-12-31 & 233,753.20 & 0.08 & 2,307.36 & 0.99 \\
+    2018-12-31 & 2019-06-01 & 225,038.56 & 7.92 & 2,282.25 & 1.01 \\
+    2018-12-31 & 2919-12-01 & 176,732.18 & 25.68 & 2,103.49 & 1.19 \\
+    2023-03-01 & 2024-03-01 & 26,359.18 & 17.79 & 684.78 & 2.60 \\
+    2023-03-01 & 2025-03-01 & 14,191.66 & 37.21 & 442.81 & 3.12 \\
+    2022-03-01 & 2025-03-01 & 11,800.52 & 61.07 & 404.31 & 3.43 \\
+    2021-03-01 & 2025-03-01 & 10,443.37 & 91.03 & 383.38 & 3.67 \\
+    2020-03-01 & 2025-03-01 & 9,548.49 & 144.09 & 363.62 & 3.81 \\
+    2019-03-01 & 2025-03-01 & 9,290.95 & 253.81 & 366.20 & 3.94 \\
+    2018-12-31 & 2026-03-01 & 4,202.72 & 317.78 & 187.28 & 4.46 \\
+  \end{tabular}
+  \caption{NPV of Window Barrier Option for different barrier window.}
+  \label{window_barrier_npv_window_convergence}
+\end{table}
+
+\begin{table}[!htbp]
+  \centering
+  \begin{tabular}{r | r}
+    Type & Analytical NPV \\ \hline
+    Vanilla Option & 4,049.55 \\
+    Barrier Option & 233,867.04
+  \end{tabular}
+  \caption{Analytical NPV of Vanilla Option and Barrier Option.}
+  \label{window_barrier_analytical_npv}
+\end{table}
+
+
+
+\begin{table}[!htbp]
+  \centering
+  \begin{tabular}{r | r | r | r | r}
+    Barrier Level & NPV & Run Time (s) & Std. Error & Std. Error \% of NPV \\ \hline
+    1.10 & 1,583.34 & 16.30 & 145.62 & 12.07 \\
+    1.20 & 8,721.62 & 15.64 & 371.61 & 19.28 \\
+    1.30 & 26,359.18 & 17.79 & 684.78 & 2.60 \\
+    1.40 & 56,356.49 & 16.41 & 1,042.16 & 1.85 \\
+    1.50 & 93,221.28 & 16.27 & 1,354.51 & 1.45 \\
+    1.80 & 189,493.51 & 14.01 & 1,943.19 & 1.03 \\
+    2.00 & 218,075.40 & 12.25 & 2,144.28 & 0.98 \\
+    3.00 & 234,022.50 & 9.00 & 2,304.75 & 1.06
+  \end{tabular}
+  \caption{NPV of Window Barrier Option for different barrier level}
+  \label{window_barrier_npv_level_convergence}
+\end{table}

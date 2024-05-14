@@ -23,8 +23,11 @@
 
 #pragma once
 
+#include <orea/scenario/scenario.hpp>
+
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
 #include <qle/termstructures/dynamicstype.hpp>
 
 namespace ore {
@@ -44,30 +47,30 @@ using std::vector;
 class StressTestScenarioData : public XMLSerializable {
 public:
     struct CurveShiftData {
-        string shiftType;
+        ShiftType shiftType;
         vector<Real> shifts;
         vector<Period> shiftTenors;
     };
 
     struct SpotShiftData {
-        string shiftType;
+        ShiftType shiftType;
         Real shiftSize;
     };
 
     struct VolShiftData {
-        string shiftType;
+        ShiftType shiftType;
         vector<Period> shiftExpiries;
-        vector<Real> shifts;
+        vector<Real> shifts; 
     };
 
     struct CapFloorVolShiftData {
-        string shiftType;
+        ShiftType shiftType;
         vector<Period> shiftExpiries;
-        vector<Real> shifts;
+        vector<double> shiftStrikes;
+        std::map<Period, vector<Real>> shifts;
     };
-
     struct SwaptionVolShiftData {
-        string shiftType;
+        ShiftType shiftType;
         Real parallelShiftSize;
         vector<Period> shiftExpiries;
         vector<Period> shiftTerms;
@@ -88,6 +91,11 @@ public:
         map<string, SpotShiftData> securitySpreadShifts;       // by bond/security
         map<string, SpotShiftData> recoveryRateShifts;         // by underlying name
         map<string, CurveShiftData> survivalProbabilityShifts; // by underlying name
+        bool irCurveParShifts = false;
+        bool irCapFloorParShifts = false;
+        bool creditCurveParShifts = false;
+
+        bool containsParShifts() const { return irCurveParShifts || irCapFloorParShifts || creditCurveParShifts; };        
     };
 
     //! Default constructor
@@ -96,18 +104,51 @@ public:
     //! \name Inspectors
     //@{
     const vector<StressTestData>& data() const { return data_; }
+    const bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
+    
+    const bool hasScenarioWithParShifts() const {
+        for (const auto& scenario : data_) {
+            if (scenario.containsParShifts())
+                return true;
+        }
+        return false;
+    }
 
+    const bool withIrCurveParShifts() const {
+        for (const auto& scenario : data_) {
+            if (scenario.irCurveParShifts)
+                return true;
+        }
+        return false;
+    }
+
+    const bool withCreditCurveParShifts() const {
+        for (const auto& scenario : data_) {
+            if (scenario.creditCurveParShifts)
+                return true;
+        }
+        return false;
+    }
+
+    const bool withIrCapFloorParShifts() const {
+        for (const auto& scenario : data_) {
+            if (scenario.irCapFloorParShifts)
+                return true;
+        }
+        return false;
+    }
     //@}
 
     //! \name Setters
     //@{
     vector<StressTestData>& data() { return data_; }
+    bool& useSpreadedTermStructures() { return useSpreadedTermStructures_; }
     //@}
 
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
     //! \name Equality Operators
@@ -118,6 +159,7 @@ public:
 
 private:
     vector<StressTestData> data_;
+    bool useSpreadedTermStructures_ = false;
 };
 } // namespace analytics
 } // namespace ore

@@ -39,7 +39,7 @@ public:
         \param index the index of the inflation component to use within the cross asset model.
         \param indexIsInterpolated whether the underlying inflation index is interpolated or not
     */
-    AnalyticJyYoYCapFloorEngine(const boost::shared_ptr<CrossAssetModel>& model,
+    AnalyticJyYoYCapFloorEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
         QuantLib::Size index, bool indexIsInterpolated);
     
     //! \name PricingEngine interface
@@ -48,7 +48,7 @@ public:
     //@}
 
 private:
-    const boost::shared_ptr<CrossAssetModel> model_;
+    const QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::Size index_;
     bool indexIsInterpolated_;
 

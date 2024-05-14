@@ -127,9 +127,9 @@ string ShiftScenarioGenerator::ScenarioDescription::factors() const {
     return result;
 }
 
-ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
-                                               const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-					       const boost::weak_ptr<ScenarioSimMarket>& simMarket)
+ShiftScenarioGenerator::ShiftScenarioGenerator(const QuantLib::ext::shared_ptr<Scenario>& baseScenario,
+                                               const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+					       const QuantLib::ext::weak_ptr<ScenarioSimMarket>& simMarket)
   : baseScenario_(baseScenario), simMarketData_(simMarketData), simMarket_(simMarket), counter_(0) {
     QL_REQUIRE(baseScenario_ != NULL, "ShiftScenarioGenerator: baseScenario is null");
     QL_REQUIRE(simMarketData_ != NULL, "ShiftScenarioGenerator: simMarketData is null");
@@ -137,30 +137,9 @@ ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<Scenario>
     scenarioDescriptions_.push_back(ScenarioDescription(ScenarioDescription::Type::Base));
 }
 
-boost::shared_ptr<Scenario> ShiftScenarioGenerator::next(const Date& d) {
+QuantLib::ext::shared_ptr<Scenario> ShiftScenarioGenerator::next(const Date& d) {
     QL_REQUIRE(counter_ < scenarios_.size(), "scenario vector size " << scenarios_.size() << " exceeded");
     return scenarios_[counter_++];
-}
-
-ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s) {
-    static map<string, ShiftScenarioGenerator::ShiftType> m = {
-        {"Absolute", ShiftScenarioGenerator::ShiftType::Absolute},
-        {"Relative", ShiftScenarioGenerator::ShiftType::Relative}};
-    auto it = m.find(s);
-    if (it != m.end()) {
-        return it->second;
-    } else {
-        QL_FAIL("Cannot convert shift type \"" << s << "\" to ShiftScenarioGenerator::ShiftType");
-    }
-}
-
-std::ostream& operator<<(std::ostream& out, const ShiftScenarioGenerator::ShiftType& shiftType) {
-    if (shiftType == ShiftScenarioGenerator::ShiftType::Absolute)
-        return out << "Absolute";
-    else if (shiftType == ShiftScenarioGenerator::ShiftType::Relative)
-        return out << "Relative";
-    else
-        QL_FAIL("Invalid ShiftType " << shiftType);
 }
 
 ostream& operator<<(ostream& out, const ShiftScenarioGenerator::ScenarioDescription& scenarioDescription) {
@@ -208,7 +187,7 @@ string reconstructFactor(const RiskFactorKey& key, const string& desc) {
     return to_string(key) + "/" + desc;
 }
 
-boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const string& str, vector<string>& addTokens) {
+QuantLib::ext::shared_ptr<RiskFactorKey> parseRiskFactorKey(const string& str, vector<string>& addTokens) {
     // Use deconstructFactor to split in to pair: [key, additional token str]
     auto p = deconstructFactor(str);
 
@@ -220,7 +199,7 @@ boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const string& str, vector<st
     addTokens = tokens;
 
     // Return the key value
-    return boost::make_shared<RiskFactorKey>(p.first.keytype, p.first.name, p.first.index);
+    return QuantLib::ext::make_shared<RiskFactorKey>(p.first.keytype, p.first.name, p.first.index);
 }
 
 void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftType shiftType,

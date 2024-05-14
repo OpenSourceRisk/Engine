@@ -25,17 +25,17 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-CommodityForward::CommodityForward(const boost::shared_ptr<CommodityIndex>& index, const QuantLib::Currency& currency,
+CommodityForward::CommodityForward(const QuantLib::ext::shared_ptr<CommodityIndex>& index, const QuantLib::Currency& currency,
                                    QuantLib::Position::Type position, QuantLib::Real quantity,
                                    const QuantLib::Date& maturityDate, QuantLib::Real strike, bool physicallySettled,
                                    const Date& paymentDate, const QuantLib::Currency& payCcy, const Date& fixingDate,
-                                   const boost::shared_ptr<QuantExt::FxIndex>& fxIndex)
+                                   const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex)
     : index_(index), currency_(currency), position_(position), quantity_(quantity), maturityDate_(maturityDate),
       strike_(strike), physicallySettled_(physicallySettled), paymentDate_(paymentDate), payCcy_(payCcy),
       fxIndex_(fxIndex), fixingDate_(fixingDate) {
 
     QL_REQUIRE(quantity_ > 0, "Commodity forward quantity should be positive: " << quantity);
-    QL_REQUIRE(strike_ > 0, "Commodity forward strike should be positive: " << strike);
+    QL_REQUIRE(strike_ > 0 || close_enough(strike_, 0.0), "Commodity forward strike should be greater than or equal to 0: " << strike);
 
     if (physicallySettled_) {
         QL_REQUIRE(paymentDate_ == Date(), "CommodityForward: payment date (" << io::iso_date(paymentDate_) <<
@@ -85,7 +85,7 @@ void CommodityForward::setupArguments(PricingEngine::arguments* args) const {
 
 void CommodityForward::arguments::validate() const {
     QL_REQUIRE(quantity > 0, "quantity should be positive: " << quantity);
-    QL_REQUIRE(strike > 0, "strike should be positive: " << strike);
+    QL_REQUIRE(strike > 0 || close_enough(strike, 0.0), "strike should be greater than or equal to 0: " << strike);
 }
 
 } // namespace QuantExt

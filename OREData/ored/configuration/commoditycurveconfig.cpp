@@ -37,7 +37,7 @@ void PriceSegment::OffPeakDaily::fromXML(XMLNode* node) {
     peakQuotes_ = XMLUtils::getChildrenValues(node, "PeakQuotes", "Quote", true);
 }
 
-XMLNode* PriceSegment::OffPeakDaily::toXML(XMLDocument& doc) {
+XMLNode* PriceSegment::OffPeakDaily::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("OffPeakDaily");
     XMLUtils::addChildren(doc, node, "OffPeakQuotes", "Quote", offPeakQuotes_);
@@ -127,7 +127,7 @@ void PriceSegment::populateQuotes() {
     quotes_.assign(quotes.begin(), quotes.end());
 }
 
-XMLNode* PriceSegment::toXML(XMLDocument& doc) {
+XMLNode* PriceSegment::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("PriceSegment");
     XMLUtils::addChild(doc, node, "Type", strType_);
@@ -174,7 +174,7 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
                                            bool extrapolation)
     : CurveConfig(curveId, curveDescription), type_(Type::CrossCurrency), currency_(currency),
       basePriceCurveId_(basePriceCurveId), baseYieldCurveId_(baseYieldCurveId), yieldCurveId_(yieldCurveId),
-      extrapolation_(extrapolation), addBasis_(true), monthOffset_(0), averageBase_(true) {
+      extrapolation_(extrapolation), addBasis_(true), monthOffset_(0), averageBase_(true), priceAsHistFixing_(true) {
     populateRequiredCurveIds();
 }
 
@@ -187,16 +187,17 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
     : CurveConfig(curveId, curveDescription), type_(Type::Basis), fwdQuotes_(basisQuotes), currency_(currency),
       dayCountId_(dayCountId), interpolationMethod_(interpolationMethod), basePriceCurveId_(basePriceCurveId),
       extrapolation_(extrapolation), conventionsId_(basisConventionsId), baseConventionsId_(baseConventionsId),
-      addBasis_(addBasis), monthOffset_(monthOffset), averageBase_(averageBase) {
+      addBasis_(addBasis), monthOffset_(monthOffset), averageBase_(averageBase), priceAsHistFixing_(true) {
     populateRequiredCurveIds();
 }
 
 CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& curveDescription,
-    const string& currency, const vector<PriceSegment>& priceSegments, const string& dayCountId,
-    const string& interpolationMethod, bool extrapolation, const boost::optional<BootstrapConfig>& bootstrapConfig)
-    : CurveConfig(curveId, curveDescription), type_(Type::Piecewise), currency_(currency),
-      dayCountId_(dayCountId), interpolationMethod_(interpolationMethod), extrapolation_(extrapolation),
-      addBasis_(true), monthOffset_(0), averageBase_(true), bootstrapConfig_(bootstrapConfig) {
+                                           const string& currency, const vector<PriceSegment>& priceSegments,
+                                           const string& dayCountId, const string& interpolationMethod,
+                                           bool extrapolation, const boost::optional<BootstrapConfig>& bootstrapConfig)
+    : CurveConfig(curveId, curveDescription), type_(Type::Piecewise), currency_(currency), dayCountId_(dayCountId),
+      interpolationMethod_(interpolationMethod), extrapolation_(extrapolation), addBasis_(true), monthOffset_(0),
+      averageBase_(true), priceAsHistFixing_(true), bootstrapConfig_(bootstrapConfig) {
     processSegments(priceSegments);
 }
 
@@ -220,7 +221,7 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
         addBasis_ = XMLUtils::getChildValueAsBool(n, "AddBasis", false);
         monthOffset_ = XMLUtils::getChildValueAsInt(n, "MonthOffset", false);
         averageBase_ = XMLUtils::getChildValueAsBool(n, "AverageBase", false);
-
+        priceAsHistFixing_ = XMLUtils::getChildValueAsBool(n, "PriceAsHistoricalFixing", false);
     } else if (XMLNode* n = XMLUtils::getChildNode(node, "BasePriceCurve")) {
 
         type_ = Type::CrossCurrency;
@@ -266,7 +267,7 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CommodityCurve");
 
@@ -275,9 +276,7 @@ XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Currency", currency_);
 
     if (type_ == Type::Basis) {
-
         XMLNode* basisNode = XMLUtils::addChild(doc, node, "BasisConfiguration");
-
         XMLUtils::addChild(doc, basisNode, "BasePriceCurve", basePriceCurveId_);
         XMLUtils::addChild(doc, basisNode, "BasePriceConventions", baseConventionsId_);
         XMLUtils::addChildren(doc, basisNode, "BasisQuotes", "Quote", fwdQuotes_);
@@ -287,6 +286,7 @@ XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, basisNode, "AddBasis", addBasis_);
         XMLUtils::addChild(doc, basisNode, "MonthOffset", static_cast<int>(monthOffset_));
         XMLUtils::addChild(doc, basisNode, "AverageBase", averageBase_);
+        XMLUtils::addChild(doc, basisNode, "PriceAsHistoricalFixing", priceAsHistFixing_);
 
     } else if (type_ == Type::CrossCurrency) {
 

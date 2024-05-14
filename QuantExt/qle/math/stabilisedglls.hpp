@@ -85,7 +85,7 @@ protected:
     Array a_, err_, residuals_, standardErrors_, xMultiplier_, xShift_;
     Real yMultiplier_, yShift_;
     Method method_;
-    boost::shared_ptr<GeneralLinearLeastSquares> glls_;
+    QuantLib::ext::shared_ptr<GeneralLinearLeastSquares> glls_;
 
     template <class xContainer, class yContainer, class vContainer>
     void calculate(
@@ -140,7 +140,7 @@ void StabilisedGLLS::calculate(
             acc(x[i]);
         }
         xShift_[0] = -mean(acc);
-        Real tmp = variance(acc);
+        Real tmp = boost::accumulators::variance(acc);
         if (!QuantLib::close_enough(tmp, 0.0))
             xMultiplier_[0] = 1.0 / std::sqrt(tmp);
         accumulator_set<Real, stats<boost::accumulators::tag::mean, boost::accumulators::tag::variance> > acc2;
@@ -148,7 +148,7 @@ void StabilisedGLLS::calculate(
             acc2(y[i]);
         }
         yShift_ = -mean(acc2);
-        Real tmp2 = variance(acc2);
+        Real tmp2 = boost::accumulators::variance(acc2);
         if (!QuantLib::close_enough(tmp2, 0.0))
             yMultiplier_ = 1.0 / std::sqrt(tmp2);
         break;
@@ -164,7 +164,7 @@ void StabilisedGLLS::calculate(
         yData[i] = (y[i] + yShift_) * yMultiplier_;
     }
 
-    glls_ = boost::make_shared<GeneralLinearLeastSquares>(xData, yData, v);
+    glls_ = QuantLib::ext::make_shared<GeneralLinearLeastSquares>(xData, yData, v);
 }
 
 template <class xContainer, class yContainer, class vContainer>
@@ -213,7 +213,7 @@ void StabilisedGLLS::calculate(
         }
         for (Size j = 0; j < acc.size(); ++j) {
             xShift_[j] = -mean(acc[j]);
-            Real tmp = variance(acc[j]);
+            Real tmp = boost::accumulators::variance(acc[j]);
             if (!QuantLib::close_enough(tmp, 0.0))
                 xMultiplier_[j] = 1.0 / std::sqrt(tmp);
         }
@@ -222,7 +222,7 @@ void StabilisedGLLS::calculate(
             acc2(y[i]);
         }
         yShift_ = -mean(acc2);
-        Real tmp2 = variance(acc2);
+        Real tmp2 = boost::accumulators::variance(acc2);
         if (!QuantLib::close_enough(tmp2, 0.0))
             yMultiplier_ = 1.0 / std::sqrt(tmp2);
         break;
@@ -241,7 +241,7 @@ void StabilisedGLLS::calculate(
         yData[i] = (y[i] + yShift_) * yMultiplier_;
     }
 
-    glls_ = boost::make_shared<GeneralLinearLeastSquares>(xData, yData, v);
+    glls_ = QuantLib::ext::make_shared<GeneralLinearLeastSquares>(xData, yData, v);
 }
 
 template <class xType, class vContainer>

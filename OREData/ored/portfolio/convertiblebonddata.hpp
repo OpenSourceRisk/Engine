@@ -56,7 +56,7 @@ public:
                 const std::vector<std::string>& crIncreaseDates() const { return crIncreaseDates_; }
 
                 void fromXML(ore::data::XMLNode* node) override;
-                ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+                ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
             private:
                 bool initialised_;
@@ -74,7 +74,7 @@ public:
             }
 
             void fromXML(ore::data::XMLNode* node) override;
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
         private:
             bool initialised_;
@@ -107,7 +107,7 @@ public:
         const MakeWholeData& makeWholeData() const { return makeWholeData_; }
 
         void fromXML(ore::data::XMLNode* node) override;
-        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     private:
         bool initialised_;
@@ -149,7 +149,7 @@ public:
             const std::vector<std::string>& barrierDates() const { return barrierDates_; }
 
             void fromXML(ore::data::XMLNode* node) override;
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
         private:
             bool initialised_;
@@ -176,7 +176,7 @@ public:
                 double lowerConversionRatio() const { return lowerConversionRatio_; }
 
                 void fromXML(ore::data::XMLNode* node) override;
-                ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+                ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
             private:
                 bool initialised_;
@@ -197,7 +197,7 @@ public:
             const PepsData& pepsData() const { return pepsData_; }
 
             void fromXML(ore::data::XMLNode* node) override;
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
         private:
             bool initialised_;
@@ -229,7 +229,7 @@ public:
             const std::vector<std::string>& globalFloorDates() const { return globalFloorDates_; }
 
             void fromXML(ore::data::XMLNode* node) override;
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
         private:
             bool initialised_;
@@ -261,7 +261,7 @@ public:
             bool secured() const { return secured_; }
 
             void fromXML(ore::data::XMLNode* node) override;
-            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
         private:
             bool initialised_;
@@ -269,6 +269,30 @@ public:
             bool isExchangeable_;
             std::string equityCreditCurve_;
             bool secured_;
+        };
+
+        // 2.5 Fixed Amount Conversion Data
+
+        class FixedAmountConversionData : public ore::data::XMLSerializable {
+        public:
+            FixedAmountConversionData() : initialised_(false) {}
+
+            bool initialised() const { return initialised_; }
+
+            const std::string& currency() const { return currency_; }
+
+            const std::vector<double>& amounts() const { return amounts_; }
+            const std::vector<std::string>& amountDates() const { return amountDates_; }
+
+            void fromXML(ore::data::XMLNode* node) override;
+            ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+        private:
+            bool initialised_;
+
+            std::string currency_;
+            std::vector<double> amounts_;
+            std::vector<std::string> amountDates_;
         };
 
         // Conversion Data
@@ -289,10 +313,11 @@ public:
         const ore::data::EquityUnderlying equityUnderlying() const { return equityUnderlying_; }
         const std::string fxIndex() const { return fxIndex_; }
         const ExchangeableData& exchangeableData() const { return exchangeableData_; }
+        const FixedAmountConversionData& fixedAmountConversionData() const { return fixedAmountConversionData_; }
         ExchangeableData& modifyExchangeableData() { return exchangeableData_; }
 
         void fromXML(ore::data::XMLNode* node) override;
-        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     private:
         bool initialised_;
@@ -309,6 +334,7 @@ public:
         ore::data::EquityUnderlying equityUnderlying_;
         std::string fxIndex_;
         ExchangeableData exchangeableData_;
+        FixedAmountConversionData fixedAmountConversionData_;
     };
 
     // 3 Dividend Protection Data
@@ -328,7 +354,7 @@ public:
         const std::vector<std::string>& thresholdDates() const { return thresholdDates_; }
 
         void fromXML(ore::data::XMLNode* node) override;
-        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+        ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     private:
         bool initialised_;
@@ -357,9 +383,9 @@ public:
     std::string detachable() const { return detachable_; }
 
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
-    void populateFromBondReferenceData(const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData);
+    void populateFromBondReferenceData(const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData);
 
 private:
     ore::data::BondData bondData_;

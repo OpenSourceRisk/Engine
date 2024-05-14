@@ -36,15 +36,20 @@ namespace QuantExt {
       public:
         class arguments;
         class engine;
+        VanillaForwardOption(const QuantLib::ext::shared_ptr<QuantLib::StrikedTypePayoff>& payoff,
+                             const QuantLib::ext::shared_ptr<QuantLib::Exercise>& exercise, const QuantLib::Date& forwardDate,
+                             const QuantLib::Date& paymentDate)
+            : VanillaOption(payoff, exercise), forwardDate_(forwardDate), paymentDate_(paymentDate) {}
 
-        VanillaForwardOption(const boost::shared_ptr<QuantLib::StrikedTypePayoff>& payoff,
-            const boost::shared_ptr<QuantLib::Exercise>& exercise, const QuantLib::Date& forwardDate)
+        VanillaForwardOption(const QuantLib::ext::shared_ptr<QuantLib::StrikedTypePayoff>& payoff,
+            const QuantLib::ext::shared_ptr<QuantLib::Exercise>& exercise, const QuantLib::Date& forwardDate)
                 : VanillaOption(payoff, exercise), forwardDate_(forwardDate) {}
 
         void setupArguments(QuantLib::PricingEngine::arguments*) const override;
         
       private:
         QuantLib::Date forwardDate_;
+        QuantLib::Date paymentDate_;
     };
 
     //! %Arguments for Vanilla Forward Option calculation
@@ -52,6 +57,7 @@ namespace QuantExt {
     public:
         arguments() {}
         QuantLib::Date forwardDate;
+        QuantLib::Date paymentDate;
     };
 
     inline void VanillaForwardOption::setupArguments(QuantLib::PricingEngine::arguments* args) const {
@@ -62,6 +68,7 @@ namespace QuantExt {
         QL_REQUIRE(arguments != 0, "wrong argument type");
 
         arguments->forwardDate = forwardDate_;
+        arguments->paymentDate = paymentDate_;
     }
 
     //! base class for swaption engines

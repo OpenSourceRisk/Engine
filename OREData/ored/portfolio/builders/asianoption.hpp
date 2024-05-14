@@ -1,5 +1,6 @@
 /*
   Copyright (C) 2020 Skandinaviska Enskilda Banken AB (publ)
+  Copyright (C) 2022 Quaternion Risk Management Ltd
   All rights reserved.
 
   This file is part of ORE, a free-software/open-source library
@@ -35,6 +36,8 @@
  #include <ql/pricingengines/asian/mc_discr_arith_av_strike.hpp>
  #include <ql/pricingengines/asian/turnbullwakemanasianengine.hpp>
  #include <ql/utilities/null.hpp>
+ #include <ored/portfolio/basketoption.hpp>
+ #include <ored/portfolio/enginefactory.hpp>
 
  namespace ore {
  namespace data {
@@ -51,12 +54,12 @@
                               const AssetClass& assetClass, const Date& expiryDate)
          : CachingOptionEngineBuilder(model, engine, tradeTypes, assetClass), expiryDate_(expiryDate) {}
 
-     boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy, const Date& expiryDate) {
+     QuantLib::ext::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy, const Date& expiryDate) {
          return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&,
                                             const Date&>::engine(assetName, ccy, assetClass_, expiryDate);
      }
 
-     boost::shared_ptr<PricingEngine> engine(const Currency& ccy1, const Currency& ccy2, const Date& expiryDate) {
+     QuantLib::ext::shared_ptr<PricingEngine> engine(const Currency& ccy1, const Currency& ccy2, const Date& expiryDate) {
          return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&,
                                             const Date&>::engine(ccy1.code(), ccy2, assetClass_, expiryDate);
      }
@@ -87,7 +90,7 @@
      std::string processType() override { return "Discrete"; }
 
  protected:
-     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                          const AssetClass& assetClassUnderlying,
                                                          const Date& expiryDate) override {
          bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", {}, false, "true"));
@@ -108,9 +111,9 @@
          QL_REQUIRE(requiredSamples != QuantLib::Null<Size>() || requiredTolerance != QuantLib::Null<Real>(),
                     "RequiredSamples or RequiredTolerance must be set for engine MCDiscreteArithmeticAPEngine.");
 
-         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+         QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
              getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
-         return boost::make_shared<MCDiscreteArithmeticAPEngine<LowDiscrepancy>>(gbsp, brownianBridge, antitheticVariate,
+         return QuantLib::ext::make_shared<MCDiscreteArithmeticAPEngine<LowDiscrepancy>>(gbsp, brownianBridge, antitheticVariate,
                                                                                  controlVariate, requiredSamples,
                                                                                  requiredTolerance, maxSamples, seed);
      }
@@ -130,7 +133,7 @@
      std::string processType() override { return "Discrete"; }
 
  protected:
-     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                          const AssetClass& assetClassUnderlying,
                                                          const Date& expiryDate) override {
          bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", {}, false, "true"));
@@ -150,9 +153,9 @@
          QL_REQUIRE(requiredSamples != QuantLib::Null<Size>() || requiredTolerance != QuantLib::Null<Real>(),
                     "RequiredSamples or RequiredTolerance must be set for engine MCDiscreteArithmeticASEngine.");
 
-         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+         QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
              getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
-         return boost::make_shared<MCDiscreteArithmeticASEngine<LowDiscrepancy>>(
+         return QuantLib::ext::make_shared<MCDiscreteArithmeticASEngine<LowDiscrepancy>>(
              gbsp, brownianBridge, antitheticVariate, requiredSamples, requiredTolerance, maxSamples, seed);
      }
  };
@@ -171,7 +174,7 @@
      std::string processType() override { return "Discrete"; }
 
  protected:
-     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                          const AssetClass& assetClassUnderlying,
                                                          const Date& expiryDate) override {
          bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", {}, false, "true"));
@@ -191,9 +194,9 @@
          QL_REQUIRE(requiredSamples != QuantLib::Null<Size>() || requiredTolerance != QuantLib::Null<Real>(),
                     "RequiredSamples or RequiredTolerance must be set for engine MCDiscreteGeometricAPEngine.");
 
-         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+         QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
              getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
-         return boost::make_shared<MCDiscreteGeometricAPEngine<LowDiscrepancy>>(
+         return QuantLib::ext::make_shared<MCDiscreteGeometricAPEngine<LowDiscrepancy>>(
              gbsp, brownianBridge, antitheticVariate, requiredSamples, requiredTolerance, maxSamples, seed);
      }
  };
@@ -211,12 +214,12 @@
      std::string processType() override { return "Discrete"; }
 
  protected:
-     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                          const AssetClass& assetClassUnderlying,
                                                          const Date& expiryDate) override {
-         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+         QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
              getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
-         return boost::make_shared<AnalyticDiscreteGeometricAveragePriceAsianEngine>(gbsp);
+         return QuantLib::ext::make_shared<AnalyticDiscreteGeometricAveragePriceAsianEngine>(gbsp);
      }
  };
 
@@ -233,12 +236,12 @@
      std::string processType() override { return "Discrete"; }
 
  protected:
-     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                          const AssetClass& assetClassUnderlying,
                                                          const Date& expiryDate) override {
-         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+         QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
              getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
-         return boost::make_shared<AnalyticDiscreteGeometricAverageStrikeAsianEngine>(gbsp);
+         return QuantLib::ext::make_shared<AnalyticDiscreteGeometricAverageStrikeAsianEngine>(gbsp);
      }
  };
 
@@ -256,12 +259,12 @@
      std::string processType() override { return "Continuous"; }
 
  protected:
-     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                          const AssetClass& assetClassUnderlying,
                                                          const Date& expiryDate) override {
-         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+         QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
              getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
-         return boost::make_shared<AnalyticContinuousGeometricAveragePriceAsianEngine>(gbsp);
+         return QuantLib::ext::make_shared<AnalyticContinuousGeometricAveragePriceAsianEngine>(gbsp);
      }
  };
 
@@ -278,14 +281,29 @@
      std::string processType() override { return "Discrete"; }
 
  protected:
-     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                          const AssetClass& assetClassUnderlying,
                                                          const Date& expiryDate) override {
-         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+         QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
              getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
-         return boost::make_shared<TurnbullWakemanAsianEngine>(gbsp);
+         return QuantLib::ext::make_shared<TurnbullWakemanAsianEngine>(gbsp);
      }
  };
+
+class AsianOptionScriptedEngineBuilder : public DelegatingEngineBuilder {
+public:
+    AsianOptionScriptedEngineBuilder()
+        : DelegatingEngineBuilder("ScriptedTrade", "ScriptedTrade",
+                                  {"EquityAsianOptionArithmeticPrice", "EquityAsianOptionArithmeticStrike",
+                                   "EquityAsianOptionGeometricPrice", "EquityAsianOptionGeometricStrike",
+                                   "FxAsianOptionArithmeticPrice", "FxAsianOptionArithmeticStrike",
+                                   "FxAsianOptionGeometricPrice", "FxAsianOptionGeometricStrike",
+                                   "CommodityAsianOptionArithmeticPrice", "CommodityAsianOptionArithmeticStrike",
+                                   "CommodityAsianOptionGeometricPrice", "CommodityAsianOptionGeometricStrike"}) {}
+    QuantLib::ext::shared_ptr<ore::data::Trade> build(const Trade* trade,
+                                              const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) override;
+    std::string effectiveTradeType() const override { return "ScriptedTrade"; }
+};
 
  } // namespace data
  } // namespace ore

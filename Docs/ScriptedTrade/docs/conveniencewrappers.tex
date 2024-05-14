@@ -1,0 +1,11 @@
+We provide a number of trade wrappers that read a ``normal'' ORE XML and translates this internally to the script data
+structure. Examples include the trade types
+
+\begin{itemize}
+\item DoubleDigitalOption
+\item PerformanceOption\_01
+\item Autocallable\_01.
+\end{itemize}
+
+The implementation of a wrapper is usually done by inheriting from ScriptedTrade and implementing the fromXML(), toXML()
+and build() methods appropriately, see one of the classes on how this is done in detail.

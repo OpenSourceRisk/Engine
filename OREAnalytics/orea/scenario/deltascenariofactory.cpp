@@ -27,20 +27,22 @@
 namespace ore {
 namespace analytics {
 
-DeltaScenarioFactory::DeltaScenarioFactory(const boost::shared_ptr<ore::analytics::Scenario>& baseScenario,
-                                           const boost::shared_ptr<ore::analytics::ScenarioFactory>& scenarioFactory)
+DeltaScenarioFactory::DeltaScenarioFactory(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& baseScenario,
+                                           const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFactory>& scenarioFactory)
     : baseScenario_(baseScenario), scenarioFactory_(scenarioFactory) {
     QL_REQUIRE(baseScenario_ != nullptr, "DeltaScenarioFactory: base scenario pointer must not be NULL");
     QL_REQUIRE(scenarioFactory_ != nullptr, "DeltaScenarioFactory: scenario factory must not be NULL");
 }
 
-const boost::shared_ptr<ore::analytics::Scenario>
-DeltaScenarioFactory::buildScenario(QuantLib::Date asof, const std::string& label, QuantLib::Real numeraire) const {
+const QuantLib::ext::shared_ptr<ore::analytics::Scenario>
+DeltaScenarioFactory::buildScenario(QuantLib::Date asof, bool isAbsolute, const std::string& label,
+                                    QuantLib::Real numeraire) const {
     QL_REQUIRE(asof == baseScenario_->asof(),
                "unexpected asof date (" << asof << "), does not match base - " << baseScenario_->asof());
-    boost::shared_ptr<ore::analytics::Scenario> incremental = scenarioFactory_->buildScenario(asof, label, numeraire);
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> incremental =
+        scenarioFactory_->buildScenario(asof, isAbsolute, label, numeraire);
     QL_REQUIRE((label == incremental->label()) || (label == ""), "DeltaScenarioFactory has not updated scenario label");
-    return boost::make_shared<DeltaScenario>(baseScenario_, incremental);
+    return QuantLib::ext::make_shared<DeltaScenario>(baseScenario_, incremental);
 }
 } // namespace sensitivity
 } // namespace ore

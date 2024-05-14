@@ -1,17 +1,24 @@
-# syntax = nexus3.acadiasoft.net:4445/docker/dockerfile:experimental
-ARG quantlib_version=${QL_TAG}
-FROM env_quantlib:${quantlib_version}
+# syntax = docker/dockerfile:1.2
+ARG debian_tag
+FROM debian:${debian_tag}
 
 MAINTAINER Quaternion Risk Management
-LABEL Description="Build ORE and add to the QuantLib build environment"
+LABEL Description="Build QuantLib and add to the Boost build environment"
 
 # Argument for number of cores to use while building
 ARG num_cores
 
-# install Eigen
-RUN apt-get install -f -y libeigen3-dev
+# Argument that chooses cmake build type
+ARG cmake_build_type
 
-# Copy ORE sources for libs and app
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libbz2-dev autoconf libtool cmake ninja-build zlib1g-dev opencl-headers ocl-icd-opencl-dev libboost-all-dev doxygen graphviz ccache libeigen3-dev \
+  && apt-get clean
+
+# Exclusions are performed by .dockerignore
+COPY QuantLib /ore/QuantLib
+COPY CMakeLists.txt /ore/CMakeLists.txt
+COPY QuantLib /ore/QuantLib
 COPY QuantExt /ore/QuantExt
 COPY OREData /ore/OREData
 COPY OREAnalytics /ore/OREAnalytics
@@ -19,23 +26,26 @@ COPY App /ore/App
 COPY ThirdPartyLibs /ore/ThirdPartyLibs
 COPY ORETest /ore/ORETest
 COPY cmake /ore/cmake
-COPY Docker /ore/Docker
 
-# Need the dos2unix all if building from Windows because the shell 
-# scripts fail if there are CRLF present in the files
+ENV PATH="/usr/lib/ccache:$PATH"
+ENV CCACHE_DIR="/ccache"
+ENV CCACHE_MAXSIZE="10G"
+# needed if QL_USE_PCH is ON
+#ENV CCACHE_SLOPPINESS="pch_defines,time_macros,pch_defines,time_macros,include_file_mtime,include_file_ctim"
+
+# - add  -fpch-preprocess to CMAKE_CXX_FLAGS when QL_USE_PCH is set to ON
 RUN cd /ore \
-  && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
-  && cp Docker/CMakeLists_ORE.txt CMakeLists.txt \
   && mkdir -p build.ore && cd build.ore \
-  && cmake .. -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-mavx2" -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON
-
+  && cmake .. -GNinja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DQL_USE_PCH=OFF -DORE_BUILD_DOC=ON -DCMAKE_BUILD_TYPE=${cmake_build_type} -DCMAKE_CXX_FLAGS="-D BOOST_ENABLE_ASSERT_HANDLER -mavx2" -DQL_ENABLE_SESSIONS=ON -DQL_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DQL_BUILD_EXAMPLES=OFF -DQL_BUILD_BENCHMARK=OFF -DORE_ENABLE_PARALLEL_UNIT_TEST_RUNNER=ON -DORE_USE_ZLIB=ON -D ORE_ENABLE_OPENCL=ON
+ 
 WORKDIR /ore/build.ore
-RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
-  && make install \
+RUN --mount=type=cache,target=/ccache/ ccache -z \
+  && cmake --build . -- -j ${num_cores} install \
+  && ccache -s \
   && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
   && make doc_ored 2>&1 | grep -v "ignoring unsupported tag" \
   && make doc_orea 2>&1 | grep -v "ignoring unsupported tag" 
-  
+
 WORKDIR / 
 RUN mkdir -p html \
   && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \

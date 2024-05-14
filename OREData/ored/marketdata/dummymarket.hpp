@@ -78,7 +78,7 @@ public:
 
     Handle<QuantExt::CreditCurve> defaultCurve(const string&, const string&) const override {
         return Handle<QuantExt::CreditCurve>(
-            boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>()));
+            QuantLib::ext::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>()));
     }
     Handle<Quote> recoveryRate(const string&, const string&) const override { return Handle<Quote>(); }
 
@@ -109,8 +109,8 @@ public:
         return Handle<QuantExt::YoYOptionletVolatilitySurface>();
     }
 
-    Handle<CPIVolatilitySurface> cpiInflationCapFloorVolatilitySurface(const string&, const string&) const override {
-        return Handle<CPIVolatilitySurface>();
+    Handle<QuantLib::CPIVolatilitySurface> cpiInflationCapFloorVolatilitySurface(const string&, const string&) const override {
+        return Handle<QuantLib::CPIVolatilitySurface>();
     }
 
     Handle<Quote> equitySpot(const string&, const string&) const override { return Handle<Quote>(); }
@@ -121,8 +121,8 @@ public:
         return Handle<YieldTermStructure>();
     }
 
-    Handle<QuantExt::EquityIndex> equityCurve(const string& eqName, const string&) const override {
-        return Handle<QuantExt::EquityIndex>();
+    Handle<QuantExt::EquityIndex2> equityCurve(const string& eqName, const string&) const override {
+        return Handle<QuantExt::EquityIndex2>();
     }
 
     Handle<BlackVolTermStructure> equityVol(const string&, const string&) const override {

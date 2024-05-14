@@ -24,20 +24,10 @@
 #pragma once
 
 #include <ored/report/report.hpp>
-#include <ored/utilities/timeperiod.hpp>
-
-#include <qle/math/covariancesalvage.hpp>
-
-#include <ql/math/array.hpp>
-#include <ql/math/matrix.hpp>
-
-#include <map>
-#include <set>
+#include <orea/engine/marketriskreport.hpp>
 
 namespace ore {
 namespace analytics {
-using QuantLib::Array;
-using QuantLib::Matrix;
 
 //! VaR Calculator
 class VarCalculator {
@@ -47,6 +37,34 @@ public:
 
     virtual QuantLib::Real var(QuantLib::Real confidence, const bool isCall = true, 
         const std::set<std::pair<std::string, QuantLib::Size>>& tradeIds = {}) = 0;
+};
+
+class VarReport : public MarketRiskReport {
+public:
+    VarReport(const std::string& baseCurrency,
+        const QuantLib::ext::shared_ptr<Portfolio> & portfolio,
+        const std::string& portfolioFilter,
+        const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
+        const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen = nullptr,
+        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, std::unique_ptr<FullRevalArgs> fullRevalArgs = nullptr, 
+        const bool breakdown = false);
+
+    void createReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports) override;
+
+    const std::vector<Real>& p() const { return p_; }
+
+protected:
+    QuantLib::ext::shared_ptr<VarCalculator> varCalculator_;
+    
+    virtual void createVarCalculator() = 0;
+    void writeReports(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& report,
+                         const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup,
+                         const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
+
+    std::vector<ore::data::TimePeriod> timePeriods() override { return {period_.get()}; }
+
+private:
+    std::vector<Real> p_;
 };
 
 } // namespace analytics

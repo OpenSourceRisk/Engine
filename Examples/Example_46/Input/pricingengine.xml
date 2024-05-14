@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="CBO">
+    <Model>OneFactorCopula</Model>
+    <ModelParameters/>
+    <Engine>MonteCarloCBOEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="Bins">20</Parameter>
+      <Parameter name="Seed">42</Parameter>
+      <Parameter name="LossDistributionPeriods"></Parameter>
+      <Parameter name="Correlation">0.2</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+</PricingEngines>

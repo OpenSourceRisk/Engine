@@ -5,6 +5,7 @@ basecorrelationcurve.cpp
 bond.cpp
 calendaradjustment.cpp
 calendars.cpp
+cbo.cpp
 ccyswapwithresets.cpp
 cds.cpp
 cdsindexoption.cpp
@@ -36,27 +37,40 @@ equitytrades.cpp
 expiry.cpp
 fittedbondcurve.cpp
 fixings.cpp
+formulaparser.cpp
+fxaccumulator.cpp
 fxasianoption.cpp
+fxdom.cpp
 fxexotics.cpp
 fxoption.cpp
 fxswap.cpp
+fxtarf.cpp
 fxtriangulation.cpp
 fxvolcurve.cpp
+gaussiancam.cpp
 generalisedreplicatingvarianceswapengine.cpp
 indices.cpp
 inflationcapfloor.cpp
 inflationcurve.cpp
 legdata.cpp
+localvol.cpp
 mxnircurves.cpp
 optionpaymentdata.cpp
 ored_commodityforward.cpp
+oredtestmarket.cpp
 parser.cpp
 portfolio.cpp
+representativefxoption.cpp
+representativeswaption.cpp
+riskparticipationagreement.cpp
 schedule.cpp
+scriptengine.cpp
+scriptparser.cpp
 strike.cpp
 swaption.cpp
 testsuite.cpp
 todaysmarket.cpp
+value.cpp
 xmlmanipulation.cpp
 yieldcurve.cpp
 zerocouponswap.cpp)
@@ -74,4 +88,5 @@ add_test(NAME ored-test-suite WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} COMMAN
 install(TARGETS ored-test-suite
         RUNTIME DESTINATION bin
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        OPTIONAL
         )

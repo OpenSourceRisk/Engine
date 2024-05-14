@@ -65,13 +65,13 @@ protected:
                (momentType == MomentType::Variance ? "Variance" : "Volatility");
     }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& underlyingName, const Currency& ccy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& underlyingName, const Currency& ccy,
                                                         const AssetClass& assetClassUnderlying,
                                                         const MomentType& momentType) override {
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp;
-        boost::shared_ptr<Index> index;
+        QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> gbsp;
+        QuantLib::ext::shared_ptr<Index> index;
         if (assetClassUnderlying == AssetClass::EQ) {
-            gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
+            gbsp = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
                 market_->equitySpot(underlyingName, configuration(ore::data::MarketContext::pricing)),
                 market_->equityDividendCurve(underlyingName, configuration(ore::data::MarketContext::pricing)),
                 market_->equityForecastCurve(underlyingName, configuration(ore::data::MarketContext::pricing)),
@@ -82,7 +82,7 @@ protected:
             const string& sourceCurrencyCode = fxIndex->sourceCurrency().code();
             const string& targetCurrencyCode = fxIndex->targetCurrency().code();
             const string& ccyPairCode = sourceCurrencyCode + targetCurrencyCode;
-            gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
+            gbsp = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(
                 market_->fxSpot(ccyPairCode, configuration(ore::data::MarketContext::pricing)),
                 market_->discountCurve(targetCurrencyCode, configuration(ore::data::MarketContext::pricing)),
                 market_->discountCurve(sourceCurrencyCode, configuration(ore::data::MarketContext::pricing)),
@@ -93,34 +93,34 @@ protected:
          } else if (assetClassUnderlying == AssetClass::COM) {
             Handle<BlackVolTermStructure> vol = market_->commodityVolatility(underlyingName, configuration(ore::data::MarketContext::pricing));
             Handle<QuantExt::PriceTermStructure> priceCurve = market_->commodityPriceCurve(underlyingName, configuration(ore::data::MarketContext::pricing));
-            Handle<Quote> commoditySpot(boost::make_shared<QuantExt::DerivedPriceQuote>(priceCurve));
+            Handle<Quote> commoditySpot(QuantLib::ext::make_shared<QuantExt::DerivedPriceQuote>(priceCurve));
             Handle<YieldTermStructure> discount = market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing));
-            Handle<YieldTermStructure> yield(boost::make_shared<QuantExt::PriceTermStructureAdapter>(*priceCurve, *discount));
+            Handle<YieldTermStructure> yield(QuantLib::ext::make_shared<QuantExt::PriceTermStructureAdapter>(*priceCurve, *discount));
             yield->enableExtrapolation();
-            gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(commoditySpot, yield, discount, vol);
+            gbsp = QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(commoditySpot, yield, discount, vol);
             index = market_->commodityIndex(underlyingName).currentLink();
         } else {
             QL_FAIL("Asset class of " + underlyingName + " not recognized.");
         }
 
-        QuantExt::GeneralisedReplicatingVarianceSwapEngine::Settings settings;
+        QuantExt::GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings settings;
 
         std::string schemeStr = engineParameter("Scheme", {}, false, "GaussLobatto");
         std::string boundsStr = engineParameter("Bounds", {}, false, "PriceThreshold");
 
         if (schemeStr == "GaussLobatto")
-            settings.scheme = QuantExt::GeneralisedReplicatingVarianceSwapEngine::Settings::Scheme::GaussLobatto;
+            settings.scheme = QuantExt::GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings::Scheme::GaussLobatto;
         else if (schemeStr == "Segment")
-            settings.scheme = QuantExt::GeneralisedReplicatingVarianceSwapEngine::Settings::Scheme::Segment;
+            settings.scheme = QuantExt::GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings::Scheme::Segment;
         else {
             QL_FAIL("invalid var swap pricing engine parameter Scheme (" << schemeStr
                                                                          << "), expected GaussLobatto, Segment");
         }
 
         if (boundsStr == "Fixed")
-            settings.bounds = QuantExt::GeneralisedReplicatingVarianceSwapEngine::Settings::Bounds::Fixed;
+            settings.bounds = QuantExt::GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings::Bounds::Fixed;
         else if (boundsStr == "PriceThreshold")
-            settings.bounds = QuantExt::GeneralisedReplicatingVarianceSwapEngine::Settings::Bounds::PriceThreshold;
+            settings.bounds = QuantExt::GeneralisedReplicatingVarianceSwapEngine::VarSwapSettings::Bounds::PriceThreshold;
         else {
             QL_FAIL("invalid var swap pricing engine parameter Bounds (" << boundsStr
                                                                          << "), expected Fixed, PriceThreshold");
@@ -142,11 +142,11 @@ protected:
         }
 
         if (momentType == MomentType::Variance)
-            return boost::make_shared<QuantExt::GeneralisedReplicatingVarianceSwapEngine>(
+            return QuantLib::ext::make_shared<QuantExt::GeneralisedReplicatingVarianceSwapEngine>(
                 index, gbsp, market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing)),
                 settings, staticTodaysSpot);
         else
-            return boost::make_shared<QuantExt::VolatilityFromVarianceSwapEngine>(
+            return QuantLib::ext::make_shared<QuantExt::VolatilityFromVarianceSwapEngine>(
                 index, gbsp, market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing)),
                 settings, staticTodaysSpot);
     }

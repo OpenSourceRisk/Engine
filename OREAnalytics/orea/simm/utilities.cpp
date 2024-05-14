@@ -27,6 +27,8 @@
 #include <orea/simm/simmconfigurationisdav2_3_8.hpp>
 #include <orea/simm/simmconfigurationisdav2_5.hpp>
 #include <orea/simm/simmconfigurationisdav2_5a.hpp>
+#include <orea/simm/simmconfigurationisdav2_6.hpp>
+#include <orea/simm/simmconfigurationcalibration.hpp>
 
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -170,8 +172,10 @@ SimmVersion parseSimmVersion(const string& version) {
                                                   {"2.3.8", SimmVersion::V2_3_8},
                                                   {"2.5", SimmVersion::V2_5},
                                                   {"2.5A", SimmVersion::V2_5A},
-						  // alias
+                                                  {"2.5.6", SimmVersion::V2_6},
+						                          // alias
                                                   {"2.4", SimmVersion::V2_3_8},
+                                                  {"2.6", SimmVersion::V2_6},
                                                   // old names for backwards compatibility
                                                   {"ISDA_V315", SimmVersion::V1_0},
                                                   {"ISDA_V329", SimmVersion::V1_3},
@@ -184,42 +188,55 @@ SimmVersion parseSimmVersion(const string& version) {
     return versionMap.at(version);
 }
 
-boost::shared_ptr<SimmConfiguration> buildSimmConfiguration(const string& simmVersion,
-                                                            const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+QuantLib::ext::shared_ptr<SimmConfiguration> buildSimmConfiguration(const string& simmVersion,
+                                                            const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+                                                            const QuantLib::ext::shared_ptr<SimmCalibrationData>& simmCalibrationData,
                                                             const Size& mporDays) {
+
+    // Check first if the SIMM calibration has the requested simmVersion
+    if (simmCalibrationData) {
+        const auto& simmCalibration = simmCalibrationData->getBySimmVersion(simmVersion);
+        if (simmCalibration) {
+            auto simmConfiguration = QuantLib::ext::make_shared<SimmConfigurationCalibration>(simmBucketMapper, simmCalibration, mporDays);
+            return simmConfiguration;
+        }
+    }
 
     auto version = parseSimmVersion(simmVersion);
 
     switch (version) {
     case SimmVersion::V1_0:
-        return boost::make_shared<SimmConfiguration_ISDA_V1_0>(simmBucketMapper);
+        return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V1_0>(simmBucketMapper);
         break;
     case SimmVersion::V1_3:
-        return boost::make_shared<SimmConfiguration_ISDA_V1_3>(simmBucketMapper);
+        return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V1_3>(simmBucketMapper);
         break;
     case SimmVersion::V1_3_38:
-        return boost::make_shared<SimmConfiguration_ISDA_V1_3_38>(simmBucketMapper);
+        return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V1_3_38>(simmBucketMapper);
         break;
     case SimmVersion::V2_0:
-        return boost::make_shared<SimmConfiguration_ISDA_V2_0>(simmBucketMapper);
+        return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_0>(simmBucketMapper);
         break;
     case SimmVersion::V2_1:
-        return boost::make_shared<SimmConfiguration_ISDA_V2_1>(simmBucketMapper);
+        return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_1>(simmBucketMapper);
         break;
     case SimmVersion::V2_2:
-        return boost::make_shared<SimmConfiguration_ISDA_V2_2>(simmBucketMapper, mporDays);
+        return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_2>(simmBucketMapper, mporDays);
         break;
     case SimmVersion::V2_3:
-        return boost::make_shared<SimmConfiguration_ISDA_V2_3>(simmBucketMapper, mporDays);
+        return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_3>(simmBucketMapper, mporDays);
         break;
     case SimmVersion::V2_3_8:
-        return boost::make_shared<SimmConfiguration_ISDA_V2_3_8>(simmBucketMapper, mporDays);
+        return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_3_8>(simmBucketMapper, mporDays);
         break;
     case SimmVersion::V2_5:
-	    return boost::make_shared<SimmConfiguration_ISDA_V2_5>(simmBucketMapper, mporDays);
+	    return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_5>(simmBucketMapper, mporDays);
         break;
     case SimmVersion::V2_5A:
-        return boost::make_shared<SimmConfiguration_ISDA_V2_5A>(simmBucketMapper, mporDays);
+        return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_5A>(simmBucketMapper, mporDays);
+        break;
+    case SimmVersion::V2_6:
+        return QuantLib::ext::make_shared<SimmConfiguration_ISDA_V2_6>(simmBucketMapper, mporDays);
         break;
     default:
         break;

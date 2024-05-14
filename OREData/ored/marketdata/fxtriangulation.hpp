@@ -52,10 +52,11 @@ public:
     /*! Get fx index, possibly via triangulation. The index name can be of the form FX-TAG-CCY1-CCY2 or also
         be just a currency pair CCY1CCY2. In the latter case, the fixing source is set to TAG = GENERIC.
         The fx index requires discount curves from a market. The assumption is that the market provides discount
-        curves consistent with cross-currency discounting under its default configuration. If the triangulation
+        curves consistent with cross-currency discounting under the specified configuration. If the triangulation
         is not possible or required curves are not available an exception is thrown.
     */
-    QuantLib::Handle<QuantExt::FxIndex> getIndex(const std::string& indexOrPair, const Market* market) const;
+    QuantLib::Handle<QuantExt::FxIndex> getIndex(const std::string& indexOrPair, const Market* market,
+                                                 const std::string& configuration) const;
 
 private:
     /* get path for conversion forCcy => domCcy, throws if such a path does not exist     */
@@ -73,7 +74,7 @@ private:
 
     // caches to improve perfomance
     mutable std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quoteCache_;
-    mutable std::map<std::string, QuantLib::Handle<QuantExt::FxIndex>> indexCache_;
+    mutable std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::FxIndex>> indexCache_;
 
     // internal data structure to represent the undirected graph of currencies
     std::vector<std::string> nodeToCcy_;

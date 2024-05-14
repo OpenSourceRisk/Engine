@@ -67,8 +67,13 @@ Allowable values:  See section \ref{ss:premiums}
 
 \end{itemize}
 
-\item BarrierData: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
+\item BarrierData: This is a trade component sub-node outlined in section \ref{ss:barrier_data}. 
+
+Note that the \emph{FxDigitalBarrierOption} is a single barrier instrument, and can have only one BarrierData node with one barrier level.
+
 Level specified in BarrierData should be quoted as the amount in DomesticCurrency per one unit of ForeignCurrency, with both currencies as defined in FxDigitalBarrierOptionData node.
+
+Type specified in BarrierData can be one of: \emph{UpAndIn, DownAndIn, UpAndOut, DownAndOut}
 
 \item StartDate[Optional]: The start date for checking if a barrier has been breached prior to today's date.  If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future. If`StartDate' is provided then the fixings for dates between this date and the asof date are checked to see if the option was triggered. If no fixing is available then we skip that date. This is to allow for backwards compatibility.
 
@@ -86,7 +91,7 @@ Allowable values:  The format of the FX Index is``FX-SOURCE-CCY1-CCY2'' as descr
 
 Allowable values:  Any positive real number.
 
-\item PayoffAmount: The fixed payoff amount expressed in domestic currency. It is cash-or-nothing payoff that depends on the option being in or out of the money, and whether the barrier has been breached.
+\item PayoffAmount: The fixed payoff amount expressed in the PayoffCurrency. It is cash-or-nothing payoff that depends on the option being in or out of the money, and whether the barrier has been breached.
 
 Allowable values:  Any positive real number.
 

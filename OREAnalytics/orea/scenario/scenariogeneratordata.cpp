@@ -41,7 +41,7 @@ void ScenarioGeneratorData::clear() {
         grid_->truncate(0);
 }
 
-void ScenarioGeneratorData::setGrid(boost::shared_ptr<DateGrid> grid) { 
+void ScenarioGeneratorData::setGrid(QuantLib::ext::shared_ptr<DateGrid> grid) { 
     grid_ = grid;
     
     std::ostringstream oss;
@@ -72,10 +72,10 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     std::vector<std::string> tokens;
     boost::split(tokens, gridString_, boost::is_any_of(","));
     if (tokens.size() <= 2) {
-        grid_ = boost::make_shared<DateGrid>(gridString_, cal, dc);
+        grid_ = QuantLib::ext::make_shared<DateGrid>(gridString_, cal, dc);
     } else {
         std::vector<Period> gridTenors = XMLUtils::getChildrenValuesAsPeriods(node, "Grid", true);
-        grid_ = boost::make_shared<DateGrid>(gridTenors, cal, dc);
+        grid_ = QuantLib::ext::make_shared<DateGrid>(gridTenors, cal, dc);
     }
     LOG("ScenarioGeneratorData grid points size = " << grid_->size());
 
@@ -131,21 +131,10 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
         }
     }
 
-    if (XMLUtils::getChildNode(node, "MporCashFlowMode") != NULL) {
-        string mporCashFlowModeString = XMLUtils::getChildValue(node, "MporCashFlowMode", true);
-        mporCashFlowMode_ = parseMporCashFlowMode(mporCashFlowModeString);
-        LOG("Mpor cash flow mode is" << mporCashFlowModeString);
-    } else {
-        if (withMporStickyDate_)
-            mporCashFlowMode_ = ScenarioGeneratorData::MporCashFlowMode::NonePay;
-        else
-            mporCashFlowMode_ = ScenarioGeneratorData::MporCashFlowMode::BothPay;
-    }
-
     LOG("ScenarioGeneratorData done.");
 }
 
-XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) {
+XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Simulation");
     XMLNode* pNode = XMLUtils::addChild(doc, node, "Parameters");
 
@@ -178,33 +167,5 @@ XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) {
     return node;
 }
 
-ScenarioGeneratorData::MporCashFlowMode parseMporCashFlowMode(const string& s) {
-    static map<string, ScenarioGeneratorData::MporCashFlowMode> m = {
-        {"NonePay", ScenarioGeneratorData::MporCashFlowMode::NonePay},
-        {"BothPay", ScenarioGeneratorData::MporCashFlowMode::BothPay},
-        {"WePay", ScenarioGeneratorData::MporCashFlowMode::WePay},
-        {"TheyPay", ScenarioGeneratorData::MporCashFlowMode::TheyPay}
-    };
-    auto it = m.find(s);
-    if (it != m.end()) {
-        return it->second;
-    } else {
-        QL_FAIL("Mpor cash flow mode \"" << s << "\" not recognized");
-    }
-}
-
-std::ostream& operator<<(std::ostream& out, ScenarioGeneratorData::MporCashFlowMode t) {
-    if (t == ScenarioGeneratorData::MporCashFlowMode::NonePay)
-        out << "NonePay";
-    else if (t == ScenarioGeneratorData::MporCashFlowMode::BothPay)
-        out << "BothPay";
-    else if (t == ScenarioGeneratorData::MporCashFlowMode::WePay)
-        out << "WePay";
-    else if (t == ScenarioGeneratorData::MporCashFlowMode::TheyPay)
-        out << "TheyPay";
-    else
-        QL_FAIL("Mpor cash flow mode not covered");
-    return out;
-}
 } // namespace analytics
 } // namespace ore

@@ -48,14 +48,18 @@ public:
         //! Fixing file name
         const string& fixingFilename,
         //! Enable/disable implying today's fixings
-        bool implyTodaysFixings = false);
+        bool implyTodaysFixings = false,
+	//! Load fixings up to this date
+	Date fixingCutOffDate = Date());
 
     CSVLoader( //! Quote file name
         const vector<string>& marketFiles,
         //! Fixing file name
         const vector<string>& fixingFiles,
         //! Enable/disable implying today's fixings
-        bool implyTodaysFixings = false);
+        bool implyTodaysFixings = false,
+	//! Load fixings up to this date
+	Date fixingCutOffDate = Date());
 
     CSVLoader( //! Quote file name
         const string& marketFilename,
@@ -64,7 +68,9 @@ public:
         //! Dividend file name
         const string& dividendFilename,
         //! Enable/disable implying today's fixings
-        bool implyTodaysFixings = false);
+        bool implyTodaysFixings = false,
+	//! Load fixings up to this date
+	Date fixingCutOffDate = Date());
 
     CSVLoader( //! Quote file name
         const vector<string>& marketFiles,
@@ -73,15 +79,17 @@ public:
         //! Dividend file name
         const vector<string>& dividendFiles,
         //! Enable/disable implying today's fixings
-        bool implyTodaysFixings = false);
+        bool implyTodaysFixings = false,
+	//! Load fixings up to this date
+	Date fixingCutOffDate = Date());
 
-    std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
+    std::vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
 
-    boost::shared_ptr<MarketDatum> get(const string& name, const QuantLib::Date& d) const override;
-    std::set<boost::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
+    QuantLib::ext::shared_ptr<MarketDatum> get(const string& name, const QuantLib::Date& d) const override;
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
                                                  const QuantLib::Date& asof) const override;
     //! get quotes matching a wildcard
-    std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override;
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const override;
 
     //! Load fixings
     std::set<Fixing> loadFixings() const override { return fixings_; }
@@ -94,9 +102,10 @@ private:
     void loadFile(const string&, DataType);
 
     bool implyTodaysFixings_;
-    std::map<QuantLib::Date, std::set<boost::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
+    std::map<QuantLib::Date, std::set<QuantLib::ext::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
     std::set<Fixing> fixings_;
     std::set<QuantExt::Dividend> dividends_;
+    Date fixingCutOffDate_;
 };
 } // namespace data
 } // namespace ore

@@ -59,7 +59,7 @@ protected:
                referenceCurveId + "_" + volatilityCurveId + "_" + "BondOption";
     }
 
-    virtual boost::shared_ptr<QuantLib::PricingEngine>
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
     engineImpl(const string& id, const Currency& ccy, const string& creditCurveId, const bool hasCreditRisk,
                const string& securityId, const string& referenceCurveId, const string& volatilityCurveId) override {
 
@@ -98,7 +98,7 @@ protected:
             dpts = Handle<DefaultProbabilityTermStructure>();
         }
 
-        return boost::make_shared<QuantExt::BlackBondOptionEngine>(
+        return QuantLib::ext::make_shared<QuantExt::BlackBondOptionEngine>(
             discountCurve, yieldVola, yts, dpts, recovery, spread, parsePeriod(engineParameter("TimestepPeriod")));
     };
 };

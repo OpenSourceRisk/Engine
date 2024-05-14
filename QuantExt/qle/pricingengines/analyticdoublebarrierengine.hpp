@@ -23,7 +23,7 @@
 #ifndef quantext_analytic_double_barrier_engine_hpp
 #define quantext_analytic_double_barrier_engine_hpp
 
-#include <ql/experimental/barrieroption/analyticdoublebarrierengine.hpp>
+#include <ql/pricingengines/barrier/analyticdoublebarrierengine.hpp>
 #include <ql/instruments/barrieroption.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/processes/blackscholesprocess.hpp>

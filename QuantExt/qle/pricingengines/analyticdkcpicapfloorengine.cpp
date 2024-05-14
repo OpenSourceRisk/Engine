@@ -25,12 +25,12 @@ namespace QuantExt {
 
 using namespace CrossAssetAnalytics;
 
-AnalyticDkCpiCapFloorEngine::AnalyticDkCpiCapFloorEngine(const boost::shared_ptr<CrossAssetModel>& model,
+AnalyticDkCpiCapFloorEngine::AnalyticDkCpiCapFloorEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                          const Size index, const Real baseCPI)
     : model_(model), index_(index), baseCPI_(baseCPI) {}
 
 void AnalyticDkCpiCapFloorEngine::calculate() const {
-    
+
     QL_DEPRECATED_DISABLE_WARNING
     bool interpolate = arguments_.observationInterpolation == CPI::Linear ||
                        (arguments_.observationInterpolation == CPI::AsIndex && arguments_.index->interpolated());
@@ -49,19 +49,19 @@ void AnalyticDkCpiCapFloorEngine::calculate() const {
 
     // Book, 13.37, 13.38
 
-    const CrossAssetModel* x = model_.get();
     Real k = std::pow(1.0 + arguments_.strike, t);
     Real kTilde = k * arguments_.baseCPI;
     Real nTilde = arguments_.nominal / arguments_.baseCPI;
 
-    Real m = baseCPI_ * std::pow(1.0 + model_->infdk(index_)->termStructure()->zeroRate(arguments_.fixDate, Period(0, Days)), t);
-    m = arguments_.index->fixing(arguments_.fixDate); 
-    Real Ht = Hy(index_).eval(x, t);
-    Real v = Ht * Ht * zetay(index_).eval(x, t) -
-             2.0 * Ht * integral(x, P(Hy(index_), ay(index_), ay(index_)), 0.0, t) +
-             integral(x, P(Hy(index_), Hy(index_), ay(index_), ay(index_)), 0.0, t);
+    Real m = baseCPI_ *
+             std::pow(1.0 + model_->infdk(index_)->termStructure()->zeroRate(arguments_.fixDate, Period(0, Days)), t);
+    m = arguments_.index->fixing(arguments_.fixDate);
+    Real Ht = Hy(index_).eval(*model_, t);
+    Real v = Ht * Ht * zetay(index_).eval(*model_, t) -
+             2.0 * Ht * integral(*model_, P(Hy(index_), ay(index_), ay(index_)), 0.0, t) +
+             integral(*model_, P(Hy(index_), Hy(index_), ay(index_), ay(index_)), 0.0, t);
 
-    Size irIdx = x->ccyIndex(x->infdk(index_)->currency());
+    Size irIdx = model_->ccyIndex(model_->infdk(index_)->currency());
     Real discount = model_->irlgm1f(irIdx)->termStructure()->discount(arguments_.payDate);
 
     results_.value = nTilde * blackFormula(arguments_.type, kTilde, m, std::sqrt(v), discount);

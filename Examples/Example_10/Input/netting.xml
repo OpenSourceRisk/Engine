@@ -2,15 +2,15 @@
 <NettingSetDefinitions>
   <NettingSet>
     <NettingSetId>CPTY_A</NettingSetId>
-    <ActiveCSAFlag>false</ActiveCSAFlag>
+    <ActiveCSAFlag>true</ActiveCSAFlag>
     <CSADetails>
       <Bilateral>Bilateral</Bilateral>
       <CSACurrency>EUR</CSACurrency>
       <Index>EUR-EONIA</Index>
       <ThresholdPay>0</ThresholdPay>
       <ThresholdReceive>0</ThresholdReceive>
-      <MinimumTransferAmountPay>50000</MinimumTransferAmountPay>
-      <MinimumTransferAmountReceive>50000</MinimumTransferAmountReceive>
+      <MinimumTransferAmountPay>0</MinimumTransferAmountPay>
+      <MinimumTransferAmountReceive>0</MinimumTransferAmountReceive>
       <IndependentAmount>
         <IndependentAmountHeld>0</IndependentAmountHeld>
         <IndependentAmountType>FIXED</IndependentAmountType>

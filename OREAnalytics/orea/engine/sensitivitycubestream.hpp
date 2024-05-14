@@ -36,10 +36,10 @@ namespace analytics {
  */
 class SensitivityCubeStream : public SensitivityStream {
 public:
-    /*! Constructor providing the sensitivity \p cube and currency of the
-        sensitivities
-    */
-    SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const std::string& currency);
+    /*! Constructor providing the sensitivity \p cube and currency of the sensitivities */
+    SensitivityCubeStream(const QuantLib::ext::shared_ptr<SensitivityCube>& cube, const std::string& currency);
+    /*! Constructor providing the sensitivity \p cubes and currency of the sensitivities */
+    SensitivityCubeStream(const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& cubes, const std::string& currency);
 
     /*! Returns the next SensitivityRecord in the stream
 
@@ -53,10 +53,13 @@ public:
 private:
     void updateForNewTrade();
 
-    //! Handle on the SensitivityCube
-    boost::shared_ptr<SensitivityCube> cube_;
-    //! Currency of the sensitivities in the SensitivityCube
+    //! Handle on the SensitivityCubes
+    std::vector<QuantLib::ext::shared_ptr<SensitivityCube>> cubes_;
+    //! Currency of the sensitivities in the SensitivityCubes
     std::string currency_;
+
+    //! Current cube index in vector
+    Size currentCubeIdx_;
 
     //! Current delta risk factor keys to process and iterators
     std::set<RiskFactorKey> currentDeltaKeys_;

@@ -17,12 +17,17 @@
 */
 
 #include "parsensitivityanalysismanual.hpp"
-#include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
-#include <test/testportfolio.hpp>
+#include "testmarket.hpp"
+#include "testportfolio.hpp"
+
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/parsensitivityanalysis.hpp>
+#include <orea/engine/zerotoparcube.hpp>
+#include <orea/scenario/deltascenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/cdo.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
@@ -35,13 +40,12 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ored/portfolio/builders/cdo.hpp>
-#include <orea/engine/parsensitivityanalysis.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
-#include <orea/engine/zerotoparcube.hpp>
-#include <orea/scenario/deltascenariofactory.hpp>
+
 #include <oret/toplevelfixture.hpp>
+
 #include <ql/time/date.hpp>
+
+#include <test/oreatoplevelfixture.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -53,16 +57,16 @@ using namespace ore::analytics;
 
 namespace {
 
-boost::shared_ptr<EngineFactory> registerBuilders(boost::shared_ptr<EngineData> engineData,
-                                                  boost::shared_ptr<Market> market) {
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
+QuantLib::ext::shared_ptr<EngineFactory> registerBuilders(QuantLib::ext::shared_ptr<EngineData> engineData,
+                                                  QuantLib::ext::shared_ptr<Market> market) {
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
     return factory;
 }
 
-void parSensiBumpAnalysis(boost::shared_ptr<Portfolio>& portfolio, boost::shared_ptr<EngineData>& engineData,
-                          boost::shared_ptr<Market>& initMarket, map<string, Real>& baseManualPv, string& baseCcy,
+void parSensiBumpAnalysis(QuantLib::ext::shared_ptr<Portfolio>& portfolio, QuantLib::ext::shared_ptr<EngineData>& engineData,
+                          QuantLib::ext::shared_ptr<Market>& initMarket, map<string, Real>& baseManualPv, string& baseCcy,
                           vector<Handle<Quote>>& parValVecBase, vector<string>& labelVec, Real shiftSize,
-                          string& shiftType, std::map<std::pair<std::string, std::string>, Real>& parDelta,
+                          ShiftType shiftType, std::map<std::pair<std::string, std::string>, Real>& parDelta,
                           std::map<std::pair<std::string, std::string>, Real>& zeroDelta, map<string, Real>& basePv) {
 
     Size tradeCount = portfolio->size();
@@ -77,9 +81,9 @@ void parSensiBumpAnalysis(boost::shared_ptr<Portfolio>& portfolio, boost::shared
         Handle<Quote> q = parValVecBase[i];
         Real baseVal = q->value();
         baseValues.push_back(baseVal);
-        boost::dynamic_pointer_cast<SimpleQuote>(*q)->setValue(baseVal);
+        QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(*q)->setValue(baseVal);
     }
-    boost::shared_ptr<EngineFactory> manualFactory2 = registerBuilders(engineData, initMarket);
+    QuantLib::ext::shared_ptr<EngineFactory> manualFactory2 = registerBuilders(engineData, initMarket);
     portfolio->reset();
     portfolio->build(manualFactory2);
     BOOST_CHECK_MESSAGE(portfolio->size() == tradeCount,
@@ -101,14 +105,14 @@ void parSensiBumpAnalysis(boost::shared_ptr<Portfolio>& portfolio, boost::shared
         // if ((curveType == "CDSVolatility") || (curveType == "EquityVolatility")) sensiLabel = sensiLabel + "/ATM";
         for (Size j = 0; j < parValVecBase.size(); ++j) {
             if (i == j) {
-                Real newVal =
-                    (shiftType == "ABSOLUTE") ? (baseValues[j] + shiftSize) : (baseValues[j] * (1.0 + shiftSize));
-                boost::dynamic_pointer_cast<SimpleQuote>(*parValVecBase[j])->setValue(newVal);
+                Real newVal = (shiftType == ShiftType::Absolute) ? (baseValues[j] + shiftSize)
+                                                                 : (baseValues[j] * (1.0 + shiftSize));
+                QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(*parValVecBase[j])->setValue(newVal);
             } else {
-                boost::dynamic_pointer_cast<SimpleQuote>(*parValVecBase[j])->setValue(baseValues[j]);
+                QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(*parValVecBase[j])->setValue(baseValues[j]);
             }
         }
-        boost::shared_ptr<EngineFactory> manualFactoryDisc = registerBuilders(engineData, initMarket);
+        QuantLib::ext::shared_ptr<EngineFactory> manualFactoryDisc = registerBuilders(engineData, initMarket);
         portfolio->reset();
         portfolio->build(manualFactoryDisc);
         BOOST_CHECK_MESSAGE(portfolio->size() == tradeCount,
@@ -141,9 +145,9 @@ void parSensiBumpAnalysis(boost::shared_ptr<Portfolio>& portfolio, boost::shared
     }
     // set back to the base curve
     for (Size i = 0; i < parValVecBase.size(); ++i) {
-        boost::dynamic_pointer_cast<SimpleQuote>(*parValVecBase[i])->setValue(baseValues[i]);
+        QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(*parValVecBase[i])->setValue(baseValues[i]);
     }
-    boost::shared_ptr<EngineFactory> manualFactory3 = registerBuilders(engineData, initMarket);
+    QuantLib::ext::shared_ptr<EngineFactory> manualFactory3 = registerBuilders(engineData, initMarket);
 
     portfolio->reset();
     portfolio->build(manualFactory3);
@@ -187,17 +191,17 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     ccys.push_back("JPY");
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarketParCurves>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarketParCurves>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketData =
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketData =
         TestConfigurationObjects::setupSimMarketData(true, false);
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData =
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData =
         TestConfigurationObjects::setupSensitivityScenarioData(true, false, true);
     // build porfolio
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
     engineData->model("CrossCurrencySwap") = "DiscountedCashflows";
@@ -251,30 +255,30 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     engineData->model("EquityOption") = "BlackScholesMerton";
     engineData->engine("EquityOption") = "AnalyticEuropeanEngine";
 
-    std::vector<boost::shared_ptr<EngineBuilder>> builders;
-    // builders.push_back(boost::make_shared<oreplus::data::MidPointIndexCdsEngineBuilder>());
-    // builders.push_back(boost::make_shared<oreplus::data::BlackIndexCdsOptionEngineBuilder>());
-    builders.push_back(boost::make_shared<ore::data::GaussCopulaBucketingCdoEngineBuilder>());
+    std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> builders;
+    // builders.push_back(QuantLib::ext::make_shared<oreplus::data::MidPointIndexCdsEngineBuilder>());
+    // builders.push_back(QuantLib::ext::make_shared<oreplus::data::BlackIndexCdsOptionEngineBuilder>());
+    builders.push_back(QuantLib::ext::make_shared<ore::data::GaussCopulaBucketingCdoEngineBuilder>());
 
-    boost::shared_ptr<EngineFactory> factory = registerBuilders(engineData, initMarket);
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
-    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-    boost::shared_ptr<IRSwapConvention> eurConv =
-        boost::dynamic_pointer_cast<IRSwapConvention>(conventions->get("EUR-6M-SWAP-CONVENTIONS"));
+    QuantLib::ext::shared_ptr<EngineFactory> factory = registerBuilders(engineData, initMarket);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
+    QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    QuantLib::ext::shared_ptr<IRSwapConvention> eurConv =
+        QuantLib::ext::dynamic_pointer_cast<IRSwapConvention>(conventions->get("EUR-6M-SWAP-CONVENTIONS"));
     string eurIdx = "EUR-EURIBOR-6M";
     Period eurFloatTenor = initMarket->iborIndex(eurIdx)->tenor();
-    boost::shared_ptr<IRSwapConvention> usdConv =
-        boost::dynamic_pointer_cast<IRSwapConvention>(conventions->get("USD-6M-SWAP-CONVENTIONS"));
+    QuantLib::ext::shared_ptr<IRSwapConvention> usdConv =
+        QuantLib::ext::dynamic_pointer_cast<IRSwapConvention>(conventions->get("USD-6M-SWAP-CONVENTIONS"));
     string usdIdx = "USD-LIBOR-6M";
     Period usdFloatTenor = initMarket->iborIndex(usdIdx)->tenor();
-    boost::shared_ptr<IRSwapConvention> jpyConv =
-        boost::dynamic_pointer_cast<IRSwapConvention>(conventions->get("JPY-6M-SWAP-CONVENTIONS"));
+    QuantLib::ext::shared_ptr<IRSwapConvention> jpyConv =
+        QuantLib::ext::dynamic_pointer_cast<IRSwapConvention>(conventions->get("JPY-6M-SWAP-CONVENTIONS"));
     string jpyIdx = "JPY-LIBOR-6M";
     Period jpyFloatTenor = initMarket->iborIndex(jpyIdx)->tenor();
-    boost::shared_ptr<CrossCcyBasisSwapConvention> chfBasisConv =
-        boost::dynamic_pointer_cast<CrossCcyBasisSwapConvention>(conventions->get("CHF-XCCY-BASIS-CONVENTIONS"));
-    boost::shared_ptr<CdsConvention> cdsConv =
-        boost::dynamic_pointer_cast<CdsConvention>(conventions->get("CDS-STANDARD-CONVENTIONS"));
+    QuantLib::ext::shared_ptr<CrossCcyBasisSwapConvention> chfBasisConv =
+        QuantLib::ext::dynamic_pointer_cast<CrossCcyBasisSwapConvention>(conventions->get("CHF-XCCY-BASIS-CONVENTIONS"));
+    QuantLib::ext::shared_ptr<CdsConvention> cdsConv =
+        QuantLib::ext::dynamic_pointer_cast<CdsConvention>(conventions->get("CDS-STANDARD-CONVENTIONS"));
 
     string chfIdx = chfBasisConv->spreadIndexName();
     string otherIdx = chfBasisConv->flatIndexName();
@@ -395,17 +399,18 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     BOOST_CHECK_MESSAGE(portfolio->size() == tradeCount,
                         "Some trades not built correctly," << portfolio->size() << " vs. " << tradeCount);
     // build the sensitivity analysis object
-    boost::shared_ptr<SensitivityAnalysis> zeroAnalysis =
-        boost::make_shared<SensitivityAnalysisPlus>(portfolio, initMarket, "default", engineData, simMarketData,
-                                                    sensiData, false, nullptr, nullptr, false, nullptr);
-    ParSensitivityAnalysis parAnalysis(today, simMarketData, *sensiData, "default");
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> zeroAnalysis =
+        QuantLib::ext::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, engineData,
+                                                simMarketData, sensiData,
+                                                false, nullptr, nullptr, false, nullptr);
+    ParSensitivityAnalysis parAnalysis(today, simMarketData, *sensiData, Market::defaultConfiguration);
     parAnalysis.alignPillars();
     zeroAnalysis->overrideTenors(true);
     zeroAnalysis->generateSensitivities();
     parAnalysis.computeParInstrumentSensitivities(zeroAnalysis->simMarket());
-    boost::shared_ptr<ParSensitivityConverter> parConverter =
-        boost::make_shared<ParSensitivityConverter>(parAnalysis.parSensitivities(), parAnalysis.shiftSizes());
-    boost::shared_ptr<SensitivityCube> sensiCube = zeroAnalysis->sensiCube();
+    QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
+        QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis.parSensitivities(), parAnalysis.shiftSizes());
+    QuantLib::ext::shared_ptr<SensitivityCube> sensiCube = zeroAnalysis->sensiCube();
     ZeroToParCube parCube(sensiCube, parConverter);
 
     std::map<std::pair<std::string, std::string>, Real> parDelta;
@@ -425,7 +430,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
             parDelta[make_pair(tradeId, des)] = kv.second;
         }
     }
-    boost::shared_ptr<EngineFactory> manualFactory = registerBuilders(engineData, initMarket);
+    QuantLib::ext::shared_ptr<EngineFactory> manualFactory = registerBuilders(engineData, initMarket);
 
     portfolio->reset();
     portfolio->build(manualFactory);
@@ -448,15 +453,14 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
                                                              << ", but expected " << basePv[tradeId]);
     }
 
-    boost::shared_ptr<TestMarketParCurves> initParMarket = boost::dynamic_pointer_cast<TestMarketParCurves>(initMarket);
+    QuantLib::ext::shared_ptr<TestMarketParCurves> initParMarket = QuantLib::ext::dynamic_pointer_cast<TestMarketParCurves>(initMarket);
     BOOST_ASSERT(initParMarket);
     BOOST_TEST_MESSAGE("testing discount curve par sensis");
     // the discount curve par sensis
     for (auto d_it : initParMarket->discountRateHelpersInstMap()) {
         string ccy = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->discountCurveShiftData()[ccy]->shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->discountCurveShiftData()[ccy]->shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->discountCurveShiftData()[ccy]->shiftType;
         vector<Period> parTenorVec = initParMarket->discountRateHelperTenorsMap().find(ccy)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->discountRateHelperValuesMap().find(ccy)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -474,10 +478,9 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
         auto itr = zeroAnalysis->sensitivityData()->indexCurveShiftData().find(idxName);
         if (itr == zeroAnalysis->sensitivityData()->indexCurveShiftData().end())
             zeroAnalysis->sensitivityData()->indexCurveShiftData()[idxName] =
-                boost::make_shared<SensitivityScenarioData::CurveShiftData>();
+                QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>();
         Real shiftSize = zeroAnalysis->sensitivityData()->indexCurveShiftData()[idxName]->shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->indexCurveShiftData()[idxName]->shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->indexCurveShiftData()[idxName]->shiftType;
         vector<Period> parTenorVec = initParMarket->indexCurveRateHelperTenorsMap().find(idxName)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->indexCurveRateHelperValuesMap().find(idxName)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -494,10 +497,9 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
         auto itr = zeroAnalysis->sensitivityData()->creditCurveShiftData().find(name);
         if (itr == zeroAnalysis->sensitivityData()->creditCurveShiftData().end())
             zeroAnalysis->sensitivityData()->creditCurveShiftData()[name] =
-                boost::make_shared<SensitivityScenarioData::CurveShiftData>();
+                QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>();
         Real shiftSize = zeroAnalysis->sensitivityData()->creditCurveShiftData()[name]->shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->creditCurveShiftData()[name]->shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->creditCurveShiftData()[name]->shiftType;
         vector<Period> parTenorVec = initParMarket->defaultRateHelperTenorsMap().find(name)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->defaultRateHelperValuesMap().find(name)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -512,7 +514,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->cdsVolRateHelperValuesMap()) {
         string name = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->cdsVolShiftData()[name].shiftSize;
-        string shiftType = boost::to_upper_copy(zeroAnalysis->sensitivityData()->cdsVolShiftData()[name].shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->cdsVolShiftData()[name].shiftType;
         vector<Period> parTenorVec = initParMarket->cdsVolRateHelperTenorsMap().find(name)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->cdsVolRateHelperValuesMap().find(name)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -527,7 +529,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->equityVolRateHelperValuesMap()) {
         string name = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->equityVolShiftData()[name].shiftSize;
-        string shiftType = boost::to_upper_copy(zeroAnalysis->sensitivityData()->equityVolShiftData()[name].shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->equityVolShiftData()[name].shiftType;
         vector<Period> parTenorVec = initParMarket->equityVolRateHelperTenorsMap().find(name)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->equityVolRateHelperValuesMap().find(name)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -542,8 +544,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->swaptionVolRateHelperValuesMap()) {
         string name = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name].shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name].shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name].shiftType;
         vector<Period> parTenorVec = initParMarket->swaptionVolRateHelperTenorsMap().find(name)->second;
         vector<Period> swapTenorVec = initParMarket->swaptionVolRateHelperSwapTenorsMap().find(name)->second;
         vector<Real> strikeSpreadVec = zeroAnalysis->sensitivityData()->swaptionVolShiftData()[name].shiftStrikes;
@@ -574,8 +575,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->baseCorrRateHelperValuesMap()) {
         string name = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->baseCorrelationShiftData()[name].shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->baseCorrelationShiftData()[name].shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->baseCorrelationShiftData()[name].shiftType;
         vector<Period> parTenorVec = initParMarket->baseCorrRateHelperTenorsMap().find(name)->second;
         vector<string> lossLevelVec = initParMarket->baseCorrLossLevelsMap().find(name)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->baseCorrRateHelperValuesMap().find(name)->second;
@@ -593,8 +593,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->zeroInflationRateHelperInstMap()) {
         string idxName = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->zeroInflationCurveShiftData()[idxName]->shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->zeroInflationCurveShiftData()[idxName]->shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->zeroInflationCurveShiftData()[idxName]->shiftType;
         vector<Period> parTenorVec = initParMarket->zeroInflationRateHelperTenorsMap().find(idxName)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->zeroInflationRateHelperValuesMap().find(idxName)->second;
         vector<string> sensiLabels(parValVecBase.size());
@@ -609,8 +608,7 @@ void ParSensitivityAnalysisManualTest::testParSwapBenchmark() {
     for (auto d_it : initParMarket->yoyInflationRateHelperInstMap()) {
         string idxName = d_it.first;
         Real shiftSize = zeroAnalysis->sensitivityData()->yoyInflationCurveShiftData()[idxName]->shiftSize;
-        string shiftType =
-            boost::to_upper_copy(zeroAnalysis->sensitivityData()->yoyInflationCurveShiftData()[idxName]->shiftType);
+        ShiftType shiftType = zeroAnalysis->sensitivityData()->yoyInflationCurveShiftData()[idxName]->shiftType;
         vector<Period> parTenorVec = initParMarket->yoyInflationRateHelperTenorsMap().find(idxName)->second;
         vector<Handle<Quote>> parValVecBase = initParMarket->yoyInflationRateHelperValuesMap().find(idxName)->second;
         vector<string> sensiLabels(parValVecBase.size());

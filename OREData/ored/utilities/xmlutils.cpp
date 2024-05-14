@@ -21,12 +21,14 @@
     \ingroup utilities
 */
 
-#include <boost/algorithm/string/join.hpp>
-#include <boost/lexical_cast.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/erase.hpp>
 
 // we only want to include these here.
 #if defined(__clang__)
@@ -61,37 +63,12 @@ namespace {
 // handle rapid xml parser errors
 
 void handle_rapidxml_parse_error(const rapidxml::parse_error& e) {
-    // limit to first 30 chars.
-    string where(e.where<char>(), std::min<std::size_t>(strlen(e.where<char>()), 30));
-    QL_FAIL("RapidXML Parse Error : " << e.what() << ". where=" << where);
+    string where = e.where<char>();
+    boost::erase_all(where, "\n");
+    boost::erase_all(where, "\r");
+    QL_FAIL("RapidXML Parse Error (" << e.what() << ") at '" << where.substr(0, 400) << "'");
 }
 
-// helper routine to convert a value of an arbitrary type to string
-
-string convertToString(const Real value) {
-    // We want to write out a double that conforms to xs:double, this means no
-    // scientific notation, so we check for really small numbers here and explicitly set
-    // to 16 decimal places
-    string result;
-    if (std::abs(value) < 1.0e-6) {
-        std::ostringstream obj1;
-        obj1.precision(16);
-        obj1 << std::fixed << value;
-        result = obj1.str();
-    } else {
-        // And here we just use boost::lexical_cast which is better
-        // at precision than std::to_string()
-        result = boost::lexical_cast<std::string>(value);
-    }
-    return result;
-}
-
-template <class T> string convertToString(const T& value) { return ore::data::to_string(value); }
-
-// FIXME another variant of the above routine, just for backwards compatibility, we should get
-// rid of one of these two
-string convertToString2(const std::string& s) { return s; }
-template <class T> string convertToString2(const T& value) { return std::to_string(value); }
 
 } // namespace
 
@@ -136,17 +113,17 @@ void XMLDocument::fromXMLString(const string& xmlString) {
     }
 }
 
-XMLNode* XMLDocument::getFirstNode(const string& name) { return _doc->first_node(name == "" ? NULL : name.c_str()); }
+XMLNode* XMLDocument::getFirstNode(const string& name) const { return _doc->first_node(name == "" ? NULL : name.c_str()); }
 
 void XMLDocument::appendNode(XMLNode* node) { _doc->append_node(node); }
 
-void XMLDocument::toFile(const string& fileName) {
+void XMLDocument::toFile(const string& fileName) const {
     std::ofstream ofs(fileName.c_str());
     ofs << *_doc;
     ofs.close();
 }
 
-string XMLDocument::toString() {
+string XMLDocument::toString() const {
     ostringstream oss;
     oss << *_doc;
     return oss.str();
@@ -175,7 +152,7 @@ void XMLSerializable::fromFile(const string& filename) {
     fromXML(doc.getFirstNode(""));
 }
 
-void XMLSerializable::toFile(const string& filename) {
+void XMLSerializable::toFile(const string& filename) const {
     XMLDocument doc;
     XMLNode* node = toXML(doc);
     doc.appendNode(node);
@@ -188,7 +165,7 @@ void XMLSerializable::fromXMLString(const string& xml) {
     fromXML(doc.getFirstNode(""));
 }
 
-string XMLSerializable::toXMLString() {
+string XMLSerializable::toXMLString() const {
     XMLDocument doc;
     XMLNode* node = toXML(doc);
     doc.appendNode(node);
@@ -266,7 +243,7 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, Real v
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, int value) {
-    addChild(doc, n, name, convertToString(value));
+    addChild(doc, n, name, std::to_string(value));
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, bool value) {
@@ -275,12 +252,12 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, bool v
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const Period& value) {
-    addChild(doc, n, name, convertToString(value));
+    addChild(doc, n, name, ore::data::to_string(value));
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* parent, const string& name, const vector<Real>& values) {
     vector<string> strings(values.size());
-    std::transform(values.begin(), values.end(), strings.begin(), [](Real x) { return convertToString2(x); });
+    std::transform(values.begin(), values.end(), strings.begin(), [](Real x) { return convertToString(x); });
     addChild(doc, parent, name, boost::algorithm::join(strings, ","));
 }
 
@@ -449,7 +426,7 @@ string XMLUtils::getAttribute(XMLNode* node, const string& attrName) {
 }
 
 vector<XMLNode*> XMLUtils::getChildrenNodes(XMLNode* node, const string& name) {
-    QL_REQUIRE(node, "XMLUtils::getChildredNodes(" << name << ") node is NULL");
+    QL_REQUIRE(node, "XMLUtils::getChildrenNodes(" << name << ") node is NULL");
     vector<XMLNode*> res;
     const char* p = name.empty() ? nullptr : name.c_str();
     for (xml_node<>* c = node->first_node(p); c; c = c->next_sibling(p))
@@ -472,7 +449,8 @@ vector<XMLNode*> XMLUtils::getChildrenNodesWithAttributes(XMLNode* parent, const
     QL_REQUIRE(attrNames.size() == attrs.size(),
                "attrNames size (" << attrNames.size() << ") must match attrs size (" << attrs.size() << ")");
     vector<XMLNode*> vec;
-    rapidxml::xml_node<>* node = parent->first_node(names.c_str());
+    // if names is empty, use the parent as the anchor node
+    rapidxml::xml_node<>* node = names.empty() ? parent : parent->first_node(names.c_str());
     if (mandatory) {
         QL_REQUIRE(node, "Error: No XML Node " << names << " found.");
     }
@@ -520,16 +498,6 @@ string XMLUtils::getNodeValue(XMLNode* node) {
 
 // template implementations
 
-// FIXME only needed as long as we want convert2String2() here, can be removed once we have consolidated
-// convert2String() and convert2String()
-template <>
-void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
-                           const vector<Real>& values) {
-    vector<string> strings(values.size());
-    std::transform(values.begin(), values.end(), strings.begin(), [](Real x) { return convertToString2(x); });
-    addChildren(doc, parent, names, name, strings);
-}
-
 template <class T>
 void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
                            const vector<T>& values) {
@@ -558,7 +526,7 @@ void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, cons
         QL_REQUIRE(parent, "XML Node is null (Adding " << names << ")");
         XMLNode* node = addChild(doc, parent, names);
         for (Size i = 0; i < values.size(); i++) {
-            XMLNode* c = doc.allocNode(name, convertToString2(values[i]));
+            XMLNode* c = doc.allocNode(name, convertToString(values[i]));
             QL_REQUIRE(c, "XML AllocNode failure (" << name << ")");
             QL_REQUIRE(node, "XML Node is NULL (" << name << ")");
             node->insert_node(0, c);
@@ -625,7 +593,8 @@ vector<T> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent, const strin
     QL_REQUIRE(attrNames.size() == attrs.size(),
                "attrNames size (" << attrNames.size() << ") must match attrs size (" << attrs.size() << ")");
     vector<T> vec;
-    rapidxml::xml_node<>* node = parent->first_node(names.c_str());
+    // if 'names' is not given, use the parent node directly
+    rapidxml::xml_node<>* node = names.empty() ? parent : parent->first_node(names.c_str());
     if (mandatory) {
         QL_REQUIRE(node, "Error: No XML Node " << names << " found.");
     }
@@ -648,6 +617,26 @@ vector<T> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent, const strin
     return vec;
 }
 
+string XMLUtils::convertToString(const Real value) {
+    // We want to write out a double that conforms to xs:double, this means no
+    // scientific notation, so we check for really small numbers here and explicitly set
+    // to 16 decimal places
+    string result;
+    if (std::abs(value) < 1.0e-6) {
+        std::ostringstream obj1;
+        obj1.precision(16);
+        obj1 << std::fixed << value;
+        result = obj1.str();
+    } else {
+        // And here we just use boost::lexical_cast which is better
+        // at precision than std::to_string()
+        result = boost::lexical_cast<std::string>(value);
+    }
+    return result;
+}
+
+template <class T> string XMLUtils::convertToString(const T& value) { return boost::lexical_cast<std::string>(value); }
+
 /* Instantiate some template functions above for types T we want to support. Add instantiations for more types here,
    if required. This has two advantages over putting the templated version of the functions in the header file:
    - faster compile times
@@ -658,6 +647,8 @@ template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const str
 // throws a warning currently, but that is ok, see the FIXME above in template <> void XMLUtils::addChildren(...)
 // template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
 //                                     const vector<double>& values);
+template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
+                                     const vector<Real>& values);
 template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
                                     const vector<bool>& values);
 

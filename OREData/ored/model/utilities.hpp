@@ -44,7 +44,7 @@ namespace data {
 using namespace QuantExt;
 using namespace QuantLib;
 
-template <typename Helper> Real getCalibrationError(const std::vector<boost::shared_ptr<Helper>>& basket) {
+template <typename Helper> Real getCalibrationError(const std::vector<QuantLib::ext::shared_ptr<Helper>>& basket) {
     Real rmse = 0.0;
     for (auto const& h : basket) {
         Real tmp = h->calibrationError();
@@ -54,44 +54,44 @@ template <typename Helper> Real getCalibrationError(const std::vector<boost::sha
 }
 
 std::string getCalibrationDetails(
-    LgmCalibrationInfo& info, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-    const boost::shared_ptr<IrLgm1fParametrization>& parametrization = boost::shared_ptr<IrLgm1fParametrization>());
+    LgmCalibrationInfo& info, const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+    const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization = QuantLib::ext::shared_ptr<IrLgm1fParametrization>());
 
 std::string getCalibrationDetails(
-    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-    const boost::shared_ptr<FxBsParametrization>& parametrization = boost::shared_ptr<FxBsParametrization>(),
-    const boost::shared_ptr<Parametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+    const QuantLib::ext::shared_ptr<FxBsParametrization>& parametrization = QuantLib::ext::shared_ptr<FxBsParametrization>(),
+    const QuantLib::ext::shared_ptr<Parametrization>& domesticLgm = QuantLib::ext::shared_ptr<IrLgm1fParametrization>());
 
 std::string getCalibrationDetails(
-    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-    const boost::shared_ptr<FxBsParametrization>& parametrization = boost::shared_ptr<FxBsParametrization>(),
-    const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+    const QuantLib::ext::shared_ptr<FxBsParametrization>& parametrization = QuantLib::ext::shared_ptr<FxBsParametrization>(),
+    const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& domesticLgm = QuantLib::ext::shared_ptr<IrLgm1fParametrization>());
 
 std::string getCalibrationDetails(
-    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-    const boost::shared_ptr<EqBsParametrization>& parametrization = boost::shared_ptr<EqBsParametrization>(),
-    const boost::shared_ptr<Parametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+    const QuantLib::ext::shared_ptr<EqBsParametrization>& parametrization = QuantLib::ext::shared_ptr<EqBsParametrization>(),
+    const QuantLib::ext::shared_ptr<Parametrization>& domesticLgm = QuantLib::ext::shared_ptr<IrLgm1fParametrization>());
 
 std::string getCalibrationDetails(
-    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-    const boost::shared_ptr<EqBsParametrization>& parametrization = boost::shared_ptr<EqBsParametrization>(),
-    const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+    const QuantLib::ext::shared_ptr<EqBsParametrization>& parametrization = QuantLib::ext::shared_ptr<EqBsParametrization>(),
+    const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& domesticLgm = QuantLib::ext::shared_ptr<IrLgm1fParametrization>());
 
 std::string getCalibrationDetails(
-    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-    const boost::shared_ptr<InfDkParametrization>& parametrization = boost::shared_ptr<InfDkParametrization>(),
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+    const QuantLib::ext::shared_ptr<InfDkParametrization>& parametrization = QuantLib::ext::shared_ptr<InfDkParametrization>(),
     bool indexIsInterpolated = true);
 
 std::string getCalibrationDetails(
-    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-    const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization = boost::shared_ptr<CommoditySchwartzParametrization>());
+    const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+    const QuantLib::ext::shared_ptr<CommoditySchwartzParametrization>& parametrization = QuantLib::ext::shared_ptr<CommoditySchwartzParametrization>());
 
-std::string getCalibrationDetails(const std::vector<boost::shared_ptr<CalibrationHelper>>& realRateBasket,
-                                  const std::vector<boost::shared_ptr<CalibrationHelper>>& indexBasket,
-                                  const boost::shared_ptr<InfJyParameterization>& parameterization,
+std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<CalibrationHelper>>& realRateBasket,
+                                  const std::vector<QuantLib::ext::shared_ptr<CalibrationHelper>>& indexBasket,
+                                  const QuantLib::ext::shared_ptr<InfJyParameterization>& parameterization,
                                   bool calibrateRealRateVol = false);
 
-std::string getCalibrationDetails(const boost::shared_ptr<IrLgm1fParametrization>& parametrization);
+std::string getCalibrationDetails(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization);
 
 //! Return an option's maturity date, given an explicit date or a period.
 QuantLib::Date optionMaturity(const boost::variant<QuantLib::Date, QuantLib::Period>& maturity,
@@ -99,13 +99,13 @@ QuantLib::Date optionMaturity(const boost::variant<QuantLib::Date, QuantLib::Per
                               const QuantLib::Date& referenceDate = Settings::instance().evaluationDate());
 
 //! Return a cpi cap/floor strike value, the input strike can be of type absolute or atm forward
-Real cpiCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
-                            const boost::shared_ptr<ZeroInflationTermStructure>& curve,
+Real cpiCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
+                            const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& curve,
                             const QuantLib::Date& optionMaturityDate);
 
 //! Return a yoy cap/floor strike value, the input strike can be of type absolute or atm forward
-Real yoyCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
-                            const boost::shared_ptr<YoYInflationTermStructure>& curve,
+Real yoyCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
+                            const QuantLib::ext::shared_ptr<YoYInflationTermStructure>& curve,
                             const QuantLib::Date& optionMaturityDate);
 
 //! helper function that computes the atm forward

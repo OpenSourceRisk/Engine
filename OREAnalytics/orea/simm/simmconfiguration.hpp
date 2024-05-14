@@ -27,17 +27,16 @@
 #include <vector>
 
 #include <boost/optional.hpp>
-
+#include <orea/simm/crifconfiguration.hpp>
+#include <orea/simm/crifrecord.hpp>
 #include <ql/indexes/interestrateindex.hpp>
 #include <ql/types.hpp>
 
 namespace ore {
 namespace analytics {
 
-class SimmBucketMapper;
-
 //! Abstract base class defining the interface for a SIMM configuration
-class SimmConfiguration {
+class SimmConfiguration : public CrifConfiguration {
 public:
     virtual ~SimmConfiguration() {}
 
@@ -53,55 +52,11 @@ public:
     */
     enum class RiskClass { InterestRate, CreditQualifying, CreditNonQualifying, Equity, Commodity, FX, All };
 
-    /*! Risk types plus an All type for convenience
-        Internal methods rely on the last element being 'All'
-        Note that the risk type inflation has to be treated as an additional, single
-        tenor bucket in IRCurve
-    */
-    enum class RiskType {
-        Commodity,
-        CommodityVol,
-        CreditNonQ,
-        CreditQ,
-        CreditVol,
-        CreditVolNonQ,
-        Equity,
-        EquityVol,
-        FX,
-        FXVol,
-        Inflation,
-        IRCurve,
-        IRVol,
-        InflationVol,
-        BaseCorr,
-        XCcyBasis,
-        ProductClassMultiplier,
-        AddOnNotionalFactor,
-        Notional,
-        AddOnFixedAmount,
-        PV, // IM Schedule
-        All
-    };
+    
 
     //! Margin types in SIMM plus an All type for convenience
     //! Internal methods rely on the last element being 'All'
-    enum class MarginType { Delta, Vega, Curvature, BaseCorr, AdditionalIM, All };
-
-    //! Product class types in SIMM plus an All type for convenience
-    //! Internal methods rely on the last element being 'All'
-    enum class ProductClass {
-        RatesFX,
-        Rates, // extension for IM Schedule
-        FX,    // extension for IM Schedule
-        Credit,
-        Equity,
-        Commodity,
-        Empty,
-        Other, // extension for IM Schedule
-        AddOnNotionalFactor, // extension for additional IM
-        AddOnFixedAmount,    // extension for additional IM
-        All
-    };
+    enum class MarginType { Delta, Vega, Curvature, BaseCorr, AdditionalIM, All }; 
 
     enum class IMModel {
         Schedule,
@@ -140,72 +95,57 @@ public:
     static std::set<RiskClass> riskClasses(bool includeAll = false);
 
     //! Give back a set containing the RiskType values optionally excluding 'All'
-    static std::set<RiskType> riskTypes(bool includeAll = false);
+    static std::set<CrifRecord::RiskType> riskTypes(bool includeAll = false);
 
     //! Give back a set containing the MarginType values optionally excluding 'All'
     static std::set<MarginType> marginTypes(bool includeAll = false);
 
     //! Give back a set containing the ProductClass values optionally excluding 'All'
-    static std::set<ProductClass> productClasses(bool includeAll = false);
+    static std::set<CrifRecord::ProductClass> productClasses(bool includeAll = false);
+
+    //! For a given risk class, return the corresponding risk types
+    static std::pair<CrifRecord::RiskType, CrifRecord::RiskType> riskClassToRiskType(const RiskClass& rc);
+
+    //! For a given rirsk type, return the corresponding risk class
+    static RiskClass riskTypeToRiskClass(const CrifRecord::RiskType& rt);
 
     //! Define ordering for ProductClass according to a waterfall:
     // Empty < RatesFX < Equity < Commodity < Credit
     // All is unhandled
     // Would use operator< but there is a bug in the visual studio compiler.
-    static bool less_than(const ProductClass& lhs, const ProductClass& rhs);
-    static bool greater_than(const ProductClass& lhs, const ProductClass& rhs);
-    static bool less_than_or_equal_to(const ProductClass& lhs, const ProductClass& rhs);
-    static bool greater_than_or_equal_to(const ProductClass& lhs, const ProductClass& rhs);
+    static bool less_than(const CrifRecord::ProductClass& lhs, const CrifRecord::ProductClass& rhs);
+    static bool greater_than(const CrifRecord::ProductClass& lhs, const CrifRecord::ProductClass& rhs);
+    static bool less_than_or_equal_to(const CrifRecord::ProductClass& lhs, const CrifRecord::ProductClass& rhs);
+    static bool greater_than_or_equal_to(const CrifRecord::ProductClass& lhs, const CrifRecord::ProductClass& rhs);
 
     //! Return the "worse" ProductClass using a waterfall logic:
     // RatesFX <
-    static ProductClass maxProductClass(ProductClass pc1, ProductClass pc2) {
-        QL_REQUIRE(pc1 != ProductClass::All && pc2 != ProductClass::All,
+    static CrifRecord::ProductClass maxProductClass(CrifRecord::ProductClass pc1, CrifRecord::ProductClass pc2) {
+        QL_REQUIRE(pc1 != CrifRecord::ProductClass::All && pc2 != CrifRecord::ProductClass::All,
                    "Cannot define worse product type if even one of the product classes is indeterminate.");
         return (less_than(pc1, pc2) ? pc2 : pc1);
     }
 
-    //! Returns the SIMM configuration name
-    virtual const std::string& name() const = 0;
-
-    //! Returns the SIMM configuration version
-    virtual const std::string& version() const = 0;
-
-    //! Returns the SIMM bucket mapper used by the configuration
-    virtual const boost::shared_ptr<SimmBucketMapper>& bucketMapper() const = 0;
-
     //! Return the SIMM <em>bucket</em> names for the given risk type \p rt
     //! An empty vector is returned if the risk type has no buckets
-    virtual std::vector<std::string> buckets(const RiskType& rt) const = 0;
+    virtual std::vector<std::string> buckets(const CrifRecord::RiskType& rt) const = 0;
 
     //! Return true if the SIMM risk type \p rt has buckets
-    virtual bool hasBuckets(const RiskType& rt) const = 0;
+    virtual bool hasBuckets(const CrifRecord::RiskType& rt) const = 0;
 
-    /*! Return the SIMM <em>bucket</em> name for the given risk type \p rt
-        and \p qualifier
+    //! Return true if the SIMM risk type \p rt has buckets
+    bool hasBucketMapping(const CrifRecord::RiskType& rt, const std::string& qualifier) const override {
+        return bucketMapper()->has(rt, qualifier);
+    }
 
-        \warning Throws an error if there are no buckets for the risk type \p rt
-    */
-    virtual std::string bucket(const RiskType& rt, const std::string& qualifier) const = 0;
 
     //! Return the list of SIMM <em>Label1</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label1</em>
-    virtual std::vector<std::string> labels1(const RiskType& rt) const = 0;
+    virtual std::vector<std::string> labels1(const CrifRecord::RiskType& rt) const = 0;
 
     //! Return the list of SIMM <em>Label2</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label2</em>
-    virtual std::vector<std::string> labels2(const RiskType& rt) const = 0;
-
-    /*! Return the SIMM <em>Label2</em> value for the given interest rate index
-        \p irIndex. For interest rate indices, this is the SIMM sub curve name
-        e.g. 'Libor1m', 'Libor3m' etc.
-    */
-    virtual std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const = 0;
-
-    /*! Return the SIMM <em>Label2</em> value for the given Libor tenor
-        \p p. This is the SIMM sub curve name, e.g. 'Libor1m', 'Libor3m' etc.
-    */
-    virtual std::string labels2(const QuantLib::Period& p) const = 0;
+    virtual std::vector<std::string> labels2(const CrifRecord::RiskType& rt) const = 0;
 
     /*! Add SIMM <em>Label2</em> values under certain circumstances.
 
@@ -215,7 +155,7 @@ public:
         Adding to label2 in the configuration means you do not have to have an
         exhaustive list up front.
     */
-    virtual void addLabels2(const RiskType& rt, const std::string& label_2) = 0;
+    virtual void addLabels2(const CrifRecord::RiskType& rt, const std::string& label_2) = 0;
 
     /*! Return the SIMM <em>risk weight</em> for the given risk type \p rt with
         the given \p qualifier and the given \p label_1. Three possibilities:
@@ -225,7 +165,7 @@ public:
         -# there is a qualifier-dependent and label1-dependent risk weight for the risk
            factor's RiskType so need all three parameters
     */
-    virtual QuantLib::Real weight(const RiskType& rt, boost::optional<std::string> qualifier = boost::none,
+    virtual QuantLib::Real weight(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
                                   boost::optional<std::string> label_1 = boost::none,
                                   const std::string& calculationCurrency = "") const = 0;
 
@@ -236,11 +176,11 @@ public:
         \f]
         where \f$t\f$ is given in days.
     */
-    virtual QuantLib::Real curvatureWeight(const RiskType& rt, const std::string& label_1) const = 0;
+    virtual QuantLib::Real curvatureWeight(const CrifRecord::RiskType& rt, const std::string& label_1) const = 0;
 
     /*! Give back the SIMM <em>historical volatility ratio</em> for the risk type \p rt
      */
-    virtual QuantLib::Real historicalVolatilityRatio(const RiskType& rt) const = 0;
+    virtual QuantLib::Real historicalVolatilityRatio(const CrifRecord::RiskType& rt) const = 0;
 
     /*! Give back the value of \f$\sigma_{kj}\f$ from the SIMM docs for risk type \p rt.
         In general, \p rt is a volatility risk type and the method returns:
@@ -252,7 +192,7 @@ public:
 
         \remark For convenience, returns 1.0 if not applicable for risk type \p rt
     */
-    virtual QuantLib::Real sigma(const RiskType& rt, boost::optional<std::string> qualifier = boost::none,
+    virtual QuantLib::Real sigma(const CrifRecord::RiskType& rt, boost::optional<std::string> qualifier = boost::none,
                                  boost::optional<std::string> label_1 = boost::none,
                                  const std::string& calculationCurrency = "") const = 0;
 
@@ -263,12 +203,12 @@ public:
     /*! Give back the SIMM <em>concentration threshold</em> for the risk type \p rt and the
         SIMM \p qualifier
     */
-    virtual QuantLib::Real concentrationThreshold(const RiskType& rt, const std::string& qualifier) const = 0;
+    virtual QuantLib::Real concentrationThreshold(const CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
 
     /*! Return true if \p rt is a valid SIMM <em>RiskType</em> under the current configuration.
         Otherwise, return false.
     */
-    virtual bool isValidRiskType(const RiskType& rt) const = 0;
+    virtual bool isValidRiskType(const CrifRecord::RiskType& rt) const = 0;
 
     //! Return the correlation between SIMM risk classes \p rc_1 and \p rc_2
     virtual QuantLib::Real correlationRiskClasses(const RiskClass& rc_1, const RiskClass& rc_2) const = 0;
@@ -282,21 +222,19 @@ public:
 
         \todo test if the default return value of 0 makes sense
     */
-    virtual QuantLib::Real correlation(const RiskType& firstRt, const std::string& firstQualifier,
+    virtual QuantLib::Real correlation(const CrifRecord::RiskType& firstRt, const std::string& firstQualifier,
                                        const std::string& firstLabel_1, const std::string& firstLabel_2,
-                                       const RiskType& secondRt, const std::string& secondQualifier,
+                                       const CrifRecord::RiskType& secondRt, const std::string& secondQualifier,
                                        const std::string& secondLabel_1, const std::string& secondLabel_2,
                                        const std::string& calculationCurrency = "") const = 0;
+
+    virtual bool isSimmConfigCalibration() const { return false; }
 
 protected:
     //! Number of risk classes including RiskClass::All
     static const QuantLib::Size numberOfRiskClasses;
-    //! Number of risk types including RiskType::All
-    static const QuantLib::Size numberOfRiskTypes;
     //! Number of margin types including MarginType::All
     static const QuantLib::Size numberOfMarginTypes;
-    //! Number of product classes including ProductClass::All
-    static const QuantLib::Size numberOfProductClasses;
     //! Number of regulations
     static const QuantLib::Size numberOfRegulations;
 };
@@ -305,11 +243,7 @@ std::ostream& operator<<(std::ostream& out, const SimmConfiguration::SimmSide& s
 
 std::ostream& operator<<(std::ostream& out, const SimmConfiguration::RiskClass& rc);
 
-std::ostream& operator<<(std::ostream& out, const SimmConfiguration::RiskType& rt);
-
 std::ostream& operator<<(std::ostream& out, const SimmConfiguration::MarginType& mt);
-
-std::ostream& operator<<(std::ostream& out, const SimmConfiguration::ProductClass& pc);
 
 std::ostream& operator<<(std::ostream& out, const SimmConfiguration::IMModel& model);
 
@@ -319,15 +253,13 @@ SimmConfiguration::SimmSide parseSimmSide(const std::string& side);
 
 SimmConfiguration::RiskClass parseSimmRiskClass(const std::string& rc);
 
-SimmConfiguration::RiskType parseSimmRiskType(const std::string& rt);
-
 SimmConfiguration::MarginType parseSimmMarginType(const std::string& mt);
-
-SimmConfiguration::ProductClass parseSimmProductClass(const std::string& pc);
 
 SimmConfiguration::IMModel parseIMModel(const std::string& pc);
 
 SimmConfiguration::Regulation parseRegulation(const std::string& regulation);
+
+std::string combineRegulations(const std::string&, const std::string&);
 
 //! Reads a string containing regulations applicable for a given CRIF record
 std::set<std::string> parseRegulationString(const std::string& regsString,
@@ -346,10 +278,6 @@ std::string filterRegulations(const std::string& regsString, const std::vector<s
 
 //! From a vector of regulations, determine the winning regulation based on order of priority
 SimmConfiguration::Regulation getWinningRegulation(const std::vector<std::string>& winningRegulations);
-
-SimmConfiguration::ProductClass simmProductClassFromOreTradeType(const std::string& tradeType);
-
-SimmConfiguration::ProductClass scheduleProductClassFromOreTradeType(const std::string& tradeType);
 
 } // namespace analytics
 } // namespace ore

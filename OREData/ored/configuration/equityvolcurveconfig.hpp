@@ -52,12 +52,14 @@ public:
     EquityVolatilityCurveConfig() {}
     //! Detailed constructor
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                                const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig,
+                                const std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig,
+                                const string& equityId = string(),
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
                                 const boost::optional<bool>& preferOutOfTheMoney = boost::none);
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                                const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                const QuantLib::ext::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                const string& equityId = string(),
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
                                 const boost::optional<bool>& preferOutOfTheMoney = boost::none);
@@ -66,15 +68,16 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
     //@{
+    const string& equityId() const { return equityId_.empty() ? curveID_ : equityId_; }
     const string& ccy() const { return parseCurrencyWithMinors(ccy_).code(); }
     const string& dayCounter() const { return dayCounter_; }
     const string& calendar() const { return calendar_; }
-    const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig() const { return volatilityConfig_; }
+    const std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig() const { return volatilityConfig_; }
     const string quoteStem(const std::string& volType) const;
     void populateQuotes();
     bool isProxySurface();
@@ -95,7 +98,8 @@ private:
     void populateRequiredCurveIds();
 
     string ccy_;
-    std::vector<boost::shared_ptr<VolatilityConfig>> volatilityConfig_;
+    std::vector<QuantLib::ext::shared_ptr<VolatilityConfig>> volatilityConfig_;
+    string equityId_;
     string dayCounter_;
     string calendar_;
     OneDimSolverConfig solverConfig_;

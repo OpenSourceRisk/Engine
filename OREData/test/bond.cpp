@@ -54,11 +54,11 @@ public:
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.02);
         defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(0.0);
         // recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
-        //     Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        //     Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.00));
         securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] =
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.00));
         recoveryRates_[make_pair(Market::defaultConfiguration, "Security1")] =
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.00));
         // build ibor index
         Handle<IborIndex> hEUR(ore::data::parseIborIndex(
             "EUR-EURIBOR-6M", yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")]));
@@ -80,24 +80,24 @@ public:
             flatRateYts(0.02);
         defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(defaultFlatRate);
         // recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
-        //     Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        //     Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.00));
         securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] =
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.00));
         recoveryRates_[make_pair(Market::defaultConfiguration, "Security1")] =
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.00));
     }
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
+        QuantLib::ext::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
         yts->enableExtrapolation();
         return Handle<YieldTermStructure>(yts);
     }
     Handle<QuantExt::CreditCurve> flatRateDcs(Real forward) {
-        boost::shared_ptr<DefaultProbabilityTermStructure> dcs(
+        QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> dcs(
             new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
         return Handle<QuantExt::CreditCurve>(
-            boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(dcs)));
+            QuantLib::ext::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(dcs)));
     }
 };
 
@@ -127,54 +127,54 @@ struct CommonVars {
     vector<Real> spread;
 
     // utilities
-    boost::shared_ptr<ore::data::Bond> makeBond() {
+    QuantLib::ext::shared_ptr<ore::data::Bond> makeBond() {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
         // build CMSSwap
-        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
+        LegData fixedLegData(QuantLib::ext::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
                              fixedSchedule, fixDC, notionals);
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(
+        QuantLib::ext::shared_ptr<ore::data::Bond> bond(
             new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr,
                                               issue, fixedLegData)));
         return bond;
     }
 
-    boost::shared_ptr<ore::data::Bond> makeAmortizingFixedBond(string amortType, Real value, bool underflow) {
+    QuantLib::ext::shared_ptr<ore::data::Bond> makeAmortizingFixedBond(string amortType, Real value, bool underflow) {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
         AmortizationData amortizationData(amortType, value, start, end, fixtenor, underflow);
-        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
+        LegData fixedLegData(QuantLib::ext::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
                              fixedSchedule, fixDC, notionals, vector<string>(), conv, false, false, false, true, "", 0,
                              "", {amortizationData});
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(
+        QuantLib::ext::shared_ptr<ore::data::Bond> bond(
             new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr,
                                               issue, fixedLegData)));
         return bond;
     }
 
-    boost::shared_ptr<ore::data::Bond> makeAmortizingFloatingBond(string amortType, Real value, bool underflow) {
+    QuantLib::ext::shared_ptr<ore::data::Bond> makeAmortizingFloatingBond(string amortType, Real value, bool underflow) {
         ScheduleData floatingSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
         AmortizationData amortizationData(amortType, value, start, end, fixtenor, underflow);
-        LegData floatingLegData(boost::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, spread), isPayer, ccy,
+        LegData floatingLegData(QuantLib::ext::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, spread), isPayer, ccy,
                                 floatingSchedule, fixDC, notionals, vector<string>(), conv, false, false, false, true,
                                 "", 0, "", {amortizationData});
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(
+        QuantLib::ext::shared_ptr<ore::data::Bond> bond(
             new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr,
                                               issue, floatingLegData)));
         return bond;
     }
 
-    boost::shared_ptr<ore::data::Bond> makeAmortizingFixedBondWithChangingAmortisation(string amortType1, Real value1,
+    QuantLib::ext::shared_ptr<ore::data::Bond> makeAmortizingFixedBondWithChangingAmortisation(string amortType1, Real value1,
                                                                                        bool underflow1, string end1,
                                                                                        string amortType2, Real value2,
                                                                                        bool underflow2) {
@@ -182,19 +182,19 @@ struct CommonVars {
 
         AmortizationData amortizationData1(amortType1, value1, start, end1, fixtenor, underflow1);
         AmortizationData amortizationData2(amortType2, value2, end1, end, fixtenor, underflow2);
-        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
+        LegData fixedLegData(QuantLib::ext::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
                              fixedSchedule, fixDC, notionals, vector<string>(), conv, false, false, false, true, "", 0,
                              "", {amortizationData1, amortizationData2});
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(
+        QuantLib::ext::shared_ptr<ore::data::Bond> bond(
             new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr,
                                               issue, fixedLegData)));
         return bond;
     }
 
-    boost::shared_ptr<ore::data::Bond>
+    QuantLib::ext::shared_ptr<ore::data::Bond>
     makeAmortizingFloatingBondWithChangingAmortisation(string amortType1, Real value1, bool underflow1, string end1,
                                                        string amortType2, Real value2, bool underflow2) {
         ScheduleData floatingSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
@@ -202,22 +202,22 @@ struct CommonVars {
         FloatingLegData floatingLegRateData;
         AmortizationData amortizationData1(amortType1, value1, start, end1, fixtenor, underflow1);
         AmortizationData amortizationData2(amortType2, value2, end1, end, fixtenor, underflow2);
-        LegData floatingLegData(boost::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, spread), isPayer, ccy,
+        LegData floatingLegData(QuantLib::ext::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, spread), isPayer, ccy,
                                 floatingSchedule, fixDC, notionals, vector<string>(), conv, false, false, false, true,
                                 "", 0, "", {amortizationData1, amortizationData2});
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(
+        QuantLib::ext::shared_ptr<ore::data::Bond> bond(
             new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr,
                                               issue, floatingLegData)));
         return bond;
     }
 
-    boost::shared_ptr<ore::data::Bond> makeZeroBond() {
+    QuantLib::ext::shared_ptr<ore::data::Bond> makeZeroBond() {
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(
+        QuantLib::ext::shared_ptr<ore::data::Bond> bond(
             new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr,
                                               notional, end, ccy, issue)));
         return bond;
@@ -242,14 +242,14 @@ struct CommonVars {
 };
 
 // print details of bond cashflows
-void printBondSchedule(const boost::shared_ptr<ore::data::Bond>& b) {
-    auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(b->instrument()->qlInstrument());
+void printBondSchedule(const QuantLib::ext::shared_ptr<ore::data::Bond>& b) {
+    auto qlInstr = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(b->instrument()->qlInstrument());
     BOOST_REQUIRE(qlInstr != nullptr);
     BOOST_TEST_MESSAGE("Bond NPV=" << qlInstr->NPV() << ", Schedule:");
     Leg l = qlInstr->cashflows();
     BOOST_TEST_MESSAGE(" StartDate    EndDate     Nominal        Rate      Amount");
     for (auto const& c : l) {
-        auto cpn = boost::dynamic_pointer_cast<Coupon>(c);
+        auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c);
         if (cpn != nullptr) {
             BOOST_TEST_MESSAGE(QuantLib::io::iso_date(cpn->accrualStartDate())
                                << " " << QuantLib::io::iso_date(cpn->accrualEndDate()) << std::setw(12)
@@ -263,13 +263,13 @@ void printBondSchedule(const boost::shared_ptr<ore::data::Bond>& b) {
 }
 
 // check nominal schedule of bond
-void checkNominalSchedule(const boost::shared_ptr<ore::data::Bond>& b, const std::vector<Real> notionals) {
-    auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(b->instrument()->qlInstrument());
+void checkNominalSchedule(const QuantLib::ext::shared_ptr<ore::data::Bond>& b, const std::vector<Real> notionals) {
+    auto qlInstr = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(b->instrument()->qlInstrument());
     BOOST_REQUIRE(qlInstr != nullptr);
     Leg l = qlInstr->cashflows();
     std::vector<Real> bondNotionals;
     for (auto const& c : l) {
-        auto cpn = boost::dynamic_pointer_cast<Coupon>(c);
+        auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c);
         if (cpn != nullptr) {
             bondNotionals.push_back(cpn->nominal());
         }
@@ -289,14 +289,14 @@ BOOST_AUTO_TEST_CASE(testZeroBond) {
     BOOST_TEST_MESSAGE("Testing Zero Bond...");
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Settings::instance().evaluationDate() = market->asofDate();
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::Bond> bond = vars.makeZeroBond();
+    QuantLib::ext::shared_ptr<ore::data::Bond> bond = vars.makeZeroBond();
 
     // Build and price
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Bond") = "DiscountedCashflows";
     engineData->engine("Bond") = "DiscountingRiskyBondEngine";
 
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(testZeroBond) {
     engineparams["TimestepPeriod"] = "6M";
     engineData->engineParameters("Bond") = engineparams;
 
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     bond->build(engineFactory);
 
@@ -318,21 +318,21 @@ BOOST_AUTO_TEST_CASE(testAmortizingBond) {
     BOOST_TEST_MESSAGE("Testing Amortising Bonds...");
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Date today = Date(30, Jan, 2021);
     Settings::instance().evaluationDate() = today; // market->asofDate();
 
     CommonVars vars;
-    vector<boost::shared_ptr<ore::data::Bond>> bonds;
-    boost::shared_ptr<ore::data::Bond> bondFixedAmount = vars.makeAmortizingFixedBond("FixedAmount", 2500000, true);
+    vector<QuantLib::ext::shared_ptr<ore::data::Bond>> bonds;
+    QuantLib::ext::shared_ptr<ore::data::Bond> bondFixedAmount = vars.makeAmortizingFixedBond("FixedAmount", 2500000, true);
     bonds.push_back(bondFixedAmount);
 
-    boost::shared_ptr<ore::data::Bond> bondRelativeInitial =
+    QuantLib::ext::shared_ptr<ore::data::Bond> bondRelativeInitial =
         vars.makeAmortizingFixedBond("RelativeToInitialNotional", 0.25, true);
     bonds.push_back(bondRelativeInitial);
 
     // Build and price
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Bond") = "DiscountedCashflows";
     engineData->engine("Bond") = "DiscountingRiskyBondEngine";
 
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(testAmortizingBond) {
     engineparams["TimestepPeriod"] = "6M";
     engineData->engineParameters("Bond") = engineparams;
 
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     Real npvTol = 0.5;
 
@@ -356,37 +356,37 @@ BOOST_AUTO_TEST_CASE(testAmortizingBond) {
         BOOST_CHECK(std::fabs(npv - expectedNpv) < npvTol);
     }
 
-    boost::shared_ptr<ore::data::Bond> bondRelativePrevious =
+    QuantLib::ext::shared_ptr<ore::data::Bond> bondRelativePrevious =
         vars.makeAmortizingFixedBond("RelativeToPreviousNotional", 0.25, true);
     bondRelativePrevious->build(engineFactory);
     printBondSchedule(bondRelativePrevious);
 
-    boost::shared_ptr<QuantLib::Instrument> inst1 = bondRelativePrevious->instrument()->qlInstrument();
-    boost::shared_ptr<QuantLib::Bond> qlBond1 = boost::dynamic_pointer_cast<QuantLib::Bond>(inst1);
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> inst1 = bondRelativePrevious->instrument()->qlInstrument();
+    QuantLib::ext::shared_ptr<QuantLib::Bond> qlBond1 = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(inst1);
     Real expectedNotional = 3164062.5;
 
     Real notional = qlBond1->notionals()[qlBond1->notionals().size() - 2];
 
     BOOST_CHECK_CLOSE(notional, expectedNotional, 1);
 
-    boost::shared_ptr<ore::data::Bond> bondFixedAnnuity = vars.makeAmortizingFixedBond("Annuity", 2500000, true);
+    QuantLib::ext::shared_ptr<ore::data::Bond> bondFixedAnnuity = vars.makeAmortizingFixedBond("Annuity", 2500000, true);
     bondFixedAnnuity->build(engineFactory);
     printBondSchedule(bondFixedAnnuity);
 
-    boost::shared_ptr<QuantLib::Instrument> inst2 = bondFixedAnnuity->instrument()->qlInstrument();
-    boost::shared_ptr<QuantLib::Bond> qlBond2 = boost::dynamic_pointer_cast<QuantLib::Bond>(inst2);
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> inst2 = bondFixedAnnuity->instrument()->qlInstrument();
+    QuantLib::ext::shared_ptr<QuantLib::Bond> qlBond2 = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(inst2);
     expectedNotional = 1380908.447;
 
     notional = qlBond2->notionals()[qlBond2->notionals().size() - 2];
 
     BOOST_CHECK(std::fabs(notional - expectedNotional) < npvTol);
 
-    boost::shared_ptr<ore::data::Bond> bondFloatingAnnuity = vars.makeAmortizingFloatingBond("Annuity", 2500000, true);
+    QuantLib::ext::shared_ptr<ore::data::Bond> bondFloatingAnnuity = vars.makeAmortizingFloatingBond("Annuity", 2500000, true);
     bondFloatingAnnuity->build(engineFactory);
     printBondSchedule(bondFloatingAnnuity);
 
-    boost::shared_ptr<QuantLib::Instrument> inst3 = bondFloatingAnnuity->instrument()->qlInstrument();
-    boost::shared_ptr<QuantLib::Bond> qlBond3 = boost::dynamic_pointer_cast<QuantLib::Bond>(inst3);
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> inst3 = bondFloatingAnnuity->instrument()->qlInstrument();
+    QuantLib::ext::shared_ptr<QuantLib::Bond> qlBond3 = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(inst3);
     Real expectedAmount = 93.41;
 
     Real amount = qlBond3->cashflows()[qlBond3->cashflows().size() - 2]->amount();
@@ -398,95 +398,95 @@ BOOST_AUTO_TEST_CASE(testAmortizingBondWithChangingAmortisation) {
     BOOST_TEST_MESSAGE("Testing Amortising Bonds with changing amortisation...");
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Date today = Date(30, Jan, 2021);
     Settings::instance().evaluationDate() = today; // market->asofDate();
 
     // build engine factory
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Bond") = "DiscountedCashflows";
     engineData->engine("Bond") = "DiscountingRiskyBondEngine";
     map<string, string> engineparams;
     engineparams["TimestepPeriod"] = "6M";
     engineData->engineParameters("Bond") = engineparams;
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // test different amortization combinations
     CommonVars vars;
 
     // fixed rate bond test cases
-    boost::shared_ptr<ore::data::Bond> bond1 = vars.makeAmortizingFixedBondWithChangingAmortisation(
+    QuantLib::ext::shared_ptr<ore::data::Bond> bond1 = vars.makeAmortizingFixedBondWithChangingAmortisation(
         "FixedAmount", 2500000, true, "05-02-2018", "FixedAmount", 1250000, true);
     bond1->build(engineFactory);
     printBondSchedule(bond1);
     checkNominalSchedule(bond1, {1.0E7, 7.5E6, 6.25E6, 5.0E6, 3.75E6});
 
-    boost::shared_ptr<ore::data::Bond> bond2 = vars.makeAmortizingFixedBondWithChangingAmortisation(
+    QuantLib::ext::shared_ptr<ore::data::Bond> bond2 = vars.makeAmortizingFixedBondWithChangingAmortisation(
         "FixedAmount", 2500000, true, "05-02-2018", "RelativeToInitialNotional", 0.1, true);
     bond2->build(engineFactory);
     printBondSchedule(bond2);
     checkNominalSchedule(bond2, {1.0E7, 7.5E6, 6.5E6, 5.5E6, 4.5E6});
 
-    boost::shared_ptr<ore::data::Bond> bond3 = vars.makeAmortizingFixedBondWithChangingAmortisation(
+    QuantLib::ext::shared_ptr<ore::data::Bond> bond3 = vars.makeAmortizingFixedBondWithChangingAmortisation(
         "RelativeToPreviousNotional", 0.1, true, "05-02-2018", "Annuity", 1E6, true);
     bond3->build(engineFactory);
     printBondSchedule(bond3);
     checkNominalSchedule(bond3, {1.0E7, 9.0E6, 8.45247E6, 7.87393E6, 7.26645E6});
 
-    boost::shared_ptr<ore::data::Bond> bond4 = vars.makeAmortizingFixedBondWithChangingAmortisation(
+    QuantLib::ext::shared_ptr<ore::data::Bond> bond4 = vars.makeAmortizingFixedBondWithChangingAmortisation(
         "Annuity", 1E6, true, "05-02-2018", "RelativeToPreviousNotional", 0.1, true);
     bond4->build(engineFactory);
     printBondSchedule(bond4);
     checkNominalSchedule(bond4, {1.0E7, 9.50012E6, 8.55011E6, 7.6951E6, 6.92559E6});
 
     // floating rate bond test cases
-    boost::shared_ptr<ore::data::Bond> bond5 = vars.makeAmortizingFloatingBondWithChangingAmortisation(
+    QuantLib::ext::shared_ptr<ore::data::Bond> bond5 = vars.makeAmortizingFloatingBondWithChangingAmortisation(
         "FixedAmount", 2500000, true, "05-02-2018", "FixedAmount", 1250000, true);
     bond5->build(engineFactory);
     printBondSchedule(bond5);
     checkNominalSchedule(bond5, {1.0E7, 7.5E6, 6.25E6, 5.0E6, 3.75E6});
 
-    boost::shared_ptr<ore::data::Bond> bond6 = vars.makeAmortizingFloatingBondWithChangingAmortisation(
+    QuantLib::ext::shared_ptr<ore::data::Bond> bond6 = vars.makeAmortizingFloatingBondWithChangingAmortisation(
         "FixedAmount", 2500000, true, "05-02-2018", "RelativeToInitialNotional", 0.1, true);
     bond6->build(engineFactory);
     printBondSchedule(bond6);
     checkNominalSchedule(bond6, {1.0E7, 7.5E6, 6.5E6, 5.5E6, 4.5E6});
 
     // annuity only allowed in single block setup
-    boost::shared_ptr<ore::data::Bond> bond7 = vars.makeAmortizingFloatingBondWithChangingAmortisation(
+    QuantLib::ext::shared_ptr<ore::data::Bond> bond7 = vars.makeAmortizingFloatingBondWithChangingAmortisation(
         "RelativeToPreviousNotional", 0.1, true, "05-02-2018", "Annuity", 1E6, true);
     BOOST_CHECK_THROW(bond7->build(engineFactory), QuantLib::Error);
 }
 
 BOOST_AUTO_TEST_CASE(testMultiPhaseBond) {
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Date today = Date(30, Jan, 2021);
     Settings::instance().evaluationDate() = today; // market->asofDate();
 
     // build engine factory
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Bond") = "DiscountedCashflows";
     engineData->engine("Bond") = "DiscountingRiskyBondEngine";
     map<string, string> engineparams;
     engineparams["TimestepPeriod"] = "6M";
     engineData->engineParameters("Bond") = engineparams;
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // test multi phase bond
     CommonVars vars;
     ScheduleData schedule1(ScheduleRules("05-02-2016", "05-02-2018", "1Y", "TARGET", "F", "F", "Forward"));
     ScheduleData schedule2(ScheduleRules("05-02-2018", "05-02-2020", "6M", "TARGET", "F", "F", "Forward"));
-    auto fixedLegRateData = boost::make_shared<FixedLegData>(vector<double>(1, 0.01));
+    auto fixedLegRateData = QuantLib::ext::make_shared<FixedLegData>(vector<double>(1, 0.01));
     LegData legdata1(fixedLegRateData, vars.isPayer, vars.ccy, schedule1, vars.fixDC, vars.notionals);
     LegData legdata2(fixedLegRateData, vars.isPayer, vars.ccy, schedule2, vars.fixDC, vars.notionals);
     Envelope env("CP1");
-    boost::shared_ptr<ore::data::Bond> bond(
+    QuantLib::ext::shared_ptr<ore::data::Bond> bond(
         new ore::data::Bond(env, BondData(vars.issuerId, vars.creditCurveId, vars.securityId, vars.referenceCurveId,
                                           vars.settledays, vars.calStr, vars.issue, {legdata1, legdata2})));
     bond->build(engineFactory);
     printBondSchedule(bond);
-    auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
+    auto qlInstr = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
     BOOST_REQUIRE(qlInstr != nullptr);
     // annually
     BOOST_REQUIRE_EQUAL(qlInstr->cashflows().size(), 7);
@@ -504,14 +504,14 @@ BOOST_AUTO_TEST_CASE(testBondZeroSpreadDefault) {
     BOOST_TEST_MESSAGE("Testing Bond price...");
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Settings::instance().evaluationDate() = market->asofDate();
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::Bond> bond = vars.makeBond();
+    QuantLib::ext::shared_ptr<ore::data::Bond> bond = vars.makeBond();
 
     // Build and price
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Bond") = "DiscountedCashflows";
     engineData->engine("Bond") = "DiscountingRiskyBondEngine";
 
@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(testBondZeroSpreadDefault) {
     engineparams["TimestepPeriod"] = "6M";
     engineData->engineParameters("Bond") = engineparams;
 
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     bond->build(engineFactory);
 
@@ -533,25 +533,25 @@ BOOST_AUTO_TEST_CASE(testBondCompareDefault) {
     BOOST_TEST_MESSAGE("Testing Bond price...");
 
     // build market
-    boost::shared_ptr<Market> market1 = boost::make_shared<TestMarket>(0.0);
-    boost::shared_ptr<Market> market2 = boost::make_shared<TestMarket>(0.5);
-    boost::shared_ptr<Market> market3 = boost::make_shared<TestMarket>(0.99);
+    QuantLib::ext::shared_ptr<Market> market1 = QuantLib::ext::make_shared<TestMarket>(0.0);
+    QuantLib::ext::shared_ptr<Market> market2 = QuantLib::ext::make_shared<TestMarket>(0.5);
+    QuantLib::ext::shared_ptr<Market> market3 = QuantLib::ext::make_shared<TestMarket>(0.99);
     Settings::instance().evaluationDate() = market1->asofDate();
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::Bond> bond = vars.makeBond();
+    QuantLib::ext::shared_ptr<ore::data::Bond> bond = vars.makeBond();
 
     // Build and price
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Bond") = "DiscountedCashflows";
     engineData->engine("Bond") = "DiscountingRiskyBondEngine";
     map<string, string> engineparams;
     engineparams["TimestepPeriod"] = "6M";
     engineData->engineParameters("Bond") = engineparams;
 
-    boost::shared_ptr<EngineFactory> engineFactory1 = boost::make_shared<EngineFactory>(engineData, market1);
-    boost::shared_ptr<EngineFactory> engineFactory2 = boost::make_shared<EngineFactory>(engineData, market2);
-    boost::shared_ptr<EngineFactory> engineFactory3 = boost::make_shared<EngineFactory>(engineData, market3);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory1 = QuantLib::ext::make_shared<EngineFactory>(engineData, market1);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory2 = QuantLib::ext::make_shared<EngineFactory>(engineData, market2);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory3 = QuantLib::ext::make_shared<EngineFactory>(engineData, market3);
 
     bond->build(engineFactory1);
     Real npv1 = bond->instrument()->NPV();

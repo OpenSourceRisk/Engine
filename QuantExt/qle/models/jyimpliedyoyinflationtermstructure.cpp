@@ -16,15 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
-#include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
-#include <qle/models/crossassetanalytics.hpp>
-#include <qle/indexes/inflationindexwrapper.hpp>
-#include <qle/utilities/inflation.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/schedule.hpp>
+#include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/models/crossassetanalytics.hpp>
+#include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
+#include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using QuantLib::Date;
 using QuantLib::InterpolatedDiscountCurve;
@@ -42,12 +42,12 @@ using std::vector;
 
 namespace QuantExt {
 
-JyImpliedYoYInflationTermStructure::JyImpliedYoYInflationTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index, bool indexIsInterpolated)
+JyImpliedYoYInflationTermStructure::JyImpliedYoYInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
+                                                                       Size index, bool indexIsInterpolated)
     : YoYInflationModelTermStructure(model, index, indexIsInterpolated) {}
 
 map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>& dts, const Period& obsLag) const {
-    
+
     // First step is to calculate the YoY swap rate for each maturity date in dts and store in yyiisRates.
     map<Date, Real> yoySwaplets;
     map<Date, Real> discounts;
@@ -55,19 +55,19 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     auto irIdx = model_->ccyIndex(model_->infjy(index_)->currency());
 
     // Will need a YoY index below in the helpers.
-    boost::shared_ptr<YoYInflationIndex> index = boost::make_shared<YoYInflationIndexWrapper>(
-        model_->infjy(index_)->inflationIndex(), indexIsInterpolated());
+    QuantLib::ext::shared_ptr<YoYInflationIndex> index =
+        QuantLib::ext::make_shared<YoYInflationIndexWrapper>(model_->infjy(index_)->inflationIndex(), indexIsInterpolated());
 
     for (const auto& maturity : dts) {
 
         // Schedule for the YoY swap with maturity date equal to `maturity`
         Schedule schedule = MakeSchedule()
-            .from(referenceDate_)
-            .to(maturity)
-            .withTenor(1 * Years)
-            .withConvention(Unadjusted)
-            .withCalendar(calendar())
-            .backwards();
+                                .from(referenceDate_)
+                                .to(maturity)
+                                .withTenor(1 * Years)
+                                .withConvention(Unadjusted)
+                                .withCalendar(calendar())
+                                .backwards();
 
         // Store the value of the model implied YoY leg and the value of the fixed leg annuity.
         Real yoyLegValue = 0.0;
@@ -94,7 +94,8 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
             auto discount = model_->discountBond(irIdx, relativeTime_, T, state_[2]);
             if (i == 1) {
                 // The first YoY swaplet is a zero coupon swaplet because I_{start} is known.
-                auto growth = inflationGrowth(model_, index_, relativeTime_, T, state_[2], state_[0], indexIsInterpolated_);
+                auto growth =
+                    inflationGrowth(model_, index_, relativeTime_, T, state_[2], state_[0], indexIsInterpolated_);
                 swaplet = discount * (growth - 1.0);
             } else {
                 auto S = relativeTime_ + dayCounter().yearFraction(referenceDate_, start);
@@ -119,7 +120,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     // Will need a discount term structure in the bootstrap below so create it here from the discounts map.
     vector<Date> dfDates;
     vector<Real> dfValues;
-    
+
     if (discounts.count(referenceDate_) == 0) {
         dfDates.push_back(referenceDate_);
         dfValues.push_back(1.0);
@@ -131,25 +132,25 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     }
 
     auto irTs = model_->irlgm1f(irIdx)->termStructure();
-    Handle<YieldTermStructure> yts(boost::make_shared<InterpolatedDiscountCurve<LogLinear>>(
-        dfDates, dfValues, irTs->dayCounter(), LogLinear()));
+    Handle<YieldTermStructure> yts(
+        QuantLib::ext::make_shared<InterpolatedDiscountCurve<LogLinear>>(dfDates, dfValues, irTs->dayCounter(), LogLinear()));
 
     // Create the YoY swap helpers from the YoY swap rates calculated above.
     // Using the curve's day counter as the helper's day counter for now.
     using YoYHelper = BootstrapHelper<YoYInflationTermStructure>;
-    vector<boost::shared_ptr<YoYHelper>> helpers;
+    vector<QuantLib::ext::shared_ptr<YoYHelper>> helpers;
     for (const auto& kv : yyiisRates) {
-        Handle<Quote> yyiisQuote(boost::make_shared<SimpleQuote>(kv.second));
-        helpers.push_back(boost::make_shared<YearOnYearInflationSwapHelper>(yyiisQuote, observationLag(), kv.first,
-            calendar(), Unadjusted, dayCounter(), index, yts));
+        Handle<Quote> yyiisQuote(QuantLib::ext::make_shared<SimpleQuote>(kv.second));
+        helpers.push_back(QuantLib::ext::make_shared<YearOnYearInflationSwapHelper>(
+            yyiisQuote, observationLag(), kv.first, calendar(), Unadjusted, dayCounter(), index, yts));
     }
 
     // Create a YoY curve from the helpers
     // Use Linear here in line with what is in scenariosimmarket and todaysmarket but should probably be more generic.
     auto lag = obsLag == -1 * Days ? observationLag() : obsLag;
     auto baseRate = helpers.front()->quote()->value();
-    auto yoyCurve = boost::make_shared<PiecewiseYoYInflationCurve<Linear>>(referenceDate_, calendar(), dayCounter(),
-                                                                           lag, frequency(), indexIsInterpolated(), baseRate, helpers, 1e-12);
+    auto yoyCurve = QuantLib::ext::make_shared<PiecewiseYoYInflationCurve<Linear>>(
+        referenceDate_, calendar(), dayCounter(), lag, frequency(), indexIsInterpolated(), baseRate, helpers, 1e-12);
 
     // Read the necessary YoY rates from the bootstrapped YoY inflation curve
     map<Date, Real> result;
@@ -161,7 +162,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
 }
 
 Real JyImpliedYoYInflationTermStructure::yoySwaplet(Time S, Time T) const {
-    
+
     // The JY implied swap rate at time t for the period from S to T is:
     // N \tau(S, T) \left\{ P_n(t,S) \frac{P_r(t,T)}{P_r(t,S)} e^{C(t,S,T)} - P_n(t,T) \right\}
     // where N is the nominal, \tau(S, T) is the daycount which we assume equals 1 here.
@@ -179,30 +180,33 @@ Real JyImpliedYoYInflationTermStructure::yoySwaplet(Time S, Time T) const {
     auto H_r_T = rrParam->H(T);
     auto zeta_r_t = rrParam->zeta(relativeTime_);
     auto rrRatio = exp(-(H_r_T - H_r_S) * state_[0] - 0.5 * (H_r_T * H_r_T - H_r_S * H_r_S) * zeta_r_t);
-    
+
     const auto& zts = model_->infjy(index_)->realRate()->termStructure();
-    rrRatio *= (irTs->discount(T) * inflationGrowth(zts, T, indexIsInterpolated_)) / (irTs->discount(S) * inflationGrowth(zts, S, indexIsInterpolated_));
+    rrRatio *= (irTs->discount(T) * inflationGrowth(zts, T, indexIsInterpolated_)) /
+               (irTs->discount(S) * inflationGrowth(zts, S, indexIsInterpolated_));
 
     // Calculate the correction term C(t,S,T)
+    using CrossAssetAnalytics::ay;
+    using CrossAssetAnalytics::az;
+    using CrossAssetAnalytics::Hy;
+    using CrossAssetAnalytics::Hz;
     using CrossAssetAnalytics::integral;
     using CrossAssetAnalytics::LC;
     using CrossAssetAnalytics::P;
-    using CrossAssetAnalytics::az;
-    using CrossAssetAnalytics::Hz;
-    using CrossAssetAnalytics::ay;
-    using CrossAssetAnalytics::Hy;
-    using CrossAssetAnalytics::sy;
-    using CrossAssetAnalytics::rzy;
     using CrossAssetAnalytics::ryy;
-    
+    using CrossAssetAnalytics::rzy;
+    using CrossAssetAnalytics::sy;
+
     auto H_n_S = model_->irlgm1f(irIdx)->H(S);
     auto zeta_r_S = rrParam->zeta(S);
-    
+
     auto c = H_r_S * (zeta_r_S - zeta_r_t);
-    c -= H_n_S * integral(model_.get(), P(rzy(irIdx, index_, 0), az(irIdx), ay(index_)), relativeTime_, S);
-    c += integral(model_.get(), LC(0.0, -1.0, P(ay(index_), ay(index_), Hy(index_)),
-        1.0, P(rzy(irIdx, index_, 0), az(irIdx), ay(index_), Hz(irIdx)),
-        -1.0, P(ryy(index_, index_, 0, 1), ay(index_), sy(index_))), relativeTime_, S);
+    c -= H_n_S * integral(*model_, P(rzy(irIdx, index_, 0), az(irIdx), ay(index_)), relativeTime_, S);
+    c += integral(*model_,
+                  LC(0.0, -1.0, P(ay(index_), ay(index_), Hy(index_)), 1.0,
+                     P(rzy(irIdx, index_, 0), az(irIdx), ay(index_), Hz(irIdx)), -1.0,
+                     P(ryy(index_, index_, 0, 1), ay(index_), sy(index_))),
+                  relativeTime_, S);
     c *= (H_r_S - H_r_T);
 
     return p_n_t_S * rrRatio * exp(c) - p_n_t_T;
@@ -210,8 +214,8 @@ Real JyImpliedYoYInflationTermStructure::yoySwaplet(Time S, Time T) const {
 
 void JyImpliedYoYInflationTermStructure::checkState() const {
     // For JY YoY, expect the state to be three variables i.e. z_I and c_I and z_{ir}.
-    QL_REQUIRE(state_.size() == 3, "JyImpliedYoYInflationTermStructure: expected state to have " <<
-        "three elements but got " << state_.size());
+    QL_REQUIRE(state_.size() == 3, "JyImpliedYoYInflationTermStructure: expected state to have "
+                                       << "three elements but got " << state_.size());
 }
 
-}
+} // namespace QuantExt

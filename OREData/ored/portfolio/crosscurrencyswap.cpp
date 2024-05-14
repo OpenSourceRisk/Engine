@@ -36,10 +36,11 @@ void CrossCurrencySwap::checkCrossCurrencySwap() {
         if (!indexings.empty() && indexings.front().hasData()) {
             Indexing indexing = indexings.front();
             if (!boost::starts_with(indexing.index(), "FX-")) {
-                WLOG(StructuredTradeWarningMessage(
+                StructuredTradeWarningMessage(
                     tradeType(), id(), "Trade validation (checkCrossCurrencySwap)",
                     "Could not set fixed leg currency to Indexing currency for trade validation. Index (" +
-                        indexing.index() + ") should start with 'FX-'"));
+                        indexing.index() + ") should start with 'FX-'")
+                    .log();
                 return;
             }
 
@@ -48,12 +49,13 @@ void CrossCurrencySwap::checkCrossCurrencySwap() {
             Currency tgtCurrency = index->targetCurrency();
 
             if (legCcy != srcCurrency && legCcy != tgtCurrency) {
-                WLOG(StructuredTradeWarningMessage(tradeType(), id(), "Trade validation (checkCrossCurrencySwap)",
+                StructuredTradeWarningMessage(tradeType(), id(), "Trade validation (checkCrossCurrencySwap)",
                                                    "Could not set fixed leg currency to Indexing currency for trade "
                                                    "validation. Expected the leg currency (" +
                                                        legCcy.code() +
                                                        ") be equal to either of the currencies in the index (" +
-                                                       indexing.index() + ")"));
+                                                  indexing.index() + ")")
+                    .log();
                 return;
             }
 
@@ -90,7 +92,7 @@ void CrossCurrencySwap::checkCrossCurrencySwap() {
         if (legData0.legType() == "Fixed") {
             getIndexingCurrency(legData0, legCcy0, legIndexCcy0);
         } else if (legData0.legType() == "Floating") {
-            auto floatingLeg = boost::dynamic_pointer_cast<FloatingLegData>(legData0.concreteLegData());
+            auto floatingLeg = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(legData0.concreteLegData());
             if (floatingLeg)
                 legIndexCcy0 = parseIborIndex(floatingLeg->index())->currency();
         }
@@ -100,7 +102,7 @@ void CrossCurrencySwap::checkCrossCurrencySwap() {
         if (legData1.legType() == "Fixed") {
             getIndexingCurrency(legData1, legCcy1, legIndexCcy1);
         } else if (legData1.legType() == "Floating") {
-            auto floatingLeg = boost::dynamic_pointer_cast<FloatingLegData>(legData1.concreteLegData());
+            auto floatingLeg = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(legData1.concreteLegData());
             if (floatingLeg)
                 legIndexCcy1 = parseIborIndex(floatingLeg->index()) ->currency();
         }
@@ -109,7 +111,7 @@ void CrossCurrencySwap::checkCrossCurrencySwap() {
     }
 }
 
-void CrossCurrencySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CrossCurrencySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("CrossCurrencySwap::build() called for " << id());
 

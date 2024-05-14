@@ -55,11 +55,11 @@ namespace ore {
 namespace data {
 
 EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
-                               const CurveConfigurations& curveConfigs, const Handle<EquityIndex>& eqIndex,
-                               const map<string, boost::shared_ptr<EquityCurve>>& requiredEquityCurves,
-                               const map<string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves,
-                               const map<string, boost::shared_ptr<FXVolCurve>>& requiredFxVolCurves,
-                               const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
+                               const CurveConfigurations& curveConfigs, const Handle<EquityIndex2>& eqIndex,
+                               const map<string, QuantLib::ext::shared_ptr<EquityCurve>>& requiredEquityCurves,
+                               const map<string, QuantLib::ext::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves,
+                               const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& requiredFxVolCurves,
+                               const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
                                const Market* fxIndices, const bool buildCalibrationInfo) {
 
     try {
@@ -83,26 +83,26 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                 if (!vc->calendar().empty())
                     calendar_ = vc->calendar();
 
-                if (auto eqvc = boost::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
+                if (auto eqvc = QuantLib::ext::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
                     buildVolatility(asof, spec, curveConfigs, *eqvc, requiredEquityCurves, requiredEquityVolCurves,
                         requiredFxVolCurves, requiredCorrelationCurves, fxIndices);
-                } else if (auto qvc = boost::dynamic_pointer_cast<QuoteBasedVolatilityConfig>(vc)) {
+                } else if (auto qvc = QuantLib::ext::dynamic_pointer_cast<QuoteBasedVolatilityConfig>(vc)) {
                     // if the config is quote based (all except proxy surfaces?), do some checks
                     QL_REQUIRE(qvc->quoteType() == MarketDatum::QuoteType::PRICE ||
                         qvc->quoteType() == MarketDatum::QuoteType::RATE_LNVOL,
                         "EquityVolCurve: Only lognormal volatilities and option premiums supported for equity "
                         "volatility surfaces.");
-                    if (auto cvc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
+                    if (auto cvc = QuantLib::ext::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
                         buildVolatility(asof, config, *cvc, loader);
-                    } else if (auto vcc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
+                    } else if (auto vcc = QuantLib::ext::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
                         buildVolatility(asof, config, *vcc, loader);
-                    } else if (auto vssc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
+                    } else if (auto vssc = QuantLib::ext::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
                         buildVolatility(asof, config, *vssc, loader, eqIndex);
-                    } else if (auto vmsc = boost::dynamic_pointer_cast<VolatilityMoneynessSurfaceConfig>(vc)) {
+                    } else if (auto vmsc = QuantLib::ext::dynamic_pointer_cast<VolatilityMoneynessSurfaceConfig>(vc)) {
                         buildVolatility(asof, config, *vmsc, loader, eqIndex);
-                    } else if (auto vdsc = boost::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
+                    } else if (auto vdsc = QuantLib::ext::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
                         buildVolatility(asof, config, *vdsc, loader, eqIndex);
-                    } else if (auto vdsc = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
+                    } else if (auto vdsc = QuantLib::ext::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
                         QL_FAIL("EquityVolCurve: VolatilityApoFutureSurfaceConfig surface not supported for Equities");
                     } else {
                         QL_FAIL("EquityVolCurve: Unexpected VolatilityConfig");
@@ -145,11 +145,11 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
                    cvc.quoteType() == MarketDatum::QuoteType::RATE_NVOL,
                "Quote for Equity Constant Volatility Config must be a Volatility");
 
-    const boost::shared_ptr<MarketDatum>& md = loader.get(cvc.quote(), asof);
+    const QuantLib::ext::shared_ptr<MarketDatum>& md = loader.get(cvc.quote(), asof);
     QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
     QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION,
         "MarketDatum instrument type '" << md->instrumentType() << "' <> 'MarketDatum::InstrumentType::EQUITY_OPTION'");
-    boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
+    QuantLib::ext::shared_ptr<EquityOptionQuote> q = QuantLib::ext::dynamic_pointer_cast<EquityOptionQuote>(md);
     QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
     QL_REQUIRE(q->name() == cvc.quote(),
         "EquityOptionQuote name '" << q->name() << "' <> ConstantVolatilityConfig quote '" << cvc.quote() << "'");
@@ -158,7 +158,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
     Real quoteValue = convertMinorToMajorCurrency(q->ccy(), q->quote()->value());
 
     DLOG("Creating BlackConstantVol structure");
-    vol_ = boost::make_shared<BlackConstantVol>(asof, calendar_, quoteValue, dayCounter_);
+    vol_ = QuantLib::ext::make_shared<BlackConstantVol>(asof, calendar_, quoteValue, dayCounter_);
 
     DLOG("EquityVolCurve: finished building constant volatility structure");
 }
@@ -192,7 +192,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
             QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
-            auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
+            auto q = QuantLib::ext::dynamic_pointer_cast<EquityOptionQuote>(md);
             QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
             QL_REQUIRE(q->quoteType() == vcc.quoteType(),
                 "EquityOptionQuote type '" << q->quoteType() << "' <> VolatilityCurveConfig quote type '" << vcc.quoteType() << "'");
@@ -224,14 +224,14 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
         // Loop over quotes and process equity option quotes that are explicitly specified in the config
         std::ostringstream ss;
-        ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vcc.quoteType() << "/" << vc.curveID() << "/"
+        ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vcc.quoteType() << "/" << vc.equityId() << "/"
            << vc.ccy() << "/*";
         Wildcard w(ss.str());
         for (const auto& md : loader.get(w, asof)) {
 
             QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
-            auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
+            auto q = QuantLib::ext::dynamic_pointer_cast<EquityOptionQuote>(md);
             QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
 
             // Find quote name in configured quotes.
@@ -277,7 +277,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
     }
 
     DLOG("Creating BlackVarianceCurve object.");
-    auto tmp = boost::make_shared<BlackVarianceCurve>(asof, dates, volatilities, dayCounter_);
+    auto tmp = QuantLib::ext::make_shared<BlackVarianceCurve>(asof, dates, volatilities, dayCounter_);
 
     // set max expiry date (used in buildCalibrationInfo())
     if (!dates.empty())
@@ -320,7 +320,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
 void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                                     const QuantLib::Handle<EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<EquityIndex2>& eqIndex) {
     
     DLOG("EquityVolCurve: start building 2-D strike volatility surface");
    
@@ -352,16 +352,16 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     Size putQuotesAdded = 0;
     Size excludedAlreadyExpired = 0;
     std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vssc.quoteType() << "/" << vc.curveID() << "/"
+    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vssc.quoteType() << "/" << vc.equityId() << "/"
        << vc.ccy() << "/*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
-        boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
+        QuantLib::ext::shared_ptr<EquityOptionQuote> q = QuantLib::ext::dynamic_pointer_cast<EquityOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
         // todo - for now we will ignore ATM, ATMF quotes both for explicit strikes and in case of strike wild
         // card. ----
-        auto absoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
+        auto absoluteStrike = QuantLib::ext::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
         if (!absoluteStrike)
             continue;
         if (!expiriesWc) {
@@ -493,15 +493,15 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         Solver1DOptions solverOptions = vc.solverConfig();
 
         DLOG("EquityVolCurve: Building a option price surface for calls and puts");
-        boost::shared_ptr<OptionPriceSurface> callSurface =
-            boost::make_shared<OptionPriceSurface>(asof, callExpiries, callStrikes, callData, dayCounter_);
-        boost::shared_ptr<OptionPriceSurface> putSurface =
-            boost::make_shared<OptionPriceSurface>(asof, putExpiries, putStrikes, putData, dayCounter_);
+        QuantLib::ext::shared_ptr<OptionPriceSurface> callSurface =
+            QuantLib::ext::make_shared<OptionPriceSurface>(asof, callExpiries, callStrikes, callData, dayCounter_);
+        QuantLib::ext::shared_ptr<OptionPriceSurface> putSurface =
+            QuantLib::ext::make_shared<OptionPriceSurface>(asof, putExpiries, putStrikes, putData, dayCounter_);
 
         DLOG("EquityVolCurve: CallSurface contains " << callSurface->expiries().size() << " expiries.");
 
         DLOG("EquityVolCurve: Stripping equity volatility surface from the option premium surfaces");
-        boost::shared_ptr<EquityOptionSurfaceStripper> eoss = boost::make_shared<EquityOptionSurfaceStripper>(
+        QuantLib::ext::shared_ptr<EquityOptionSurfaceStripper> eoss = QuantLib::ext::make_shared<EquityOptionSurfaceStripper>(
             eqIndex, callSurface, putSurface, calendar_, dayCounter_, vssc.exerciseType(), flatStrikeExtrap,
             flatStrikeExtrap, flatTimeExtrap, preferOutOfTheMoney, solverOptions);
         vol_ = eoss->volSurface();
@@ -510,12 +510,12 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
         if (callExpiries.size() == 1 && callStrikes.size() == 1) {
             DLOG("EquityVolCurve: Building BlackConstantVol");
-            vol_ = boost::shared_ptr<BlackVolTermStructure>(
+            vol_ = QuantLib::ext::shared_ptr<BlackVolTermStructure>(
                 new BlackConstantVol(asof, Calendar(), callData[0], dayCounter_));
         } else {
             // create a vol surface from the calls
-            boost::shared_ptr<BlackVarianceSurfaceSparse> callSurface =
-                boost::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, callExpiries, callStrikes, callData,
+            QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse> callSurface =
+                QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, callExpiries, callStrikes, callData,
                                                                 dayCounter_, flatStrikeExtrap, flatStrikeExtrap,
                                                                 flatTimeExtrap);
 
@@ -524,13 +524,13 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                 vol_ = callSurface;
             } else {
                 // otherwise create a vol surface from puts and strip for a final surface
-                boost::shared_ptr<BlackVarianceSurfaceSparse> putSurface =
-                    boost::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, putExpiries, putStrikes,
+                QuantLib::ext::shared_ptr<BlackVarianceSurfaceSparse> putSurface =
+                    QuantLib::ext::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, putExpiries, putStrikes,
                                                                     putData, dayCounter_, flatStrikeExtrap,
                                                                     flatStrikeExtrap, flatTimeExtrap);
 
-                boost::shared_ptr<EquityOptionSurfaceStripper> eoss =
-                    boost::make_shared<EquityOptionSurfaceStripper>(
+                QuantLib::ext::shared_ptr<EquityOptionSurfaceStripper> eoss =
+                    QuantLib::ext::make_shared<EquityOptionSurfaceStripper>(
                         eqIndex, callSurface, putSurface, calendar_, dayCounter_, Exercise::European,
                         flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap, preferOutOfTheMoney);
                 vol_ = eoss->volSurface();
@@ -566,7 +566,7 @@ vector<Real> checkMoneyness(const vector<string>& strMoneynessLevels) {
 
 void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityMoneynessSurfaceConfig& vmsc, const Loader& loader,
-                                     const QuantLib::Handle<EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<EquityIndex2>& eqIndex) {
 
     LOG("EquityVolCurve: start building 2-D volatility moneyness strike surface");
     using boost::adaptors::transformed;
@@ -598,36 +598,37 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     MoneynessStrike::Type moneynessType = parseMoneynessType(vmsc.moneynessType());
 
     // Populate the configured strikes.
-    vector<boost::shared_ptr<BaseStrike>> strikes;
+    vector<QuantLib::ext::shared_ptr<BaseStrike>> strikes;
     for (const auto& moneynessLevel : moneynessLevels) {
-        strikes.push_back(boost::make_shared<MoneynessStrike>(moneynessType, moneynessLevel));
+        strikes.push_back(QuantLib::ext::make_shared<MoneynessStrike>(moneynessType, moneynessLevel));
     }
 
     // Read the quotes to fill the expiry dates and vols matrix.
     std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vmsc.quoteType() << "/" << vc.curveID() << "/"
+    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vmsc.quoteType() << "/" << vc.equityId() << "/"
        << vc.ccy() << "/*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
 
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
-        auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
+        auto q = QuantLib::ext::dynamic_pointer_cast<EquityOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
-        QL_REQUIRE(q->eqName() == vc.curveID(),
-            "EquityOptionQuote eqName '" << q->eqName() << "' <> EquityVolatilityCurveConfig curveID '" << vc.curveID() << "'");
+        QL_REQUIRE(q->eqName() == vc.equityId(), "EquityOptionQuote eqName '"
+                                                     << q->eqName() << "' <> EquityVolatilityCurveConfig equityId '"
+                                                     << vc.equityId() << "'");
         QL_REQUIRE(q->ccy() == vc.ccy(),
             "EquityOptionQuote ccy '" << q->ccy() << "' <> EquityVolatilityCurveConfig ccy '" << vc.ccy() << "'");
         QL_REQUIRE(q->quoteType() == vmsc.quoteType(),
             "EquityOptionQuote quoteType '" << q->quoteType() << "' <> VolatilityMoneynessSurfaceConfig quoteType '" << vmsc.quoteType() << "'");
 
         // Iterator to one of the configured strikes.
-        vector<boost::shared_ptr<BaseStrike>>::iterator strikeIt;
+        vector<QuantLib::ext::shared_ptr<BaseStrike>>::iterator strikeIt;
 
         if (expWc) {
             // Check if quote's strike is in the configured strikes and continue if it is not.
             strikeIt = find_if(strikes.begin(), strikes.end(),
-                               [&q](boost::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
+                               [&q](QuantLib::ext::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
             if (strikeIt == strikes.end())
                 continue;
         } else {
@@ -638,7 +639,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
             // Check if quote's strike is in the configured strikes and continue if it is not.
             strikeIt = find_if(strikes.begin(), strikes.end(),
-                               [&q](boost::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
+                               [&q](QuantLib::ext::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
             if (strikeIt == strikes.end())
                 continue;
         }
@@ -693,7 +694,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         expiryDates[row.index()] = row.value().first;
         expiryTimes[row.index()] = dayCounter_.yearFraction(asof, row.value().first);
         for (Size i = 0; i < row.value().second.size(); i++) {
-            vols[i].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(row.value().second[i])));
+            vols[i].push_back(Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(row.value().second[i])));
         }
     }
 
@@ -747,13 +748,13 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
     if (moneynessType == MoneynessStrike::Type::Forward) {
         DLOG("EquityVolCurve: Creating BlackVarianceSurfaceMoneynessForward object");
-        vol_ = boost::make_shared<BlackVarianceSurfaceMoneynessForward>(
+        vol_ = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(
             calendar_, eqIndex->equitySpot(), expiryTimes, moneynessLevels, vols, dayCounter_,
             eqIndex->equityDividendCurve(), eqIndex->equityForecastCurve(), stickyStrike, flatExtrapolation);
 
     } else {
         DLOG("EquityVolCurve: Creating BlackVarianceSurfaceMoneynessSpot object");
-        vol_ = boost::make_shared<BlackVarianceSurfaceMoneynessSpot>(calendar_, eqIndex->equitySpot(), expiryTimes,
+        vol_ = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessSpot>(calendar_, eqIndex->equitySpot(), expiryTimes,
                                                                      moneynessLevels, vols, dayCounter_, stickyStrike,
                                                                      flatExtrapolation);
     }
@@ -766,7 +767,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityDeltaSurfaceConfig& vdsc, const Loader& loader,
-                                     const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex) {
+                                     const QuantLib::Handle<QuantExt::EquityIndex2>& eqIndex) {
 
     using boost::adaptors::transformed;
     using boost::algorithm::join;
@@ -822,40 +823,41 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
     }
 
     // Populate the configured strikes.
-    vector<boost::shared_ptr<BaseStrike>> strikes;
+    vector<QuantLib::ext::shared_ptr<BaseStrike>> strikes;
     for (const auto& pd : putDeltas) {
-        strikes.push_back(boost::make_shared<DeltaStrike>(deltaType, Option::Put, pd));
+        strikes.push_back(QuantLib::ext::make_shared<DeltaStrike>(deltaType, Option::Put, pd));
     }
-    strikes.push_back(boost::make_shared<AtmStrike>(atmType, atmDeltaType));
+    strikes.push_back(QuantLib::ext::make_shared<AtmStrike>(atmType, atmDeltaType));
     for (const auto& cd : callDeltas) {
-        strikes.push_back(boost::make_shared<DeltaStrike>(deltaType, Option::Call, cd));
+        strikes.push_back(QuantLib::ext::make_shared<DeltaStrike>(deltaType, Option::Call, cd));
     }
 
     // Read the quotes to fill the expiry dates and vols matrix.
     std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vdsc.quoteType() << "/" << vc.curveID() << "/"
+    ss << MarketDatum::InstrumentType::EQUITY_OPTION << "/" << vdsc.quoteType() << "/" << vc.equityId() << "/"
        << vc.ccy() << "/*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
 
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
 
-        auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
+        auto q = QuantLib::ext::dynamic_pointer_cast<EquityOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to EquityOptionQuote");
-        QL_REQUIRE(q->eqName() == vc.curveID(),
-            "EquityOptionQuote eqName '" << q->eqName() << "' <> EquityVolatilityCurveConfig curveID '" << vc.curveID() << "'");
+        QL_REQUIRE(q->eqName() == vc.equityId(), "EquityOptionQuote eqName '"
+                                                     << q->eqName() << "' <> EquityVolatilityCurveConfig equityId '"
+                                                     << vc.equityId() << "'");
         QL_REQUIRE(q->ccy() == vc.ccy(),
             "EquityOptionQuote ccy '" << q->ccy() << "' <> EquityVolatilityCurveConfig ccy '" << vc.ccy() << "'");
         QL_REQUIRE(q->quoteType() == vdsc.quoteType(),
             "EquityOptionQuote quoteType '" << q->quoteType() << "' <> VolatilityMoneynessSurfaceConfig quoteType '" << vdsc.quoteType() << "'");
 
         // Iterator to one of the configured strikes.
-        vector<boost::shared_ptr<BaseStrike>>::iterator strikeIt;
+        vector<QuantLib::ext::shared_ptr<BaseStrike>>::iterator strikeIt;
 
         if (expWc) {
             // Check if quote's strike is in the configured strikes and continue if it is not.
             strikeIt = find_if(strikes.begin(), strikes.end(),
-                               [&q](boost::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
+                               [&q](QuantLib::ext::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
             if (strikeIt == strikes.end())
                 continue;
         } else {
@@ -867,7 +869,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
             // Check if quote's strike is in the configured strikes.
             // It should be as we have selected from the explicitly configured quotes in the last step.
             strikeIt = find_if(strikes.begin(), strikes.end(),
-                               [&q](boost::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
+                               [&q](QuantLib::ext::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
             QL_REQUIRE(strikeIt != strikes.end(),
                        "EquityVolCurve: The quote '"
                            << q->name()
@@ -879,10 +881,10 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
 
         // Process the quote
         Date eDate;
-        boost::shared_ptr<Expiry> expiry = parseExpiry(q->expiry());
-        if (auto expiryDate = boost::dynamic_pointer_cast<ExpiryDate>(expiry)) {
+        QuantLib::ext::shared_ptr<Expiry> expiry = parseExpiry(q->expiry());
+        if (auto expiryDate = QuantLib::ext::dynamic_pointer_cast<ExpiryDate>(expiry)) {
             eDate = expiryDate->expiryDate();
-        } else if (auto expiryPeriod = boost::dynamic_pointer_cast<ExpiryPeriod>(expiry)) {
+        } else if (auto expiryPeriod = QuantLib::ext::dynamic_pointer_cast<ExpiryPeriod>(expiry)) {
             // We may need more conventions here eventually.
             eDate = calendar_.adjust(asof + expiryPeriod->expiryPeriod());
         }
@@ -987,7 +989,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
 
     DLOG("EquityVolCurve: Creating BlackVolatilitySurfaceDelta object");
     bool hasAtm = true;
-    vol_ = boost::make_shared<BlackVolatilitySurfaceDelta>(
+    vol_ = QuantLib::ext::make_shared<BlackVolatilitySurfaceDelta>(
         asof, expiryDates, putDeltas, callDeltas, hasAtm, vols, dayCounter_, calendar_, eqIndex->equitySpot(),
         eqIndex->equityForecastCurve(), eqIndex->equityDividendCurve(), deltaType, atmType, atmDeltaType, 0 * Days,
         deltaType, atmType, atmDeltaType, im, flatExtrapolation);
@@ -1000,10 +1002,10 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
                                      const CurveConfigurations& curveConfigs, const ProxyVolatilityConfig& epvc,
-                                     const map<string, boost::shared_ptr<EquityCurve>>& eqCurves,
-                                     const map<string, boost::shared_ptr<EquityVolCurve>>& eqVolCurves,
-                                     const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
-                                     const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
+                                     const map<string, QuantLib::ext::shared_ptr<EquityCurve>>& eqCurves,
+                                     const map<string, QuantLib::ext::shared_ptr<EquityVolCurve>>& eqVolCurves,
+                                     const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves,
+                                     const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
                                      const Market* fxIndices) {
 
     DLOG("EquityVolCurve: start building proxy vol surface");
@@ -1034,9 +1036,9 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
 
     // check the currency against the proxy surface currrency
 
-    boost::shared_ptr<BlackVolTermStructure> fxSurface;
-    boost::shared_ptr<FxIndex> fxIndex;
-    boost::shared_ptr<QuantExt::CorrelationTermStructure> correlation;
+    QuantLib::ext::shared_ptr<BlackVolTermStructure> fxSurface;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex;
+    QuantLib::ext::shared_ptr<QuantExt::CorrelationTermStructure> correlation;
     if (config.ccy() != proxyVolConfig.ccy() && fxIndices != nullptr) {
         QL_REQUIRE(!epvc.fxVolatilityCurve().empty(), "EquityVolCurve: FXVolatilityCurve must be provided for Equity vol config " << 
             spec.curveConfigID() << " as proxy currencies if different from equity currency.");
@@ -1057,7 +1059,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
         // check if the fx vol surface needs to be inverted
         if (proxyVolForCcy != proxyVolConfig.ccy()) {
             Handle<BlackVolTermStructure> hFx(fxSurface);
-            fxSurface = boost::make_shared<QuantExt::BlackInvertedVolTermStructure>(hFx);
+            fxSurface = QuantLib::ext::make_shared<QuantExt::BlackInvertedVolTermStructure>(hFx);
             fxSurface->enableExtrapolation();
         }
 
@@ -1070,13 +1072,13 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
         correlation = corrIt->second->corrTermStructure();
     }
 
-    vol_ = boost::make_shared<BlackVolatilitySurfaceProxy>(proxyVolCurve->second->volTermStructure(), curve->second->equityIndex(),
+    vol_ = QuantLib::ext::make_shared<BlackVolatilitySurfaceProxy>(proxyVolCurve->second->volTermStructure(), curve->second->equityIndex(),
         proxyCurve->second->equityIndex(), fxSurface, fxIndex, correlation);
 }
 
 void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,
                                           const EquityVolatilityCurveConfig& config,
-                                          const Handle<EquityIndex>& eqIndex) {
+                                          const Handle<EquityIndex2>& eqIndex) {
 
     DLOG("EquityVolCurve: Building calibration info for eq vol surface");
 
@@ -1090,12 +1092,12 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
         std::vector<std::string> deltas = *rc.deltas();
         std::vector<Period> expiries = *rc.expiries();
 
-        calibrationInfo_ = boost::make_shared<FxEqCommVolCalibrationInfo>();
+        calibrationInfo_ = QuantLib::ext::make_shared<FxEqCommVolCalibrationInfo>();
 
         DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
         DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Fwd;
 
-        if (auto vdsc = boost::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(volatilityConfig_)) {
+        if (auto vdsc = QuantLib::ext::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(volatilityConfig_)) {
             atmType = parseAtmType(vdsc->atmType());
             deltaType = parseDeltaType(vdsc->deltaType());
         }
@@ -1131,6 +1133,10 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
 
         if (reportOnDeltaGrid) {
             calibrationInfo_->deltas = deltas;
+            calibrationInfo_->deltaCallPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            calibrationInfo_->deltaPutPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             calibrationInfo_->deltaGridStrikes =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             calibrationInfo_->deltaGridProb =
@@ -1180,6 +1186,13 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
                         }
                         Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                         callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
+
+                        if (d.isPut()) {
+                            calibrationInfo_->deltaPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, rfDisc[i]);
+                        } else {
+                            calibrationInfo_->deltaCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, rfDisc[i]);
+                        }
+
                         calibrationInfo_->deltaGridStrikes[i][j] = strike;
                         calibrationInfo_->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
                     } catch (const std::exception& e) {
@@ -1212,6 +1225,10 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
 
         if (reportOnMoneynessGrid) {
             calibrationInfo_->moneyness = moneyness;
+            calibrationInfo_->moneynessCallPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+            calibrationInfo_->moneynessPutPrices =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
             calibrationInfo_->moneynessGridStrikes =
                 std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
             calibrationInfo_->moneynessGridProb =
@@ -1233,6 +1250,11 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
                         Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                         callPricesMoneyness[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
                         calibrationInfo_->moneynessGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
+                        if (moneyness[j] >= 1) {
+                            calibrationInfo_->moneynessCallPrices[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev, rfDisc[i]);
+                        } else {
+                            calibrationInfo_->moneynessPutPrices[i][j] = blackFormula(Option::Put, strike, forwards[i], stddev, rfDisc[i]);
+                        };
                     } catch (const std::exception& e) {
                         TLOG("EquityVolCurve: error for time " << t << " moneyness " << moneyness[j] << ": " << e.what());
                     }

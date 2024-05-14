@@ -49,15 +49,24 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
             // the digit where we switch form roundng down to rounding up, typically 5 and used across all
             // Integer digit = parseInteger(XMLUtils::getChildValue(node, "Digit", false));
             string format = XMLUtils::getChildValue(node, "Format", false);
+            QuantExt::ConfigurableCurrency::Type currencyType = parseCurrencyType(XMLUtils::getChildValue(node, "CurrencyType", false, "Major"));
             Rounding rounding(precision, roundingType);
-
             QuantExt::ConfigurableCurrency c(name, isoCode, numericCode, symbol, fractionSymbol, fractionsPerUnit,
-                                             rounding, format, minorUnitCodes);
-            currencies_.push_back(c);
-
+                                             rounding, format, minorUnitCodes, currencyType);
             DLOG("loading configuration for currency code " << isoCode);
 
-            CurrencyParser::instance().addCurrency(c.code(), c);
+            switch (currencyType) { 
+                case QuantExt::ConfigurableCurrency::Type::Crypto:
+                    CurrencyParser::instance().addCrypto(c.code(), c);
+                    break;
+                case QuantExt::ConfigurableCurrency::Type::Metal:
+                    CurrencyParser::instance().addMetal(c.code(), c);
+                    break;
+                default:
+                    CurrencyParser::instance().addCurrency(c.code(), c);
+                    break;
+            }
+            currencies_.push_back(c);
 
         } catch (std::exception&) {
             ALOG("error loading currency config for name " << name << " iso code " << isoCode);
@@ -65,7 +74,7 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
     }
 }
 
-XMLNode* CurrencyConfig::toXML(XMLDocument& doc) {
+XMLNode* CurrencyConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("CurrencyConfig");
     for (auto ccy : currencies_) {
         XMLNode* ccyNode = XMLUtils::addChild(doc, node, "Currency");
@@ -81,6 +90,7 @@ XMLNode* CurrencyConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, ccyNode, "RoundingPrecision", to_string(ccy.rounding().precision()));
         // XMLUtils::addChild(doc, ccyNode, "Digit", to_string(ccy.rounding().roundingDigit()));
         XMLUtils::addChild(doc, ccyNode, "Format", ccy.format());
+        XMLUtils::addChild(doc, ccyNode, "CurrencyType", to_string(ccy.currencyType()));
     }
     return node;
 }

@@ -48,7 +48,7 @@ void RangeBound::fromXML(XMLNode* node) {
         strikeAdjustment_ = Null<Real>();
 }
 
-XMLNode* RangeBound::toXML(XMLDocument& doc) {
+XMLNode* RangeBound::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("RangeBound");
     if (from_ != Null<Real>())
         XMLUtils::addChild(doc, node, "RangeFrom", from_);

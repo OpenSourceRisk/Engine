@@ -1,0 +1,67 @@
+<TodaysMarket>
+  <Configuration id="inccy">
+    <YieldCurvesId>default</YieldCurvesId>
+    <DiscountingCurvesId>inccy</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+  </Configuration>
+  <Configuration id="single">
+    <YieldCurvesId>default</YieldCurvesId>
+    <DiscountingCurvesId>single</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+  </Configuration>
+  <Configuration id="default">
+    <YieldCurvesId>default</YieldCurvesId>
+    <DiscountingCurvesId>default</DiscountingCurvesId>
+    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
+  </Configuration>
+  <YieldCurves id="default">
+    <YieldCurve name="SOFR">Yield/USD/USD-SOFR</YieldCurve>
+    <YieldCurve name="ESTER">Yield/EUR/EUR-ESTER</YieldCurve>
+    <YieldCurve name="EURIBOR-6M">Yield/EUR/EUR6M</YieldCurve>
+    <YieldCurve name="EURIBOR-6M-SINGLE">Yield/EUR/EUR6M-SINGLE</YieldCurve>
+    <YieldCurve name="EUR-IN-USD">Yield/EUR/EUR-IN-USD</YieldCurve>
+  </YieldCurves>
+  <DiscountingCurves id="single">
+    <DiscountingCurve currency="USD">Yield/USD/USD-SOFR</DiscountingCurve>
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR6M-SINGLE</DiscountingCurve>
+  </DiscountingCurves>
+  <DiscountingCurves id="inccy">
+    <DiscountingCurve currency="USD">Yield/USD/USD-SOFR</DiscountingCurve>
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR-ESTER</DiscountingCurve>
+  </DiscountingCurves>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="USD">Yield/USD/USD-SOFR</DiscountingCurve>
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR-IN-USD</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves id="single">
+    <Index name="EUR-EURIBOR-6M">Yield/EUR/EUR6M-SINGLE</Index>
+    <Index name="EUR-ESTER">Yield/EUR/EUR-ESTER</Index>
+    <Index name="USD-SOFR">Yield/USD/USD-SOFR</Index>
+  </IndexForwardingCurves>
+  <IndexForwardingCurves id="inccy">
+    <Index name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</Index>
+    <Index name="EUR-ESTER">Yield/EUR/EUR-ESTER</Index>
+    <Index name="USD-SOFR">Yield/USD/USD-SOFR</Index>
+  </IndexForwardingCurves>
+  <IndexForwardingCurves id="default">
+    <Index name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</Index>
+    <Index name="EUR-ESTER">Yield/EUR/EUR-ESTER</Index>
+    <Index name="USD-SOFR">Yield/USD/USD-SOFR</Index>
+  </IndexForwardingCurves>
+  <SwapIndexCurves id="default"/>
+  <FxSpots id="default">
+    <FxSpot pair="USDEUR">FX/USD/EUR</FxSpot>
+  </FxSpots>
+  <!--
+  <FxVolatilities id="default"/>
+  <SwaptionVolatilities id="default"/>
+  <DefaultCurves id="default"/>
+  -->
+  <EquityCurves id="default">
+    <EquityCurve name="RIC:.STOXX50E">Equity/EUR/RIC:.STOXX50E</EquityCurve>
+  </EquityCurves>
+  <EquityVolatilities id="default">
+    <EquityVolatility name="RIC:.STOXX50E">EquityVolatility/EUR/RIC:.STOXX50E</EquityVolatility>
+  </EquityVolatilities>
+</TodaysMarket>
+

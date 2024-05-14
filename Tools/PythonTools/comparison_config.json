@@ -1,6 +1,56 @@
 {
   "csv_settings": {
     "files": {
+      "im_schedule.csv": {
+        "keys": [
+            "Portfolio",
+            "ProductClass",
+            "Side",
+            "Currency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "GrossIM",
+                "GrossCurrentRC",
+                "NetCurrentRC",
+                "NetToGrossRatio",
+                "ScheduleIM"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "im_schedule_trade.csv": {
+        "keys": [
+            "TradeId",
+            "Portfolio",
+            "ProductClass",
+            "EndDate",
+            "Label",
+            "NotionalCurrency",
+            "PVCurrency",
+            "BaseCurrency",
+            "CollectRegulations",
+            "PostRegulations"
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "Maturity",
+                "Multiplier",
+                "Notional",
+                "PV",
+                "Notional(Base)",
+                "PV(Base)",
+                "GrossIM(Base)"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "simm_margin_data\\.csv": {
         "keys": [
           "Portfolio",
@@ -168,6 +218,7 @@
           "IMModel",
           "TradeType"
         ],
+        "require_equal_optional_cols": false,
         "optional_cols": [
           "collect_regulations",
           "post_regulations"
@@ -226,6 +277,26 @@
           "IMModel",
           "TradeType"
         ],
+        "optional_cols": [
+          "BaseCurrency",
+          "end_date",
+          "trade_date",
+          "notional",
+          "trade_currency",
+          "notional2",
+          "trade_currency2",
+          "underlying",
+          "mtm_curr",
+          "mtm_value",
+          "settlement_type",
+          "strike",
+          "call_put",
+          "long_short",
+          "asset_class",
+          "base_product",
+          "sub_product",
+          "xccy_resettable"
+        ],
         "optional_keys": [
           "collect_regulations",
           "post_regulations"
@@ -256,6 +327,7 @@
           },
           {
             "names": [
+              "BaseCurrency",
               "IMModel",
               "TradeType"
             ],
@@ -426,7 +498,44 @@
           }
         ]
       },
+      "frtbcrif.csv": {
+        "keys": [
+            "RiskType",
+            "Qualifier",
+            "Bucket",
+            "Label1",
+            "Label2",
+            "AmountCurrency"
+            
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "AmountUSD"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "frtb.csv": {
+        "keys": [
+            "CorrelationScenario",
+            "CapitalRequirement",
+            "RiskClass",
+            "Bucket"
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "FrtbCharge"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "frtb_rrao.csv": {
         "keys": [
             "CorrelationScenario",
             "CapitalRequirement",
@@ -485,7 +594,7 @@
         "column_settings": [
           {
             "names": [],
-            "abs_tol": 1e-6,
+            "abs_tol": 1.0,
             "rel_tol": 1e-12
           }
         ]
@@ -526,7 +635,10 @@
               "Exceptions",
               "GreenUpTo",
               "AmberUpTo",
-              "Zone"
+              "Zone",
+              "DiscountingCurrency",
+              "SIMMResultCurrency",
+              "SIMMCalculationCurrency"
             ],
             "abs_tol": null,
             "rel_tol": null
@@ -612,7 +724,8 @@
         "use_cols": [
           "InitialMargin",
           "Regulation",
-          "Currency"
+          "Currency",
+          "CalculationCurrency"
         ],
         "optional_cols": [
           "InitialMargin(Report)",
@@ -631,6 +744,7 @@
             "names": [
               "Regulation",
               "Currency",
+              "CalculationCurrency",
               "ReportCurrency"
             ],
             "abs_tol": null,
@@ -675,11 +789,15 @@
         "keys": [
           "TradeId",
           "Portfolio",
-          "ProductClass"
+          "ProductClass",
+          "CollectRegulations",
+          "PostRegulations"
         ],
         "column_settings": [
           {
             "names": [
+              "Maturity",
+              "Multiplier",
               "Notional",
               "PV",
               "Notional(Base)",
@@ -688,6 +806,17 @@
             ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "EndDate",
+              "Label",
+              "NotionalCurrency",
+              "PVCurrency",
+              "BaseCurrency"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
           }
         ]
       },
@@ -719,6 +848,7 @@
           "ProductClass",
           "RiskClass",
           "MarginType",
+          "Bucket",
           "SimmSide"
         ],
         "rename_cols": {
@@ -833,12 +963,24 @@
           "Factor",
           "Up/Down"
         ],
+        "use_cols": [
+          "Base NPV",
+          "Scenario NPV",
+          "Difference"
+        ],
+        "optional_cols": [
+          "ShiftSize_1",
+          "ShiftSize_2"
+        ],
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "Base NPV",
               "Scenario NPV",
-              "Difference"
+              "Difference",
+              "ShiftSize_1",
+              "ShiftSize_2"
             ],
             "abs_tol": 1e-2,
             "rel_tol": 1e-12
@@ -912,21 +1054,6 @@
           }
         ]
       },
-      "npv.csv": {
-        "keys": [
-          "TradeId"
-        ],
-        "column_settings": [
-          {
-            "names": [
-              "NPV",
-              "NPV(Base)"
-            ],
-            "abs_tol": 1e-6,
-            "rel_tol": 1e-12
-          }
-        ]
-      },
       ".*npv.*\\.json": {
         "keys": [
           "tradeId"
@@ -947,6 +1074,15 @@
           "tradeId",
           "resultId",
           "resultType"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "resultValue"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
         ]
       },
       ".*curves.*\\.csv": {
@@ -991,8 +1127,11 @@
           "DiscountFactor",
           "fxRateBase",
           "BaseCurrency",
-          "PresentValueBase"
+          "PresentValueBase",
+          "EffectiveFloorVolatility",
+          "EffectiveCapVolatility"
         ],
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
@@ -1008,10 +1147,27 @@
               "PresentValue",
               "DiscountFactor",
               "fxRateBase",
-              "PresentValueBase"
+              "PresentValueBase",
+              "EffectiveFloorVolatility",
+              "EffectiveCapVolatility"
             ],
             "abs_tol": 1e-8,
             "rel_tol": 1e-8
+          }
+        ]
+      },
+      "xvacg-exposure.csv": {
+        "keys": [
+          "Date"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "EPE",
+              "ENE"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 0.0001
           }
         ]
       },
@@ -1220,8 +1376,510 @@
             "rel_tol": 1e-6
           }
         ]
+      },
+	  "pnl.csv":{
+        "keys": [
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+			  "NPV(t0)",
+			  "NPV(asof=t0;mkt=t1)",
+			  "NPV(asof=t1;mkt=t0)",
+			  "NPV(t1)",
+			  "PeriodCashFlow",
+			  "Theta",
+			  "HypotheticalCleanPnL",
+			  "CleanPnL",
+			  "DirtyPnL"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+	  "pnl_explain.csv":{
+        "keys": [
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+			  "NPV(t0)",
+			  "NPV(asof=t0;mkt=t1)",
+			  "NPV(asof=t1;mkt=t0)",
+			  "NPV(t1)",
+			  "PeriodCashFlow",
+			  "Theta",
+			  "HypotheticalCleanPnL",
+			  "CleanPnL",
+			  "DirtyPnL",
+			  "ScenarioPnl",
+			  "TotalDelta",
+			  "TotalGamma",
+			  "TotalVega",
+			  "IrDelta",
+			  "IrGamma",
+			  "IrVega",
+			  "EqDelta",
+			  "EqGamma",
+			  "EqVega",
+			  "FxDelta",
+			  "FxGamma",
+			  "FxVega",
+			  "InfDelta",
+			  "InfGamma",
+			  "InfVega",
+			  "CreditDelta",
+			  "CreditGamma",
+			  "CreditVega",
+			  "CommDelta",
+			  "CommGamma",
+			  "CommVega"
+            ],
+            "abs_tol": 1e-4,
+            "rel_tol": 1e-6
+          }
+        ]
       }
-
+    }
+  },
+  "json_settings": {
+    "files": {
+      "log_progress.*\\.json": {
+        "ignore_keys": [
+          "@timestamp"
+        ],
+        "settings": [
+          {
+            "names": [
+              "progress",
+              "total"
+            ],
+            "abs_tol": 0
+          }
+        ]
+      },
+      "log_structured.*\\.json": {},
+      "marketdata\\.json": {
+        "settings": [
+          {
+            "names": [
+              "curves/data/discountFactor",
+              "curves/data/time",
+              "curves/data/zeroRate"
+            ],
+            "abs_tol": 1e-15,
+            "rel_tol": 1e-8
+          }
+        ]
+      },
+      "curves\\.json": {
+        "keys": {
+          "data/": [
+            "dates"
+          ]
+        },
+        "settings": [
+          {
+            "names": [
+              "data/discountFactor",
+              "data/time",
+              "data/zeroRate"
+            ],
+            "abs_tol": 1e-15,
+            "rel_tol": 1e-9
+          }
+        ]
+      },
+      "simm\\.json": {
+        "ignore_keys": [
+          "simmResultsPath"
+        ],
+        "keys": {
+          "": [
+            "portfolio",
+            "product_class",
+            "risk_class",
+            "margin_type",
+            "bucket",
+            "side"
+          ]
+        },
+        "settings": [
+          {
+            "names": [
+              "initial_margin",
+              "initial_margin_in_report_ccy",
+              "simmReport/initial_margin",
+              "simmReport/initial_margin_in_report_ccy"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "im_impact\\.json": {
+        "keys": {
+          "impact/schedule_impact_report/": [
+            "portfolio",
+            "agreement_type",
+            "product_class",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "side"
+          ],
+          "impact/simm_impact_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "product_class",
+            "risk_class",
+            "margin_type",
+            "bucket",
+            "side"
+          ],
+          "impact/total_impact_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "side"
+          ],
+          "impact/standalone_im_schedule_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "product_class",
+            "side"
+          ],
+          "impact/standalone_simm_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "product_class",
+            "risk_class",
+            "margin_type",
+            "bucket",
+            "side"
+          ],
+          "impact/standalone_total_im_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "side"
+          ]
+        },
+        "settings": [
+          {
+            "names": [
+              "impact/schedule_impact_report/initial_margin_after",
+              "impact/schedule_impact_report/initial_margin_before",
+              "impact/schedule_impact_report/initial_margin_impact",
+              "impact/simm_impact_report/initial_margin_after",
+              "impact/simm_impact_report/initial_margin_before",
+              "impact/simm_impact_report/initial_margin_impact",
+              "impact/standalone_im_schedule_report/gross_im",
+              "impact/standalone_im_schedule_report/schedule_im",
+              "impact/standalone_im_schedule_report/gross_current_rc",
+              "impact/standalone_im_schedule_report/net_current_rc",
+              "impact/standalone_im_schedule_report/net_to_gross_ratio",
+              "impact/standalone_simm_report/initial_margin",
+              "impact/standalone_total_im_report/initial_margin",
+              "impact/total_impact_report/initial_margin_after",
+              "impact/total_impact_report/initial_margin_before",
+              "impact/total_impact_report/initial_margin_impact",
+              "impact/schedule_impact_report/initial_margin_after_in_report_ccy",
+              "impact/schedule_impact_report/initial_margin_before_in_report_ccy",
+              "impact/schedule_impact_report/initial_margin_impact_in_report_ccy",
+              "impact/simm_impact_report/initial_margin_after_in_report_ccy",
+              "impact/simm_impact_report/initial_margin_before_in_report_ccy",
+              "impact/simm_impact_report/initial_margin_impact_in_report_ccy",
+              "impact/standalone_im_schedule_report/schedule_im_in_report_ccy",
+              "impact/standalone_simm_report/initial_margin_in_report_ccy",
+              "impact/standalone_total_im_report/initial_margin_in_report_ccy",
+              "impact/total_impact_report/initial_margin_after_in_report_ccy",
+              "impact/total_impact_report/initial_margin_before_in_report_ccy",
+              "impact/total_impact_report/initial_margin_impact_in_report_ccy"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "frtb\\.json": {
+        "keys": {
+          "": [
+            "bucket",
+            "capitalRequirement",
+            "risk_class",
+            "correlationScenario"
+          ]
+        },
+        "settings": [
+          {
+            "names": [
+              "frtbCharge"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "total_im\\.json": {
+        "keys": {
+          "": [
+            "side",
+            "portfolio"
+          ]
+        },
+        "settings": [
+          {
+            "names": [
+              "initial_margin",
+              "initial_margin_in_report_ccy"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "response\\.json": {
+        "ignore_keys": [
+          "simmResultsPath"
+        ],
+        "keys": {
+          "additionalResults/": [
+            "tradeId",
+            "resultId",
+            "resultType"
+          ],
+          "bacva/": [
+            "analytic",
+            "counterparty",
+            "nettingSetId"
+          ],
+          "frtb/": [
+            "bucket",
+            "capitalRequirement",
+            "risk_class",
+            "correlationScenario"
+          ],
+          "impact/schedule_impact_report/": [
+            "portfolio",
+            "agreement_type",
+            "product_class",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "side"
+          ],
+          "impact/simm_impact_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "product_class",
+            "risk_class",
+            "margin_type",
+            "bucket",
+            "side"
+          ],
+          "impact/total_impact_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "side"
+          ],
+          "impact/standalone_im_schedule_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "product_class",
+            "side"
+          ],
+          "impact/standalone_simm_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "product_class",
+            "risk_class",
+            "margin_type",
+            "bucket",
+            "side"
+          ],
+          "impact/standalone_total_im_report/": [
+            "portfolio",
+            "agreement_type",
+            "call_type",
+            "initial_margin_type",
+            "legal_entity_id",
+            "side"
+          ],
+          "simmReport/": [
+            "portfolio",
+            "product_class",
+            "risk_class",
+            "margin_type",
+            "bucket",
+            "side"
+          ],
+          "totalIMReport/": [
+            "side",
+            "portfolio"
+          ]
+        },
+        "settings": [
+          {
+            "names": [
+              "additionalResults/resultValue",
+              "bacva/value",
+              "cashflow/accrual",
+              "cashflow/accruedAmount",
+              "cashflow/amount",
+              "cashflow/coupon",
+              "cashflow/discountFactor",
+              "cashflow/fXRate(Local-Base)",
+              "cashflow/fixingValue",
+              "cashflow/notional",
+              "cashflow/presentValue",
+              "cashflow/presentValue(Base)",
+              "cashflowNpv/presentValue",
+              "crifReport/amount",
+              "crifReport/amount_usd",
+              "crifReport/mtm_value",
+              "crifReport/notional",
+              "dividends/dividendRate",
+              "frtb/frtbCharge",
+              "imScheduleReport/gross_current_rc",
+              "imScheduleReport/gross_im",
+              "imScheduleReport/net_current_rc",
+              "imScheduleReport/net_to_gross_ratio",
+              "imScheduleReport/schedule_im",
+              "imScheduleReport/schedule_im_in_report_ccy",
+              "impact/schedule_impact_report/initial_margin_after",
+              "impact/schedule_impact_report/initial_margin_after_in_report_ccy",
+              "impact/schedule_impact_report/initial_margin_before",
+              "impact/schedule_impact_report/initial_margin_before_in_report_ccy",
+              "impact/schedule_impact_report/initial_margin_impact",
+              "impact/schedule_impact_report/initial_margin_impact_in_report_ccy",
+              "impact/simm_impact_report/initial_margin_after",
+              "impact/simm_impact_report/initial_margin_after_in_report_ccy",
+              "impact/simm_impact_report/initial_margin_before",
+              "impact/simm_impact_report/initial_margin_before_in_report_ccy",
+              "impact/simm_impact_report/initial_margin_impact",
+              "impact/simm_impact_report/initial_margin_impact_in_report_ccy",
+              "impact/standalone_im_schedule_report/gross_current_rc",
+              "impact/standalone_im_schedule_report/gross_im",
+              "impact/standalone_im_schedule_report/net_current_rc",
+              "impact/standalone_im_schedule_report/net_to_gross_ratio",
+              "impact/standalone_im_schedule_report/schedule_im",
+              "impact/standalone_im_schedule_report/schedule_im_in_report_ccy",
+              "impact/standalone_simm_report/initial_margin",
+              "impact/standalone_simm_report/initial_margin_in_report_ccy",
+              "impact/standalone_total_im_report/initial_margin",
+              "impact/standalone_total_im_report/initial_margin_in_report_ccy",
+              "impact/total_impact_report/initial_margin_after",
+              "impact/total_impact_report/initial_margin_after_in_report_ccy",
+              "impact/total_impact_report/initial_margin_before",
+              "impact/total_impact_report/initial_margin_before_in_report_ccy",
+              "impact/total_impact_report/initial_margin_impact",
+              "impact/total_impact_report/initial_margin_impact_in_report_ccy",
+              "npv/notional",
+              "npv/notionalBase",
+              "npv/npv",
+              "npv/npvBase",
+              "saccr/addOn",
+              "saccr/cC",
+              "saccr/eAD",
+              "saccr/multiplier",
+              "saccr/npv",
+              "saccr/pfe",
+              "saccr/rC",
+              "saccr/rW",
+              "simmReport/initial_margin",
+              "simmReport/initial_margin_in_report_ccy",
+              "totalIMReport/initial_margin",
+              "totalIMReport/initial_margin_in_report_ccy",
+              "xva/allocatedCVA",
+              "xva/allocatedDVA",
+              "xva/baselEEPE",
+              "xva/baselEPE",
+              "xva/cOLVA",
+              "xva/cVA",
+              "xva/collateralFloor",
+              "xva/dVA",
+              "xva/fBA",
+              "xva/fBAexAllSP",
+              "xva/fBAexOwnSP",
+              "xva/fCA",
+              "xva/fCAexAllSP",
+              "xva/fCAexOwnSP",
+              "xva/mVA",
+              "xva/ourKVACCR",
+              "xva/ourKVACVA",
+              "xva/theirKVACCR",
+              "xva/theirKVACVA"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "flownpv\\.json": {
+        "settings": [
+          {
+            "names": [
+              "presentValue"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "jobId"
+            ],
+            "abs_tol": 0,
+            "rel_tol": null
+          }
+        ]
+      },
+      "saccr.json": {
+        "settings": [
+          {
+            "names": [
+              "addOn",
+              "cC",
+              "eAD",
+              "multiplier",
+              "npv",
+              "pfe",
+              "rC",
+              "rW"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      }
     }
   }
 }

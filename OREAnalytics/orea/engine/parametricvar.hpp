@@ -92,51 +92,38 @@ private:
 //! Parametric VaR Calculator
 /*! This class takes sensitivity data and a covariance matrix as an input and computes a parametric value at risk. The
  * output can be broken down by portfolios, risk classes (IR, FX, EQ, ...) and risk types (delta-gamma, vega, ...). */
-class ParametricVarReport {
+class ParametricVarReport : public VarReport {
 public:
     virtual ~ParametricVarReport() {}
     ParametricVarReport(
-        const std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>>& tradePortfolio, 
-        const std::string& portfolioFilter, const QuantLib::ext::shared_ptr<SensitivityStream>& sensitivities,
-        const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance, const std::vector<Real>& p,
-        const ParametricVarCalculator::ParametricVarParams& parametricVarParams, const bool breakdown,
-        const bool salvageCovarianceMatrix);
+        const std::string& baseCurrency,
+        const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+        const std::string& portfolioFilter,
+        const std::vector<QuantLib::Real>& p,
+        const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
+        const bool salvageCovarianceMatrix, boost::optional<ore::data::TimePeriod> period,
+        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, const bool breakdown = false);
     
     ParametricVarReport(
-        const std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>>& tradePortfolios,
-        const std::string& portfolioFilter, const QuantLib::ext::shared_ptr<SensitivityStream>& sensitivities,
+        const std::string& baseCurrency,
+        const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+        const std::string& portfolioFilter,
         const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
-        const ore::data::TimePeriod& benchmarkPeriod,
-        const QuantLib::ext::shared_ptr<SensitivityScenarioData>& sensitivityConfig,
-        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig, 
         const std::vector<QuantLib::Real>& p,
-        const ParametricVarCalculator::ParametricVarParams& parametricVarParams, const bool breakdown,
-        const bool salvageCovarianceMatrix);
+        const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
+        const bool salvageCovarianceMatrix, boost::optional<ore::data::TimePeriod> period,
+        std::unique_ptr<SensiRunArgs> sensiArgs = nullptr, const bool breakdown = false);
 
-    void calculate(ore::data::Report& report);
+    void createVarCalculator() override;
     
     typedef std::pair<RiskFactorKey, RiskFactorKey> CrossPair;
 
-protected:
-    std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>> tradePortfolios_;
-    const std::string portfolioFilter_;
-    const QuantLib::ext::shared_ptr<SensitivityStream> sensitivities_;
-    const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance_;
-
-    
-    //! Historical scenario generator
-    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> hisScenGen_;
-    boost::optional<ore::data::TimePeriod> benchmarkPeriod_;
+protected:    
     const QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityConfig_;
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
 
-    Matrix cov_;
-
-    const std::vector<Real> p_;
-
     //! The parameters to use for calculating the parametric VAR benchmark
     ParametricVarCalculator::ParametricVarParams parametricVarParams_;
-    bool breakdown_ = false;
     bool salvageCovarianceMatrix_ = true;
 };
 

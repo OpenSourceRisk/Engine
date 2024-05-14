@@ -17,19 +17,23 @@
 */
 
 #include "parsensitivityanalysis.hpp"
-#include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
-#include <test/testportfolio.hpp>
-#include <boost/timer/timer.hpp>
+#include "testmarket.hpp"
+#include "testportfolio.hpp"
+
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
+#include <orea/engine/zerotoparcube.hpp>
+#include <orea/scenario/deltascenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
+
 #include <ored/model/lgmdata.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
@@ -45,16 +49,15 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <orea/engine/parsensitivityanalysis.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
-#include <orea/engine/zerotoparcube.hpp>
-#include <orea/scenario/sensitivityscenariodata.hpp>
-#include <orea/scenario/deltascenariofactory.hpp>
-#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
+
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+
+#include <test/oreatoplevelfixture.hpp>
+
+#include <boost/timer/timer.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -64,8 +67,8 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData2() {
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
+QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData2() {
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
         new analytics::ScenarioSimMarketParameters());
     simMarketData->baseCcy() = "EUR";
     simMarketData->ccys() = {"EUR", "GBP", "USD"};
@@ -130,8 +133,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData2() 
     return simMarketData;
 }
 
-boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() {
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
+QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() {
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
         new analytics::ScenarioSimMarketParameters());
 
     simMarketData->baseCcy() = "EUR";
@@ -213,32 +216,32 @@ SensitivityScenarioData::CurveShiftParData createCurveShiftData() {
     SensitivityScenarioData::CurveShiftParData cvsData;
     cvsData.shiftTenors = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
                            7 * Years,  10 * Years, 15 * Years, 20 * Years}; // multiple tenors: triangular shifts
-    cvsData.shiftType = "Absolute";
+    cvsData.shiftType = ShiftType::Absolute;
     cvsData.shiftSize = 0.0001;
     cvsData.parInstruments = {"DEP", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS"};
 
     return cvsData;
 }
-boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
-    boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>(false);
+QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = QuantLib::ext::make_shared<SensitivityScenarioData>(false);
 
     SensitivityScenarioData::SpotShiftData fxsData;
-    fxsData.shiftType = "Relative";
+    fxsData.shiftType = ShiftType::Relative;
     fxsData.shiftSize = 0.01;
 
     SensitivityScenarioData::VolShiftData fxvsData;
-    fxvsData.shiftType = "Relative";
+    fxvsData.shiftType = ShiftType::Relative;
     fxvsData.shiftSize = 1.0;
     fxvsData.shiftExpiries = {2 * Years, 5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    cfvsData.shiftType = "Absolute";
+    cfvsData.shiftType = ShiftType::Absolute;
     cfvsData.shiftSize = 0.0001;
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.05};
 
     SensitivityScenarioData::GenericYieldVolShiftData swvsData;
-    swvsData.shiftType = "Relative";
+    swvsData.shiftType = ShiftType::Relative;
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {3 * Years, 5 * Years, 10 * Years};
     swvsData.shiftTerms = {2 * Years, 5 * Years, 10 * Years};
@@ -248,28 +251,28 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     eurDiscountData.parInstrumentConventions["DEP"] = "EUR-DEP-CONVENTIONS";
     eurDiscountData.parInstrumentConventions["IRS"] = "EUR-6M-SWAP-CONVENTIONS";
     sensiData->discountCurveShiftData()["EUR"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(eurDiscountData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(eurDiscountData);
 
     SensitivityScenarioData::CurveShiftParData gbpDiscountData = createCurveShiftData();
     gbpDiscountData.parInstrumentSingleCurve = true;
     gbpDiscountData.parInstrumentConventions["DEP"] = "GBP-DEP-CONVENTIONS";
     gbpDiscountData.parInstrumentConventions["IRS"] = "GBP-6M-SWAP-CONVENTIONS";
     sensiData->discountCurveShiftData()["GBP"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(gbpDiscountData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(gbpDiscountData);
 
     SensitivityScenarioData::CurveShiftParData eurIndexData = createCurveShiftData();
     eurIndexData.parInstrumentSingleCurve = false;
     eurIndexData.parInstrumentConventions["DEP"] = "EUR-DEP-CONVENTIONS";
     eurIndexData.parInstrumentConventions["IRS"] = "EUR-6M-SWAP-CONVENTIONS";
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(eurIndexData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(eurIndexData);
 
     SensitivityScenarioData::CurveShiftParData gbpIndexData = createCurveShiftData();
     gbpIndexData.parInstrumentSingleCurve = false;
     gbpIndexData.parInstrumentConventions["DEP"] = "GBP-DEP-CONVENTIONS";
     gbpIndexData.parInstrumentConventions["IRS"] = "GBP-6M-SWAP-CONVENTIONS";
     sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(gbpIndexData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(gbpIndexData);
 
     sensiData->fxShiftData()["EURGBP"] = fxsData;
 
@@ -284,20 +287,20 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     bondData.parInstrumentSingleCurve = false;
     bondData.parInstrumentConventions["CDS"] = "CDS-STANDARD-CONVENTIONS";
     sensiData->creditCurveShiftData()["BondIssuer1"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(bondData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(bondData);
 
     ore::analytics::SensitivityScenarioData::SpotShiftData eqsData;
-    eqsData.shiftType = "Relative";
+    eqsData.shiftType = ShiftType::Relative;
     eqsData.shiftSize = 0.01;
 
     ore::analytics::SensitivityScenarioData::VolShiftData eqvsData;
-    eqvsData.shiftType = "Relative";
+    eqvsData.shiftType = ShiftType::Relative;
     eqvsData.shiftSize = 0.01;
     eqvsData.shiftExpiries = {2 * Weeks, 1 * Months, 3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
                               5 * Years, 7 * Years,  10 * Years, 13 * Years, 15 * Years, 20 * Years, 30 * Years};
 
     ore::analytics::SensitivityScenarioData::CurveShiftData eqdivData;
-    eqdivData.shiftType = "Absolute";
+    eqdivData.shiftType = ShiftType::Absolute;
     eqdivData.shiftSize = 0.00001;
     eqdivData.shiftTenors = {6 * Months, 1 * Years, 2 * Years};
 
@@ -307,9 +310,9 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     sensiData->equityVolShiftData()["SP5"] = eqvsData;
     sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
 
-    boost::shared_ptr<ore::analytics::SensitivityScenarioData::CurveShiftParData> yinfData =
-        boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftParData>();
-    yinfData->shiftType = "Absolute";
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData::CurveShiftParData> yinfData =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftParData>();
+    yinfData->shiftType = ShiftType::Absolute;
     yinfData->shiftSize = 0.0001;
     yinfData->shiftTenors = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years};
     yinfData->parInstruments = {"YYS", "YYS", "YYS", "YYS", "YYS", "YYS", "YYS", "YYS"};
@@ -317,8 +320,8 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     yinfData->parInstrumentConventions["YYS"] = "UKRP1";
     sensiData->yoyInflationCurveShiftData()["UKRP1"] = yinfData;
 
-    auto yinfCfData = boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftParData>();
-    yinfCfData->shiftType = "Absolute";
+    auto yinfCfData = QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftParData>();
+    yinfCfData->shiftType = ShiftType::Absolute;
     yinfCfData->shiftSize = 0.00001;
     yinfCfData->shiftExpiries = {1 * Years, 2 * Years,  3 * Years,  5 * Years,
                                  7 * Years, 10 * Years, 15 * Years, 20 * Years};
@@ -332,34 +335,34 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     return sensiData;
 }
 
-boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5(bool parConversion) {
-    boost::shared_ptr<SensitivityScenarioData> sensiData =
-        boost::make_shared<SensitivityScenarioData>(parConversion);
+QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5(bool parConversion) {
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData =
+        QuantLib::ext::make_shared<SensitivityScenarioData>(parConversion);
 
     SensitivityScenarioData::SpotShiftData fxsData;
 
-    fxsData.shiftType = "Relative";
+    fxsData.shiftType = ShiftType::Relative;
     fxsData.shiftSize = 0.01;
 
     SensitivityScenarioData::VolShiftData fxvsData;
-    fxvsData.shiftType = "Relative";
+    fxvsData.shiftType = ShiftType::Relative;
     fxvsData.shiftSize = 1.0;
     fxvsData.shiftExpiries = {5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    cfvsData.shiftType = "Absolute";
+    cfvsData.shiftType = ShiftType::Absolute;
     cfvsData.shiftSize = 0.0001;
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::GenericYieldVolShiftData swvsData;
-    swvsData.shiftType = "Relative";
+    swvsData.shiftType = ShiftType::Relative;
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {2 * Years, 5 * Years, 10 * Years};
     swvsData.shiftTerms = {5 * Years, 10 * Years};
 
     SensitivityScenarioData::CdsVolShiftData cdsvsData;
-    cdsvsData.shiftType = "Relative";
+    cdsvsData.shiftType = ShiftType::Relative;
     cdsvsData.shiftSize = 0.01;
     cdsvsData.shiftExpiries = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
 
@@ -370,77 +373,77 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5(bool pa
     eurDiscountData.parInstrumentConventions["DEP"] = "EUR-DEP-CONVENTIONS";
     eurDiscountData.parInstrumentConventions["IRS"] = "EUR-6M-SWAP-CONVENTIONS";
     sensiData->discountCurveShiftData()["EUR"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(eurDiscountData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(eurDiscountData);
 
     SensitivityScenarioData::CurveShiftParData usdDiscountData = createCurveShiftData();
     usdDiscountData.parInstrumentSingleCurve = true;
     usdDiscountData.parInstrumentConventions["DEP"] = "USD-DEP-CONVENTIONS";
     usdDiscountData.parInstrumentConventions["IRS"] = "USD-3M-SWAP-CONVENTIONS";
     sensiData->discountCurveShiftData()["USD"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(usdDiscountData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(usdDiscountData);
 
     SensitivityScenarioData::CurveShiftParData gbpDiscountData = createCurveShiftData();
     gbpDiscountData.parInstrumentSingleCurve = true;
     gbpDiscountData.parInstrumentConventions["DEP"] = "GBP-DEP-CONVENTIONS";
     gbpDiscountData.parInstrumentConventions["IRS"] = "GBP-6M-SWAP-CONVENTIONS";
     sensiData->discountCurveShiftData()["GBP"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(gbpDiscountData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(gbpDiscountData);
 
     SensitivityScenarioData::CurveShiftParData jpyDiscountData = createCurveShiftData();
     jpyDiscountData.parInstrumentSingleCurve = true;
     jpyDiscountData.parInstrumentConventions["DEP"] = "JPY-DEP-CONVENTIONS";
     jpyDiscountData.parInstrumentConventions["IRS"] = "JPY-6M-SWAP-CONVENTIONS";
     sensiData->discountCurveShiftData()["JPY"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(jpyDiscountData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(jpyDiscountData);
 
     SensitivityScenarioData::CurveShiftParData chfDiscountData = createCurveShiftData();
     chfDiscountData.parInstrumentSingleCurve = true;
     chfDiscountData.parInstrumentConventions["DEP"] = "CHF-DEP-CONVENTIONS";
     chfDiscountData.parInstrumentConventions["IRS"] = "CHF-6M-SWAP-CONVENTIONS";
     sensiData->discountCurveShiftData()["CHF"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(chfDiscountData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(chfDiscountData);
 
     SensitivityScenarioData::CurveShiftParData bondData = createCurveShiftData();
     bondData.parInstrumentSingleCurve = true;
     bondData.parInstrumentConventions["DEP"] = "EUR-DEP-CONVENTIONS";
     bondData.parInstrumentConventions["IRS"] = "EUR-6M-SWAP-CONVENTIONS";
     sensiData->yieldCurveShiftData()["BondCurve1"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(bondData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(bondData);
 
     SensitivityScenarioData::CurveShiftParData eurIndexData = createCurveShiftData();
     eurIndexData.parInstrumentSingleCurve = false;
     eurIndexData.parInstrumentConventions["DEP"] = "EUR-DEP-CONVENTIONS";
     eurIndexData.parInstrumentConventions["IRS"] = "EUR-6M-SWAP-CONVENTIONS";
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(eurIndexData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(eurIndexData);
 
     SensitivityScenarioData::CurveShiftParData usdIndexData = createCurveShiftData();
     usdIndexData.parInstrumentSingleCurve = false;
     usdIndexData.parInstrumentConventions["DEP"] = "USD-DEP-CONVENTIONS";
     usdIndexData.parInstrumentConventions["IRS"] = "USD-3M-SWAP-CONVENTIONS";
     sensiData->indexCurveShiftData()["USD-LIBOR-3M"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(usdIndexData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(usdIndexData);
 
     SensitivityScenarioData::CurveShiftParData gbpIndexData = createCurveShiftData();
     gbpIndexData.parInstrumentSingleCurve = false;
     gbpIndexData.parInstrumentConventions["DEP"] = "GBP-DEP-CONVENTIONS";
     gbpIndexData.parInstrumentConventions["IRS"] = "GBP-6M-SWAP-CONVENTIONS";
     sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(gbpIndexData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(gbpIndexData);
 
     SensitivityScenarioData::CurveShiftParData jpyIndexData = createCurveShiftData();
     jpyIndexData.parInstrumentSingleCurve = false;
     jpyIndexData.parInstrumentConventions["DEP"] = "JPY-DEP-CONVENTIONS";
     jpyIndexData.parInstrumentConventions["IRS"] = "JPY-6M-SWAP-CONVENTIONS";
     sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(jpyIndexData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(jpyIndexData);
 
     SensitivityScenarioData::CurveShiftParData chfIndexData = createCurveShiftData();
     chfIndexData.parInstrumentSingleCurve = false;
     chfIndexData.parInstrumentConventions["DEP"] = "CHF-DEP-CONVENTIONS";
     chfIndexData.parInstrumentConventions["IRS"] = "CHF-6M-SWAP-CONVENTIONS";
     sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(chfIndexData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(chfIndexData);
 
     sensiData->fxShiftData()["EURUSD"] = fxsData;
     sensiData->fxShiftData()["EURGBP"] = fxsData;
@@ -459,10 +462,10 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5(bool pa
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
     sensiData->capFloorVolShiftData()["EUR"] =
-        boost::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
     sensiData->capFloorVolShiftData()["EUR"]->indexName = "EUR-EURIBOR-6M";
     sensiData->capFloorVolShiftData()["USD"] =
-        boost::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
     sensiData->capFloorVolShiftData()["USD"]->indexName = "USD-LIBOR-3M";
 
     SensitivityScenarioData::CurveShiftParData dcData = createCurveShiftData();
@@ -470,7 +473,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5(bool pa
     dcData.parInstrumentSingleCurve = false;
     dcData.parInstrumentConventions["CDS"] = "CDS-STANDARD-CONVENTIONS";
     sensiData->creditCurveShiftData()["dc"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(dcData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(dcData);
     sensiData->creditCcys()["dc"] = "EUR";
 
     SensitivityScenarioData::CurveShiftParData bondIssData = createCurveShiftData();
@@ -478,23 +481,23 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5(bool pa
     bondIssData.parInstrumentSingleCurve = false;
     bondIssData.parInstrumentConventions["CDS"] = "CDS-STANDARD-CONVENTIONS";
     sensiData->creditCurveShiftData()["BondIssuer1"] =
-        boost::make_shared<SensitivityScenarioData::CurveShiftParData>(bondIssData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftParData>(bondIssData);
     sensiData->creditCcys()["BondIssuer1"] = "EUR";
 
     sensiData->cdsVolShiftData()["dc"] = cdsvsData;
 
     ore::analytics::SensitivityScenarioData::SpotShiftData eqsData;
-    eqsData.shiftType = "Relative";
+    eqsData.shiftType = ShiftType::Relative;
     eqsData.shiftSize = 0.01;
 
     ore::analytics::SensitivityScenarioData::VolShiftData eqvsData;
-    eqvsData.shiftType = "Relative";
+    eqvsData.shiftType = ShiftType::Relative;
     eqvsData.shiftSize = 0.01;
     eqvsData.shiftExpiries = {2 * Weeks, 1 * Months, 3 * Months, 6 * Months, 1 * Years,  2 * Years, 3 * Years,
                               5 * Years, 10 * Years, 13 * Years, 15 * Years, 20 * Years, 30 * Years};
 
     ore::analytics::SensitivityScenarioData::CurveShiftData eqdivData;
-    eqdivData.shiftType = "Absolute";
+    eqdivData.shiftType = ShiftType::Absolute;
     eqdivData.shiftSize = 0.00001;
     eqdivData.shiftTenors = {6 * Months, 1 * Years, 2 * Years};
 
@@ -504,9 +507,9 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5(bool pa
     sensiData->equityVolShiftData()["SP5"] = eqvsData;
     sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
 
-    boost::shared_ptr<ore::analytics::SensitivityScenarioData::CurveShiftParData> yinfData =
-        boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftParData>();
-    yinfData->shiftType = "Absolute";
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData::CurveShiftParData> yinfData =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftParData>();
+    yinfData->shiftType = ShiftType::Absolute;
     yinfData->shiftSize = 0.0001;
     yinfData->shiftTenors = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years};
     yinfData->parInstruments = {"YYS", "YYS", "YYS", "YYS", "YYS", "YYS", "YYS", "YYS"};
@@ -514,8 +517,8 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5(bool pa
     yinfData->parInstrumentConventions["YYS"] = "UKRP1";
     sensiData->yoyInflationCurveShiftData()["UKRP1"] = yinfData;
 
-    auto yinfCfData = boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftParData>();
-    yinfCfData->shiftType = "Absolute";
+    auto yinfCfData = QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftParData>();
+    yinfCfData->shiftType = ShiftType::Absolute;
     yinfCfData->shiftSize = 0.00001;
     yinfCfData->shiftExpiries = {1 * Years, 2 * Years,  3 * Years,  5 * Years,
                                  7 * Years, 10 * Years, 15 * Years, 20 * Years};
@@ -544,30 +547,30 @@ void ParSensitivityAnalysisTest::testPortfolioZeroSensitivity() {
     BOOST_TEST_MESSAGE("Today is " << today);
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5(false);
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5(false);
     // build scenario sim market
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        QuantLib::ext::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
-    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory =
-        boost::make_shared<ore::analytics::DeltaScenarioFactory>(baseScenario);
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory =
+        QuantLib::ext::make_shared<ore::analytics::DeltaScenarioFactory>(baseScenario);
 
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        QuantLib::ext::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
     data->model("CrossCurrencySwap") = "DiscountedCashflows";
@@ -600,10 +603,10 @@ void ParSensitivityAnalysisTest::testPortfolioZeroSensitivity() {
     data->engineParameters("Bond")["TimestepPeriod"] = "6M";
     data->model("EquityOption") = "BlackScholesMerton";
     data->engine("EquityOption") = "AnalyticEuropeanEngine";
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(data, simMarket);
 
-    // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    // QuantLib::ext::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     portfolio->add(buildSwap("1_Swap_EUR", "EUR", true, 10000000.0, 0, 10, 0.03, 0.00, "1Y",
                                                 "30/360", "6M", "A360", "EUR-EURIBOR-6M"));
     portfolio->add(buildSwap("2_Swap_USD", "USD", true, 10000000.0, 0, 15, 0.02, 0.00, "6M",
@@ -630,8 +633,8 @@ void ParSensitivityAnalysisTest::testPortfolioZeroSensitivity() {
     // vector<string> names(1, "dc");
     // vector<string> ccys(1, "EUR");
     // vector<Real> notionals(1, 1000000.0);
-    // boost::shared_ptr<CdsConvention> cdsConv =
-    //     boost::dynamic_pointer_cast<CdsConvention>(InstrumentConventions::instance().conventions()->get("CDS-STANDARD-CONVENTIONS"));
+    // QuantLib::ext::shared_ptr<CdsConvention> cdsConv =
+    //     QuantLib::ext::dynamic_pointer_cast<CdsConvention>(InstrumentConventions::instance().conventions()->get("CDS-STANDARD-CONVENTIONS"));
     // portfolio->add(buildIndexCdsOption(
     //     "11_CDSOption_EUR", "dc", names, "Long", "EUR", ccys, true, notionals, 1000000.0, 1, 4, 0.4, 0.1,
     //     ore::data::to_string(Period(cdsConv->frequency())), ore::data::to_string(cdsConv->dayCounter()),
@@ -647,14 +650,14 @@ void ParSensitivityAnalysisTest::testPortfolioZeroSensitivity() {
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
     // build the scenario valuation engine
-    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>(
+    QuantLib::ext::shared_ptr<DateGrid> dg = QuantLib::ext::make_shared<DateGrid>(
         "1,0W"); // TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
-    vector<boost::shared_ptr<ValuationCalculator>> calculators;
-    calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
+    vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
+    calculators.push_back(QuantLib::ext::make_shared<NPVCalculator>(simMarketData->baseCcy()));
     ValuationEngine engine(today, dg, simMarket);
     // run scenarios and fill the cube
     boost::timer::cpu_timer t;
-    boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
+    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(
         today, portfolio->ids(), vector<Date>(1, today), scenarioGenerator->samples());
     engine.buildCube(portfolio, cube, calculators);
     double elapsed = t.elapsed().wall * 1e-9;
@@ -1078,31 +1081,31 @@ void testParConversion(ObservationMode::Mode om) {
     ccys.push_back("JPY");
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5(true);
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5(true);
 
     // build scenario sim market
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        QuantLib::ext::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
-    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory =
-        boost::make_shared<ore::analytics::DeltaScenarioFactory>(baseScenario);
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory =
+        QuantLib::ext::make_shared<ore::analytics::DeltaScenarioFactory>(baseScenario);
 
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        QuantLib::ext::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
     engineData->model("CrossCurrencySwap") = "DiscountedCashflows";
@@ -1126,10 +1129,10 @@ void testParConversion(ObservationMode::Mode om) {
     engineData->engine("CreditDefaultSwap") = "MidPointCdsEngine";
     engineData->model("EquityOption") = "BlackScholesMerton";
     engineData->engine("EquityOption") = "AnalyticEuropeanEngine";
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, simMarket);
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(engineData, simMarket);
 
-    // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    // QuantLib::ext::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     portfolio->add(buildSwap("1_Swap_EUR", "EUR", true, 10000000.0, 0, 10, 0.03, 0.00, "1Y",
                                                 "30/360", "6M", "A360", "EUR-EURIBOR-6M"));
     portfolio->add(buildSwap("2_Swap_USD", "USD", true, 10000000.0, 0, 15, 0.02, 0.00, "6M",
@@ -1149,11 +1152,10 @@ void testParConversion(ObservationMode::Mode om) {
 
     // build the sensitivity analysis object
     // first build the par analysis object, so that we can align the pillars for the zero sensi analysis
-    ParSensitivityAnalysis parAnalysis(today, simMarketData, *sensiData, "default");
+    ParSensitivityAnalysis parAnalysis(today, simMarketData, *sensiData, Market::defaultConfiguration);
     parAnalysis.alignPillars();
-    boost::shared_ptr<SensitivityAnalysis> zeroAnalysis =
-        boost::make_shared<SensitivityAnalysisPlus>(portfolio, initMarket, "default", engineData,
-                                                    simMarketData, sensiData, false);
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> zeroAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, engineData, simMarketData, sensiData, false);
     BOOST_TEST_MESSAGE("SensitivityAnalysis object built");
     zeroAnalysis->overrideTenors(true);
     zeroAnalysis->generateSensitivities();
@@ -1166,9 +1168,9 @@ void testParConversion(ObservationMode::Mode om) {
     //     parAnalysis.alignPillars();
     //     zeroAnalysis->overrideTenors(true);
     parAnalysis.computeParInstrumentSensitivities(zeroAnalysis->simMarket());
-    boost::shared_ptr<ParSensitivityConverter> parConverter =
-        boost::make_shared<ParSensitivityConverter>(parAnalysis.parSensitivities(), parAnalysis.shiftSizes());
-    boost::shared_ptr<SensitivityCube> sensiCube = zeroAnalysis->sensiCube();
+    QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
+        QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis.parSensitivities(), parAnalysis.shiftSizes());
+    QuantLib::ext::shared_ptr<SensitivityCube> sensiCube = zeroAnalysis->sensiCube();
     ZeroToParCube parCube(sensiCube, parConverter);
 
     map<pair<string, string>, Real> parDelta;
@@ -1379,26 +1381,26 @@ void ParSensitivityAnalysisTest::test1dZeroShifts() {
     ccys.push_back("GBP");
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData2();
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData2();
 
     // build scenario sim market
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        QuantLib::ext::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData2();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData2();
 
     // build scenario factory
-    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory =
-        boost::make_shared<ore::analytics::DeltaScenarioFactory>(baseScenario);
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory =
+        QuantLib::ext::make_shared<ore::analytics::DeltaScenarioFactory>(baseScenario);
 
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        QuantLib::ext::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
 
     // cache initial zero rates
@@ -1427,8 +1429,8 @@ void ParSensitivityAnalysisTest::test1dZeroShifts() {
     vector<Real> diffAbsolute(tenors.size(), 0.0);
     vector<Real> diffRelative(tenors.size(), 0.0);
     Real shiftSize = 0.01;
-    SensitivityScenarioGenerator::ShiftType shiftTypeAbsolute = SensitivityScenarioGenerator::ShiftType::Absolute;
-    SensitivityScenarioGenerator::ShiftType shiftTypeRelative = SensitivityScenarioGenerator::ShiftType::Relative;
+    ShiftType shiftTypeAbsolute = ShiftType::Absolute;
+    ShiftType shiftTypeRelative = ShiftType::Relative;
     for (Size i = 0; i < shiftTenors.size(); ++i) {
         scenarioGenerator->applyShift(i, shiftSize, true, shiftTypeAbsolute, shiftTimes, initialZeros, times,
                                       shiftedZeros, true);
@@ -1472,26 +1474,26 @@ void ParSensitivityAnalysisTest::test2dZeroShifts() {
     ccys.push_back("GBP");
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData2();
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData2();
 
     // build scenario sim market
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        QuantLib::ext::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData2();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData2();
 
     // build scenario factory
-    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory =
-        boost::make_shared<ore::analytics::DeltaScenarioFactory>(baseScenario);
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory =
+        QuantLib::ext::make_shared<ore::analytics::DeltaScenarioFactory>(baseScenario);
 
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
+    QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        QuantLib::ext::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket,
                                                          scenarioFactory, false);
 
     // cache initial zero rates
@@ -1529,8 +1531,8 @@ void ParSensitivityAnalysisTest::test2dZeroShifts() {
     vector<vector<Real>> diffAbsolute(expiries.size(), vector<Real>(terms.size(), 0.0));
     vector<vector<Real>> diffRelative(expiries.size(), vector<Real>(terms.size(), 0.0));
     Real shiftSize = 0.01; // arbitrary
-    SensitivityScenarioGenerator::ShiftType shiftTypeAbsolute = SensitivityScenarioGenerator::ShiftType::Absolute;
-    SensitivityScenarioGenerator::ShiftType shiftTypeRelative = SensitivityScenarioGenerator::ShiftType::Relative;
+    ShiftType shiftTypeAbsolute = ShiftType::Absolute;
+    ShiftType shiftTypeRelative = ShiftType::Relative;
     for (Size i = 0; i < expiryShiftTenors.size(); ++i) {
         for (Size j = 0; j < termShiftTenors.size(); ++j) {
             scenarioGenerator->applyShift(i, j, shiftSize, true, shiftTypeAbsolute, shiftExpiryTimes, shiftTermTimes,

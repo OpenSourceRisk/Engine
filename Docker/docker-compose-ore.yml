@@ -3,11 +3,12 @@ version: '3'
 services:
   env_ore:
     image: env_ore:${ORE_TAG}
-    volumes:
-      - /home/shared/cache/ore_env:/ccache
+    cap_drop:
+      - NET_RAW
     build:
       context: ../
       dockerfile: Docker/Dockerfile-ORE
       args:
-        - quantlib_version=${QL_TAG}
+        - debian_tag=${DEBIAN_TAG}
+        - cmake_build_type=${CMAKE_BUILD_TYPE}
         - num_cores=${NUM_CORES}

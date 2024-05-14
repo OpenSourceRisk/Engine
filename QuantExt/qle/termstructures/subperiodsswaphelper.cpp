@@ -16,19 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/cashflows/iborcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 
 namespace QuantExt {
 
-namespace {
-void no_deletion(YieldTermStructure*) {}
-} // namespace
-
 SubPeriodsSwapHelper::SubPeriodsSwapHelper(Handle<Quote> spread, const Period& swapTenor, const Period& fixedTenor,
                                            const Calendar& fixedCalendar, const DayCounter& fixedDayCount,
                                            BusinessDayConvention fixedConvention, const Period& floatPayTenor,
-                                           const boost::shared_ptr<IborIndex>& iborIndex,
+                                           const QuantLib::ext::shared_ptr<IborIndex>& iborIndex,
                                            const DayCounter& floatDayCount,
                                            const Handle<YieldTermStructure>& discountingCurve,
                                            QuantExt::SubPeriodsCoupon1::Type type)
@@ -56,40 +54,40 @@ void SubPeriodsSwapHelper::initializeDates() {
     valuationDate = spotCalendar.adjust(valuationDate);
     Date effectiveDate = spotCalendar.advance(valuationDate, spotDays * Days);
 
-    swap_ = boost::shared_ptr<SubPeriodsSwap>(new SubPeriodsSwap(
+    swap_ = QuantLib::ext::shared_ptr<SubPeriodsSwap>(new SubPeriodsSwap(
         effectiveDate, 1.0, swapTenor_, true, fixedTenor_, 0.0, fixedCalendar_, fixedDayCount_, fixedConvention_,
         floatPayTenor_, iborIndex_, floatDayCount_, DateGeneration::Backward, type_));
 
-    boost::shared_ptr<PricingEngine> engine(new DiscountingSwapEngine(discountRelinkableHandle_));
+    QuantLib::ext::shared_ptr<PricingEngine> engine(new DiscountingSwapEngine(discountRelinkableHandle_));
     swap_->setPricingEngine(engine);
 
     // set earliest and latest
     earliestDate_ = swap_->startDate();
     latestDate_ = swap_->maturityDate();
 
-    boost::shared_ptr<FloatingRateCoupon> lastFloating =
-        boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->floatLeg().back());
-#ifdef QL_USE_INDEXED_COUPON
-    /* May need to adjust latestDate_ if you are projecting libor based
-    on tenor length rather than from accrual date to accrual date. */
-    Date fixingValueDate = iborIndex_->valueDate(lastFloating->fixingDate());
-    Date endValueDate = iborIndex_->maturityDate(fixingValueDate);
-    latestDate_ = std::max(latestDate_, endValueDate);
-#else
-    /* Subperiods coupons do not have a par approximation either... */
-    if (boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastFloating)) {
+    QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
+        QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->floatLeg().back());
+    if (IborCoupon::Settings::instance().usingAtParCoupons()) {
+        /* Subperiods coupons do not have a par approximation either... */
+        if (QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastFloating)) {
+            Date fixingValueDate = iborIndex_->valueDate(lastFloating->fixingDate());
+            Date endValueDate = iborIndex_->maturityDate(fixingValueDate);
+            latestDate_ = std::max(latestDate_, endValueDate);
+        }
+    } else {
+        /* May need to adjust latestDate_ if you are projecting libor based
+        on tenor length rather than from accrual date to accrual date. */
         Date fixingValueDate = iborIndex_->valueDate(lastFloating->fixingDate());
         Date endValueDate = iborIndex_->maturityDate(fixingValueDate);
         latestDate_ = std::max(latestDate_, endValueDate);
     }
-#endif
 }
 
 void SubPeriodsSwapHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
 
-    boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
     if (discountHandle_.empty())

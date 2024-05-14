@@ -175,7 +175,7 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
         Real xMin = std::log(mi) - sigmaSqrtT * normInvEps * mesherScaling_;
         Real xMax = std::log(ma) + sigmaSqrtT * normInvEps * mesherScaling_;
 
-        mesher_ = boost::make_shared<Uniform1dMesher>(xMin, xMax, stateGridPoints_);
+        mesher_ = QuantLib::ext::make_shared<Uniform1dMesher>(xMin, xMax, stateGridPoints_);
     }
 
     // 4 set up functions accrual(t), notional(t), recovery(t, S)
@@ -187,7 +187,7 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
     for (auto const& c : arguments_.cashflows) {
         if (c->date() <= today)
             continue;
-        if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
+        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
             if (!close_enough(cpn->nominal(), notionals.back())) {
                 notionalTimes.push_back(model_->timeFromReference(c->date()));
                 notionals.push_back(cpn->nominal());
@@ -251,14 +251,14 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
 
     // 5 build operator
 
-    auto fdmOp = boost::make_shared<FdmDefaultableEquityJumpDiffusionOp>(
-        boost::make_shared<FdmMesherComposite>(mesher_), *model_, 0, recovery, discountingCurve_, discountingSpread_,
+    auto fdmOp = QuantLib::ext::make_shared<FdmDefaultableEquityJumpDiffusionOp>(
+        QuantLib::ext::make_shared<FdmMesherComposite>(mesher_), *model_, 0, recovery, discountingCurve_, discountingSpread_,
         creditCurve_, addRecovery);
 
     // 6 build solver
 
-    auto solver = boost::make_shared<FdmBackwardSolver>(
-        fdmOp, std::vector<boost::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, FdmSchemeDesc::Douglas());
+    auto solver = QuantLib::ext::make_shared<FdmBackwardSolver>(
+        fdmOp, std::vector<QuantLib::ext::shared_ptr<BoundaryCondition<FdmLinearOp>>>(), nullptr, FdmSchemeDesc::Douglas());
 
     // 7 prepare event container
 
@@ -278,10 +278,14 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
 
     Size n = mesher_->locations().size();
     std::vector<Array> value(stochasticConversionRatios.size(), Array(n, 0.0)), valueTmp;
+    std::vector<Array> conversionIndicator;
+    if (generateAdditionalResults_)
+        conversionIndicator.resize(stochasticConversionRatios.size(), Array(n, 0.0));
 
     // 10 add no-conversion variants for start of period coco feature
 
     std::vector<Array> valueNoConversion, valueNoConversionTmp;
+    std::vector<Array> conversionIndicatorNoConversion;
 
     // 11 perform the backward PDE pricing
 
@@ -299,6 +303,7 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
 
         if (events.hasNoConversionPlane(i) && valueNoConversion.empty()) {
             valueNoConversion = value;
+            conversionIndicatorNoConversion = conversionIndicator;
         }
 
         // 11.3a handle voluntary (contingent) conversion on t_i (overrides call and put)
@@ -309,19 +314,24 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                 Real cr = value.size() > 1 ? stochasticConversionRatios[plane] : events.getCurrentConversionRatio(i);
                 for (Size j = 0; j < n; ++j) {
                     bool cocoTriggered = true;
-                   if (events.hasContingentConversion(i) && !events.hasNoConversionPlane(i)) {
+                    if (events.hasContingentConversion(i) && !events.hasNoConversionPlane(i)) {
                         cocoTriggered = cr * S[j] > events.getConversionData(i).cocoBarrier;
                         // update value from no conversion plane, if there is one and coco is not triggered
                         if (!valueNoConversion.empty()) {
                             if (!cocoTriggered) {
                                 value[plane][j] = valueNoConversion[plane][j];
+                                if (!conversionIndicator.empty())
+                                    conversionIndicator[plane][j] = conversionIndicatorNoConversion[plane][j];
                             }
                         }
                     }
                     Real exerciseValue = S[j] * cr * notional(grid[i]) / N0 + accrual(grid[i]);
-                    if (cocoTriggered && exerciseValue > value[plane][j]) {
+                    // see 11.9, if we do not exercise, we are entitled to receive the final redempion flow
+                    if (cocoTriggered && exerciseValue > value[plane][j] + events.getBondFinalRedemption(i)) {
                         value[plane][j] = exerciseValue;
                         conversionExercised[plane][j] = true;
+                        if (!conversionIndicator.empty())
+                            conversionIndicator[plane][j] = 1.0;
                     }
                 }
             }
@@ -331,6 +341,7 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
 
         if (events.hasContingentConversion(i) && !events.hasNoConversionPlane(i) && !valueNoConversion.empty()) {
             valueNoConversion.clear();
+            conversionIndicatorNoConversion.clear();
         }
 
         // 11.4 handle cr / DP induced cr resets and resets to specific value on t_i
@@ -371,9 +382,8 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                                         std::min(adjustedConversionRatio[j], N0 / (rd.globalFloor * referenceCP));
                                 }
                                 adjustedConversionRatio[j] =
-                                    std::max(cr,
-                                             adjustedConversionRatio[j] != QL_MAX_REAL ? adjustedConversionRatio[j]
-                                                                                       : -QL_MAX_REAL);
+                                    std::max(cr, adjustedConversionRatio[j] != QL_MAX_REAL ? adjustedConversionRatio[j]
+                                                                                           : -QL_MAX_REAL);
                             }
                         }
                     }
@@ -446,6 +456,21 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                 }
                 valueNoConversion = std::vector<Array>(1, collapsedValue);
             }
+            if (!conversionIndicator.empty()) {
+                for (Size j = 0; j < n; ++j) {
+                    collapsedValue[j] = interpolateValueFromPlanes(events.getCurrentConversionRatio(i),
+                                                                   conversionIndicator, stochasticConversionRatios, j);
+                }
+                conversionIndicator = std::vector<Array>(1, collapsedValue);
+            }
+            if (!conversionIndicatorNoConversion.empty()) {
+                for (Size j = 0; j < n; ++j) {
+                    collapsedValue[j] =
+                        interpolateValueFromPlanes(events.getCurrentConversionRatio(i), conversionIndicatorNoConversion,
+                                                   stochasticConversionRatios, j);
+                }
+                conversionIndicatorNoConversion = std::vector<Array>(1, collapsedValue);
+            }
         }
 
         for (Size plane = 0; plane < value.size(); ++plane) {
@@ -468,6 +493,10 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                     conversionExercised[plane][j] = true;
                     if (!valueNoConversion.empty())
                         valueNoConversion[plane][j] = payoff;
+                    if (!conversionIndicator.empty())
+                        conversionIndicator[plane][j] = 1.0;
+                    if (!conversionIndicatorNoConversion.empty())
+                        conversionIndicatorNoConversion[plane][j] = 1.0;
                 }
             }
 
@@ -487,6 +516,12 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                                 cr = events.getCallData(i).mwCr(S[j], cr0);
                             // compuate forced conversion value and update npv node
                             Real forcedConversionValue = S[j] * cr * notional(grid[i]) / N0 + accrual(grid[i]);
+                            if (forcedConversionValue > c && forcedConversionValue < value[plane][j]) {
+                                // conversion is forced -> update flags
+                                if (!conversionIndicator.empty())
+                                    conversionIndicator[plane][j] = 0.0;
+                                conversionExercised[plane][j] = false;
+                            }
                             value[plane][j] = std::min(std::max(forcedConversionValue, c), value[plane][j]);
                             if (!valueNoConversion.empty()) {
                                 valueNoConversion[plane][j] =
@@ -500,8 +535,13 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
             if (events.hasPut(i)) {
                 Real c = getCallPriceAmount(events.getPutData(i), notional(t_from), accrual(t_from));
                 for (Size j = 0; j < n; ++j) {
-                    if (!conversionExercised[plane][j])
-                        value[plane][j] = std::max(c, value[plane][j]);
+                    if (c > value[plane][j]) {
+                        // put is more favorable than conversion (if that happened above)
+                        value[plane][j] = c;
+                        if (!conversionIndicator.empty())
+                            conversionIndicator[plane][j] = 0.0;
+                        conversionExercised[plane][j] = false;
+                    }
                 }
                 if (!valueNoConversion.empty()) {
                     for (Size j = 0; j < n; ++j) {
@@ -558,6 +598,10 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
             solver->rollback(value[plane], t_from, t_to, 1, 0);
             if (!valueNoConversion.empty())
                 solver->rollback(valueNoConversion[plane], t_from, t_to, 1, 0);
+            if (!conversionIndicator.empty())
+                solver->rollback(conversionIndicator[plane], t_from, t_to, 1, 0);
+            if (!conversionIndicatorNoConversion.empty())
+                solver->rollback(conversionIndicatorNoConversion[plane], t_from, t_to, 1, 0);
 
         } // loop over stochastic conversion ratio planes
 
@@ -623,7 +667,8 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
            << "|" << std::setw(width) << "eq_fwd"
            << "|" << std::setw(width) << "div_amt"
            << "|" << std::setw(width) << "conv_val"
-           << "|" << std::setw(width) << "conv_prc" << "|";
+           << "|" << std::setw(width) << "conv_prc"
+           << "|";
 
     results_.additionalResults["event_0000!"] = header.str();
 
@@ -749,7 +794,7 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
     results_.additionalResults["market.creditSpread(tMax)"] =
         -std::log(model_->creditCurve()->survivalProbability(tMax)) / tMax;
     if (!creditCurve_.empty()) {
-       results_.additionalResults["market.exchangeableBondSpread(tMax)"] =
+        results_.additionalResults["market.exchangeableBondSpread(tMax)"] =
             -std::log(creditCurve_->survivalProbability(tMax)) / tMax;
     }
     results_.additionalResults["market.recoveryRate"] = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
@@ -764,6 +809,12 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
     results_.additionalResults["model.calibrationTimes"] = model_->stepTimes();
     results_.additionalResults["model.h0"] = model_->h0();
     results_.additionalResults["model.sigma"] = model_->sigma();
+
+    if (!conversionIndicator.empty()) {
+        MonotonicCubicNaturalSpline interpolationConversionIndicator(
+            mesher_->locations().begin(), mesher_->locations().end(), conversionIndicator[0].begin());
+        results_.additionalResults["conversionIndicator"] = interpolationConversionIndicator(logSpot);
+    }
 }
 
 } // namespace QuantExt

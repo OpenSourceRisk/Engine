@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file models/localvolmodelbuilder.hpp
+/*! \file ored/model/localvolmodelbuilder.hpp
     \brief builder for an array of local vol processes
     \ingroup utilities
 */
@@ -28,28 +28,34 @@
 namespace ore {
 namespace data {
 
-using namespace ore::data;
 using namespace QuantLib;
 
 class LocalVolModelBuilder : public BlackScholesModelBuilderBase {
 public:
-    enum class Type { Dupire, AndreasenHuge };
+    enum class Type { Dupire, DupireFloored, AndreasenHuge };
     LocalVolModelBuilder(const std::vector<Handle<YieldTermStructure>>& curves,
-                         const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
-                         const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                         const Size timeStepsPerYear, const Type lvType, const std::vector<Real>& calibrationMoneyness,
-                         const bool dontCalibrate);
+                         const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+                         const std::set<Date>& simulationDates = {},
+                         const std::set<Date>& addDates = {},
+                         const Size timeStepsPerYear = 1,
+                         const Type lvType = Type::Dupire,
+                         const std::vector<Real>& calibrationMoneyness = { -2.0, -1.0, 0.0, 1.0, 2.0 },
+                         const bool dontCalibrate = false);
     LocalVolModelBuilder(const Handle<YieldTermStructure>& curve,
-                         const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
-                         const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                         const Size timeStepsPerYear, const Type lvType, const std::vector<Real>& calibrationMoneyness,
-                         const bool dontCalibrate)
+                         const ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
+                         const std::set<Date>& simulationDates = {},
+                         const std::set<Date>& addDates = {},
+                         const Size timeStepsPerYear = 1,
+                         const Type lvType = Type::Dupire,
+                         const std::vector<Real>& calibrationMoneyness = { -2.0, -1.0, 0.0, 1.0, 2.0 },
+                         const bool dontCalibrate = false)
         : LocalVolModelBuilder(std::vector<Handle<YieldTermStructure>>{curve},
-                               std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>{process}, simulationDates,
+                               std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>{process}, simulationDates,
                                addDates, timeStepsPerYear, lvType, calibrationMoneyness, dontCalibrate) {}
 
+    std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
+
 protected:
-    std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
     std::vector<std::vector<Real>> getCurveTimes() const override;
     std::vector<std::vector<std::pair<Real, Real>>> getVolTimesStrikes() const override;
 

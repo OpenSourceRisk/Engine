@@ -38,8 +38,71 @@ using RFType = RiskFactorKey::KeyType;
 using ShiftData = SensitivityScenarioData::ShiftData;
 
 void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) {
-    data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
-    data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+
+    // read in the shift types, sizes, schemes for all keys
+
+    vector<string> shiftTypeKeys;
+    vector<string> shiftSizeKeys;
+    vector<string> shiftSchemeKeys;
+
+    auto shiftTypes =
+        XMLUtils::getChildrenValuesWithAttributes(child, std::string(), "ShiftType", "key", shiftTypeKeys);
+    auto shiftSizes = XMLUtils::getChildrenValuesWithAttributes<Real>(child, std::string(), "ShiftSize", "key",
+                                                                      shiftSizeKeys, &ore::data::parseReal);
+    auto shiftSchemes =
+        XMLUtils::getChildrenValuesWithAttributes(child, std::string(), "ShiftScheme", "key", shiftSchemeKeys);
+
+    // check that attributes are unique
+
+    QL_REQUIRE(shiftTypeKeys.size() == std::set<string>(shiftTypeKeys.begin(), shiftTypeKeys.end()).size(),
+               "SensitivityScenarioData::shiftDataFromXML(): non-unique attributes for ShiftType in node '"
+                   << XMLUtils::getNodeName(child) << "'");
+    QL_REQUIRE(shiftSizeKeys.size() == std::set<string>(shiftSizeKeys.begin(), shiftSizeKeys.end()).size(),
+               "SensitivityScenarioData::shiftDataFromXML(): non-unique attributes for ShiftSize in node '"
+                   << XMLUtils::getNodeName(child) << "'");
+    QL_REQUIRE(shiftSchemeKeys.size() == std::set<string>(shiftSchemeKeys.begin(), shiftSchemeKeys.end()).size(),
+               "SensitivityScenarioData::shiftDataFromXML(): non-unique attributes for ShiftScheme in node '"
+                   << XMLUtils::getNodeName(child) << "'");
+
+    // extract the parameter without attribute, shift type and size are mandatory, scheme is optional
+
+    auto shiftTypeEmptyKey = std::find(shiftTypeKeys.begin(), shiftTypeKeys.end(), std::string());
+    auto shiftSizeEmptyKey = std::find(shiftSizeKeys.begin(), shiftSizeKeys.end(), std::string());
+    auto shiftSchemeEmptyKey = std::find(shiftSchemeKeys.begin(), shiftSchemeKeys.end(), std::string());
+
+    QL_REQUIRE(shiftTypeEmptyKey != shiftTypeKeys.end(),
+               "SensitivityScenarioData::shiftDataFromXML(): no ShiftType without attribute defined in node '"
+                   << XMLUtils::getNodeName(child) << "'");
+    QL_REQUIRE(shiftSizeEmptyKey != shiftSizeKeys.end(),
+               "SensitivityScenarioData::shiftDataFromXML(): no ShiftSize without attribute defined in node '"
+                   << XMLUtils::getNodeName(child) << "'");
+
+    data.shiftType = parseShiftType(shiftTypes.at(std::distance(shiftTypeKeys.begin(), shiftTypeEmptyKey)));
+    data.shiftSize = shiftSizes.at(std::distance(shiftSizeKeys.begin(), shiftSizeEmptyKey));
+
+    if (shiftSchemeEmptyKey == shiftSchemeKeys.end())
+        data.shiftScheme = ShiftScheme::Forward;
+    else
+        data.shiftScheme =
+            parseShiftScheme(shiftSchemes.at(std::distance(shiftSchemeKeys.begin(), shiftSchemeEmptyKey)));
+
+    // extract the parameters with attribute
+
+    for (Size i = 0; i < shiftTypeKeys.size(); ++i) {
+        if (!shiftTypeKeys[i].empty()) {
+            data.keyedShiftType[shiftTypeKeys[i]] = parseShiftType(shiftTypes[i]);
+        }
+    }
+    for (Size i = 0; i < shiftSizeKeys.size(); ++i) {
+        if (!shiftSizeKeys[i].empty()) {
+            data.keyedShiftSize[shiftSizeKeys[i]] = shiftSizes[i];
+        }
+    }
+    for (Size i = 0; i < shiftSchemeKeys.size(); ++i) {
+        if (!shiftSchemeKeys[i].empty()) {
+            data.keyedShiftScheme[shiftSchemeKeys[i]] = parseShiftScheme(shiftSchemes[i]);
+        }
+    }
 }
 
 void SensitivityScenarioData::curveShiftDataFromXML(XMLNode* child, CurveShiftData& data) {
@@ -61,8 +124,15 @@ void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& 
 }
 
 void SensitivityScenarioData::shiftDataToXML(XMLDocument& doc, XMLNode* node, const ShiftData& data) const {
-    XMLUtils::addChild(doc, node, "ShiftType", data.shiftType);
+    XMLUtils::addChild(doc, node, "ShiftType", ore::data::to_string(data.shiftType));
+    for (auto const& [k, v] : data.keyedShiftType)
+        XMLUtils::addChild(doc, node, "ShiftType", ore::data::to_string(v), "key", k);
     XMLUtils::addChild(doc, node, "ShiftSize", data.shiftSize);
+    for (auto const& [k, v] : data.keyedShiftSize)
+        XMLUtils::addChild(doc, node, "ShiftSize", XMLUtils::convertToString(v), "key", k);
+    XMLUtils::addChild(doc, node, "ShiftScheme", ore::data::to_string(data.shiftScheme));
+    for (auto const& [k, v] : data.keyedShiftScheme)
+        XMLUtils::addChild(doc, node, "ShiftScheme", ore::data::to_string(v), "key", k);
 }
 
 void SensitivityScenarioData::curveShiftDataToXML(XMLDocument& doc, XMLNode* node, const CurveShiftData& data) const {
@@ -128,28 +198,24 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
     }
 }
 
-bool SensitivityScenarioData::twoSidedDelta(const RiskFactorKey::KeyType& keyType) const {
-    return twoSidedDeltas_.count(keyType) == 1;
-}
-
 void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* node = XMLUtils::locateNode(root, "SensitivityAnalysis");
     XMLUtils::checkNode(node, "SensitivityAnalysis");
 
-    LOG("Get discount curve sensitivity parameters");
+    DLOG("Get discount curve sensitivity parameters");
     XMLNode* discountCurves = XMLUtils::getChildNode(node, "DiscountCurves");
     if (discountCurves) {
         for (XMLNode* child = XMLUtils::getChildNode(discountCurves, "DiscountCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
-            LOG("Discount curve for ccy " << ccy);
+            DLOG("Discount curve for ccy " << ccy);
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            discountCurveShiftData_[ccy] = boost::make_shared<CurveShiftData>(data);
+            discountCurveShiftData_[ccy] = QuantLib::ext::make_shared<CurveShiftData>(data);
         }
     }
 
-    LOG("Get index curve sensitivity parameters");
+    DLOG("Get index curve sensitivity parameters");
     XMLNode* indexCurves = XMLUtils::getChildNode(node, "IndexCurves");
     if (indexCurves) {
         for (XMLNode* child = XMLUtils::getChildNode(indexCurves, "IndexCurve"); child;
@@ -157,11 +223,11 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string index = XMLUtils::getAttribute(child, "index");
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            indexCurveShiftData_[index] = boost::make_shared<CurveShiftData>(data);
+            indexCurveShiftData_[index] = QuantLib::ext::make_shared<CurveShiftData>(data);
         }
     }
 
-    LOG("Get yield curve sensitivity parameters");
+    DLOG("Get yield curve sensitivity parameters");
     XMLNode* yieldCurves = XMLUtils::getChildNode(node, "YieldCurves");
     if (yieldCurves) {
         for (XMLNode* child = XMLUtils::getChildNode(yieldCurves, "YieldCurve"); child;
@@ -171,24 +237,24 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             curveShiftDataFromXML(child, data);
 
             string curveType = XMLUtils::getChildValue(child, "CurveType", false);
-            yieldCurveShiftData_[curveName] = boost::make_shared<CurveShiftData>(data);
+            yieldCurveShiftData_[curveName] = QuantLib::ext::make_shared<CurveShiftData>(data);
         }
     }
 
-    LOG("Get dividend yield curve sensitivity parameters");
+    DLOG("Get dividend yield curve sensitivity parameters");
     XMLNode* dividendYieldCurves = XMLUtils::getChildNode(node, "DividendYieldCurves");
     if (dividendYieldCurves) {
         for (XMLNode* child = XMLUtils::getChildNode(dividendYieldCurves, "DividendYieldCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string curveName = XMLUtils::getAttribute(child, "equity");
-            LOG("Add dividend yield curve data for equity " << curveName);
+            DLOG("Add dividend yield curve data for equity " << curveName);
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            dividendYieldShiftData_[curveName] = boost::make_shared<CurveShiftData>(data);
+            dividendYieldShiftData_[curveName] = QuantLib::ext::make_shared<CurveShiftData>(data);
         }
     }
 
-    LOG("Get FX spot sensitivity parameters");
+    DLOG("Get FX spot sensitivity parameters");
     XMLNode* fxSpots = XMLUtils::getChildNode(node, "FxSpots");
     if (fxSpots) {
         for (XMLNode* child = XMLUtils::getChildNode(fxSpots, "FxSpot"); child;
@@ -200,7 +266,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get swaption vol sensitivity parameters");
+    DLOG("Get swaption vol sensitivity parameters");
     XMLNode* swaptionVols = XMLUtils::getChildNode(node, "SwaptionVolatilities");
     if (swaptionVols) {
         for (XMLNode* child = XMLUtils::getChildNode(swaptionVols, "SwaptionVolatility"); child;
@@ -222,7 +288,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get yield vol sensitivity parameters");
+    DLOG("Get yield vol sensitivity parameters");
     XMLNode* yieldVols = XMLUtils::getChildNode(node, "YieldVolatilities");
     if (yieldVols) {
         for (XMLNode* child = XMLUtils::getChildNode(yieldVols, "YieldVolatility"); child;
@@ -239,7 +305,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get cap/floor vol sensitivity parameters");
+    DLOG("Get cap/floor vol sensitivity parameters");
     XMLNode* capVols = XMLUtils::getChildNode(node, "CapFloorVolatilities");
     if (capVols) {
         for (XMLNode* child = XMLUtils::getChildNode(capVols, "CapFloorVolatility"); child;
@@ -252,14 +318,14 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
                     ALOG("SensitivityData: attribute 'ccy' for CapFloorVolatilities is deprecated, use 'key' instead.");
                 }
 	    }
-            auto data = boost::make_shared<CapFloorVolShiftData>();
+            auto data = QuantLib::ext::make_shared<CapFloorVolShiftData>();
             volShiftDataFromXML(child, *data);
             data->indexName = XMLUtils::getChildValue(child, "Index", true);
             capFloorVolShiftData_[key] = data;
         }
     }
 
-    LOG("Get fx vol sensitivity parameters");
+    DLOG("Get fx vol sensitivity parameters");
     XMLNode* fxVols = XMLUtils::getChildNode(node, "FxVolatilities");
     if (fxVols) {
         for (XMLNode* child = XMLUtils::getChildNode(fxVols, "FxVolatility"); child;
@@ -271,7 +337,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get credit curve sensitivity parameters");
+    DLOG("Get credit curve sensitivity parameters");
     XMLNode* creditCurves = XMLUtils::getChildNode(node, "CreditCurves");
     if (creditCurves) {
         for (XMLNode* child = XMLUtils::getChildNode(creditCurves, "CreditCurve"); child;
@@ -281,11 +347,11 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             creditCcys_[name] = ccy;
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            creditCurveShiftData_[name] = boost::make_shared<CurveShiftData>(data);
+            creditCurveShiftData_[name] = QuantLib::ext::make_shared<CurveShiftData>(data);
         }
     }
 
-    LOG("Get cds vol sensitivity parameters");
+    DLOG("Get cds vol sensitivity parameters");
     XMLNode* cdsVols = XMLUtils::getChildNode(node, "CDSVolatilities");
     if (cdsVols) {
         for (XMLNode* child = XMLUtils::getChildNode(cdsVols, "CDSVolatility"); child;
@@ -298,7 +364,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get Base Correlation sensitivity parameters");
+    DLOG("Get Base Correlation sensitivity parameters");
     XMLNode* bcNode = XMLUtils::getChildNode(node, "BaseCorrelations");
     if (bcNode) {
         for (XMLNode* child = XMLUtils::getChildNode(bcNode, "BaseCorrelation"); child;
@@ -312,7 +378,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get Equity spot sensitivity parameters");
+    DLOG("Get Equity spot sensitivity parameters");
     XMLNode* equitySpots = XMLUtils::getChildNode(node, "EquitySpots");
     if (equitySpots) {
         for (XMLNode* child = XMLUtils::getChildNode(equitySpots, "EquitySpot"); child;
@@ -324,7 +390,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get Equity vol sensitivity parameters");
+    DLOG("Get Equity vol sensitivity parameters");
     XMLNode* equityVols = XMLUtils::getChildNode(node, "EquityVolatilities");
     if (equityVols) {
         for (XMLNode* child = XMLUtils::getChildNode(equityVols, "EquityVolatility"); child;
@@ -336,7 +402,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get Zero Inflation sensitivity parameters");
+    DLOG("Get Zero Inflation sensitivity parameters");
     XMLNode* zeroInflation = XMLUtils::getChildNode(node, "ZeroInflationIndexCurves");
     if (zeroInflation) {
         for (XMLNode* child = XMLUtils::getChildNode(zeroInflation, "ZeroInflationIndexCurve"); child;
@@ -344,11 +410,11 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string index = XMLUtils::getAttribute(child, "index");
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            zeroInflationCurveShiftData_[index] = boost::make_shared<CurveShiftData>(data);
+            zeroInflationCurveShiftData_[index] = QuantLib::ext::make_shared<CurveShiftData>(data);
         }
     }
 
-    LOG("Get Yoy Inflation sensitivity parameters");
+    DLOG("Get Yoy Inflation sensitivity parameters");
     XMLNode* yoyInflation = XMLUtils::getChildNode(node, "YYInflationIndexCurves");
     if (yoyInflation) {
         for (XMLNode* child = XMLUtils::getChildNode(yoyInflation, "YYInflationIndexCurve"); child;
@@ -356,35 +422,35 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string index = XMLUtils::getAttribute(child, "index");
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            yoyInflationCurveShiftData_[index] = boost::make_shared<CurveShiftData>(data);
+            yoyInflationCurveShiftData_[index] = QuantLib::ext::make_shared<CurveShiftData>(data);
         }
     }
 
-    LOG("Get yoy inflation cap/floor vol sensitivity parameters");
+    DLOG("Get yoy inflation cap/floor vol sensitivity parameters");
     XMLNode* yoyCapVols = XMLUtils::getChildNode(node, "YYCapFloorVolatilities");
     if (yoyCapVols) {
         for (XMLNode* child = XMLUtils::getChildNode(yoyCapVols, "YYCapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            auto data = boost::make_shared<CapFloorVolShiftData>();
+            auto data = QuantLib::ext::make_shared<CapFloorVolShiftData>();
             volShiftDataFromXML(child, *data);
             yoyInflationCapFloorVolShiftData_[index] = data;
         }
     }
 
-    LOG("Get zero inflation cap/floor vol sensitivity parameters");
+    DLOG("Get zero inflation cap/floor vol sensitivity parameters");
     XMLNode* zeroCapVols = XMLUtils::getChildNode(node, "CPICapFloorVolatilities");
     if (zeroCapVols) {
         for (XMLNode* child = XMLUtils::getChildNode(zeroCapVols, "CPICapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            auto data = boost::make_shared<CapFloorVolShiftData>();
+            auto data = QuantLib::ext::make_shared<CapFloorVolShiftData>();
             volShiftDataFromXML(child, *data);
             zeroInflationCapFloorVolShiftData_[index] = data;
         }
     }
 
-    LOG("Get commodity curve sensitivity parameters");
+    DLOG("Get commodity curve sensitivity parameters");
     XMLNode* ccNode = XMLUtils::getChildNode(node, "CommodityCurves");
     if (ccNode) {
         for (XMLNode* child = XMLUtils::getChildNode(ccNode, "CommodityCurve"); child;
@@ -393,11 +459,11 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             commodityCurrencies_[name] = XMLUtils::getChildValue(child, "Currency", true);
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            commodityCurveShiftData_[name] = boost::make_shared<CurveShiftData>(data);
+            commodityCurveShiftData_[name] = QuantLib::ext::make_shared<CurveShiftData>(data);
         }
     }
 
-    LOG("Get commodity volatility sensitivity parameters");
+    DLOG("Get commodity volatility sensitivity parameters");
     XMLNode* cvNode = XMLUtils::getChildNode(node, "CommodityVolatilities");
     if (cvNode) {
         for (XMLNode* child = XMLUtils::getChildNode(cvNode, "CommodityVolatility"); child;
@@ -416,7 +482,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get security spread sensitivity parameters");
+    DLOG("Get security spread sensitivity parameters");
     XMLNode* securitySpreads = XMLUtils::getChildNode(node, "SecuritySpreads");
     if (securitySpreads) {
         for (XMLNode* child = XMLUtils::getChildNode(securitySpreads, "SecuritySpread"); child;
@@ -428,7 +494,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get correlation sensitivity parameters");
+    DLOG("Get correlation sensitivity parameters");
     XMLNode* correlations = XMLUtils::getChildNode(node, "Correlations");
     if (correlations) {
         for (XMLNode* child = XMLUtils::getChildNode(correlations, "Correlation"); child;
@@ -444,7 +510,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
     XMLNode* CGF = XMLUtils::getChildNode(node, "CrossGammaFilter");
     if (CGF) {
-        LOG("Get cross gamma parameters");
+        DLOG("Get cross gamma parameters");
         vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
         for (Size i = 0; i < filter.size(); ++i) {
             vector<string> tokens;
@@ -454,23 +520,14 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    LOG("Get compute gamma flag");
+    DLOG("Get compute gamma flag");
     computeGamma_ = XMLUtils::getChildValueAsBool(node, "ComputeGamma", false); // defaults to true
 
-    LOG("Get useSpreadedTermStructures flag");
+    DLOG("Get useSpreadedTermStructures flag");
     if (auto n = XMLUtils::getChildNode(node, "UseSpreadedTermStructures"))
         useSpreadedTermStructures_ = parseBool(XMLUtils::getNodeValue(n));
     else
         useSpreadedTermStructures_ = false;
-
-    DLOG("Get TwoSidedDeltaKeyTypes.");
-    if (auto n = XMLUtils::getChildNode(node, "TwoSidedDeltaKeyTypes")) {
-        for (XMLNode* c = XMLUtils::getChildNode(n, "RiskFactorKeyType"); c; c = XMLUtils::getNextSibling(c)) {
-            auto keyType = parseRiskFactorKeyType(XMLUtils::getNodeValue(c));
-            twoSidedDeltas_.insert(keyType);
-            TLOG("Added key type " << keyType << " from TwoSidedDeltaKeyTypes.");
-        }
-    }
 
     if (!parConversion_)
         return;
@@ -478,7 +535,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     node = XMLUtils::locateNode(root, "SensitivityAnalysis");
     XMLUtils::checkNode(node, "SensitivityAnalysis");
 
-    LOG("Get discount curve parSensitivity parameters");
+    DLOG("Get discount curve parSensitivity parameters");
     discountCurves = XMLUtils::getChildNode(node, "DiscountCurves");
     if (discountCurves) {
         for (XMLNode* child = XMLUtils::getChildNode(discountCurves, "DiscountCurve"); child;
@@ -486,11 +543,11 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
             CurveShiftParData data(*discountCurveShiftData_.find(ccy)->second);
             parDataFromXML(child, data);
-            discountCurveShiftData_[ccy] = boost::make_shared<CurveShiftParData>(data);
+            discountCurveShiftData_[ccy] = QuantLib::ext::make_shared<CurveShiftParData>(data);
         }
     }
 
-    LOG("Get index curve parSensitivity parameters");
+    DLOG("Get index curve parSensitivity parameters");
     indexCurves = XMLUtils::getChildNode(node, "IndexCurves");
     if (indexCurves) {
         for (XMLNode* child = XMLUtils::getChildNode(indexCurves, "IndexCurve"); child;
@@ -498,11 +555,11 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string index = XMLUtils::getAttribute(child, "index");
             CurveShiftParData data(*indexCurveShiftData_.find(index)->second);
             parDataFromXML(child, data);
-            indexCurveShiftData_[index] = boost::make_shared<CurveShiftParData>(data);
+            indexCurveShiftData_[index] = QuantLib::ext::make_shared<CurveShiftParData>(data);
         }
     }
 
-    LOG("Get yield curve parSensitivity parameters");
+    DLOG("Get yield curve parSensitivity parameters");
     yieldCurves = XMLUtils::getChildNode(node, "YieldCurves");
     if (yieldCurves) {
         for (XMLNode* child = XMLUtils::getChildNode(yieldCurves, "YieldCurve"); child;
@@ -511,11 +568,11 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string curveType = XMLUtils::getChildValue(child, "CurveType", false);
             CurveShiftParData data(*yieldCurveShiftData_.find(curveName)->second);
             parDataFromXML(child, data);
-            yieldCurveShiftData_[curveName] = boost::make_shared<CurveShiftParData>(data);
+            yieldCurveShiftData_[curveName] = QuantLib::ext::make_shared<CurveShiftParData>(data);
         }
     }
 
-    LOG("Get cap/floor vol par sensitivity parameters");
+    DLOG("Get cap/floor vol par sensitivity parameters");
     capVols = XMLUtils::getChildNode(node, "CapFloorVolatilities");
     if (capVols) {
         for (XMLNode* child = XMLUtils::getChildNode(capVols, "CapFloorVolatility"); child;
@@ -533,11 +590,11 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             if (par) {
                 data.discountCurve = XMLUtils::getChildValue(par, "DiscountCurve", false);
             }
-            capFloorVolShiftData_[key] = boost::make_shared<CapFloorVolShiftParData>(data);
+            capFloorVolShiftData_[key] = QuantLib::ext::make_shared<CapFloorVolShiftParData>(data);
         }
     }
 
-    LOG("Get credit curve parSensitivity parameters");
+    DLOG("Get credit curve parSensitivity parameters");
     creditCurves = XMLUtils::getChildNode(node, "CreditCurves");
     if (creditCurves) {
         for (XMLNode* child = XMLUtils::getChildNode(creditCurves, "CreditCurve"); child;
@@ -545,11 +602,11 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string name = XMLUtils::getAttribute(child, "name");
             CurveShiftParData data(*creditCurveShiftData_.find(name)->second);
             parDataFromXML(child, data);
-            creditCurveShiftData_[name] = boost::make_shared<CurveShiftParData>(data);
+            creditCurveShiftData_[name] = QuantLib::ext::make_shared<CurveShiftParData>(data);
         }
     }
 
-    LOG("Get Zero Inflation parSensitivity parameters");
+    DLOG("Get Zero Inflation parSensitivity parameters");
     zeroInflation = XMLUtils::getChildNode(node, "ZeroInflationIndexCurves");
     if (zeroInflation) {
         for (XMLNode* child = XMLUtils::getChildNode(zeroInflation, "ZeroInflationIndexCurve"); child;
@@ -557,11 +614,11 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string index = XMLUtils::getAttribute(child, "index");
             CurveShiftParData data(*zeroInflationCurveShiftData_.find(index)->second);
             parDataFromXML(child, data);
-            zeroInflationCurveShiftData_[index] = boost::make_shared<CurveShiftParData>(data);
+            zeroInflationCurveShiftData_[index] = QuantLib::ext::make_shared<CurveShiftParData>(data);
         }
     }
 
-    LOG("Get Yoy Inflation parSensitivity parameters");
+    DLOG("Get Yoy Inflation parSensitivity parameters");
     yoyInflation = XMLUtils::getChildNode(node, "YYInflationIndexCurves");
     if (yoyInflation) {
         for (XMLNode* child = XMLUtils::getChildNode(yoyInflation, "YYInflationIndexCurve"); child;
@@ -569,11 +626,11 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string index = XMLUtils::getAttribute(child, "index");
             CurveShiftParData data(*yoyInflationCurveShiftData_.find(index)->second);
             parDataFromXML(child, data);
-            yoyInflationCurveShiftData_[index] = boost::make_shared<CurveShiftParData>(data);
+            yoyInflationCurveShiftData_[index] = QuantLib::ext::make_shared<CurveShiftParData>(data);
         }
     }
 
-    LOG("Get Yoy cap/floor vol par sensitivity parameters");
+    DLOG("Get Yoy cap/floor vol par sensitivity parameters");
     yoyCapVols = XMLUtils::getChildNode(node, "YYCapFloorVolatilities");
     if (yoyCapVols) {
         for (XMLNode* child = XMLUtils::getChildNode(yoyCapVols, "YYCapFloorVolatility"); child;
@@ -590,17 +647,17 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
                 data.parInstrumentConventions =
                     XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
             }
-            yoyInflationCapFloorVolShiftData_[index] = boost::make_shared<CapFloorVolShiftParData>(data);
+            yoyInflationCapFloorVolShiftData_[index] = QuantLib::ext::make_shared<CapFloorVolShiftParData>(data);
         }
     }
 }
 
-XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
+XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
 
     XMLNode* root = doc.allocNode("SensitivityAnalysis");
 
     if (!discountCurveShiftData_.empty()) {
-        LOG("toXML for DiscountCurves");
+        DLOG("toXML for DiscountCurves");
         XMLNode* parent = XMLUtils::addChild(doc, root, "DiscountCurves");
         for (const auto& kv : discountCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "DiscountCurve");
@@ -610,7 +667,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!indexCurveShiftData_.empty()) {
-        LOG("toXML for IndexCurves");
+        DLOG("toXML for IndexCurves");
         XMLNode* parent = XMLUtils::addChild(doc, root, "IndexCurves");
         for (const auto& kv : indexCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "IndexCurve");
@@ -621,7 +678,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
 
     if (!yieldCurveShiftData_.empty()) {
         XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, root, "YieldCurves");
-        LOG("toXML for YieldCurves");
+        DLOG("toXML for YieldCurves");
         for (const auto& kv : yieldCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, yieldCurvesNode, "YieldCurve");
             XMLUtils::addAttribute(doc, node, "name", kv.first);
@@ -630,7 +687,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!dividendYieldShiftData_.empty()) {
-        LOG("toXML for DividendYieldCurves");
+        DLOG("toXML for DividendYieldCurves");
         XMLNode* parent = XMLUtils::addChild(doc, root, "DividendYieldCurves");
         for (const auto& kv : dividendYieldShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "DividendYieldCurve");
@@ -640,7 +697,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!fxShiftData_.empty()) {
-        LOG("toXML for FxSpots");
+        DLOG("toXML for FxSpots");
         XMLNode* parent = XMLUtils::addChild(doc, root, "FxSpots");
         for (const auto& kv : fxShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "FxSpot");
@@ -650,7 +707,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!swaptionVolShiftData_.empty()) {
-        LOG("toXML for SwaptionVolatilities");
+        DLOG("toXML for SwaptionVolatilities");
         XMLNode* parent = XMLUtils::addChild(doc, root, "SwaptionVolatilities");
         for (const auto& kv : swaptionVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "SwaptionVolatility");
@@ -661,7 +718,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!yieldVolShiftData_.empty()) {
-        LOG("toXML for YieldVolatilities");
+        DLOG("toXML for YieldVolatilities");
         XMLNode* parent = XMLUtils::addChild(doc, root, "YieldVolatilities");
         for (const auto& kv : yieldVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "YieldVolatility");
@@ -672,7 +729,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!capFloorVolShiftData_.empty()) {
-        LOG("toXML for CapFloorVolatilities");
+        DLOG("toXML for CapFloorVolatilities");
         XMLNode* parent = XMLUtils::addChild(doc, root, "CapFloorVolatilities");
         for (const auto& kv : capFloorVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "CapFloorVolatility");
@@ -684,7 +741,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!fxVolShiftData_.empty()) {
-        LOG("toXML for FxVolatilities");
+        DLOG("toXML for FxVolatilities");
         XMLNode* parent = XMLUtils::addChild(doc, root, "FxVolatilities");
         for (const auto& kv : fxVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "FxVolatility");
@@ -694,18 +751,18 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!creditCurveShiftData_.empty()) {
-        LOG("toXML for CreditCurves");
+        DLOG("toXML for CreditCurves");
         XMLNode* parent = XMLUtils::addChild(doc, root, "CreditCurves");
         for (const auto& kv : creditCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "CreditCurve");
             XMLUtils::addAttribute(doc, node, "name", kv.first);
-            XMLUtils::addChild(doc, node, "Currency", creditCcys_[kv.first]);
+            XMLUtils::addChild(doc, node, "Currency", creditCcys_.find(kv.first)->second);
             curveShiftDataToXML(doc, node, *kv.second);
         }
     }
 
     if (!cdsVolShiftData_.empty()) {
-        LOG("toXML for CDSVolatilities");
+        DLOG("toXML for CDSVolatilities");
         XMLNode* parent = XMLUtils::addChild(doc, root, "CDSVolatilities");
         for (const auto& kv : cdsVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "CDSVolatility");
@@ -716,7 +773,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!baseCorrelationShiftData_.empty()) {
-        LOG("toXML for BaseCorrelations");
+        DLOG("toXML for BaseCorrelations");
         XMLNode* parent = XMLUtils::addChild(doc, root, "BaseCorrelations");
         for (const auto& kv : baseCorrelationShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "BaseCorrelation");
@@ -728,7 +785,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!equityShiftData_.empty()) {
-        LOG("toXML for EquitySpots");
+        DLOG("toXML for EquitySpots");
         XMLNode* parent = XMLUtils::addChild(doc, root, "EquitySpots");
         for (const auto& kv : equityShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "EquitySpot");
@@ -738,7 +795,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!equityVolShiftData_.empty()) {
-        LOG("toXML for EquityVolatilities");
+        DLOG("toXML for EquityVolatilities");
         XMLNode* parent = XMLUtils::addChild(doc, root, "EquityVolatilities");
         for (const auto& kv : equityVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "EquityVolatility");
@@ -748,7 +805,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!zeroInflationCurveShiftData_.empty()) {
-        LOG("toXML for ZeroInflationIndexCurves");
+        DLOG("toXML for ZeroInflationIndexCurves");
         XMLNode* parent = XMLUtils::addChild(doc, root, "ZeroInflationIndexCurves");
         for (const auto& kv : zeroInflationCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "ZeroInflationIndexCurve");
@@ -758,7 +815,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!yoyInflationCurveShiftData_.empty()) {
-        LOG("toXML for YYInflationIndexCurves");
+        DLOG("toXML for YYInflationIndexCurves");
         XMLNode* parent = XMLUtils::addChild(doc, root, "YYInflationIndexCurves");
         for (const auto& kv : yoyInflationCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "YYInflationIndexCurve");
@@ -768,7 +825,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!yoyInflationCapFloorVolShiftData_.empty()) {
-        LOG("toXML for YYInflationCapFloorVolatilities");
+        DLOG("toXML for YYInflationCapFloorVolatilities");
         XMLNode* parent = XMLUtils::addChild(doc, root, "YYCapFloorVolatilities");
         for (const auto& kv : yoyInflationCapFloorVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "YYCapFloorVolatility");
@@ -778,7 +835,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!zeroInflationCapFloorVolShiftData_.empty()) {
-        LOG("toXML for CPIInflationCapFloorVolatilities");
+        DLOG("toXML for CPIInflationCapFloorVolatilities");
         XMLNode* parent = XMLUtils::addChild(doc, root, "CPICapFloorVolatilities");
         for (const auto& kv : zeroInflationCapFloorVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "CPICapFloorVolatility");
@@ -788,18 +845,18 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!commodityCurveShiftData_.empty()) {
-        LOG("toXML for CommodityCurves");
+        DLOG("toXML for CommodityCurves");
         XMLNode* parent = XMLUtils::addChild(doc, root, "CommodityCurves");
         for (const auto& kv : commodityCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "CommodityCurve");
             XMLUtils::addAttribute(doc, node, "name", kv.first);
-            XMLUtils::addChild(doc, node, "Currency", commodityCurrencies_[kv.first]);
+            XMLUtils::addChild(doc, node, "Currency", commodityCurrencies_.find(kv.first)->second);
             curveShiftDataToXML(doc, node, *kv.second);
         }
     }
 
     if (!commodityVolShiftData_.empty()) {
-        LOG("toXML for CommodityVolatilities");
+        DLOG("toXML for CommodityVolatilities");
         XMLNode* parent = XMLUtils::addChild(doc, root, "CommodityVolatilities");
         for (const auto& kv : commodityVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "CommodityVolatility");
@@ -809,7 +866,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!securityShiftData_.empty()) {
-        LOG("toXML for SecuritySpreads");
+        DLOG("toXML for SecuritySpreads");
         XMLNode* parent = XMLUtils::addChild(doc, root, "SecuritySpreads");
         for (const auto& kv : securityShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "SecuritySpread");
@@ -819,7 +876,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!correlationShiftData_.empty()) {
-        LOG("toXML for Correlations");
+        DLOG("toXML for Correlations");
         XMLNode* parent = XMLUtils::addChild(doc, root, "Correlations");
         for (const auto& kv : correlationShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "Correlation");
@@ -832,7 +889,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     if (!crossGammaFilter_.empty()) {
-        LOG("toXML for CrossGammaFilter");
+        DLOG("toXML for CrossGammaFilter");
         XMLNode* parent = XMLUtils::addChild(doc, root, "CrossGammaFilter");
         for (const auto& crossGamma : crossGammaFilter_) {
             XMLUtils::addChild(doc, parent, "Pair", crossGamma.first + "," + crossGamma.second);
@@ -842,14 +899,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
     XMLUtils::addChild(doc, root, "UseSpreadedTermStructures", useSpreadedTermStructures_);
 
-    if (!twoSidedDeltas_.empty()) {
-        DLOG("toXML for TwoSidedDeltaKeyTypes");
-        XMLNode* parent = XMLUtils::addChild(doc, root, "TwoSidedDeltaKeyTypes");
-        for (const auto& keyType : twoSidedDeltas_) {
-            XMLUtils::addChild(doc, parent, "RiskFactorKeyType", to_string(keyType));
-        }
-    }
-
     // If not par, no more to do
     if (!parConversion_)
         return root;
@@ -857,29 +906,29 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     // If par, add par nodes where necessary
     XMLNode* discountCurves = XMLUtils::getChildNode(root, "DiscountCurves");
     if (discountCurves) {
-        LOG("toXML for DiscountCurves ParConversion node");
+        DLOG("toXML for DiscountCurves ParConversion node");
         for (XMLNode* child = XMLUtils::getChildNode(discountCurves, "DiscountCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
-            XMLNode* parNode = parDataToXML(doc, discountCurveShiftData_[ccy]);
+            XMLNode* parNode = parDataToXML(doc, discountCurveShiftData_.find(ccy)->second);
             XMLUtils::appendNode(child, parNode);
         }
     }
 
     XMLNode* indexCurves = XMLUtils::getChildNode(root, "IndexCurves");
     if (indexCurves) {
-        LOG("toXML for IndexCurves ParConversion node");
+        DLOG("toXML for IndexCurves ParConversion node");
         for (XMLNode* child = XMLUtils::getChildNode(indexCurves, "IndexCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            XMLNode* parNode = parDataToXML(doc, indexCurveShiftData_[index]);
+            XMLNode* parNode = parDataToXML(doc, indexCurveShiftData_.find(index)->second);
             XMLUtils::appendNode(child, parNode);
         }
     }
 
     XMLNode* yieldCurves = XMLUtils::getChildNode(root, "YieldCurves");
     if (yieldCurves) {
-        LOG("toXML for YieldCurves ParConversion node");
+        DLOG("toXML for YieldCurves ParConversion node");
         for (XMLNode* child = XMLUtils::getChildNode(yieldCurves, "YieldCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string curveName = XMLUtils::getAttribute(child, "name");
@@ -894,44 +943,44 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
 
     XMLNode* creditCurves = XMLUtils::getChildNode(root, "CreditCurves");
     if (creditCurves) {
-        LOG("toXML for CreditCurves ParConversion node");
+        DLOG("toXML for CreditCurves ParConversion node");
         for (XMLNode* child = XMLUtils::getChildNode(creditCurves, "CreditCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string name = XMLUtils::getAttribute(child, "name");
-            XMLNode* parNode = parDataToXML(doc, creditCurveShiftData_[name]);
+            XMLNode* parNode = parDataToXML(doc, creditCurveShiftData_.find(name)->second);
             XMLUtils::appendNode(child, parNode);
         }
     }
 
     XMLNode* zeroInflation = XMLUtils::getChildNode(root, "ZeroInflationIndexCurves");
     if (zeroInflation) {
-        LOG("toXML for ZeroInflationIndexCurves ParConversion node");
+        DLOG("toXML for ZeroInflationIndexCurves ParConversion node");
         for (XMLNode* child = XMLUtils::getChildNode(zeroInflation, "ZeroInflationIndexCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            XMLNode* parNode = parDataToXML(doc, zeroInflationCurveShiftData_[index]);
+            XMLNode* parNode = parDataToXML(doc, zeroInflationCurveShiftData_.find(index)->second);
             XMLUtils::appendNode(child, parNode);
         }
     }
 
     XMLNode* yoyInflation = XMLUtils::getChildNode(root, "YYInflationIndexCurves");
     if (yoyInflation) {
-        LOG("toXML for YYInflationIndexCurves ParConversion node");
+        DLOG("toXML for YYInflationIndexCurves ParConversion node");
         for (XMLNode* child = XMLUtils::getChildNode(yoyInflation, "YYInflationIndexCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            XMLNode* parNode = parDataToXML(doc, yoyInflationCurveShiftData_[index]);
+            XMLNode* parNode = parDataToXML(doc, yoyInflationCurveShiftData_.find(index)->second);
             XMLUtils::appendNode(child, parNode);
         }
     }
 
     XMLNode* capFloor = XMLUtils::getChildNode(root, "CapFloorVolatilities");
     if (capFloor) {
-        LOG("toXML for CapFloorVolatilities ParConversion node");
+        DLOG("toXML for CapFloorVolatilities ParConversion node");
         for (XMLNode* child = XMLUtils::getChildNode(capFloor, "CapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string key = XMLUtils::getAttribute(child, "key");
-            auto data = boost::dynamic_pointer_cast<CapFloorVolShiftParData>(capFloorVolShiftData_[key]);
+            auto data = QuantLib::ext::dynamic_pointer_cast<CapFloorVolShiftParData>(capFloorVolShiftData_.find(key)->second);
             if (data) {
                 XMLNode* parNode = doc.allocNode("ParConversion");
                 if (!data->discountCurve.empty())
@@ -943,11 +992,11 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
 
     XMLNode* yoyCapFloor = XMLUtils::getChildNode(root, "YYCapFloorVolatilities");
     if (yoyCapFloor) {
-        LOG("toXML for YYCapFloorVolatilities ParConversion node");
+        DLOG("toXML for YYCapFloorVolatilities ParConversion node");
         for (XMLNode* child = XMLUtils::getChildNode(yoyCapFloor, "YYCapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            auto data = boost::dynamic_pointer_cast<CapFloorVolShiftParData>(yoyInflationCapFloorVolShiftData_[index]);
+            auto data = QuantLib::ext::dynamic_pointer_cast<CapFloorVolShiftParData>(yoyInflationCapFloorVolShiftData_.find(index)->second);
             if (data) {
                 XMLNode* parNode = doc.allocNode("ParConversion");
                 XMLUtils::addGenericChildAsList(doc, parNode, "Instruments", data->parInstruments);
@@ -989,10 +1038,10 @@ void SensitivityScenarioData::parDataFromXML(XMLNode* child, CurveShiftParData& 
 }
 
 XMLNode* SensitivityScenarioData::parDataToXML(XMLDocument& doc,
-                                               const boost::shared_ptr<CurveShiftData>& csd) const {
+                                               const QuantLib::ext::shared_ptr<CurveShiftData>& csd) const {
 
     // Check that we have a CurveShiftParData node
-    auto data = boost::dynamic_pointer_cast<CurveShiftParData>(csd);
+    auto data = QuantLib::ext::dynamic_pointer_cast<CurveShiftParData>(csd);
 
     // TODO: Fail here because fromXML requires par everywhere but maybe needs to be revisited
     QL_REQUIRE(data, "The sensitivity configuration should have par conversion data");
@@ -1012,6 +1061,64 @@ XMLNode* SensitivityScenarioData::parDataToXML(XMLDocument& doc,
     }
 
     return parNode;
+}
+
+namespace {
+void extractKeysFromShiftData(const ShiftData& d, std::set<string>& pids) {
+    for (auto const& [k, _] : d.keyedShiftType)
+        pids.insert(k);
+    for (auto const& [k, _] : d.keyedShiftSize)
+        pids.insert(k);
+    for (auto const& [k, _] : d.keyedShiftScheme)
+        pids.insert(k);
+}
+} // namespace
+
+std::set<std::string> getShiftSpecKeys(const SensitivityScenarioData& d) {
+    std::set<std::string> pids;
+    for (auto const& [_, v] : d.discountCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.indexCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.fxShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.capFloorVolShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.swaptionVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.yieldVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.fxVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.cdsVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.baseCorrelationShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.zeroInflationCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.yoyInflationCapFloorVolShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.yoyInflationCapFloorVolShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.zeroInflationCapFloorVolShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.creditCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.equityShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.equityVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.dividendYieldShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.commodityCurveShiftData())
+        extractKeysFromShiftData(*v, pids);
+    for (auto const& [_, v] : d.commodityVolShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.correlationShiftData())
+        extractKeysFromShiftData(v, pids);
+    for (auto const& [_, v] : d.securityShiftData())
+        extractKeysFromShiftData(v, pids);
+    return pids;
 }
 
 } // namespace analytics

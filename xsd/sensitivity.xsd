@@ -40,7 +40,7 @@
       <xs:element type="xs:boolean" name="SingleCurve" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="xs:string" name="DiscountCurve" maxOccurs="1" minOccurs="0"/>
       <xs:element type="currencyCode" name="OtherCurrency" maxOccurs="1" minOccurs="0"/>
-      <xs:element name="Conventions">
+      <xs:element name="Conventions" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element name="Convention" maxOccurs="unbounded" minOccurs="0">
@@ -208,28 +208,52 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="shiftTypeEntry">
+    <xs:simpleContent>
+      <xs:extension base="shiftType">
+        <xs:attribute type="xs:string" name="key"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="shiftSizeEntry">
+    <xs:simpleContent>
+      <xs:extension base="xs:float">
+        <xs:attribute type="xs:string" name="key"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="shiftSchemeEntry">
+    <xs:simpleContent>
+      <xs:extension base="shiftScheme">
+        <xs:attribute type="xs:string" name="key"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
 
   <xs:complexType name="survivalprobability">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
 
-
   <xs:complexType name="discountcurve">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
@@ -238,11 +262,12 @@
 
   <xs:complexType name="indexcurve">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
@@ -252,13 +277,13 @@
   <xs:complexType name="yieldcurve">
     <xs:sequence>
       <xs:element type="xs:string" name="CurveType" minOccurs="0"/>
-      <xs:element type="shifttype" name="ShiftType"  minOccurs="0"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftTenors"/>
-      <xs:element type="xs:string" name="Shifts"  minOccurs="0"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
@@ -266,33 +291,36 @@
 
   <xs:complexType name="fxspot">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute type="currencyPair" name="ccypair" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="recoveryrate">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="fxvolatility">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
     </xs:sequence>
@@ -301,9 +329,9 @@
 
   <xs:complexType name="swaptionvolatility">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element name="Shifts">
           <xs:complexType>
             <xs:sequence>
@@ -321,6 +349,7 @@
           </xs:complexType>
         </xs:element>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
       <xs:element type="xs:string" name="ShiftTerms"/>
@@ -331,9 +360,9 @@
 
   <xs:complexType name="yieldvolatility">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element name="Shifts">
           <xs:complexType>
             <xs:sequence>
@@ -351,6 +380,7 @@
           </xs:complexType>
         </xs:element>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftTerms"/>
     </xs:sequence>
@@ -359,15 +389,17 @@
 
   <xs:complexType name="capfloorvolatility">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
       <xs:element type="indexNameType" name="Index" minOccurs="0"/>
       <xs:element type="xs:boolean" name="IsRelative" minOccurs="0"/>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="key"/>
     <xs:attribute type="currencyCode" name="ccy"/> <!-- deprecated -->
@@ -375,11 +407,12 @@
 
   <xs:complexType name="cdsvolatility">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftExpiries"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
@@ -388,11 +421,12 @@
   <xs:complexType name="creditcurve">
     <xs:sequence>
       <xs:element type="currencyCode" name="Currency"/>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
@@ -401,22 +435,24 @@
 
   <xs:complexType name="equityspot">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="equity" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="equityvolatility">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
     </xs:sequence>
@@ -425,11 +461,12 @@
 
   <xs:complexType name="zeroinflationindexcurve">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
@@ -438,11 +475,12 @@
 
   <xs:complexType name="yyinflationindexcurve">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
@@ -451,11 +489,12 @@
 
   <xs:complexType name="cpicapfloorvolatility">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
     </xs:sequence>
@@ -464,11 +503,12 @@
 
   <xs:complexType name="yycapfloorvolatility">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
     </xs:sequence>
@@ -477,11 +517,12 @@
 
   <xs:complexType name="basecorrelation">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftLossLevels"/>
       <xs:element type="xs:string" name="ShiftTerms"/>
     </xs:sequence>
@@ -490,22 +531,24 @@
 
   <xs:complexType name="securityspread">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="security" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="dividendyield">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftTenors"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="equity" use="required"/>
@@ -514,11 +557,12 @@
   <xs:complexType name="commodityCurve">
     <xs:sequence>
       <xs:element type="currencyCode" name="Currency"/>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
@@ -527,11 +571,12 @@
 
   <xs:complexType name="commodityvolatility">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
     </xs:sequence>
@@ -540,11 +585,12 @@
 
   <xs:complexType name="correlationcurve">
     <xs:sequence>
-      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
       <xs:choice>
-        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="shiftSizeEntry" name="ShiftSize" maxOccurs="unbounded"/>
         <xs:element type="xs:string" name="Shifts"/>
       </xs:choice>
+      <xs:element type="shiftSchemeEntry" name="ShiftScheme" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
     </xs:sequence>
@@ -552,13 +598,6 @@
     <xs:attribute type="xs:string" name="index2" use="required"/>
   </xs:complexType>
 
-  <xs:simpleType name="shifttype">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="Absolute"/>
-      <xs:enumeration value="Relative"/>
-    </xs:restriction>
-  </xs:simpleType>
-  
   <xs:complexType name="setRiskFactorKeyTypes">
     <xs:sequence>
       <xs:element type="riskFactorKeyType" name="RiskFactorKeyType"/>

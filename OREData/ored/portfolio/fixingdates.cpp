@@ -17,25 +17,10 @@
 */
 
 #include <ored/configuration/iborfallbackconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
-
-#include <qle/cashflows/averageonindexedcoupon.hpp>
-#include <qle/cashflows/cmbcoupon.hpp>
-#include <qle/cashflows/commodityindexedaveragecashflow.hpp>
-#include <qle/cashflows/commodityindexedcashflow.hpp>
-#include <qle/cashflows/equitycoupon.hpp>
-#include <qle/cashflows/equitymargincoupon.hpp>
-#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
-#include <qle/cashflows/fxlinkedcashflow.hpp>
-#include <qle/cashflows/indexedcoupon.hpp>
-#include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
-#include <qle/cashflows/overnightindexedcoupon.hpp>
-#include <qle/cashflows/subperiodscoupon.hpp>
-#include <qle/indexes/commodityindex.hpp>
-#include <qle/indexes/fallbackiborindex.hpp>
-#include <qle/indexes/offpeakpowerindex.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/cashflows/averagebmacoupon.hpp>
@@ -50,6 +35,27 @@
 #include <ql/experimental/coupons/cmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/bondtrscashflow.hpp>
+#include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
+#include <qle/cashflows/cmbcoupon.hpp>
+#include <qle/cashflows/commodityindexedaveragecashflow.hpp>
+#include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
+#include <qle/cashflows/equitymargincoupon.hpp>
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/indexes/commoditybasisfutureindex.hpp>
+#include <qle/indexes/commodityindex.hpp>
+#include <qle/indexes/compositeindex.hpp>
+#include <qle/indexes/fallbackiborindex.hpp>
+#include <qle/indexes/fallbackovernightindex.hpp>
+#include <qle/indexes/genericindex.hpp>
+#include <qle/indexes/offpeakpowerindex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -85,21 +91,22 @@ namespace data {
 namespace {
 
 // Return the set of dates on which a fixing will be required, if any.
-set<Date> needsForecast(const Date& fixingDate, const Date& today, const bool interpolated, const Frequency frequency,
-                        const Period& availabilityLag) {
+RequiredFixings::FixingDates needsForecast(const Date& fixingDate, const Date& today, const bool interpolated,
+                                           const Frequency frequency, const Period& availabilityLag,
+                                           const bool mandatory) {
 
-    set<Date> result;
+    RequiredFixings::FixingDates result;
 
     Date todayMinusLag = today - availabilityLag;
     Date historicalFixingKnown = inflationPeriod(todayMinusLag, frequency).first - 1;
 
     pair<Date, Date> lim = inflationPeriod(fixingDate, frequency);
-    result.insert(lim.first);
+    result.addDate(lim.first, mandatory);
     Date latestNeededDate = fixingDate;
     if (interpolated) {
         if (fixingDate > lim.first) {
             latestNeededDate += Period(frequency);
-            result.insert(lim.second + 1);
+            result.addDate(lim.second + 1, mandatory);
         }
     }
 
@@ -108,35 +115,59 @@ set<Date> needsForecast(const Date& fixingDate, const Date& today, const bool in
         return result;
     } else if (latestNeededDate > today) {
         // Know that fixings are not available
-        return {};
+        return RequiredFixings::FixingDates();
     } else {
         // Grey area here but for now return nothing
-        return {};
+        return RequiredFixings::FixingDates();
     }
 }
 
 // Common code for zero inflation index based coupons
-void addZeroInflationDates(set<Date>& dates, const Date& fixingDate, const Date& today, const bool indexInterpolated,
-                           const Frequency indexFrequency, const Period& indexAvailabilityLag,
-                           const CPI::InterpolationType interpolation, const Frequency f) {
+void addZeroInflationDates(RequiredFixings::FixingDates& dates, const Date& fixingDate, const Date& today,
+                           const bool indexInterpolated, const Frequency indexFrequency,
+                           const Period& indexAvailabilityLag, const CPI::InterpolationType interpolation,
+                           const Frequency f, const bool mandatory) {
 
-    set<Date> fixingDates;
+    RequiredFixings::FixingDates fixingDates;
 
     if (interpolation == CPI::AsIndex) {
-        fixingDates = needsForecast(fixingDate, today, indexInterpolated, indexFrequency, indexAvailabilityLag);
+        fixingDates =
+            needsForecast(fixingDate, today, indexInterpolated, indexFrequency, indexAvailabilityLag, mandatory);
     } else {
         pair<Date, Date> lim = inflationPeriod(fixingDate, f);
-        fixingDates = needsForecast(lim.first, today, indexInterpolated, indexFrequency, indexAvailabilityLag);
+        fixingDates =
+            needsForecast(lim.first, today, indexInterpolated, indexFrequency, indexAvailabilityLag, mandatory);
         if (interpolation == CPI::Linear) {
-            auto moreDates =
-                needsForecast(lim.second + 1, today, indexInterpolated, indexFrequency, indexAvailabilityLag);
-            fixingDates.insert(moreDates.begin(), moreDates.end());
+            auto moreDates = needsForecast(lim.second + 1, today, indexInterpolated, indexFrequency,
+                                           indexAvailabilityLag, mandatory);
+            fixingDates.addDates(moreDates);
         }
     }
-
-    dates.insert(fixingDates.begin(), fixingDates.end());
+    dates.addDates(fixingDates);
 }
 } // namespace
+
+bool operator<(const RequiredFixings::FixingEntry& lhs, const RequiredFixings::FixingEntry& rhs) {
+    return std::tie(lhs.indexName, lhs.fixingDate, lhs.payDate, lhs.alwaysAddIfPaysOnSettlement, lhs.mandatory) <
+           std::tie(rhs.indexName, rhs.fixingDate, rhs.payDate, rhs.alwaysAddIfPaysOnSettlement, rhs.mandatory);
+}
+
+bool operator<(const RequiredFixings::InflationFixingEntry& lhs, const RequiredFixings::InflationFixingEntry& rhs) {
+    return std::tie(lhs.indexName, lhs.fixingDate, lhs.payDate, lhs.alwaysAddIfPaysOnSettlement, lhs.mandatory,
+                    lhs.indexInterpolated, lhs.availabilityLeg, lhs.indexFreq) <
+           std::tie(rhs.indexName, rhs.fixingDate, rhs.payDate, rhs.alwaysAddIfPaysOnSettlement, rhs.mandatory,
+                    rhs.indexInterpolated, rhs.availabilityLeg, rhs.indexFreq);
+}
+
+bool operator<(const RequiredFixings::ZeroInflationFixingEntry& lhs,
+               const RequiredFixings::ZeroInflationFixingEntry& rhs) {
+    return std::tie(lhs.indexName, lhs.fixingDate, lhs.payDate, lhs.alwaysAddIfPaysOnSettlement, lhs.mandatory,
+                    lhs.indexInterpolated, lhs.availabilityLeg, lhs.indexFreq, lhs.couponFrequency,
+                    lhs.couponInterpolation) < std::tie(rhs.indexName, rhs.fixingDate, rhs.payDate,
+                                                        rhs.alwaysAddIfPaysOnSettlement, rhs.mandatory,
+                                                        rhs.indexInterpolated, rhs.availabilityLeg, rhs.indexFreq,
+                                                        rhs.couponFrequency, rhs.couponInterpolation);
+}
 
 void RequiredFixings::clear() {
     fixingDates_.clear();
@@ -158,18 +189,18 @@ void RequiredFixings::unsetPayDates() {
     std::set<ZeroInflationFixingEntry> newZeroInflationFixingDates;
     std::set<InflationFixingEntry> newYoYInflationFixingDates;
     for (auto f : fixingDates_) {
-        std::get<2>(f) = Date::maxDate();
-        std::get<3>(f) = true;
+        f.payDate = Date::maxDate();
+        f.alwaysAddIfPaysOnSettlement = true;
         newFixingDates.insert(f);
     }
     for (auto f : zeroInflationFixingDates_) {
-        std::get<2>(std::get<0>(std::get<0>(f))) = Date::maxDate();
-        std::get<3>(std::get<0>(std::get<0>(f))) = true;
+        f.payDate = Date::maxDate();
+        f.alwaysAddIfPaysOnSettlement = true;
         newZeroInflationFixingDates.insert(f);
     }
     for (auto f : yoyInflationFixingDates_) {
-        std::get<2>(std::get<0>(f)) = Date::maxDate();
-        std::get<3>(std::get<0>(f)) = true;
+        f.payDate = Date::maxDate();
+        f.alwaysAddIfPaysOnSettlement = true;
         newYoYInflationFixingDates.insert(f);
     }
     fixingDates_ = newFixingDates;
@@ -177,74 +208,152 @@ void RequiredFixings::unsetPayDates() {
     yoyInflationFixingDates_ = newYoYInflationFixingDates;
 }
 
-std::map<std::string, std::set<Date>> RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
+RequiredFixings RequiredFixings::makeCopyWithMandatoryOverride(bool mandatory) {
+    RequiredFixings result(*this);
+    // we can't modify the elements of a set directly, need to make a copy and reassign
+    std::set<FixingEntry> newFixingDates;
+    std::set<ZeroInflationFixingEntry> newZeroInflationFixingDates;
+    std::set<InflationFixingEntry> newYoYInflationFixingDates;
+    for (auto f : result.fixingDates_) {
+        f.mandatory = mandatory;
+        newFixingDates.insert(f);
+    }
+    for (auto f : result.zeroInflationFixingDates_) {
+        f.mandatory = mandatory;
+        newZeroInflationFixingDates.insert(f);
+    }
+    for (auto f : yoyInflationFixingDates_) {
+        f.mandatory = mandatory;
+        newYoYInflationFixingDates.insert(f);
+    }
+    result.fixingDates_ = newFixingDates;
+    result.zeroInflationFixingDates_ = newZeroInflationFixingDates;
+    result.yoyInflationFixingDates_ = newYoYInflationFixingDates;
+    return result;
+}
 
+RequiredFixings RequiredFixings::filteredFixingDates(const Date& settlementDate) {
+    RequiredFixings rf;
     // If settlement date is an empty date, update to evaluation date.
     Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
-
-    std::map<std::string, std::set<Date>> result;
-
     // handle the general case
-    for (auto const& f : fixingDates_) {
+    for (auto f : fixingDates_) {
         // get the data
-        std::string indexName = std::get<0>(f);
-        Date fixingDate = std::get<1>(f);
-        Date payDate = std::get<2>(f);
-        bool alwaysAddIfPaysOnSettlement = std::get<3>(f);
+        std::string indexName = f.indexName;
+        Date fixingDate = f.fixingDate;
+        Date payDate = f.payDate;
+        bool alwaysAddIfPaysOnSettlement = f.alwaysAddIfPaysOnSettlement;
         // add to result
         if (fixingDate > d)
             continue;
         SimpleCashFlow dummyCf(0.0, payDate);
         if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
-            result[indexName].insert(fixingDate);
+            f.payDate = Date::maxDate();
+            f.alwaysAddIfPaysOnSettlement = true;
+            rf.addFixingDate(f);
+        }
+    }
+
+    // handle zero inflation index based coupons
+    for (auto f : zeroInflationFixingDates_) {
+        // get the data
+        std::string indexName = f.indexName;
+        Date payDate = f.payDate;
+        bool alwaysAddIfPaysOnSettlement = f.alwaysAddIfPaysOnSettlement;
+        // add to result
+        SimpleCashFlow dummyCf(0.0, payDate);
+        if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
+            f.payDate = Date::maxDate();
+            f.alwaysAddIfPaysOnSettlement = true;
+            rf.addZeroInflationFixingDate(f);
+        }
+    }
+
+    // handle yoy inflation index based coupons
+    for (auto f : yoyInflationFixingDates_) {
+        // get the data
+        std::string indexName = f.indexName;
+        Date payDate = f.payDate;
+        bool alwaysAddIfPaysOnSettlement = f.alwaysAddIfPaysOnSettlement;
+        // add to result
+        SimpleCashFlow dummyCf(0.0, payDate);
+        if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
+            f.payDate = Date::maxDate();
+            f.alwaysAddIfPaysOnSettlement = true;
+            rf.addYoYInflationFixingDate(f);
+        }
+    }
+    return rf;
+}
+
+std::map<std::string, RequiredFixings::FixingDates>
+RequiredFixings::fixingDatesIndices(const Date& settlementDate) const {
+
+    // If settlement date is an empty date, update to evaluation date.
+    Date d = settlementDate == Date() ? Settings::instance().evaluationDate() : settlementDate;
+
+    std::map<std::string, FixingDates> result;
+
+    // handle the general case
+    for (auto const& f : fixingDates_) {
+        // get the data
+        std::string indexName = f.indexName;
+        Date fixingDate = f.fixingDate;
+        Date payDate = f.payDate;
+        bool alwaysAddIfPaysOnSettlement = f.alwaysAddIfPaysOnSettlement;
+        // add to result
+        if (fixingDate > d)
+            continue;
+        SimpleCashFlow dummyCf(0.0, payDate);
+        if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
+            result[indexName].addDate(fixingDate, f.mandatory);
         }
     }
 
     // handle zero inflation index based coupons
     for (auto const& f : zeroInflationFixingDates_) {
         // get the data
-        InflationFixingEntry inflationFixingEntry = std::get<0>(f);
-        FixingEntry fixingEntry = std::get<0>(inflationFixingEntry);
-        std::string indexName = std::get<0>(fixingEntry);
-        Date fixingDate = std::get<1>(fixingEntry);
-        Date payDate = std::get<2>(fixingEntry);
-        bool alwaysAddIfPaysOnSettlement = std::get<3>(fixingEntry);
-        bool indexInterpolated = std::get<1>(inflationFixingEntry);
-        Frequency indexFrequency = std::get<2>(inflationFixingEntry);
-        Period indexAvailabilityLag = std::get<3>(inflationFixingEntry);
-        CPI::InterpolationType couponInterpolation = std::get<1>(f);
-        Frequency couponFrequency = std::get<2>(f);
+        std::string indexName = f.indexName;
+        Date fixingDate = f.fixingDate;
+        Date payDate = f.payDate;
+        bool alwaysAddIfPaysOnSettlement = f.alwaysAddIfPaysOnSettlement;
+        bool indexInterpolated = f.indexInterpolated;
+        Frequency indexFrequency = f.indexFreq;
+        Period indexAvailabilityLag = f.availabilityLeg;
+        CPI::InterpolationType couponInterpolation = f.couponInterpolation;
+        Frequency couponFrequency = f.couponFrequency;
         // add to result
         SimpleCashFlow dummyCf(0.0, payDate);
         if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
-            std::set<Date> tmp;
+            RequiredFixings::FixingDates tmp;
             addZeroInflationDates(tmp, fixingDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag,
-                                  couponInterpolation, couponFrequency);
+                                  couponInterpolation, couponFrequency, f.mandatory);
             if (!tmp.empty())
-                result[indexName].insert(tmp.begin(), tmp.end());
+                result[indexName].addDates(tmp);
         }
     }
 
     // handle yoy inflation index based coupons
     for (auto const& f : yoyInflationFixingDates_) {
         // get the data
-        FixingEntry fixingEntry = std::get<0>(f);
-        std::string indexName = std::get<0>(fixingEntry);
-        Date fixingDate = std::get<1>(fixingEntry);
-        Date payDate = std::get<2>(fixingEntry);
-        bool alwaysAddIfPaysOnSettlement = std::get<3>(fixingEntry);
-        bool indexInterpolated = std::get<1>(f);
-        Frequency indexFrequency = std::get<2>(f);
-        Period indexAvailabilityLag = std::get<3>(f);
+        std::string indexName = f.indexName;
+        Date fixingDate = f.fixingDate;
+        Date payDate = f.payDate;
+        bool alwaysAddIfPaysOnSettlement = f.alwaysAddIfPaysOnSettlement;
+        bool indexInterpolated = f.indexInterpolated;
+        Frequency indexFrequency = f.indexFreq;
+        Period indexAvailabilityLag = f.availabilityLeg;
         // add to result
         SimpleCashFlow dummyCf(0.0, payDate);
         if (!dummyCf.hasOccurred(d) || (alwaysAddIfPaysOnSettlement && dummyCf.date() == d)) {
-            auto fixingDates = needsForecast(fixingDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag);
+            auto fixingDates =
+                needsForecast(fixingDate, d, indexInterpolated, indexFrequency, indexAvailabilityLag, f.mandatory);
             if (!fixingDates.empty())
-                result[indexName].insert(fixingDates.begin(), fixingDates.end());
+                result[indexName].addDates(fixingDates);
             // Add the previous year's date(s) also if any.
-            for (const auto& d : fixingDates) {
-                result[indexName].insert(d - 1 * Years);
+            for (const auto& [d, mandatory] : fixingDates) {
+                Date previousYear = d - 1 * Years;
+                result[indexName].addDate(previousYear, mandatory);
             }
         }
     }
@@ -253,15 +362,27 @@ std::map<std::string, std::set<Date>> RequiredFixings::fixingDatesIndices(const 
 }
 
 void RequiredFixings::addFixingDate(const QuantLib::Date& fixingDate, const std::string& indexName,
-                                    const QuantLib::Date& payDate, const bool alwaysAddIfPaysOnSettlement) {
+                                    const QuantLib::Date& payDate, const bool alwaysAddIfPaysOnSettlement,
+                                    const bool mandatory) {
     fixingDates_.insert(
-        std::make_tuple(indexName, fixingDate, payDate, payDate == Date::maxDate() || alwaysAddIfPaysOnSettlement));
+        {indexName, fixingDate, payDate, payDate == Date::maxDate() || alwaysAddIfPaysOnSettlement, mandatory});
+}
+
+void RequiredFixings::addFixingDate(const FixingEntry& fixingEntry) { fixingDates_.insert(fixingEntry); }
+
+void RequiredFixings::addFixingDates(const std::vector<std::pair<QuantLib::Date, bool>>& fixingDates,
+                                     const std::string& indexName, const QuantLib::Date& payDate,
+                                     const bool alwaysAddIfPaysOnSettlement) {
+    for (auto const& [date, mandatory] : fixingDates) {
+        fixingDates_.insert({indexName, date, payDate, alwaysAddIfPaysOnSettlement, mandatory});
+    }
 }
 
 void RequiredFixings::addFixingDates(const std::vector<QuantLib::Date>& fixingDates, const std::string& indexName,
-                                     const QuantLib::Date& payDate, const bool alwaysAddIfPaysOnSettlement) {
-    for (auto const& d : fixingDates) {
-        fixingDates_.insert(std::make_tuple(indexName, d, payDate, alwaysAddIfPaysOnSettlement));
+                                     const QuantLib::Date& payDate, const bool alwaysAddIfPaysOnSettlement,
+                                     const bool mandatory) {
+    for (auto const& date : fixingDates) {
+        fixingDates_.insert({indexName, date, payDate, alwaysAddIfPaysOnSettlement, mandatory});
     }
 }
 
@@ -270,51 +391,84 @@ void RequiredFixings::addZeroInflationFixingDate(const QuantLib::Date& fixingDat
                                                  const Period& indexAvailabilityLag,
                                                  const CPI::InterpolationType couponInterpolation,
                                                  const Frequency couponFrequency, const QuantLib::Date& payDate,
-                                                 const bool alwaysAddIfPaysOnSettlement) {
-    zeroInflationFixingDates_.insert(
-        std::make_tuple(std::make_tuple(std::make_tuple(indexName, fixingDate, payDate, alwaysAddIfPaysOnSettlement),
-                                        indexInterpolated, indexFrequency, indexAvailabilityLag),
-                        couponInterpolation, couponFrequency));
+                                                 const bool alwaysAddIfPaysOnSettlement, const bool mandatory) {
+    ZeroInflationFixingEntry entry;
+    entry.indexName = indexName;
+    entry.fixingDate = fixingDate;
+    entry.payDate = payDate;
+    entry.alwaysAddIfPaysOnSettlement = alwaysAddIfPaysOnSettlement;
+    entry.mandatory = mandatory;
+    entry.indexInterpolated = indexInterpolated;
+    entry.indexFreq = indexFrequency;
+    entry.availabilityLeg = indexAvailabilityLag;
+    entry.couponFrequency = couponFrequency;
+    entry.couponInterpolation = couponInterpolation;
+    addZeroInflationFixingDate(entry);
+}
+
+void RequiredFixings::addZeroInflationFixingDate(const ZeroInflationFixingEntry& fixingEntry) {
+    zeroInflationFixingDates_.insert(fixingEntry);
 }
 
 void RequiredFixings::addYoYInflationFixingDate(const QuantLib::Date& fixingDate, const std::string& indexName,
                                                 const bool indexInterpolated, const Frequency indexFrequency,
                                                 const Period& indexAvailabilityLag, const QuantLib::Date& payDate,
-                                                const bool alwaysAddIfPaysOnSettlement) {
-    yoyInflationFixingDates_.insert(
-        std::make_tuple(std::make_tuple(indexName, fixingDate, payDate, alwaysAddIfPaysOnSettlement), indexInterpolated,
-                        indexFrequency, indexAvailabilityLag));
+                                                const bool alwaysAddIfPaysOnSettlement, const bool mandatory) {
+    InflationFixingEntry entry;
+    entry.indexName = indexName;
+    entry.fixingDate = fixingDate;
+    entry.payDate = payDate;
+    entry.alwaysAddIfPaysOnSettlement = alwaysAddIfPaysOnSettlement;
+    entry.mandatory = mandatory;
+    entry.indexInterpolated = indexInterpolated;
+    entry.indexFreq = indexFrequency;
+    entry.availabilityLeg = indexAvailabilityLag;
+    addYoYInflationFixingDate(entry);
+}
+
+void RequiredFixings::addYoYInflationFixingDate(const InflationFixingEntry& fixingEntry) {
+    yoyInflationFixingDates_.insert(fixingEntry);
+}
+
+std::ostream& operator<<(std::ostream& out, const ore::data::RequiredFixings::FixingEntry& f) {
+
+    std::string indexName = f.indexName;
+    Date fixingDate = f.fixingDate;
+    Date payDate = f.payDate;
+    bool alwaysAddIfPaysOnSettlement = f.alwaysAddIfPaysOnSettlement;
+    bool mandatory = f.mandatory;
+    out << indexName << " " << QuantLib::io::iso_date(fixingDate) << " " << QuantLib::io::iso_date(payDate) << " "
+        << std::boolalpha << alwaysAddIfPaysOnSettlement << " " << std::boolalpha << mandatory << "\n";
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const std::set<ore::data::RequiredFixings::FixingEntry>& entries) {
+    for (auto const& f : entries) {
+        out << f;
+    }
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const std::set<ore::data::RequiredFixings::InflationFixingEntry>& entries) {
+    for (auto const& f : entries) {
+        out << f;
+    }
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out,
+                         const std::set<ore::data::RequiredFixings::ZeroInflationFixingEntry>& entries) {
+    for (auto const& f : entries) {
+        out << f;
+    }
+    return out;
 }
 
 std::ostream& operator<<(std::ostream& out, const RequiredFixings& requiredFixings) {
     out << "IndexName FixingDate PayDate AlwaysAddIfPaysOnSettlement\n";
-    for (auto const& f : requiredFixings.fixingDates_) {
-        std::string indexName = std::get<0>(f);
-        Date fixingDate = std::get<1>(f);
-        Date payDate = std::get<2>(f);
-        bool alwaysAddIfPaysOnSettlement = std::get<3>(f);
-        out << indexName << " " << QuantLib::io::iso_date(fixingDate) << " " << QuantLib::io::iso_date(payDate) << " "
-            << std::boolalpha << alwaysAddIfPaysOnSettlement << "\n";
-    }
-    for (auto const& f : requiredFixings.zeroInflationFixingDates_) {
-        RequiredFixings::InflationFixingEntry inflationFixingEntry = std::get<0>(f);
-        RequiredFixings::FixingEntry fixingEntry = std::get<0>(inflationFixingEntry);
-        std::string indexName = std::get<0>(fixingEntry);
-        Date fixingDate = std::get<1>(fixingEntry);
-        Date payDate = std::get<2>(fixingEntry);
-        bool alwaysAddIfPaysOnSettlement = std::get<3>(fixingEntry);
-        out << indexName << " " << QuantLib::io::iso_date(fixingDate) << " " << QuantLib::io::iso_date(payDate) << " "
-            << std::boolalpha << alwaysAddIfPaysOnSettlement << "\n";
-    }
-    for (auto const& f : requiredFixings.yoyInflationFixingDates_) {
-        RequiredFixings::FixingEntry fixingEntry = std::get<0>(f);
-        std::string indexName = std::get<0>(fixingEntry);
-        Date fixingDate = std::get<1>(fixingEntry);
-        Date payDate = std::get<2>(fixingEntry);
-        bool alwaysAddIfPaysOnSettlement = std::get<3>(fixingEntry);
-        out << indexName << " " << QuantLib::io::iso_date(fixingDate) << " " << QuantLib::io::iso_date(payDate) << " "
-            << std::boolalpha << alwaysAddIfPaysOnSettlement << "\n";
-    }
+    out << requiredFixings.fixingDates_;
+    out << requiredFixings.zeroInflationFixingDates_;
+    out << requiredFixings.yoyInflationFixingDates_;
     return out;
 }
 
@@ -329,7 +483,7 @@ void FixingDateGetter::visit(FloatingRateCoupon& c) {
 }
 
 void FixingDateGetter::visit(IborCoupon& c) {
-    if (auto bma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(c.index())) {
+    if (auto bma = QuantLib::ext::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(c.index())) {
         // Handle bma indices which we allow in IborCoupon as an approximation to BMA
         // coupons. For these we allow fixing dates that are invalid as BMA fixing dates
         // and adjust these dates to the last valid BMA fixing date in the BMAIndexWrapper.
@@ -338,7 +492,7 @@ void FixingDateGetter::visit(IborCoupon& c) {
         requiredFixings_.addFixingDate(bma->adjustedFixingDate(c.fixingDate()),
                                        IndexNameTranslator::instance().oreName(c.index()->name()), c.date(), true);
     } else {
-        auto fallback = boost::dynamic_pointer_cast<FallbackIborIndex>(c.index());
+        auto fallback = QuantLib::ext::dynamic_pointer_cast<FallbackIborIndex>(c.index());
         if (fallback != nullptr && c.fixingDate() >= fallback->switchDate()) {
             requiredFixings_.addFixingDates(fallback->onCoupon(c.fixingDate())->fixingDates(),
                                             IndexNameTranslator::instance().oreName(fallback->rfrIndex()->name()),
@@ -362,7 +516,7 @@ void FixingDateGetter::visit(IndexedCashFlow& c) {
 
 void FixingDateGetter::visit(CPICashFlow& c) {
     // CPICashFlow must have a ZeroInflationIndex
-    auto zeroInflationIndex = boost::dynamic_pointer_cast<ZeroInflationIndex>(c.index());
+    auto zeroInflationIndex = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(c.index());
     QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
 
     QL_DEPRECATED_DISABLE_WARNING
@@ -384,9 +538,8 @@ void FixingDateGetter::visit(CPICashFlow& c) {
 void FixingDateGetter::visit(CPICoupon& c) {
 
     QL_DEPRECATED_DISABLE_WARNING
-    bool isInterpolated =
-        c.observationInterpolation() == QuantLib::CPI::Linear ||
-        (c.observationInterpolation() == QuantLib::CPI::AsIndex && c.cpiIndex()->interpolated());
+    bool isInterpolated = c.observationInterpolation() == QuantLib::CPI::Linear ||
+                          (c.observationInterpolation() == QuantLib::CPI::AsIndex && c.cpiIndex()->interpolated());
     QL_DEPRECATED_ENABLE_WARNING
 
     requiredFixings_.addZeroInflationFixingDate(
@@ -412,8 +565,13 @@ void FixingDateGetter::visit(QuantLib::OvernightIndexedCoupon& c) {
 }
 
 void FixingDateGetter::visit(QuantExt::OvernightIndexedCoupon& c) {
-    requiredFixings_.addFixingDates(c.fixingDates(), IndexNameTranslator::instance().oreName(c.index()->name()),
-                                    c.date());
+    auto fallback = QuantLib::ext::dynamic_pointer_cast<FallbackOvernightIndex>(c.index());
+    string indexName;
+    if (fallback && c.fixingDate() >= fallback->switchDate())
+        indexName = fallback->rfrIndex()->name();
+    else
+        indexName = c.index()->name();
+    requiredFixings_.addFixingDates(c.fixingDates(), IndexNameTranslator::instance().oreName(indexName), c.date());
 }
 
 void FixingDateGetter::visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) { c.underlying()->accept(*this); }
@@ -422,6 +580,8 @@ void FixingDateGetter::visit(AverageBMACoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), IndexNameTranslator::instance().oreName(c.index()->name()),
                                     c.date());
 }
+
+void FixingDateGetter::visit(CappedFlooredAverageBMACoupon& c) { c.underlying()->accept(*this); }
 
 void FixingDateGetter::visit(CmsSpreadCoupon& c) {
     // Enforce fixing to be added even if coupon pays on settlement.
@@ -499,12 +659,10 @@ void FixingDateGetter::visit(QuantExt::NonStandardYoYInflationCoupon& c) {
     bool isInterpolated = c.isInterpolated();
     requiredFixings_.addZeroInflationFixingDate(
         c.fixingDateNumerator(), IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
-        c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), CPI::Flat,
-        c.cpiIndex()->frequency(), c.date());
+        c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), CPI::Flat, c.cpiIndex()->frequency(), c.date());
     requiredFixings_.addZeroInflationFixingDate(
         c.fixingDateDenumerator(), IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
-        c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), CPI::Flat,
-        c.cpiIndex()->frequency(), c.date());
+        c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), CPI::Flat, c.cpiIndex()->frequency(), c.date());
 }
 
 void FixingDateGetter::visit(CmbCoupon& c) {
@@ -520,70 +678,154 @@ void FixingDateGetter::visit(EquityMarginCoupon& c) {
                                        IndexNameTranslator::instance().oreName(c.fxIndex()->name()), c.date());
 }
 
-void FixingDateGetter::visit(CommodityIndexedCashFlow& c) {
+void FixingDateGetter::visit(CommodityCashFlow& c) {
     auto indices = c.indices();
-    for (const auto& kv : indices) {
-        // see above, the ql and ORE index names are identical
-        requiredFixings_.addFixingDate(kv.first, kv.second->name(), c.date());
-        // if the pricing date is > future expiry, add the future expiry itself as well
-        if (auto d = kv.second->expiryDate(); d != Date() && d < kv.first) {
-            requiredFixings_.addFixingDate(d, kv.second->name(), d);
+    for (const auto& [pricingDate, index] : indices) {
+        // todays fixing is not mandatory, we will fallback to estimate it if its not there.
+        bool isTodaysFixing = Settings::instance().evaluationDate() == pricingDate;
+        if (auto powerIndex = QuantLib::ext::dynamic_pointer_cast<OffPeakPowerIndex>(index)) {
+            // if powerindex, we need the offpeak index fixing and the peak index fixings
+            requiredFixings_.addFixingDate(pricingDate, powerIndex->offPeakIndex()->name(), c.date(), false,
+                                           !isTodaysFixing);
+            bool isOffPeakDay = powerIndex->peakCalendar().isHoliday(pricingDate);
+            requiredFixings_.addFixingDate(pricingDate, powerIndex->peakIndex()->name(), c.date(), false,
+                                           isOffPeakDay && !isTodaysFixing);
+            // if the pricing date is > future expiry, add the future expiry itself as well
+            if (auto d = index->expiryDate(); d != Date() && d < pricingDate) {
+                requiredFixings_.addFixingDate(d, powerIndex->offPeakIndex()->name(), c.date(), false, !isTodaysFixing);
+                requiredFixings_.addFixingDate(d, powerIndex->peakIndex()->name(), c.date(), false,
+                                               isOffPeakDay && !isTodaysFixing);
+            }
+        } else {
+            requiredFixings_.addFixingDate(pricingDate, index->name(), c.date(), false, !isTodaysFixing);
+            // if the pricing date is > future expiry, add the future expiry itself as well
+            if (auto d = index->expiryDate(); d != Date() && d < pricingDate) {
+                requiredFixings_.addFixingDate(d, index->name(), c.date(), false, !isTodaysFixing);
+            }
+        } 
+        if (auto baseFutureIndex = QuantLib::ext::dynamic_pointer_cast<CommodityBasisFutureIndex>(index)) {
+            RequiredFixings tmpFixings;
+            FixingDateGetter baseCashflowGetter(tmpFixings);
+            baseFutureIndex->baseCashflow(c.date())->accept(baseCashflowGetter);
+            auto optionalFixings = tmpFixings.makeCopyWithMandatoryOverride(false);
+            requiredFixings_.addData(optionalFixings);
         }
     }
 }
 
-void FixingDateGetter::visit(CommodityIndexedAverageCashFlow& c) {
-    auto indices = c.indices();
-    for (const auto& kv : indices) {
-        // see above, the ql and ORE index names are identical
-        requiredFixings_.addFixingDate(kv.first, kv.second->name(), c.date());
-        // if the pricing date is > future expiry, add the future expiry itself as well
-        if (auto d = kv.second->expiryDate(); d != Date() && d < kv.first) {
-            requiredFixings_.addFixingDate(d, kv.second->name(), d);
+void FixingDateGetter::visit(BondTRSCashFlow& bc) {
+    if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_) {
+        requiredFixings_.addFixingDate(bc.fixingStartDate(), bc.index()->name(), bc.date());
+    }
+    requiredFixings_.addFixingDate(bc.fixingEndDate(), bc.index()->name(), bc.date());
+    if (bc.fxIndex()) {
+        requiredFixings_.addFixingDate(bc.fxIndex()->fixingCalendar().adjust(bc.fixingStartDate(), Preceding),
+                                       IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
+        requiredFixings_.addFixingDate(bc.fxIndex()->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
+                                       IndexNameTranslator::instance().oreName(bc.fxIndex()->name()), bc.date());
+    }
+}
+
+void FixingDateGetter::visit(TRSCashFlow& bc) {
+    vector<QuantLib::ext::shared_ptr<Index>> indexes;
+    vector<QuantLib::ext::shared_ptr<FxIndex>> fxIndexes;
+
+    if (auto e = QuantLib::ext::dynamic_pointer_cast<QuantExt::CompositeIndex>(bc.index())) {
+        indexes = e->indices();
+        fxIndexes = e->fxConversion();
+
+        // Dividends date can require FX fixings for conversion, add any required fixing
+        std::vector<std::pair<QuantLib::Date, std::string>> fixings =
+            e->dividendFixingDates(bc.fixingStartDate(), bc.fixingEndDate());
+
+        for (const auto& f : fixings)
+            requiredFixings_.addFixingDate(f.first, ore::data::IndexNameTranslator::instance().oreName(f.second));
+    } else {
+        indexes.push_back(bc.index());
+    }
+
+    // always add the top level fxIndex, for a CompositeIndex we may need to convert underlyings to the CompositeIndex
+    // ccy and then to the leg currency
+    fxIndexes.push_back(bc.fxIndex());
+    if (additionalFxIndex_)
+        fxIndexes.push_back(additionalFxIndex_);
+
+    for (const auto& ind : indexes) {
+        if (ind) {
+            auto startDate = ind->fixingCalendar().adjust(bc.fixingStartDate(), Preceding);
+            auto endDate = ind->fixingCalendar().adjust(bc.fixingEndDate(), Preceding);
+
+            auto gi = QuantLib::ext::dynamic_pointer_cast<QuantExt::GenericIndex>(ind);
+
+            if (!gi || gi->expiry() == Date() || startDate < gi->expiry()) {
+                if (bc.initialPrice() == Null<Real>() || requireFixingStartDates_)
+                    requiredFixings_.addFixingDate(startDate, IndexNameTranslator::instance().oreName(ind->name()),
+                                                   bc.date());
+            }
+
+            if (!gi || gi->expiry() == Date() || endDate < gi->expiry())
+                requiredFixings_.addFixingDate(endDate, IndexNameTranslator::instance().oreName(ind->name()),
+                                               bc.date());
+        }
+    }
+
+    for (const auto& fx : fxIndexes) {
+        if (fx) {
+            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(bc.fixingStartDate(), Preceding),
+                                           IndexNameTranslator::instance().oreName(fx->name()), bc.date());
+            requiredFixings_.addFixingDate(fx->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
+                                           IndexNameTranslator::instance().oreName(fx->name()), bc.date());
+
+            // also add using the underlyingIndex calendar, as FX Conversion is done within a CompositeIndex
+            // for a basket of underlyings
+            requiredFixings_.addFixingDate(bc.index()->fixingCalendar().adjust(bc.fixingStartDate(), Preceding),
+                                           IndexNameTranslator::instance().oreName(fx->name()), bc.date(), false);
+            requiredFixings_.addFixingDate(bc.index()->fixingCalendar().adjust(bc.fixingEndDate(), Preceding),
+                                           IndexNameTranslator::instance().oreName(fx->name()), bc.date(), false);
         }
     }
 }
 
-void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<FixingDateGetter>& fixingDateGetter) {
+void addToRequiredFixings(const QuantLib::Leg& leg, const QuantLib::ext::shared_ptr<FixingDateGetter>& fixingDateGetter) {
     for (auto const& c : leg) {
         QL_REQUIRE(c, "addToRequiredFixings(), got null cashflow, this is unexpected");
         c->accept(*fixingDateGetter);
     }
 }
 
-void amendInflationFixingDates(map<string, set<Date>>& fixings) {
+void amendInflationFixingDates(std::map<std::string, RequiredFixings::FixingDates>& fixings) {
     // Loop over indices and amend any that are of type InflationIndex
-    for (auto& kv : fixings) {
-        auto p = isInflationIndex(kv.first);
-        if (p.first) {
+    for (auto& [indexName, fixingDates] : fixings) {
+        auto [isInfIndex, infIndex] = isInflationIndex(indexName);
+        if (isInfIndex) {
             // We have an inflation index
-            set<Date> newDates;
-            Frequency f = p.second->frequency();
-            for (const Date& d : kv.second) {
+            RequiredFixings::FixingDates amendedFixingDates;
+            Frequency f = infIndex->frequency();
+            for (const auto& [d, mandatory] : fixingDates) {
                 auto period = inflationPeriod(d, f);
                 if (d == period.first) {
                     // If the fixing date is the start of the inflation period, move it to the end.
-                    newDates.insert(period.second);
+                    amendedFixingDates.addDate(period.second, mandatory);
                 } else {
                     // If the fixing date is not the start of the inflation period, leave it as it is.
-                    newDates.insert(d);
+                    amendedFixingDates.addDate(d, mandatory);
                 }
             }
             // Update the fixings map that was passed in with the new set of dates
-            kv.second = newDates;
+            fixings[indexName] = amendedFixingDates;
         }
     }
 }
 
-void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
+void addMarketFixingDates(const Date& asof, map<string, RequiredFixings::FixingDates>& fixings, const TodaysMarketParameters& mktParams,
                           const Period& iborLookback, const Period& oisLookback, const Period& bmaLookback,
-                          const Period& inflationLookback, const string& configuration) {
+                          const Period& inflationLookback) {
 
-    if (mktParams.hasConfiguration(configuration)) {
+    for (auto const& [configuration, _] : mktParams.configurations()) {
 
         LOG("Start adding market fixing dates for configuration '" << configuration << "'");
 
-        boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 
         // If there are ibor indices in the market parameters, add the lookback fixings
         // IF there are SIFMA / BMA indices, add lookback fixings for the Libor basis index
@@ -598,45 +840,62 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
             set<Date> bmaDates;
             WeekendsOnly calendar;
 
+            std::set<std::string> indices;
+            for (auto const& [i, _] : mktParams.mapping(MarketObject::IndexCurve, configuration)) {
+                indices.insert(i);
+            }
+            for (auto const& [i, _] : mktParams.mapping(MarketObject::YieldCurve, configuration)) {
+                QuantLib::ext::shared_ptr<IborIndex> dummy;
+                if (tryParseIborIndex(i, dummy))
+                    indices.insert(i);
+            }
+            for (auto const& [_, s] : mktParams.mapping(MarketObject::DiscountCurve, configuration)) {
+                auto spec = parseCurveSpec(s);
+                QuantLib::ext::shared_ptr<IborIndex> dummy;
+                if (tryParseIborIndex(spec->curveConfigID(), dummy))
+                    indices.insert(spec->curveConfigID());
+            }
+
             // For each of the IR indices in market parameters, insert the dates
-            for (const auto& kv : mktParams.mapping(MarketObject::IndexCurve, configuration)) {
-                if (isOvernightIndex(kv.first)) {
+            for (const auto& i : indices) {
+                if (isOvernightIndex(i)) {
                     if (oisDates.empty()) {
                         TLOG("Generating fixing dates for overnight indices.");
                         oisDates = generateLookbackDates(asof, oisLookback, calendar);
                     }
-                    TLOG("Adding extra fixing dates for overnight index " << kv.first);
-                    fixings[kv.first].insert(oisDates.begin(), oisDates.end());
-                } else if (isBmaIndex(kv.first)) {
+                    TLOG("Adding extra fixing dates for overnight index " << i);
+                    fixings[i].addDates(oisDates, false);
+                    
+                } else if (isBmaIndex(i)) {
                     if (bmaDates.empty()) {
                         TLOG("Generating fixing dates for bma/sifma indices.");
                         bmaDates = generateLookbackDates(asof, bmaLookback, calendar);
                     }
-                    fixings[kv.first].insert(bmaDates.begin(), bmaDates.end());
+                    fixings[i].addDates(bmaDates, false);
                     if (iborDates.empty()) {
                         TLOG("Generating fixing dates for ibor indices.");
                         iborDates = generateLookbackDates(asof, iborLookback, calendar);
                     }
                     std::set<string> liborNames;
                     for (auto const& c : conventions->get(Convention::Type::BMABasisSwap)) {
-                        auto bma = boost::dynamic_pointer_cast<BMABasisSwapConvention>(c);
+                        auto bma = QuantLib::ext::dynamic_pointer_cast<BMABasisSwapConvention>(c);
                         QL_REQUIRE(
                             bma, "internal error, could not cast to BMABasisSwapConvention in addMarketFixingDates()");
-                        if (bma->bmaIndexName() == kv.first) {
+                        if (bma->bmaIndexName() == i) {
                             liborNames.insert(bma->liborIndexName());
                         }
                     }
                     for (auto const& l : liborNames) {
-                        TLOG("Adding extra fixing dates for libor index " << l << " from bma/sifma index " << kv.first);
-                        fixings[l].insert(iborDates.begin(), iborDates.end());
+                        TLOG("Adding extra fixing dates for libor index " << l << " from bma/sifma index " << i);
+                        fixings[l].addDates(iborDates, false);
                     }
                 } else {
                     if (iborDates.empty()) {
                         TLOG("Generating fixing dates for ibor indices.");
                         iborDates = generateLookbackDates(asof, iborLookback, calendar);
                     }
-                    TLOG("Adding extra fixing dates for ibor index " << kv.first);
-                    fixings[kv.first].insert(iborDates.begin(), iborDates.end());
+                    TLOG("Adding extra fixing dates for ibor index " << i);
+                    fixings[i].addDates(iborDates, false);
                 }
             }
 
@@ -650,28 +909,27 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
             QL_REQUIRE(inflationLookback >= 0 * Days, "Inflation lookback period must be non-negative");
 
             // Dates that will be used for each of the inflation indices
-            Date today = Settings::instance().evaluationDate();
-            Date lookback = NullCalendar().advance(today, -inflationLookback);
+            Date lookback = NullCalendar().advance(asof, -inflationLookback);
             lookback = Date(1, lookback.month(), lookback.year());
             set<Date> dates;
             do {
                 TLOG("Adding date " << io::iso_date(lookback) << " to fixings for inflation indices");
                 dates.insert(lookback);
                 lookback = NullCalendar().advance(lookback, 1 * Months);
-            } while (lookback <= today);
+            } while (lookback <= asof);
 
             // For each of the inflation indices in market parameters, insert the dates
             if (mktParams.hasMarketObject(MarketObject::ZeroInflationCurve)) {
                 for (const auto& kv : mktParams.mapping(MarketObject::ZeroInflationCurve, configuration)) {
                     TLOG("Adding extra fixing dates for (zero) inflation index " << kv.first);
-                    fixings[kv.first].insert(dates.begin(), dates.end());
+                    fixings[kv.first].addDates(dates, false);
                 }
             }
 
             if (mktParams.hasMarketObject(MarketObject::YoYInflationCurve)) {
                 for (const auto& kv : mktParams.mapping(MarketObject::YoYInflationCurve, configuration)) {
                     TLOG("Adding extra fixing dates for (yoy) inflation index " << kv.first);
-                    fixings[kv.first].insert(dates.begin(), dates.end());
+                    fixings[kv.first].addDates(dates, false);
                 }
             }
         }
@@ -682,22 +940,21 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
 
             // "Fixing" dates for commodities.
             Period commodityLookback = 2 * Months;
-            Date today = Settings::instance().evaluationDate();
-            Date lookback = today - commodityLookback;
+            Date lookback = asof - commodityLookback;
             lookback = Date(1, lookback.month(), lookback.year());
             set<Date> dates;
             do {
                 TLOG("Adding date " << io::iso_date(lookback) << " to fixings for commodities");
                 dates.insert(lookback++);
-            } while (lookback <= today);
+            } while (lookback <= asof);
 
             // Expiry months and years for which we require future contract fixings. For our purposes here, using the
             // 1st of the month does not matter. We will just use the date to get the appropriate commodity future
             // index name below when adding the dates and the "-01" will be removed (for non-daily contracts).
             Size numberMonths = 2;
             vector<Date> contractExpiries;
-            Date startContract = today - numberMonths * Months;
-            Date endContract = today + numberMonths * Months;
+            Date startContract = asof - numberMonths * Months;
+            Date endContract = asof + numberMonths * Months;
             do {
                 Month m = startContract.month();
                 Year y = startContract.year();
@@ -710,14 +967,14 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
             // the dates. Skip commodity names that do not have future conventions.
             for (const auto& kv : mktParams.mapping(MarketObject::CommodityCurve, configuration)) {
 
-                boost::shared_ptr<CommodityFutureConvention> cfc;
+                QuantLib::ext::shared_ptr<CommodityFutureConvention> cfc;
                 if (conventions->has(kv.first)) {
-                    cfc = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(kv.first));
+                    cfc = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(kv.first));
                 }
 
                 auto commIdx = parseCommodityIndex(kv.first, false);
                 if (cfc) {
-                    if (auto oppIdx = boost::dynamic_pointer_cast<OffPeakPowerIndex>(commIdx)) {
+                    if (auto oppIdx = QuantLib::ext::dynamic_pointer_cast<OffPeakPowerIndex>(commIdx)) {
                         DLOG("Commodity " << kv.first << " is off-peak power so adding underlying daily contracts.");
                         const auto& opIndex = oppIdx->offPeakIndex();
                         const auto& pIndex = oppIdx->peakIndex();
@@ -725,24 +982,24 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
                             auto tmpIdx = oppIdx->clone(expiry);
                             auto opName = opIndex->clone(expiry)->name();
                             TLOG("Adding (date, id) = (" << io::iso_date(expiry) << "," << opName << ")");
-                            fixings[opName].insert(expiry);
+                            fixings[opName].addDate(expiry, false);
                             auto pName = pIndex->clone(expiry)->name();
                             TLOG("Adding (date, id) = (" << io::iso_date(expiry) << "," << pName << ")");
-                            fixings[pName].insert(expiry);
+                            fixings[pName].addDate(expiry, false);
                         }
                     } else if (cfc->contractFrequency() == Daily) {
                         DLOG("Commodity " << kv.first << " has daily frequency so adding daily contracts.");
                         for (const Date& expiry : dates) {
                             auto indexName = commIdx->clone(expiry)->name();
                             TLOG("Adding (date, id) = (" << io::iso_date(expiry) << "," << indexName << ")");
-                            fixings[indexName].insert(expiry);
+                            fixings[indexName].addDate(expiry, false);
                         }
                     } else {
                         DLOG("Commodity " << kv.first << " is not daily so adding the monthly contracts.");
                         for (const Date& expiry : contractExpiries) {
                             auto indexName = commIdx->clone(expiry)->name();
                             TLOG("Adding extra fixing dates for commodity future " << indexName);
-                            fixings[indexName].insert(dates.begin(), dates.end());
+                            fixings[indexName].addDates(dates, false);
                         }
                     }
                 } else {
@@ -750,7 +1007,7 @@ void addMarketFixingDates(const Date& asof, map<string, set<Date>>& fixings, con
                     DLOG("Commodity " << kv.first << " does not have future conventions so adding daily fixings.");
                     auto indexName = commIdx->name();
                     TLOG("Adding extra fixing dates for commodity spot " << indexName);
-                    fixings[indexName].insert(dates.begin(), dates.end());
+                    fixings[indexName].addDates(dates, false);
                 }
             }
         }

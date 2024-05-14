@@ -22,7 +22,7 @@
 */
 
 #pragma once
-
+#include <map>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/timegrid.hpp>
@@ -101,6 +101,8 @@ public:
     QuantLib::TimeGrid closeOutTimeGrid() const;
     //@}
 
+    QuantLib::Date closeOutDateFromValuationDate(const QuantLib::Date& d) const;
+
     //! Accessor methods
     const QuantLib::Date& operator[](QuantLib::Size i) const { return dates_[i]; };
 
@@ -112,18 +114,19 @@ private:
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
     std::vector<QuantLib::Date> dates_;
+    std::map<QuantLib::Date, QuantLib::Date> valuationCloseOutMap_;
     std::vector<QuantLib::Period> tenors_;
     std::vector<QuantLib::Time> times_;
     QuantLib::TimeGrid timeGrid_;
     std::vector<bool> isValuationDate_, isCloseOutDate_;
 };
 
-boost::shared_ptr<DateGrid> generateShiftedDateGrid(const boost::shared_ptr<DateGrid>& dg,
+QuantLib::ext::shared_ptr<DateGrid> generateShiftedDateGrid(const QuantLib::ext::shared_ptr<DateGrid>& dg,
                                                     const QuantLib::Period& shift = QuantLib::Period(2,
                                                                                                      QuantLib::Weeks));
 
-boost::shared_ptr<DateGrid> combineDateGrids(const boost::shared_ptr<DateGrid>& dg1,
-                                             const boost::shared_ptr<DateGrid>& dg2);
+QuantLib::ext::shared_ptr<DateGrid> combineDateGrids(const QuantLib::ext::shared_ptr<DateGrid>& dg1,
+                                             const QuantLib::ext::shared_ptr<DateGrid>& dg2);
 
 } // namespace data
 } // namespace ore

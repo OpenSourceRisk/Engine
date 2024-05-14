@@ -45,13 +45,14 @@ std::pair<std::string, std::string> splitPair(const std::string& pair) {
     return std::make_pair(pair.substr(0, 3), pair.substr(3));
 }
 
-Handle<YieldTermStructure> getMarketDiscountCurve(const Market* market, const std::string& ccy) {
+Handle<YieldTermStructure> getMarketDiscountCurve(const Market* market, const std::string& ccy,
+                                                  const std::string& configuration) {
     try {
-        return market->discountCurve(ccy);
+        return market->discountCurve(ccy, configuration);
     } catch (const std::exception&) {
         WLOG("FXTriangulation: could not get market discount curve '"
-             << ccy
-             << "' - discounted fx spot rates will be replaced by non-discounted rates in future calculations, which "
+             << ccy << "' (requested for configuration '" << configuration
+             << "') - discounted fx spot rates will be replaced by non-discounted rates in future calculations, which "
                 "might lead to inaccuracies");
         return Handle<YieldTermStructure>();
     }
@@ -126,7 +127,7 @@ Handle<Quote> FXTriangulation::getQuote(const std::string& pair) const {
     // handle trivial case
 
     if (ccy1 == ccy2)
-        return Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+        return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 
     // get the path from ccy1 to ccy2
 
@@ -155,7 +156,7 @@ Handle<Quote> FXTriangulation::getQuote(const std::string& pair) const {
         auto f = [](const std::vector<Real>& quotes) {
             return std::accumulate(quotes.begin(), quotes.end(), 1.0, std::multiplies());
         };
-        result = Handle<Quote>(boost::make_shared<CompositeVectorQuote<decltype(f)>>(quotes, f));
+        result = Handle<Quote>(QuantLib::ext::make_shared<CompositeVectorQuote<decltype(f)>>(quotes, f));
     }
 
     // add the result to the lookup cache and return it
@@ -164,11 +165,12 @@ Handle<Quote> FXTriangulation::getQuote(const std::string& pair) const {
     return result;
 }
 
-Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const Market* market) const {
+Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const Market* market,
+                                          const std::string& configuration) const {
 
     // do we have a cached result?
 
-    if (auto it = indexCache_.find(indexOrPair); it != indexCache_.end()) {
+    if (auto it = indexCache_.find(std::make_pair(indexOrPair, configuration)); it != indexCache_.end()) {
         return it->second;
     }
 
@@ -196,8 +198,8 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
 
     // get the discount curves for the result index
 
-    auto sourceYts = getMarketDiscountCurve(market, forCcy);
-    auto targetYts = getMarketDiscountCurve(market, domCcy);
+    auto sourceYts = getMarketDiscountCurve(market, forCcy, configuration);
+    auto targetYts = getMarketDiscountCurve(market, domCcy, configuration);
 
     // get the path from ccy1 to ccy2
 
@@ -208,7 +210,7 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
         // we can use a direct or inverted quote, but do not need a composite
 
         auto fxSpot = getQuote(path[0], path[1]);
-        result = Handle<FxIndex>(boost::make_shared<FxIndex>(familyName, fixingDays, parseCurrency(forCcy),
+        result = Handle<FxIndex>(QuantLib::ext::make_shared<FxIndex>(familyName, fixingDays, parseCurrency(forCcy),
                                                              parseCurrency(domCcy), fixingCalendar, fxSpot, sourceYts,
                                                              targetYts));
 
@@ -227,9 +229,9 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
             // we store a quote "as of today" to account for possible spot lag differences
 
             auto [fd, fc, bdc] = getFxIndexConventions(path[i] + path[i + 1]);
-            auto s_yts = getMarketDiscountCurve(market, path[i]);
-            auto t_yts = getMarketDiscountCurve(market, path[i + 1]);
-            quotes.push_back(Handle<Quote>(boost::make_shared<FxRateQuote>(q, s_yts, t_yts, fd, fc)));
+            auto s_yts = getMarketDiscountCurve(market, path[i], configuration);
+            auto t_yts = getMarketDiscountCurve(market, path[i + 1], configuration);
+            quotes.push_back(Handle<Quote>(QuantLib::ext::make_shared<FxRateQuote>(q, s_yts, t_yts, fd, fc)));
         }
 
         // build the composite quote "as of today"
@@ -237,23 +239,23 @@ Handle<FxIndex> FXTriangulation::getIndex(const std::string& indexOrPair, const 
         auto f = [](const std::vector<Real>& quotes) {
             return std::accumulate(quotes.begin(), quotes.end(), 1.0, std::multiplies());
         };
-        Handle<Quote> compQuote(boost::make_shared<CompositeVectorQuote<decltype(f)>>(quotes, f));
+        Handle<Quote> compQuote(QuantLib::ext::make_shared<CompositeVectorQuote<decltype(f)>>(quotes, f));
 
         // build the spot quote
 
         Handle<Quote> spotQuote(
-            boost::make_shared<FxSpotQuote>(compQuote, sourceYts, targetYts, fixingDays, fixingCalendar));
+            QuantLib::ext::make_shared<FxSpotQuote>(compQuote, sourceYts, targetYts, fixingDays, fixingCalendar));
 
         // build the idnex
 
-        result = Handle<FxIndex>(boost::make_shared<FxIndex>(familyName, fixingDays, parseCurrency(forCcy),
+        result = Handle<FxIndex>(QuantLib::ext::make_shared<FxIndex>(familyName, fixingDays, parseCurrency(forCcy),
                                                              parseCurrency(domCcy), fixingCalendar, spotQuote,
                                                              sourceYts, targetYts));
     }
 
     // add the result to the lookup cache and return it
 
-    indexCache_[indexOrPair] = result;
+    indexCache_[std::make_pair(indexOrPair, configuration)] = result;
     return result;
 }
 
@@ -346,7 +348,7 @@ Handle<Quote> FXTriangulation::getQuote(const std::string& forCcy, const std::st
     }
     if (auto it = quotes_.find(domCcy + forCcy); it != quotes_.end()) {
         auto f = [](Real x) { return 1.0 / x; };
-        return Handle<Quote>(boost::make_shared<DerivedQuote<decltype(f)>>(it->second, f));
+        return Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<decltype(f)>>(it->second, f));
     }
     QL_FAIL(
         "FXTriangulation::getQuote(" << forCcy << domCcy

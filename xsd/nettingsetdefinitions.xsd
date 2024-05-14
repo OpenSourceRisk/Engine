@@ -1,5 +1,22 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
+  <xs:element type="collateralBalances" name="CollateralBalances"/>
+
+  <xs:complexType name="collateralBalances">
+    <xs:sequence>
+      <xs:element name="CollateralBalance" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element ref="nettingSetGroup"/>
+            <xs:element type="currencyCode" name="Currency" minOccurs="0"/>
+            <xs:element type="xs:decimal" name="InitialMargin" minOccurs="0"/>
+            <xs:element type="xs:decimal" name="VariationMargin" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  
   <xs:element type="nettingsetdefinitions" name="NettingSetDefinitions"/>
 
   <xs:complexType name="nettingsetdefinitions">
@@ -55,6 +72,7 @@
                   <xs:element type="csaType" name="InitialMarginType" minOccurs="0"/>
                   <xs:element type="xs:boolean" name="CalculateIMAmount" minOccurs="0"/>
                   <xs:element type="xs:boolean" name="CalculateVMAmount" minOccurs="0"/>
+                  <xs:element type="xs:string" name="NonExemptIMRegulations" minOccurs="0"/>
                 </xs:all>
               </xs:complexType>
             </xs:element>

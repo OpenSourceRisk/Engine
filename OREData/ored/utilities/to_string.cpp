@@ -22,7 +22,10 @@
 */
 
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/log.hpp>
+
 #include <ql/errors.hpp>
+
 #include <iostream>
 #include <stdio.h>
 
@@ -35,9 +38,11 @@ using std::string;
 namespace ore {
 namespace data {
 
-std::string to_string(const QuantLib::Date& date) {
-    if (date == QuantLib::Date())
-        return "1900-01-01";
+using namespace QuantLib;
+
+std::string to_string(const Date& date) {
+    if (date == Date())
+        return "1901-01-01";
 
     char buf[11];
     int y = date.year();
@@ -51,7 +56,7 @@ std::string to_string(const QuantLib::Date& date) {
 
 string to_string(bool aBool) { return aBool ? "true" : "false"; }
 
-std::string to_string(const QuantLib::Period& period) {
+std::string to_string(const Period& period) {
     Integer n = period.length();
     Integer m = 0;
     std::ostringstream o;

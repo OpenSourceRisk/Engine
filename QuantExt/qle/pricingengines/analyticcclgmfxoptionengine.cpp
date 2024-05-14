@@ -25,34 +25,33 @@ namespace QuantExt {
 
 using namespace CrossAssetAnalytics;
 
-AnalyticCcLgmFxOptionEngine::AnalyticCcLgmFxOptionEngine(const boost::shared_ptr<CrossAssetModel>& model,
+AnalyticCcLgmFxOptionEngine::AnalyticCcLgmFxOptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                          const Size foreignCurrency)
     : model_(model), foreignCurrency_(foreignCurrency), cacheEnabled_(false), cacheDirty_(true) {}
 
-Real AnalyticCcLgmFxOptionEngine::value(const Time t0, const Time t, const boost::shared_ptr<StrikedTypePayoff> payoff,
+Real AnalyticCcLgmFxOptionEngine::value(const Time t0, const Time t, const QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff,
                                         const Real domesticDiscount, const Real fxForward) const {
-    Real H0 = Hz(0).eval(model_.get(), t);
-    Real Hi = Hz(foreignCurrency_ + 1).eval(model_.get(), t);
+    Real H0 = Hz(0).eval(*model_, t);
+    Real Hi = Hz(foreignCurrency_ + 1).eval(*model_, t);
 
     // just a shortcut
     const Size& i = foreignCurrency_;
 
-    const CrossAssetModel* x = model_.get();
-
     if (cacheDirty_ || !cacheEnabled_ || !(close_enough(cachedT0_, t0) && close_enough(cachedT_, t))) {
         cachedIntegrals_ =
             // first term
-            H0 * H0 * (zetaz(0).eval(x, t) - zetaz(0).eval(x, t0)) -
-            2.0 * H0 * integral(x, P(Hz(0), az(0), az(0)), t0, t) + integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t) +
+            H0 * H0 * (zetaz(0).eval(*model_, t) - zetaz(0).eval(*model_, t0)) -
+            2.0 * H0 * integral(*model_, P(Hz(0), az(0), az(0)), t0, t) +
+            integral(*model_, P(Hz(0), Hz(0), az(0), az(0)), t0, t) +
             // second term
-            Hi * Hi * (zetaz(i + 1).eval(x, t) - zetaz(i + 1).eval(x, t0)) -
-            2.0 * Hi * integral(x, P(Hz(i + 1), az(i + 1), az(i + 1)), t0, t) +
-            integral(x, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), t0, t) -
+            Hi * Hi * (zetaz(i + 1).eval(*model_, t) - zetaz(i + 1).eval(*model_, t0)) -
+            2.0 * Hi * integral(*model_, P(Hz(i + 1), az(i + 1), az(i + 1)), t0, t) +
+            integral(*model_, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), t0, t) -
             // third term
-            2.0 * (H0 * Hi * integral(x, P(az(0), az(i + 1), rzz(0, i + 1)), t0, t) -
-                   H0 * integral(x, P(Hz(i + 1), az(i + 1), az(0), rzz(i + 1, 0)), t0, t) -
-                   Hi * integral(x, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)), t0, t) +
-                   integral(x, P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)), t0, t));
+            2.0 * (H0 * Hi * integral(*model_, P(az(0), az(i + 1), rzz(0, i + 1)), t0, t) -
+                   H0 * integral(*model_, P(Hz(i + 1), az(i + 1), az(0), rzz(i + 1, 0)), t0, t) -
+                   Hi * integral(*model_, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)), t0, t) +
+                   integral(*model_, P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)), t0, t));
         cacheDirty_ = false;
         cachedT0_ = t0;
         cachedT_ = t;
@@ -60,13 +59,13 @@ Real AnalyticCcLgmFxOptionEngine::value(const Time t0, const Time t, const boost
 
     Real variance = cachedIntegrals_ +
                     // term two three/fourth
-                    (vx(i).eval(x, t) - vx(i).eval(x, t0)) +
+                    (vx(i).eval(*model_, t) - vx(i).eval(*model_, t0)) +
                     // forth term
-                    2.0 * (H0 * integral(x, P(az(0), sx(i), rzx(0, i)), t0, t) -
-                           integral(x, P(Hz(0), az(0), sx(i), rzx(0, i)), t0, t)) -
+                    2.0 * (H0 * integral(*model_, P(az(0), sx(i), rzx(0, i)), t0, t) -
+                           integral(*model_, P(Hz(0), az(0), sx(i), rzx(0, i)), t0, t)) -
                     // fifth term
-                    2.0 * (Hi * integral(x, P(az(i + 1), sx(i), rzx(i + 1, i)), t0, t) -
-                           integral(x, P(Hz(i + 1), az(i + 1), sx(i), rzx(i + 1, i)), t0, t));
+                    2.0 * (Hi * integral(*model_, P(az(i + 1), sx(i), rzx(i + 1, i)), t0, t) -
+                           integral(*model_, P(Hz(i + 1), az(i + 1), sx(i), rzx(i + 1, i)), t0, t));
 
     BlackCalculator black(payoff, fxForward, std::sqrt(variance), domesticDiscount);
 
@@ -77,7 +76,7 @@ void AnalyticCcLgmFxOptionEngine::calculate() const {
 
     QL_REQUIRE(arguments_.exercise->type() == Exercise::European, "only European options are allowed");
 
-    boost::shared_ptr<StrikedTypePayoff> payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
     QL_REQUIRE(payoff != NULL, "only striked payoff is allowed");
 
     Date expiry = arguments_.exercise->lastDate();

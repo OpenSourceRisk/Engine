@@ -27,8 +27,10 @@ namespace data {
 std::string IndexNameTranslator::oreName(const std::string& qlName) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto n = data_.left.find(qlName);
-    QL_REQUIRE(n != data_.left.end(), "IndexNameTranslator: qlName '" << qlName << "' not found.");
-    return n->second;
+    if (n == data_.left.end())
+        return qlName;
+    else
+        return n->second;
 }
 
 std::string IndexNameTranslator::qlName(const std::string& oreName) const {

@@ -18,8 +18,8 @@
 
 #include "sensitivityperformanceplus.hpp"
 #include <test/oreatoplevelfixture.hpp>
-#include <test/testmarket.hpp>
-#include <test/testportfolio.hpp>
+#include "testmarket.hpp"
+#include "testportfolio.hpp"
 
 #include <boost/timer/timer.hpp>
 #include <orea/app/reportwriter.hpp>
@@ -52,7 +52,6 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
-#include <orea/engine/sensitivityanalysisplus.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
@@ -80,8 +79,8 @@ inline const string& randString(MersenneTwisterUniformRng& rng, const vector<str
 
 inline bool randBoolean(MersenneTwisterUniformRng& rng) { return randInt(rng, 0, 1) == 1; }
 
-boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() {
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
+QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() {
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
         new analytics::ScenarioSimMarketParameters());
 
     simMarketData->baseCcy() = "EUR";
@@ -119,8 +118,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     return simMarketData;
 }
 
-boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData7() {
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
+QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData7() {
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
         new analytics::ScenarioSimMarketParameters());
 
     simMarketData->baseCcy() = "EUR";
@@ -143,8 +142,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData7() 
     return simMarketData;
 }
 
-boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5Big() {
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
+QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5Big() {
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
         new analytics::ScenarioSimMarketParameters());
 
     simMarketData->baseCcy() = "EUR";
@@ -221,11 +220,11 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5Big
     return simMarketData;
 }
 
-boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
-    boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
+QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = QuantLib::ext::make_shared<SensitivityScenarioData>();
 
-    boost::shared_ptr<SensitivityScenarioData::CurveShiftData> cvsData =
-        boost::make_shared<SensitivityScenarioData::CurveShiftData>();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::CurveShiftData> cvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>();
     cvsData->shiftTenors = {
         1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,  6 * Months,
         9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months, 15 * Months, 16 * Months,
@@ -236,15 +235,15 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
         67 * Months, 68 * Months, 6 * Years,   76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
         7 * Years,   88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months, 10 * Years,  15 * Years,
         20 * Years,  25 * Years,  30 * Years,  50 * Years}; // multiple tenors: triangular shifts
-    cvsData->shiftType = "Absolute";
+    cvsData->shiftType = ShiftType::Absolute;
     cvsData->shiftSize = 0.0001;
 
     SensitivityScenarioData::SpotShiftData fxsData;
-    fxsData.shiftType = "Relative";
+    fxsData.shiftType = ShiftType::Relative;
     fxsData.shiftSize = 0.01;
 
     SensitivityScenarioData::VolShiftData fxvsData;
-    fxvsData.shiftType = "Relative";
+    fxvsData.shiftType = ShiftType::Relative;
     fxvsData.shiftSize = 1.0;
     fxvsData.shiftExpiries = {1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,
                               6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months,
@@ -258,7 +257,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
                               15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    cfvsData.shiftType = "Absolute";
+    cfvsData.shiftType = ShiftType::Absolute;
     cfvsData.shiftSize = 0.0001;
     cfvsData.shiftExpiries = {
         3 * Months,  4 * Months,  5 * Months,  6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,
@@ -272,7 +271,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::GenericYieldVolShiftData swvsData;
-    swvsData.shiftType = "Relative";
+    swvsData.shiftType = ShiftType::Relative;
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,
                               6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months,
@@ -333,42 +332,42 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
     sensiData->capFloorVolShiftData()["EUR"] =
-        boost::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
     sensiData->capFloorVolShiftData()["EUR"]->indexName = "EUR-EURIBOR-6M";
     sensiData->capFloorVolShiftData()["USD"] =
-        boost::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
     sensiData->capFloorVolShiftData()["USD"]->indexName = "USD-LIBOR-3M";
 
     return sensiData;
 }
 
-boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
-    boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
+QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = QuantLib::ext::make_shared<SensitivityScenarioData>();
 
-    boost::shared_ptr<SensitivityScenarioData::CurveShiftData> cvsData =
-        boost::make_shared<SensitivityScenarioData::CurveShiftData>();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::CurveShiftData> cvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>();
     cvsData->shiftTenors = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
                             7 * Years,  10 * Years, 15 * Years, 20 * Years}; // multiple tenors: triangular shifts
-    cvsData->shiftType = "Absolute";
+    cvsData->shiftType = ShiftType::Absolute;
     cvsData->shiftSize = 0.0001;
 
     SensitivityScenarioData::SpotShiftData fxsData;
-    fxsData.shiftType = "Relative";
+    fxsData.shiftType = ShiftType::Relative;
     fxsData.shiftSize = 0.01;
 
     SensitivityScenarioData::VolShiftData fxvsData;
-    fxvsData.shiftType = "Relative";
+    fxvsData.shiftType = ShiftType::Relative;
     fxvsData.shiftSize = 1.0;
     fxvsData.shiftExpiries = {5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    cfvsData.shiftType = "Absolute";
+    cfvsData.shiftType = ShiftType::Absolute;
     cfvsData.shiftSize = 0.0001;
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::GenericYieldVolShiftData swvsData;
-    swvsData.shiftType = "Relative";
+    swvsData.shiftType = ShiftType::Relative;
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {6 * Months, 1 * Years, 3 * Years, 5 * Years, 10 * Years};
     swvsData.shiftTerms = {1 * Years, 3 * Years, 5 * Years, 10 * Years, 20 * Years};
@@ -411,28 +410,28 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
     sensiData->capFloorVolShiftData()["EUR"] =
-        boost::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
     sensiData->capFloorVolShiftData()["EUR"]->indexName = "EUR-EURIBOR-6M";
     sensiData->capFloorVolShiftData()["USD"] =
-        boost::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
+        QuantLib::ext::make_shared<SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
     sensiData->capFloorVolShiftData()["USD"]->indexName = "USD-LIBOR-3M";
 
     return sensiData;
 }
 
-boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData7() {
-    boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
+QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData7() {
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = QuantLib::ext::make_shared<SensitivityScenarioData>();
 
-    boost::shared_ptr<SensitivityScenarioData::CurveShiftData> cvsData =
-        boost::make_shared<SensitivityScenarioData::CurveShiftData>();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::CurveShiftData> cvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::CurveShiftData>();
     cvsData->shiftTenors = {
         2 * Weeks, 1 * Months, 3 * Months, 6 * Months, 1 * Years,  2 * Years,
         3 * Years, 5 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years}; // multiple tenors: triangular shifts
-    cvsData->shiftType = "Absolute";
+    cvsData->shiftType = ShiftType::Absolute;
     cvsData->shiftSize = 0.0001;
 
     SensitivityScenarioData::SpotShiftData fxsData;
-    fxsData.shiftType = "Relative";
+    fxsData.shiftType = ShiftType::Relative;
     fxsData.shiftSize = 0.01;
 
     sensiData->discountCurveShiftData()["EUR"] = cvsData;
@@ -623,10 +622,10 @@ void addCrossGammas7(vector<pair<string, string>>& cgFilter) {
     cgFilter.push_back(pair<string, string>("IndexCurve/USD", "IndexCurve/CAD"));
 }
 
-boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, bool swapsOnly = false,
-                                            boost::shared_ptr<EngineFactory> factory = {}) {
+QuantLib::ext::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, bool swapsOnly = false,
+                                            QuantLib::ext::shared_ptr<EngineFactory> factory = {}) {
 
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
 
     vector<string> ccys = {"EUR", "USD", "GBP", "JPY", "CHF"};
 
@@ -726,11 +725,11 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     Settings::instance().evaluationDate() = today;
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<testsuite::TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<testsuite::TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
     if (bigScenario) {
         simMarketData = setupSimMarketData5Big();
     }
@@ -744,18 +743,17 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     // build scenario sim market
 
     // build porfolio
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
     data->model("EuropeanSwaption") = "BlackBachelier";
     data->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
 
-    boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize);
 
     boost::timer::cpu_timer timer;
-    boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysisPlus>(
-            portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> sa = QuantLib::ext::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
     sa->generateSensitivities();
     timer.stop();
     Real elapsed = timer.elapsed().wall * 1e-9;
@@ -784,35 +782,34 @@ void BT_Benchmark(bool crossGammas, ObservationMode::Mode om) {
     Settings::instance().evaluationDate() = today;
 
     // Init market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<testsuite::TestMarket>(today, true);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<testsuite::TestMarket>(today, true);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData7();
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData7();
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData7();
+    QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData7();
     if (crossGammas) {
         addCrossGammas7(sensiData->crossGammaFilter());
     }
 
     // build porfolio
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
     data->model("EuropeanSwaption") = "BlackBachelier";
     data->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
 
-    boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize, true);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize, true);
 
     boost::timer::cpu_timer timer;
-    boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysisPlus>(
-            portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> sa = QuantLib::ext::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
     sa->generateSensitivities();
 
     // TODO: do we really want to write a report in the unit tests?
     // Create a stream from the sensitivity cube
     CSVFileReport cgReport("crossgammReport");
     auto baseCurrency = sa->simMarketData()->baseCcy();
-    auto ss = boost::make_shared<SensitivityCubeStream>(sa->sensiCube(), baseCurrency);
+    auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(sa->sensiCube(), baseCurrency);
     ReportWriter().writeSensitivityReport(cgReport, ss, 0.000001);
     timer.stop();
 

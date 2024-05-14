@@ -49,8 +49,8 @@ QuantLib::Real dontThrowFallback(const QuantLib::BootstrapError<Curve>& error, Q
     QuantLib::Real stepSize = (xMax - xMin) / steps;
 
     for (QuantLib::Size i = 0; i <= steps; ++i) {
-        Real x = xMin + stepSize * static_cast<double>(i);
-        Real absError = QL_MAX_REAL;
+        QuantLib::Real x = xMin + stepSize * static_cast<double>(i);
+        QuantLib::Real absError = QL_MAX_REAL;
         try {
             absError = std::abs(error(x));
         } catch (...) {
@@ -109,7 +109,7 @@ private:
     mutable bool initialized_, validCurve_, loopRequired_;
     mutable QuantLib::Size firstAliveHelper_, alive_;
     mutable std::vector<QuantLib::Real> previousData_;
-    mutable std::vector<boost::shared_ptr<QuantLib::BootstrapError<Curve> > > errors_;
+    mutable std::vector<QuantLib::ext::shared_ptr<QuantLib::BootstrapError<Curve> > > errors_;
     QuantLib::Real accuracy_;
     QuantLib::Real globalAccuracy_;
     bool dontThrow_;
@@ -166,7 +166,7 @@ template <class Curve> void IterativeBootstrap<Curve>::initialize() const {
     // helper counter: j
     for (QuantLib::Size i = 1, j = firstAliveHelper_; j < n_; ++i, ++j) {
 
-        const boost::shared_ptr<typename Traits::helper>& helper = ts_->instruments_[j];
+        const QuantLib::ext::shared_ptr<typename Traits::helper>& helper = ts_->instruments_[j];
         dates[i] = helper->pillarDate();
         times[i] = ts_->timeFromReference(dates[i]);
 
@@ -176,7 +176,7 @@ template <class Curve> void IterativeBootstrap<Curve>::initialize() const {
         latestRelevantDate = helper->latestRelevantDate();
         // check that the helper is really extending the curve, i.e. that
         // pillar-sorted helpers are also sorted by latestRelevantDate
-        QL_REQUIRE(latestRelevantDate > maxDate, io::ordinal(j + 1)
+        QL_REQUIRE(latestRelevantDate > maxDate, QuantLib::io::ordinal(j + 1)
                                                      << " instrument (pillar: " << dates[i]
                                                      << ") has latestRelevantDate (" << latestRelevantDate
                                                      << ") before or equal to "
@@ -189,7 +189,7 @@ template <class Curve> void IterativeBootstrap<Curve>::initialize() const {
         if (dates[i] != latestRelevantDate)
             loopRequired_ = true;
 
-        errors_[i] = boost::make_shared<QuantLib::BootstrapError<Curve> >(ts_, helper, i);
+        errors_[i] = QuantLib::ext::make_shared<QuantLib::BootstrapError<Curve> >(ts_, helper, i);
     }
     ts_->maxDate_ = maxDate;
 
@@ -216,10 +216,10 @@ template <class Curve> void IterativeBootstrap<Curve>::calculate() const {
 
     // setup helpers
     for (QuantLib::Size j = firstAliveHelper_; j < n_; ++j) {
-        const boost::shared_ptr<typename Traits::helper>& helper = ts_->instruments_[j];
+        const QuantLib::ext::shared_ptr<typename Traits::helper>& helper = ts_->instruments_[j];
 
         // check for valid quote
-        QL_REQUIRE(helper->quote()->isValid(), io::ordinal(j + 1)
+        QL_REQUIRE(helper->quote()->isValid(), QuantLib::io::ordinal(j + 1)
                                                    << " instrument (maturity: " << helper->maturityDate()
                                                    << ", pillar: " << helper->pillarDate() << ") has an invalid quote");
 

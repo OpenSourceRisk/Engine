@@ -35,7 +35,6 @@
 #include <qle/calendars/ireland.hpp>
 #include <qle/calendars/islamicweekendsonly.hpp>
 #include <qle/calendars/israel.hpp>
-#include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/mauritius.hpp>
@@ -88,7 +87,7 @@ QuantLib::Calendar CalendarParser::parseCalendar(const std::string& name) const 
                 QL_FAIL("Cannot convert \"" << name << "\" to Calendar [unhandled exception]");
             }
         }
-        return QuantExt::LargeJointCalendar(calendars);
+        return QuantLib::JointCalendar(calendars);
     }
 }
 
@@ -321,6 +320,8 @@ void CalendarParser::reset() {
         {"GBX", UnitedKingdom()},
         {"ILa", QuantLib::Israel()},
         {"ILX", QuantLib::Israel()},
+        {"ILs", QuantLib::Israel()},
+        {"ILA", QuantLib::Israel()},
         {"ZAc", SouthAfrica()},
         {"ZAC", SouthAfrica()},
         {"ZAX", SouthAfrica()},
@@ -365,6 +366,7 @@ void CalendarParser::reset() {
         {"ZMW", AmendedCalendar(WeekendsOnly(), "ZMW")},
 
         // ISO 10383 MIC Exchange
+        {"XASX", Australia(Australia::ASX)},
         {"BVMF", Brazil(Brazil::Exchange)},
         {"XTSE", Canada(Canada::TSX)},
         {"XSHG", China(China::SSE)},
@@ -390,6 +392,7 @@ void CalendarParser::reset() {
         {"London stock exchange", UnitedKingdom(UnitedKingdom::Exchange)},
         {"LNB", UnitedKingdom()},
         {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
+        {"SOFR fixing calendar", UnitedStates(UnitedStates::SOFR)},
         {"NGL", Netherlands()},
         {"NYB", UnitedStates(UnitedStates::Settlement)},
         {"SA", SouthAfrica()}, // TODO: consider remove it, not ISO & confuses with Saudi Arabia

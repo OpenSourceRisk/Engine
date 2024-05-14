@@ -16,20 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
+#include <boost/bind/bind.hpp>
+#include <ql/functional.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/quotes/derivedquote.hpp>
+#include <ql/utilities/null_deleter.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
 
 using namespace QuantLib;
 using std::ostream;
-
-namespace {
-void no_deletion(OptionletVolatilityStructure*) {}
-} // namespace
 
 namespace QuantExt {
 
@@ -40,14 +37,14 @@ namespace QuantExt {
 // where the quote volatility type input is of one type and the optionlet structure that we are trying to build is of
 // another different type.
 CapFloorHelper::CapFloorHelper(Type type, const Period& tenor, Rate strike, const Handle<Quote>& quote,
-                               const boost::shared_ptr<IborIndex>& iborIndex,
+                               const QuantLib::ext::shared_ptr<IborIndex>& iborIndex,
                                const Handle<YieldTermStructure>& discountingCurve, bool moving,
                                const QuantLib::Date& effectiveDate, QuoteType quoteType,
                                QuantLib::VolatilityType quoteVolatilityType, QuantLib::Real quoteDisplacement,
                                bool endOfMonth, bool firstCapletExcluded)
     : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(
-          Handle<Quote>(boost::make_shared<DerivedQuote<boost::function<Real(Real)> > >(
-              quote, boost::bind(&CapFloorHelper::npv, this, _1)))),
+          Handle<Quote>(QuantLib::ext::make_shared<DerivedQuote<QuantLib::ext::function<Real(Real)> > >(
+              quote, QuantLib::ext::bind(&CapFloorHelper::npv, this, QuantLib::ext::placeholders::_1)))),
       type_(type), tenor_(tenor), strike_(strike), iborIndex_(iborIndex), discountHandle_(discountingCurve),
       moving_(moving), effectiveDate_(effectiveDate), quoteType_(quoteType), quoteVolatilityType_(quoteVolatilityType),
       quoteDisplacement_(quoteDisplacement), endOfMonth_(endOfMonth), firstCapletExcluded_(firstCapletExcluded),
@@ -92,14 +89,14 @@ void CapFloorHelper::initializeDates() {
         const Leg& leg = capFloor_->floatingLeg();
 
         // Earliest date is the first optionlet fixing date
-        boost::shared_ptr<CashFlow> cf = leg.front();
-        boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+        QuantLib::ext::shared_ptr<CashFlow> cf = leg.front();
+        QuantLib::ext::shared_ptr<FloatingRateCoupon> frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(cf);
         QL_REQUIRE(frc, "Expected the first cashflow on the cap floor instrument to be a FloatingRateCoupon");
         earliestDate_ = frc->fixingDate();
 
         // Remaining dates are each equal to the fixing date on the final optionlet
         cf = leg.back();
-        frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+        frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(cf);
         QL_REQUIRE(frc, "Expected the final cashflow on the cap floor instrument to be a FloatingRateCoupon");
         pillarDate_ = latestDate_ = latestRelevantDate_ = frc->fixingDate();
     }
@@ -132,7 +129,7 @@ void CapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
     }
 
     // Set this helper's optionlet volatility structure
-    boost::shared_ptr<OptionletVolatilityStructure> temp(ovts, no_deletion);
+    QuantLib::ext::shared_ptr<OptionletVolatilityStructure> temp(ovts, null_deleter());
     ovtsHandle_.linkTo(temp, false);
 
     // Set the term structure pointer member variable in the base class
@@ -140,20 +137,20 @@ void CapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
 
     // Set this helper's pricing engine depending on the type of the optionlet volatilities
     if (ovts->volatilityType() == ShiftedLognormal) {
-        capFloor_->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(discountHandle_, ovtsHandle_));
+        capFloor_->setPricingEngine(QuantLib::ext::make_shared<BlackCapFloorEngine>(discountHandle_, ovtsHandle_));
     } else {
-        capFloor_->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(discountHandle_, ovtsHandle_));
+        capFloor_->setPricingEngine(QuantLib::ext::make_shared<BachelierCapFloorEngine>(discountHandle_, ovtsHandle_));
     }
 
     // If the quote type is not a premium, we will need to use capFloorCopy_ to return the premium from the volatility
     // quote
     if (quoteType_ != Premium) {
         if (quoteVolatilityType_ == ShiftedLognormal) {
-            capFloorCopy_->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
+            capFloorCopy_->setPricingEngine(QuantLib::ext::make_shared<BlackCapFloorEngine>(
                 discountHandle_, rawQuote_, ovtsHandle_->dayCounter(), quoteDisplacement_));
         } else {
             capFloorCopy_->setPricingEngine(
-                boost::make_shared<BachelierCapFloorEngine>(discountHandle_, rawQuote_, ovtsHandle_->dayCounter()));
+                QuantLib::ext::make_shared<BachelierCapFloorEngine>(discountHandle_, rawQuote_, ovtsHandle_->dayCounter()));
         }
     }
 }

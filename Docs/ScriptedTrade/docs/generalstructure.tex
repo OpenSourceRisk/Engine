@@ -1,0 +1,130 @@
+A scripted trade comprises
+
+\begin{itemize}
+\item external data that parametrises the payoff script
+\item the payoff script
+\end{itemize}
+
+In the following example, a plain vanilla equity call or put option is described by providing the expiry and settlement
+date, the strike, a put / call indicator and the underlying index as external data in the \verb+Data+ node, and the
+payoff script is referenced by the \verb+ScriptName+ node:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="VanillaOption">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope/>
+  <ScriptedTradeData>
+    <ScriptName>EuropeanOption</ScriptName>
+    <Data>
+      <Event>
+        <Name>Expiry</Name>
+        <Value>2020-02-09</Value>
+      </Event>
+      <Event>
+        <Name>Settlement</Name>
+        <Value>2020-02-15</Value>
+      </Event>
+      <Number>
+        <Name>Strike</Name>
+        <Value>1200</Value>
+      </Number>
+      <Number>
+        <Name>PutCall</Name>
+        <Value>1</Value>
+      </Number>
+      <Index>
+        <Name>Underlying</Name>
+        <Value>EQ-RIC:.SPX</Value>
+      </Index>
+      <Currency>
+        <Name>PayCcy</Name>
+        <Value>USD</Value>
+      </Currency>
+    </Data>
+  </ScriptedTradeData>
+</Trade>
+\end{minted}
+
+The script itself is defined in a script library, which is part of
+the static data setup of the application like bond or credit index static data, as follows
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ScriptLibrary>
+  <Script>
+    <Name>EuropeanOption</Name>
+    <ProductTag>SingleAssetOption({AssetClass})</ProductTag>
+    <Script>
+      <Code><![CDATA[
+          Option = PAY(max( PutCall * (Underlying(Expiry) - Strike), 0 ),
+                                                  Expiry, Settlement, PayCcy);
+        ]]></Code>
+      <NPV>Option</NPV>
+      <Results>
+        <Result>ExerciseProbability</Result>
+      </Results>
+    </Script>
+  </Script>
+  <Script>
+  ...
+  </Script>
+  ...
+</ScriptLibrary>
+\end{minted}
+
+Many scripted trades can thus share the same script, and the payoff scripts can be managed and maintained
+centrally. Each scipt defines an exotic product type. And adding a product type to the library is a configuration rather
+than a code release change.
+
+\ifdefined\STModuleDoc
+
+For the ORE CLI the script library can be loaded by specifying the (optional) scriptLibrary parameter:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ORE>
+  <Setup>
+  <Parameter name="asofDate">2016-02-05</Parameter>
+  ...
+  <Parameter name="scriptLibrary">scriptlibrary.xml</Parameter>
+  </Setup>
+  ...
+</ORE>
+\end{minted}
+
+In the pricer\_app the script library can be loaded by specifying the (optional) script\_library parameter, e.g. in config.txt
+
+\begin{minted}[fontsize=\footnotesize]{text}
+asof=2018-12-31
+base_currency=USD
+trade=scripted_fx_onetouch_option.xml
+script_library=scriptlibrary.xml
+\end{minted}
+
+Alternatively, the script can be inlined in the trade representation:
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="VanillaOption">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope/>
+  <ScriptedTradeData>
+    <ProductTag>SingleAssetOption({AssetClass})</ProductTag>
+    <Script>
+      <Code><![CDATA[
+          Option = PAY(max( PutCall * (Underlying(Expiry) - Strike), 0 ),
+                                                  Expiry, Settlement, PayCcy);
+      ]]></Code>
+      <NPV>Option</NPV>
+      <Results>
+          <Result>ExerciseProbability</Result>
+      <Results>
+    </Script>
+    <Data>
+      ...
+    </Data>
+  </ScriptedTradeData>
+</Trade>
+\end{minted}
+
+The product tag node is optional both for scripts in the library and inlined script and used for the assignment of a
+pricing model and its parameters, see \ref{producttags_engineconfig}
+
+\fi

@@ -18,12 +18,12 @@
     <Parameter name="continueOnError">false</Parameter>
   </Setup>
   <Markets>
-    <Parameter name="lgmcalibration">libor</Parameter>
-    <Parameter name="fxcalibration">libor</Parameter>
-    <Parameter name="eqcalibration">libor</Parameter>
-    <Parameter name="pricing">libor</Parameter>
-    <Parameter name="simulation">libor</Parameter>
-    <Parameter name="sensitivity">libor</Parameter>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="eqcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="simulation">default</Parameter>
+    <Parameter name="sensitivity">default</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">

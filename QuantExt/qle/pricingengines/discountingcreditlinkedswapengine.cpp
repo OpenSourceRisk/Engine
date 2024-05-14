@@ -86,7 +86,7 @@ void DiscountingCreditLinkedSwapEngine::calculate() const {
                 }
 
                 if (arguments_.settlesAccrual) {
-                    if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
+                    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
                         Date start = std::max(cpn->accrualStartDate(), today);
                         Date end = cpn->accrualEndDate();
                         if (end > today) {

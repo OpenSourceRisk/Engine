@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/bind/bind.hpp>
+
 #include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
 
 #include <ql/cashflows/fixedratecoupon.hpp>
@@ -23,7 +25,7 @@
 
 namespace QuantExt {
 
-AnalyticLgmCdsOptionEngine::AnalyticLgmCdsOptionEngine(const boost::shared_ptr<CrossAssetModel>& model,
+AnalyticLgmCdsOptionEngine::AnalyticLgmCdsOptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                        const Size index, const Size ccy, const Real recoveryRate,
                                                        const Handle<YieldTermStructure>& termStructure)
     : QuantExt::CdsOption::engine(), model_(model), index_(index), ccy_(ccy), recoveryRate_(recoveryRate),
@@ -65,8 +67,8 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
 
     Real accrualSettlementAmount = 0.0;
     for (Size i = 0; i < n; ++i) {
-        boost::shared_ptr<FixedRateCoupon> cpn =
-            boost::dynamic_pointer_cast<FixedRateCoupon>(arguments_.swap->coupons()[i]);
+        QuantLib::ext::shared_ptr<FixedRateCoupon> cpn =
+            QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(arguments_.swap->coupons()[i]);
         QL_REQUIRE(cpn != NULL, "AnalyticLgmCdsOptionEngine: expected fixed rate coupon");
         t_[i + 1] = yts->timeFromReference(cpn->date());
         Real mid = (t_[i] + t_[i + 1]) / 2.0;
@@ -96,7 +98,8 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
     Brent b;
     Real lambdaStar;
     try {
-        lambdaStar = b.solve(boost::bind(&AnalyticLgmCdsOptionEngine::lambdaStarHelper, this, _1), 1.0E-6, 0.0, 0.01);
+        lambdaStar = b.solve(QuantLib::ext::bind(&AnalyticLgmCdsOptionEngine::lambdaStarHelper, this, QuantLib::ext::placeholders::_1),
+                             1.0E-6, 0.0, 0.01);
     } catch (const std::exception& e) {
         QL_FAIL("AnalyticLgmCdsOptionEngine, failed to compute lambdaStar, " << e.what());
     }

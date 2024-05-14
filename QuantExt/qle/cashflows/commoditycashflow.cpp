@@ -18,12 +18,21 @@
 
 #include <qle/cashflows/commoditycashflow.hpp>
 
+using QuantLib::AcyclicVisitor;
+using QuantLib::Visitor;
 using QuantLib::Calendar;
 using QuantLib::Date;
 using QuantLib::Days;
 using std::set;
 
 namespace QuantExt {
+
+void CommodityCashFlow::accept(QuantLib::AcyclicVisitor& v) {
+    if (QuantLib::Visitor<CommodityCashFlow>* v1 = dynamic_cast<QuantLib::Visitor<CommodityCashFlow>*>(&v))
+        v1->visit(*this);
+    else
+        CashFlow::accept(v);
+}
 
 CommodityCashFlow::CommodityCashFlow(QuantLib::Real quantity, QuantLib::Real spread, QuantLib::Real gearing,
                                      bool useFuturePrice, const ext::shared_ptr<CommodityIndex>& index,

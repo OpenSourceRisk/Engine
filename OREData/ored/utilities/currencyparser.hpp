@@ -40,8 +40,12 @@ public:
     QuantLib::Currency parseCurrency(const std::string& name) const;
     QuantLib::Currency parseMinorCurrency(const std::string& name) const;
     QuantLib::Currency parseCurrencyWithMinors(const std::string& name) const;
+    std::pair<QuantLib::Currency, QuantLib::Currency> parseCurrencyPair(const std::string& name,
+                                                                        const std::string& delimiters) const;
 
     void addCurrency(const std::string& newName, const QuantLib::Currency& currency);
+    void addMetal(const std::string& newName, const QuantLib::Currency& currency);
+    void addCrypto(const std::string& newName, const QuantLib::Currency& currency);
 
     bool isValidCurrency(const std::string& name) const;
     bool isMinorCurrency(const std::string& name) const;

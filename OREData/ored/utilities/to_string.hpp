@@ -23,9 +23,10 @@
 
 #pragma once
 
-#include <ored/configuration/equitycurveconfig.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/period.hpp>
+
+#include <set>
 #include <sstream>
 
 namespace ore {
@@ -64,7 +65,7 @@ std::string to_string(const QuantLib::Period& period);
 */
 template <class T>  std::string to_string(const std::vector<T>& vec, const std::string& sep = ",") {
     std::ostringstream oss;
-    for (Size i = 0; i < vec.size(); ++i) {
+    for (std::size_t i = 0; i < vec.size(); ++i) {
         oss << vec[i];
         if (i < vec.size() - 1)
             oss << sep;
@@ -78,7 +79,7 @@ template <class T>  std::string to_string(const std::vector<T>& vec, const std::
 */
 template <class T>  std::string to_string(const std::set<T>& set, const std::string& sep = ",") {
     std::ostringstream oss;
-    Size count = 1;
+    std::size_t count = 1;
     for (auto s: set) {
         oss << s;
         if (count < set.size())

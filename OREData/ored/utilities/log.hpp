@@ -39,8 +39,17 @@
 #include <time.h>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/log/attributes/mutable_constant.hpp>
+#include <boost/log/utility/manipulators/add_value.hpp>
+#include <boost/log/attributes.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/expressions/formatters/date_time.hpp>
+#include <boost/log/sinks.hpp>
+#include <boost/log/sources/global_logger_storage.hpp>
+#include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/sources/severity_logger.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <map>
 #include <ql/qldefines.hpp>
 #include <queue>
@@ -58,9 +67,58 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/lock_types.hpp>
 
+enum oreSeverity {
+    alert = ORE_ALERT,
+    critical = ORE_CRITICAL,
+    error = ORE_ERROR,
+    warning = ORE_WARNING,
+    notice = ORE_NOTICE,
+    debug = ORE_DEBUG,
+    data = ORE_DATA,
+    memory = ORE_MEMORY
+};
+
+
+//! Outputs stringized representation of the severity level to the stream
+template <typename CharT, typename TraitsT>
+inline std::basic_ostream<CharT, TraitsT>& operator<<(std::basic_ostream<CharT, TraitsT>& strm, oreSeverity lvl) {
+    switch (lvl) {
+    case oreSeverity::alert:
+        strm << "ALERT";
+        break;
+    case oreSeverity::critical:
+        strm << "CRITICAL";
+        break;
+    case oreSeverity::error:
+        strm << "ERROR";
+        break;
+    case oreSeverity::warning:
+        strm << "WARNING";
+        break;
+    case oreSeverity::notice:
+        strm << "NOTICE";
+        break;
+    case oreSeverity::debug:
+        strm << "DEBUG";
+        break;
+    case oreSeverity::data:
+        strm << "DATA";
+        break;
+    case oreSeverity::memory:
+        strm << "MEMORY";
+        break;
+    default:
+        strm << "UNKNOWN";
+    }
+
+    return strm;
+}
+
 namespace ore {
 namespace data {
-using std::string;
+
+typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend> file_sink;
+typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend> text_sink;
 
 //! The Base Custom Log Handler class
 /*!
@@ -80,10 +138,10 @@ public:
       \param level the log level
       \param s the log message
      */
-    virtual void log(unsigned level, const string& s) = 0;
+    virtual void log(unsigned level, const std::string& s) = 0;
 
     //! Returns the Logger name
-    const string& name() { return name_; }
+    const std::string& name() { return name_; }
 
 protected:
     //! Constructor
@@ -91,10 +149,10 @@ protected:
       Implementations must provide a logger name
       \param name the logger name
      */
-    Logger(const string& name) : name_(name) {}
+    Logger(const std::string& name) : name_(name) {}
 
 private:
-    string name_;
+    std::string name_;
 };
 
 //! Stderr Logger
@@ -106,7 +164,7 @@ private:
 class StderrLogger : public Logger {
 public:
     //! the name "StderrLogger"
-    static const string name;
+    static const std::string name;
     //! Constructor
     /*!
       This logger writes all logs to stderr.
@@ -116,7 +174,7 @@ public:
     //! Destructor
     virtual ~StderrLogger() {}
     //! The log callback that writes to stderr
-    virtual void log(unsigned l, const string& s) override {
+    virtual void log(unsigned l, const std::string& s) override {
         if (!alertOnly_ || l == ORE_ALERT)
             std::cerr << s << std::endl;
     }
@@ -135,21 +193,21 @@ private:
 class FileLogger : public Logger {
 public:
     //! the name "FileLogger"
-    static const string name;
+    static const std::string name;
     //! Constructor
     /*!
       Construct a file logger using the given filename, this filename is passed to std::fostream::open()
       and this constructor will throw an exception if the file is not opened (e.g. if the filename is invalid)
       \param filename the log filename
      */
-    FileLogger(const string& filename);
+    FileLogger(const std::string& filename);
     //! Destructor
     virtual ~FileLogger();
     //! The log callback
-    virtual void log(unsigned, const string&) override;
+    virtual void log(unsigned, const std::string&) override;
 
 private:
-    string filename_;
+    std::string filename_;
     std::fstream fout_;
 };
 
@@ -170,13 +228,13 @@ private:
 class BufferLogger : public Logger {
 public:
     //! the name "BufferLogger"
-    static const string name;
+    static const std::string name;
     //! Constructor
     BufferLogger(unsigned minLevel = ORE_DATA) : Logger(name), minLevel_(minLevel) {}
     //! Destructor
     virtual ~BufferLogger() {}
     //! The log callback
-    virtual void log(unsigned, const string&) override;
+    virtual void log(unsigned, const std::string&) override;
 
     //! Checks if Logger has new messages
     /*!
@@ -189,11 +247,109 @@ public:
       Messages are returned in a FIFO order. Messages are deleted from the buffer once returned.
       \return The next message
      */
-    string next();
+    std::string next();
 
 private:
-    std::queue<string> buffer_;
+    std::queue<std::string> buffer_;
     unsigned minLevel_;
+};
+
+//! Base Log handler class that utilises Boost logging to create log sinks
+/*!
+  This type of logger should only be received via Log::registerIndependentLoggers().
+  It is responsible for creating and maintaining Boost log sink/s and nothing more.
+  \ingroup utilities
+  \see Log
+ */
+class IndependentLogger {
+public:
+    //! Destructor
+    virtual ~IndependentLogger() {}
+    virtual void removeSinks() = 0;
+    std::vector<std::string>& messages() { return messages_; }
+    void clear();
+
+    //! Returns the Logger name
+    const std::string& name() const { return name_; }
+
+protected:
+    //! Constructor
+    /*!
+      Implementations must provide a logger name
+      \param name the logger name
+     */
+    IndependentLogger(const std::string& name) : name_(name) {}
+    std::vector<std::string> messages_;
+
+private:
+    std::string name_;
+};
+
+//! ProgressLogger
+//! //! This logger stores each log message in a separate location indicating progress of analytic runs.
+class ProgressLogger : public IndependentLogger {
+
+public:
+    //! the name "ProgressLogger"
+    static const std::string name;
+    //! Constructors
+    ProgressLogger();
+    ProgressLogger(const bool coutLog) : ProgressLogger() { setCoutLog(coutLog); }
+    const QuantLib::ext::shared_ptr<file_sink>& fileSink() { return fileSink_; }
+    const QuantLib::ext::shared_ptr<text_sink>& coutSink() { return coutSink_; }
+    const QuantLib::ext::shared_ptr<text_sink>& cacheSink() { return cacheSink_; }
+    //! Destructor
+    virtual void removeSinks() override;
+    void setCoutLog(bool flag);
+    void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize = 0);
+
+private:
+    QuantLib::ext::shared_ptr<file_sink> fileSink_;
+    QuantLib::ext::shared_ptr<text_sink> coutSink_;
+    QuantLib::ext::shared_ptr<text_sink> cacheSink_;
+};
+
+//! StructuredLogger
+//! //! This logger stores each structured error/warning message in a separate location
+class StructuredLogger : public IndependentLogger {
+
+public:
+    //! the name "StructuredLogger"
+    static const std::string name;
+    //! Constructors
+    StructuredLogger();
+    const QuantLib::ext::shared_ptr<file_sink>& fileSink() { return fileSink_; }
+    const QuantLib::ext::shared_ptr<text_sink>& cacheSink() { return cacheSink_; }
+    //! Destructor
+    virtual void removeSinks() override;
+    void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize = 0);
+
+private:
+    QuantLib::ext::shared_ptr<file_sink> fileSink_;
+    QuantLib::ext::shared_ptr<text_sink> cacheSink_;
+};
+
+//! EventLogger
+/*!
+This logger listens for EventMessage logs from within ORE to support event logging for ORE components
+*/
+class EventLogger : public ore::data::IndependentLogger {
+public:
+    //! the name "EventLogger"
+    static const std::string name;
+
+    //! Constructor
+    //! This logger will only write event logs. All other logs will be ignored.
+    EventLogger() : IndependentLogger(name) {}
+
+    void setFormatter(const std::function<void(const boost::log::record_view&, boost::log::formatting_ostream&)>&);
+    const QuantLib::ext::shared_ptr<file_sink>& fileSink() { return fileSink_; }
+    //! Destructor
+    virtual void removeSinks() override;
+    void setFileLog(const std::string& filepath);
+
+private:
+    QuantLib::ext::shared_ptr<file_sink> fileSink_;
 };
 
 //! Global static Log class
@@ -209,19 +365,19 @@ private:
   To configure the Log class to log to a file "/tmp/my_log.txt"
   <pre>
       Log::instance().removeAllLoggers();
-      Log::instance().registerLogger(boost::shared_ptr<Logger>(new FileLogger("/tmp/my_log.txt")));
+      Log::instance().registerLogger(QuantLib::ext::shared_ptr<Logger>(new FileLogger("/tmp/my_log.txt")));
   </pre>
 
   To change the Log class to only use a BufferLogger the user must call
   <pre>
       Log::instance().removeAllLoggers();
-      Log::instance().registerLogger(boost::shared_ptr<Logger>(new BufferLogger));
+      Log::instance().registerLogger(QuantLib::ext::shared_ptr<Logger>(new BufferLogger));
   </pre>
   and then to retrieve log messages from the buffer and print them to stdout the user must call:
   <pre>
       std::cout << "Begin Log Messages:" << std::endl;
 
-      boost::shared_ptr<BufferLogger> bl = boost::dynamic_pointer_cast<BufferLogger>
+      QuantLib::ext::shared_ptr<BufferLogger> bl = QuantLib::ext::dynamic_pointer_cast<BufferLogger>
         (Log::instance().logger(BufferLogger::name));
 
       while (bl.hasNext())
@@ -241,32 +397,49 @@ public:
       This method will throw if a logger with the same name is already registered.
       \param logger the logger to add
      */
-    void registerLogger(const boost::shared_ptr<Logger>& logger);
+    void registerLogger(const QuantLib::ext::shared_ptr<Logger>& logger);
+    void registerIndependentLogger(const QuantLib::ext::shared_ptr<IndependentLogger>& logger);
+    void clearAllIndependentLoggers();
+
+    //! Check if logger exists
+    const bool hasLogger(const std::string& name) const;
+    const bool hasIndependentLogger(const std::string& name) const;
+
     //! Retrieve a Logger.
     /*!
       Retrieve a Logger by it's name, for example to retrieve the StderrLogger (assuming it is registered)
       <pre>
-      boost::shared_ptr<Logger> slogger = Log::instance().logger(StderrLogger::name);
+      QuantLib::ext::shared_ptr<Logger> slogger = Log::instance().logger(StderrLogger::name);
       </pre>
       */
-    boost::shared_ptr<Logger>& logger(const string& name);
+    QuantLib::ext::shared_ptr<Logger>& logger(const std::string& name);
+    QuantLib::ext::shared_ptr<IndependentLogger>& independentLogger(const std::string& name);
+
     //! Remove a Logger
     /*!
       Remove a logger by name
       \param name the logger name
      */
-    void removeLogger(const string& name);
+    void removeLogger(const std::string& name);
+    void removeIndependentLogger(const std::string& name);
+    
     //! Remove all loggers
     /*!
       Removes all loggers. If called, all subsequent log messages will be ignored.
      */
     void removeAllLoggers();
 
-    //! macro utility function - do not use directly
+    void addExcludeFilter(const std::string&, const std::function<bool(const std::string&)>);
+
+    void removeExcludeFilter(const std::string&);
+
+    bool checkExcludeFilters(const std::string&);
+
+    //! macro utility function - do not use directly, not thread safe
     void header(unsigned m, const char* filename, int lineNo);
-    //! macro utility function - do not use directly
+    //! macro utility function - do not use directly, not thread safe
     std::ostream& logStream() { return ls_; }
-    //! macro utility function - do not use directly
+    //! macro utility function - do not use directly, not thread safe
     void log(unsigned m);
 
     //! mutex to acquire locks
@@ -286,7 +459,7 @@ public:
         mask_ = mask;
     }
     const boost::filesystem::path& rootPath() {
-        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
         return rootPath_;
     }
     void setRootPath(const boost::filesystem::path& pth) {
@@ -294,7 +467,7 @@ public:
         rootPath_ = pth;
     }
     int maxLen() {
-        boost::unique_lock<boost::shared_mutex> lock(mutex());
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
         return maxLen_;
     }
     void setMaxLen(const int n) {
@@ -315,13 +488,22 @@ public:
         enabled_ = false;
     }
 
+    bool writeSuppressedMessagesHint() {
+        boost::shared_lock<boost::shared_mutex> lock(mutex());
+        return writeSuppressedMessagesHint_;
+    }
+
     //! if a PID is set for the logger, messages are tagged with [1234] if pid = 1234
     void setPid(const int pid) { pid_ = pid; }
 
 private:
     Log();
 
-    std::map<string, boost::shared_ptr<Logger>> loggers_;
+    // not thread safe
+    std::string source(const char* filename, int lineNo) const;
+
+    std::map<std::string, QuantLib::ext::shared_ptr<Logger>> loggers_;
+    std::map<std::string, QuantLib::ext::shared_ptr<IndependentLogger>> independentLoggers_;
     bool enabled_;
     unsigned mask_;
     boost::filesystem::path rootPath_;
@@ -331,60 +513,64 @@ private:
     std::size_t sameSourceLocationSince_ = 0;
     bool writeSuppressedMessagesHint_ = true;
     std::size_t sameSourceLocationCutoff_ = 1000;
-    string lastFileName_;
+    std::string lastFileName_;
     int lastLineNo_ = 0;
 
     int pid_ = 0;
 
     mutable boost::shared_mutex mutex_;
+
+    std::map<std::string, std::function<bool(const std::string&)>> excludeFilters_;
 };
 
 /*!
   Main Logging macro, do not use this directly, use on of the below 6 macros instead
- */
+ */                               
 #define MLOG(mask, text)                                                                                               \
     {                                                                                                                  \
         if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask)) {                         \
             std::ostringstream __ore_mlog_tmp_stringstream__;                                                          \
             __ore_mlog_tmp_stringstream__ << text;                                                                     \
-            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                          \
-            ore::data::Log::instance().header(mask, __FILE__, __LINE__);                                               \
-            ore::data::Log::instance().logStream() << __ore_mlog_tmp_stringstream__.str();                             \
-            ore::data::Log::instance().log(mask);                                                                      \
+            if (!ore::data::Log::instance().checkExcludeFilters(__ore_mlog_tmp_stringstream__.str())) {                \
+                boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                      \
+                ore::data::Log::instance().header(mask, __FILE__, __LINE__);                                           \
+                ore::data::Log::instance().logStream() << __ore_mlog_tmp_stringstream__.str();                         \
+                ore::data::Log::instance().log(mask);                                                                  \
+            }                                                                                                          \
         }                                                                                                              \
     }
 
 //! Logging Macro (Level = Alert)
-#define ALOG(text) MLOG(ORE_ALERT, text);
+#define ALOG(text) MLOG(oreSeverity::alert, text);
 //! Logging Macro (Level = Critical)
-#define CLOG(text) MLOG(ORE_CRITICAL, text)
+#define CLOG(text) MLOG(oreSeverity::critical, text)
 //! Logging Macro (Level = Error)
-#define ELOG(text) MLOG(ORE_ERROR, text)
+#define ELOG(text) MLOG(oreSeverity::error, text)
 //! Logging Macro (Level = Warning)
-#define WLOG(text) MLOG(ORE_WARNING, text)
+#define WLOG(text) MLOG(oreSeverity::warning, text)
 //! Logging Macro (Level = Notice)
-#define LOG(text) MLOG(ORE_NOTICE, text)
+#define LOG(text) MLOG(oreSeverity::notice, text)
 //! Logging Macro (Level = Debug)
-#define DLOG(text) MLOG(ORE_DEBUG, text)
+#define DLOG(text) MLOG(oreSeverity::debug, text)
 //! Logging Macro (Level = Data)
-#define TLOG(text) MLOG(ORE_DATA, text)
+#define TLOG(text) MLOG(oreSeverity::data, text)
 
 //! Logging macro specifically for logging memory usage
-#define MEM_LOG MEM_LOG_USING_LEVEL(ORE_MEMORY)
+#define MEM_LOG MEM_LOG_USING_LEVEL(oreSeverity::memory)
 
-#define MEM_LOG_USING_LEVEL(LEVEL)                                                                                     \
-    {                                                                                                                  \
-        if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(LEVEL)) {                        \
-            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                          \
-            ore::data::Log::instance().header(LEVEL, __FILE__, __LINE__);                                              \
-            ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getPeakMemoryUsageBytes()) << "|"; \
-            ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getMemoryUsageBytes());            \
-            ore::data::Log::instance().log(LEVEL);                                                                     \
-        }                                                                                                              \
+#define MEM_LOG_USING_LEVEL(LEVEL)                                                                                      \
+    {                                                                                                                   \
+        if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(LEVEL)) {                         \
+            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                           \
+            ore::data::Log::instance().header(LEVEL, __FILE__, __LINE__);                                               \
+            ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getPeakMemoryUsageBytes()) << "|";  \
+            ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getMemoryUsageBytes());             \
+            ore::data::Log::instance().log(LEVEL);                                                                      \
+        }                                                                                                               \
     }
 
 //! LoggerStream class that is a std::ostream replacement that will log each line
-/*! LoggerStream is a simple wrapper around a string stream, it has an explicit
+/*! LoggerStream is a simple wrapper around a std::string stream, it has an explicit
     cast std::ostream& method so it can be used in place of any std::ostream, this
     can be used with QuantExt methods that take a std::ostream& for logging purposes.
 
@@ -433,9 +619,9 @@ private:
     std::stringstream ss_;
 };
 
-#define CHECKED_LOGGERSTREAM(LEVEL, text)                                                                              \
-    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(LEVEL)) {                            \
-        (std::ostream&)ore::data::LoggerStream(LEVEL, __FILE__, __LINE__) << text;                              \
+#define CHECKED_LOGGERSTREAM(LEVEL, text)                                                       \
+    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(LEVEL)) {     \
+        (std::ostream&)ore::data::LoggerStream(LEVEL, __FILE__, __LINE__) << text;              \
     }
 
 #define ALOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_ALERT, text)
@@ -445,6 +631,25 @@ private:
 #define LOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_NOTICE, text)
 #define DLOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_DEBUG, text)
 #define TLOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_DATA, text)
+
+class JSONMessage {
+public:
+    virtual ~JSONMessage() {}
+    //! return a std::string for the log file
+    virtual std::string msg() const = 0;
+    //! generate Boost log record to pass to corresponding sinks
+    void log() const;
+    //! create JSON-like output from the data
+    const std::string json() const { return jsonify(data_); }
+    void set(const std::string& key, const boost::any& value) { data_[key] = value; }
+
+protected:
+    //! generate Boost log record - this method is called by log()
+    virtual void emitLog() const = 0;
+    static std::string jsonify(const boost::any&);
+
+    std::map<std::string, boost::any> data_;
+};
 
 // This can be used directly in log messages, e.g.
 // ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error Parsing Trade", "Invalid XML Node foo"));
@@ -469,77 +674,72 @@ private:
 //        }
 //    ]
 //}
-class StructuredMessage {
+class StructuredMessage : public JSONMessage {
 public:
     enum class Category { Error, Warning, Unknown };
 
     enum class Group { Analytics, Configuration, Model, Curve, Trade, Fixing, Logging, ReferenceData, Unknown };
 
-    StructuredMessage(const Category& category, const Group& group, const string& message,
-                      const std::map<string, string>& subFields = std::map<string, string>())
-        : category_(category), group_(group), message_(message), subFields_(subFields) {}
+    StructuredMessage(const Category& category, const Group& group, const std::string& message,
+                      const std::map<std::string, std::string>& subFields = std::map<std::string, std::string>());
 
-    StructuredMessage(const Category& category, const Group& group, const string& message,
-                      const std::pair<string, string>& subField = std::pair<string, string>())
-        : StructuredMessage(category, group, message, std::map<string, string>({subField})) {}
+    StructuredMessage(const Category& category, const Group& group, const std::string& message,
+                      const std::pair<std::string, std::string>& subField = std::pair<std::string, std::string>())
+        : StructuredMessage(category, group, message, std::map<std::string, std::string>({subField})) {}
 
     virtual ~StructuredMessage() {}
 
     static constexpr const char* name = "StructuredMessage";
 
-    //! return a string for the log file
-    string msg() const { return string(name) + string(" ") + json(); }
-
-    string json() const;
-
-private:
-    // utility function to delimit string for json, handles \" and \\ and control characters
-    string jsonify(const string& s) const;
-
-    Category category_;
-    Group group_;
-    string message_;
+    //! return a std::string for the log file
+    std::string msg() const { return std::string(name) + std::string(" ") + json(); }
+    //! generate Boost log record to pass to corresponding sinks
+    void emitLog() const;
 
 protected:
-    std::map<string, string> subFields_;
+    void addSubFields(const std::map<std::string, std::string>&);
 };
 
 std::ostream& operator<<(std::ostream& out, const StructuredMessage::Category&);
 
 std::ostream& operator<<(std::ostream& out, const StructuredMessage::Group&);
 
-inline std::ostream& operator<<(std::ostream& out, const StructuredMessage& sm) { return out << sm.msg(); }
-
 class StructuredLoggingErrorMessage : public StructuredMessage {
 public:
-    StructuredLoggingErrorMessage(const string& exceptionType, const string& exceptionWhat = "")
+    StructuredLoggingErrorMessage(const std::string& exceptionType, const std::string& exceptionWhat = "")
         : StructuredMessage(Category::Error, Group::Logging, exceptionWhat,
                             std::pair<std::string, std::string>({"exceptionType", exceptionType})){};
 };
 
-class EventMessage {
+class EventMessage : public JSONMessage {
 public:
-    EventMessage(const string& msg, const std::map<string, boost::any> data = {}) : message_(msg), data_(data) {}
-
-
-    virtual ~EventMessage() {}
+    EventMessage(const std::string& msg, const std::string& msgKey, const std::map<std::string, boost::any> data = {}) {
+        data_ = data;
+        data_[msgKey] = msg;
+    }
 
     static constexpr const char* name = "EventMessage";
 
-    //! return a string for the log file
-    std::string msg() const { return string(name) + string(" ") + json(); }
-    void set(const std::string& key, const boost::any& value) { data_[key] = value; }
+    //! return a std::string for the log file
+    std::string msg() const { return std::string(name) + std::string(" ") + json(); }
+    //! generate Boost log record to pass to corresponding sinks
+    void emitLog() const;
 
 private:
-    // utility function to delimate string for json, handles \" and \\ and control characters
-    string jsonify(const string& s) const;
-    string json() const;
-
-    string message_;
-    std::map<string, boost::any> data_;
+    std::string message_;
 };
 
-inline std::ostream& operator<<(std::ostream& out, const EventMessage& em) { return out << em.msg(); }
+class ProgressMessage : public JSONMessage {
+public:
+    ProgressMessage(const std::string&, const QuantLib::Size, const QuantLib::Size, const std::string& detail = "");
+
+    static constexpr const char* name = "ProgressMessage";
+
+    //! return a std::string for the log file
+    std::string msg() const { return std::string(name) + std::string(" ") + json(); }
+    //! generate Boost log record to pass to corresponding sinks
+    void emitLog() const;
+};
 
 //! Singleton to control console logging
 //

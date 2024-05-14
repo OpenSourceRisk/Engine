@@ -31,7 +31,7 @@ using ore::test::TopLevelFixture;
 namespace {
 
 // Test data from ECB as of 8 Jan 2016
-vector<pair<string, Real>> data() {
+vector<pair<string, Real>> fxtData() {
 
     // clang-format off
     vector<pair<string, Real>> testData{
@@ -62,8 +62,8 @@ public:
     FxTriFixture() {
         // Initialise FX data
 	std::map<std::string, Handle<Quote>> quotes;
-        for (const auto& p : data()) {
-            Handle<Quote> q(boost::make_shared<SimpleQuote>(p.second));
+        for (const auto& p : fxtData()) {
+            Handle<Quote> q(QuantLib::ext::make_shared<SimpleQuote>(p.second));
             quotes[p.first] = q;
         }
 	fx = FXTriangulation(quotes);
@@ -79,7 +79,7 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 BOOST_FIXTURE_TEST_SUITE(FXTriangulationTests, FxTriFixture)
 
 BOOST_AUTO_TEST_CASE(testDataLoaded) {
-    for (const auto& p : data()) {
+    for (const auto& p : fxtData()) {
         BOOST_CHECK_EQUAL(fx.getQuote(p.first)->value(), p.second);
     }
 }

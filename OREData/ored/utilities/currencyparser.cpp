@@ -82,6 +82,31 @@ QuantLib::Currency CurrencyParser::parseCurrencyWithMinors(const std::string& na
     return parseMinorCurrency(name);
 }
 
+std::pair<QuantLib::Currency, QuantLib::Currency>
+CurrencyParser::parseCurrencyPair(const std::string& name, const std::string& delimiters) const {
+    std::vector<std::string> tokens;
+    tokens = boost::split(tokens, name, boost::is_any_of(delimiters));
+    if (tokens.size() == 1) {
+        if (tokens[0].size() > 6) {
+            QL_FAIL("Failed to parse currency pair (" << tokens[0] << ")");
+        }
+
+        QuantLib::Currency ccy1 = parseCurrency(tokens[0].substr(0, 3));
+        QuantLib::Currency ccy2 = parseCurrency(tokens[0].substr(3));
+        return std::make_pair(ccy1, ccy2);
+    } else if (tokens.size() == 2) {
+        try {
+            QuantLib::Currency ccy1 = parseCurrency(tokens[0]);
+            QuantLib::Currency ccy2 = parseCurrency(tokens[1]);
+            return std::make_pair(ccy1, ccy2);
+        } catch (const std::exception& e) {
+            QL_FAIL("Failed to parse currency pair (" << name << "): " << e.what());
+        }
+    } else {
+        QL_FAIL("Failed to parse currency pair (" << name << ")");
+    }
+}
+
 bool CurrencyParser::isValidCurrency(const std::string& name) const {
     try {
         parseCurrencyWithMinors(name);
@@ -156,6 +181,22 @@ void CurrencyParser::addCurrency(const std::string& newName, const QuantLib::Cur
     addMinorCurrencyCodes(currency);
 }
 
+void CurrencyParser::addMetal(const std::string& newName, const QuantLib::Currency& currency) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    if (currencies_.find(newName) != currencies_.end() || preciousMetals_.find(newName) != preciousMetals_.end() ||
+        cryptoCurrencies_.find(newName) != cryptoCurrencies_.end())
+        return;
+    preciousMetals_[newName] = currency;
+}
+
+void CurrencyParser::addCrypto(const std::string& newName, const QuantLib::Currency& currency) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    if (currencies_.find(newName) != currencies_.end() || preciousMetals_.find(newName) != preciousMetals_.end() ||
+        cryptoCurrencies_.find(newName) != cryptoCurrencies_.end())
+        return;
+    cryptoCurrencies_[newName] = currency;
+}
+
 void CurrencyParser::addMinorCurrencyCodes(const QuantLib::Currency& currency) {
     for (auto const& c : currency.minorUnitCodes()) {
         minorCurrencies_[c] = currency;
@@ -167,28 +208,29 @@ void CurrencyParser::reset() {
 
     currencies_ = {{"AED", AEDCurrency()}, {"AOA", AOACurrency()}, {"ARS", ARSCurrency()}, {"ATS", ATSCurrency()},
                    {"AUD", AUDCurrency()}, {"BEF", BEFCurrency()}, {"BGN", BGNCurrency()}, {"BHD", BHDCurrency()},
-                   {"BRL", BRLCurrency()}, {"CAD", CADCurrency()}, {"CHF", CHFCurrency()}, {"CLF", CLFCurrency()},
-                   {"CLP", CLPCurrency()}, {"CNH", CNHCurrency()}, {"CNY", CNYCurrency()}, {"COP", COPCurrency()},
-                   {"COU", COUCurrency()}, {"CZK", CZKCurrency()}, {"DEM", DEMCurrency()}, {"DKK", DKKCurrency()},
-                   {"EGP", EGPCurrency()}, {"ESP", ESPCurrency()}, {"ETB", ETBCurrency()}, {"EUR", EURCurrency()},
-                   {"FIM", FIMCurrency()}, {"FRF", FRFCurrency()}, {"GBP", GBPCurrency()}, {"GEL", GELCurrency()},
-                   {"GHS", GHSCurrency()}, {"GRD", GRDCurrency()}, {"HKD", HKDCurrency()}, {"HRK", HRKCurrency()},
-                   {"HUF", HUFCurrency()}, {"IDR", IDRCurrency()}, {"IEP", IEPCurrency()}, {"ILS", ILSCurrency()},
-                   {"INR", INRCurrency()}, {"ISK", ISKCurrency()}, {"ITL", ITLCurrency()}, {"JOD", JODCurrency()},
-                   {"JPY", JPYCurrency()}, {"KES", KESCurrency()}, {"KRW", KRWCurrency()}, {"KWD", KWDCurrency()},
-                   {"KZT", KZTCurrency()}, {"LKR", LKRCurrency()}, {"LUF", LUFCurrency()}, {"MAD", MADCurrency()},
-                   {"MUR", MURCurrency()}, {"MXN", MXNCurrency()}, {"MXV", MXVCurrency()}, {"MYR", MYRCurrency()},
-                   {"NGN", NGNCurrency()}, {"NLG", NLGCurrency()}, {"NOK", NOKCurrency()}, {"NZD", NZDCurrency()},
-                   {"OMR", OMRCurrency()}, {"PEN", PENCurrency()}, {"PHP", PHPCurrency()}, {"PKR", PKRCurrency()},
-                   {"PLN", PLNCurrency()}, {"PTE", PTECurrency()}, {"QAR", QARCurrency()}, {"RON", RONCurrency()},
-                   {"RSD", RSDCurrency()}, {"RUB", RUBCurrency()}, {"SAR", SARCurrency()}, {"SEK", SEKCurrency()},
-                   {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TND", TNDCurrency()}, {"TRY", TRYCurrency()},
-                   {"TWD", TWDCurrency()}, {"UAH", UAHCurrency()}, {"UGX", UGXCurrency()}, {"USD", USDCurrency()},
-                   {"UYU", UYUCurrency()}, {"VND", VNDCurrency()}, {"XOF", XOFCurrency()}, {"ZAR", ZARCurrency()},
-                   {"ZMW", ZMWCurrency()}};
+                   {"BRL", BRLCurrency()}, {"BWP", BWPCurrency()}, {"CAD", CADCurrency()}, {"CHF", CHFCurrency()},
+                   {"CLF", CLFCurrency()}, {"CLP", CLPCurrency()}, {"CNH", CNHCurrency()}, {"CNY", CNYCurrency()},
+                   {"COP", COPCurrency()}, {"COU", COUCurrency()}, {"CZK", CZKCurrency()}, {"DEM", DEMCurrency()},
+                   {"DKK", DKKCurrency()}, {"EGP", EGPCurrency()}, {"ESP", ESPCurrency()}, {"ETB", ETBCurrency()},
+                   {"EUR", EURCurrency()}, {"FIM", FIMCurrency()}, {"FRF", FRFCurrency()}, {"GBP", GBPCurrency()},
+                   {"GEL", GELCurrency()}, {"GHS", GHSCurrency()}, {"GRD", GRDCurrency()}, {"HKD", HKDCurrency()},
+                   {"HRK", HRKCurrency()}, {"HUF", HUFCurrency()}, {"IDR", IDRCurrency()}, {"IEP", IEPCurrency()},
+                   {"ILS", ILSCurrency()}, {"INR", INRCurrency()}, {"ISK", ISKCurrency()}, {"ITL", ITLCurrency()},
+                   {"JOD", JODCurrency()}, {"JPY", JPYCurrency()}, {"KES", KESCurrency()}, {"KRW", KRWCurrency()},
+                   {"KWD", KWDCurrency()}, {"KZT", KZTCurrency()}, {"LKR", LKRCurrency()}, {"LUF", LUFCurrency()},
+                   {"MAD", MADCurrency()}, {"MUR", MURCurrency()}, {"MXN", MXNCurrency()}, {"MXV", MXVCurrency()},
+                   {"MYR", MYRCurrency()}, {"NGN", NGNCurrency()}, {"NLG", NLGCurrency()}, {"NOK", NOKCurrency()},
+                   {"NZD", NZDCurrency()}, {"OMR", OMRCurrency()}, {"PEN", PENCurrency()}, {"PHP", PHPCurrency()},
+                   {"PKR", PKRCurrency()}, {"PLN", PLNCurrency()}, {"PTE", PTECurrency()}, {"QAR", QARCurrency()},
+                   {"RON", RONCurrency()}, {"RSD", RSDCurrency()}, {"RUB", RUBCurrency()}, {"SAR", SARCurrency()},
+                   {"SEK", SEKCurrency()}, {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TND", TNDCurrency()},
+                   {"TRY", TRYCurrency()}, {"TWD", TWDCurrency()}, {"UAH", UAHCurrency()}, {"UGX", UGXCurrency()},
+                   {"USD", USDCurrency()}, {"UYU", UYUCurrency()}, {"VND", VNDCurrency()}, {"XOF", XOFCurrency()},
+                   {"ZAR", ZARCurrency()}, {"ZMW", ZMWCurrency()}};
 
     minorCurrencies_ = {{"GBp", GBPCurrency()}, {"GBX", GBPCurrency()}, {"ILa", ILSCurrency()}, {"ILX", ILSCurrency()},
-                        {"KWf", KWDCurrency()}, {"ZAc", ZARCurrency()}, {"ZAC", ZARCurrency()}, {"ZAX", ZARCurrency()}};
+                        {"ILs", ILSCurrency()}, {"KWf", KWDCurrency()}, {"ILA", ILSCurrency()}, {"ZAc", ZARCurrency()},
+                        {"ZAC", ZARCurrency()}, {"ZAX", ZARCurrency()}};
 
     preciousMetals_ = {{"XAG", XAGCurrency()}, {"XAU", XAUCurrency()}, {"XPT", XPTCurrency()}, {"XPD", XPDCurrency()}};
 
