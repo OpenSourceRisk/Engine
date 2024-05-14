@@ -26,7 +26,7 @@ VarReport::VarReport(const std::string& baseCurrency, const QuantLib::ext::share
                      const std::string& portfolioFilter, const vector<Real>& p, boost::optional<ore::data::TimePeriod> period,
                      const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
                      std::unique_ptr<SensiRunArgs> sensiArgs, std::unique_ptr<FullRevalArgs> fullRevalArgs, const bool breakdown) 
-    : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, move(sensiArgs), move(fullRevalArgs), nullptr, breakdown), p_(p) { 
+    : MarketRiskReport(baseCurrency, portfolio, portfolioFilter, period, hisScenGen, std::move(sensiArgs), std::move(fullRevalArgs), nullptr, breakdown), p_(p) { 
 }
 
 void VarReport::createReports(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
