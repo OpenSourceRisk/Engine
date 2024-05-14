@@ -4,12 +4,14 @@ Changes for the 12th ORE release:
 ORE v12 includes the following notable changes.
 
 INSTRUMENTS & PRICING
-- add formula-based coupon (ticket 12263), see Example 64
+- add formula-based leg (ticket 12263), see Example 64
 - add Callable Swap (ticket 12370), Example, see extended Example 5
 - add Flexi Swap (ticket 12370), see Example 65
 - add Balance Guaranteed Swap (ticket 12370), see Example 66
-- add American Swaption with Finite Difference pricing in LGM (ticket 11618), see extended Example 4
-- add analytic Pricer for Overnight Index Swaptions (ticket 11974)
+- add American Swaption with finite difference pricing in LGM (ticket 11618), see extended Example 4
+- add analytic pricer for Overnight Index Swaptions (ticket 11974)
+- add finite difference LGM pricers for Bermudan and European Swaptions
+- add numerical integration LGM pricer for European Swaptions
 - support indexed cashflows in AMC (ticket 12206)
 - scripted trades: support LGM1F using finite difference and numerical integration (ticket 12306)
 - scripted trades: support generating past cashflows (ticket 12417)
@@ -21,6 +23,8 @@ INSTRUMENTS & PRICING
 - add priorities to yield curve segments (ticket 9557)
 - configurable settlement date flows handling (ticket 12372)
 - introduce notional payment lag for resetting Cross Currency Swaps (ticket 12379)
+- support security spreads over discount in Single Currency Swaps, Swaptions and Scripted Trades
+  (ticket 12201 and 12275)
 
 MARKETS & TERMSTRUCTURES
 - SABR pricing for Swaptions and Caps/Floors (ticket 12325), see Example 59
@@ -43,8 +47,8 @@ ANALYTICS
 - introduce configurable shift size and difference scheme per product for sensitivity analysis (ticket 12014)
 - improve performance of SIMM calculations for large CRIF files (ticket 12397)
 - output effective SOFR / RFR cap volatilities in reports (ticket 12192)
-- XVA Stress testing (ticket 12376) - Matthias ???
-- XVA Bump & Reval Sensitivities, Raw and Par (ticket 12437) - Matthias ???
+- XVA Stress testing (ticket 12376): Matthias ???
+- XVA Bump & Reval Sensitivities, Raw and Par (ticket 12437): Matthias ???
 
 TESTS
 - add a test suite for ORE-SWIG (ticket 11823)
@@ -69,6 +73,9 @@ LANGUAGE BINDINGS & PYTHON MODULE
 - add NPV Cube and joint cube to the swig interface (ticket 12421)
 - refactor OREApp to allow repeated run() calls (ticket 12317)
 - add Python wheels workflow on github (ticket 12436)
+
+ORE SERVICE
+- add a restful API to ORE, based on ORE-Python, see ore/Api: Farah ??? 
 
 GPU
 - The external device interface based on the scripted trade and in particular its computation
@@ -105,14 +112,6 @@ NEW & EXTENDED EXAMPLES
 OTHER
 - QuantLib version unchanged at 1.31.1
 
-SHALL WE MENTION ANY OF THIS:
-- new date generation rule for weekly schedules (ticket 12070) - Matthias ???
-- RPA - premium is ignored in underlying swaption (ticket 10089)
-- Scripted Trades: support security spread over discount curve (ticket 12268)
-- Security Spread over Discount in Single-Ccy Swaps and Swaptions (ticket 12275)
-- use swap index discount curve for LGM Calibration (ticket 12201)
-- support relative shifts in stress test when using spreaded termstructures (12216)
-- swaption is repriced on each sensi scenario (ticket 12189)
 
 
 Changes for the 11th ORE release (1.8.11.0):
