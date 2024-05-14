@@ -17,8 +17,69 @@
 */
 
 #include <ored/portfolio/builders/forwardbond.hpp>
+#include <qle/pricingengines/mclgmfwdbondengine.hpp>
+#include <ored/utilities/parsers.hpp>
 
 namespace ore {
 namespace data {
+
+using namespace QuantLib;
+using namespace QuantExt;
+
+QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngine(
+    const QuantLib::ext::shared_ptr<LGM>& lgm, const Handle<YieldTermStructure>& discountCurve,
+    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices,
+    const Handle<YieldTermStructure>& incomeCurve, const Handle<YieldTermStructure>& discountContractCurve) {
+
+    return QuantLib::ext::make_shared<QuantExt::McLgmFwdBondEngine>(
+        lgm, parseSequenceType(engineParameter("Training.Sequence")),
+        parseSequenceType(engineParameter("Pricing.Sequence")), parseInteger(engineParameter("Training.Samples")),
+        parseInteger(engineParameter("Pricing.Samples")), parseInteger(engineParameter("Training.Seed")),
+        parseInteger(engineParameter("Pricing.Seed")), parseInteger(engineParameter("Training.BasisFunctionOrder")),
+        parsePolynomType(engineParameter("Training.BasisFunction")),
+        parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurve, simulationDates,
+        externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
+        incomeCurve, discountContractCurve);
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, const string& creditCurveId,
+                                       const bool hasCreditRisk, const string& securityId,
+                                       const string& referenceCurveId, const string& incomeCurveId) {
+
+    DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");
+
+    QL_REQUIRE(cam_ != nullptr, "CamAmcFwdBondEngineBuilder::engineImpl: cam is null");
+    Size currIdx = cam_->ccyIndex(ccy);
+    auto lgm = cam_->lgm(currIdx);
+    std::vector<Size> modelIndex(1, cam_->pIdx(CrossAssetModel::AssetType::IR, currIdx));
+
+    ALOG("CamAmcFwdBondEngineBuilder : creditCurveId not used at present");
+
+    // for discounting underlying bond make use of reference curve
+    Handle<YieldTermStructure> yts =
+        referenceCurveId.empty() ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+                                 : indexOrYieldCurve(market_, referenceCurveId, configuration(MarketContext::pricing));
+
+    if (!securityId.empty())
+        yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
+            yts, market_->securitySpread(securityId, configuration(MarketContext::pricing))));
+
+    // fall back on reference curve if no income curve is specified
+    Handle<YieldTermStructure> incomeTS = market_->yieldCurve(incomeCurveId.empty() ? referenceCurveId : incomeCurveId,
+                                                              configuration(MarketContext::pricing));
+
+    //to discount the contract, might be a OIS curve
+    Handle<YieldTermStructure> discountTS =
+            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+
+    // todo registering of the yts,incomets ???
+    // done in qle/pricingengines/mclgmfwdbondengine.hpp
+    return buildMcEngine(lgm, yts, simulationDates_, modelIndex, incomeTS, discountTS);
+}
+
 } // namespace data
 } // namespace ore

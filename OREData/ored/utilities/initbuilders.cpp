@@ -395,6 +395,8 @@ void initBuilders() {
 
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcCurrencySwapEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(LGMAmcSwaptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcBondEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFwdBondEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcSwapEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxOptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxForwardEngineBuilder, false)

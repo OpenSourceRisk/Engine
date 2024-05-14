@@ -83,6 +83,9 @@ protected:
         const RegressorModel regressorModel = RegressorModel::Simple,
         const Real regressionVarianceCutoff = Null<Real>());
 
+    //due to the virtual payOff function
+    virtual ~McMultiLegBaseEngine() {}
+
     // run calibration and pricing (called from derived engines)
     void calculate() const;
 
@@ -96,6 +99,10 @@ protected:
     mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
     mutable bool includeSettlementDateFlows_ = false;
+    mutable Real multiplier_ = 1.0;
+
+    //instrument specific payoff function
+    virtual Real payOff(RandomVariable pathValueOption) const;
 
     // data members
     Handle<CrossAssetModel> model_;

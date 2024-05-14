@@ -23,7 +23,60 @@
 
 #include <ored/portfolio/builders/bond.hpp>
 
+#include <qle/pricingengines/mclgmbondengine.hpp>
+
+#include <ored/utilities/parsers.hpp>
+
 namespace ore {
 namespace data {
+
+using namespace QuantLib;
+using namespace QuantExt;
+
+QuantLib::ext::shared_ptr<PricingEngine> CamAmcBondEngineBuilder::buildMcEngine(
+    const QuantLib::ext::shared_ptr<LGM>& lgm, const Handle<YieldTermStructure>& discountCurve,
+    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices) {
+
+    return QuantLib::ext::make_shared<QuantExt::McLgmBondEngine>(
+        lgm, parseSequenceType(engineParameter("Training.Sequence")),
+        parseSequenceType(engineParameter("Pricing.Sequence")), parseInteger(engineParameter("Training.Samples")),
+        parseInteger(engineParameter("Pricing.Samples")), parseInteger(engineParameter("Training.Seed")),
+        parseInteger(engineParameter("Pricing.Seed")), parseInteger(engineParameter("Training.BasisFunctionOrder")),
+        parsePolynomType(engineParameter("Training.BasisFunction")),
+        parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurve, simulationDates,
+        externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcBondEngineBuilder::engineImpl(const Currency& ccy, const string& creditCurveId, const bool hasCreditRisk,
+                                    const string& securityId, const string& referenceCurveId) {
+
+    DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");
+
+    QL_REQUIRE(cam_ != nullptr, "CamAmcBondEngineBuilder::engineImpl: cam is null");
+    Size currIdx = cam_->ccyIndex(ccy);
+    auto lgm = cam_->lgm(currIdx);
+    std::vector<Size> modelIndex(1, cam_->pIdx(CrossAssetModel::AssetType::IR, currIdx));
+
+    // at present, use reference curve and security spread only
+    ALOG("CamAmcBondEngineBuilder : incomeCurveId and creditCurveId not used at present");
+
+    // for discounting underlying bond make use of reference curve
+    Handle<YieldTermStructure> yts =
+        referenceCurveId.empty() ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+                                 : indexOrYieldCurve(market_, referenceCurveId, configuration(MarketContext::pricing));
+
+    if (!securityId.empty())
+        yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
+            yts, market_->securitySpread(securityId, configuration(MarketContext::pricing))));
+
+    // todo registering of the yts ???
+
+    return buildMcEngine(lgm, yts, simulationDates_, modelIndex);
+}
+
 } // namespace data
 } // namespace ore
