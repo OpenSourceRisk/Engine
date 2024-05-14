@@ -104,6 +104,8 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
 
+    auto floatSpreadMapping = parseFloatSpreadMapping(modelParameter("FloatSpreadMapping", {}, false, "proRata"));
+
     auto data = QuantLib::ext::make_shared<IrLgmData>();
 
     // check for allowed calibration / bermudan strategy settings
@@ -138,6 +140,7 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     data->volatilityType() = volatilityType;
     data->calibrationType() = calibration;
     data->shiftHorizon() = shiftHorizon;
+    data->floatSpreadMapping() = floatSpreadMapping;
 
     std::vector<Date> effExpiries;
     std::vector<Real> effStrikes;

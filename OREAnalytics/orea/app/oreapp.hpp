@@ -99,7 +99,7 @@ protected:
 
     void initFromParams();
     void initFromInputs();
-  
+      
     //! ORE Input parameters
     QuantLib::ext::shared_ptr<Parameters> params_;
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
