@@ -63,6 +63,7 @@ protected:
     Matrix creditStateCorrelationMatrix() const;
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarketCalibration_;
     QuantLib::ext::shared_ptr<EngineFactory> engineFactory_;
     QuantLib::ext::shared_ptr<CrossAssetModel> model_;
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
@@ -84,6 +85,14 @@ protected:
 
 static const std::set<std::string> xvaAnalyticSubAnalytics{"XVA", "EXPOSURE"};
 
+struct XvaResult {
+    std::string tradeId;
+    std::string nettingSetId;
+    double cva=0;
+    double dva=0;
+    double pfe=0;
+};
+
 class XvaAnalytic : public Analytic {
 public:
     explicit XvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
@@ -94,8 +103,16 @@ public:
     void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario) { offsetScenario_ = scenario; }
     const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const { return offsetScenario_; }
 
+    void setNettingSetResults(const std::map<std::string, XvaResult>& results) { nettingSetResults_ = results; }
+    void setTradeLevelResults(const std::map<std::string, XvaResult>& results) { tradeLevelResults_ = results; }
+    
+    const std::map<std::string, XvaResult>& nettingSetResults() const { return nettingSetResults_; }
+    const std::map<std::string, XvaResult>& tradeLevelResults() const { return tradeLevelResults_; }
+
 private:
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+    std::map<std::string, XvaResult> nettingSetResults_;
+    std::map<std::string, XvaResult> tradeLevelResults_;
 };
 
 } // namespace analytics
