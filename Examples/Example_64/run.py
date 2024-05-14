@@ -20,7 +20,7 @@ oreex.save_plot_to_file()
 
 
 oreex.setup_plot("DigitalCMSSpread")
-oreex.plot("DigitalCMSSpread_fbc.csv", 2, 3, 'r', "EPE Swap with DigitalCMSSpreadLeg FBC")
-oreex.plot("DigitalCMSSpread_analytic.csv", 2, 3, 'g', "EPE Swap with DigitalCMSSpreadLeg Analytical ")
+oreex.plot("exposure_trade_SWAP_EUR_DigitalCMSSpread_fbc.csv", 2, 3, 'r', "EPE Swap with DigitalCMSSpreadLeg FBC")
+oreex.plot("exposure_trade_SWAP_EUR_DigitalCMSSpread_analytic.csv", 2, 3, 'g', "EPE Swap with DigitalCMSSpreadLeg Analytical ")
 oreex.decorate_plot(title="'Swap with Digital CMS spread leg: formula based coupon vs analytical pricer")
 oreex.save_plot_to_file()
