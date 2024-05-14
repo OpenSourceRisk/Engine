@@ -815,7 +815,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 	auto keys = XMLUtils::getChildrenValues(nodeChild, "Keys", "Key", false);
 	if(!ccys.empty()) {
 	    keys.insert(keys.end(), ccys.begin(), ccys.end());
-            ALOG("ScenarioSimMarketParameters: SwaptionVolatilities/Currencies is deprecated, use Keys instead.");
+            WLOG("ScenarioSimMarketParameters: SwaptionVolatilities/Currencies is deprecated, use Keys instead.");
         }
         setSwapVolKeys(keys);
         QL_REQUIRE(!keys.empty(), "SwaptionVolatilities needs at least one currency");
@@ -835,7 +835,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string ccyAttr = XMLUtils::getAttribute(expiryNode, "ccy");
                 if (!ccyAttr.empty()) {
                     key = ccyAttr;
-                    ALOG("ScenarioSimMarketParameters: SwaptionVolatilities/Expiries: 'ccy' attribute is deprecated, "
+                    WLOG("ScenarioSimMarketParameters: SwaptionVolatilities/Expiries: 'ccy' attribute is deprecated, "
                          "use 'key' instead.");
                 }
             }
@@ -860,7 +860,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string ccyAttr = XMLUtils::getAttribute(termNode, "ccy");
                 if (!ccyAttr.empty()) {
                     key = ccyAttr;
-                    ALOG("ScenarioSimMarketParameters: SwaptionVolatilities/Terms: 'ccy' attribute is deprecated, "
+                    WLOG("ScenarioSimMarketParameters: SwaptionVolatilities/Terms: 'ccy' attribute is deprecated, "
                          "use 'key' instead.");
                 }
             }
@@ -984,7 +984,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 	auto keys = XMLUtils::getChildrenValues(nodeChild, "Keys", "Key", false);
 	if(!ccys.empty()) {
 	    keys.insert(keys.end(), ccys.begin(), ccys.end());
-            ALOG("ScenarioSimMarketParameters: CapFloorVolatilities/Currencies is deprecated, use Keys instead.");
+            WLOG("ScenarioSimMarketParameters: CapFloorVolatilities/Currencies is deprecated, use Keys instead.");
         }
         setCapFloorVolKeys(keys);
         QL_REQUIRE(!keys.empty(), "CapFloorVolatilities needs at least one entry");
@@ -1005,7 +1005,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string ccyAttr = XMLUtils::getAttribute(expiryNode, "ccy");
                 if (!ccyAttr.empty()) {
                     key = ccyAttr;
-                    ALOG("ScenarioSimMarketParameters: CapFloorVolatilities/Expiries: 'ccy' attribute is deprecated, "
+                    WLOG("ScenarioSimMarketParameters: CapFloorVolatilities/Expiries: 'ccy' attribute is deprecated, "
                          "use 'key' instead.");
                 }
             }
@@ -1030,7 +1030,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string ccyAttr = XMLUtils::getAttribute(strikeNode, "ccy");
                 if (!ccyAttr.empty()) {
                     key = ccyAttr;
-                    ALOG("ScenarioSimMarketParameters: CapFloorVolatilities/Strikes: 'ccy' attribute is deprecated, "
+                    WLOG("ScenarioSimMarketParameters: CapFloorVolatilities/Strikes: 'ccy' attribute is deprecated, "
                          "use 'key' instead.");
                 }
             }

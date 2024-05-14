@@ -242,14 +242,13 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         for (XMLNode* child = XMLUtils::getChildNode(capVols, "CapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string key = XMLUtils::getAttribute(child, "key");
-            if (key.empty()) {
-                string ccyAttr = XMLUtils::getAttribute(child, "ccy");
-                if (!ccyAttr.empty()) {
-                    key = ccyAttr;
-                    ALOG("StressScenarioData: 'ccy' is deprecated as an attribute for CapFloorVolatilities, use 'key' "
-                         "instead.");
-                }
-            }
+	    if(key.empty()) {
+		string ccyAttr = XMLUtils::getAttribute(child, "ccy");
+		if(!ccyAttr.empty()) {
+		    key = ccyAttr;
+		    WLOG("StressScenarioData: 'ccy' is deprecated as an attribute for CapFloorVolatilities, use 'key' instead.");
+		}
+	    }
             CapFloorVolShiftData data;
             data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
