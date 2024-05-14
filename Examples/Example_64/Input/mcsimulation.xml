@@ -170,14 +170,6 @@
       <Strikes>0.00,0.01,0.02,0.03,0.04,0.05,0.06</Strikes>
     </CapFloorVolatilities>
 
-    <DefaultCurves/>
-    <Equities/>
-    <FxVolatilities/>
-    <CDSVolatilities/>
-    <Securities/>
-    <ZeroInflationIndexCurves/>
-    <YYInflationIndexCurves/>	
-
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->
     <AggregationScenarioDataCurrencies>
@@ -188,8 +180,6 @@
       <Index>EUR-EURIBOR-3M</Index>
       <Index>EUR-EONIA</Index>
     </AggregationScenarioDataIndices>
-
-    <Correlations/>
 
   </Market>
 
