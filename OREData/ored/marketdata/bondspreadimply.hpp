@@ -28,6 +28,7 @@
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/bond.hpp>
 
 namespace ore {
 namespace data {
@@ -54,6 +55,11 @@ private:
                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                             const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration);
+
+    static void checkForwardBond(const std::string& securityId, string& id, Date& expiry);
+    static void modifyToForwardBond(const QuantLib::Date& expiry, ore::data::BondBuilder::Result& bondstructure,
+                                    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 };
 
 } // namespace data
