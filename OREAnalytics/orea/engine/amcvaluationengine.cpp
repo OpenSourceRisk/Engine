@@ -820,7 +820,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
                     std::string configuration = configurationFinalModel_;
                     market = QuantLib::ext::make_shared<ScenarioSimMarket>(
                         initMarket, simMarketParams_, QuantLib::ext::make_shared<FixingManager>(today_), configuration,
-                        *curveConfigs_, *todaysMarketParams_, continueOnError, false, true, false, iborFallbackConfig_,
+                        *curveConfigs_, *todaysMarketParams_, continueOnError, true, true, false, iborFallbackConfig_,
                         false, offsetScenario_);
                 }
 
@@ -845,14 +845,14 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
                                                           {MarketContext::pricing, configurationFinalModel_}};
 
                 auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(
-                    edCopy, initMarket, configurations, referenceData_, iborFallbackConfig_,
+                    edCopy, market, configurations, referenceData_, iborFallbackConfig_,
                     EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, simDates), true);
 
                 portfolio->build(engineFactory, "amc-val-engine", true);
 
                 // run core engine code (asd is written for thread id 0 only)
 
-                runCoreEngine(portfolio, cam, initMarket, scenarioGeneratorData_, aggDataIndices_, aggDataCurrencies_,
+                runCoreEngine(portfolio, cam, market, scenarioGeneratorData_, aggDataIndices_, aggDataCurrencies_,
                               aggDataNumberCreditStates_, id == 0 ? asd_ : nullptr, miniCubes_[id], progressIndicator);
 
                 // return code 0 = ok

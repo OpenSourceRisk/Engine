@@ -23,7 +23,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
-
+#include <orea/app/analytics/xvaanalytic.hpp>
 namespace ore {
 namespace analytics {
 
@@ -34,12 +34,18 @@ public:
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+
+private:
+    void addReports(const std::string& label, const QuantLib::ext::shared_ptr<XvaAnalytic>& xvaAnalytic);
 };
 
 class XvaStressAnalytic : public Analytic {
 public:
     explicit XvaStressAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
+
 };
+
+
 
 } // namespace analytics
 } // namespace ore
