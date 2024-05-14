@@ -299,6 +299,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     creditRiskCurrency_.clear();
     creditQualifierMapping_.clear();
+    notionalCurrency_ = returnData_.currency();
 
     // checks
 
@@ -338,6 +339,13 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         // populate sensi template from first underlying, we have to make _some_ assumption here!
         if (sensitivityTemplate_.empty()) {
             setSensitivityTemplate(underlying_[i]->sensitivityTemplate());
+        }
+    }
+
+    // propagate additional data from underlyings to trs trade
+    for (Size i = 0; i < underlying_.size(); ++i) {
+        for (auto const& [key, value] : underlying_[i]->additionalData()) {
+            additionalData_["und_ad_" + std::to_string(i + 1) + "_" + key] = value;
         }
     }
 
@@ -748,20 +756,12 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     npvCurrency_ = fundingCurrency;
 
     notional_ = 0.0; // we have overridden notional() to return this
-    notionalCurrency_ = returnData_.currency();
 
     // if the maturity date was not set by the trs underlying builder, set it here
     if (maturity_ == Date::minDate()) {
         maturity_ = std::max(valuationDates.back(), paymentDates.back());
         for (auto const& l : fundingLegs) {
             maturity_ = std::max(maturity_, CashFlows::maturityDate(l));
-        }
-    }
-
-    // propagate additional data from underlyings to trs trade
-    for (Size i = 0; i < underlying_.size(); ++i) {
-        for (auto const& [key, value] : underlying_[i]->additionalData()) {
-            additionalData_["und_ad_" + std::to_string(i + 1) + "_" + key] = value;
         }
     }
 }

@@ -128,17 +128,23 @@ public:
       types, no matter whether useSpreadedTermStructures is true or false. */
     virtual QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
+    /*! Return true if this instance uses spreaded term structures */
+    bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
+
     //! Return the fixing manager
     const QuantLib::ext::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
 
     //! is risk factor key simulated by this sim market instance?
     virtual bool isSimulated(const RiskFactorKey::KeyType& factor) const;
 
-protected:
     void applyScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario);
 
+protected:
+    
+
     void writeSimData(std::map<RiskFactorKey, QuantLib::ext::shared_ptr<SimpleQuote>>& simDataTmp,
-                      std::map<RiskFactorKey, Real>& absoluteSimDataTmp);
+                      std::map<RiskFactorKey, Real>& absoluteSimDataTmp, const RiskFactorKey::KeyType keyType,
+                      const std::string& name, const std::vector<std::vector<Real>>& coordinates);
 
     void addYieldCurve(const QuantLib::ext::shared_ptr<Market>& initMarket, const std::string& configuration,
                        const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
@@ -167,6 +173,7 @@ protected:
 
     std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> cachedSimData_;
     std::vector<bool> cachedSimDataActive_;
+    std::size_t cachedSimDataKeysHash_ = 0;
 
     std::set<RiskFactorKey::KeyType> nonSimulatedFactors_;
 
@@ -174,6 +181,9 @@ protected:
     // so that we can set up the base scenario with absolute values
     bool useSpreadedTermStructures_;
     std::map<RiskFactorKey, Real> absoluteSimData_;
+
+    // hold meta data for the scenarios stored in simData_, absoluteSimData_
+    std::set<std::tuple<RiskFactorKey::KeyType, std::string, std::vector<std::vector<Real>>>> coordinatesData_;
 
     bool cacheSimData_;
     bool allowPartialScenarios_;

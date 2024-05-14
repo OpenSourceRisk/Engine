@@ -43,8 +43,13 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Foreign Exchange");
     additionalData_["isdaBaseProduct"] = string("Vanilla Option");
-    additionalData_["isdaSubProduct"] = string("");  
-    additionalData_["isdaTransaction"] = string("");  
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
+    additionalData_["boughtCurrency"] = assetName_;
+    additionalData_["boughtAmount"] = quantity_;
+    additionalData_["soldCurrency"] = currency_;
+    additionalData_["soldAmount"] = quantity_ * strike_.value();
 
     QuantLib::Date today = Settings::instance().evaluationDate();
     const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
@@ -111,22 +116,13 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             }
             forwardDate_ = paymentDate;
             paymentDate_ = paymentDate;
-            VanillaOptionTrade::build(engineFactory);
-
-        } else {
-            // Build the trade using the shared functionality in the base class.
-            VanillaOptionTrade::build(engineFactory);
         }
+        // Build the trade using the shared functionality in the base class.
+        VanillaOptionTrade::build(engineFactory);
         maturity_ = paymentDate;
     } else {
         VanillaOptionTrade::build(engineFactory);
     }
-    
-    
-    additionalData_["boughtCurrency"] = assetName_; 
-    additionalData_["boughtAmount"] = quantity_;
-    additionalData_["soldCurrency"] = currency_;
-    additionalData_["soldAmount"] = quantity_ * strike_.value();
 }
 
 void FxOption::fromXML(XMLNode* node) {

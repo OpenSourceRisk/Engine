@@ -34,19 +34,18 @@ using namespace QuantLib;
 
 class SwaptionSabrCube : public SwaptionVolatilityCube {
 public:
-    SwaptionSabrCube(const Handle<SwaptionVolatilityStructure>& atmVolStructure,
-                     const std::vector<Period>& optionTenors, const std::vector<Period>& swapTenors,
-                     const std::vector<Period>& atmOptionTenors, const std::vector<Period>& atmSwapLengths,
-                     const std::vector<Spread>& strikeSpreads,
-                     const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                     const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase,
-                     const QuantLib::ext::shared_ptr<SwapIndex>& shortSwapIndexBase,
-                     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
-                     const boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none,
-                     const std::vector<std::pair<Real, bool>>& initialModelParameters = {},
-                     const QuantLib::Size maxCalibrationAttempts = 10,
-                     const QuantLib::Real exitEarlyErrorThreshold = 0.005,
-                     const QuantLib::Real maxAcceptableError = 0.05);
+    SwaptionSabrCube(
+        const Handle<SwaptionVolatilityStructure>& atmVolStructure, const std::vector<Period>& optionTenors,
+        const std::vector<Period>& swapTenors, const std::vector<Period>& atmOptionTenors,
+        const std::vector<Period>& atmSwapLengths, const std::vector<Spread>& strikeSpreads,
+        const std::vector<std::vector<Handle<Quote>>>& volSpreads,
+        const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase,
+        const QuantLib::ext::shared_ptr<SwapIndex>& shortSwapIndexBase,
+        const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
+        const boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none,
+        const std::map<std::pair<Period, Period>, std::vector<std::pair<Real, bool>>>& initialModelParameters = {},
+        const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
+        const QuantLib::Real maxAcceptableError = 0.05);
     void performCalculations() const override;
     QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
 
@@ -58,7 +57,7 @@ private:
     std::vector<Period> atmOptionTenors_, atmSwapTenors_;
     QuantExt::SabrParametricVolatility::ModelVariant modelVariant_;
     boost::optional<QuantLib::VolatilityType> outputVolatilityType_;
-    std::vector<std::pair<Real, bool>> initialModelParameters_;
+    std::map<std::pair<QuantLib::Period, QuantLib::Period>, std::vector<std::pair<Real, bool>>> initialModelParameters_;
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;
     QuantLib::Real maxAcceptableError_;

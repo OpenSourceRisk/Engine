@@ -265,6 +265,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     DLOG("useAd                = " << std::boolalpha << useAd_);
     DLOG("useExternalDevice    = " << std::boolalpha << useExternalComputeDevice_);
     DLOG("useDblPrecExtCalc    = " << std::boolalpha << useDoublePrecisionForExternalCalculation_);
+    DLOG("extDeviceCompatMode  = " << std::boolalpha << externalDeviceCompatibilityMode_);
     DLOG("externalDevice       = " << (useExternalComputeDevice_ ? externalComputeDevice_ : "na"));
     DLOG("calibration          = " << calibration_);
     DLOG("base ccy             = " << baseCcy_);
@@ -324,8 +325,19 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
             generateAdditionalResults, includePastCashflows_);
     } else if (modelCG_) {
         auto rt = globalParameters_.find("RunType");
-        bool useCachedSensis = useAd_ && (rt != globalParameters_.end() && rt->second == "SensitivityDelta");
+        std::string runType = rt != globalParameters_.end() ? rt->second : "<<no run type set>>";
+        bool useCachedSensis = useAd_ && (runType == "SensitivityDelta");
         bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults && !useCachedSensis;
+        if (useAd_ && !useCachedSensis) {
+            WLOG("Will not apply AD although useAD is configured, because runType ("
+                 << runType << ") does not match SensitivitiyDelta");
+        }
+        if (useExternalComputeDevice_ && !useExternalDev) {
+            WLOG("Will not use exxternal compute deivce although useExternalComputeDevice is configured, because we "
+                 "are either applying AD ("
+                 << std::boolalpha << useCachedSensis << ") or we are generating add results ("
+                 << generateAdditionalResults << "), both of which do not support external devices at the moment.");
+        }
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngineCG>(
             script.npv(), script.results(), modelCG_, ast_, context, mcParams_, script.code(), interactive_,
             generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev,
@@ -489,6 +501,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     useDoublePrecisionForExternalCalculation_ =
         parseBool(engineParameter("UseDoublePrecisionForExternalCalculation", {resolvedProductTag_}, false, "false"));
     externalComputeDevice_ = engineParameter("ExternalComputeDevice", {}, false, "");
+    externalDeviceCompatibilityMode_ = parseBool(engineParameter("ExternalDeviceCompatibilityMode", {}, false, "false"));
     includePastCashflows_ = parseBool(engineParameter("IncludePastCashflows", {resolvedProductTag_}, false, "false"));
 
     // usage of ad or an external device implies usage of cg
@@ -543,6 +556,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         }
         mcParams_.regressionVarianceCutoff =
             parseRealOrNull(engineParameter("RegressionVarianceCutoff", {resolvedProductTag_}, false, std::string()));
+        mcParams_.externalDeviceCompatibilityMode = externalDeviceCompatibilityMode_;
     } else if (engineParam_ == "FD") {
         modelSize_ = parseInteger(engineParameter("StateGridPoints", {resolvedProductTag_}));
         mesherEpsilon_ = parseReal(engineParameter("MesherEpsilon", {resolvedProductTag_}, false, "1.0E-4"));
@@ -1463,11 +1477,15 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
             std::vector<CalibrationBasket> calBaskets(1, CalibrationBasket(calInstr));
             if (infModelType_ == "DK") {
                 // build DK config
+                std::string infName = IndexInfo(modelInfIndices_[i].first).infName();
+                Real vol = parseReal(modelParameter("InfDkVolatility",
+                                                    {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_},
+                                                    false, "0.0050"));
                 config = QuantLib::ext::make_shared<InfDkData>(
                     CalibrationType::Bootstrap, calBaskets, modelInfIndices_[i].second->currency().code(),
                     IndexInfo(modelInfIndices_[i].first).infName(),
                     ReversionParameter(LgmData::ReversionType::Hagan, true, ParamType::Piecewise, {}, {0.60}),
-                    VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise, {}, {0.0050}),
+                    VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise, {}, {vol}),
                     LgmReversionTransformation(),
                     // ignore duplicate expiry times among calibration instruments
                     true);

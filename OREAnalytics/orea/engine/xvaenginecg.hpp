@@ -60,9 +60,13 @@ public:
                 const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData = nullptr,
                 const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+		const bool bumpCvaSensis = false,
                 const bool continueOnCalibrationError = true, const bool continueOnError = true,
                 const std::string& context = "xva engine cg");
 
+    QuantLib::ext::shared_ptr<InMemoryReport> exposureReport() { return epeReport_; }
+    QuantLib::ext::shared_ptr<InMemoryReport> sensiReport() { return sensiReport_; }
+    
 private:
     void populateRandomVariates(std::vector<RandomVariable>& values) const;
     void populateConstants(std::vector<RandomVariable>& values) const;
@@ -84,6 +88,7 @@ private:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityData_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
+    bool bumpCvaSensis_;
     bool continueOnCalibrationError_;
     bool continueOnError_;
     std::string context_;
@@ -103,6 +108,8 @@ private:
     std::vector<RandomVariableOpNodeRequirements> opNodeRequirements_;
     std::vector<RandomVariableOp> ops_;
     std::vector<RandomVariableGrad> grads_;
+
+    QuantLib::ext::shared_ptr<InMemoryReport> epeReport_, sensiReport_; 
 };
 
 } // namespace analytics

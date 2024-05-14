@@ -957,6 +957,10 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         resultType = "array";
         QuantLib::Array r = boost::any_cast<QuantLib::Array>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
+    } else if (anyType.type() == typeid(QuantLib::Currency)) {
+        resultType = "currency";
+        QuantLib::Currency r = boost::any_cast<QuantLib::Currency>(anyType);
+        oss << r;
     } else {
         ALOG("Unsupported Boost::Any type");
         resultType = "unsupported_type";
@@ -1490,6 +1494,21 @@ std::ostream& operator<<(std::ostream& out, SabrParametricVolatility::ModelVaria
                                                            << ") not recognized. This is an internal error.");
     }
     return out;
+}
+
+std::ostream& operator<<(std::ostream& os, Exercise::Type type) {
+    if (type == Exercise::European) {
+        os << "European";
+    } else if (type == Exercise::Bermudan) {
+        os << "Bermudan";
+    } else if (type == Exercise::American) {
+        os << "American";
+    } else {
+        QL_FAIL("Exercise::Type (" << static_cast<int>(type)
+                                   << " not recognized. Expected 'European', 'Bermudan', or 'American'.");
+    }
+
+    return os;
 }
 
 } // namespace data

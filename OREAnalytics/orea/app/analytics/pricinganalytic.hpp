@@ -41,11 +41,12 @@ public:
     void setUpConfigurations() override;
 };
 
+static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};
+
 class PricingAnalytic : public Analytic {
 public:
     PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs),
-            {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"},
+        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics,
                    inputs) {}
 };
  

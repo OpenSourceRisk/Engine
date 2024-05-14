@@ -1263,6 +1263,7 @@ McMultiLegBaseEngine::RegressionModel::apply(const Array& initialState,
 
             if (t2 == pathTimes.end()) {
                 regressor[i] = paths[pathTimes.size() - 1][modelIdx];
+                ++i;
                 continue;
             }
 

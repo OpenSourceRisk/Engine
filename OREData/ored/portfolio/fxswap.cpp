@@ -43,6 +43,11 @@ void FxSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory
     Currency nearSoldCcy = data::parseCurrency(nearSoldCurrency_);
     Date nearDate = data::parseDate(nearDate_);
     Date farDate = data::parseDate(farDate_);
+    maturity_ = farDate;
+
+    notional_ = nearBoughtAmount_;
+    notionalCurrency_ = nearBoughtCurrency_;
+    npvCurrency_ = nearBoughtCurrency_;
 
     try {
         DLOG("FxSwap::build() called for trade " << id());
@@ -70,10 +75,6 @@ void FxSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory
         composite->add(instNear_, -1.0);
         composite->add(instFar_, 1.0);
         instrument_.reset(new VanillaInstrument(composite));
-        npvCurrency_ = nearBoughtCurrency_;
-        notional_ = Null<Real>();//nearBoughtAmount_;
-        notionalCurrency_ = "";//nearBoughtCurrency_;
-        maturity_ = farDate;
 
     } catch (std::exception&) {
         instrument_.reset();
@@ -123,8 +124,8 @@ QuantLib::Real FxSwap::notional() const {
         if (strcmp(e.what(), "currentNotional not provided"))
 	    ALOG("error when retrieving notional: " << e.what());
     }
-    // if not provided, return null
-    return Null<Real>();
+    // if not provided, return original/fallback amount
+    return notional_;
 }
 
 std::string FxSwap::notionalCurrency() const {
@@ -135,8 +136,8 @@ std::string FxSwap::notionalCurrency() const {
         if (strcmp(e.what(), "notionalCurrency not provided"))
             ALOG("error when retrieving notional ccy: " << e.what());
     }
-    // if not provided, return an empty string
-    return "";
+    // if not provided, return original/fallback value
+    return notionalCurrency_;
 }
 
 void FxSwap::fromXML(XMLNode* node) {
