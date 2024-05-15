@@ -19,14 +19,16 @@
 #include <orea/app/analytics/xvastressanalytic.hpp>
 
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/structuredanalyticserror.hpp>
+#include <orea/app/structuredanalyticswarning.hpp>
+#include <orea/cube/cube_io.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
-#include <orea/scenario/stressscenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
-
+#include <orea/scenario/stressscenariogenerator.hpp>
 namespace ore {
 namespace analytics {
 
-auto buildNettingSetReport(){
+auto buildNettingSetReport() {
     auto report = QuantLib::ext::make_shared<InMemoryReport>();
     report->addColumn("Scenario", string());
     report->addColumn("NettingSet", string());
@@ -41,12 +43,13 @@ auto buildNettingSetReport(){
     return report;
 }
 
-void addResultsToNettingSetReport(const std::string& label, QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report,
+void addResultsToNettingSetReport(const std::string& label,
+                                  QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report,
                                   const std::map<std::string, XvaResult>& stressResults,
                                   const std::map<std::string, XvaResult>& baseResults) {
-                                        
+
     for (const auto& [nid, r] : stressResults) {
-        
+
         if (auto baseIt = baseResults.find(nid); baseIt != baseResults.end()) {
             report->next();
             report->add(label);
@@ -61,18 +64,68 @@ void addResultsToNettingSetReport(const std::string& label, QuantLib::ext::share
     }
 }
 
-void XvaStressAnalyticImpl::addReports(const std::string& label,
+QuantLib::ext::shared_ptr<ore::data::InMemoryReport>
+extendReport(const std::string& label, const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report) {
+    QuantLib::ext::shared_ptr<ore::data::InMemoryReport> newReport = ext::make_shared<ore::data::InMemoryReport>();
+    if (report != nullptr) {
+        newReport->addColumn("Scenario", string());
+        for (size_t i = 0; i < report->columns(); i++) {
+            newReport->addColumn(report->header(i), report->columnType(i), report->columnPrecision(i));
+        }
+        for (size_t row = 0; row < report->rows(); row++) {
+            newReport->next();
+            newReport->add(label);
+            for (size_t col = 0; col < report->columns(); col++) {
+                newReport->add(report->data(col)[row]);
+            }
+        }
+        newReport->end();
+    }
+    return newReport;
+}
+
+void XvaStressAnalyticImpl::writeCubes(const std::string& label,
                                        const QuantLib::ext::shared_ptr<XvaAnalytic>& xvaAnalytic) {
-    analytic()->reports()["XVA_STRESS"]["xva_" + label] = xvaAnalytic->reports()["XVA"]["xva"];
+    if (!inputs_->xvaStressWriteCubes() || xvaAnalytic == nullptr) {
+        return;
+    }
 
     if (inputs_->rawCubeOutput()) {
         DLOG("Write raw cube under scenario " << label);
-        analytic()->reports()["XVA_STRESS"]["rawcube_" + label] = xvaAnalytic->reports()["XVA"]["rawcube"];
+        // analytic()->reports()["XVA_STRESS"]["rawcube_" + label] = xvaAnalytic->reports()["XVA"]["rawcube"];
+        xvaAnalytic->reports()["XVA"]["rawcube"]->toFile(inputs_->resultsPath().string() + "/rawcube_" + label +
+                                                         ".csv");
+    }
+
+    if (inputs_->netCubeOutput()) {
+        DLOG("Write raw cube under scenario " << label);
+        // analytic()->reports()["XVA_STRESS"]["netcube_" + label] = xvaAnalytic->reports()["XVA"]["netcube"];
+        xvaAnalytic->reports()["XVA"]["netcube"]->toFile(inputs_->resultsPath().string() + "/netcube_" + label +
+                                                         ".csv");
+    }
+
+    if (inputs_->writeCube()) {
+        const auto& cubes = xvaAnalytic->npvCubes()["XVA"];
+        for (const auto& [name, cube] : cubes) {
+            DLOG("Write cube under scenario " << name << " for scenario" << label);
+            // analytic()->npvCubes()["XVA_STRESS"][name + "_" + label] = cube;
+            NPVCubeWithMetaData r;
+            r.cube = cube;
+            if (name == "cube") {
+                // store meta data together with npv cube
+                r.scenarioGeneratorData = inputs_->scenarioGeneratorData();
+                r.storeFlows = inputs_->storeFlows();
+                r.storeCreditStateNPVs = inputs_->storeCreditStateNPVs();
+            }
+            saveCube(inputs_->resultsPath().string() + "/" + name + "_" + label + ".csv.gz", r);
+        }
     }
 
     if (inputs_->writeScenarios()) {
         DLOG("Write scenario report under scenario " << label);
-        analytic()->reports()["XVA_STRESS"]["scenario" + label] = xvaAnalytic->reports()["XVA"]["scenario"];
+        // analytic()->reports()["XVA_STRESS"]["scenario" + label] = xvaAnalytic->reports()["XVA"]["scenario"];
+        xvaAnalytic->reports()["XVA"]["scenario"]->toFile(inputs_->resultsPath().string() + "/scenario" + label +
+                                                          ".csv");
     }
 }
 
@@ -103,6 +156,7 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
 
     analytic()->buildMarket(loader);
 
+    LOG("XVA Stress: Build SimMarket and StressTestScenarioGenerator")
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), inputs_->xvaStressSimMarketParams(), marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
@@ -120,29 +174,80 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
 
     // generate the stress scenarios and run dependent xva analytic under each of them
 
-    CONSOLEW("XVA_STRESS: Running stress scenarios");
+    CONSOLE("XVA_STRESS: Running stress scenarios");
 
-    // base scenario run
-    
-    xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
-    addReports("org", xvaAnalytic);
-    
-    auto baseNettingSetResults = xvaAnalytic->nettingSetResults();
+    // run stress test
+    LOG("Run XVA Stresstest")
+    runStressTest(scenarioGenerator, loader);
 
-    auto nettingSetReport = buildNettingSetReport();
-    for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
-        auto scenario = scenarioGenerator->next(simMarket->asofDate());
-        const std::string& label = scenario->label();
-       
-        auto newAnalytic = ext::make_shared<XvaAnalytic>(inputs_, scenario);
-        CONSOLEW("XVA_STRESS: Compute scenario " << label);
-        newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
-        addReports(label, newAnalytic);
-        addResultsToNettingSetReport(label, nettingSetReport, newAnalytic->nettingSetResults(), baseNettingSetResults);
-    }
-    nettingSetReport->end();
-    analytic()->reports()["XVA_STRESS"]["xva_stress"] = nettingSetReport;
     LOG("Running XVA Stress analytic finished.");
+}
+
+void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<StressScenarioGenerator>& scenarioGenerator,
+                                          const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+
+    std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> xvaReports;
+    std::map<std::string, std::map<std::string, XvaResult>> nettingSetXvaResults;
+    for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
+        auto scenario = scenarioGenerator->next(inputs_->asof());
+        const std::string& label = scenario != nullptr ? scenario->label() : std::string();
+        try {
+            DLOG("Calculate XVA for scenario " << label);
+            CONSOLE("XVA_STRESS: Apply scenario " << label);
+            auto newAnalytic = ext::make_shared<XvaAnalytic>(inputs_, (label == "BASE" ? nullptr : scenario));
+            CONSOLE("XVA_STRESS: Calculate Exposure and XVA")
+            newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
+            nettingSetXvaResults[label] = newAnalytic->nettingSetResults();
+            // Collect exposure and xva reports
+            for (auto& [name, rpt] : newAnalytic->reports()["XVA"]) {
+                // add scenario column to report and copy it, concat it later
+                if (boost::starts_with(name, "exposure") || boost::starts_with(name, "xva")) {
+                    DLOG("Save and extend report " << name);
+                    xvaReports[name].push_back(extendReport(label, rpt));
+                }
+            }
+            writeCubes(label, newAnalytic);
+        } catch (const std::exception& e) {
+            StructuredAnalyticsErrorMessage("XvaStress", "XVACalc",
+                                            "Error during XVA calc under scenario " + label + ", got " + e.what() +
+                                                ". Skip it")
+                .log();
+        }
+    }
+    writeStressTestReport(nettingSetXvaResults);
+    concatReports(xvaReports);
+}
+
+void XvaStressAnalyticImpl::concatReports(
+    const std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>& xvaReports) {
+    DLOG("Concat exposure and xva reports");
+    for (auto& [name, reports] : xvaReports) {
+        if (!reports.empty()) {
+            DLOG("Concat report " << name);
+            auto firstReport = reports.front();
+            for (size_t i = 1; i < reports.size(); i++) {
+                if (reports[i] != nullptr) {
+                    firstReport->add(*reports[i]);
+                }
+            }
+            analytic()->reports()["XVA_STRESS"][name] = firstReport;
+        }
+    }
+}
+
+void XvaStressAnalyticImpl::writeStressTestReport(
+    const std::map<std::string, std::map<std::string, XvaResult>>& xvaResults) {
+    auto it = xvaResults.find("BASE");
+    if (it != xvaResults.end()) {
+        auto nettingSetReport = buildNettingSetReport();
+        for (const auto& [label, results] : xvaResults) {
+            addResultsToNettingSetReport(label, nettingSetReport, results, it->second);
+        }
+        nettingSetReport->end();
+        analytic()->reports()["XVA_STRESS"]["xva_stress"] = nettingSetReport;
+    } else {
+        StructuredAnalyticsWarningMessage("XvaStressTest", "Internal Error", "Missing base scenario").log();
+    }
 }
 
 void XvaStressAnalyticImpl::setUpConfigurations() {

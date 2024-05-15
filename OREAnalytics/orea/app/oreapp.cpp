@@ -1798,6 +1798,15 @@ void OREAppInputParameters::loadParameters() {
         } else {
             WLOG("Xva Stress scenario data not loaded");
         }
+
+        tmp = params_->get("xvaStress", "writeCubes", false);
+        if (!tmp.empty()) {
+            bool writeCubes = false;
+            bool success = tryParse<bool>(tmp, writeCubes, parseBool);
+            if (success) {
+                setXvaStressWriteCubes(writeCubes);
+            }
+        }
     }
 
     /*************

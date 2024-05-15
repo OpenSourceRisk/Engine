@@ -24,6 +24,8 @@
 
 #include <orea/app/analytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <ored/report/inmemoryreport.hpp>
+#include <orea/scenario/stressscenariogenerator.hpp>
 namespace ore {
 namespace analytics {
 
@@ -36,7 +38,11 @@ public:
     void setUpConfigurations() override;
 
 private:
-    void addReports(const std::string& label, const QuantLib::ext::shared_ptr<XvaAnalytic>& xvaAnalytic);
+    void runStressTest(const QuantLib::ext::shared_ptr<ore::analytics::StressScenarioGenerator>& scenarioGenerator,
+                       const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
+    void writeStressTestReport(const std::map<std::string, std::map<std::string, XvaResult>>& xvaResults);
+    void writeCubes(const std::string& label, const QuantLib::ext::shared_ptr<XvaAnalytic>& xvaAnalytic);
+    void concatReports(const std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>& xvaReports);
 };
 
 class XvaStressAnalytic : public Analytic {

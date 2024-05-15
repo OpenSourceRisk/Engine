@@ -15,7 +15,7 @@
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
-    <Parameter name="nThreads">1</Parameter>
+    <Parameter name="nThreads">2</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
@@ -94,6 +94,7 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+      <Parameter name="writeCubes">N</Parameter>
     </Analytic>
   </Analytics>
 </ORE>
