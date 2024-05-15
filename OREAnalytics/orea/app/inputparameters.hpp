@@ -316,7 +316,7 @@ public:
     void setXvaStressSimMarketParamsFromFile(const std::string& f);
     void setXvaStressScenarioData(const std::string& s);
     void setXvaStressScenarioDataFromFile(const std::string& s);
-
+    void setXvaStressWriteCubes(const bool writeCubes) { xvaStressWriteCubes_ = writeCubes; }
     // Setters for SIMM
     void setSimmVersion(const std::string& s) { simmVersion_ = s; }
     
@@ -629,7 +629,7 @@ public:
     const std::string& creditMigrationOutputFiles() const { return creditMigrationOutputFiles_; }
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& xvaStressSimMarketParams() const { return xvaStressSimMarketParams_; }
     const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& xvaStressScenarioData() const { return xvaStressScenarioData_; }
-    
+    bool xvaStressWriteCubes() const { return xvaStressWriteCubes_; }
     /**************************************************
      * Getters for cashflow npv and dynamic backtesting
      **************************************************/
@@ -935,7 +935,7 @@ protected:
     std::string creditMigrationOutputFiles_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaStressSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> xvaStressScenarioData_;
-
+    bool xvaStressWriteCubes_ = false;
     /***************
      * SIMM analytic
      ***************/

@@ -190,21 +190,21 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
         *inputs_->iborFallbackConfig(), false, offsetScenario_);
 
     if (offsetScenario_ != nullptr){
-        LOG("Offset Scenario SimMarket");
-        LOG("Offset scenario is absolute = " << offsetScenario_->isAbsolute());
+        DLOG("Offset Scenario SimMarket");
+        DLOG("Offset scenario is absolute = " << offsetScenario_->isAbsolute());
         for (const auto& key : offsetScenario_->keys()) {
 
-            LOG(key << " : " << offsetScenario_->get(key));
+            DLOG(key << " : " << offsetScenario_->get(key));
         }
     }
-    LOG("Finished Scenario SimMarket");
+    DLOG("Finished building Scenario SimMarket");
     for(const auto& key : simMarket_->baseScenario()->keys()){
-        LOG(key << " : " << simMarket_->baseScenario()->get(key) << " : "
+        DLOG(key << " : " << simMarket_->baseScenario()->get(key) << " : "
                 << simMarket_->baseScenarioAbsolute()->get(key));
     }
-    LOG("Finished Calibration Scenario SimMarket");
+    DLOG("Finished Calibration Scenario SimMarket");
     for(const auto& key : simMarketCalibration_->baseScenario()->keys()){
-        LOG(key << " : " << simMarketCalibration_->baseScenario()->get(key) << " : "
+        DLOG(key << " : " << simMarketCalibration_->baseScenario()->get(key) << " : "
                 << simMarketCalibration_->baseScenarioAbsolute()->get(key));
     }
 }
