@@ -1179,7 +1179,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             std::size_t offset = i * size_[currentId_ - 1];
             std::string output;
             if (outputVariables_[i] < inputVarOffset_.size()) {
-                output = "input[" + std::to_string(outputVariables_[i]) + "U" +
+                output = "input[" + std::to_string(inputVarOffset_[outputVariables_[i]]) + "U" +
                          (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
             } else if (outputVariables_[i] < inputVarOffset_.size() + nVariates_) {
                 output = "rn[" +
