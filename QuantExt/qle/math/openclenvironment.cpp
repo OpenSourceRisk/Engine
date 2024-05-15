@@ -1023,6 +1023,20 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
         ssaLine += "pow(" + argStr[0] + "," + argStr[1] + ");";
         break;
     }
+    // TODO add this in the kernel code below first before activating it here
+    // case RandomVariableOpCode::NormalCdf: {
+    //     ssaLine += "ore_normalCdf(" + argStr[0] + ");";
+    //     break;
+    // }
+    case RandomVariableOpCode::NormalPdf: {
+        ssaLine += "ore_normalPdf(" + argStr[0] + ");";
+        break;
+    }
+    // TODO
+    // case RandomVariableOpCode::ConditionalExpectation: {
+    //     ...
+    //     break;
+    // }
     default: {
         QL_FAIL("OpenClContext::executeKernel(): no implementation for op code "
                 << randomVariableOpCode << " (" << getRandomVariableOpLabels()[randomVariableOpCode] << ") provided.");
@@ -1135,6 +1149,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         std::string fpEpsStr = settings_.useDoublePrecision ? "0x1.0p-52" : "0x1.0p-23f";
         std::string fpSuffix = settings_.useDoublePrecision ? std::string() : "f";
 
+        // TODO ore_normalCdf
+
         // clang-format off
         const std::string includeSource =
             "bool ore_closeEnough(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n"
@@ -1144,16 +1160,23 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             "    if (x == 0.0" + fpSuffix + " || y == 0.0" + fpSuffix + ")\n"
             "        return diff < tol * tol;\n"
             "    return diff <= tol * fabs(x) || diff <= tol * fabs(y);\n"
-            "}\n"
-            "\n" +
+            "}\n" +
             fpTypeStr + " ore_indicatorEq(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n" +
             fpTypeStr + " ore_indicatorEq(const " + fpTypeStr + " x, const " + fpTypeStr + " y) "
                                                 "{ return ore_closeEnough(x, y) ? 1.0" + fpSuffix + " : 0.0" + fpSuffix +"; }\n\n" +
             fpTypeStr + " ore_indicatorGt(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n" +
             fpTypeStr + " ore_indicatorGt(const " + fpTypeStr + " x, const " + fpTypeStr + " y) " +
                                                 "{ return x > y && !ore_closeEnough(x, y); }\n\n" +
-            fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n";
-            fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y) { return x > y || ore_closeEnough(x, y); }\n\n";
+            fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n" +
+            fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y) { return x > y || ore_closeEnough(x, y); }\n\n" +
+            fpTypeStr + " ore_normalCdf(const " + fpTypeStr + " x);\n" +
+            fpTypeStr + " ore_normalCdf(const " + fpTypeStr + " x) {\n return 0.0" + fpSuffix + ";}\n" + 
+            fpTypeStr + " ore_normalPdf(const " + fpTypeStr + " x);\n" +
+            fpTypeStr + " ore_normalPdf(const " + fpTypeStr + " x) {\n" +
+            "    " + fpTypeStr + " exponent = -(x*x)/2.0" + fpSuffix + ";\n" +
+            "    return exponent <= -690.0" + fpSuffix + " ? 0.0 : exp(exponent) * 0.3989422804014327" + fpSuffix + ";\n"
+            "}\n";
+
         // clang-format on
 
         std::string kernelName =
