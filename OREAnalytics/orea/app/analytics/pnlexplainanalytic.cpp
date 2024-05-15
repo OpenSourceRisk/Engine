@@ -119,9 +119,10 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
         std::make_unique<MarketRiskReport::SensiRunArgs>(ss, shiftCalculator);
 
-    auto pnlExplainReport = ext::make_shared<PnlExplainReport>(inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(),
-                                           period, pnlReport, scenarios, move(sensiArgs), nullptr, nullptr, true);
-        
+    auto pnlExplainReport =
+        ext::make_shared<PnlExplainReport>(inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(),
+                                           period, pnlReport, scenarios, std::move(sensiArgs), nullptr, nullptr, true);
+
     LOG("Call PNL Explain calculation");
     CONSOLEW("Risk: PNL Explain Calculation");
     ext::shared_ptr<MarketRiskReport::Reports> reports = ext::make_shared<MarketRiskReport::Reports>();
