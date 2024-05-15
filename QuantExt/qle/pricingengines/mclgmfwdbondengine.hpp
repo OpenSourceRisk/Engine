@@ -66,7 +66,27 @@ public:
 
     void calculate() const override;
 
-    Real payOff(RandomVariable pathValueOption) const override;
+    double payOff(double time) const;
+
+    class FwdBondAmcCalculator : public McMultiLegBaseEngine::MultiLegBaseAmcCalculator {
+    public:
+        FwdBondAmcCalculator(McMultiLegBaseEngine::MultiLegBaseAmcCalculator c)
+            : McMultiLegBaseEngine::MultiLegBaseAmcCalculator(c){};
+
+        std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
+                                                           std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+                                                           const std::vector<size_t>& relevantPathIndex,
+                                                           const std::vector<size_t>& relevantTimeIndex) override;
+
+        Currency npvCurrency() override { return baseCurrency_; }
+
+        void addEngine(const QuantExt::McLgmFwdBondEngine& engine) {
+            engine_ = boost::make_shared<QuantExt::McLgmFwdBondEngine>(engine);
+        };
+
+    private:
+        boost::shared_ptr<QuantExt::McLgmFwdBondEngine> engine_;
+    };
 
 private:
     Handle<YieldTermStructure> incomeCurve_;

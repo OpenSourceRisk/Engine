@@ -57,7 +57,7 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
     auto lgm = cam_->lgm(currIdx);
     std::vector<Size> modelIndex(1, cam_->pIdx(CrossAssetModel::AssetType::IR, currIdx));
 
-    ALOG("CamAmcFwdBondEngineBuilder : creditCurveId not used at present");
+    WLOG("CamAmcFwdBondEngineBuilder : creditCurveId not used at present");
 
     // for discounting underlying bond make use of reference curve
     Handle<YieldTermStructure> yts =

@@ -62,7 +62,7 @@ CamAmcBondEngineBuilder::engineImpl(const Currency& ccy, const string& creditCur
     std::vector<Size> modelIndex(1, cam_->pIdx(CrossAssetModel::AssetType::IR, currIdx));
 
     // at present, use reference curve and security spread only
-    ALOG("CamAmcBondEngineBuilder : incomeCurveId and creditCurveId not used at present");
+    WLOG("CamAmcBondEngineBuilder : incomeCurveId and creditCurveId not used at present");
 
     // for discounting underlying bond make use of reference curve
     Handle<YieldTermStructure> yts =
@@ -73,8 +73,7 @@ CamAmcBondEngineBuilder::engineImpl(const Currency& ccy, const string& creditCur
         yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
             yts, market_->securitySpread(securityId, configuration(MarketContext::pricing))));
 
-    // todo registering of the yts ???
-
+    //yts registering done in qle/pricingengines/mclgmbondengine.hpp
     return buildMcEngine(lgm, yts, simulationDates_, modelIndex);
 }
 

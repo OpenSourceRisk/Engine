@@ -930,7 +930,9 @@ void McMultiLegBaseEngine::calculate() const {
     // set the result value (= underlying value if no exercise is given, otherwise option value)
 
     resultUnderlyingNpv_ = expectation(pathValueUndDirty).at(0) * model_->numeraire(0, 0.0, 0.0, discountCurves_[0]);
-    resultValue_ = payOff(pathValueOption);
+    resultValue_ = exercise_ == nullptr
+                           ? resultUnderlyingNpv_
+                           : expectation(pathValueOption).at(0) * model_->numeraire(0, 0.0, 0.0, discountCurves_[0]);
 
     McEngineStats::instance().calc_timer.stop();
 
@@ -940,13 +942,6 @@ void McMultiLegBaseEngine::calculate() const {
         externalModelIndices_, optionSettlement_, exerciseXvaTimes, exerciseTimes, xvaTimes, regModelUndDirty,
         regModelUndExInto, regModelContinuationValue, regModelOption, resultValue_,
         model_->stateProcess()->initialValues(), model_->irlgm1f(0)->currency());
-}
-
-Real McMultiLegBaseEngine::payOff(RandomVariable pathValueOption) const {
-
-    return exercise_ == nullptr
-               ? resultUnderlyingNpv_
-               : expectation(pathValueOption).at(0) * model_->numeraire(0, 0.0, 0.0, discountCurves_[0]);
 }
 
 QuantLib::ext::shared_ptr<AmcCalculator> McMultiLegBaseEngine::amcCalculator() const { return amcCalculator_; }

@@ -83,9 +83,6 @@ protected:
         const RegressorModel regressorModel = RegressorModel::Simple,
         const Real regressionVarianceCutoff = Null<Real>());
 
-    //due to the virtual payOff function
-    virtual ~McMultiLegBaseEngine() {}
-
     // run calibration and pricing (called from derived engines)
     void calculate() const;
 
@@ -100,9 +97,6 @@ protected:
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
     mutable bool includeSettlementDateFlows_ = false;
     mutable Real multiplier_ = 1.0;
-
-    //instrument specific payoff function
-    virtual Real payOff(RandomVariable pathValueOption) const;
 
     // data members
     Handle<CrossAssetModel> model_;
@@ -125,10 +119,10 @@ protected:
     // results, these are read from derived engines
     mutable Real resultUnderlyingNpv_, resultValue_;
 
-private:
+
     static constexpr Real tinyTime = 1E-10;
 
-    // data structure storing info needed to generate the amount for a cashflow
+   // data structure storing info needed to generate the amount for a cashflow
     struct CashflowInfo {
         Size legNo = Null<Size>(), cfNo = Null<Size>();
         Real payTime = Null<Real>();
@@ -184,7 +178,7 @@ private:
                                                            const std::vector<size_t>& relevantPathIndex,
                                                            const std::vector<size_t>& relevantTimeIndex) override;
 
-    private:
+    protected:
         std::vector<Size> externalModelIndices_;
         Settlement::Type settlement_;
         std::set<Real> exerciseXvaTimes_;
