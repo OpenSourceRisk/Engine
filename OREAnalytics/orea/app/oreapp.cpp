@@ -1471,9 +1471,9 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setWriteScenarios(true);
 
-        tmp = params_->get("simulation", "cvaBumpSensis", false);
+        tmp = params_->get("simulation", "xvaCgBumpSensis", false);
 	if (tmp != "")
-	    setCvaBumpSensis(parseBool(tmp));
+	    setXvaCgBumpSensis(parseBool(tmp));
 
     }
 

@@ -611,7 +611,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             inputs_->amcPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-	    inputs_->cvaBumpSensis());
+	    inputs_->xvaCgBumpSensis());
 
 	analytic()->reports()["XVA"]["xvacg-exposure"] = engine.exposureReport();
 	analytic()->reports()["XVA"]["xvacg-cva-sensi-scenario"] = engine.sensiReport();

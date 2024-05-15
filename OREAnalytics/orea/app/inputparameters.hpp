@@ -192,7 +192,7 @@ public:
     void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
     void setAmc(bool b) { amc_ = b; }
     void setAmcCg(bool b) { amcCg_ = b; }
-    void setCvaBumpSensis(bool b) { cvaBumpSensis_ = b; }
+    void setXvaCgBumpSensis(bool b) { xvaCgBumpSensis_ = b; }
     void setXvaCgSensiScenarioData(const std::string& xml);
     void setXvaCgSensiScenarioDataFromFile(const std::string& fileName);
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
@@ -528,7 +528,7 @@ public:
     bool salvageCorrelationMatrix() const { return salvageCorrelationMatrix_; }
     bool amc() const { return amc_; }
     bool amcCg() const { return amcCg_; }
-    bool cvaBumpSensis() const { return cvaBumpSensis_; }
+    bool xvaCgBumpSensis() const { return xvaCgBumpSensis_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaCgSensiScenarioData() const { return xvaCgSensiScenarioData_; }
     const std::set<std::string>& amcTradeTypes() const { return amcTradeTypes_; }
     const std::string& exposureBaseCurrency() const { return exposureBaseCurrency_; }
@@ -839,7 +839,7 @@ protected:
     bool salvageCorrelationMatrix_ = false;
     bool amc_ = false;
     bool amcCg_ = false;
-    bool cvaBumpSensis_ = false;
+    bool xvaCgBumpSensis_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string exposureBaseCurrency_ = "";
