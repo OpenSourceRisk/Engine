@@ -139,15 +139,15 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
 
     LOG("XVA Stress: Build SimMarket and StressTestScenarioGenerator")
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
-        analytic()->market(), inputs_->xvaStressSimMarketParams(), marketConfig,
+        analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-        inputs_->continueOnError(), inputs_->xvaStressScenarioData()->useSpreadedTermStructures(), false, false,
+        inputs_->continueOnError(), scenarioData->useSpreadedTermStructures(), false, false,
         *inputs_->iborFallbackConfig(), true);
 
     auto baseScenario = simMarket->baseScenario();
     auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
     auto scenarioGenerator = QuantLib::ext::make_shared<StressScenarioGenerator>(
-        inputs_->xvaStressScenarioData(), baseScenario, inputs_->xvaStressSimMarketParams(), simMarket, scenarioFactory,
+        scenarioData, baseScenario, analytic()->configurations().simMarketParams, simMarket, scenarioFactory,
         simMarket->baseScenarioAbsolute());
     simMarket->scenarioGenerator() = scenarioGenerator;
 
