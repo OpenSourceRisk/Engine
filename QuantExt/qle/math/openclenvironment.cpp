@@ -927,14 +927,14 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
     // determine variable id to use for result
 
     std::size_t resultId;
-    bool resultIdNeedsDeclaration;
+    // bool resultIdNeedsDeclaration;
     if (!freedVariables_.empty()) {
         resultId = freedVariables_.back();
         freedVariables_.pop_back();
-        resultIdNeedsDeclaration = false;
+        // resultIdNeedsDeclaration = false;
     } else {
         resultId = nVars_++;
-        resultIdNeedsDeclaration = true;
+        // resultIdNeedsDeclaration = true;
     }
 
     // determine arg variable names
@@ -948,7 +948,10 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
             argStr[i] = "rn[" + std::to_string((args[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) + "U + i]";
         } else {
             // variable is an (intermediate) result
-            argStr[i] = "v" + std::to_string(args[i]);
+            // argStr[i] = "v" + std::to_string(args[i]);
+            argStr[i] = "values[" +
+                        std::to_string((args[i] - inputVarOffset_.size() - nVariates_) * size_[currentId_ - 1]) +
+                        "U + i]";
         }
     }
 
@@ -956,8 +959,11 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 
     std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
 
-    std::string ssaLine =
-        (resultIdNeedsDeclaration ? fpTypeStr + " " : "") + std::string("v") + std::to_string(resultId) + " = ";
+    // std::string ssaLine =
+    //     (resultIdNeedsDeclaration ? fpTypeStr + " " : "") + std::string("v") + std::to_string(resultId) + " = ";
+    std::string ssaLine = "values[" +
+                          std::to_string((resultId - inputVarOffset_.size() - nVariates_) * size_[currentId_ - 1]) +
+                          "U + i] = ";
 
     switch (randomVariableOpCode) {
     case RandomVariableOpCode::None: {
@@ -1108,7 +1114,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     boost::timer::cpu_timer timer;
     boost::timer::nanosecond_type timerBase;
 
-    // create input and output buffers
+    // create input, values and output buffers
 
     std::size_t fpSize = settings_.useDoublePrecision ? sizeof(double) : sizeof(float);
 
@@ -1124,8 +1130,17 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     if (inputBufferSize > 0) {
         inputBuffer = clCreateBuffer(*context_, CL_MEM_READ_WRITE, fpSize * inputBufferSize, NULL, &err);
         guard.mem.push_back(inputBuffer);
-        QL_REQUIRE(err == CL_SUCCESS,
-                   "OpenClContext::finalizeCalculation(): creating input buffer fails: " << errorText(err));
+        QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): creating input buffer of size "
+                                          << inputBufferSize << " fails: " << errorText(err));
+    }
+
+    std::size_t valuesBufferSize = (nVars_ - inputVarOffset_.size() - nVariates_) * size_[currentId_ - 1];
+    cl_mem valuesBuffer;
+    if (valuesBufferSize > 0) {
+        valuesBuffer = clCreateBuffer(*context_, CL_MEM_READ_WRITE, fpSize * valuesBufferSize, NULL, &err);
+        guard.mem.push_back(valuesBuffer);
+        QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): creating values buffer of size "
+                                          << valuesBufferSize << " fails: " << errorText(err));
     }
 
     std::size_t outputBufferSize = nOutputVars_[currentId_ - 1] * size_[currentId_ - 1];
@@ -1133,8 +1148,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     if (outputBufferSize > 0) {
         outputBuffer = clCreateBuffer(*context_, CL_MEM_READ_WRITE, fpSize * outputBufferSize, NULL, &err);
         guard.mem.push_back(outputBuffer);
-        QL_REQUIRE(err == CL_SUCCESS,
-                   "OpenClContext::finalizeCalculation(): creating output buffer fails: " << errorText(err));
+        QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): creating output buffer of size "
+                                          << outputBufferSize << " fails: " << errorText(err));
     }
 
     if (settings_.debug) {
@@ -1187,6 +1202,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             inputArgs.push_back("__global " + fpTypeStr + "* input");
         if (nVariates_ > 0)
             inputArgs.push_back("__global " + fpTypeStr + "* rn");
+        if (valuesBufferSize > 0)
+            inputArgs.push_back("__global " + fpTypeStr + "* values");
         if (outputBufferSize > 0)
             inputArgs.push_back("__global " + fpTypeStr + "* output");
 
@@ -1209,16 +1226,20 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                          std::to_string((outputVariables_[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) +
                          "U + i]";
             } else {
-                output = "v" + std::to_string(outputVariables_[i]);
+                // output = "v" + std::to_string(outputVariables_[i]);
+                output = "values[" +
+                         std::to_string((outputVariables_[i] - inputVarOffset_.size() - nVariates_) *
+                                        size_[currentId_ - 1]) +
+                         "U + i]";
             }
-            std::string ssaLine = "  output[" + std::to_string(offset) + "UL + i] = " + output + ";";
+            std::string ssaLine = "  output[" + std::to_string(offset) + "U + i] = " + output + ";";
             kernelSource += ssaLine + "\n";
         }
 
         kernelSource += "  }\n"
                         "}\n";
 
-        // std::cerr << "generated kernel: \n" + kernelSource + "\n";
+        std::cerr << "generated kernel: \n" + kernelSource + "\n";
 
         if (settings_.debug) {
             timerBase = timer.elapsed().wall;
@@ -1270,7 +1291,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::finalizeCalculation(): writing to input buffer fails: " << errorText(err));
     }
-
     if (settings_.debug) {
         err = clFinish(queue_);
         QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::clFinish(): error in debug mode: " << errorText(err));
@@ -1286,6 +1306,9 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     }
     if (nVariates_ > 0) {
         err |= clSetKernelArg(kernel_[currentId_ - 1], kidx++, sizeof(cl_mem), &variatesPool_);
+    }
+    if (valuesBufferSize > 0) {
+        err |= clSetKernelArg(kernel_[currentId_ - 1], kidx++, sizeof(cl_mem), &valuesBuffer);
     }
     if (outputBufferSize > 0) {
         err |= clSetKernelArg(kernel_[currentId_ - 1], kidx++, sizeof(cl_mem), &outputBuffer);
@@ -1307,6 +1330,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     err = clEnqueueNDRangeKernel(queue_, kernel_[currentId_ - 1], 1, NULL, &size_[currentId_ - 1], NULL,
                                  runWaitEvents.size(), runWaitEvents.empty() ? NULL : &runWaitEvents[0], &runEvent);
     QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): enqueue kernel fails: " << errorText(err));
+
 
     if (settings_.debug) {
         err = clFinish(queue_);
