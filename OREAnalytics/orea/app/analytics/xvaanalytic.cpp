@@ -42,58 +42,6 @@ using namespace boost::filesystem;
 namespace ore {
 namespace analytics {
 
-namespace {
-std::map<std::string, XvaResult> populateNettingSetResults(const QuantLib::ext::shared_ptr<PostProcess>& postProcess) {
-    std::map<std::string, XvaResult> results;
-    if(postProcess != nullptr){
-        for (const auto& [id, _] : postProcess->nettingSetIds()) {
-            try {
-                results[id] = XvaResult{"", id, postProcess->nettingSetCVA(id), postProcess->nettingSetDVA(id)};
-            } catch (const std::exception& e) {
-                StructuredAnalyticsErrorMessage("XVA", "Missing results",
-                                                "Skip adding XVA results for nettingSet " + to_string(id) + " got, " +
-                                                    to_string(e.what()))
-                    .log();
-            }
-        }
-    } else{
-        StructuredAnalyticsWarningMessage("XVA", "Missing Results", "Can not compute results, postProcess is null");
-    }
-    return results;
-}
-
-std::map<std::string, XvaResult> populateTradeLevelXvaResults(const QuantLib::ext::shared_ptr<PostProcess>& postProcess,
-                                                           const QuantLib::ext::shared_ptr<Portfolio>& portfolio) {
-    std::map<std::string, XvaResult> results;
-    if (postProcess != nullptr && portfolio != nullptr) {
-        std::unordered_map<std::string, std::vector<const ext::shared_ptr<Trade>*>> trades;
-        for (const auto& [id, trade] : portfolio->trades()) {
-            if (trade != nullptr) {
-                auto nid = trade->envelope().nettingSetId();
-                trades[nid].push_back(&trade);
-            }
-        }
-        for (const auto& [nid, _] : postProcess->nettingSetIds()) {
-            for (const auto& trade : trades[nid]) {
-                string tid = 0;
-                try {
-                    tid = (*trade)->id();
-                    results[tid] = XvaResult{tid, nid, postProcess->tradeCVA(tid), postProcess->tradeDVA(tid)};
-                } catch (const std::exception& e) {
-                    StructuredAnalyticsErrorMessage("XVA", "Missing results",
-                                                    "Skip adding trade " + tid + " XVA results for nettingSet " + nid +
-                                                        " got, " + to_string(e.what()))
-                        .log();
-                }
-            }
-        }
-    } else{
-        StructuredAnalyticsWarningMessage("XVA", "Missing Results", "Can not compute results, postProcess or portfolio is null");
-    }
-    return results;
-}
-} // namespace
-
 /******************************************************************************
  * XVA Analytic: EXPOSURE, CVA, DVA, FVA, KVA, COLVA, COLLATERALFLOOR, DIM, MVA
  ******************************************************************************/
@@ -727,10 +675,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         inputs_->storeFlows(), analytic()->configurations().scenarioGeneratorData->withCloseOutLag(), scenarioData_,
         grid_, inputs_->storeCreditStateNPVs(), inputs_->flipViewXVA());
 
-    XvaAnalytic* xvaAnalytic = static_cast<XvaAnalytic*>(analytic());
-    
     if (runSimulation_) {
-        offsetScenario_ = xvaAnalytic->offsetScenario();    
         LOG("XVA: Build simulation market");
         buildScenarioSimMarket();
 
@@ -875,13 +820,6 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         runPostProcessor();
         CONSOLE("OK");
         ProgressMessage(msg, 1, 1).log();
-
-        /******************************************************
-         * Store some results
-         ******************************************************/
-
-        xvaAnalytic->setNettingSetResults(populateNettingSetResults(postProcess_));
-        xvaAnalytic->setTradeLevelResults(populateTradeLevelXvaResults(postProcess_, analytic()->portfolio()));
 
         /******************************************************
          * Finally generate various (in-memory) reports/outputs

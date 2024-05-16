@@ -31,7 +31,9 @@ class XvaAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "XVA";
 
-    explicit XvaAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    explicit XvaAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                             const QuantLib::ext::shared_ptr<Scenario>& offsetScenario = nullptr)
+        : Analytic::Impl(inputs), offsetScenario_(offsetScenario) {
         setLabel(LABEL);
     }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -85,34 +87,12 @@ protected:
 
 static const std::set<std::string> xvaAnalyticSubAnalytics{"XVA", "EXPOSURE"};
 
-struct XvaResult {
-    std::string tradeId;
-    std::string nettingSetId;
-    double cva=0;
-    double dva=0;
-    double pfe=0;
-};
-
 class XvaAnalytic : public Analytic {
 public:
     explicit XvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                         const QuantLib::ext::shared_ptr<Scenario> offSetScenario = nullptr)
-        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs), xvaAnalyticSubAnalytics, inputs, false, false, false,
-                   false), offsetScenario_(offSetScenario) {}
-
-    void setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& scenario) { offsetScenario_ = scenario; }
-    const QuantLib::ext::shared_ptr<Scenario>& offsetScenario() const { return offsetScenario_; }
-
-    void setNettingSetResults(const std::map<std::string, XvaResult>& results) { nettingSetResults_ = results; }
-    void setTradeLevelResults(const std::map<std::string, XvaResult>& results) { tradeLevelResults_ = results; }
-    
-    const std::map<std::string, XvaResult>& nettingSetResults() const { return nettingSetResults_; }
-    const std::map<std::string, XvaResult>& tradeLevelResults() const { return tradeLevelResults_; }
-
-private:
-    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
-    std::map<std::string, XvaResult> nettingSetResults_;
-    std::map<std::string, XvaResult> tradeLevelResults_;
+                         const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr)
+        : Analytic(std::make_unique<XvaAnalyticImpl>(inputs, offSetScenario), xvaAnalyticSubAnalytics, inputs, false,
+                   false, false, false) {}
 };
 
 } // namespace analytics

@@ -1807,6 +1807,15 @@ void OREAppInputParameters::loadParameters() {
                 setXvaStressWriteCubes(writeCubes);
             }
         }
+
+        tmp = params_->get("xvaStress", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setXvaStressSensitivityScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
+        }
     }
 
     /*************
