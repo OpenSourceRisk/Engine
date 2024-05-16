@@ -94,11 +94,8 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="marketConfigFile">simulation_classic.xml</Parameter>
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
-    </Analytic>
-    <Analytic type="stress">
-      <Parameter name="active">N</Parameter>
-      <Parameter name="marketConfigFile">simulation_classic.xml</Parameter>
-      <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity_stress.xml</Parameter>
+      <Parameter name="writeCubes">N</Parameter>
     </Analytic>
   </Analytics>
   
