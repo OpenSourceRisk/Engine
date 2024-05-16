@@ -40,7 +40,6 @@ public:
 private:
     void runStressTest(const QuantLib::ext::shared_ptr<ore::analytics::StressScenarioGenerator>& scenarioGenerator,
                        const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
-    void writeStressTestReport(const std::map<std::string, std::map<std::string, XvaResult>>& xvaResults);
     void writeCubes(const std::string& label, const QuantLib::ext::shared_ptr<XvaAnalytic>& xvaAnalytic);
     void concatReports(const std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>& xvaReports);
 };

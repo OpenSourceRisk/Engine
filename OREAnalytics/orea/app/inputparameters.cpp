@@ -317,6 +317,16 @@ void InputParameters::setXvaStressScenarioDataFromFile(const std::string& fileNa
     xvaStressScenarioData_->fromFile(fileName);
 }
 
+void InputParameters::setXvaStressSensitivityScenarioData(const std::string& xml) {
+    xvaStressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaStressSensitivityScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaStressSensitivityScenarioDataFromFile(const std::string& fileName) {
+    xvaStressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaStressSensitivityScenarioData_->fromFile(fileName);
+}
+
 void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
     amcPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     amcPricingEngine_->fromFile(fileName);

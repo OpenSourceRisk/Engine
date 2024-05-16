@@ -25,44 +25,9 @@
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
+#include <orea/engine/parstressconverter.hpp>
 namespace ore {
 namespace analytics {
-
-auto buildNettingSetReport() {
-    auto report = QuantLib::ext::make_shared<InMemoryReport>();
-    report->addColumn("Scenario", string());
-    report->addColumn("NettingSet", string());
-
-    report->addColumn("BaseCVA", double(), 6);
-    report->addColumn("CVA", double(), 6);
-    report->addColumn("StressCVA", double(), 6);
-
-    report->addColumn("BaseDVA", double(), 6);
-    report->addColumn("DVA", double(), 6);
-    report->addColumn("StressDVA", double(), 6);
-    return report;
-}
-
-void addResultsToNettingSetReport(const std::string& label,
-                                  QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report,
-                                  const std::map<std::string, XvaResult>& stressResults,
-                                  const std::map<std::string, XvaResult>& baseResults) {
-
-    for (const auto& [nid, r] : stressResults) {
-
-        if (auto baseIt = baseResults.find(nid); baseIt != baseResults.end()) {
-            report->next();
-            report->add(label);
-            report->add(nid);
-            report->add(r.cva);
-            report->add(baseIt->second.cva);
-            report->add(r.cva - baseIt->second.cva);
-            report->add(r.dva);
-            report->add(baseIt->second.dva);
-            report->add(r.dva - baseIt->second.dva);
-        }
-    }
-}
 
 QuantLib::ext::shared_ptr<ore::data::InMemoryReport>
 extendReport(const std::string& label, const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report) {
@@ -156,6 +121,22 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
 
     analytic()->buildMarket(loader);
 
+
+    QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = inputs_->xvaStressScenarioData();
+    if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
+        try {
+            ParStressTestConverter converter(
+                inputs_->asof(), analytic()->configurations().todaysMarketParams,
+                analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
+                analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
+            scenarioData = converter.convertStressScenarioData(scenarioData);
+            analytic()->stressTests()[label()]["stress_ZeroStressData"] = scenarioData;
+        } catch (const std::exception& e) {
+            scenarioData = inputs_->xvaStressScenarioData();
+            StructuredAnalyticsErrorMessage(label(), "ParConversionFailed", e.what()).log();
+        }
+    }
+
     LOG("XVA Stress: Build SimMarket and StressTestScenarioGenerator")
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), inputs_->xvaStressSimMarketParams(), marketConfig,
@@ -187,7 +168,6 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
                                           const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
 
     std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> xvaReports;
-    std::map<std::string, std::map<std::string, XvaResult>> nettingSetXvaResults;
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         const std::string& label = scenario != nullptr ? scenario->label() : std::string();
@@ -197,7 +177,6 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
             auto newAnalytic = ext::make_shared<XvaAnalytic>(inputs_, (label == "BASE" ? nullptr : scenario));
             CONSOLE("XVA_STRESS: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
-            nettingSetXvaResults[label] = newAnalytic->nettingSetResults();
             // Collect exposure and xva reports
             for (auto& [name, rpt] : newAnalytic->reports()["XVA"]) {
                 // add scenario column to report and copy it, concat it later
@@ -214,7 +193,6 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
                 .log();
         }
     }
-    writeStressTestReport(nettingSetXvaResults);
     concatReports(xvaReports);
 }
 
@@ -235,24 +213,10 @@ void XvaStressAnalyticImpl::concatReports(
     }
 }
 
-void XvaStressAnalyticImpl::writeStressTestReport(
-    const std::map<std::string, std::map<std::string, XvaResult>>& xvaResults) {
-    auto it = xvaResults.find("BASE");
-    if (it != xvaResults.end()) {
-        auto nettingSetReport = buildNettingSetReport();
-        for (const auto& [label, results] : xvaResults) {
-            addResultsToNettingSetReport(label, nettingSetReport, results, it->second);
-        }
-        nettingSetReport->end();
-        analytic()->reports()["XVA_STRESS"]["xva_stress"] = nettingSetReport;
-    } else {
-        StructuredAnalyticsWarningMessage("XvaStressTest", "Internal Error", "Missing base scenario").log();
-    }
-}
-
 void XvaStressAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->xvaStressSimMarketParams();
+    analytic()->configurations().sensiScenarioData = inputs_->xvaStressSensitivityScenarioData();
 }
 
 XvaStressAnalytic::XvaStressAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
