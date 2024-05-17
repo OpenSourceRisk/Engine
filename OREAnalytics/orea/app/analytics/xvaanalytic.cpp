@@ -131,13 +131,23 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
             *inputs_->iborFallbackConfig(),
             false, offsetScenario_);
 
-    simMarketCalibration_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-        analytic()->market(), analytic()->configurations().simMarketParams,
-        QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
-        *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), true, true, false,
-        *inputs_->iborFallbackConfig(), false, offsetScenario_);
+    if(offsetScenario_ == nullptr){
+        simMarketCalibration_ = simMarket_;
+        offsetSimMarket_ = simMarket_;
+    } else{
+        // set useSpreadedTermstructure to true, yield better results in calibration of the CAM
+        simMarketCalibration_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
+            analytic()->market(), analytic()->configurations().simMarketParams,
+            QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
+            *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), true, true, false,
+            *inputs_->iborFallbackConfig(), false, offsetScenario_);
 
-    if (offsetScenario_ != nullptr) {
+        // Create a third market used for AMC and Postprocessor, holds a larger simmarket, e.g. default curves
+        offsetSimMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
+            analytic()->market(), offsetSimMarketParams_, QuantLib::ext::make_shared<FixingManager>(inputs_->asof()),
+            configuration, *inputs_->curveConfigs().get(), *analytic()->configurations().todaysMarketParams,
+            inputs_->continueOnError(), true, true, false, *inputs_->iborFallbackConfig(), false, offsetScenario_);
+    
         TLOG("XvaAnalytic: Offset Scenario used in building SimMarket");
         TLOG("XvaAnalytic: Offset scenario is absolute = " << offsetScenario_->isAbsolute());
         TLOG("RfKey,OffsetScenarioValue");
@@ -145,6 +155,7 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
             TLOG(key << " : " << offsetScenario_->get(key));
         }
     }
+    
     TLOG("XvaAnalytic:Finished building Scenario SimMarket");
     TLOG("RfKey,BaseScenarioValue,BaseScenarioAbsValue");
     for (const auto& key : simMarket_->baseScenario()->keys()) {
@@ -425,7 +436,7 @@ XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::Cros
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
     ext::shared_ptr<ore::data::Market> market =
-        offsetScenario_ == nullptr ? analytic()->market() : simMarketCalibration_;
+        offsetScenario_ == nullptr ? analytic()->market() : offsetSimMarket_;
     auto factory = QuantLib::ext::make_shared<EngineFactory>(
         edCopy, market, configurations, inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
         EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, grid), true);
@@ -491,7 +502,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
     if (inputs_->nThreads() == 1) {
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
-        ext::shared_ptr<ore::data::Market> market = offsetScenario_ == nullptr ? analytic()->market() : simMarketCalibration_;
+        ext::shared_ptr<ore::data::Market> market = offsetScenario_ == nullptr ? analytic()->market() : offsetSimMarket_;
+
         AMCValuationEngine amcEngine(model_, inputs_->scenarioGeneratorData(), market,
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
@@ -511,18 +523,21 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
                 return QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples,
                                                                                         cubeDepth_, 0.0f);
         };
-        AMCValuationEngine amcEngine(inputs_->nThreads(), inputs_->asof(), samples_, analytic()->loader(),
-                                     inputs_->scenarioGeneratorData(),
-                                     inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
-                                     inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
-                                     inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates(),
-                                     inputs_->crossAssetModelData(), inputs_->amcPricingEngine(),
-                                     inputs_->curveConfigs().get(), analytic()->configurations().todaysMarketParams,
-                                     inputs_->marketConfig("lgmcalibration"), inputs_->marketConfig("fxcalibration"),
-                                     inputs_->marketConfig("eqcalibration"), inputs_->marketConfig("infcalibration"),
-                                     inputs_->marketConfig("crcalibration"), inputs_->marketConfig("simulation"),
-                                     inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory, 
-                                     offsetScenario_, analytic()->configurations().simMarketParams);
+
+        auto simMarketParams =
+            offsetScenario_ == nullptr ? analytic()->configurations().simMarketParams : offsetSimMarketParams_;
+
+        AMCValuationEngine amcEngine(
+            inputs_->nThreads(), inputs_->asof(), samples_, analytic()->loader(), inputs_->scenarioGeneratorData(),
+            inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
+            inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
+            inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates(),
+            inputs_->crossAssetModelData(), inputs_->amcPricingEngine(), inputs_->curveConfigs().get(),
+            analytic()->configurations().todaysMarketParams, inputs_->marketConfig("lgmcalibration"),
+            inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
+            inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
+            inputs_->marketConfig("simulation"), inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true,
+            cubeFactory, offsetScenario_, simMarketParams);
 
         amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
@@ -619,9 +634,11 @@ void XvaAnalyticImpl::runPostProcessor() {
     string flipViewLendingCurvePostfix = inputs_->flipViewLendingCurvePostfix();
 
     LOG("baseCurrency " << baseCurrency);
-    
+
+    auto market = offsetScenario_ == nullptr ? analytic()->market() : offsetSimMarket_;
+
     postProcess_ = QuantLib::ext::make_shared<PostProcess>(
-        analytic()->portfolio(), netting, balances, analytic()->market(), marketConfiguration, cube_, *scenarioData_, analytics,
+        analytic()->portfolio(), netting, balances, market, marketConfiguration, cube_, *scenarioData_, analytics,
         baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid,
         cvaSensiShiftSize, kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor,

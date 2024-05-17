@@ -20,8 +20,8 @@
 
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/simplescenario.hpp>
+#include <ored/utilities/log.hpp>
 #include <set>
-
 namespace ore {
 namespace analytics {
 
@@ -235,8 +235,14 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
 
     std::set<std::pair<RiskFactorKey::KeyType, std::string>> keys;
     for (auto const& k : scenario->keys()) {
-        keys.insert(std::make_pair(k.keytype, k.name));
+        if(newCoordinates.count({k.keytype, k.name})==1){
+            keys.insert(std::make_pair(k.keytype, k.name));
+        } else{
+            DLOG("Recast skip " << k.keytype << " " << k.name);
+        }
     }
+
+
 
     for (auto const& k : keys) {
         auto c0 = oldCoordinates.find(k);
@@ -251,7 +257,7 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
                                                                << c0->second.size() << ") and new ("
                                                                << c1->second.size() << ") coordinates for " << k.first
                                                                << "/" << k.second << " do not match.");
-        if (c0->second.size() == 0) {
+        if (c1->second.size() == 0) {
 
             // nothing to interpolate, just copy the single value associated to a rf key
 
@@ -268,8 +274,7 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
             int workingIndex;
             do {
                 workingIndex = indices.size() - 1;
-                indices[workingIndex]++;
-                while (workingIndex >= 0 && indices[workingIndex] == c0->second[workingIndex].size()) {
+                while (workingIndex >= 0 && indices[workingIndex] == c1->second[workingIndex].size()) {
                     --workingIndex;
                     if (workingIndex >= 0)
                         indices[workingIndex] = 0;
@@ -278,10 +283,10 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
                     RiskFactorKey key(k.first, k.second, newKeyIndex++);
                     result->add(key, interpolatedValue(c0->second, c1->second, indices, k, scenario));
                 }
+                indices[workingIndex]++;
             } while (workingIndex >= 0);
         }
     }
-
     return result;
 }
 

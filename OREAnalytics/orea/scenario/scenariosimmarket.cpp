@@ -2848,10 +2848,10 @@ ScenarioSimMarket::ScenarioSimMarket(
     }
 
     if (offsetScenario_ != nullptr && offsetScenario_->isAbsolute() && !useSpreadedTermStructures_) {
-        recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
+        auto recastedScenario = recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
         for (auto& [key, quote] : simData_) {
-            if (offsetScenario_->has(key)) {
-                quote->setValue(offsetScenario_->get(key));
+            if (recastedScenario->has(key)) {
+                quote->setValue(recastedScenario->get(key));
             } else {
                 QL_FAIL("ScenarioSimMarket: Offset Scenario doesnt contain key "
                         << key
@@ -2859,12 +2859,12 @@ ScenarioSimMarket::ScenarioSimMarket(
             }
         }
     } else if (offsetScenario_ != nullptr && offsetScenario_->isAbsolute() && useSpreadedTermStructures_) {
-        recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
+        auto recastedScenario = recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
         for (auto& [key, data] : simData_) {
-            if (offsetScenario_->has(key)) {
-                auto shift = getDifferenceScenario(key.keytype, absoluteSimData_[key], offsetScenario_->get(key));
+            if (recastedScenario->has(key)) {
+                auto shift = getDifferenceScenario(key.keytype, absoluteSimData_[key], recastedScenario->get(key));
                 data->setValue(shift);
-                absoluteSimData_[key] = offsetScenario_->get(key);
+                absoluteSimData_[key] = recastedScenario->get(key);
             } else {
                 QL_FAIL("ScenarioSimMarket: Offset Scenario doesnt contain key "
                         << key
@@ -2872,10 +2872,10 @@ ScenarioSimMarket::ScenarioSimMarket(
             }
         }
     } else if (offsetScenario_ != nullptr && !offsetScenario_->isAbsolute() && !useSpreadedTermStructures_) {
-        recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
+        auto recastedScenario = recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
         for (auto& [key, quote] : simData_) {
-            if (offsetScenario_->has(key)) {
-                quote->setValue(addDifferenceToScenario(key.keytype, quote->value(), offsetScenario_->get(key)));
+            if (recastedScenario->has(key)) {
+                quote->setValue(addDifferenceToScenario(key.keytype, quote->value(), recastedScenario->get(key)));
             } else {
                 QL_FAIL("ScenarioSimMarket: Offset Scenario doesnt contain key "
                         << key
@@ -2883,12 +2883,12 @@ ScenarioSimMarket::ScenarioSimMarket(
             }
         }
     } else if (offsetScenario_ != nullptr && !offsetScenario_->isAbsolute() && useSpreadedTermStructures_) {
-        recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
+        auto recastedScenario = recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
         for (auto& [key, quote] : simData_) {
-            if (offsetScenario_->has(key)) {
-                quote->setValue(offsetScenario_->get(key));
+            if (recastedScenario->has(key)) {
+                quote->setValue(recastedScenario->get(key));
                 absoluteSimData_[key] =
-                    addDifferenceToScenario(key.keytype, absoluteSimData_[key], offsetScenario_->get(key));
+                    addDifferenceToScenario(key.keytype, absoluteSimData_[key], recastedScenario->get(key));
             } else {
                 QL_FAIL("ScenarioSimMarket: Offset Scenario doesnt contain key "
                         << key
