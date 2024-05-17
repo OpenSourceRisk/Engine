@@ -119,10 +119,12 @@ private:
     void addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false, bool sortFxVolQualifer =true);
     void addSimmParameterRecord(const CrifRecord& record);
     void updateAmountExistingRecord(std::set<CrifRecord>::iterator& it, const CrifRecord& record);
+    void updateAmountExistingRecord(std::map<CrifRecord::SimmAmountCcyKey, const CrifRecord*>::iterator& it, const CrifRecord& record);
 
 
     CrifType type_ = CrifType::Empty;
     std::set<CrifRecord> records_;
+    std::map<CrifRecord::SimmAmountCcyKey, const CrifRecord*> diffAmountCurrenciesIndex_;
 
     //SIMM members
     //! Set of portfolio IDs that have been loaded

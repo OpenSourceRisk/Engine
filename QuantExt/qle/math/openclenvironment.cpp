@@ -665,7 +665,8 @@ void OpenClContext::updateVariatesPool() {
 
         // clang-format off
         // ported from from QuantLib::InverseCumulativeNormal
-        std::string sourceInvCumN = fpTypeStr + " ore_invCumN(const uint x0) {\n"
+        std::string sourceInvCumN = fpTypeStr + " ore_invCumN(const uint x0);\n" +
+            fpTypeStr + " ore_invCumN(const uint x0) {\n"
             "    const " + fpTypeStr + " a1_ = -3.969683028665376e+01" + fpSuffix + ";\n"
             "    const " + fpTypeStr + " a2_ = 2.209460984245205e+02" + fpSuffix + ";\n"
             "    const " + fpTypeStr + " a3_ = -2.759285104469687e+02" + fpSuffix + ";\n"
@@ -1136,6 +1137,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
         // clang-format off
         const std::string includeSource =
+            "bool ore_closeEnough(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n"
             "bool ore_closeEnough(const " + fpTypeStr + " x, const " + fpTypeStr + " y) {\n"
             "    const " + fpTypeStr + " tol = 42.0" + fpSuffix + " * " + fpEpsStr + ";\n"
             "    " + fpTypeStr + " diff = fabs(x - y);\n"
@@ -1144,10 +1146,13 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             "    return diff <= tol * fabs(x) || diff <= tol * fabs(y);\n"
             "}\n"
             "\n" +
+            fpTypeStr + " ore_indicatorEq(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n" +
             fpTypeStr + " ore_indicatorEq(const " + fpTypeStr + " x, const " + fpTypeStr + " y) "
                                                 "{ return ore_closeEnough(x, y) ? 1.0" + fpSuffix + " : 0.0" + fpSuffix +"; }\n\n" +
+            fpTypeStr + " ore_indicatorGt(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n" +
             fpTypeStr + " ore_indicatorGt(const " + fpTypeStr + " x, const " + fpTypeStr + " y) " +
                                                 "{ return x > y && !ore_closeEnough(x, y); }\n\n" +
+            fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n";
             fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y) { return x > y || ore_closeEnough(x, y); }\n\n";
         // clang-format on
 
