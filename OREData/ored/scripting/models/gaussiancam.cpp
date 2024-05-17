@@ -197,20 +197,29 @@ void GaussianCam::performCalculations() const {
     }
 
     indexPositionInProcess_.clear();
+    eqIndexInCam_.resize(indices_.size());
+    comIndexInCam_.resize(indices_.size());
+    std::fill(eqIndexInCam_.begin(), eqIndexInCam_.end(), Null<Size>());
+    std::fill(comIndexInCam_.begin(), comIndexInCam_.end(), Null<Size>());
     for (Size i = 0; i < indices_.size(); ++i) {
         if (indices_[i].isFx()) {
             // FX
             Size ccyIdx = cam_->ccyIndex(parseCurrency(indexCurrencies_[i]));
             QL_REQUIRE(ccyIdx > 0, "fx index '" << indices_[i] << "' has unexpected for ccy = base ccy");
             indexPositionInProcess_.push_back(cam_->pIdx(CrossAssetModel::AssetType::FX, ccyIdx - 1));
-            eqIndexInCam_.push_back(Null<Size>());
         } else if (indices_[i].isEq()) {
             // EQ
             Size eqIdx = cam_->eqIndex(indices_[i].eq()->name());
             indexPositionInProcess_.push_back(cam_->pIdx(CrossAssetModel::AssetType::EQ, eqIdx));
-            eqIndexInCam_.push_back(eqIdx);
+            eqIndexInCam_[i] = eqIdx;
+        } else if(indices_[i].isComm()) {
+            // COM
+            Size comIdx = cam_->comIndex(indices_[i].commName());
+            indexPositionInProcess_.push_back(cam_->pIdx(CrossAssetModel::AssetType::COM, comIdx));
+            comIndexInCam_[i] = comIdx;
         } else {
-            QL_FAIL("index '" << indices_[i].name() << "' expected to be FX or EQ");
+            QL_FAIL("GuassianCam::performCalculations(): index '" << indices_[i].name()
+                                                                  << "' expected to be FX, EQ, COMM");
         }
     }
 
@@ -233,7 +242,7 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
 
     // set reference date values, if there are no future simulation dates, we are done
 
-    // FX and EQ indcies
+    // FX, EQ, COMM indcies
     for (Size k = 0; k < indices_.size(); ++k) {
         paths[referenceDate_][k].setAll(process->initialValues().at(indexPositionInProcess_[k]));
     }
@@ -351,7 +360,7 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
             }
         }
 
-        // FX and EQ indcies
+        // FX, EQ, COMM indices
         std::vector<std::vector<RandomVariable*>> rvs(
             indices_.size(), std::vector<RandomVariable*>(effectiveSimulationDates_.size() - 1));
         auto date = effectiveSimulationDates_.begin();
@@ -417,8 +426,17 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
 
 RandomVariable GaussianCam::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
     auto res = underlyingPaths_.at(d).at(indexNo);
-    // compute forwarding factor
-    if (fwd != Null<Date>()) {
+    if (comIndexInCam_[indexNo] != Null<Size>()) {
+        // handle com (TODO: performace optimization via vectorized version of com model)
+        RandomVariable tmp(res.size());
+        for (Size i = 0; i < tmp.size(); ++i) {
+            tmp.set(i, cam_->comModel(comIndexInCam_[indexNo])
+                           ->forwardPrice(timeFromReference(d), timeFromReference(fwd != Null<Date>() ? fwd : d),
+                                          Array(1, std::log(res[i]))));
+        }
+        return tmp;
+    } else if (fwd != Null<Date>()) {
+        // handle fx, eq -> incorporate forwarding factor if applicable
         auto ccy = std::find(currencies_.begin(), currencies_.end(), indexCurrencies_[indexNo]);
         QL_REQUIRE(ccy != currencies_.end(), "GaussianCam::getIndexValue(): can not get currency for index #"
                                                  << indexNo << "(" << indices_.at(indexNo) << ")");
@@ -430,9 +448,11 @@ RandomVariable GaussianCam::getIndexValue(const Size indexNo, const Date& d, con
             res *= RandomVariable(size(), div->discount(fwd) / div->discount(d)) /
                    getDiscount(std::distance(currencies_.begin(), ccy), d, fwd,
                                cam_->eqbs(eqIndexInCam_[indexNo])->equityIrCurveToday());
+        } else if (comIndexInCam_[indexNo] != Null<Size>()) {
+
         } else {
-            QL_FAIL("GaussianGam::getIndexValue(): did not recognise  index #" << indexNo << "(" << indices_.at(indexNo)
-                                                                               << ")");
+            QL_FAIL("GaussianGam::getIndexValue(): did not recognise  index #" << indexNo << "("
+                                                                               << indices_.at(indexNo));
         }
     }
     return res;
