@@ -25,6 +25,7 @@
 #pragma warning(disable : 4503)
 #endif
 
+#include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
 #include <orea/app/marketdatainmemoryloader.hpp>
 #include <orea/app/oreapp.hpp>
@@ -39,6 +40,7 @@
 #include <ored/portfolio/collateralbalance.hpp>
 
 #include <qle/version.hpp>
+
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
@@ -157,7 +159,7 @@ boost::shared_ptr<AggregationScenarioData> OREApp::getMarketCube(std::string cub
 }
 
 std::vector<std::string> OREApp::getErrors() {
-    return structuredLogger_->messages();
+    return errorMessages_;
 }
 
 Real OREApp::getRunTime() {
@@ -287,60 +289,57 @@ void OREApp::analytics() {
     LOG("ORE analytics done");
 }
 
-OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console, 
-               const boost::filesystem::path& logRootPath)
-    : params_(params), inputs_(nullptr) {
 
-    if (console) {
+void OREApp::initFromParams() {
+    if (console_) {
         ConsoleLog::instance().switchOn();
     }
 
-    string outputPath = params_->get("setup", "outputPath");
-    string logFile = outputPath + "/" + params_->get("setup", "logFile");
-    Size logMask = 15;
+    outputPath_ = params_->get("setup", "outputPath");
+    logFile_ = outputPath_ + "/" + params_->get("setup", "logFile");
+    logMask_ = 15;
     // Get log mask if available
     if (params_->has("setup", "logMask")) {
-        logMask = static_cast<Size>(parseInteger(params_->get("setup", "logMask")));
+        logMask_ = static_cast<Size>(parseInteger(params_->get("setup", "logMask")));
     }
 
-    string progressLogFile, structuredLogFile;
-    Size progressLogRotationSize = 0;
-    bool progressLogToConsole = false;
-    Size structuredLogRotationSize = 0;
+    progressLogRotationSize_ = 0;
+    progressLogToConsole_ = false;
+    structuredLogRotationSize_ = 0;
     
     if (params_->hasGroup("logging")) {
-        string logFileOverride = params_->get("logging", "logFile", false);
-        if (!logFileOverride.empty()) {
-            logFile = outputPath + '/' + logFileOverride;
-        }
-        string logMaskOverride = params_->get("logging", "logMask", false);
-        if (!logMaskOverride.empty()) {
-            logMask = static_cast<Size>(parseInteger(logMaskOverride));
-        }
-        progressLogFile = params_->get("logging", "progressLogFile", false);
-        if (!progressLogFile.empty()) {
-            progressLogFile = outputPath + '/' + progressLogFile;
-        }
-        string tmp = params_->get("logging", "progressLogRotationSize", false);
+        string tmp = params_->get("logging", "logFile", false);
         if (!tmp.empty()) {
-            progressLogRotationSize = static_cast<Size>(parseInteger(tmp));
+            logFile_ = outputPath_ + '/' + tmp;
+        }
+        tmp = params_->get("logging", "logMask", false);
+        if (!tmp.empty()) {
+            logMask_ = static_cast<Size>(parseInteger(tmp));
+        }
+        tmp = params_->get("logging", "progressLogFile", false);
+        if (!tmp.empty()) {
+            progressLogFile_ = outputPath_ + '/' + tmp;
+        }
+        tmp = params_->get("logging", "progressLogRotationSize", false);
+        if (!tmp.empty()) {
+            progressLogRotationSize_ = static_cast<Size>(parseInteger(tmp));
         }
         tmp = params_->get("logging", "progressLogToConsole", false);
         if (!tmp.empty()) {
-            progressLogToConsole = ore::data::parseBool(tmp);
+            progressLogToConsole_ = ore::data::parseBool(tmp);
         }
-        structuredLogFile = params_->get("logging", "structuredLogFile", false);
-        if (!structuredLogFile.empty()) {
-            structuredLogFile = outputPath + '/' + structuredLogFile;
+        tmp = params_->get("logging", "structuredLogFile", false);
+        if (!tmp.empty()) {
+            structuredLogFile_ = outputPath_ + '/' + tmp;
         }
         tmp = params_->get("logging", "structuredLogRotationSize", false);
         if (!tmp.empty()) {
-            structuredLogRotationSize = static_cast<Size>(parseInteger(tmp));
+            structuredLogRotationSize_ = static_cast<Size>(parseInteger(tmp));
         }
     }
     
-    setupLog(outputPath, logFile, logMask, logRootPath, progressLogFile, progressLogRotationSize, progressLogToConsole,
-             structuredLogFile, structuredLogRotationSize);
+    setupLog(outputPath_, logFile_, logMask_, logRootPath_, progressLogFile_, progressLogRotationSize_, progressLogToConsole_,
+             structuredLogFile_, structuredLogRotationSize_);
 
     // Log the input parameters
     params_->log();
@@ -353,20 +352,18 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, bool console,
     CONSOLE("OK");
         
     Settings::instance().evaluationDate() = inputs_->asof();
-}
-
-OREApp::OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel,
-               bool console, const boost::filesystem::path& logRootPath)
-    : params_(nullptr), inputs_(inputs) {
-
+} 
+  
+void OREApp::initFromInputs() {
     // Initialise Singletons
     Settings::instance().evaluationDate() = inputs_->asof();
     InstrumentConventions::instance().setConventions(inputs_->conventions());
-    if (console) {
+    if (console_) {
         ConsoleLog::instance().switchOn();
     }
 
-    setupLog(inputs_->resultsPath().string(), logFile, logLevel, logRootPath);
+    outputPath_ = inputs_->resultsPath().string();
+    setupLog(outputPath_, logFile_, logMask_, logRootPath_);
 }
 
 OREApp::~OREApp() {
@@ -376,6 +373,24 @@ OREApp::~OREApp() {
 
 void OREApp::run() {
 
+    // only one thread at a time should call run
+    static std::mutex _s_mutex;
+    std::lock_guard<std::mutex> lock(_s_mutex);
+
+    // clean up after finishing the run
+    CleanUpThreadLocalSingletons cleanupThreadLocalSingletons;
+    CleanUpThreadGlobalSingletons cleanupThreadGloablSingletons;
+    CleanUpLogSingleton cleanupLogSingleton(true, true);
+
+    if (inputs_ == nullptr)
+        initFromParams();
+    else if (params_ == nullptr)
+        initFromInputs();
+    else {
+        ALOG("both inputs are empty");
+        return;      
+    }
+    
     runTimer_.start();
     
     try {
@@ -389,6 +404,9 @@ void OREApp::run() {
 
     runTimer_.stop();
 
+    // cache the error messages because we reset the loggers 
+    errorMessages_ = structuredLogger_->messages();
+
     CONSOLE("run time: " << runTimer_.format(default_places, "%w") << " sec");
     CONSOLE("ORE done.");
     LOG("ORE done.");
@@ -396,6 +414,25 @@ void OREApp::run() {
 
 void OREApp::run(const std::vector<std::string>& marketData,
                  const std::vector<std::string>& fixingData) {
+
+    // only one thread at a time should call run
+    static std::mutex _s_mutex;
+    std::lock_guard<std::mutex> lock(_s_mutex);
+
+    // clean up after finishing the run
+    CleanUpThreadLocalSingletons cleanupThreadLocalSingletons;
+    CleanUpThreadGlobalSingletons cleanupThreadGloablSingletons;
+    CleanUpLogSingleton cleanupLogSingleton(true, true);
+
+    if (inputs_ == nullptr)
+        initFromParams();
+    else if (params_ == nullptr)
+        initFromInputs();
+    else {
+        ALOG("both inputs are empty");
+        return;      
+    }
+
     runTimer_.start();
 
     try {
@@ -968,12 +1005,14 @@ void OREAppInputParameters::loadParameters() {
             setOutputHistoricalScenarios(parseBool(tmp));
     }
 
-    /****************
-     * SIMM
-     ****************/
+    /**********************
+     * SIMM and IM Schedule
+     **********************/
 
+    LOG("SIMM");
     tmp = params_->get("simm", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
+    bool doSimm = !tmp.empty() ? parseBool(tmp) : false;
+    if (doSimm) {
         insertAnalytic("SIMM");
 
         tmp = params_->get("simm", "version", false);
@@ -1032,6 +1071,77 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simm", "writeIntermediateReports", false);
         if (tmp != "")
             setWriteSimmIntermediateReports(parseBool(tmp));
+    }
+
+    LOG("IM SCHEDULE");
+    tmp = params_->get("imschedule", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("IM_SCHEDULE");
+
+        tmp = params_->get("imschedule", "version", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "version", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "version for imschedule and simm should match");
+            setSimmVersion(tmp);
+        } else if (simmVersion() == "") {
+            LOG("set SIMM version for IM Schedule to 2.6, required to load CRIF")
+            setSimmVersion("2.6");
+        }
+
+        tmp = params_->get("imschedule", "crif", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "crif", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "crif files for imschedule and simm should match");
+            string file = (inputPath / tmp).generic_string();
+            setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
+        }
+        
+        tmp = params_->get("imschedule", "calculationCurrency", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "calculationCurrency", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "calculation currency for for imschedule and simm should match");
+            setSimmCalculationCurrencyCall(tmp);
+            setSimmCalculationCurrencyPost(tmp);
+        } else {
+            QL_REQUIRE(baseCurrency() != "", "either base currency or calculation currency is required");
+        }
+
+        tmp = params_->get("imschedule", "calculationCurrencyCall", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "calculationCurrencyCall", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "calculation currency for imschedule and simm should match");
+            setSimmCalculationCurrencyCall(tmp);
+        }
+
+        tmp = params_->get("imschedule", "calculationCurrencyPost", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "calculationCurrencyPost", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "calculation currency for imschedule and simm should match");
+            setSimmCalculationCurrencyPost(tmp);
+        }
+
+        tmp = params_->get("imschedule", "resultCurrency", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "resultCurrency", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "result currency for imschedule and simm should match");
+            setSimmResultCurrency(tmp);
+        }
+        else
+            setSimmResultCurrency(simmCalculationCurrencyCall());
+
+        tmp = params_->get("imschedule", "reportingCurrency", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "reportingCurrency", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "reporting currency for imschedule and simm should match");
+            setSimmReportingCurrency(tmp);
+        }
+
+        tmp = params_->get("imschedule", "enforceIMRegulations", false);
+        if (tmp != "") {
+            string tmpSimm = params_->get("simm", "enforceIMRegulations", false);
+            QL_REQUIRE(!doSimm || tmp == tmpSimm, "enforceIMRegulations for imschedule and simm should match");
+            setEnforceIMRegulations(parseBool(tmp));
+        }
     }
 
     /************
@@ -1570,6 +1680,10 @@ void OREAppInputParameters::loadParameters() {
             LOG("Lazy market build being overridden to \"false\" for MARKETDATA analytic.")
         setLazyMarketBuilding(false);
     }
+
+    LOG("analytics: " << analytics().size());
+    for (auto a: analytics())
+        LOG("analytic: " << a);
 
     LOG("buildInputParameters done");
 }

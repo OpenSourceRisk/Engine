@@ -159,7 +159,7 @@ Date & Author & Comment \\
 31 March 2023 & Acadia & updates for release 9\\
 16 June 2023 & Acadia & updates for release 10\\
 16 October 2023 & Acadia & updates for release 11\\
-15 January 2024 & Acadia & updates for release 12\\
+31 March 2024 & Acadia & updates for release 12\\
 \hline
 \end{supertabular}
 \end{center}
@@ -1243,7 +1243,7 @@ Example & Description \\
 \hline
 43 & Credit Portfolio Model \\
 \hline
-44 & ISDA SIMM Model \\
+44 & Initial Margin: ISDA SIMM and IM Schedule \\
 \hline
 45 & Collateralized Bond Obligation \\
 \hline
@@ -3241,12 +3241,14 @@ Bonds and CDS & Migration & Notional & Analytic \\
 The last demo case in this table can be activated by uncommenting the corresponding section at the end of the {\tt run.py} script.
  
 %--------------------------------------------------------------------
-\subsection{ISDA SIMM Model}% Example 44
+\subsection{Initial Margin: ISDA SIMM and IM Schedule}% Example 44
 \label{example:44}
 %--------------------------------------------------------------------
 
 This example demonstrates the calculation of initial margin using ISDA's Standard Initial Margin Model (SIMM) based on a provided 
-sensitivity file in ISDA's Common Risk Interchange Format (CRIF).
+sensitivity file in ISDA's Common Risk Interchange Format (CRIF). In addition, we show how to use the standard "IM Schdule" method to compute 
+initial margin.
+
 ORE covers all SIMM versions since inception to date, i.e.\ 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4 (=2.3.8), 2.5, 2.5A, 2.6 (=2.5.6).
 All versions have been tested against the respective ISDA SIMM model unit test suites and pass these tests.
 Any new SIMM versions will be added with each ORE release.
@@ -3274,7 +3276,7 @@ The SIMM calculation in this example is done for SIMM version 2.4 and 2.6, with 
 \end{itemize}
 
 \medskip
-There are four input files -- {\tt ore\_SIMM2.4\_1D.xml}, {\tt ore\_SIMM2.4\_10D.xml}, {\tt ore\_SIMM2.6\_1D.xml}, {\tt ore\_SIMM2.6\_10D.xml} -- with corresponding folders in the {\tt Output/} directory.
+There are four SIMM-related input files -- {\tt ore\_SIMM2.4\_1D.xml}, {\tt ore\_SIMM2.4\_10D.xml}, {\tt ore\_SIMM2.6\_1D.xml}, {\tt ore\_SIMM2.6\_10D.xml} -- with corresponding folders in the {\tt Output/} directory.
 The relevant inputs in the files are:
 
 \begin{itemize}
@@ -3292,6 +3294,34 @@ If the ORE Python module is installed, as shown in Example 42, then you can also
 
 \medskip
 \centerline{\tt python ore.py} 
+
+\subsubsection*{IM Schedule}
+
+As an additonal case in this example we demonstrate how to use the IM Schedule method to compute initial margin.
+The related input file is {\tt Input/ore\_schedule.xml}. It is also run when calling {\tt python run.py}, and results are written to folder 
+{\tt Output/IM\_SCHEDULE}.
+The basic input is provided in CRIF file format where ORE expects two lines per trade, one with RiskClass = PV and one with RiskClass = Notional, 
+so that the  amounts in these CRIF lines are interpeted as NPV respectively notional. 
+Further required columns are product class and end date, as shown in the example {\tt Input/crif\_schedule.csv}. Note that the product class has to be in
+\begin{itemize}
+  \item Rates
+  \item FX
+  \item Equity
+  \item Credit
+  \item Commodity
+\end{itemize}
+in contrast to SIMM where we use the combined RatesFX.
+
+To run the IM Schedule analytic, the following minimal addition to {\tt Input/ore\_schedule.xml} is required.
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Analytics>
+    <Analytic type="imschedule">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="crif">crif_schedule.csv</Parameter>
+      <Parameter name="calculationCurrency">USD</Parameter>
+    </Analytic>
+  </Analytics>
+\end{minted}
 
 %--------------------------------------------------------
 \subsection{Collateralized Bond Obligation}% Example 45
@@ -3904,6 +3934,7 @@ type can be (so far) in
 \item stress
 \item parametricVar
 \item simm
+\item imschedule
 \end{itemize}
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
@@ -4463,6 +4494,39 @@ Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 \end{itemize}
 
 The SIMM analytic requires minimal market data input and today's market configuration - FX rates for conversions calculation currency, USD and result currency.
+
+\medskip The {\tt imschedule} 'analytic' provides initial margin calculation using the standard "IM Schedule" method that is based on 
+trade NPV, notional, end date and product class. ORE expects the inputs in the form of a CRIF file.
+Listing \ref{lst:ore_simm} shows a configuration example.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+   <Analytic type="imschedule">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="crif">schedule_crif.csv</Parameter>
+      <Parameter name="calculationCurrency">USD</Parameter>
+    </Analytic>
+<Analytics>
+\end{minted}
+\caption{ORE analytic: IM Schedule}
+\label{lst:ore_schedule}
+\end{listing}
+
+The input CRIF file here has two lines per trade, for RiskClass = PV respectively RiskClass Notional. 
+Additonally required columns are product class and end date, see example 44. 
+The idea is that the inputs can be externally provided. Therefore the IM Schedule analytic does not require a portfolio.
+The alternative -- ORE uses a portfolio to compute NPV, imply product class and end date -- has not been implemented yet.
+
+Note that the IM Schedule product class has to be in 
+\begin{itemize}
+  \item Rates
+  \item FX
+  \item Equity
+  \item Credit
+  \item Commodity
+\end{itemize}
+in contrast to SIMM where we use the combined RatesFX product class.
 
 %--------------------------------------------------------
 \subsection{Market: {\tt todaysmarket.xml}}\label{sec:market}
@@ -6205,6 +6269,7 @@ If a new calendar is added in this way and the schema is being used to validate 
 \input{tradedata/capfloor}
 \input{tradedata/forwardrateagreement}
 \input{tradedata/swaption}
+\input{tradedata/callableswap}
 \input{tradedata/fxforward}
 \input{tradedata/fxswap}
 \input{tradedata/fxoption}
@@ -6268,6 +6333,25 @@ If a new calendar is added in this way and the schema is being used to validate 
 
 \input{tradedata/totalReturnSwap}
 
+\input{tradedata/eq_outperformance.tex}
+\input{tradedata/doubledigitaloption}
+\input{tradedata/europeanoptioncontingentonabarrier}
+\input{tradedata/autocallable_01}
+\input{tradedata/performanceoption_01}
+\input{tradedata/window_barrieroption}
+\input{tradedata/generic_barrieroption}
+\input{tradedata/bestentryoption}
+\input{tradedata/basketoption}
+\input{tradedata/worstofbasketswap}
+\input{tradedata/rainbow_option}
+\input{tradedata/var_and_vol_derivatives}
+\input{tradedata/accumulator}
+\input{tradedata/tarf}
+\input{tradedata/knockoutswap}
+
+\input{tradedata/flexiswap}
+\input{tradedata/balanceguaranteedswap}
+
 %\include{tradecomponents}
 \input{tradecomponents/tradecomponentsintro}
 \input{tradecomponents/optiondata}
@@ -6300,6 +6384,8 @@ If a new calendar is added in this way and the schema is being used to validate 
 \input{tradecomponents/rangebound}
 \input{tradecomponents/bondbasketdata.tex}
 \input{tradecomponents/cbotranches.tex}
+\input{tradecomponents/formulabasedlegdata}
+
 \include{allowablevalues}
 
 %========================================================

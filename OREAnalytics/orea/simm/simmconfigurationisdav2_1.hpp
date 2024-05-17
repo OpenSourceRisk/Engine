@@ -38,7 +38,7 @@ public:
                                 const std::string version = "2.1");
 
     //! Return the SIMM <em>Label2</em> value for the given interest rate index
-    std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
+    std::string label2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const override;
 
     //! Add SIMM <em>Label2</em> values under certain circumstances.
     void addLabels2(const CrifRecord::RiskType& rt, const std::string& label_2) override;

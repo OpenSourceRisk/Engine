@@ -41,10 +41,14 @@ class OREApp {
 public:
     //! Constructor that uses ORE parameters and input data from files
     OREApp(boost::shared_ptr<Parameters> params, bool console = false, 
-           const boost::filesystem::path& = boost::filesystem::path());
+           const boost::filesystem::path& logRootPath = boost::filesystem::path())
+      : params_(params), inputs_(nullptr), console_(console), logRootPath_(logRootPath) {}
+
     //! Constructor that assumes we have already assembled input parameters via API
     OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel = 31,
-           bool console = false, const boost::filesystem::path& = boost::filesystem::path());
+           bool console = false, const boost::filesystem::path& logRootPath = boost::filesystem::path())
+      : params_(nullptr), inputs_(inputs), logFile_(logFile), logMask_(logLevel), console_(console),
+	logRootPath_(logRootPath) {}
 
     //! Destructor
     virtual ~OREApp();
@@ -93,6 +97,9 @@ protected:
     //! remove logs
     void closeLog();
 
+    void initFromParams();
+    void initFromInputs();
+  
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
     boost::shared_ptr<InputParameters> inputs_;
@@ -101,6 +108,21 @@ protected:
     boost::shared_ptr<AnalyticsManager> analyticsManager_;
     boost::shared_ptr<StructuredLogger> structuredLogger_;
     boost::timer::cpu_timer runTimer_;
+
+    //! Logging
+    string logFile_;
+    Size logMask_;
+    bool console_;
+    string outputPath_;
+    boost::filesystem::path logRootPath_;
+    string progressLogFile_ = "";
+    QuantLib::Size progressLogRotationSize_ = 100 * 1024 * 1024;
+    bool progressLogToConsole_ = false;
+    string structuredLogFile_ = "";
+    QuantLib::Size structuredLogRotationSize_ = 100 * 1024 * 1024;
+
+    // Cached error messages of a run
+    std::vector<std::string> errorMessages_;
 };
 
 class OREAppInputParameters : virtual public InputParameters {
