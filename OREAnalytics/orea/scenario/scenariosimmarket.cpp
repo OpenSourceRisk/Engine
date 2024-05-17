@@ -2849,6 +2849,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
     if (offsetScenario_ != nullptr && offsetScenario_->isAbsolute() && !useSpreadedTermStructures_) {
         auto recastedScenario = recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
+        QL_REQUIRE(recastedScenario != nullptr, "ScenarioSimMarke: Offset Scenario couldn't applied");
         for (auto& [key, quote] : simData_) {
             if (recastedScenario->has(key)) {
                 quote->setValue(recastedScenario->get(key));
@@ -2860,6 +2861,7 @@ ScenarioSimMarket::ScenarioSimMarket(
         }
     } else if (offsetScenario_ != nullptr && offsetScenario_->isAbsolute() && useSpreadedTermStructures_) {
         auto recastedScenario = recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
+        QL_REQUIRE(recastedScenario != nullptr, "ScenarioSimMarke: Offset Scenario couldn't applied");
         for (auto& [key, data] : simData_) {
             if (recastedScenario->has(key)) {
                 auto shift = getDifferenceScenario(key.keytype, absoluteSimData_[key], recastedScenario->get(key));
@@ -2873,6 +2875,7 @@ ScenarioSimMarket::ScenarioSimMarket(
         }
     } else if (offsetScenario_ != nullptr && !offsetScenario_->isAbsolute() && !useSpreadedTermStructures_) {
         auto recastedScenario = recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
+        QL_REQUIRE(recastedScenario != nullptr, "ScenarioSimMarke: Offset Scenario couldn't applied");
         for (auto& [key, quote] : simData_) {
             if (recastedScenario->has(key)) {
                 quote->setValue(addDifferenceToScenario(key.keytype, quote->value(), recastedScenario->get(key)));
@@ -2884,6 +2887,7 @@ ScenarioSimMarket::ScenarioSimMarket(
         }
     } else if (offsetScenario_ != nullptr && !offsetScenario_->isAbsolute() && useSpreadedTermStructures_) {
         auto recastedScenario = recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
+        QL_REQUIRE(recastedScenario != nullptr, "ScenarioSimMarke: Offset Scenario couldn't applied");
         for (auto& [key, quote] : simData_) {
             if (recastedScenario->has(key)) {
                 quote->setValue(recastedScenario->get(key));
