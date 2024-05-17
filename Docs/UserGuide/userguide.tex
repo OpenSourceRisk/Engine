@@ -501,7 +501,7 @@ LANGUAGE BINDINGS \& PYTHON MODULE
 
 ORE SERVICE
 \begin{itemize}
-\item {\color{red}add a restful API to ORE, based on ORE-Python, see ore/Api}
+\item {\color{red}add a restful API to ORE, based on ORE-Python, see Example 0 (Examples/API)
 \end{itemize}
 
 \bigskip
@@ -526,6 +526,7 @@ GPU
 \bigskip
 NEW \& EXTENDED EXAMPLES
 \begin{itemize}
+\item  0: ORE Web Service
 \item  4: American Swaption added
 \item  5: Callable Swap instrument added  
 \item 44: IM Schedule added
@@ -906,7 +907,33 @@ files in the project directory. The python script (in {\tt Tools/update\_cmake\_
 automatically. 
 
 \end{itemize}
- 
+
+\subsubsection{Supported Compiler and Boost Versions}
+\label{sec:compiler_boost_versions}
+
+The following table \ref{tab:compiler_boost_versions} reflects the compiler / boost version combinations that
+the users/developers at Acadia/LSEG can confirm as working combinations with the latest ORE v12.
+
+\begin{table}[hbt]
+  \begin{tabular}{|l|c|c|}
+    \hline
+    Compiler & Boost & ORE \\
+    \hline
+    AppleClang version 13.0.0 & 1.82.0 & 12\\
+    AppleClang version 13.1.6 & 1.84.0 & 12\\
+    AppleClang version 14.0.0 & 1.82.0 & 12\\
+    AppleClang version 15.0.0 & 1.83.0 & 12\\
+    gcc 10.2.1 & 1.74.0 & 12 \\
+    gcc 11.4.0 & 1.74.0 & 12 \\
+    VS2019 & 1.72.0 & 12 \\
+    VS2022 & 1.78.0 & 12 \\
+    VS2022 & 1.83.0 & 12 \\
+    \hline
+  \end{tabular}
+  \caption{Supported compiler and boost versions for ORE v12.}
+  \label{tab:compiler_boost_versions}
+\end{table}
+
 \subsubsection*{ZLIB support}
 
 To enable zlib support configure CMake with the flag {\tt -DORE\_USE\_ZLIB=ON}. 
@@ -963,289 +990,6 @@ for installing and building Python wrappers and wheels.
 \medskip
 Typical usage of the Python wrapper is shown in ORE's {\tt Example\_42} and in ORE SWIG's {\tt OREAnalytics/Python/Examples} directory.
 
-%
-%\medskip
-%To build the wrappers on Windows, Linux, mac OS
-%\begin{enumerate}
-%\item build ORE and QuantLib first, as shown in the previous section. It is strongly advised to switch the codebase to a release tag here (e.g. 1.8.7.0), as the versions of the master branch are not always aligned!
-%\item check out the ORE-SWIG repository into a project directory {\tt oreswig}, change into that directory (the same advice as above applies here as well, switch to the same release tag as ORE)
-%\item pull in the QuantLib-SWIG project by running \\
-%{\tt git submodule init} \\
-%{\tt git submodule update}
-%%\item Edit the top-level {\tt oreswig/CMakeLists.txt} and uncomment e.g. the line {\tt add\_subdirectory(OREAnalytics-SWIG/Python)} to build the OREAnalytics Python wrappers
-%\item Create a subdirectory {\tt build}, change into that directory and configure cmake and then build using Ninja as follows \\
-%\medskip
-%{\footnotesize
-%{\tt cmake -G Ninja $\backslash$} \\
-%\hspace{1cm} {\tt -D ORE=<ORE Root Directory> $\backslash$} \\
-%\hspace{1cm} {\tt -D BOOST\_ROOT=<Top level boost include directory> $\backslash$}\\
-%\hspace{1cm} {\tt -D BOOST\_LIBRARYDIR=<Location of the compiled boost libraries> $\backslash$}\\
-%\hspace{1cm} {\tt -D Python\_ROOT\_DIR=<Root directory of the python installation>$\backslash$} \\
-%\hspace{1cm} {\tt ..} \\
-%{\tt ninja} \\
-%}
-%\medskip
-%On Linux or mac OS one can also use {\tt make} instead of {\tt ninja}. 
-%In that case, omit the {\tt -G Ninja} part in the configuration. 
-%
-%\medskip
-%To build on Windows using CMake and an existing Visual Studio installation you can e.g. run
-%this from the top-level oreswig directory
-%
-%{\footnotesize
-%{\tt mkdir build $\backslash$} \\
-%{\tt cmake -G "Visual Studio 17 2022" $\backslash$}\\
-%\hspace{1cm} {\tt -A x64 $\backslash$}\\
-%\hspace{1cm} {\tt -D SWIG\_DIR=C:$\backslash$dev$\backslash$swigwin$\backslash$Lib $\backslash$}\\
-%\hspace{1cm} {\tt -D SWIG\_EXECUTABLE=C:$\backslash$dev$\backslash$swigwin$\backslash$swig.exe $\backslash$}\\
-%\hspace{1cm} {\tt -D ORE:PATHNAME=C:$\backslash$dev$\backslash$ORE$\backslash$master $\backslash$}\\
-%\hspace{1cm} {\tt -D BOOST\_ROOT=C:$\backslash$dev$\backslash$boost $\backslash$}\\
-%\hspace{1cm} {\tt -S OREAnalytics-SWIG/Python $\backslash$}\\
-%\hspace{1cm} {\tt -B build $\backslash$}\\
-%{\tt cmake -{}-build build -v}
-%}
-
-%\medskip
-%
-%This builds the OREAnalytics-Python bindings which include the wrapped parts of QuantLib, QuantExt, OREData and OREAnalytics.
-%
-%\begin{itemize}
-%\item Try a Python example: Update your PYTHONPATH environment variable to include directory {\tt oreswig/build/OREAnalytics-SWIG/Python} 
-%which contains both the new python module and the associated native library loaded by the python module;
-%change to the {\tt oreswig/OREAnalytics/Python/Examples} directory and run e.g.\\
-%
-%\medskip
-%\centerline{\tt python ore.py}  
-%
-%There is also an IPython example in the same directory. To try it, launch 
-%
-%\medskip
-%\centerline{\tt jupyter notebook}  
-%
-%wait for your browser to open, select {\tt ore.ipy} from the list of files and then run all cells.
-%
-%\item Try a Java example: Make sure that the line {\tt add\_subdirectory(OREAnalytics-SWIG/Java)} 
-%is uncommented in the top-level CMakeLists.txt file when building; change to directory 
-%{\tt ORE-SWIG/OREAnalytics-SWIG/Java/Examples} and run
-%
-%\medskip
-%{\tt java -Djava.library.path=../../../build/OREAnalytics-SWIG/Java $\backslash$} \\
-%\hspace{1cm} {\tt -jar ../../../build/OREAnalytics-SWIG/Java/ORERunner.jar $\backslash$}\\
-%\hspace{1cm} {\tt Input/ore.xml}
-%
-%\end{enumerate}
-%
-%\subsection{How to build ORE Python Wheels on Windows}\label{sec:win_wheel}
-%
-%This section is a stand-alone HOWTO for building ore and oreswig, including Python wrappers and wheels, at the DOS command line using cmake and VS 2022.  
-%
-%\subsubsection*{Prerequisites}
-% 
-%\begin{itemize}
-%\item python: The following tools need to be up to date: \\
-% {\tt python -m ensurepip } \\
-% {\tt pip install build }
-%\item boost: Download the binaries from the link below.  This release was tested against boost version 1.72.  It is important to download these precompiled binaries (rather than compiling yourself from source code) because the binaries include ZLIB support which this build requires. \\
-%\url{https://sourceforge.net/projects/boost/files/boost-binaries}
-%\item  swig: You need to either install the binaries, or install the source code and build yourself
-% \item ore and oreswig: You need to install the source code. Instructions for building with cmake are provided below.
-% \end{itemize}
-% 
-%\subsubsection*{Environment variables}
-% 
-%Set the following environment variables to the paths where the above items live on your machine, e.g:
-% 
-%{\tt set BOOST\_INC=C:{\bs}repos{\bs}boost{\bs}boost\_1\_81\_0} \\
-%{\tt set BOOST\_LIB=C:{\bs}repos{\bs}boost{\bs}boost\_1\_81\_0{\bs}lib{\bs}x64{\bs}lib} \\
-%{\tt set SWIG=C:{\bs}repos{\bs}swigwin-4.1.1} \\
-%{\tt set ORE=C:{\bs}repos{\bs}ore } \\
-%{\tt set ORESWIG=C:{\bs}repos{\bs}oreswig}
-% 
-%\subsubsection*{Build ORE}
-% 
-%Generate the project files:
-% 
-%\medskip
-%{\tt cd \%ORE\%} \\
-%{\tt mkdir build }\\
-%{\tt cd \%ORE\%{\bs}build} \\
-%{\tt cmake .. $\backslash$\\
-%\hspace{1cm} -DBoost\_NO\_WARN\_NEW\_VERSIONS=1 $\backslash$\\
-%\hspace{1cm} -Wno-dev -G "Visual Studio 17 2022" $\backslash$ \\
-%\hspace{1cm} -A x64 $\backslash$\\
-%\hspace{1cm} -DMSVC\_LINK\_DYNAMIC\_RUNTIME=OFF $\backslash$ \\
-%\hspace{1cm} -DBOOST\_ROOT=\$BOOST\_INC $\backslash$\\
-%\hspace{1cm} -DBOOST\_LIBRARYDIR=\$BOOST\_LIB $\backslash$ \\
-%\hspace{1cm} -DQL\_ENABLE\_SESSIONS=ON} 
-%
-%\medskip
-%This will create \%ORE\%{\bs}build{\bs}ORE.sln
-% 
-%\medskip
-%Build:
-% 
-%\medskip
-%{\tt cd \%ORE\%{\bs}build} \\
-%%{\tt "C:{\bs}Program Files{\bs}CMake{\bs}bin{\bs}cmake.exe" -{}-build . -{}-config Release}
-%{\tt cmake -{}-build . -{}-config Release}
-%
-%\medskip
-%This will create  \%ORE\%{\bs}build{\bs}OREAnalytics{\bs}orea{\bs}Release{\bs}OREAnalytics-x64-mt.lib
-% 
-%\subsubsection*{Build ORE-SWIG Wrapper and Wheel}
-% 
-%In contrast to the generic cmake-based SWIG build in section \ref{sec:oreswig}, we are now resorting to python's setup.py.
-% 
-%\medskip
-%{\tt cd \%ORESWIG\%{\bs}OREAnalytics-SWIG{\bs}Python} \\
-%{\tt set BOOST\_ROOT=\%BOOST\_INC\%} \\
-%% set BOOST_LIB is needed but already done above
-%% set ORE needed but already done above
-%{\tt set PATH=\%PATH\%;\%SWIG\%} \\
-%{\tt set ORE\_STATIC\_RUNTIME=1} \\
-%{\tt python setup.py wrap} \\
-%{\tt python setup.py build} \\
-%{\tt python setup.py test} \\
-%{\tt python -m build -{}-wheel} 
-% 
-%\medskip
-%This will create 
-%\begin{itemize}
-%\item the Python module and static library in folder {\tt <PATH>{\bs}build{\bs}lib.win-amd64-cpython-310} (the directory name depends on the machine and python version)
-%\item the wheel file (filename.whl) in folder {\tt <PATH>{\bs}dist}
-%\end{itemize}
-%where {\tt <PATH>} stands for {\tt \%ORESWIG\%{\bs}OREAnalytics-SWIG{\bs}Python}.
-%
-%\medskip
-%To use the wrapper directly: \\
-%\medskip
-%{\tt cd <PATH>{\bs}Examples} \\
-%{\tt set PYTHONPATH=<PATH>{\bs}build{\bs}lib.win-amd64-cpython-310} \\
-%{\tt python swap.py}
-%
-%\medskip
-%To use the wheel:
-% 
-%{\tt cd <PATH>{\bs}Examples} \\
-%{\tt python -m venv env1} \\
-%{\tt .{\bs}env1{\bs}Scripts{\bs}activate.bat} \\
-%{\tt pip install <PATH>{\bs}dist{\bs}filename.whl} \\
-%{\tt python swap.py} \\
-%{\tt deactivate} \\
-%{\tt rmdir /s /q env1} \\
-%
-%\subsection{How to build ORE Python Wheels on Linux and macOS}\label{sec:nix_wheel}
-%
-%This section is a stand-alone HOWTO for building and using a python wheel for OREAnalytics on Linux or macOS.
-%
-%\subsubsection*{Prerequisites}
-%
-%\begin{itemize}
-%\item python: Ensure that python3, pip, build, and virtualenv are installed and up to date. \\
-%
-%\medskip
-%For example, on ubuntu:\\
-%{\tt sudo apt install python3-pip} \\
-%{\tt sudo apt install python3.10-venv} \\
-%{\tt pip3 install -{}-upgrade build} \\
-%
-%\medskip
-%On macOS it is recommended to install jupyterlab (which contains python and pip) with \\
-%{\tt brew install jupyterlab} \\
-%followed by\\
-%{\tt pip install -{}-upgrade build} \\
-%{\tt pip install virtualenv} 
-%
-%\item python3-dev: You need to install the python header files and libs. On some platforms these come already installed with python.  
-%
-%\medskip
-%On ubuntu they do not and the command to install them is: \\
-%{\tt sudo apt install python3-dev }\\
-%
-%\medskip
-%On macOS they come with the recommended installation of jupyterlab
-%
-%\item boost and swig: You need to either install the binaries, or install the source code and build yourself.
-%\item ore and oreswig: You need to install the source code. Instructions for building with cmake are provided below.
-%\end{itemize}
-%
-%\subsubsection*{Environment variables}
-%
-%Set the following environment variables to the paths where the ore and ore swig repos, as well as boost live on your machine, e.g:
-%
-%\medskip
-%{\tt export ORE=\$HOME/dev/ore} \\
-%{\tt export ORESWIG=\$HOME/dev/oreswig}\\
-%{\tt export BOOST\_INC=/opt/homebrew/include} \\
-%{\tt export BOOST\_LIB=/opt/homebrew/lib} 
-%
-%\subsubsection*{Build ORE}
-%
-%Use cmake to generate the project Makefiles
-%
-%\medskip
-%{\tt cd \$ORE} \\
-%{\tt mkdir build} \\
-%{\tt cd \$ORE/build} \\
-%{\tt cmake .. \\
-%\hspace{1cm} -DQL\_ENABLE\_SESSIONS=ON $\backslash$\\
-%\hspace{1cm} -DCMAKE\_POSITION\_INDEPENDENT\_CODE=ON $\backslash$\\
-%\hspace{1cm} -DORE\_BUILD\_DOC=OFF $\backslash$ \\
-%\hspace{1cm} -DORE\_BUILD\_EXAMPLES=OFF $\backslash$ \\
-%\hspace{1cm} -DORE\_BUILD\_TESTS=OFF $\backslash$\\
-%\hspace{1cm} -DORE\_BUILD\_APP=OFF $\backslash$\\
-%\hspace{1cm} -DQL\_BUILD\_BENCHMARK=OFF $\backslash$\\
-%\hspace{1cm} -DQL\_BUILD\_EXAMPLES=OFF $\backslash$\\
-%\hspace{1cm} -DQL\_BUILD\_TEST\_SUITE=OFF $\backslash$\\
-%\hspace{1cm} -DBoost\_NO\_WARN\_NEW\_VERSIONS=1 $\backslash$\\
-%\hspace{1cm} -DBoost\_NO\_SYSTEM\_PATHS=1 $\backslash$\\
-%\hspace{1cm} -DBOOST\_ROOT=\$BOOST\_INC $\backslash$\\
-%\hspace{1cm} -DBOOST\_LIBRARYDIR=\$BOOST\_LIB}
-%
-%\medskip
-%Execute the following to kick off the build:
-%
-%\medskip
-%{\tt cd \$ORE/build} \\
-%{\tt cmake -{}-build} . 
-%
-%\medskip
-%This will generate \$ORE/build/OREAnalytics/orea/libOREAnalytics.so or .dylib
-%
-%\subsubsection*{Build ORE-SWIG Wrapper and Wheel}
-%
-%In contrast to the generic cmake-based SWIG build in section \ref{sec:oreswig}, we are now resorting to python's setup.py. 
-%
-%The commands below will try to link to boost library boost\_thread.  On some platforms this lib has a different name and if that is the case for you then you can override it, e.g:
-%
-%{\tt export BOOST\_THREAD=boost\_thread-mt} \\
-%
-%\medskip
-%
-%Ensure that environent variables ORE, BOOST\_INC and BOOST\_LIB are set (see above), then
-%
-%\medskip
-%{\tt cd \$ORESWIG/OREAnalytics-SWIG/Python} \\
-%{\tt python setup.py wrap} \\
-%{\tt python setup.py build} \\
-%{\tt python -m build -{}-wheel}
-%
-%\medskip
-%will then generate the wheel file (filename.whl) in folder \$ORESWIG/OREAnalytics-SWIG/Python/dist.
-%For the second step above you may need to modify the \$ORESWIG/OREAnalytics-SWIG/oreanalytics-config script to return the appropriate cflags and libs on your machine.
-%
-%\medskip
-%To use the wheel:
-%
-%\medskip
-%{\tt cd \$ORESWIG/OREAnalytics-SWIG/Python/Examples} \\
-%{\tt python -m venv env1} \\
-%{\tt . ./env1/bin/activate} \\
-%{\tt pip install \$ORESWIG/OREAnalytics-SWIG/Python/dist/filename.whl} \\
-%{\tt python commodityforward.py} \\
-%{\tt deactivate} \\
-%{\tt rm -rf env1}
-
 %========================================================
 \section{Examples}\label{sec:examples}
 %========================================================
@@ -1260,6 +1004,8 @@ checks for the simulation results generated with ORE.
 \hline
 Example & Description \\
 \hline
+\hline
+0 & ORE Web Service \\
 \hline
 1 & Vanilla at-the-money Swap with flat yield curve \\
 \hline
@@ -1477,6 +1223,56 @@ File Name & Description \\
 Note: When building ORE from sources on Windows platforms, make sure that you copy your {\tt ore.exe} to the binary
 directory {\tt App/bin/win32/} respectively {\tt App/bin/x64/}. Otherwise the examples may be run using the pre-compiled
 executables which come with the ORE release.
+
+% start with section 0
+\setcounter{subsection}{-1}
+\subsection{ORE Web Service}\label{sec:service}
+
+Since release 12, ORE comes with a proof-of-concept implementation of a web service around ORE
+that is written in Python, see folder {\tt Examples/API}.
+
+The service is based on
+\begin{itemize}
+\item the flask web framework \url{https://flask.palletsprojects.com}, and
+\item the ORE Python module which can be installed using \\
+  {\tt pip install open-source-risk-engine} \\
+  or built from sources following the instructions in the ORE-SWIG repository
+  at \url{https://github.com/opensourcerisk/ore-swig}.
+\end{itemize}
+
+\medskip
+Main files in the {\tt Examples/API} directory:
+\begin{itemize}
+\item {\bf restapi.py} runs a flask api as analytics service that takes a post request
+  (e.g. from a server like postman, or from a python script): The request contains a json body
+  which corresponds to the data usually contained in the master input file ore.xml. restapi.py
+  calls the oreApi.py class (see below) to do the work. By default, the analytics service listens for
+  requests on port 5001.
+\item {\bf oreApi.py} reads the json body, compiles all ORE input parameters, calls into a
+  data service (see below) to retrieve additional data. Then it kicks off an ORE run to process
+  the request.  And finally it posts resulting reports through the data service.
+\item {\bf simplefileserver.py} runs a flask api as a data service. It takes requests from the
+  analytics service above in the form of urls of xml files that contain additional data required
+  by ORE (market data, portfolio, configuration). By default, the data service
+  listens on port 5000, reads from the Input directory in Examples/API and writes reports to the Output
+  directory in Examples/API.
+\end{itemize}
+
+\medskip
+Run a local example:
+\begin{itemize}
+\item start the data service: \\
+  {\tt python3 simplefileserver.py \&} 
+\item start the analytics service: \\
+  {\tt python3 restapi.py \&}
+\item send a request to run the equivalent of Example 1: \\
+  {\tt python3 request.py} \\
+  Note that the json equivalent of Example\_1/Input/ore.xml is contained in request.py,
+  and all other inputs are retrieved from folder Examples/API/Input via the data service.
+\end{itemize}
+
+See {\tt Examples/API/ReadMe.txt} for further ways to utilise the service, e.g. to run all
+examples in this section, deploy via docker etc.
 
 %--------------------------------------------------------
 \subsection{Interest Rate Swap Exposure, Flat Market}\label{sec:example1}
@@ -3961,48 +3757,6 @@ current and past CPRs or expert judgement.
 \section{Launchers and Visualisation}\label{sec:visualisation}
 %========================================================
 
-\subsection{ORE Web Service}\label{sec:service}
-
-Since release 12, ORE comes with a proof-of-concept implementation of a web service around ORE
-that is written in Python, see folder {\tt Api} at the top level of the source tree.
-
-The service is based on
-\begin{itemize}
-\item the flask web framework \url{https://flask.palletsprojects.com}, and
-\item the ORE Python module which can be installed using \\
-  {\tt pip install open-source-risk-engine} \\
-  or built from sources following the instructions in the ORE-SWIG repository
-  at \url{https://github.com/opensourcerisk/ore-swig}.
-\end{itemize}
-
-\medskip
-Main files in the {\tt Api} directory:
-\begin{itemize}
-\item {\bf restapi.py} runs a flask api as analytics service that takes a post request
-  (e.g. from a server like postman, or from a python script): The request contains a json body
-  which corresponds to the data usually contained in the master input file ore.xml. restapi.py
-  calls the oreApi.py class (see below) to do the work. By default, the analytics service listens for
-  requests on port 5001.
-\item {\bf oreApi.py} reads the json body, compiles all ORE input parameters, calls into a
-  data service (see below) to retrieve additional data. Then it kicks off an ORE run to process
-  the request.  And finally it posts resulting reports through the data service.
-\item {\bf simplefileserver.py} runs a flask api as a data service. It takes requests from the
-  analytics service above in the form of urls of xml files that contain additional data required
-  by ORE (market data, portfolio, configuration). By default, the data service
-  listens on port 5000, reads from the Input directory in ore/Api and writes reports to the Output
-  directory in ore/Api.
-\end{itemize}
-
-\medskip
-Run a local example:
-\begin{itemize}
-\item start the data service: \\
-  {\tt python3 simplefileserver.py \&} 
-\item start the analytics service: \\
-  {\tt python3 restapi.py \&}
-\item send a request, the equivalent of Example 1: \\
-  {\tt python3 request.py} 
-\end{itemize}
 
 \subsection{Jupyter}\label{sec:jupyter}
 

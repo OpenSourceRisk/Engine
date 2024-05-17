@@ -15,7 +15,7 @@ body = {
         "logFile": "log.txt",
         "observationModel": "Disable",
         "marketData": "http://localhost:5000/file/market_20160205.txt",
-        "fixingsData": "http://localhost:5000/file/fixings_20160205.txt",
+        "fixingData": "http://localhost:5000/file/fixings_20160205.txt",
         "conventionsUri": "http://localhost:5000/file/conventions.xml",
         "pricingEnginesUri": "http://localhost:5000/file/pricingengine.xml",
         "portfolioUri": "http://localhost:5000/file/portfolio.xml",
