@@ -1250,7 +1250,7 @@ Main files in the {\tt Examples/API} directory:
   requests on port 5001.
 \item {\bf oreApi.py} reads the json body, compiles all ORE input parameters, calls into a
   data service (see below) to retrieve additional data. Then it kicks off an ORE run to process
-  the request.  And finally it posts resulting reports through the data service.
+  the request.  Finally it posts resulting reports through the data service.
 \item {\bf simplefileserver.py} runs a flask api as a data service. It takes requests from the
   analytics service above in the form of urls of xml files that contain additional data required
   by ORE (market data, portfolio, configuration). By default, the data service
@@ -1267,12 +1267,12 @@ Run a local example:
   {\tt python3 restapi.py \&}
 \item send a request to run the equivalent of Example 1: \\
   {\tt python3 request.py} \\
-  Note that the json equivalent of Example\_1/Input/ore.xml is contained in request.py,
+  Note that the json equivalent of {\tt Example\_1/Input/ore.xml} is contained in request.py,
   and all other inputs are retrieved from folder Examples/API/Input via the data service.
 \end{itemize}
 
-See {\tt Examples/API/ReadMe.txt} for further ways to utilise the service, e.g. to run all
-examples in this section, deploy via docker etc.
+%See {\tt Examples/API/ReadMe.txt} for further ways to utilise the service, e.g. to run all
+%examples in this section, deploy via docker etc.
 
 %--------------------------------------------------------
 \subsection{Interest Rate Swap Exposure, Flat Market}\label{sec:example1}
