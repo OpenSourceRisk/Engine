@@ -55,14 +55,14 @@ The meanings and allowable values of the elements in the data node follow below.
 
 \item Currency: The payout currency. The result of the payout formula above is treated to be in this currency. Note that
   for (non-quanto) FxWindowBarrierOption this should be the domestic (\lstinline!CCY2!) currency. For non-quanto Equity-
-  and CommodityAccumulators this should be the currency the equity or commodity is quoted in.
+  and CommodityWindowBarrierOptions this should be the currency the equity or commodity is quoted in.
   Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
 
 Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 
-\item FixingAmount: The notional amount. For FxAccumulators: The FixingAmount is expressed in the foreign currency
-  (\lstinline!CCY1!).  For EquityAccumulators: The FixingAmount is expressed as number of shares/units of the underlying
-  equity or equity index. For CommodityAccumulators: The FixingAmount is expressed as number of units of the underlying
+\item FixingAmount: The notional amount. For FxWindowBarrierOptions: The FixingAmount is expressed in the foreign currency
+  (\lstinline!CCY1!).  For EquityWindowBarrierOptions: The FixingAmount is expressed as number of shares/units of the underlying
+  equity or equity index. For CommodityWindowBarrierOptions: The FixingAmount is expressed as number of units of the underlying
   commodity. \\
 
 Allowable values: Any positive real number.
@@ -84,10 +84,10 @@ Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}. 
 number. The currency provided in this node may be quoted as corresponding minor currency to the underlying major
 currency.
 
-\item Strike [Optional]: For FxAccumulators: The the fx strike rate is defined as amount in domestic currency
-  (\lstinline!CCY2!) for one unit of foreign currency (\lstinline!CCY1!). For Equity- and CommodityAccumulators: The
+\item Strike [Optional]: For FxWindowBarrierOptions: The the fx strike rate is defined as amount in domestic currency
+  (\lstinline!CCY2!) for one unit of foreign currency (\lstinline!CCY1!). For Equity- and CommodityWindowBarrierOptions: The
   strike value for one unit/share/contract of the underlying equity or commodity, expressed in the currency the equity
-  or commodity is quoted in. For EquityAccumulators, the \lstinline!StrikeData! node (see above) should be used. \\
+  or commodity is quoted in. For EquityWindowBarrierOptions, the \lstinline!StrikeData! node (see above) should be used. \\
 
 Allowable values: Any positive real number.
 

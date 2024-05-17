@@ -380,7 +380,7 @@ of the Python wrapper around ORE.
 
 {\bf ORE Service:} ORE v12 contains an implementation of a restful API around ORE, see folder ore/Api and the example therein.
 This is written in Python, uses the ORE-Python module and the Flask web framework. This implementation is proof of concept,
-for demonstration purposes and to encourage the community to contribute alternatives.
+for demonstration purposes and to encourage the community to extend and contribute alternatives.
 
 \subsection{Further Resources}
 \begin{itemize}
@@ -3961,6 +3961,49 @@ current and past CPRs or expert judgement.
 \section{Launchers and Visualisation}\label{sec:visualisation}
 %========================================================
 
+\subsection{ORE Web Service}\label{sec:service}
+
+Since release 12, ORE comes with a proof-of-concept implementation of a web service around ORE
+that is written in Python, see folder {\tt Api} at the top level of the source tree.
+
+The service is based on
+\begin{itemize}
+\item the flask web framework \url{https://flask.palletsprojects.com}, and
+\item the ORE Python module which can be installed using \\
+  {\tt pip install open-source-risk-engine} \\
+  or built from sources following the instructions in the ORE-SWIG repository
+  at \url{https://github.com/opensourcerisk/ore-swig}.
+\end{itemize}
+
+\medskip
+Main files in the {\tt Api} directory:
+\begin{itemize}
+\item {\bf restapi.py} runs a flask api as analytics service that takes a post request
+  (e.g. from a server like postman, or from a python script): The request contains a json body
+  which corresponds to the data usually contained in the master input file ore.xml. restapi.py
+  calls the oreApi.py class (see below) to do the work. By default, the analytics service listens for
+  requests on port 5001.
+\item {\bf oreApi.py} reads the json body, compiles all ORE input parameters, calls into a
+  data service (see below) to retrieve additional data. Then it kicks off an ORE run to process
+  the request.  And finally it posts resulting reports through the data service.
+\item {\bf simplefileserver.py} runs a flask api as a data service. It takes requests from the
+  analytics service above in the form of urls of xml files that contain additional data required
+  by ORE (market data, portfolio, configuration). By default, the data service
+  listens on port 5000, reads from the Input directory in ore/Api and writes reports to the Output
+  directory in ore/Api.
+\end{itemize}
+
+\medskip
+Run a local example:
+\begin{itemize}
+\item start the data service: \\
+  {\tt python3 simplefileserver.py \&} 
+\item start the analytics service: \\
+  {\tt python3 restapi.py \&}
+\item send a request, the equivalent of Example 1: \\
+  {\tt python3 request.py} 
+\end{itemize}
+
 \subsection{Jupyter}\label{sec:jupyter}
 
 ORE comes with an experimental Jupyter notebook for launching ORE batches and in particular for drilling into NPV cube
@@ -4038,6 +4081,7 @@ ORE also comes with a basic Excel sheet to demonstrate launching ORE and present
 self-contained than the Calc demo in the previous section, as it uses VBA only rather than calls to external Python
 scripts. The Excel demo is available in Example\_1. Launch {\tt Example\_1.xlsm}. Then modify the paths on the first
 sheet, and kick off the ORE process.
+
 
 %========================================================
 \section{Parameterisation}\label{sec:configuration}

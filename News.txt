@@ -75,7 +75,8 @@ LANGUAGE BINDINGS & PYTHON MODULE
 - add Python wheels workflow on github (ticket 12436)
 
 ORE SERVICE
-- add a restful API to ORE, based on ORE-Python, see ore/Api: Farah ??? 
+- add a restful API to ORE, based on ORE-Python and the Flask web framework, see ore/Api
+  and the corresponding section in the user guide
 
 GPU
 - The external device interface based on the scripted trade and in particular its computation
@@ -108,10 +109,6 @@ NEW & EXTENDED EXAMPLES
 - 66: Balance Guaranteed Swap 
 - 67: XVA Stress Analytic - Matthias ???
 - 68: XVA Bump & Reval Sensitivity Analytic - Matthias ???
-
-OTHER
-- QuantLib version unchanged at 1.31.1
-
 
 
 Changes for the 11th ORE release (1.8.11.0):
