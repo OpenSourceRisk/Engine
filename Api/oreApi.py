@@ -83,11 +83,34 @@ class oreApi():
                 else:
                     param(lookup_value)
 
+    def setSimpleAnalyticParameter(self, data_dict, lookupname, lookuplocation, param=None, paramtype=None):
+        if lookupname in data_dict["analytics"][lookuplocation]:
+            lookup_value = data_dict["analytics"][lookuplocation][lookupname]
+            # Set Parameter and check for types
+            if param is not None:
+                if paramtype is not None:
+                    param(paramtype(lookup_value))
+                else:
+                    param(lookup_value)
 
     def setUriParameter(self, data_dict, lookupname, lookuplocation, param):
         if lookupname in data_dict[lookuplocation]:
             # Fetch xml url from the json
             lookup_value = data_dict[lookuplocation][lookupname]
+            try:
+                response = requests.get(lookup_value)
+                response.raise_for_status()  # Raise an exception for non-2xx response codes
+                xml_data = response.text
+                param(xml_data)
+
+            except Exception as e:
+                error_message = str(e)
+                raise MyCustomException(f"HTTPConnectionPool error: {error_message}") from e
+
+    def setAnalyticUriParameter(self, data_dict, lookupname, lookuplocation, param):
+        if lookupname in data_dict["analytics"][lookuplocation]:
+            # Fetch xml url from the json
+            lookup_value = data_dict["analytics"][lookuplocation][lookupname]
             try:
                 response = requests.get(lookup_value)
                 response.raise_for_status()  # Raise an exception for non-2xx response codes
@@ -227,7 +250,7 @@ class oreApi():
 
         # Analytics npv variables
         if "Y" in data_dict["analytics"]["npv"]["active"]:
-            print("Loading Analytics NPV variables")
+            print("Loading analytics/npv variables")
             params.insertAnalytic("NPV")
 
             if "baseCurrency" in data_dict["analytics"]["npv"]:
@@ -242,193 +265,213 @@ class oreApi():
                 outputFileName = data_dict["analytics"]["npv"]["outputFileName"]
                 # params.setOutputCurves(outputFileName)
         else:
-            print("NPV is not active")
+            print("npv analytic is not requested")
 
         # Analytics cashflow variables
         if "Y" in data_dict["analytics"]["cashflow"]["active"]:
-            print("Loading Analytics cashflow variables")
+            print("Loading analytics/cashflow variables")
             params.insertAnalytic("CASHFLOW")
         else:
-            print("The cashflow is not active")
+            print("cashflow analytic is not requested")
         if "includePastCashflows" in data_dict["analytics"]["cashflow"]:
             params.setIncludePastCashflows(bool(data_dict["analytics"]["cashflow"]["includePastCashflows"]))
         else:
             params.setIncludePastCashflows(False)
-
+            
         # Curve variables
-        if "active" in data_dict["curves"]:
-            print("Loading Curves variables")
+        if "active" in data_dict["analytics"]["curves"]:
+            print("Loading analytics/curves variables")
             params.setOutputCurves(True)
         else:
+            print("curve output is not requested")
             params.setOutputCurves(False)
-        self.setSimpleParameter(data_dict, "grid", "curves", params.setCurvesGrid)
-        self.setSimpleParameter(data_dict, "configuration", "curves", params.setCurvesMarketConfig)
-        self.setSimpleParameter(data_dict, "outputTodaysMarketCalibration", "curves",
+
+        self.setSimpleAnalyticParameter(data_dict, "grid", "curves", params.setCurvesGrid)
+        self.setSimpleAnalyticParameter(data_dict, "configuration", "curves", params.setCurvesMarketConfig)
+        self.setSimpleAnalyticParameter(data_dict, "outputTodaysMarketCalibration", "curves",
                                 params.setOutputTodaysMarketCalibration, bool)
 
         # Sensitivity variables
-        if "Y" in data_dict["sensitivity"]["active"]:
-            print("Loading Sensitivity variables")
+        if "Y" in data_dict["analytics"]["sensitivity"]["active"]:
+            print("Loading analytics/sensitivity variables")
             params.insertAnalytic("SENSITIVITY")
-            self.setSimpleParameter(data_dict, "paraSensitivity", "sensitivity", params.setParSensi, bool)
-            self.setSimpleParameter(data_dict, "outputJacobi", "sensitivity", params.setOutputJacobi, bool)
-            self.setSimpleParameter(data_dict, "alignPillars", "sensitivity", params.setAlignPillars, bool)
-            self.setUriParameter(data_dict, "marketConfigUri", "sensitivity", params.setSensiSimMarketParams)
-            self.setUriParameter(data_dict, "sensitivityConfigUri", "sensitivity", params.setSensiScenarioData)
-            self.setUriParameter(data_dict, "pricingEnginesUri", "sensitivity", params.setSensiPricingEngine)
-            self.setSimpleParameter(data_dict, "outputSensitivityThreshold", "sensitivity", params.setSensiThreshold)
+            self.setSimpleAnalyticParameter(data_dict, "paraSensitivity", "sensitivity", params.setParSensi, bool)
+            self.setSimpleAnalyticParameter(data_dict, "outputJacobi", "sensitivity", params.setOutputJacobi, bool)
+            self.setSimpleAnalyticParameter(data_dict, "alignPillars", "sensitivity", params.setAlignPillars, bool)
+            self.setAnalyticUriParameter(data_dict, "marketConfigUri", "sensitivity", params.setSensiSimMarketParams)
+            self.setAnalyticUriParameter(data_dict, "sensitivityConfigUri", "sensitivity", params.setSensiScenarioData)
+            self.setAnalyticUriParameter(data_dict, "pricingEnginesUri", "sensitivity", params.setSensiPricingEngine)
+            self.setSimpleAnalyticParameter(data_dict, "outputSensitivityThreshold", "sensitivity", params.setSensiThreshold)
+        else:
+            print("sensitivity analytic is not requested")
+            
         # Stress variables
-        if "Y" in data_dict["stress"]["active"]:
-            print("Loading Stress variables")
+        if "Y" in data_dict["analytics"]["stress"]["active"]:
+            print("Loading analytics/stress variables")
             params.insertAnalytic("STRESS")
             self.setUriParameter(data_dict, "pricingEnginesUri", "setup", params.setStressPricingEngine)
-            self.setUriParameter(data_dict, "marketConfigUri", "stress", params.setStressSimMarketParams)
-            self.setUriParameter(data_dict, "stressConfigUri", "stress", params.setStressScenarioData)
-            self.setSimpleParameter(data_dict, "outputSensitivityThreshold", "stress", params.setStressThreshold)
+            self.setAnalyticUriParameter(data_dict, "marketConfigUri", "stress", params.setStressSimMarketParams)
+            self.setAnalyticUriParameter(data_dict, "stressConfigUri", "stress", params.setStressScenarioData)
+            self.setSimpleAnalyticParameter(data_dict, "outputSensitivityThreshold", "stress", params.setStressThreshold)
+        else:
+            print("stress analytic is not requested")
+
         # parametricVar variables
-        if "Y" in data_dict["parametricVar"]["active"]:
-            print("Loading parametricVar variables")
+        if "Y" in data_dict["analytics"]["parametricVar"]["active"]:
+            print("Loading analytics/parametricVar variables")
             params.insertAnalytic("VAR")
-            self.setSimpleParameter(data_dict, "salvageCovarianceMatrix", "parametricVar", params.setSalvageCovariance,
+            self.setSimpleAnalyticParameter(data_dict, "salvageCovarianceMatrix", "parametricVar", params.setSalvageCovariance,
                                     bool)
-            self.setSimpleParameter(data_dict, "quantiles", "parametricVar", params.setVarQuantiles)
-            self.setSimpleParameter(data_dict, "breakdown", "parametricVar", params.setVarBreakDown)
-            self.setSimpleParameter(data_dict, "portfolioFilter", "parametricVar", params.setVarBreakDown)
-            self.setSimpleParameter(data_dict, "method", "parametricVar", params.setVarBreakDown)
-            self.setSimpleParameter(data_dict, "mcSamples", "parametricVar", params.setVarBreakDown, int)
-            self.setSimpleParameter(data_dict, "mcSeed", "parametricVar", params.setVarBreakDown, int)
+            self.setSimpleAnalyticParameter(data_dict, "quantiles", "parametricVar", params.setVarQuantiles)
+            self.setSimpleAnalyticParameter(data_dict, "breakdown", "parametricVar", params.setVarBreakDown)
+            self.setSimpleAnalyticParameter(data_dict, "portfolioFilter", "parametricVar", params.setVarBreakDown)
+            self.setSimpleAnalyticParameter(data_dict, "method", "parametricVar", params.setVarBreakDown)
+            self.setSimpleAnalyticParameter(data_dict, "mcSamples", "parametricVar", params.setVarBreakDown, int)
+            self.setSimpleAnalyticParameter(data_dict, "mcSeed", "parametricVar", params.setVarBreakDown, int)
             # TODO: create param for Covariance and Sensitivity (754)
-        if "Y" in data_dict["simm"]["active"]:
-            print("Loading simm variables")
+        else:
+            print("parametricVar analytic is not requested")
+
+        if "Y" in data_dict["analytics"]["simm"]["active"]:
+            print("Loading analytics/simm variables")
             params.insertAnalytic("SIMM")
             # TODO: set params for version, crif, and currencys (775)
-        if "Y" in data_dict["simulation"]["active"]:
-            print("Loading simulation variables")
+        else:
+            print("simm analytic is not requested")
+            
+        if "Y" in data_dict["analytics"]["simulation"]["active"]:
+            print("Loading analytics/simulation variables")
             params.insertAnalytic("EXPOSURE")
-        if "Y" in data_dict["xva"]["active"]:
-            print("Loading xva variables")
+
+            self.setSimpleAnalyticParameter(data_dict, "salvageCorrelationMatrix", "simulation", params.setSalvageCovariance, bool)
+            self.setSimpleAnalyticParameter(data_dict, "amc", "simulation", params.setAmc, bool)
+            self.setSimpleAnalyticParameter(data_dict, "amcTradeTypes", "simulation", params.setAmc)
+            self.setAnalyticUriParameter(data_dict, "simulationConfigUri", "simulation", params.setExposureSimMarketParams)
+            self.setAnalyticUriParameter(data_dict, "simulationConfigUri", "simulation", params.setCrossAssetModelData)
+            self.setAnalyticUriParameter(data_dict, "simulationConfigUri", "simulation", params.setScenarioGeneratorData)
+            self.setAnalyticUriParameter(data_dict, "pricingEnginesUri", "simulation", params.setSimulationPricingEngine)
+            self.setAnalyticUriParameter(data_dict, "amcPricingEnginesUri", "simulation", params.setAmcPricingEngine)
+            self.setSimpleAnalyticParameter(data_dict, "baseCurrency", "simulation", params.setExposureBaseCurrency)
+            if "observationModel" in data_dict["analytics"]["simulation"]:
+                params.setExposureObservationModel(data_dict["analytics"]["simulation"]["observationModel"])
+            else:
+                params.setExposureObservationModel(data_dict["setup"]["observationModel"])
+                if "Y" in data_dict["analytics"]["simulation"]["storeFlows"]:
+                    params.setStoreFlows(True)
+                if "Y" in data_dict["analytics"]["simulation"]["storeSurvivalProbabilities"]:
+                    params.setStoreSurvivalProbabilities(True)
+                self.setSimpleAnalyticParameter(data_dict, "nettingSetId", "simulation", params.setNettingSetId)
+                if "cubeUri" in data_dict["analytics"]["simulation"]:
+                    params.setWriteCube(True)
+                if "scenariodump" in data_dict["analytics"]["simulation"]:
+                    params.setWriteScenarios(True)
+        else:
+            print("simulation analytic is not requested")
+
+        if "Y" in data_dict["analytics"]["xva"]["active"]:
+            print("Loading analytics/xva variables")
             params.insertAnalytic("XVA")
+
+            # XVA specifically
+            self.setSimpleAnalyticParameter(data_dict, "baseCurrency", "xva", params.setXvaBaseCurrency)
+            if "Y" in data_dict["analytics"]["simulation"]["active"] and "Y" not in data_dict["analytics"]["xva"]["active"]:
+                params.setLoadCube(True)  # might need to reset cube here
+            if "Y" in data_dict["analytics"]["simulation"]["active"] or "Y" in data_dict["analytics"]["xva"]["active"]:
+                self.setAnalyticUriParameter(data_dict, "csaUri", "xva", params.setNettingSetManager)
+            if params.setLoadCube(True) and "nettingSetCubeUri" in data_dict["analytics"]["xva"]:
+                self.setUriParameter(data_dict, "nettingSetCubeUri", "xva", params.setNettingSetManager)
+            # TODO: CPTY and Market cube not needed for any of the runs (966)
+            # Set Xva params
+            self.setSimpleAnalyticParameter(data_dict, "flipViewXVA", "xva", params.setFlipViewXVA, bool)
+            self.setSimpleAnalyticParameter(data_dict, "fullInitialCollateralisation", "xva", params.setFullInitialCollateralisation, bool)
+            self.setSimpleAnalyticParameter(data_dict, "exposureProfilesByTrade", "xva", params.setExposureProfilesByTrade, bool)
+            self.setSimpleAnalyticParameter(data_dict, "exposureProfiles", "xva", params.setExposureProfiles, bool)
+            self.setSimpleAnalyticParameter(data_dict, "quantile", "xva", params.setPfeQuantile, float)
+            self.setSimpleAnalyticParameter(data_dict, "calculationType", "xva", params.setCollateralCalculationType, str)
+            self.setSimpleAnalyticParameter(data_dict, "allocationMethod", "xva", params.setExposureAllocationMethod, str)
+            self.setSimpleAnalyticParameter(data_dict, "marginalAllocationLimit", "xva", params.setMarginalAllocationLimit, float)
+            self.setSimpleAnalyticParameter(data_dict, "exerciseNextBreak", "xva", params.setExerciseNextBreak, bool)
+            self.setSimpleAnalyticParameter(data_dict, "cva", "xva", params.setCvaAnalytic, bool)
+            self.setSimpleAnalyticParameter(data_dict, "dva", "xva", params.setDvaAnalytic, bool)
+            self.setSimpleAnalyticParameter(data_dict, "fva", "xva", params.setFvaAnalytic, bool)
+            self.setSimpleAnalyticParameter(data_dict, "colva", "xva", params.setColvaAnalytic, bool)
+            self.setSimpleAnalyticParameter(data_dict, "collateralFloor", "xva", params.setCollateralFloorAnalytic, bool)
+            self.setSimpleAnalyticParameter(data_dict, "dim", "xva", params.setDimAnalytic, bool)
+            self.setSimpleAnalyticParameter(data_dict, "mva", "xva", params.setMvaAnalytic, bool)
+            self.setSimpleAnalyticParameter(data_dict, "kva", "xva", params.setKvaAnalytic, bool)
+            self.setSimpleAnalyticParameter(data_dict, "dynamicCredit", "xva", params.setDynamicCredit, bool)
+            self.setSimpleAnalyticParameter(data_dict, "cvaSensi", "xva", params.setCvaSensi, bool)
+            self.setSimpleAnalyticParameter(data_dict, "cvaSensiGrid", "xva", params.setCvaSensiGrid, str)
+            self.setSimpleAnalyticParameter(data_dict, "cvaSensiShiftSize", "xva", params.setCvaSensiShiftSize, float)
+            self.setSimpleAnalyticParameter(data_dict, "dvaName", "xva", params.setDvaName, str)
+            self.setAnalyticUriParameter(data_dict, "rawCubeOutputUri", "xva", params.setRawCubeOutput)
+            self.setAnalyticUriParameter(data_dict, "netCubeOutputUri", "xva", params.setNetCubeOutput)
+
+            # FVA variables
+            self.setSimpleAnalyticParameter(data_dict, "fvaBorrowingCurve", "xva", params.setFvaBorrowingCurve)
+            self.setSimpleAnalyticParameter(data_dict, "fvaLendingCurve", "xva", params.setFvaLendingCurve)
+            self.setSimpleAnalyticParameter(data_dict, "flipViewBorrowingCurvePostfix", "xva",
+                                            params.setFlipViewBorrowingCurvePostfix)
+            self.setSimpleAnalyticParameter(data_dict, "flipViewLendingCurvePostfix", "xva", params.setFlipViewLendingCurvePostfix)
+
+            # DIM variables
+            #  Fill Time series param
+            self.setAnalyticUriParameter(data_dict, "deterministicInitialMarginUri", "xva", params.setDeterministicInitialMargin)
+            self.setSimpleAnalyticParameter(data_dict, "dimQuantile", "xva", params.setDimQuantile, float)
+            self.setSimpleAnalyticParameter(data_dict, "dimHorizonCalendarDays", "xva", params.setDimHorizonCalendarDays, int)
+            self.setSimpleAnalyticParameter(data_dict, "dimRegressionOrder", "xva", params.setDimRegressionOrder, int)
+            self.setSimpleAnalyticParameter(data_dict, "dimRegressors", "xva", params.setDimRegressors, str)
+            self.setSimpleAnalyticParameter(data_dict, "dimOutputGridPoints", "xva", params.setDimOutputGridPoints, str)
+            self.setSimpleAnalyticParameter(data_dict, "dimOutputNettingSet", "xva", params.setDimOutputNettingSet, str)
+            self.setSimpleAnalyticParameter(data_dict, "dimLocalRegressionEvaluations", "xva", params.setDimLocalRegressionEvaluations, int)
+            self.setSimpleAnalyticParameter(data_dict, "dimLocalRegressionBandwidth", "xva", params.setDimLocalRegressionBandwidth, float)
+
+            # KVA Variables
+            self.setSimpleAnalyticParameter(data_dict, "kvaCapitalDiscountRate", "xva", params.setKvaCapitalDiscountRate, float)
+            self.setSimpleAnalyticParameter(data_dict, "kvaAlpha", "xva", params.setKvaAlpha, float)
+            self.setSimpleAnalyticParameter(data_dict, "kvaRegAdjustment", "xva", params.setKvaRegAdjustment, float)
+            self.setSimpleAnalyticParameter(data_dict, "kvaCapitalHurdle", "xva", params.setKvaCapitalHurdle, float)
+            self.setSimpleAnalyticParameter(data_dict, "kvaOurPdFloor", "xva", params.setKvaOurPdFloor, float)
+            self.setSimpleAnalyticParameter(data_dict, "kvaTheirPdFloor", "xva", params.setKvaTheirPdFloor, float)
+            self.setSimpleAnalyticParameter(data_dict, "kvaOurCvaRiskWeight", "xva", params.setKvaOurCvaRiskWeight, float)
+            self.setSimpleAnalyticParameter(data_dict, "kvaTheirCvaRiskWeight", "xva", params.setKvaTheirCvaRiskWeight, float)
+            
+            # Credit Simulation Variables
+            # TODO: set credit simulation parameters once added to swig (1167)
+            '''
+            if "creditMigration" in data_dict["analytics"]["xva"]:
+                params.setCreditMigrationAnalytic(bool(data_dict["xva"]["creditMigration"]))
+    
+            if "creditMigrationDistributionGrid" in data_dict["analytics"]["xva"]:
+                params.setCreditMigrationDistributionGrid(data_dict["xva"]["creditMigrationDistributionGrid"])
+    
+            if "creditMigrationTimeSteps" in data_dict["analytics"]["xva"]:
+                params.setCreditMigrationTimeSteps(data_dict["xva"]["creditMigrationTimeSteps"])
+        
+            if "creditMigrationConfigUri" in data_dict["analytics"]["xva"]:
+                # Fetch xml url from the json
+                creditMigrationConfigUri = data_dict["analytics"]["xva"]["creditMigrationConfigUri"]
+
+                # Decode the URL
+                decoded_url = urllib.parse.unquote(creditMigrationConfigUri)
+
+                # Fetch the XML data
+                response = urllib.request.urlopen(decoded_url)
+                xml_data = response.read().decode('utf-8')
+                # TODO: set this parameter once added: params.setCreditSimulationParameters(xml_data)
+            '''
+
+        else:
+            print("xva analytic is not requested")
+
         self.setSimpleParameter(data_dict, "observationModel", "setup", params.setExposureObservationModel)
         response = urllib.request.urlopen(data_dict["setup"]["pricingEnginesUri"])
         xml_data = response.read().decode('utf-8')
         params.setSimulationPricingEngine(xml_data)
-        self.setSimpleParameter(data_dict, "salvageCorrelationMatrix", "simulation", params.setSalvageCovariance, bool)
-        self.setSimpleParameter(data_dict, "amc", "simulation", params.setAmc, bool)
-        self.setSimpleParameter(data_dict, "amcTradeTypes", "simulation", params.setAmc)
-        if "Y" in data_dict["simulation"]["active"] or "Y" in data_dict["simulation"]["active"]:
-            self.setUriParameter(data_dict, "simulationConfigUri", "simulation", params.setExposureSimMarketParams)
-            self.setUriParameter(data_dict, "simulationConfigUri", "simulation", params.setCrossAssetModelData)
-            self.setUriParameter(data_dict, "simulationConfigUri", "simulation", params.setScenarioGeneratorData)
-        self.setUriParameter(data_dict, "pricingEnginesUri", "simulation", params.setSimulationPricingEngine)
-        self.setUriParameter(data_dict, "amcPricingEnginesUri", "simulation", params.setAmcPricingEngine)
-        self.setSimpleParameter(data_dict, "baseCurrency", "simulation", params.setExposureBaseCurrency)
-        if "observationModel" in data_dict["simulation"]:
-            params.setExposureObservationModel(data_dict["simulation"]["observationModel"])
-        else:
-            params.setExposureObservationModel(data_dict["setup"]["observationModel"])
-        if "Y" in data_dict["simulation"]["storeFlows"]:
-            params.setStoreFlows(True)
-        if "Y" in data_dict["simulation"]["storeSurvivalProbabilities"]:
-            params.setStoreSurvivalProbabilities(True)
-        self.setSimpleParameter(data_dict, "nettingSetId", "simulation", params.setNettingSetId)
-        if "cubeUri" in data_dict["simulation"]:
-            params.setWriteCube(True)
-        if "scenariodump" in data_dict["simulation"]:
-            params.setWriteScenarios(True)
-
-        # XVA specifically
-        self.setSimpleParameter(data_dict, "baseCurrency", "xva", params.setXvaBaseCurrency)
-        if "Y" in data_dict["simulation"]["active"] and "Y" not in data_dict["xva"]["active"]:
-            params.setLoadCube(True)  # might need to reset cube here
-        if "Y" in data_dict["simulation"]["active"] or "Y" in data_dict["xva"]["active"]:
-            self.setUriParameter(data_dict, "csaUri", "xva", params.setNettingSetManager)
-        if params.setLoadCube(True) and "nettingSetCubeUri" in data_dict["xva"]:
-            self.setUriParameter(data_dict, "nettingSetCubeUri", "xva", params.setNettingSetManager)
-        # TODO: CPTY and Market cube not needed for any of the runs (966)
-        # Set Xva params
-        self.setSimpleParameter(data_dict, "flipViewXVA", "xva", params.setFlipViewXVA, bool)
-        self.setSimpleParameter(data_dict, "fullInitialCollateralisation", "xva", params.setFullInitialCollateralisation,
-                           bool)
-        self.setSimpleParameter(data_dict, "exposureProfilesByTrade", "xva", params.setExposureProfilesByTrade, bool)
-        self.setSimpleParameter(data_dict, "exposureProfiles", "xva", params.setExposureProfiles, bool)
-        self.setSimpleParameter(data_dict, "quantile", "xva", params.setPfeQuantile, float)
-        self.setSimpleParameter(data_dict, "calculationType", "xva", params.setCollateralCalculationType, str)
-        self.setSimpleParameter(data_dict, "allocationMethod", "xva", params.setExposureAllocationMethod, str)
-        self.setSimpleParameter(data_dict, "marginalAllocationLimit", "xva", params.setMarginalAllocationLimit, float)
-        self.setSimpleParameter(data_dict, "exerciseNextBreak", "xva", params.setExerciseNextBreak, bool)
-        self.setSimpleParameter(data_dict, "cva", "xva", params.setCvaAnalytic, bool)
-        self.setSimpleParameter(data_dict, "dva", "xva", params.setDvaAnalytic, bool)
-        self.setSimpleParameter(data_dict, "fva", "xva", params.setFvaAnalytic, bool)
-        self.setSimpleParameter(data_dict, "colva", "xva", params.setColvaAnalytic, bool)
-        self.setSimpleParameter(data_dict, "collateralFloor", "xva", params.setCollateralFloorAnalytic, bool)
-        self.setSimpleParameter(data_dict, "dim", "xva", params.setDimAnalytic, bool)
-        self.setSimpleParameter(data_dict, "mva", "xva", params.setMvaAnalytic, bool)
-        self.setSimpleParameter(data_dict, "kva", "xva", params.setKvaAnalytic, bool)
-        self.setSimpleParameter(data_dict, "dynamicCredit", "xva", params.setDynamicCredit, bool)
-        self.setSimpleParameter(data_dict, "cvaSensi", "xva", params.setCvaSensi, bool)
-        self.setSimpleParameter(data_dict, "cvaSensiGrid", "xva", params.setCvaSensiGrid, str)
-        self.setSimpleParameter(data_dict, "cvaSensiShiftSize", "xva", params.setCvaSensiShiftSize, float)
-        self.setSimpleParameter(data_dict, "dvaName", "xva", params.setDvaName, str)
-        self.setUriParameter(data_dict, "rawCubeOutputUri", "xva", params.setRawCubeOutput)
-        self.setUriParameter(data_dict, "netCubeOutputUri", "xva", params.setNetCubeOutput)
-
-        # FVA variables
-        self.setSimpleParameter(data_dict, "fvaBorrowingCurve", "xva", params.setFvaBorrowingCurve)
-        self.setSimpleParameter(data_dict, "fvaLendingCurve", "xva", params.setFvaLendingCurve)
-        self.setSimpleParameter(data_dict, "flipViewBorrowingCurvePostfix", "xva",
-                                params.setFlipViewBorrowingCurvePostfix)
-        self.setSimpleParameter(data_dict, "flipViewLendingCurvePostfix", "xva", params.setFlipViewLendingCurvePostfix)
-
-        # DIM variables
-        #  Fill Time series param
-        self.setUriParameter(data_dict, "deterministicInitialMarginUri", "xva", params.setDeterministicInitialMargin)
-        self.setSimpleParameter(data_dict, "dimQuantile", "xva", params.setDimQuantile, float)
-        self.setSimpleParameter(data_dict, "dimHorizonCalendarDays", "xva", params.setDimHorizonCalendarDays, int)
-        self.setSimpleParameter(data_dict, "dimRegressionOrder", "xva", params.setDimRegressionOrder, int)
-        self.setSimpleParameter(data_dict, "dimRegressors", "xva", params.setDimRegressors, str)
-        self.setSimpleParameter(data_dict, "dimOutputGridPoints", "xva", params.setDimOutputGridPoints, str)
-        self.setSimpleParameter(data_dict, "dimOutputNettingSet", "xva", params.setDimOutputNettingSet, str)
-        self.setSimpleParameter(data_dict, "dimLocalRegressionEvaluations", "xva", params.setDimLocalRegressionEvaluations,
-                           int)
-        self.setSimpleParameter(data_dict, "dimLocalRegressionBandwidth", "xva", params.setDimLocalRegressionBandwidth,
-                           float)
-        # KVA Variables
-        self.setSimpleParameter(data_dict, "kvaCapitalDiscountRate", "xva", params.setKvaCapitalDiscountRate, float)
-        self.setSimpleParameter(data_dict, "kvaAlpha", "xva", params.setKvaAlpha, float)
-        self.setSimpleParameter(data_dict, "kvaRegAdjustment", "xva", params.setKvaRegAdjustment, float)
-        self.setSimpleParameter(data_dict, "kvaCapitalHurdle", "xva", params.setKvaCapitalHurdle, float)
-        self.setSimpleParameter(data_dict, "kvaOurPdFloor", "xva", params.setKvaOurPdFloor, float)
-        self.setSimpleParameter(data_dict, "kvaTheirPdFloor", "xva", params.setKvaTheirPdFloor, float)
-        self.setSimpleParameter(data_dict, "kvaOurCvaRiskWeight", "xva", params.setKvaOurCvaRiskWeight, float)
-        self.setSimpleParameter(data_dict, "kvaTheirCvaRiskWeight", "xva", params.setKvaTheirCvaRiskWeight, float)
-
-        # Credit Simulation Variables
-        # TODO: set credit simulation parameters once added to swig (1167)
-        '''
-        if "creditMigration" in data_dict["xva"]:
-            params.setCreditMigrationAnalytic(bool(data_dict["xva"]["creditMigration"]))
-    
-        if "creditMigrationDistributionGrid" in data_dict["xva"]:
-            params.setCreditMigrationDistributionGrid(data_dict["xva"]["creditMigrationDistributionGrid"])
-    
-        if "creditMigrationTimeSteps" in data_dict["xva"]:
-            params.setCreditMigrationTimeSteps(data_dict["xva"]["creditMigrationTimeSteps"])
         
-        if "creditMigrationConfigUri" in data_dict["xva"]:
-            # Fetch xml url from the json
-            creditMigrationConfigUri = data_dict["xva"]["creditMigrationConfigUri"]
-
-            # Decode the URL
-            decoded_url = urllib.parse.unquote(creditMigrationConfigUri)
-
-            # Fetch the XML data
-            response = urllib.request.urlopen(decoded_url)
-            xml_data = response.read().decode('utf-8')
-            # TODO: set this parameter once added: params.setCreditSimulationParameters(xml_data)
-        '''
         # cashflow npv and dynamic backtesting
-        self.setSimpleParameter(data_dict, "cashFlowHorizon", "cashflow", params.setCashflowHorizon)
-        self.setSimpleParameter(data_dict, "portfolioFilterDate", "cashflow", params.setPortfolioFilterDate)
+        self.setSimpleAnalyticParameter(data_dict, "cashFlowHorizon", "cashflow", params.setCashflowHorizon)
+        self.setSimpleAnalyticParameter(data_dict, "portfolioFilterDate", "cashflow", params.setPortfolioFilterDate)
 
         # TODO: Check if Analytics is empty
         ''' 
@@ -438,7 +481,6 @@ class oreApi():
             if params.lazyMarketBuilding(True):
                 params.setLazyMarketBuilding(False)
         '''
-        print("buildInputParameters done")
 
         print("Creating OREApp...")
         ore = ql.OREApp(params, logFile, 31, True)
