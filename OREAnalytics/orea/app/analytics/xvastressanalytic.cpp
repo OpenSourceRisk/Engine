@@ -26,28 +26,9 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <orea/engine/parstressconverter.hpp>
+#include <ored/report/utilities.hpp>
 namespace ore {
 namespace analytics {
-
-QuantLib::ext::shared_ptr<ore::data::InMemoryReport>
-extendReport(const std::string& label, const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report) {
-    QuantLib::ext::shared_ptr<ore::data::InMemoryReport> newReport = ext::make_shared<ore::data::InMemoryReport>();
-    if (report != nullptr) {
-        newReport->addColumn("Scenario", string());
-        for (size_t i = 0; i < report->columns(); i++) {
-            newReport->addColumn(report->header(i), report->columnType(i), report->columnPrecision(i));
-        }
-        for (size_t row = 0; row < report->rows(); row++) {
-            newReport->next();
-            newReport->add(label);
-            for (size_t col = 0; col < report->columns(); col++) {
-                newReport->add(report->data(col)[row]);
-            }
-        }
-        newReport->end();
-    }
-    return newReport;
-}
 
 void XvaStressAnalyticImpl::writeCubes(const std::string& label,
                                        const QuantLib::ext::shared_ptr<XvaAnalytic>& xvaAnalytic) {
@@ -182,7 +163,7 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
                 // add scenario column to report and copy it, concat it later
                 if (boost::starts_with(name, "exposure") || boost::starts_with(name, "xva")) {
                     DLOG("Save and extend report " << name);
-                    xvaReports[name].push_back(extendReport(label, rpt));
+                    xvaReports[name].push_back(addColumnToExisitingReport("Scenario", label, rpt));
                 }
             }
             writeCubes(label, newAnalytic);
@@ -200,15 +181,9 @@ void XvaStressAnalyticImpl::concatReports(
     const std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>& xvaReports) {
     DLOG("Concat exposure and xva reports");
     for (auto& [name, reports] : xvaReports) {
-        if (!reports.empty()) {
-            DLOG("Concat report " << name);
-            auto firstReport = reports.front();
-            for (size_t i = 1; i < reports.size(); i++) {
-                if (reports[i] != nullptr) {
-                    firstReport->add(*reports[i]);
-                }
-            }
-            analytic()->reports()["XVA_STRESS"][name] = firstReport;
+        auto report = concatenateReports(reports);
+        if(report != nullptr){
+            analytic()->reports()[label()][name] = report;
         }
     }
 }

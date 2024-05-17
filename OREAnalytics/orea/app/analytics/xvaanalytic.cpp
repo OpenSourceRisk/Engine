@@ -137,23 +137,24 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
         *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), true, true, false,
         *inputs_->iborFallbackConfig(), false, offsetScenario_);
 
-    if (offsetScenario_ != nullptr){
-        DLOG("Offset Scenario SimMarket");
-        DLOG("Offset scenario is absolute = " << offsetScenario_->isAbsolute());
+    if (offsetScenario_ != nullptr) {
+        TLOG("XvaAnalytic: Offset Scenario used in building SimMarket");
+        TLOG("XvaAnalytic: Offset scenario is absolute = " << offsetScenario_->isAbsolute());
+        TLOG("RfKey,OffsetScenarioValue");
         for (const auto& key : offsetScenario_->keys()) {
-
-            DLOG(key << " : " << offsetScenario_->get(key));
+            TLOG(key << " : " << offsetScenario_->get(key));
         }
     }
-    DLOG("Finished building Scenario SimMarket");
-    for(const auto& key : simMarket_->baseScenario()->keys()){
-        DLOG(key << " : " << simMarket_->baseScenario()->get(key) << " : "
-                << simMarket_->baseScenarioAbsolute()->get(key));
+    TLOG("XvaAnalytic:Finished building Scenario SimMarket");
+    TLOG("RfKey,BaseScenarioValue,BaseScenarioAbsValue");
+    for (const auto& key : simMarket_->baseScenario()->keys()) {
+        TLOG(key << "," << simMarket_->baseScenario()->get(key) << "," << simMarket_->baseScenarioAbsolute()->get(key));
     }
-    DLOG("Finished Calibration Scenario SimMarket");
-    for(const auto& key : simMarketCalibration_->baseScenario()->keys()){
-        DLOG(key << " : " << simMarketCalibration_->baseScenario()->get(key) << " : "
-                << simMarketCalibration_->baseScenarioAbsolute()->get(key));
+    TLOG("XvaAnalytic: Finished building Scenario SimMarket for model calibration (useSpreadedTermStructure)");
+    TLOG("RfKey,BaseScenarioValue,BaseScenarioAbsValue");
+    for (const auto& key : simMarketCalibration_->baseScenario()->keys()) {
+        TLOG(key << "," << simMarketCalibration_->baseScenario()->get(key) << ","
+                 << simMarketCalibration_->baseScenarioAbsolute()->get(key));
     }
 }
 
