@@ -237,14 +237,16 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
     for (auto const& k : scenario->keys()) {
         if(newCoordinates.count({k.keytype, k.name})==1){
             keys.insert(std::make_pair(k.keytype, k.name));
+            TLOG("Insert keys " << k.keytype << " " << k.name)
         } else{
-            DLOG("Recast skip " << k.keytype << " " << k.name);
+            TLOG("Recast skip " << k.keytype << " " << k.name);
         }
     }
 
 
 
     for (auto const& k : keys) {
+
         auto c0 = oldCoordinates.find(k);
         auto c1 = newCoordinates.find(k);
         QL_REQUIRE(c0 != scenario->coordinates().end(), "recastScenario(): no coordinates for "
@@ -265,26 +267,24 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
             result->add(key, scenario->get(key));
 
         } else {
-
             // interpolate new values from old values
-
             Size newKeyIndex = 0;
-
             std::vector<Size> indices(c0->second.size(), 0);
             int workingIndex;
             do {
                 workingIndex = indices.size() - 1;
-                indices[workingIndex]++;
-                while (workingIndex >= 0 && indices[workingIndex] == c1->second[workingIndex].size()+1) {
+                while (workingIndex >= 0 && indices[workingIndex] == c1->second[workingIndex].size()) {
                     --workingIndex;
                     if (workingIndex >= 0)
                         indices[workingIndex] = 0;
                 }
                 if (workingIndex >= 0) {
                     RiskFactorKey key(k.first, k.second, newKeyIndex++);
-                    result->add(key, interpolatedValue(c0->second, c1->second, indices, k, scenario));
+                    auto iValue = interpolatedValue(c0->second, c1->second, indices, k, scenario);
+                    TLOG("Add "<< key <<  " interpolated value = " << iValue);
+                    result->add(key, iValue);
+                    indices[workingIndex]++;
                 }
-                
             } while (workingIndex >= 0);
         }
     }
