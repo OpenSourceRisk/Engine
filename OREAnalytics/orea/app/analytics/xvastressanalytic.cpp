@@ -22,10 +22,10 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/cube_io.hpp>
+#include <orea/engine/parstressconverter.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
-#include <orea/engine/parstressconverter.hpp>
 #include <ored/report/utilities.hpp>
 namespace ore {
 namespace analytics {
@@ -102,7 +102,6 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
 
     analytic()->buildMarket(loader);
 
-
     QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = inputs_->xvaStressScenarioData();
     if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
         try {
@@ -155,7 +154,9 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
         try {
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_STRESS: Apply scenario " << label);
-            auto newAnalytic = ext::make_shared<XvaAnalytic>(inputs_, (label == "BASE" ? nullptr : scenario));
+            auto newAnalytic = ext::make_shared<XvaAnalytic>(
+                inputs_, (label == "BASE" ? nullptr : scenario),
+                (label == "BASE" ? nullptr : analytic()->configurations().simMarketParams));
             CONSOLE("XVA_STRESS: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
@@ -182,7 +183,7 @@ void XvaStressAnalyticImpl::concatReports(
     DLOG("Concat exposure and xva reports");
     for (auto& [name, reports] : xvaReports) {
         auto report = concatenateReports(reports);
-        if(report != nullptr){
+        if (report != nullptr) {
             analytic()->reports()[label()][name] = report;
         }
     }
