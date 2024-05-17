@@ -1,5 +1,32 @@
 \subsubsection{Performance Option Type 01}
 
+The performace option of type ``01'' is characterized by the following data
+
+\begin{itemize}
+\item a notional amount $N$
+\item a participation rate $q$
+\item a valuation date $V$ and a settlement date $S$
+\item a number of underlyings $U_i$ for $i=1,\ldots,n$
+\item weights for the underlyings $w_i$ for $i=1,\ldots,n$
+\item initial strike prices for the underlyings $s_i$ for $i=1,\ldots,n$
+\item an option strike $K$
+\end{itemize}
+
+On the valuation date the average performance of the underlying basket is computed as
+
+$$
+P = \max\left( \sum_{i=1}^n w_i \left( \frac{U_i(V)}{s_i} - K \right), 0 \right)
+$$
+
+The option holder receives an amount $N\cdot q\cdot P$ on the settlement date $S$. The underlyings can be Equity, FX or
+Commodity underlyings.
+
+The above payoff includes the strike in the performance calculation. There is another variant with excluded strike and payoff:
+
+$$
+P = \max\left( \left[ \sum_{i=1}^n w_i \frac{U_i(V)}{s_i} \right] - K, 0 \right)
+$$
+
 The \verb+PerformanceOption_01+ node is the trade data container for the PerformanceOption\_01 trade type, listing
 \ref{lst:performanceoption01_data} shows the structure of an example.
 
@@ -63,8 +90,7 @@ The meanings and allowable values of the elements in the \verb+PerformanceOption
 \item Strike: The option strike. This is expressed in terms of the performance of the underlying basket (see the product
   description for more details). Allowable values are numbers.
 \item StrikeIncluded [optional]: If true the strike is included in the performance calculation, this is also the default
-  if the flag not given. If false the strike is excluded. See the product description in \ref{prod:performanceoption_01}
-  for the respective payoffs in both cases.
+  if the flag not given. If false the strike is excluded. 
 \item Position: The option position. Allowable values are {\em Long} or {\em Short}.
 \item PayCcy: The payment currency of the option. See the appendix for allowable currency codes.
 \end{itemize}
