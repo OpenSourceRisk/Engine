@@ -1,36 +1,86 @@
-<?xml version="1.0"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <Portfolio>
-
-  <Trade id="SwapLeg">
+  <Trade id="XccySwap">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CPTY</CounterParty>
-      <NettingSetId>CPTY</NettingSetId>
+      <CounterParty>A</CounterParty>
+      <NettingSetId/>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
       <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>false</Payer>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>1000000</Notional>
+          <Notional>102120250.0</Notional>
+          <FXReset>
+            <ForeignCurrency>EUR</ForeignCurrency>
+            <ForeignAmount>95000000.0</ForeignAmount>
+            <FXIndex>FX-ECB-EUR-USD</FXIndex>
+            <FixingDays>2</FixingDays>
+          </FXReset>
+          <Exchanges>
+            <NotionalInitialExchange>true</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+          </Exchanges>
         </Notionals>
-        <DayCounter>30/360</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.05</Rate>
-          </Rates>
-        </FixedLegData>
+        <DayCounter>ACT/360</DayCounter>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <PaymentLag>2</PaymentLag>
+        <FloatingLegData>
+          <Index>USD-SOFR</Index>
+          <Spreads>
+            <Spread>0.0</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20230201</StartDate>
-            <EndDate>20240201</EndDate>
-            <Tenor>1Y</Tenor>
-            <Calendar>US</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
+            <StartDate>2024-01-02</StartDate>
+            <EndDate>2026-01-02</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US,TARGET</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>95000000.0</Notional>
+          <Exchanges>
+            <NotionalInitialExchange>true</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+          </Exchanges>
+        </Notionals>
+        <DayCounter>ACT/360</DayCounter>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <PaymentLag>2</PaymentLag>
+        <FloatingLegData>
+          <Index>EUR-ESTER</Index>
+          <Spreads>
+            <Spread>-0.00255</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2024-01-02</StartDate>
+            <EndDate>2026-01-02</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US,TARGET</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
             <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>
@@ -40,23 +90,112 @@
       </LegData>
     </SwapData>
   </Trade>
-
-  <Trade id="SwapLegFlow">
+  <Trade id="Cap">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CPTY</CounterParty>
-      <NettingSetId>CPTY</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
       <LegData>
-        <LegType>Fixed</LegType>
+        <LegType>Floating</LegType>
         <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>100000000</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>EUR-EURIBOR-6M</Index>
+          <FixingDays>2</FixingDays>
+          <Spreads>
+            <Spread>0.0</Spread>
+          </Spreads>
+          <Caps>
+            <Cap>0.03</Cap>
+          </Caps>
+          <NakedOption>false</NakedOption>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20240301</StartDate>
+            <EndDate>20260301</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Backward</Rule>
+            <EndOfMonth>false</EndOfMonth>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+  <Trade id="EUR6MSwap">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>100000000</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>EUR-EURIBOR-6M</Index>
+          <FixingDays>2</FixingDays>
+          <Spreads>
+            <Spread>0.0</Spread>
+          </Spreads>
+          <NakedOption>false</NakedOption>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20240301</StartDate>
+            <EndDate>20260301</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Backward</Rule>
+            <EndOfMonth>false</EndOfMonth>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+  <Trade id="CDS">
+    <TradeType>CreditDefaultSwap</TradeType>
+    <Envelope>
+      <CounterParty>CP</CounterParty>
+      <NettingSetId>NS</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CreditDefaultSwapData>
+      <CreditCurveId>Underlying1</CreditCurveId>
+      <SettlesAccrual>Y</SettlesAccrual>
+      <PaysAtDefaultTime>Y</PaysAtDefaultTime>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>true</Payer>
         <Currency>USD</Currency>
         <Notionals>
           <Notional>1000000</Notional>
         </Notionals>
-        <DayCounter>30/360</DayCounter>
+        <DayCounter>A360</DayCounter>
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
@@ -65,106 +204,19 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20220205</StartDate>
-            <EndDate>20240205</EndDate>
-            <Tenor>1Y</Tenor>
-            <Calendar>US</Calendar>
+            <StartDate>2021-09-21</StartDate>
+            <EndDate>2026-12-20</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>WeekendsOnly</Calendar>
             <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
-            <Rule>Forward</Rule>
+            <TermConvention>U</TermConvention>
+            <Rule>CDS2015</Rule>
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
           </Rules>
         </ScheduleData>
       </LegData>
-    </SwapData>
+    </CreditDefaultSwapData>
   </Trade>
-
-  <!--
-  <Trade id="ScriptedRangeAccrual">
-    <TradeType>ScriptedTrade</TradeType>
-    <Envelope>
-      <CounterParty>CPTY</CounterParty>
-      <NettingSetId>CPTY</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
-    <ScriptedTradeData>
-      <Script>
-	<Code><![CDATA[
-	NUMBER N, AccrualDays, Payoff, U, i;
-
-	N = SIZE(FixingDates);
-	AccrualDays = 0;
-	
-	FOR i IN (1, SIZE(FixingDates), 1) DO
-	
-	  U = Underlying(FixingDates[i]);
-
-	  IF {U >= LowerBound AND U <= UpperBound} THEN
-	    AccrualDays = AccrualDays + 1;
-	  END;
-
-	END;
-
-	Payoff = Notional * FixedRate * YearFraction * AccrualDays / N;
-
-	Value = PAY( Payoff, PayDate, PayDate, Currency);
-	]]></Code>
-	<NPV>Value</NPV>
-      </Script>
-      <Data>
-	<Number>
-	  <Name>Notional</Name>
-	  <Value>100.0</Value>
-	</Number>
-	<Currency>
-	  <Name>Currency</Name>
-	  <Value>USD</Value>
-	</Currency>
-	<Number>
-	  <Name>FixedRate</Name>
-	  <Value>0.05</Value>
-	</Number>
-	<Number>
-	  <Name>YearFraction</Name>
-	  <Value>1.013889</Value>
-	</Number>
-	<Event>
-	  <Name>FixingDates</Name>
-	  <ScheduleData>
-            <Rules>
-              <StartDate>2023-02-01</StartDate>
-              <EndDate>2024-02-01</EndDate>
-              <Tenor>1D</Tenor>
-              <Calendar>US</Calendar>
-              <Convention>F</Convention>
-              <TermConvention>F</TermConvention>
-              <Rule>Forward</Rule>
-              <EndOfMonth/>
-              <FirstDate/>
-              <LastDate/>
-            </Rules>
-          </ScheduleData>
-	</Event>
-	<Event>
-	  <Name>PayDate</Name>
-	  <Value>2024-02-02</Value>
-	</Event>
-	<Index>
-	  <Name>Underlying</Name>
-	  <Value>USD-SOFR</Value>
-	</Index>
-	<Number>
-	  <Name>UpperBound</Name>
-	  <Value>0.049</Value>
-	</Number>
-	<Number>
-	  <Name>LowerBound</Name>
-	  <Value>0.046</Value>
-	</Number>
-      </Data>
-    </ScriptedTradeData>
-  </Trade>
--->
 </Portfolio>
