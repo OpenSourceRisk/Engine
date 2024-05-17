@@ -274,7 +274,8 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
             int workingIndex;
             do {
                 workingIndex = indices.size() - 1;
-                while (workingIndex >= 0 && indices[workingIndex] == c1->second[workingIndex].size()) {
+                indices[workingIndex]++;
+                while (workingIndex >= 0 && indices[workingIndex] == c1->second[workingIndex].size()+1) {
                     --workingIndex;
                     if (workingIndex >= 0)
                         indices[workingIndex] = 0;
@@ -283,7 +284,7 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
                     RiskFactorKey key(k.first, k.second, newKeyIndex++);
                     result->add(key, interpolatedValue(c0->second, c1->second, indices, k, scenario));
                 }
-                indices[workingIndex]++;
+                
             } while (workingIndex >= 0);
         }
     }
