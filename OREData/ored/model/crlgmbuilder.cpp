@@ -31,7 +31,7 @@ using namespace std;
 namespace ore {
 namespace data {
 
-CrLgmBuilder::CrLgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CrLgmData>& data,
+CrLgmBuilder::CrLgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<CrLgmData>& data,
                            const std::string& configuration)
     : market_(market), configuration_(configuration), data_(data) {
 
@@ -52,7 +52,7 @@ CrLgmBuilder::CrLgmBuilder(const boost::shared_ptr<ore::data::Market>& market, c
 
     // the currency does not matter here
     parametrization_ =
-        boost::make_shared<QuantExt::CrLgm1fConstantParametrization>(USDCurrency(), modelDefaultCurve_, alpha[0], h[0], name);
+        QuantLib::ext::make_shared<QuantExt::CrLgm1fConstantParametrization>(USDCurrency(), modelDefaultCurve_, alpha[0], h[0], name);
 
     LOG("Apply shift horizon and scale");
 

@@ -24,7 +24,7 @@
 namespace ore {
 namespace data {
 
-void PerformanceOption_01::build(const boost::shared_ptr<EngineFactory>& factory) {
+void PerformanceOption_01::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 

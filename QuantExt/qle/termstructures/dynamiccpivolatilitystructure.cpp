@@ -19,7 +19,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <qle/termstructures/dynamiccpivolatilitystructure.hpp>
 
 namespace QuantExt {
-DynamicCPIVolatilitySurface::DynamicCPIVolatilitySurface(const boost::shared_ptr<CPIVolatilitySurface>& source,
+DynamicCPIVolatilitySurface::DynamicCPIVolatilitySurface(const QuantLib::ext::shared_ptr<CPIVolatilitySurface>& source,
                                                          ReactionToTimeDecay decayMode)
     : CPIVolatilitySurface(source->settlementDays(), source->calendar(), source->businessDayConvention(),
                            source->dayCounter(), source->observationLag(), source->frequency(),

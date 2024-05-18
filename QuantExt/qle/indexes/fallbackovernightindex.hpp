@@ -34,28 +34,28 @@ using namespace QuantLib;
 
 class FallbackOvernightIndex : public QuantLib::OvernightIndex {
 public:
-    FallbackOvernightIndex(const boost::shared_ptr<OvernightIndex> originalIndex,
-			   const boost::shared_ptr<OvernightIndex> rfrIndex, const Real spread, const Date& switchDate,
+    FallbackOvernightIndex(const QuantLib::ext::shared_ptr<OvernightIndex> originalIndex,
+			   const QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex, const Real spread, const Date& switchDate,
 			   const bool useRfrCurve);
-    FallbackOvernightIndex(const boost::shared_ptr<OvernightIndex> originalIndex,
-			   const boost::shared_ptr<OvernightIndex> rfrIndex, const Real spread, const Date& switchDate,
+    FallbackOvernightIndex(const QuantLib::ext::shared_ptr<OvernightIndex> originalIndex,
+			   const QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex, const Real spread, const Date& switchDate,
 			   const Handle<YieldTermStructure>& forwardingCurve);
 
     void addFixing(const Date& fixingDate, Real fixing, bool forceOverwrite = false) override;
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     Rate pastFixing(const Date& fixingDate) const override;
-    boost::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& forwarding) const override;
+    QuantLib::ext::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& forwarding) const override;
 
-    boost::shared_ptr<OvernightIndex> originalIndex() const;
-    boost::shared_ptr<OvernightIndex> rfrIndex() const;
+    QuantLib::ext::shared_ptr<OvernightIndex> originalIndex() const;
+    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex() const;
     Real spread() const;
     const Date& switchDate() const;
     bool useRfrCurve() const;
 
 private:
     Rate forecastFixing(const Date& valueDate, const Date& endDate, Time t) const override;
-    boost::shared_ptr<OvernightIndex> originalIndex_;
-    boost::shared_ptr<OvernightIndex> rfrIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> originalIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex_;
     Real spread_;
     Date switchDate_;
     bool useRfrCurve_;

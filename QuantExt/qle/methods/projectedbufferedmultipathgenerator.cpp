@@ -22,7 +22,7 @@ namespace QuantExt {
 
 ProjectedBufferedMultiPathGenerator::ProjectedBufferedMultiPathGenerator(
     const std::vector<Size>& stateProcessProjection,
-    const boost::shared_ptr<std::vector<std::vector<QuantLib::Path>>>& bufferedPaths)
+    const QuantLib::ext::shared_ptr<std::vector<std::vector<QuantLib::Path>>>& bufferedPaths)
     : stateProcessProjection_(stateProcessProjection), bufferedPaths_(bufferedPaths), next_(MultiPath(), 1.0) {
 
     QL_REQUIRE(bufferedPaths_, "ProjectedBufferedMultiPathGenerator: no buffered paths given (null)");

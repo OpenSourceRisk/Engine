@@ -70,11 +70,11 @@ void ComputeEnvironment::selectContext(const std::string& deviceName) {
 
 ComputeContext& ComputeEnvironment::context() { return *currentContext_; }
 
-void ComputeContext::finalizeCalculation(std::vector<std::vector<double>>& output, const Settings& settings) {
+void ComputeContext::finalizeCalculation(std::vector<std::vector<double>>& output) {
     std::vector<double*> outputPtr(output.size());
     std::transform(output.begin(), output.end(), outputPtr.begin(),
                    [](std::vector<double>& v) -> double* { return &v[0]; });
-    finalizeCalculation(outputPtr, settings);
+    finalizeCalculation(outputPtr);
 }
 
 void ComputeFrameworkRegistry::add(const std::string& name, std::function<ComputeFramework*(void)> creator,

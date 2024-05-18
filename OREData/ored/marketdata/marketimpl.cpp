@@ -75,7 +75,7 @@ Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, co
                                                   const string& configuration) const {
     // we allow for standard (i.e. not convention based) ibor index names as keys and return the index forward curve in
     // case of a match
-    boost::shared_ptr<IborIndex> notUsed;
+    QuantLib::ext::shared_ptr<IborIndex> notUsed;
     if (tryParseIborIndex(key, notUsed)) {
         return iborIndex(key, configuration)->forwardingTermStructure();
     }
@@ -128,7 +128,7 @@ Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::swaptionVol(const stri
             return it2->second;
     }
     // if key is an index name and we have a swaption curve for its ccy, we return that
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     if (!tryParseIborIndex(key, index)) {
         QL_FAIL("did not find swaption curve for key '" << key << "'");
     }
@@ -161,7 +161,7 @@ pair<string, string> MarketImpl::swapIndexBases(const string& key, const string&
             return it2->second;
     }
     // if key is an index name and we have a swaption curve for its ccy, we return that
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     if (!tryParseIborIndex(key, index)) {
         QL_FAIL("did not find swaption index bases for key '" << key << "'");
     }
@@ -205,13 +205,13 @@ Handle<QuantExt::FxIndex> MarketImpl::fxIndexImpl(const string& fxIndex, const s
 Handle<Quote> MarketImpl::fxRateImpl(const string& ccypair, const string& configuration) const {
     // if rate requested for a currency against itself, return 1.0
     if (ccypair.substr(0,3) == ccypair.substr(3))
-        return Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+        return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
     return fxIndex(ccypair, configuration)->fxQuote();
 }
 
 Handle<Quote> MarketImpl::fxSpotImpl(const string& ccypair, const string& configuration) const {
     if (ccypair.substr(0, 3) == ccypair.substr(3))
-        return Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+        return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
     return fxIndex(ccypair, configuration)->fxQuote(true);
 }
 
@@ -227,7 +227,7 @@ Handle<BlackVolTermStructure> MarketImpl::fxVolImpl(const string& ccypair, const
         require(MarketObject::FXVol, ccypairInverted, configuration);
         it = fxVols_.find(make_pair(configuration, ccypairInverted));
         if (it != fxVols_.end()) {
-            Handle<BlackVolTermStructure> h(boost::make_shared<QuantExt::BlackInvertedVolTermStructure>(it->second));
+            Handle<BlackVolTermStructure> h(QuantLib::ext::make_shared<QuantExt::BlackInvertedVolTermStructure>(it->second));
             h->enableExtrapolation();
             // we have found a surface for the inverted pair.
             // so we can invert the surface and store that under the original pair.
@@ -279,7 +279,7 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
             return it2->second;
     }
     // if key is an index name and we have a cap floor surface for its ccy, we return that
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     if (!tryParseIborIndex(key, index)) {
         QL_FAIL("did not find capfloor curve for key '" << key << "'");
     }
@@ -313,7 +313,7 @@ std::pair<string, QuantLib::Period> MarketImpl::capFloorVolIndexBase(const strin
             return it2->second;
     }
     // if key is an index name and we have a cap floor surface for its ccy, we return that
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     if (!tryParseIborIndex(key, index)) {
         return std::make_pair(string(),0*Days);
     }
@@ -426,12 +426,12 @@ Handle<QuantExt::CorrelationTermStructure> MarketImpl::correlationCurve(const st
         it = correlationCurves_.find(make_tuple(configuration, inverseFxIndex(index1), index2));
         if (it != correlationCurves_.end())
             return Handle<QuantExt::CorrelationTermStructure>(
-                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+                QuantLib::ext::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
         require(MarketObject::Correlation, index2 + "&" + inverseFxIndex(index1), configuration);
         it = correlationCurves_.find(make_tuple(configuration, index2, inverseFxIndex(index1)));
         if (it != correlationCurves_.end())
             return Handle<QuantExt::CorrelationTermStructure>(
-                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+                QuantLib::ext::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
     }
     // inverse fx index2
     if (isFxIndex(index2)) {
@@ -439,12 +439,12 @@ Handle<QuantExt::CorrelationTermStructure> MarketImpl::correlationCurve(const st
         it = correlationCurves_.find(make_tuple(configuration, index1, inverseFxIndex(index2)));
         if (it != correlationCurves_.end())
             return Handle<QuantExt::CorrelationTermStructure>(
-                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+                QuantLib::ext::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
         require(MarketObject::Correlation, inverseFxIndex(index2) + "&" + index1, configuration);
         it = correlationCurves_.find(make_tuple(configuration, inverseFxIndex(index2), index1));
         if (it != correlationCurves_.end())
             return Handle<QuantExt::CorrelationTermStructure>(
-                boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
+                QuantLib::ext::make_shared<QuantExt::NegativeCorrelationTermStructure>(it->second));
     }
     // both fx indices inverted
     if (isFxIndex(index1) && isFxIndex(index2)) {
@@ -482,18 +482,18 @@ void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountInd
         QL_REQUIRE(tokens[1] == "CMS", "expected CMS as second token in " << swapIndex);
 
         Handle<YieldTermStructure> discounting, forwarding;
-        boost::shared_ptr<IborIndex> dummeyIndex;
+        QuantLib::ext::shared_ptr<IborIndex> dummeyIndex;
         if (tryParseIborIndex(discountIndex, dummeyIndex))
             discounting = iborIndex(discountIndex, configuration)->forwardingTermStructure();
         else
             discounting = yieldCurve(discountIndex, configuration);
 
-        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-        auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(swapIndex));
+        const QuantLib::ext::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+        auto swapCon = QuantLib::ext::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(swapIndex));
         QL_REQUIRE(swapCon, "expected SwapIndexConvention for " << swapIndex);
-        auto conIbor = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions->get(swapCon->conventions()));
-        auto conOisComp = boost::dynamic_pointer_cast<data::OisConvention>(conventions->get(swapCon->conventions()));
-        auto conOisAvg = boost::dynamic_pointer_cast<data::AverageOisConvention>(conventions->get(swapCon->conventions()));
+        auto conIbor = QuantLib::ext::dynamic_pointer_cast<data::IRSwapConvention>(conventions->get(swapCon->conventions()));
+        auto conOisComp = QuantLib::ext::dynamic_pointer_cast<data::OisConvention>(conventions->get(swapCon->conventions()));
+        auto conOisAvg = QuantLib::ext::dynamic_pointer_cast<data::AverageOisConvention>(conventions->get(swapCon->conventions()));
         QL_REQUIRE(conIbor || conOisComp || conOisAvg,
                    "expected IRSwapConvention, OisConvention, AverageOisConvention for " << swapCon->conventions());
 
@@ -503,7 +503,7 @@ void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountInd
         else
             forwarding = iborIndex(fi, configuration)->forwardingTermStructure();
 
-        boost::shared_ptr<SwapIndex> si = data::parseSwapIndex(swapIndex, forwarding, discounting);
+        QuantLib::ext::shared_ptr<SwapIndex> si = data::parseSwapIndex(swapIndex, forwarding, discounting);
         swapIndices_[make_pair(configuration, swapIndex)] = Handle<SwapIndex>(si);
     } catch (std::exception& e) {
         QL_FAIL("Failure in MarketImpl::addSwapIndex() with index " << swapIndex << " : " << e.what());
@@ -514,7 +514,7 @@ void MarketImpl::refresh(const string& configuration) {
 
     auto it = refreshTs_.find(configuration);
     if (it == refreshTs_.end()) {
-        it = refreshTs_.insert(make_pair(configuration, std::set<boost::shared_ptr<TermStructure>>())).first;
+        it = refreshTs_.insert(make_pair(configuration, std::set<QuantLib::ext::shared_ptr<TermStructure>>())).first;
     }
 
     if (it->second.empty()) {

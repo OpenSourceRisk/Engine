@@ -347,7 +347,7 @@ private:
 };
 
 /*! Populates a RequiredFixings instance based on a given QuantLib::Leg */
-void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<FixingDateGetter>& fixingDateGetter);
+void addToRequiredFixings(const QuantLib::Leg& leg, const QuantLib::ext::shared_ptr<FixingDateGetter>& fixingDateGetter);
 
 /*! Inflation fixings are generally available on a monthly, or coarser, frequency. When a portfolio is asked for its
     fixings, and it contains inflation fixings, ORE will by convention put the fixing date as the 1st day of the

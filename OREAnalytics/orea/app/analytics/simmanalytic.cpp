@@ -31,7 +31,7 @@ void SimmAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
 }
 
-void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
     if (!analytic()->match(runTypes))
         return;
@@ -47,13 +47,13 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
     simmAnalytic->loadCrifRecords(loader);
 
     if (analytic()->getWriteIntermediateReports()) {
-        boost::shared_ptr<InMemoryReport> crifReport = boost::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> crifReport = QuantLib::ext::make_shared<InMemoryReport>();
         ReportWriter(inputs_->reportNaString()).writeCrifReport(crifReport, simmAnalytic->crif());
         analytic()->reports()[LABEL]["crif"] = crifReport;
         LOG("CRIF report generated");
 
         Crif simmDataCrif = simmAnalytic->crif().aggregate();
-        boost::shared_ptr<InMemoryReport> simmDataReport = boost::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> simmDataReport = QuantLib::ext::make_shared<InMemoryReport>();
         ReportWriter(inputs_->reportNaString())
             .writeSIMMData(simmAnalytic->crif(), simmDataReport);
         analytic()->reports()[LABEL]["simm_data"] = simmDataReport;
@@ -71,7 +71,7 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
     simmConfig->bucketMapper()->updateFromCrif(simmAnalytic->crif());
 
     // Calculate SIMM
-    auto simm = boost::make_shared<SimmCalculator>(simmAnalytic->crif(),
+    auto simm = QuantLib::ext::make_shared<SimmCalculator>(simmAnalytic->crif(),
                                                    simmConfig,
                                                    inputs_->simmCalculationCurrencyCall(),
                                                    inputs_->simmCalculationCurrencyPost(),
@@ -88,7 +88,7 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
         LOG("SIMM reporting currency is " << inputs_->simmReportingCurrency() << " with fxSpot " << fxSpot);
     }
 
-    boost::shared_ptr<InMemoryReport> simmRegulationBreakdownReport = boost::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> simmRegulationBreakdownReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
         .writeSIMMReport(simm->simmResults(), simmRegulationBreakdownReport, simmAnalytic->hasNettingSetDetails(),
                          inputs_->simmResultCurrency(), inputs_->simmCalculationCurrencyCall(),
@@ -97,7 +97,7 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
     analytic()->reports()[LABEL]["regulation_breakdown_simm"] = simmRegulationBreakdownReport;
 
 
-    boost::shared_ptr<InMemoryReport> simmReport = boost::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> simmReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
         .writeSIMMReport(simm->finalSimmResults(), simmReport, simmAnalytic->hasNettingSetDetails(),
                          inputs_->simmResultCurrency(), inputs_->simmCalculationCurrencyCall(),
@@ -108,7 +108,7 @@ void SimmAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLo
 
 }
 
-void SimmAnalytic::loadCrifRecords(const boost::shared_ptr<ore::data::InMemoryLoader>& loader) {
+void SimmAnalytic::loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     QL_REQUIRE(inputs_, "Inputs not set");
     QL_REQUIRE(!inputs_->crif().empty(), "CRIF loader does not contain any records");
         

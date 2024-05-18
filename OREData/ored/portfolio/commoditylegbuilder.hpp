@@ -35,7 +35,7 @@ public:
     CommodityFixedLegBuilder() : LegBuilder("CommodityFixed") {}
 
     QuantLib::Leg buildLeg(const ore::data::LegData& data,
-                           const boost::shared_ptr<ore::data::EngineFactory>& engineFactory,
+                           const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
                            RequiredFixings& requiredFixings, const std::string& configuration,
                            const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                            const bool useXbsCurves = false) const override;
@@ -47,7 +47,7 @@ public:
         : LegBuilder("CommodityFloating"), allAveraging_(false) {}
 
     QuantLib::Leg buildLeg(const ore::data::LegData& data,
-                           const boost::shared_ptr<ore::data::EngineFactory>& engineFactory,
+                           const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory,
                            RequiredFixings& requiredFixings, const std::string& configuration,
                            const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                            const bool useXbsCurves = false) const override;

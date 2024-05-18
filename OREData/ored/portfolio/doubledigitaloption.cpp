@@ -37,7 +37,7 @@ std::pair<std::string, std::string> getLowerAndUpperBound(const std::string& typ
     }
 }
 
-void DoubleDigitalOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void DoubleDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 

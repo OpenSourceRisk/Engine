@@ -36,12 +36,12 @@ using namespace std::placeholders;
 namespace ore {
 namespace data {
 
-void ScriptedTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory, const PremiumData& premiumData,
+void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const PremiumData& premiumData,
                           const Real premiumMultiplier) {
 
     DLOG("ScriptedTrade::build() called for trade " << id());
 
-    auto builder = boost::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(engineFactory->builder("ScriptedTrade"));
+    auto builder = QuantLib::ext::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(engineFactory->builder("ScriptedTrade"));
 
     QL_REQUIRE(builder, "no builder found for ScriptedTrade");
     auto engine = builder->engine(id(), *this, engineFactory->referenceData(), engineFactory->iborFallbackConfig());
@@ -51,7 +51,7 @@ void ScriptedTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory,
 
     setIsdaTaxonomyFields();
 
-    auto qleInstr = boost::make_shared<ScriptedInstrument>(builder->lastRelevantDate());
+    auto qleInstr = QuantLib::ext::make_shared<ScriptedInstrument>(builder->lastRelevantDate());
     qleInstr->setPricingEngine(engine);
 
     npvCurrency_ = builder->npvCurrency();
@@ -62,13 +62,13 @@ void ScriptedTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory,
     legCurrencies_.clear();
     legPayers_.clear();
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData,
                                                 premiumMultiplier, parseCurrencyWithMinors(npvCurrency_), engineFactory,
                                                 builder->configuration(MarketContext::pricing)));
 
-    instrument_ = boost::make_shared<VanillaInstrument>(qleInstr, 1.0, additionalInstruments, additionalMultipliers);
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qleInstr, 1.0, additionalInstruments, additionalMultipliers);
     
     // add required fixings
     for (auto const& f : builder->fixings()) {
@@ -94,7 +94,7 @@ void ScriptedTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory,
     setSensitivityTemplate(builder->sensitivityTemplate());
 }
 
-void ScriptedTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     ScriptedTrade::build(engineFactory, PremiumData(), 1.0);
 }
 
@@ -121,14 +121,14 @@ void ScriptedTrade::setIsdaTaxonomyFields() {
         additionalData_["isdaSubProduct"] = string("Other");
         additionalData_["isdaTransaction"] = string("");
     } else if (scheduleProductClass_ == "Commodity") {
-        WLOG("ISDA taxonomy for trade " << id() << " and product class " << scheduleProductClass_
+        DLOG("ISDA taxonomy for trade " << id() << " and product class " << scheduleProductClass_
                                         << " follows the Equity template");
         additionalData_["isdaAssetClass"] = string("Commodity");
         additionalData_["isdaBaseProduct"] = string("Other");
         additionalData_["isdaSubProduct"] = string("");
         additionalData_["isdaTransaction"] = string("");
     } else {
-        ALOG("ISDA taxonomy not set for trade " << id() << " and product class " << scheduleProductClass_);
+        DLOG("ISDA taxonomy not set for trade " << id() << " and product class " << scheduleProductClass_);
     }
 }
 
@@ -136,14 +136,14 @@ QuantLib::Real ScriptedTrade::notional() const {
     if (instrument_->qlInstrument()->isExpired())
         return 0.0;
     // try to get the notional from the additional results of the instrument
-    auto st = boost::dynamic_pointer_cast<ScriptedInstrument>(instrument_->qlInstrument(true));
+    auto st = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(instrument_->qlInstrument(true));
     QL_REQUIRE(st, "internal error: could not cast to ScriptedInstrument");
     try {
         return st->result<Real>("currentNotional");
     } catch (const std::exception& e) {
         if (st->lastCalculationWasValid()) {
             // calculation was valid, just the result is not provided
-            ALOG("error when retrieving notional: " << e.what() << ", return null");
+            DLOG("notional was not retrieved: " << e.what() << ", return null");
         } else {
             // calculation threw an error, propagate this
             QL_FAIL(e.what());
@@ -157,21 +157,21 @@ std::string ScriptedTrade::notionalCurrency() const {
     if (instrument_->qlInstrument()->isExpired())
         return npvCurrency_;
     // try to get the notional ccy from the additional results of the instrument
-    auto st = boost::dynamic_pointer_cast<ScriptedInstrument>(instrument_->qlInstrument(true));
+    auto st = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(instrument_->qlInstrument(true));
     QL_REQUIRE(st, "internal error: could not cast to ScriptedInstrument");
     try {
         return instrument_->qlInstrument()->result<std::string>("notionalCurrency");
     } catch (const std::exception& e) {
         if (st->lastCalculationWasValid()) {
             // calculation was valid, just the result is not provided
-            ALOG("error when retrieving notional ccy: " << e.what() << ", return empty string");
+            DLOG("notional ccy was not retrieved: " << e.what() << ", return empty string");
         } else {
             // calculation threw an error, propagate this
             QL_FAIL(e.what());
         }
     }
     // if not provided, return an empty string
-    return "";
+    return std::string();
 }
 
 void ScriptedTrade::clear() {
@@ -223,7 +223,7 @@ std::pair<NodeType, std::string> getNativeTypeAndValue(const std::string& value,
 } // namespace
 
 std::map<ore::data::AssetClass, std::set<std::string>>
-ScriptedTrade::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+ScriptedTrade::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
 
     map<ore::data::AssetClass, set<string>> result;
 

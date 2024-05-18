@@ -38,8 +38,8 @@ class PiecewiseAtmOptionletCurve : public QuantLib::OptionletVolatilityStructure
 public:
     typedef typename PiecewiseOptionletCurve<Interpolator, Bootstrap>::this_curve optionlet_curve;
 
-    PiecewiseAtmOptionletCurve(QuantLib::Natural settlementDays, const boost::shared_ptr<CapFloorTermVolCurve>& cftvc,
-                               const boost::shared_ptr<QuantLib::IborIndex>& index,
+    PiecewiseAtmOptionletCurve(QuantLib::Natural settlementDays, const QuantLib::ext::shared_ptr<CapFloorTermVolCurve>& cftvc,
+                               const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
                                const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
                                bool flatFirstPeriod = true,
                                const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
@@ -50,8 +50,8 @@ public:
                                const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>());
 
     PiecewiseAtmOptionletCurve(const QuantLib::Date& referenceDate,
-                               const boost::shared_ptr<CapFloorTermVolCurve>& cftvc,
-                               const boost::shared_ptr<QuantLib::IborIndex>& index,
+                               const QuantLib::ext::shared_ptr<CapFloorTermVolCurve>& cftvc,
+                               const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
                                const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
                                bool flatFirstPeriod = true,
                                const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
@@ -97,18 +97,18 @@ public:
     //@}
 
     //! The underlying optionlet curve
-    boost::shared_ptr<optionlet_curve> curve() const;
+    QuantLib::ext::shared_ptr<optionlet_curve> curve() const;
 
 protected:
     //! \name OptionletVolatilityStructure interface
     //@{
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
     QuantLib::Volatility volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const override;
     //@}
 
 private:
     //! The underlying ATM cap floor term volatility curve
-    boost::shared_ptr<CapFloorTermVolCurve> cftvc_;
+    QuantLib::ext::shared_ptr<CapFloorTermVolCurve> cftvc_;
 
     //! Flat optionlet volatility before first optionlet fixing date
     bool flatFirstPeriod_;
@@ -135,27 +135,27 @@ private:
     Bootstrap<optionlet_curve> bootstrap_;
 
     //! The stripped optionlet curve
-    boost::shared_ptr<optionlet_curve> curve_;
+    QuantLib::ext::shared_ptr<optionlet_curve> curve_;
 
     //! Store the helper tenors
     std::vector<QuantLib::Period> tenors_;
 
     //! Store the vector of ATM cap floor helpers that are used in the bootstrap
     typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
-    std::vector<boost::shared_ptr<helper> > helpers_;
+    std::vector<QuantLib::ext::shared_ptr<helper> > helpers_;
 
     //! Store the ATM cap floor curve quotes
-    std::vector<boost::shared_ptr<QuantLib::SimpleQuote> > quotes_;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::SimpleQuote> > quotes_;
 
     //! Shared initialisation
-    void initialise(const boost::shared_ptr<QuantLib::IborIndex>& index,
+    void initialise(const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
                     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount);
 };
 
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
-    QuantLib::Natural settlementDays, const boost::shared_ptr<CapFloorTermVolCurve>& cftvc,
-    const boost::shared_ptr<QuantLib::IborIndex>& index, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
+    QuantLib::Natural settlementDays, const QuantLib::ext::shared_ptr<CapFloorTermVolCurve>& cftvc,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
     bool flatFirstPeriod, const QuantLib::VolatilityType capFloorVolType, const QuantLib::Real capFloorVolDisplacement,
     const boost::optional<QuantLib::VolatilityType> optionletVolType,
     const boost::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets, const Interpolator& i,
@@ -171,15 +171,15 @@ PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
 
     initialise(index, discount);
 
-    curve_ = boost::make_shared<optionlet_curve>(settlementDays, helpers_, cftvc_->calendar(),
+    curve_ = QuantLib::ext::make_shared<optionlet_curve>(settlementDays, helpers_, cftvc_->calendar(),
                                                  cftvc_->businessDayConvention(), cftvc_->dayCounter(), volatilityType_,
                                                  displacement_, flatFirstPeriod_, interpolator_, bootstrap_);
 }
 
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
-    const QuantLib::Date& referenceDate, const boost::shared_ptr<CapFloorTermVolCurve>& cftvc,
-    const boost::shared_ptr<QuantLib::IborIndex>& index, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
+    const QuantLib::Date& referenceDate, const QuantLib::ext::shared_ptr<CapFloorTermVolCurve>& cftvc,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
     bool flatFirstPeriod, const QuantLib::VolatilityType capFloorVolType, const QuantLib::Real capFloorVolDisplacement,
     const boost::optional<QuantLib::VolatilityType> optionletVolType,
     const boost::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets, const Interpolator& i,
@@ -195,7 +195,7 @@ PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
 
     initialise(index, discount);
 
-    curve_ = boost::make_shared<optionlet_curve>(referenceDate, helpers_, cftvc_->calendar(),
+    curve_ = QuantLib::ext::make_shared<optionlet_curve>(referenceDate, helpers_, cftvc_->calendar(),
                                                  cftvc_->businessDayConvention(), cftvc_->dayCounter(), volatilityType_,
                                                  displacement_, flatFirstPeriod_, interpolator_, bootstrap_);
 }
@@ -247,14 +247,14 @@ QuantLib::Real PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::displacement
 }
 
 template <class Interpolator, template <class> class Bootstrap>
-boost::shared_ptr<typename PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::optionlet_curve>
+QuantLib::ext::shared_ptr<typename PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::optionlet_curve>
 PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::curve() const {
     calculate();
     return curve_;
 }
 
 template <class Interpolator, template <class> class Bootstrap>
-boost::shared_ptr<QuantLib::SmileSection>
+QuantLib::ext::shared_ptr<QuantLib::SmileSection>
 PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::smileSectionImpl(QuantLib::Time optionTime) const {
     calculate();
     return curve_->smileSection(optionTime, true);
@@ -269,7 +269,7 @@ QuantLib::Volatility PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::volati
 
 template <class Interpolator, template <class> class Bootstrap>
 void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::initialise(
-    const boost::shared_ptr<QuantLib::IborIndex>& index,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount) {
 
     // Readability
@@ -326,8 +326,8 @@ void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::initialise(
 
     // Initialise the quotes and helpers
     for (Size i = 0; i < tenors_.size(); i++) {
-        quotes_[i] = boost::make_shared<SimpleQuote>(cftvc_->volatility(tenors_[i], 0.01));
-        helpers_[i] = boost::make_shared<CapFloorHelper>(
+        quotes_[i] = QuantLib::ext::make_shared<SimpleQuote>(cftvc_->volatility(tenors_[i], 0.01));
+        helpers_[i] = QuantLib::ext::make_shared<CapFloorHelper>(
             CapFloorHelper::Cap, tenors_[i], Null<Real>(), Handle<Quote>(quotes_[i]), index, discount, this->moving_,
             effectiveDate, CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_);
     }

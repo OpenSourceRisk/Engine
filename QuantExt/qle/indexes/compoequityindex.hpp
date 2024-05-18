@@ -36,22 +36,22 @@ public:
     /*! - fxIndex source ccy must be the equity ccy, fxIndex target ccy is the new equity ccy
         - dividends before the divCutoffDate are ignored, this is useful since there have to be
           fixings for the fx index on all dividend dates which might not be available */
-    CompoEquityIndex(const boost::shared_ptr<QuantExt::EquityIndex2>& source, const boost::shared_ptr<FxIndex>& fxIndex,
+    CompoEquityIndex(const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& source, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex,
                      const Date& dividendCutoffDate = Date());
 
-    boost::shared_ptr<QuantExt::EquityIndex2> source() const;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> source() const;
 
     void addDividend(const Dividend& dividend, bool forceOverwrite = false) override;
     const std::set<Dividend>& dividendFixings() const override;
     Real pastFixing(const Date& fixingDate) const override;
-    boost::shared_ptr<QuantExt::EquityIndex2> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
                                          const Handle<YieldTermStructure>& dividend) const override;
 
 private:
     void performCalculations() const override;
 
-    boost::shared_ptr<QuantExt::EquityIndex2> source_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> source_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Date dividendCutoffDate_;
 
     mutable std::set<Dividend> dividendFixings_;

@@ -41,7 +41,7 @@ public:
     /* see GaussianCam, this is the FD variant for a single underlying IR model */
     FdGaussianCam(const Handle<CrossAssetModel>& cam, const std::string& currency,
                   const Handle<YieldTermStructure>& curve,
-                  const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
+                  const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
                   const std::set<Date>& simulationDates, const Size stateGridPoints = 50,
                   const Size timeStepsPerYear = 24, const Real mesherEpsilon = 1E-4,
                   const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());

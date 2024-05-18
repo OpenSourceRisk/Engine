@@ -59,8 +59,8 @@ public:
        required, the respective index should be a nullptr. The fx indices can be given in any direction, i.e. this
        wrapper will figure out whether to apply the fixing or the inverse fixing.
     */
-    TRSWrapper(const std::vector<boost::shared_ptr<ore::data::Trade>>& underlying,
-               const std::vector<boost::shared_ptr<QuantLib::Index>>& underlyingIndex,
+    TRSWrapper(const std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>>& underlying,
+               const std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>>& underlyingIndex,
                const std::vector<QuantLib::Real> underlyingMultiplier, const bool includeUnderlyingCashflowsInReturn,
                const QuantLib::Real initialPrice, const QuantLib::Currency& initialPriceCurrency,
                const std::vector<QuantLib::Currency>& assetCurrency, const QuantLib::Currency& returnCurrency,
@@ -70,10 +70,10 @@ public:
                const QuantLib::Currency& fundingCurrency, const QuantLib::Size fundingResetGracePeriod,
                const bool paysAsset, const bool paysFunding, const QuantLib::Leg& additionalCashflowLeg,
                const bool additionalCashflowLegPayer, const QuantLib::Currency& additionalCashflowCurrency,
-               const std::vector<boost::shared_ptr<QuantExt::FxIndex>>& fxIndexAsset,
-               const boost::shared_ptr<QuantExt::FxIndex>& fxIndexReturn,
-               const boost::shared_ptr<QuantExt::FxIndex>& fxIndexAdditionalCashflows,
-               const std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& addFxindices);
+               const std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndexAsset,
+               const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndexReturn,
+               const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndexAdditionalCashflows,
+               const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxindices);
 
     //! \name Instrument interface
     //@{
@@ -83,8 +83,8 @@ public:
     //@}
 
 private:
-    std::vector<boost::shared_ptr<ore::data::Trade>> underlying_;
-    std::vector<boost::shared_ptr<QuantLib::Index>> underlyingIndex_;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>> underlying_;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>> underlyingIndex_;
     std::vector<QuantLib::Real> underlyingMultiplier_;
     bool includeUnderlyingCashflowsInReturn_;
     QuantLib::Real initialPrice_;
@@ -100,9 +100,9 @@ private:
     QuantLib::Leg additionalCashflowLeg_;
     bool additionalCashflowLegPayer_;
     const QuantLib::Currency additionalCashflowCurrency_;
-    std::vector<boost::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
 
     Date lastDate_;
 };
@@ -110,8 +110,8 @@ private:
 class TRSWrapper::arguments : public virtual QuantLib::PricingEngine::arguments {
 public:
     // direct copy from the instrument
-    std::vector<boost::shared_ptr<ore::data::Trade>> underlying_;
-    std::vector<boost::shared_ptr<QuantLib::Index>> underlyingIndex_;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>> underlying_;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>> underlyingIndex_;
     std::vector<QuantLib::Real> underlyingMultiplier_;
     bool includeUnderlyingCashflowsInReturn_;
     QuantLib::Real initialPrice_;
@@ -127,9 +127,9 @@ public:
     QuantLib::Leg additionalCashflowLeg_;
     bool additionalCashflowLegPayer_;
     QuantLib::Currency additionalCashflowCurrency_;
-    std::vector<boost::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexAsset_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndexReturn_, fxIndexAdditionalCashflows_;
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> addFxIndices_;
 
     void validate() const override;
 };

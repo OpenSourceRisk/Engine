@@ -18,6 +18,8 @@
 
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -79,7 +81,7 @@ XMLNode* BondReferenceDatum::BondData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "IssuerId", issuerId);
     XMLUtils::addChild(doc, node, "CreditCurveId", creditCurveId);
     XMLUtils::addChild(doc, node, "CreditGroup", creditGroup);
-    XMLUtils::addChild(doc, node, "ReferenceCurveId", issuerId);
+    XMLUtils::addChild(doc, node, "ReferenceCurveId", referenceCurveId);
     XMLUtils::addChild(doc, node, "IncomeCurveId", incomeCurveId);
     XMLUtils::addChild(doc, node, "VolatilityCurveId", volatilityCurveId);
     XMLUtils::addChild(doc, node, "SettlementDays", settlementDays);
@@ -394,6 +396,127 @@ XMLNode* CurrencyHedgedEquityIndexReferenceDatum::toXML(XMLDocument& doc) const 
     return node;
 }
 
+// Portfolio Basket
+/*
+<ReferenceDatum id="MSFDSJP">
+ <PortfolioBasketReferenceData>
+  <Components>
+   <Trade>
+    <TradeType>EquityPosition</TradeType>
+     <Envelope>
+      <CounterParty>{{netting_set_id}}</CounterParty>
+       <NettingSetId>{{netting_set_id}}</NettingSetId>
+       <AdditionalFields>
+        <valuation_date>2023-11-07</valuation_date>
+        <im_model>SIMM</im_model>
+        <post_regulations>SEC</post_regulations>
+        <collect_regulations>SEC</collect_regulations>
+       </AdditionalFields>
+      </Envelope>
+      <EquityPositionData>
+       <Quantity>7006.0</Quantity>
+        <Underlying>
+         <Type>Equity</Type>
+         <Name>CR.N</Name>
+         <IdentifierType>RIC</IdentifierType>
+        </Underlying>
+       </EquityPositionData>
+      </Trade>
+      <Trade id="CashSWAP_USD.CASH">
+       <TradeType>Swap</TradeType>
+        <Envelope>
+          <CounterParty>{{netting_set_id}}</CounterParty>
+           <NettingSetId>{{netting_set_id}}</NettingSetId>
+           <AdditionalFields>
+            <valuation_date>2023-11-07</valuation_date>
+            <im_model>SIMM</im_model>
+            <post_regulations>SEC</post_regulations>
+            <collect_regulations>SEC</collect_regulations>
+           </AdditionalFields>
+          </Envelope>
+          <SwapData>
+           <LegData>
+           <Payer>true</Payer>
+           <LegType>Cashflow</LegType>
+           <Currency>USD</Currency>
+           <CashflowData>
+            <Cashflow>
+             <Amount date="2023-11-08">28641475.824680243</Amount>
+            </Cashflow>
+           </CashflowData>
+       </LegData>
+      </SwapData>
+     </Trade>
+   </Components>
+  </PortfolioBasketReferenceData>
+</ReferenceDatum>
+*/
+
+void PortfolioBasketReferenceDatum::fromXML(XMLNode* node) {
+        ReferenceDatum::fromXML(node);
+        XMLNode* innerNode = XMLUtils::getChildNode(node, type() + "ReferenceData");
+        QL_REQUIRE(innerNode, "No " + type() + "ReferenceData node");  
+
+        // Get the "Components" node
+        XMLNode* componentsNode = XMLUtils::getChildNode(innerNode, "Components");
+        QL_REQUIRE(componentsNode, "No Components node");
+
+        tradecomponents_.clear();
+        auto c = XMLUtils::getChildrenNodes(componentsNode, "Trade");
+        int k = 0;
+        for (auto const n : c) {
+
+            string tradeType = XMLUtils::getChildValue(n, "TradeType", true);
+            string id = XMLUtils::getAttribute(n, "id");
+            if (id == "") {
+                id = std::to_string(k);
+            }
+            
+            DLOG("Parsing composite trade " << this->id() << " node " << k << " with id: " << id);
+            
+            QuantLib::ext::shared_ptr<Trade> trade;
+            try {
+                trade = TradeFactory::instance().build(tradeType);
+                trade->id() = id;
+                Envelope componentEnvelope;
+                if (XMLNode* envNode = XMLUtils::getChildNode(n, "Envelope")) {
+                   componentEnvelope.fromXML(envNode);
+                }
+                Envelope env;
+                // the component trade's envelope is the main trade's envelope with possibly overwritten add fields
+                for (auto const& [k, v] : componentEnvelope.fullAdditionalFields()) {
+                   env.setAdditionalField(k, v);
+                }
+                    
+                trade->setEnvelope(env);
+                trade->fromXML(n);
+                tradecomponents_.push_back(trade);
+                DLOG("Added Trade " << id << " (" << trade->id() << ")"
+                                        << " type:" << tradeType << " to composite trade " << this->id() << ".");
+                k += 1;
+            } catch (const std::exception& e) {
+                StructuredTradeErrorMessage(
+                    id, tradeType,
+                    "Failed to build subtrade with id '" + id + "' inside composite trade: ", e.what())
+                    .log();
+            }
+            
+         }
+}
+
+XMLNode* PortfolioBasketReferenceDatum::toXML(XMLDocument& doc) const {
+        XMLNode* node = ReferenceDatum::toXML(doc);
+        XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
+        XMLUtils::appendNode(node, rdNode);
+        XMLNode* cNode = XMLUtils::addChild(doc, rdNode, "Components");
+        for (auto& u : tradecomponents_) {
+            auto test = u->toXML(doc);
+            XMLUtils::appendNode(cNode, test);
+        }
+
+        return node;
+    }
+
 // Credit
 void CreditReferenceDatum::fromXML(XMLNode* node) {
     ReferenceDatum::fromXML(node);
@@ -502,15 +625,15 @@ void BasicReferenceDataManager::fromXML(XMLNode* node) {
     }
 }
 
-void BasicReferenceDataManager::add(const boost::shared_ptr<ReferenceDatum>& rd) {
+void BasicReferenceDataManager::add(const QuantLib::ext::shared_ptr<ReferenceDatum>& rd) {
     // Add reference datum, it is overwritten if it is already present.
     data_[make_pair(rd->type(), rd->id())][rd->validFrom()] = rd;
 }
 
-boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::addFromXMLNode(XMLNode* node, const std::string& inputId,
+QuantLib::ext::shared_ptr<ReferenceDatum> BasicReferenceDataManager::addFromXMLNode(XMLNode* node, const std::string& inputId,
                                                                             const QuantLib::Date& inputValidFrom) {
     string refDataType = XMLUtils::getChildValue(node, "Type", false);
-    boost::shared_ptr<ReferenceDatum> refData;
+    QuantLib::ext::shared_ptr<ReferenceDatum> refData;
 
     if (refDataType.empty()) {
         ALOG("Found referenceDatum without Type - skipping");
@@ -562,7 +685,7 @@ boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::addFromXMLNode(XMLN
     return refData;
 }
 
-boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum(const string& refDataType) {
+QuantLib::ext::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum(const string& refDataType) {
     auto refData = ReferenceDatumFactory::instance().build(refDataType);
     QL_REQUIRE(refData,
                "Reference data type " << refDataType << " has not been registered with the reference data factory.");
@@ -579,7 +702,7 @@ XMLNode* BasicReferenceDataManager::toXML(XMLDocument& doc) const {
     return node;
 }
 
-std::tuple<QuantLib::Date, boost::shared_ptr<ReferenceDatum>> BasicReferenceDataManager::latestValidFrom(const string& type, const string& id,
+std::tuple<QuantLib::Date, QuantLib::ext::shared_ptr<ReferenceDatum>> BasicReferenceDataManager::latestValidFrom(const string& type, const string& id,
                                                           const QuantLib::Date& asof) const {   
     auto it = data_.find(make_pair(type, id));
     if (it != data_.end() && !it->second.empty()){
@@ -616,7 +739,7 @@ bool BasicReferenceDataManager::hasData(const string& type, const string& id, co
     return refData != nullptr;
 }
 
-boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id,
+QuantLib::ext::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id,
                                                                      const QuantLib::Date& asof) {
     Date asofDate = asof;
     if (asofDate == QuantLib::Null<QuantLib::Date>()) {

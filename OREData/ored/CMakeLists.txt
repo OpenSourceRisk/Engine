@@ -19,6 +19,7 @@ configuration/iborfallbackconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
 configuration/onedimsolverconfig.cpp
+configuration/parametricsmileconfiguration.cpp
 configuration/reportconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
@@ -357,6 +358,7 @@ utilities/csvfilereader.cpp
 utilities/currencyconfig.cpp
 utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
+utilities/databuilders.cpp
 utilities/dategrid.cpp
 utilities/fileio.cpp
 utilities/flowanalysis.cpp
@@ -364,7 +366,6 @@ utilities/formulaparser.cpp
 utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
 utilities/inflationstartdate.cpp
-utilities/initbuilders.cpp
 utilities/log.cpp
 utilities/marketdata.cpp
 utilities/osutils.cpp
@@ -399,6 +400,7 @@ configuration/iborfallbackconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/onedimsolverconfig.hpp
+configuration/parametricsmileconfiguration.hpp
 configuration/reportconfig.hpp
 configuration/securityconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
@@ -760,6 +762,7 @@ utilities/csvfilereader.hpp
 utilities/currencyconfig.hpp
 utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
+utilities/databuilders.hpp
 utilities/dategrid.hpp
 utilities/fileio.hpp
 utilities/flowanalysis.hpp
@@ -767,7 +770,6 @@ utilities/formulaparser.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp
 utilities/inflationstartdate.hpp
-utilities/initbuilders.hpp
 utilities/log.hpp
 utilities/marketdata.hpp
 utilities/osutils.hpp

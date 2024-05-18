@@ -42,7 +42,7 @@ public:
         : FlexiSwapBGSLGMGridEngineBuilderBase("BalanceGuaranteedSwap", "LGM-FlexiSwap") {}
 
 protected:
-    virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id, const std::string& id2,
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id, const std::string& id2,
                                                                   const std::string& ccy,
                                                                   const std::vector<QuantLib::Date>& dates,
                                                                   const QuantLib::Date& maturity,

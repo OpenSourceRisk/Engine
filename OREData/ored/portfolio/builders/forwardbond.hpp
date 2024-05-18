@@ -66,7 +66,7 @@ public:
         : fwdBondEngineBuilder("DiscountedCashflows", "DiscountingForwardBondEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& id, const Currency& ccy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const Currency& ccy,
                                                         const string& creditCurveId, const bool hasCreditRisk,
                                                         const string& securityId, const string& referenceCurveId,
                                                         const string& incomeCurveId) override {
@@ -108,7 +108,7 @@ protected:
             dpts = Handle<DefaultProbabilityTermStructure>();
         }
 
-        return boost::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, incomeTS, yts, bondSpread, dpts,
+        return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, incomeTS, yts, bondSpread, dpts,
                                                                           recovery, tsperiod);
     }
 };

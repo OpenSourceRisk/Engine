@@ -40,12 +40,12 @@ using namespace ore::data;
 class OREApp {
 public:
     //! Constructor that uses ORE parameters and input data from files
-    OREApp(boost::shared_ptr<Parameters> params, bool console = false, 
+    OREApp(QuantLib::ext::shared_ptr<Parameters> params, bool console = false, 
            const boost::filesystem::path& logRootPath = boost::filesystem::path())
       : params_(params), inputs_(nullptr), console_(console), logRootPath_(logRootPath) {}
 
     //! Constructor that assumes we have already assembled input parameters via API
-    OREApp(const boost::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel = 31,
+    OREApp(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel = 31,
            bool console = false, const boost::filesystem::path& logRootPath = boost::filesystem::path())
       : params_(nullptr), inputs_(inputs), logFile_(logFile), logMask_(logLevel), console_(console),
 	logRootPath_(logRootPath) {}
@@ -60,20 +60,20 @@ public:
     void run(const std::vector<std::string>& marketData,
              const std::vector<std::string>& fixingData);
     
-    boost::shared_ptr<InputParameters> getInputs() { return inputs_; }
+    QuantLib::ext::shared_ptr<InputParameters> getInputs() { return inputs_; }
 
     std::set<std::string> getAnalyticTypes();
     std::set<std::string> getSupportedAnalyticTypes();
-    const boost::shared_ptr<Analytic>& getAnalytic(std::string type); 
+    const QuantLib::ext::shared_ptr<Analytic>& getAnalytic(std::string type); 
     
     std::set<std::string> getReportNames();
-    boost::shared_ptr<PlainInMemoryReport> getReport(std::string reportName);
+    QuantLib::ext::shared_ptr<PlainInMemoryReport> getReport(std::string reportName);
 
     std::set<std::string> getCubeNames();
-    boost::shared_ptr<NPVCube> getCube(std::string cubeName);
+    QuantLib::ext::shared_ptr<NPVCube> getCube(std::string cubeName);
 
     std::set<std::string> getMarketCubeNames();
-    boost::shared_ptr<AggregationScenarioData> getMarketCube(std::string cubeName);
+    QuantLib::ext::shared_ptr<AggregationScenarioData> getMarketCube(std::string cubeName);
 
     std::vector<std::string> getErrors();
 
@@ -86,9 +86,9 @@ protected:
     virtual void analytics();
 
     //! Populate InputParameters object from classic ORE key-value pairs in Parameters 
-    void buildInputParameters(boost::shared_ptr<InputParameters> inputs,
-                              const boost::shared_ptr<Parameters>& params);
-    boost::shared_ptr<CSVLoader> buildCsvLoader(const boost::shared_ptr<Parameters>& params);
+    void buildInputParameters(QuantLib::ext::shared_ptr<InputParameters> inputs,
+                              const QuantLib::ext::shared_ptr<Parameters>& params);
+    QuantLib::ext::shared_ptr<CSVLoader> buildCsvLoader(const QuantLib::ext::shared_ptr<Parameters>& params);
     //! set up logging
     void setupLog(const std::string& path, const std::string& file, QuantLib::Size mask,
                   const boost::filesystem::path& logRootPath, const std::string& progressLogFile = "",
@@ -99,14 +99,14 @@ protected:
 
     void initFromParams();
     void initFromInputs();
-  
+      
     //! ORE Input parameters
-    boost::shared_ptr<Parameters> params_;
-    boost::shared_ptr<InputParameters> inputs_;
-    boost::shared_ptr<OutputParameters> outputs_;
+    QuantLib::ext::shared_ptr<Parameters> params_;
+    QuantLib::ext::shared_ptr<InputParameters> inputs_;
+    QuantLib::ext::shared_ptr<OutputParameters> outputs_;
 
-    boost::shared_ptr<AnalyticsManager> analyticsManager_;
-    boost::shared_ptr<StructuredLogger> structuredLogger_;
+    QuantLib::ext::shared_ptr<AnalyticsManager> analyticsManager_;
+    QuantLib::ext::shared_ptr<StructuredLogger> structuredLogger_;
     boost::timer::cpu_timer runTimer_;
 
     //! Logging
@@ -127,7 +127,7 @@ protected:
 
 class OREAppInputParameters : virtual public InputParameters {
 public:
-    OREAppInputParameters(const boost::shared_ptr<Parameters>& params) : params_(params) {}
+    OREAppInputParameters(const QuantLib::ext::shared_ptr<Parameters>& params) : params_(params) {}
 
      // load input parameters
     virtual void loadParameters() override;
@@ -136,7 +136,7 @@ public:
     virtual void writeOutParameters() override{};
 
 private:
-    boost::shared_ptr<Parameters> params_;
+    QuantLib::ext::shared_ptr<Parameters> params_;
 };
 
 } // namespace analytics

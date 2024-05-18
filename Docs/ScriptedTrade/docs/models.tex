@@ -49,6 +49,8 @@ An example pricing engine configuration looks as follows.
       <Parameter name="TimeStepsPerYear">24</Parameter>
       <Parameter name="Interactive">false</Parameter>
       <Parameter name="BootstrapTolerance">0.1</Parameter>
+      <Parameter name="IncludePastCashflows">true</Parameter>
+      <Parameter name="RegressionVarianceCutoff">1E-5</Parameter>
       <!-- product specific parameters -->
       <Parameter name="RegressionOrder_SingleAssetOption(EQ)">6</Parameter>
       <Parameter name="RegressionOrder_SingleAssetOption(FX)">6</Parameter>
@@ -136,6 +138,12 @@ The engine parameters have the following meaning:
   only. The moneyness is defined as a ``standardised moneyness'' $\ln(K/F) / \sigma\sqrt{t}$ with $K$ strike, $F$ ATMF
   forward, $\sigma$ ATMF market vol, $t$ option time to expiry
 \item BootstrapTolerance: tolerance for calibration bootstrap, only applies to model = GaussianCam
+\item IncludePastCashflows: if true, LOGPAY() will generate cashflow information for pay dates on or before the
+  reference date. Optional, defaults to false.
+\item RegressionVarianceCutoff: Optional. Only relevant for MC models. If given, a coordinate transform and (possibly) a
+  factor reduction is applied to the regressors used for conditional expectation calculation, such that $1-\epsilon$ of
+  the total variance of regressors is kept, where $\epsilon$ the given parameter. This helps dealing with collinearity
+  and also reducing the dimnensionality of the regression model.
 \item Interactive: If true an interactive session is started on script execution for debugging purposes; should be false
   except for debugging purposes
 \item UseAD: If true and RunType in the global pricing engine parameters is SensitivityDelta, a first order pnl
@@ -144,6 +152,11 @@ The engine parameters have the following meaning:
   UseExternalComputingDevice is true, this implies that UseCG is true irrespective of how it is configured.
 \item UseExternalComputingDevice: If true and RunType is not NPV (generating additional results) and AD sensitivities
   are {\em not} used, an external compute device is used for the calculations.
+\item UseDoublePrecisionForExternalCalculation: Use double precision for external computations. Defaults to false.
+\item ExternalDeviceCompatibilityMode: Only applies if UseCG is enabled. Defaults to false. If enabled, random number
+  generation for internal calculations using the CG is aligned as closely as possible with what is usually implemented
+  for external calculations, i.e. if enabled, the MersenneTwister random number generation is done in
+  step-dimension-path order. If disabled, the ``classic'' order path-step-dimension is used.
 \item ExternalComputeDevice: The external compute device to use if UseExternalComputingDevice is effective.
 \end{itemize}
 

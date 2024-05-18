@@ -35,22 +35,22 @@
 namespace ore {
 namespace data {
 
-std::map<std::string, boost::shared_ptr<Security>>
-BondSpreadImply::requiredSecurities(const Date& asof, const boost::shared_ptr<TodaysMarketParameters>& params,
-                                    const boost::shared_ptr<CurveConfigurations>& curveConfigs, const Loader& loader,
+std::map<std::string, QuantLib::ext::shared_ptr<Security>>
+BondSpreadImply::requiredSecurities(const Date& asof, const QuantLib::ext::shared_ptr<TodaysMarketParameters>& params,
+                                    const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs, const Loader& loader,
                                     const bool continueOnError, const std::string& excludeRegex) {
     std::regex excludePattern;
     if (!excludeRegex.empty())
         excludePattern = std::regex(excludeRegex);
 
-    std::map<std::string, boost::shared_ptr<Security>> securities;
+    std::map<std::string, QuantLib::ext::shared_ptr<Security>> securities;
     for (const auto& configuration : params->configurations()) {
         LOG("identify securities that require a spread imply for configuration " << configuration.first);
 
         /* Loop over the security curve specs, do the spread imply where we have a price, but no spread
            and and store the calculated spread in the MarketImpl container */
         for (const auto& it : params->curveSpecs(configuration.first)) {
-            auto securityspec = boost::dynamic_pointer_cast<SecuritySpec>(parseCurveSpec(it));
+            auto securityspec = QuantLib::ext::dynamic_pointer_cast<SecuritySpec>(parseCurveSpec(it));
             if (securityspec) {
                 std::string securityId = securityspec->securityID();
                 if (std::regex_match(securityId, excludePattern)) {
@@ -62,9 +62,9 @@ BondSpreadImply::requiredSecurities(const Date& asof, const boost::shared_ptr<To
                         DLOG("no spread quote configuraed, skip security " << securityId);
                         continue;
                     }
-                    boost::shared_ptr<Security> security;
+                    QuantLib::ext::shared_ptr<Security> security;
                     try {
-                        security = boost::make_shared<Security>(asof, *securityspec, loader, *curveConfigs);
+                        security = QuantLib::ext::make_shared<Security>(asof, *securityspec, loader, *curveConfigs);
                     } catch (const std::exception& e) {
                         if (continueOnError) {
                             StructuredCurveErrorMessage(securityId, "Bond spread imply failed",
@@ -106,11 +106,11 @@ BondSpreadImply::requiredSecurities(const Date& asof, const boost::shared_ptr<To
     return securities;
 }
 
-boost::shared_ptr<Loader>
-BondSpreadImply::implyBondSpreads(const std::map<std::string, boost::shared_ptr<Security>>& securities,
-                                  const boost::shared_ptr<ReferenceDataManager>& referenceDataManager,
-                                  const boost::shared_ptr<Market>& market,
-                                  const boost::shared_ptr<EngineData>& engineData,
+QuantLib::ext::shared_ptr<Loader>
+BondSpreadImply::implyBondSpreads(const std::map<std::string, QuantLib::ext::shared_ptr<Security>>& securities,
+                                  const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
+                                  const QuantLib::ext::shared_ptr<Market>& market,
+                                  const QuantLib::ext::shared_ptr<EngineData>& engineData,
                                   const std::string& configuration, const IborFallbackConfig& iborFallbackConfig) {
 
     LOG("run bond spread imply");
@@ -120,20 +120,20 @@ BondSpreadImply::implyBondSpreads(const std::map<std::string, boost::shared_ptr<
     // build engine factory against which we build the bonds
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = configuration;
-    auto spreadImplyMarket = boost::make_shared<BondSpreadImplyMarket>(market);
-    auto edCopy = boost::make_shared<EngineData>(*engineData);
+    auto spreadImplyMarket = QuantLib::ext::make_shared<BondSpreadImplyMarket>(market);
+    auto edCopy = QuantLib::ext::make_shared<EngineData>(*engineData);
     edCopy->globalParameters()["RunType"] = "BondSpreadImply";
-    auto engineFactory = boost::make_shared<EngineFactory>(edCopy, spreadImplyMarket, configurations,
+    auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(edCopy, spreadImplyMarket, configurations,
                                                            referenceDataManager, iborFallbackConfig);
 
     // imply spreads and store the generate market data
 
-    std::map<std::string, boost::shared_ptr<MarketDatum>> generatedSpreads;
+    std::map<std::string, QuantLib::ext::shared_ptr<MarketDatum>> generatedSpreads;
     for (auto const& sec : securities) {
         auto storedSpread = generatedSpreads.find(sec.first);
         if (storedSpread == generatedSpreads.end()) {
             try {
-                auto impliedSpread = boost::make_shared<SecuritySpreadQuote>(
+                auto impliedSpread = QuantLib::ext::make_shared<SecuritySpreadQuote>(
                     implySpread(sec.first, sec.second->price()->value(), referenceDataManager, engineFactory,
                                 spreadImplyMarket->spreadQuote(sec.first), configuration),
                     market->asofDate(), "BOND/YIELD_SPREAD/" + sec.first, sec.first);
@@ -152,7 +152,7 @@ BondSpreadImply::implyBondSpreads(const std::map<std::string, boost::shared_ptr<
 
     // add generated market data to loader and return the loader
 
-    auto loader = boost::make_shared<InMemoryLoader>();
+    auto loader = QuantLib::ext::make_shared<InMemoryLoader>();
 
     for (auto const& s : generatedSpreads) {
         DLOG("adding market datum " << s.second->name() << " (" << s.second->quote()->value() << ") for asof "
@@ -165,9 +165,9 @@ BondSpreadImply::implyBondSpreads(const std::map<std::string, boost::shared_ptr<
 }
 
 Real BondSpreadImply::implySpread(const std::string& securityId, const Real cleanPrice,
-                                  const boost::shared_ptr<ReferenceDataManager>& referenceDataManager,
-                                  const boost::shared_ptr<EngineFactory>& engineFactory,
-                                  const boost::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration) {
+                                  const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
+                                  const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                  const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration) {
 
     // checks, build bond from reference data
 
@@ -196,6 +196,14 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
         TLOG("--> spread imply: trying s = " << s << " yields clean price " << c);
         return c - cleanPrice * inflationFactor * adj;
     };
+
+    // edge case: bond has a zero settlement value -> skip spread imply
+
+    if (QuantLib::close_enough(b.bond->cleanPrice(), 0.0)) {
+        DLOG("bond has a theoretical clean price of zero (no outstanding flows as of settlement date) -> skip spread "
+             "imply and continue with zero security spread.");
+        return 0.0;
+    }
 
     // solve for spread and return result
 

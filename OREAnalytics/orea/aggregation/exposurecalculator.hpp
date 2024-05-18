@@ -28,7 +28,7 @@
 #include <orea/cube/npvcube.hpp>
 #include <ored/portfolio/portfolio.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace ore {
 namespace analytics {
@@ -47,13 +47,13 @@ class ExposureCalculator {
 public:
     ExposureCalculator(
         //! Driving portfolio consistent with the cube below
-        const boost::shared_ptr<Portfolio>& portfolio,
+        const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         //! NPV cube resulting from the Monte Carlo simulation loop
-        const boost::shared_ptr<NPVCube>& cube,
+        const QuantLib::ext::shared_ptr<NPVCube>& cube,
         //! Interpreter for cube storage (where to find which data items)
-        const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
+        const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation,
         //! Market data object to access e.g. discounting and funding curves
-        const boost::shared_ptr<Market>& market,
+        const QuantLib::ext::shared_ptr<Market>& market,
 	    //! Flag to indicate exposure termination at the next break date
         const bool exerciseNextBreak,
         //! Expression currency for all results
@@ -83,10 +83,10 @@ public:
     };
     const Size EXPOSURE_CUBE_DEPTH = 4;
 
-    boost::shared_ptr<Portfolio> portfolio() { return portfolio_; }
-    boost::shared_ptr<NPVCube> npvCube() { return cube_; }
-    boost::shared_ptr<CubeInterpretation> cubeInterpretation() { return cubeInterpretation_; }
-    boost::shared_ptr<Market> market() { return market_; }
+    QuantLib::ext::shared_ptr<Portfolio> portfolio() { return portfolio_; }
+    QuantLib::ext::shared_ptr<NPVCube> npvCube() { return cube_; }
+    QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation() { return cubeInterpretation_; }
+    QuantLib::ext::shared_ptr<Market> market() { return market_; }
     bool exerciseNextBreak() { return exerciseNextBreak_; }
     string baseCurrency() { return baseCurrency_; }
     string configuration() { return configuration_; }
@@ -103,7 +103,7 @@ public:
     map<string, Date> nettingSetMaturity() { return nettingSetMaturity_; }
     vector<Real> times() { return times_; };
 
-    const boost::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
+    const QuantLib::ext::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
     const map<string, vector<vector<Real>>>& nettingSetDefaultValue() { return nettingSetDefaultValue_; }
     const map<string, vector<vector<Real>>>& nettingSetCloseOutValue() { return nettingSetCloseOutValue_; }
     const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow() { return nettingSetMporPositiveFlow_; }
@@ -120,10 +120,10 @@ public:
     Real& eepe_b(const string& tid) { return eepe_b_[tid]; }
 
 protected:
-    const boost::shared_ptr<Portfolio> portfolio_;
-    const boost::shared_ptr<NPVCube> cube_;
-    const boost::shared_ptr<CubeInterpretation> cubeInterpretation_;
-    const boost::shared_ptr<Market> market_;
+    const QuantLib::ext::shared_ptr<Portfolio> portfolio_;
+    const QuantLib::ext::shared_ptr<NPVCube> cube_;
+    const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation_;
+    const QuantLib::ext::shared_ptr<Market> market_;
     const bool exerciseNextBreak_;
     const string baseCurrency_;
     const string configuration_;
@@ -140,7 +140,7 @@ protected:
     map<string, Date> nettingSetMaturity_;
     vector<Real> times_;
 
-    boost::shared_ptr<NPVCube> exposureCube_;
+    QuantLib::ext::shared_ptr<NPVCube> exposureCube_;
     map<string, vector<vector<Real>>> nettingSetDefaultValue_, nettingSetCloseOutValue_;
     map<string, vector<vector<Real>>> nettingSetMporPositiveFlow_, nettingSetMporNegativeFlow_;
 

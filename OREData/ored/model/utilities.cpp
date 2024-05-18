@@ -41,7 +41,7 @@ namespace ore {
 namespace data {
 
 namespace {
-Real impliedVolatility(const boost::shared_ptr<BlackCalibrationHelper>& h) {
+Real impliedVolatility(const QuantLib::ext::shared_ptr<BlackCalibrationHelper>& h) {
     try {
         Real minVol, maxVol;
         if (h->volatilityType() == QuantLib::ShiftedLognormal) {
@@ -68,13 +68,13 @@ struct HelperValues {
 
 // Deal with possible JY inflation helpers. Use Date key to order the results so as to avoid re-calculating the
 // time in the parameterisation.
-map<Date, HelperValues> jyHelperValues(const vector<boost::shared_ptr<CalibrationHelper>>& cb, const Array& times) {
+map<Date, HelperValues> jyHelperValues(const vector<QuantLib::ext::shared_ptr<CalibrationHelper>>& cb, const Array& times) {
 
     map<Date, HelperValues> result;
 
     for (const auto& ci : cb) {
 
-        if (boost::shared_ptr<CpiCapFloorHelper> h = boost::dynamic_pointer_cast<CpiCapFloorHelper>(ci)) {
+        if (QuantLib::ext::shared_ptr<CpiCapFloorHelper> h = QuantLib::ext::dynamic_pointer_cast<CpiCapFloorHelper>(ci)) {
             HelperValues hv;
             hv.modelValue = h->modelValue();
             hv.marketValue = h->marketValue();
@@ -84,7 +84,7 @@ map<Date, HelperValues> jyHelperValues(const vector<boost::shared_ptr<Calibratio
             continue;
         }
 
-        if (boost::shared_ptr<YoYCapFloorHelper> h = boost::dynamic_pointer_cast<YoYCapFloorHelper>(ci)) {
+        if (QuantLib::ext::shared_ptr<YoYCapFloorHelper> h = QuantLib::ext::dynamic_pointer_cast<YoYCapFloorHelper>(ci)) {
             HelperValues hv;
             hv.modelValue = h->modelValue();
             hv.marketValue = h->marketValue();
@@ -94,7 +94,7 @@ map<Date, HelperValues> jyHelperValues(const vector<boost::shared_ptr<Calibratio
             continue;
         }
 
-        if (boost::shared_ptr<YoYSwapHelper> h = boost::dynamic_pointer_cast<YoYSwapHelper>(ci)) {
+        if (QuantLib::ext::shared_ptr<YoYSwapHelper> h = QuantLib::ext::dynamic_pointer_cast<YoYSwapHelper>(ci)) {
             HelperValues hv;
             hv.modelValue = h->modelRate();
             hv.marketValue = h->marketRate();
@@ -123,8 +123,8 @@ map<Date, HelperValues> jyHelperValues(const vector<boost::shared_ptr<Calibratio
 } // namespace
 
 std::string getCalibrationDetails(LgmCalibrationInfo& info,
-                                     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-                                     const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
+                                     const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+                                     const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization) {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
         << "marketVol" << std::setw(14) << "(diff)" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
@@ -137,7 +137,7 @@ std::string getCalibrationDetails(LgmCalibrationInfo& info,
         Real marketValue = basket[j]->marketValue();
         Real valueDiff = modelValue - marketValue;
         Volatility modelVol = 0, marketVol = 0, volDiff = 0;
-        boost::shared_ptr<SwaptionHelper> swaption = boost::dynamic_pointer_cast<SwaptionHelper>(basket[j]);
+        QuantLib::ext::shared_ptr<SwaptionHelper> swaption = QuantLib::ext::dynamic_pointer_cast<SwaptionHelper>(basket[j]);
         if (swaption != nullptr && parametrization != nullptr) {
             // report alpha, kappa at t_expiry^-
             t = parametrization->termStructure()->timeFromReference(swaption->swaption()->exercise()->date(0));
@@ -167,10 +167,10 @@ std::string getCalibrationDetails(LgmCalibrationInfo& info,
     return log.str();
 }
 
-std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-                                  const boost::shared_ptr<FxBsParametrization>& parametrization,
-                                  const boost::shared_ptr<Parametrization>& domesticIrModel) {
-    auto lgmParametrization = boost::dynamic_pointer_cast<IrLgm1fParametrization>(domesticIrModel);
+std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const QuantLib::ext::shared_ptr<FxBsParametrization>& parametrization,
+                                  const QuantLib::ext::shared_ptr<Parametrization>& domesticIrModel) {
+    auto lgmParametrization = QuantLib::ext::dynamic_pointer_cast<IrLgm1fParametrization>(domesticIrModel);
     if (lgmParametrization) {
         return getCalibrationDetails(basket, parametrization, lgmParametrization);
     } else {
@@ -178,9 +178,9 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
     }
 }
 
-std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-                                  const boost::shared_ptr<FxBsParametrization>& parametrization,
-                                  const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
+std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const QuantLib::ext::shared_ptr<FxBsParametrization>& parametrization,
+                                  const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
         << "marketVol" << std::setw(14) << "(diff)" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
@@ -191,7 +191,7 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
         Real marketValue = basket[j]->marketValue();
         Real valueDiff = modelValue - marketValue;
         Volatility modelVol = 0, marketVol = 0, volDiff = 0;
-        boost::shared_ptr<FxEqOptionHelper> fxoption = boost::dynamic_pointer_cast<FxEqOptionHelper>(basket[j]);
+        QuantLib::ext::shared_ptr<FxEqOptionHelper> fxoption = QuantLib::ext::dynamic_pointer_cast<FxEqOptionHelper>(basket[j]);
         if (fxoption != nullptr && parametrization != nullptr && domesticLgm != nullptr) {
             // report alpha, kappa at t_expiry^-
             t = domesticLgm->termStructure()->timeFromReference(fxoption->option()->exercise()->date(0));
@@ -212,10 +212,10 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
     return log.str();
 }
 
-std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-                                  const boost::shared_ptr<EqBsParametrization>& parametrization,
-                                  const boost::shared_ptr<Parametrization>& domesticIrModel) {
-    auto lgmParametrization = boost::dynamic_pointer_cast<IrLgm1fParametrization>(parametrization);
+std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const QuantLib::ext::shared_ptr<EqBsParametrization>& parametrization,
+                                  const QuantLib::ext::shared_ptr<Parametrization>& domesticIrModel) {
+    auto lgmParametrization = QuantLib::ext::dynamic_pointer_cast<IrLgm1fParametrization>(parametrization);
     if (lgmParametrization) {
         return getCalibrationDetails(basket, parametrization, lgmParametrization);
     } else {
@@ -223,9 +223,9 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
     }
 }
 
-std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-                                  const boost::shared_ptr<EqBsParametrization>& parametrization,
-                                  const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
+std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const QuantLib::ext::shared_ptr<EqBsParametrization>& parametrization,
+                                  const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
         << "marketVol" << std::setw(14) << "(diff)" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
@@ -236,7 +236,7 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
         Real marketValue = basket[j]->marketValue();
         Real valueDiff = modelValue - marketValue;
         Volatility modelVol = 0, marketVol = 0, volDiff = 0;
-        boost::shared_ptr<FxEqOptionHelper> eqoption = boost::dynamic_pointer_cast<FxEqOptionHelper>(basket[j]);
+        QuantLib::ext::shared_ptr<FxEqOptionHelper> eqoption = QuantLib::ext::dynamic_pointer_cast<FxEqOptionHelper>(basket[j]);
         if (eqoption != nullptr && parametrization != nullptr && domesticLgm != nullptr) {
             t = domesticLgm->termStructure()->timeFromReference(eqoption->option()->exercise()->date(0));
             modelSigma = parametrization->sigma(t - 1E-4);
@@ -255,8 +255,8 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
     return log.str();
 }
 
-std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-                                  const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization) {
+std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const QuantLib::ext::shared_ptr<CommoditySchwartzParametrization>& parametrization) {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
         << "marketVol" << std::setw(14) << "(diff)" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
@@ -269,7 +269,7 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
         Real marketValue = basket[j]->marketValue();
         Real valueDiff = modelValue - marketValue;
         Volatility modelVol = 0, marketVol = 0, volDiff = 0;
-        boost::shared_ptr<FutureOptionHelper> option = boost::dynamic_pointer_cast<FutureOptionHelper>(basket[j]);
+        QuantLib::ext::shared_ptr<FutureOptionHelper> option = QuantLib::ext::dynamic_pointer_cast<FutureOptionHelper>(basket[j]);
         if (option != nullptr && parametrization != nullptr) {
             t = option->priceCurve()->timeFromReference(option->option()->exercise()->date(0));
             //modelSigma = parametrization->sigma(t - 1E-4);
@@ -288,8 +288,8 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
     return log.str();
 }
 
-std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-                                  const boost::shared_ptr<InfDkParametrization>& parametrization,
+std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
+                                  const QuantLib::ext::shared_ptr<InfDkParametrization>& parametrization,
                                   bool indexIsInterpolated) {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelValue"
@@ -300,7 +300,7 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
         Real modelValue = basket[j]->modelValue();
         Real marketValue = basket[j]->marketValue();
         Real valueDiff = (modelValue - marketValue);
-        boost::shared_ptr<CpiCapFloorHelper> instr = boost::dynamic_pointer_cast<CpiCapFloorHelper>(basket[j]);
+        QuantLib::ext::shared_ptr<CpiCapFloorHelper> instr = QuantLib::ext::dynamic_pointer_cast<CpiCapFloorHelper>(basket[j]);
         if (instr != nullptr && parametrization != nullptr) {
             // report alpha, H at t_expiry^-
             t = inflationYearFraction(
@@ -324,9 +324,9 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
     return log.str();
 }
 
-string getCalibrationDetails(const vector<boost::shared_ptr<CalibrationHelper>>& rrBasket,
-                             const vector<boost::shared_ptr<CalibrationHelper>>& idxBasket,
-                             const boost::shared_ptr<InfJyParameterization>& p, bool calibrateRealRateVol) {
+string getCalibrationDetails(const vector<QuantLib::ext::shared_ptr<CalibrationHelper>>& rrBasket,
+                             const vector<QuantLib::ext::shared_ptr<CalibrationHelper>>& idxBasket,
+                             const QuantLib::ext::shared_ptr<InfJyParameterization>& p, bool calibrateRealRateVol) {
 
     ostringstream log;
     Real epsTime = 0.0001;
@@ -396,7 +396,7 @@ string getCalibrationDetails(const vector<boost::shared_ptr<CalibrationHelper>>&
     return log.str();
 }
 
-string getCalibrationDetails(const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
+string getCalibrationDetails(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& parametrization) {
     std::ostringstream log;
 
     log << right << setw(3) << "#" << setw(14) << "time" << setw(14) << "irlgm1fAlpha" << setw(14)
@@ -450,12 +450,12 @@ Date optionMaturity(const boost::variant<Date, Period>& maturity, const QuantLib
     return boost::apply_visitor(MaturityGetter(calendar, referenceDate), maturity);
 }
 
-Real cpiCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
-                            const boost::shared_ptr<ZeroInflationTermStructure>& curve,
+Real cpiCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
+                            const QuantLib::ext::shared_ptr<ZeroInflationTermStructure>& curve,
                             const QuantLib::Date& optionMaturityDate) {
-    if (auto abs = boost::dynamic_pointer_cast<AbsoluteStrike>(strike)) {
+    if (auto abs = QuantLib::ext::dynamic_pointer_cast<AbsoluteStrike>(strike)) {
         return abs->strike();
-    } else if (auto atm = boost::dynamic_pointer_cast<AtmStrike>(strike)) {
+    } else if (auto atm = QuantLib::ext::dynamic_pointer_cast<AtmStrike>(strike)) {
         QL_REQUIRE(atm->atmType() == DeltaVolQuote::AtmFwd,
                    "only atm forward allowed as atm strike for cpi cap floors");
         return curve->zeroRate(optionMaturityDate);
@@ -465,12 +465,12 @@ Real cpiCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
     }
 }
 
-Real yoyCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
-                            const boost::shared_ptr<YoYInflationTermStructure>& curve,
+Real yoyCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
+                            const QuantLib::ext::shared_ptr<YoYInflationTermStructure>& curve,
                             const QuantLib::Date& optionMaturityDate) {
-    if (auto abs = boost::dynamic_pointer_cast<AbsoluteStrike>(strike)) {
+    if (auto abs = QuantLib::ext::dynamic_pointer_cast<AbsoluteStrike>(strike)) {
         return abs->strike();
-    } else if (auto atm = boost::dynamic_pointer_cast<AtmStrike>(strike)) {
+    } else if (auto atm = QuantLib::ext::dynamic_pointer_cast<AtmStrike>(strike)) {
         QL_REQUIRE(atm->atmType() == DeltaVolQuote::AtmFwd,
                    "only atm forward allowed as atm strike for cpi cap floors");
         return curve->yoyRate(optionMaturityDate);
