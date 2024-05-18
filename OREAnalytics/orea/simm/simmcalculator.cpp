@@ -1272,6 +1272,7 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
             // Add to aggregation at portfolio level
             add(nettingSetDetails, regulation, ProductClass::All, RiskClass::All, MarginType::All, "All", pcmMargin, side,
                 overwrite);
+            simmParameters_.addRecord(it);
         }
     }
 
@@ -1292,6 +1293,7 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
         // Add to aggregation at portfolio level
         add(nettingSetDetails, regulation, ProductClass::All, RiskClass::All, MarginType::All, "All", fixedMargin, side,
             overwrite);
+        simmParameters_.addRecord(it);
     }
 
     // Third, add percentage of notional amounts IM, using "AddOnNotionalFactor"
@@ -1326,6 +1328,7 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
             add(nettingSetDetails, regulation, ProductClass::All, RiskClass::All, MarginType::All, "All",
                 notionalFactorMargin,
                 side, overwrite);
+            simmParameters_.addRecord(it);
         }
     }
 }
