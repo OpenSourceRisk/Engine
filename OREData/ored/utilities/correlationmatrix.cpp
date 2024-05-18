@@ -55,14 +55,15 @@ ostream& operator<<(ostream& out, const CorrelationFactor& f) {
     return out << f.type << ":" << f.name << ":" << f.index;
 }
 
-CorrelationFactor parseCorrelationFactor(const string& name) {
+CorrelationFactor parseCorrelationFactor(const string& name, const char separator) {
 
+    std::string sep(1, separator);
     vector<string> tokens;
-    boost::split(tokens, name, boost::is_any_of(":"));
+    boost::split(tokens, name, boost::is_any_of(sep));
 
     QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
-               "parseCorrelationFactor(" << name
-                                         << "): expected 2 or 3 tokens separated by ':', e.g. 'IR:USD' or 'INF:UKRPI:0'");
+               "parseCorrelationFactor(" << name << "): expected 2 or 3 tokens separated by separator ('" << sep
+                                         << "'), e.g. 'IR" << sep << "USD' or 'INF" << sep << "UKRPI" << sep << "0'");
 
     return {parseCamAssetType(tokens[0]), tokens[1],
             static_cast<Size>(tokens.size() == 3 ? parseInteger(tokens[3]) : 0)};
