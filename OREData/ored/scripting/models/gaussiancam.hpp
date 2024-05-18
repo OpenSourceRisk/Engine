@@ -130,6 +130,7 @@ private:
     mutable std::vector<Size> infIndexPositionInCam_;     // maps inf index no to inf idx in cam
     mutable std::vector<Size> currencyPositionInCam_;     // maps currency no to position in cam parametrizations
     mutable std::vector<Size> eqIndexInCam_;      // maps index no to eq position in cam (or null, if not an eq index)
+    mutable std::vector<Size> comIndexInCam_;     // maps index no to com position in cam (or null, if not a com index)
     mutable bool conditionalExpectationUseIr_;    // derived from input conditionalExpectationModelState
     mutable bool conditionalExpectationUseInf_;   // derived from input conditionalExpectationModelState
     mutable bool conditionalExpectationUseAsset_; // derived from input conditionalExpectationModelState
