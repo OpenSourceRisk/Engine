@@ -110,20 +110,20 @@ public:
 private:
     std::string name_;
     std::string ccy_;
-    CalibrationType calibrationType_;
-    bool calibrateSigma_;
-    ParamType sigmaType_;
-    Real sigmaValue_;
-    bool calibrateKappa_;
-    ParamType kappaType_;
-    Real kappaValue_;
+    CalibrationType calibrationType_ = CalibrationType::None;
+    bool calibrateSigma_ = false;
+    ParamType sigmaType_ = ParamType::Constant;
+    Real sigmaValue_ = 0.0;
+    bool calibrateKappa_ = false;
+    ParamType kappaType_ = ParamType::Constant;
+    Real kappaValue_ = 0.0;
     std::vector<std::string> optionExpiries_;
     std::vector<std::string> optionStrikes_;
-    bool driftFreeState_;
+    bool driftFreeState_ = false;
     QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
     Constraint constraint_;
-    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
+    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_ = BlackCalibrationHelper::RelativePriceError;
 };
 } // namespace data
 } // namespace ore
