@@ -45,12 +45,12 @@
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">sensi_scenarios.csv</Parameter>
-      <Parameter name="sensitivityOutputFile">zero_sensi.csv</Parameter>
+      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
       <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
       <Parameter name="recalibrateModels">Y</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="productClassMappingOutputFile">productclass_mapping.csv</Parameter>
-      <Parameter name="parSensitivityOutputFile">par_sensi.csv</Parameter>
+      <Parameter name="parSensitivityOutputFile">parsensitivity.csv</Parameter>
       <Parameter name="outputJacobi">Y</Parameter>
       <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
       <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
