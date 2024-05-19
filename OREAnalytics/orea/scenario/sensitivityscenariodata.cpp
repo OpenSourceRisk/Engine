@@ -276,7 +276,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 		string ccyAttr = XMLUtils::getAttribute(child, "ccy");
 		if(!ccyAttr.empty()) {
 		    key = ccyAttr;
-                    ALOG("SensitivityData: attribute 'ccy' for SwaptionVolatilities is deprecated, use 'key' instead.");
+                    WLOG("SensitivityData: attribute 'ccy' for SwaptionVolatilities is deprecated, use 'key' instead.");
                 }
 	    }
             GenericYieldVolShiftData data;
@@ -315,7 +315,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 		string ccyAttr = XMLUtils::getAttribute(child, "ccy");
 		if(!ccyAttr.empty()) {
 		    key = ccyAttr;
-                    ALOG("SensitivityData: attribute 'ccy' for CapFloorVolatilities is deprecated, use 'key' instead.");
+                    WLOG("SensitivityData: attribute 'ccy' for CapFloorVolatilities is deprecated, use 'key' instead.");
                 }
 	    }
             auto data = QuantLib::ext::make_shared<CapFloorVolShiftData>();
@@ -582,7 +582,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 		string ccyAttr = XMLUtils::getAttribute(child, "ccy");
 		if(!ccyAttr.empty()) {
 		    key = ccyAttr;
-                    ALOG("SensitivityData: attribute 'ccy' for CapFloorVolatilities is deprecated, use 'key' instead.");
+                    WLOG("SensitivityData: attribute 'ccy' for CapFloorVolatilities is deprecated, use 'key' instead.");
                 }
 	    }
 	    CapFloorVolShiftParData data(*capFloorVolShiftData_.find(key)->second);

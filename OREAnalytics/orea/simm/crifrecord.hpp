@@ -125,6 +125,11 @@ struct CrifRecord {
     //! There are two entries for curvature risk in frtb, a up and down shift
     enum class CurvatureScenario { Empty, Up, Down };
 
+    // clang-format off
+    //                 trade ID                                                qualifier    bucket       label1       label2       collect regs post regs
+    typedef std::tuple<std::string, NettingSetDetails, ProductClass, RiskType, std::string, std::string, std::string, std::string, std::string, std::string> SimmAmountCcyKey;
+    // clang-format on
+
     // required data
     std::string tradeId;
     std::string portfolioId;
@@ -284,6 +289,11 @@ struct CrifRecord {
             }
         }
         return value;
+    }
+
+    const SimmAmountCcyKey getSimmAmountCcyKey() const {
+        return std::make_tuple(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
+                               collectRegulations, postRegulations);
     }
 
     //! Define how CRIF records are compared
