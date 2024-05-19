@@ -67,10 +67,10 @@
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">sensi_scenarios.csv</Parameter>
-      <Parameter name="sensitivityOutputFile">sensi_raw.csv</Parameter>
+      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="parSensitivity">Y</Parameter>
-      <Parameter name="parSensitivityOutputFile">sensi_par.csv</Parameter>
+      <Parameter name="parSensitivityOutputFile">parsensitivity.csv</Parameter>
       <Parameter name="outputJacobi">Y</Parameter>
       <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
       <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
