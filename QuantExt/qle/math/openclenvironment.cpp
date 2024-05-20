@@ -401,7 +401,7 @@ void OpenClContext::releaseMem(cl_mem& m, const std::string& description) {
 void OpenClContext::releaseKernel(cl_kernel& k, const std::string& description) {
     cl_int err;
     if (err = clReleaseKernel(k); err != CL_SUCCESS) {
-        std::cerr << "OpenClContext: error during clReleaseKernel'" << description << "': " + errorText(err)
+        std::cerr << "OpenClContext: error during clReleaseKernel '" << description << "': " + errorText(err)
                   << std::endl;
     }
 }
@@ -409,7 +409,7 @@ void OpenClContext::releaseKernel(cl_kernel& k, const std::string& description) 
 void OpenClContext::releaseProgram(cl_program& p, const std::string& description) {
     cl_int err;
     if (err = clReleaseProgram(p); err != CL_SUCCESS) {
-        std::cerr << "OpenClContext: error during clReleaseProgram'" << description << "': " + errorText(err)
+        std::cerr << "OpenClContext: error during clReleaseProgram '" << description << "': " + errorText(err)
                   << std::endl;
     }
 }
