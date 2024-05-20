@@ -125,7 +125,7 @@ The meanings and allowable values of the elements in the data  node follow below
 expressed in this currency.  For FX, this should be \lstinline!CCY2! as defined in the Name field in the Underlying node.
 Note that for (non-quanto) FxTaRFs this should be the domestic (\lstinline!CCY2!) currency, as defined in the Name field in
 the Underlying node. For non-quanto Equity- and CommodityTaRFs this should be the currency the equity or commodity is quoted in.
-Notice section \ref{sss:payccy_st}. \\
+Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
       Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 
     \item FixingAmount: The unlevered FixingAmount amount to be used at each fixing date, as per the payout formula above.  
@@ -264,8 +264,9 @@ Allowable values: For each range, see \ref{ss:rangebound}. Note that an interval
 
 % scripted trade representation
 
-Target Redemption Forwards can alternatively represented as {\em scripted trades}, refer to Section
-\ref{app:scriptedtrade} for an introduction. This representation does not allow for time varying strikes or range
+Target Redemption Forwards can alternatively represented as {\em scripted trades},
+refer to the scripted trade documentation in ore/Docs/ScriptedTrade
+for an introduction. This representation does not allow for time varying strikes or range
 bounds and also not for a target amount / cumulated profit cap specification in points.
 
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -386,16 +387,16 @@ The meanings and allowable values of the elements in the \lstinline!TaRFData! no
     \item{}[longShort] \lstinline!LongShort!: \emph{Long} if we buy the option. \emph{Short} if we sell the option.
     Allowable values: \emph{Long, Short}
     \item{}[index] \lstinline!Underlying!: Underlying index. \\
-    Allowable values: See Section \ref{data_index} for allowable values.
+    Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
     \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
       in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
       be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
-      COMM underlyings), this will result in a quanto payoff. Notice section \ref{sss:payccy_st}. \\
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
         Allowable values: See Table \ref{tab:currency} for allowable currency codes.
     \item{}[event] \lstinline!FixingDates!: The fixing dates, given as a ScheduleData node \\
-    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see \ref{app:scriptedtrade}).
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see the scripted trade documentation in ore/Docs/ScriptedTrade).
     \item{}[event] \lstinline!SettlementDates!: The settlement dates, given as a ScheduleData or DerivedSchedule node.
-    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see \ref{app:scriptedtrade}).
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see the scripted trade documentation in ore/Docs/ScriptedTrade).
     \item{}[number] \lstinline!RangeUpperBound!: Values of upperbounds for the leverage ranges. If a given range has no upperbound, add 100000. \\
     Allowable values: Any list of positive real numbers. \emph{RangeUpperBound}, \emph{RangeLowerBound} and \emph{RangeLeverages} must have the same size. \emph{RangeUpperBound}[$i$] $\ge$ \emph{RangeLowerBound}[$i$] for all $i$
     \item{}[number] \lstinline!RangeLowerBound!: Values of lowerbounds for the leverage ranges. If a given range has no lowerbound add 0 \\
