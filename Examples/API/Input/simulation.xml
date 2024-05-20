@@ -7,7 +7,7 @@
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>5000</Samples>
+    <Samples>1000</Samples>
   </Parameters>
   <CrossAssetModel>
     <DomesticCcy>EUR</DomesticCcy>

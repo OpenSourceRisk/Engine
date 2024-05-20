@@ -41,6 +41,6 @@ ii. via local host (127.0.0.1)
     
     Run restapi. See: python restapi.py --host="0.0.0.0" --port="5001"
 
-    If using a JSON: using postman, POST to http://127.0.0.1:5001/api/analytics. Copy your prepared json file and send.
+    If using a JSON: using postman, POST to http://127.0.0.1:5001/api/analytics. Copy your prepared json file and send. Alternatively, embed the json into a python script following the request.py example and send by running "python3 request.py".
 
     If calling the API with ore.xml, GET to http://127.0.0.1:5001/api/analytics/file/{path to ore.xml}. The path must be double encoded. Send.
