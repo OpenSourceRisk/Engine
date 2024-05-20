@@ -480,6 +480,9 @@
       <xs:enumeration value="Hermite"/>
       <xs:enumeration value="Quadratic"/>
       <xs:enumeration value="LogQuadratic"/>
+      <xs:enumeration value="LogNaturalCubic"/>
+      <xs:enumeration value="LogFinancialCubic"/>
+      <xs:enumeration value="LogCubicSpline"/>
       <xs:enumeration value="CubicSpline"/>
       <xs:enumeration value="LinearFlat"/>
       <xs:enumeration value="LogLinearFlat"/>
