@@ -83,14 +83,18 @@ in section \ref{sec:bootstrap_config} are used.
     \hline
     Linear & Linear interpolation \\ \hline
     LogLinear & Linear interpolation on the natural log of the interpolation variable \\ \hline
-    NaturalCubic & Monotonic Kruger cubic interpolation with second derivative at left and right \\ \hline
-    FinancialCubic & Monotonic Kruger cubic interpolation with second derivative at left and 
-                     first derivative at right \\ \hline
+    NaturalCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and right \\ \hline
+    FinancialCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and 
+                     zero first derivative at right \\ \hline
     ConvexMonotone & Convex Monotone Interpolation (Hagan, West) \\ \hline
     Quadratic & Quadratic interpolation \\ \hline
     LogQuadratic & Quadratic interpolation on the natural log of the interpolation variable \\ \hline
+    LogNaturalCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and right \\hline
+    LogFinancialCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and 
+                     zero first derivative at right \\hline
+    LogCubicSpline & Non-monotonic cubic spline interpolation with zero second derivative at left and right \\hline
     Hermite & Hermite cubic spline interpolation \\ \hline
-    CubicSpline & Non-monotonic cubic spline interpolation with second derivative at left and right \\ \hline
+    CubicSpline & Non-monotonic cubic spline interpolation with zero second derivative at left and right \\ \hline
     DefaultLogMixedLinearCubic & Mixed interpolation, first linear, then monotonic Kruger cubic spline \\ \hline
     MonotonicLogMixedLinearCubic & Mixed interpolation, first linear, then monotonic natural cubic spline \\ \hline
     KrugerLogMixedLinearCubic & Mixed interpolation, first linear, then non-monotonic Kruger cubic spline \\ \hline
