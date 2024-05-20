@@ -1156,7 +1156,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             fpTypeStr + " ore_indicatorGt(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n" +
             fpTypeStr + " ore_indicatorGt(const " + fpTypeStr + " x, const " + fpTypeStr + " y) " +
                                                 "{ return x > y && !ore_closeEnough(x, y); }\n\n" +
-            fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n";
+            fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n" +
             fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y) { return x > y || ore_closeEnough(x, y); }\n\n";
         // clang-format on
 
