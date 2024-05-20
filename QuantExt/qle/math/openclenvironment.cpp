@@ -529,8 +529,8 @@ void OpenClContext::init() {
 void OpenClContext::disposeCalculation(const std::size_t id) {
     QL_REQUIRE(!disposed_[id - 1], "OpenClContext::disposeCalculation(): id " << id << " was already disposed.");
     disposed_[id - 1] = true;
-    releaseKernel(kernel_[id - 1], "kernel id " + std::to_string(id));
-    releaseProgram(program_[id - 1], "program id " + std::to_string(id));
+    releaseKernel(kernel_[id - 1], "kernel id " + std::to_string(id) + " (during dispose())");
+    releaseProgram(program_[id - 1], "program id " + std::to_string(id) + " (during dispose())");
 }
 
 std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_t n, const std::size_t id,
@@ -575,8 +575,12 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
             version_[id - 1] = version;
             nVars_[id - 1] = 0;
             nVariates_[id - 1] = 0;
-            releaseKernel(kernel_[id - 1], "kernel id " + std::to_string(id));
-            releaseProgram(program_[id - 1], "program id " + std::to_string(id));
+            releaseKernel(kernel_[id - 1],
+                          "kernel id " + std::to_string(id) + " (during initiateCalculation, old version: " +
+                              std::to_string(version_[id - 1]) + ", new version:" + std::to_string(version) + ")");
+            releaseProgram(program_[id - 1],
+                           "program id " + std::to_string(id) + " (during initiateCalculation, old version: " +
+                               std::to_string(version_[id - 1]) + ", new version:" + std::to_string(version) + ")");
             newCalc = true;
         }
 
