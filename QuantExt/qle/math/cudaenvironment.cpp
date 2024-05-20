@@ -85,23 +85,26 @@ namespace QuantExt {
 
 class CudaContext : public ComputeContext {
 public:
-    CudaContext(size_t device);
+    CudaContext(size_t device,
+                const std::vector<std::pair<std::string, std::string>>& deviceInfo, const bool supportsDoublePrecision);
     ~CudaContext() override final;
     void init() override final;
 
     std::pair<std::size_t, bool> initiateCalculation(const std::size_t n, const std::size_t id = 0,
                                                      const std::size_t version = 0,
-                                                     const bool debug = false) override final;
+                                                     const Settings settings = {}) override final;
+    void disposeCalculation(const std::size_t n) override final;
     std::size_t createInputVariable(double v) override final;
     std::size_t createInputVariable(double* v) override final;
-    std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim, const std::size_t steps,
-                                                              const std::uint32_t seed) override final;
+    std::vector<std::vector<std::size_t>> createInputVariates(const std::size_t dim, const std::size_t steps) override final;
     std::size_t applyOperation(const std::size_t randomVariableOpCode,
                                const std::vector<std::size_t>& args) override final;
     void freeVariable(const std::size_t id) override final;
     void declareOutputVariable(const std::size_t id) override final;
-    void finalizeCalculation(std::vector<double*>& output, const Settings& settings = Settings()) override final;
+    void finalizeCalculation(std::vector<double*>& output) override final;
 
+    std::vector<std::pair<std::string, std::string>> deviceInfo() const override;
+    bool supportsDoublePrecision() const override;
     const DebugInfo& debugInfo() const override final;
 
 private:
@@ -109,6 +112,7 @@ private:
     void releaseMem(double*& m);
     void releaseMem(size_t id);
     void releaseModule(CUmodule& k);
+    void releaseMersenneTwisterStates(curandStateMtgp32*& rngState);
 
     enum class ComputeState { idle, createInput, createVariates, calc };
 
@@ -116,6 +120,9 @@ private:
     size_t device_;
     CUcontext context_;
     size_t NUM_THREADS_ = 256;
+    
+    std::vector<std::pair<std::string, std::string>> deviceInfo_;
+    bool supportsDoublePrecision_;
 
     // will be accumulated over all calcs
     ComputeContext::DebugInfo debugInfo_;
@@ -124,6 +131,7 @@ private:
 
     std::vector<std::size_t> size_;
     std::vector<bool> hasKernel_;
+    std::vector<bool> disposed_;
     std::vector<std::size_t> version_;
     std::vector<CUmodule> module_;
     std::vector<CUfunction> kernel_;
@@ -141,7 +149,7 @@ private:
     std::size_t currentId_ = 0;
     ComputeState currentState_ = ComputeState::idle;
     std::size_t nInputVars_;
-    bool debug_;
+    Settings settings_;
 
     // 2a indexed by var id
     std::vector<bool> inputVarIsScalar_;
@@ -165,7 +173,8 @@ CudaFramework::CudaFramework() {
         cudaDeviceProp device_prop;
         cudaGetDeviceProperties(&device_prop, 0);
         char device_name[MAX_N_NAME];
-        contexts_["CUDA/DEFAULT/" + std::string(device_prop.name)] = new CudaContext(d);
+        std::vector<std::pair<std::string, std::string>> deviceInfo;
+        contexts_["CUDA/DEFAULT/" + std::string(device_prop.name)] = new CudaContext(d, deviceInfo, true);
     }
 }
 
@@ -175,16 +184,19 @@ CudaFramework::~CudaFramework() {
     }
 }
 
-CudaContext::CudaContext(size_t device) : initialized_(false), device_(device) {}
+CudaContext::CudaContext(
+    size_t device,
+    const std::vector<std::pair<std::string, std::string>>& deviceInfo, const bool supportsDoublePrecision)
+    : initialized_(false), device_(device), deviceInfo_(deviceInfo), supportsDoublePrecision_(supportsDoublePrecision) {}
 
 CudaContext::~CudaContext() {
     if (initialized_) {
         CUresult err;
 
-        for (auto& state : mersenneTwisterStates_) {
-            auto cudaErr = cudaFree(state);
-            QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::~CudaContext(): free memory for mersenneTwisterStates_ fails: "
-                                                   << cudaGetErrorString(cudaErr));
+        for (Size i = 0; i < mersenneTwisterStates_.size(); ++i) {
+            if (disposed_[i])
+                continue;
+            releaseMersenneTwisterStates(mersenneTwisterStates_[i]);
         }
 
         for (auto& outer : nOutputPtrList_) {
@@ -200,8 +212,10 @@ CudaContext::~CudaContext() {
                            << cudaGetErrorString(cudaErr));
         }
 
-        for (auto& m : module_) {
-            releaseModule(m);
+        for (Size i = 0; i < module_.size(); ++i) {
+            if (disposed_[i])
+                continue;
+            releaseModule(module_[i]);
         }
 
         err = cuCtxDestroy(context_);
@@ -223,7 +237,14 @@ void CudaContext::releaseMem(double*& m) {
 void CudaContext::releaseMem(size_t id) {
     cudaError_t err;
     if (err = cudaFree(deviceVarList_[id]); err != cudaSuccess) {
-        std::cerr << "CudaContext: error during cudaFree: " << cudaGetErrorString(err) << std::endl;
+        std::cerr << "CudaContext: error during releaseMem: " << cudaGetErrorString(err) << std::endl;
+    }
+}
+
+void CudaContext::releaseMersenneTwisterStates(curandStateMtgp32*& rngState) {
+    cudaError_t err;
+    if (err = cudaFree(rngState); err != cudaSuccess) {
+        std::cerr << "CudaContext: error during releaseMersenneTwisterStates: " << cudaGetErrorString(err) << std::endl;
     }
 }
 
@@ -296,12 +317,19 @@ void CudaContext::init() {
 //    return mtStates;
 //}
 
+void CudaContext::disposeCalculation(const std::size_t id) {
+    QL_REQUIRE(!disposed_[id - 1], "CudaContext::disposeCalculation(): id " << id << " was already disposed.");
+    disposed_[id - 1] = true;
+    releaseMersenneTwisterStates(mersenneTwisterStates_[id - 1]);
+    releaseModule(module_[id - 1]);
+}
+
 std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t n, const std::size_t id,
-                                                                const std::size_t version, const bool debug) {
+                                                              const std::size_t version, const Settings settings) {
     QL_REQUIRE(n > 0, "CudaContext::initiateCalculation(): n must not be zero");
 
     bool newCalc = false;
-    debug_ = debug;
+    settings_ = settings;
 
     if (id == 0) {
 
@@ -309,6 +337,7 @@ std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t 
 
         size_.push_back(n);
         hasKernel_.push_back(false);
+        disposed_.push_back(false);
         version_.push_back(version);
 
         CUmodule cuModule;
@@ -337,6 +366,8 @@ std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t 
         QL_REQUIRE(size_[id - 1] == n, "OpenClCOntext::initiateCalculation(): size ("
                                            << size_[id - 1] << ") for id " << id << " does not match current size ("
                                            << n << ")");
+        QL_REQUIRE(!disposed_[id - 1], "CudaContext::initiateCalculation(): id ("
+                                           << id << ") was already disposed, it can not be used any more.");
 
         if (version != version_[id - 1]) {
             hasKernel_[id - 1] = false;
@@ -396,8 +427,7 @@ std::size_t CudaContext::createInputVariable(double* v) {
     return nInputVars_++;
 }
 
-std::vector<std::vector<std::size_t>> CudaContext::createInputVariates(const std::size_t dim, const std::size_t steps,
-                                                                         const std::uint32_t seed) {
+std::vector<std::vector<std::size_t>> CudaContext::createInputVariates(const std::size_t dim, const std::size_t steps) {
     QL_REQUIRE(currentState_ == ComputeState::createInput || currentState_ == ComputeState::createVariates,
                "CudaContext::createInputVariable(): not in state createInput or createVariates ("
                    << static_cast<int>(currentState_) << ")");
@@ -432,7 +462,7 @@ std::vector<std::vector<std::size_t>> CudaContext::createInputVariates(const std
                "CudaContext::initMersenneTwisterRng(): error during curandMakeMTGP32Constants(): "
                    << curandGetErrorString(curandErr));
     curandErr = curandMakeMTGP32KernelState(mtStates, mtgp32dc_params_fast_11213, kernelParams,
-                                            nNUM_BLOCKS_[currentId_ - 1], seed);
+                                            nNUM_BLOCKS_[currentId_ - 1], settings_.rngSeed);
     QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
                "CudaContext::initMersenneTwisterRng(): error during curandMakeMTGP32KernelState(): "
                    << curandGetErrorString(curandErr));
@@ -571,7 +601,7 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
     }
 
     // update num of ops in debug info
-    if (debug_)
+    if (settings_.debug)
         debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
 
     // return result id
@@ -603,7 +633,7 @@ void CudaContext::declareOutputVariable(const std::size_t id) {
     outputVariables_.push_back(id);
 }
 
-void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settings& settings) {
+void CudaContext::finalizeCalculation(std::vector<double*>& output) {
     struct exitGuard {
         exitGuard() {}
         ~exitGuard() {
@@ -656,15 +686,15 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
 
         std::string kernelSource = includeSource + "extern \"C\" __global__ void " + kernelName +
                                    "(double** input, double** output, curandStateMtgp32 *mtStates, int n) {\n"
-                                   "    int tid = blockIdx.x * blockDim.x + threadIdx.x;\n"
-                                   "    if (tid < n) {\n";
+                                   "    int tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
 
         for (size_t id = nInputVars_; id < nInputVars_ + nRandomVariables_[currentId_ - 1]; ++id) {
-            kernelSource += "       double v" + std::to_string(id) + " = curand_normal_double(&mtStates[blockIdx.x]);\n";
-            if (debug_)
+            kernelSource += "    double v" + std::to_string(id) + " = curand_normal_double(&mtStates[blockIdx.x]);\n";
+            if (settings_.debug)
                 debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
         }
 
+        kernelSource += "    if (tid < n) {\n";
         kernelSource += source_;
         size_t ii = 0;
         for (auto const& out : outputVariables_) {
@@ -673,8 +703,8 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         }
         kernelSource += "   }\n"
                         "}\n";
-        //std::cout << kernelSource << std::endl;
-        if (debug_) {
+        std::cout << kernelSource << std::endl;
+        if (settings_.debug) {
             timerBase = timer.elapsed().wall;
         }
 
@@ -734,14 +764,14 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
 
         hasKernel_[currentId_ - 1] = true;
         
-        if (debug_) {
+        if (settings_.debug) {
             debugInfo_.nanoSecondsProgramBuild += timer.elapsed().wall - timerBase;
         }
     }
 
     // allocate and copy memory for input to device
 
-    if (debug_) {
+    if (settings_.debug) {
         timerBase = timer.elapsed().wall;
     }
 
@@ -792,7 +822,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         nOutputPtr_[nOutputVariables_[currentId_ - 1]] = d_output;
         nOutputPtrList_[nOutputVariables_[currentId_ - 1]] = outputVarList;
     }
-    if (debug_) {
+    if (settings_.debug) {
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
     }
 
@@ -803,7 +833,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
 
     // execute kernel
 
-    if (debug_) {
+    if (settings_.debug) {
         timerBase = timer.elapsed().wall;
     }
     cuErr = cuLaunchKernel(kernel_[currentId_ - 1], nNUM_BLOCKS_[currentId_ - 1], 1, 1, NUM_THREADS_, 1, 1, 0, 0, args,
@@ -814,13 +844,13 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
         std::cerr << "CudaContext::finalizeCalculation(): error during cuLaunchKernel(): " << errStr << std::endl;
     }
 
-     if (debug_) {
+     if (settings_.debug) {
         debugInfo_.nanoSecondsCalculation += timer.elapsed().wall - timerBase;
     }
 
     // copy the results
 
-    if (debug_) {
+    if (settings_.debug) {
         timerBase = timer.elapsed().wall;
     }
 
@@ -847,12 +877,14 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output, const Settin
     QL_REQUIRE(cudaErr == cudaSuccess,
                "CudaContext::finalizeCalculation(): free memory for input fails: " << cudaGetErrorString(cudaErr));
 
-    if (debug_) {
+    if (settings_.debug) {
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
     }
 }
 
 const ComputeContext::DebugInfo& CudaContext::debugInfo() const { return debugInfo_; }
+std::vector<std::pair<std::string, std::string>> CudaContext::deviceInfo() const { return deviceInfo_; }
+bool CudaContext::supportsDoublePrecision() const { return supportsDoublePrecision_; }
 
 #endif
 
