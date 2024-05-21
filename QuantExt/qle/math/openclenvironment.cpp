@@ -28,7 +28,8 @@
 #include <iostream>
 #include <thread>
 
-#define ORE_OPENCL_MAX_N_DEV_INFO 65536U
+#define ORE_OPENCL_MAX_N_DEV_INFO 1024U
+#define ORE_OPENCL_MAX_N_DEV_INFO_LARGE 65536U
 #define ORE_OPENCL_MAX_BUILD_LOG 65536U
 #define ORE_OPENCL_MAX_BUILD_LOG_LOGFILE 1024U
 
@@ -302,7 +303,8 @@ void OpenClFramework::init() {
             clGetDeviceInfo(devices_[p][d], CL_DEVICE_NAME, ORE_OPENCL_MAX_N_DEV_INFO, &deviceName, NULL);
             clGetDeviceInfo(devices_[p][d], CL_DRIVER_VERSION, ORE_OPENCL_MAX_N_DEV_INFO, &driverVersion, NULL);
             clGetDeviceInfo(devices_[p][d], CL_DEVICE_VERSION, ORE_OPENCL_MAX_N_DEV_INFO, &deviceVersion, NULL);
-            clGetDeviceInfo(devices_[p][d], CL_DEVICE_EXTENSIONS, ORE_OPENCL_MAX_N_DEV_INFO, &deviceExtensions, NULL);
+            clGetDeviceInfo(devices_[p][d], CL_DEVICE_EXTENSIONS, ORE_OPENCL_MAX_N_DEV_INFO_LARGE, &deviceExtensions,
+                            NULL);
 
             deviceInfo_[p][d].push_back(std::make_pair("device_name", std::string(deviceName)));
             deviceInfo_[p][d].push_back(std::make_pair("driver_version", std::string(driverVersion)));
