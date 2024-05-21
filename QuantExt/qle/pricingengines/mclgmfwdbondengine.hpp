@@ -24,7 +24,6 @@
 #pragma once
 
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
-
 #include <qle/instruments/forwardbond.hpp>
 
 namespace QuantExt {
@@ -66,7 +65,7 @@ public:
 
     void calculate() const override;
 
-    double payOff(double time) const;
+    double payOff(double time, double underlyingSpot) const;
 
     class FwdBondAmcCalculator : public McMultiLegBaseEngine::MultiLegBaseAmcCalculator {
     public:

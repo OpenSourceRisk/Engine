@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/pricingengines/mclgmfwdbondengine.hpp>
-#include <qle/cashflows/scaledcoupon.hpp>
 #include <ql/exercise.hpp>
+#include <qle/cashflows/scaledcoupon.hpp>
+#include <qle/pricingengines/mclgmfwdbondengine.hpp>
 
 namespace QuantExt {
 
@@ -44,21 +44,21 @@ void McLgmFwdBondEngine::calculate() const {
     // not sure yet, why we need this for fwd bonds and not in bonds
     multiplier_ = arguments_.bondNotional;
 
-    // generally: no option, but we can switch off the underlying npv in the output
-    // real option values in not beeing calculated as payOff function overwrites resultValue
-    // exercise_ = ext::make_shared<EuropeanExercise>(arguments_.fwdMaturityDate);
+    // generally: no option
     exercise_ = nullptr;
 
     McMultiLegBaseEngine::calculate();
 
+    // take result from base engine, akin to calculateBondNpv in DiscountingForwardBondEngine
     results_.underlyingSpotValue = resultUnderlyingNpv_;
 
-    results_.value = payOff(0.0);
+    // calculation of contract value, akin to calculateForwardContractPresentValue in DiscountingForwardBondEngine
+    results_.value = payOff(0.0, resultUnderlyingNpv_);
 
     // get the interim amcCalculator from the base class
     auto multiLegBaseAmcCalculator = boost::dynamic_pointer_cast<MultiLegBaseAmcCalculator>(amcCalculator());
 
-    // cast to fwdAMC to gain access to the overwritten simulate path methof
+    // cast to fwdAMC to gain access to the overwritten simulate path method
     ext::shared_ptr<FwdBondAmcCalculator> fwdBondCalc =
         boost::make_shared<FwdBondAmcCalculator>(*multiLegBaseAmcCalculator);
     fwdBondCalc->addEngine(*this);
@@ -68,14 +68,18 @@ void McLgmFwdBondEngine::calculate() const {
 
 } // McLgmSwaptionEngine::calculate
 
-double McLgmFwdBondEngine::payOff(double time) const {
+double McLgmFwdBondEngine::payOff(double time, double underlyingSpot) const {
 
     // engine ignores credit curve and uses the spread on discount only ...
 
     // strip off values after expiry of forward contract
-    double maturityTime = McMultiLegBaseEngine::time(arguments_.fwdMaturityDate);
+    double maturityTime = McLgmFwdBondEngine::time(arguments_.fwdMaturityDate);
     if (time >= maturityTime)
         return 0.0;
+
+    // retrieve correct numeraire - however numeraire value is one
+    double numeraire_income = model_->numeraire(0, 0.0, 0.0, incomeCurve_);
+    double numeraire_contract = model_->numeraire(0, 0.0, 0.0, discountContractCurve_);
 
     // the case of dirty strike corresponds here to an accrual of 0.0. This will be convenient in the code.
     Date bondSettlementDate = arguments_.underlying->settlementDate(arguments_.fwdMaturityDate);
@@ -85,44 +89,16 @@ double McLgmFwdBondEngine::payOff(double time) const {
                                                           arguments_.bondNotional;
 
     // cash settlement case
-    // TODO : do we need the numeraire, here?
-    double forwardBondValue = resultUnderlyingNpv_ / (incomeCurve_->discount(bondSettlementDate));
+    auto forwardBondValue = underlyingSpot / incomeCurve_->discount(bondSettlementDate) / numeraire_income;
 
     // vanilla forward bond calculation
-    double forwardContractForwardValue = (*arguments_.payoff)(forwardBondValue - accruedAmount);
+    auto forwardContractForwardValue = (*arguments_.payoff)(forwardBondValue - accruedAmount);
 
-    // strike logic
-    Date npvDate = discountCurves_[0]->referenceDate();
-    Date cmpPaymentDate = arguments_.compensationPaymentDate;
-    Real cmpPayment = arguments_.compensationPayment;
+    auto forwardContractPresentValue = forwardContractForwardValue *
+                                       discountContractCurve_->discount(arguments_.fwdSettlementDate) *
+                                       numeraire_contract;
 
-    if (cmpPayment == Null<Real>())
-        cmpPayment = 0.0;
-
-    if (cmpPaymentDate == Null<Date>())
-        cmpPaymentDate = npvDate;
-
-    Date cmpPaymentDate_use = cmpPaymentDate >= npvDate ? cmpPaymentDate : arguments_.fwdMaturityDate;
-    cmpPayment = cmpPaymentDate >= npvDate ? cmpPayment : 0.0;
-
-    // finally ... the forwardContractPresentValue
-    double forwardContractPresentValue =
-        forwardContractForwardValue * (discountContractCurve_->discount(arguments_.fwdSettlementDate)) -
-        cmpPayment * (discountContractCurve_->discount(cmpPaymentDate_use));
-
-    // retrieve correct numeraire
-    double numeraire = model_->numeraire(0, time, 0.0, discountContractCurve_);
-
-    std::cout << std::endl;
-    std::cout << "discountContractCurve " << discountContractCurve_->discount(arguments_.fwdSettlementDate)
-              << std::endl;
-    std::cout << "referenceCurve        " << discountCurves_[0]->discount(arguments_.fwdSettlementDate) << std::endl;
-    std::cout << "incomeCurve           " << incomeCurve_->discount(arguments_.fwdSettlementDate) << std::endl;
-    std::cout << "numeraire             " << numeraire << std::endl;
-    std::cout << std::endl;
-
-    // TODO : do we need the numeraire, here? It is one, given the argument list.
-    return forwardContractPresentValue * numeraire;
+    return forwardContractPresentValue;
 }
 
 std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::simulatePath(
@@ -133,15 +109,38 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
     Size samples = paths.front().front().size();
     std::vector<RandomVariable> result(xvaTimes_.size() + 1, RandomVariable(paths.front().front().size(), 0.0));
 
+    /* put together the relevant simulation times on the input paths and check for consistency with xva times,
+    also put together the effective paths by filtering on relevant simulation times and model indices */
+    std::vector<std::vector<const RandomVariable*>> effPaths(
+        xvaTimes_.size(), std::vector<const RandomVariable*>(externalModelIndices_.size()));
+
+    Size timeIndex = 0;
+    for (Size i = 0; i < relevantPathIndex.size(); ++i) {
+        size_t pathIdx = relevantPathIndex[i];
+        for (Size j = 0; j < externalModelIndices_.size(); ++j) {
+            effPaths[timeIndex][j] = &paths[pathIdx][externalModelIndices_[j]];
+        }
+        ++timeIndex;
+    }
+
     // simulate the path: result at first time index is simply the reference date npv
-    result[0] = RandomVariable(samples, engine_->payOff(0.0));
+    result[0] = RandomVariable(samples, engine_->results_.value);
 
     Size counter = 0;
     for (auto t : xvaTimes_) {
-        double tmp = engine_->payOff(t);
-        result[++counter] = RandomVariable(samples, tmp);
-    }
 
+        Size ind = std::distance(exerciseXvaTimes_.begin(), exerciseXvaTimes_.find(t));
+        QL_REQUIRE(ind < exerciseXvaTimes_.size(),
+                   "MultiLegBaseAmcCalculator::simulatePath(): internal error, xva time "
+                       << t << " not found in exerciseXvaTimes vector.");
+
+        auto underylingSpotRV = regModelUndDirty_[ind].apply(initialState_, effPaths, xvaTimes_);
+
+        double underlyingSpot =
+            expectation(underylingSpotRV).at(0) * engine_->model_->numeraire(0, 0.0, 0.0, engine_->discountCurves_[0]);
+
+        result[++counter] = RandomVariable(samples, engine_->payOff(t, underlyingSpot));
+    }
     return result;
 }
 
