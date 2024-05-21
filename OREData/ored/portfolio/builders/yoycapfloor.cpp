@@ -26,31 +26,31 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<PricingEngine> YoYCapFloorEngineBuilder::engineImpl(const string& indexName) {
+QuantLib::ext::shared_ptr<PricingEngine> YoYCapFloorEngineBuilder::engineImpl(const string& indexName) {
     Handle<YoYInflationIndex> yoyTs = market_->yoyInflationIndex(indexName, configuration(MarketContext::pricing));
     Handle<YieldTermStructure> discount =
         market_->discountCurve(yoyTs->currency().code(), configuration(MarketContext::pricing));
     Handle<QuantExt::YoYOptionletVolatilitySurface> ovs =
         market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing));
     if (ovs.empty())
-        return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(
+        return QuantLib::ext::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(
             *yoyTs, Handle<QuantLib::YoYOptionletVolatilitySurface>(), discount);
     switch (ovs->volatilityType()) {
     case ShiftedLognormal:
         if (ovs->displacement() == 0.0) {
             LOG("Build YoYInflationBlackCapFloorEngine for inflation index " << indexName);
-            return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(
+            return QuantLib::ext::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(
                 *yoyTs, Handle<QuantLib::YoYOptionletVolatilitySurface>(ovs), discount);
             break;
         } else {
             LOG("Build YoYInflationUnitDisplacedBlackCapFloorEngine for inflation index " << indexName);
-            return boost::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(
+            return QuantLib::ext::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(
                 *yoyTs, Handle<QuantLib::YoYOptionletVolatilitySurface>(ovs), discount);
             break;
         }
     case Normal:
         LOG("Build YoYInflationBachelierCapFloorEngine for inflation index " << indexName);
-        return boost::make_shared<QuantExt::YoYInflationBachelierCapFloorEngine>(
+        return QuantLib::ext::make_shared<QuantExt::YoYInflationBachelierCapFloorEngine>(
             *yoyTs, Handle<QuantLib::YoYOptionletVolatilitySurface>(ovs), discount);
         break;
     default:

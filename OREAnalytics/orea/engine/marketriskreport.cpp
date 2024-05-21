@@ -17,6 +17,8 @@
 */
 
 #include <ored/marketdata/todaysmarket.hpp>
+#include <ored/portfolio/trade.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <orea/cube/cubewriter.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -24,6 +26,7 @@
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
+#include <boost/regex.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -32,29 +35,99 @@ namespace ore {
 namespace analytics {
 using std::map;
 
-std::ostream& operator<<(std::ostream& out, const ext::shared_ptr<MarketRiskGroup>& riskGroup) {
+std::ostream& operator<<(std::ostream& out, const ext::shared_ptr<MarketRiskGroupBase>& riskGroup) {
     return out << riskGroup->to_string();
 }
 
-std::ostream& operator<<(std::ostream& out, const ext::shared_ptr<TradeGroup>& tradeGroup) {
+std::ostream& operator<<(std::ostream& out, const ext::shared_ptr<TradeGroupBase>& tradeGroup) {
     return out << tradeGroup->to_string();
 }
 
-void MarketRiskReport::init() {
+string MarketRiskGroup::to_string() {
+    return "[" + ore::data::to_string(riskClass_) + ", " + ore::data::to_string(riskType_) + "]";
+}
+
+bool MarketRiskGroup::allLevel() const {
+    return riskClass_ == MarketRiskConfiguration::RiskClass::All && riskType_ == MarketRiskConfiguration::RiskType::All;
+}
+
+map<MarketRiskConfiguration::RiskClass, Size> MarketRiskGroupContainer::CompRisk::rcOrder = {
+    {MarketRiskConfiguration::RiskClass::All, 0},       {MarketRiskConfiguration::RiskClass::InterestRate, 1},
+    {MarketRiskConfiguration::RiskClass::Inflation, 2}, {MarketRiskConfiguration::RiskClass::Credit, 3},
+    {MarketRiskConfiguration::RiskClass::Equity, 4},    {MarketRiskConfiguration::RiskClass::FX, 5}};
+
+map<MarketRiskConfiguration::RiskType, Size> MarketRiskGroupContainer::CompRisk::rtOrder = {
+    {MarketRiskConfiguration::RiskType::All, 0},
+    {MarketRiskConfiguration::RiskType::DeltaGamma, 1},
+    {MarketRiskConfiguration::RiskType::Vega, 2},
+    {MarketRiskConfiguration::RiskType::BaseCorrelation, 3}};
+
+bool MarketRiskGroupContainer::CompRisk::operator()(const QuantLib::ext::shared_ptr<MarketRiskGroup>& lhs,
+                                                    const QuantLib::ext::shared_ptr<MarketRiskGroup>& rhs) const {
+
+    if (rcOrder.at(lhs->riskClass()) < rcOrder.at(rhs->riskClass()))
+        return true;
+    if (rcOrder.at(lhs->riskClass()) > rcOrder.at(rhs->riskClass()))
+        return false;
+
+    if (rtOrder.at(lhs->riskType()) < rtOrder.at(rhs->riskType()))
+        return true;
+    if (rtOrder.at(lhs->riskType()) > rtOrder.at(rhs->riskType()))
+        return false;
+
+    return false;
+}
+
+void MarketRiskGroupContainer::reset() { rgIdx_ = riskGroups_.begin(); }
+
+QuantLib::Size MarketRiskGroupContainer::size() { return riskGroups_.size(); }
+
+QuantLib::ext::shared_ptr<MarketRiskGroupBase> MarketRiskGroupContainer::next() {
+    if (rgIdx_ == riskGroups_.end())
+        return nullptr;
+    auto rg = *rgIdx_;
+    ++rgIdx_;
+    return rg;
+}
+
+void MarketRiskGroupContainer::add(const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup) {
+    auto rg = QuantLib::ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);
+    QL_REQUIRE(rg, "riskGroup must be of type MarketRiskGroup");
+    riskGroups_.insert(rg);
+}
+
+void TradeGroupContainer::reset() { tgIdx_ = tradeGroups_.begin(); }
+
+QuantLib::ext::shared_ptr<TradeGroupBase> TradeGroupContainer::next() {
+    if (tgIdx_ == tradeGroups_.end())
+        return nullptr;
+    auto tg = *tgIdx_;
+    ++tgIdx_;
+    return tg;
+}
+
+void TradeGroupContainer::add(const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) {
+    auto tg = QuantLib::ext::dynamic_pointer_cast<TradeGroup>(tradeGroup);
+    QL_REQUIRE(tg, "tradeGroup must be of type VarTradeGroup");
+    tradeGroups_.insert(tg);
+}
+
+
+void MarketRiskReport::initialise() {
 
     if (multiThreadArgs_ && fullRevalArgs_ && !fullRevalArgs_->simMarket_)
         initSimMarket();
 
     // set run type in engine data, make a copy of this before
     if (fullRevalArgs_ && fullRevalArgs_->engineData_) {
-        fullRevalArgs_->engineData_ = boost::make_shared<EngineData>(*fullRevalArgs_->engineData_);
+        fullRevalArgs_->engineData_ = QuantLib::ext::make_shared<EngineData>(*fullRevalArgs_->engineData_);
         fullRevalArgs_->engineData_->globalParameters()["RunType"] = std::string("HistoricalPnL");
     }
 
     // save a sensi pnl calculator
     if (hisScenGen_) {
         // Build the filtered historical scenario generator
-        hisScenGen_ = boost::make_shared<HistoricalScenarioGeneratorWithFilteredDates>(
+        hisScenGen_ = QuantLib::ext::make_shared<HistoricalScenarioGeneratorWithFilteredDates>(
             timePeriods(), hisScenGen_);
 
         if (fullRevalArgs_ && fullRevalArgs_->simMarket_)
@@ -66,28 +139,28 @@ void MarketRiskReport::init() {
             ext::make_shared<HistoricalSensiPnlCalculator>(hisScenGen_, sensiArgs_->sensitivityStream_);
 
     if (fullRevalArgs_) {
-        LOG("Build the portfolio for full reval bt.")
+        LOG("Build the portfolio for full reval bt.");
 
         if (!multiThreadArgs_) {
-            factory_ = boost::make_shared<EngineFactory>(fullRevalArgs_->engineData_, fullRevalArgs_->simMarket_,
+            factory_ = QuantLib::ext::make_shared<EngineFactory>(fullRevalArgs_->engineData_, fullRevalArgs_->simMarket_,
                                                          map<MarketContext, string>(), fullRevalArgs_->referenceData_,
                                                          fullRevalArgs_->iborFallbackConfig_);
 
             DLOG("Building the portfolio");
-            fullRevalArgs_->portfolio_->build(factory_, "historical pnl generation");
+            portfolio_->build(factory_, "historical pnl generation");
             DLOG("Portfolio built");
 
             LOG("Creating the historical P&L generator (dryRun=" << std::boolalpha << fullRevalArgs_->dryRun_ << ")");
-            ext::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
-                fullRevalArgs_->simMarket_->asofDate(), fullRevalArgs_->portfolio_->ids(),
+            ext::shared_ptr<NPVCube> cube = ext::make_shared<DoublePrecisionInMemoryCube>(
+                fullRevalArgs_->simMarket_->asofDate(), portfolio_->ids(),
                 vector<Date>(1, fullRevalArgs_->simMarket_->asofDate()), hisScenGen_->numScenarios());
 
-            histPnlGen_ = boost::make_shared<HistoricalPnlGenerator>(
-                baseCurrency_, fullRevalArgs_->portfolio_, fullRevalArgs_->simMarket_, 
+            histPnlGen_ = ext::make_shared<HistoricalPnlGenerator>(
+                calculationCurrency_, portfolio_, fullRevalArgs_->simMarket_, 
                 hisScenGen_, cube, factory_->modelBuilders(), fullRevalArgs_->dryRun_);
         } else {
-            histPnlGen_ = boost::make_shared<HistoricalPnlGenerator>(
-                baseCurrency_, fullRevalArgs_->portfolio_, hisScenGen_,
+            histPnlGen_ = ext::make_shared<HistoricalPnlGenerator>(
+                calculationCurrency_, portfolio_, hisScenGen_,
                 fullRevalArgs_->engineData_,
                 multiThreadArgs_->nThreads_, multiThreadArgs_->today_, multiThreadArgs_->loader_,
                 multiThreadArgs_->curveConfigs_, multiThreadArgs_->todaysMarketParams_,
@@ -95,18 +168,72 @@ void MarketRiskReport::init() {
                 fullRevalArgs_->iborFallbackConfig_, fullRevalArgs_->dryRun_, multiThreadArgs_->context_);
         }
     }
+
+    initialiseRiskGroups();
+}
+
+void MarketRiskReport::initialiseRiskGroups() {
+    riskGroups_ = QuantLib::ext::make_shared<MarketRiskGroupContainer>();
+    tradeGroups_ = QuantLib::ext::make_shared<TradeGroupContainer>();
+
+    // build portfolio filter, if given
+    bool hasFilter = false;
+    boost::regex filter;
+    if (portfolioFilter_ != "") {
+        hasFilter = true;
+        filter = boost::regex(portfolioFilter_);
+        LOG("Portfolio filter: " << portfolioFilter_);
+    }
+
+    Size pos = 0;
+    string allStr = "All";
+    auto tradeGroup = QuantLib::ext::make_shared<TradeGroup>(allStr);
+    tradeGroups_->add(tradeGroup);
+
+    QL_REQUIRE(portfolio_, "No portfolio given");
+    for (const auto& pId : portfolio_->portfolioIds()) {
+        if (breakdown_ && (!hasFilter || boost::regex_match(pId, filter))) {
+            auto tradeGroupP = QuantLib::ext::make_shared<TradeGroup>(pId);
+            tradeGroups_->add(tradeGroupP);
+        }
+    }
+
+    for (auto const& [tradeId, trade] : portfolio_->trades()) {
+        if (!hasFilter && trade->portfolioIds().size() == 0)
+            tradeIdGroups_[allStr].insert(make_pair(tradeId, pos));
+        else {
+            for (auto const& pId : trade->portfolioIds()) {
+                if (!hasFilter || boost::regex_match(pId, filter)) {
+                    tradeIdGroups_[allStr].insert(make_pair(tradeId, pos));
+                    if (breakdown_)
+                        tradeIdGroups_[pId].insert(make_pair(tradeId, pos));
+                }
+            }
+        }
+        pos++;
+    }
+
+    // Create the Var risk groups, pairs of risk class/type
+    for (auto rc : MarketRiskConfiguration::riskClasses(true)) {
+        for (auto rt : MarketRiskConfiguration::riskTypes(true)) {
+            auto riskGroup = QuantLib::ext::make_shared<MarketRiskGroup>(rc, rt);
+            riskGroups_->add(riskGroup);
+        }
+    }
+    riskGroups_->reset();
+    tradeGroups_->reset();
 }
 
 void MarketRiskReport::initSimMarket() {
     QL_REQUIRE(multiThreadArgs_ && fullRevalArgs_, "MarketRiskBacktest: must be a multithreaded run");
 
     // called from the ctors that do not take a sim market as an input (the multithreaded ctors)
-    auto initMarket = boost::make_shared<TodaysMarket>(
+    auto initMarket = QuantLib::ext::make_shared<TodaysMarket>(
         multiThreadArgs_->today_, multiThreadArgs_->todaysMarketParams_, multiThreadArgs_->loader_,
         multiThreadArgs_->curveConfigs_, true, true, false, fullRevalArgs_->referenceData_, false,
         fullRevalArgs_->iborFallbackConfig_);
 
-    fullRevalArgs_->simMarket_ = boost::make_shared<ore::analytics::ScenarioSimMarket>(
+    fullRevalArgs_->simMarket_ = QuantLib::ext::make_shared<ore::analytics::ScenarioSimMarket>(
         initMarket, multiThreadArgs_->simMarketData_, multiThreadArgs_->configuration_,
         *multiThreadArgs_->curveConfigs_, *multiThreadArgs_->todaysMarketParams_, true, false, false, false,
         fullRevalArgs_->iborFallbackConfig_);
@@ -121,13 +248,14 @@ void MarketRiskReport::registerProgressIndicators() {
 }
 
 void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports>& reports) {
+    initialise();
     registerProgressIndicators();
     
     LOG("Creating reports");
     createReports(reports);
 
     // Cube to store Sensi Shifts and vector of keys used in cube, per portfolio
-    map<string, boost::shared_ptr<NPVCube>> sensiShiftCube;
+    map<string, QuantLib::ext::shared_ptr<NPVCube>> sensiShiftCube;
     ext::shared_ptr<SensitivityAggregator> sensiAgg;
     if (sensiBased_)
         // Create a sensitivity aggregator. Will be used if running sensi-based backtest.
@@ -139,7 +267,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
     // Loop over all the risk groups
     riskGroups_->reset();
     Size currentRiskGroup = 0;
-    while (ext::shared_ptr<MarketRiskGroup> riskGroup = riskGroups_->next()) {
+    while (ext::shared_ptr<MarketRiskGroupBase> riskGroup = riskGroups_->next()) {
         LOG("[progress] Processing RiskGroup " << ++currentRiskGroup << " out of " << riskGroups_->size()
                                                   << ") = " << riskGroup);
 
@@ -169,7 +297,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
 
         // loop over all the trade groups
         tradeGroups_->reset();
-        while (ext::shared_ptr<TradeGroup> tradeGroup = tradeGroups_->next()) {
+        while (ext::shared_ptr<TradeGroupBase> tradeGroup = tradeGroups_->next()) {
             reset(riskGroup);
 
             // Only look at this trade group if there required
@@ -189,7 +317,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
             set<SensitivityRecord> srs;
 
             if (runSensiBased && sensiAgg) {
-                map<string, boost::shared_ptr<NPVCube>>::iterator scube;
+                map<string, QuantLib::ext::shared_ptr<NPVCube>>::iterator scube;
 
                 auto tradeGpId = tradeGroupKey(tradeGroup);
                 srs = sensiAgg->sensitivities(tradeGpId);
@@ -217,7 +345,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                                  << riskGroup << " and tradeGroup " << tradeGroup << "; Skipping Sensi based PnL.");
                             runSensiBased = false;
                         } else {
-                            scube = sensiShiftCube.insert({portfolio, boost::shared_ptr<NPVCube>()}).first;
+                            scube = sensiShiftCube.insert({portfolio, QuantLib::ext::shared_ptr<NPVCube>()}).first;
                             vector<RiskFactorKey> riskFactorKeys;
                             transform(deltas_.begin(), deltas_.end(), back_inserter(riskFactorKeys),
                                       [](const pair<RiskFactorKey, Real>& kv) { return kv.first; });
@@ -266,7 +394,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
                                 "eigenvalue is "
                                     << evMin);
                             DLOG("Smallest eigenvalue is " << evMin);
-                            salvage_ = boost::make_shared<QuantExt::NoCovarianceSalvage>();
+                            salvage_ = QuantLib::ext::make_shared<QuantExt::NoCovarianceSalvage>();
                         }
                     } else
                         covCalculator = ext::make_shared<CovarianceCalculator>(covariancePeriod());
@@ -289,7 +417,7 @@ void MarketRiskReport::calculate(const ext::shared_ptr<MarketRiskReport::Reports
             if (runFullReval(riskGroup))                                
                 handleFullRevalResults(reports, riskGroup, tradeGroup);
 
-            writeSummary(reports, riskGroup, tradeGroup);
+            writeReports(reports, riskGroup, tradeGroup);
         }
         if (sensiBased_)
             // Reset the sensitivity aggregator before changing the risk filter
@@ -306,7 +434,7 @@ void MarketRiskReport::enableCubeWrite(const string& cubeDir, const string& cube
     fullRevalArgs_->cubeFilename_ = cubeFilename;
 }
 
-void MarketRiskReport::reset(const ext::shared_ptr<MarketRiskGroup>& riskGroup) {
+void MarketRiskReport::reset(const ext::shared_ptr<MarketRiskGroupBase>& riskGroup) {
     deltas_.clear();
     gammas_.clear();
     covarianceMatrix_ = Matrix();
@@ -320,5 +448,23 @@ void MarketRiskReport::closeReports(const ext::shared_ptr<MarketRiskReport::Repo
     for (const auto& r : reports->reports())
         r->end();    
 }
+
+QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>
+MarketRiskReport::createScenarioFilter(const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup) {
+    auto rg = QuantLib::ext::dynamic_pointer_cast<MarketRiskGroup>(riskGroup);
+    QL_REQUIRE(rg, "riskGroup must be of type MarketRiskGroup");
+    return QuantLib::ext::make_shared<RiskFilter>(rg->riskClass(), rg->riskType());
+}
+
+string MarketRiskReport::portfolioId(const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) const {
+    auto vtg = QuantLib::ext::dynamic_pointer_cast<TradeGroup>(tradeGroup);
+    QL_REQUIRE(vtg, "TradeGroup of type TradeGroup required");
+    return vtg->portfolioId();
+}
+
+string MarketRiskReport::tradeGroupKey(const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) const {
+    return portfolioId(tradeGroup);
+}
+
 } // namespace analytics
 } // namespace ore

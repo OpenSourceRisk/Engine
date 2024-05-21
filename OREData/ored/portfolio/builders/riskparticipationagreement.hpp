@@ -54,7 +54,7 @@ public:
         : RiskParticipationAgreementEngineBuilderBase("Black", "Analytic", {"RiskParticipationAgreement_Vanilla"}) {}
 
 protected:
-    boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
                                                           RiskParticipationAgreement* rpa) override;
 };
 
@@ -66,7 +66,7 @@ public:
                                                       {"RiskParticipationAgreement_Vanilla_XCcy"}) {}
 
 protected:
-    boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
                                                           RiskParticipationAgreement* rpa) override;
 };
 
@@ -77,7 +77,7 @@ public:
         : RiskParticipationAgreementEngineBuilderBase("LGM", "Grid", tradeTypes) {}
 
 protected:
-    boost::shared_ptr<QuantExt::LGM> model(const string& id, const string& key, const std::vector<Date>& expiries,
+    QuantLib::ext::shared_ptr<QuantExt::LGM> model(const string& id, const string& key, const std::vector<Date>& expiries,
                                            const Date& maturity, const std::vector<Real>& strikes);
 };
 
@@ -89,7 +89,7 @@ public:
               {"RiskParticipationAgreement_Vanilla", "RiskParticipationAgreement_Structured"}) {}
 
 protected:
-    boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
                                                           RiskParticipationAgreement* rpa) override;
 };
 
@@ -100,7 +100,7 @@ public:
         : RiskParticipationAgreementLGMGridEngineBuilder({"RiskParticipationAgreement_TLock"}) {}
 
 protected:
-    boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& id,
                                                           RiskParticipationAgreement* rpa) override;
 };
 

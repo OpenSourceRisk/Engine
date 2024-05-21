@@ -47,22 +47,22 @@ public:
         const CreditDefaultSwap::ProtectionPaymentTime proteectionPaymentTime =
             CreditDefaultSwap::ProtectionPaymentTime::atDefault,
         const Date protectionStart = Date(), const Date upfrontDate = Date(),
-        const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(),
+        const QuantLib::ext::shared_ptr<Claim>& claim = QuantLib::ext::shared_ptr<Claim>(),
         const BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
 
     virtual void addTimesTo(std::list<Time>& times) const override {}
     virtual Real modelValue() const override;
     virtual Real blackPrice(Volatility volatility) const override;
 
-    boost::shared_ptr<CreditDefaultSwap> underlying() const { return cds_; }
-    boost::shared_ptr<QuantExt::CdsOption> option() const { return option_; }
+    QuantLib::ext::shared_ptr<CreditDefaultSwap> underlying() const { return cds_; }
+    QuantLib::ext::shared_ptr<QuantExt::CdsOption> option() const { return option_; }
 
 private:
     Handle<YieldTermStructure> termStructure_;
-    boost::shared_ptr<CreditDefaultSwap> cds_;
-    boost::shared_ptr<QuantExt::CdsOption> option_;
-    boost::shared_ptr<SimpleQuote> blackVol_;
-    boost::shared_ptr<PricingEngine> blackEngine_;
+    QuantLib::ext::shared_ptr<CreditDefaultSwap> cds_;
+    QuantLib::ext::shared_ptr<QuantExt::CdsOption> option_;
+    QuantLib::ext::shared_ptr<SimpleQuote> blackVol_;
+    QuantLib::ext::shared_ptr<PricingEngine> blackEngine_;
 };
 } // namespace QuantExt
 

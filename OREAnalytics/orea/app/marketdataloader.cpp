@@ -72,14 +72,14 @@ void additional_fx_fixings(const string& fixingId, const RequiredFixings::Fixing
 void additional_commodity_fixings(const string& fixingId, const RequiredFixings::FixingDates& fixingDates, FixingMap& fixings,
     map<pair<string, Date>, set<Date>>& commodityMap) {
     
-    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 
     auto ind = parseCommodityIndex(fixingId);
     string commName = ind->underlyingName();
 
-    boost::shared_ptr<CommodityFutureConvention> cfc;
+    QuantLib::ext::shared_ptr<CommodityFutureConvention> cfc;
     if (conventions->has(commName)) {
-        cfc = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(commName));
+        cfc = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(commName));
     }
 
     if (cfc) {
@@ -121,11 +121,11 @@ void additional_commodity_fixings(const string& fixingId, const RequiredFixings:
 
 // Additional fixings for equity index decomposition
 void additional_equity_fixings(map<string, RequiredFixings::FixingDates>& fixings, const TodaysMarketParameters& mktParams,
-                               const boost::shared_ptr<ReferenceDataManager> refData,
-                               const boost::shared_ptr<CurveConfigurations>& curveConfigs) {
+                               const QuantLib::ext::shared_ptr<ReferenceDataManager> refData,
+                               const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs) {
     std::string configuration = Market::defaultConfiguration;
     Date asof = Settings::instance().evaluationDate();
-    boost::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum> currencyHedgedIndexData;
+    QuantLib::ext::shared_ptr<CurrencyHedgedEquityIndexReferenceDatum> currencyHedgedIndexData;
     if (mktParams.hasMarketObject(MarketObject::EquityCurve)) {
         for (const auto& [equityName, _] : mktParams.mapping(MarketObject::EquityCurve, configuration)) {
             try {    
@@ -140,7 +140,7 @@ void additional_equity_fixings(map<string, RequiredFixings::FixingDates>& fixing
     }
 }
 
-const boost::shared_ptr<MarketDataLoaderImpl>& MarketDataLoader::impl() const {
+const QuantLib::ext::shared_ptr<MarketDataLoaderImpl>& MarketDataLoader::impl() const {
     QL_REQUIRE(impl_, "No MarketDataLoader implementation of type MarketDataLoaderImpl set");
     return impl_;
 }
@@ -160,7 +160,7 @@ void MarketDataLoader::addRelevantFixings(
 }
 
 void MarketDataLoader::populateFixings(
-    const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+    const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
     const std::set<QuantLib::Date>& loaderDates) {
     if (inputs_->allFixings()) {
         impl()->retrieveFixings(loader_);
@@ -221,12 +221,12 @@ void MarketDataLoader::populateFixings(
 }
 
 void MarketDataLoader::populateLoader(
-    const std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+    const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
     const std::set<QuantLib::Date>& loaderDates) {
 
     // create a loader if doesn't already exist
     if (!loader_)
-        loader_ = boost::make_shared<InMemoryLoader>();
+        loader_ = QuantLib::ext::make_shared<InMemoryLoader>();
     else
         loader_->reset(); // can only populate once to avoid duplicates
 
@@ -241,7 +241,7 @@ void MarketDataLoader::populateLoader(
             auto eqMap = tmp->mapping(MarketObject::EquityCurve, Market::defaultConfiguration);
             for (auto eq : eqMap) {
                 if (inputs_->refDataManager() && inputs_->refDataManager()->hasData("Equity", eq.first)) {
-                    auto refData = boost::dynamic_pointer_cast<EquityReferenceDatum>(
+                    auto refData = QuantLib::ext::dynamic_pointer_cast<EquityReferenceDatum>(
                         inputs_->refDataManager()->getData("Equity", eq.first));
                     auto erData = refData->equityData();
                     equities[eq.first] = erData.equityId;

@@ -34,7 +34,7 @@ using namespace QuantExt;
 
 NumericLgmRiskParticipationAgreementEngineTLock::NumericLgmRiskParticipationAgreementEngineTLock(
     const std::string& baseCcy, const std::map<std::string, Handle<YieldTermStructure>>& discountCurves,
-    const std::map<std::string, Handle<Quote>>& fxSpots, const boost::shared_ptr<QuantExt::LinearGaussMarkovModel>& model,
+    const std::map<std::string, Handle<Quote>>& fxSpots, const QuantLib::ext::shared_ptr<QuantExt::LinearGaussMarkovModel>& model,
     const Real sy, const Size ny, const Real sx, const Size nx, const Handle<YieldTermStructure>& treasuryCurve,
     const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
     const Size timeStepsPerYear)
@@ -46,7 +46,7 @@ NumericLgmRiskParticipationAgreementEngineTLock::NumericLgmRiskParticipationAgre
         registerWith(d.second);
     for (auto const& s : fxSpots_)
         registerWith(s.second);
-    fxSpots_[baseCcy] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+    fxSpots_[baseCcy] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
     registerWith(treasuryCurve_);
     registerWith(defaultCurve_);
     registerWith(recoveryRate_);
@@ -88,7 +88,7 @@ void NumericLgmRiskParticipationAgreementEngineTLock::calculate() const {
             fee += c->amount() * discountCurves_[arguments_.protectionFeeCcys[idx]]->discount(c->date()) *
                    fxSpots_[arguments_.protectionFeeCcys[idx]]->value() * defaultCurve_->survivalProbability(c->date());
             // accrual settlement using the mid of the coupon periods
-            auto cpn = boost::dynamic_pointer_cast<Coupon>(c);
+            auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c);
             if (cpn && arguments_.settlesAccrual) {
                 Date start = std::max(cpn->accrualStartDate(), referenceDate_);
                 Date end = cpn->accrualEndDate();

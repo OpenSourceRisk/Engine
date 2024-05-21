@@ -21,14 +21,14 @@
 
 namespace QuantExt {
 
-CommoditySchwartzModel::CommoditySchwartzModel(const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization, 
+CommoditySchwartzModel::CommoditySchwartzModel(const QuantLib::ext::shared_ptr<CommoditySchwartzParametrization>& parametrization, 
                                                const Discretization discretization)
     : parametrization_(parametrization), discretization_(discretization) {
     QL_REQUIRE(parametrization_ != nullptr, "CommoditySchwartzModel: parametrization is null");
     arguments_.resize(2);
     arguments_[0] = parametrization_->parameter(0);
     arguments_[1] = parametrization_->parameter(1);
-    stateProcess_ = boost::make_shared<CommoditySchwartzStateProcess>(parametrization_, discretization_);
+    stateProcess_ = QuantLib::ext::make_shared<CommoditySchwartzStateProcess>(parametrization_, discretization_);
 }
 
 QuantLib::Real CommoditySchwartzModel::forwardPrice(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& state,

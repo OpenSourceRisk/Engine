@@ -16,13 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
+#include <orea/app/analytics/pnlexplainanalytic.hpp>
+#include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/scenariostatisticsanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
+#include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/xvastressanalytic.hpp>
+#include <orea/app/analytics/pnlanalytic.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
@@ -38,29 +45,16 @@ using ore::data::InMemoryReport;
 
 namespace ore {
 namespace analytics {
+    
+AnalyticsManager::AnalyticsManager(const QuantLib::ext::shared_ptr<InputParameters>& inputs, 
+                                   const QuantLib::ext::shared_ptr<MarketDataLoader>& marketDataLoader)
+    : inputs_(inputs), marketDataLoader_(marketDataLoader) {
 
-Size matches(const std::set<std::string>& requested, const std::set<std::string>& available) {
-    Size count = 0;
-    for (auto r : requested) {
-        if (available.find(r) != available.end())
-            count++;
+    for (const auto& a : inputs_->analytics()) {
+        auto ap = AnalyticFactory::instance().build(a, inputs);
+        if (ap.second)
+            addAnalytic(ap.first, ap.second);
     }
-    return count;
-}
-    
-AnalyticsManager::AnalyticsManager(const boost::shared_ptr<InputParameters>& inputs, 
-                                   const boost::shared_ptr<MarketDataLoader>& marketDataLoader)
-    : inputs_(inputs), marketDataLoader_(marketDataLoader) {    
-    
-    addAnalytic("MARKETDATA", boost::make_shared<MarketDataAnalytic>(inputs));
-    addAnalytic("PRICING", boost::make_shared<PricingAnalytic>(inputs));
-    addAnalytic("PARAMETRIC_VAR", boost::make_shared<ParametricVarAnalytic>(inputs_));
-    addAnalytic("HISTSIM_VAR", boost::make_shared<HistoricalSimulationVarAnalytic>(inputs_));
-    addAnalytic("XVA", boost::make_shared<XvaAnalytic>(inputs_));
-    addAnalytic("SIMM", boost::make_shared<SimmAnalytic>(inputs_));
-    addAnalytic("PARCONVERSION", boost::make_shared<ParConversionAnalytic>(inputs_));
-    addAnalytic("SCENARIO_STATISTICS", boost::make_shared<ScenarioStatisticsAnalytic>(inputs_));
-    addAnalytic("SCENARIO", boost::make_shared<ScenarioAnalytic>(inputs_));
 }
 
 void AnalyticsManager::clear() {
@@ -69,12 +63,7 @@ void AnalyticsManager::clear() {
     validAnalytics_.clear();
 }
     
-void AnalyticsManager::addAnalytic(const std::string& label, const boost::shared_ptr<Analytic>& analytic) {
-    // Allow overriding, but warn 
-    if (analytics_.find(label) != analytics_.end()) {
-        WLOG("Overwriting analytic with label " << label);
-    }
-
+void AnalyticsManager::addAnalytic(const std::string& label, const QuantLib::ext::shared_ptr<Analytic>& analytic) {
     // Label is not necessarily a valid analytics type
     // Get the latter via analytic->analyticTypes()
     LOG("register analytic with label '" << label << "' and sub-analytics " << to_string(analytic->analyticTypes()));
@@ -94,7 +83,7 @@ const std::set<std::string>& AnalyticsManager::validAnalytics() {
 }
 
 const std::set<std::string>& AnalyticsManager::requestedAnalytics() {
-    return requestedAnalytics_;
+    return inputs_->analytics();
 }
     
 bool AnalyticsManager::hasAnalytic(const std::string& type) {
@@ -102,7 +91,7 @@ bool AnalyticsManager::hasAnalytic(const std::string& type) {
     return va.find(type) != va.end();
 }
 
-const boost::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::string& type) const {
+const QuantLib::ext::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::string& type) const {
     for (const auto& a : analytics_) {
         const std::set<std::string>& types = a.second->analyticTypes();
         if (types.find(type) != types.end())
@@ -112,23 +101,19 @@ const boost::shared_ptr<Analytic>& AnalyticsManager::getAnalytic(const std::stri
 }
 
 std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> AnalyticsManager::todaysMarketParams() {
-    std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
     for (const auto& a : analytics_) {
-        std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> atmps = a.second->todaysMarketParams();
+        std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> atmps = a.second->todaysMarketParams();
         tmps.insert(end(tmps), begin(atmps), end(atmps));
     }
     return tmps;
 }
 
-void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
-                                    const boost::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport) {
-
-    requestedAnalytics_ = analyticTypes;
-    
+void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport) {
     if (analytics_.size() == 0)
         return;
 
-    std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps = todaysMarketParams();
+    std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps = todaysMarketParams();
     std::set<Date> marketDates;
     for (const auto& a : analytics_) {
         auto mdates = a.second->marketDates();
@@ -147,13 +132,13 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
     if (requireMarketData) {
         // load the market data
         if (tmps.size() > 0) {
-            LOG("AnalyticsManager::runAnalytics: populate loader");
+            LOG("AnalyticsManager::runAnalytics: populate loader for dates: " << to_string(marketDates));
             marketDataLoader_->populateLoader(tmps, marketDates);
         }
         
-        boost::shared_ptr<InMemoryReport> mdReport = boost::make_shared<InMemoryReport>();
-        boost::shared_ptr<InMemoryReport> fixingReport = boost::make_shared<InMemoryReport>();
-        boost::shared_ptr<InMemoryReport> dividendReport = boost::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> mdReport = QuantLib::ext::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> fixingReport = QuantLib::ext::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> dividendReport = QuantLib::ext::make_shared<InMemoryReport>();
 
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeMarketData(*mdReport, marketDataLoader_->loader(), inputs_->asof(),
@@ -171,18 +156,16 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
 
     // run requested analytics
     for (auto a : analytics_) {
-        if (matches(analyticTypes, a.second->analyticTypes()) > 0) {
-            LOG("run analytic with label '" << a.first << "'");
-            a.second->runAnalytic(marketDataLoader_->loader(), analyticTypes);
-            LOG("run analytic with label '" << a.first << "' finished.");
-            // then populate the market calibration report if required
-            if (marketCalibrationReport)
-                a.second->marketCalibration(marketCalibrationReport);
-        }
+        LOG("run analytic with label '" << a.first << "'");
+        a.second->runAnalytic(marketDataLoader_->loader(), inputs_->analytics());
+        LOG("run analytic with label '" << a.first << "' finished.");
+        // then populate the market calibration report if required
+        if (marketCalibrationReport)
+            a.second->marketCalibration(marketCalibrationReport);
     }
 
     if (inputs_->portfolio()) {
-        auto pricingStatsReport = boost::make_shared<InMemoryReport>();
+        auto pricingStatsReport = QuantLib::ext::make_shared<InMemoryReport>();
         ReportWriter(inputs_->reportNaString())
             .writePricingStats(*pricingStatsReport, inputs_->portfolio());
         reports_["STATS"]["pricingstats"] = pricingStatsReport;
@@ -191,7 +174,7 @@ void AnalyticsManager::runAnalytics(const std::set<std::string>& analyticTypes,
     if (marketCalibrationReport) {
         auto report = marketCalibrationReport->outputCalibrationReport();
         if (report) {
-            if (auto rpt = boost::dynamic_pointer_cast<InMemoryReport>(report))
+            if (auto rpt = QuantLib::ext::dynamic_pointer_cast<InMemoryReport>(report))
                 reports_["MARKET"]["todaysmarketcalibration"] = rpt;
         }
     }
@@ -221,6 +204,15 @@ Analytic::analytic_mktcubes const AnalyticsManager::mktCubes() {
     Analytic::analytic_mktcubes results;
     for (auto a : analytics_) {
         auto rs = a.second->mktCubes();
+        results.insert(rs.begin(), rs.end());
+    }
+    return results;
+}
+
+Analytic::analytic_stresstests const AnalyticsManager::stressTests() {
+    Analytic::analytic_stresstests results;
+    for (auto a : analytics_) {
+        auto rs = a.second->stressTests();
         results.insert(rs.begin(), rs.end());
     }
     return results;
@@ -260,14 +252,14 @@ void AnalyticsManager::toFile(const ore::analytics::Analytic::analytic_reports& 
         string analytic = rep.first;
         for (auto b : rep.second) {
             string reportName = b.first;
-            boost::shared_ptr<InMemoryReport> report = b.second;
+            QuantLib::ext::shared_ptr<InMemoryReport> report = b.second;
             string fileName;
             auto it = hits.find(reportName);
             QL_REQUIRE(it != hits.end(), "something wrong here");
             if (it->second == 1) {
                 // The report name is unique, check whether we want to rename it or use the standard name
                 auto it2 = reportNames.find(reportName);
-                fileName = it2 != reportNames.end() ? it2->second : reportName;
+                fileName = (it2 != reportNames.end() && !it2->second.empty()) ? it2->second : reportName;
             }
             else {
                 ALOG("Report " << reportName << " occurs " << it->second << " times, fix report naming");

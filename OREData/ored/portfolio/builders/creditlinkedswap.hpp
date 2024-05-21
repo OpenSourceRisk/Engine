@@ -33,7 +33,7 @@ public:
 
 private:
     std::string keyImpl(const std::string& currency, const std::string& creditCurveId) override;
-    boost::shared_ptr<PricingEngine> engineImpl(const std::string& currency, const std::string& creditCurveId) override;
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::string& currency, const std::string& creditCurveId) override;
 };
 
 } // namespace data

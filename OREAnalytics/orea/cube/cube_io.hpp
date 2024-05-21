@@ -36,9 +36,9 @@ namespace analytics {
     config will be used. */
 
 struct NPVCubeWithMetaData {
-    boost::shared_ptr<NPVCube> cube;
+    QuantLib::ext::shared_ptr<NPVCube> cube;
     // all of the following members are optional
-    boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData;
+    QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData;
     boost::optional<bool> storeFlows;
     boost::optional<Size> storeCreditStateNPVs;
 };
@@ -46,7 +46,7 @@ struct NPVCubeWithMetaData {
 NPVCubeWithMetaData loadCube(const std::string& filename, const bool doublePrecision = false);
 void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, const bool doublePrecision = false);
 
-boost::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename);
+QuantLib::ext::shared_ptr<AggregationScenarioData> loadAggregationScenarioData(const std::string& filename);
 void saveAggregationScenarioData(const std::string& filename, const AggregationScenarioData& cube);
 
 } // namespace analytics

@@ -54,18 +54,18 @@ struct CommonVars {
     // 5Y TRY annual fixed rate vs. USD 3M Libor
     Handle<Quote> rate;
     // USD/TRY spot FX rate
-    boost::shared_ptr<SimpleQuote> spotFx;
+    QuantLib::ext::shared_ptr<SimpleQuote> spotFx;
     // Spread on float leg of swap
-    boost::shared_ptr<SimpleQuote> spread;
+    QuantLib::ext::shared_ptr<SimpleQuote> spread;
     // USD Libor 3M projection curve
     Handle<YieldTermStructure> liborProjCurve;
     // USD Libor 3M index
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     // USD discount curve
     Handle<YieldTermStructure> usdDiscCurve;
 
     // Hold the helper created during testing
-    boost::shared_ptr<CrossCcyFixFloatSwapHelper> helper;
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatSwapHelper> helper;
 
     CommonVars() {
         asof = Date(11, Sep, 2018);
@@ -79,18 +79,18 @@ struct CommonVars {
         fixedDayCount = Actual360();
         usdNominal = 10000000.0;
 
-        rate = Handle<Quote>(boost::make_shared<SimpleQuote>(0.25));
-        spotFx = boost::make_shared<SimpleQuote>(6.4304);
-        spread = boost::make_shared<SimpleQuote>(0.0);
+        rate = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.25));
+        spotFx = QuantLib::ext::make_shared<SimpleQuote>(6.4304);
+        spread = QuantLib::ext::make_shared<SimpleQuote>(0.0);
         liborProjCurve =
-            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.029773, Actual365Fixed()));
-        index = boost::make_shared<USDLibor>(3 * Months, liborProjCurve);
+            Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.029773, Actual365Fixed()));
+        index = QuantLib::ext::make_shared<USDLibor>(3 * Months, liborProjCurve);
         usdDiscCurve =
-            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.026727, Actual365Fixed()));
+            Handle<YieldTermStructure>(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.026727, Actual365Fixed()));
     }
 };
 
-boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(const CommonVars& vars,
+QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(const CommonVars& vars,
                                                      const Handle<YieldTermStructure>& discCurve) {
 
     // Swap start and end date
@@ -108,14 +108,14 @@ boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(const CommonVars& vars,
                            DateGeneration::Backward, false);
 
     // Create swap
-    boost::shared_ptr<CrossCcyFixFloatSwap> swap(new CrossCcyFixFloatSwap(
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap> swap(new CrossCcyFixFloatSwap(
         CrossCcyFixFloatSwap::Payer, vars.usdNominal * vars.spotFx->value(), vars.fixedCurrency, fixedSchedule,
         vars.rate->value(), vars.fixedDayCount, vars.payConvention, vars.payLag, vars.payCalendar, vars.usdNominal,
         vars.index->currency(), floatSchedule, vars.index, vars.spread->value(), vars.payConvention, vars.payLag,
         vars.payCalendar));
 
     // Attach pricing engine
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<CrossCcySwapEngine>(
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(
         vars.fixedCurrency, discCurve, vars.index->currency(), vars.usdDiscCurve, Handle<Quote>(vars.spotFx));
     swap->setPricingEngine(engine);
 
@@ -126,7 +126,7 @@ boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(const CommonVars& vars,
 Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
 
     // Create a helper
-    vector<boost::shared_ptr<RateHelper> > helpers(1);
+    vector<QuantLib::ext::shared_ptr<RateHelper> > helpers(1);
     vars.helper.reset(new CrossCcyFixFloatSwapHelper(
         vars.rate, Handle<Quote>(vars.spotFx), vars.settlementDays, vars.payCalendar, vars.payConvention, vars.tenor,
         vars.fixedCurrency, vars.fixedFrequency, vars.payConvention, vars.fixedDayCount, vars.index, vars.usdDiscCurve,
@@ -135,7 +135,7 @@ Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
 
     // Create a yield curve referencing the helper
     return Handle<YieldTermStructure>(
-        boost::make_shared<PiecewiseYieldCurve<Discount, LogLinear> >(0, NullCalendar(), helpers, Actual365Fixed()));
+        QuantLib::ext::make_shared<PiecewiseYieldCurve<Discount, LogLinear> >(0, NullCalendar(), helpers, Actual365Fixed()));
 }
 
 } // namespace
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(testBootstrap) {
     Handle<YieldTermStructure> tryDiscCurve = bootstrappedCurve(vars);
 
     // Create the helper swap manually and price it using curve bootstrapped from helper
-    boost::shared_ptr<CrossCcyFixFloatSwap> swap = makeTestSwap(vars, tryDiscCurve);
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap> swap = makeTestSwap(vars, tryDiscCurve);
 
     // Swap should have NPV = 0.0. On notional = $10M i.e. TRY60.5M, 1e-5 is enough.
     Real absTol = 1e-5;
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(testSpotFxChange) {
     Handle<YieldTermStructure> tryDiscCurve = bootstrappedCurve(vars);
 
     // Create the helper swap manually and price it using curve bootstrapped from helper
-    boost::shared_ptr<CrossCcyFixFloatSwap> swap = makeTestSwap(vars, tryDiscCurve);
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap> swap = makeTestSwap(vars, tryDiscCurve);
 
     // Check NPV = 0.0
     Real absTol = 1e-5;
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(testSpreadChange) {
     Handle<YieldTermStructure> tryDiscCurve = bootstrappedCurve(vars);
 
     // Create the helper swap manually and price it using curve bootstrapped from helper
-    boost::shared_ptr<CrossCcyFixFloatSwap> swap = makeTestSwap(vars, tryDiscCurve);
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap> swap = makeTestSwap(vars, tryDiscCurve);
 
     // Check NPV = 0.0
     Real absTol = 1e-5;
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(testMovingEvaluationDate) {
     Handle<YieldTermStructure> tryDiscCurve = bootstrappedCurve(vars);
 
     // Create the helper swap manually and price it using curve bootstrapped from helper
-    boost::shared_ptr<CrossCcyFixFloatSwap> swap = makeTestSwap(vars, tryDiscCurve);
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap> swap = makeTestSwap(vars, tryDiscCurve);
 
     // Check NPV = 0.0
     Real absTol = 1e-5;

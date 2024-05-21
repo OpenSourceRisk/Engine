@@ -27,7 +27,7 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<PricingEngine> CapFloorEngineBuilder::engineImpl(const std::string& index) {
+QuantLib::ext::shared_ptr<PricingEngine> CapFloorEngineBuilder::engineImpl(const std::string& index) {
     string ccyCode = parseIborIndex(index)->currency().code();
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
     Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(index, configuration(MarketContext::pricing));
@@ -35,11 +35,11 @@ boost::shared_ptr<PricingEngine> CapFloorEngineBuilder::engineImpl(const std::st
     switch (ovs->volatilityType()) {
     case ShiftedLognormal:
         LOG("Build BlackCapFloorEngine for index " << index);
-        return boost::make_shared<BlackCapFloorEngine>(yts, ovs, ovs->displacement());
+        return QuantLib::ext::make_shared<BlackCapFloorEngine>(yts, ovs, ovs->displacement());
         break;
     case Normal:
         LOG("Build BachelierCapFloorEngine for index " << index);
-        return boost::make_shared<BachelierCapFloorEngine>(yts, ovs);
+        return QuantLib::ext::make_shared<BachelierCapFloorEngine>(yts, ovs);
         break;
     default:
         QL_FAIL("Caplet volatility type, " << ovs->volatilityType() << ", not covered in EngineFactory");

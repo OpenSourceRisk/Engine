@@ -47,7 +47,7 @@ void ConvertibleBondData::CallabilityData::MakeWholeData::ConversionRatioIncreas
     initialised_ = true;
 }
 
-XMLNode* ConvertibleBondData::CallabilityData::MakeWholeData::ConversionRatioIncreaseData::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBondData::CallabilityData::MakeWholeData::ConversionRatioIncreaseData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ConversionRatioIncrease");
     if (!cap_.empty()) {
         XMLUtils::addChild(doc, node, "Cap", cap_);
@@ -69,7 +69,7 @@ void ConvertibleBondData::CallabilityData::MakeWholeData::fromXML(XMLNode* node)
     initialised_ = true;
 }
 
-XMLNode* ConvertibleBondData::CallabilityData::MakeWholeData::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBondData::CallabilityData::MakeWholeData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("MakeWhole");
     if (conversionRatioIncreaseData_.initialised()) {
         XMLUtils::appendNode(node, conversionRatioIncreaseData_.toXML(doc));
@@ -99,7 +99,7 @@ void ConvertibleBondData::CallabilityData::fromXML(XMLNode* node) {
     initialised_ = true;
 }
 
-XMLNode* ConvertibleBondData::CallabilityData::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBondData::CallabilityData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(nodeName_);
     XMLUtils::appendNode(node, dates_.toXML(doc));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Styles", "Style", styles_, "startDate", styleDates_);
@@ -128,7 +128,7 @@ void ConvertibleBondData::ConversionData::ContingentConversionData::fromXML(XMLN
     initialised_ = true;
 }
 
-XMLNode* ConvertibleBondData::ConversionData::ContingentConversionData::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBondData::ConversionData::ContingentConversionData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ContingentConversion");
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Observations", "Observation", observations_, "startDate",
                                                 observationDates_);
@@ -146,7 +146,7 @@ void ConvertibleBondData::ConversionData::MandatoryConversionData::PepsData::fro
     initialised_ = true;
 }
 
-XMLNode* ConvertibleBondData::ConversionData::MandatoryConversionData::PepsData::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBondData::ConversionData::MandatoryConversionData::PepsData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("PepsData");
     XMLUtils::addChild(doc, node, "UpperBarrier", upperBarrier_);
     XMLUtils::addChild(doc, node, "LowerBarrier", upperBarrier_);
@@ -166,7 +166,7 @@ void ConvertibleBondData::ConversionData::MandatoryConversionData::fromXML(XMLNo
     initialised_ = true;
 }
 
-XMLNode* ConvertibleBondData::ConversionData::MandatoryConversionData::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBondData::ConversionData::MandatoryConversionData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("MandatoryConversion");
     XMLUtils::addChild(doc, node, "Date", date_);
     XMLUtils::addChild(doc, node, "Type", type_);
@@ -192,7 +192,7 @@ void ConvertibleBondData::ConversionData::ConversionResetData::fromXML(XMLNode* 
     initialised_ = true;
 }
 
-XMLNode* ConvertibleBondData::ConversionData::ConversionResetData::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBondData::ConversionData::ConversionResetData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ConversionResets");
     XMLUtils::appendNode(node, dates_.toXML(doc));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "References", "Reference", references_, "startDate",
@@ -219,7 +219,7 @@ void ConvertibleBondData::ConversionData::ExchangeableData::fromXML(XMLNode* nod
     initialised_ = true;
 }
 
-XMLNode* ConvertibleBondData::ConversionData::ExchangeableData::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBondData::ConversionData::ExchangeableData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Exchangeable");
     XMLUtils::addChild(doc, node, "IsExchangeable", isExchangeable_);
     XMLUtils::addChild(doc, node, "EquityCreditCurve", equityCreditCurve_);
@@ -235,7 +235,7 @@ void ConvertibleBondData::ConversionData::FixedAmountConversionData::fromXML(XML
     initialised_ = true;
 }
 
-XMLNode* ConvertibleBondData::ConversionData::FixedAmountConversionData::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBondData::ConversionData::FixedAmountConversionData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("FixedAmountConversion");
     XMLUtils::addChild(doc, node, "Currency", currency_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Amounts", "Amount", amounts_, "startDate", amountDates_);
@@ -284,7 +284,7 @@ void ConvertibleBondData::ConversionData::fromXML(XMLNode* node) {
     initialised_ = true;
 }
 
-XMLNode* ConvertibleBondData::ConversionData::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBondData::ConversionData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ConversionData");
     XMLUtils::appendNode(node, dates_.toXML(doc));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Styles", "Style", styles_, "startDate", styleDates_);
@@ -318,7 +318,7 @@ void ConvertibleBondData::DividendProtectionData::fromXML(XMLNode* node) {
     initialised_ = true;
 }
 
-XMLNode* ConvertibleBondData::DividendProtectionData::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBondData::DividendProtectionData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("DividendProtectionData");
     XMLUtils::appendNode(node, dates_.toXML(doc));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "AdjustmentStyles", "AdjustmentStyle", adjustmentStyles_,
@@ -353,7 +353,7 @@ void ConvertibleBondData::fromXML(XMLNode* node) {
     detachable_ = XMLUtils::getChildValue(node, "Detachable");
 }
 
-XMLNode* ConvertibleBondData::toXML(XMLDocument& doc) {
+XMLNode* ConvertibleBondData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ConvertibleBondData");
     XMLUtils::appendNode(node, bondData_.toXML(doc));
     if (callData_.initialised())
@@ -370,7 +370,7 @@ XMLNode* ConvertibleBondData::toXML(XMLDocument& doc) {
 }
 
 void ConvertibleBondData::populateFromBondReferenceData(
-    const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData) {
+    const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData) {
 
     QL_REQUIRE(!bondData_.securityId().empty(),
                "ConvertibleBondData::populateFromBondReferenceData(): no security id given");
@@ -378,13 +378,13 @@ void ConvertibleBondData::populateFromBondReferenceData(
         DLOG("could not get ConvertibleBondReferenceDatum for name " << bondData_.securityId()
                                                                      << " leave data in trade unchanged");
     } else {
-        auto bondRefData = boost::dynamic_pointer_cast<ConvertibleBondReferenceDatum>(
+        auto bondRefData = QuantLib::ext::dynamic_pointer_cast<ConvertibleBondReferenceDatum>(
             referenceData->getData(ConvertibleBondReferenceDatum::TYPE, bondData_.securityId()));
         QL_REQUIRE(bondRefData, "could not cast to ConvertibleBondReferenceDatum, this is unexpected");
         DLOG("Got ConvertibleBondReferenceDatum for name " << bondData_.securityId()
                                                            << " overwrite empty elements in trade");
         bondData_.populateFromBondReferenceData(
-            boost::make_shared<BondReferenceDatum>(bondData_.securityId(), bondRefData->bondData()));
+            QuantLib::ext::make_shared<BondReferenceDatum>(bondData_.securityId(), bondRefData->bondData()));
         if (!callData_.initialised()) {
             DLOG("overwrite CallData from reference data")
             callData_ = bondRefData->callData();

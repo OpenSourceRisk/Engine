@@ -29,7 +29,7 @@ void populateFromBondReferenceData(std::string& subType,
                                    std::string& creditCurveId, std::string& creditGroup, std::string& referenceCurveId,
                                    std::string& incomeCurveId, std::string& volatilityCurveId,
                                    std::vector<LegData>& coupons, const std::string& name,
-                                   const boost::shared_ptr<BondReferenceDatum>& bondRefData,
+                                   const QuantLib::ext::shared_ptr<BondReferenceDatum>& bondRefData,
                                    const std::string& startDate, const std::string& endDate) {
     DLOG("populating data bond from reference data");
     QL_REQUIRE(bondRefData, "populateFromBondReferenceData(): empty bond reference datum given");

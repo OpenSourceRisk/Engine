@@ -21,13 +21,13 @@
 namespace ore {
 namespace data {
 
-BondSpreadImplyMarket::BondSpreadImplyMarket(const boost::shared_ptr<Market>& market, const bool handlePseudoCurrencies)
+BondSpreadImplyMarket::BondSpreadImplyMarket(const QuantLib::ext::shared_ptr<Market>& market, const bool handlePseudoCurrencies)
     : WrappedMarket(market, handlePseudoCurrencies) {}
 
-boost::shared_ptr<SimpleQuote> BondSpreadImplyMarket::spreadQuote(const string& securityID) const {
+QuantLib::ext::shared_ptr<SimpleQuote> BondSpreadImplyMarket::spreadQuote(const string& securityID) const {
     if (auto s = spreadQuote_.find(securityID); s != spreadQuote_.end())
         return s->second;
-    auto q = boost::make_shared<SimpleQuote>(0.0);
+    auto q = QuantLib::ext::make_shared<SimpleQuote>(0.0);
     spreadQuote_[securityID] = q;
     return q;
 }

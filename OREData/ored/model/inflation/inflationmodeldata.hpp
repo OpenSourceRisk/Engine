@@ -70,7 +70,7 @@ public:
 
 protected:
     //! Method used by toXML in derived classes to add the members here to a node.
-    void append(XMLDocument& doc, XMLNode* node) override;
+    void append(XMLDocument& doc, XMLNode* node) const override;
 
 private:
     std::string currency_;

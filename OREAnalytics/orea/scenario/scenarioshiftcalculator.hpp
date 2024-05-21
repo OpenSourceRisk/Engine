@@ -47,10 +47,10 @@ public:
                                  be fed to the shift method
         \param simMarket         simulation market that will be used if provided
     */
-    ScenarioShiftCalculator(const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityConfig,
-                            const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketConfig,
-			    const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket =
-			    boost::shared_ptr<ore::analytics::ScenarioSimMarket>());
+    ScenarioShiftCalculator(const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityConfig,
+                            const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketConfig,
+			    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket =
+			    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>());
     /*! Calculate the shift in the risk factor \p key implied by going from scenario \p s_1 to
         scenario \p s_2.
     */
@@ -58,9 +58,9 @@ public:
                          const ore::analytics::Scenario& s_2) const;
 
 private:
-    boost::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityConfig_;
-    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketConfig_;
-    boost::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket_;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityConfig_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketConfig_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket_;
   
     /*! For some risk factors, the sensitivty is understood to be to a transform
         of the quantity that appears in the scenario and this transform can generally

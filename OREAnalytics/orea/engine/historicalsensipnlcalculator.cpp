@@ -147,15 +147,20 @@ void PNLCalculator::populatePNLs(const std::vector<Real>& allPnls,
     foPnls_.shrink_to_fit();
 }
 
+void PNLCalculator::populateTradePNLs(const TradePnLStore& allPnls, const TradePnLStore& foPnls) {
+    tradePnls_ = allPnls;
+    foTradePnls_ = foPnls;
+}
+
  const bool PNLCalculator::isInTimePeriod(Date startDate, Date endDate) {
     return pnlPeriod_.contains(startDate) && pnlPeriod_.contains(endDate);
 }
 
-void HistoricalSensiPnlCalculator::populateSensiShifts(boost::shared_ptr<NPVCube>& cube, const vector<RiskFactorKey>& keys,
+void HistoricalSensiPnlCalculator::populateSensiShifts(QuantLib::ext::shared_ptr<NPVCube>& cube, const vector<RiskFactorKey>& keys,
     ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator) {
 
     hisScenGen_->reset();
-    boost::shared_ptr<Scenario> baseScenario = hisScenGen_->baseScenario();
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = hisScenGen_->baseScenario();
 
     set<string> keyNames;
     std::map<std::string, RiskFactorKey> keyNameMapping;
@@ -164,13 +169,13 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(boost::shared_ptr<NPVCube
         keyNameMapping.insert({ore::data::to_string(k), k});
     }
 
-    cube = boost::make_shared<DoublePrecisionInMemoryCube>(
+    cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(
         baseScenario->asof(), keyNames, vector<Date>(1, baseScenario->asof()), hisScenGen_->numScenarios());
 
     // Loop over each historical scenario which represents the market move from t_i to
     // t_i + mpor applied to the base scenario for all i in historical period of scenario generator
     for (Size i = 0; i < hisScenGen_->numScenarios(); i++) {
-        boost::shared_ptr<Scenario> scenario = hisScenGen_->next(baseScenario->asof());
+        QuantLib::ext::shared_ptr<Scenario> scenario = hisScenGen_->next(baseScenario->asof());
 
         Size j = 0;
         for (const auto& [_, key] : keyNameMapping) {
@@ -255,7 +260,7 @@ void HistoricalSensiPnlCalculator::calculateSensiPnl(
     }
 
     hisScenGen_->reset();
-    boost::shared_ptr<Scenario> baseScenario = hisScenGen_->baseScenario();
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = hisScenGen_->baseScenario();
 
     // If we have been asked for a trade level P&L contribution report or detail report, store the trade level
     // sensitivities. We store them in a container here that is easily looked up in the loop below.

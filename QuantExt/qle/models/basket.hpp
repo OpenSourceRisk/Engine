@@ -61,8 +61,8 @@ public:
       should be consistent.)
     */
     Basket(const Date& refDate, const std::vector<std::string>& names, const std::vector<Real>& notionals,
-           const boost::shared_ptr<Pool> pool, Real attachmentRatio = 0.0, Real detachmentRatio = 1.0,
-           const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(new FaceValueClaim()));
+           const QuantLib::ext::shared_ptr<Pool> pool, Real attachmentRatio = 0.0, Real detachmentRatio = 1.0,
+           const QuantLib::ext::shared_ptr<Claim>& claim = QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
     void computeBasket() const {
         Date today = Settings::instance().evaluationDate();
         /* update cache values at the calculation date (work as arguments
@@ -89,7 +89,7 @@ public:
     //! Returns the total expected exposures for that name.
     Real exposure(const std::string& name, const Date& = Date()) const;
     //! Underlying pool
-    const boost::shared_ptr<Pool>& pool() const;
+    const QuantLib::ext::shared_ptr<Pool>& pool() const;
     //! The keys each counterparty enters the basket with (sensitive to)
     std::vector<DefaultProbKey> defaultKeys() const;
     /*! Loss Given Default for all issuers/notionals based on
@@ -124,7 +124,7 @@ public:
         return detachmentAmount_;
     }
     //! default claim, same for all positions and counterparties
-    boost::shared_ptr<Claim> claim() const { return claim_; }
+    QuantLib::ext::shared_ptr<Claim> claim() const { return claim_; }
     /*! Vector of cumulative default probability to date d for all
         issuers in the basket.
     */
@@ -220,7 +220,7 @@ public:
     std::vector<Size> liveList(const Date&) const; //?? keep?
     //! Assigns the default loss model to this basket. Resets calculations.
     // RL: Use QuantExt version here
-    void setLossModel(const boost::shared_ptr<QuantExt::DefaultLossModel>& lossModel);
+    void setLossModel(const QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel>& lossModel);
     /*! \name Basket Loss Statistics
         Methods providing statistical metrics on the loss or value
         distribution of the basket. Most calculations rely on the pressence
@@ -277,9 +277,9 @@ private:
     void performCalculations() const override;
 
     std::vector<Real> notionals_;
-    boost::shared_ptr<Pool> pool_;
+    QuantLib::ext::shared_ptr<Pool> pool_;
     //! The claim is the same for all names
-    const boost::shared_ptr<Claim> claim_;
+    const QuantLib::ext::shared_ptr<Claim> claim_;
 
     Real attachmentRatio_;
     Real detachmentRatio_;
@@ -311,7 +311,7 @@ private:
       case (and that is true in a single thread environment only).
     */
     // RL: Use QuantExt version here
-    boost::shared_ptr<QuantExt::DefaultLossModel> lossModel_;
+    QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel> lossModel_;
 };
 
 // ------------ Inlines -------------------------------------------------
@@ -322,7 +322,7 @@ inline const std::vector<Real>& Basket::notionals() const { return notionals_; }
 
 inline std::vector<DefaultProbKey> Basket::defaultKeys() const { return pool_->defaultKeys(); }
 
-inline const boost::shared_ptr<Pool>& Basket::pool() const { return pool_; }
+inline const QuantLib::ext::shared_ptr<Pool>& Basket::pool() const { return pool_; }
 
 inline const std::vector<Size>& Basket::liveList() const {
     calculate();

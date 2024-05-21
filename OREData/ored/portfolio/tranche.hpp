@@ -42,7 +42,7 @@ public:
     //! Default constructor
     TrancheData() {}
 
-    TrancheData(const std::string& name, double icRatio, double  ocRatio, const boost::shared_ptr<LegAdditionalData>& concreteLegData)
+    TrancheData(const std::string& name, double icRatio, double  ocRatio, const QuantLib::ext::shared_ptr<LegAdditionalData>& concreteLegData)
         : name_(name), icRatio_(icRatio), ocRatio_(ocRatio), concreteLegData_(concreteLegData) {}
 
     //! \name Inspectors
@@ -51,13 +51,13 @@ public:
     double faceAmount() { return faceAmount_; }
     double icRatio() { return icRatio_; }
     double ocRatio() { return ocRatio_; }
-    const boost::shared_ptr<LegAdditionalData> concreteLegData() {return concreteLegData_; } 
+    const QuantLib::ext::shared_ptr<LegAdditionalData> concreteLegData() {return concreteLegData_; } 
     //@}
 
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     //@}
 private:
@@ -65,7 +65,7 @@ private:
     double faceAmount_;
     double icRatio_;
     double ocRatio_;
-    boost::shared_ptr<LegAdditionalData> concreteLegData_;
+    QuantLib::ext::shared_ptr<LegAdditionalData> concreteLegData_;
 
 };
 } // namespace data

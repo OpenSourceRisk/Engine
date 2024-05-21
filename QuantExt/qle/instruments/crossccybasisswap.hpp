@@ -49,8 +49,8 @@ public:
     */
     CrossCcyBasisSwap(
         Real payNominal, const Currency& payCurrency, const Schedule& paySchedule,
-        const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing, Real recNominal,
-        const Currency& recCurrency, const Schedule& recSchedule, const boost::shared_ptr<IborIndex>& recIndex,
+        const QuantLib::ext::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing, Real recNominal,
+        const Currency& recCurrency, const Schedule& recSchedule, const QuantLib::ext::shared_ptr<IborIndex>& recIndex,
         Spread recSpread, Real recGearing, Size payPaymentLag = 0, Size recPaymentLag = 0,
         boost::optional<bool> payIncludeSpread = boost::none, boost::optional<Period> payLookback = boost::none,
         boost::optional<Size> payFixingDays = boost::none, boost::optional<Size> payRateCutoff = boost::none,
@@ -69,14 +69,14 @@ public:
     Real payNominal() const { return payNominal_; }
     const Currency& payCurrency() const { return payCurrency_; }
     const Schedule& paySchedule() const { return paySchedule_; }
-    const boost::shared_ptr<IborIndex>& payIndex() const { return payIndex_; }
+    const QuantLib::ext::shared_ptr<IborIndex>& payIndex() const { return payIndex_; }
     Spread paySpread() const { return paySpread_; }
     Real payGearing() const { return payGearing_; }
 
     Real recNominal() const { return recNominal_; }
     const Currency& recCurrency() const { return recCurrency_; }
     const Schedule& recSchedule() const { return recSchedule_; }
-    const boost::shared_ptr<IborIndex>& recIndex() const { return recIndex_; }
+    const QuantLib::ext::shared_ptr<IborIndex>& recIndex() const { return recIndex_; }
     Spread recSpread() const { return recSpread_; }
     Real recGearing() const { return recGearing_; }
     //@}
@@ -107,14 +107,14 @@ private:
     Real payNominal_;
     Currency payCurrency_;
     Schedule paySchedule_;
-    boost::shared_ptr<IborIndex> payIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> payIndex_;
     Spread paySpread_;
     Real payGearing_;
 
     Real recNominal_;
     Currency recCurrency_;
     Schedule recSchedule_;
-    boost::shared_ptr<IborIndex> recIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> recIndex_;
     Spread recSpread_;
     Real recGearing_;
 

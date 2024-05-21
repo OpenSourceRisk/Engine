@@ -53,21 +53,21 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
-        underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const;
+        underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const;
 
     bool empty() { return bonds_.empty(); }
     void clear();
 
-    boost::shared_ptr<QuantExt::BondBasket> build(const boost::shared_ptr<EngineFactory>& engineFactory,
+    QuantLib::ext::shared_ptr<QuantExt::BondBasket> build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                                   const QuantLib::Currency& ccy,
                                                   const std::string& reinvestmentEndDate);
     //@}
 
-    const std::vector<boost::shared_ptr<Bond>>& bonds() const { return bonds_; }
+    const std::vector<QuantLib::ext::shared_ptr<Bond>>& bonds() const { return bonds_; }
 
     const RequiredFixings& requiredFixings() const { return requiredFixings_; }
 private:
@@ -75,8 +75,8 @@ private:
     bool isFeeFlow(const ext::shared_ptr<QuantLib::CashFlow>& cf, const std::string& name);
     void setReinvestmentScalar();
 
-    vector<boost::shared_ptr<Bond>> bonds_;
-    std::map <string, boost::shared_ptr<QuantExt::FxIndex>> fxIndexMap_;
+    vector<QuantLib::ext::shared_ptr<Bond>> bonds_;
+    std::map <string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexMap_;
     RequiredFixings requiredFixings_;
     QuantLib::Date reinvestment_;
     std::map<std::string, std::vector<double> > reinvestmentScalar_;

@@ -1,0 +1,418 @@
+\subsubsection{Target Redemption Forward (TaRF)}
+
+The \verb+FxTaRFData+, \verb+EquityTaRFData+, \verb+CommodityTaRFData+ is the trade data container for the FxTaRF,
+EquityTaRF, CommodityTaRF trade type, listings \ref{lst:fxtarf_data} and \ref{lst:eqtarf_data} show the structure of
+example trades for an FX and Equity underlying.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="FX_TARF">
+  <TradeType>FxTaRF</TradeType>
+  <Envelope/>
+  <FxTaRFData>
+    <Currency>USD</Currency>
+    <FixingAmount>1000000</FixingAmount>
+    <TargetAmount>100000</TargetAmount>
+    <Strike>1.1</Strike>
+    <Underlying>
+      <Type>FX</Type>
+      <Name>ECB-EUR-USD</Name>
+    </Underlying>
+    <ScheduleData>
+      <Dates>
+        <Dates>
+          <Date>2017-03-01</Date>
+          <Date>2020-03-01</Date>
+          <Date>2025-03-01</Date>
+          <Date>2029-03-01</Date>
+        </Dates>
+      </Dates>
+    </ScheduleData>
+    <OptionData>
+      <LongShort>Long</LongShort>
+      <PayoffType>TargetExact</PayoffType>
+    </OptionData>
+    <RangeBounds>
+      <RangeBound>
+        <RangeTo>1.05</RangeTo>
+        <Leverage>2</Leverage>
+      </RangeBound>
+      <RangeBound>
+        <RangeFrom>1.1</RangeFrom>
+        <Leverage>1</Leverage>
+      </RangeBound>
+    </RangeBounds>
+    <Barriers>
+      <BarrierData>
+        <Type>CumulatedProfitCap</Type>
+        <Levels>
+          <Level>100000</Level>
+        </Levels>
+      </BarrierData>
+    </Barriers>
+  </FxTaRFData>
+</Trade>
+\end{minted}
+\caption{FxTaRF data}
+\label{lst:fxtarf_data}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="EQ_TARF">
+  <TradeType>EquityTaRF</TradeType>
+  <Envelope/>
+  <EquityTaRFData>
+    <Currency>USD</Currency>
+    <FixingAmount>775</FixingAmount>
+    <Strike>2900</Strike>
+    <Underlying>
+      <Type>Equity</Type>
+      <Name>RIC:.SPX</Name>
+    </Underlying>
+    <ScheduleData>
+      <Dates>
+        <Dates>
+          <Date>2017-03-01</Date>
+          <Date>2020-03-01</Date>
+          <Date>2025-03-01</Date>
+          <Date>2026-03-01</Date> 
+          <Date>2027-03-01</Date>                   
+          <Date>2028-03-01</Date>
+        </Dates>
+      </Dates>
+    </ScheduleData>
+    <OptionData>
+      <LongShort>Long</LongShort>
+      <PayoffType>TargetFull</PayoffType>
+    </OptionData>
+    <RangeBounds>
+        <RangeBound>
+            <RangeTo>3300</RangeTo>
+            <Leverage>1</Leverage>
+        </RangeBound>
+        <RangeBound>
+            <RangeFrom>3300</RangeFrom>
+            <Leverage>2</Leverage>
+            <StrikeAdjustment>100</StrikeAdjustment>
+        </RangeBound>
+    </RangeBounds>
+    <Barriers>
+      <BarrierData>
+        <Type>FixingCap</Type>
+        <Levels>
+          <Level>3</Level>
+        </Levels>
+      </BarrierData>
+    </Barriers>
+  </EquityTaRFData>
+</Trade>
+\end{minted}
+\caption{EquityTaRF data}
+\label{lst:eqtarf_data}
+\end{listing}
+
+The payout formula for each fixing date of a TaRF - for a Long position - is:
+$
+Payout = RangeBound(Leverage) \cdot FixingAmount \cdot (fix - Strike(global/local))
+$
+
+
+The meanings and allowable values of the elements in the data  node follow below.
+
+\begin{itemize}
+    \item Currency: The payout currency of the TaRF. The TargetAmount and the result of the payout formula above are
+expressed in this currency.  For FX, this should be \lstinline!CCY2! as defined in the Name field in the Underlying node.
+Note that for (non-quanto) FxTaRFs this should be the domestic (\lstinline!CCY2!) currency, as defined in the Name field in
+the Underlying node. For non-quanto Equity- and CommodityTaRFs this should be the currency the equity or commodity is quoted in.
+Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+      Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+
+    \item FixingAmount: The unlevered FixingAmount amount to be used at each fixing date, as per the payout formula above.  
+    
+    For FxTaRFs: The FixingAmount is expressed in the foreign currency (\lstinline!CCY1!).
+    
+   For EquityTaRFs: The FixingAmount is expressed as number of shares/units of the underlying equity or equity index.
+    
+   For CommodityTaRFs: The FixingAmount is expressed as number of units of the underlying commodity.
+    
+      Allowable values: Any positive real number. Note that the FixingAmount must
+be positive both for Long and Short positions.
+
+    \item TargetAmount[Optional]: If PayoffType = \emph{TargetExact}, after a knock-out event the last payout is
+      adjusted so that the cumulated profit since the start of the TaRF matches the target amount.  TargetAmount is
+      optional, only required for PayoffType = \emph{TargetExact}. The TargetAmount is a currency amount, for FxTaRFs it
+      is in (\lstinline!CCY2!).
+
+      Notice that if the barrier type is \emph{CumulatedProfitCapPoints} the last payout is adjusted in a way such that
+      the cumulated profit in relative terms (as defined for this barrier type below) matches the target amount divided
+      by the fixing amount (i.e. the target amount in points). \\
+
+      Allowable values: Any positive real number.
+
+    \item TargetPoints[Optional]: For PayoffType = \emph{TargetExact}, this provides an alternative way of expressing
+      the TargetAmount as a percentage of FixingAmount in decimal form. For example a FixingAmount = $1,000,000$ and
+      TargetPoints = $0.0700$ translates to a TargetAmount = $70,000$. \\
+
+      Allowable values: Any positive real number.
+
+    \item Strikes [Optional]: Global strikes associated to the ranges. Either this node or the Strike node must be given
+      to specify (a) global strike(s) valid across all ranges. If no such global strikes are given, the strikes have to
+      be specified as part of the range bound definition.  The Strikes node represents time-varying strikes while the
+      Strike node represents a strike that is constant over time. If the Strikes node is given, it must contain a number
+      of Strike subnodes. Either
+     \begin{itemize}
+       \item the Strike subnodes except the first one must contain an attribute startDate which indicates from which
+         fixing date on the strike is valid. The first strike is valid until the minimum startDate given in the other
+         nodes, or
+       \item the values in the Strike subnodes are associated to the given fixing dates in their order, the number of
+         values must be equal to the number of fixing dates or less, in the latter case the last given value is repeated
+         to match the number of fixing dates.
+     \end{itemize}
+     See the description under Strike for further information on the single strike values and the relation to strike
+     information given in range bounds.
+
+    \item Strike [Optional]: Global strike associated to the ranges. Is overwritten by local strikes defined in
+      \lstinline!RangeBounds! or modified by range strike adjustments. Note that each RangeBound needs a strike, either
+      the global strike defined here, or a local one in the \lstinline!RangeBounds! nodes which then overwrites the
+      global one. For FX, the strike is expressed as amount in \lstinline!CCY2! per one unit of \lstinline!CCY1! as
+      defined in the Name field in the Underlying node.
+    
+The logic for global and local strikes is as follows:
+
+- if a local Strike for a range is given, this local Strike will be used for the range (a global Strike will be ignored if given)\\
+- otherwise if a global Strike and a local StrikeAdjustment are given, the strike used for the range will be global Strike + local StrikeAdjustment\\
+- otherwise if a global Strike, but no local StrikeAdjustment is given, the strike used for the range will be the global Strike\\
+- if no global strike and no local strike is given for an range, an error is thrown, since the strike information is not sufficient
+    
+      Allowable values: Any positive real number. 
+    \item Underlying: A node with the underlying of the TaRF instrument.
+
+For FxTaRFs: \lstinline!Type! is set to \emph{FX} and \lstinline!Name! is a string on the form \emph{SOURCE-CCY1-CCY2} where \lstinline!CCY1! is the foreign currency, \lstinline!CCY2! is the domestic currency, and \emph{SOURCE} is the fixing source, see Table \ref{tab:fxindex_data} and  \ref{ss:underlying}.
+
+For EquityTaRFs: \lstinline!Type! is set to \emph{Equity} and \lstinline!Name! and other fields are as outlined in \ref{ss:underlying}
+
+For CommodityTaRFs: \lstinline!Type! is set to \emph{Commodity} and \lstinline!Name! is an identifier of the commodity as outlined in \ref{ss:underlying} and in Table \ref{tab:commodity_data}.
+
+      Allowable values: Any FX, Equity or Commodity underlying as specified in \ref{ss:underlying}
+    \item ScheduleData: The fixing dates schedule of the TaRF.\\
+      Allowable values: See \ref{ss:schedule_data}
+    \item SettelementLag [Optional]: The settlement delay. \\
+      Allowable values: Any period definition (e.g.\ \emph{2D}, \emph{1W}, \emph{1M}, \emph{1Y}). If omitted or left blank, defaults to \emph{0D}.
+    \item SettlementCalendar [Optional]: The calendar used to compute the settlement date from the corresponding fixing date. \\
+      Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar. If omitted or left blank, defaults to the \emph{NullCalendar} (no holidays).
+    \item SettlementConvention [Optional]: The convention used to compute the settlement date from the corresponding fixing date. \\
+      Allowable values: Any valid roll convention (\emph{U,F,P,MF,MP}), see Table \ref{tab:convention} Roll Convention. If omitted or left blank, defaults to \emph{F} (following).
+    \item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. 
+The relevant fields in the \lstinline!OptionData! node for an TaRF are:
+
+\begin{itemize}
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
+\item \lstinline!PayoffType! can be \emph{TargetFull}, \emph{TargetExact}, or \emph{TargetTruncated}, impacting the payment after a Knock-Out event as per:
+      
+     \emph{TargetExact}: the payment is set to the pre-determined \lstinline!TargetAmount!\\
+     \emph{TargetFull}: the unadjusted payment is made\\
+     \emph{TargetTruncated}: no payment is made
+\end{itemize}
+
+    \item RangeBoundSet: Time-varying range-bound information. Either this node or the RangeBonds node (for time-independent range bounds) must be given. If the RangeBoundSet node is given, it must contain a number of RangeBounds nodes. Either
+     \begin{itemize}
+       \item the RangeBounds subnodes except the first one must contain an attribute startDate which indicates from
+         which fixing date on the values are valid. The first value is valid until the minimum startDate given in the
+         other nodes, or
+       \item the values in the RangeBounds subnodes are associated to the given fixing dates in their order, the number
+         of RangeBounds subnodes must be equal to the number of fixing dates or less, in the latter case the last given
+         RangeBounds subnode is repeated to match the number of fixing dates.
+     \end{itemize}
+     See the description under RangeBounds for further information on the single RangeBounds nodes.
+
+    \item RangeBounds: Nodes for the specification of ranges (intervals) and associated \lstinline!Leverage!, local
+      \lstinline!Strike! and local \lstinline!StrikeAdjustment!. A range/interval can be specified to apply for all
+      values the underlying can take, or for specific ranges using \lstinline!RangeFrom! and
+      \lstinline!RangeTo!. Multiple \lstinline!RangeBound! sub-nodes can be included within the \lstinline!RangeBounds!
+      node. If the value for \lstinline!RangeFrom! is omitted it is interpreted as $-\infty$ (unbounded towards minus
+      infinity). If \lstinline!RangeTo! is omitted it is interpreted as $\infty$ (unbounded towards plus infinity).
+      Note that if the underlying takes a value not covered by any range/interval, no payout will occur.
+    
+    For FxTaRFs: The the  \lstinline!Strike!, \lstinline!StrikeAdjustment!, \lstinline!RangeFrom! and \lstinline!RangeTo! Fx rates are all defined as amount in domestic
+currency (\lstinline!CCY2!) for one unit of foreign currency (\lstinline!CCY1!).
+    
+For Equity- and CommodityTaRFs: The \lstinline!Strike!, \lstinline!StrikeAdjustment!, \lstinline!RangeFrom! and \lstinline!RangeTo!  are all defined as the value of one
+unit/share/contract of the underlying equity or commodity, expressed in the currency the equity or commodity is quoted in. \\
+    
+Allowable values: For each range, see \ref{ss:rangebound}. Note that an interval/range can't have both a local \lstinline!Strike!  and a local \lstinline!StrikeAdjustment!. If no global \lstinline!Strike! is given, each interval/range must have a local \lstinline!Strike!.
+
+    \item Barriers[Optional]: Specification of barriers, see \ref{ss:barrier_data}. Multiple \lstinline!BarrierData! sub-nodes can be included within the \lstinline!Barriers! node. Relevant fields for each TaRF \lstinline!BarrierData! sub-node are \lstinline!Type! and \lstinline!Level!.  For a TaRF, \lstinline!Type! can be set to \emph{CumulatedProfitCap}, \emph{CumulatedProfitCapPoints} or \emph{FixingCap}. Notice that \emph{CumulatedProfitCapPoints} can not be combined with the other barrier types.
+    
+    \begin{itemize}
+    \item \emph{CumulatedProfitCap}: The TaRF terminates once the generated profit from the long side's view reaches the
+      CumulatedProfitCap. (Continuous TaRF) For an FxTaRF the CumulatedProfitCap is quoted in
+      \lstinline!CCY2!. \\ Allowable values: The \lstinline!Level! for a \emph{CumulatedProfitCap} can be set to any
+      non-negative real number.
+
+    \item \emph{CumulatedProfitCapPoints}: The TaRF terminates once the generated profit from the long side's view
+      reaches the CumulatedProfitCapPoints. (Continuous TaRF) Here, the generated profit is measured as the absolute
+      profit amount (as used in CumulatedProfitCap) divided by the FixingAmount and divided by the absolute value of the
+      leverage. \\ Allowable values: The \lstinline!Level! for a \emph{CumulatedProfitCapPoints} can be set to any
+      non-negative real number.
+
+    \item \emph{FixingCap}: The TaRF terminates once number of fixings where a profit is generated - from the long side's view -reaches the FixingCap. (Digital TaRF)\\
+     Allowable values: The \lstinline!Level! for a \emph{FixingCap} can be set to a non-negative integer.
+    \end{itemize}
+
+\end{itemize}
+
+% scripted trade representation
+
+Target Redemption Forwards can alternatively represented as {\em scripted trades},
+refer to the scripted trade documentation in ore/Docs/ScriptedTrade
+for an introduction. This representation does not allow for time varying strikes or range
+bounds and also not for a target amount / cumulated profit cap specification in points.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="TaRF#1">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope/>
+  <TaRFData>
+    <FixingAmount type="number">1000000</FixingAmount>
+    <LongShort type="longShort">Long</LongShort>
+    <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+    <PayCcy type="currency">USD</PayCcy>
+    <FixingDates type="event">
+      <ScheduleData>
+        <Dates>
+          <Dates>
+              <Date>2017-03-01</Date>
+              <Date>2020-03-01</Date>
+              <Date>2025-03-01</Date>
+              <Date>2029-03-01</Date>
+          </Dates>
+        </Dates>
+      </ScheduleData>
+    </FixingDates>
+    <SettlementDates type="event">
+      <DerivedSchedule>
+        <BaseSchedule>FixingDates</BaseSchedule>
+        <Shift>2D</Shift>
+        <Calendar>TARGET</Calendar>
+        <Convention>F</Convention>
+      </DerivedSchedule>
+    </SettlementDates>
+    <RangeUpperBounds type="number">
+        <Value>1.05</Value>
+        <Value>10000</Value>
+    </RangeUpperBounds>
+    <RangeLowerBounds type="number">
+        <Value>0</Value>
+        <Value>1.1</Value>
+    </RangeLowerBounds>
+    <RangeLeverages type="number">
+        <Value>2</Value>
+        <Value>1</Value>
+    </RangeLeverages>
+    <RangeStrikes type="number">
+      <Value>1.1</Value>
+      <Value>1.1</Value>
+    </RangeStrikes>
+    <KnockOutProfitAmount type="number">100000</KnockOutProfitAmount>
+    <KnockOutProfitEvents type="number">0</KnockOutProfitEvents>
+    <TargetAmount type="number">100000</TargetAmount>
+    <TargetType type="number">0</TargetType>
+  </TaRFData>
+</Trade>
+\end{minted}
+
+The TaRF script referenced in the trade above is shown in Listing \ref{lst:tarf_script}.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\footnotesize]{Basic}
+REQUIRE FixingAmount > 0;
+REQUIRE LongShort == 1 OR LongShort == -1;
+REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLowerBounds);
+REQUIRE SIZE(RangeLowerBounds) == SIZE(RangeLeverages);
+REQUIRE SIZE(RangeLowerBounds) == SIZE(RangeStrikes);
+REQUIRE TargetType == -1 OR TargetType == 0 OR TargetType == 1;
+REQUIRE SIZE(FixingDates) == SIZE(SettlementDates);
+
+NUMBER Payoff, d, r, PnL, wasTriggered, AccProfit, Hits, currentNotional;
+NUMBER Fixing[SIZE(FixingDates)], Triggered[SIZE(FixingDates)];
+
+FOR r IN (1, SIZE(RangeUpperBounds), 1) DO
+  REQUIRE RangeLowerBounds[r] <= RangeUpperBounds[r];
+  REQUIRE RangeStrikes[r] >= 0;
+END;
+
+FOR d IN (1, SIZE(FixingDates), 1) DO
+  Fixing[d] = Underlying(FixingDates[d]);
+  IF wasTriggered != 1 THEN
+    PnL = 0;
+    FOR r IN (1, SIZE(RangeUpperBounds), 1) DO
+      IF Fixing[d] > RangeLowerBounds[r] AND Fixing[d] <= RangeUpperBounds[r] THEN
+        PnL = PnL + RangeLeverages[r] * FixingAmount * (Fixing[d] - RangeStrikes[r]);
+      END;
+    END;
+
+    IF PnL >= 0 THEN
+      AccProfit = AccProfit + PnL;
+      Hits = Hits + 1;
+    END;
+
+    IF {KnockOutProfitEvents > 0 AND Hits >= KnockOutProfitEvents} OR
+       {KnockOutProfitAmount > 0 AND AccProfit >= KnockOutProfitAmount} THEN
+      wasTriggered = 1;
+      Triggered[d] = 1;
+      IF TargetType == 0 THEN
+        Payoff = Payoff + LOGPAY(TargetAmount - (AccProfit - PnL), FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+      END;
+      IF TargetType == 1 THEN
+        Payoff = Payoff + LOGPAY(PnL, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+      END;
+    ELSE
+        Payoff = Payoff + LOGPAY(PnL, FixingDates[d], SettlementDates[d], PayCcy, 0, Cashflow);
+    END;
+  END;
+END;
+value = LongShort * Payoff;
+currentNotional = FixingAmount * RangeStrikes[1];
+\end{minted}
+\caption{Payoff script for a TaRF.}
+\label{lst:tarf_script}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!TaRFData! node below.
+
+\begin{itemize}
+    \item{}[number] \lstinline!FixingAmount!: Amount to buy/sell on each fixing day should be FixingAmount times Leverage of the range that the spot level fixes within. \\
+    Allowable values: Any positive real number.
+    \item{}[longShort] \lstinline!LongShort!: \emph{Long} if we buy the option. \emph{Short} if we sell the option.
+    Allowable values: \emph{Long, Short}
+    \item{}[index] \lstinline!Underlying!: Underlying index. \\
+    Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+    \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+    \item{}[event] \lstinline!FixingDates!: The fixing dates, given as a ScheduleData node \\
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see the scripted trade documentation in ore/Docs/ScriptedTrade).
+    \item{}[event] \lstinline!SettlementDates!: The settlement dates, given as a ScheduleData or DerivedSchedule node.
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see the scripted trade documentation in ore/Docs/ScriptedTrade).
+    \item{}[number] \lstinline!RangeUpperBound!: Values of upperbounds for the leverage ranges. If a given range has no upperbound, add 100000. \\
+    Allowable values: Any list of positive real numbers. \emph{RangeUpperBound}, \emph{RangeLowerBound} and \emph{RangeLeverages} must have the same size. \emph{RangeUpperBound}[$i$] $\ge$ \emph{RangeLowerBound}[$i$] for all $i$
+    \item{}[number] \lstinline!RangeLowerBound!: Values of lowerbounds for the leverage ranges. If a given range has no lowerbound add 0 \\
+    Allowable values: Any list of positive real numbers.
+    \item{}[number] \lstinline!RangeLeverages!: Values of leverages for the leverage ranges. Positive for Bullish TaRF, Negative for
+      Bearish TaRF. \\
+    Allowable values: Any list of real numbers.
+    \item{}[number] \lstinline!RangeStrikes!: Strikes associated to the ranges. \emph{}. \\
+    Allowable values: Any positive real number.
+    \item{}[number] \lstinline!KnockOutProfitAmount!: If positive, cap of the profit the buyer can make. \\
+    Allowable values: Any positive real number or zero if not applicable.
+    \item{}[number] \lstinline!KnockOutProfitEvents!: If positive, cap of the number of fixing days on which buyer makes profit. \\
+    Allowable values: Any positive real number or zero if not applicable.
+    \item{}[number] \lstinline!TargetAmount!: The target amount to be paid as an accumulated profit for TargetType = exact. \\
+    Allowable values: Any positive real number or zero if not applicable.
+    \item{}[number] \lstinline!TargetType!: \emph{-1} for truncated, \emph{0} for exact, \emph{1} for full. If DigitalKnockOut is
+      true the target type must be set to full. \\
+    Allowable values: \emph{-1,0,1}
+\end{itemize}

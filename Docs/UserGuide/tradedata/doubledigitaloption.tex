@@ -1,0 +1,63 @@
+\subsubsection{Double Digital Option}
+
+The \verb+DoubleDigitalOptionData+ node is the trade data container for the DoubleDigitalOption trade type, listing
+\ref{lst:doubledigitaloption_data} shows the structure of an example with two underlying FX rates. Equity, Commodity and IR underlyings are also supported in arbitrary combinations. 
+A double digital option is a binary option that pays out a fixed amount if the two underlyings (FX spots, Equity or Commodity prices, interest rates) are simultaneously in the money w.r.t. given strikes and option types at the option expiry.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <DoubleDigitalOptionData>
+      <Expiry>2021-09-01</Expiry>
+      <Settlement>2021-09-03</Settlement>
+      <BinaryPayout>12000000</BinaryPayout>
+      <BinaryLevel1>1.1</BinaryLevel1>
+      <BinaryLevel2>0.006</BinaryLevel2>
+      <BinaryLevelUpper2>0.008</BinaryLevelUpper2>
+      <Type1>Call</Type1>
+      <Type2>Collar</Type2>
+      <Position>Long</Position>
+      <Underlying1>
+        <Type>FX</Type>
+        <Name>ECB-EUR-USD</Name>
+      </Underlying1>
+      <Underlying2>
+        <Type>FX</Type>
+        <Name>ECB-JPY-USD</Name>
+      </Underlying2>
+      <PayCcy>USD</PayCcy>
+    </DoubleDigitalOptionData>
+\end{minted}
+\caption{Double Digital Option data}
+\label{lst:doubledigitaloption_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \verb+DoubleDigitalOptionData+  node follow below.
+
+\begin{itemize}
+\item Expiry: The expiry date of the option. Allowable values are valid dates.
+\item Settlement: The payout settlement date. Allowable values are valid dates.
+\item BinaryPayout: The amount that is paid if the option is in the money. Allowable values are all non-negative numbers.
+\item BinaryLevel1: The strike for underlying 1 for {\em Call} or {\em Put} option and the lower bound for a {\em Collar} option. For an FX underlying (SOURCE-CCY1-CCY2) this is the number of units of
+  CCY2 per units of CCY1. For an Equity underlying this is the equity price expressed in the equity ccy.  For a Commodity underlying this is the commodity price expressed in the commodity ccy. For an IR underlying this is the rate expressed in decimal form. Allowable values
+  are non-negative numbers.
+\item BinaryLevel2: The strike for underlying 2 for {\em Call} or {\em Put} option and the lower bound for a {\em Collar}. For an FX underlying (SOURCE-CCY1-CCY2) this is the number of units of
+  CCY2 per units of CCY1. For an Equity underlying this is the equity price expressed in the equity ccy.  For a Commodity underlying this is the commodity price expressed in the commodity ccy. For an IR underlying this is the rate expressed in decimal form. Allowable values
+  are non-negative numbers.
+\item Type1: The option type that applies to underlying 1. Allowable values: {\em Call}, {\em Put} or {\em Collar}. Underlying 1 is
+  considered to be in the money if the spot is above (Call) / below (Put) the BinaryLevel1 resp. between (Collar) the BinaryLevel1 and BinaryLevelUpper1 at the expiry. 
+\item Type2: The option type that applies to underlying 2. Allowable values: {\em Call}, {\em Put} or {\em Collar}. Underlying 2 is
+  considered to be in the money if the spot is above (Call) / below (Put) the BinaryLevel1 resp. between (Collar) the BinaryLevel2 andthe  BinaryLevelUpper2 at the expiry. 
+\item Position: The option position type. Allowable values: {\em Long} or {\em Short}.
+\item Underlying1: The first underlying, see \ref{ss:underlying}. 
+\item Underlying2: The second underlying, see \ref{ss:underlying}. Note that Type for both underlyings has allowable values \emph{Equity}, \emph{Commodity}, \emph{FX}, and \emph{IR}.
+\item Underlying3 [Optional]: If defined, the first underlying in this transaction is treated as a spread between Underlying1 and Underlying3 (i.e.\ Underlying1 fixing minus Underlying3 fixing), see \ref{ss:underlying}. Underlying3 Type must be the same as Underlying1 Type.
+\item Underlying4 [Optional]: If defined, the second underlying in this transaction is treated as a spread between Underlying2 and Underlying4 (i.e.\ Underlying2 fixing minus Underlying4 fixing), see \ref{ss:underlying}. Underlying4 Type must be the same as Underlying2 Type.
+\item PayCcy: The currency in which the \verb+BinaryPayout+ is paid.  See Table \ref{tab:currency} for allowable currency codes.
+\item BinaryLevelUpper1 [Optional]: This is field is used only for Collar option. The upper bound for underlying 1. For an FX underlying (SOURCE-CCY1-CCY2) this is the number of units of
+  CCY2 per units of CCY1. For an Equity underlying this is the equity price expressed in the equity ccy.  For a Commodity underlying this is the commodity price expressed in the commodity ccy. For an IR underlying this is the rate expressed in decimal form. Allowable values
+  are non-negative numbers.
+\item BinaryLevelUpper2 [Optional]: This field is used only for Collar option. The upper bound for underlying 2. For an FX underlying (SOURCE-CCY1-CCY2) this is the number of units of
+  CCY2 per units of CCY1. For an Equity underlying this is the equity price expressed in the equity ccy.  For a Commodity underlying this is the commodity price expressed in the commodity ccy. For an IR underlying this is the rate expressed in decimal form. Allowable values
+  are non-negative numbers.
+
+\end{itemize}

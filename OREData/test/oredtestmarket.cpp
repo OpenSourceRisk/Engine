@@ -47,28 +47,28 @@ using QuantExt::SwaptionVolCubeWithATM;
 OredTestMarket::OredTestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     asof_ = asof;
 
-    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
+    QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
         
     // add conventions
-    boost::shared_ptr<ore::data::Convention> swapIndexEURConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexEURConv(
         new ore::data::SwapIndexConvention("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
-    boost::shared_ptr<ore::data::Convention> swapIndexEURLongConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexEURLongConv(
         new ore::data::SwapIndexConvention("EUR-CMS-30Y", "EUR-6M-SWAP-CONVENTIONS"));
-    boost::shared_ptr<ore::data::Convention> swapIndexUSDConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexUSDConv(
         new ore::data::SwapIndexConvention("USD-CMS-2Y", "USD-3M-SWAP-CONVENTIONS"));
-    boost::shared_ptr<ore::data::Convention> swapIndexUSDLongConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexUSDLongConv(
         new ore::data::SwapIndexConvention("USD-CMS-30Y", "USD-3M-SWAP-CONVENTIONS"));
-    boost::shared_ptr<ore::data::Convention> swapIndexGBPConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexGBPConv(
         new ore::data::SwapIndexConvention("GBP-CMS-2Y", "GBP-3M-SWAP-CONVENTIONS"));
-    boost::shared_ptr<ore::data::Convention> swapIndexGBPLongConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexGBPLongConv(
         new ore::data::SwapIndexConvention("GBP-CMS-30Y", "GBP-6M-SWAP-CONVENTIONS"));
-    boost::shared_ptr<ore::data::Convention> swapIndexCHFConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexCHFConv(
         new ore::data::SwapIndexConvention("CHF-CMS-2Y", "CHF-3M-SWAP-CONVENTIONS"));
-    boost::shared_ptr<ore::data::Convention> swapIndexCHFLongConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexCHFLongConv(
         new ore::data::SwapIndexConvention("CHF-CMS-30Y", "CHF-6M-SWAP-CONVENTIONS"));
-    boost::shared_ptr<ore::data::Convention> swapIndexJPYConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexJPYConv(
         new ore::data::SwapIndexConvention("JPY-CMS-2Y", "JPY-LIBOR-6M-SWAP-CONVENTIONS"));
-    boost::shared_ptr<ore::data::Convention> swapIndexJPYLongConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapIndexJPYLongConv(
         new ore::data::SwapIndexConvention("JPY-CMS-30Y", "JPY-LIBOR-6M-SWAP-CONVENTIONS"));
 
     conventions->add(swapIndexEURConv);
@@ -82,19 +82,19 @@ OredTestMarket::OredTestMarket(Date asof, bool swapVolCube) : MarketImpl(false) 
     conventions->add(swapIndexJPYConv);
     conventions->add(swapIndexJPYLongConv);
 
-    boost::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
         "EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
-    boost::shared_ptr<ore::data::Convention> swapUSDConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapUSDConv(
         new ore::data::IRSwapConvention("USD-3M-SWAP-CONVENTIONS", "US", "Semiannual", "MF", "30/360", "USD-LIBOR-3M"));
-    boost::shared_ptr<ore::data::Convention> swapGBPConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapGBPConv(
         new ore::data::IRSwapConvention("GBP-3M-SWAP-CONVENTIONS", "UK", "Semiannual", "MF", "A365", "GBP-LIBOR-3M"));
-    boost::shared_ptr<ore::data::Convention> swapGBPLongConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapGBPLongConv(
         new ore::data::IRSwapConvention("GBP-6M-SWAP-CONVENTIONS", "UK", "Semiannual", "MF", "A365", "GBP-LIBOR-6M"));
-    boost::shared_ptr<ore::data::Convention> swapCHFConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapCHFConv(
         new ore::data::IRSwapConvention("CHF-3M-SWAP-CONVENTIONS", "ZUB", "Annual", "MF", "30/360", "CHF-LIBOR-3M"));
-    boost::shared_ptr<ore::data::Convention> swapCHFLongConv(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapCHFLongConv(
         new ore::data::IRSwapConvention("CHF-6M-SWAP-CONVENTIONS", "ZUB", "Annual", "MF", "30/360", "CHF-LIBOR-6M"));
-    boost::shared_ptr<ore::data::Convention> swapJPYConv(new ore::data::IRSwapConvention(
+    QuantLib::ext::shared_ptr<ore::data::Convention> swapJPYConv(new ore::data::IRSwapConvention(
         "JPY-LIBOR-6M-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M"));
 
     conventions->add(swapEURConv);
@@ -149,13 +149,13 @@ OredTestMarket::OredTestMarket(Date asof, bool swapVolCube) : MarketImpl(false) 
 
     // add fx rates
     std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quotes;
-    quotes["EURUSD"] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.2));
-    quotes["EURGBP"] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.8));
-    quotes["EURCHF"] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
-    quotes["EURCAD"] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
-    quotes["EURSEK"] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
-    quotes["EURJPY"] = Handle<Quote>(boost::make_shared<SimpleQuote>(128.0));
-    fx_ = boost::make_shared<FXTriangulation>(quotes);
+    quotes["EURUSD"] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.2));
+    quotes["EURGBP"] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.8));
+    quotes["EURCHF"] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+    quotes["EURCAD"] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+    quotes["EURSEK"] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+    quotes["EURJPY"] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(128.0));
+    fx_ = QuantLib::ext::make_shared<FXTriangulation>(quotes);
 
     // build fx vols
     fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.12);
@@ -165,9 +165,9 @@ OredTestMarket::OredTestMarket(Date asof, bool swapVolCube) : MarketImpl(false) 
     fxVols_[make_pair(Market::defaultConfiguration, "GBPCHF")] = flatRateFxv(0.15);
     // Add Equity Spots
     equitySpots_[make_pair(Market::defaultConfiguration, "SP5")] =
-        Handle<Quote>(boost::make_shared<SimpleQuote>(2147.56));
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(2147.56));
     equitySpots_[make_pair(Market::defaultConfiguration, "Lufthansa")] =
-        Handle<Quote>(boost::make_shared<SimpleQuote>(12.75));
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(12.75));
 
     equityVols_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateFxv(0.2514);
     equityVols_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateFxv(0.30);
@@ -176,11 +176,11 @@ OredTestMarket::OredTestMarket(Date asof, bool swapVolCube) : MarketImpl(false) 
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "Lufthansa")] =
         flatRateDiv(0.0);
 
-    equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = Handle<EquityIndex2>(boost::make_shared<EquityIndex2>(
+    equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = Handle<EquityIndex2>(QuantLib::ext::make_shared<EquityIndex2>(
         "SP5", UnitedStates(UnitedStates::Settlement), parseCurrency("USD"), equitySpot("SP5"), yieldCurve(YieldCurveType::Discount, "USD"),
         yieldCurve(YieldCurveType::EquityDividend, "SP5")));
     equityCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] =
-        Handle<EquityIndex2>(boost::make_shared<EquityIndex2>(
+        Handle<EquityIndex2>(QuantLib::ext::make_shared<EquityIndex2>(
             "Lufthansa", TARGET(), parseCurrency("EUR"), equitySpot("Lufthansa"),
             yieldCurve(YieldCurveType::Discount, "EUR"), yieldCurve(YieldCurveType::EquityDividend, "Lufthansa")));
 
@@ -203,28 +203,28 @@ OredTestMarket::OredTestMarket(Date asof, bool swapVolCube) : MarketImpl(false) 
         BusinessDayConvention bdc = Following;
         vector<vector<Handle<Quote>>> parQuotes(
             optionTenors.size(),
-            vector<Handle<Quote>>(swapTenors.size(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.02))));
+            vector<Handle<Quote>>(swapTenors.size(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02))));
 
         vector<vector<Real>> shift(optionTenors.size(), vector<Real>(swapTenors.size(), 0.0));
         vector<string> ccys = {"USD", "JPY"};
-        boost::shared_ptr<SwaptionVolatilityStructure> atm(new SwaptionVolatilityMatrix(
+        QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atm(new SwaptionVolatilityMatrix(
             asof_, cal, bdc, optionTenors, swapTenors, parQuotes, dc, true, QuantLib::Normal, shift));
 
         Handle<SwaptionVolatilityStructure> hATM(atm);
         vector<vector<Handle<Quote>>> cubeQuotes(
             optionTenors.size() * swapTenors.size(),
-            vector<Handle<Quote>>(shiftStrikes.size(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.02))));
+            vector<Handle<Quote>>(shiftStrikes.size(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02))));
 
         for (auto name : ccys) {
             Handle<SwapIndex> si = swapIndex(swapIndexBase(name));
             Handle<SwapIndex> ssi = swapIndex(shortSwapIndexBase(name));
 
-            boost::shared_ptr<SwaptionVolatilityCube> tmp(new QuantExt::SwaptionVolCube2(
+            QuantLib::ext::shared_ptr<SwaptionVolatilityCube> tmp(new QuantExt::SwaptionVolCube2(
                 hATM, optionTenors, swapTenors, shiftStrikes, cubeQuotes, *si, *ssi, false, true, false));
             tmp->enableExtrapolation();
 
             Handle<SwaptionVolatilityStructure> svp =
-                Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolCubeWithATM>(tmp));
+                Handle<SwaptionVolatilityStructure>(QuantLib::ext::make_shared<SwaptionVolCubeWithATM>(tmp));
             swaptionCurves_[make_pair(Market::defaultConfiguration, name)] = svp;
         }
 
@@ -248,55 +248,55 @@ OredTestMarket::OredTestMarket(Date asof, bool swapVolCube) : MarketImpl(false) 
     defaultCurves_[make_pair(Market::defaultConfiguration, "dc2")] = flatRateDcs(0.2);
     defaultCurves_[make_pair(Market::defaultConfiguration, "BondIssuer1")] = flatRateDcs(0.0);
 
-    recoveryRates_[make_pair(Market::defaultConfiguration, "dc")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.4));
+    recoveryRates_[make_pair(Market::defaultConfiguration, "dc")] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4));
     recoveryRates_[make_pair(Market::defaultConfiguration, "dc2")] =
-        Handle<Quote>(boost::make_shared<SimpleQuote>(0.4));
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4));
     recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer1")] =
-        Handle<Quote>(boost::make_shared<SimpleQuote>(0.4));
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4));
 
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BondCurve1")] = flatRateYts(0.05);
 
     securitySpreads_[make_pair(Market::defaultConfiguration, "Bond1")] =
-        Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
+        Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
 
     cdsVols_[make_pair(Market::defaultConfiguration, "dc")] =
-        Handle<QuantExt::CreditVolCurve>(boost::make_shared<QuantExt::CreditVolCurveWrapper>(flatRateFxv(0.12)));
+        Handle<QuantExt::CreditVolCurve>(QuantLib::ext::make_shared<QuantExt::CreditVolCurveWrapper>(flatRateFxv(0.12)));
 }
 
 Handle<YieldTermStructure> OredTestMarket::flatRateYts(Real forward) {
-    boost::shared_ptr<YieldTermStructure> yts(
+    QuantLib::ext::shared_ptr<YieldTermStructure> yts(
         new FlatForward(Settings::instance().evaluationDate(), forward, ActualActual(ActualActual::ISDA)));
     return Handle<YieldTermStructure>(yts);
 }
 
 Handle<YieldTermStructure> OredTestMarket::flatRateDiv(Real dividend) {
-    boost::shared_ptr<YieldTermStructure> yts(
+    QuantLib::ext::shared_ptr<YieldTermStructure> yts(
         new FlatForward(Settings::instance().evaluationDate(), dividend, ActualActual(ActualActual::ISDA)));
     return Handle<YieldTermStructure>(yts);
 }
 
 Handle<BlackVolTermStructure> OredTestMarket::flatRateFxv(Volatility forward) {
-    boost::shared_ptr<BlackVolTermStructure> fxv(
+    QuantLib::ext::shared_ptr<BlackVolTermStructure> fxv(
         new BlackConstantVol(Settings::instance().evaluationDate(), NullCalendar(), forward, Actual365Fixed()));
     return Handle<BlackVolTermStructure>(fxv);
 }
 
 Handle<QuantLib::SwaptionVolatilityStructure> OredTestMarket::flatRateSvs(Volatility forward, VolatilityType type,
                                                                           Real shift) {
-    boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svs(
+    QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure> svs(
         new QuantLib::ConstantSwaptionVolatility(Settings::instance().evaluationDate(), NullCalendar(),
                                                  ModifiedFollowing, forward, Actual365Fixed(), type, shift));
     return Handle<QuantLib::SwaptionVolatilityStructure>(svs);
 }
 
 Handle<QuantExt::CreditCurve> OredTestMarket::flatRateDcs(Volatility forward) {
-    boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
+    QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
     return Handle<QuantExt::CreditCurve>(
-        boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(dcs)));
+        QuantLib::ext::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(dcs)));
 }
 
 Handle<OptionletVolatilityStructure> OredTestMarket::flatRateCvs(Volatility vol, VolatilityType type, Real shift) {
-    boost::shared_ptr<OptionletVolatilityStructure> ts(new QuantLib::ConstantOptionletVolatility(
+    QuantLib::ext::shared_ptr<OptionletVolatilityStructure> ts(new QuantLib::ConstantOptionletVolatility(
         Settings::instance().evaluationDate(), NullCalendar(), ModifiedFollowing, vol, ActualActual(ActualActual::ISDA), type, shift));
     return Handle<OptionletVolatilityStructure>(ts);
 }

@@ -34,7 +34,7 @@ void BondPositionData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* BondPositionData::toXML(XMLDocument& doc) {
+XMLNode* BondPositionData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("BondBasketData");
     XMLUtils::addChild(doc, n, "Quantity", quantity_);
     XMLUtils::addChild(doc, n, "Identifier", identifier_);
@@ -44,13 +44,13 @@ XMLNode* BondPositionData::toXML(XMLDocument& doc) {
     return n;
 }
 
-void BondPositionData::populateFromBondBasketReferenceData(const boost::shared_ptr<ReferenceDataManager>& ref) {
+void BondPositionData::populateFromBondBasketReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& ref) {
     QL_REQUIRE(!identifier_.empty(), "BondPositionData::populateFromBondBasketReferenceData(): no identifier given");
     if (!ref || !ref->hasData(BondBasketReferenceDatum::TYPE, identifier_)) {
         DLOG("could not get BondBasketReferenceDatum for '" << identifier_ << "' leave data in trade unchanged");
     } else {
         DLOG("got BondBasketReferenceDatum for '" << identifier_ << "':");
-        auto r = boost::dynamic_pointer_cast<BondBasketReferenceDatum>(
+        auto r = QuantLib::ext::dynamic_pointer_cast<BondBasketReferenceDatum>(
             ref->getData(BondBasketReferenceDatum::TYPE, identifier_));
         QL_REQUIRE(r, "BondPositionData::populateFromBondBasketReferenceData(): internal error, could not cast "
                       "reference datum to expected type.");
@@ -59,8 +59,15 @@ void BondPositionData::populateFromBondBasketReferenceData(const boost::shared_p
     }
 }
 
-void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void BondPosition::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     DLOG("BondPosition::build() called for " << id());
+
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has a Bond position underlying
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
 
     bonds_.clear();
     weights_.clear();
@@ -96,29 +103,22 @@ void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     }
 
     // set instrument
-    std::vector<boost::shared_ptr<QuantLib::Bond>> qlbonds;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Bond>> qlbonds;
     std::transform(bonds_.begin(), bonds_.end(), std::back_inserter(qlbonds),
                    [](const BondBuilder::Result& d) { return d.bond; });
-    instrument_ = boost::make_shared<BondPositionInstrumentWrapper>(data_.quantity(), qlbonds, weights_,
+    instrument_ = QuantLib::ext::make_shared<BondPositionInstrumentWrapper>(data_.quantity(), qlbonds, weights_,
                                                                     bidAskAdjustments_, fxConversion_);
 
     // leave legs empty, leave notional empty for the time being
     notional_ = Null<Real>();
     notionalCurrency_ = "";
 
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has a Bond position underlying
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
-
     setSensitivityTemplate(std::string());
 }
 
 void BondPosition::setNpvCurrencyConversion(const std::string& ccy, const Handle<Quote>& conversion) {
     npvCurrency_ = ccy;
-    boost::static_pointer_cast<BondPositionInstrumentWrapper>(instrument_)->setNpvCurrencyConversion(conversion);
+    QuantLib::ext::static_pointer_cast<BondPositionInstrumentWrapper>(instrument_)->setNpvCurrencyConversion(conversion);
 }
 
 void BondPosition::fromXML(XMLNode* node) {
@@ -127,14 +127,14 @@ void BondPosition::fromXML(XMLNode* node) {
     data_ = originalData_;
 }
 
-XMLNode* BondPosition::toXML(XMLDocument& doc) {
+XMLNode* BondPosition::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, originalData_.toXML(doc));
     return node;
 }
 
 std::map<AssetClass, std::set<std::string>>
-BondPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+BondPosition::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     for (auto const& u : data_.underlyings()) {
         result[AssetClass::BOND].insert(u.name());
@@ -144,7 +144,7 @@ BondPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& r
 }
 
 BondPositionInstrumentWrapper::BondPositionInstrumentWrapper(
-    const Real quantity, const std::vector<boost::shared_ptr<QuantLib::Bond>>& bonds, const std::vector<Real>& weights,
+    const Real quantity, const std::vector<QuantLib::ext::shared_ptr<QuantLib::Bond>>& bonds, const std::vector<Real>& weights,
     const std::vector<Real>& bidAskAdjustments, const std::vector<Handle<Quote>>& fxConversion)
     : quantity_(quantity), bonds_(bonds), weights_(weights), bidAskAdjustments_(bidAskAdjustments),
       fxConversion_(fxConversion) {

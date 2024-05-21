@@ -45,7 +45,7 @@
 
 namespace testsuite {
 
-boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term, Real rate,
+QuantLib::ext::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term, Real rate,
                                    Real spread, string fixedFreq, string fixedDC, string floatFreq, string floatDC,
                                    string index, Calendar calendar, Natural spotDays, bool spotStartLag) {
     Date today = Settings::instance().evaluationDate();
@@ -72,19 +72,19 @@ boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real not
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, fixedFreq, cal, conv, conv, rule));
     // fixed leg
-    LegData fixedLeg(boost::make_shared<FixedLegData>(rates), isPayer, ccy, fixedSchedule, fixedDC, notionals);
+    LegData fixedLeg(QuantLib::ext::make_shared<FixedLegData>(rates), isPayer, ccy, fixedSchedule, fixedDC, notionals);
     // float leg
-    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, spotDays, false, spreads), !isPayer, ccy,
+    LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>(index, spotDays, false, spreads), !isPayer, ccy,
                         floatSchedule, floatDC, notionals);
     // trade
-    boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, fixedLeg));
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, fixedLeg));
     trade->id() = id;
 
     return trade;
 
 }
 
-boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
+QuantLib::ext::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
                                                int start, Size term, Real rate, Real spread, string fixedFreq,
                                                string fixedDC, string floatFreq, string floatDC, string index,
                                                string cashPhysical, Real premium, string premiumCcy,
@@ -112,9 +112,9 @@ boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, stri
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, fixedFreq, cal, conv, conv, rule));
     // fixed leg
-    LegData fixedLeg(boost::make_shared<FixedLegData>(rates), isPayer, ccy, fixedSchedule, fixedDC, notionals);
+    LegData fixedLeg(QuantLib::ext::make_shared<FixedLegData>(rates), isPayer, ccy, fixedSchedule, fixedDC, notionals);
     // float leg
-    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
+    LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
                         floatDC, notionals);
     // leg vector
     vector<LegData> legs;
@@ -124,13 +124,13 @@ boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, stri
     OptionData option(longShort, "Call", "European", false, vector<string>(1, startDate), cashPhysical, "",
                       premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
     // trade
-    boost::shared_ptr<Trade> trade(new ore::data::Swaption(env, option, legs));
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::Swaption(env, option, legs));
     trade->id() = id;
 
     return trade;
 }
 
-boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
+QuantLib::ext::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
                                                Size exercises, int start, Size term, Real rate, Real spread,
                                                string fixedFreq, string fixedDC, string floatFreq, string floatDC,
                                                string index, string cashPhysical, Real premium, string premiumCcy,
@@ -164,9 +164,9 @@ boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, stri
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, fixedFreq, cal, conv, conv, rule));
     // fixed leg
-    LegData fixedLeg(boost::make_shared<FixedLegData>(rates), isPayer, ccy, fixedSchedule, fixedDC, notionals);
+    LegData fixedLeg(QuantLib::ext::make_shared<FixedLegData>(rates), isPayer, ccy, fixedSchedule, fixedDC, notionals);
     // float leg
-    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
+    LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
                         floatDC, notionals);
     // leg vector
     vector<LegData> legs;
@@ -176,13 +176,13 @@ boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, stri
     OptionData option(longShort, "Call", "Bermudan", false, exerciseDates, cashPhysical, "",
                       premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
     // trade
-    boost::shared_ptr<Trade> trade(new ore::data::Swaption(env, option, legs));
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::Swaption(env, option, legs));
     trade->id() = id;
 
     return trade;
 }
 
-boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
+QuantLib::ext::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
                                        Real boughtAmount, string soldCcy, Real soldAmount, Real premium,
                                        string premiumCcy, string premiumDate) {
     Date today = Settings::instance().evaluationDate();
@@ -200,13 +200,13 @@ boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCa
     OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash", "",
                       premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
     // trade
-    boost::shared_ptr<Trade> trade(new ore::data::FxOption(env, option, boughtCcy, boughtAmount, soldCcy, soldAmount));
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::FxOption(env, option, boughtCcy, boughtAmount, soldCcy, soldAmount));
     trade->id() = id;
 
     return trade;
 }
 
-boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string putCall, Size expiry, string equityName,
+QuantLib::ext::shared_ptr<Trade> buildEquityOption(string id, string longShort, string putCall, Size expiry, string equityName,
                                            string currency, Real strike, Real quantity, Real premium, string premiumCcy,
                                            string premiumDate) {
     Date today = Settings::instance().evaluationDate();
@@ -226,14 +226,14 @@ boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string p
     OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash", "",
                       premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
     // trade
-    boost::shared_ptr<Trade> trade(
+    QuantLib::ext::shared_ptr<Trade> trade(
         new ore::data::EquityOption(env, option, EquityUnderlying(equityName), currency, quantity, tradeStrike));
     trade->id() = id;
 
     return trade;
 }
 
-boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size expiry, string equityName,
+QuantLib::ext::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size expiry, string equityName,
                                             string currency, Real strike, Real quantity) {
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
@@ -244,28 +244,28 @@ boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size ex
     // envelope
     Envelope env("CP");
     // trade
-    boost::shared_ptr<Trade> trade(new ore::data::EquityForward(env, longShort, EquityUnderlying(equityName), currency,
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::EquityForward(env, longShort, EquityUnderlying(equityName), currency,
                                                                 quantity, expiryDate, strike));
     trade->id() = id;
 
     return trade;
 }
 
-boost::shared_ptr<Trade> buildCap(string id, string ccy, string longShort, Real capRate, Real notional, int start,
+QuantLib::ext::shared_ptr<Trade> buildCap(string id, string ccy, string longShort, Real capRate, Real notional, int start,
                                   Size term, string floatFreq, string floatDC, string index,
                                   Calendar calendar, Natural spotDays, bool spotStartLag) {
     return buildCapFloor(id, ccy, longShort, vector<Real>(1, capRate), vector<Real>(), notional, start, term, floatFreq,
                          floatDC, index, calendar, spotDays, spotStartLag);
 }
 
-boost::shared_ptr<Trade> buildFloor(string id, string ccy, string longShort, Real floorRate, Real notional, int start,
+QuantLib::ext::shared_ptr<Trade> buildFloor(string id, string ccy, string longShort, Real floorRate, Real notional, int start,
                                     Size term, string floatFreq, string floatDC, string index,
                                     Calendar calendar, Natural spotDays, bool spotStartLag) {
     return buildCapFloor(id, ccy, longShort, vector<Real>(), vector<Real>(1, floorRate), notional, start, term,
                          floatFreq, floatDC, index, calendar, spotDays, spotStartLag);
 }
 
-boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, vector<Real> capRates,
+QuantLib::ext::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, vector<Real> capRates,
                                        vector<Real> floorRates, Real notional, int start, Size term, string floatFreq,
                                        string floatDC, string index, Calendar calendar, Natural spotDays,
                                        bool spotStartLag) {
@@ -294,16 +294,16 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
     // schedules
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     // float leg
-    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, spotDays, false, spreads), false, ccy, floatSchedule,
+    LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>(index, spotDays, false, spreads), false, ccy, floatSchedule,
                         floatDC, notionals);
     // trade
-    boost::shared_ptr<Trade> trade(new ore::data::CapFloor(env, longShort, floatingLeg, capRates, floorRates));
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::CapFloor(env, longShort, floatingLeg, capRates, floorRates));
     trade->id() = id;
 
     return trade;
 }
 
-boost::shared_ptr<Trade> buildCrossCcyBasisSwap(
+QuantLib::ext::shared_ptr<Trade> buildCrossCcyBasisSwap(
     string id, string recCcy, Real recNotional, string payCcy, Real payNotional, int start, Size term,
     Real recLegSpread, Real payLegSpread, string recFreq, string recDC, string recIndex, Calendar recCalendar,
     string payFreq, string payDC, string payIndex, Calendar payCalendar, Natural spotDays, bool spotStartLag,
@@ -334,7 +334,7 @@ boost::shared_ptr<Trade> buildCrossCcyBasisSwap(
     ScheduleData recSchedule(ScheduleRules(startDate, endDate, recFreq, recCal, conv, conv, rule));
     ScheduleData paySchedule(ScheduleRules(startDate, endDate, payFreq, payCal, conv, conv, rule));
     // rec float leg
-    auto recFloatingLegData = boost::make_shared<FloatingLegData>(recIndex, spotDays, false, recSpreads);
+    auto recFloatingLegData = QuantLib::ext::make_shared<FloatingLegData>(recIndex, spotDays, false, recSpreads);
     LegData recFloatingLeg;
     if (isRecLegFXResettable) {
         string fxIndex = "FX-ECB-" + recCcy + "-" + payCcy;
@@ -346,7 +346,7 @@ boost::shared_ptr<Trade> buildCrossCcyBasisSwap(
                                  conv, notionalInitialExchange, notionalFinalExchange, notionalAmortizingExchange);
     }
     // pay float leg
-    auto payFloatingLegData = boost::make_shared<FloatingLegData>(payIndex, spotDays, false, recSpreads);
+    auto payFloatingLegData = QuantLib::ext::make_shared<FloatingLegData>(payIndex, spotDays, false, recSpreads);
     LegData payFloatingLeg;
     if (isPayLegFXResettable) {
         string fxIndex = "FX-ECB-" + payCcy + "-" + recCcy;
@@ -358,13 +358,13 @@ boost::shared_ptr<Trade> buildCrossCcyBasisSwap(
                                  conv, notionalInitialExchange, notionalFinalExchange, notionalAmortizingExchange);
     }
     // trade
-    boost::shared_ptr<Trade> trade(new ore::data::Swap(env, recFloatingLeg, payFloatingLeg));
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::Swap(env, recFloatingLeg, payFloatingLeg));
     trade->id() = id;
 
     return trade;
 }
     
-boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term, string suffix) {
+QuantLib::ext::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term, string suffix) {
     Date today = Settings::instance().evaluationDate();
     Date qlEndDate = today + term * Years;
     string maturityDate = ore::data::to_string(qlEndDate);
@@ -378,7 +378,7 @@ boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Siz
     string referenceCurveId = "BondCurve" + suffix;
     // envelope
     Envelope env("CP");
-    boost::shared_ptr<Trade> trade(
+    QuantLib::ext::shared_ptr<Trade> trade(
         new ore::data::Bond(env, BondData(issuerId, creditCurveId, securityId, referenceCurveId, settlementDays,
                                           calendar, notional, maturityDate, ccy, issueDate)));
     trade->id() = id;
@@ -386,7 +386,7 @@ boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Siz
     return trade;
 }
 
-boost::shared_ptr<Trade> buildCreditDefaultSwap(string id, string ccy, string issuerId,
+QuantLib::ext::shared_ptr<Trade> buildCreditDefaultSwap(string id, string ccy, string issuerId,
                                                 string creditCurveId, bool isPayer, Real notional,
                                                 int start, Size term, Real rate, Real spread,
                                                 string fixedFreq, string fixedDC) {
@@ -412,18 +412,18 @@ boost::shared_ptr<Trade> buildCreditDefaultSwap(string id, string ccy, string is
     Envelope env("CP");
     ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, fixedFreq, cal, conv, convEnd, rule));
     // fixed leg
-    LegData fixedLeg(boost::make_shared<FixedLegData>(spreads), isPayer, ccy, fixedSchedule, fixedDC, notionals);
+    LegData fixedLeg(QuantLib::ext::make_shared<FixedLegData>(spreads), isPayer, ccy, fixedSchedule, fixedDC, notionals);
 
     ore::data::CreditDefaultSwapData swap(issuerId, creditCurveId, fixedLeg, true,
                                           QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault, today + 1);
-    boost::shared_ptr<Trade> trade(new ore::data::CreditDefaultSwap(env, swap));
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::CreditDefaultSwap(env, swap));
 
     trade->id() = id;
 
     return trade;
 }
 
-boost::shared_ptr<Trade> buildSyntheticCDO(string id, string name, vector<string> names,
+QuantLib::ext::shared_ptr<Trade> buildSyntheticCDO(string id, string name, vector<string> names,
                                            string longShort, string ccy, vector<string> ccys,
                                            bool isPayer, vector<Real> notionals, Real notional,
                                            int start, Size term, Real rate, Real spread,
@@ -463,7 +463,7 @@ boost::shared_ptr<Trade> buildSyntheticCDO(string id, string name, vector<string
     // schedules
     ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, fixedFreq, cal, conv, conv, rule));
     // fixed leg
-    LegData fixedLeg(boost::make_shared<FixedLegData>(rates), isPayer, ccy, fixedSchedule, fixedDC, notionalTotal);
+    LegData fixedLeg(QuantLib::ext::make_shared<FixedLegData>(rates), isPayer, ccy, fixedSchedule, fixedDC, notionalTotal);
     // basket data
     using ore::data::BasketConstituent;
     vector<BasketConstituent> constituents;
@@ -474,7 +474,7 @@ boost::shared_ptr<Trade> buildSyntheticCDO(string id, string name, vector<string
     // swap data
     ore::data::IndexCreditDefaultSwapData swap(creditCurveId, basket, fixedLeg);
 
-    boost::shared_ptr<Trade> trade(new ore::data::SyntheticCDO(
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::SyntheticCDO(
         env, fixedLeg, qualifier, basket, attachmentPoint, detachmentPoint, settlesAccrual, protectionPaymentTime,
         protectionStart, upfrontDate, upfrontFee));
     if (trade == NULL)
@@ -485,7 +485,7 @@ boost::shared_ptr<Trade> buildSyntheticCDO(string id, string name, vector<string
     return trade;
 }
 
-boost::shared_ptr<Trade> buildCmsCapFloor(string id, string ccy, string indexId, bool isPayer,
+QuantLib::ext::shared_ptr<Trade> buildCmsCapFloor(string id, string ccy, string indexId, bool isPayer,
                                           Real notional, int start, Size term, Real capRate,
                                           Real floorRate, Real spread, string freq, string dc) {
     Date today = Settings::instance().evaluationDate();
@@ -515,17 +515,17 @@ boost::shared_ptr<Trade> buildCmsCapFloor(string id, string ccy, string indexId,
     ScheduleData schedule(ScheduleRules(startDate, endDate, freq, cal, conv, conv, rule));
     // fixed leg
 
-    LegData cmsLeg(boost::make_shared<CMSLegData>(indexId, 0, isInArrears, spreads, vector<string>(1, startDate)),
+    LegData cmsLeg(QuantLib::ext::make_shared<CMSLegData>(indexId, 0, isInArrears, spreads, vector<string>(1, startDate)),
                    isPayer, ccy, schedule, dc, notionals, vector<string>(1, startDate));
 
-    boost::shared_ptr<Trade> trade(new ore::data::CapFloor(env, longShort, cmsLeg, vector<double>(), floors));
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::CapFloor(env, longShort, cmsLeg, vector<double>(), floors));
 
     trade->id() = id;
 
     return trade;
 }
 
-boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
+QuantLib::ext::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
                                                Real spread, string floatFreq, string floatDC, string index,
                                                string cpiFreq, string cpiDC, string cpiIndex, Real baseRate,
                                                string observationLag, bool interpolated, Real cpiRate) {
@@ -552,21 +552,21 @@ boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPay
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     ScheduleData cpiSchedule(ScheduleRules(startDate, endDate, cpiFreq, cal, conv, conv, rule));
     // float leg
-    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
+    LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
                         floatDC, notionals);
     // fixed leg
-    LegData cpiLeg(boost::make_shared<CPILegData>(cpiIndex, startDate, baseRate, observationLag,
+    LegData cpiLeg(QuantLib::ext::make_shared<CPILegData>(cpiIndex, startDate, baseRate, observationLag,
                                                   (interpolated ? "Linear" : "Flat"), cpiRates),
                    isPayer, ccy, cpiSchedule, cpiDC, notionals, vector<string>(), "F", false, true);
 
     // trade
-    boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, cpiLeg));
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, cpiLeg));
     trade->id() = id;
 
     return trade;
 }
 
-boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
+QuantLib::ext::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
                                               Real spread, string floatFreq, string floatDC, string index,
                                               string yyFreq, string yyDC, string yyIndex, string observationLag,
                                               Size fixDays) {
@@ -592,20 +592,20 @@ boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPaye
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     ScheduleData yySchedule(ScheduleRules(startDate, endDate, yyFreq, cal, conv, conv, rule));
     // float leg
-    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
+    LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
                         floatDC, notionals);
     // fixed leg
-    LegData yyLeg(boost::make_shared<YoYLegData>(yyIndex, observationLag, fixDays), isPayer, ccy, yySchedule, yyDC,
+    LegData yyLeg(QuantLib::ext::make_shared<YoYLegData>(yyIndex, observationLag, fixDays), isPayer, ccy, yySchedule, yyDC,
                   notionals);
 
     // trade
-    boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, yyLeg));
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, yyLeg));
     trade->id() = id;
 
     return trade;
 }
 
-boost::shared_ptr<Trade> buildYYInflationCapFloor(string id, string ccy, Real notional, bool isCap,
+QuantLib::ext::shared_ptr<Trade> buildYYInflationCapFloor(string id, string ccy, Real notional, bool isCap,
                                                   bool isLong, Real capFloorRate, int start,
                                                   Size term, string yyFreq, string yyDC,
                                                   string yyIndex, string observationLag,
@@ -631,17 +631,17 @@ boost::shared_ptr<Trade> buildYYInflationCapFloor(string id, string ccy, Real no
 
     ScheduleData yySchedule(ScheduleRules(startDate, endDate, yyFreq, cal, conv, conv, rule));
 
-    LegData yyLeg(boost::make_shared<YoYLegData>(yyIndex, observationLag, fixDays), true, ccy, yySchedule, yyDC,
+    LegData yyLeg(QuantLib::ext::make_shared<YoYLegData>(yyIndex, observationLag, fixDays), true, ccy, yySchedule, yyDC,
                   notionals);
 
     Envelope env("CP");
 
-    auto trade = boost::make_shared<ore::data::CapFloor>(env, isLong ? "Long" : "Short", yyLeg, caps, floors);
+    auto trade = QuantLib::ext::make_shared<ore::data::CapFloor>(env, isLong ? "Long" : "Short", yyLeg, caps, floors);
     trade->id() = id;
     return trade;
 }
     
-boost::shared_ptr<Trade> buildCommodityForward(const std::string& id, const std::string& position, Size term,
+QuantLib::ext::shared_ptr<Trade> buildCommodityForward(const std::string& id, const std::string& position, Size term,
                                                const std::string& commodityName, const std::string& currency,
                                                Real strike, Real quantity) {
 
@@ -649,14 +649,14 @@ boost::shared_ptr<Trade> buildCommodityForward(const std::string& id, const std:
     string maturity = ore::data::to_string(today + term * Years);
 
     Envelope env("CP");
-    boost::shared_ptr<Trade> trade = boost::make_shared<ore::data::CommodityForward>(
+    QuantLib::ext::shared_ptr<Trade> trade = QuantLib::ext::make_shared<ore::data::CommodityForward>(
         env, position, commodityName, currency, quantity, maturity, strike);
     trade->id() = id;
 
     return trade;
 }
 
-boost::shared_ptr<Trade> buildCommodityOption(const string& id, const string& longShort, const string& putCall,
+QuantLib::ext::shared_ptr<Trade> buildCommodityOption(const string& id, const string& longShort, const string& putCall,
                                               Size term, const string& commodityName, const string& currency,
                                               Real strike, Real quantity, Real premium, const string& premiumCcy,
                                               const string& premiumDate) {
@@ -668,8 +668,8 @@ boost::shared_ptr<Trade> buildCommodityOption(const string& id, const string& lo
     OptionData option(longShort, putCall, "European", false, expiryDate, "Cash", "",
                       premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
     TradeStrike trStrike(TradeStrike::Type::Price, strike);
-    boost::shared_ptr<Trade> trade =
-        boost::make_shared<ore::data::CommodityOption>(env, option, commodityName, currency, quantity, trStrike);
+    QuantLib::ext::shared_ptr<Trade> trade =
+        QuantLib::ext::make_shared<ore::data::CommodityOption>(env, option, commodityName, currency, quantity, trStrike);
     trade->id() = id;
 
     return trade;

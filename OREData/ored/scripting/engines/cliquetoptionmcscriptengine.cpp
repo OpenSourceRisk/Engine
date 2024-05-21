@@ -32,7 +32,7 @@ namespace data {
 
 CliquetOptionMcScriptEngine::CliquetOptionMcScriptEngine(const std::string& underlying, const std::string& baseCcy,
                                                          const std::string& underlyingCcy,
-                                                         const boost::shared_ptr<GeneralizedBlackScholesProcess>& p,
+                                                         const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& p,
                                                          const std::set<std::string>& tradeTypes, Size samples,
                                                          Size regressionOrder, bool interactive,
                                                          bool scriptedLibraryOverride)
@@ -76,24 +76,24 @@ void CliquetOptionMcScriptEngine::calculate() const {
     // some checks (copied from QuantLib::AnalyticEuropeanEngine)
 
     QL_REQUIRE(arguments_.exercise->type() == Exercise::European, "not an European option");
-    boost::shared_ptr<StrikedTypePayoff> payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
     QL_REQUIRE(payoff, "non-striked payoff given");
 
     // set up the script engine model
 
     // cas use time steps = 0 for black scholes
-    auto builder = boost::make_shared<BlackScholesModelBuilder>(p_->riskFreeRate(), p_, arguments_.valuationDates,
+    auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(p_->riskFreeRate(), p_, arguments_.valuationDates,
                                                                 std::set<Date>(), 0);
     // the black scholes model wrapper won't notify the model of changes in curves and vols, so we register manually
     builder->model()->registerWith(p_);
     Model::McParams mcParams;
     mcParams.regressionOrder = regressionOrder_;
-    auto model = boost::make_shared<BlackScholes>(samples_, baseCcy_, p_->riskFreeRate(), underlying_, underlyingCcy_,
+    auto model = QuantLib::ext::make_shared<BlackScholes>(samples_, baseCcy_, p_->riskFreeRate(), underlying_, underlyingCcy_,
                                                   builder->model(), mcParams, arguments_.valuationDates);
 
     // populate context
 
-    auto context = boost::make_shared<Context>();
+    auto context = QuantLib::ext::make_shared<Context>();
     context->scalars["TODAY"] = EventVec{samples_, Settings::instance().evaluationDate()};
     context->scalars["Underlying"] = IndexVec{samples_, underlying_};
     std::vector<ValueType> tmp;
@@ -126,7 +126,7 @@ void CliquetOptionMcScriptEngine::calculate() const {
 
     ScriptEngine engine(ast_, context, model);
     engine.run("", interactive_);
-    results_.value = expectation(boost::get<RandomVariable>(context->scalars.at("Option"))).at(0);
+    results_.value = expectation(QuantLib::ext::get<RandomVariable>(context->scalars.at("Option"))).at(0);
 }
 
 } // namespace data

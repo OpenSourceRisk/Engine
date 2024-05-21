@@ -75,8 +75,8 @@ public:
 protected:
     void createVarCalculator() override;
     void handleFullRevalResults(const QuantLib::ext::shared_ptr<MarketRiskReport::Reports>& reports,
-        const QuantLib::ext::shared_ptr<MarketRiskGroup>& riskGroup, 
-        const QuantLib::ext::shared_ptr<TradeGroup>& tradeGroup) override;
+        const QuantLib::ext::shared_ptr<MarketRiskGroupBase>& riskGroup, 
+        const QuantLib::ext::shared_ptr<TradeGroupBase>& tradeGroup) override;
 
 private:
     std::vector<QuantLib::Real> pnls_;

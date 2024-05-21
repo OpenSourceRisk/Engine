@@ -26,7 +26,7 @@ namespace QuantExt {
 
 DurationAdjustedCmsCoupon::DurationAdjustedCmsCoupon(const Date& paymentDate, Real nominal, const Date& startDate,
                                                      const Date& endDate, Natural fixingDays,
-                                                     const boost::shared_ptr<SwapIndex>& swapIndex, Size duration,
+                                                     const QuantLib::ext::shared_ptr<SwapIndex>& swapIndex, Size duration,
                                                      Real gearing, Spread spread, const Date& refPeriodStart,
                                                      const Date& refPeriodEnd, const DayCounter& dayCounter,
                                                      bool isInArrears, const Date& exCouponDate)
@@ -58,7 +58,7 @@ void DurationAdjustedCmsCoupon::accept(AcyclicVisitor& v) {
         FloatingRateCoupon::accept(v);
 }
 
-DurationAdjustedCmsLeg::DurationAdjustedCmsLeg(const Schedule& schedule, const boost::shared_ptr<SwapIndex>& swapIndex,
+DurationAdjustedCmsLeg::DurationAdjustedCmsLeg(const Schedule& schedule, const QuantLib::ext::shared_ptr<SwapIndex>& swapIndex,
                                                const Size duration)
     : schedule_(schedule), swapIndex_(swapIndex), paymentLag_(0), paymentCalendar_(Calendar()),
       paymentAdjustment_(Following), inArrears_(false), zeroPayments_(false), exCouponPeriod_(Period()),
@@ -214,7 +214,7 @@ DurationAdjustedCmsLeg::operator Leg() const {
             exCouponDate =
                 exCouponCalendar_.advance(paymentDate, -exCouponPeriod_, exCouponAdjustment_, exCouponEndOfMonth_);
         }
-        auto cpn = boost::make_shared<DurationAdjustedCmsCoupon>(
+        auto cpn = QuantLib::ext::make_shared<DurationAdjustedCmsCoupon>(
             paymentDate, detail::get(notionals_, i, 1.0), start, end,
             detail::get(fixingDays_, i, swapIndex_->fixingDays()), swapIndex_, duration_,
             detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), refStart, refEnd, paymentDayCounter_,
@@ -222,7 +222,7 @@ DurationAdjustedCmsLeg::operator Leg() const {
         if (detail::noOption(caps_, floors_, i)) {
             leg.push_back(cpn);
         } else {
-            leg.push_back(boost::make_shared<CappedFlooredCoupon>(cpn, detail::get(caps_, i, Null<Rate>()),
+            leg.push_back(QuantLib::ext::make_shared<CappedFlooredCoupon>(cpn, detail::get(caps_, i, Null<Rate>()),
                                                                   detail::get(floors_, i, Null<Rate>())));
         }
     }
