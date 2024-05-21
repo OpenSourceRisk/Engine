@@ -43,14 +43,6 @@
 using namespace QuantLib;
 using namespace std;
 
-// Temporary workaround to silence warnings on g++ until QL 1.17 is released with the
-// pull request: https://github.com/lballabio/QuantLib/pull/679
-#ifdef BOOST_MSVC
-#define ATTR_UNUSED
-#else
-#define ATTR_UNUSED __attribute__((unused))
-#endif
-
 namespace {
 
 using namespace ore::data;
@@ -444,8 +436,7 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
     Size dontThrowSteps = config.bootstrapConfig().dontThrowSteps();
 
     typedef PiecewiseDefaultCurve<QuantExt::SurvivalProbability, LogLinear, QuantExt::IterativeBootstrap> SpCurve;
-    ATTR_UNUSED typedef SpCurve::traits_type dummy;
-    QuantExt::IterativeBootstrap<SpCurve> btconfig(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+    SpCurve::bootstrap_type btconfig(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                    minFactor, dontThrowSteps);
     QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> qlCurve;
 

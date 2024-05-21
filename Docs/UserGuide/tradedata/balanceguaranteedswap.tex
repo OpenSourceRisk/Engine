@@ -1,5 +1,21 @@
 \subsubsection{Balance Guaranteed Swap (BGS)}
 
+A Balance Guaranteed Swap is similar to an amortizing interest rate swap, but the  
+notional amortization matches actual prepayments of a Reference Security which can 
+be either a tranche or a reference pool of assets, or securitized interest backed 
+by a pool of assets. The BGS differs from an amortizing swap in that the notional 
+amortizations are uncertain.
+
+BGS are priced in ORE yusing an auxiliary Flexi Swap as a proxy. The amortization schedule 
+of the Flexi Swap is set up as the notional schedule of the BGS assuming a zero 
+CPR (Conditional Prepayment Rate). The lower notional bound of the Flexi Swap is 
+constructed assuming a MaxCPR (Maximum Conditional Prepayment Rate) which is 
+dependent on the Reference Security. The MaxCPR is estimated on the basis of 
+the current CPR, historical CPRs and / or expert judgement as to provide a 
+(hypothetical) sufficiently realistic hedge for the BGS. The option holder in 
+the Flexi Swap is the payer of the structured leg (i.e. the leg replicating the 
+payments of the reference security) in the BGS.
+
 The \lstinline!BalanceGuaranteedSwapData! node is the trade data container for trade type \emph{BalanceGuaranteedSwap}.  A BGS must have two legs, one fixed and one floating. Each leg typically has an amortising notional and is represented by a \lstinline!LegData! trade component sub-node, described in section \ref{ss:leg_data}.
 The \lstinline!BalanceGuaranteedSwapData! node also contains a \lstinline!ReferenceSecurity! sub-node specifying the Asset Backed Security to which the notional schedule of the BGS is linked. 
 %and a \lstinline!MaxCPR!  sub-node indicating the maximum allowable prepayment. 
