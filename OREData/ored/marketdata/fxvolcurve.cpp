@@ -217,6 +217,19 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         QL_FAIL("Delta FX vol surface: invalid interpolation, expected Linear, Cubic");
     }
 
+    bool flatExtrapolation = true;
+    auto smileExtrapType = parseExtrapolation(config->smileExtrapolation());
+    if (smileExtrapType == Extrapolation::UseInterpolator) {
+        DLOG("Smile extrapolation switched to using interpolator.");
+        flatExtrapolation = false;
+    } else if (smileExtrapType == Extrapolation::None) {
+        DLOG("Smile extrapolation cannot be turned off on its own so defaulting to flat.");
+    } else if (smileExtrapType == Extrapolation::Flat) {
+        DLOG("Smile extrapolation has been set to flat.");
+    } else {
+        DLOG("Smile extrapolation " << smileExtrapType << " not expected so defaulting to flat.");
+    }
+
     // daycounter used for interpolation in time.
     // TODO: push into conventions or config
     DayCounter dc = config->dayCounter();
@@ -227,7 +240,8 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                    [](const std::pair<Real, string>& x) { return x.first; });
     vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
         asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot_, domYts_, forYts_,
-        deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_, boost::none, interp);
+        deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_, boost::none, interp,
+        flatExtrapolation);
 
     vol_->enableExtrapolation();
 }
