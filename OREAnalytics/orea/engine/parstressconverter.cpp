@@ -140,6 +140,7 @@ QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> ParStressTestC
 //! sensitivites
 std::pair<QuantLib::ext::shared_ptr<ScenarioSimMarket>, QuantLib::ext::shared_ptr<ParSensitivityAnalysis>>
 ParStressTestConverter::computeParSensitivity(const std::set<RiskFactorKey::KeyType>& typesDisabled) const {
+    QL_REQUIRE(sensiScenarioData_ != nullptr, "No SensitivitySceneraioData given, skip par Conversion");
     auto parAnalysis = ext::make_shared<ParSensitivityAnalysis>(asof_, simMarketParams_, *sensiScenarioData_,
                                                                 Market::defaultConfiguration, true, typesDisabled);
 
