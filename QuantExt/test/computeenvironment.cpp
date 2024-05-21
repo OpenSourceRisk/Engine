@@ -357,6 +357,45 @@ BOOST_AUTO_TEST_CASE(testRngGenerationMt19937) {
     BOOST_CHECK(true);
 }
 
+BOOST_AUTO_TEST_CASE(testConditionalExpectation) {
+    ComputeEnvironmentFixture fixture;
+    const std::size_t n = 100;
+    for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
+        BOOST_TEST_MESSAGE("testing conditional expectation on device '" << d << "'.");
+        ComputeEnvironment::instance().selectContext(d);
+        auto& c = ComputeEnvironment::instance().context();
+        ComputeContext::Settings settings;
+        settings.useDoublePrecision = c.supportsDoublePrecision();
+        BOOST_TEST_MESSAGE("using double precision = " << std::boolalpha << settings.useDoublePrecision);
+
+        c.initiateCalculation(n, 0, 0, settings);
+
+        auto one = c.createInputVariable(1.0);
+
+        auto vs = c.createInputVariates(1, 2);
+        for (auto const& d : vs) {
+            for (auto const& r : d) {
+                c.declareOutputVariable(r);
+            }
+        }
+
+        auto ce = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, vs[0][1]});
+        c.declareOutputVariable(ce);
+
+        std::vector<std::vector<double>> output(3, std::vector<double>(n));
+        c.finalizeCalculation(output);
+
+        RandomVariable y(output[0]);
+        RandomVariable x(output[1]);
+        RandomVariable z = conditionalExpectation(
+            y, {&x}, multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, x.size()));
+
+        for (Size i = 0; i < n; ++i) {
+            BOOST_TEST_MESSAGE(output[0][i] << " " << output[1][i] << " " << output[2][i] << " " << z[i]);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
