@@ -146,8 +146,6 @@ void PricingAnalyticImpl::runAnalytic(
             QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis;
             if (inputs_->nThreads() == 1) {
                 LOG("Single-threaded sensi analysis");
-                std::vector<QuantLib::ext::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
-                std::vector<QuantLib::ext::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
                 sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
                     analytic()->portfolio(), analytic()->market(), configuration, inputs_->pricingEngine(),
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
@@ -158,11 +156,6 @@ void PricingAnalyticImpl::runAnalytic(
             }
             else {
                 LOG("Multi-threaded sensi analysis");
-                std::function<std::map<std::string, QuantLib::ext::shared_ptr<ore::data::AbstractTradeBuilder>>(
-                    const QuantLib::ext::shared_ptr<ReferenceDataManager>&, const QuantLib::ext::shared_ptr<TradeFactory>&)>
-                    extraTradeBuilders = {};
-                std::function<std::vector<QuantLib::ext::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuilders = {};
-                std::function<std::vector<QuantLib::ext::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders = {};
                 sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
                     inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), configuration,
                     inputs_->pricingEngine(), analytic()->configurations().simMarketParams,
