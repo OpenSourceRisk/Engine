@@ -173,8 +173,7 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
     // checks, build bond from reference data
     QL_REQUIRE(referenceDataManager, "no reference data manager given");
 
-    string id = ""; Date expiry = Date();
-    checkForwardBond(securityId, id, expiry);
+    Date expiry = checkForwardBond(securityId);
 
     auto b = BondFactory::instance().build(engineFactory, referenceDataManager, securityId);
 
@@ -213,7 +212,7 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
     return s;
 }
 
-void BondSpreadImply::checkForwardBond(const std::string& securityId, string& id, Date& expiry) {
+Date BondSpreadImply::checkForwardBond(const std::string& securityId) {
 
     // forward bonds shall have a security id of type isin_expiry
     vector<string> tokens;
@@ -221,13 +220,12 @@ void BondSpreadImply::checkForwardBond(const std::string& securityId, string& id
 
     QL_REQUIRE(tokens.size() <= 2, "unexpected number of elements");
 
-    id = tokens[0];
-    expiry = Date();
+    // string id = tokens[0];
+    Date expiry = Date();
     if (tokens.size() == 2)
         expiry = parseDate(tokens[1]);
 
-    std::cout << "BondSpreadImply::checkForwardBond with " << id << " and " << io::iso_date(expiry) << std::endl;
-
+    return expiry;
 }
 
 void BondSpreadImply::modifyToForwardBond(const Date& expiry, BondBuilder::Result& bondstructure,
@@ -236,32 +234,34 @@ void BondSpreadImply::modifyToForwardBond(const Date& expiry, BondBuilder::Resul
 
     auto originalBond = bondstructure.bond;
 
-    //truncate legs akin to fwd bond method...
+    // truncate legs akin to fwd bond method...
     Leg modifiedLeg;
     for (auto& cf : originalBond->cashflows()) {
         if (!cf->hasOccurred(expiry))
             modifiedLeg.push_back(cf);
     }
 
-    //uses old CTOR, so we can pass the notional flow deduces above, otherwise we get the notional flows twice
+    // uses old CTOR, so we can pass the notional flow deduces above, otherwise we get the notional flows twice
     QuantLib::ext::shared_ptr<QuantLib::Bond> modifiedBond = QuantLib::ext::make_shared<QuantLib::Bond>(
-        originalBond->settlementDays(), originalBond->calendar(), 1.0 , originalBond->maturityDate(), originalBond->issueDate(), modifiedLeg);
+        originalBond->settlementDays(), originalBond->calendar(), 1.0, originalBond->maturityDate(),
+        originalBond->issueDate(), modifiedLeg);
 
-    //get reference curve id...
+    // get reference curve id...
     auto bondRefData = QuantLib::ext::dynamic_pointer_cast<BondReferenceDatum>(
-            referenceData->getData(BondReferenceDatum::TYPE, bondstructure.securityId ));
+        referenceData->getData(BondReferenceDatum::TYPE, bondstructure.securityId));
     QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
     string referenceCurveID = bondRefData->bondData().referenceCurveId;
 
-    //Set pricing engine
+    // Set pricing engine
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
     Currency ccy = parseCurrency(bondstructure.currency);
-    QuantLib::ext::shared_ptr<BondEngineBuilder> bondBuilder = QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<BondEngineBuilder> bondBuilder =
+        QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << bondstructure.securityId);
     modifiedBond->setPricingEngine(bondBuilder->engine(ccy, bondstructure.creditCurveId, bondstructure.hasCreditRisk,
-                                               bondstructure.securityId,referenceCurveID)); 
+                                                       bondstructure.securityId, referenceCurveID));
 
-    //store modified bond
+    // store modified bond
     bondstructure.bond = modifiedBond;
     std::cout << "BondSpreadImply::modifyToForwardBond completed for " << bondstructure.securityId << std::endl;
 }
