@@ -36,8 +36,6 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
     useSpreadedTermStructures_ =
         ore::data::parseBool(XMLUtils::getChildValue(node, "UseSpreadedTermStructures", false, "false"));
 
-
-
     for (XMLNode* testCase = XMLUtils::getChildNode(node, "StressTest"); testCase;
          testCase = XMLUtils::getNextSibling(testCase)) {
 
@@ -57,7 +55,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         }
 
         LOG("Get recovery rate shift parameters");
-        
+
         test.recoveryRateShifts.clear();
         XMLNode* recoveryRates = XMLUtils::getChildNode(testCase, "RecoveryRates");
         if (recoveryRates) {
@@ -102,8 +100,9 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
-                       "number of tenors and shifts does not match in discount curve stress data");
-            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in discount curve stress data");
+                       "number of tenors (" << data.shiftTenors.size() << ")and shifts (" << data.shifts.size()
+                                            << ") does not match in discount curve stress data for ccy = " << ccy);
+            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in discount curve stress data for ccy = " << ccy);
             test.discountCurveShifts[ccy] = data;
         }
 
@@ -121,8 +120,9 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
-                       "number of tenors and shifts does not match in index curve stress data");
-            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in index curve stress data");
+                       "number of tenors (" << data.shiftTenors.size() << ")and shifts (" << data.shifts.size()
+                                            << ") does not match in index curve stress data curve = " << index);
+            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in index curve stress data curve = " << index);
             test.indexCurveShifts[index] = data;
         }
 
@@ -140,8 +140,9 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
-                       "number of tenors and shifts does not match in yield curve stress data");
-            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in yield curve stress data");
+                       "number of tenors (" << data.shiftTenors.size() << ")and shifts (" << data.shifts.size()
+                                            << ") does not match in yield curve stress data curve = " << name);
+            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in yield curve stress data curve = " << name);
             test.yieldCurveShifts[name] = data;
         }
 
@@ -246,7 +247,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 string ccyAttr = XMLUtils::getAttribute(child, "ccy");
                 if (!ccyAttr.empty()) {
                     key = ccyAttr;
-                    ALOG("StressScenarioData: 'ccy' is deprecated as an attribute for CapFloorVolatilities, use 'key' "
+                    WLOG("StressScenarioData: 'ccy' is deprecated as an attribute for CapFloorVolatilities, use 'key' "
                          "instead.");
                 }
             }
@@ -293,8 +294,9 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 
 void curveShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
                          const std::map<std::string, StressTestScenarioData::CurveShiftData>& data,
-                         const std::string& identifier, const std::string& nodeName, const std::string& parentNodeName=std::string()) {
-    std::string name = parentNodeName.empty() ?  nodeName + "s" : parentNodeName;
+                         const std::string& identifier, const std::string& nodeName,
+                         const std::string& parentNodeName = std::string()) {
+    std::string name = parentNodeName.empty() ? nodeName + "s" : parentNodeName;
     auto parentNode = XMLUtils::addChild(doc, node, name);
     for (const auto& [key, data] : data) {
         auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
@@ -338,7 +340,7 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
         // Add test node
         auto testNode = XMLUtils::addChild(doc, node, "StressTest");
         XMLUtils::addAttribute(doc, testNode, "id", test.label);
-    // Add Par Shifts node
+        // Add Par Shifts node
         auto parShiftsNode = XMLUtils::addChild(doc, testNode, "ParShifts");
         XMLUtils::addChild(doc, parShiftsNode, "IRCurves", test.irCurveParShifts);
         XMLUtils::addChild(doc, parShiftsNode, "CapFloorVolatilities", test.irCapFloorParShifts);
@@ -374,16 +376,17 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
             XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftTerms", data.shiftTerms);
             XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftExpiries", data.shiftExpiries);
             XMLNode* shiftSizesNode = XMLUtils::addChild(doc, swaptionVolNode, "Shifts");
-            
-            if(data.shifts.empty()){
+
+            if (data.shifts.empty()) {
                 XMLUtils::addChild(doc, shiftSizesNode, "Shift", ore::data::to_string(data.parallelShiftSize),
                                    swaptionAttributeNames, {"", ""});
             } else {
-                for(const auto& [key, shift] : data.shifts){
+                for (const auto& [key, shift] : data.shifts) {
                     const auto& [expiry, term] = key;
                     std::vector<std::string> attributeValues = {ore::data::to_string(expiry),
                                                                 ore::data::to_string(term)};
-                    XMLUtils::addChild(doc, shiftSizesNode, "Shift", ore::data::to_string(shift), swaptionAttributeNames, attributeValues);
+                    XMLUtils::addChild(doc, shiftSizesNode, "Shift", ore::data::to_string(shift),
+                                       swaptionAttributeNames, attributeValues);
                 }
             }
         }

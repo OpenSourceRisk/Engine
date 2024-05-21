@@ -711,6 +711,7 @@ portfolio/worstofbasketswap.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
+report/utilities.hpp
 scripting/ast.hpp
 scripting/astprinter.hpp
 scripting/astresetter.hpp

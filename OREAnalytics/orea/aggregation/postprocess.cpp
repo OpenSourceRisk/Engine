@@ -28,7 +28,6 @@
 #include <ored/utilities/vectorutils.hpp>
 #include <ql/errors.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
-#include <ql/version.hpp>
 
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/generallinearleastsquares.hpp>

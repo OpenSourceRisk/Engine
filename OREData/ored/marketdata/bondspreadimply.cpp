@@ -203,6 +203,14 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
         return c - cleanPrice * inflationFactor * adj;
     };
 
+    // edge case: bond has a zero settlement value -> skip spread imply
+
+    if (QuantLib::close_enough(b.bond->cleanPrice(), 0.0)) {
+        DLOG("bond has a theoretical clean price of zero (no outstanding flows as of settlement date) -> skip spread "
+             "imply and continue with zero security spread.");
+        return 0.0;
+    }
+
     // solve for spread and return result
 
     Brent brent;

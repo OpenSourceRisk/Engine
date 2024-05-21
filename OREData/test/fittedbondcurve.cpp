@@ -39,8 +39,6 @@ BOOST_AUTO_TEST_SUITE(FittedBondCurveTests)
 
 BOOST_AUTO_TEST_CASE(testCurveFromFixedRateBonds) {
 
-
-    // will work in QL 1.19
     Date asof(6, April, 2020);
     Settings::instance().evaluationDate() = asof;
 
