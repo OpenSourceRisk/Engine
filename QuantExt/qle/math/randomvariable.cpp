@@ -407,6 +407,22 @@ RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real
     time_ = time;
 }
 
+RandomVariable::RandomVariable(const std::vector<Real>& data, const Real time) {
+    n_ = data.size();
+    deterministic_ = false;
+    time_ = time;
+    if (n_ != 0) {
+        resumeDataStats();
+        data_ = new double[n_];
+        // std::memcpy(data_, array.begin(), n_ * sizeof(double));
+        std::copy(data.begin(), data.end(), data_);
+        stopDataStats(n_);
+    } else {
+        data_ = nullptr;
+    }
+    constantData_ = 0.0;
+}
+
 RandomVariable::RandomVariable(const QuantLib::Array& array, const Real time) {
     n_ = array.size();
     deterministic_ = false;

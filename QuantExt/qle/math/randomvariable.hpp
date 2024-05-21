@@ -161,6 +161,7 @@ struct RandomVariable {
     explicit RandomVariable(const Size n, const Real value = 0.0, const Real time = Null<Real>());
     explicit RandomVariable(const Filter& f, const Real valueTrue = 1.0, const Real valueFalse = 0.0,
                             const Real time = Null<Real>());
+    explicit RandomVariable(const std::vector<Real>& data, const Real time = Null<Real>());
     // interop with ql classes
     explicit RandomVariable(const QuantLib::Array& array, const Real time = Null<Real>());
     void copyToMatrixCol(QuantLib::Matrix&, const Size j) const;
