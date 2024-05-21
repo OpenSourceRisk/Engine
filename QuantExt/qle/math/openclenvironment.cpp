@@ -28,7 +28,7 @@
 #include <iostream>
 #include <thread>
 
-#define ORE_OPENCL_MAX_N_DEV_INFO 256U
+#define ORE_OPENCL_MAX_N_DEV_INFO 65536U
 #define ORE_OPENCL_MAX_BUILD_LOG 65536U
 #define ORE_OPENCL_MAX_BUILD_LOG_LOGFILE 1024U
 
