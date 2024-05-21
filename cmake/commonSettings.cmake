@@ -69,30 +69,6 @@ if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY
         "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<BOOL:${MSVC_LINK_DYNAMIC_RUNTIME}>:DLL>")
 
-    # link against static boost libraries
-    if(NOT DEFINED Boost_USE_STATIC_LIBS)
-        if(BUILD_SHARED_LIBS)
-            set(Boost_USE_STATIC_LIBS 0)
-        else()
-            set(Boost_USE_STATIC_LIBS 1)
-        endif()
-    endif()
-
-    # Boost static runtime ON for MSVC
-    if(NOT DEFINED Boost_USE_STATIC_RUNTIME)
-        if(BUILD_SHARED_LIBS OR(MSVC AND MSVC_LINK_DYNAMIC_RUNTIME))
-            set(Boost_USE_STATIC_RUNTIME 0)
-        else()
-            set(Boost_USE_STATIC_RUNTIME 1)
-        endif()
-    endif()
-
-
-
-    IF(NOT Boost_USE_STATIC_LIBS)
-        add_definitions(-DBOOST_ALL_DYN_LINK)
-        add_definitions(-DBOOST_TEST_DYN_LINK)
-    endif()
     add_compile_options(/external:env:BOOST)
     add_compile_options(/external:W0)
     add_compile_definitions(_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
@@ -137,9 +113,8 @@ else()
         set(BUILD_SHARED_LIBS ON)
     endif()
 
-    # link against dynamic boost libraries
-    add_definitions(-DBOOST_ALL_DYN_LINK)
-    add_definitions(-DBOOST_TEST_DYN_LINK)
+    # Issue with Boost CMake finder introduced in version 1.70
+    set(Boost_NO_BOOST_CMAKE         ON)
 
     # avoid a crash in valgrind that sometimes occurs if this flag is not defined
     add_definitions(-DBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
@@ -196,8 +171,43 @@ else()
     # if QuantLib is build separately
     include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
 
-   
 endif()
+
+# Boost #
+# link against static boost libraries
+if(NOT DEFINED Boost_USE_STATIC_LIBS)
+    if(BUILD_SHARED_LIBS)
+        set(Boost_USE_STATIC_LIBS OFF)
+    else()
+        set(Boost_USE_STATIC_LIBS ON)
+    endif()
+endif()
+
+# Boost static runtime. ON for MSVC
+if(NOT DEFINED Boost_USE_STATIC_RUNTIME)
+    if(BUILD_SHARED_LIBS OR(MSVC AND MSVC_LINK_DYNAMIC_RUNTIME))
+        set(Boost_USE_STATIC_RUNTIME OFF)
+    else()
+        set(Boost_USE_STATIC_RUNTIME ON)
+    endif()
+endif()
+
+if(NOT Boost_USE_STATIC_LIBS)
+    # link against dynamic boost libraries
+    add_definitions(-DBOOST_ALL_DYN_LINK)
+    add_definitions(-DBOOST_TEST_DYN_LINK)
+endif()
+
+# Use Boost Release/Debug
+if(CMAKE_BUILD_TYPE MATCHES Release)
+    set(Boost_USE_DEBUG_LIBS        OFF)
+    set(Boost_USE_RELEASE_LIBS       ON)
+elseif(CMAKE_BUILD_TYPE MATCHES Debug)
+    set(Boost_USE_DEBUG_LIBS         ON)
+    set(Boost_USE_RELEASE_LIBS      OFF)
+endif()
+
+# Boost end #
 
 # workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111
 add_definitions(-DBOOST_PHOENIX_STL_TUPLE_H_)
