@@ -305,11 +305,11 @@ BOOST_AUTO_TEST_CASE(testReplayFlowError) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(testRngGenerationTmp) {
+BOOST_AUTO_TEST_CASE(testRngGenerationMt19937) {
     ComputeEnvironmentFixture fixture;
     const std::size_t n = 1500;
     for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
-        BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
+        BOOST_TEST_MESSAGE("testing rng generation mt19937 against QL on device '" << d << "'.");
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
         ComputeContext::Settings settings;
