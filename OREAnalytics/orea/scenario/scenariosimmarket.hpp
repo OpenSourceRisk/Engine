@@ -78,7 +78,8 @@ public:
                       const bool continueOnError = false, const bool useSpreadedTermStructures = false,
                       const bool cacheSimData = false, const bool allowPartialScenarios = false,
                       const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                      const bool handlePseudoCurrencies = true);
+                      const bool handlePseudoCurrencies = true,
+                      const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr);
 
     ScenarioSimMarket(const QuantLib::ext::shared_ptr<Market>& initMarket,
                       const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& parameters,
@@ -89,7 +90,8 @@ public:
                       const bool continueOnError = false, const bool useSpreadedTermStructures = false,
                       const bool cacheSimData = false, const bool allowPartialScenarios = false,
                       const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                      const bool handlePseudoCurrencies = true);
+                      const bool handlePseudoCurrencies = true,
+                      const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr);
 
     //! Set scenario generator
     virtual QuantLib::ext::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
@@ -193,6 +195,7 @@ protected:
     std::set<ore::analytics::RiskFactorKey> diffToBaseKeys_;
 
     mutable QuantLib::ext::shared_ptr<Scenario> currentScenario_;
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
 };
 } // namespace analytics
 } // namespace ore
