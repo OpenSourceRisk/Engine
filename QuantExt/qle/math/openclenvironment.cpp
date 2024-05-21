@@ -610,7 +610,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
 
         // reset ssa
 
-        currentSsa_.clear();
+        currentSsa_ = std::vector<std::string>(1);
     }
 
     // set state
@@ -941,11 +941,6 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
                                                                                     << version_[currentId_ - 1]
                                                                                     << " has a kernel already.");
 
-    // init a section of the ssa, if we don't have any
-
-    if (currentSsa_.empty())
-        currentSsa_.push_back(std::string());
-
     // determine variable id to use for result
 
     std::size_t resultId;
@@ -958,6 +953,8 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
         resultId = nVarsTmp_++;
         resultIdNeedsDeclaration = true;
     }
+
+    resultIdNeedsDeclaration = resultIdNeedsDeclaration && currentSsa_.size() == 1; // no init from values
 
     // determine arg variable names
 
@@ -977,8 +974,6 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
     // generate ssa entry
 
     std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
-
-    resultIdNeedsDeclaration = false; // if the values are read from the global cache initially
 
     std::string ssaLine =
         (resultIdNeedsDeclaration ? fpTypeStr + " " : "") + std::string("v") + std::to_string(resultId) + " = ";
@@ -1303,7 +1298,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
         } // for part
 
-        std::cerr << "generated kernel: \n" + kernelSource + "\n";
+        // std::cerr << "generated kernel: \n" + kernelSource + "\n";
 
         if (settings_.debug) {
             timerBase = timer.elapsed().wall;
