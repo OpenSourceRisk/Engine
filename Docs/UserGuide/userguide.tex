@@ -159,7 +159,7 @@ Date & Author & Comment \\
 31 March 2023 & Acadia & updates for release 9\\
 16 June 2023 & Acadia & updates for release 10\\
 16 October 2023 & Acadia & updates for release 11\\
-15 January 2024 & Acadia & updates for release 12\\
+24 May 2024 & Acadia & updates for release 12\\
 \hline
 \end{supertabular}
 \end{center}
@@ -195,12 +195,16 @@ The project aims at reaching quantitative risk ma\-nage\-ment practitioners (be 
 firms, consulting companies or regulatory bodies) who are looking for accessible software solutions, and quant
 developers in charge of the implementation of pricing and risk methods similar to those in ORE. Moreover, the project
 aims at reaching academics and students who would like to teach or learn quantitative risk management using a freely
-available, contemporary risk application.
+available, contemporary risk application. And in the meantime, as ORE is used in risk services at industrial scale since 2018
+with over 150 users, ORE is aimed at firms that consider the replacement of third party licensed software. 
 
 \subsubsection*{Contributions}
 Quaternion Risk Management \cite{QRM} has been committed to sponsoring the Open Source Risk project through ongoing project
 administration, through providing an initial release and a series of subsequent releases in order to achieve a wide
-analytics, product and risk factor class coverage. Since Quaternion's acquisition by Acadia Inc. in February 2021, Acadia \cite{acadia} is committed to continue the sponsorship. The Open Source Risk project works will continue with former Quaternion now operating as Acadia's Quantitative Services unit. 
+analytics, product and risk factor class coverage. Since Quaternion's acquisition by Acadia Inc. in February 2021,
+Acadia \cite{acadia} has been committed to continue the sponsorship. The Open Source Risk project work continues with
+former Quaternion operating as Acadia's Quantitative Services unit. And with Acadia's acquisiton by London Stock
+Exchange Group (LSEG) in 2023, the journey continues under the roof of LSEG Post Trade.
 
 The community is invited to contribute to ORE, for example through
 feedback, discussions and suggested enhancement in the forum on the ORE site \cite{ORE}, as well as contributions of ORE
@@ -208,8 +212,8 @@ enhancements in the form of source code. See the FAQ section on the ORE site \ci
 
 \subsection{Scope}
 
-ORE currently provides portfolio pricing, cash flow generation, market risk analysis and a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields 
-the evolution of various exposure measures:
+ORE currently provides portfolio pricing, cash flow generation, market risk analysis and a range of contemporary derivative
+portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various exposure measures:
 \begin{itemize}
 \item EE aka EPE (Expected Exposure or Expected Positive Exposure)
 \item ENE (Expected Negative Exposure, i.e. the counterparty's perspective)
@@ -227,26 +231,39 @@ and derivative value adjustments (xVA)
 for portfolios with netting, variation and initial margin agreements. 
 
 \medskip
-The market risk framework provides sensitivity analysis, stress testing and several parametric VaR versions (Delta VaR, Delta-Gamma Normal VaR, Delta-Gamma VaR with Cornish-Fisher expansion and Saddlepoint method),  across all asset classes and products. 
+The market risk framework provides
+\begin{itemize}
+\item sensitivity analysis, also in the ``par'' domain
+\item stress testing, also in the ``par'' domain
+\item several parametric VaR versions (Delta VaR, Delta-Gamma Normal VaR, Delta-Gamma VaR with Cornish-Fisher expansion and Saddlepoint method)
+\item historical simulation VaR
+\item P\&L and P\&L explain
+\end{itemize}
+across all asset classes and products. 
 
 \medskip
-Thanks to Acadia's open-source strategy, ORE's financial instrument scope was extended beyond the initial vanilla scope with quarterly releases since version 7 (September 2022) to cover
+Thanks to Acadia's open-source strategy, ORE's financial instrument scope was extended beyond the initial vanilla scope with quarterly releases since version 7 to cover
 \begin{itemize}
 \item "First Generation" Equity and FX Exotics, released September with ORE v7
 \item Commodity products (Swaps, Basis Swaps, Average Price Options, Swaptions), released December 22 with ORE v8
 \item Credit products (Index CDS and Index CDS Options, Credit-Linked Swaps, Synthetic CDOs), released March 23 with ORE v9
 \item Bond products and Hybrids (Bond Options, Bond Repos, Bond TRS, Composite Trades, Convertible Bonds, Generic TRS with mixed basket underlyings, CFDs), released in June 23 with ORE v10
+\item a Scripted Trade framework in October 23 with ORE v11: This allows the modelling of complex hybrid payoffs
+  such as Accumulators, TARFs, PRDCs, Basket Options, etc, across IR, FX, INF, EQ, COM classes.  Scripted Trades are fully
+  integrated into the market risk and exposure simulation frameworks, supported by American Monte Carlo methods for pricing
+  and exposure simulation. The user can now extend the instrument scope conveniently by adding payoff scripts (embedded into
+  the trade XML or in separate script "library" XML) and without recompiling the code base.
+\item Formula-based legs, Callable Swaps, Flexi Swaps, Balance Guaranteed Swaps and American Swaptions in May 24 with ORE v12
 \end{itemize}
+
 These contributions were accompanied by analytics extensions to enhance ORE usability
 \begin{itemize}
 \item Exposure simulation for xVA and PFE, adding Commodity to the asset class coverage, and adding American Monte Carlo for Exotics, released in December 22 with ORE v8
 \item Market Risk including multi-threaded sensitivity analysis, par sensitivity conversion, parametric delta/gamma VaR with Cornish-Fisher expansion and Saddlepoint method, released in March 23 with ORE v9
 \item Portfolio Credit Model, released in June 23 with ORE v10
 \item ISDA's Standard Initial Margin Model (SIMM), released in June 23 with ORE v10
+\item Historical Simulation VaR, P\&L and P\&L Explain, released in May 24 with ORE v12
 \end{itemize}
-
-With ORE v11 the release of the {\em Scripted Trade} framework followed. This allows the modelling of complex hybrid payoffs such as Accumulators, TARFs, PRDCs, Basket Options, etc, across IR, FX, INF, EQ, COM classes.  Scripted Trades are fully integrated into the market risk and exposure simulation frameworks, supported by American Monte Carlo methods for pricing and exposure simulation. 
-The user can now extend the instrument scope conveniently by adding payoff scripts (embedded into the trade XML or in separate script "library" XML) and without recompiling the code base.
 
 \medskip 
 The product coverage of the latest release of ORE is sketched in Table \ref{tab_coverage}.
@@ -263,7 +280,7 @@ Interest Rate Swaps & Y & Y & Y & Y\\
 \hline
 Caps/Floors & Y & Y & Y & Y\\
 \hline
-Swaptions & Y & Y & Y &Y \\
+Swaptions, Callable Swaps & Y & Y & Y &Y \\
 \hline
 Constant Maturity Swaps, CMS Caps/Floors & Y & Y & Y & Y\\
 \hline
@@ -319,6 +336,8 @@ ASCOTs & Y & Y & Y & Y \\
 \hline
 Scripted Trades & Y & Y & Y & Y \\
 \hline
+Flexi Swaps and Balance Guaranteed Swaps & Y & Y & Y & Y \\
+\hline
 \end{tabular}
 \caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options. Scripted Trades cover single and multi-asset products across all asset classes except Credit (so far), see Example\_52 and the separate documentation in Docs/ScriptedTrade.}
 \label{tab_coverage}
@@ -348,17 +367,20 @@ See section \ref{example:42} on how to use ORE-Python.
 It is planned that subsequent ORE releases will also provide the calculation of {\bf regulatory capital charges} 
 \begin{itemize}
 \item for Counterparty Credit Risk under the standardised approach (SA-CCR)
-\item for Market Risk (FRTB-SA)
+\item for Market Risk (SMRC, FRTB-SA)
 \item for CVA Risk (BA-CVA, SA-CVA)
 \end{itemize}
 
-We also expect to contribute performance enhancements over time that are currently in development at Acadia, primarily based on the scripted trade framework
-\begin{itemize}
-\item AAD for fast calculation of trade sensitivities and xVAs
-\item tailored interfaces for utilising GPUs
-\end{itemize}
+{\bf Performance:} ORE v12 contains applications of {\bf AAD} for sensitivity analysis, CVA sensitivity (proof-of concept stage),
+as well as applications of {\bf GPUs} to parallelize computations (see Examples 56 and 61), with significant
+speed-ups. Both areas are active work in progress, and further enhancements and tests should be released with the next versions.
 
-There is demand among our clients for extended coverage of the ORE-Python version, so that we also expect steady growth of the Python wrapper around ORE.
+{\bf ORE Python:} Moreover, there is demand among ORE users for extended coverage of the ORE-Python version, so that we also expect steady growth
+of the Python wrapper around ORE.
+
+{\bf ORE Service:} ORE v12 contains an implementation of a restful API around ORE, see folder ore/Api and the example therein.
+This is written in Python, uses the ORE-Python module and the Flask web framework. This implementation is proof of concept,
+for demonstration purposes and to encourage the community to extend and contribute alternatives.
 
 \subsection{Further Resources}
 \begin{itemize}
@@ -380,69 +402,149 @@ launch ORE using its command line application, and we discuss typical results an
 parametrisation and the structure of trade and market data input.
 
 %========================================================
-\section{Release Notes}\label{sec:releasenotes}
+\section{Release Notes - TODO}\label{sec:releasenotes}
 %========================================================
 
 See the full history of release notes in {\tt News.txt} in the top level directory of the ORE's github repository.
 
 \medskip
-This section summarises the notable changes between release 10 (June 2023) and 11 (October 2023).
+This section summarises the notable changes between release 11 (October 2023) and 12 (May 2024).
 
 \bigskip
-INSTRUMENTS
+INSTRUMENTS \& PRICING
 \begin{itemize}
-\item Add the Scripted Trade framework, see Example 52
-\item Add support for fixings at trade level, see Example 51
-\item Add Commodity Heat Rate Option
-\item Add support for FRA on OIS
-\item Add support for SIFMA Cap/Floor
+\item add formula-based leg (ticket 12263), see Example 64
+\item add Callable Swap (ticket 12370), Example, see extended Example 5
+\item add Flexi Swap (ticket 12370), see Example 65
+\item add Balance Guaranteed Swap (ticket 12370), see Example 66
+\item add American Swaption with finite difference pricing in LGM (ticket 11618), see extended Example 4
+\item add analytic pricer for Overnight Index Swaptions (ticket 11974)
+\item add finite difference LGM pricers for Bermudan and European Swaptions
+\item add numerical integration LGM pricer for European Swaptions
+\item support indexed cashflows in AMC (ticket 12206)
+\item scripted trades: support LGM1F using finite difference and numerical integration (ticket 12306)
+\item scripted trades: support generating past cashflows (ticket 12417)
+\item scripted trades: handle near-collinear predictor variables in linear regression for AMC (ticket 12419)
+\item support for rules-based Bermudan exercise dates (ticket 11947)
+\item improved AMC regression model for resetting XCCY Swaps (ticket 12119)
+\item add Burley 2020 scrambled Sobol sequence (ticket 12140), used in Example 56
+\item rates curve building: support mixed interpolations (ticket 12159), used in Example 53
+\item add priorities to yield curve segments (ticket 9557)
+\item configurable settlement date flows handling (ticket 12372)
+\item introduce notional payment lag for resetting Cross Currency Swaps (ticket 12379)
+\item support security spreads over discount in Single Currency Swaps, Swaptions and Scripted Trades
+  (ticket 12201 and 12275)
 \end{itemize}
 
 \bigskip
-MARKETS
+MARKETS \& TERMSTRUCTURES
 \begin{itemize}
-\item Support Optionlet volatility input
-\item Add Dated OIS Rate Helper to the ORE yield curve to support instruments
-  tailored to Central Bank meeting dates, see Example 53
+\item SABR pricing for Swaptions and Caps/Floors (ticket 12325), see Example 59
+\item allow importing external SABR parameters (ticket 12491)
 \end{itemize}
 
 \bigskip
 ANALYTICS
 \begin{itemize}
-\item Add SIMM 2.6
-\item Add support for SIMM with one-day horizon, see updated Example 44
-\item Convert pre-computed zero sensitivities into par sensitivities, see Example 50 
-\item Add support for Cross Currency MtM Reset Swaps to AMC exposure simulation
+\item add XVA Sensitivitiy Proof of Concept using AAD (ticket 12028), see Example 56
+\item support overlapping close-out date grid in exposure/XVA (ticket 9859), see Example 60
+\item add scenario analytic (ticket 11990), see Example 57
+\item add historical simulation VaR analytic (ticket 9793), see Example 58
+\item add IM Schedule analytic (ticket 11730), see extended Example 44
+\item add P\&L and P\&L Explain analytics (ticket 12458), see Example 62
+\item add par stress test support (ticket 12148), see Example 63
+\item add bond spread imply to ORE (ticket 12370)
+\item add market risk backtest analytic (ticket 12370)
+\item add calculation of stoplight bounds for backtests (ticket 12370)
+\item feed t0 Variation Margin into xVA calculation (ticket 12241)
+\item support flat Initial Margin projection in exposure calculations (ticket 12318)
+\item fix the Independent Amount implementation in exposure calculations (ticket 12277)
+\item introduce configurable shift size and difference scheme per product for sensitivity analysis (ticket 12014)
+\item improve performance of SIMM calculations for large CRIF files (ticket 12397)
+\item output effective SOFR / RFR cap volatilities in reports (ticket 12192)
+\item {\color{red}XVA Stress testing (ticket 12376)}
+\item {\color{red}XVA Bump \& Reval Sensitivities, Raw and Par (ticket 12437)}
 \end{itemize}
 
 \bigskip
-TEST
+TESTS
 \begin{itemize}
-\item QuantExt: 272 test functions (vs 267 in the previous release)
-\item OREData: 257 test functions (vs. 206 in the previous release)
-\item OREAnalytics: 78 test functions 
+\item add a test suite for ORE-SWIG (ticket 11823)
+\item add AD unit tests (ticket 12188)
+\item add delta/gamma engine tests (ticket 12370)
+\item add pairwise variance swap tests (ticket 12370)
+\item add equity outperformance option tests (ticket 12370)
+\item QuantExt: 298 test functions (vs 272 in the previous release)
+\item OREData: 264 test functions (vs. 257 in the previous release)
+\item OREAnalytics: 79 test functions (vs. 78 in the previous release)
 \end{itemize}
 
 \bigskip
 DOCUMENTATION
 \begin{itemize}
-\item A separate guide for the Scripted Trade has been added,
-  see Docs/ScriptedTrade/scriptedtrade.tex
+\item add documentation of pricing engine configuration (ticket 12337)
+\item add documentation for added instruments (ticket 12317)
+\item add supported compiler and boost versions (ticket 11431) TODO update user guide
+\item clean up ORE cmake build flags (ticket 12048) TODO and update user guide
+\item update the ORE Design document (ticket 12375)
+\item the user guide has grown significantly to about 820 pages, due to the migration of more instruments
+  into ORE, additional examples, and especially the added documentation of pricing engine configurations.
 \end{itemize}
 
 \bigskip
-LANGUAGE BINDINGS
+LANGUAGE BINDINGS \& PYTHON MODULE
 \begin{itemize}
-\item Upgrade to QuantLib-SWIG-v1.31.1
+\item add NPV Cube and joint cube to the swig interface (ticket 12421)
+\item refactor OREApp to allow repeated run() calls (ticket 12317)
+\item add Python wheels workflow on github (ticket 12436)
+\end{itemize}
+
+ORE SERVICE
+\begin{itemize}
+\item add a restful API to ORE, based on ORE-Python, see Example 0 (Examples/API)
 \end{itemize}
 
 \bigskip
-OTHER
+GPU
 \begin{itemize}
-\item Added an external compute device interface (to utilise GPUs)
-\item Logging enhancements (progress, structured logs)
-\item Introduced Blackduck and Coverity scans of the code base before releases
-\item Upgrade of ORE's QuantLib fork to QuantLib-v1.31.1
+\item The external device interface based on the scripted trade and in particular its computation
+  graph implementation is progressing. This release has several notable changes
+  \begin{itemize}
+    \item an option to use double precision in opencl (ticket 12386)
+    \item a mersenne twister random number generator implementation for opencl (ticket 12387)
+    \item a working example that parallelizes bump \& reval sensitivity analysis on a GPU, see Example 61
+    \item smoke test are passing on several external devices 
+  \end{itemize}
+\item Next steps
+  \begin{itemize}
+    \item implementation of the conditional expectation operator on the GPU
+    \item implementation of several coupon types to cover IR/FX products more broadly
+    \item implementation of a computation graph version of the post processor
+  \end{itemize}
+\end{itemize}
+
+\bigskip
+NEW \& EXTENDED EXAMPLES
+\begin{itemize}
+\item  0: ORE Web Service
+\item  4: American Swaption added
+\item  5: Callable Swap instrument added  
+\item 44: IM Schedule added
+\item 54: Scripted Trade exposure with AMC: Bermudan Swaption and LPI Swap
+\item 55: Scripted Trade exposure with AMC: TaRF
+\item 56: Proof of Concept: CVA Sensitivities using AAD
+\item 57: Base Scenario Analytic
+\item 58: Historical Simulation VaR
+\item 59: SABR model for Swaptions and Caps/Floors
+\item 60: Exposure and XVA with Overlapping Close-Out Grid
+\item 61: Fast Sensitivities using AAD and GPUs
+\item 62: P\&L and P\&L Explain Analytic
+\item 63: Stresstest with shifts in the par-rate domain
+\item 64: Formual-based Coupon
+\item 65: Flexi Swap
+\item 66: Balance Guaranteed Swap 
+\item 67: {\color{red}XVA Stress Analytic}
+\item 68: {\color{red}XVA Bump \& Reval Sensitivity Analytic}
 \end{itemize}
 
 %========================================================
@@ -799,7 +901,33 @@ files in the project directory. The python script (in {\tt Tools/update\_cmake\_
 automatically. 
 
 \end{itemize}
- 
+
+\subsubsection{Supported Compiler and Boost Versions}
+\label{sec:compiler_boost_versions}
+
+The following table \ref{tab:compiler_boost_versions} reflects the compiler / boost version combinations that
+the users/developers at Acadia/LSEG can confirm as working combinations with the latest ORE v12.
+
+\begin{table}[hbt]
+  \begin{tabular}{|l|c|c|}
+    \hline
+    Compiler & Boost & ORE \\
+    \hline
+    AppleClang version 13.0.0 & 1.82.0 & 12\\
+    AppleClang version 13.1.6 & 1.84.0 & 12\\
+    AppleClang version 14.0.0 & 1.82.0 & 12\\
+    AppleClang version 15.0.0 & 1.83.0 & 12\\
+    gcc 10.2.1 & 1.74.0 & 12 \\
+    gcc 11.4.0 & 1.74.0 & 12 \\
+    VS2019 & 1.72.0 & 12 \\
+    VS2022 & 1.78.0 & 12 \\
+    VS2022 & 1.83.0 & 12 \\
+    \hline
+  \end{tabular}
+  \caption{Supported compiler and boost versions for ORE v12.}
+  \label{tab:compiler_boost_versions}
+\end{table}
+
 \subsubsection*{ZLIB support}
 
 To enable zlib support configure CMake with the flag {\tt -DORE\_USE\_ZLIB=ON}. 
@@ -856,289 +984,6 @@ for installing and building Python wrappers and wheels.
 \medskip
 Typical usage of the Python wrapper is shown in ORE's {\tt Example\_42} and in ORE SWIG's {\tt OREAnalytics/Python/Examples} directory.
 
-%
-%\medskip
-%To build the wrappers on Windows, Linux, mac OS
-%\begin{enumerate}
-%\item build ORE and QuantLib first, as shown in the previous section. It is strongly advised to switch the codebase to a release tag here (e.g. 1.8.7.0), as the versions of the master branch are not always aligned!
-%\item check out the ORE-SWIG repository into a project directory {\tt oreswig}, change into that directory (the same advice as above applies here as well, switch to the same release tag as ORE)
-%\item pull in the QuantLib-SWIG project by running \\
-%{\tt git submodule init} \\
-%{\tt git submodule update}
-%%\item Edit the top-level {\tt oreswig/CMakeLists.txt} and uncomment e.g. the line {\tt add\_subdirectory(OREAnalytics-SWIG/Python)} to build the OREAnalytics Python wrappers
-%\item Create a subdirectory {\tt build}, change into that directory and configure cmake and then build using Ninja as follows \\
-%\medskip
-%{\footnotesize
-%{\tt cmake -G Ninja $\backslash$} \\
-%\hspace{1cm} {\tt -D ORE=<ORE Root Directory> $\backslash$} \\
-%\hspace{1cm} {\tt -D BOOST\_ROOT=<Top level boost include directory> $\backslash$}\\
-%\hspace{1cm} {\tt -D BOOST\_LIBRARYDIR=<Location of the compiled boost libraries> $\backslash$}\\
-%\hspace{1cm} {\tt -D Python\_ROOT\_DIR=<Root directory of the python installation>$\backslash$} \\
-%\hspace{1cm} {\tt ..} \\
-%{\tt ninja} \\
-%}
-%\medskip
-%On Linux or mac OS one can also use {\tt make} instead of {\tt ninja}. 
-%In that case, omit the {\tt -G Ninja} part in the configuration. 
-%
-%\medskip
-%To build on Windows using CMake and an existing Visual Studio installation you can e.g. run
-%this from the top-level oreswig directory
-%
-%{\footnotesize
-%{\tt mkdir build $\backslash$} \\
-%{\tt cmake -G "Visual Studio 17 2022" $\backslash$}\\
-%\hspace{1cm} {\tt -A x64 $\backslash$}\\
-%\hspace{1cm} {\tt -D SWIG\_DIR=C:$\backslash$dev$\backslash$swigwin$\backslash$Lib $\backslash$}\\
-%\hspace{1cm} {\tt -D SWIG\_EXECUTABLE=C:$\backslash$dev$\backslash$swigwin$\backslash$swig.exe $\backslash$}\\
-%\hspace{1cm} {\tt -D ORE:PATHNAME=C:$\backslash$dev$\backslash$ORE$\backslash$master $\backslash$}\\
-%\hspace{1cm} {\tt -D BOOST\_ROOT=C:$\backslash$dev$\backslash$boost $\backslash$}\\
-%\hspace{1cm} {\tt -S OREAnalytics-SWIG/Python $\backslash$}\\
-%\hspace{1cm} {\tt -B build $\backslash$}\\
-%{\tt cmake -{}-build build -v}
-%}
-
-%\medskip
-%
-%This builds the OREAnalytics-Python bindings which include the wrapped parts of QuantLib, QuantExt, OREData and OREAnalytics.
-%
-%\begin{itemize}
-%\item Try a Python example: Update your PYTHONPATH environment variable to include directory {\tt oreswig/build/OREAnalytics-SWIG/Python} 
-%which contains both the new python module and the associated native library loaded by the python module;
-%change to the {\tt oreswig/OREAnalytics/Python/Examples} directory and run e.g.\\
-%
-%\medskip
-%\centerline{\tt python ore.py}  
-%
-%There is also an IPython example in the same directory. To try it, launch 
-%
-%\medskip
-%\centerline{\tt jupyter notebook}  
-%
-%wait for your browser to open, select {\tt ore.ipy} from the list of files and then run all cells.
-%
-%\item Try a Java example: Make sure that the line {\tt add\_subdirectory(OREAnalytics-SWIG/Java)} 
-%is uncommented in the top-level CMakeLists.txt file when building; change to directory 
-%{\tt ORE-SWIG/OREAnalytics-SWIG/Java/Examples} and run
-%
-%\medskip
-%{\tt java -Djava.library.path=../../../build/OREAnalytics-SWIG/Java $\backslash$} \\
-%\hspace{1cm} {\tt -jar ../../../build/OREAnalytics-SWIG/Java/ORERunner.jar $\backslash$}\\
-%\hspace{1cm} {\tt Input/ore.xml}
-%
-%\end{enumerate}
-%
-%\subsection{How to build ORE Python Wheels on Windows}\label{sec:win_wheel}
-%
-%This section is a stand-alone HOWTO for building ore and oreswig, including Python wrappers and wheels, at the DOS command line using cmake and VS 2022.  
-%
-%\subsubsection*{Prerequisites}
-% 
-%\begin{itemize}
-%\item python: The following tools need to be up to date: \\
-% {\tt python -m ensurepip } \\
-% {\tt pip install build }
-%\item boost: Download the binaries from the link below.  This release was tested against boost version 1.72.  It is important to download these precompiled binaries (rather than compiling yourself from source code) because the binaries include ZLIB support which this build requires. \\
-%\url{https://sourceforge.net/projects/boost/files/boost-binaries}
-%\item  swig: You need to either install the binaries, or install the source code and build yourself
-% \item ore and oreswig: You need to install the source code. Instructions for building with cmake are provided below.
-% \end{itemize}
-% 
-%\subsubsection*{Environment variables}
-% 
-%Set the following environment variables to the paths where the above items live on your machine, e.g:
-% 
-%{\tt set BOOST\_INC=C:{\bs}repos{\bs}boost{\bs}boost\_1\_81\_0} \\
-%{\tt set BOOST\_LIB=C:{\bs}repos{\bs}boost{\bs}boost\_1\_81\_0{\bs}lib{\bs}x64{\bs}lib} \\
-%{\tt set SWIG=C:{\bs}repos{\bs}swigwin-4.1.1} \\
-%{\tt set ORE=C:{\bs}repos{\bs}ore } \\
-%{\tt set ORESWIG=C:{\bs}repos{\bs}oreswig}
-% 
-%\subsubsection*{Build ORE}
-% 
-%Generate the project files:
-% 
-%\medskip
-%{\tt cd \%ORE\%} \\
-%{\tt mkdir build }\\
-%{\tt cd \%ORE\%{\bs}build} \\
-%{\tt cmake .. $\backslash$\\
-%\hspace{1cm} -DBoost\_NO\_WARN\_NEW\_VERSIONS=1 $\backslash$\\
-%\hspace{1cm} -Wno-dev -G "Visual Studio 17 2022" $\backslash$ \\
-%\hspace{1cm} -A x64 $\backslash$\\
-%\hspace{1cm} -DMSVC\_LINK\_DYNAMIC\_RUNTIME=OFF $\backslash$ \\
-%\hspace{1cm} -DBOOST\_ROOT=\$BOOST\_INC $\backslash$\\
-%\hspace{1cm} -DBOOST\_LIBRARYDIR=\$BOOST\_LIB $\backslash$ \\
-%\hspace{1cm} -DQL\_ENABLE\_SESSIONS=ON} 
-%
-%\medskip
-%This will create \%ORE\%{\bs}build{\bs}ORE.sln
-% 
-%\medskip
-%Build:
-% 
-%\medskip
-%{\tt cd \%ORE\%{\bs}build} \\
-%%{\tt "C:{\bs}Program Files{\bs}CMake{\bs}bin{\bs}cmake.exe" -{}-build . -{}-config Release}
-%{\tt cmake -{}-build . -{}-config Release}
-%
-%\medskip
-%This will create  \%ORE\%{\bs}build{\bs}OREAnalytics{\bs}orea{\bs}Release{\bs}OREAnalytics-x64-mt.lib
-% 
-%\subsubsection*{Build ORE-SWIG Wrapper and Wheel}
-% 
-%In contrast to the generic cmake-based SWIG build in section \ref{sec:oreswig}, we are now resorting to python's setup.py.
-% 
-%\medskip
-%{\tt cd \%ORESWIG\%{\bs}OREAnalytics-SWIG{\bs}Python} \\
-%{\tt set BOOST\_ROOT=\%BOOST\_INC\%} \\
-%% set BOOST_LIB is needed but already done above
-%% set ORE needed but already done above
-%{\tt set PATH=\%PATH\%;\%SWIG\%} \\
-%{\tt set ORE\_STATIC\_RUNTIME=1} \\
-%{\tt python setup.py wrap} \\
-%{\tt python setup.py build} \\
-%{\tt python setup.py test} \\
-%{\tt python -m build -{}-wheel} 
-% 
-%\medskip
-%This will create 
-%\begin{itemize}
-%\item the Python module and static library in folder {\tt <PATH>{\bs}build{\bs}lib.win-amd64-cpython-310} (the directory name depends on the machine and python version)
-%\item the wheel file (filename.whl) in folder {\tt <PATH>{\bs}dist}
-%\end{itemize}
-%where {\tt <PATH>} stands for {\tt \%ORESWIG\%{\bs}OREAnalytics-SWIG{\bs}Python}.
-%
-%\medskip
-%To use the wrapper directly: \\
-%\medskip
-%{\tt cd <PATH>{\bs}Examples} \\
-%{\tt set PYTHONPATH=<PATH>{\bs}build{\bs}lib.win-amd64-cpython-310} \\
-%{\tt python swap.py}
-%
-%\medskip
-%To use the wheel:
-% 
-%{\tt cd <PATH>{\bs}Examples} \\
-%{\tt python -m venv env1} \\
-%{\tt .{\bs}env1{\bs}Scripts{\bs}activate.bat} \\
-%{\tt pip install <PATH>{\bs}dist{\bs}filename.whl} \\
-%{\tt python swap.py} \\
-%{\tt deactivate} \\
-%{\tt rmdir /s /q env1} \\
-%
-%\subsection{How to build ORE Python Wheels on Linux and macOS}\label{sec:nix_wheel}
-%
-%This section is a stand-alone HOWTO for building and using a python wheel for OREAnalytics on Linux or macOS.
-%
-%\subsubsection*{Prerequisites}
-%
-%\begin{itemize}
-%\item python: Ensure that python3, pip, build, and virtualenv are installed and up to date. \\
-%
-%\medskip
-%For example, on ubuntu:\\
-%{\tt sudo apt install python3-pip} \\
-%{\tt sudo apt install python3.10-venv} \\
-%{\tt pip3 install -{}-upgrade build} \\
-%
-%\medskip
-%On macOS it is recommended to install jupyterlab (which contains python and pip) with \\
-%{\tt brew install jupyterlab} \\
-%followed by\\
-%{\tt pip install -{}-upgrade build} \\
-%{\tt pip install virtualenv} 
-%
-%\item python3-dev: You need to install the python header files and libs. On some platforms these come already installed with python.  
-%
-%\medskip
-%On ubuntu they do not and the command to install them is: \\
-%{\tt sudo apt install python3-dev }\\
-%
-%\medskip
-%On macOS they come with the recommended installation of jupyterlab
-%
-%\item boost and swig: You need to either install the binaries, or install the source code and build yourself.
-%\item ore and oreswig: You need to install the source code. Instructions for building with cmake are provided below.
-%\end{itemize}
-%
-%\subsubsection*{Environment variables}
-%
-%Set the following environment variables to the paths where the ore and ore swig repos, as well as boost live on your machine, e.g:
-%
-%\medskip
-%{\tt export ORE=\$HOME/dev/ore} \\
-%{\tt export ORESWIG=\$HOME/dev/oreswig}\\
-%{\tt export BOOST\_INC=/opt/homebrew/include} \\
-%{\tt export BOOST\_LIB=/opt/homebrew/lib} 
-%
-%\subsubsection*{Build ORE}
-%
-%Use cmake to generate the project Makefiles
-%
-%\medskip
-%{\tt cd \$ORE} \\
-%{\tt mkdir build} \\
-%{\tt cd \$ORE/build} \\
-%{\tt cmake .. \\
-%\hspace{1cm} -DQL\_ENABLE\_SESSIONS=ON $\backslash$\\
-%\hspace{1cm} -DCMAKE\_POSITION\_INDEPENDENT\_CODE=ON $\backslash$\\
-%\hspace{1cm} -DORE\_BUILD\_DOC=OFF $\backslash$ \\
-%\hspace{1cm} -DORE\_BUILD\_EXAMPLES=OFF $\backslash$ \\
-%\hspace{1cm} -DORE\_BUILD\_TESTS=OFF $\backslash$\\
-%\hspace{1cm} -DORE\_BUILD\_APP=OFF $\backslash$\\
-%\hspace{1cm} -DQL\_BUILD\_BENCHMARK=OFF $\backslash$\\
-%\hspace{1cm} -DQL\_BUILD\_EXAMPLES=OFF $\backslash$\\
-%\hspace{1cm} -DQL\_BUILD\_TEST\_SUITE=OFF $\backslash$\\
-%\hspace{1cm} -DBoost\_NO\_WARN\_NEW\_VERSIONS=1 $\backslash$\\
-%\hspace{1cm} -DBoost\_NO\_SYSTEM\_PATHS=1 $\backslash$\\
-%\hspace{1cm} -DBOOST\_ROOT=\$BOOST\_INC $\backslash$\\
-%\hspace{1cm} -DBOOST\_LIBRARYDIR=\$BOOST\_LIB}
-%
-%\medskip
-%Execute the following to kick off the build:
-%
-%\medskip
-%{\tt cd \$ORE/build} \\
-%{\tt cmake -{}-build} . 
-%
-%\medskip
-%This will generate \$ORE/build/OREAnalytics/orea/libOREAnalytics.so or .dylib
-%
-%\subsubsection*{Build ORE-SWIG Wrapper and Wheel}
-%
-%In contrast to the generic cmake-based SWIG build in section \ref{sec:oreswig}, we are now resorting to python's setup.py. 
-%
-%The commands below will try to link to boost library boost\_thread.  On some platforms this lib has a different name and if that is the case for you then you can override it, e.g:
-%
-%{\tt export BOOST\_THREAD=boost\_thread-mt} \\
-%
-%\medskip
-%
-%Ensure that environent variables ORE, BOOST\_INC and BOOST\_LIB are set (see above), then
-%
-%\medskip
-%{\tt cd \$ORESWIG/OREAnalytics-SWIG/Python} \\
-%{\tt python setup.py wrap} \\
-%{\tt python setup.py build} \\
-%{\tt python -m build -{}-wheel}
-%
-%\medskip
-%will then generate the wheel file (filename.whl) in folder \$ORESWIG/OREAnalytics-SWIG/Python/dist.
-%For the second step above you may need to modify the \$ORESWIG/OREAnalytics-SWIG/oreanalytics-config script to return the appropriate cflags and libs on your machine.
-%
-%\medskip
-%To use the wheel:
-%
-%\medskip
-%{\tt cd \$ORESWIG/OREAnalytics-SWIG/Python/Examples} \\
-%{\tt python -m venv env1} \\
-%{\tt . ./env1/bin/activate} \\
-%{\tt pip install \$ORESWIG/OREAnalytics-SWIG/Python/dist/filename.whl} \\
-%{\tt python commodityforward.py} \\
-%{\tt deactivate} \\
-%{\tt rm -rf env1}
-
 %========================================================
 \section{Examples}\label{sec:examples}
 %========================================================
@@ -1153,6 +998,8 @@ checks for the simulation results generated with ORE.
 \hline
 Example & Description \\
 \hline
+\hline
+0 & ORE Web Service \\
 \hline
 1 & Vanilla at-the-money Swap with flat yield curve \\
 \hline
@@ -1243,7 +1090,7 @@ Example & Description \\
 \hline
 43 & Credit Portfolio Model \\
 \hline
-44 & ISDA SIMM Model \\
+44 & Initial Margin: ISDA SIMM and IM Schedule \\
 \hline
 45 & Collateralized Bond Obligation \\
 \hline
@@ -1270,6 +1117,24 @@ Example & Description \\
 56 & CVA Sensitivity using AAD \\
 \hline
 57 & Base Scenario Analytic \\
+\hline
+58 &  Historical Simulation VaR \\
+\hline
+59 & SABR model for Swaptions and Caps/Floors \\
+\hline
+60 &  Exposure and XVA with Overlapping Close-Out Grids \\
+\hline
+61 &  Fast Sensitivties using AAD and GPUs \\
+\hline
+62 &  P\&L and P\&L Explain Analytics \\
+\hline
+63 &  Stress Tests in the Par-Rate Domain \\
+\hline
+64 &  Formula-based Coupon \\
+\hline
+65 &  Flexi Swap \\
+\hline
+66 &  Balance Guaranteed Swap \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -1352,6 +1217,56 @@ File Name & Description \\
 Note: When building ORE from sources on Windows platforms, make sure that you copy your {\tt ore.exe} to the binary
 directory {\tt App/bin/win32/} respectively {\tt App/bin/x64/}. Otherwise the examples may be run using the pre-compiled
 executables which come with the ORE release.
+
+% start with section 0
+\setcounter{subsection}{-1}
+\subsection{ORE Web Service}\label{sec:service}
+
+Since release 12, ORE comes with a proof-of-concept implementation of a web service around ORE
+that is written in Python, see folder {\tt Examples/API}.
+
+The service is based on
+\begin{itemize}
+\item the flask web framework \url{https://flask.palletsprojects.com}, and
+\item the ORE Python module which can be installed using \\
+  {\tt pip install open-source-risk-engine} \\
+  or built from sources following the instructions in the ORE-SWIG repository
+  at \url{https://github.com/opensourcerisk/ore-swig}.
+\end{itemize}
+
+\medskip
+Main files in the {\tt Examples/API} directory:
+\begin{itemize}
+\item {\bf restapi.py} runs a flask api as analytics service that takes a post request
+  (e.g. from a server like postman, or from a python script): The request contains a json body
+  which corresponds to the data usually contained in the master input file ore.xml. restapi.py
+  calls the oreApi.py class (see below) to do the work. By default, the analytics service listens for
+  requests on port 5001.
+\item {\bf oreApi.py} reads the json body, compiles all ORE input parameters, calls into a
+  data service (see below) to retrieve additional data. Then it kicks off an ORE run to process
+  the request.  Finally it posts resulting reports through the data service.
+\item {\bf simplefileserver.py} runs a flask api as a data service. It takes requests from the
+  analytics service above in the form of urls of xml files that contain additional data required
+  by ORE (market data, portfolio, configuration). By default, the data service
+  listens on port 5000, reads from the Input directory in Examples/API and writes reports to the Output
+  directory in Examples/API.
+\end{itemize}
+
+\medskip
+Run a local example:
+\begin{itemize}
+\item start the data service: \\
+  {\tt python3 simplefileserver.py \&} 
+\item start the analytics service: \\
+  {\tt python3 restapi.py \&}
+\item send a request to run the equivalent of Example 1: \\
+  {\tt python3 request.py} \\
+  Note that the json equivalent of {\tt Example\_1/Input/ore.xml} is contained in request.py,
+  and all other inputs are retrieved from folder Examples/API/Input via the data service.
+\end{itemize}
+
+%See {\tt Examples/API/ReadMe.txt} for further ways to utilise the service, e.g. to run all
+%examples in this section, deploy via docker etc.
 
 %--------------------------------------------------------
 \subsection{Interest Rate Swap Exposure, Flat Market}\label{sec:example1}
@@ -1511,6 +1426,9 @@ The example is an extreme case where the underlying Swap is deeply in the money 
 call exercise probability is close to one. Modify the Swap and Swaption fixed rates closer to the money ($\approx$ 1\%)
 to see the deviation between net exposure of the callable Swap and the exposure of a 'short' Swap with maturity on
 exercise.
+
+We have added more recently the combined CallableSwap instrument representation, check {\tt portfolio.xml} and compare
+the CallableSwap NPV in {\tt npv.csv} to the package NPV of Swap and Swaption.
 
 %--------------------------------------------------------
 \subsection{Cap/Floor Exposure}\label{sec:capfloor}
@@ -3193,8 +3111,7 @@ or on macOS/Linux: {\tt ./env1/bin/activate }
 or even fully remove the environment again by removing the {\tt env1} folder.
 \end{enumerate}
 
-Finally, you can build the Python module and installable packages yourself following the instructions in sections \ref{sec:oreswig}, \ref{sec:win_wheel}, \ref{sec:nix_wheel}
-based on your local ORE code. 
+Finally, you can build the Python module and installable packages yourself following the instructions in sections \ref{sec:oreswig} based on your local ORE code. 
 
 %--------------------------------------------------------------------
 \subsection{Credit Portfolio Model}% Example 43
@@ -3241,12 +3158,14 @@ Bonds and CDS & Migration & Notional & Analytic \\
 The last demo case in this table can be activated by uncommenting the corresponding section at the end of the {\tt run.py} script.
  
 %--------------------------------------------------------------------
-\subsection{ISDA SIMM Model}% Example 44
+\subsection{Initial Margin: ISDA SIMM and IM Schedule}% Example 44
 \label{example:44}
 %--------------------------------------------------------------------
 
 This example demonstrates the calculation of initial margin using ISDA's Standard Initial Margin Model (SIMM) based on a provided 
-sensitivity file in ISDA's Common Risk Interchange Format (CRIF).
+sensitivity file in ISDA's Common Risk Interchange Format (CRIF). In addition, we show how to use the standard "IM Schdule" method to compute 
+initial margin.
+
 ORE covers all SIMM versions since inception to date, i.e.\ 1.0, 1.1, 1.2, 1.3, 1.3.38, 2.0, 2.1, 2.2, 2.3, 2.4 (=2.3.8), 2.5, 2.5A, 2.6 (=2.5.6).
 All versions have been tested against the respective ISDA SIMM model unit test suites and pass these tests.
 Any new SIMM versions will be added with each ORE release.
@@ -3274,7 +3193,7 @@ The SIMM calculation in this example is done for SIMM version 2.4 and 2.6, with 
 \end{itemize}
 
 \medskip
-There are four input files -- {\tt ore\_SIMM2.4\_1D.xml}, {\tt ore\_SIMM2.4\_10D.xml}, {\tt ore\_SIMM2.6\_1D.xml}, {\tt ore\_SIMM2.6\_10D.xml} -- with corresponding folders in the {\tt Output/} directory.
+There are four SIMM-related input files -- {\tt ore\_SIMM2.4\_1D.xml}, {\tt ore\_SIMM2.4\_10D.xml}, {\tt ore\_SIMM2.6\_1D.xml}, {\tt ore\_SIMM2.6\_10D.xml} -- with corresponding folders in the {\tt Output/} directory.
 The relevant inputs in the files are:
 
 \begin{itemize}
@@ -3292,6 +3211,34 @@ If the ORE Python module is installed, as shown in Example 42, then you can also
 
 \medskip
 \centerline{\tt python ore.py} 
+
+\subsubsection*{IM Schedule}
+
+As an additonal case in this example we demonstrate how to use the IM Schedule method to compute initial margin.
+The related input file is {\tt Input/ore\_schedule.xml}. It is also run when calling {\tt python run.py}, and results are written to folder 
+{\tt Output/IM\_SCHEDULE}.
+The basic input is provided in CRIF file format where ORE expects two lines per trade, one with RiskClass = PV and one with RiskClass = Notional, 
+so that the  amounts in these CRIF lines are interpeted as NPV respectively notional. 
+Further required columns are product class and end date, as shown in the example {\tt Input/crif\_schedule.csv}. Note that the product class has to be in
+\begin{itemize}
+  \item Rates
+  \item FX
+  \item Equity
+  \item Credit
+  \item Commodity
+\end{itemize}
+in contrast to SIMM where we use the combined RatesFX.
+
+To run the IM Schedule analytic, the following minimal addition to {\tt Input/ore\_schedule.xml} is required.
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Analytics>
+    <Analytic type="imschedule">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="crif">crif_schedule.csv</Parameter>
+      <Parameter name="calculationCurrency">USD</Parameter>
+    </Analytic>
+  </Analytics>
+\end{minted}
 
 %--------------------------------------------------------
 \subsection{Collateralized Bond Obligation}% Example 45
@@ -3599,7 +3546,7 @@ The respective NPV cubes are combined before generating results such as exposure
 \label{example:55}
 %--------------------------------------------------------------------
 
-This example demonstrates exposure simulation and XVA for another scripted product, an
+This example in folder {\tt Examples/Example\_55} demonstrates exposure simulation and XVA for another scripted product, an
 FX Target Redemption Forward (TaRF). In contrast to the cases presented above, you won't see
 the payoff script library in the Input folder, nor is the script embedded into the trade XML file.
 The trade type in this case is {\tt FxTARF} which has its own implementation in OREData/ored/portfolio/tarf.xpp
@@ -3607,11 +3554,12 @@ and a separate trade schema. However, the scipted trade framework is used under 
 script is embedded into the C++ code in OREData/ored/portfolio/tarf.cpp.
 
 %--------------------------------------------------------------------
-\subsection{CVA Sensitivity using AD}% Example 56
+\subsection{CVA Sensitivities using AAD}% Example 56
 \label{example:56}
 %--------------------------------------------------------------------
 
-This example demonstrates a prototype CVA sensitivity calculation applying Adjoint Algorithmic Differentiation (AAD)
+This example in folder {\tt Examples/Example\_56} demonstrates a prototype CVA sensitivity
+calculation applying Adjoint Algorithmic Differentiation (AAD)
 to a Swap instrument represented as scripted trade. 
 
 %--------------------------------------------------------------------
@@ -3622,10 +3570,187 @@ to a Swap instrument represented as scripted trade.
 Demonstration of the {\tt Scenario} analytic which has been added to export the simulation market's base scenario
 as a file.
 
+%--------------------------------------------------------------------
+\subsection{Historical Simlation VaR Analytic}% Example 58
+\label{example:58}
+%--------------------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_58} demonstrates a historical simulation VaR calculation
+given a portfolio and externally provided ``market scenarios'' covering
+one or several historical observation period(s).
+The analytic is specified as usual in {\tt ore.xml} with the following parameters:
+\begin{itemize}
+\item outputFile: csv file name of the resulting VaR report 
+%\item breakdown: boolean, if true the VaR report will contain a breakdown by risk class and risk type, otherwise the report shows the portfolio-lvel VaR only.
+\item quantiles: comma searated list of quantiles to be reported
+\item portfolioFilter (optional): Only trades with {\tt portfolioId} equal to the provided filter name are processed, see {\tt portfolio.xml}; the entire portfolio is processed, if omitted
+\item historicalPeriod: comma-separated date list, an even number of ordered dates is required (d1, d2, d3, d4, ...), where each pair (d1-d2, d3-d4, ...) defines the start and end of historical observation periods used
+\item mporDays: Number of calendar days between historical scenarios taken from the observation periods in order to compute P\&L effects (typically 1 or 10) 
+\item mporCalendar: Calendar applied in the scenario date calculation
+\item mporOverlappingPeriods: Boolean, if true we use overlapping periods of length mporDays (t to t + 10 calendate days, t+1 to t+11, t+2 to t+12, ...), otherwise consecutive periods (t to t+10, t+10 to t+20, ...)
+\item simulationConfigFile: defines the structure of the simulation market applied in the P\&L calculation, e.g. discount and index curves, yield curve tenor points used, FX pairs etc.
+\item historicalScenarioFile: csv file containing the market scenarios for each date in the observation periods defined below; the granularity of the scenarios (e.g. discount and index curves, number of yield curve tenors) needs to match the simulation market definition above; each yield curve tenor scenario is represented as a discount factor 
+\end{itemize}
+
+The example is run as usual by calling {\tt python run.py}
+
+%--------------------------------------------------------------------
+\subsection{SABR Model for Swaptions and Caps/Floors}% Example 59
+\label{example:59}
+%--------------------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_59} demonstrates the pricing of a Swaption and a Cap on
+volatility surfaces that are interpolated in smile direction using a SABR
+model flavour. As usual the example is run by calling {\tt python run.py}
+
+The essential configuration is in {\tt curveconfig.xml} where the
+Interpolation (Swaption) resp. StrikeInterpolation (Caps/Floors) allows
+the following new SABR types
+\begin{itemize}
+\item Hagan2002Lognormal
+\item Hagan2002Normal
+\item Hagan2002NormalZeroBeta
+\item Antonov2015FreeBoundaryNormal
+\item KienitzLawsonSwaynePde
+\item FlochKennedy
+\end{itemize}
+SABR parameters can be calibrated or have fixed externally provided values
+per option tenor and Swap tenor (Swaptions) resp. optionlet (Caps/Floors).
+
+%--------------------------------------------------------------------
+\subsection{Overlapping Close-Out Grids}% Example 60
+\label{example:60}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_60} demonstrates ORE's capability to handle xVA simulations using American Monte-Carlo with overlapping close-out grids.
+
+%--------------------------------------------------------------------
+\subsection{Fast Sensitivities using AAD and GPUs}% Example 61
+\label{example:61}
+%--------------------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_61} demonstrates alternative ways of speeding up sensitivity
+calculations - using AAD or an external compute device.
+The test portfolio consists of 
+\begin{itemize}
+\item Vanilla Equity Option
+\item Equity Barrier Option
+\item Equity Accumulator
+\item Asian Basket Option
+\item FX TaRFs
+\end{itemize}
+The sensitivity analysis is run in four ways, see {\tt run.py},
+\begin{itemize}
+\item with ``classic'' bump and revalue
+\item as above but using the Computation Graph, see {\tt UseCG=true} in {\tt pricingengine\_cg.xml}, which
+  is the basis for the following two approaches
+\item using AAD, see {\tt pricingengine\_ad.xml} (as in Example 
+\item using the external device if available, see {\tt pricingengine\_gpu.xml}
+\end{itemize}
+to compare sensitivities and performance. In the latter case we have set the external device in
+{\tt pricingengine\_gpu.xml} to ``BasicCpu/Default/Default'' which mimics an external device on the CPU.
+On a macbook pro (2023) with M2 Max processor, we can also choose  
+``OpenCL/Apple/Apple M2 Max'' here (a 38 core GPU).
+The Jupyter notebook {\tt ore.ipynb} in this Example\_61 folder also kicks
+off these four runs, but adds further commentary and visualises results.
+To run this notebook you need to build the Python bindings for release 12
+or ``pip install'' ORE v12.
+
+%--------------------------------------------------------------------
+\subsection{P\&L and P\&L Explain Analytics}% Example 62
+\label{example:62}
+%--------------------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_62} demonstrates the P\&L analytic
+type on a very simple test portfolio that consists of two
+single-leg swaps. The example can be run as usual by calling {\tt python run.py}.
+Main output is the P\&L report in {\tt Output/Pnl/pnl.csv} with the following columns
+\begin{itemize}
+\item TradeId
+\item Maturity and MaturityTime
+\item StartDate and EndDate of the P\&L period, referred to as t0 and t1 below
+\item NPV(t0)
+\item NPV(asof=t0; mkt=t1)
+\item NPV(asof=t1; mkt=t0)
+\item NPV(t1)
+\item PeriodCashFlow: Aggregate of trade flows in the period, converted into the P\&L currency below
+\item Theta: NPV(asof=t1; mkt=t0) - NPV(t0) + PeriodCashFLow
+\item HypotheticalCleanPnL: NPV(asof=t0; mkt=t1) - NPV(t0)
+\item CleanPnL: NPV(t1) - NPV(t0) + PeriodCashFlow 
+\item DirtyPnL: NPV(t1) - NPV(t0)
+\item Currency
+\end{itemize}
+Moreover we write
+\begin{itemize}
+\item Four ``flavours'' of NPV reports used here
+\item Four related additional results reports
+\item Two reports for the market scenarios used in the two ``lagged'' NPV calculations
+\end{itemize}
+
+This analytic is work in progress since it is based on the portfolio at t0 only: The t1 portfolio needs
+to be taken into account in order to work out the effects of portfolio changes (maturities, new business, trade
+changes) in the observation period.
+
+Furthermore, this example runs a second batch (see {\tt Input/ore\_explain.xml}) to explain the
+P\&L above in terms of portfolio sensitivities and changes in related market moves. The main output of this
+is in {\tt Output/PnlExplain/pnl\_explain.csv}. The PnlExplain analytic contains the Pnl analytic as dependent
+analytic, i.e. the PnlExplain analytic is self-sufficient kicking off Pnl calculation internally. 
+The only additional piece of input for the explainer run is {\tt sensitivity.xml}.
+
+%--------------------------------------------------------------------
+\subsection{Stress Tests in the Par-Rate Domain}% Example 63
+\label{example:63}
+%--------------------------------------------------------------------
+
+The stress testing framework in ORE has been operated so far in the ``raw'' domain
+of zero rate shifts, hazard rate shifts, optionlet volatility shifts etc.
+To analyse the impact of market rate shifts (Swap rates, CDS spreads, flat vols), one had to
+manipulate the market data input into ORE and re-run the entire ORE process multiple times.
+
+This example in folder {\tt Examples/Example\_63} demonstrates the extended
+stress testing framework that can be operated in the ``par'' rate domain instead.
+
+%--------------------------------------------------------------------
+\subsection{Formula-based Coupon}% Example 64
+\label{example:64}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_64} demonstrates the
+formula based leg in the context of Swaps with CMS Spread and
+Digital CMS Spread legs, as well as a Bond with a CMS Spread leg.
+
+The formula-based leg can be seen as a predecessor of the more versatile
+scripted trade framework. However, the formula leg may be used to
+apply a multi-factor Log-normal Swap Rate model instead of the Gaussian
+interest rate models currently applied in the scripted trade framework.
+
+%--------------------------------------------------------------------
+\subsection{Flexi Swap}% Example 65
+\label{example:65}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_65} demonstrates the
+FlexiSwap instrument in ORE - in a nutshell an amortizing swap in which one party
+has the option to reduce the notional in each period to any value between the current
+notional and a specified lower bound for that period.
+
+%--------------------------------------------------------------------
+\subsection{Balance Guaranteed Swap}% Example 66
+\label{example:66}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_66} demonstrates the
+Balance Guaranteed Swap (BGS) instrument, an amortizing Swap with prepayments
+that match prepayments in an underlying reference security. In ORE this
+BGS is approximated by a FlexiSwap instrument with amorization bounds
+given by two ``conditional prepayment rate (CPR)'' levels, e.g. determined by
+current and past CPRs or expert judgement.
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
 %========================================================
+
 
 \subsection{Jupyter}\label{sec:jupyter}
 
@@ -3704,6 +3829,7 @@ ORE also comes with a basic Excel sheet to demonstrate launching ORE and present
 self-contained than the Calc demo in the previous section, as it uses VBA only rather than calls to external Python
 scripts. The Excel demo is available in Example\_1. Launch {\tt Example\_1.xlsm}. Then modify the paths on the first
 sheet, and kick off the ORE process.
+
 
 %========================================================
 \section{Parameterisation}\label{sec:configuration}
@@ -3902,8 +4028,14 @@ type can be (so far) in
 \item xva
 \item sensitivity
 \item stress
+\item parStressConversion
 \item parametricVar
+\item historicalSimulationVar
+\item pnl
+\item pnlExplain
 \item simm
+\item imschedule
+\item scenario
 \end{itemize}
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
@@ -4076,6 +4208,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="csaFile">netting.xml</Parameter>
     <Parameter name="cubeFile">cube.csv.gz</Parameter>
     <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
+    <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
     <Parameter name="exposureProfilesByTrade">Y</Parameter>
@@ -4103,6 +4236,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="kvaOurCvaRiskWeight">0.005</Parameter>
     <Parameter name="kvaTheirCvaRiskWeight">0.05</Parameter>
     <Parameter name="dim">Y</Parameter>
+    <Parameter name="dimModel">Regression</Parameter>
     <Parameter name="mva">Y</Parameter>
     <Parameter name="dimQuantile">0.99</Parameter>
     <Parameter name="dimHorizonCalendarDays">14</Parameter>
@@ -4138,6 +4272,7 @@ transfer amounts, margin period of risk
 \item {\tt cubeFile:} NPV cube file previously generated and to be post-processed here
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and
 FX rates)
+\item {\tt collateralBalancesFile:} References an xml file that contains current VM and IM balances by netting set
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
 \item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
 \item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
@@ -4195,7 +4330,10 @@ absolute netting set value falls below this limit and switches to equal distribu
 \item {\tt exerciseNextBreak:} Flag to terminate all trades at their next break date before aggregation and the
 subsequent analytics
 \item {\tt cva, dva, fva, colva, collateralFloor, dim, mva:} Flags to enable/disable these analytics. \todo[inline]{Add
-collateral rates floor to the collateral model file (netting.xml)}
+  collateral rates floor to the collateral model file (netting.xml)}
+\item {\tt dimModel:} Type of dynamic initial margin model to be applied -- {\em Regression} or {\em Flat}. {\em Regression} is applied by default
+  when the dimModel node is omitted (see appendix and further settings related to the regression DIM model below); {\em Flat} means a simple flat
+  projection of todays's IM amount on each path (this requires providing today's IM using the {\tt collateralBalancesFile} parameter, see above)
 \item {\tt dvaName:} Credit name to look up the own default probability curve and recovery rate for DVA calculation
 \item {\tt fvaBorrowingCurve:} Identifier of the borrowing yield curve
 \item {\tt fvaLendingCurve:} Identifier of the lending yield curve
@@ -4465,6 +4603,39 @@ Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 \end{itemize}
 
 The SIMM analytic requires minimal market data input and today's market configuration - FX rates for conversions calculation currency, USD and result currency.
+
+\medskip The {\tt imschedule} 'analytic' provides initial margin calculation using the standard "IM Schedule" method that is based on 
+trade NPV, notional, end date and product class. ORE expects the inputs in the form of a CRIF file.
+Listing \ref{lst:ore_simm} shows a configuration example.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+   <Analytic type="imschedule">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="crif">schedule_crif.csv</Parameter>
+      <Parameter name="calculationCurrency">USD</Parameter>
+    </Analytic>
+<Analytics>
+\end{minted}
+\caption{ORE analytic: IM Schedule}
+\label{lst:ore_schedule}
+\end{listing}
+
+The input CRIF file here has two lines per trade, for RiskClass = PV respectively RiskClass Notional. 
+Additonally required columns are product class and end date, see example 44. 
+The idea is that the inputs can be externally provided. Therefore the IM Schedule analytic does not require a portfolio.
+The alternative -- ORE uses a portfolio to compute NPV, imply product class and end date -- has not been implemented yet.
+
+Note that the IM Schedule product class has to be in 
+\begin{itemize}
+  \item Rates
+  \item FX
+  \item Equity
+  \item Credit
+  \item Commodity
+\end{itemize}
+in contrast to SIMM where we use the combined RatesFX product class.
 
 %--------------------------------------------------------
 \subsection{Market: {\tt todaysmarket.xml}}\label{sec:market}
@@ -5127,6 +5298,7 @@ Each interest rate model is specified by a block as follows
         <ShiftHorizon>0.0</ShiftHorizon>
         <Scaling>1.0</Scaling>
       </ParameterTransformation>
+      <FloatSpreadMapping>proRata</FloatSpreadMapping>
     </LGM>
     <LGM ccy="EUR">
       <!-- ... -->
@@ -5164,6 +5336,8 @@ the time grid is empty
 \item {\tt ParameterTransformation: } LGM model prices are invariant under scaling and shift transformations
 \cite{Lichters} with advantages for numerical convergence of results in long term simulations. These transformations can
 be chosen here. Default settings are shiftHorizon 0 (time in years) and scaling factor 1.
+\item {\tt FloatSpreadMapping: } mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \end{itemize}
 
 The reason for having to specify one more {\tt Volatility/InitialValue} entries than {\tt Volatility/TimeGrid} entries (and at least one more calibration option than {\tt Volatility/TimeGrid} entries) is the fact that the intervals defined by the {\tt Volatility/TimeGrid} entries are spanning from $[0,t_1],[t_1,t_2]\ldots[t_n,\infty]$, which results in $n+1$ intervals.
@@ -5861,7 +6035,7 @@ specified, the default shift type {\tt Absolute} is used. Note regarding the rep
     </DiscountCurve>
 \end{minted}
 \caption{Sensitivity template definition}
-\label{lst:lst:sensi_config_template}
+\label{lst:sensi_config_template}
 \end{longlisting}
 
 The cross gamma filter section contains a list of pairs of sensitivity keys. For each possible pair of sensitivity keys
@@ -6057,10 +6231,16 @@ Stress tests can be applied in ORE to the same market segments and with same gra
 This file {\tt stressconfig.xml} specifies how stress tests can be configured. The general structure is shown in listing
 \ref{lst:stress_config}.
 
-In this example, two stress scenarios ``parallel\_rates'' and ``twist'' are defined. Each scenario definition contains
+In this example, two zero stress scenarios ``parallel\_rates'' and ``twist'' and one par rate ``par\_parallel'' are defined. 
+Each scenario definition contains
 the market components to be shifted in this scenario in a similar syntax that is also used for the sensitivity
 configuration, see \ref{sec:sensitivity}. Components that should not be shifted, can just be omitted in the definition
-of the scenario.
+of the scenario. Shifts for rate curves, credit curves and interest rate cap/floors can be given as par or zero rate shifts.
+By default shifts are zero rate shifts. If shifts are marked as par rate shifts all components (rate/credit/caps) shifts are 
+par shifts in that category, for example it is not possible to have par rate first for one yield curve and zero rate for 
+another curve in the same scenario. In case of par stress scenario, the shifted par instruments and related conventions are defined 
+in a sensitivity configuration.  The number number stress shifts (tenors/expiries and strikes) need to be allign with
+ the tenors/expiries and strikes of par instruments \ref{sec:sensitivity}.
 
 However, instead of specifying one shift size per market component, here a whole vector of shifts can be given, with
 different shift sizes applied to each point of the curve (or surface / cube).
@@ -6070,7 +6250,6 @@ and {\tt term}) represents a default value that is used whenever no explicit val
 
 UseSpreadedTermStructures: If set to true, spreaded termstructures over t0 will be used for the scenario calculation, to
 improve the alignment of the scenario sim market and t0 curves.
-
 
 \begin{longlisting}
 %\hrule\medskip
@@ -6127,6 +6306,56 @@ improve the alignment of the scenario sim market and t0 curves.
   </StressTest>
   <StressTest id="twist">
     ...
+  </StressTest>
+  <StressTest id="par_parallel">
+    <ParShifts>
+      <IRCurves>true</IRCurves>
+      <SurvivalProbability>true</SurvivalProbability>
+      <CapFloorVolatilities>true</CapFloorVolatilities>
+    </ParShifts>
+    <DiscountCurves>
+      <DiscountCurve ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+        <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+      </DiscountCurve>
+      ...
+    </DiscountCurves>
+    <IndexCurves>
+      ...
+    </IndexCurves>
+    <YieldCurves />
+    <FxSpots />
+    <FxVolatilities />
+    <SwaptionVolatilities />
+    <CapFloorVolatilities>
+      <CapFloorVolatility key="EUR-EURIBOR-6M">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftExpiries>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y</ShiftExpiries>
+        <Shifts>
+          <Shift tenor="1Y">0.01</Shift>
+          <Shift tenor="2Y">0.01</Shift>
+          <Shift tenor="3Y">0.01</Shift>
+          <Shift tenor="4Y">0.01</Shift>
+          <Shift tenor="5Y">0.01</Shift>
+          <Shift tenor="6Y">0.01</Shift>
+          <Shift tenor="7Y">0.01</Shift>
+          <Shift tenor="8Y">0.01</Shift>
+          <Shift tenor="9Y">0.01</Shift>
+        </Shifts>
+      </CapFloorVolatility>
+    </CapFloorVolatilities>
+    <EquitySpots />
+    <EquityVolatilities />
+    <SecuritySpreads />
+    <RecoveryRates />
+    <SurvivalProbabilities>
+      <SurvivalProbability name="Underlying1">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.01, 0.01, 0.01, 0.01, 0.01</Shifts>
+        <ShiftTenors>1Y, 2Y, 3Y, 5Y, 10Y</ShiftTenors>
+      </SurvivalProbability>
+    </SurvivalProbabilities>
   </StressTest>
 </StressTesting>
   \end{minted}
@@ -6207,6 +6436,7 @@ If a new calendar is added in this way and the schema is being used to validate 
 \input{tradedata/capfloor}
 \input{tradedata/forwardrateagreement}
 \input{tradedata/swaption}
+\input{tradedata/callableswap}
 \input{tradedata/fxforward}
 \input{tradedata/fxswap}
 \input{tradedata/fxoption}
@@ -6270,6 +6500,25 @@ If a new calendar is added in this way and the schema is being used to validate 
 
 \input{tradedata/totalReturnSwap}
 
+\input{tradedata/eq_outperformance.tex}
+\input{tradedata/doubledigitaloption}
+\input{tradedata/europeanoptioncontingentonabarrier}
+\input{tradedata/autocallable_01}
+\input{tradedata/performanceoption_01}
+\input{tradedata/window_barrieroption}
+\input{tradedata/generic_barrieroption}
+\input{tradedata/bestentryoption}
+\input{tradedata/basketoption}
+\input{tradedata/worstofbasketswap}
+\input{tradedata/rainbow_option}
+\input{tradedata/var_and_vol_derivatives}
+\input{tradedata/accumulator}
+\input{tradedata/tarf}
+\input{tradedata/knockoutswap}
+
+\input{tradedata/flexiswap}
+\input{tradedata/balanceguaranteedswap}
+
 %\include{tradecomponents}
 \input{tradecomponents/tradecomponentsintro}
 \input{tradecomponents/optiondata}
@@ -6302,6 +6551,8 @@ If a new calendar is added in this way and the schema is being used to validate 
 \input{tradecomponents/rangebound}
 \input{tradecomponents/bondbasketdata.tex}
 \input{tradecomponents/cbotranches.tex}
+\input{tradecomponents/formulabasedlegdata}
+
 \include{allowablevalues}
 
 %========================================================
@@ -6884,7 +7135,7 @@ Trade types supported by AMC so far:
 \item MultiLegOption
 \end{enumerate}
 
-\subsubsection{Implementation Details}\label{sec:implementation_details}
+\subsubsection{*Implementation Details}\label{sec:implementation_details}
 
 \subsubsection*{AMC valuation engine and AMC pricing engines}
 
@@ -6998,7 +7249,7 @@ The specific engine implementations should convert the \verb+resultValue_+ to th
 by the (ORE) trade builder) so that they can be used as regular pricing engine consistently within ORE. Note that only
 the additional \verb+amcCalculator+ result is used by the AMC valuation engine, not any of the T0 NPVs directly.
 
-\subsubsection{Limitations and Open Points}
+\subsection*{Limitations and Open Points}
 \label{sec:amc_limitations}
 
 This sections lists known limitations of the AMC simulation engine.
@@ -7032,7 +7283,7 @@ down the computation of regression coefficients. It would be desirable to have t
 basis functions, e.g. by explicitly enumerating them in the configuration, so that a high order can be chosen even for
 products with a relatively large number of independent variables (like e.g. FX Options or Cross Currency Swaps).
 
-\subsubsection{Outlook: Trade Compression}
+\subsection*{Outlook: Trade Compression}
 
 For vanilla trades where the regression is only required to produce the NPV cube entries (and not to take exercise
 decisions etc.) it is not strictly necessary to do the regression analysis on a single trade level\footnote{except
@@ -7388,7 +7639,7 @@ Consider the lower case of \eqref{eq:CSA}: If the netting set value is negative 
 then the Credit Support Amount is just the negative difference $\CSA=-|\NPV| + \IA + \Th_{pay}$ so that we need to post collateral, but only the amount 
 beyond the combined threshold $\IA + \Th_{pay}$.
 
-\subsubsection{Margin Period of Risk} \label{sec:mpor}
+\subsubsection*{Margin Period of Risk} \label{sec:mpor}
 After a counterparty defaults, it takes time to close out the portfolio. During this time period the portfolio value will change upon market conditions, therefore the portfolio's close-out value is subject to market risk, which is referred also as the close-out risk and the corresponding close-out period is called as the {\em Margin Period of Risk} (MPoR).  
 
 Therefore, when a loss on the defaulted counterparty is realised at time $t_d$, the last time the collateral could be received is $t_d-\tau$, where $\tau$ denotes the MPoR. That is, the collateral at time $t_d$ is determined by the collateral value at $t_d-\tau$, namely $CSA(t_d-\tau)$, see equation \ref{eq:CSA}.
@@ -7652,7 +7903,424 @@ The par rate conversion supports the following par instruments:
 \end{itemize}
 
 
+\subsection{Economic P\&L}\label{economic_pnl}
+
+The economic P\&L of a portfolio denotes the change in its economic value over  
+a time period $t_1$ to $t_2$. The economic value evolution during the period is due to three components
+ 
+\begin{itemize}
+\item the change in present value from period start to end
+\item incoming and outgoing cash flows
+\item accumulated cost of funding required to set up the portfolio initially 
+\end{itemize}
+
+In the following, we consider a portfolio consisting of assets in various currencies. We decompose the portfolio into parts each denominated in a different currency and value each sub-portfolio in its currency. We denote the sub-portfolio values at time $t$ in the respective currency $P_1(t), P_2(t), \dots$. Instruments with cash flows in more than one currency are decomposed into single-currency instruments and assigned into the related sub-portfolio.
+The total portfolio value expressed in base currency (e.g. EUR) is 
+\begin{equation} 
+	P(t) = \sum_c P_c(t)\:X_c(t) \label{initial_value_base}
+\end{equation}
+where $X_c$ is the exchange rate that converts an amount in currency $c$ into an amount in base currency by multiplication. All prices $P_c(t)$ denote {\em dirty} market values (or theoretical values where market values are not available) at time $t$. 
+
+In the following we consider three points in time,
+\begin{itemize}
+\item $t_0$: the time just before the first actual cash flow has appeared in the portfolio under consideration, possibly years ago
+\item $t_1$: the beginning of the period for which we want to determine P\&L
+\item $t_2$: the end of the period for which we want to determine P\&L
+\end{itemize} 
+
+\subsubsection*{Original P\&L} \label{trade_start}
+
+The original P\&L is the portfolio's P\&L from portfolio inception $t_0$.
+In this case the portfolio value at $t_0$ is 
+$$P(t_0) = 0,$$
+and the P\&L up to time $t_2$ is given by the portfolio value at $t_2$ plus the balance of currency accounts that collect incoming and outgoing cash flows and are compounded up to time $t_2$:
+\begin{equation}
+\pi(0, t_2) = P(t_2) + \sum_c X_c(t_2)\:B_c(t_2)
+\label{pnl_3}
+\end{equation}
+where 
+\begin{equation}
+B_c(t_2) = \sum_{j=0}^{I(t_2)-1} F_c(\tau_j)\:C_c(\tau_j, t_2), \quad C_c(\tau_j, t_2)=\prod_{k=I(\tau_j)}^{I(t_2)-1} (1+r_c(\tau_k)\delta_k),
+\end{equation}
+sums and products are taken over daily time steps $\tau_j$ and
+
+\medskip
+\begin{tabular}{lp{10cm}}
+$I(t)$ & is the day's index associated with time $t$ \\
+$F_c(\tau_{j})$ & is the net cash flow in currency $c$ on date/time $\tau_j$, possibly zero \\
+$r_c(\tau_j)$ & is the Bank's overnight funding and investment rate in currency $c$ for interest period $[\tau_j, \,\tau_{j+1}]$ (overnight)\\
+$\delta_j$ & is the related day count fraction for period $[\tau_j, \,\tau_{j+1}]$ 
+\end{tabular}
+
+\bigskip
+
+The balances $B_c$ can also be constructed iteratively
+\begin{eqnarray*}
+B_c(\tau_{j+1}) &=& B_c(\tau_{j}) (1+r_c(\tau_j)\delta_j) + F_c(\tau_{j+1}) 
+\label{recursion}\\
+j &=& 0, 1, 2, \dots \nonumber\\
+B_c(\tau_0) &=& 0. \nonumber
+\end{eqnarray*}
+
+The P\&L for a period of interest $[t_1;\,t_2]$ is then computed by taking the difference
+\begin{eqnarray}
+	\pi(t_1, t_2) &=& \pi(0,t_2) - \pi(0,t_1) \label{pnl_1} \\
+		&=& P(t_2) - P(t_1) + \sum_c (X_c(t_2)\: B_c(t_2) - X_c(t_1)\: B_c(t_1))
+		\nonumber
+\end{eqnarray}
+
+One can show that
+\begin{equation} 
+	B_c(t_2) = B_c(t_1) \:C_c(t_1, t_2) 
+	+ \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2) 
+\label{bc}
+\end{equation}
+which separates the contribution to $B_c(t_2)$ from cash flows in period $[t_1;t_2]$ (right-most sum) and contributions from realized P\&L and cost of funding of previous periods accumulated in $B_c(t_1)$. We can now insert (\ref{bc}) into (\ref{pnl_1}) to eliminate $B_c(t_2)$ and obtain 
+\begin{eqnarray}
+	\pi(t_1, t_2) &=& P(t_2) - P(t_1)
+	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2)
+	\nonumber\\
+	&& + \sum_c B_c(t_1)\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\} \label{pnl_1a}
+\end{eqnarray}
+ 
+\subsubsection*{Cost of Carry}
+
+Separating actual cash flows and prices from compounding effects yields
+$$
+	\pi(t_1, t_2) = P(t_2) - P(t_1)
+	+ \sum_c X_c(t_2)\sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)
+	+ CC(t_1,t_2)
+$$
+
+where the cost of carry term is 
+\begin{eqnarray}
+CC(t_1,t_2) &=& 
+	\sum_c X_c(t_2)\sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:
+	\left(C_c(\tau_j, t_2) - 1\right) \nonumber\\
+&& + \sum_c \:B_c(t_1)\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\} 
+\label{CC}
+\end{eqnarray}
+
+\subsubsection*{Period P\&L after Sell-Down}
+
+At time $t_1$, we can write the original P\&L (equation \ref{pnl_3}) in respective currencies
+$$
+\pi_c(t_1) = P_c(t_1) + B_c(t_1), \qquad \pi(t_1) = \sum_c X_c(t_1)\:\pi_c(t_1).
+$$
+Inserting this into (\ref{CC}),
+\begin{eqnarray*}
+CC(t_1,t_2) &=& 
+	\sum_c X_c(t_2)\sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:
+	\left(C_c(\tau_j, t_2) - 1\right) \\
+&& + \sum_c \:(\pi_c(t_1) - P_c(t_1))\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\}, 
+\end{eqnarray*}
+shows that there is a contribution to $\pi(t_1,t_2)$, via the cost of carry, due to compounding and FX effects on previous periods' P\&L result.
+
+\bigskip
+We now take the view that the portfolio is liquidated at time $t_1$, so that the account balance equals the P\&L at $t_1$. We further assume that this balance is then removed ("sell down" of P\&L) and transfered into a separate portfolio, the Bank's equity\footnote{Equity is in turn managed and most likely invested into financial instruments other than a Bank account}. The same portfolio is thereafter set up again so that the currency account balance turns into a liability $B_c(t_1) = - P_c(t_1)$, and the total starting balance is $B(t_1)=-P(t_1)$. In contrast to the previous section, this changes the balance at time $t_1$ suddenly and without relation to an actual cash flow.
+
+This raises the question how the artificial initial balance is funded subsequently, in currency for each sub-portfolio or in base currency only. This
+choice may vary by portfolio, depend on the actual currencies in which the Bank can source funding, depend on the location/economy in which the portfolio is run, which currency is a reasonable benchmark, etc. 
+
+\subsubsection*{Funding in Currency}\label{funding_ccy}
+
+In this section we take the view that each sub-portfolio is funded in currency
+so that we start with opening balances $B_c(t_1) = -P_c(t_1)$.
+
+Inserting the artificial opening balances at $t_1$ into (\ref{pnl_1a}) yields
+\begin{eqnarray}
+	\pi_2(t_1, t_2) &=& P(t_2) - P(t_1)
+	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2)
+	\nonumber\\
+	&& - \sum_c P_c(t_1)\:\left\{X_c(t_2)\:C_c(t_1, t_2) - X_c(t_1)\right\} \nonumber \\
+&=&	P(t_2)
+	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2)
+	\nonumber\\
+	&& - \sum_c P_c(t_1)\:X_c(t_2)\:C_c(t_1, t_2)
+	\label{pnl_2}
+\end{eqnarray}
+
+Note that only exchange rates at $t_2$ enter into the expression.
+
+\subsubsection*{Cost of Carry}
+
+Separating actual cash flows and prices from compounding effects yields
+
+$$
+	\pi_2(t_1, t_2) = P(t_2) + \sum_c X_c(t_2)\:\left\{-P_c(t_1)
+	+ \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\right\}
+	+ CC_2(t_1,t_2)
+$$
+
+where the cost of carry term is 
+\begin{eqnarray*}
+CC_2(t_1,t_2) &=& \sum_c \:X_c(t_2)\:
+\sum_{j=I(t_1)}^{I(t_2)-1} F_c(\tau_j) \: \left(C_c(\tau_j, t_2) - 1\right)\\
+&& - \sum_c \:X_c(t_2)\:P_c(t_1)\:\left(C_c(t_1, t_2) - 1\right)
+\end{eqnarray*}
+
+\subsubsection*{Funding in Base Currency}\label{funding_base_ccy}
+
+In this section we assume that the setup cost for the portfolio is converted into base currency at $t_1$ and funded subsequently in base currency.
+This means we insert artificial initial balances $B_c(t_1)=0$ except for the base currency account $B(t_1) = -P(t_1)$.
+Inserting this opening balance at $t_1$ into (\ref{pnl_1a}) now yields
+\begin{eqnarray}
+	\pi_3(t_1, t_2) &=& P(t_2) 
+	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:C_c(\tau_j, t_2)
+	\nonumber\\
+	&& - P(t_1)\:C(t_1, t_2)
+	\label{pnl_4}
+\end{eqnarray}
+
+where $C(t_1,t_2)$ is the compounding factor in base currency.
+
+\subsubsection*{Cost of Carry}
+
+Separating actual cash flows and prices from compounding effects yields now
+
+$$
+	\pi_3(t_1, t_2) = P(t_2) - P(t_1) 
+	+ \sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)
+	+ CC_3(t_1, t_2)
+$$
+where
+\begin{eqnarray*}
+CC_3(t_1, t_2) &=& 
+\sum_c X_c(t_2) \sum_{j=I(t_1)}^{I(t_2)-1}F_c(\tau_j)\:(C_c(\tau_j, t_2)-1)\\
+&&  - P(t_1)\:(C(t_1, t_2) - 1)
+\end{eqnarray*}
+
+\subsubsection*{FX Effect}\label{fx_effect}
+
+The difference between (\ref{pnl_2}) and (\ref{pnl_3}) is 
+
+$$ \pi_2(t_1, t_2) - \pi_3(t_1, t_2) = P(t_1)\:C(t_1, t_2) 
+	- \sum_c P_c(t_1)\:X_c(t_2)\:C_c(t_1, t_2).
+$$
+
+The expected value of this difference at period start $t_1$ is zero, but the retrospectively realized difference at period end $t_2$ is nonzero in general.
+ 
+
+\subsection{Risk Hypothetical P\&L}\label{sec:pl}
+
+In the following we briefly describe approaches to generating P\&L
+vectors that feed into several subsequent sections for the purpose of
+computing risk measures such as Value at Risk or for backtesting a
+market risk model.
+
+These P\&L's are different from the economic P\&L introduced in
+section \ref{economic_pnl} above, but rather {\em risk-hypothetical} 
+due to the application  of some historical market moves to the
+current market which gives rise to a valuation change.
+  
+%\subsection{Basics}\label{sec:pl_basics}
+
+Consider a history of market risk factors $X_i(j)$ where $i\in\{1,\ldots,n\}$ identifies the risk factor and
+$j\in\{1,\ldots,m\}$ corresponds to a time $t_j$ on which the risk factor was observed. The times are assumed to be
+equally spaced, with $t_{j+1}-t_j$ corresponding to $1$ business day w.r.t. a given calendar. To generate an overlapping
+$k$-day PL, define the $k$ day return at time $t_j$ to be
+
+\begin{equation}\label{returns}
+r_i(j) = R_{T_i}(X_i(j), X_{i}(j+k))
+\end{equation}
+
+for $j=1,\ldots,m-k$. Note that the case of non-overlapping $k$ day returns fits in with straightforward modifications
+of the scheme described here. $R$ defines the return value for two observations of the same factor, which is one of the
+following
+
+\begin{eqnarray}
+  R_A(x,y) &=& y-x \\
+  R_R(x,y) &=& y/x - 1 \\
+  R_L(x,y) &=& \log(y/x)
+\end{eqnarray}
+
+where the subscript stands for absolute (A), relative (R) and lognormal (L) returns, respectively. Note that the
+relative and lognormal returns are not defined for $x=0$, and we consider a data point with $X_i(j)=0$ and for which we
+compute relative or lognormal returns to be an error in the data that needs to be corrected or excluded from the
+analysis. Also note that $R_R \approx R_L$ for small values of $y/x-1$, the difference $R_R-R_L$ approaching zero when
+$y/x$ approaches $1$.
+
+Now assume $t_m$ to be the reference date (e.g. for the value at risk calculation) and
+
+\begin{equation}
+  X(m) = \{ X_i(m) \}_{i=1,\ldots,n}
+\end{equation}
+
+the market factor values on the reference date.
+
+\subsubsection*{Full Revaluation P\&L}\label{fullpl}
+
+For a given portfolio denote its NPV at $t_m$ by $\nu(X(m))$. Then we can compute a {\em full revaluation PL} vector
+
+\begin{equation}\label{fullrevalpl}
+\pi_F = \{ \pi_F(j) \}_{j=1,\ldots,m-k}
+\end{equation}
+
+as
+
+\begin{equation}
+  \pi_F(j) = \nu( X'(m,j) ) - \nu ( X(m) )
+\end{equation}
+
+by pricing the portfolio under each perturbed market factor vector
+
+\begin{equation}
+  X'(m,j) = \{ X'_i(m,j) \}_{i=1,\ldots,n}
+\end{equation}
+
+which is defined by
+
+\begin{equation}\label{histReturns}
+  X'_i(m,j) = a_{T_i}( X_i(m),  R_{T_i}(X_i(j),X_i(j+k)) )
+\end{equation}
+
+with the return application function
+
+\begin{eqnarray}
+  a_A(x,r) &=& x+r \\
+  a_R(x,r) &=& x(1+r) \\
+  a_L(x,r) &=& x e^r
+\end{eqnarray}
+
+and return types $T_i \in \{ A, R, L \}$, dependent on the particular factor $X_i$. Table \ref{sensiReturnTypes} shows a
+possible choice of return types for the different risk factors (in ORE notation). Note, that the factors Discount
+Curve, Index Curve and Survival Probability are discount factors resp. survival probabilities that are converted to zero
+rate resp. hazard rate shifts by taking the log. Also note, that the factors Recovery Rate and Basis Correlation are
+bounded (a recovery rate must be in $[0,1]$ while the base correlation must be in $[-1,1]$), so that after a shift is
+applied, the result has to be capped / floored appropriately to ensure valid scenario values.
+
+\subsubsection*{Sensitivity based P\&L}\label{sensipl}
+
+As an alternative to the full revaluation PL in \eqref{fullrevalpl} we can approximate this PL using a Taylor expansion
+of $\nu(X'(m,j))$ viewed as a function of the returns $R_{T_i}$\footnote{i.e. we view $\nu$ as a function of the second
+argument of $a_{T_i}$ in \ref{histReturns}} around the expansion point $(0,0,\ldots,0)$ generating a {\em sensitivity
+  based PL},
+
+\begin{equation}
+\pi_S = \{ \pi_S(j) \}_{j=1,\ldots,m-k}
+\end{equation}
+
+with
+
+\begin{equation}
+\begin{aligned}\label{taylorPl}
+  \pi_S(j) = & \sum_{i=1}^n D^i_{T_i}\nu(X(m)) R_{T_i}(X_i(m), X'_i(m,j)) + \\
+           \frac{1}{2}& \sum_{i,l=1}^n D^{i,l}_{T_i,T_l}\nu(X(m)) R_{T_i}(X_i(m), X'_i(m,j)) R_{T_l}(X_l(m), X'_l(m,j)),
+\end{aligned}
+\end{equation}
+
+where we use sensitivities up to second order. Here $D^i_{T_i}$ denotes a first or second order derivative operator, depending
+on the market factor specific shift type $T_i \in \{ A,R,L \}$, i.e.
+
+\begin{eqnarray}\label{derivs}
+  D^i_A f(x) &=& \frac{\partial f(x)}{\partial x_i}, \\
+  D^i_R f(x) = D^i_L f(x) &=& x_i\frac{\partial f(x)}{\partial x_i}
+\end{eqnarray}
+
+and using the short hand notation
+
+\begin{equation}\label{derivs_short}
+  D^{i,l}_{T_i,T_l} f(x) = D^i_{T_i} D^l_{T_l} f(x).
+\end{equation}
+
+These first and second order sensitivities may be computed analytically, or (more common) as finite difference
+approximations (``bump and revalue'' approximations), see section \ref{sec:app_sensi}. To clarify the relationship of \eqref{derivs}
+and a finite difference scheme for derivatives computation in a bit more detail we note that for a absolute shift $h>0$
+
+\begin{equation}
+\frac{f(x+h)-f(x)}{h} \rightarrow f'(x)
+\end{equation}
+
+for $h\rightarrow 0$ by definition of $f'$ while for a relative shift
+
+\begin{equation}
+  \frac{f(x(1+h))-f(x)}{h} = x \frac{f(x(1+h))-f(x)}{xh} \rightarrow xf'(x)
+\end{equation}
+
+for $h\rightarrow 0$ and for a log shift
+
+\begin{equation}\label{logshift}
+\frac{f(xe^h)-f(x)}{h} \rightarrow xf'(x)
+\end{equation}
+
+using e.g. L'Hospital's rule, so that
+
+\begin{itemize}
+\item both a relative and a log shift bump and revalue sensitivity approximate the same value $xf'(x)$ in the limit for
+  $h\rightarrow 0$,
+\item an absolute shift sensitivity can be transformed into a relative / log shift sensitivity (in the limit for
+  $h\rightarrow 0$) by multiplying with the risk factor value $x$, and vice versa.
+\end{itemize}
+
+We also note that the usual way of bumping continuously compounded zero rates to compute a Discount Curve or Index Curve
+sensitivity by $h^*$ is equivalent to \eqref{logshift} with $h=h^*t$, where $t$ is the maturity of the respective
+rate. Therefore in practice a log return of discount factors can not directly be combined with a sensitivity expressed
+in zero rate shifts, but has to be scaled by $1/t$ before doing so.
+
+Since the number of second order deriviatives can be quite big in realistic setups with hundreds or even thousands of
+market factors, in practice only part of the second order deriviatives might be fed into \eqref{taylorPl} assuming the
+rest to be zero.
+
+Note that the types $T_i$ used to generate the historical returns \eqref{histReturns} can be different from those used
+in the Taylor expansion \eqref{taylorPl}. It is important though that the same types $T_i$ are used for the
+derivatives operators $D^i_{T_i}$ and the returns $R_{T_i}$ in \eqref{taylorPl}. 
+
+A number of configurations are hard-coded into ORE depending on whether raw sensitivities, backtesting sensitivities or CRIF sensitivities are being called. These configurations are displayed in \ref{sensiReturnTypes} - note that there is currently no distinction made in ORE between raw sensitivities and backtest sensitivities.
+
+\begin{table}[ht]
+  \begin{tabular}{|l|c|c|c|c|}
+    \hline
+    \multicolumn{1}{|c|}{\multirow{2}{*}{ORE Risk Factor}} & \multicolumn{2}{c|}{Backtest Sensitivities} & \multicolumn{2}{c|}{CRIF Sensitivities} \\ \cline{2-5} 
+    \multicolumn{1}{|c|}{} & \multicolumn{1}{c|}{Return Type} & \multicolumn{1}{c|}{Shift Size} & \multicolumn{1}{c|}{Return Type} & \multicolumn{1}{c|}{Shift Size} \\ \hline
+    Discount Curve & A & 0.01\% & A & 0.01\% \\
+    Index Curve & A & 0.01\% & A & 0.01\% \\
+    Yield Curve & A & 0.01\% & A & 0.01\% \\
+    Dividend Yield & A & 0.01\% & A & 0.01\% \\
+    Equity Forecast Curve & A & 0.01\% & A & 0.01\% \\
+    Swaption Volatility* & R & 1\% & A & 0.01\% \\
+    Optionlet Volatility* & R & 1\% & A & 0.01\% \\
+    FX Spot** & R & 1\% & R & 0.1\% \\
+    FX Volatility & R & 1\% & A & 1\% \\
+    Equity Spot & R & 1\% & R & 1\% \\
+    Equity Volatility & R & 1\% & A & 1\% \\
+    Yield Volatility & R & 1\% & R & 1\% \\
+    Survival Probability & A & 0.01\% & A & 0.01\% \\
+    CDS Volatility & R & 1\% & R & 1\% \\
+    Correlation & R & 1\% & - & - \\
+    Base Correlation & A & 1\% & A & 1\% \\
+    Zero Inflation Curve & A & 0.01\% & A & 0.01\% \\
+    YoY Inflation Curve & A & 0.01\% & A & 0.01\% \\
+    Zero Inflation CF Vol & R & 1\% & R & 1\% \\
+    YoY Inflation CF Vol & R & 1\% & R & 1\% \\
+    Commodity Curve & R & 1\% & R & 1\% \\
+    Commodity Volatility & R & 1\% & A & 1\% \\
+    Security Spread & A & 0.01\% & - & - \\ \hline
+  \end{tabular}
+  \caption{Sensitivity return type configuration for raw, backtest and CRIF sensitivities}
+  \label{sensiReturnTypes}
+\end{table}
+
+\newpage
+*We predominantly use normal IR volatilities with an absolute shift of $0.01\%$. For lognormal IR volatilities an absolute shift of $1\%$ applies. Also, notice that ``Optionlet Volatility'' is the ORE name for ``Cap / Floor Volatility''.
+
+**During a CRIF run, the FX spot delta is computed using the central difference approximation by default. A smaller shift size of $0.1\%$ is used because of this. Furthermore, for FX vanilla European and American options, there are analytic formulae available for FX deltas. These are implemented in ORE during a CRIF run.
+
+Note - the values $A$ and $R$ here refer to the absolute and relative shifts defined in \eqref{derivs}. 
+
 \subsection{Value at Risk}\label{sec:app_var}
+
+\subsubsection*{Historical Simulation VaR}\label{histsimvar}
+
+The historical simulation VaR is defined to be a $p$-quantile of the empirical distribution generated by the full
+revaluation PL vector $\pi_F = \{ \pi_F(j) \}_{j}$. Here, with ``generated'' we mean that we weigh each $\pi_F(j)$ with
+the same probability $1/J$, where $J$ denotes the number of elements in the vector.
+
+\subsubsection*{Historical Simulation Taylor VaR}\label{histtaylorvar}
+
+Similarly, the historical simulation Taylor VaR is defined to be the $p$-quantile of the empirical distribution
+generated by the sensitivity based PL vector $\pi_S$ (call side), resp. $-\pi_S$ (post side).
+
+\subsubsection*{Parametric VaR}\label{parametricvar}
 
 For the computation of the parametric, or variance-covariance VaR, we rely on a second order sensitivity-based P\&L approximation
 
@@ -7672,7 +8340,7 @@ ensure this property, which basically replaces negative Eigenvalues by zero and 
 \cite{corrSalv};
 \item first or second order derivative operators $D$, depending
 on the market factor specific shift type $T_i \in \{ A,R,L \}$ (absolute shifts, relative shifts, absolute log-shifts), i.e.
-\begin{eqnarray*}\label{derivs}
+\begin{eqnarray*}\label{derivs2}
   D^i_A \,V(x) &=& \frac{\partial V(x)}{\partial x_i} \\
   D^i_R \,V(x) = D^i_L f(x) &=& x_i\frac{\partial V(x)}{\partial x_i}
 \end{eqnarray*}
@@ -7809,6 +8477,8 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
 
 \bibitem{Daniels} Daniels, H. E. (1987), Tail Probability Approximations, International Statistical Review, 55, 37-48.
 
+\bibitem{ScriptedTrade} ORE Scripted Trade Module, latest version at \url{https://github.com/OpenSourceRisk/Engine/tree/master/Docs/ScriptedTrade}
+  
 \end{thebibliography}
 
 \newpage

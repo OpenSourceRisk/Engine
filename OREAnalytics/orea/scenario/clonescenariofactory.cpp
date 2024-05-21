@@ -23,20 +23,21 @@
 namespace ore {
 namespace analytics {
 
-CloneScenarioFactory::CloneScenarioFactory(const boost::shared_ptr<Scenario>& baseScenario)
+CloneScenarioFactory::CloneScenarioFactory(const QuantLib::ext::shared_ptr<Scenario>& baseScenario)
     : baseScenario_(baseScenario) {
     QL_REQUIRE(baseScenario_ != NULL, "base scenario pointer must not be NULL");
 }
 
-const boost::shared_ptr<Scenario> CloneScenarioFactory::buildScenario(Date asof, const std::string& label,
-                                                                      Real numeraire) const {
-    boost::shared_ptr<Scenario> newScen = baseScenario_->clone();
+const QuantLib::ext::shared_ptr<Scenario>
+CloneScenarioFactory::buildScenario(Date asof, bool isAbsolute, const std::string& label, Real numeraire) const {
+    QuantLib::ext::shared_ptr<Scenario> newScen = baseScenario_->clone();
     QL_REQUIRE(asof == newScen->asof(),
                "unexpected asof date (" << asof << "), does not match base - " << baseScenario_->asof());
     newScen->label(label);
     QL_REQUIRE((label == newScen->label()) || (label == ""), "CloneScenarioFactory has not updated scenario label");
     if (numeraire != 0.0)
         newScen->setNumeraire(numeraire);
+    newScen->setAbsolute(isAbsolute);
     return newScen;
 }
 } // namespace analytics

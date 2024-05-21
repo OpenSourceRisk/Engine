@@ -50,9 +50,9 @@ class CommoditySchwartzModelBuilder : public QuantExt::ModelBuilder {
 public:
     //! Constructor
     CommoditySchwartzModelBuilder( //! Market object
-        const boost::shared_ptr<ore::data::Market>& market,
+        const QuantLib::ext::shared_ptr<ore::data::Market>& market,
         //! EQ model parameters/description
-        const boost::shared_ptr<CommoditySchwartzData>& data,
+        const QuantLib::ext::shared_ptr<CommoditySchwartzData>& data,
         //! base currency for calibration
         const QuantLib::Currency& baseCcy,
         //! Market configuration to use
@@ -66,9 +66,9 @@ public:
     //! \name Inspectors
     //@{
     std::string name() { return data_->name(); }
-    boost::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization() const;
-    boost::shared_ptr<QuantExt::CommoditySchwartzModel> model() const;
-    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
+    QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization() const;
+    QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzModel> model() const;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> optionBasket() const;
     //@}
 
     //! \name ModelBuilder interface
@@ -86,20 +86,20 @@ private:
     bool volSurfaceChanged(const bool updateCache) const;
 
     // input data
-    const boost::shared_ptr<ore::data::Market> market_;
+    const QuantLib::ext::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
-    const boost::shared_ptr<CommoditySchwartzData> data_;
+    const QuantLib::ext::shared_ptr<CommoditySchwartzData> data_;
     const std::string referenceCalibrationGrid_;
     const QuantLib::Currency baseCcy_;
 
     // computed
     mutable Real error_;
-    mutable boost::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization_;
-    mutable boost::shared_ptr<QuantExt::CommoditySchwartzModel> model_;
+    mutable QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization_;
+    mutable QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzModel> model_;
 
     // which options in data->optionExpiries() are actually in the basket?
     mutable std::vector<bool> optionActive_;
-    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
+    mutable std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> optionBasket_;
     mutable Array optionExpiries_;
 
     // relevant market data
@@ -114,7 +114,7 @@ private:
     bool forceCalibration_ = false;
 
     // market observer
-    boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
+    QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 
     mutable std::vector<Real> calibrationErrors_;
 

@@ -36,53 +36,53 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-                       const boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
-                       const boost::shared_ptr<ore::data::EngineData>& engineData,
-                       const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                       const boost::shared_ptr<StressTestScenarioData>& stressData,
+StressTest::StressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+                       const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+                       const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+                       const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                       const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressData,
                        const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams,
-                       boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                       const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                       QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
+                       const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                        const IborFallbackConfig& iborFallbackConfig, bool continueOnError) {
 
     LOG("Run Stress Test");
     DLOG("Build Simulation Market");
-    boost::shared_ptr<ScenarioSimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         market, simMarketData, marketConfiguration, curveConfigs, todaysMarketParams, continueOnError,
         stressData->useSpreadedTermStructures(), false, false, iborFallbackConfig, true);
 
     DLOG("Build Stress Scenario Generator");
     Date asof = market->asofDate();
-    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
-    scenarioFactory = scenarioFactory ? scenarioFactory : boost::make_shared<CloneScenarioFactory>(baseScenario);
-    boost::shared_ptr<StressScenarioGenerator> scenarioGenerator = boost::make_shared<StressScenarioGenerator>(
+    QuantLib::ext::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    scenarioFactory = scenarioFactory ? scenarioFactory : QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
+    QuantLib::ext::shared_ptr<StressScenarioGenerator> scenarioGenerator = QuantLib::ext::make_shared<StressScenarioGenerator>(
         stressData, baseScenario, simMarketData, simMarket, scenarioFactory, simMarket->baseScenarioAbsolute());
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     DLOG("Build Engine Factory");
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration;
-    auto ed = boost::make_shared<EngineData>(*engineData);
+    auto ed = QuantLib::ext::make_shared<EngineData>(*engineData);
     ed->globalParameters()["RunType"] = "Stress";
-    boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(ed, simMarket, configurations, referenceData, iborFallbackConfig);
+    QuantLib::ext::shared_ptr<EngineFactory> factory =
+    QuantLib::ext::make_shared<EngineFactory>(ed, simMarket, configurations, referenceData, iborFallbackConfig);
 
     DLOG("Reset and Build Portfolio");
     portfolio->reset();
     portfolio->build(factory, "stress analysis");
 
     DLOG("Build the cube object to store sensitivities");
-    boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
+    QuantLib::ext::shared_ptr<NPVCube> cube = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(
         asof, portfolio->ids(), vector<Date>(1, asof), scenarioGenerator->samples());
 
     DLOG("Run Stress Scenarios");
-    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W", NullCalendar());
-    vector<boost::shared_ptr<ValuationCalculator>> calculators;
-    calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
+    QuantLib::ext::shared_ptr<DateGrid> dg = QuantLib::ext::make_shared<DateGrid>("1,0W", NullCalendar());
+    vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
+    calculators.push_back(QuantLib::ext::make_shared<NPVCalculator>(simMarketData->baseCcy()));
     ValuationEngine engine(asof, dg, simMarket, factory->modelBuilders());
 
-    engine.registerProgressIndicator(boost::make_shared<ProgressLog>("stress scenarios", 100, oreSeverity::notice));
+    engine.registerProgressIndicator(QuantLib::ext::make_shared<ProgressLog>("stress scenarios", 100, oreSeverity::notice));
     engine.buildCube(portfolio, cube, calculators);
 
     /*****************
@@ -115,7 +115,7 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     LOG("Stress testing done");
 }
 
-void StressTest::writeReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold) {
+void StressTest::writeReport(const QuantLib::ext::shared_ptr<ore::data::Report>& report, Real outputThreshold) {
 
     report->addColumn("TradeId", string());
     report->addColumn("ScenarioLabel", string());

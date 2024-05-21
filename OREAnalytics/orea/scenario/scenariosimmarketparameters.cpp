@@ -815,7 +815,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 	auto keys = XMLUtils::getChildrenValues(nodeChild, "Keys", "Key", false);
 	if(!ccys.empty()) {
 	    keys.insert(keys.end(), ccys.begin(), ccys.end());
-            ALOG("ScenarioSimMarketParameters: SwaptionVolatilities/Currencies is deprecated, use Keys instead.");
+            WLOG("ScenarioSimMarketParameters: SwaptionVolatilities/Currencies is deprecated, use Keys instead.");
         }
         setSwapVolKeys(keys);
         QL_REQUIRE(!keys.empty(), "SwaptionVolatilities needs at least one currency");
@@ -835,7 +835,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string ccyAttr = XMLUtils::getAttribute(expiryNode, "ccy");
                 if (!ccyAttr.empty()) {
                     key = ccyAttr;
-                    ALOG("ScenarioSimMarketParameters: SwaptionVolatilities/Expiries: 'ccy' attribute is deprecated, "
+                    WLOG("ScenarioSimMarketParameters: SwaptionVolatilities/Expiries: 'ccy' attribute is deprecated, "
                          "use 'key' instead.");
                 }
             }
@@ -860,7 +860,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string ccyAttr = XMLUtils::getAttribute(termNode, "ccy");
                 if (!ccyAttr.empty()) {
                     key = ccyAttr;
-                    ALOG("ScenarioSimMarketParameters: SwaptionVolatilities/Terms: 'ccy' attribute is deprecated, "
+                    WLOG("ScenarioSimMarketParameters: SwaptionVolatilities/Terms: 'ccy' attribute is deprecated, "
                          "use 'key' instead.");
                 }
             }
@@ -984,7 +984,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 	auto keys = XMLUtils::getChildrenValues(nodeChild, "Keys", "Key", false);
 	if(!ccys.empty()) {
 	    keys.insert(keys.end(), ccys.begin(), ccys.end());
-            ALOG("ScenarioSimMarketParameters: CapFloorVolatilities/Currencies is deprecated, use Keys instead.");
+            WLOG("ScenarioSimMarketParameters: CapFloorVolatilities/Currencies is deprecated, use Keys instead.");
         }
         setCapFloorVolKeys(keys);
         QL_REQUIRE(!keys.empty(), "CapFloorVolatilities needs at least one entry");
@@ -1005,7 +1005,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string ccyAttr = XMLUtils::getAttribute(expiryNode, "ccy");
                 if (!ccyAttr.empty()) {
                     key = ccyAttr;
-                    ALOG("ScenarioSimMarketParameters: CapFloorVolatilities/Expiries: 'ccy' attribute is deprecated, "
+                    WLOG("ScenarioSimMarketParameters: CapFloorVolatilities/Expiries: 'ccy' attribute is deprecated, "
                          "use 'key' instead.");
                 }
             }
@@ -1030,7 +1030,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string ccyAttr = XMLUtils::getAttribute(strikeNode, "ccy");
                 if (!ccyAttr.empty()) {
                     key = ccyAttr;
-                    ALOG("ScenarioSimMarketParameters: CapFloorVolatilities/Strikes: 'ccy' attribute is deprecated, "
+                    WLOG("ScenarioSimMarketParameters: CapFloorVolatilities/Strikes: 'ccy' attribute is deprecated, "
                          "use 'key' instead.");
                 }
             }
@@ -1544,7 +1544,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     DLOG("Loaded ScenarioSimMarketParameters");
 }
 
-XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
+XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
 
     XMLNode* simulationNode = doc.allocNode("Simulation");
     XMLNode* marketNode = doc.allocNode("Market");
@@ -1642,11 +1642,11 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, swaptionVolatilitiesNode, "ReactionToTimeDecay", swapVolDecayMode_);
         XMLUtils::addChildren(doc, swaptionVolatilitiesNode, "Keys", "Key", swapVolKeys());
         for (auto it = swapVolExpiries_.begin(); it != swapVolExpiries_.end(); it++) {
-            XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Expiries", swapVolExpiries_[it->first],
+            XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Expiries", swapVolExpiries_.find(it->first)->second,
                                             "key", it->first);
         }
         for (auto it = swapVolTerms_.begin(); it != swapVolTerms_.end(); it++) {
-            XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Terms", swapVolTerms_[it->first], "key",
+            XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Terms", swapVolTerms_.find(it->first)->second, "key",
                                             it->first);
         }
 
@@ -1655,7 +1655,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         } else {
             for (auto it = swapVolStrikeSpreads_.begin(); it != swapVolStrikeSpreads_.end(); it++) {
                 XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "StrikeSpreads",
-                                                swapVolStrikeSpreads_[it->first], "key", it->first);
+                                                swapVolStrikeSpreads_.find(it->first)->second, "key", it->first);
             }
         }
         for (auto it = swapVolSmileDynamics_.begin(); it != swapVolSmileDynamics_.end(); it++) {
@@ -1769,7 +1769,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, fxVolatilitiesNode, "ReactionToTimeDecay", fxVolDecayMode_);
         XMLUtils::addChildren(doc, fxVolatilitiesNode, "CurrencyPairs", "CurrencyPair", fxVolCcyPairs());
         for (auto it = fxVolExpiries_.begin(); it != fxVolExpiries_.end(); it++) {
-            XMLUtils::addGenericChildAsList(doc, fxVolatilitiesNode, "Expiries", fxVolExpiries_[it->first], "ccyPair",
+            XMLUtils::addGenericChildAsList(doc, fxVolatilitiesNode, "Expiries", fxVolExpiries_.find(it->first)->second, "ccyPair",
                                             it->first);
         }
         if (fxVolSimulateATMOnly_) {
@@ -1778,12 +1778,12 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         if (fxVolSimulateATMOnly_ || fxMoneyness_.size() > 0 || fxStandardDevs_.size() > 0) {
             XMLNode* fxSurfaceNode = XMLUtils::addChild(doc, fxVolatilitiesNode, "Surface");
             for (auto it = fxMoneyness_.begin(); it != fxMoneyness_.end(); it++) {
-                XMLUtils::addGenericChildAsList(doc, fxSurfaceNode, "Moneyness", equityMoneyness_[it->first], "ccyPair",
+                XMLUtils::addGenericChildAsList(doc, fxSurfaceNode, "Moneyness", equityMoneyness_.find(it->first)->second, "ccyPair",
                                                 it->first);
             }
             for (auto it = fxStandardDevs_.begin(); it != fxStandardDevs_.end(); it++) {
                 XMLUtils::addGenericChildAsList(doc, fxSurfaceNode, "StandardDeviations",
-                                                fxStandardDevs_[it->first], "ccyPair", it->first);
+                                                fxStandardDevs_.find(it->first)->second, "ccyPair", it->first);
             }
         }
         for (auto it = fxVolSmileDynamics_.begin(); it != fxVolSmileDynamics_.end(); it++) {
@@ -1799,7 +1799,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, eqVolatilitiesNode, "ReactionToTimeDecay", equityVolDecayMode_);
         XMLUtils::addChildren(doc, eqVolatilitiesNode, "Names", "Name", equityVolNames());
         for (auto it = equityVolExpiries_.begin(); it != equityVolExpiries_.end(); it++) {
-            XMLUtils::addGenericChildAsList(doc, eqVolatilitiesNode, "Expiries", equityVolExpiries_[it->first], "name",
+            XMLUtils::addGenericChildAsList(doc, eqVolatilitiesNode, "Expiries", equityVolExpiries_.find(it->first)->second, "name",
                 it->first);
         }
         if (equityVolSimulateATMOnly_) {
@@ -1808,11 +1808,11 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         if (equityVolSimulateATMOnly_ || equityMoneyness_.size() > 0 || equityStandardDevs_.size() > 0) {
             XMLNode* eqSurfaceNode = XMLUtils::addChild(doc, eqVolatilitiesNode, "Surface");
             for (auto it = equityMoneyness_.begin(); it != equityMoneyness_.end(); it++) {
-                XMLUtils::addGenericChildAsList(doc, eqSurfaceNode, "Moneyness", equityMoneyness_[it->first], "name",
+                XMLUtils::addGenericChildAsList(doc, eqSurfaceNode, "Moneyness", equityMoneyness_.find(it->first)->second, "name",
                     it->first);
             }
             for (auto it = equityStandardDevs_.begin(); it != equityStandardDevs_.end(); it++) {
-                XMLUtils::addGenericChildAsList(doc, eqSurfaceNode, "StandardDeviations", equityStandardDevs_[it->first], "name",
+                XMLUtils::addGenericChildAsList(doc, eqSurfaceNode, "StandardDeviations", equityStandardDevs_.find(it->first)->second, "name",
                     it->first);
             }            
         }
@@ -1826,7 +1826,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     for (Size i = 0; i < yieldCurveNames().size(); ++i) {
         DLOG("Writing benchmark yield curves data");
         XMLNode* benchmarkCurveNode = XMLUtils::addChild(doc, benchmarkCurvesNode, "BenchmarkCurve");
-        XMLUtils::addChild(doc, benchmarkCurveNode, "Currency", yieldCurveCurrencies_[yieldCurveNames()[i]]);
+        XMLUtils::addChild(doc, benchmarkCurveNode, "Currency", yieldCurveCurrencies_.find(yieldCurveNames()[i])->second);
         XMLUtils::addChild(doc, benchmarkCurveNode, "Name", yieldCurveNames()[i]);
     }
 
@@ -1927,8 +1927,8 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         for (const auto& name : commodityVolNames()) {
             XMLNode* nameNode = doc.allocNode("Name");
             XMLUtils::addAttribute(doc, nameNode, "id", name);
-            XMLUtils::addGenericChildAsList(doc, nameNode, "Expiries", commodityVolExpiries_[name]);
-            XMLUtils::addGenericChildAsList(doc, nameNode, "Moneyness", commodityVolMoneyness_[name]);
+            XMLUtils::addGenericChildAsList(doc, nameNode, "Expiries", commodityVolExpiries_.find(name)->second);
+            XMLUtils::addGenericChildAsList(doc, nameNode, "Moneyness", commodityVolMoneyness_.find(name)->second);
             XMLUtils::appendNode(namesNode, nameNode);
         }
         for (auto it = commodityVolSmileDynamics_.begin(); it != commodityVolSmileDynamics_.end(); it++) {

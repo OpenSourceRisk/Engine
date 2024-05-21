@@ -1,0 +1,66 @@
+\subsubsection{Callable Swap}\label{ss:callable_swap}
+
+The \lstinline!CallableSwapData! node is the trade data container for the \emph{CallableSwap} trade type. A Callable Swap is a
+ swap that can be cancelled at predefined dates by one of the counterparties. A Callable Swap must have at least one leg, each leg described by a \lstinline!LegData! trade component sub-node as described in section
+\ref{ss:leg_data}.  
+
+There must be at least one full coupon period after the exercise date for European Callable Swaps, and after the last exercise date for Bermudan and American Callable Swaps. 
+
+The \lstinline!CallableSwapData! node also contains an \lstinline!OptionData! node which describes
+the exercise dates and specifies which party holds the call right, see \ref{ss:option_data}. An example structure of a
+\lstinline!CallableSwapData! node is shown in Listing \ref{lst:callableswap_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CallableSwapData>
+    <OptionData>
+      <LongShort>Short</LongShort>
+      <Style>Bermudan</Style>
+      <Settlement>Physical</Settlement>
+      <ExerciseDates>
+        <ExerciseDate>2031-10-01</ExerciseDate>
+        <ExerciseDate>2032-10-01</ExerciseDate>
+        <ExerciseDate>2033-10-01</ExerciseDate>
+      </ExerciseDates>
+      ...
+    </OptionData>
+  <LegData>
+	<LegType>Fixed</LegType>
+        <Payer>false</Payer>    
+        <Currency>USD</Currency>	
+	...
+  </LegData>
+  <LegData>
+	<LegType>Floating</LegType>
+        <Payer>true</Payer>     
+        <Currency>USD</Currency>	
+	...
+  </LegData>
+</CallableSwapData>
+\end{minted}
+\caption{Callable Swap data}
+\label{lst:callableswap_data}
+\end{listing}
+
+
+
+The meanings and allowable values of the elements in the \lstinline!CallableSwapData!  node follow below.
+
+\begin{itemize}
+
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. The exercise dates
+  specify the dates on which one of the counterparties may terminate the swap. The counterpart holding the call right is
+  specified by the {\tt LongShort} flag. The Settlement should be set to \emph{Physical} always. See also the OptionData
+  node outlined for a Swaption - see \ref{ss:swaption}, which is identical for a CallableSwap with the exception of the
+  requirement that Settlement must be \emph{Physical}. A callable swap can be marked as exercised as explained in
+  \ref{ss:swaption} using the \lstinline!ExerciseData! node within OptionData.
+
+\item LegData: This is a trade component sub-node described in section \ref{ss:leg_data} outlining each leg of the
+  underlying Swap. A Callable Swap must have at least one leg on the underlying Swap, but can have multiple legs,
+  i.e. multiple \lstinline!LegData! nodes.  The LegType elements must be of types \emph{Floating}, \emph{Fixed} or
+  \emph{Cashflow}. All legs must have the same \lstinline!Currency!.
+  
+  Note that the direction of the legs, determined by the \lstinline!Payer! tag, is like for a Swap, from the perspective of the party to the trade. I.e. unlike for a Swaption where the direction of the legs is from the perspective of the party that is long. 
+
+\end{itemize}

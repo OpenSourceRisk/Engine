@@ -24,7 +24,7 @@ namespace data {
 
 BondIndexBuilder::BondIndexBuilder(BondData securityData, const bool dirty, const bool relative,
                                    const Calendar& fixingCalendar, const bool conditionalOnSurvival,
-                                   const boost::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment,
+                                   const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment,
                                    const bool bondIssueDateFallback)
     : dirty_(dirty) {
 
@@ -36,7 +36,7 @@ BondIndexBuilder::BondIndexBuilder(BondData securityData, const bool dirty, cons
 
 BondIndexBuilder::BondIndexBuilder(const Bond& bond, const bool dirty, const bool relative,
                                    const Calendar& fixingCalendar, const bool conditionalOnSurvival, 
-                                   const boost::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment,
+                                   const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment,
                                    const bool bondIssueDateFallback)
     : bond_(bond), dirty_(dirty) {
     buildIndex(relative, fixingCalendar, conditionalOnSurvival, engineFactory, bidAskAdjustment, bondIssueDateFallback);
@@ -44,7 +44,7 @@ BondIndexBuilder::BondIndexBuilder(const Bond& bond, const bool dirty, const boo
 
 BondIndexBuilder::BondIndexBuilder(const std::string& securityId, const bool dirty, const bool relative,
                                    const Calendar& fixingCalendar, const bool conditionalOnSurvival,
-                                   const boost::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment,
+                                   const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment,
                                    const bool bondIssueDateFallback)
     : dirty_(dirty) {
     BondData bondData(securityId, 100.0);
@@ -55,12 +55,12 @@ BondIndexBuilder::BondIndexBuilder(const std::string& securityId, const bool dir
 }
 
 void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCalendar, const bool conditionalOnSurvival,
-                                  const boost::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment,
+                                  const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, Real bidAskAdjustment,
                                   const bool bondIssueDateFallback) {
 
     fixings_ = bond_.requiredFixings();
 
-    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond_.instrument()->qlInstrument());
+    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond_.instrument()->qlInstrument());
     QL_REQUIRE(qlBond, "buildBondIndex(): could not cast to QuantLib::Bond, this is unexpected");
 
     // get the curves
@@ -93,7 +93,7 @@ void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCal
                                                              engineFactory->configuration(MarketContext::pricing));
     }
 
-    Handle<Quote> spread(boost::make_shared<SimpleQuote>(0.0));
+    Handle<Quote> spread(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     try {
         spread =
             engineFactory->market()->securitySpread(securityId, engineFactory->configuration(MarketContext::pricing));
@@ -104,19 +104,19 @@ void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCal
         defaultCurve = Handle<DefaultProbabilityTermStructure>();
    
     // build and return the index
-    bondIndex_ = boost::make_shared<QuantExt::BondIndex>(securityId, dirty_, relative, fixingCalendar, qlBond,
+    bondIndex_ = QuantLib::ext::make_shared<QuantExt::BondIndex>(securityId, dirty_, relative, fixingCalendar, qlBond,
         discountCurve, defaultCurve, recovery, spread, incomeCurve, conditionalOnSurvival, parseDate(bondData.issueDate()), bondData.priceQuoteMethod(),
         bondData.priceQuoteBaseValue(), bondData.isInflationLinked(), bidAskAdjustment, bondIssueDateFallback);
 }
 
-boost::shared_ptr<QuantExt::BondIndex> BondIndexBuilder::bondIndex() const { return bondIndex_; }
+QuantLib::ext::shared_ptr<QuantExt::BondIndex> BondIndexBuilder::bondIndex() const { return bondIndex_; }
 
 void BondIndexBuilder::addRequiredFixings(RequiredFixings& requiredFixings, Leg leg) {
     requiredFixings.addData(fixings_.filteredFixingDates());
     if (dirty_) {
         QL_REQUIRE(leg.size() > 0, "BondIndexBuild: Leg is required if dirty flag set to true");
         RequiredFixings legFixings;
-        auto fixingGetter = boost::make_shared<FixingDateGetter>(legFixings);
+        auto fixingGetter = QuantLib::ext::make_shared<FixingDateGetter>(legFixings);
         fixingGetter->setRequireFixingStartDates(true);
         addToRequiredFixings(leg, fixingGetter);
 

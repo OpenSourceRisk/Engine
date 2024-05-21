@@ -35,7 +35,7 @@ InflationCashFlowPricer::InflationCashFlowPricer(const Handle<CPIVolatilitySurfa
         registerWith(vol_);
     if (yts_.empty()) {
         yts_ = Handle<YieldTermStructure>(
-            boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
+            QuantLib::ext::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
     } else {
         registerWith(yts_);
     }   
@@ -44,13 +44,13 @@ InflationCashFlowPricer::InflationCashFlowPricer(const Handle<CPIVolatilitySurfa
 BlackCPICashFlowPricer::BlackCPICashFlowPricer(const Handle<CPIVolatilitySurface>& vol,
                                                const Handle<YieldTermStructure>& yts, const bool useLastFixing)
     : InflationCashFlowPricer(vol, yts) {
-    engine_ = boost::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
+    engine_ = QuantLib::ext::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
 }
 
 BachelierCPICashFlowPricer::BachelierCPICashFlowPricer(const Handle<CPIVolatilitySurface>& vol,
                                                const Handle<YieldTermStructure>& yts, const bool useLastFixing)
     : InflationCashFlowPricer(vol, yts) {
-    engine_ = boost::make_shared<CPIBachelierCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
+    engine_ = QuantLib::ext::make_shared<CPIBachelierCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
 }
 
 
@@ -59,19 +59,19 @@ CappedFlooredCPICouponPricer::CappedFlooredCPICouponPricer(const Handle<CPIVolat
     : CPICouponPricer(vol, yts) {
     if (nominalTermStructure_.empty())
         nominalTermStructure_ = Handle<YieldTermStructure>(
-            boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
+            QuantLib::ext::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
 }
 
 BlackCPICouponPricer::BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& vol,
                                            const Handle<YieldTermStructure>& yts, const bool useLastFixing)
     : CappedFlooredCPICouponPricer(vol, yts){
-    engine_ = boost::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
+    engine_ = QuantLib::ext::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
 }
 
 BachelierCPICouponPricer::BachelierCPICouponPricer(const Handle<CPIVolatilitySurface>& vol,
                                            const Handle<YieldTermStructure>& yts, const bool useLastFixing)
     : CappedFlooredCPICouponPricer(vol, yts) {
-    engine_ = boost::make_shared<CPIBachelierCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
+    engine_ = QuantLib::ext::make_shared<CPIBachelierCapFloorEngine>(yieldCurve(), volatility(), useLastFixing);
 }
 
 } // namespace QuantExt

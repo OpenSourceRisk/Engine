@@ -66,16 +66,16 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(CPICapFloorTest)
 
 template <class T, class U, class I>
-std::vector<boost::shared_ptr<BootstrapHelper<T> > > makeHelpers(Datum iiData[], Size N, const boost::shared_ptr<I>& ii,
+std::vector<QuantLib::ext::shared_ptr<BootstrapHelper<T> > > makeHelpers(Datum iiData[], Size N, const QuantLib::ext::shared_ptr<I>& ii,
                                                                  const Period& observationLag, const Calendar& calendar,
                                                                  const BusinessDayConvention& bdc, const DayCounter& dc,
                                                                  Handle<YieldTermStructure> yts) {
 
-    std::vector<boost::shared_ptr<BootstrapHelper<T> > > instruments;
+    std::vector<QuantLib::ext::shared_ptr<BootstrapHelper<T> > > instruments;
     for (Size i = 0; i < N; i++) {
         Date maturity = iiData[i].date;
-        Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(iiData[i].rate / 100.0)));
-        boost::shared_ptr<BootstrapHelper<T> > anInstrument(
+        Handle<Quote> quote(QuantLib::ext::shared_ptr<Quote>(new SimpleQuote(iiData[i].rate / 100.0)));
+        QuantLib::ext::shared_ptr<BootstrapHelper<T> > anInstrument(
             new U(quote, observationLag, maturity, calendar, bdc, dc, ii, CPI::AsIndex, yts));
         instruments.push_back(anInstrument);
     }
@@ -106,7 +106,7 @@ struct CommonVars {
     DayCounter dcZCIIS, dcNominal;
     std::vector<Date> zciisD;
     std::vector<Rate> zciisR;
-    boost::shared_ptr<UKRPI> ii;
+    QuantLib::ext::shared_ptr<UKRPI> ii;
     RelinkableHandle<ZeroInflationIndex> hii;
     Size zciisDataLength;
 
@@ -117,10 +117,10 @@ struct CommonVars {
     vector<Rate> cStrikesUK;
     vector<Rate> fStrikesUK;
     vector<Period> cfMaturitiesUK;
-    boost::shared_ptr<Matrix> cPriceUK;
-    boost::shared_ptr<Matrix> fPriceUK;
+    QuantLib::ext::shared_ptr<Matrix> cPriceUK;
+    QuantLib::ext::shared_ptr<Matrix> fPriceUK;
 
-    boost::shared_ptr<CPICapFloorTermPriceSurface> cpiCFsurfUK;
+    QuantLib::ext::shared_ptr<CPICapFloorTermPriceSurface> cpiCFsurfUK;
 
     // cleanup
 
@@ -161,7 +161,7 @@ struct CommonVars {
                            -999 };
 
         // link from cpi index to cpi TS
-        ii = boost::make_shared<UKRPI>(hcpi);
+        ii = QuantLib::ext::make_shared<UKRPI>(hcpi);
         for (Size i = 0; i < rpiSchedule.size(); i++) {
             ii->addFixing(rpiSchedule[i], fixData[i], true); // force overwrite in case multiple use
         };
@@ -207,8 +207,8 @@ struct CommonVars {
             nomD.push_back(nominalData[i].date);
             nomR.push_back(nominalData[i].rate / 100.0);
         }
-        boost::shared_ptr<YieldTermStructure> nominalTS =
-            boost::make_shared<InterpolatedZeroCurve<Linear> >(nomD, nomR, dcNominal);
+        QuantLib::ext::shared_ptr<YieldTermStructure> nominalTS =
+            QuantLib::ext::make_shared<InterpolatedZeroCurve<Linear> >(nomD, nomR, dcNominal);
 
         nominalUK.linkTo(nominalTS);
 
@@ -232,7 +232,7 @@ struct CommonVars {
         }
 
         // now build the helpers ...
-        std::vector<boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > > helpers =
+        std::vector<QuantLib::ext::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > > helpers =
             makeHelpers<ZeroInflationTermStructure, ZeroCouponInflationSwapHelper, ZeroInflationIndex>(
                 zciisData, zciisDataLength, ii, observationLag, calendar, convention, dcZCIIS,
                 Handle<YieldTermStructure>(nominalTS));
@@ -240,7 +240,7 @@ struct CommonVars {
         // we can use historical or first ZCIIS for this
         // we know historical is WAY off market-implied, so use market implied flat.
         baseZeroRate = zciisData[0].rate / 100.0;
-        boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(
+        QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(
             new PiecewiseZeroInflationCurve<Linear>(evaluationDate, calendar, dcZCIIS, observationLag, ii->frequency(),
                                                     baseZeroRate, helpers));
         pCPIts->recalculate();
@@ -275,8 +275,8 @@ struct CommonVars {
             fStrikesUK.push_back(fStrike[i]);
         for (Size i = 0; i < ncfMaturities; i++)
             cfMaturitiesUK.push_back(cfMat[i]);
-        cPriceUK = boost::make_shared<Matrix>(ncStrikes, ncfMaturities);
-        fPriceUK = boost::make_shared<Matrix>(nfStrikes, ncfMaturities);
+        cPriceUK = QuantLib::ext::make_shared<Matrix>(ncStrikes, ncfMaturities);
+        fPriceUK = QuantLib::ext::make_shared<Matrix>(nfStrikes, ncfMaturities);
         for (Size i = 0; i < ncStrikes; i++) {
             for (Size j = 0; j < ncfMaturities; j++) {
                 (*cPriceUK)[i][j] = cPrice[j][i] / 10000.0;
@@ -289,7 +289,7 @@ struct CommonVars {
         }
 
         Real nominal = 1.0;
-        boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<Bilinear> > intplCpiCFsurfUK(
+        QuantLib::ext::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<Bilinear> > intplCpiCFsurfUK(
             new InterpolatedCPICapFloorTermPriceSurface<Bilinear>(
                 nominal, baseZeroRate, observationLag, calendar, convention, dcZCIIS, ii, CPI::AsIndex, nominalUK, cStrikesUK,
                 fStrikesUK, cfMaturitiesUK, *(cPriceUK), *(fPriceUK)));
@@ -333,8 +333,8 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
     Handle<YieldTermStructure> nominalTS = common.nominalUK;
 
     // this engine is used to imply the volatility that reproduces a quoted price
-    boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> blackEngine =
-        boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(nominalTS,
+    QuantLib::ext::shared_ptr<QuantExt::CPIBlackCapFloorEngine> blackEngine =
+        QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(nominalTS,
                                                              QuantLib::Handle<QuantLib::CPIVolatilitySurface>());
 
     // wrap the pointer into a handle
@@ -342,8 +342,8 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
 
     // initialize the vol surface, taking the price surface as an input and running the vol imply calculations
     QuantExt::PriceQuotePreference type = QuantExt::CapFloor;
-    boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
-        boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
+    QuantLib::ext::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
+        QuantLib::ext::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
                                                                                         common.ii, blackEngine);
 
     // attach the implied vol surface to the engine
@@ -360,7 +360,7 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
     CPI::InterpolationType observationInterpolation = CPI::AsIndex;
 
     Handle<CPICapFloorTermPriceSurface> cpiCFsurfUKh(common.cpiCFsurfUK);
-    boost::shared_ptr<PricingEngine> engine(new InterpolatingCPICapFloorEngine(cpiCFsurfUKh));
+    QuantLib::ext::shared_ptr<PricingEngine> engine(new InterpolatingCPICapFloorEngine(cpiCFsurfUKh));
 
     for (Size i = 0; i < common.cStrikesUK.size(); i++) {
         Rate strike = common.cStrikesUK[i];
@@ -433,8 +433,8 @@ BOOST_AUTO_TEST_CASE(testPutCallParity) {
     Handle<YieldTermStructure> nominalTS = common.nominalUK;
 
     // this engine is used to imply the volatility that reproduces a quoted price
-    boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> blackEngine =
-        boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(nominalTS,
+    QuantLib::ext::shared_ptr<QuantExt::CPIBlackCapFloorEngine> blackEngine =
+        QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(nominalTS,
                                                              QuantLib::Handle<QuantLib::CPIVolatilitySurface>());
 
     // wrap the pointer into a handle
@@ -442,8 +442,8 @@ BOOST_AUTO_TEST_CASE(testPutCallParity) {
 
     // initialize the vol surface, taking the price surface as an input and running the vol imply calculations
     QuantExt::PriceQuotePreference type = QuantExt::CapFloor;
-    boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
-        boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
+    QuantLib::ext::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
+        QuantLib::ext::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
                                                                                         common.ii, blackEngine);
 
     // attach the implied vol surface to the engine
@@ -513,8 +513,8 @@ BOOST_AUTO_TEST_CASE(testInterpolatedVolatilitySurface) {
     Handle<YieldTermStructure> nominalTS = common.nominalUK;
 
     // this engine is used to imply the volatility that reproduces a quoted price
-    boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> blackEngine =
-        boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(nominalTS,
+    QuantLib::ext::shared_ptr<QuantExt::CPIBlackCapFloorEngine> blackEngine =
+        QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(nominalTS,
                                                              QuantLib::Handle<QuantLib::CPIVolatilitySurface>());
 
     // wrap the pointer into a handle
@@ -522,8 +522,8 @@ BOOST_AUTO_TEST_CASE(testInterpolatedVolatilitySurface) {
 
     // initialize the vol surface, taking the price surface as an input and running the vol imply calculations
     QuantExt::PriceQuotePreference type = QuantExt::CapFloor;
-    boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
-        boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
+    QuantLib::ext::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
+        QuantLib::ext::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
                                                                                         common.ii, blackEngine);
 
     std::vector<Period> optionTenors = cpiVolSurface->maturities();
@@ -533,12 +533,12 @@ BOOST_AUTO_TEST_CASE(testInterpolatedVolatilitySurface) {
     for (Size i = 0; i < optionTenors.size(); ++i) {
         for (Size j = 0; j < strikes.size(); ++j) {
             Real vol = cpiVolSurface->volatility(optionTenors[i], strikes[j]);
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+            QuantLib::ext::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
             quotes[i][j] = Handle<Quote>(q);
         }
     }
-    boost::shared_ptr<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear> > interpolatedCpiVol =
-        boost::make_shared<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear> >(
+    QuantLib::ext::shared_ptr<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear> > interpolatedCpiVol =
+        QuantLib::ext::make_shared<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear> >(
             optionTenors, strikes, quotes, common.hii.currentLink(), cpiVolSurface->settlementDays(),
             cpiVolSurface->calendar(), cpiVolSurface->businessDayConvention(), cpiVolSurface->dayCounter(),
             cpiVolSurface->observationLag());
@@ -562,26 +562,26 @@ BOOST_AUTO_TEST_CASE(testSimpleCapFloor) {
     BusinessDayConvention bdc = Unadjusted;
     DayCounter dc = ActualActual(ActualActual::ISDA);
     Period observationLag = 3 * Months; // EUHICPXT Caps/Swaps
-    Handle<YieldTermStructure> discountCurve(boost::make_shared<FlatForward>(common.evaluationDate, rate, dc));
+    Handle<YieldTermStructure> discountCurve(QuantLib::ext::make_shared<FlatForward>(common.evaluationDate, rate, dc));
     RelinkableHandle<ZeroInflationTermStructure> inflationCurve;
-    Handle<ZeroInflationIndex> index(boost::make_shared<EUHICPXT>(inflationCurve));
+    Handle<ZeroInflationIndex> index(QuantLib::ext::make_shared<EUHICPXT>(inflationCurve));
     // Make sure we use the correct index publication frequency and interpolation, consistent with the index we want to
     // project. We therefore create the index first, then the term structure, then relink the curve. Otherwise time
     // calculations will be inconsistent, and ATM strikes do not generate equal put/call or cap/floor prices.
-    boost::shared_ptr<ZeroInflationTermStructure> inflationCurvePtr =
-        boost::make_shared<FlatZeroInflationTermStructure>(common.evaluationDate, index->fixingCalendar(), dc,
+    QuantLib::ext::shared_ptr<ZeroInflationTermStructure> inflationCurvePtr =
+        QuantLib::ext::make_shared<FlatZeroInflationTermStructure>(common.evaluationDate, index->fixingCalendar(), dc,
                                                            inflationRate, observationLag, index->frequency(),
                                                            false, discountCurve);
     inflationCurve.linkTo(inflationCurvePtr);
     // Make sure we use the same observation lag as in the inflation curve, and same index publication frequency and
     // interpolation. The vol surface observation lag is used in the engine for lag difference calculations compared to
     // the instrument's lag.
-    Handle<CPIVolatilitySurface> inflationVol(boost::make_shared<ConstantCPIVolatility>(
+    Handle<CPIVolatilitySurface> inflationVol(QuantLib::ext::make_shared<ConstantCPIVolatility>(
         inflationBlackVol, 0, inflationCurve->calendar(), bdc, dc, inflationCurve->observationLag(),
         inflationCurve->frequency(), false));
 
-    boost::shared_ptr<PricingEngine> engine =
-        boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, inflationVol);
+    QuantLib::ext::shared_ptr<PricingEngine> engine =
+        QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, inflationVol);
 
     Real nominal = 10000.0;
     Date start = common.evaluationDate;

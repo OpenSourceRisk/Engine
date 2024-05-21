@@ -21,7 +21,7 @@
 namespace QuantExt {
 
 IborFraCoupon::IborFraCoupon(const QuantLib::Date& startDate, const QuantLib::Date& endDate, QuantLib::Real nominal,
-                             const boost::shared_ptr<QuantLib::IborIndex>& index, const double strikeRate)
+                             const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index, const double strikeRate)
     : QuantLib::IborCoupon(startDate, nominal, startDate,
                            index->fixingCalendar().adjust(endDate, index->businessDayConvention()),
                            index->fixingDate(startDate), index, 1.0, -strikeRate) {}

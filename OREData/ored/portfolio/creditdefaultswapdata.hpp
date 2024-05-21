@@ -85,7 +85,7 @@ public:
     //! \name XMLSerializable interface
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -163,7 +163,7 @@ public:
 			  const bool rebatesAccrual = true);
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     const string& issuerId() const { return issuerId_; }
     const string& creditCurveId() const;

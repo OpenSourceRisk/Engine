@@ -42,8 +42,8 @@ namespace data {
 static DefaultProbKey dummyDefaultProbKey() {
     Currency currency = QuantLib::EURCurrency();
     Seniority seniority = NoSeniority;
-    boost::shared_ptr<DefaultType> defaultType(new DefaultType());
-    vector<boost::shared_ptr<DefaultType>> defaultTypes(1, defaultType);
+    QuantLib::ext::shared_ptr<DefaultType> defaultType(new DefaultType());
+    vector<QuantLib::ext::shared_ptr<DefaultType>> defaultTypes(1, defaultType);
     DefaultProbKey key(defaultTypes, currency, seniority);
     return key;
 }
@@ -53,22 +53,22 @@ static Issuer dummyIssuer(Handle<DefaultProbabilityTermStructure> dts) {
     return Issuer(vector<Issuer::key_curve_pair>(1, curve));
 }
 
-boost::shared_ptr<QuantExt::BondBasket> BondBasket::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+QuantLib::ext::shared_ptr<QuantExt::BondBasket> BondBasket::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                                           const QuantLib::Currency& baseCcy,
                                                           const string& reinvestmentEndDate) {
     DLOG("BondBasket::build() called");
 
-    boost::shared_ptr<Pool> pool(new Pool());
+    QuantLib::ext::shared_ptr<Pool> pool(new Pool());
     vector<Issuer> issuerPair;
     set<Currency> currencies_unique;
 
-    map<string,  boost::shared_ptr<QuantLib::Bond>> qlBonds;
+    map<string,  QuantLib::ext::shared_ptr<QuantLib::Bond>> qlBonds;
     map<string, double> recoveries;
     map<string, double> multipliers;
     map<string, Handle<YieldTermStructure>> yieldTermStructures;
     map<string, Currency> currencies;
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
     for (size_t i = 0; i < bonds_.size(); i++) {
         DLOG("BondBasket::build() -- processing issuer number " << i);
@@ -90,11 +90,11 @@ boost::shared_ptr<QuantExt::BondBasket> BondBasket::build(const boost::shared_pt
 
             Real rr = recovery.empty() ? 0.0 : recovery->value();
             auto m = [rr](Real x) { return x / (1.0 - rr); };
-            Handle<Quote> scaledSpread(boost::make_shared<DerivedQuote<decltype(m)>>(
+            Handle<Quote> scaledSpread(QuantLib::ext::make_shared<DerivedQuote<decltype(m)>>(
                 market->securitySpread(securityId, Market::defaultConfiguration), m));
 
             defaultTS = Handle<DefaultProbabilityTermStructure>(
-                    boost::make_shared<QuantExt::HazardSpreadedDefaultTermStructure>(defaultOriginal, scaledSpread));
+                    QuantLib::ext::make_shared<QuantExt::HazardSpreadedDefaultTermStructure>(defaultOriginal, scaledSpread));
 
             bonds_[i]->instrument()->qlInstrument()->registerWith(scaledSpread);
             recoveries[bonds_[i]->id()] = rr;
@@ -110,7 +110,7 @@ boost::shared_ptr<QuantExt::BondBasket> BondBasket::build(const boost::shared_pt
         currencies_unique.insert(parseCurrency(bonds_[i]->bondData().currency()));
         requiredFixings_.addData(bonds_[i]->requiredFixings());
 
-        boost::shared_ptr<QuantLib::Bond> qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bonds_[i]->instrument()->qlInstrument());
+        QuantLib::ext::shared_ptr<QuantLib::Bond> qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bonds_[i]->instrument()->qlInstrument());
         QL_REQUIRE(qlBond, "ql bond expected " << bonds_[i]->id());
         qlBonds[bonds_[i]->id()]= qlBond;
 
@@ -138,7 +138,7 @@ boost::shared_ptr<QuantExt::BondBasket> BondBasket::build(const boost::shared_pt
 
             string name = source + target + "Index";
 
-            boost::shared_ptr<QuantExt::FxIndex> fxi = boost::make_shared<QuantExt::FxIndex>(
+            QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxi = QuantLib::ext::make_shared<QuantExt::FxIndex>(
                 name, fixingDays, parseCurrency(source), baseCcy, cal, spot, sorTS, tarTS);
 
             fxIndexMap_[source] = fxi;
@@ -153,7 +153,7 @@ boost::shared_ptr<QuantExt::BondBasket> BondBasket::build(const boost::shared_pt
 
     setReinvestmentScalar();
 
-    boost::shared_ptr<QuantExt::BondBasket> basket(
+    QuantLib::ext::shared_ptr<QuantExt::BondBasket> basket(
         new QuantExt::BondBasket(qlBonds, recoveries, multipliers, yieldTermStructures, currencies,
                                     pool, baseCcy, fxIndexMap_, reinvestment_, reinvestmentScalar_, flowType_));
 
@@ -170,10 +170,10 @@ bool BondBasket::isFeeFlow(const ext::shared_ptr<QuantLib::CashFlow>& cf, const 
         bool result = false;
         for(auto& bond : bonds_){
             if(bond->id() == name){
-                auto oreBondData = boost::make_shared<ore::data::BondData>(bond->bondData());
+                auto oreBondData = QuantLib::ext::make_shared<ore::data::BondData>(bond->bondData());
                 if(oreBondData){
                     for (auto legData : oreBondData->coupons()){
-                        auto cfData = boost::dynamic_pointer_cast<ore::data::CashflowData>(legData.concreteLegData());
+                        auto cfData = QuantLib::ext::dynamic_pointer_cast<ore::data::CashflowData>(legData.concreteLegData());
                         if(cfData){
                             auto amounts = cfData->amounts();
                             auto dates = cfData->dates();
@@ -209,8 +209,8 @@ void BondBasket::setReinvestmentScalar(){
 
         size_t jmax = 0;    //index for first coupon date after reinvestment period end date
         for (size_t j = 0; j < leg.size(); j++) {
-            boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
-                boost::dynamic_pointer_cast<QuantLib::Coupon>(leg[j]);
+            QuantLib::ext::shared_ptr<QuantLib::Coupon> ptrCoupon =
+                QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(leg[j]);
             if(ptrCoupon){
                 if(ptrCoupon->date() > reinvestment_){
                     jmax = j;
@@ -226,8 +226,8 @@ void BondBasket::setReinvestmentScalar(){
 
         for (size_t j = 0; j < leg.size(); j++) {
 
-            boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
-                boost::dynamic_pointer_cast<QuantLib::Coupon>(leg[j]);
+            QuantLib::ext::shared_ptr<QuantLib::Coupon> ptrCoupon =
+                QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(leg[j]);
             flowType[j] = "xnl"; //notional
             if(isFeeFlow(leg[j], name))
                 flowType[j] = "fee"; //fees
@@ -266,14 +266,14 @@ void BondBasket::fromXML(XMLNode* node) {
     bonds_.clear();
     for (XMLNode* child = XMLUtils::getChildNode(node, "Trade"); child; child = XMLUtils::getNextSibling(child)) {
         string id = XMLUtils::getAttribute(child, "id");
-        auto bonddata = boost::make_shared<ore::data::Bond>();
+        auto bonddata = QuantLib::ext::make_shared<ore::data::Bond>();
         bonddata->fromXML(child);
         bonddata->id() = id;
         bonds_.push_back(bonddata);
     }
 }
 
-XMLNode* BondBasket::toXML(ore::data::XMLDocument& doc) {
+XMLNode* BondBasket::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("BondBasketData");
     for (Size i = 0; i < bonds_.size(); i++) {
         XMLUtils::appendNode(node, bonds_[i]->toXML(doc));
@@ -281,7 +281,7 @@ XMLNode* BondBasket::toXML(ore::data::XMLDocument& doc) {
     return node;
 }
 
-std::map<AssetClass, std::set<std::string>> BondBasket::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+std::map<AssetClass, std::set<std::string>> BondBasket::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     result[AssetClass::BOND] = {};
     for ( auto b : bonds_)

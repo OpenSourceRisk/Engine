@@ -358,7 +358,7 @@ void CappedFlooredOvernightIndexedCoupon::performCalculations() const {
     if (cap_ != Null<Real>())
         capletRate = (nakedOption_ && floor_ == Null<Real>() ? -1.0 : 1.0) * pricer()->capletRate(effectiveCap());
     rate_ = swapletRate + floorletRate - capletRate;
-    auto p = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCouponPricer>(pricer());
+    auto p = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCouponPricer>(pricer());
     QL_REQUIRE(p, "CappedFlooredOvernightIndexedCoupon::performCalculations(): internal error, could not cast to "
                   "CappedFlooredOvernightIndexedCouponPricer");
     effectiveCapletVolatility_ = p->effectiveCapletVolatility();
@@ -597,13 +597,13 @@ OvernightLeg& OvernightLeg::withPaymentDates(const std::vector<Date>& paymentDat
 }
 
 OvernightLeg&
-OvernightLeg::withOvernightIndexedCouponPricer(const boost::shared_ptr<OvernightIndexedCouponPricer>& couponPricer) {
+OvernightLeg::withOvernightIndexedCouponPricer(const QuantLib::ext::shared_ptr<OvernightIndexedCouponPricer>& couponPricer) {
     couponPricer_ = couponPricer;
     return *this;
 }
 
 OvernightLeg& OvernightLeg::withCapFlooredOvernightIndexedCouponPricer(
-    const boost::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer) {
+    const QuantLib::ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& couponPricer) {
     capFlooredCouponPricer_ = couponPricer;
     return *this;
 }
@@ -690,7 +690,7 @@ OvernightLeg::operator Leg() const {
 
         if (close_enough(detail::get(gearings_, i, 1.0), 0.0)) {
             // fixed coupon
-            cashflows.push_back(boost::make_shared<FixedRateCoupon>(
+            cashflows.push_back(QuantLib::ext::make_shared<FixedRateCoupon>(
                 paymentDate, detail::get(notionals_, i, 1.0), detail::effectiveFixedRate(spreads_, caps_, floors_, i),
                 paymentDayCounter_, start, end, refStart, refEnd));
         } else {

@@ -73,7 +73,7 @@ void CreditLinkedSwap::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CreditLinkedSwap::toXML(ore::data::XMLDocument& doc) {
+XMLNode* CreditLinkedSwap::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* n = Trade::toXML(doc);
     XMLNode* d = doc.allocNode("CreditLinkedSwapData");
     XMLUtils::appendNode(n, d);
@@ -112,9 +112,16 @@ XMLNode* CreditLinkedSwap::toXML(ore::data::XMLDocument& doc) {
     return n;
 }
 
-void CreditLinkedSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CreditLinkedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("Building credit linked swap " << id());
+
+    // ISDA taxonomy
+
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Exotic");
+    additionalData_["isdaSubProduct"] = string("");  
+    additionalData_["isdaTransaction"] = string("");  
 
     // checks, set npv currency (= single currency allowed in all legs)
 
@@ -128,7 +135,7 @@ void CreditLinkedSwap::build(const boost::shared_ptr<EngineFactory>& engineFacto
 
     // get engine builder
 
-    auto builder = boost::dynamic_pointer_cast<CreditLinkedSwapEngineBuilder>(engineFactory->builder(tradeType()));
+    auto builder = QuantLib::ext::dynamic_pointer_cast<CreditLinkedSwapEngineBuilder>(engineFactory->builder(tradeType()));
     QL_REQUIRE(builder, "CreditLinkedSwap: wrong builder, expected CreditLinkedSwapEngineBuilder");
     auto configuration = builder->configuration(MarketContext::pricing);
 
@@ -163,12 +170,12 @@ void CreditLinkedSwap::build(const boost::shared_ptr<EngineFactory>& engineFacto
     // build ql instrument
 
     auto qlInstr =
-        boost::make_shared<QuantExt::CreditLinkedSwap>(legs_, legPayers_, legTypes, settlesAccrual_, fixedRecoveryRate_,
+        QuantLib::ext::make_shared<QuantExt::CreditLinkedSwap>(legs_, legPayers_, legTypes, settlesAccrual_, fixedRecoveryRate_,
                                                        defaultPaymentTime_, parseCurrency(npvCurrency_));
 
     // wrap instrument
 
-    instrument_ = boost::make_shared<VanillaInstrument>(qlInstr);
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qlInstr);
 
     // set trade members
 
@@ -180,13 +187,6 @@ void CreditLinkedSwap::build(const boost::shared_ptr<EngineFactory>& engineFacto
 
     qlInstr->setPricingEngine(builder->engine(npvCurrency_, creditCurveId_));
     setSensitivityTemplate(*builder);
-
-    // ISDA taxonomy
-
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("Exotic");
-    additionalData_["isdaSubProduct"] = string("");  
-    additionalData_["isdaTransaction"] = string("");  
 
     // log
 

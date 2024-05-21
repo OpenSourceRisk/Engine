@@ -17,11 +17,11 @@
 */
 
 #include <algorithm>
-#include <qle/pricingengines/binomialconvertibleengine.hpp>
-#include <qle/pricingengines/intrinsicascotengine.hpp>
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <qle/pricingengines/binomialconvertibleengine.hpp>
+#include <qle/pricingengines/intrinsicascotengine.hpp>
 
 namespace QuantExt {
 
@@ -38,31 +38,42 @@ void IntrinsicAscotEngine::calculate() const {
     Real bondPrice = arguments_.bondQuantity * bond.NPV();
 
     Date referenceDate = discountCurve_->referenceDate();
+    Date settlementDate = bond.calendar().advance(referenceDate, bond.settlementDays(), QuantLib::Days);
 
-    Leg notional;
-    auto coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(bond.cashflows()[0]);
-    QL_REQUIRE(coupon, "expected non-coupon legs");
-    double initFlowAmt = coupon->nominal();
-    Date initDate = coupon->accrualStartDate();
-    initDate = bond.calendar().adjust(initDate, Following);
-    if (initFlowAmt != 0)
-        notional.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(initFlowAmt, initDate)));
+    Real currentNotional = Null<Real>();
+    for (auto const& c : bond.cashflows()) {
+        if (auto coupon = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(c)) {
+            currentNotional = coupon->nominal();
+            if (c->date() > referenceDate)
+                break;
+        }
+    }
 
-    Real upfrontPayment = CashFlows::npv(notional, **discountCurve_, false, referenceDate, referenceDate);
+    QL_REQUIRE(currentNotional != Null<Real>(), "IntrinsicAscotEngine::calculate(): could not determine current "
+                                                "notional, underlying bond must have at least one coupon");
+
+    Leg upfrontLeg;
+    upfrontLeg.push_back(QuantLib::ext::make_shared<SimpleCashFlow>(currentNotional, settlementDate));
+    Real upfrontLegNpv = CashFlows::npv(upfrontLeg, **discountCurve_, false, referenceDate, referenceDate);
 
     // includes redemption flows
-    Real assetLeg = CashFlows::npv(bond.cashflows(), **discountCurve_, false, referenceDate, referenceDate);
+    Real assetLegNpv = CashFlows::npv(bond.cashflows(), **discountCurve_, false, referenceDate, referenceDate);
 
-    Real redemptionLeg = CashFlows::npv(bond.redemptions(), **discountCurve_, false, referenceDate, referenceDate);
+    Real redemptionLegNpv = CashFlows::npv(bond.redemptions(), **discountCurve_, false, referenceDate, referenceDate);
 
     // multiplied by bondNotional already
-    Real fundingLeg = CashFlows::npv(arguments_.fundingLeg, **discountCurve_, true, referenceDate, referenceDate);
+    Real fundingLegNpv = CashFlows::npv(arguments_.fundingLeg, **discountCurve_, true, referenceDate, referenceDate);
 
-    Real X = arguments_.bondQuantity * (upfrontPayment + assetLeg - redemptionLeg) - fundingLeg;
+    Real strike = arguments_.bondQuantity * (upfrontLegNpv + assetLegNpv - redemptionLegNpv) - fundingLegNpv;
 
-    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(arguments_.callPut, X));
-
-    results_.value = (*payoff)(bondPrice);
+    results_.value = PlainVanillaPayoff(arguments_.callPut, strike)(bondPrice);
+    results_.additionalResults["bondPrice"] = bondPrice;
+    results_.additionalResults["strike"] = strike;
+    results_.additionalResults["fundingLegNpv"] = fundingLegNpv;
+    results_.additionalResults["redemptionLegNpv"] = redemptionLegNpv * arguments_.bondQuantity;
+    results_.additionalResults["assetLegNpv"] = assetLegNpv * arguments_.bondQuantity;
+    results_.additionalResults["upfrontLegNpv"] = upfrontLegNpv * arguments_.bondQuantity;
+    results_.additionalResults["bondQuantity"] = arguments_.bondQuantity;
 }
 
 } // namespace QuantExt

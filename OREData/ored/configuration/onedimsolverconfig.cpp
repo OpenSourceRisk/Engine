@@ -105,7 +105,7 @@ void OneDimSolverConfig::fromXML(XMLNode* node) {
     empty_ = false;
 }
 
-XMLNode* OneDimSolverConfig::toXML(XMLDocument& doc) {
+XMLNode* OneDimSolverConfig::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("OneDimSolverConfig");
 

@@ -99,6 +99,7 @@ indexes/offpeakpowerindex.cpp
 indexes/region.cpp
 instruments/ascot.cpp
 instruments/averageois.cpp
+instruments/balanceguaranteedswap.cpp
 instruments/bondbasket.cpp
 instruments/bondoption.cpp
 instruments/bondrepo.cpp
@@ -122,9 +123,9 @@ instruments/crossccyfixfloatswap.cpp
 instruments/crossccyswap.cpp
 instruments/currencyswap.cpp
 instruments/deposit.cpp
-instruments/doubleoibasisswap.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
+instruments/flexiswap.cpp
 instruments/forwardbond.cpp
 instruments/fxforward.cpp
 instruments/genericswaption.cpp
@@ -136,8 +137,9 @@ instruments/makecds.cpp
 instruments/makeoiscapfloor.cpp
 instruments/multiccycompositeinstrument.cpp
 instruments/multilegoption.cpp
-instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
+instruments/outperformanceoption.cpp
+instruments/pairwisevarianceswap.cpp
 instruments/payment.cpp
 instruments/rebatedexercise.cpp
 instruments/riskparticipationagreement.cpp
@@ -161,6 +163,7 @@ math/randomvariable.cpp
 math/randomvariable_io.cpp
 math/randomvariable_ops.cpp
 math/randomvariablelsmbasissystem.cpp
+math/stoplightbounds.cpp
 methods/brownianbridgepathinterpolator.cpp
 methods/fdmblackscholesmesher.cpp
 methods/fdmblackscholesop.cpp
@@ -206,6 +209,7 @@ models/infdkvectorised.cpp
 models/infjyparameterization.cpp
 models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
+models/kienitzlawsonswaynesabrpdedensity.cpp
 models/lgm.cpp
 models/lgmcalibrationinfo.cpp
 models/lgmconvolutionsolver2.cpp
@@ -238,11 +242,13 @@ pricingengines/analyticdkcpicapfloorengine.cpp
 pricingengines/analyticdoublebarrierbinaryengine.cpp
 pricingengines/analyticdoublebarrierengine.cpp
 pricingengines/analyticeuropeanengine.cpp
+pricingengines/analyticeuropeanenginedeltagamma.cpp
 pricingengines/analyticeuropeanforwardengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
 pricingengines/analyticjyyoycapfloorengine.cpp
 pricingengines/analyticlgmcdsoptionengine.cpp
 pricingengines/analyticlgmswaptionengine.cpp
+pricingengines/analyticoutperformanceoptionengine.cpp
 pricingengines/analyticxassetlgmeqoptionengine.cpp
 pricingengines/baroneadesiwhaleyengine.cpp
 pricingengines/binomialconvertibleengine.cpp
@@ -250,6 +256,7 @@ pricingengines/blackbondoptionengine.cpp
 pricingengines/blackcdsoptionengine.cpp
 pricingengines/blackindexcdsoptionengine.cpp
 pricingengines/blackmultilegoptionengine.cpp
+pricingengines/blackswaptionenginedeltagamma.cpp
 pricingengines/cboengine.cpp
 pricingengines/cbomcengine.cpp
 pricingengines/commodityapoengine.cpp
@@ -266,11 +273,14 @@ pricingengines/discountingbondtrsengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
 pricingengines/discountingcreditlinkedswapengine.cpp
 pricingengines/discountingcurrencyswapengine.cpp
+pricingengines/discountingcurrencyswapenginedeltagamma.cpp
 pricingengines/discountingequityforwardengine.cpp
 pricingengines/discountingforwardbondengine.cpp
 pricingengines/discountingfxforwardengine.cpp
+pricingengines/discountingfxforwardenginedeltagamma.cpp
 pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingriskybondenginemultistate.cpp
+pricingengines/discountingswapenginedeltagamma.cpp
 pricingengines/discountingswapenginemulticurve.cpp
 pricingengines/discretizedconvertible.cpp
 pricingengines/fdconvertiblebondevents.cpp
@@ -291,8 +301,11 @@ pricingengines/midpointcdoengine.cpp
 pricingengines/midpointcdsenginemultistate.cpp
 pricingengines/midpointindexcdsengine.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
+pricingengines/numericlgmbgsflexiswapengine.cpp
+pricingengines/numericlgmflexiswapengine.cpp
 pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
+pricingengines/pairwisevarianceswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
 pricingengines/varianceswapgeneralreplicationengine.cpp
 pricingengines/volatilityfromvarianceswapengine.cpp
@@ -335,7 +348,6 @@ termstructures/crosscurrencypricetermstructure.cpp
 termstructures/datedstrippedoptionlet.cpp
 termstructures/datedstrippedoptionletadapter.cpp
 termstructures/discountratiomodifiedcurve.cpp
-termstructures/doubleoibasisswaphelper.cpp
 termstructures/dynamiccpivolatilitystructure.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
@@ -353,7 +365,6 @@ termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
 termstructures/inflation/constantcpivolatility.cpp
 termstructures/inflation/cpivolatilitystructure.cpp
-termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
 termstructures/oiscapfloorhelper.cpp
 termstructures/oisratehelper.cpp
@@ -361,10 +372,13 @@ termstructures/optionletstripper.cpp
 termstructures/optionletstripper1.cpp
 termstructures/optionletstripper2.cpp
 termstructures/overnightfallbackcurve.cpp
+termstructures/parametricvolatility.cpp
+termstructures/parametricvolatilitysmilesection.cpp
 termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
 termstructures/proxyoptionletvolatility.cpp
 termstructures/proxyswaptionvolatility.cpp
+termstructures/sabrparametricvolatility.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
 termstructures/spreadedcorrelationcurve.cpp
@@ -382,6 +396,7 @@ termstructures/spreadedyoyvolsurface.cpp
 termstructures/strippedoptionletadapter2.cpp
 termstructures/strippedyoyinflationoptionletvol.cpp
 termstructures/subperiodsswaphelper.cpp
+termstructures/swaptionsabrcube.cpp
 termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolconstantspread.cpp
 termstructures/swaptionvolcube2.cpp
@@ -560,6 +575,7 @@ indexes/region.hpp
 indexes/secpi.hpp
 instruments/ascot.hpp
 instruments/averageois.hpp
+instruments/balanceguaranteedswap.hpp
 instruments/bondbasket.hpp
 instruments/bondoption.hpp
 instruments/bondrepo.hpp
@@ -583,9 +599,9 @@ instruments/crossccyfixfloatswap.hpp
 instruments/crossccyswap.hpp
 instruments/currencyswap.hpp
 instruments/deposit.hpp
-instruments/doubleoibasisswap.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
+instruments/flexiswap.hpp
 instruments/forwardbond.hpp
 instruments/fxforward.hpp
 instruments/genericswaption.hpp
@@ -598,8 +614,9 @@ instruments/makeoiscapfloor.hpp
 instruments/multiccycompositeinstrument.hpp
 instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
-instruments/oibasisswap.hpp
 instruments/oiccbasisswap.hpp
+instruments/outperformanceoption.hpp
+instruments/pairwisevarianceswap.hpp
 instruments/payment.hpp
 instruments/rebatedexercise.hpp
 instruments/riskparticipationagreement.hpp
@@ -637,6 +654,7 @@ math/randomvariable_opcodes.hpp
 math/randomvariable_ops.hpp
 math/randomvariablelsmbasissystem.hpp
 math/stabilisedglls.hpp
+math/stoplightbounds.hpp
 math/trace.hpp
 methods/brownianbridgepathinterpolator.hpp
 methods/fdmblackscholesmesher.hpp
@@ -711,6 +729,7 @@ models/irlgm1fpiecewiselinearparametrization.hpp
 models/irmodel.hpp
 models/jyimpliedyoyinflationtermstructure.hpp
 models/jyimpliedzeroinflationtermstructure.hpp
+models/kienitzlawsonswaynesabrpdedensity.hpp
 models/lgm.hpp
 models/lgmbackwardsolver.hpp
 models/lgmcalibrationinfo.hpp
@@ -750,11 +769,13 @@ pricingengines/analyticdkcpicapfloorengine.hpp
 pricingengines/analyticdoublebarrierbinaryengine.hpp
 pricingengines/analyticdoublebarrierengine.hpp
 pricingengines/analyticeuropeanengine.hpp
+pricingengines/analyticeuropeanenginedeltagamma.hpp
 pricingengines/analyticeuropeanforwardengine.hpp
 pricingengines/analyticjycpicapfloorengine.hpp
 pricingengines/analyticjyyoycapfloorengine.hpp
 pricingengines/analyticlgmcdsoptionengine.hpp
 pricingengines/analyticlgmswaptionengine.hpp
+pricingengines/analyticoutperformanceoptionengine.hpp
 pricingengines/analyticxassetlgmeqoptionengine.hpp
 pricingengines/baroneadesiwhaleyengine.hpp
 pricingengines/binomialconvertibleengine.hpp
@@ -762,6 +783,7 @@ pricingengines/blackbondoptionengine.hpp
 pricingengines/blackcdsoptionengine.hpp
 pricingengines/blackindexcdsoptionengine.hpp
 pricingengines/blackmultilegoptionengine.hpp
+pricingengines/blackswaptionenginedeltagamma.hpp
 pricingengines/cboengine.hpp
 pricingengines/cbomcengine.hpp
 pricingengines/commodityapoengine.hpp
@@ -778,11 +800,14 @@ pricingengines/discountingbondtrsengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
 pricingengines/discountingcreditlinkedswapengine.hpp
 pricingengines/discountingcurrencyswapengine.hpp
+pricingengines/discountingcurrencyswapenginedeltagamma.hpp
 pricingengines/discountingequityforwardengine.hpp
 pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingfxforwardengine.hpp
+pricingengines/discountingfxforwardenginedeltagamma.hpp
 pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingriskybondenginemultistate.hpp
+pricingengines/discountingswapenginedeltagamma.hpp
 pricingengines/discountingswapenginemulticurve.hpp
 pricingengines/discretizedconvertible.hpp
 pricingengines/fdconvertiblebondevents.hpp
@@ -803,8 +828,11 @@ pricingengines/midpointcdoengine.hpp
 pricingengines/midpointcdsenginemultistate.hpp
 pricingengines/midpointindexcdsengine.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
+pricingengines/numericlgmbgsflexiswapengine.hpp
+pricingengines/numericlgmflexiswapengine.hpp
 pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
+pricingengines/pairwisevarianceswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
 pricingengines/tflattice.hpp
 pricingengines/varianceswapgeneralreplicationengine.hpp
@@ -864,7 +892,6 @@ termstructures/datedstrippedoptionlet.hpp
 termstructures/datedstrippedoptionletadapter.hpp
 termstructures/datedstrippedoptionletbase.hpp
 termstructures/discountratiomodifiedcurve.hpp
-termstructures/doubleoibasisswaphelper.hpp
 termstructures/dynamicblackvoltermstructure.hpp
 termstructures/dynamiccpivolatilitystructure.hpp
 termstructures/dynamicoptionletvolatilitystructure.hpp
@@ -899,7 +926,6 @@ termstructures/interpolatedyoycapfloortermpricesurface.hpp
 termstructures/iterativebootstrap.hpp
 termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/multisectiondefaultcurve.hpp
-termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp
 termstructures/oiscapfloorhelper.hpp
 termstructures/oisratehelper.hpp
@@ -910,6 +936,8 @@ termstructures/optionletstripper2.hpp
 termstructures/optionletstripperwithatm.hpp
 termstructures/optionpricesurface.hpp
 termstructures/overnightfallbackcurve.hpp
+termstructures/parametricvolatility.hpp
+termstructures/parametricvolatilitysmilesection.hpp
 termstructures/piecewiseatmoptionletcurve.hpp
 termstructures/piecewiseoptionletcurve.hpp
 termstructures/piecewiseoptionletstripper.hpp
@@ -920,6 +948,8 @@ termstructures/pricetermstructureadapter.hpp
 termstructures/probabilitytraits.hpp
 termstructures/proxyoptionletvolatility.hpp
 termstructures/proxyswaptionvolatility.hpp
+termstructures/sabrparametricvolatility.hpp
+termstructures/sabrstrippedoptionletadapter.hpp
 termstructures/spreadedblackvolatilitycurve.hpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.hpp
 termstructures/spreadedcorrelationcurve.hpp
@@ -941,6 +971,7 @@ termstructures/strippedoptionletadapter2.hpp
 termstructures/strippedyoyinflationoptionletvol.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp
+termstructures/swaptionsabrcube.hpp
 termstructures/swaptionvolatilityconverter.hpp
 termstructures/swaptionvolconstantspread.hpp
 termstructures/swaptionvolcube2.hpp

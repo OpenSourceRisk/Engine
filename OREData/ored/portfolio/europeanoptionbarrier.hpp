@@ -33,16 +33,16 @@ using namespace ore::data;
 
 class EuropeanOptionBarrier : public ScriptedTrade {
 public:
-    explicit EuropeanOptionBarrier(const boost::shared_ptr<Conventions>& conventions = nullptr)
+    explicit EuropeanOptionBarrier(const QuantLib::ext::shared_ptr<Conventions>& conventions = nullptr)
         : ScriptedTrade("EuropeanOptionBarrier") {}
     EuropeanOptionBarrier(const Envelope& env, const string& quantity, const string& putCall, const string& longShort,
                           const string& strike, const string& premiumAmount, const string& premiumCurrency,
                           const string& premiumDate, const string& optionExpiry,
-                          const boost::shared_ptr<Underlying>& optionUnderlying,
-                          const boost::shared_ptr<Underlying>& barrierUnderlying, const string& barrierLevel,
+                          const QuantLib::ext::shared_ptr<Underlying>& optionUnderlying,
+                          const QuantLib::ext::shared_ptr<Underlying>& barrierUnderlying, const string& barrierLevel,
                           const string& barrierType, const string& barrierStyle, const string& settlementDate,
                           const string& payCcy, const ScheduleData& barrierSchedule,
-                          const boost::shared_ptr<Conventions>& conventions = nullptr)
+                          const QuantLib::ext::shared_ptr<Conventions>& conventions = nullptr)
         : ScriptedTrade("EuropeanOptionBarrier", env), quantity_(quantity), putCall_(putCall), longShort_(longShort),
           strike_(strike), premiumAmount_(premiumAmount), premiumCurrency_(premiumCurrency), premiumDate_(premiumDate),
           optionExpiry_(optionExpiry), optionUnderlying_(optionUnderlying), barrierUnderlying_(barrierUnderlying),
@@ -50,14 +50,14 @@ public:
           barrierSchedule_(barrierSchedule), settlementDate_(settlementDate), payCcy_(payCcy) {
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     void initIndices();
     string quantity_, putCall_, longShort_, strike_, premiumAmount_, premiumCurrency_, premiumDate_, optionExpiry_;
-    boost::shared_ptr<Underlying> optionUnderlying_, barrierUnderlying_;
+    QuantLib::ext::shared_ptr<Underlying> optionUnderlying_, barrierUnderlying_;
     string barrierLevel_, barrierType_, barrierStyle_;
     ScheduleData barrierSchedule_;
     string settlementDate_, payCcy_;

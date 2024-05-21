@@ -42,18 +42,18 @@ public:
     Swaption(const Envelope& env, const OptionData& optionData, const vector<LegData>& legData)
         : Trade("Swaption", env), optionData_(optionData), legData_(legData) {}
 
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! \name Inspectors
     //@{
-    const OptionData& optionData() { return optionData_; }
+    const OptionData& optionData() const { return optionData_; }
     const vector<LegData>& legData() { return legData_; }
     //@}
 
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     QuantLib::Real notional() const override;
@@ -63,18 +63,18 @@ public:
     bool isExercised() const;
 
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
 private:
     OptionData optionData_;
     vector<LegData> legData_;
 
     //! build underlying swaps for exposure simulation
-    std::vector<boost::shared_ptr<Instrument>> buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>&,
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> buildUnderlyingSwaps(const QuantLib::ext::shared_ptr<PricingEngine>&,
                                                                     const std::vector<Date>&);
 
-    boost::shared_ptr<ore::data::Swap> underlying_;
-    boost::shared_ptr<ExerciseBuilder> exerciseBuilder_;
+    QuantLib::ext::shared_ptr<ore::data::Swap> underlying_;
+    QuantLib::ext::shared_ptr<ExerciseBuilder> exerciseBuilder_;
     Position::Type positionType_;
     Exercise::Type exerciseType_;
     Settlement::Type settlementType_;

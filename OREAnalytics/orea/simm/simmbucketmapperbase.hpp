@@ -59,8 +59,8 @@ class SimmBucketMapperBase : public SimmBucketMapper, public ore::data::XMLSeria
 public:
     //! Default constructor that adds fixed known mappings
     SimmBucketMapperBase(
-        const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
-        const boost::shared_ptr<SimmBasicNameMapper>& nameMapper = nullptr);
+        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager = nullptr,
+        const QuantLib::ext::shared_ptr<SimmBasicNameMapper>& nameMapper = nullptr);
 
     /*! Return the SIMM <em>bucket</em> for a given SIMM <em>RiskType</em> and
         SIMM <em>Qualifier</em>. An error is thrown if there is no <em>bucket</em>
@@ -77,7 +77,7 @@ public:
 
     //! \name Serialisation
     //@{
-    ore::data::XMLNode* toXML(ore::data::XMLDocument&) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument&) const override;
     void fromXML(ore::data::XMLNode* node) override;
     //@}
 
@@ -90,10 +90,10 @@ public:
                     const std::string& bucket, const std::string& validFrom = "", const std::string& validTo = "", bool fallback = false) override;
 
     //! Set the Reference data manager
-    void setSimmNameMapper(const boost::shared_ptr<SimmBasicNameMapper> nameMapper) { nameMapper_ = nameMapper; }
+    void setSimmNameMapper(const QuantLib::ext::shared_ptr<SimmBasicNameMapper> nameMapper) { nameMapper_ = nameMapper; }
 
     //! Set the Reference data manager
-    void setRefDataManger(const boost::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager) { refDataManager_ = refDataManager; }
+    void setRefDataManger(const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager) { refDataManager_ = refDataManager; }
 
     const std::set<FailedMapping>& failedMappings() const override { return failedMappings_; }
 
@@ -121,10 +121,10 @@ private:
     void reset();
 
     //! Reference data manager
-    boost::shared_ptr<ore::data::ReferenceDataManager> refDataManager_;
+    QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> refDataManager_;
 
     //! Simm Name Mapper
-    boost::shared_ptr<SimmBasicNameMapper> nameMapper_;
+    QuantLib::ext::shared_ptr<SimmBasicNameMapper> nameMapper_;
 
     mutable std::set<FailedMapping> failedMappings_;
 };

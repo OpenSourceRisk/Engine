@@ -29,7 +29,7 @@
 namespace ore {
 namespace data {
 
-void KnockOutSwap::build(const boost::shared_ptr<EngineFactory>& factory) {
+void KnockOutSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     clear();
 
@@ -46,8 +46,8 @@ void KnockOutSwap::build(const boost::shared_ptr<EngineFactory>& factory) {
     const LegData& fixedLegData = legData_[0].legType() == "Fixed" ? legData_[0] : legData_[1];
     const LegData& floatLegData = legData_[0].legType() == "Fixed" ? legData_[1] : legData_[0];
 
-    auto floatAddData = boost::dynamic_pointer_cast<FloatingLegData>(floatLegData.concreteLegData());
-    auto fixedAddData = boost::dynamic_pointer_cast<FixedLegData>(fixedLegData.concreteLegData());
+    auto floatAddData = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(floatLegData.concreteLegData());
+    auto fixedAddData = QuantLib::ext::dynamic_pointer_cast<FixedLegData>(fixedLegData.concreteLegData());
 
     QL_REQUIRE(floatAddData, "Internal error: could not cast to float additional data");
     QL_REQUIRE(fixedAddData, "Internal error: could not cast to fixed additional data");
@@ -132,7 +132,7 @@ void KnockOutSwap::build(const boost::shared_ptr<EngineFactory>& factory) {
 
     // set script
 
-    bool isIborBased = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(index) == nullptr;
+    bool isIborBased = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(index) == nullptr;
 
     // clang-format off
 
@@ -207,7 +207,7 @@ void KnockOutSwap::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* KnockOutSwap::toXML(XMLDocument& doc) {
+XMLNode* KnockOutSwap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(dataNode, barrierData_.toXML(doc));

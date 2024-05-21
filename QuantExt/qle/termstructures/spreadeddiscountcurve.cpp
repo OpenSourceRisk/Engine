@@ -34,9 +34,9 @@ SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& r
         registerWith(quotes_[i]);
     }
     if (interpolation_ == Interpolation::logLinear) {
-        dataInterpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+        dataInterpolation_ = QuantLib::ext::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
     } else {
-        dataInterpolation_ = boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+        dataInterpolation_ = QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
     }
     dataInterpolation_->enableExtrapolation();
     registerWith(referenceCurve_);

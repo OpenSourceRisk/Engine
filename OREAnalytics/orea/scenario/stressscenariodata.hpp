@@ -60,15 +60,15 @@ public:
     struct VolShiftData {
         ShiftType shiftType;
         vector<Period> shiftExpiries;
-        vector<Real> shifts;
+        vector<Real> shifts; 
     };
 
     struct CapFloorVolShiftData {
         ShiftType shiftType;
         vector<Period> shiftExpiries;
-        vector<Real> shifts;
+        vector<double> shiftStrikes;
+        std::map<Period, vector<Real>> shifts;
     };
-
     struct SwaptionVolShiftData {
         ShiftType shiftType;
         Real parallelShiftSize;
@@ -91,6 +91,11 @@ public:
         map<string, SpotShiftData> securitySpreadShifts;       // by bond/security
         map<string, SpotShiftData> recoveryRateShifts;         // by underlying name
         map<string, CurveShiftData> survivalProbabilityShifts; // by underlying name
+        bool irCurveParShifts = false;
+        bool irCapFloorParShifts = false;
+        bool creditCurveParShifts = false;
+
+        bool containsParShifts() const { return irCurveParShifts || irCapFloorParShifts || creditCurveParShifts; };        
     };
 
     //! Default constructor
@@ -99,18 +104,51 @@ public:
     //! \name Inspectors
     //@{
     const vector<StressTestData>& data() const { return data_; }
-    bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
+    const bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
+    
+    const bool hasScenarioWithParShifts() const {
+        for (const auto& scenario : data_) {
+            if (scenario.containsParShifts())
+                return true;
+        }
+        return false;
+    }
+
+    const bool withIrCurveParShifts() const {
+        for (const auto& scenario : data_) {
+            if (scenario.irCurveParShifts)
+                return true;
+        }
+        return false;
+    }
+
+    const bool withCreditCurveParShifts() const {
+        for (const auto& scenario : data_) {
+            if (scenario.creditCurveParShifts)
+                return true;
+        }
+        return false;
+    }
+
+    const bool withIrCapFloorParShifts() const {
+        for (const auto& scenario : data_) {
+            if (scenario.irCapFloorParShifts)
+                return true;
+        }
+        return false;
+    }
     //@}
 
     //! \name Setters
     //@{
     vector<StressTestData>& data() { return data_; }
+    bool& useSpreadedTermStructures() { return useSpreadedTermStructures_; }
     //@}
 
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
     //! \name Equality Operators

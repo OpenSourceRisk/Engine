@@ -48,18 +48,32 @@ CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionDa
     tradeType_ = "CommodityOption";
 }
 
-void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CommodityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy, assuming Commodity follows the Equity template
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Option");
+    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string("");
+
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = strike_.value();
+    additionalData_["strikeCurrency"] = currency_;    
 
     // Checks
-    QL_REQUIRE(quantity_ > 0, "Commodity option requires a positive quatity");
     QL_REQUIRE((strike_.value() > 0) || close_enough(strike_.value(),0.0), "Commodity option requires a non-negative strike");
     if (close_enough(strike_.value(), 0.0)) {
         strike_.setValue(0.0);
     }
 
+    // This is called in VanillaOptionTrade::build(), but we want to call it first here,
+    // in case the build fails before it reaches VanillaOptionTrade::build()
+    VanillaOptionTrade::setNotionalAndCurrencies();
+
     // Populate the index_ in case the option is automatic exercise.
     // Intentionally use null calendar because we will ask for index value on the expiry date without adjustment.
-    const boost::shared_ptr<Market>& market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
     index_ = *market->commodityIndex(assetName_, engineFactory->configuration(MarketContext::pricing));
     if (!isFuturePrice_ || *isFuturePrice_) {
 
@@ -85,7 +99,7 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
         // Set the VanillaOptionTrade forwardDate_ if the index is a CommodityFuturesIndex - we possibly still have a 
         // CommoditySpotIndex at this point so check. Also, will only work for European exercise.
         auto et = parseExerciseType(option_.style());
-        if (et == Exercise::European && boost::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+        if (et == Exercise::European && QuantLib::ext::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
             forwardDate_ = expiryDate;
         }
 
@@ -99,21 +113,10 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
                                 << " and strike " << strike_.value() << " is "
                                 << market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_.value()));
     }
-
-    additionalData_["quantity"] = quantity_;
-    additionalData_["strike"] = strike_.value();
-    additionalData_["strikeCurrency"] = currency_;    
-
-    // ISDA taxonomy, assuming Commodity follows the Equity template
-    additionalData_["isdaAssetClass"] = std::string("Commodity");
-    additionalData_["isdaBaseProduct"] = std::string("Option");
-    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = std::string("");
 }
 
 std::map<AssetClass, std::set<std::string>>
-CommodityOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+CommodityOption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::COM, std::set<std::string>({assetName_})}};
 }
 
@@ -140,7 +143,7 @@ void CommodityOption::fromXML(XMLNode* node) {
         futureExpiryDate_ = parseDate(XMLUtils::getNodeValue(n));
 }
 
-XMLNode* CommodityOption::toXML(XMLDocument& doc) {
+XMLNode* CommodityOption::toXML(XMLDocument& doc) const {
 
     XMLNode* node = Trade::toXML(doc);
 

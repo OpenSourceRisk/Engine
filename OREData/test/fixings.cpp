@@ -131,8 +131,8 @@ void loadFixings(const map<string, RequiredFixings::FixingDates>& requestedFixin
 class F : public TopLevelFixture {
 public:
     Date today;
-    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
-    boost::shared_ptr<EngineFactory> engineFactory;
+    QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory;
 
     F() {
         today = Date(12, Feb, 2019);
@@ -141,25 +141,25 @@ public:
         conventions->fromFile(TEST_INPUT_FILE("market/conventions.xml"));
         InstrumentConventions::instance().setConventions(conventions);
         
-        auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
+        auto todaysMarketParams = QuantLib::ext::make_shared<TodaysMarketParameters>();
         todaysMarketParams->fromFile(TEST_INPUT_FILE("market/todaysmarket.xml"));
 
-        auto curveConfigs = boost::make_shared<CurveConfigurations>();
+        auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
         curveConfigs->fromFile(TEST_INPUT_FILE("market/curveconfig.xml"));
 
         string marketFile = TEST_INPUT_FILE("market/market.txt");
         string fixingsFile = TEST_INPUT_FILE("market/fixings_for_bootstrap.txt");
         string dividendsFile = TEST_INPUT_FILE("market/dividends.txt");
-        auto loader = boost::make_shared<CSVLoader>(marketFile, fixingsFile, dividendsFile, false);
+        auto loader = QuantLib::ext::make_shared<CSVLoader>(marketFile, fixingsFile, dividendsFile, false);
 
         bool continueOnError = false;
-        boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
+        QuantLib::ext::shared_ptr<TodaysMarket> market = QuantLib::ext::make_shared<TodaysMarket>(
             today, todaysMarketParams, loader, curveConfigs, continueOnError);
 
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->fromFile(TEST_INPUT_FILE("market/pricingengine.xml"));
 
-        engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
     }
 
     ~F() {}
