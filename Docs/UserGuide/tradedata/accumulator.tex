@@ -1,0 +1,630 @@
+\subsubsection{Accumulators and Decumulators}
+
+The \verb+FxAccumulatorData+, \verb+EquityAccumulatorData+, \verb+CommodityAccumulatorData+ is the trade data container
+for the FxAccumulator, EquityAccumulator, CommodityAccumulator trade type. The following listings and show the
+structure of example trades for an FX and Equity underlying. Here the FX accumulator is of ``type 01'' meaning that a
+settlement takes place on each observation date while the equity accumulator is of ``type 02'' meaning that a settlement
+takes place on specific period end dates for all observation dates in that period.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="FX_ACCUMULATOR">
+  <TradeType>FxAccumulator</TradeType>
+  <Envelope>
+   ...
+  </Envelope>
+  <FxAccumulatorData>
+    <Currency>USD</Currency>
+    <FixingAmount>1000000</FixingAmount>
+    <Strike>1.1</Strike>
+    <Underlying>
+      <Type>FX</Type>
+      <Name>ECB-EUR-USD</Name>
+    </Underlying>
+    <OptionData>
+      <LongShort>Long</LongShort>
+      <PayoffType>Accumulator</PayoffType>
+    </OptionData>
+    <StartDate>2016-03-01</StartDate>
+    <ObservationDates>
+      <Dates>
+        <Dates>
+          <Date>2017-03-01</Date>
+          <Date>2020-03-01</Date>
+          <Date>2025-03-01</Date>
+          <Date>2029-03-01</Date>
+        </Dates>
+      </Dates>
+    </ObservationDates>
+    <SettlementDates>
+      <Dates>
+        <Dates>
+          <Date>2017-03-03</Date>
+          <Date>2020-03-03</Date>
+          <Date>2025-03-03</Date>
+          <Date>2029-03-03</Date>
+        </Dates>
+     </Dates>
+    </SettlementDates>
+    <RangeBounds>
+      <RangeBound>
+        <RangeTo>1.14</RangeTo>
+        <Leverage>1</Leverage>
+      </RangeBound>
+      <RangeBound>
+        <RangeFrom>1.14</RangeFrom>
+        <Leverage>1</Leverage>
+      </RangeBound>
+    </RangeBounds>
+    <Barriers>
+      <BarrierData>
+        <Type>UpAndOut</Type>
+        <Style>American</Style>
+        <Levels>
+          <Level>1.5</Level>
+        </Levels>
+      </BarrierData>
+      <BarrierData>
+        <Type>FixingFloor</Type>
+        <Levels>
+          <Level>2</Level>
+        </Levels>
+      </BarrierData>
+    </Barriers>
+  </FxAccumulatorData>
+</Trade>
+\end{minted}
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="Equity_Decumulator">
+  <TradeType>EquityAccumulator</TradeType>
+  <Envelope>
+   ...
+  </Envelope>
+  <EquityAccumulatorData>
+    <FixingAmount>30</FixingAmount>
+    <StrikeData>
+      <Value>4000</Value>
+      <Currency>EUR</Currency>
+    </StrikeData>
+    <Underlying>
+        <Type>Equity</Type>
+        <Name>.STOXX50</Name>
+        <IdentifierType>RIC</IdentifierType>
+    </Underlying>
+    <OptionData>
+      <LongShort>Long</LongShort>
+      <PayoffType>Decumulator</PayoffType>
+    </OptionData>
+    <StartDate>20190925</StartDate>
+    <ObservationDates>
+      <Rules>
+        <StartDate>20190925</StartDate>
+        <EndDate>20200925</EndDate>
+        <Tenor>1D</Tenor>
+        <Calendar>TARGET</Calendar>
+        <Convention>F</Convention>
+        <TermConvention>F</TermConvention>
+        <Rule>Forward</Rule>
+      </Rules>
+    </ObservationDates>
+    <PricingDates>
+      <Dates>
+        <Dates>
+          <Date>20211025</Date>
+          <Date>20211125</Date>
+          ...
+        </Dates>
+      </Dates>
+    </PricingDates>
+    <SettlementLag>2D</SettlementLag>
+    <SettlementCalendar>TARGET</SettlementCalendar>
+    <SettlementConvention>F</SettlementConvention>
+    <RangeBounds>
+      <RangeBound>
+        <RangeTo>4000</RangeTo>
+        <Leverage>1</Leverage>
+      </RangeBound>
+      <RangeBound>
+        <RangeFrom>4000</RangeFrom>
+        <Leverage>2</Leverage>
+      </RangeBound>
+    </RangeBounds>
+    <Barriers>
+      <BarrierData>
+        <Type>DownAndOut</Type>
+        <LevelData>
+          <Level>
+            <Value>3500</Value>
+            <Currency>EUR</Currency>
+          </Level>
+        </LevelData>
+      </BarrierData>
+      <BarrierData>
+        <Type>FixingFloor</Type>
+        <Levels>
+          <Level>1</Level>
+        </Levels>
+      </BarrierData>
+    </Barriers>
+  </EquityAccumulatorData>
+</Trade>
+\end{minted}
+
+\lstinline!Accumulator Payout Formula!
+
+The payout formula, from the perspective of the party that is long, for each observation date of an Accumulator is:
+
+$$
+Payout = RangeBound(Leverage) \cdot FixingAmount \cdot (fix - Strike),
+$$
+
+i.e.\ for an Accumulator the holder pays 
+ [\lstinline!Strike! * \lstinline!FixingAmount! * \lstinline!RangeBound!(Leverage)] expressed in \lstinline!Currency! and receives/buys 
+ [fix * \lstinline!FixingAmount! * \lstinline!RangeBound!(Leverage)]'s worth of equity/CCY1/commodity in \lstinline!Currency! on each  observation date.
+
+If \lstinline!NakedOption! is \emph{true}, the payout formula for an Accumulator (long perspective) is:
+
+$$
+Payout = |RangeBound(Leverage)| \cdot FixingAmount \cdot \max(0, \phi \cdot (fix - Strike)),
+$$
+
+where $\phi = \pm 1$ is the option type (+1 for Call, -1 for Put) inferred from the sign of the values of \lstinline!RangeBound!(Leverage),
+which are all required to be the same.
+
+\medskip
+
+\lstinline!Decumulator Payout Formula!
+
+The payout formula, from the perspective of the party that is long, for each observation date of a Decumulator is:
+
+$$
+Payout = RangeBound(Leverage) \cdot FixingAmount \cdot (Strike - fix),
+$$
+
+For a Decumulator the holder pays/sells 
+[fix * \lstinline!FixingAmount! * \lstinline!RangeBound!(Leverage)]'s worth of equity/CCY1/commodity in \lstinline!Currency!, and receives 
+[\lstinline!Strike! * \lstinline!FixingAmount! * \lstinline!RangeBound!(Leverage)]  expressed in \lstinline!Currency!  on each  observation date.
+
+If \lstinline!NakedOption! is \emph{true}, the payout formula for a Decumulator (long perspective) is:
+
+$$
+Payout = |RangeBound(Leverage)| \cdot FixingAmount \cdot \max(0, \phi \cdot (Strike - fix),
+$$
+
+where $\phi = \pm 1$ is the option type (+1 for Call, -1 for Put) inferred from the sign of the values of \lstinline!RangeBound!(Leverage),
+which are all required to be the same.
+
+
+
+The meanings and allowable values of the elements in the data node follow below.
+
+\begin{itemize}
+
+\item StrikeData [Optional]: A node containing the global strike in \lstinline!Value! and the currency in which both the underlying and the strike are quoted in \lstinline!Currency!. Only supported for EquityAccumulators. 
+
+Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}. The strike may be any positive real number. The currency provided in this node may be quoted as corresponding minor currency to the underlying major currency. If omitted, local strikes should be used in each \lstinline!RangeBound! node.
+
+\item Currency: The payout currency. The result of the payout formula above is treated to be in this currency. Note that for (non-quanto) FxAccumulators this should be the domestic (\lstinline!CCY2!) currency. For non-quanto Equity- and CommodityAccumulators this should be the currency the equity or commodity is quoted in. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+
+Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item FixingAmount: The unleveraged notional amount accumulated at each fixing date.
+
+For FxAccumulators: The FixingAmount is expressed in the foreign currency (\lstinline!CCY1!). 
+
+For EquityAccumulators: The FixingAmount is expressed as number of shares/units of the underlying equity or equity index.
+
+For CommodityAccumulators: The FixingAmount is expressed as number of units of the underlying commodity.
+
+%    Allowable values: Any positive real number. Note that the FixingAmount must be positive both for accumulators and decumulators, and for Long and Short positions.
+    Allowable values: Any real number. Note that a negative amount causes an Accumulator to become a Decumulator, and vice-versa. 
+
+\item DailyFixingAmount [Optional]: For accumulator type ``01'' only: If \emph{true}, the fixing amount for a period is calculated as the given FixingAmount times the number of calendar days in the period. The periods are given by [StartDate, ObservationDate(1)], [ObservationDate(1), ObservationDate(2)], ... etc. i.e. if \emph{true}, a StartDate is required to determine the calendar days in the first period. If \emph{false}, the fixing amount is used directly without any weighting.
+
+    Allowable values: \emph{true} or \emph{false}. Defaults to \emph{false} if left blank or omitted.
+
+\item Strike [Optional]: Global strike associated to the ranges.  Is overwritten by local strikes defined in \lstinline!RangeBounds! or modified by range strike adjustments. Note that each RangeBound needs a strike, either the global strike defined here, or a local one in the \lstinline!RangeBounds! nodes which then overwrites the global one.
+
+For FxAccumulators: The the fx strike rate (global and local) is defined as amount in domestic currency (\lstinline!CCY2!) for one unit of foreign currency (\lstinline!CCY1!). 
+
+For Equity- and CommodityAccumulators: The strike value (global and local) for one unit/share/contract of the underlying equity or commodity, expressed in the currency the equity or commodity is quoted in. For EquityAccumulators, the \lstinline!StrikeData! node (see above) should be used.
+
+The logic for global and local strikes is as follows:
+
+- if a local Strike for an interval is given, this local Strike will be used for the interval (a global Strike will be ignored if given)\\
+- otherwise if a global Strike and a local StrikeAdjustment are given, the strike used for the interval will be global Strike + local StrikeAdjustment\\
+- otherwise if a global Strike, but no local StrikeAdjustment is given, the strike used for the interval will be the global Strike\\
+- if no global strike and no local strike is given for an interval, an error is thrown, since the strike information is not sufficient  
+
+    Allowable values: Any positive real number.
+    
+\item Underlying: A node with the underlying of the Accumulator instrument.
+
+For FxAccumulators: \lstinline!Type! is set to \emph{FX} and \lstinline!Name! is a string of the form \emph{SOURCE-CCY1-CCY2} where \lstinline!CCY1! is the foreign currency, \lstinline!CCY2! is the domestic currency, and \emph{SOURCE} is the fixing source, see Table \ref{tab:fxindex_data} and  \ref{ss:underlying}.
+
+For EquityAccumulators: \lstinline!Type! is set to \emph{Equity} and \lstinline!Name! and other fields are as outlined in \ref{ss:underlying}
+
+For CommodityAccumulators: \lstinline!Type! is set to \emph{Commodity} and \lstinline!Name! is an identifier of the commodity as outlined in \ref{ss:underlying} and in Table \ref{tab:commodity_data}.
+
+    Allowable values: Any FX, Equity or Commodity underlying as specified in \ref{ss:underlying}
+    
+\item OptionData: See \ref{ss:option_data}. A node that describes whether the instrument is \emph{Long} or \emph{Short}, whether the payoff type is \emph{Accumulator} or \emph{Decumulator},  
+
+The relevant fields in the \lstinline!OptionData! node for an Accumulator are:
+
+\begin{itemize}
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}. Note that a \emph{Long} \emph{Accumulator} is equivalent to a \emph{Short} \emph{Decumulator} except when there are guaranteed fixings, i.e.\ when a Barrier node of Type \emph{FixingFloor} is present. The \emph{FixingFloor} causes asymmetry in the payoff.  
+
+\lstinline!PayoffType! The allowable values are \emph{Accumulator} or \emph{Decumulator}. For a long accumulator the strike is paid and the underlying received, for a long decumulator it is the other way around.
+
+\end{itemize}
+    
+\item StartDate [Mandatory for American Style Barrier or if a daily fixing amount is used, Optional for European Style or no Barrier and no daily fixing amount is used]:  Used to set the start of the knock out monitoring -  American knock out events are monitored from this
+  date on. This field is only relevant for accumulators of type American Knock-Out, and not used otherwise. Can be
+  omitted for European knock outs, or if there is no barrier. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\item ObservationDates: The observation dates given as schedule data.\\
+    Allowable values: See the ScheduleData definition \ref{ss:schedule_data}.
+\item PricingDates[Optional]: The dates defining observation period end dates on which the settlement for all dates in the period
+  takes place. Note that the inclusion or not of PricingDates determines  the Accumulator type.  If included the Accumulator is of ``type 02'', and otherwise,  if PricingDates are not included it is of ``type 01''.\\
+    Allowable values: See the ScheduleData definition \ref{ss:schedule_data}. Note that the final pricing period end date (defining the final observation period end date) must be on or after the final observation date.
+  \item SettlementLag [Optional]: The settlement delay. Optional, if not given it is defaulted to 0D.\\
+    Allowable values: Any period definition (e.g.\ \emph{2D}, \emph{1W}, \emph{1M}, \emph{1Y})
+\item SettlementCalendar [Optional]: The calendar used to compute the settlement date from the corresponding observation date.\\
+    Allowable values: Any valid calendar, see Table \ref{tab:calendar} Calendar.. Optional, defaults to the null calendar (no holidays).
+\item SettlementConvention [Optional]: The convention used to compute the settlement date from the corresponding observation
+  date. Optional, defaults to F (following). \\
+  Allowable values: Any valid roll convention (\emph{U,F,P,MF,MP}), see Table \ref{tab:convention} Roll Convention.
+\item SettlementDates [Optional]: The settlement dates can also be given as an explicit list of dates, see the FX
+  accumulator listing above for an example. For a ``type 01'' accumulator the number of dates must be equal to the
+  number of observation dates. For a ``type 02'' accumulator the number of dates must be equal to the number of pricing
+  dates. If an explicit list of settlement dates is given, no settlement lag, calendar, conventions should be given.
+\item NakedOption [Optional]: If \emph{true}, the payoff represents that of an option, and only positive values are accumulated in the instrument. The option type (Call or Put) is inferred from the sign of the \lstinline!Leverage! values in \lstinline!RangeBound!, which are all required to be the same.\\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if left blank or omitted.
+\item RangeBounds: Nodes for the specification of ranges and associated leverages. A leverage can be specified to apply for all values the underlying can take, or for specific ranges using \lstinline!RangeFrom! and \lstinline!RangeTo!. Multiple \lstinline!RangeBound! sub-nodes can be included within the \lstinline!RangeBounds! node. If no leverage is specified for a range, it defaults to 1 for this range. In addition a range bound specific strike can be specified for Accumulators of ``type 01'' (and only this type!) which overwrites the global Strike field. If all range bounds have a specific strike defined, the global Strike field might be omitted. \\
+    Allowable values: For each range, see \ref{ss:rangebound}. Only the \lstinline!Leverage! is relevant for a given range. All \lstinline!Leverage! parameters in one instrument must have the same sign. For ``type 01'' Accumulators, the Strike is relevant too and overwrites the global strike if given. Finally, for ``type 01'' Accumulators a range bound specific strike can be specified by specifying a range bound specific strike adjustment to the global strike (see the range bound spec for details).
+\item Barriers: Specification of barriers and fixing floors (guaranteed fixings). Multiple \lstinline!BarrierData! sub-nodes can be included within the \lstinline!Barriers! node. Relevant fields for each \lstinline!BarrierData! sub-node are \lstinline!Type!, \lstinline!Style!, and \lstinline!Level!.  The barrier is monitored on the
+  \begin{itemize}
+    \item the observation dates (type 02 accumulator, i.e.\ PricingDates are given)
+    \item the observation dates (type 01 accumulator, i.e.\ no PricingDates are given), if barrier style is European
+    \item from the start date to the first observation date and between the observation dates on a continuous basis
+      (type 01 accumulator), if barrier style is American
+  \end{itemize}
+
+    For \emph{type 01 accumulators} (no pricing dates are given), the FixingFloor guarantees a specific number of
+    fixings to be settled even in case of a knock out. On a guaranteed fixing date, Only positive payouts (from the
+    buyer/long perspective) are realised. Where payout = fix - strike for accumulators and strike - fix for decumulators.
+
+    For \emph{type 02 accumulators} (pricing dates are given), the FixingFloor specifies the number of {\em periods}
+    (rather than observation dates) that are guaranteed to settle. If a knock out event occurs within a settlement
+    period the fixings after the knock event within this period are assumed to fall into the first defined range and the
+    settlement takes place on the knock out day plus the defined settlement delay.
+
+    The barrier \lstinline!Level! for \lstinline!Type! \emph{UpAndOut} and \emph{DownAndOut} is expressed in the same way as \lstinline!Strike! outlined above. For EquityAccumulators, each \lstinline!Level! node should be provided a \lstinline!Value! and a \lstinline!Currency! and contained in a \lstinline!LevelData! node (see example trade above). This \lstinline!Currency! supports minor currencies. \\
+    The barrier \lstinline!Level! for \lstinline!Type!  \emph{FixingFloor}  is a non-negative integer.
+
+    Allowable values: For each \lstinline!BarrierData! node, see \ref{ss:barrier_data}. For Accumulators/Decumulators, the following values for \lstinline!Type! are relevant: \emph{UpAndOut}, \emph{DownAndOut} and \emph{FixingFloor}. The barrier \lstinline!Style! can be \emph{European} (monitored on observation dates) or \emph{American} (continuously monitored).
+\end{itemize}
+
+% scripted trade representation type 01
+
+Accumulators can also be represented as scripted trades, refer to the separate documentation in ore/Docs/ScriptedTrade for an
+introduction. Listing \ref{lst:fxaccumulator01} shows the structure of an Accumulator (type 01) example, here on a FX
+underlying (EQ or COMM underlyings are possible as well).
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="SCRIPTED_FX_ACCUMULATOR">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <Accumulator01Data>
+    <Strike type="number">1.1</Strike>
+    <FixingAmount type="number">1000000</FixingAmount>
+    <LongShort type="longShort">Long</LongShort>
+    <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+    <PayCcy type="currency">USD</PayCcy>
+    <StartDate type="event">2016-03-01</StartDate>
+    <FixingDates type="event">
+      <ScheduleData>
+        <Dates>
+          <Dates>
+            <Date>2017-03-01</Date>
+            <Date>2020-03-01</Date>
+            <Date>2025-03-01</Date>
+            <Date>2029-03-01</Date>
+          </Dates>
+        </Dates>
+      </ScheduleData>
+    </FixingDates>
+    <SettlementDates type="event">
+      <DerivedSchedule>
+        <BaseSchedule>FixingDates</BaseSchedule>
+        <Shift>2D</Shift>
+        <Calendar>TARGET</Calendar>
+        <Convention>F</Convention>
+      </DerivedSchedule>
+    </SettlementDates>
+    <RangeUpperBounds type="number">
+      <Value>1.14</Value>
+      <Value>10000</Value>
+    </RangeUpperBounds>
+    <RangeLowerBounds type="number">
+      <Value>0</Value>
+      <Value>1.14</Value>
+    </RangeLowerBounds>
+    <RangeLeverages type="number">
+      <Value>1</Value>
+      <Value>2</Value>
+    </RangeLeverages>
+    <KnockOutLevel type="number">1.5</KnockOutLevel>
+    <KnockOutType type="barrierType">UpOut</KnockOutType>
+    <AmericanKO type="bool">true</AmericanKO>
+    <GuaranteedFixings type="number">2</GuaranteedFixings>
+  </Accumulator01Data>
+</Trade>
+\end{minted}
+\caption{Accumulator (type 01) Scripted Representation}
+\label{lst:fxaccumulator01}
+\end{listing}
+
+The meanings and allowable values of the elements in the \verb+Accumulator01Data+ representation follow below.
+
+\begin{itemize}
+\item Strike: The strike value the bought currency is purchased at.
+\item FixedAmount: The unleveraged notional amount accumulated at each fixing date
+\item LongShort: 1 for a long, -1 for a short position
+\item Underlying: See ore/Docs/ScriptedTrade's Index section for allowable values.
+\item PayCcy: The payment currency of the trade. Notice section Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade.
+\item StartDate: The start date. American knock out events are monitored from this date on. Notice that the start date
+  must be given in the scripted trade representation for European knock outs, although it is not used for this variant.
+\item FixingDates: The fixing dates, given as a ScheduleData, or DerivedSchedule (see ore/Docs/ScriptedTrade).
+\item SettlementDates: The fixing dates, given as a ScheduleData, or DerivedSchedule (see ore/Docs/ScriptedTrade).
+\item RangeUpperBound: Values of upperbounds for the leverage ranges. If a given range has no upperbound add 100000
+\item RangeLowerBound: Values of lowerbounds for the leverage ranges. If a given range has no lowerbound add 0
+\item RangeLeverages: Values of leverages for the leverage ranges.
+\item KnockOutLevel: The KnockOut Barrier level
+\item KnockOutType: The KnockOut Barrier type, can be UpOut or DownOut
+\item AmericanKO: If true, knock out events are monitored on a continuous basis, otherwise they are monitored on the
+  fixing dates only.
+\item GuaranteedFixings: Number of the first n Fixings that are guaranteed, regardless of whether or not the trade has been knocked out.
+\end{itemize}
+
+The script `Accumulator01' referenced in the trade above is shown in Listing \ref{lst:accumulator01_script}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{Basic}
+REQUIRE KnockOutType == 3 OR KnockOutType == 4;
+NUMBER Payoff, fix, d, r, Alive, currentNotional, Factor, ThisPayout, Fixing[SIZE(FixingDates)];
+Alive = 1;
+FOR d IN (1, SIZE(FixingDates), 1) DO
+    fix = Underlying(FixingDates[d]);
+    Fixing[d] = fix;
+
+    IF AmericanKO == 1 THEN
+      IF KnockOutType == 4 THEN
+        IF FixingDates[d] >= StartDate THEN
+           IF d == 1 OR FixingDates[d-1] <= StartDate THEN
+              Alive = Alive * (1 - ABOVEPROB(Underlying, StartDate, FixingDates[d], KnockOutLevel));
+           ELSE
+              Alive = Alive * (1 - ABOVEPROB(Underlying, FixingDates[d-1], FixingDates[d], KnockOutLevel));
+           END;
+        END;
+      ELSE
+        IF FixingDates[d] >= StartDate THEN
+           IF d == 1 OR FixingDates[d-1] <= StartDate THEN
+              Alive = Alive * (1 - BELOWPROB(Underlying, StartDate, FixingDates[d], KnockOutLevel));
+           ELSE
+              Alive = Alive * (1 - BELOWPROB(Underlying, FixingDates[d-1], FixingDates[d], KnockOutLevel));
+           END;
+        END;
+      END;
+    ELSE
+      IF {KnockOutType == 4 AND fix >= KnockOutLevel} OR
+         {KnockOutType == 3 AND fix <= KnockOutLevel} THEN
+        Alive = 0;
+      END;
+    END;
+
+    IF d <= GuaranteedFixings THEN
+      Factor = 1;
+    ELSE
+      Factor = Alive;
+    END;
+
+    FOR r IN (1, SIZE(RangeUpperBounds), 1) DO
+      IF fix > RangeLowerBounds[r] AND fix <= RangeUpperBounds[r] THEN
+        ThisPayout = RangeLeverages[r] * FixingAmount * (fix - Strike) * Factor;
+        IF d > GuaranteedFixings OR ThisPayout >= 0 THEN
+          Payoff = Payoff + LOGPAY(RangeLeverages[r] * FixingAmount * (fix - Strike) * Factor,
+                                   FixingDates[d], SettlementDates[d], PayCcy);
+        END;
+      END;
+    END;
+END;
+value = LongShort * Payoff;
+currentNotional = FixingAmount * Strike;
+\end{minted}
+\caption{Accumulator type 01 script}
+\label{lst:accumulator01_script}
+\end{listing}
+
+% scripted trade representation type 02
+
+Accumulators of Type 02 can also be represented as scripted trades, see ore/Docs/ScriptedTrade for an
+introduction.  Listing \ref{lst:eqaccumulator02} shows the structure of an Accumulator (Type 02) example, here on an
+equity underlying. FX and COMM underlyings are possible as well.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="EqDecumulator">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    <CounterParty>CPTY_A</CounterParty>
+    <NettingSetId>CPTY_A</NettingSetId>
+    <AdditionalFields/>
+  </Envelope>
+  <Accumulator02Data>
+    <Strike type="number">59.9842</Strike>
+    <FixingAmount type="number">11</FixingAmount>
+    <LongShort type="longShort">Long</LongShort>
+    <Underlying type="index">EQ-RIC:.SPX</Underlying>
+    <PayCcy type="currency">EUR</PayCcy>
+    <ObservationDates type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>20190925</StartDate>
+          <EndDate>20200925</EndDate>
+          <Tenor>1D</Tenor>
+          ...
+        </Rules>
+      </ScheduleData>
+    </ObservationDates>
+    <KnockOutSettlementDates type="event">
+      <DerivedSchedule>
+        <BaseSchedule>ObservationDates</BaseSchedule>
+        <Shift>2D</Shift>
+        <Calendar>TARGET</Calendar>
+        <Convention>F</Convention>
+      </DerivedSchedule>
+    </KnockOutSettlementDates>
+    <ObservationPeriodEndDates type="event">
+      <ScheduleData>
+        <Dates>
+          <Dates>
+            <Date>20191025</Date>
+            <Date>20191125</Date>
+            ...
+            <Date>20200925</Date>
+          </Dates>
+        </Dates>
+      </ScheduleData>
+    </ObservationPeriodEndDates>
+    <SettlementDates type="event">
+      <ScheduleData>
+        <Dates>
+          <Dates>
+            <Date>20191027</Date>
+            <Date>20191127</Date>
+            ...
+            <Date>20200927</Date>
+          </Dates>
+        </Dates>
+      </ScheduleData>
+    </SettlementDates>
+    <RangeUpperBounds type="number">
+      <Value>59.9842</Value>
+      <Value>10000000.0</Value>
+    </RangeUpperBounds>
+    <RangeLowerBounds type="number">
+      <Value>-10000000.0</Value>
+      <Value>59.9842</Value>
+    </RangeLowerBounds>
+    <RangeLeverages type="number">
+      <Value>1</Value>
+      <Value>2</Value>
+    </RangeLeverages>
+    <DefaultRange type="number">1</DefaultRange>
+    <KnockOutLevel type="number">50.825</KnockOutLevel>
+    <KnockOutType type="barrierType">DownOut</KnockOutType>
+    <GuaranteedPeriodEndDate type="event">20191025</GuaranteedPeriodEndDate>
+  </Accumulator02Data>
+</Trade>
+\end{minted}
+\caption{EQ Accumulator (type 02) Scripted Representation}
+\label{lst:eqaccumulator02}
+\end{listing}
+
+The script `Accumulator02' referenced in the trade above is shown in Listing \ref{lst:accumulator02_script}.
+
+The meanings and allowable values of the elements in the \verb+DecumulatorData+ node folllow below.
+
+\begin{itemize}
+\item Strike: The forward price. For an FX underlying \lstinline!FX-SOURCE-CCY1-CCY2! this is the number of units of \lstinline!CCY2! per units
+  of \lstinline!CCY1!. For an EQ underlying this is the equity price expressed in the equity ccy.  Allowable values are non-negative
+  numbers.
+\item FixingAmount: The number of shares per day (EQ Undlerinyg) resp. the foreign amount (FX Undderlying). Allowable values
+  are non-negative values.
+\item LongShort: The position, allowable values are ``Long'' and ``Short''
+\item Underlying:  The underlying index \\
+  See ore/Docs/ScriptedTrade's Index section for allowable values.
+\item PayCcy: The payment currency. See the appendix for allowable currency codes.  Notice section Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade.
+\item ObservationDates: The observation date schedule. See ore/Docs/ScriptedTrade on how this is set up.
+\item KnowOutSettlementDates: The settlement dates associated to the observation dates in case of a knock out event, the
+  number of observation and knock out settlement dates must be equal. See ore/Docs/ScriptedTrade on how this is
+  set up.
+\item ObservationPeriodEndDates: The last date for each observation period. See ore/Docs/ScriptedTrade on how
+  this is set up.
+\item SettlementDates: The settlement dates for each observation period, the number of settlement dates and the number
+  of observation period end dates must be equal. See ore/Docs/ScriptedTrade on how this is set up.
+\item RangeUpperBounds: The multiplier for the ``number of days below'' in the payoff. Allowable values are non-negative numbers.
+\item RangeLowerBounds: The multiplier for the ``number of days above'' in the payoff. Allowable values are non-negative numbers.
+\item RangeLeverages: The multiplier for the defined ranges. Allowable values are non-negative numbers.
+\item DefaultRange: The default range used in case of a knock-out event to classify the remaining days until the
+  GuaranteedPeriodEndDate. Allowable values are $1,2,\ldots,r$ where $r$ is the number of defined ranges.
+\item KnockOutLevel: The knock out price. See Strike for more details and allowable values.
+\item KnockOutType: The KnockOut Barrier type, can be UpOut or DownOut
+\item GuaranteedPeriodEndDate: The last date of the guaranteed period. Allowable values are any valid dates.
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{Basic}
+REQUIRE SIZE(ObservationDates) == SIZE(KnockOutSettlementDates);
+REQUIRE SIZE(ObservationPeriodEndDates) == SIZE(SettlementDates);
+REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLowerBounds);
+REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLeverages);
+NUMBER Payoff, fix, d, dd, KnockedOut, currentNotional, Days[SIZE(RangeUpperBounds)];
+NUMBER currentPeriod, r;
+currentPeriod = 1;
+FOR d IN (1, SIZE(ObservationDates)) DO
+  fix = Underlying(ObservationDates[d]);
+  IF KnockedOut == 0 THEN
+    IF {KnockOutType == 4 AND fix >= KnockOutLevel} OR
+       {KnockOutType == 3 AND fix <= KnockOutLevel} THEN
+       KnockedOut = 1;
+       FOR dd IN (d + 1, SIZE(ObservationDates)) DO
+         IF ObservationDates[d] <= GuaranteedPeriodEndDate THEN
+            Days[DefaultRange] = Days[DefaultRange] + 1;
+         END;
+       END;
+       FOR r IN (1, SIZE(RangeUpperBounds)) DO
+         value = value + PAY( LongShort * FixingAmount * RangeLeverages[r] * Days[r]
+                              * ( fix - Strike ),
+                              ObservationDates[d], KnockOutSettlementDates[d], PayCcy );
+       END;
+    END;
+  END;
+  IF KnockedOut == 0 THEN
+    FOR r IN (1, SIZE(RangeUpperBounds)) DO
+      IF fix > RangeLowerBounds[r] AND fix <= RangeUpperBounds[r] THEN
+        Days[r] = Days[r] + 1;
+      END;
+    END;
+    IF ObservationDates[d] >= ObservationPeriodEndDates[currentPeriod] THEN
+      FOR r IN (1, SIZE(RangeUpperBounds)) DO
+        value = value + PAY( LongShort * FixingAmount * RangeLeverages[r] * Days[r]
+                             * ( fix - Strike ),
+                             ObservationDates[d], SettlementDates[currentPeriod], PayCcy );
+      END;
+    END;
+  END;
+  IF ObservationDates[d] >= ObservationPeriodEndDates[currentPeriod] THEN
+    currentPeriod = currentPeriod + 1;
+    IF currentNotional == 0 THEN
+      FOR r IN (1, SIZE(RangeUpperBounds)) DO
+        currentNotional = currentNotional + FixingAmount * RangeLeverages[r] * Days[r] * Strike;
+      END;
+    END;
+    FOR r IN (1, SIZE(RangeUpperBounds)) DO
+      Days[r] = 0;
+    END;
+  END;
+END;
+\end{minted}
+\caption{Accumulator type 02 script.}
+\label{lst:accumulator02_script}
+\end{listing}

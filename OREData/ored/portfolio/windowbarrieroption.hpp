@@ -37,15 +37,16 @@ class WindowBarrierOption : public ScriptedTrade {
 public:
     explicit WindowBarrierOption(const std::string& tradeType = "WindowBarrierOption") : ScriptedTrade(tradeType) {}
     WindowBarrierOption(const std::string& currency, const std::string& fixingAmount, const TradeStrike& strike,
-                        const boost::shared_ptr<Underlying>& underlying, const std::string& startDate,
+                        const QuantLib::ext::shared_ptr<Underlying>& underlying, const std::string& startDate,
                         const std::string& endDate, const OptionData& optionData, const BarrierData& barrier)
         : currency_(currency), fixingAmount_(fixingAmount), strike_(strike), underlying_(underlying),
           startDate_(startDate), endDate_(endDate), optionData_(optionData), barrier_(barrier) {
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void setIsdaTaxonomyFields() override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     //! \name Inspectors
     //@{
@@ -56,7 +57,7 @@ private:
     void initIndices();
     std::string currency_, fixingAmount_;
     TradeStrike strike_;
-    boost::shared_ptr<Underlying> underlying_;
+    QuantLib::ext::shared_ptr<Underlying> underlying_;
     std::string startDate_, endDate_;
     OptionData optionData_;
     BarrierData barrier_;

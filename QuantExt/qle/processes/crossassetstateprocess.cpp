@@ -33,7 +33,7 @@ using namespace QuantLib;
 
 namespace {
 
-inline void setValue(Matrix& m, const Real& value, const boost::shared_ptr<const QuantExt::CrossAssetModel>& model,
+inline void setValue(Matrix& m, const Real& value, const QuantLib::ext::shared_ptr<const QuantExt::CrossAssetModel>& model,
                      const QuantExt::CrossAssetModel::AssetType& t1, const Size& i1,
                      const QuantExt::CrossAssetModel::AssetType& t2, const Size& i2, const Size& offset1 = 0,
                      const Size& offset2 = 0) {
@@ -42,7 +42,7 @@ inline void setValue(Matrix& m, const Real& value, const boost::shared_ptr<const
     m[i][j] = m[j][i] = value;
 }
 
-inline void setValue2(Matrix& m, const Real& value, const boost::shared_ptr<const QuantExt::CrossAssetModel>& model,
+inline void setValue2(Matrix& m, const Real& value, const QuantLib::ext::shared_ptr<const QuantExt::CrossAssetModel>& model,
                       const QuantExt::CrossAssetModel::AssetType& t1, const Size& i1,
                       const QuantExt::CrossAssetModel::AssetType& t2, const Size& i2, const Size& offset1 = 0,
                       const Size& offset2 = 0) {
@@ -52,14 +52,14 @@ inline void setValue2(Matrix& m, const Real& value, const boost::shared_ptr<cons
 }
 } // anonymous namespace
 
-CrossAssetStateProcess::CrossAssetStateProcess(boost::shared_ptr<const CrossAssetModel> model)
+CrossAssetStateProcess::CrossAssetStateProcess(QuantLib::ext::shared_ptr<const CrossAssetModel> model)
     : StochasticProcess(), model_(std::move(model)), cirppCount_(0) {
 
     if (model_->discretization() == CrossAssetModel::Discretization::Euler) {
-        discretization_ = boost::make_shared<EulerDiscretization>();
+        discretization_ = QuantLib::ext::make_shared<EulerDiscretization>();
     } else {
         discretization_ =
-            boost::make_shared<CrossAssetStateProcess::ExactDiscretization>(model_, model_->salvagingAlgorithm());
+            QuantLib::ext::make_shared<CrossAssetStateProcess::ExactDiscretization>(model_, model_->salvagingAlgorithm());
     }
 
     updateSqrtCorrelation();
@@ -70,7 +70,7 @@ CrossAssetStateProcess::CrossAssetStateProcess(boost::shared_ptr<const CrossAsse
             crCirpp_.push_back(model_->crcirppModel(i)->stateProcess());
             cirppCount_++;
         } else {
-            crCirpp_.push_back(boost::shared_ptr<CrCirppStateProcess>());
+            crCirpp_.push_back(QuantLib::ext::shared_ptr<CrCirppStateProcess>());
         }
     }
 }
@@ -85,7 +85,7 @@ void CrossAssetStateProcess::resetCache(const Size timeSteps) const {
     timeStepCache_m_ = timeStepCache_d_ = 0;
     cache_m_.clear();
     cache_d_.clear();
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(discretization_))
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(discretization_))
         tmp->resetCache(timeSteps);
     updateSqrtCorrelation();
 }
@@ -321,7 +321,7 @@ Array CrossAssetStateProcess::drift(Time t, const Array& x) const {
     // COM drift
     Size n_com = model_->components(CrossAssetModel::AssetType::COM);
     for (Size k = 0; k < n_com; ++k) {
-        auto cm = boost::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(k));
+        auto cm = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(k));
         QL_REQUIRE(cm, "CommoditySchwartzModel not set");
         if (!cm->parametrization()->driftFreeState()) {
             // Ornstein-Uhlenbeck drift
@@ -442,7 +442,7 @@ Array getProjectedArray(const Array& source, Size start, Size length) {
     return Array(std::next(source.begin(), start), std::next(source.begin(), start + length));
 }
 
-void applyFxDriftAdjustment(Array& state, const boost::shared_ptr<const CrossAssetModel>& model, Size i, Time t0,
+void applyFxDriftAdjustment(Array& state, const QuantLib::ext::shared_ptr<const CrossAssetModel>& model, Size i, Time t0,
                             Time dt) {
 
     // the specifics depend on the ir and fx model types and their discretizations
@@ -574,7 +574,7 @@ Array CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time dt, const Ar
     return res;
 }
 
-CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(boost::shared_ptr<const CrossAssetModel> model,
+CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(QuantLib::ext::shared_ptr<const CrossAssetModel> model,
                                                                  SalvagingAlgorithm::Type salvaging)
     : model_(std::move(model)), salvaging_(salvaging) {
 
@@ -735,7 +735,7 @@ Array CrossAssetStateProcess::ExactDiscretization::driftImpl2(const StochasticPr
     for (Size i = 0; i < com; ++i) {
         // res[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)] =
         //     x0[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)];
-        auto cm = boost::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(i));
+        auto cm = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModel>(model_->comModel(i));
         QL_REQUIRE(cm, "CommoditySchwartzModel not set");
         Real com0 = x0[model_->pIdx(CrossAssetModel::AssetType::COM, i, 0)];
         if (cm->parametrization()->driftFreeState()) {

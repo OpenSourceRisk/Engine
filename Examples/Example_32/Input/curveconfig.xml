@@ -271,8 +271,8 @@
             <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/GBP/30Y</Quote>
           </Quotes>
           <Conventions>GBP-LIBOR-3M-6M-BASIS</Conventions>
-          <ProjectionCurveLong>GBP-LIBOR-6M</ProjectionCurveLong>
-          <ProjectionCurveShort>GBP-LIBOR-3M</ProjectionCurveShort>
+          <ProjectionCurvePay>GBP-LIBOR-6M</ProjectionCurvePay>
+          <ProjectionCurveReceive>GBP-LIBOR-3M</ProjectionCurveReceive>
         </TenorBasis>
       </Segments>
     </YieldCurve>
@@ -380,8 +380,8 @@
             <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/EUR/30Y</Quote>
           </Quotes>
           <Conventions>EURIBOR-3M-6M-BASIS</Conventions>
-          <ProjectionCurveLong>EUR-EURIBOR-6M</ProjectionCurveLong>
-          <ProjectionCurveShort>EUR-EURIBOR-3M</ProjectionCurveShort>
+          <ProjectionCurvePay>EUR-EURIBOR-6M</ProjectionCurvePay>
+          <ProjectionCurveReceive>EUR-EURIBOR-3M</ProjectionCurveReceive>
         </TenorBasis>
       </Segments>
     </YieldCurve>

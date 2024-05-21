@@ -36,7 +36,7 @@ using QuantLib::Real;
 */
 class ConstantInterpolation : public QuantLib::Interpolation {
 public:
-    ConstantInterpolation(const Real& y) { impl_ = boost::make_shared<ConstantInterpolationImpl>(y); }
+    ConstantInterpolation(const Real& y) { impl_ = QuantLib::ext::make_shared<ConstantInterpolationImpl>(y); }
 
 private:
     struct ConstantInterpolationImpl : public Interpolation::Impl {

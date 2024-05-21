@@ -34,7 +34,7 @@ class Autocallable_01 : public ScriptedTrade {
 public:
     Autocallable_01() : ScriptedTrade("Autocallable_01") {}
     Autocallable_01(const Envelope& env, const string& notionalAmount, const string& determinationLevel,
-                    const string& triggerLevel, const boost::shared_ptr<Underlying>& underlying, const string& position,
+                    const string& triggerLevel, const QuantLib::ext::shared_ptr<Underlying>& underlying, const string& position,
                     const string& payCcy, const ScheduleData& fixingDates, const ScheduleData& settlementDates,
                     const vector<string>& accumulationFactors, const string& cap)
         : ScriptedTrade("Autocallable_01", env), notionalAmount_(notionalAmount),
@@ -43,14 +43,15 @@ public:
           accumulationFactors_(accumulationFactors), cap_(cap) {
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void setIsdaTaxonomyFields() override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     void initIndices();
     string notionalAmount_, determinationLevel_, triggerLevel_, position_, payCcy_;
-    boost::shared_ptr<Underlying> underlying_;
+    QuantLib::ext::shared_ptr<Underlying> underlying_;
     ScheduleData fixingDates_, settlementDates_;
     vector<string> accumulationFactors_;
     string cap_;

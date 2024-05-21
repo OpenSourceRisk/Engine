@@ -27,7 +27,7 @@ CrossCcyFixFloatMtMResetSwapHelper::CrossCcyFixFloatMtMResetSwapHelper(
     const Handle<Quote>& rate, const Handle<Quote>& spotFx, Natural settlementDays, const Calendar& paymentCalendar,
     BusinessDayConvention paymentConvention, const Period& tenor, const Currency& fixedCurrency,
     Frequency fixedFrequency, BusinessDayConvention fixedConvention, const DayCounter& fixedDayCount,
-    const boost::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
+    const QuantLib::ext::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
     const Handle<Quote>& spread, bool endOfMonth, bool resetsOnFloatLeg)
     : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
     paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
@@ -66,21 +66,21 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
     // build an FX index for forward rate projection (TODO - review settlement and calendar)
     Natural paymentLag = 0;
     Spread floatSpread = spread_.empty() ? 0.0 : spread_->value();
-    boost::shared_ptr<FxIndex> fxIdx;
+    QuantLib::ext::shared_ptr<FxIndex> fxIdx;
     if (resetsOnFloatLeg_) {
-        fxIdx = boost::make_shared<FxIndex>("dummy", settlementDays_, fixedCurrency_, index_->currency(),  paymentCalendar_,
+        fxIdx = QuantLib::ext::make_shared<FxIndex>("dummy", settlementDays_, fixedCurrency_, index_->currency(),  paymentCalendar_,
             spotFx_, termStructureHandle_, floatDiscount_);
     } else {
-        fxIdx = boost::make_shared<FxIndex>("dummy", settlementDays_, index_->currency(), fixedCurrency_, paymentCalendar_,
+        fxIdx = QuantLib::ext::make_shared<FxIndex>("dummy", settlementDays_, index_->currency(), fixedCurrency_, paymentCalendar_,
             spotFx_, floatDiscount_, termStructureHandle_);
     }
 
-    swap_ = boost::make_shared<CrossCcyFixFloatMtMResetSwap>(nominal, fixedCurrency_, fixedSchedule, 0.0, fixedDayCount_, paymentConvention_,
+    swap_ = QuantLib::ext::make_shared<CrossCcyFixFloatMtMResetSwap>(nominal, fixedCurrency_, fixedSchedule, 0.0, fixedDayCount_, paymentConvention_,
         paymentLag, paymentCalendar_, index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
         paymentLag, paymentCalendar_, fxIdx, resetsOnFloatLeg_);
 
     // Attach engine
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<CrossCcySwapEngine>(
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(
         fixedCurrency_, termStructureHandle_, index_->currency(), floatDiscount_, spotFx_);
     swap_->setPricingEngine(engine);
 
@@ -95,8 +95,8 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
         if (numCashflows > 0) {
             for(Size i = numCashflows; i > 0; i--) {
                 Size pos = i - 1;
-                boost::shared_ptr<FloatingRateCoupon> lastFloating =
-                    boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[pos]);
+                QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating =
+                    QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(swap_->leg(1)[pos]);
                 if (!lastFloating)
                     continue;
                 else {
@@ -112,7 +112,7 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
 }
 
 void CrossCcyFixFloatMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {
-    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, false);
     RelativeDateRateHelper::setTermStructure(t);
 }

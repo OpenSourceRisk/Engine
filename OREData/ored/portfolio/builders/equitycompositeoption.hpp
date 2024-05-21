@@ -54,7 +54,7 @@ protected:
         return equityName + "/" + equityCcy.code() + "/" + strikeCcy.code() + "/" + to_string(expiry);
     }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& equityCcy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& equityCcy,
                                                         const Currency& strikeCcy, const Date& expiry) override {
 
         string config = this->configuration(ore::data::MarketContext::pricing);
@@ -70,7 +70,7 @@ protected:
 
         using scaledQuoted = CompositeQuote<std::function<Real(const Real&, const Real&)>>;
         
-        Handle<Quote> spot(boost::make_shared<scaledQuoted>(equitySpot, fxSpot, multiply));
+        Handle<Quote> spot(QuantLib::ext::make_shared<scaledQuoted>(equitySpot, fxSpot, multiply));
 
         auto dividendCurve = this->market_->equityDividendCurve(equityName, config);
 
@@ -93,19 +93,19 @@ protected:
         } catch (...) {
             WLOG("Couldnt find correlation curve "
                  << " FX - GENERIC - " << equityCcy.code() << " -" << strikeCcy.code() << "&EQ - " << equityName << ". will fallback to zero correlation");
-            correlation = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<QuantExt::FlatCorrelation>(0, WeekendsOnly(), 0, Actual365Fixed()));
+            correlation = Handle<QuantExt::CorrelationTermStructure>(QuantLib::ext::make_shared<QuantExt::FlatCorrelation>(0, WeekendsOnly(), 0, Actual365Fixed()));
         }
         
         Handle<BlackVolTermStructure> vol(
-            boost::make_shared<QuantExt::BlackVolatilitySurfaceProxy>(*eqVol, *equityIndex, *equityIndex, *fxVol, fxIndex, *correlation));
+            QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceProxy>(*eqVol, *equityIndex, *equityIndex, *fxVol, fxIndex, *correlation));
         
-        auto blackScholesProcess = boost::make_shared<QuantLib::GeneralizedBlackScholesProcess>(
+        auto blackScholesProcess = QuantLib::ext::make_shared<QuantLib::GeneralizedBlackScholesProcess>(
             spot, dividendCurve, strikeCcyDiscountCurve, vol);
         
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(strikeCcy.code(), configuration(MarketContext::pricing));
 
-        return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(blackScholesProcess, discountCurve);
+        return QuantLib::ext::make_shared<QuantLib::AnalyticEuropeanEngine>(blackScholesProcess, discountCurve);
     }
 };
 

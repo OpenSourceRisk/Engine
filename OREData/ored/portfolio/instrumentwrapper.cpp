@@ -23,8 +23,8 @@ namespace data {
 
 InstrumentWrapper::InstrumentWrapper() : instrument_(nullptr), multiplier_(1.0) {}
 
-InstrumentWrapper::InstrumentWrapper(const boost::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier,
-                                     const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
+InstrumentWrapper::InstrumentWrapper(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier,
+                                     const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
                                      const std::vector<Real>& additionalMultipliers)
     : instrument_(inst), multiplier_(multiplier), additionalInstruments_(additionalInstruments),
       additionalMultipliers_(additionalMultipliers) {
@@ -49,7 +49,7 @@ void InstrumentWrapper::updateQlInstruments() {
 
 bool InstrumentWrapper::isOption() { return false; }
 
-boost::shared_ptr<QuantLib::Instrument> InstrumentWrapper::qlInstrument(const bool calculate) const {
+QuantLib::ext::shared_ptr<QuantLib::Instrument> InstrumentWrapper::qlInstrument(const bool calculate) const {
     if (calculate && instrument_ != nullptr) {
         getTimedNPV(instrument_);
     }
@@ -60,7 +60,7 @@ Real InstrumentWrapper::multiplier() const { return multiplier_; }
 
 Real InstrumentWrapper::multiplier2() const { return 1.0; }
 
-const std::vector<boost::shared_ptr<QuantLib::Instrument>>& InstrumentWrapper::additionalInstruments() const {
+const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& InstrumentWrapper::additionalInstruments() const {
     return additionalInstruments_;
 }
 
@@ -75,7 +75,7 @@ void InstrumentWrapper::resetPricingStats() const {
     cumulativePricingTime_ = 0;
 }
 
-Real InstrumentWrapper::getTimedNPV(const boost::shared_ptr<QuantLib::Instrument>& instr) const {
+Real InstrumentWrapper::getTimedNPV(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& instr) const {
     if (instr == nullptr)
         return 0.0;
     if (instr->isCalculated() || instr->isExpired())
@@ -87,8 +87,8 @@ Real InstrumentWrapper::getTimedNPV(const boost::shared_ptr<QuantLib::Instrument
     return tmp;
 }
 
-VanillaInstrument::VanillaInstrument(const boost::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier,
-                                     const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
+VanillaInstrument::VanillaInstrument(const QuantLib::ext::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier,
+                                     const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
                                      const std::vector<Real>& additionalMultipliers)
     : InstrumentWrapper(inst, multiplier, additionalInstruments, additionalMultipliers) {}
 

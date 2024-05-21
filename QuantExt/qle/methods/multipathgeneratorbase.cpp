@@ -25,7 +25,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 MultiPathGeneratorMersenneTwister::MultiPathGeneratorMersenneTwister(
-    const boost::shared_ptr<StochasticProcess>& process, const TimeGrid& grid, BigNatural seed, bool antitheticSampling)
+    const QuantLib::ext::shared_ptr<StochasticProcess>& process, const TimeGrid& grid, BigNatural seed, bool antitheticSampling)
     : process_(process), grid_(grid), seed_(seed), antitheticSampling_(antitheticSampling), antitheticVariate_(true),
       next_(MultiPath(process->size(), grid), 1.0) {
     MultiPathGeneratorMersenneTwister::reset();
@@ -33,10 +33,10 @@ MultiPathGeneratorMersenneTwister::MultiPathGeneratorMersenneTwister(
 
 void MultiPathGeneratorMersenneTwister::reset() {
     PseudoRandom::rsg_type rsg = PseudoRandom::make_sequence_generator(process_->factors() * (grid_.size() - 1), seed_);
-    if (auto tmp = boost::dynamic_pointer_cast<StochasticProcess1D>(process_)) {
-        pg1D_ = boost::make_shared<PathGenerator<PseudoRandom::rsg_type>>(tmp, grid_, rsg, false);
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<StochasticProcess1D>(process_)) {
+        pg1D_ = QuantLib::ext::make_shared<PathGenerator<PseudoRandom::rsg_type>>(tmp, grid_, rsg, false);
     } else {
-        pg_ = boost::make_shared<MultiPathGenerator<PseudoRandom::rsg_type>>(process_, grid_, rsg, false);
+        pg_ = QuantLib::ext::make_shared<MultiPathGenerator<PseudoRandom::rsg_type>>(process_, grid_, rsg, false);
     }
     antitheticVariate_ = true;
 }
@@ -60,7 +60,7 @@ const Sample<MultiPath>& MultiPathGeneratorMersenneTwister::next() const {
     }
 }
 
-MultiPathGeneratorSobol::MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>& process,
+MultiPathGeneratorSobol::MultiPathGeneratorSobol(const QuantLib::ext::shared_ptr<StochasticProcess>& process,
                                                  const TimeGrid& grid, BigNatural seed,
                                                  SobolRsg::DirectionIntegers directionIntegers)
     : process_(process), grid_(grid), seed_(seed), directionIntegers_(directionIntegers),
@@ -69,15 +69,15 @@ MultiPathGeneratorSobol::MultiPathGeneratorSobol(const boost::shared_ptr<Stochas
 }
 
 void MultiPathGeneratorSobol::reset() {
-    if (auto tmp = boost::dynamic_pointer_cast<StochasticProcess1D>(process_)) {
-        pg1D_ = boost::make_shared<PathGenerator<InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>>>(
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<StochasticProcess1D>(process_)) {
+        pg1D_ = QuantLib::ext::make_shared<PathGenerator<InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>>>(
             tmp, grid_,
             InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>(
                 SobolRsg(process_->factors() * (grid_.size() - 1), seed_, directionIntegers_)),
             false);
 
     } else {
-        pg_ = boost::make_shared<MultiPathGenerator<InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>>>(
+        pg_ = QuantLib::ext::make_shared<MultiPathGenerator<InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>>>(
             process_, grid_,
             InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>(
                 SobolRsg(process_->factors() * (grid_.size() - 1), seed_, directionIntegers_)));
@@ -93,7 +93,7 @@ const Sample<MultiPath>& MultiPathGeneratorSobol::next() const {
     }
 }
 
-MultiPathGeneratorBurley2020Sobol::MultiPathGeneratorBurley2020Sobol(const boost::shared_ptr<StochasticProcess>& process,
+MultiPathGeneratorBurley2020Sobol::MultiPathGeneratorBurley2020Sobol(const QuantLib::ext::shared_ptr<StochasticProcess>& process,
                                                            const TimeGrid& grid, BigNatural seed,
                                                            SobolRsg::DirectionIntegers directionIntegers,
                                                            BigNatural scrambleSeed)
@@ -103,15 +103,15 @@ MultiPathGeneratorBurley2020Sobol::MultiPathGeneratorBurley2020Sobol(const boost
 }
 
 void MultiPathGeneratorBurley2020Sobol::reset() {
-    if (auto tmp = boost::dynamic_pointer_cast<StochasticProcess1D>(process_)) {
-        pg1D_ = boost::make_shared<PathGenerator<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>>>(
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<StochasticProcess1D>(process_)) {
+        pg1D_ = QuantLib::ext::make_shared<PathGenerator<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>>>(
             tmp, grid_,
             InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>(
                 Burley2020SobolRsg(process_->factors() * (grid_.size() - 1), seed_, directionIntegers_, scrambleSeed_)),
             false);
 
     } else {
-        pg_ = boost::make_shared<MultiPathGenerator<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>>>(
+        pg_ = QuantLib::ext::make_shared<MultiPathGenerator<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>>>(
             process_, grid_,
             InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>(Burley2020SobolRsg(
                 process_->factors() * (grid_.size() - 1), seed_, directionIntegers_, scrambleSeed_)));
@@ -128,11 +128,11 @@ const Sample<MultiPath>& MultiPathGeneratorBurley2020Sobol::next() const {
 }
 
 MultiPathGeneratorSobolBrownianBridgeBase::MultiPathGeneratorSobolBrownianBridgeBase(
-    const boost::shared_ptr<StochasticProcess>& process, const TimeGrid& grid,
+    const QuantLib::ext::shared_ptr<StochasticProcess>& process, const TimeGrid& grid,
     SobolBrownianGenerator::Ordering ordering, BigNatural seed, SobolRsg::DirectionIntegers directionIntegers)
     : process_(process), grid_(grid), ordering_(ordering), seed_(seed), directionIntegers_(directionIntegers),
       next_(MultiPath(process->size(), grid), 1.0) {
-    process1D_ = boost::dynamic_pointer_cast<StochasticProcess1D>(process);
+    process1D_ = QuantLib::ext::dynamic_pointer_cast<StochasticProcess1D>(process);
 }
 
 const Sample<MultiPath>& MultiPathGeneratorSobolBrownianBridgeBase::next() const {
@@ -161,19 +161,19 @@ const Sample<MultiPath>& MultiPathGeneratorSobolBrownianBridgeBase::next() const
 }
 
 MultiPathGeneratorSobolBrownianBridge::MultiPathGeneratorSobolBrownianBridge(
-    const boost::shared_ptr<StochasticProcess>& process, const TimeGrid& grid,
+    const QuantLib::ext::shared_ptr<StochasticProcess>& process, const TimeGrid& grid,
     SobolBrownianGenerator::Ordering ordering, BigNatural seed, SobolRsg::DirectionIntegers directionIntegers)
     : MultiPathGeneratorSobolBrownianBridgeBase(process, grid, ordering, seed, directionIntegers) {
     MultiPathGeneratorSobolBrownianBridge::reset();
 }
 
 void MultiPathGeneratorSobolBrownianBridge::reset() {
-    gen_ = boost::make_shared<SobolBrownianGenerator>(process_->factors(), grid_.size() - 1, ordering_, seed_,
+    gen_ = QuantLib::ext::make_shared<SobolBrownianGenerator>(process_->factors(), grid_.size() - 1, ordering_, seed_,
                                                       directionIntegers_);
 }
 
 MultiPathGeneratorBurley2020SobolBrownianBridge::MultiPathGeneratorBurley2020SobolBrownianBridge(
-    const boost::shared_ptr<StochasticProcess>& process, const TimeGrid& grid,
+    const QuantLib::ext::shared_ptr<StochasticProcess>& process, const TimeGrid& grid,
     Burley2020SobolBrownianGenerator::Ordering ordering, BigNatural seed, SobolRsg::DirectionIntegers directionIntegers,
     BigNatural scrambleSeed)
     : MultiPathGeneratorSobolBrownianBridgeBase(process, grid, ordering, seed, directionIntegers),
@@ -182,29 +182,29 @@ MultiPathGeneratorBurley2020SobolBrownianBridge::MultiPathGeneratorBurley2020Sob
 }
 
 void MultiPathGeneratorBurley2020SobolBrownianBridge::reset() {
-    gen_ = boost::make_shared<Burley2020SobolBrownianGenerator>(process_->factors(), grid_.size() - 1, ordering_, seed_,
+    gen_ = QuantLib::ext::make_shared<Burley2020SobolBrownianGenerator>(process_->factors(), grid_.size() - 1, ordering_, seed_,
                                                                 directionIntegers_, scrambleSeed_);
 }
 
-boost::shared_ptr<MultiPathGeneratorBase>
-makeMultiPathGenerator(const SequenceType s, const boost::shared_ptr<StochasticProcess>& process,
+QuantLib::ext::shared_ptr<MultiPathGeneratorBase>
+makeMultiPathGenerator(const SequenceType s, const QuantLib::ext::shared_ptr<StochasticProcess>& process,
                        const TimeGrid& timeGrid, const BigNatural seed, const SobolBrownianGenerator::Ordering ordering,
                        const SobolRsg::DirectionIntegers directionIntegers) {
     switch (s) {
     case MersenneTwister:
-        return boost::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, false);
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, false);
     case MersenneTwisterAntithetic:
-        return boost::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, true);
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, true);
     case Sobol:
-        return boost::make_shared<QuantExt::MultiPathGeneratorSobol>(process, timeGrid, seed, directionIntegers);
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorSobol>(process, timeGrid, seed, directionIntegers);
     case Burley2020Sobol:
-        return boost::make_shared<QuantExt::MultiPathGeneratorBurley2020Sobol>(
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorBurley2020Sobol>(
             process, timeGrid, seed, directionIntegers, seed == 0 ? 0 : seed + 1);
     case SobolBrownianBridge:
-        return boost::make_shared<QuantExt::MultiPathGeneratorSobolBrownianBridge>(process, timeGrid, ordering, seed,
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorSobolBrownianBridge>(process, timeGrid, ordering, seed,
                                                                                    directionIntegers);
     case Burley2020SobolBrownianBridge:
-        return boost::make_shared<QuantExt::MultiPathGeneratorBurley2020SobolBrownianBridge>(
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorBurley2020SobolBrownianBridge>(
             process, timeGrid, ordering, seed, directionIntegers, seed == 0 ? 0 : seed + 1);
     default:
         QL_FAIL("Unknown sequence type");

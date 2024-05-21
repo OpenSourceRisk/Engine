@@ -49,19 +49,19 @@
          DayCounter dayCounter = Actual360();
 
          // Add USD/JPY discount curves
-         Handle<YieldTermStructure> domestic(boost::make_shared<FlatForward>(asof_, domRate, dayCounter));
-         Handle<YieldTermStructure> foreign(boost::make_shared<FlatForward>(asof_, forRate, dayCounter));
+         Handle<YieldTermStructure> domestic(QuantLib::ext::make_shared<FlatForward>(asof_, domRate, dayCounter));
+         Handle<YieldTermStructure> foreign(QuantLib::ext::make_shared<FlatForward>(asof_, forRate, dayCounter));
          yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = domestic;
          yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "JPY")] = foreign;
 
          // Add fx spot
 	 std::map<std::string, Handle<Quote>> quotes;
-	 quotes["JPYUSD"] = Handle<Quote>(boost::make_shared<SimpleQuote>(spot));
-	 fx_ = boost::make_shared<FXTriangulation>(quotes);
+	 quotes["JPYUSD"] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spot));
+	 fx_ = QuantLib::ext::make_shared<FXTriangulation>(quotes);
 
          // Add USDJPY volatilities
          Handle<BlackVolTermStructure> volatility(
-             boost::make_shared<BlackConstantVol>(asof_, TARGET(), flatVolatility, dayCounter));
+             QuantLib::ext::make_shared<BlackConstantVol>(asof_, TARGET(), flatVolatility, dayCounter));
          fxVols_[make_pair(Market::defaultConfiguration, "JPYUSD")] = volatility;
      }
  };
@@ -117,8 +117,8 @@
 
      Date asof = Date(01, Feb, 2021);
      Envelope env("CP1");
-     boost::shared_ptr<EngineFactory> engineFactory;
-     boost::shared_ptr<Market> market;
+     QuantLib::ext::shared_ptr<EngineFactory> engineFactory;
+     QuantLib::ext::shared_ptr<Market> market;
 
      for (const auto& a : asians) {
          Time deltaT = a.length / (a.fixings - 1);
@@ -134,15 +134,15 @@
          ScheduleDates scheduleDates("NullCalendar", "", "", strFixingDates);
          ScheduleData scheduleData(scheduleDates);
 
-         market = boost::make_shared<TestMarket>(a.spot, expiry, a.domesticRate, a.foreignRate, a.volatility);
-         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+         market = QuantLib::ext::make_shared<TestMarket>(a.spot, expiry, a.domesticRate, a.foreignRate, a.volatility);
+         QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
          std::string productName = "FxAsianOptionArithmeticPrice";
          engineData->model(productName) = "GarmanKohlhagen";
          engineData->engine(productName) = "MCDiscreteArithmeticAPEngine";
          engineData->engineParameters(productName) = {{"ProcessType", "Discrete"},    {"BrownianBridge", "True"},
                                                       {"AntitheticVariate", "False"}, {"ControlVariate", "True"},
                                                       {"RequiredSamples", "2047"},    {"Seed", "0"}};
-         engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+         engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
          // Set evaluation date
          Settings::instance().evaluationDate() = market->asofDate();
@@ -154,23 +154,23 @@
                                vector<Real>(), vector<Real>(), "", "", "", vector<string>(), vector<string>(), "", "",
                                "", "Asian", "Arithmetic", boost::none, boost::none, boost::none);
 
-         boost::shared_ptr<FxAsianOption> asianOption = boost::make_shared<FxAsianOption>(
+         QuantLib::ext::shared_ptr<FxAsianOption> asianOption = QuantLib::ext::make_shared<FxAsianOption>(
              env, "FxAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
-             boost::make_shared<FXUnderlying>("FX", "ECB-JPY-USD", 1.0), Date(), "USD");
+             QuantLib::ext::make_shared<FXUnderlying>("FX", "ECB-JPY-USD", 1.0), Date(), "USD");
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected
-         boost::shared_ptr<Instrument> qlInstrument = asianOption->instrument()->qlInstrument();
+         QuantLib::ext::shared_ptr<Instrument> qlInstrument = asianOption->instrument()->qlInstrument();
 
-         boost::shared_ptr<DiscreteAveragingAsianOption> discreteAsian =
-             boost::dynamic_pointer_cast<DiscreteAveragingAsianOption>(qlInstrument);
+         QuantLib::ext::shared_ptr<DiscreteAveragingAsianOption> discreteAsian =
+             QuantLib::ext::dynamic_pointer_cast<DiscreteAveragingAsianOption>(qlInstrument);
 
          BOOST_CHECK(discreteAsian);
          BOOST_CHECK_EQUAL(discreteAsian->exercise()->type(), Exercise::Type::European);
          BOOST_CHECK_EQUAL(discreteAsian->exercise()->dates().size(), 1);
          BOOST_CHECK_EQUAL(discreteAsian->exercise()->dates()[0], expiry);
 
-         boost::shared_ptr<TypePayoff> payoff = boost::dynamic_pointer_cast<TypePayoff>(discreteAsian->payoff());
+         QuantLib::ext::shared_ptr<TypePayoff> payoff = QuantLib::ext::dynamic_pointer_cast<TypePayoff>(discreteAsian->payoff());
          BOOST_CHECK(payoff);
          BOOST_CHECK_EQUAL(payoff->optionType(), a.type);
 
@@ -246,8 +246,8 @@
      portfolio.fromXMLString(tradeXml);
 
      // Extract FxAsianOption trade from portfolio
-     boost::shared_ptr<Trade> trade = portfolio.trades().begin()->second;
-     boost::shared_ptr<FxAsianOption> option = boost::dynamic_pointer_cast<ore::data::FxAsianOption>(trade);
+     QuantLib::ext::shared_ptr<Trade> trade = portfolio.trades().begin()->second;
+     QuantLib::ext::shared_ptr<FxAsianOption> option = QuantLib::ext::dynamic_pointer_cast<ore::data::FxAsianOption>(trade);
      BOOST_CHECK(option != nullptr);
 
      // Check fields after checking that the cast was successful

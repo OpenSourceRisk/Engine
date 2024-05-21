@@ -194,7 +194,7 @@ void CrifLoader::updateMapping(const CrifRecord& cr) const {
     }
 }
 
-StringStreamCrifLoader::StringStreamCrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
+StringStreamCrifLoader::StringStreamCrifLoader(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
     const std::vector<std::set<std::string>>& additionalHeaders, bool updateMapper,
     bool aggregateTrades, char eol, char delim, char quoteChar, char escapeChar, const std::string& nullString)
     : CrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades), eol_(eol), delim_(delim),

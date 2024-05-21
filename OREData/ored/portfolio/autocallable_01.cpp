@@ -22,7 +22,7 @@
 namespace ore {
 namespace data {
 
-void Autocallable_01::build(const boost::shared_ptr<EngineFactory>& factory) {
+void Autocallable_01::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -70,6 +70,10 @@ void Autocallable_01::build(const boost::shared_ptr<EngineFactory>& factory) {
     // build trade
 
     ScriptedTrade::build(factory);
+}
+
+void Autocallable_01::setIsdaTaxonomyFields() {
+    ScriptedTrade::setIsdaTaxonomyFields();
 
     // ISDA taxonomy, asset class set in the base class build
     // asset class set in the base class already
@@ -120,7 +124,7 @@ void Autocallable_01::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* Autocallable_01::toXML(XMLDocument& doc) {
+XMLNode* Autocallable_01::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode("Autocallable01Data");
     XMLUtils::appendNode(node, tradeNode);

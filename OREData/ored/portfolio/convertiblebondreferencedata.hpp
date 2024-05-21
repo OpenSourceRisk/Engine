@@ -29,7 +29,7 @@
 
 #include <ql/cashflow.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace ore {
 namespace data {
@@ -59,7 +59,7 @@ public:
           conversionData_(conversionData), dividendProtectionData_(dividendProtectionData) {}
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const BondReferenceDatum::BondData& bondData() const { return bondData_; }
     const ConvertibleBondData::CallabilityData& callData() const { return callData_; }

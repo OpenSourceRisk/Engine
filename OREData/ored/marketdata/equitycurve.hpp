@@ -49,13 +49,13 @@ public:
     EquityCurve() {}
     //! Detailed constructor
     EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-                const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves, const bool buildCalibrationInfo);
+                const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& requiredYieldCurves, const bool buildCalibrationInfo);
     //@}
     //! \name Inspectors
     //@{
     const EquityCurveSpec& spec() const { return spec_; };
-    boost::shared_ptr<QuantExt::EquityIndex2> equityIndex() const { return equityIndex_; };
-    boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equityIndex() const { return equityIndex_; };
+    QuantLib::ext::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
 private:
     EquityCurveSpec spec_;
@@ -65,8 +65,8 @@ private:
     DayCounter dc_;
     YieldCurve::InterpolationVariable dividendInterpVariable_;
     YieldCurve::InterpolationMethod dividendInterpMethod_;
-    boost::shared_ptr<QuantExt::EquityIndex2> equityIndex_;
-    boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo_;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equityIndex_;
+    QuantLib::ext::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo_;
 };
 } // namespace data
 } // namespace ore

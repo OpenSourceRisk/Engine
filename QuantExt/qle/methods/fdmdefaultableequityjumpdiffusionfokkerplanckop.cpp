@@ -26,8 +26,8 @@ namespace QuantExt {
 using namespace QuantLib;
 
 FdmDefaultableEquityJumpDiffusionFokkerPlanckOp::FdmDefaultableEquityJumpDiffusionFokkerPlanckOp(
-    const Real T, const boost::shared_ptr<QuantLib::FdmMesher>& mesher,
-    const boost::shared_ptr<const DefaultableEquityJumpDiffusionModel>& model, const Size direction)
+    const Real T, const QuantLib::ext::shared_ptr<QuantLib::FdmMesher>& mesher,
+    const QuantLib::ext::shared_ptr<const DefaultableEquityJumpDiffusionModel>& model, const Size direction)
     : T_(T), mesher_(mesher), model_(model), direction_(direction), dxMap_(FirstDerivativeOp(direction, mesher)),
       dxxMap_(SecondDerivativeOp(direction, mesher)), mapT_(direction, mesher), y_(mesher_->locations(direction_)) {}
 

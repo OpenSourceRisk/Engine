@@ -81,7 +81,7 @@ public:
 
     //! For each CRIF record checks if amountCurrency and amount are 
     //! defined and uses these to populate the record's amountUsd
-    void fillAmountUsd(const boost::shared_ptr<ore::data::Market> market);
+    void fillAmountUsd(const QuantLib::ext::shared_ptr<ore::data::Market> market);
     
     //! Check if netting set details are used anywhere, instead of just the netting set ID
     bool hasNettingSetDetails() const;
@@ -119,10 +119,12 @@ private:
     void addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false, bool sortFxVolQualifer =true);
     void addSimmParameterRecord(const CrifRecord& record);
     void updateAmountExistingRecord(std::set<CrifRecord>::iterator& it, const CrifRecord& record);
+    void updateAmountExistingRecord(std::map<CrifRecord::SimmAmountCcyKey, const CrifRecord*>::iterator& it, const CrifRecord& record);
 
 
     CrifType type_ = CrifType::Empty;
     std::set<CrifRecord> records_;
+    std::map<CrifRecord::SimmAmountCcyKey, const CrifRecord*> diffAmountCurrenciesIndex_;
 
     //SIMM members
     //! Set of portfolio IDs that have been loaded

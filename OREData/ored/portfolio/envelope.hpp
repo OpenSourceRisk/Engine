@@ -28,7 +28,7 @@
 
 #include <boost/any.hpp>
 #include <boost/none.hpp>
-#include <boost/tuple/tuple.hpp>
+#include <ql/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
 
 #include <map>
@@ -92,7 +92,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors

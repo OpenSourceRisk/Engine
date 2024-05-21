@@ -1,0 +1,96 @@
+\subsubsection{Performance Option Type 01}
+
+The performace option of type ``01'' is characterized by the following data
+
+\begin{itemize}
+\item a notional amount $N$
+\item a participation rate $q$
+\item a valuation date $V$ and a settlement date $S$
+\item a number of underlyings $U_i$ for $i=1,\ldots,n$
+\item weights for the underlyings $w_i$ for $i=1,\ldots,n$
+\item initial strike prices for the underlyings $s_i$ for $i=1,\ldots,n$
+\item an option strike $K$
+\end{itemize}
+
+On the valuation date the average performance of the underlying basket is computed as
+
+$$
+P = \max\left( \sum_{i=1}^n w_i \left( \frac{U_i(V)}{s_i} - K \right), 0 \right)
+$$
+
+The option holder receives an amount $N\cdot q\cdot P$ on the settlement date $S$. The underlyings can be Equity, FX or
+Commodity underlyings.
+
+The above payoff includes the strike in the performance calculation. There is another variant with excluded strike and payoff:
+
+$$
+P = \max\left( \left[ \sum_{i=1}^n w_i \frac{U_i(V)}{s_i} \right] - K, 0 \right)
+$$
+
+The \verb+PerformanceOption_01+ node is the trade data container for the PerformanceOption\_01 trade type, listing
+\ref{lst:performanceoption01_data} shows the structure of an example.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <PerformanceOption01Data>
+      <NotionalAmount>12500000</NotionalAmount>
+      <ParticipationRate>0.9</ParticipationRate>
+      <ValuationDate>2022-05-03</ValuationDate>
+      <SettlementDate>2022-05-05</SettlementDate>
+      <Underlyings>
+        <Underlying>
+          <Type>FX</Type>
+          <Name>ECB-CHF-EUR</Name>
+          <Weight>0.34</Weight>
+        </Underlying>
+        <Underlying>
+          <Type>FX</Type>
+          <Name>ECB-NOK-EUR</Name>
+          <Weight>0.32</Weight>
+        </Underlying>
+        <Underlying>
+          <Type>FX</Type>
+          <Name>ECB-SEK-EUR</Name>
+          <Weight>0.24</Weight>
+        </Underlying>
+        <Underlying>
+          <Type>FX</Type>
+          <Name>ECB-SEK-EUR</Name>
+          <Weight>0.10</Weight>
+        </Underlying>
+      </Underlyings>
+      <StrikePrices>
+        <StrikePrice>0.910002</StrikePrice>
+        <StrikePrice>0.097192</StrikePrice>
+        <StrikePrice>0.096085</StrikePrice>
+        <StrikePrice>0.035032</StrikePrice>
+      </StrikePrices>
+      <Strike>1.15</Strike>
+      <StrikeIncluded>true</StrikeIncluded>
+      <Position>Long</Position>
+      <PayCcy>EUR</PayCcy>
+    </PerformanceOption01Data>
+\end{minted}
+\caption{Performance Option Type 01 data}
+\label{lst:performanceoption01_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \verb+PerformanceOption01Data+  node follow below.
+
+\begin{itemize}
+\item NotionalAmount: The notional amount of the option. Allowable valus are non-negative numbers.
+\item ParticipationRate: The participation rate. Allowable values are non-negative numbers. Usually the value will be
+  between 0 and 1.
+\item ValuationDate: The valuation date.  Allowable values are valid dates.
+\item SettlementDate: The settlement date. Allowable values are valid dates.
+\item Underlyings: The underlyings of the option. See \ref{ss:underlying} for each underlying.
+\item StrikePrices: The initial strike prices of the underlyings. For an FX underlying FX-SOURCE-CCY1-CCY2 this is the
+  number of units of CCY2 per units of CCY1. For an EQ underlying this is the equity price expressed in the equity ccy. For a Commodity underlying this is the commodity price quoted as per the underlying commodity.
+  Allowable values are non-negative numbers.
+\item Strike: The option strike. This is expressed in terms of the performance of the underlying basket (see the product
+  description for more details). Allowable values are numbers.
+\item StrikeIncluded [optional]: If true the strike is included in the performance calculation, this is also the default
+  if the flag not given. If false the strike is excluded. 
+\item Position: The option position. Allowable values are {\em Long} or {\em Short}.
+\item PayCcy: The payment currency of the option. See the appendix for allowable currency codes.
+\end{itemize}

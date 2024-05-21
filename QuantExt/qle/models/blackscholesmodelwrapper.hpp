@@ -36,18 +36,18 @@ using namespace QuantLib;
 class BlackScholesModelWrapper : public Observer, public Observable {
 public:
     BlackScholesModelWrapper() {}
-    BlackScholesModelWrapper(const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+    BlackScholesModelWrapper(const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
                              const std::set<Date>& effectiveSimulationDates, const TimeGrid& discretisationTimeGrid)
         : processes_(processes), effectiveSimulationDates_(effectiveSimulationDates),
           discretisationTimeGrid_(discretisationTimeGrid) {}
 
-    const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>>& processes() const { return processes_; }
+    const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes() const { return processes_; }
     const std::set<Date>& effectiveSimulationDates() const { return effectiveSimulationDates_; }
     const TimeGrid& discretisationTimeGrid() const { return discretisationTimeGrid_; }
 
 private:
     void update() override { notifyObservers(); }
-    const std::vector<boost::shared_ptr<GeneralizedBlackScholesProcess>> processes_;
+    const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> processes_;
     const std::set<Date> effectiveSimulationDates_;
     const TimeGrid discretisationTimeGrid_;
 };

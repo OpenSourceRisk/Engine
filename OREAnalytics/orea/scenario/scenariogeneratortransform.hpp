@@ -25,7 +25,7 @@
 
 #include <vector>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
@@ -40,19 +40,19 @@ using std::vector;
 
 class ScenarioGeneratorTransform : public ScenarioGenerator {
 public:
-    ScenarioGeneratorTransform(boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
-                               const boost::shared_ptr<ScenarioSimMarket>& simMarket,
-                               const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig)
+    ScenarioGeneratorTransform(QuantLib::ext::shared_ptr<ScenarioGenerator>& scenarioGenerator,
+                               const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
+                               const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig)
         : scenarioGenerator_(scenarioGenerator), simMarket_(simMarket), simMarketConfig_(simMarketConfig){}
 
-    boost::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
+    QuantLib::ext::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
 
     void reset() override;
 
 private:
-    boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
-    boost::shared_ptr<ScenarioSimMarket> simMarket_;
-    boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
+    QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
 };
 
 } // namespace analytics

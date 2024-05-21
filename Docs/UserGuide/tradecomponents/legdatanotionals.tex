@@ -41,7 +41,7 @@ The meanings and allowable values of the elements in the \lstinline!LegData! nod
 \item LegType:  Determines which of the available sub-nodes must be
   used. 
 
-Allowable values:  \emph{Fixed, Floating, Cashflow, CMS, DigitalCMS, DurationAdjustedCMS, CMSSpread, DigitalCMSSpread, Equity, CPI, YY, ZeroCouponFixed}
+Allowable values:  \emph{Fixed, Floating, Cashflow, CMS, CMB, DigitalCMS, DurationAdjustedCMS, CMSSpread, DigitalCMSSpread, Equity, CPI, YY, ZeroCouponFixed, FormulaBased, CommodityFloating, CommodityFixed, EquityMargin} 
 
 \item Payer:  The flows of the leg are paid to the counterparty if
   \emph{true}, and received if \emph{false}.  
@@ -52,7 +52,7 @@ Allowable values:  \emph{true, false}
 
 Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!. When \lstinline!LegType! is \emph{Equity}, Minor Currencies in Table \ref{tab:currency} are also allowable.
 
-\item PaymentCalendar [Optional]: The payment calendar of the leg coupons. The \lstinline!PaymentCalendar! is used in conjunction with the \lstinline!PaymentConvention! and the \lstinline!PaymentLag! to determine the payments dates, unless the \lstinline!PaymentDates! node is used which defines the payment dates explicitly.
+\item PaymentCalendar [Optional]: The payment calendar of the leg coupons. The \lstinline!PaymentCalendar! is used in conjunction with the \lstinline!PaymentConvention!, \lstinline!PaymentLag! and \lstinline!NotionalPaymentLag! to determine the payments dates, unless the \lstinline!PaymentDates! node is used which defines the payment dates explicitly.
 
 Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. If left blank or omitted, defaults to the calendar in the \lstinline!ScheduleData! node, unless \lstinline!LegType! is \emph{Floating} and \lstinline!Index! is OIS, in which case this defaults to the index calendar. 
 
@@ -62,11 +62,15 @@ The \lstinline!PaymentCalendar! calendar field is currently only supported for \
 
 Allowable values: See Table \ref{tab:convention}.
 
-\item PaymentLag [optional]: The payment lag applies to Fixed legs, Equity legs, and Floating legs with Ibor and OIS indices (but not to BMA/SIFMA indices), as well as CPI legs and Zero Coupon Fixed legs. \\
+\item PaymentLag [optional]: The payment lag applies to the coupons on Fixed legs, Equity legs, and Floating legs with Ibor and OIS indices (but not to BMA/SIFMA indices), as well as CMS legs, CMSSpread legs, CPI legs and Zero Coupon Fixed legs. \\
 PaymentLag is also not supported for CapFloor Floating legs that have Ibor coupons with sub periods (HasSubPeriods = \emph{true}), nor for CapFloor Floating legs with averaged ON coupons (IsAveraged = \emph{true}).
 
 Allowable values: Any valid period, i.e. a non-negative whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
   \emph{Y} (years). Defaults to \emph{0D} if left blank or omitted. If a whole number is given and no letter, it is assumed that it is a number of  \emph{D} (days).
+
+\item NotionalPaymentLag [optional]: The notional payment lag (in days) applied to any notional exchanges.
+
+Allowable values: Any non-negative integer. Defaults to zero if left blank or omitted.
 
 \item DayCounter: The day count convention of the leg coupons. Note that \lstinline!DayCounter! is mandatory for all leg types except \emph{Equity}.
 
@@ -210,8 +214,8 @@ outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
   outlined in section \ref{ss:cashflowlegdata}.
 \item CMSLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CMS} (Constant Maturity Swap). It is
   outlined in section \ref{ss:cmslegdata}.
-% \item CMBLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CMB} (Constant Maturity Bond). It is
-%  outlined in section \ref{ss:cmblegdata}.   
+  \item CMBLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CMB} (Constant Maturity Bond). It is
+  outlined in section \ref{ss:cmblegdata}. 
 \item DigitalCMSLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{DigitalCMS}. It is
   outlined in section \ref{ss:digitalcmslegdata}.
 \item DurationAdjustedCMSLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{DurationAdjustedCMS}. It is
@@ -228,10 +232,10 @@ outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
   outlined in section \ref{ss:yylegdata}.
 \item ZeroCouponFixedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{ZeroCouponFixed}. It is
   outlined in section \ref{ss:zerolegdata}.
- %  \item FormulaBasedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{FormulaBased}. It is
- % outlined in section \ref{ss:formulalegdata}.
- % \item CommodityFloatingLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CommodityFloating} It is
-% outlined in section \ref{ss:commodity_floating_leg_data}.
-% \item CommodityFixedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CommodityFixed} It is outlined in section \ref{ss:commodity_fixed_leg_data}.
-% \item EquityMarginLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{EquityMargin} It is outlined in section \ref{ss:equity_margin_leg_data}.  
+  \item FormulaBasedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{FormulaBased}. It is
+  outlined in section \ref{ss:formulalegdata}.
+  \item CommodityFloatingLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CommodityFloating} It is
+outlined in section \ref{ss:commodity_floating_leg_data}.
+\item CommodityFixedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CommodityFixed} It is outlined in section \ref{ss:commodity_fixed_leg_data}.
+\item EquityMarginLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{EquityMargin} It is outlined in section \ref{ss:equity_margin_leg_data}.
 \end{itemize}

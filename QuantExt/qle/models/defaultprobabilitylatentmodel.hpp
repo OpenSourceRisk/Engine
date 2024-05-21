@@ -55,8 +55,8 @@ public:
 protected:
     // not a handle, the model doesnt keep any cached magnitudes, no need
     //  for notifications, still...
-    mutable boost::shared_ptr<Basket> basket_;
-    boost::shared_ptr<LMIntegration> integration_;
+    mutable QuantLib::ext::shared_ptr<Basket> basket_;
+    QuantLib::ext::shared_ptr<LMIntegration> integration_;
 
 private:
     typedef typename copulaPolicy::initTraits initTraits;
@@ -89,7 +89,7 @@ public:
     /* To interface with loss models. It is possible to change the basket
     since there are no cached magnitudes.
     */
-    void resetBasket(const boost::shared_ptr<Basket> basket) const {
+    void resetBasket(const QuantLib::ext::shared_ptr<Basket> basket) const {
         basket_ = basket;
         // in the future change 'size' to 'liveSize'
         QL_REQUIRE(basket_->size() == factorWeights_.size(), "Incompatible new basket and model sizes.");
@@ -165,7 +165,7 @@ protected:
     outside the call.
     */
     Probability conditionalDefaultProbability(const Date& date, Size iName, const std::vector<Real>& mktFactors) const {
-        const boost::shared_ptr<Pool>& pool = basket_->pool();
+        const QuantLib::ext::shared_ptr<Pool>& pool = basket_->pool();
         Probability pDefUncond =
             pool->get(pool->names()[iName]).defaultProbability(basket_->defaultKeys()[iName])->defaultProbability(date);
         return conditionalDefaultProbability(pDefUncond, iName, mktFactors);
@@ -181,7 +181,7 @@ protected:
     // \todo: check the issuer has not defaulted.
     Real conditionalProbAtLeastNEvents(Size n, const Date& date, const std::vector<Real>& mktFactors) const;
     //! access to integration:
-    const boost::shared_ptr<LMIntegration>& integration() const override { return integration_; }
+    const QuantLib::ext::shared_ptr<LMIntegration>& integration() const override { return integration_; }
 
 public:
     /*! Computes the unconditional probability of default of a given name.
@@ -189,16 +189,16 @@ public:
     */
     Probability probOfDefault(Size iName, const Date& d) const {
         QL_REQUIRE(basket_, "No portfolio basket set.");
-        const boost::shared_ptr<Pool>& pool = basket_->pool();
+        const QuantLib::ext::shared_ptr<Pool>& pool = basket_->pool();
         // avoid repeating this in the integration:
         Probability pUncond =
             pool->get(pool->names()[iName]).defaultProbability(basket_->defaultKeys()[iName])->defaultProbability(d);
         if (pUncond < 1.e-10)
             return 0.;
 
-        return integratedExpectedValue(boost::function<Real(const std::vector<Real>& v1)>(
-            boost::bind(&DefaultLatentModel<copulaPolicy>::conditionalDefaultProbabilityInvP, this,
-                        inverseCumulativeY(pUncond, iName), iName, boost::placeholders::_1)));
+        return integratedExpectedValue(QuantLib::ext::function<Real(const std::vector<Real>& v1)>(
+            QuantLib::ext::bind(&DefaultLatentModel<copulaPolicy>::conditionalDefaultProbabilityInvP, this,
+                        inverseCumulativeY(pUncond, iName), iName, QuantLib::ext::placeholders::_1)));
     }
     /*! Pearsons' default probability correlation.
         Users should consider specialization on the copula type for specific
@@ -212,8 +212,8 @@ public:
     defaults in the basket portfolio at a given time.
     */
     Probability probAtLeastNEvents(Size n, const Date& date) const {
-        return integratedExpectedValue(boost::function<Real(const std::vector<Real>& v1)>(boost::bind(
-            &DefaultLatentModel<copulaPolicy>::conditionalProbAtLeastNEvents, this, n, boost::cref(date), boost::placeholders::_1)));
+        return integratedExpectedValue(QuantLib::ext::function<Real(const std::vector<Real>& v1)>(QuantLib::ext::bind(
+            &DefaultLatentModel<copulaPolicy>::conditionalProbAtLeastNEvents, this, n, QuantLib::ext::cref(date), QuantLib::ext::placeholders::_1)));
     }
 };
 
@@ -222,7 +222,7 @@ public:
 template <class CP> Real DefaultLatentModel<CP>::defaultCorrelation(const Date& d, Size iNamei, Size iNamej) const {
     QL_REQUIRE(basket_, "No portfolio basket set.");
 
-    const boost::shared_ptr<Pool>& pool = basket_->pool();
+    const QuantLib::ext::shared_ptr<Pool>& pool = basket_->pool();
     // unconditionals:
     Probability pi =
         pool->get(pool->names()[iNamei]).defaultProbability(basket_->defaultKeys()[iNamei])->defaultProbability(d);
@@ -234,8 +234,8 @@ template <class CP> Real DefaultLatentModel<CP>::defaultCorrelation(const Date& 
     // avoid repetitive calls when i=j?
     Real E1i1j; // joint default covariance term
     if (iNamei != iNamej) {
-        E1i1j = integratedExpectedValue(boost::function<Real(const std::vector<Real>& v1)>(
-            boost::bind(&DefaultLatentModel<CP>::condProbProduct, this, invPi, invPj, iNamei, iNamej, boost::placeholders::_1)));
+        E1i1j = integratedExpectedValue(QuantLib::ext::function<Real(const std::vector<Real>& v1)>(
+            QuantLib::ext::bind(&DefaultLatentModel<CP>::condProbProduct, this, invPi, invPj, iNamei, iNamej, QuantLib::ext::placeholders::_1)));
     } else {
         E1i1j = pi;
     }
@@ -256,7 +256,7 @@ Real DefaultLatentModel<CP>::conditionalProbAtLeastNEvents(Size n, const Date& d
     */
     // first position with as many defaults as desired:
     Size poolSize = basket_->size(); // move to 'livesize'
-    const boost::shared_ptr<Pool>& pool = basket_->pool();
+    const QuantLib::ext::shared_ptr<Pool>& pool = basket_->pool();
 
     BigNatural limit = static_cast<BigNatural>(std::pow(2., (int)(poolSize)));
 

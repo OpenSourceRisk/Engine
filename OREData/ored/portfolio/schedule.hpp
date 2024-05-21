@@ -79,7 +79,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
     string startDate_;
@@ -95,6 +95,7 @@ private:
     bool adjustEndDateToPreviousMonthEnd_{false};
     bool removeFirstDate_ = false;
     bool removeLastDate_ = false;
+    bool was1T_ = false;
 };
 
 //! Serializable object holding schedule Dates data
@@ -130,7 +131,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
     string calendar_;
@@ -138,6 +139,7 @@ private:
     string tenor_;
     string endOfMonth_;
     vector<string> dates_;
+    bool was1T_ = false;
 };
 
 //! Serializable object holding Derived schedule data
@@ -174,7 +176,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
     string baseSchedule_;
@@ -232,7 +234,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 private:
     vector<ScheduleDates> dates_;
