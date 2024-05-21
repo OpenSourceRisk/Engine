@@ -195,6 +195,9 @@ public:
     const DebugInfo& debugInfo() const override final;
 
 private:
+    std::pair<std::size_t, bool> generateResultId();
+    std::vector<std::string> getArgString(const std::vector<std::size_t>& args) const;
+
     void updateVariatesPool();
 
     void runHealthChecks();
@@ -227,6 +230,7 @@ private:
     std::vector<std::size_t> version_;
     std::vector<cl_program> program_;
     std::vector<std::vector<cl_kernel>> kernel_;
+    std::vector<std::vector<std::vector<std::vector<std::size_t>>>> conditionalExpectationVarIds_;
     std::vector<std::size_t> inputBufferSize_;
     std::vector<std::size_t> nOutputVars_;
     std::vector<std::size_t> nVars_;
@@ -249,6 +253,8 @@ private:
     std::size_t nVarsTmp_;
     std::size_t nVariatesTmp_;
     Settings settings_;
+    bool lastOperationWasConditionalExpectation_ = false;
+    std::set<std::size_t> declaredVariables_;
 
     // 2a indexed by var id
     std::vector<std::size_t> inputVarOffset_;
@@ -559,6 +565,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         version_.push_back(version);
         program_.push_back(cl_program());
         kernel_.push_back(std::vector<cl_kernel>());
+        conditionalExpectationVarIds_.push_back(std::vector<std::vector<std::vector<std::size_t>>>(1));
         inputBufferSize_.push_back(0);
         nOutputVars_.push_back(0);
         nVars_.push_back(0);
@@ -587,6 +594,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
             releaseKernel(kernel_[id - 1],
                           "kernel id " + std::to_string(id) + " (during initiateCalculation, old version: " +
                               std::to_string(version_[id - 1]) + ", new version:" + std::to_string(version) + ")");
+            conditionalExpectationVarIds_[id - 1] = std::vector<std::vector<std::vector<std::size_t>>>(1);
             releaseProgram(program_[id - 1],
                            "program id " + std::to_string(id) + " (during initiateCalculation, old version: " +
                                std::to_string(version_[id - 1]) + ", new version:" + std::to_string(version) + ")");
@@ -609,10 +617,12 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
     if (newCalc) {
         freedVariables_.clear();
         outputVariables_.clear();
-
         // reset ssa
-
         currentSsa_ = std::vector<std::string>(1);
+        // reset last op flag
+        lastOperationWasConditionalExpectation_ = false;
+        // reset declared variables
+        declaredVariables_.clear();
     }
 
     // set state
@@ -931,35 +941,22 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
     return resultIds;
 }
 
-std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode,
-                                          const std::vector<std::size_t>& args) {
-    QL_REQUIRE(currentState_ == ComputeState::createInput || currentState_ == ComputeState::createVariates ||
-                   currentState_ == ComputeState::calc,
-               "OpenClContext::applyOperation(): not in state createInput or calc (" << static_cast<int>(currentState_)
-                                                                                     << ")");
-    currentState_ = ComputeState::calc;
-    QL_REQUIRE(currentId_ > 0, "OpenClContext::applyOperation(): current id is not set");
-    QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::applyOperation(): id (" << currentId_ << ") in version "
-                                                                                    << version_[currentId_ - 1]
-                                                                                    << " has a kernel already.");
-
-    // determine variable id to use for result
-
+std::pair<std::size_t, bool> OpenClContext::generateResultId() {
     std::size_t resultId;
     bool resultIdNeedsDeclaration;
     if (!freedVariables_.empty()) {
         resultId = freedVariables_.back();
         freedVariables_.pop_back();
-        resultIdNeedsDeclaration = false;
+        resultIdNeedsDeclaration = declaredVariables_.find(resultId) == declaredVariables_.end();
     } else {
         resultId = nVarsTmp_++;
         resultIdNeedsDeclaration = true;
     }
+    declaredVariables_.insert(resultId);
+    return std::make_pair(resultId, resultIdNeedsDeclaration);
+}
 
-    resultIdNeedsDeclaration = resultIdNeedsDeclaration && currentSsa_.size() == 1; // no init from values
-
-    // determine arg variable names
-
+std::vector<std::string> OpenClContext::getArgString(const std::vector<std::size_t>& args) const {
     std::vector<std::string> argStr(args.size());
     for (std::size_t i = 0; i < args.size(); ++i) {
         if (args[i] < inputVarOffset_.size()) {
@@ -972,116 +969,156 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
             argStr[i] = "v" + std::to_string(args[i]);
         }
     }
+    return argStr;
+}
 
-    // generate ssa entry
-
+std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode,
+                                          const std::vector<std::size_t>& args) {
+    QL_REQUIRE(currentState_ == ComputeState::createInput || currentState_ == ComputeState::createVariates ||
+                   currentState_ == ComputeState::calc,
+               "OpenClContext::applyOperation(): not in state createInput or calc (" << static_cast<int>(currentState_)
+                                                                                     << ")");
+    currentState_ = ComputeState::calc;
+    QL_REQUIRE(currentId_ > 0, "OpenClContext::applyOperation(): current id is not set");
+    QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::applyOperation(): id (" << currentId_ << ") in version "
+                                                                                    << version_[currentId_ - 1]
+                                                                                    << " has a kernel already.");
     std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
 
-    std::string ssaLine =
-        (resultIdNeedsDeclaration ? fpTypeStr + " " : "") + std::string("v") + std::to_string(resultId) + " = ";
-    bool startNewKernel = false;
+    auto argStr = getArgString(args);
 
-    switch (randomVariableOpCode) {
-    case RandomVariableOpCode::None: {
-        break;
-    }
-    case RandomVariableOpCode::Add: {
-        ssaLine += argStr[0] + " + " + argStr[1] + ";";
-        break;
-    }
-    case RandomVariableOpCode::Subtract: {
-        ssaLine += argStr[0] + " - " + argStr[1] + ";";
-        break;
-    }
-    case RandomVariableOpCode::Negative: {
-        ssaLine += "-" + argStr[0] + ";";
-        break;
-    }
-    case RandomVariableOpCode::Mult: {
-        ssaLine += argStr[0] + " * " + argStr[1] + ";";
-        break;
-    }
-    case RandomVariableOpCode::Div: {
-        ssaLine += argStr[0] + " / " + argStr[1] + ";";
-        break;
-    }
-    case RandomVariableOpCode::IndicatorEq: {
-        ssaLine += "ore_indicatorEq(" + argStr[0] + "," + argStr[1] + ");";
-        break;
-    }
-    case RandomVariableOpCode::IndicatorGt: {
-        ssaLine += "ore_indicatorGt(" + argStr[0] + "," + argStr[1] + ");";
-        break;
-    }
-    case RandomVariableOpCode::IndicatorGeq: {
-        ssaLine += "ore_indicatorGeq(" + argStr[0] + "," + argStr[1] + ");";
-        break;
-    }
-    case RandomVariableOpCode::Min: {
-        ssaLine += "fmin(" + argStr[0] + "," + argStr[1] + ");";
-        break;
-    }
-    case RandomVariableOpCode::Max: {
-        ssaLine += "fmax(" + argStr[0] + "," + argStr[1] + ");";
-        break;
-    }
-    case RandomVariableOpCode::Abs: {
-        ssaLine += "fabs(" + argStr[0] + ");";
-        break;
-    }
-    case RandomVariableOpCode::Exp: {
-        ssaLine += "exp(" + argStr[0] + ");";
-        break;
-    }
-    case RandomVariableOpCode::Sqrt: {
-        ssaLine += "sqrt(" + argStr[0] + ");";
-        break;
-    }
-    case RandomVariableOpCode::Log: {
-        ssaLine += "log(" + argStr[0] + ");";
-        break;
-    }
-    case RandomVariableOpCode::Pow: {
-        ssaLine += "pow(" + argStr[0] + "," + argStr[1] + ");";
-        break;
-    }
-    // TODO add this in the kernel code below first before activating it here
-    // case RandomVariableOpCode::NormalCdf: {
-    //     ssaLine += "ore_normalCdf(" + argStr[0] + ");";
-    //     break;
-    // }
-    case RandomVariableOpCode::NormalPdf: {
-        ssaLine += "ore_normalPdf(" + argStr[0] + ");";
-        break;
-    }
-    case RandomVariableOpCode::ConditionalExpectation: {
-        ssaLine.clear();
-        startNewKernel = true;
-        conditionalExpectationArgs_.push_back(argStr);
-        break;
-    }
-    default: {
-        QL_FAIL("OpenClContext::executeKernel(): no implementation for op code "
-                << randomVariableOpCode << " (" << getRandomVariableOpLabels()[randomVariableOpCode] << ") provided.");
-    }
-    }
+    if (randomVariableOpCode == RandomVariableOpCode::ConditionalExpectation) {
 
-    // add entry to global ssa
+        // after a (block of) conditional expectation operations, we start a new kernel
 
-    if (startNewKernel && !currentSsa_.back().empty())
-        currentSsa_.push_back(std::string());
+        std::string ssaLines;
+        std::vector<std::size_t> argIds;
+        std::size_t regressandId;
+        for (std::size_t i = 0; i < argStr.size() + 1; ++i) {
+            auto [resultId, resultIdNeedsDeclaration] = generateResultId();
+            ssaLines += "  " + (resultIdNeedsDeclaration ? fpTypeStr + " " : "") + std::string("v") +
+                        std::to_string(resultId) + " = " + (i == 0 ? "0.0" : argStr[i - 1]) + ";\n";
+            argIds.push_back(resultId);
+            if (i == 0)
+                regressandId = resultId;
+        }
 
-    if (!ssaLine.empty())
+        std::size_t ssaIndex;
+        if (lastOperationWasConditionalExpectation_) {
+            ssaIndex = currentSsa_.size() - 2;
+        } else {
+            ssaIndex = currentSsa_.size() - 1;
+            lastOperationWasConditionalExpectation_ = true;
+            currentSsa_.push_back(std::string());
+            conditionalExpectationVarIds_[currentId_ - 1].push_back(std::vector<std::vector<std::size_t>>());
+        }
+
+        conditionalExpectationVarIds_[currentId_ - 1][ssaIndex].push_back(argIds);
+        currentSsa_[ssaIndex] += ssaLines;
+
+        return regressandId;
+
+    } else {
+
+        // op code is everythig but conditional expectation (i.e. a pathwise operation)
+
+        if(lastOperationWasConditionalExpectation_)
+            declaredVariables_.clear();
+
+        lastOperationWasConditionalExpectation_ = false;
+
+        auto [resultIdNeedsDeclaration, resultId] = generateResultId();
+
+        std::string ssaLine =
+            (resultIdNeedsDeclaration ? fpTypeStr + " " : "") + std::string("v") + std::to_string(resultId) + " = ";
+
+        switch (randomVariableOpCode) {
+        case RandomVariableOpCode::None: {
+            break;
+        }
+        case RandomVariableOpCode::Add: {
+            ssaLine += argStr[0] + " + " + argStr[1] + ";";
+            break;
+        }
+        case RandomVariableOpCode::Subtract: {
+            ssaLine += argStr[0] + " - " + argStr[1] + ";";
+            break;
+        }
+        case RandomVariableOpCode::Negative: {
+            ssaLine += "-" + argStr[0] + ";";
+            break;
+        }
+        case RandomVariableOpCode::Mult: {
+            ssaLine += argStr[0] + " * " + argStr[1] + ";";
+            break;
+        }
+        case RandomVariableOpCode::Div: {
+            ssaLine += argStr[0] + " / " + argStr[1] + ";";
+            break;
+        }
+        case RandomVariableOpCode::IndicatorEq: {
+            ssaLine += "ore_indicatorEq(" + argStr[0] + "," + argStr[1] + ");";
+            break;
+        }
+        case RandomVariableOpCode::IndicatorGt: {
+            ssaLine += "ore_indicatorGt(" + argStr[0] + "," + argStr[1] + ");";
+            break;
+        }
+        case RandomVariableOpCode::IndicatorGeq: {
+            ssaLine += "ore_indicatorGeq(" + argStr[0] + "," + argStr[1] + ");";
+            break;
+        }
+        case RandomVariableOpCode::Min: {
+            ssaLine += "fmin(" + argStr[0] + "," + argStr[1] + ");";
+            break;
+        }
+        case RandomVariableOpCode::Max: {
+            ssaLine += "fmax(" + argStr[0] + "," + argStr[1] + ");";
+            break;
+        }
+        case RandomVariableOpCode::Abs: {
+            ssaLine += "fabs(" + argStr[0] + ");";
+            break;
+        }
+        case RandomVariableOpCode::Exp: {
+            ssaLine += "exp(" + argStr[0] + ");";
+            break;
+        }
+        case RandomVariableOpCode::Sqrt: {
+            ssaLine += "sqrt(" + argStr[0] + ");";
+            break;
+        }
+        case RandomVariableOpCode::Log: {
+            ssaLine += "log(" + argStr[0] + ");";
+            break;
+        }
+        case RandomVariableOpCode::Pow: {
+            ssaLine += "pow(" + argStr[0] + "," + argStr[1] + ");";
+            break;
+        }
+        // TODO add this in the kernel code below first before activating it here
+        // case RandomVariableOpCode::NormalCdf: {
+        //     ssaLine += "ore_normalCdf(" + argStr[0] + ");";
+        //     break;
+        // }
+        case RandomVariableOpCode::NormalPdf: {
+            ssaLine += "ore_normalPdf(" + argStr[0] + ");";
+            break;
+        }
+        default: {
+            QL_FAIL("OpenClContext::executeKernel(): no implementation for op code "
+                    << randomVariableOpCode << " (" << getRandomVariableOpLabels()[randomVariableOpCode]
+                    << ") provided.");
+        }
+        } // switch random var op code
+
         currentSsa_.back() += "  " + ssaLine + "\n";
 
-    // update num of ops in debug info
+        if (settings_.debug)
+            debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
 
-    if (settings_.debug)
-        debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
-
-    // return result id
-
-    return resultId;
+        return resultId;
+    }
 }
 
 void OpenClContext::freeVariable(const std::size_t id) {
@@ -1226,77 +1263,77 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
         // clang-format on
 
-         std::string kernelNameStem =
-             "ore_kernel_" + std::to_string(currentId_) + "_" + std::to_string(version_[currentId_ - 1]) + "_";
+        std::string kernelNameStem =
+            "ore_kernel_" + std::to_string(currentId_) + "_" + std::to_string(version_[currentId_ - 1]) + "_";
 
-         for (std::size_t part = 0; part < currentSsa_.size(); ++part) {
+        for (std::size_t part = 0; part < currentSsa_.size(); ++part) {
 
-             bool initFromValues = part > 0;
-             bool cacheToValues = currentSsa_.size() > 1 && part < currentSsa_.size() - 1;
-             bool generateOutputValues = part == currentSsa_.size() - 1;
+            bool initFromValues = part > 0;
+            bool cacheToValues = currentSsa_.size() > 1 && part < currentSsa_.size() - 1;
+            bool generateOutputValues = part == currentSsa_.size() - 1;
 
-             std::string kernelName = kernelNameStem + std::to_string(part);
+            std::string kernelName = kernelNameStem + std::to_string(part);
 
-             std::vector<std::string> inputArgs;
-             if (inputBufferSize > 0)
-                 inputArgs.push_back("__global " + fpTypeStr + "* input");
-             if (nVariates_[currentId_ - 1] > 0)
-                 inputArgs.push_back("__global " + fpTypeStr + "* rn");
-             if (valuesBufferSize > 0 && (initFromValues || cacheToValues))
-                 inputArgs.push_back("__global " + fpTypeStr + "* values");
-             if (outputBufferSize > 0 && generateOutputValues)
-                 inputArgs.push_back("__global " + fpTypeStr + "* output");
+            std::vector<std::string> inputArgs;
+            if (inputBufferSize > 0)
+                inputArgs.push_back("__global " + fpTypeStr + "* input");
+            if (nVariates_[currentId_ - 1] > 0)
+                inputArgs.push_back("__global " + fpTypeStr + "* rn");
+            if (valuesBufferSize > 0 && (initFromValues || cacheToValues))
+                inputArgs.push_back("__global " + fpTypeStr + "* values");
+            if (outputBufferSize > 0 && generateOutputValues)
+                inputArgs.push_back("__global " + fpTypeStr + "* output");
 
-             kernelSource += "__kernel void " + kernelName + "(" + boost::join(inputArgs, ",") +
-                             ") {\n"
-                             "unsigned int i = get_global_id(0);\n"
-                             "if(i < " +
-                             std::to_string(size_[currentId_ - 1]) + "U) {\n";
+            kernelSource += "__kernel void " + kernelName + "(" + boost::join(inputArgs, ",") +
+                            ") {\n"
+                            "unsigned int i = get_global_id(0);\n"
+                            "if(i < " +
+                            std::to_string(size_[currentId_ - 1]) + "U) {\n";
 
-             if (initFromValues) {
-                 for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1]; i < nVars_[currentId_ - 1];
-                      ++i) {
-                     kernelSource += "  " + fpTypeStr + " v" + std::to_string(i) + " = values[" +
-                                     std::to_string((i - inputVarOffset_.size() - nVariates_[currentId_ - 1]) *
-                                                    size_[currentId_ - 1]) +
-                                     "U + i];\n";
-                 }
-             }
+            if (initFromValues) {
+                for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1]; i < nVars_[currentId_ - 1];
+                     ++i) {
+                    kernelSource += "  " + fpTypeStr + " v" + std::to_string(i) + " = values[" +
+                                    std::to_string((i - inputVarOffset_.size() - nVariates_[currentId_ - 1]) *
+                                                   size_[currentId_ - 1]) +
+                                    "U + i];\n";
+                }
+            }
 
-             kernelSource += currentSsa_[part];
+            kernelSource += currentSsa_[part];
 
-             if (cacheToValues) {
-                 for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1]; i < nVars_[currentId_ - 1];
-                      ++i) {
-                     kernelSource += "  values[" +
-                                     std::to_string((i - inputVarOffset_.size() - nVariates_[currentId_ - 1]) *
-                                                    size_[currentId_ - 1]) +
-                                     "U + i] = v" + std::to_string(i) + ";\n";
-                 }
-             }
+            if (cacheToValues) {
+                for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1]; i < nVars_[currentId_ - 1];
+                     ++i) {
+                    kernelSource += "  values[" +
+                                    std::to_string((i - inputVarOffset_.size() - nVariates_[currentId_ - 1]) *
+                                                   size_[currentId_ - 1]) +
+                                    "U + i] = v" + std::to_string(i) + ";\n";
+                }
+            }
 
-             if (generateOutputValues) {
-                 for (std::size_t i = 0; i < nOutputVars_[currentId_ - 1]; ++i) {
-                     std::size_t offset = i * size_[currentId_ - 1];
-                     std::string output;
-                     if (outputVariables_[i] < inputVarOffset_.size()) {
-                         output = "input[" + std::to_string(inputVarOffset_[outputVariables_[i]]) + "U" +
-                                  (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
-                     } else if (outputVariables_[i] < inputVarOffset_.size() + nVariates_[currentId_ - 1]) {
-                         output =
-                             "rn[" +
-                             std::to_string((outputVariables_[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) +
-                             "U + i]";
-                     } else {
-                         output = "v" + std::to_string(outputVariables_[i]);
-                     }
-                     std::string ssaLine = "  output[" + std::to_string(offset) + "U + i] = " + output + ";";
-                     kernelSource += ssaLine + "\n";
-                 }
-             }
+            if (generateOutputValues) {
+                for (std::size_t i = 0; i < nOutputVars_[currentId_ - 1]; ++i) {
+                    std::size_t offset = i * size_[currentId_ - 1];
+                    std::string output;
+                    if (outputVariables_[i] < inputVarOffset_.size()) {
+                        output = "input[" + std::to_string(inputVarOffset_[outputVariables_[i]]) + "U" +
+                                 (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
+                    } else if (outputVariables_[i] < inputVarOffset_.size() + nVariates_[currentId_ - 1]) {
+                        output =
+                            "rn[" +
+                            std::to_string((outputVariables_[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) +
+                            "U + i]";
+                    } else {
+                        output = "v" + std::to_string(outputVariables_[i]);
+                    }
+                    std::string ssaLine = "  output[" + std::to_string(offset) + "U + i] = " + output + ";";
+                    kernelSource += ssaLine + "\n";
+                }
+            }
 
-             kernelSource += "  }\n"
-                             "}\n";
+            kernelSource += "  }\n"
+                            "}\n";
 
         } // for part
 
