@@ -35,6 +35,7 @@
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/xvastressanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/cleanupsingletons.hpp>
 #include <orea/app/initbuilders.hpp>

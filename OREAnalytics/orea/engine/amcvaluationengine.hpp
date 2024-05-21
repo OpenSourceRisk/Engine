@@ -65,7 +65,9 @@ public:
         const bool handlePseudoCurrenciesTodaysMarket = true,
         const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
-            const QuantLib::Size)>& cubeFactory = {});
+            const QuantLib::Size)>& cubeFactory = {},
+        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams = nullptr);
 
     //! build cube in single threaded run
     void buildCube(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
@@ -120,7 +122,8 @@ private:
     std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                              const std::vector<QuantLib::Date>&, const QuantLib::Size)>
         cubeFactory_;
-
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;
     // result cubes for multi-threaded run
     std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> miniCubes_;
 };
