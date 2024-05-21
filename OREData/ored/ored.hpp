@@ -336,6 +336,7 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/report/report.hpp>
+#include <ored/report/utilities.hpp>
 #include <ored/scripting/ast.hpp>
 #include <ored/scripting/astprinter.hpp>
 #include <ored/scripting/astresetter.hpp>
