@@ -47,8 +47,7 @@ ANALYTICS
 - introduce configurable shift size and difference scheme per product for sensitivity analysis (ticket 12014)
 - improve performance of SIMM calculations for large CRIF files (ticket 12397)
 - output effective SOFR / RFR cap volatilities in reports (ticket 12192)
-- XVA Stress testing (ticket 12376): Matthias ???
-- XVA Bump & Reval Sensitivities, Raw and Par (ticket 12437): Matthias ???
+- XVA Stress testing (ticket 12376)
 
 TESTS
 - add a test suite for ORE-SWIG (ticket 11823)
@@ -63,8 +62,7 @@ TESTS
 DOCUMENTATION
 - add documentation of pricing engine configuration (ticket 12337)
 - add documentation for added instruments (ticket 12317)
-- add supported compiler and boost versions (ticket 11431) TODO update user guide
-- clean up ORE cmake build flags (ticket 12048) TODO and update user guide
+- add supported compiler and boost versions (ticket 11431) 
 - update the ORE Design document (ticket 12375)
 - the user guide has grown significantly to about 830 pages, due to the migration of more instruments
   into ORE, additional examples, and especially the added documentation of pricing engine configurations.
@@ -107,8 +105,7 @@ NEW & EXTENDED EXAMPLES
 - 64: Formual-based Coupon
 - 65: Flexi Swap
 - 66: Balance Guaranteed Swap 
-- 67: XVA Stress Analytic - Matthias ???
-- 68: XVA Bump & Reval Sensitivity Analytic - Matthias ???
+- 67: XVA Stress Analytic
 
 
 Changes for the 11th ORE release (1.8.11.0):
