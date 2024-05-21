@@ -76,7 +76,7 @@ public:
 
     std::string getVariableName(const ASTNodePtr p) {
         checkpoint(*p);
-        auto var = boost::dynamic_pointer_cast<VariableNode>(p);
+        auto var = QuantLib::ext::dynamic_pointer_cast<VariableNode>(p);
         if (var) {
             TRACE("getVariableName(" << var->name << ")", *p);
             return var->name;
@@ -87,7 +87,7 @@ public:
     // returns Null<Real>() if not a constant number node
     Real getConstantNumber(const ASTNodePtr p) {
         checkpoint(*p);
-        auto cn = boost::dynamic_pointer_cast<ConstantNumberNode>(p);
+        auto cn = QuantLib::ext::dynamic_pointer_cast<ConstantNumberNode>(p);
         if (cn) {
             TRACE("getConstantNumber(" << cn->value << ")", *p);
             return cn->value;
@@ -123,7 +123,7 @@ public:
         result.erase(std::remove_if(result.begin(), result.end(),
                                     [](const ValueType& v) {
                                         return v.which() == ValueTypeWhich::Event &&
-                                               boost::get<EventVec>(v).value == Date();
+                                               QuantLib::ext::get<EventVec>(v).value == Date();
                                     }),
                      result.end());
         return result;
@@ -150,12 +150,12 @@ public:
             for (auto const& d : datesValues) {
                 QL_REQUIRE(i.which() == ValueTypeWhich::Index, "index expected on lhs");
                 QL_REQUIRE(d.which() == ValueTypeWhich::Event, "event expected as obs date");
-                indexEvalDates_[boost::get<IndexVec>(i).value].insert(boost::get<EventVec>(d).value);
+                indexEvalDates_[QuantLib::ext::get<IndexVec>(i).value].insert(QuantLib::ext::get<EventVec>(d).value);
             }
             for (auto const& d : fwdDatesValues) {
                 QL_REQUIRE(i.which() == ValueTypeWhich::Index, "index expected on lhs");
                 QL_REQUIRE(d.which() == ValueTypeWhich::Event, "event expected as fwd date");
-                indexFwdDates_[boost::get<IndexVec>(i).value].insert(boost::get<EventVec>(d).value);
+                indexFwdDates_[QuantLib::ext::get<IndexVec>(i).value].insert(QuantLib::ext::get<EventVec>(d).value);
             }
         }
         visit(static_cast<ASTNode&>(n));
@@ -183,14 +183,14 @@ public:
             QL_REQUIRE(v.which() == ValueTypeWhich::Event, "date expected as arg #" << (indexObs + 1));
             for (auto const& c : currencyValues) {
                 QL_REQUIRE(c.which() == ValueTypeWhich::Currency, "currency expected as arg #" << (indexCurr + 1));
-                obsDates[boost::get<CurrencyVec>(c).value].insert(boost::get<EventVec>(v).value);
+                obsDates[QuantLib::ext::get<CurrencyVec>(c).value].insert(QuantLib::ext::get<EventVec>(v).value);
             }
         }
         for (auto const& v : payDateValues) {
             QL_REQUIRE(v.which() == ValueTypeWhich::Event, "date expected as arg #" << (indexPay + 1));
             for (auto const& c : currencyValues) {
                 QL_REQUIRE(c.which() == ValueTypeWhich::Currency, "currency expected as arg #" << (indexCurr + 1));
-                payDates[boost::get<CurrencyVec>(c).value].insert(boost::get<EventVec>(v).value);
+                payDates[QuantLib::ext::get<CurrencyVec>(c).value].insert(QuantLib::ext::get<EventVec>(v).value);
             }
         }
         visit(static_cast<ASTNode&>(n));
@@ -247,9 +247,9 @@ public:
             TRACE("got end date " << v, n);
         for (auto const& i : indexValues) {
             QL_REQUIRE(i.which() == ValueTypeWhich::Index, "index expected as arg #1");
-            std::string indexName = boost::get<IndexVec>(i).value;
+            std::string indexName = QuantLib::ext::get<IndexVec>(i).value;
             IndexInfo ind(indexName);
-            auto on = boost::dynamic_pointer_cast<OvernightIndex>(ind.irIbor());
+            auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(ind.irIbor());
             // ignore indices that are not on, those are not allowed in the end, but might still occur
             // here, wenn an array contains both libor and on indices
             if (!on) {
@@ -258,28 +258,28 @@ public:
             }
             for (auto const& v : obsDateValues) {
                 QL_REQUIRE(v.which() == ValueTypeWhich::Event, "date expected as arg #2 (obsdate)");
-                fwdCompAvgEvalDates_[indexName].insert(boost::get<EventVec>(v).value);
+                fwdCompAvgEvalDates_[indexName].insert(QuantLib::ext::get<EventVec>(v).value);
             }
             Date minStart = Date::maxDate();
             Date maxEnd = Date::minDate();
             for (auto const& v : startDateValues) {
                 QL_REQUIRE(v.which() == ValueTypeWhich::Event, "date expected as arg #3 (startdate)");
-                minStart = std::min(minStart, boost::get<EventVec>(v).value);
+                minStart = std::min(minStart, QuantLib::ext::get<EventVec>(v).value);
             }
             for (auto const& w : endDateValues) {
                 QL_REQUIRE(w.which() == ValueTypeWhich::Event, "date expected as arg #4 (enddate)");
-                maxEnd = std::max(maxEnd, boost::get<EventVec>(w).value);
+                maxEnd = std::max(maxEnd, QuantLib::ext::get<EventVec>(w).value);
             }
             if (minStart >= maxEnd)
                 continue;
             RandomVariable lookback, fixingDays;
             for (auto const& l : lookbackValues) {
                 QL_REQUIRE(l.which() == ValueTypeWhich::Number, "number expected as arg #7 (lookback)");
-                lookback = boost::get<RandomVariable>(l);
+                lookback = QuantLib::ext::get<RandomVariable>(l);
                 QL_REQUIRE(lookback.deterministic(), "expected arg #7 (lookback) to be deterministic");
                 for (auto const& f : fixingDaysValues) {
                     QL_REQUIRE(f.which() == ValueTypeWhich::Number, "number expected as arg #9 (fixingDays)");
-                    fixingDays = boost::get<RandomVariable>(f);
+                    fixingDays = QuantLib::ext::get<RandomVariable>(f);
                     QL_REQUIRE(fixingDays.deterministic(), "expected arg #9 (fixingDays) to be deterministic");
                     // construct template coupon and extract fixing and value dates
                     QuantExt::OvernightIndexedCoupon cpn(
@@ -319,11 +319,11 @@ public:
             TRACE("got obs date 2 " << v, n);
         for (auto const& i : indexValues) {
             QL_REQUIRE(i.which() == ValueTypeWhich::Index, "index expected as arg #1");
-            std::string indexName = boost::get<IndexVec>(i).value;
+            std::string indexName = QuantLib::ext::get<IndexVec>(i).value;
             Date minDate = Date::maxDate(), maxDate = Date::minDate();
             for (auto const& v : obsDate1Values) {
                 QL_REQUIRE(v.which() == ValueTypeWhich::Event, "date expected as arg #2");
-                Date d = boost::get<EventVec>(v).value;
+                Date d = QuantLib::ext::get<EventVec>(v).value;
                 indexEvalDates_[indexName].insert(d);
                 if (d < minDate)
                     minDate = d;
@@ -332,7 +332,7 @@ public:
             }
             for (auto const& v : obsDate2Values) {
                 QL_REQUIRE(v.which() == ValueTypeWhich::Event, "date expected as arg #3");
-                Date d = boost::get<EventVec>(v).value;
+                Date d = QuantLib::ext::get<EventVec>(v).value;
                 indexEvalDates_[indexName].insert(d);
                 if (d < minDate)
                     minDate = d;
@@ -376,7 +376,7 @@ public:
         TRACE("npv(" << obsDateVariable << ")", n);
         for (auto const& v : obsDateValues) {
             QL_REQUIRE(v.which() == ValueTypeWhich::Event, "date expected and 2nd argument");
-            regressionDates_.insert(boost::get<EventVec>(v).value);
+            regressionDates_.insert(QuantLib::ext::get<EventVec>(v).value);
         }
         visit(static_cast<ASTNode&>(n));
     }

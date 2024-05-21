@@ -42,14 +42,14 @@ public:
     explicit AsianOption(const string& tradeType) : Trade(tradeType) {}
     AsianOption(const Envelope& env, const string& tradeType, const double quantity, const TradeStrike& strike,
                 const OptionData& option, const ScheduleData& observationDates,
-                const boost::shared_ptr<Underlying>& underlying, const Date& settlementDate,
+                const QuantLib::ext::shared_ptr<Underlying>& underlying, const Date& settlementDate,
                 const std::string& currency)
         : Trade(tradeType, env), quantity_(quantity), tradeStrike_(strike), option_(option),
           observationDates_(observationDates), underlying_(underlying), settlementDate_(settlementDate),
           currency_(currency) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! Trade interface
     QuantLib::Real notional() const override;
@@ -58,7 +58,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -74,12 +74,12 @@ public:
         populateIndexName();
         return indexName_;
     }
-    const boost::shared_ptr<Underlying>& underlying() const { return underlying_; }
+    const QuantLib::ext::shared_ptr<Underlying>& underlying() const { return underlying_; }
     //@}
 
     // underlying asset names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
 protected:
     void populateIndexName() const;
@@ -88,13 +88,13 @@ protected:
     TradeStrike tradeStrike_;
     OptionData option_;
     ScheduleData observationDates_;
-    boost::shared_ptr<Underlying> underlying_;
+    QuantLib::ext::shared_ptr<Underlying> underlying_;
     Date settlementDate_;
 
     string currency_;
     string assetName_;
 
-    boost::shared_ptr<Trade> delegatingBuilderTrade_;
+    QuantLib::ext::shared_ptr<Trade> delegatingBuilderTrade_;
 
     mutable string indexName_;
 };

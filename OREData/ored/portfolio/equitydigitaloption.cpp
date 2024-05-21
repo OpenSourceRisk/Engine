@@ -31,7 +31,14 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void EquityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void EquityDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Option");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
 
     // Only European Vanilla supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
@@ -53,21 +60,21 @@ void EquityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     // Set up the CashOrNothing
     Real strike = strike_;
-    boost::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, strike, payoffAmount_));
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, strike, payoffAmount_));
 
     // Exercise
     Date expiryDate = parseDate(option_.exerciseDates().front());
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
 
     // QL does not have an EquityDigitalOption, so we add a vanilla one here and wrap
     // it in a composite.
-    boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
+    QuantLib::ext::shared_ptr<Instrument> vanilla = QuantLib::ext::make_shared<VanillaOption>(payoff, exercise);
 
     // set pricing engines
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<EquityDigitalOptionEngineBuilder> eqOptBuilder =
-        boost::dynamic_pointer_cast<EquityDigitalOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<EquityDigitalOptionEngineBuilder> eqOptBuilder =
+        QuantLib::ext::dynamic_pointer_cast<EquityDigitalOptionEngineBuilder>(builder);
     vanilla->setPricingEngine(eqOptBuilder->engine(assetName, ccy));
     setSensitivityTemplate(*eqOptBuilder);
 
@@ -75,13 +82,13 @@ void EquityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFa
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real mult = bsInd;
 
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     Date lastPremiumDate =
         addPremiums(additionalInstruments, additionalMultipliers, mult * quantity_, option_.premiumData(), -bsInd, ccy,
                     engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult*quantity_, additionalInstruments, additionalMultipliers));
 
     notional_ = payoffAmount_;
@@ -91,13 +98,6 @@ void EquityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engineFa
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("Option");
-    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");
 }
 
 void EquityDigitalOption::fromXML(XMLNode* node) {
@@ -115,7 +115,7 @@ void EquityDigitalOption::fromXML(XMLNode* node) {
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
 }
 
-XMLNode* EquityDigitalOption::toXML(XMLDocument& doc) {
+XMLNode* EquityDigitalOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityDigitalOptionData");
     XMLUtils::appendNode(node, eqNode);

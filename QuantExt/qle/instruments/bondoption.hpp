@@ -33,7 +33,7 @@ using namespace QuantLib;
 //! Bond option class
 class BondOption : public QuantLib::Instrument {
 public:
-    BondOption(const boost::shared_ptr<QuantLib::Bond>& underlying, const CallabilitySchedule& putCallSchedule,
+    BondOption(const QuantLib::ext::shared_ptr<QuantLib::Bond>& underlying, const CallabilitySchedule& putCallSchedule,
                const bool knocksOutOnDefault = false)
         : underlying_(underlying), putCallSchedule_(putCallSchedule), knocksOutOnDefault_(knocksOutOnDefault) {}
 
@@ -51,14 +51,14 @@ public:
 
 private:
     void setupArguments(PricingEngine::arguments*) const override;
-    const boost::shared_ptr<QuantLib::Bond> underlying_;
+    const QuantLib::ext::shared_ptr<QuantLib::Bond> underlying_;
     const CallabilitySchedule putCallSchedule_;
     const bool knocksOutOnDefault_;
 };
 
 class BondOption::arguments : public PricingEngine::arguments {
 public:
-    boost::shared_ptr<QuantLib::Bond> underlying;
+    QuantLib::ext::shared_ptr<QuantLib::Bond> underlying;
     CallabilitySchedule putCallSchedule;
     bool knocksOutOnDefault;
     void validate() const override;

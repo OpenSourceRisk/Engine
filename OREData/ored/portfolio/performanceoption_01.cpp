@@ -24,7 +24,7 @@
 namespace ore {
 namespace data {
 
-void PerformanceOption_01::build(const boost::shared_ptr<EngineFactory>& factory) {
+void PerformanceOption_01::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -68,27 +68,28 @@ void PerformanceOption_01::build(const boost::shared_ptr<EngineFactory>& factory
     // build trade
 
     ScriptedTrade::build(factory);
+}
+
+void PerformanceOption_01::setIsdaTaxonomyFields() {
+    ScriptedTrade::setIsdaTaxonomyFields();
 
     // ISDA taxonomy
     // asset class set in the base class already
     std::string assetClass = boost::any_cast<std::string>(additionalData_["isdaAssetClass"]);
     if (assetClass == "Equity") {
         additionalData_["isdaBaseProduct"] = string("Other");
-        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
-    }
-    else if (assetClass == "Commodity") {
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    } else if (assetClass == "Commodity") {
         // isda taxonomy missing for this class, using the same as equity
         additionalData_["isdaBaseProduct"] = string("Other");
-        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
-    }
-    else if (assetClass == "Foreign Exchange") {
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    } else if (assetClass == "Foreign Exchange") {
         additionalData_["isdaBaseProduct"] = string("Complex Exotic");
-        additionalData_["isdaSubProduct"] = string("Generic");  
-    }
-    else {
+        additionalData_["isdaSubProduct"] = string("Generic");
+    } else {
         WLOG("ISDA taxonomy incomplete for trade " << id());
-    }        
-    additionalData_["isdaTransaction"] = string("Basket");  
+    }
+    additionalData_["isdaTransaction"] = string("Basket");
 }
 
 void PerformanceOption_01::initIndices() {
@@ -126,7 +127,7 @@ void PerformanceOption_01::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* PerformanceOption_01::toXML(XMLDocument& doc) {
+XMLNode* PerformanceOption_01::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode("PerformanceOption01Data");
     XMLUtils::appendNode(node, tradeNode);

@@ -26,7 +26,8 @@
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/currencies/exchangeratemanager.hpp>
-
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 namespace ore {
 namespace data {
 
@@ -34,17 +35,17 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 TRSWrapper::TRSWrapper(
-    const std::vector<boost::shared_ptr<ore::data::Trade>>& underlying,
-    const std::vector<boost::shared_ptr<Index>>& underlyingIndex, const std::vector<Real> underlyingMultiplier,
+    const std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>>& underlying,
+    const std::vector<QuantLib::ext::shared_ptr<Index>>& underlyingIndex, const std::vector<Real> underlyingMultiplier,
     const bool includeUnderlyingCashflowsInReturn, const Real initialPrice, const Currency& initialPriceCurrency,
     const std::vector<Currency>& assetCurrency, const Currency& returnCurrency,
     const std::vector<Date>& valuationSchedule, const std::vector<Date>& paymentSchedule,
     const std::vector<Leg>& fundingLegs, const std::vector<TRS::FundingData::NotionalType>& fundingNotionalTypes,
     const Currency& fundingCurrency, const Size fundingResetGracePeriod, const bool paysAsset, const bool paysFunding,
     const Leg& additionalCashflowLeg, const bool additionalCashflowLegPayer, const Currency& additionalCashflowCurrency,
-    const std::vector<boost::shared_ptr<FxIndex>>& fxIndexAsset, const boost::shared_ptr<FxIndex>& fxIndexReturn,
-    const boost::shared_ptr<FxIndex>& fxIndexAdditionalCashflows,
-    const std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& addFxIndices)
+    const std::vector<QuantLib::ext::shared_ptr<FxIndex>>& fxIndexAsset, const QuantLib::ext::shared_ptr<FxIndex>& fxIndexReturn,
+    const QuantLib::ext::shared_ptr<FxIndex>& fxIndexAdditionalCashflows,
+    const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxIndices)
     : underlying_(underlying), underlyingIndex_(underlyingIndex), underlyingMultiplier_(underlyingMultiplier),
       includeUnderlyingCashflowsInReturn_(includeUnderlyingCashflowsInReturn), initialPrice_(initialPrice),
       initialPriceCurrency_(initialPriceCurrency), assetCurrency_(assetCurrency), returnCurrency_(returnCurrency),
@@ -275,7 +276,7 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
 }
 
 namespace {
-Real getFxIndexFixing(const boost::shared_ptr<FxIndex>& fx, const Currency& source, const Date& d,
+Real getFxIndexFixing(const QuantLib::ext::shared_ptr<FxIndex>& fx, const Currency& source, const Date& d,
                       const bool enforceProjection) {
     bool invert = fx->targetCurrency() == source;
     Real res;
@@ -485,10 +486,10 @@ void TRSWrapperAccrualEngine::calculate() const {
                     }
                     // account for dividends
                     Real dividends = 0.0;
-                    if (auto e = boost::dynamic_pointer_cast<EquityIndex2>(arguments_.underlyingIndex_[i])) {
+                    if (auto e = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(arguments_.underlyingIndex_[i])) {
                         dividends +=
                             e->dividendsBetweenDates(startDate + 1, today) * arguments_.underlyingMultiplier_[i];
-                    } else if (auto e = boost::dynamic_pointer_cast<CompositeIndex>(arguments_.underlyingIndex_[i])) {
+                    } else if (auto e = QuantLib::ext::dynamic_pointer_cast<CompositeIndex>(arguments_.underlyingIndex_[i])) {
                         dividends +=
                             e->dividendsBetweenDates(startDate + 1, today) * arguments_.underlyingMultiplier_[i];
                     }
@@ -533,7 +534,7 @@ void TRSWrapperAccrualEngine::calculate() const {
 
             Real localFundingLegNpv = 0.0; // local per funding coupon
 
-            auto cpn = boost::dynamic_pointer_cast<QuantLib::Coupon>(arguments_.fundingLegs_[i][cpnNo]);
+            auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(arguments_.fundingLegs_[i][cpnNo]);
             if (cpn == nullptr || cpn->date() <= today || cpn->accrualStartDate() >= today)
                 continue;
 
@@ -556,7 +557,6 @@ void TRSWrapperAccrualEngine::calculate() const {
             }
 
             localFundingLegNpv = cpn->accruedAmount(today);
-
             Real fundingLegNotionalFactor = 0.0;
             std::string resultSuffix = arguments_.fundingLegs_.size() > 1 ? "_" + std::to_string(i + 1) : "";
 
@@ -564,6 +564,8 @@ void TRSWrapperAccrualEngine::calculate() const {
                 results_.additionalResults["fundingCouponRate" + resultSuffix] = cpn->rate();
             } catch (...) {
             }
+
+            bool isOvernightCoupon = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn) != nullptr;
 
             for (Size j = 0; j < arguments_.underlying_.size(); ++j) {
 
@@ -602,16 +604,14 @@ void TRSWrapperAccrualEngine::calculate() const {
                         localNotionalFactor;
                     results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2] = localFxFactor;
 
-                } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset) {
+                } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset &&
+                           (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(cpn) ||
+                            QuantLib::ext::dynamic_pointer_cast<IborCoupon>(cpn))) {
 
-                    auto fixedCpn = boost::dynamic_pointer_cast<QuantLib::FixedRateCoupon>(cpn);
-                    QL_REQUIRE(fixedCpn, "NotionalType DailyReset is only supported for fixed rate funding legs");
-
-                    Real dcfTotal = fixedCpn->dayCounter().yearFraction(fixedCpn->accrualStartDate(),
-                                                                        std::min(fixedCpn->accrualEndDate(), today));
-                    for (QuantLib::Date d = fixedCpn->accrualStartDate();
-                         d < std::min(fixedCpn->accrualEndDate(), today); ++d) {
-                        Real dcfLocal = fixedCpn->dayCounter().yearFraction(d, d + 1);
+                    Real dcfTotal =
+                        cpn->dayCounter().yearFraction(cpn->accrualStartDate(), std::min(cpn->accrualEndDate(), today));
+                    for (QuantLib::Date d = cpn->accrualStartDate(); d < std::min(cpn->accrualEndDate(), today); ++d) {
+                        Real dcfLocal = cpn->dayCounter().yearFraction(d, d + 1);
                         Date fixingDate = arguments_.underlyingIndex_[j]->fixingCalendar().adjust(d, Preceding);
                         Real localNotionalFactor = getUnderlyingFixing(j, fixingDate, false) *
                                                    arguments_.underlyingMultiplier_[j] * dcfLocal / dcfTotal;
@@ -624,7 +624,86 @@ void TRSWrapperAccrualEngine::calculate() const {
                         results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2 + "_" +
                                                    ore::data::to_string(d)] = localFxFactor;
                     }
+                } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset &&
+                           isOvernightCoupon) {
+                    auto overnightCpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn);
+                    auto valueDates = overnightCpn->valueDates();
+                    auto fixingValues = overnightCpn->indexFixings();
+                    auto dts = overnightCpn->dt();
+                    double accruedInterest = 0;
+                    double accruedSpreadInterest = 0;
+                    double gearing = overnightCpn->gearing();
+                    double spread = overnightCpn->spread();
+                    for (size_t i = 0; i < valueDates.size() - 1; ++i) {
+                        const Date& valueDate = valueDates[i];
+                        double dt = dts[i];
+                        double irFixing = fixingValues[i];
+                        if (overnightCpn->includeSpread())
+                            irFixing += overnightCpn->spread();
+                        if (valueDate < today) {
+                            Date fixingDate =
+                                arguments_.underlyingIndex_[j]->fixingCalendar().adjust(valueDate, Preceding);
+                            Real localNotional =
+                                getUnderlyingFixing(j, fixingDate, false) * arguments_.underlyingMultiplier_[j];
+                            Real localFxFactor = getFxConversionRate(fixingDate, arguments_.assetCurrency_[j],
+                                                                     arguments_.fundingCurrency_, false);
+                            results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2 + "_" +
+                                                       ore::data::to_string(valueDate)] = localNotional;
+                            results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2 + "_" +
+                                                       ore::data::to_string(valueDate)] = localFxFactor;
+                            results_.additionalResults["fundingLegOISRate" + resultSuffix + resultSuffix2 + "_" +
+                                                       ore::data::to_string(valueDate)] = irFixing;
+                            results_.additionalResults["fundingLegDCF" + resultSuffix + resultSuffix2 + "_" +
+                                                       ore::data::to_string(valueDate)] = dt;
+                            localNotional *= localFxFactor;
+                            accruedInterest = localNotional * irFixing * dt + accruedInterest * (1 + irFixing * dt);
+                            if (!overnightCpn->includeSpread()) {
+                                accruedSpreadInterest += localNotional * spread * dt;
+                            }
+                            results_.additionalResults["fundingLegAccruedInterest" + resultSuffix + resultSuffix2 +
+                                                       "_" + ore::data::to_string(valueDate)] =
+                                accruedInterest + accruedSpreadInterest;
+                        }
+                    }
+                    fundingLegNotionalFactor = (gearing * accruedInterest + accruedSpreadInterest) / localFundingLegNpv;
+                } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset &&
+                           QuantLib::ext::dynamic_pointer_cast<AverageONIndexedCoupon>(cpn) != nullptr) {
+                    auto overnightCpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(cpn);
+                    auto valueDates = overnightCpn->valueDates();
+                    auto fixingValues = overnightCpn->indexFixings();
+                    auto dts = overnightCpn->dt();
+                    double accruedInterest = 0;
+                    double spread = overnightCpn->spread();
+                    double gearing = overnightCpn->gearing();
+                    for (size_t i = 0; i < valueDates.size() - 1; ++i) {
+                        const Date& valueDate = valueDates[i];
+                        double dt = dts[i];
+                        double irFixing = fixingValues[i];
 
+                        if (valueDate < today) {
+                            Date fixingDate =
+                                arguments_.underlyingIndex_[j]->fixingCalendar().adjust(valueDate, Preceding);
+                            Real localNotional =
+                                getUnderlyingFixing(j, fixingDate, false) * arguments_.underlyingMultiplier_[j];
+                            Real localFxFactor = getFxConversionRate(fixingDate, arguments_.assetCurrency_[j],
+                                                                     arguments_.fundingCurrency_, false);
+                            results_.additionalResults["fundingLegNotional" + resultSuffix + resultSuffix2 + "_" +
+                                                       ore::data::to_string(valueDate)] = localNotional;
+                            results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2 + "_" +
+                                                       ore::data::to_string(valueDate)] = localFxFactor;
+                            results_.additionalResults["fundingLegOISRate" + resultSuffix + resultSuffix2 + "_" +
+                                                       ore::data::to_string(valueDate)] = irFixing;
+                            results_.additionalResults["fundingLegDCF" + resultSuffix + resultSuffix2 + "_" +
+                                                       ore::data::to_string(valueDate)] = dt;
+                            localNotional *= localFxFactor;
+                            accruedInterest += localNotional * (gearing * irFixing + spread) * dt;
+                            results_.additionalResults["fundingLegAccruedInterest" + resultSuffix + resultSuffix2 +
+                                                       "_" + ore::data::to_string(valueDate)] = accruedInterest;
+                        }
+                    }
+                    fundingLegNotionalFactor = accruedInterest / localFundingLegNpv;
+                } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset) {
+                    QL_FAIL("daily reset funding legs support fixed rate, ibor and overnight indexed coupons only");
                 } else {
                     QL_FAIL("internal error: unknown notional type, contact dev");
                 }

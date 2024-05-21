@@ -35,15 +35,16 @@ using namespace std;
 namespace ore {
 namespace data {
 
-CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename, bool implyTodaysFixings)
-    : CSVLoader(marketFilename, fixingFilename, "", implyTodaysFixings) {}
+CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename, bool implyTodaysFixings,
+		     Date fixingCutOffDate)
+    : CSVLoader(marketFilename, fixingFilename, "", implyTodaysFixings, fixingCutOffDate) {}
 
-CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles, bool implyTodaysFixings)
-    : CSVLoader(marketFiles, fixingFiles, {}, implyTodaysFixings) {}
+CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles, bool implyTodaysFixings, Date fixingCutOffDate)
+    : CSVLoader(marketFiles, fixingFiles, {}, implyTodaysFixings, fixingCutOffDate) {}
 
 CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename, const string& dividendFilename,
-                     bool implyTodaysFixings)
-    : implyTodaysFixings_(implyTodaysFixings) {
+                     bool implyTodaysFixings, Date fixingCutOffDate)
+    : implyTodaysFixings_(implyTodaysFixings), fixingCutOffDate_(fixingCutOffDate) {
 
     // load market data
     loadFile(marketFilename, DataType::Market);
@@ -66,8 +67,9 @@ CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename,
 }
 
 CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles,
-                     const vector<string>& dividendFiles, bool implyTodaysFixings)
-    : implyTodaysFixings_(implyTodaysFixings) {
+                     const vector<string>& dividendFiles, bool implyTodaysFixings,
+		     Date fixingCutOffDate)
+    : implyTodaysFixings_(implyTodaysFixings), fixingCutOffDate_(fixingCutOffDate) {
 
     for (auto marketFile : marketFiles)
         // load market data
@@ -88,6 +90,11 @@ CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fi
     LOG("CSVLoader loaded " << dividends_.size() << " dividends");
 
     LOG("CSVLoader complete.");
+}
+
+QuantLib::ext::shared_ptr<MarketDatum> makeDummyMarketDatum(const Date& d, const std::string& name) {
+    return QuantLib::ext::make_shared<MarketDatum>(0.0, d, name, MarketDatum::QuoteType::NONE,
+                                           MarketDatum::InstrumentType::NONE);
 }
 
 void CSVLoader::loadFile(const string& filename, DataType dataType) {
@@ -122,17 +129,32 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                 // process market
                 // build market datum and add to map
                 try {
-                    boost::shared_ptr<MarketDatum> md;
+                    QuantLib::ext::shared_ptr<MarketDatum> md;
                     try {
                         md = parseMarketDatum(date, key, value);
                     } catch (std::exception& e) {
                         WLOG("Failed to parse MarketDatum " << key << ": " << e.what());
                     }
                     if (md != nullptr) {
-                        if (data_[date].insert(md).second) {
-                            TLOG("Added MarketDatum " << key);
-                        } else {
-                            WLOG("Skipped MarketDatum " << key << " - this is already present.");
+                        std::pair<bool, string> addFX = {true, ""};
+                        if (md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT &&
+                            md->quoteType() == MarketDatum::QuoteType::RATE) {
+                            addFX = checkFxDuplicate(md, date);
+                            if (!addFX.second.empty()) {
+                                auto it2 = data_[date].find(makeDummyMarketDatum(date, addFX.second));
+                                TLOG("Replacing MarketDatum " << addFX.second << " with " << key
+                                                                  << " due to FX Dominance.");
+                                if (it2 != data_[date].end())
+                                    data_[date].erase(it2);
+                            }
+                        }
+                        if (addFX.first && data_[date].insert(md).second) {
+                            LOG("Added MarketDatum " << key);
+                        } else if (!addFX.first) {
+                            LOG("Skipped MarketDatum " << key << " - dominant FX already present.")
+                        }
+						else {
+                            LOG("Skipped MarketDatum " << key << " - this is already present.");
                         }
                     }
                 } catch (std::exception& e) {
@@ -140,7 +162,8 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                 }
             } else if (dataType == DataType::Fixing) {
                 // process fixings
-                if (date < today || (date == today && !implyTodaysFixings_)) {
+                if (date < today || (date == today && !implyTodaysFixings_)
+		    || (fixingCutOffDate_ != Date() && date <= fixingCutOffDate_)) {
                     if(!fixings_.insert(Fixing(date, key, value)).second) {
                         WLOG("Skipped Fixing " << key << "@" << QuantLib::io::iso_date(date)
                                                << " - this is already present.");
@@ -166,20 +189,14 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
     LOG("CSVLoader completed processing " << filename);
 }
 
-vector<boost::shared_ptr<MarketDatum>> CSVLoader::loadQuotes(const QuantLib::Date& d) const {
+vector<QuantLib::ext::shared_ptr<MarketDatum>> CSVLoader::loadQuotes(const QuantLib::Date& d) const {
     auto it = data_.find(d);
     if (it == data_.end())
         return {};
-    return std::vector<boost::shared_ptr<MarketDatum>>(it->second.begin(), it->second.end());
+    return std::vector<QuantLib::ext::shared_ptr<MarketDatum>>(it->second.begin(), it->second.end());
 }
 
-boost::shared_ptr<MarketDatum> makeDummyMarketDatum(const Date& d, const std::string& name) {
-    return boost::make_shared<MarketDatum>(0.0, d, name, MarketDatum::QuoteType::NONE,
-                                           MarketDatum::InstrumentType::NONE);
-}
-
-
-boost::shared_ptr<MarketDatum> CSVLoader::get(const string& name, const QuantLib::Date& d) const {
+QuantLib::ext::shared_ptr<MarketDatum> CSVLoader::get(const string& name, const QuantLib::Date& d) const {
     auto it = data_.find(d);
     QL_REQUIRE(it != data_.end(), "No datum for " << name << " on date " << d);
     auto it2 = it->second.find(makeDummyMarketDatum(d, name));
@@ -187,12 +204,12 @@ boost::shared_ptr<MarketDatum> CSVLoader::get(const string& name, const QuantLib
     return *it2;
 }
 
-std::set<boost::shared_ptr<MarketDatum>> CSVLoader::get(const std::set<std::string>& names,
+std::set<QuantLib::ext::shared_ptr<MarketDatum>> CSVLoader::get(const std::set<std::string>& names,
                                                              const QuantLib::Date& asof) const {
     auto it = data_.find(asof);
     if(it == data_.end())
         return {};
-    std::set<boost::shared_ptr<MarketDatum>> result;
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>> result;
     for (auto const& n : names) {
         auto it2 = it->second.find(makeDummyMarketDatum(asof, n));
         if (it2 != it->second.end())
@@ -201,7 +218,7 @@ std::set<boost::shared_ptr<MarketDatum>> CSVLoader::get(const std::set<std::stri
     return result;
 }
 
-std::set<boost::shared_ptr<MarketDatum>> CSVLoader::get(const Wildcard& wildcard,
+std::set<QuantLib::ext::shared_ptr<MarketDatum>> CSVLoader::get(const Wildcard& wildcard,
                                                              const QuantLib::Date& asof) const {
     if (!wildcard.hasWildcard()) {
         // no wildcard => use get by name function
@@ -214,8 +231,8 @@ std::set<boost::shared_ptr<MarketDatum>> CSVLoader::get(const Wildcard& wildcard
     auto it = data_.find(asof);
     if (it == data_.end())
         return {};
-    std::set<boost::shared_ptr<MarketDatum>> result;
-    std::set<boost::shared_ptr<MarketDatum>>::iterator it1, it2;
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>> result;
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>>::iterator it1, it2;
     if (wildcard.wildcardPos() == 0) {
         // wildcard at first position => we have to search all of the data
         it1 = it->second.begin();

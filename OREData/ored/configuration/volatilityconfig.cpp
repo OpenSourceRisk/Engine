@@ -45,8 +45,8 @@ void VolatilityConfig::fromXMLNode(XMLNode* node) {
     calendar_ = calendarStr_.empty() ? Calendar() : parseCalendar(calendarStr_);
 }
 
-void VolatilityConfig::toXMLNode(XMLDocument& doc, XMLNode* node) {
-    XMLUtils::addAttribute(doc, node, "priority", to_string(priority_));
+void VolatilityConfig::toXMLNode(XMLDocument& doc, XMLNode* node) const {
+    XMLUtils::addAttribute(doc, node, "priority", std::to_string(priority_));
     if (!calendarStr_.empty())
         XMLUtils::addChild(doc, node, "Calendar", calendarStr_);
 }
@@ -59,7 +59,7 @@ void ProxyVolatilityConfig::fromXML(XMLNode* node) {
     correlationCurve_ = XMLUtils::getChildValue(node, "CorrelationCurve", false);
 }
 
-XMLNode* ProxyVolatilityConfig::toXML(XMLDocument& doc) {
+XMLNode* ProxyVolatilityConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ProxySurface");
     VolatilityConfig::toXMLNode(doc, node);
     XMLUtils::addChild(doc, node, "ProxyVolatilityCurve", proxyVolatilityCurve_);
@@ -88,7 +88,7 @@ void CDSProxyVolatilityConfig::fromXML(XMLNode* node) {
     cdsVolatilityCurve_ = XMLUtils::getChildValue(node, "CDSVolatilityCurve", true);
 }
 
-XMLNode* CDSProxyVolatilityConfig::toXML(XMLDocument& doc) {
+XMLNode* CDSProxyVolatilityConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ProxySurface");
     VolatilityConfig::toXMLNode(doc, node);
     XMLUtils::addChild(doc, node, "CDSVolatilityCurve", cdsVolatilityCurve_);
@@ -120,13 +120,13 @@ void QuoteBasedVolatilityConfig::fromBaseNode(XMLNode* node) {
     }
 }
 
-void QuoteBasedVolatilityConfig::toBaseNode(XMLDocument& doc, XMLNode* node) {
+void QuoteBasedVolatilityConfig::toBaseNode(XMLDocument& doc, XMLNode* node) const {
     VolatilityConfig::toXMLNode(doc, node);
 
     // Check first for premium
     if (quoteType_ == MarketDatum::QuoteType::PRICE) {
         XMLUtils::addChild(doc, node, "QuoteType", "Premium");
-        XMLUtils::addChild(doc, node, "ExerciseType", to_string(exerciseType_));
+        XMLUtils::addChild(doc, node, "ExerciseType", ore::data::to_string(exerciseType_));
         return;
     }
 
@@ -159,7 +159,7 @@ void ConstantVolatilityConfig::fromXML(XMLNode* node) {
     quote_ = XMLUtils::getChildValue(node, "Quote", true);
 }
 
-XMLNode* ConstantVolatilityConfig::toXML(XMLDocument& doc) {
+XMLNode* ConstantVolatilityConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Constant");
     QuoteBasedVolatilityConfig::toBaseNode(doc, node);
     XMLUtils::addChild(doc, node, "Quote", quote_);
@@ -198,7 +198,7 @@ void VolatilityCurveConfig::fromXML(XMLNode* node) {
         enforceMontoneVariance_ = parseBool(XMLUtils::getNodeValue(n));
 }
 
-XMLNode* VolatilityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* VolatilityCurveConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Curve");
     QuoteBasedVolatilityConfig::toBaseNode(doc, node);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
@@ -284,7 +284,7 @@ void VolatilityStrikeSurfaceConfig::fromXML(XMLNode* node) {
     fromNode(node);
 }
 
-XMLNode* VolatilityStrikeSurfaceConfig::toXML(XMLDocument& doc) {
+XMLNode* VolatilityStrikeSurfaceConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("StrikeSurface");
     QuoteBasedVolatilityConfig::toBaseNode(doc, node);
     XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
@@ -362,7 +362,7 @@ void VolatilityDeltaSurfaceConfig::fromXML(XMLNode* node) {
     fromNode(node);
 }
 
-XMLNode* VolatilityDeltaSurfaceConfig::toXML(XMLDocument& doc) {
+XMLNode* VolatilityDeltaSurfaceConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("DeltaSurface");
     QuoteBasedVolatilityConfig::toBaseNode(doc, node);
     XMLUtils::addChild(doc, node, "DeltaType", deltaType_);
@@ -428,7 +428,7 @@ void VolatilityMoneynessSurfaceConfig::fromXML(XMLNode* node) {
     fromNode(node);
 }
 
-XMLNode* VolatilityMoneynessSurfaceConfig::toXML(XMLDocument& doc) {
+XMLNode* VolatilityMoneynessSurfaceConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("MoneynessSurface");
     QuoteBasedVolatilityConfig::toBaseNode(doc, node);
     XMLUtils::addChild(doc, node, "MoneynessType", moneynessType_);
@@ -481,7 +481,7 @@ void VolatilityApoFutureSurfaceConfig::fromXML(XMLNode* node) {
     fromNode(node);
 }
 
-XMLNode* VolatilityApoFutureSurfaceConfig::toXML(XMLDocument& doc) {
+XMLNode* VolatilityApoFutureSurfaceConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ApoFutureSurface");
     QuoteBasedVolatilityConfig::toBaseNode(doc, node);
     XMLUtils::addGenericChildAsList(doc, node, "MoneynessLevels", moneynessLevels_);
@@ -498,48 +498,48 @@ XMLNode* VolatilityApoFutureSurfaceConfig::toXML(XMLDocument& doc) {
 
 void VolatilityConfigBuilder::loadVolatiltyConfigs(XMLNode* node) {
     for (XMLNode* n = XMLUtils::getChildNode(node, "Constant"); n; n = XMLUtils::getNextSibling(n, "Constant")) {
-        auto vc = boost::make_shared<ConstantVolatilityConfig>();
+        auto vc = QuantLib::ext::make_shared<ConstantVolatilityConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "Curve"); n; n = XMLUtils::getNextSibling(n, "Curve")) {
-        auto vc = boost::make_shared<VolatilityCurveConfig>();
+        auto vc = QuantLib::ext::make_shared<VolatilityCurveConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "DeltaSurface"); n;
          n = XMLUtils::getNextSibling(n, "DeltaSurface")) {
-        auto vc = boost::make_shared<VolatilityDeltaSurfaceConfig>();
+        auto vc = QuantLib::ext::make_shared<VolatilityDeltaSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "StrikeSurface"); n;
          n = XMLUtils::getNextSibling(n, "StrikeSurface")) {
-        auto vc = boost::make_shared<VolatilityStrikeSurfaceConfig>();
+        auto vc = QuantLib::ext::make_shared<VolatilityStrikeSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "MoneynessSurface"); n;
         n = XMLUtils::getNextSibling(n, "MoneynessSurface")) {
-        auto vc = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
+        auto vc = QuantLib::ext::make_shared<VolatilityMoneynessSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "ApoFutureSurface"); n;
         n = XMLUtils::getNextSibling(n, "ApoFutureSurface")) {
-        auto vc = boost::make_shared<VolatilityApoFutureSurfaceConfig>();
+        auto vc = QuantLib::ext::make_shared<VolatilityApoFutureSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "ProxySurface"); n;
          n = XMLUtils::getNextSibling(n, "ProxySurface")) {
-        auto vc = boost::make_shared<ProxyVolatilityConfig>();
+        auto vc = QuantLib::ext::make_shared<ProxyVolatilityConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
@@ -551,7 +551,7 @@ void VolatilityConfigBuilder::loadVolatiltyConfigs(XMLNode* node) {
     // sort the volatility configs by priority
     if (volatilityConfig_.size() > 1)
         std::sort(volatilityConfig_.begin(), volatilityConfig_.end(),
-                  [](const boost::shared_ptr<VolatilityConfig>& a, const boost::shared_ptr<VolatilityConfig>& b) {
+                  [](const QuantLib::ext::shared_ptr<VolatilityConfig>& a, const QuantLib::ext::shared_ptr<VolatilityConfig>& b) {
                       QL_REQUIRE(a && b,
                                  "VolatilityConfigBuilder fails to sort the configs, can not compare a nullptr");
                       return *a < *b;
@@ -565,7 +565,7 @@ void VolatilityConfigBuilder::fromXML(XMLNode* node) {
         loadVolatiltyConfigs(node);
 }
 
-XMLNode* VolatilityConfigBuilder::toXML(XMLDocument& doc) { return NULL; }
+XMLNode* VolatilityConfigBuilder::toXML(XMLDocument& doc) const { return NULL; }
 
 } // namespace data
 } // namespace ore

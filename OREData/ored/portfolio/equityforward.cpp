@@ -36,57 +36,7 @@ using namespace std;
 namespace ore {
 namespace data {
 
-void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    Currency ccy = parseCurrencyWithMinors(currency_);
-
-    // get the equity currency from the market
-    Currency equityCcy = engineFactory->market()->equityCurve(eqName())->currency();
-
-    // ensure forward currency matches the equity currency
-    QL_REQUIRE(!equityCcy.empty(), "No equity currency in equityCurve for equity " << eqName());
-    QL_REQUIRE(ccy == equityCcy, "EquityForward currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
-
-    // convert strike to the major currency if needed
-    Real strike;
-    if (!strikeCurrency_.empty()) {
-        Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
-        strike = convertMinorToMajorCurrency(strikeCurrency_, strike_);
-        // ensure strike currency matches equity currency
-        QL_REQUIRE(strikeCcy == equityCcy, "Strike currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
-    } else {        
-        WLOG("No Strike Currency provide for trade " << id() << ", assuming trade currency " << ccy);
-        strike = convertMinorToMajorCurrency(currency_, strike_);
-    }
-
-    QuantLib::Position::Type longShort = parsePositionType(longShort_);
-    Date maturity = parseDate(maturityDate_);
-
-    string name = eqName();
-
-    boost::shared_ptr<Instrument> inst =
-        boost::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike);
-
-    // Pricing engine
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<EquityForwardEngineBuilder> eqFwdBuilder =
-        boost::dynamic_pointer_cast<EquityForwardEngineBuilder>(builder);
-    inst->setPricingEngine(eqFwdBuilder->engine(name, ccy));
-    setSensitivityTemplate(*eqFwdBuilder);
-
-    // set up other Trade details
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
-    npvCurrency_ = ccy.code();
-    maturity_ = maturity;
-    // Notional - we really need todays spot to get the correct notional.
-    // But rather than having it move around we use strike * quantity
-    notional_ = strike * quantity_;
-    notionalCurrency_ = ccy.code();
-
-    additionalData_["underlyingSecurityId"] = name;
-    additionalData_["strike"] = strike;
-    additionalData_["strikeCurrency"] = strikeCurrency_;
-    additionalData_["quantity"] = quantity_;
+void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Equity");
@@ -94,6 +44,63 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");
+
+    additionalData_["strikeCurrency"] = strikeCurrency_;
+    additionalData_["quantity"] = quantity_;
+
+    Currency ccy = parseCurrencyWithMinors(currency_);
+
+    // convert strike to the major currency if needed
+    Real strike;
+    if (!strikeCurrency_.empty()) {
+        strike = convertMinorToMajorCurrency(strikeCurrency_, strike_);
+        // ensure strike currency matches equity currency
+    } else {        
+        WLOG("No Strike Currency provide for trade " << id() << ", assuming trade currency " << ccy);
+        strike = convertMinorToMajorCurrency(currency_, strike_);
+    }
+    additionalData_["strike"] = strike;
+
+    QuantLib::Position::Type longShort = parsePositionType(longShort_);
+    Date maturity = parseDate(maturityDate_);
+
+    string name = eqName();
+    additionalData_["underlyingSecurityId"] = name;
+
+    QuantLib::ext::shared_ptr<Instrument> inst =
+        QuantLib::ext::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike);
+
+    // set up other Trade details
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
+    npvCurrency_ = ccy.code();
+    maturity_ = maturity;
+    // Notional - we really need todays spot to get the correct notional.
+    // But rather than having it move around we use strike * quantity
+    notional_ = strike * quantity_;
+    notionalCurrency_ = ccy.code();
+
+    // We check the ccys here at the end of the build to ensure that the rest of the build above
+    // (which does not require the market) runs first
+
+    // get the equity currency from the market
+    Currency equityCcy = engineFactory->market()->equityCurve(eqName())->currency();
+
+    // ensure forward currency matches the equity currency
+    QL_REQUIRE(!equityCcy.empty(), "No equity currency in equityCurve for equity " << eqName());
+    QL_REQUIRE(ccy == equityCcy, "EquityForward currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
+    
+    if (!strikeCurrency_.empty()) {
+        Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
+        QL_REQUIRE(strikeCcy == equityCcy, "Strike currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
+    }
+
+    // Pricing engine
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    QL_REQUIRE(builder, "No builder found for " << tradeType_);
+    QuantLib::ext::shared_ptr<EquityForwardEngineBuilder> eqFwdBuilder =
+        QuantLib::ext::dynamic_pointer_cast<EquityForwardEngineBuilder>(builder);
+    inst->setPricingEngine(eqFwdBuilder->engine(name, ccy));
+    setSensitivityTemplate(*eqFwdBuilder);
 }
     
 void EquityForward::fromXML(XMLNode* node) {
@@ -112,7 +119,7 @@ void EquityForward::fromXML(XMLNode* node) {
     quantity_ = XMLUtils::getChildValueAsDouble(eNode, "Quantity", true);
 }
 
-XMLNode* EquityForward::toXML(XMLDocument& doc) {
+XMLNode* EquityForward::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eNode = doc.allocNode("EquityForwardData");
     XMLUtils::appendNode(node, eNode);
@@ -129,7 +136,7 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
 }
 
 std::map<AssetClass, std::set<std::string>>
-EquityForward::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+EquityForward::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::EQ, std::set<std::string>({eqName()})}};
 }
 

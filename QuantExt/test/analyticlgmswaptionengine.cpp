@@ -105,23 +105,23 @@ BOOST_AUTO_TEST_CASE(testMonoCurve) {
     BOOST_TEST_MESSAGE("Testing analytic LGM swaption engine coupon "
                        "adjustments in mono curve setup...");
 
-    Handle<YieldTermStructure> flatCurve(boost::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
+    Handle<YieldTermStructure> flatCurve(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
 
-    const boost::shared_ptr<IrLgm1fConstantParametrization> irlgm1f =
-        boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), flatCurve, 0.01, 0.01);
+    const QuantLib::ext::shared_ptr<IrLgm1fConstantParametrization> irlgm1f =
+        QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), flatCurve, 0.01, 0.01);
 
     // no curve attached
-    boost::shared_ptr<SwapIndex> index_nocurves = boost::make_shared<EuriborSwapIsdaFixA>(10 * Years);
+    QuantLib::ext::shared_ptr<SwapIndex> index_nocurves = QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years);
 
     // forward curve attached
-    boost::shared_ptr<SwapIndex> index_monocurve = boost::make_shared<EuriborSwapIsdaFixA>(10 * Years, flatCurve);
+    QuantLib::ext::shared_ptr<SwapIndex> index_monocurve = QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years, flatCurve);
 
     Swaption swaption_nocurves = MakeSwaption(index_nocurves, 10 * Years, 0.02);
     Swaption swaption_monocurve = MakeSwaption(index_monocurve, 10 * Years, 0.02);
 
-    boost::shared_ptr<PricingEngine> engine_nodisc = boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f);
-    boost::shared_ptr<PricingEngine> engine_monocurve =
-        boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f, flatCurve);
+    QuantLib::ext::shared_ptr<PricingEngine> engine_nodisc = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f);
+    QuantLib::ext::shared_ptr<PricingEngine> engine_monocurve =
+        QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f, flatCurve);
 
     swaption_nocurves.setPricingEngine(engine_nodisc);
     swaption_nocurves.NPV();
@@ -212,29 +212,29 @@ BOOST_AUTO_TEST_CASE(testDualCurve) {
                        "adjustments in dual curve setup...");
 
     // discounting curve
-    Handle<YieldTermStructure> discCurve(boost::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
+    Handle<YieldTermStructure> discCurve(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
     // forward (+10bp)
     Handle<YieldTermStructure> forwardCurve1(
-        boost::make_shared<FlatForward>(0, NullCalendar(), 0.0210, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0210, Actual365Fixed()));
     // forward (-10bp)
     Handle<YieldTermStructure> forwardCurve2(
-        boost::make_shared<FlatForward>(0, NullCalendar(), 0.0190, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.0190, Actual365Fixed()));
 
-    const boost::shared_ptr<IrLgm1fConstantParametrization> irlgm1f =
-        boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), discCurve, 0.01, 0.01);
+    const QuantLib::ext::shared_ptr<IrLgm1fConstantParametrization> irlgm1f =
+        QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), discCurve, 0.01, 0.01);
 
     // forward curve attached
-    boost::shared_ptr<SwapIndex> index1 = boost::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardCurve1);
-    boost::shared_ptr<SwapIndex> index2 = boost::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardCurve2);
+    QuantLib::ext::shared_ptr<SwapIndex> index1 = QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardCurve1);
+    QuantLib::ext::shared_ptr<SwapIndex> index2 = QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardCurve2);
 
     Swaption swaption1 = MakeSwaption(index1, 10 * Years, 0.02);
     Swaption swaption2 = MakeSwaption(index2, 10 * Years, 0.02);
 
-    boost::shared_ptr<PricingEngine> engine_a =
-        boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f, discCurve, AnalyticLgmSwaptionEngine::nextCoupon);
+    QuantLib::ext::shared_ptr<PricingEngine> engine_a =
+        QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f, discCurve, AnalyticLgmSwaptionEngine::nextCoupon);
 
-    boost::shared_ptr<PricingEngine> engine_b =
-        boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f, discCurve, AnalyticLgmSwaptionEngine::proRata);
+    QuantLib::ext::shared_ptr<PricingEngine> engine_b =
+        QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f, discCurve, AnalyticLgmSwaptionEngine::proRata);
 
     swaption1.setPricingEngine(engine_a);
     swaption1.NPV();
@@ -357,9 +357,9 @@ BOOST_AUTO_TEST_CASE(testAgainstOtherEngines) {
             for (Size l = 0; l < LENGTH(sigma); ++l) {
 
                 Handle<YieldTermStructure> discountingCurve(
-                    boost::make_shared<FlatForward>(0, NullCalendar(), discountingRateLevel[i], Actual365Fixed()));
+                    QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), discountingRateLevel[i], Actual365Fixed()));
                 Handle<YieldTermStructure> forwardingCurve(
-                    boost::make_shared<FlatForward>(0, NullCalendar(), forwardingRateLevel[i], Actual365Fixed()));
+                    QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), forwardingRateLevel[i], Actual365Fixed()));
 
                 Array times(0);
                 Array sigma_a(1, sigma[l]);
@@ -368,40 +368,40 @@ BOOST_AUTO_TEST_CASE(testAgainstOtherEngines) {
                 std::vector<Real> sigma_v(1, sigma[l]);
                 std::vector<Real> kappa_v(1, kappa[k]);
 
-                const boost::shared_ptr<IrLgm1fPiecewiseConstantHullWhiteAdaptor> irlgm1f =
-                    boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), discountingCurve, times,
+                const QuantLib::ext::shared_ptr<IrLgm1fPiecewiseConstantHullWhiteAdaptor> irlgm1f =
+                    QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), discountingCurve, times,
                                                                                  sigma_a, times, kappa_a);
 
-                std::vector<boost::shared_ptr<Parametrization> > params;
+                std::vector<QuantLib::ext::shared_ptr<Parametrization> > params;
                 params.push_back(irlgm1f);
                 Matrix rho(1, 1);
                 rho[0][0] = 1.0;
-                const boost::shared_ptr<CrossAssetModel> crossasset = boost::make_shared<CrossAssetModel>(params, rho);
+                const QuantLib::ext::shared_ptr<CrossAssetModel> crossasset = QuantLib::ext::make_shared<CrossAssetModel>(params, rho);
 
-                const boost::shared_ptr<Gaussian1dModel> g1d =
-                    boost::make_shared<Gaussian1dCrossAssetAdaptor>(0, crossasset);
+                const QuantLib::ext::shared_ptr<Gaussian1dModel> g1d =
+                    QuantLib::ext::make_shared<Gaussian1dCrossAssetAdaptor>(0, crossasset);
 
-                const boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(discountingCurve, dates, sigma_v, kappa_v);
+                const QuantLib::ext::shared_ptr<Gsr> gsr = QuantLib::ext::make_shared<Gsr>(discountingCurve, dates, sigma_v, kappa_v);
 
-                const boost::shared_ptr<HullWhite> hw =
-                    boost::make_shared<HullWhite>(discountingCurve, kappa[k], sigma[l]);
+                const QuantLib::ext::shared_ptr<HullWhite> hw =
+                    QuantLib::ext::make_shared<HullWhite>(discountingCurve, kappa[k], sigma[l]);
 
-                boost::shared_ptr<PricingEngine> engine_map_a = boost::make_shared<AnalyticLgmSwaptionEngine>(
+                QuantLib::ext::shared_ptr<PricingEngine> engine_map_a = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(
                     irlgm1f, discountingCurve, AnalyticLgmSwaptionEngine::nextCoupon);
-                boost::shared_ptr<PricingEngine> engine_map_b = boost::make_shared<AnalyticLgmSwaptionEngine>(
+                QuantLib::ext::shared_ptr<PricingEngine> engine_map_b = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(
                     irlgm1f, discountingCurve, AnalyticLgmSwaptionEngine::proRata);
 
-                boost::shared_ptr<PricingEngine> engine_g1d =
-                    boost::make_shared<Gaussian1dSwaptionEngine>(g1d, 128, 7.0, true, false, discountingCurve);
+                QuantLib::ext::shared_ptr<PricingEngine> engine_g1d =
+                    QuantLib::ext::make_shared<Gaussian1dSwaptionEngine>(g1d, 128, 7.0, true, false, discountingCurve);
 
-                boost::shared_ptr<PricingEngine> engine_gsr =
-                    boost::make_shared<Gaussian1dSwaptionEngine>(gsr, 128, 7.0, true, false, discountingCurve);
+                QuantLib::ext::shared_ptr<PricingEngine> engine_gsr =
+                    QuantLib::ext::make_shared<Gaussian1dSwaptionEngine>(gsr, 128, 7.0, true, false, discountingCurve);
 
-                boost::shared_ptr<PricingEngine> engine_fd =
-                    boost::make_shared<FdHullWhiteSwaptionEngine>(hw, 400, 400, 0, 1.0E-8);
+                QuantLib::ext::shared_ptr<PricingEngine> engine_fd =
+                    QuantLib::ext::make_shared<FdHullWhiteSwaptionEngine>(hw, 400, 400, 0, 1.0E-8);
 
-                boost::shared_ptr<SwapIndex> index =
-                    boost::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardingCurve, discountingCurve);
+                QuantLib::ext::shared_ptr<SwapIndex> index =
+                    QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardingCurve, discountingCurve);
                 Real atmStrike = index->fixing(TARGET().advance(Settings::instance().evaluationDate(), 5 * Years));
 
                 for (Size s = 0; s < LENGTH(strikeOffset); ++s) {
@@ -484,58 +484,58 @@ BOOST_AUTO_TEST_CASE(testLgmInvariances) {
     Real scaling[] = { 5.0, 2.0, 1.0, 0.1, 0.01, -0.01, -0.1, -1.0, -2.0, -5.0 };
 
     Handle<YieldTermStructure> discountingCurve(
-        boost::make_shared<FlatForward>(0, NullCalendar(), 0.03, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.03, Actual365Fixed()));
     Handle<YieldTermStructure> forwardingCurve(
-        boost::make_shared<FlatForward>(0, NullCalendar(), 0.05, Actual365Fixed()));
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.05, Actual365Fixed()));
 
     Array times(0);
     Array sigma_a(1, 0.01);
     Array alpha_a(1, 0.01);
     Array kappa_a(1, 0.01);
 
-    boost::shared_ptr<SwapIndex> index =
-        boost::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardingCurve, discountingCurve);
+    QuantLib::ext::shared_ptr<SwapIndex> index =
+        QuantLib::ext::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardingCurve, discountingCurve);
     Swaption swaption = MakeSwaption(index, 5 * Years, 0.07); // otm
 
     for (Size i = 0; i < LENGTH(shift); ++i) {
         for (Size j = 0; j < LENGTH(scaling); ++j) {
 
-            const boost::shared_ptr<IrLgm1fParametrization> irlgm1f0 =
-                boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), discountingCurve, 0.01, 0.01);
+            const QuantLib::ext::shared_ptr<IrLgm1fParametrization> irlgm1f0 =
+                QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), discountingCurve, 0.01, 0.01);
 
-            const boost::shared_ptr<IrLgm1fParametrization> irlgm1fa =
-                boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), discountingCurve, 0.01, 0.01);
+            const QuantLib::ext::shared_ptr<IrLgm1fParametrization> irlgm1fa =
+                QuantLib::ext::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), discountingCurve, 0.01, 0.01);
             irlgm1fa->shift() = shift[i];
             irlgm1fa->scaling() = scaling[j];
 
-            const boost::shared_ptr<IrLgm1fParametrization> irlgm1fb =
-                boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), discountingCurve, times,
+            const QuantLib::ext::shared_ptr<IrLgm1fParametrization> irlgm1fb =
+                QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), discountingCurve, times,
                                                                             alpha_a, times, kappa_a);
             irlgm1fb->shift() = shift[i];
             irlgm1fb->scaling() = scaling[j];
 
-            const boost::shared_ptr<IrLgm1fParametrization> irlgm1f0c =
-                boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), discountingCurve, times,
+            const QuantLib::ext::shared_ptr<IrLgm1fParametrization> irlgm1f0c =
+                QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), discountingCurve, times,
                                                                              sigma_a, times, kappa_a);
 
-            const boost::shared_ptr<IrLgm1fParametrization> irlgm1fc =
-                boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), discountingCurve, times,
+            const QuantLib::ext::shared_ptr<IrLgm1fParametrization> irlgm1fc =
+                QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), discountingCurve, times,
                                                                              sigma_a, times, kappa_a);
             irlgm1fc->shift() = shift[i];
             irlgm1fc->scaling() = scaling[j];
 
-            const boost::shared_ptr<LinearGaussMarkovModel> lgm0 = boost::make_shared<LinearGaussMarkovModel>(irlgm1f0);
-            const boost::shared_ptr<LinearGaussMarkovModel> lgma = boost::make_shared<LinearGaussMarkovModel>(irlgm1fa);
-            const boost::shared_ptr<LinearGaussMarkovModel> lgmb = boost::make_shared<LinearGaussMarkovModel>(irlgm1fb);
-            const boost::shared_ptr<LinearGaussMarkovModel> lgm0c =
-                boost::make_shared<LinearGaussMarkovModel>(irlgm1f0c);
-            const boost::shared_ptr<LinearGaussMarkovModel> lgmc = boost::make_shared<LinearGaussMarkovModel>(irlgm1fc);
+            const QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm0 = QuantLib::ext::make_shared<LinearGaussMarkovModel>(irlgm1f0);
+            const QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgma = QuantLib::ext::make_shared<LinearGaussMarkovModel>(irlgm1fa);
+            const QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgmb = QuantLib::ext::make_shared<LinearGaussMarkovModel>(irlgm1fb);
+            const QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm0c =
+                QuantLib::ext::make_shared<LinearGaussMarkovModel>(irlgm1f0c);
+            const QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgmc = QuantLib::ext::make_shared<LinearGaussMarkovModel>(irlgm1fc);
 
-            boost::shared_ptr<PricingEngine> engine0 = boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f0);
-            boost::shared_ptr<PricingEngine> enginea = boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1fa);
-            boost::shared_ptr<PricingEngine> engineb = boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1fb);
-            boost::shared_ptr<PricingEngine> engine0c = boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f0c);
-            boost::shared_ptr<PricingEngine> enginec = boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1fc);
+            QuantLib::ext::shared_ptr<PricingEngine> engine0 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f0);
+            QuantLib::ext::shared_ptr<PricingEngine> enginea = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1fa);
+            QuantLib::ext::shared_ptr<PricingEngine> engineb = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1fb);
+            QuantLib::ext::shared_ptr<PricingEngine> engine0c = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f0c);
+            QuantLib::ext::shared_ptr<PricingEngine> enginec = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(irlgm1fc);
 
             swaption.setPricingEngine(engine0);
             Real npv0 = swaption.NPV();

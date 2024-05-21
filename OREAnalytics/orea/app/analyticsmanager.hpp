@@ -35,31 +35,31 @@ namespace analytics {
 class AnalyticsManager {
 public:
     AnalyticsManager(//! Container for the inputs required by the standard analytics
-                     const boost::shared_ptr<InputParameters>& inputs,
+                     const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                      //! A market data loader object that can retrieve required data from a large repository
-                     const boost::shared_ptr<MarketDataLoader>& marketDataLoader);
+                     const QuantLib::ext::shared_ptr<MarketDataLoader>& marketDataLoader);
     virtual ~AnalyticsManager() {};
 
     //! Valid analytics in the analytics manager are the union of analytics types provided by analytics_ map
     bool hasAnalytic(const std::string& type);
     const std::set<std::string>& validAnalytics();
     const std::set<std::string>& requestedAnalytics();
-    const boost::shared_ptr<Analytic>& getAnalytic(const std::string& type) const;
+    const QuantLib::ext::shared_ptr<Analytic>& getAnalytic(const std::string& type) const;
     Size numberOfAnalytics() { return analytics_.size(); }
-    const boost::shared_ptr<InputParameters>& inputs() { return inputs_; }
+    const QuantLib::ext::shared_ptr<InputParameters>& inputs() { return inputs_; }
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
-    void runAnalytics(const std::set<std::string>& analyticTypes,
-                      const boost::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport = nullptr);
-    void addAnalytic(const std::string& label, const boost::shared_ptr<Analytic>& analytic);
+    void runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport = nullptr);
+    void addAnalytic(const std::string& label, const QuantLib::ext::shared_ptr<Analytic>& analytic);
 
     // returns a vector of all analytics, including dependent analytics
-    std::map<std::string, boost::shared_ptr<Analytic>> analytics() { return analytics_; }
+    std::map<std::string, QuantLib::ext::shared_ptr<Analytic>> analytics() { return analytics_; }
     void clear();
     
     Analytic::analytic_reports const reports();
     Analytic::analytic_npvcubes const npvCubes();
     Analytic::analytic_mktcubes const mktCubes();
-
+    Analytic::analytic_stresstests const stressTests();
+    
     // Write all reports to files, reportNames map can be used to replace standard report names
     // with custom names
     void toFile(const Analytic::analytic_reports& reports, const std::string& outputPath,
@@ -68,17 +68,16 @@ public:
                 const std::set<std::string>& lowerHeaderReportNames = {});
 
 private:
-    std::map<std::string, boost::shared_ptr<Analytic>> analytics_;
-    boost::shared_ptr<InputParameters> inputs_;
-    boost::shared_ptr<MarketDataLoader> marketDataLoader_;
+    std::map<std::string, QuantLib::ext::shared_ptr<Analytic>> analytics_;
+    QuantLib::ext::shared_ptr<InputParameters> inputs_;
+    QuantLib::ext::shared_ptr<MarketDataLoader> marketDataLoader_;
     Analytic::analytic_reports reports_;
     std::set<std::string> validAnalytics_;
-    std::set<std::string> requestedAnalytics_;
 };
 
-boost::shared_ptr<AnalyticsManager> parseAnalytics(const std::string& s,
-    const boost::shared_ptr<InputParameters>& inputs,
-    const boost::shared_ptr<MarketDataLoader>& marketDataLoader);
+QuantLib::ext::shared_ptr<AnalyticsManager> parseAnalytics(const std::string& s,
+    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+    const QuantLib::ext::shared_ptr<MarketDataLoader>& marketDataLoader);
 
 } // analytics
 } // ore

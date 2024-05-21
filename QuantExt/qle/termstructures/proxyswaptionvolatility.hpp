@@ -31,10 +31,10 @@ namespace QuantExt {
 class ProxySwaptionVolatility : public QuantLib::SwaptionVolatilityStructure {
 public:
     ProxySwaptionVolatility(const QuantLib::Handle<SwaptionVolatilityStructure>& baseVol,
-                            boost::shared_ptr<QuantLib::SwapIndex> baseSwapIndexBase,
-                            boost::shared_ptr<QuantLib::SwapIndex> baseShortSwapIndexBase,
-                            boost::shared_ptr<QuantLib::SwapIndex> targetSwapIndexBase,
-                            boost::shared_ptr<QuantLib::SwapIndex> targetShortSwapIndexBase);
+                            QuantLib::ext::shared_ptr<QuantLib::SwapIndex> baseSwapIndexBase,
+                            QuantLib::ext::shared_ptr<QuantLib::SwapIndex> baseShortSwapIndexBase,
+                            QuantLib::ext::shared_ptr<QuantLib::SwapIndex> targetSwapIndexBase,
+                            QuantLib::ext::shared_ptr<QuantLib::SwapIndex> targetShortSwapIndexBase);
 
     QuantLib::Rate minStrike() const override { return baseVol_->minStrike(); }
     QuantLib::Rate maxStrike() const override { return baseVol_->maxStrike(); }
@@ -46,18 +46,18 @@ public:
     const QuantLib::Period& maxSwapTenor() const override { return baseVol_->maxSwapTenor(); }
 
 private:
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate,
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate,
                                                                const QuantLib::Period& swapTenor) const override;
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime,
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime,
                                                                QuantLib::Time swapLength) const override;
     QuantLib::Volatility volatilityImpl(QuantLib::Time optionTime, QuantLib::Time swapLength,
                                         QuantLib::Rate strike) const override;
 
     QuantLib::Handle<QuantLib::SwaptionVolatilityStructure> baseVol_;
-    boost::shared_ptr<QuantLib::SwapIndex> baseSwapIndexBase_;
-    boost::shared_ptr<QuantLib::SwapIndex> baseShortSwapIndexBase_;
-    boost::shared_ptr<QuantLib::SwapIndex> targetSwapIndexBase_;
-    boost::shared_ptr<QuantLib::SwapIndex> targetShortSwapIndexBase_;
+    QuantLib::ext::shared_ptr<QuantLib::SwapIndex> baseSwapIndexBase_;
+    QuantLib::ext::shared_ptr<QuantLib::SwapIndex> baseShortSwapIndexBase_;
+    QuantLib::ext::shared_ptr<QuantLib::SwapIndex> targetSwapIndexBase_;
+    QuantLib::ext::shared_ptr<QuantLib::SwapIndex> targetShortSwapIndexBase_;
 };
 
 } // namespace QuantExt

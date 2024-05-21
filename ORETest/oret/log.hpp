@@ -70,7 +70,7 @@ void setupTestLogging(int argc, char** argv) {
             }
 
             // Set up logging
-            boost::shared_ptr<ore::test::BoostTestLogger> logger = boost::make_shared<ore::test::BoostTestLogger>();
+            QuantLib::ext::shared_ptr<ore::test::BoostTestLogger> logger = QuantLib::ext::make_shared<ore::test::BoostTestLogger>();
             ore::data::Log::instance().removeAllLoggers();
             ore::data::Log::instance().registerLogger(logger);
             ore::data::Log::instance().switchOn();

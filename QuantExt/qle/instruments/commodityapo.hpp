@@ -42,14 +42,14 @@ class CommodityAveragePriceOption : public Option {
 public:
     class arguments;
     class engine;
-    CommodityAveragePriceOption(const boost::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
+    CommodityAveragePriceOption(const QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow>& flow,
                                 const ext::shared_ptr<Exercise>& exercise, const Real quantity, const Real strikePrice,
                                 Option::Type type, Settlement::Type delivery = Settlement::Physical,
                                 Settlement::Method settlementMethod = Settlement::PhysicalOTC,
                                 const Real barrierLevel = Null<Real>(),
                                 Barrier::Type barrierType = Barrier::Type::DownIn,
                                 Exercise::Type barrierStyle = Exercise::American,
-                                const boost::shared_ptr<FxIndex>& fxIndex= nullptr);
+                                const QuantLib::ext::shared_ptr<FxIndex>& fxIndex= nullptr);
 
     //! \name Instrument interface
     //@{
@@ -61,9 +61,9 @@ public:
     //@{
     Settlement::Type settlementType() const { return settlementType_; }
     Settlement::Method settlementMethod() const { return settlementMethod_; }
-    const boost::shared_ptr<CommodityIndexedAverageCashFlow>& underlyingFlow() const { return flow_; }
+    const QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow>& underlyingFlow() const { return flow_; }
 
-    const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
+    const QuantLib::ext::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     Real barrierLevel() const { return barrierLevel_; }
     Barrier::Type barrierType() const { return barrierType_; }
     Exercise::Type barrierStyle() const { return barrierStyle_; }
@@ -73,13 +73,13 @@ public:
 
 private:
     // arguments
-    boost::shared_ptr<CommodityIndexedAverageCashFlow> flow_;
+    QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> flow_;
     Real quantity_;
     Real strikePrice_;
     Option::Type type_;
     QuantLib::Settlement::Type settlementType_;
     QuantLib::Settlement::Method settlementMethod_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Real barrierLevel_;
     Barrier::Type barrierType_;
     Exercise::Type barrierStyle_;
@@ -89,13 +89,13 @@ private:
 class CommodityAveragePriceOption::arguments : public Option::arguments {
 public:
     arguments();
-    boost::shared_ptr<CommodityIndexedAverageCashFlow> flow;
+    QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> flow;
     Real quantity;
     Real strikePrice;
     Real accrued;
     Real effectiveStrike;
     Option::Type type;
-    boost::shared_ptr<FxIndex> fxIndex;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex;
     Settlement::Type settlementType;
     Settlement::Method settlementMethod;
     Real barrierLevel;

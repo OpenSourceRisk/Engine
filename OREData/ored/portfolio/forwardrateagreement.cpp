@@ -28,23 +28,30 @@ using namespace std;
 namespace ore {
 namespace data {
 
-void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    const boost::shared_ptr<Market> market = engineFactory->market();
+void ForwardRateAgreement::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("FRA");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
 
     Date startDate = parseDate(startDate_);
     Date endDate = parseDate(endDate_);
     Position::Type positionType = parsePositionType(longShort_);
     auto index = market->iborIndex(index_);
     
-    boost::shared_ptr<FloatingRateCoupon> cpn;
-    if (auto overnightIndex = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(*index)) {
-        cpn = boost::make_shared<QuantExt::OvernightIndexedCoupon>(endDate, amount_, startDate, endDate, overnightIndex,
+    QuantLib::ext::shared_ptr<FloatingRateCoupon> cpn;
+    if (auto overnightIndex = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(*index)) {
+        cpn = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(endDate, amount_, startDate, endDate, overnightIndex,
                                                                    1.0, -strike_);
-        cpn->setPricer(boost::make_shared<QuantExt::OvernightIndexedCouponPricer>());
+        cpn->setPricer(QuantLib::ext::make_shared<QuantExt::OvernightIndexedCouponPricer>());
     } else {
         bool useIndexedCoupon = true;
-        cpn = boost::make_shared<QuantExt::IborFraCoupon>(startDate, endDate, amount_, *index, strike_);
-        cpn->setPricer(boost::make_shared<BlackIborCouponPricer>(
+        cpn = QuantLib::ext::make_shared<QuantExt::IborFraCoupon>(startDate, endDate, amount_, *index, strike_);
+        cpn->setPricer(QuantLib::ext::make_shared<BlackIborCouponPricer>(
             Handle<OptionletVolatilityStructure>(), BlackIborCouponPricer::TimingAdjustment::Black76,
             Handle<Quote>(ext::shared_ptr<Quote>(new SimpleQuote(1.0))), useIndexedCoupon));
     }
@@ -58,20 +65,14 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     npvCurrency_ = npvCcy.code();
     notionalCurrency_ = npvCcy.code();
 
-    boost::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Swap");
-    boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("Swap");
+    QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
     QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
     swap->setPricingEngine(swapBuilder->engine(npvCcy, std::string(), std::string()));
     setSensitivityTemplate(*swapBuilder);
     instrument_.reset(new VanillaInstrument(swap));
     maturity_ = endDate;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("FRA");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {
@@ -86,7 +87,7 @@ void ForwardRateAgreement::fromXML(XMLNode* node) {
     amount_ = XMLUtils::getChildValueAsDouble(fNode, "Notional", true);
 }
 
-XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) {
+XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fNode = doc.allocNode("ForwardRateAgreementData");
     XMLUtils::appendNode(node, fNode);

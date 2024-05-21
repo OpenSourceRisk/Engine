@@ -34,11 +34,11 @@ using std::string;
 
 class VarSwap : public ore::data::Trade {
 public:
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
 
     const string& longShort() { return longShort_; }
     const std::string& name() const { return underlying_->name(); }
-    const boost::shared_ptr<ore::data::Underlying>& underlying() const { return underlying_; }
+    const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying() const { return underlying_; }
     const string& currency() { return currency_; }
     double strike() { return strike_; }
     //double notional() const override { return notional_; }
@@ -51,12 +51,12 @@ public:
     const bool addPastDividends() { return addPastDividends_; }
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
 protected:
     VarSwap(AssetClass assetClassUnderlying)
         : Trade("VarSwap"), assetClassUnderlying_(assetClassUnderlying), oldXml_(false) {}
-    VarSwap(ore::data::Envelope& env, string longShort, const boost::shared_ptr<ore::data::Underlying>& underlying,
+    VarSwap(ore::data::Envelope& env, string longShort, const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying,
             string currency, double strike, double notional, string startDate, string endDate,
             AssetClass assetClassUnderlying, string momentType, bool addPastDividends)
         : Trade("VarSwap", env), assetClassUnderlying_(assetClassUnderlying), underlying_(underlying),
@@ -68,7 +68,7 @@ protected:
     AssetClass assetClassUnderlying_;
 
 protected:
-    boost::shared_ptr<ore::data::Underlying> underlying_;
+    QuantLib::ext::shared_ptr<ore::data::Underlying> underlying_;
 
 private:
     void initIndexName();
@@ -98,7 +98,7 @@ private:
 class EqVarSwap : public VarSwap {
 public:
     EqVarSwap() : VarSwap(AssetClass::EQ) { tradeType_ = "EquityVarianceSwap"; }
-    EqVarSwap(ore::data::Envelope& env, string longShort, const boost::shared_ptr<ore::data::Underlying>& underlying,
+    EqVarSwap(ore::data::Envelope& env, string longShort, const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying,
               string currency, double strike, double notional, string startDate, string endDate, string momentType,
               bool addPastDividends)
         : VarSwap(env, longShort, underlying, currency, strike, notional, startDate, endDate, AssetClass::EQ,
@@ -108,13 +108,13 @@ public:
 
     //! Add underlying Equity names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 };
 
 class FxVarSwap : public VarSwap {
 public:
     FxVarSwap() : VarSwap(AssetClass::FX) { tradeType_ = "FxVarianceSwap"; }
-    FxVarSwap(ore::data::Envelope& env, string longShort, const boost::shared_ptr<ore::data::Underlying>& underlying,
+    FxVarSwap(ore::data::Envelope& env, string longShort, const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying,
               string currency, double strike, double notional, string startDate, string endDate, string momentType,
               bool addPastDividends)
         : VarSwap(env, longShort, underlying, currency, strike, notional, startDate, endDate, AssetClass::FX,
@@ -126,7 +126,7 @@ public:
 class ComVarSwap : public VarSwap {
 public:
     ComVarSwap() : VarSwap(AssetClass::COM) { tradeType_ = "CommodityVarianceSwap"; }
-    ComVarSwap(ore::data::Envelope& env, string longShort, const boost::shared_ptr<ore::data::Underlying>& underlying,
+    ComVarSwap(ore::data::Envelope& env, string longShort, const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying,
               string currency, double strike, double notional, string startDate, string endDate, string momentType,
               bool addPastDividends)
         : VarSwap(env, longShort, underlying, currency, strike, notional, startDate, endDate, AssetClass::EQ,
@@ -136,7 +136,7 @@ public:
 
     //! Add underlying Equity names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 };
 
 } // namespace data

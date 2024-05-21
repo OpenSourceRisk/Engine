@@ -80,7 +80,7 @@ RandomVariable LgmVectorised::discountBondOption(Option::Type type, const Real K
     return w * (pT * normalCdf(w * dp) - pS * RandomVariable(x.size(), K) * normalCdf(w * dm));
 }
 
-RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate,
+RandomVariable LgmVectorised::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate,
                                      const Time t, const RandomVariable& x) const {
 
     // handle case where fixing is deterministic
@@ -91,7 +91,7 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
 
     // handle stochastic fixing
 
-    if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(index)) {
+    if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborIndex>(index)) {
 
         // Ibor Index
 
@@ -104,14 +104,14 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
         RandomVariable disc1 = reducedDiscountBond(t, T1, x, ibor->forwardingTermStructure());
         RandomVariable disc2 = reducedDiscountBond(t, T2, x, ibor->forwardingTermStructure());
         return (disc1 / disc2 - RandomVariable(x.size(), 1.0)) / RandomVariable(x.size(), dt);
-    } else if (auto swap = boost::dynamic_pointer_cast<SwapIndex>(index)) {
+    } else if (auto swap = QuantLib::ext::dynamic_pointer_cast<SwapIndex>(index)) {
 
         // Swap Index
 
         auto swapDiscountCurve =
             swap->exogenousDiscount() ? swap->discountingTermStructure() : swap->forwardingTermStructure();
         Leg floatingLeg, fixedLeg;
-        if (auto ois = boost::dynamic_pointer_cast<OvernightIndexedSwapIndex>(index)) {
+        if (auto ois = QuantLib::ext::dynamic_pointer_cast<OvernightIndexedSwapIndex>(index)) {
             auto underlying = ois->underlyingSwap(fixingDate);
             floatingLeg = underlying->overnightLeg();
             fixedLeg = underlying->fixedLeg();
@@ -122,7 +122,7 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
         }
         RandomVariable numerator(x.size(), 0.0), denominator(x.size(), 0.0);
         for (auto const& c : floatingLeg) {
-            if (auto cpn = boost::dynamic_pointer_cast<IborCoupon>(c)) {
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c)) {
                 Date fixingValueDate = swap->iborIndex()->fixingCalendar().advance(
                     cpn->fixingDate(), swap->iborIndex()->fixingDays(), Days);
                 Date fixingEndDate = cpn->fixingEndDate();
@@ -141,7 +141,7 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
                     tmp *= RandomVariable(x.size(), adjFactor);
                 }
                 numerator += tmp * reducedDiscountBond(t, T3, x, swapDiscountCurve);
-            } else if (auto cpn = boost::dynamic_pointer_cast<OvernightIndexedCoupon>(c)) {
+            } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<OvernightIndexedCoupon>(c)) {
                 Date start = cpn->valueDates().front();
                 Date end = cpn->valueDates().back();
                 Time T1 = std::max(t, p_->termStructure()->timeFromReference(start));
@@ -172,7 +172,7 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
             }
         }
         for (auto const& c : fixedLeg) {
-            auto cpn = boost::dynamic_pointer_cast<FixedRateCoupon>(c);
+            auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c);
             QL_REQUIRE(cpn, "LgmVectorised::fixing(): expected fixed coupon");
             Date d = cpn->date();
             Time T = std::max(t, p_->termStructure()->timeFromReference(d));
@@ -186,7 +186,7 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
     }
 }
 
-RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<OvernightIndex>& index,
+RandomVariable LgmVectorised::compoundedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex>& index,
                                                const std::vector<Date>& fixingDates,
                                                const std::vector<Date>& valueDates, const std::vector<Real>& dt,
                                                const Natural rateCutoff, const bool includeSpread, const Real spread,
@@ -344,7 +344,7 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
     return swapletRate + floorletRate - capletRate;
 }
 
-RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIndex>& index,
+RandomVariable LgmVectorised::averagedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex>& index,
                                              const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
                                              const std::vector<Real>& dt, const Natural rateCutoff,
                                              const bool includeSpread, const Real spread, const Real gearing,
@@ -468,7 +468,7 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
     return rate + floorletRate - capletRate;
 }
 
-RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>& index,
+RandomVariable LgmVectorised::averagedBmaRate(const QuantLib::ext::shared_ptr<BMAIndex>& index,
                                               const std::vector<Date>& fixingDates, const Date& accrualStartDate,
                                               const Date& accrualEndDate, const bool includeSpread, const Real spread,
                                               const Real gearing, Real cap, Real floor, const bool nakedOption,
@@ -585,7 +585,7 @@ RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>&
     return avgBMA + floorletRate - capletRate;
 }
 
-RandomVariable LgmVectorised::subPeriodsRate(const boost::shared_ptr<InterestRateIndex>& index,
+RandomVariable LgmVectorised::subPeriodsRate(const QuantLib::ext::shared_ptr<InterestRateIndex>& index,
                                              const std::vector<Date>& fixingDates, const Time t,
                                              const RandomVariable& x) const {
 

@@ -47,9 +47,9 @@ public:
     DiscountingBondTRSEngineBuilder() : BondTRSEngineBuilder("DiscountedCashflows", "DiscountingBondTRSEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& ccy) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& ccy) override {
         Handle<YieldTermStructure> oisCurve = market_->discountCurve(ccy, configuration(MarketContext::pricing));
-        return boost::make_shared<QuantExt::DiscountingBondTRSEngine>(oisCurve);
+        return QuantLib::ext::make_shared<QuantExt::DiscountingBondTRSEngine>(oisCurve);
     }
 };
 

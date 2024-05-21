@@ -31,25 +31,37 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void FxSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");  
+
     Currency nearBoughtCcy = data::parseCurrency(nearBoughtCurrency_);
     Currency nearSoldCcy = data::parseCurrency(nearSoldCurrency_);
     Date nearDate = data::parseDate(nearDate_);
     Date farDate = data::parseDate(farDate_);
+    maturity_ = farDate;
+
+    notional_ = nearBoughtAmount_;
+    notionalCurrency_ = nearBoughtCurrency_;
+    npvCurrency_ = nearBoughtCurrency_;
 
     try {
         DLOG("FxSwap::build() called for trade " << id());
-        //boost::shared_ptr<QuantLib::Instrument> instNear;
+        //QuantLib::ext::shared_ptr<QuantLib::Instrument> instNear;
         // builds two fxforwards and sums the npvs
         // so that both npvs are in the same currency, the value of the first forward is taken to be the negative of the
         // counterparty's npv
         // npv_total= -npv1+npv2
         instNear_.reset(
             new QuantExt::FxForward(nearSoldAmount_, nearSoldCcy, nearBoughtAmount_, nearBoughtCcy, nearDate, false));
-        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxForward");
+        QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxForward");
         QL_REQUIRE(builder, "No builder found for " << tradeType_);
-        boost::shared_ptr<FxForwardEngineBuilderBase> fxBuilder =
-            boost::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
+        QuantLib::ext::shared_ptr<FxForwardEngineBuilderBase> fxBuilder =
+            QuantLib::ext::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
         instNear_->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy));
         setSensitivityTemplate(*fxBuilder);
         instFar_.reset(
@@ -59,14 +71,10 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         DLOG("FxSwap::build(): Near NPV = " << instNear_->NPV());
         DLOG("FxSwap::build(): Far NPV = " << instFar_->NPV());
         // TODO: cannot use a CompositeInstrument
-        boost::shared_ptr<CompositeInstrument> composite(new CompositeInstrument());
+        QuantLib::ext::shared_ptr<CompositeInstrument> composite(new CompositeInstrument());
         composite->add(instNear_, -1.0);
         composite->add(instFar_, 1.0);
         instrument_.reset(new VanillaInstrument(composite));
-        npvCurrency_ = nearBoughtCurrency_;
-        notional_ = Null<Real>();//nearBoughtAmount_;
-        notionalCurrency_ = "";//nearBoughtCurrency_;
-        maturity_ = farDate;
 
     } catch (std::exception&) {
         instrument_.reset();
@@ -77,10 +85,10 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legs_.resize(4);
     legCurrencies_.resize(4);
     legPayers_.resize(4);
-    legs_[0].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(nearBoughtAmount_, nearDate)));
-    legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(nearSoldAmount_, nearDate)));
-    legs_[2].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(farBoughtAmount_, farDate)));
-    legs_[3].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(farSoldAmount_, farDate)));
+    legs_[0].push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(nearBoughtAmount_, nearDate)));
+    legs_[1].push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(nearSoldAmount_, nearDate)));
+    legs_[2].push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(farBoughtAmount_, farDate)));
+    legs_[3].push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(farSoldAmount_, farDate)));
 
     legCurrencies_[0] = nearBoughtCurrency_;
     legCurrencies_[1] = nearSoldCurrency_;
@@ -101,12 +109,6 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["nearSoldAmount"] = nearSoldAmount_;
     additionalData_["nearBoughtAmount"] = nearBoughtAmount_;
 
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");  
-
     DLOG("FxSwap leg 0: " << nearDate_ << " " << legs_[0][0]->amount());
     DLOG("FxSwap leg 1: " << nearDate_ << " " << legs_[1][0]->amount());
     DLOG("FxSwap leg 2: " << farDate_ << " " << legs_[2][0]->amount());
@@ -122,8 +124,8 @@ QuantLib::Real FxSwap::notional() const {
         if (strcmp(e.what(), "currentNotional not provided"))
 	    ALOG("error when retrieving notional: " << e.what());
     }
-    // if not provided, return null
-    return Null<Real>();
+    // if not provided, return original/fallback amount
+    return notional_;
 }
 
 std::string FxSwap::notionalCurrency() const {
@@ -134,8 +136,8 @@ std::string FxSwap::notionalCurrency() const {
         if (strcmp(e.what(), "notionalCurrency not provided"))
             ALOG("error when retrieving notional ccy: " << e.what());
     }
-    // if not provided, return an empty string
-    return "";
+    // if not provided, return original/fallback value
+    return notionalCurrency_;
 }
 
 void FxSwap::fromXML(XMLNode* node) {
@@ -154,7 +156,7 @@ void FxSwap::fromXML(XMLNode* node) {
         settlement_ = "Physical";
 }
 
-XMLNode* FxSwap::toXML(XMLDocument& doc) {
+XMLNode* FxSwap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxSwapData");
     XMLUtils::appendNode(node, fxNode);

@@ -29,7 +29,7 @@ namespace QuantExt {
 
 Payment::Payment(const Real amount, const Currency& currency, const Date& date) 
     : currency_(currency) {
-    cashflow_ = boost::make_shared<SimpleCashFlow>(amount, date);
+    cashflow_ = QuantLib::ext::make_shared<SimpleCashFlow>(amount, date);
 }
 
 bool Payment::isExpired() const { return cashflow_->hasOccurred(); }

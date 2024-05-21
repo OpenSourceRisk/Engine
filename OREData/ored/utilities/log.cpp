@@ -102,10 +102,10 @@ void IndependentLogger::clear() { messages_.clear(); }
 
 ProgressLogger::ProgressLogger() : IndependentLogger(name) {
     // Create backend and initialize it with a stream
-    boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
+    QuantLib::ext::shared_ptr<lsinks::text_ostream_backend> backend = QuantLib::ext::make_shared<lsinks::text_ostream_backend>();
 
     // Wrap it into the frontend and register in the core
-    boost::shared_ptr<text_sink> sink(new text_sink(backend));
+    QuantLib::ext::shared_ptr<text_sink> sink(new text_sink(backend));
 
     // This logger should only receive/process logs that were emitted by a ProgressMessage
     sink->set_filter(messageType == ProgressMessage::name);
@@ -165,11 +165,11 @@ void ProgressLogger::setCoutLog(const bool flag) {
     if (flag) {
         if (!coutSink_) {
             // Create backend and initialize it with a stream
-            boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
-            backend->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
+            QuantLib::ext::shared_ptr<lsinks::text_ostream_backend> backend = QuantLib::ext::make_shared<lsinks::text_ostream_backend>();
+            backend->add_stream(QuantLib::ext::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
 
             // Wrap it into the frontend and register in the core
-            boost::shared_ptr<text_sink> sink(new text_sink(backend));
+            QuantLib::ext::shared_ptr<text_sink> sink(new text_sink(backend));
             sink->set_filter(messageType == ProgressMessage::name);
             logging::core::get()->add_sink(sink);
 
@@ -184,10 +184,10 @@ void ProgressLogger::setCoutLog(const bool flag) {
 
 StructuredLogger::StructuredLogger() : IndependentLogger(name) {
     // Create backend and initialize it with a stream
-    boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
+    QuantLib::ext::shared_ptr<lsinks::text_ostream_backend> backend = QuantLib::ext::make_shared<lsinks::text_ostream_backend>();
 
     // Wrap it into the frontend and register in the core
-    boost::shared_ptr<text_sink> sink(new text_sink(backend));
+    QuantLib::ext::shared_ptr<text_sink> sink(new text_sink(backend));
     sink->set_filter(messageType == StructuredMessage::name);
 
     // Use formatter to intercept and store the message.
@@ -275,18 +275,24 @@ Log::Log() : loggers_(), enabled_(false), mask_(255), ls_() {
     ls_.setf(ios::showpoint);
 }
 
-void Log::registerLogger(const boost::shared_ptr<Logger>& logger) {
+void Log::registerLogger(const QuantLib::ext::shared_ptr<Logger>& logger) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(loggers_.find(logger->name()) == loggers_.end(),
                "Logger with name " << logger->name() << " already registered");
     loggers_[logger->name()] = logger;
 }
 
-void Log::registerIndependentLogger(const boost::shared_ptr<IndependentLogger>& logger) {
+void Log::registerIndependentLogger(const QuantLib::ext::shared_ptr<IndependentLogger>& logger) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(independentLoggers_.find(logger->name()) == independentLoggers_.end(),
                "Logger with name " << logger->name() << " already registered as independent logger");
     independentLoggers_[logger->name()] = logger;
+}
+
+void Log::clearAllIndependentLoggers() {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    for (auto& [_, l] : independentLoggers_)
+        l->clear();
 }
 
 const bool Log::hasLogger(const string& name) const {
@@ -294,7 +300,7 @@ const bool Log::hasLogger(const string& name) const {
     return loggers_.find(name) != loggers_.end();
 }
 
-boost::shared_ptr<Logger>& Log::logger(const string& name) {
+QuantLib::ext::shared_ptr<Logger>& Log::logger(const string& name) {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(hasLogger(name), "No logger found with name " << name);
     return loggers_[name];
@@ -305,7 +311,7 @@ const bool Log::hasIndependentLogger(const string& name) const {
     return independentLoggers_.find(name) != independentLoggers_.end();
 }
 
-boost::shared_ptr<IndependentLogger>& Log::independentLogger(const string& name) {
+QuantLib::ext::shared_ptr<IndependentLogger>& Log::independentLogger(const string& name) {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(hasIndependentLogger(name), "No independent logger found with name " << name);
     return independentLoggers_[name];
@@ -313,7 +319,7 @@ boost::shared_ptr<IndependentLogger>& Log::independentLogger(const string& name)
 
 void Log::removeLogger(const string& name) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    map<string, boost::shared_ptr<Logger>>::iterator it = loggers_.find(name);
+    map<string, QuantLib::ext::shared_ptr<Logger>>::iterator it = loggers_.find(name);
     if (it != loggers_.end()) {
         loggers_.erase(it);
     } else {
@@ -323,7 +329,7 @@ void Log::removeLogger(const string& name) {
 
 void Log::removeIndependentLogger(const string& name) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    map<string, boost::shared_ptr<IndependentLogger>>::iterator it = independentLoggers_.find(name);
+    map<string, QuantLib::ext::shared_ptr<IndependentLogger>>::iterator it = independentLoggers_.find(name);
     if (it != independentLoggers_.end()) {
         it->second->removeSinks();
         independentLoggers_.erase(it);
@@ -442,7 +448,7 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
 
 void Log::log(unsigned m) {
     string msg = ls_.str();
-    map<string, boost::shared_ptr<Logger>>::iterator it;
+    map<string, QuantLib::ext::shared_ptr<Logger>>::iterator it;
     if (sameSourceLocationSince_ <= sameSourceLocationCutoff_) {
         for (auto& l : loggers_) {
             l.second->log(m, msg);

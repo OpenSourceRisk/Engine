@@ -45,20 +45,20 @@ BOOST_AUTO_TEST_CASE(testFlatSurface) {
     // we setup a flat surface, all at 12%
     // Then we ask it for vol at different tenors and strikes
     Calendar cal = NullCalendar();
-    Handle<Quote> spot = Handle<Quote>(boost::make_shared<SimpleQuote>(100));
+    Handle<Quote> spot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(100));
     vector<Time> times = { 1.0, 2.0, 3.0, 4.0 };
     vector<Real> stdDevs = { -1.0, -0.5, 0, 0.5, 1.0 };
     Volatility flatVol = 0.12;
-    Handle<Quote> flatVolQ = Handle<Quote>(boost::make_shared<SimpleQuote>(flatVol));
+    Handle<Quote> flatVolQ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(flatVol));
     vector<vector<Handle<Quote> > > blackVolMatrix(stdDevs.size(), vector<Handle<Quote> >(times.size(), flatVolQ));
     DayCounter dc = ActualActual(ActualActual::ISDA);
     Handle<YieldTermStructure> forTS(
-        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), ActualActual(ActualActual::ISDA)));
+        QuantLib::ext::make_shared<FlatForward>(today, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02)), ActualActual(ActualActual::ISDA)));
     Handle<YieldTermStructure> domTS(
-        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), ActualActual(ActualActual::ISDA)));
+        QuantLib::ext::make_shared<FlatForward>(today, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.01)), ActualActual(ActualActual::ISDA)));
 
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex = 
-        boost::make_shared<QuantExt::FxIndex>("dummy", 2, EURCurrency(),
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex = 
+        QuantLib::ext::make_shared<QuantExt::FxIndex>("dummy", 2, EURCurrency(),
         GBPCurrency(), cal, spot, forTS, domTS);
     QuantExt::BlackVarianceSurfaceStdDevs surface(cal, spot, times, stdDevs, blackVolMatrix, dc, fxIndex);
 

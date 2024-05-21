@@ -30,7 +30,7 @@ AnalyticBlackRiskParticipationAgreementEngine::AnalyticBlackRiskParticipationAgr
     const std::string& baseCcy, const std::map<std::string, Handle<YieldTermStructure>>& discountCurves,
     const std::map<std::string, Handle<Quote>>& fxSpots, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
     const Handle<Quote>& recoveryRate, const Handle<SwaptionVolatilityStructure>& volatility,
-    const boost::shared_ptr<SwapIndex>& swapIndexBase, const bool matchUnderlyingTenor, const Real reversion,
+    const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase, const bool matchUnderlyingTenor, const Real reversion,
     const bool alwaysRecomputeOptionRepresentation, const Size maxGapDays, const Size maxDiscretisationPoints)
     : RiskParticipationAgreementBaseEngine(baseCcy, discountCurves, fxSpots, defaultCurve, recoveryRate, maxGapDays,
                                            maxDiscretisationPoints),
@@ -99,17 +99,17 @@ Real AnalyticBlackRiskParticipationAgreementEngine::protectionLegNpv() const {
 
     // attach an engine to the representative swaptions
 
-    boost::shared_ptr<PricingEngine> engine;
+    QuantLib::ext::shared_ptr<PricingEngine> engine;
     if (volatility_->volatilityType() == ShiftedLognormal) {
-        engine = boost::make_shared<BlackSwaptionEngine>(discountCurves_[arguments_.underlyingCcys[0]], volatility_);
+        engine = QuantLib::ext::make_shared<BlackSwaptionEngine>(discountCurves_[arguments_.underlyingCcys[0]], volatility_);
     } else {
         engine =
-            boost::make_shared<BachelierSwaptionEngine>(discountCurves_[arguments_.underlyingCcys[0]], volatility_);
+            QuantLib::ext::make_shared<BachelierSwaptionEngine>(discountCurves_[arguments_.underlyingCcys[0]], volatility_);
     }
 
     for (auto s : results_.optionRepresentation) {
         if (s) {
-            if (auto tmp = boost::dynamic_pointer_cast<Swaption>(s)) {
+            if (auto tmp = QuantLib::ext::dynamic_pointer_cast<Swaption>(s)) {
                 s->setPricingEngine(engine);
             } else {
                 QL_FAIL("AnalyticBlackRiskParticipationAgreementEngine::protectionLegNpv(): internal error, could not "
@@ -138,7 +138,7 @@ Real AnalyticBlackRiskParticipationAgreementEngine::protectionLegNpv() const {
 
     // detach pricing engine from result swaption representation
 
-    boost::shared_ptr<PricingEngine> emptyEngine;
+    QuantLib::ext::shared_ptr<PricingEngine> emptyEngine;
     for (auto s : results_.optionRepresentation)
         if (s)
             s->setPricingEngine(emptyEngine);

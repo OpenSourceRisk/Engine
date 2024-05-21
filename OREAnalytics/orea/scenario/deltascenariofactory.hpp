@@ -37,16 +37,17 @@ namespace analytics {
 class DeltaScenarioFactory : public ore::analytics::ScenarioFactory {
 public:
     //! Constructor
-    DeltaScenarioFactory(const boost::shared_ptr<ore::analytics::Scenario>& baseScenario,
-                         const boost::shared_ptr<ore::analytics::ScenarioFactory>& scenarioFactory =
-                             boost::make_shared<ore::analytics::SimpleScenarioFactory>());
+    DeltaScenarioFactory(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& baseScenario,
+                         const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFactory>& scenarioFactory =
+                             QuantLib::ext::make_shared<ore::analytics::SimpleScenarioFactory>(false));
     //! returns a new scenario, using the base scenario as a starting point
-    const boost::shared_ptr<ore::analytics::Scenario> buildScenario(QuantLib::Date asof, const std::string& label = "",
-                                                                    QuantLib::Real numeraire = 0.0) const override;
+    const QuantLib::ext::shared_ptr<ore::analytics::Scenario>
+    buildScenario(QuantLib::Date asof, bool isAbsolute, const std::string& label = "",
+                  QuantLib::Real numeraire = 0.0) const override;
 
 private:
-    boost::shared_ptr<ore::analytics::Scenario> baseScenario_;
-    boost::shared_ptr<ore::analytics::ScenarioFactory> scenarioFactory_;
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> baseScenario_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioFactory> scenarioFactory_;
 };
 
 } // namespace analytics

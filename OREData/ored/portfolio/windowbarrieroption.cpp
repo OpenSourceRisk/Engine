@@ -55,7 +55,7 @@ static const std::string window_barrier_script =
 
 // clang-format on
 
-void WindowBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void WindowBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -123,6 +123,12 @@ void WindowBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory)
 
     ScriptedTrade::build(factory, optionData_.premiumData(), positionType == QuantLib::Position::Long ? -1.0 : 1.0);
 
+    additionalData_["isdaTransaction"] = string("");
+}
+
+void WindowBarrierOption::setIsdaTaxonomyFields() {
+    ScriptedTrade::setIsdaTaxonomyFields();
+
     // ISDA taxonomy, asset class set in the base class build
     // asset class set in the base class already
     std::string assetClass = boost::any_cast<std::string>(additionalData_["isdaAssetClass"]);
@@ -139,8 +145,6 @@ void WindowBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory)
     } else {
         WLOG("ISDA taxonomy incomplete for trade " << id());
     }
-
-    additionalData_["isdaTransaction"] = string("");
 }
 
 void WindowBarrierOption::initIndices() {
@@ -173,7 +177,7 @@ void WindowBarrierOption::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* WindowBarrierOption::toXML(XMLDocument& doc) {
+XMLNode* WindowBarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, dataNode);

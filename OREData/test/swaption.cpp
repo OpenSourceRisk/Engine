@@ -55,12 +55,12 @@ public:
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
+        QuantLib::ext::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
         return Handle<YieldTermStructure>(yts);
     }
     Handle<QuantLib::SwaptionVolatilityStructure>
     flatSwaptionVol(Volatility forward, VolatilityType type = ShiftedLognormal, Real shift = 0.0) {
-        boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svs(
+        QuantLib::ext::shared_ptr<QuantLib::SwaptionVolatilityStructure> svs(
             new QuantLib::ConstantSwaptionVolatility(Settings::instance().evaluationDate(), NullCalendar(),
                                                      ModifiedFollowing, forward, ActualActual(ActualActual::ISDA), type, shift));
         return Handle<QuantLib::SwaptionVolatilityStructure>(svs);
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(testEuropeanSwaptionPrice) {
     Settings::instance().evaluationDate() = today;
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>();
     Settings::instance().evaluationDate() = market->asofDate();
 
     // build Swaptions - expiry 5Y, term 10Y
@@ -95,10 +95,10 @@ BOOST_AUTO_TEST_CASE(testEuropeanSwaptionPrice) {
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, "6M", "TARGET", "MF", "MF", "Forward"));
     ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, "1Y", "TARGET", "MF", "MF", "Forward"));
     // fixed leg
-    LegData fixedLeg(boost::make_shared<FixedLegData>(std::vector<Real>(1, 0.03)), true, "EUR", fixedSchedule, "30/360",
+    LegData fixedLeg(QuantLib::ext::make_shared<FixedLegData>(std::vector<Real>(1, 0.03)), true, "EUR", fixedSchedule, "30/360",
                      std::vector<Real>(1, 10000.0));
     // float leg
-    LegData floatingLeg(boost::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, std::vector<Real>(1, 0.0)),
+    LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, std::vector<Real>(1, 0.0)),
                         false, "EUR", floatSchedule, "A360", std::vector<Real>(1, 10000.0));
     // leg vector
     vector<LegData> legs;
@@ -120,12 +120,12 @@ BOOST_AUTO_TEST_CASE(testEuropeanSwaptionPrice) {
     Real expectedNpvPremium = expectedNpvCash - premiumNpv;
 
     // Build and price
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("EuropeanSwaption") = "BlackBachelier";
     engineData->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     swaptionCash.build(engineFactory);
     swaptionPhysical.build(engineFactory);

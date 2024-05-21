@@ -37,10 +37,10 @@ public:
     /*! Constructor taking the cross asset model, \p model, and the index of the relevant inflation component within
         the model, \p index.
     */
-    JyImpliedZeroInflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
+    JyImpliedZeroInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
 
     QL_DEPRECATED
-    JyImpliedZeroInflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
+    JyImpliedZeroInflationTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
         bool indexIsInterpolated);
 
 protected:
@@ -58,7 +58,7 @@ protected:
 /*! Calculation of inflation growth between two times given the Jarrow Yildrim (JY) real rate state, \p rrState, and 
     the nominal interest rate state, \p irState.
 */
-QuantLib::Real inflationGrowth(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
+QuantLib::Real inflationGrowth(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, QuantLib::Size index,
     QuantLib::Time S, QuantLib::Time T, QuantLib::Real irState, QuantLib::Real rrState, bool indexIsInterpolated);
 
 }

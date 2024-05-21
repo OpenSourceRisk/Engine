@@ -63,8 +63,8 @@ public:
     //@}
 protected:
     const EquityCoupon* coupon_;
-    boost::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equityCurve_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     EquityReturnType returnType_;
     Real dividendFactor_;
     AdditionalResultCache additionalResultCache_;

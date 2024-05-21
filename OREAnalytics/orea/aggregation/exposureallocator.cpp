@@ -28,9 +28,9 @@ namespace ore {
 namespace analytics {
 
 ExposureAllocator::ExposureAllocator(
-        const boost::shared_ptr<Portfolio>& portfolio,
-        const boost::shared_ptr<NPVCube>& tradeExposureCube,
-        const boost::shared_ptr<NPVCube>& nettedExposureCube,
+        const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+        const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube,
+        const QuantLib::ext::shared_ptr<NPVCube>& nettedExposureCube,
         const Size allocatedTradeEpeIndex, const Size allocatedTradeEneIndex,
         const Size tradeEpeIndex, const Size tradeEneIndex,
         const Size nettingSetEpeIndex, const Size nettingSetEneIndex)
@@ -65,10 +65,10 @@ void ExposureAllocator::build() {
 }
 
 RelativeFairValueNetExposureAllocator::RelativeFairValueNetExposureAllocator(
-    const boost::shared_ptr<Portfolio>& portfolio,
-    const boost::shared_ptr<NPVCube>& tradeExposureCube,
-    const boost::shared_ptr<NPVCube>& nettedExposureCube,
-    const boost::shared_ptr<NPVCube>& npvCube,
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+    const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube,
+    const QuantLib::ext::shared_ptr<NPVCube>& nettedExposureCube,
+    const QuantLib::ext::shared_ptr<NPVCube>& npvCube,
     const Size allocatedTradeEpeIndex, const Size allocatedTradeEneIndex,
     const Size tradeEpeIndex, const Size tradeEneIndex,
     const Size nettingSetEpeIndex, const Size nettingSetEneIndex)
@@ -111,10 +111,10 @@ Real RelativeFairValueNetExposureAllocator::calculateAllocatedEne(const string& 
 }
 
 RelativeFairValueGrossExposureAllocator::RelativeFairValueGrossExposureAllocator(
-    const boost::shared_ptr<Portfolio>& portfolio,
-    const boost::shared_ptr<NPVCube>& tradeExposureCube,
-    const boost::shared_ptr<NPVCube>& nettedExposureCube,
-    const boost::shared_ptr<NPVCube>& npvCube,
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+    const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube,
+    const QuantLib::ext::shared_ptr<NPVCube>& nettedExposureCube,
+    const QuantLib::ext::shared_ptr<NPVCube>& npvCube,
     const Size allocatedTradeEpeIndex, const Size allocatedTradeEneIndex,
     const Size tradeEpeIndex, const Size tradeEneIndex,
     const Size nettingSetEpeIndex, const Size nettingSetEneIndex)
@@ -152,10 +152,10 @@ Real RelativeFairValueGrossExposureAllocator::calculateAllocatedEne(const string
 }
 
 RelativeXvaExposureAllocator::RelativeXvaExposureAllocator(
-    const boost::shared_ptr<Portfolio>& portfolio,
-    const boost::shared_ptr<NPVCube>& tradeExposureCube,
-    const boost::shared_ptr<NPVCube>& nettedExposureCube,
-    const boost::shared_ptr<NPVCube>& npvCube,
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+    const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube,
+    const QuantLib::ext::shared_ptr<NPVCube>& nettedExposureCube,
+    const QuantLib::ext::shared_ptr<NPVCube>& npvCube,
     const map<string, Real>& tradeCva,
     const map<string, Real>& tradeDva,
     const map<string, Real>& nettingSetSumCva,
@@ -182,9 +182,9 @@ Real RelativeXvaExposureAllocator::calculateAllocatedEne(const string& tid, cons
 }
 
 NoneExposureAllocator::NoneExposureAllocator(
-    const boost::shared_ptr<Portfolio>& portfolio,
-    const boost::shared_ptr<NPVCube>& tradeExposureCube,
-    const boost::shared_ptr<NPVCube>& nettedExposureCube)
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+    const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube,
+    const QuantLib::ext::shared_ptr<NPVCube>& nettedExposureCube)
     : ExposureAllocator(portfolio, tradeExposureCube, nettedExposureCube) {}
 
 Real NoneExposureAllocator::calculateAllocatedEpe(const string& tid, const string& nid,

@@ -40,7 +40,7 @@ public:
         read the scenarios and \p scenarioFactory is a factory for building Scenarios
     */
     HistoricalScenarioFileReader(const std::string& fileName,
-                                 const boost::shared_ptr<ScenarioFactory>& scenarioFactory);
+                                 const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory);
     //! Destructor
     ~HistoricalScenarioFileReader() override;
     //! Return true if there is another Scenario to read and move to it
@@ -48,11 +48,11 @@ public:
     //! Return the current scenario's date if reader is still valid and `Null<Date>()` otherwise
     QuantLib::Date date() const override;
     //! Return the current scenario if reader is still valid and `nullptr` otherwise
-    boost::shared_ptr<Scenario> scenario() const override;
+    QuantLib::ext::shared_ptr<Scenario> scenario() const override;
 
 private:
     //! Scenario factory
-    boost::shared_ptr<ScenarioFactory> scenarioFactory_;
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory_;
     //! Handle on the csv file
     ore::data::CSVFileReader file_;
     //! The risk factor keys of the scenarios in the file

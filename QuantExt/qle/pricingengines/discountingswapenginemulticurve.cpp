@@ -112,7 +112,7 @@ void AdditionalAmountGetter::visit(IborCoupon& c) {
 
 class DiscountingSwapEngineMultiCurve::AmountImpl {
 public:
-    boost::shared_ptr<AmountGetter> amountGetter_;
+    QuantLib::ext::shared_ptr<AmountGetter> amountGetter_;
 };
 
 DiscountingSwapEngineMultiCurve::DiscountingSwapEngineMultiCurve(const Handle<YieldTermStructure>& discountCurve,

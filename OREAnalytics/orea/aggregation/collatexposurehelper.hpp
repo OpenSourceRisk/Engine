@@ -71,7 +71,7 @@ public:
       - minimum transfer amount
       - independent amount
     */
-    static Real marginRequirementCalc(const boost::shared_ptr<CollateralAccount>& collat, const Real& uncollatValue,
+    static Real marginRequirementCalc(const QuantLib::ext::shared_ptr<CollateralAccount>& collat, const Real& uncollatValue,
                                       const Date& simulationDate);
 
     /*!
@@ -87,7 +87,7 @@ public:
     /*!
       Checks if margin call is in need of update, and updates if necessary
     */
-    static void updateMarginCall(const boost::shared_ptr<CollateralAccount>& collat, const Real& uncollatValue,
+    static void updateMarginCall(const QuantLib::ext::shared_ptr<CollateralAccount>& collat, const Real& uncollatValue,
                                  const Date& simulationDate, const Real& accrualFactor,
                                  const CalculationType& calcType = Symmetric, const bool& eligMarginReqDateUs = true,
                                  const bool& eligMarginReqDateCtp = true);
@@ -97,19 +97,19 @@ public:
         All calculations done in CSA currency
     */
     static Real creditSupportAmount(
-        const boost::shared_ptr<ore::data::NettingSetDefinition>& nettingSet,
+        const QuantLib::ext::shared_ptr<ore::data::NettingSetDefinition>& nettingSet,
         const Real& uncollatValueCsaCur);
 
     /*!
       Takes a netting set (and scenario exposures) as input
       and returns collateral balance paths per scenario
     */
-    static boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> collateralBalancePaths(
-        const boost::shared_ptr<NettingSetDefinition>& csaDef, const Real& nettingSetPv, const Date& date_t0,
+    static QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>> collateralBalancePaths(
+        const QuantLib::ext::shared_ptr<NettingSetDefinition>& csaDef, const Real& nettingSetPv, const Date& date_t0,
         const vector<vector<Real>>& nettingSetValues, const Date& nettingSet_maturity, const vector<Date>& dateGrid,
         const Real& csaFxTodayRate, const vector<vector<Real>>& csaFxScenarioRates, const Real& csaTodayCollatCurve,
         const vector<vector<Real>>& csaScenCollatCurves, const CalculationType& calcType = Symmetric,
-        const boost::shared_ptr<CollateralBalance>& balance = boost::shared_ptr<CollateralBalance>());
+        const QuantLib::ext::shared_ptr<CollateralBalance>& balance = QuantLib::ext::shared_ptr<CollateralBalance>());
 };
 
 //! Convert text representation to CollateralExposureHelper::CalculationType
