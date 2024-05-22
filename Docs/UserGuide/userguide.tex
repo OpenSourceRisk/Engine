@@ -339,7 +339,7 @@ Scripted Trades & Y & Y & Y & Y \\
 Flexi Swaps and Balance Guaranteed Swaps & Y & Y & Y & Y \\
 \hline
 \end{tabular}
-\caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options. Scripted Trades cover single and multi-asset products across all asset classes except Credit (so far), see Example\_52 and the separate documentation in Docs/ScriptedTrade.}
+\caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options, Outperformance options and Pairwise Variance Swaps. Scripted Trades cover single and multi-asset products across all asset classes except Credit (so far), see Example\_52 and the separate documentation in Docs/ScriptedTrade.}
 \label{tab_coverage}
 \end{center}
 \end{table}
@@ -418,6 +418,8 @@ INSTRUMENTS \& PRICING
 \item add Flexi Swap (ticket 12370), see Example 65
 \item add Balance Guaranteed Swap (ticket 12370), see Example 66
 \item add American Swaption with finite difference pricing in LGM (ticket 11618), see extended Example 4
+\item add Equity Outperformance Option (ticket 12456)
+\item add Pairwise Variance Swap (ticket 12456)
 \item add analytic pricer for Overnight Index Swaptions (ticket 11974)
 \item add finite difference LGM pricers for Bermudan and European Swaptions
 \item add numerical integration LGM pricer for European Swaptions
@@ -434,6 +436,8 @@ INSTRUMENTS \& PRICING
 \item introduce notional payment lag for resetting Cross Currency Swaps (ticket 12379)
 \item support security spreads over discount in Single Currency Swaps, Swaptions and Scripted Trades
   (ticket 12201 and 12275)
+\item add pricing engines that provide analytical deltas and gammas for Swaps, Swaptions, FX Forwards,
+  FX Options (ticket 12456)
 \end{itemize}
 
 \bigskip
