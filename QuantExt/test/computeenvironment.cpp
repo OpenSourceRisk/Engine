@@ -318,12 +318,12 @@ BOOST_AUTO_TEST_CASE(testRngGenerationMt19937) {
         BOOST_TEST_MESSAGE("using double precision = " << std::boolalpha << settings.useDoublePrecision);
         c.initiateCalculation(n, 0, 0, settings);
         auto vs = c.createInputVariates(1, 1);
+        auto vs2 = c.createInputVariates(1, 1);
         for (auto const& d : vs) {
             for (auto const& r : d) {
                 c.declareOutputVariable(r);
             }
         }
-        auto vs2 = c.createInputVariates(1, 1);
         for (auto const& d : vs2) {
             for (auto const& r : d) {
                 c.declareOutputVariable(r);
@@ -371,15 +371,14 @@ BOOST_AUTO_TEST_CASE(testConditionalExpectation) {
         c.initiateCalculation(n, 0, 0, settings);
 
         auto one = c.createInputVariable(1.0);
-
         auto vs = c.createInputVariates(1, 2);
+        auto ce = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, vs[0][1]});
+
         for (auto const& d : vs) {
             for (auto const& r : d) {
                 c.declareOutputVariable(r);
             }
         }
-
-        auto ce = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, vs[0][1]});
         c.declareOutputVariable(ce);
 
         std::vector<std::vector<double>> output(3, std::vector<double>(n));

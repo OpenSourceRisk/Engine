@@ -198,9 +198,11 @@ public:
     const DebugInfo& debugInfo() const override final;
 
 private:
-    std::pair<std::size_t, bool> generateResultId();
+    std::size_t generateResultId();
     std::vector<std::string> getArgString(const std::vector<std::size_t>& args) const;
     std::size_t valuesBufferId(const std::size_t i) const;
+    void startNewSsaPart();
+    std::string generateSsaCode(const std::vector<std::tuple<bool, std::string, std::string>>& ssa) const;
 
     void updateVariatesPool();
 
@@ -212,7 +214,7 @@ private:
     static void releaseKernel(std::vector<cl_kernel>& ks, const std::string& desc);
     static void releaseProgram(cl_program& p, const std::string& desc);
 
-    enum class ComputeState { idle, createInput, createVariates, calc };
+    enum class ComputeState { idle, createInput, createVariates, calc, declareOutput };
 
     bool initialized_ = false;
     cl_device_id* device_;   // passed from framework
@@ -237,7 +239,7 @@ private:
     std::vector<std::vector<std::vector<std::vector<std::size_t>>>> conditionalExpectationVarIds_;
     std::vector<std::size_t> inputBufferSize_;
     std::vector<std::size_t> nOutputVars_;
-    std::vector<std::size_t> nVars_;
+    std::vector<std::vector<std::size_t>> nVars_;
     std::vector<std::size_t> nVariates_;
 
     // 1b variates (shared pool of mersenne twister based normal variates)
@@ -257,7 +259,7 @@ private:
     std::size_t nVarsTmp_;
     std::size_t nVariatesTmp_;
     Settings settings_;
-    bool lastOperationWasConditionalExpectation_ = false;
+    std::set<std::string> currentConditionalExpectationArgs_;
 
     // 2a indexed by var id
     std::vector<std::size_t> inputVarOffset_;
@@ -270,8 +272,7 @@ private:
     std::vector<std::size_t> outputVariables_;
 
     // 2d kernel ssa
-    std::vector<std::string> currentSsa_;
-    std::vector<std::vector<std::string>> conditionalExpectationArgs_;
+    std::vector<std::vector<std::tuple<bool, std::string, std::string>>> currentSsa_;
 };
 
 bool OpenClFramework::initialized_ = false;
@@ -571,7 +572,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         conditionalExpectationVarIds_.push_back(std::vector<std::vector<std::vector<std::size_t>>>(1));
         inputBufferSize_.push_back(0);
         nOutputVars_.push_back(0);
-        nVars_.push_back(0);
+        nVars_.push_back(std::vector<std::size_t>());
         nVariates_.push_back(0);
 
         currentId_ = hasKernel_.size();
@@ -592,7 +593,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         if (version != version_[id - 1]) {
             hasKernel_[id - 1] = false;
             version_[id - 1] = version;
-            nVars_[id - 1] = 0;
+            nVars_[id - 1].clear();
             nVariates_[id - 1] = 0;
             releaseKernel(kernel_[id - 1],
                           "kernel id " + std::to_string(id) + " (during initiateCalculation, old version: " +
@@ -620,10 +621,8 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
     if (newCalc) {
         freedVariables_.clear();
         outputVariables_.clear();
-        // reset ssa
-        currentSsa_ = std::vector<std::string>(1);
-        // reset last op flag
-        lastOperationWasConditionalExpectation_ = false;
+        currentSsa_ = std::vector<std::vector<std::tuple<bool, std::string, std::string>>>(1);
+        currentConditionalExpectationArgs_.clear();
     }
 
     // set state
@@ -924,7 +923,7 @@ void OpenClContext::updateVariatesPool() {
 std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const std::size_t dim,
                                                                          const std::size_t steps) {
     QL_REQUIRE(currentState_ == ComputeState::createInput || currentState_ == ComputeState::createVariates,
-               "OpenClContext::createInputVariable(): not in state createInput or createVariates ("
+               "OpenClContext::createInputVariates(): not in state createInput or createVariates ("
                    << static_cast<int>(currentState_) << ")");
     QL_REQUIRE(currentId_ > 0, "OpenClContext::applyOperation(): current id is not set");
     QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::createInputVariates(): id ("
@@ -942,18 +941,15 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
     return resultIds;
 }
 
-std::pair<std::size_t, bool> OpenClContext::generateResultId() {
+std::size_t OpenClContext::generateResultId() {
     std::size_t resultId;
-    bool resultIdWasFreed;
     if (!freedVariables_.empty()) {
         resultId = freedVariables_.back();
         freedVariables_.pop_back();
-        resultIdWasFreed = true;
     } else {
         resultId = nVarsTmp_++;
-        resultIdWasFreed = false;
     }
-    return std::make_pair(resultId, resultIdWasFreed);
+    return resultId;
 }
 
 std::vector<std::string> OpenClContext::getArgString(const std::vector<std::size_t>& args) const {
@@ -969,6 +965,12 @@ std::vector<std::string> OpenClContext::getArgString(const std::vector<std::size
         }
     }
     return argStr;
+}
+
+void OpenClContext::startNewSsaPart() {
+    currentSsa_.push_back(std::vector<std::tuple<bool, std::string, std::string>>());
+    conditionalExpectationVarIds_[currentId_ - 1].push_back(std::vector<std::vector<std::size_t>>());
+    nVars_[currentId_ - 1].push_back(nVarsTmp_);
 }
 
 std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode,
@@ -988,32 +990,27 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 
     if (randomVariableOpCode == RandomVariableOpCode::ConditionalExpectation) {
 
-        // after a (block of) conditional expectation operations, we start a new kernel
-
-        std::size_t ssaIndex;
-        if (lastOperationWasConditionalExpectation_) {
-            ssaIndex = currentSsa_.size() - 2;
-        } else {
-            ssaIndex = currentSsa_.size() - 1;
-            lastOperationWasConditionalExpectation_ = true;
-            currentSsa_.push_back(std::string());
-            conditionalExpectationVarIds_[currentId_ - 1].push_back(std::vector<std::vector<std::size_t>>());
+        if (std::find_if(argStr.begin(), argStr.end(), [this](const std::string& a) {
+                return currentConditionalExpectationArgs_.find(a) != currentConditionalExpectationArgs_.end();
+            }) != argStr.end()) {
+            startNewSsaPart();
+            currentConditionalExpectationArgs_.clear();
         }
 
-        std::string ssaLines;
         std::vector<std::size_t> argIds;
         std::size_t regressandId;
         for (std::size_t i = 0; i < argStr.size() + 1; ++i) {
-            auto [resultId, resultIdWasFreed] = generateResultId();
-            ssaLines += "  " + (!resultIdWasFreed && ssaIndex == 0 ? fpTypeStr + " " : "") + std::string("v") +
-                        std::to_string(resultId) + " = " + (i == 0 ? "0.0" : argStr[i - 1]) + ";\n";
+            auto resultId = generateResultId();
+            currentSsa_.back().push_back(
+                std::make_tuple(true, std::string("v") + std::to_string(resultId), (i == 0 ? "0.0" : argStr[i - 1])));
             argIds.push_back(resultId);
-            if (i == 0)
+            if (i == 0) {
                 regressandId = resultId;
+                currentConditionalExpectationArgs_.insert("v" + std::to_string(resultId));
+            }
         }
 
-        conditionalExpectationVarIds_[currentId_ - 1][ssaIndex].push_back(argIds);
-        currentSsa_[ssaIndex] += ssaLines;
+        conditionalExpectationVarIds_[currentId_ - 1].back().push_back(argIds);
 
         return regressandId;
 
@@ -1021,84 +1018,87 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 
         // op code is everythig but conditional expectation (i.e. a pathwise operation)
 
-        lastOperationWasConditionalExpectation_ = false;
-
-        auto [resultId, resultIdWasFreed] = generateResultId();
-
-        std::string ssaLine = (!resultIdWasFreed && currentSsa_.size() == 1 ? fpTypeStr + " " : "") + std::string("v") +
-                              std::to_string(resultId) + " = ";
+        auto resultId = generateResultId();
 
         switch (randomVariableOpCode) {
         case RandomVariableOpCode::None: {
             break;
         }
         case RandomVariableOpCode::Add: {
-            ssaLine += argStr[0] + " + " + argStr[1] + ";";
+            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), argStr[0] + " + " + argStr[1]));
             break;
         }
         case RandomVariableOpCode::Subtract: {
-            ssaLine += argStr[0] + " - " + argStr[1] + ";";
+            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), argStr[0] + " - " + argStr[1]));
             break;
         }
         case RandomVariableOpCode::Negative: {
-            ssaLine += "-" + argStr[0] + ";";
+            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), "-" + argStr[0]));
             break;
         }
         case RandomVariableOpCode::Mult: {
-            ssaLine += argStr[0] + " * " + argStr[1] + ";";
+            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), argStr[0] + " * " + argStr[1]));
             break;
         }
         case RandomVariableOpCode::Div: {
-            ssaLine += argStr[0] + " / " + argStr[1] + ";";
+            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), argStr[0] + " / " + argStr[1]));
             break;
         }
         case RandomVariableOpCode::IndicatorEq: {
-            ssaLine += "ore_indicatorEq(" + argStr[0] + "," + argStr[1] + ");";
+            currentSsa_.back().push_back(
+                std::make_tuple(true, "v" + std::to_string(resultId), "ore_indicatorEq(" + argStr[0] + "," + argStr[1] + ")"));
             break;
         }
         case RandomVariableOpCode::IndicatorGt: {
-            ssaLine += "ore_indicatorGt(" + argStr[0] + "," + argStr[1] + ");";
+            currentSsa_.back().push_back(
+                std::make_tuple(true, "v" + std::to_string(resultId), "ore_indicatorGt(" + argStr[0] + "," + argStr[1] + ")"));
             break;
         }
         case RandomVariableOpCode::IndicatorGeq: {
-            ssaLine += "ore_indicatorGeq(" + argStr[0] + "," + argStr[1] + ");";
+            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId),
+                                                        "ore_indicatorGeq(" + argStr[0] + "," + argStr[1] + ")"));
             break;
         }
         case RandomVariableOpCode::Min: {
-            ssaLine += "fmin(" + argStr[0] + "," + argStr[1] + ");";
+            currentSsa_.back().push_back(
+                std::make_tuple(true, "v" + std::to_string(resultId), "fmin(" + argStr[0] + "," + argStr[1] + ")"));
             break;
         }
         case RandomVariableOpCode::Max: {
-            ssaLine += "fmax(" + argStr[0] + "," + argStr[1] + ");";
+            currentSsa_.back().push_back(
+                std::make_tuple(true, "v" + std::to_string(resultId), "fmax(" + argStr[0] + "," + argStr[1] + ")"));
             break;
         }
         case RandomVariableOpCode::Abs: {
-            ssaLine += "fabs(" + argStr[0] + ");";
+            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), "fabs(" + argStr[0] + ")"));
             break;
         }
         case RandomVariableOpCode::Exp: {
-            ssaLine += "exp(" + argStr[0] + ");";
+            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), "exp(" + argStr[0] + ")"));
             break;
         }
         case RandomVariableOpCode::Sqrt: {
-            ssaLine += "sqrt(" + argStr[0] + ");";
+            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), "sqrt(" + argStr[0] + ")"));
             break;
         }
         case RandomVariableOpCode::Log: {
-            ssaLine += "log(" + argStr[0] + ");";
+            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), "log(" + argStr[0] + ")"));
             break;
         }
         case RandomVariableOpCode::Pow: {
-            ssaLine += "pow(" + argStr[0] + "," + argStr[1] + ");";
+            currentSsa_.back().push_back(
+                std::make_tuple(true, "v" + std::to_string(resultId), "pow(" + argStr[0] + "," + argStr[1] + ")"));
             break;
         }
         // TODO add this in the kernel code below first before activating it here
         // case RandomVariableOpCode::NormalCdf: {
-        //     ssaLine += "ore_normalCdf(" + argStr[0] + ");";
+        //     currentSsa_.back().push_back(
+        //         std::make_tuple(true, "v" + std::to_string(resultId), "ore_normalCdf(" + argStr[0] + ")"));
         //     break;
         // }
         case RandomVariableOpCode::NormalPdf: {
-            ssaLine += "ore_normalPdf(" + argStr[0] + ");";
+            currentSsa_.back().push_back(
+                std::make_tuple(true, "v" + std::to_string(resultId), "ore_normalPdf(" + argStr[0] + ")"));
             break;
         }
         default: {
@@ -1107,8 +1107,6 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
                     << ") provided.");
         }
         } // switch random var op code
-
-        currentSsa_.back() += "  " + ssaLine + "\n";
 
         if (settings_.debug)
             debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
@@ -1139,12 +1137,35 @@ void OpenClContext::declareOutputVariable(const std::size_t id) {
     QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::declareOutputVariable(): id ("
                                                 << currentId_ << ") in version " << version_[currentId_ - 1]
                                                 << " has a kernel already, output variables can not be declared.");
+    currentState_ = ComputeState::declareOutput;
     outputVariables_.push_back(id);
     nOutputVars_[currentId_ - 1]++;
+
+    // if we declare a conditional expectation in the current ssa part as output, we need to create a new ssa part
+
+    if (currentConditionalExpectationArgs_.find("v" + std::to_string(id)) != currentConditionalExpectationArgs_.end()) {
+        startNewSsaPart();
+        currentConditionalExpectationArgs_.clear();
+    }
 }
 
 std::size_t OpenClContext::valuesBufferId(const std::size_t i) const {
     return i - inputVarOffset_.size() - nVariates_[currentId_ - 1];
+}
+
+std::string OpenClContext::generateSsaCode(const std::vector<std::tuple<bool, std::string, std::string>>& ssa) const {
+    std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
+    std::string result;
+    std::set<std::string> hasDeclaration;
+    for (auto const& s : ssa) {
+        std::string typeDecl;
+        if (std::get<0>(s) && hasDeclaration.find(std::get<1>(s)) == hasDeclaration.end()) {
+            typeDecl = fpTypeStr + " ";
+            hasDeclaration.insert(std::get<1>(s));
+        }
+        result += typeDecl + std::get<1>(s) + "=" + std::get<2>(s) + ";\n";
+    }
+    return result;
 }
 
 void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
@@ -1171,8 +1192,9 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
     // update nVars_, nVariates_ for this calculation if it was a new calculation
 
-    if (nVars_[currentId_ - 1] == 0)
-        nVars_[currentId_ - 1] = nVarsTmp_;
+    if(nVars_[currentId_-1].size() < currentSsa_.size())
+        nVars_[currentId_ - 1].push_back(nVarsTmp_);
+
     if (nVariates_[currentId_ - 1] == 0)
         nVariates_[currentId_ - 1] = nVariatesTmp_;
 
@@ -1202,8 +1224,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     std::size_t valuesBufferSize = 0;
     cl_mem valuesBuffer;
     if (currentSsa_.size() > 1) {
-        valuesBufferSize =
-            (nVars_[currentId_ - 1] - inputVarOffset_.size() - nVariates_[currentId_ - 1]) * size_[currentId_ - 1];
+        valuesBufferSize = (nVars_[currentId_ - 1].back() - inputVarOffset_.size() - nVariates_[currentId_ - 1]) *
+                           size_[currentId_ - 1];
         if (valuesBufferSize > 0) {
             valuesBuffer = clCreateBuffer(*context_, CL_MEM_READ_WRITE, fpSize * valuesBufferSize, NULL, &err);
             guard.mem.push_back(valuesBuffer);
@@ -1290,21 +1312,25 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                             "if(i < " +
                             std::to_string(size_[currentId_ - 1]) + "U) {\n";
 
+            std::vector<std::tuple<bool, std::string, std::string>> ssa;
+
             if (initFromValues) {
-                for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1]; i < nVars_[currentId_ - 1];
-                     ++i) {
-                    kernelSource += "  " + fpTypeStr + " v" + std::to_string(i) + " = values[" +
-                                    std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "U + i];\n";
+                for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1];
+                     i < nVars_[currentId_ - 1][part]; ++i) {
+                    ssa.push_back(std::make_tuple(
+                        true, std::string("v") + std::to_string(i),
+                        std::string("values[") + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "U + i]"));
                 }
             }
 
-            kernelSource += currentSsa_[part];
+            ssa.insert(ssa.end(), currentSsa_[part].begin(), currentSsa_[part].end());
 
             if (cacheToValues) {
-                for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1]; i < nVars_[currentId_ - 1];
-                     ++i) {
-                    kernelSource += "  values[" + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) +
-                                    "U + i] = v" + std::to_string(i) + ";\n";
+                for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1];
+                     i < nVars_[currentId_ - 1][part]; ++i) {
+                    ssa.push_back(
+                        std::make_tuple(false, "values[" + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "U + i]",
+                                       "v" + std::to_string(i)));
                 }
             }
 
@@ -1323,17 +1349,16 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                     } else {
                         output = "v" + std::to_string(outputVariables_[i]);
                     }
-                    std::string ssaLine = "  output[" + std::to_string(offset) + "U + i] = " + output + ";";
-                    kernelSource += ssaLine + "\n";
+                    ssa.push_back(std::make_tuple(false, "output[" + std::to_string(offset) + "U + i]", output));
                 }
             }
 
-            kernelSource += "  }\n"
-                            "}\n";
+            kernelSource += generateSsaCode(ssa);
+            kernelSource += "}}\n";
 
         } // for part
 
-        std::cerr << "generated kernel: \n" + kernelSource + "\n";
+        // std::cerr << "generated kernel: \n" + kernelSource + "\n";
 
         if (settings_.debug) {
             timerBase = timer.elapsed().wall;
@@ -1441,8 +1466,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
         // calculate conditional expectations, this is the variant where we do this on the host
 
-        if (kernel_[currentId_ - 1].size() > 0 && part < kernel_[currentId_ - 1].size()) {
-            std::cerr << "calculating conditional expectation(s) for part #" << part << std::endl;
+        if (kernel_[currentId_ - 1].size() > 1 && part < kernel_[currentId_ - 1].size() - 1) {
+
             // copy values from device to host
 
             std::vector<double> values(valuesBufferSize);
@@ -1468,9 +1493,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             }
 
             for (auto const& v : conditionalExpectationVarIds_[currentId_ - 1][part]) {
-                std::cerr << "update conditional expectation with args:" << std::endl;
-                for (auto const& id : v)
-                    std::cout << "  condexp v_" << id << std::endl;
 
                 // calculate conditional expectation value
 
@@ -1486,10 +1508,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                 for (std::size_t i = 3; i < v.size(); ++i) {
                     regressor[i - 3] =
                         RandomVariable(size_[currentId_ - 1], &values[valuesBufferId(v[i]) * size_[currentId_ - 1]]);
-                    std::cout << " regressor " << regressor[i - 3] << std::endl;
                 }
-                std::cout << "regressand " << regressand << std::endl;
-                std::cout << "filter " << filter << std::endl;
 
                 auto ce =
                     conditionalExpectation(regressand, vec2vecptr(regressor),
