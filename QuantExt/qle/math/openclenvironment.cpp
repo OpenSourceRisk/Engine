@@ -1425,6 +1425,12 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     if (inputBufferSize > 0)
         runWaitEvents.push_back(inputBufferEvent);
 
+    std::vector<double> values(valuesBufferSize);
+    std::vector<float> valuesFloat;
+    if (!settings_.useDoublePrecision) {
+      valuesFloat.resize(values.size());
+    }
+
     for (std::size_t part = 0; part < kernel_[currentId_ - 1].size(); ++part) {
 
         bool initFromValues = part > 0;
@@ -1469,11 +1475,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
             // copy values from device to host
 
-            std::vector<double> values(valuesBufferSize);
-            std::vector<float> valuesFloat;
-            if (!settings_.useDoublePrecision) {
-                valuesFloat.resize(values.size());
-            }
             cl_event readEvent;
             err =
                 clEnqueueReadBuffer(queue_, valuesBuffer, CL_FALSE, 0, fpSize * valuesBufferSize,
