@@ -17,7 +17,10 @@
 */
 
 #include <qle/math/openclenvironment.hpp>
+#include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
+
+#include <qle/math/randomvariable_io.hpp> // just for debugging!
 
 #include <ql/errors.hpp>
 
@@ -197,6 +200,7 @@ public:
 private:
     std::pair<std::size_t, bool> generateResultId();
     std::vector<std::string> getArgString(const std::vector<std::size_t>& args) const;
+    std::size_t valuesBufferId(const std::size_t i) const;
 
     void updateVariatesPool();
 
@@ -1008,7 +1012,6 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
                 regressandId = resultId;
         }
 
-
         conditionalExpectationVarIds_[currentId_ - 1][ssaIndex].push_back(argIds);
         currentSsa_[ssaIndex] += ssaLines;
 
@@ -1138,6 +1141,10 @@ void OpenClContext::declareOutputVariable(const std::size_t id) {
                                                 << " has a kernel already, output variables can not be declared.");
     outputVariables_.push_back(id);
     nOutputVars_[currentId_ - 1]++;
+}
+
+std::size_t OpenClContext::valuesBufferId(const std::size_t i) const {
+    return i - inputVarOffset_.size() - nVariates_[currentId_ - 1];
 }
 
 void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
@@ -1287,9 +1294,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                 for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1]; i < nVars_[currentId_ - 1];
                      ++i) {
                     kernelSource += "  " + fpTypeStr + " v" + std::to_string(i) + " = values[" +
-                                    std::to_string((i - inputVarOffset_.size() - nVariates_[currentId_ - 1]) *
-                                                   size_[currentId_ - 1]) +
-                                    "U + i];\n";
+                                    std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "U + i];\n";
                 }
             }
 
@@ -1298,9 +1303,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             if (cacheToValues) {
                 for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1]; i < nVars_[currentId_ - 1];
                      ++i) {
-                    kernelSource += "  values[" +
-                                    std::to_string((i - inputVarOffset_.size() - nVariates_[currentId_ - 1]) *
-                                                   size_[currentId_ - 1]) +
+                    kernelSource += "  values[" + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) +
                                     "U + i] = v" + std::to_string(i) + ";\n";
                 }
             }
@@ -1330,7 +1333,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
         } // for part
 
-        // std::cerr << "generated kernel: \n" + kernelSource + "\n";
+        std::cerr << "generated kernel: \n" + kernelSource + "\n";
 
         if (settings_.debug) {
             timerBase = timer.elapsed().wall;
@@ -1436,13 +1439,92 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         runWaitEvents.clear();
         runWaitEvents.push_back(runEvent);
 
+        // calculate conditional expectations, this is the variant where we do this on the host
+
+        if (kernel_[currentId_ - 1].size() > 0 && part < kernel_[currentId_ - 1].size()) {
+            std::cerr << "calculating conditional expectation(s) for part #" << part << std::endl;
+            // copy values from device to host
+
+            std::vector<double> values(valuesBufferSize);
+            std::vector<float> valuesFloat;
+            if (!settings_.useDoublePrecision) {
+                valuesFloat.resize(values.size());
+            }
+            cl_event readEvent;
+            err =
+                clEnqueueReadBuffer(queue_, valuesBuffer, CL_FALSE, 0, fpSize * valuesBufferSize,
+                                    settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0],
+                                    runWaitEvents.size(), runWaitEvents.empty() ? NULL : &runWaitEvents[0], &readEvent);
+            QL_REQUIRE(err == CL_SUCCESS,
+                       "OpenClContext::finalizeCalculation(): enqueue read values buffer fails: " << errorText(err));
+            runWaitEvents.clear();
+            err = clWaitForEvents(1, &readEvent);
+            QL_REQUIRE(
+                err == CL_SUCCESS,
+                "OpenClContext::finalizeCalculation(): wait for read values buffer event fails: " << errorText(err));
+
+            if (!settings_.useDoublePrecision) {
+                std::copy(valuesFloat.begin(), valuesFloat.end(), values.begin());
+            }
+
+            for (auto const& v : conditionalExpectationVarIds_[currentId_ - 1][part]) {
+                std::cerr << "update conditional expectation with args:" << std::endl;
+                for (auto const& id : v)
+                    std::cout << "  condexp v_" << id << std::endl;
+
+                // calculate conditional expectation value
+
+                QL_REQUIRE(v.size() >= 4,
+                           "OpenClContext::finalizeCalculation(): expected at least 4 varIds (3 args and 1 result) for "
+                           "conditional expectation, got "
+                               << v.size());
+                RandomVariable regressand(size_[currentId_ - 1], &values[valuesBufferId(v[1]) * size_[currentId_ - 1]]);
+                Filter filter = close_enough(
+                    RandomVariable(size_[currentId_ - 1], &values[valuesBufferId(v[2]) * size_[currentId_ - 1]]),
+                    RandomVariable(size_[currentId_ - 1], 1.0));
+                std::vector<RandomVariable> regressor(v.size() - 3);
+                for (std::size_t i = 3; i < v.size(); ++i) {
+                    regressor[i - 3] =
+                        RandomVariable(size_[currentId_ - 1], &values[valuesBufferId(v[i]) * size_[currentId_ - 1]]);
+                    std::cout << " regressor " << regressor[i - 3] << std::endl;
+                }
+                std::cout << "regressand " << regressand << std::endl;
+                std::cout << "filter " << filter << std::endl;
+
+                auto ce =
+                    conditionalExpectation(regressand, vec2vecptr(regressor),
+                                           multiPathBasisSystem(regressor.size(), settings_.regressionOrder,
+                                                                QuantLib::LsmBasisSystem::Monomial, regressand.size()),
+                                           filter);
+
+                // overwrite the value
+
+                ce.expand();
+                std::copy(ce.data(), ce.data() + ce.size(), &values[valuesBufferId(v[0]) * size_[currentId_ - 1]]);
+            }
+
+            if (!settings_.useDoublePrecision) {
+                std::copy(values.begin(), values.end(), valuesFloat.begin());
+            }
+
+            // copy values from host to device
+
+            runWaitEvents.push_back(cl_event());
+            err = clEnqueueWriteBuffer(queue_, valuesBuffer, CL_FALSE, 0, fpSize * valuesBufferSize,
+                                       settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0], 0,
+                                       NULL, &runWaitEvents.back());
+            QL_REQUIRE(err == CL_SUCCESS,
+                       "OpenClContext::finalizeCalculation(): write values buffer fails: " << errorText(err));
+
+        } // if part > 0 (to update conditional expectation values)
+
         if (settings_.debug) {
             err = clFinish(queue_);
             QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::clFinish(): error in debug mode: " << errorText(err));
             debugInfo_.nanoSecondsCalculation += timer.elapsed().wall - timerBase;
         }
 
-    } // for part
+    } // for part (execute kernel part)
 
     if (settings_.debug) {
         timerBase = timer.elapsed().wall;
@@ -1470,7 +1552,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             err == CL_SUCCESS,
             "OpenClContext::finalizeCalculation(): wait for output buffer events to finish fails: " << errorText(err));
         if (!settings_.useDoublePrecision) {
-            // copy from float to double
             for (std::size_t i = 0; i < output.size(); ++i) {
                 std::copy(outputFloat[i].begin(), outputFloat[i].end(), output[i]);
             }
