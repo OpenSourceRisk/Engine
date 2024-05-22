@@ -390,8 +390,18 @@ BOOST_AUTO_TEST_CASE(testConditionalExpectation) {
         RandomVariable z = conditionalExpectation(
             y, {&x}, multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, x.size()));
 
+        double tol = settings.useDoublePrecision ? 1E-12 : 1E-4;
+        Size noErrors = 0, errorThreshold = 10;
+
         for (Size i = 0; i < n; ++i) {
-            BOOST_TEST_MESSAGE(output[0][i] << " " << output[1][i] << " " << output[2][i] << " " << z[i]);
+            Real err = std::abs(output[2][i] - z[i]);
+            if (std::abs(z[i]) > 1E-10)
+                err /= std::abs(z[i]);
+            if (err > tol && noErrors < errorThreshold) {
+                BOOST_ERROR("gpu value (" << output[2][i] << ") at i=" << i << " does not match reference cpu value ("
+                                          << z[i] << "), error " << err << ", tol " << tol);
+                noErrors++;
+            }
         }
     }
 }
