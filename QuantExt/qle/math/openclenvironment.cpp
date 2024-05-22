@@ -254,7 +254,6 @@ private:
     std::size_t nVariatesTmp_;
     Settings settings_;
     bool lastOperationWasConditionalExpectation_ = false;
-    std::set<std::size_t> declaredVariables_;
 
     // 2a indexed by var id
     std::vector<std::size_t> inputVarOffset_;
@@ -621,8 +620,6 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         currentSsa_ = std::vector<std::string>(1);
         // reset last op flag
         lastOperationWasConditionalExpectation_ = false;
-        // reset declared variables
-        declaredVariables_.clear();
     }
 
     // set state
@@ -943,17 +940,16 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
 
 std::pair<std::size_t, bool> OpenClContext::generateResultId() {
     std::size_t resultId;
-    bool resultIdNeedsDeclaration;
+    bool resultIdWasFreed;
     if (!freedVariables_.empty()) {
         resultId = freedVariables_.back();
         freedVariables_.pop_back();
-        resultIdNeedsDeclaration = declaredVariables_.find(resultId) == declaredVariables_.end();
+        resultIdWasFreed = true;
     } else {
         resultId = nVarsTmp_++;
-        resultIdNeedsDeclaration = true;
+        resultIdWasFreed = false;
     }
-    declaredVariables_.insert(resultId);
-    return std::make_pair(resultId, resultIdNeedsDeclaration);
+    return std::make_pair(resultId, resultIdWasFreed);
 }
 
 std::vector<std::string> OpenClContext::getArgString(const std::vector<std::size_t>& args) const {
@@ -965,7 +961,6 @@ std::vector<std::string> OpenClContext::getArgString(const std::vector<std::size
         } else if (args[i] < inputVarOffset_.size() + nVariatesTmp_) {
             argStr[i] = "rn[" + std::to_string((args[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) + "U + i]";
         } else {
-            // variable is an (intermediate) result
             argStr[i] = "v" + std::to_string(args[i]);
         }
     }
@@ -991,18 +986,6 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 
         // after a (block of) conditional expectation operations, we start a new kernel
 
-        std::string ssaLines;
-        std::vector<std::size_t> argIds;
-        std::size_t regressandId;
-        for (std::size_t i = 0; i < argStr.size() + 1; ++i) {
-            auto [resultId, resultIdNeedsDeclaration] = generateResultId();
-            ssaLines += "  " + (resultIdNeedsDeclaration ? fpTypeStr + " " : "") + std::string("v") +
-                        std::to_string(resultId) + " = " + (i == 0 ? "0.0" : argStr[i - 1]) + ";\n";
-            argIds.push_back(resultId);
-            if (i == 0)
-                regressandId = resultId;
-        }
-
         std::size_t ssaIndex;
         if (lastOperationWasConditionalExpectation_) {
             ssaIndex = currentSsa_.size() - 2;
@@ -1013,6 +996,19 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
             conditionalExpectationVarIds_[currentId_ - 1].push_back(std::vector<std::vector<std::size_t>>());
         }
 
+        std::string ssaLines;
+        std::vector<std::size_t> argIds;
+        std::size_t regressandId;
+        for (std::size_t i = 0; i < argStr.size() + 1; ++i) {
+            auto [resultId, resultIdWasFreed] = generateResultId();
+            ssaLines += "  " + (!resultIdWasFreed && ssaIndex == 0 ? fpTypeStr + " " : "") + std::string("v") +
+                        std::to_string(resultId) + " = " + (i == 0 ? "0.0" : argStr[i - 1]) + ";\n";
+            argIds.push_back(resultId);
+            if (i == 0)
+                regressandId = resultId;
+        }
+
+
         conditionalExpectationVarIds_[currentId_ - 1][ssaIndex].push_back(argIds);
         currentSsa_[ssaIndex] += ssaLines;
 
@@ -1022,15 +1018,12 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 
         // op code is everythig but conditional expectation (i.e. a pathwise operation)
 
-        if(lastOperationWasConditionalExpectation_)
-            declaredVariables_.clear();
-
         lastOperationWasConditionalExpectation_ = false;
 
-        auto [resultIdNeedsDeclaration, resultId] = generateResultId();
+        auto [resultId, resultIdWasFreed] = generateResultId();
 
-        std::string ssaLine =
-            (resultIdNeedsDeclaration ? fpTypeStr + " " : "") + std::string("v") + std::to_string(resultId) + " = ";
+        std::string ssaLine = (!resultIdWasFreed && currentSsa_.size() == 1 ? fpTypeStr + " " : "") + std::string("v") +
+                              std::to_string(resultId) + " = ";
 
         switch (randomVariableOpCode) {
         case RandomVariableOpCode::None: {
