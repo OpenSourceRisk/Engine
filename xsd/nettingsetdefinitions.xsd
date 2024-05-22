@@ -1,6 +1,4 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:include schemaLocation="ore_types.xsd"/>
-  <xs:include schemaLocation="instruments.xsd"/>
 
   <xs:element type="collateralBalances" name="CollateralBalances"/>
 
