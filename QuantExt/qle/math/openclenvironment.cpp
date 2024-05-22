@@ -1461,7 +1461,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         err = clEnqueueNDRangeKernel(queue_, kernel_[currentId_ - 1][part], 1, NULL, &size_[currentId_ - 1], NULL,
                                      runWaitEvents.size(), runWaitEvents.empty() ? NULL : &runWaitEvents[0], &runEvent);
         QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): enqueue kernel fails: " << errorText(err));
-        runWaitEvents.clear();
         runWaitEvents.push_back(runEvent);
 
         // calculate conditional expectations, this is the variant where we do this on the host
@@ -1482,8 +1481,9 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                                     runWaitEvents.size(), runWaitEvents.empty() ? NULL : &runWaitEvents[0], &readEvent);
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClContext::finalizeCalculation(): enqueue read values buffer fails: " << errorText(err));
-            runWaitEvents.clear();
+
             err = clWaitForEvents(1, &readEvent);
+
             QL_REQUIRE(
                 err == CL_SUCCESS,
                 "OpenClContext::finalizeCalculation(): wait for read values buffer event fails: " << errorText(err));
