@@ -50,26 +50,26 @@ std::size_t numberOfStochasticRvs(const std::vector<RandomVariable>& v) {
 }
 } // namespace
 
-XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
+XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
+                         const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
                          const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
                          const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
                          const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
                          const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
                          const QuantLib::ext::shared_ptr<ore::analytics::CrossAssetModelData>& crossAssetModelData,
                          const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
-                         const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const string& marketConfiguration,
-                         const string& marketConfigurationInCcy,
+                         const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+                         const string& marketConfiguration, const string& marketConfigurationInCcy,
                          const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                         const IborFallbackConfig& iborFallbackConfig,
-			 const bool bumpCvaSensis, const bool continueOnCalibrationError,
-                         const bool continueOnError, const std::string& context)
-    : asof_(asof), loader_(loader), curveConfigs_(curveConfigs),
-      todaysMarketParams_(todaysMarketParams), simMarketData_(simMarketData), engineData_(engineData),
-      crossAssetModelData_(crossAssetModelData), scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio),
-      marketConfiguration_(marketConfiguration), marketConfigurationInCcy_(marketConfigurationInCcy),
-      sensitivityData_(sensitivityData), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
-      bumpCvaSensis_(bumpCvaSensis), continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {
+                         const IborFallbackConfig& iborFallbackConfig, const bool bumpCvaSensis,
+                         const bool continueOnCalibrationError, const bool continueOnError, const std::string& context)
+    : asof_(asof), loader_(loader), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
+      simMarketData_(simMarketData), engineData_(engineData), crossAssetModelData_(crossAssetModelData),
+      scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
+      marketConfigurationInCcy_(marketConfigurationInCcy), sensitivityData_(sensitivityData),
+      referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), bumpCvaSensis_(bumpCvaSensis),
+      continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {
 
     // Just for performance testing, duplicate the trades in input portfolio as specified by env var N
 
@@ -93,9 +93,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
 
     LOG("XvaEngineCG: build init market");
 
-    initMarket_ = QuantLib::ext::make_shared<ore::data::TodaysMarket>(asof_, todaysMarketParams_, loader_, curveConfigs_,
-                                                              continueOnError_, true, true, referenceData_, false,
-                                                              iborFallbackConfig_, false, true);
+    initMarket_ = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
+        asof_, todaysMarketParams_, loader_, curveConfigs_, continueOnError_, true, true, referenceData_, false,
+        iborFallbackConfig_, false, true);
 
     boost::timer::nanosecond_type timing1 = timer.elapsed().wall;
 
@@ -128,13 +128,14 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
         crossAssetModelData_->discretization() == CrossAssetModel::Discretization::Euler,
         "XvaEngineCG: cam is required to use discretization 'Euler', please update simulation parameters accordingly.");
 
-    std::vector<std::string> currencies;                                                   // from cam
-    std::vector<Handle<YieldTermStructure>> curves;                                        // from cam
-    std::vector<Handle<Quote>> fxSpots;                                                    // from cam
-    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices;   // from trade building
-    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>> infIndices; // from trade building
-    std::vector<std::string> indices;                                                      // from trade building
-    std::vector<std::string> indexCurrencies;                                              // from trade building
+    std::vector<std::string> currencies;                                                         // from cam
+    std::vector<Handle<YieldTermStructure>> curves;                                              // from cam
+    std::vector<Handle<Quote>> fxSpots;                                                          // from cam
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices; // from trade building
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>
+        infIndices;                           // from trade building
+    std::vector<std::string> indices;         // from trade building
+    std::vector<std::string> indexCurrencies; // from trade building
 
     // note: for the PoC we populate the containers with hardcoded values ... temp hack ...
     currencies.push_back("EUR");
@@ -148,10 +149,10 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
     Size timeStepsPerYear = 1;
 
     // note: projectedStateProcessIndices can be removed from GaussianCamCG constructor most probably?
-    model_ = QuantLib::ext::make_shared<GaussianCamCG>(camBuilder_->model(), scenarioGeneratorData_->samples(), currencies,
-                                               curves, fxSpots, irIndices, infIndices, indices, indexCurrencies,
-                                               simulationDates, timeStepsPerYear, iborFallbackConfig,
-                                               std::vector<Size>(), std::vector<std::string>(), true);
+    model_ = QuantLib::ext::make_shared<GaussianCamCG>(
+        camBuilder_->model(), scenarioGeneratorData_->samples(), currencies, curves, fxSpots, irIndices, infIndices,
+        indices, indexCurrencies, simulationDates, timeStepsPerYear, iborFallbackConfig, std::vector<Size>(),
+        std::vector<std::string>(), true);
     model_->calculate();
     boost::timer::nanosecond_type timing3 = timer.elapsed().wall;
 
@@ -166,11 +167,11 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
     configurations[MarketContext::irCalibration] = marketConfigurationInCcy_;
     configurations[MarketContext::fxCalibration] = marketConfiguration_;
     configurations[MarketContext::pricing] = marketConfiguration_;
-    auto factory =
-        QuantLib::ext::make_shared<EngineFactory>(edCopy, simMarket_, configurations, referenceData_, iborFallbackConfig_,
-                                          EngineBuilderFactory::instance().generateAmcCgEngineBuilders(
-                                              model_, scenarioGeneratorData_->getGrid()->dates()),
-                                          true);
+    auto factory = QuantLib::ext::make_shared<EngineFactory>(
+        edCopy, simMarket_, configurations, referenceData_, iborFallbackConfig_,
+        EngineBuilderFactory::instance().generateAmcCgEngineBuilders(model_,
+                                                                     scenarioGeneratorData_->getGrid()->dates()),
+        true);
 
     portfolio_->build(factory, "xva engine cg", true);
 
@@ -326,7 +327,6 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
                 .add(expectation(max(-values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))).at(0));
         }
         epeReport_->end();
-        epeReport_->toFile("Output/xvacg-exposure.csv");
     }
 
     Real cva = expectation(values[cvaNode]).at(0);
@@ -334,139 +334,142 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::
 
     rvMemMax = std::max(rvMemMax, numberOfStochasticRvs(values) + numberOfStochasticRvs(derivatives));
 
-    // Do backward derivatives run
+    boost::timer::nanosecond_type timing11 = timing10, timing12 = timing11;
 
-    boost::timer::nanosecond_type timing11 = timer.elapsed().wall;
+    if (sensitivityData_) {
 
-    std::vector<double> modelParamDerivatives(baseModelParams_.size());
-
-    if (!bumpCvaSensis_) {
-
-        LOG("XvaEngineCG: run backward derivatives");
-
-        derivatives[cvaNode] = RandomVariable(model_->size(), 1.0);
-
-        std::vector<bool> keepNodesDerivatives(g->size(), false);
-
-        for (auto const& [n, _] : baseModelParams_)
-            keepNodesDerivatives[n] = true;
-
-        // backward derivatives run
-
-        backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, ops_,
-                            opNodeRequirements_, keepNodes, RandomVariableOpCode::ConditionalExpectation,
-                            ops_[RandomVariableOpCode::ConditionalExpectation]);
-
-        // read model param derivatives
-
-        Size i = 0;
-        for (auto const& [n, v] : baseModelParams_) {
-            modelParamDerivatives[i++] = expectation(derivatives[n]).at(0);
-        }
-
-        // get mem consumption
-
-        rvMemMax = std::max(rvMemMax, numberOfStochasticRvs(values) + numberOfStochasticRvs(derivatives));
-
-        LOG("XvaEngineCG: got " << modelParamDerivatives.size()
-                                << " model parameter derivatives from run backward derivatives");
+        // Do backward derivatives run
 
         timing11 = timer.elapsed().wall;
 
-        // Delete values and derivatives vectors, they are not needed from this point on
-        // except we are doing a full revaluation!
+        std::vector<double> modelParamDerivatives(baseModelParams_.size());
 
-        values.clear();
-        derivatives.clear();
-    }
+        if (!bumpCvaSensis_) {
 
-    // 13 generate sensitivity scenarios
+            LOG("XvaEngineCG: run backward derivatives");
 
-    LOG("XvaEngineCG: running sensi scenarios");
+            derivatives[cvaNode] = RandomVariable(model_->size(), 1.0);
 
-    sensiScenarioGenerator_ = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
-        sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
-        QuantLib::ext::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), false, std::string(), continueOnError,
-        simMarket_->baseScenarioAbsolute());
+            std::vector<bool> keepNodesDerivatives(g->size(), false);
 
-    simMarket_->scenarioGenerator() = sensiScenarioGenerator_;
+            for (auto const& [n, _] : baseModelParams_)
+                keepNodesDerivatives[n] = true;
 
-    auto resultCube = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(std::set<std::string>{"CVA"}, asof_,
-                                                                   sensiScenarioGenerator_->samples());
-    resultCube->setT0(cva, 0, 0);
+            // backward derivatives run
 
-    model_->alwaysForwardNotifications();
+            backwardDerivatives(*g, values, derivatives, grads_, RandomVariable::deleter, keepNodesDerivatives, ops_,
+                                opNodeRequirements_, keepNodes, RandomVariableOpCode::ConditionalExpectation,
+                                ops_[RandomVariableOpCode::ConditionalExpectation]);
 
-    Size activeScenarios = 0;
-    for (Size sample = 0; sample < resultCube->samples(); ++sample) {
+            // read model param derivatives
 
-        // update sim market to next scenario
-
-        simMarket_->preUpdate();
-        simMarket_->updateScenario(asof_);
-        simMarket_->postUpdate(asof_, false);
-
-        // recalibrate the model
-
-        camBuilder_->recalibrate();
-
-        Real sensi = 0.0;
-
-        // calculate sensi if model was notified of a change
-
-        if (!model_->isCalculated()) {
-
-            model_->calculate();
-            ++activeScenarios;
-
-            if (!bumpCvaSensis_) {
-
-                // calcuate CVA sensi using ad derivatives
-
-                auto modelParameters = model_->modelParameters();
-                Size i = 0;
-                boost::accumulators::accumulator_set<
-                    double, boost::accumulators::stats<boost::accumulators::tag::weighted_sum>, double>
-                    acc;
-                for (auto const& [n, v0] : baseModelParams_) {
-                    Real v1 = modelParameters[i].second;
-                    acc(modelParamDerivatives[i], boost::accumulators::weight = (v1 - v0));
-                    ++i;
-                }
-                sensi = boost::accumulators::weighted_sum(acc);
-
-            } else {
-
-                // calcuate CVA sensi doing full recalc of CVA
-
-                populateModelParameters(values, model_->modelParameters());
-                forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes);
-                sensi = expectation(values[cvaNode]).at(0) - cva;
-
+            Size i = 0;
+            for (auto const& [n, v] : baseModelParams_) {
+                modelParamDerivatives[i++] = expectation(derivatives[n]).at(0);
             }
+
+            // get mem consumption
+
+            rvMemMax = std::max(rvMemMax, numberOfStochasticRvs(values) + numberOfStochasticRvs(derivatives));
+
+            LOG("XvaEngineCG: got " << modelParamDerivatives.size()
+                                    << " model parameter derivatives from run backward derivatives");
+
+            timing11 = timer.elapsed().wall;
+
+            // Delete values and derivatives vectors, they are not needed from this point on
+            // except we are doing a full revaluation!
+
+            values.clear();
+            derivatives.clear();
         }
 
-        // set result in cube
+        // 13 generate sensitivity scenarios
 
-        resultCube->set(cva + sensi, 0, 0, sample, 0);
-    }
+        LOG("XvaEngineCG: running sensi scenarios");
 
-    boost::timer::nanosecond_type timing12 = timer.elapsed().wall;
+        sensiScenarioGenerator_ = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
+            sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
+            QuantLib::ext::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), false, std::string(),
+            continueOnError, simMarket_->baseScenarioAbsolute());
 
-    LOG("XvaEngineCG: finished running " << resultCube->samples() << " sensi scenarios, thereof " << activeScenarios
-                                         << " active.");
+        simMarket_->scenarioGenerator() = sensiScenarioGenerator_;
 
-    // write out sensi report
+        auto resultCube = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(std::set<std::string>{"CVA"}, asof_,
+                                                                               sensiScenarioGenerator_->samples());
+        resultCube->setT0(cva, 0, 0);
 
-    {
-        sensiReport_ = QuantLib::ext::make_shared<InMemoryReport>();
-        auto sensiCube = QuantLib::ext::make_shared<SensitivityCube>(
-            resultCube, sensiScenarioGenerator_->scenarioDescriptions(), sensiScenarioGenerator_->shiftSizes(),
-            sensiScenarioGenerator_->shiftSizes(), sensiScenarioGenerator_->shiftSchemes());
-        auto sensiStream = QuantLib::ext::make_shared<SensitivityCubeStream>(sensiCube, simMarketData_->baseCcy());
-        ReportWriter().writeScenarioReport(*sensiReport_, {sensiCube}, 0.0);
-        sensiReport_->toFile("Output/xvacg-cva-sensi-scenario.csv");
-    }
+        model_->alwaysForwardNotifications();
+
+        Size activeScenarios = 0;
+        for (Size sample = 0; sample < resultCube->samples(); ++sample) {
+
+            // update sim market to next scenario
+
+            simMarket_->preUpdate();
+            simMarket_->updateScenario(asof_);
+            simMarket_->postUpdate(asof_, false);
+
+            // recalibrate the model
+
+            camBuilder_->recalibrate();
+
+            Real sensi = 0.0;
+
+            // calculate sensi if model was notified of a change
+
+            if (!model_->isCalculated()) {
+
+                model_->calculate();
+                ++activeScenarios;
+
+                if (!bumpCvaSensis_) {
+
+                    // calcuate CVA sensi using ad derivatives
+
+                    auto modelParameters = model_->modelParameters();
+                    Size i = 0;
+                    boost::accumulators::accumulator_set<
+                        double, boost::accumulators::stats<boost::accumulators::tag::weighted_sum>, double>
+                        acc;
+                    for (auto const& [n, v0] : baseModelParams_) {
+                        Real v1 = modelParameters[i].second;
+                        acc(modelParamDerivatives[i], boost::accumulators::weight = (v1 - v0));
+                        ++i;
+                    }
+                    sensi = boost::accumulators::weighted_sum(acc);
+
+                } else {
+
+                    // calcuate CVA sensi doing full recalc of CVA
+
+                    populateModelParameters(values, model_->modelParameters());
+                    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes);
+                    sensi = expectation(values[cvaNode]).at(0) - cva;
+                }
+            }
+
+            // set result in cube
+
+            resultCube->set(cva + sensi, 0, 0, sample, 0);
+        }
+
+        timing12 = timer.elapsed().wall;
+
+        LOG("XvaEngineCG: finished running " << resultCube->samples() << " sensi scenarios, thereof " << activeScenarios
+                                             << " active.");
+
+        // write out sensi report
+
+        {
+            sensiReport_ = QuantLib::ext::make_shared<InMemoryReport>();
+            auto sensiCube = QuantLib::ext::make_shared<SensitivityCube>(
+                resultCube, sensiScenarioGenerator_->scenarioDescriptions(), sensiScenarioGenerator_->shiftSizes(),
+                sensiScenarioGenerator_->shiftSizes(), sensiScenarioGenerator_->shiftSchemes());
+            auto sensiStream = QuantLib::ext::make_shared<SensitivityCubeStream>(sensiCube, simMarketData_->baseCcy());
+            ReportWriter().writeScenarioReport(*sensiReport_, {sensiCube}, 0.0);
+        }
+    } // if sensi data is given
 
     // Output statistics
 

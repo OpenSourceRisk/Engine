@@ -664,7 +664,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                            inputs_->xvaCgBumpSensis());
 
         analytic()->reports()["XVA"]["xvacg-exposure"] = engine.exposureReport();
-	analytic()->reports()["XVA"]["xvacg-cva-sensi-scenario"] = engine.sensiReport();
+        if(inputs_->xvaCgSensiScenarioData())
+            analytic()->reports()["XVA"]["xvacg-cva-sensi-scenario"] = engine.sensiReport();
 	return;
     }
 
