@@ -457,6 +457,8 @@ ANALYTICS
 \item add IM Schedule analytic (ticket 11730), see extended Example 44
 \item add P\&L and P\&L Explain analytics (ticket 12458), see Example 62
 \item add par stress test support (ticket 12148), see Example 63
+\item add XVA stress testing (ticket 12376), see Example 67
+\item add XVA bump \& revalue sensitivities (ticket 12437), see Example 68
 \item add bond spread imply to ORE (ticket 12370)
 \item add market risk backtest analytic (ticket 12370)
 \item add calculation of stoplight bounds for backtests (ticket 12370)
@@ -466,7 +468,6 @@ ANALYTICS
 \item introduce configurable shift size and difference scheme per product for sensitivity analysis (ticket 12014)
 \item improve performance of SIMM calculations for large CRIF files (ticket 12397)
 \item output effective SOFR / RFR cap volatilities in reports (ticket 12192)
-\item XVA Stress testing (ticket 12376)
 \end{itemize}
 
 \bigskip
@@ -546,7 +547,8 @@ NEW \& EXTENDED EXAMPLES
 \item 64: Formual-based Coupon
 \item 65: Flexi Swap
 \item 66: Balance Guaranteed Swap 
-\item 67: XVA Stress Analytic
+\item 67: XVA Stress Testing
+\item 68: XVA Bump \& Revalue Sensitivities
 \end{itemize}
 
 %========================================================
@@ -1139,6 +1141,8 @@ Example & Description \\
 66 &  Balance Guaranteed Swap \\
 \hline
 67 &  XVA Stress Testing \\
+\hline
+68 &  XVA Bump \& Revalue Sensitivities \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -3749,6 +3753,16 @@ that match prepayments in an underlying reference security. In ORE this
 BGS is approximated by a FlexiSwap instrument with amorization bounds
 given by two ``conditional prepayment rate (CPR)'' levels, e.g. determined by
 current and past CPRs or expert judgement.
+
+%--------------------------------------------------------------------
+\subsection{XVA Stress Testing - TODO}% Example 67
+\label{example:67}
+%--------------------------------------------------------------------
+
+%--------------------------------------------------------------------
+\subsection{XVA Bump \& Revalue Sensitivities - TODO}% Example 68
+\label{example:68}
+%--------------------------------------------------------------------
 
 \clearpage
 %========================================================

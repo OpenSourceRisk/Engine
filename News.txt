@@ -42,6 +42,8 @@ ANALYTICS
 - add IM Schedule analytic (ticket 11730), see extended Example 44
 - add P&L and P&L Explain analytics (ticket 12458), see Example 62
 - add par stress test support (ticket 12148), see Example 63
+- add XVA stress testing (ticket 12376), see Example 67
+- add XVA bump & revalue sensitivities (ticket 12437), see Example 68
 - add bond spread imply to ORE (ticket 12370)
 - add market risk backtest analytic (ticket 12370)
 - add calculation of stoplight bounds for backtests (ticket 12370)
@@ -51,7 +53,6 @@ ANALYTICS
 - introduce configurable shift size and difference scheme per product for sensitivity analysis (ticket 12014)
 - improve performance of SIMM calculations for large CRIF files (ticket 12397)
 - output effective SOFR / RFR cap volatilities in reports (ticket 12192)
-- XVA Stress testing (ticket 12376)
 
 TESTS
 - add a test suite for ORE-SWIG (ticket 11823)
@@ -109,8 +110,8 @@ NEW & EXTENDED EXAMPLES
 - 64: Formual-based Coupon
 - 65: Flexi Swap
 - 66: Balance Guaranteed Swap 
-- 67: XVA Stress Analytic
-
+- 67: XVA Stress Testing
+- 68: XVA Bump & Revalue Sensitivities
 
 Changes for the 11th ORE release (1.8.11.0):
 ============================================
