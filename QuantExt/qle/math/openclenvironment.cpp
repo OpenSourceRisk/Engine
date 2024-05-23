@@ -198,11 +198,18 @@ public:
     const DebugInfo& debugInfo() const override final;
 
 private:
+    struct ssa_entry {
+        std::string lhs_str;
+        std::optional<std::size_t> lhs_local_id;
+        std::string rhs_str;
+        std::set<std::size_t> rhs_local_id;
+    };
+
     std::size_t generateResultId();
-    std::vector<std::string> getArgString(const std::vector<std::size_t>& args) const;
+    std::pair<std::vector<std::string>, std::set<std::size_t>> getArgString(const std::vector<std::size_t>& args) const;
     std::size_t valuesBufferId(const std::size_t i) const;
     void startNewSsaPart();
-    std::string generateSsaCode(const std::vector<std::tuple<bool, std::string, std::string>>& ssa) const;
+    std::string generateSsaCode(const std::vector<ssa_entry>& ssa) const;
 
     void updateVariatesPool();
 
@@ -272,7 +279,7 @@ private:
     std::vector<std::size_t> outputVariables_;
 
     // 2d kernel ssa
-    std::vector<std::vector<std::tuple<bool, std::string, std::string>>> currentSsa_;
+    std::vector<std::vector<ssa_entry>> currentSsa_;
 };
 
 bool OpenClFramework::initialized_ = false;
@@ -621,7 +628,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
     if (newCalc) {
         freedVariables_.clear();
         outputVariables_.clear();
-        currentSsa_ = std::vector<std::vector<std::tuple<bool, std::string, std::string>>>(1);
+        currentSsa_ = std::vector<std::vector<ssa_entry>>(1);
         currentConditionalExpectationArgs_.clear();
     }
 
@@ -952,8 +959,10 @@ std::size_t OpenClContext::generateResultId() {
     return resultId;
 }
 
-std::vector<std::string> OpenClContext::getArgString(const std::vector<std::size_t>& args) const {
+std::pair<std::vector<std::string>, std::set<std::size_t>>
+OpenClContext::getArgString(const std::vector<std::size_t>& args) const {
     std::vector<std::string> argStr(args.size());
+    std::set<std::size_t> localIds;
     for (std::size_t i = 0; i < args.size(); ++i) {
         if (args[i] < inputVarOffset_.size()) {
             argStr[i] = "input[" + std::to_string(inputVarOffset_[args[i]]) + "U" +
@@ -962,13 +971,14 @@ std::vector<std::string> OpenClContext::getArgString(const std::vector<std::size
             argStr[i] = "rn[" + std::to_string((args[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) + "U + i]";
         } else {
             argStr[i] = "v" + std::to_string(args[i]);
+            localIds.insert(args[i]);
         }
     }
-    return argStr;
+    return std::make_pair(argStr, localIds);
 }
 
 void OpenClContext::startNewSsaPart() {
-    currentSsa_.push_back(std::vector<std::tuple<bool, std::string, std::string>>());
+    currentSsa_.push_back(std::vector<ssa_entry>());
     conditionalExpectationVarIds_[currentId_ - 1].push_back(std::vector<std::vector<std::size_t>>());
     nVars_[currentId_ - 1].push_back(nVarsTmp_);
 }
@@ -986,7 +996,7 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
                                                                                     << " has a kernel already.");
     std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
 
-    auto argStr = getArgString(args);
+    auto [argStr, argLocalIds] = getArgString(args);
 
     if (randomVariableOpCode == RandomVariableOpCode::ConditionalExpectation) {
 
@@ -1001,8 +1011,9 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
         std::size_t regressandId;
         for (std::size_t i = 0; i < argStr.size() + 1; ++i) {
             auto resultId = generateResultId();
+            // no harm in pushing all arg local ids here for each entry
             currentSsa_.back().push_back(
-                std::make_tuple(true, std::string("v") + std::to_string(resultId), (i == 0 ? "0.0" : argStr[i - 1])));
+                {std::string("v") + std::to_string(resultId), resultId, i == 0 ? "0.0" : argStr[i - 1], argLocalIds});
             argIds.push_back(resultId);
             if (i == 0) {
                 regressandId = resultId;
@@ -1025,69 +1036,77 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
             break;
         }
         case RandomVariableOpCode::Add: {
-            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), argStr[0] + " + " + argStr[1]));
+            currentSsa_.back().push_back(
+                {"v" + std::to_string(resultId), resultId, argStr[0] + " + " + argStr[1], argLocalIds});
             break;
         }
         case RandomVariableOpCode::Subtract: {
-            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), argStr[0] + " - " + argStr[1]));
+            currentSsa_.back().push_back(
+                {"v" + std::to_string(resultId), resultId, argStr[0] + " - " + argStr[1], argLocalIds});
             break;
         }
         case RandomVariableOpCode::Negative: {
-            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), "-" + argStr[0]));
+            currentSsa_.back().push_back({"v" + std::to_string(resultId), resultId, "-" + argStr[0], argLocalIds});
             break;
         }
         case RandomVariableOpCode::Mult: {
-            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), argStr[0] + " * " + argStr[1]));
+            currentSsa_.back().push_back(
+                {"v" + std::to_string(resultId), resultId, argStr[0] + " * " + argStr[1], argLocalIds});
             break;
         }
         case RandomVariableOpCode::Div: {
-            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), argStr[0] + " / " + argStr[1]));
+            currentSsa_.back().push_back(
+                {"v" + std::to_string(resultId), resultId, argStr[0] + " / " + argStr[1], argLocalIds});
             break;
         }
         case RandomVariableOpCode::IndicatorEq: {
-            currentSsa_.back().push_back(
-                std::make_tuple(true, "v" + std::to_string(resultId), "ore_indicatorEq(" + argStr[0] + "," + argStr[1] + ")"));
+            currentSsa_.back().push_back({"v" + std::to_string(resultId), resultId,
+                                          "ore_indicatorEq(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::IndicatorGt: {
-            currentSsa_.back().push_back(
-                std::make_tuple(true, "v" + std::to_string(resultId), "ore_indicatorGt(" + argStr[0] + "," + argStr[1] + ")"));
+            currentSsa_.back().push_back({"v" + std::to_string(resultId), resultId,
+                                          "ore_indicatorGt(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::IndicatorGeq: {
-            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId),
-                                                        "ore_indicatorGeq(" + argStr[0] + "," + argStr[1] + ")"));
+            currentSsa_.back().push_back({"v" + std::to_string(resultId), resultId,
+                                          "ore_indicatorGeq(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Min: {
             currentSsa_.back().push_back(
-                std::make_tuple(true, "v" + std::to_string(resultId), "fmin(" + argStr[0] + "," + argStr[1] + ")"));
+                {"v" + std::to_string(resultId), resultId, "fmin(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Max: {
             currentSsa_.back().push_back(
-                std::make_tuple(true, "v" + std::to_string(resultId), "fmax(" + argStr[0] + "," + argStr[1] + ")"));
+                {"v" + std::to_string(resultId), resultId, "fmax(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Abs: {
-            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), "fabs(" + argStr[0] + ")"));
+            currentSsa_.back().push_back(
+                {"v" + std::to_string(resultId), resultId, "fabs(" + argStr[0] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Exp: {
-            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), "exp(" + argStr[0] + ")"));
+            currentSsa_.back().push_back(
+                {"v" + std::to_string(resultId), resultId, "exp(" + argStr[0] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Sqrt: {
-            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), "sqrt(" + argStr[0] + ")"));
+            currentSsa_.back().push_back(
+                {"v" + std::to_string(resultId), resultId, "sqrt(" + argStr[0] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Log: {
-            currentSsa_.back().push_back(std::make_tuple(true, "v" + std::to_string(resultId), "log(" + argStr[0] + ")"));
+            currentSsa_.back().push_back(
+                {"v" + std::to_string(resultId), resultId, "log(" + argStr[0] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Pow: {
             currentSsa_.back().push_back(
-                std::make_tuple(true, "v" + std::to_string(resultId), "pow(" + argStr[0] + "," + argStr[1] + ")"));
+                {"v" + std::to_string(resultId), resultId, "pow(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
             break;
         }
         // TODO add this in the kernel code below first before activating it here
@@ -1098,7 +1117,7 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
         // }
         case RandomVariableOpCode::NormalPdf: {
             currentSsa_.back().push_back(
-                std::make_tuple(true, "v" + std::to_string(resultId), "ore_normalPdf(" + argStr[0] + ")"));
+                {"v" + std::to_string(resultId), resultId, "ore_normalPdf(" + argStr[0] + ")", argLocalIds});
             break;
         }
         default: {
@@ -1153,17 +1172,26 @@ std::size_t OpenClContext::valuesBufferId(const std::size_t i) const {
     return i - inputVarOffset_.size() - nVariates_[currentId_ - 1];
 }
 
-std::string OpenClContext::generateSsaCode(const std::vector<std::tuple<bool, std::string, std::string>>& ssa) const {
-    std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
-    std::string result;
-    std::set<std::string> hasDeclaration;
+std::string OpenClContext::generateSsaCode(const std::vector<ssa_entry>& ssa) const {
+    std::set<std::size_t> localVars;
     for (auto const& s : ssa) {
-        std::string typeDecl;
-        if (std::get<0>(s) && hasDeclaration.find(std::get<1>(s)) == hasDeclaration.end()) {
-            typeDecl = fpTypeStr + " ";
-            hasDeclaration.insert(std::get<1>(s));
+        localVars.insert(s.rhs_local_id.begin(), s.rhs_local_id.end());
+    }
+
+    std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
+
+    std::string result;
+    std::set<std::size_t> hasDeclaration;
+    for (auto const& s : ssa) {
+        if (s.lhs_local_id) {
+            if (localVars.find(*s.lhs_local_id) == localVars.end())
+                continue;
+            if (hasDeclaration.find(*s.lhs_local_id) == hasDeclaration.end()) {
+                result += fpTypeStr + " ";
+                hasDeclaration.insert(*s.lhs_local_id);
+            }
         }
-        result += typeDecl + std::get<1>(s) + "=" + std::get<2>(s) + ";\n";
+        result += s.lhs_str + "=" + s.rhs_str + ";\n";
     }
     return result;
 }
@@ -1192,7 +1220,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
     // update nVars_, nVariates_ for this calculation if it was a new calculation
 
-    if(nVars_[currentId_-1].size() < currentSsa_.size())
+    if (nVars_[currentId_ - 1].size() < currentSsa_.size())
         nVars_[currentId_ - 1].push_back(nVarsTmp_);
 
     if (nVariates_[currentId_ - 1] == 0)
@@ -1312,14 +1340,16 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                             "if(i < " +
                             std::to_string(size_[currentId_ - 1]) + "U) {\n";
 
-            std::vector<std::tuple<bool, std::string, std::string>> ssa;
+            std::vector<ssa_entry> ssa;
 
             if (initFromValues) {
                 for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1];
                      i < nVars_[currentId_ - 1][part]; ++i) {
-                    ssa.push_back(std::make_tuple(
-                        true, std::string("v") + std::to_string(i),
-                        std::string("values[") + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "U + i]"));
+                    ssa.push_back(
+                        {std::string("v") + std::to_string(i),
+                         i,
+                         std::string("values[") + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "U + i]",
+                         {}});
                 }
             }
 
@@ -1328,9 +1358,10 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             if (cacheToValues) {
                 for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1];
                      i < nVars_[currentId_ - 1][part]; ++i) {
-                    ssa.push_back(
-                        std::make_tuple(false, "values[" + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "U + i]",
-                                       "v" + std::to_string(i)));
+                    ssa.push_back({"values[" + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "U + i]",
+                                   std::nullopt,
+                                   "v" + std::to_string(i),
+                                   {i}});
                 }
             }
 
@@ -1338,6 +1369,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                 for (std::size_t i = 0; i < nOutputVars_[currentId_ - 1]; ++i) {
                     std::size_t offset = i * size_[currentId_ - 1];
                     std::string output;
+                    std::set<std::size_t> rhsLocalIds;
                     if (outputVariables_[i] < inputVarOffset_.size()) {
                         output = "input[" + std::to_string(inputVarOffset_[outputVariables_[i]]) + "U" +
                                  (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
@@ -1348,8 +1380,9 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                             "U + i]";
                     } else {
                         output = "v" + std::to_string(outputVariables_[i]);
+                        rhsLocalIds.insert(outputVariables_[i]);
                     }
-                    ssa.push_back(std::make_tuple(false, "output[" + std::to_string(offset) + "U + i]", output));
+                    ssa.push_back({"output[" + std::to_string(offset) + "U + i]", std::nullopt, output, rhsLocalIds});
                 }
             }
 
@@ -1428,7 +1461,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     std::vector<double> values(valuesBufferSize);
     std::vector<float> valuesFloat;
     if (!settings_.useDoublePrecision) {
-      valuesFloat.resize(values.size());
+        valuesFloat.resize(values.size());
     }
 
     for (std::size_t part = 0; part < kernel_[currentId_ - 1].size(); ++part) {
