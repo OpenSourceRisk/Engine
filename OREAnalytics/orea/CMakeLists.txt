@@ -30,6 +30,7 @@ app/analytics/simmanalytic.cpp
 app/analytics/stresstestanalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
+app/analytics/xvasensitivityanalytic.cpp
 app/analytics/xvastressanalytic.cpp
 app/analyticsmanager.cpp
 app/cleanupsingletons.cpp
@@ -188,6 +189,7 @@ app/analytics/simmanalytic.hpp
 app/analytics/stresstestanalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
+app/analytics/xvasensitivityanalytic.hpp
 app/analytics/xvastressanalytic.hpp
 app/analyticsmanager.hpp
 app/cleanupsingletons.hpp
