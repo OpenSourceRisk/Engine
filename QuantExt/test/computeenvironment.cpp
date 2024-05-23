@@ -305,11 +305,11 @@ BOOST_AUTO_TEST_CASE(testReplayFlowError) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(testRngGenerationTmp) {
+BOOST_AUTO_TEST_CASE(testRngGenerationMt19937) {
     ComputeEnvironmentFixture fixture;
     const std::size_t n = 1500;
     for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
-        BOOST_TEST_MESSAGE("testing rng generation on device '" << d << "'.");
+        BOOST_TEST_MESSAGE("testing rng generation mt19937 against QL on device '" << d << "'.");
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
         ComputeContext::Settings settings;
@@ -318,12 +318,12 @@ BOOST_AUTO_TEST_CASE(testRngGenerationTmp) {
         BOOST_TEST_MESSAGE("using double precision = " << std::boolalpha << settings.useDoublePrecision);
         c.initiateCalculation(n, 0, 0, settings);
         auto vs = c.createInputVariates(1, 1);
+        auto vs2 = c.createInputVariates(1, 1);
         for (auto const& d : vs) {
             for (auto const& r : d) {
                 c.declareOutputVariable(r);
             }
         }
-        auto vs2 = c.createInputVariates(1, 1);
         for (auto const& d : vs2) {
             for (auto const& r : d) {
                 c.declareOutputVariable(r);
@@ -351,6 +351,55 @@ BOOST_AUTO_TEST_CASE(testRngGenerationTmp) {
                                               << tol);
                     noErrors++;
                 }
+            }
+        }
+    }
+    BOOST_CHECK(true);
+}
+
+BOOST_AUTO_TEST_CASE(testConditionalExpectation) {
+    ComputeEnvironmentFixture fixture;
+    const std::size_t n = 100;
+    for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
+        BOOST_TEST_MESSAGE("testing conditional expectation on device '" << d << "'.");
+        ComputeEnvironment::instance().selectContext(d);
+        auto& c = ComputeEnvironment::instance().context();
+        ComputeContext::Settings settings;
+        settings.useDoublePrecision = c.supportsDoublePrecision();
+        BOOST_TEST_MESSAGE("using double precision = " << std::boolalpha << settings.useDoublePrecision);
+
+        c.initiateCalculation(n, 0, 0, settings);
+
+        auto one = c.createInputVariable(1.0);
+        auto vs = c.createInputVariates(1, 2);
+        auto ce = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, vs[0][1]});
+
+        for (auto const& d : vs) {
+            for (auto const& r : d) {
+                c.declareOutputVariable(r);
+            }
+        }
+        c.declareOutputVariable(ce);
+
+        std::vector<std::vector<double>> output(3, std::vector<double>(n));
+        c.finalizeCalculation(output);
+
+        RandomVariable y(output[0]);
+        RandomVariable x(output[1]);
+        RandomVariable z = conditionalExpectation(
+            y, {&x}, multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, x.size()));
+
+        double tol = settings.useDoublePrecision ? 1E-12 : 1E-4;
+        Size noErrors = 0, errorThreshold = 10;
+
+        for (Size i = 0; i < n; ++i) {
+            Real err = std::abs(output[2][i] - z[i]);
+            if (std::abs(z[i]) > 1E-10)
+                err /= std::abs(z[i]);
+            if (err > tol && noErrors < errorThreshold) {
+                BOOST_ERROR("gpu value (" << output[2][i] << ") at i=" << i << " does not match reference cpu value ("
+                                          << z[i] << "), error " << err << ", tol " << tol);
+                noErrors++;
             }
         }
     }
