@@ -403,6 +403,7 @@ BOOST_AUTO_TEST_CASE(testConditionalExpectation) {
             }
         }
     }
+    BOOST_CHECK(true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
