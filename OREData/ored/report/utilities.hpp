@@ -36,6 +36,10 @@ addColumnToExisitingReport(const std::string& columnName, const std::string& val
                            const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report);
 
 QuantLib::ext::shared_ptr<ore::data::InMemoryReport>
+addColumnsToExisitingReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& newColsReport,
+                            const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report);
+                            
+QuantLib::ext::shared_ptr<ore::data::InMemoryReport>
 concatenateReports(const std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>& reports);
 
 } // namespace data
