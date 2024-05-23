@@ -54,6 +54,34 @@ addColumnToExisitingReport(const std::string& columnName, const std::string& val
 }
 
 QuantLib::ext::shared_ptr<ore::data::InMemoryReport>
+addColumnsToExisitingReport(const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& newColsReport,
+                            const QuantLib::ext::shared_ptr<ore::data::InMemoryReport>& report) {
+    QuantLib::ext::shared_ptr<ore::data::InMemoryReport> newReport =
+        QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+    if (report != nullptr && newColsReport->rows() == 1) {
+
+        for (size_t i = 0; i < newColsReport->columns(); ++i) {
+            newReport->addColumn(newColsReport->header(i), newColsReport->columnType(i),
+                                 newColsReport->columnPrecision(i));
+        }
+        for (size_t i = 0; i < report->columns(); i++) {
+            newReport->addColumn(report->header(i), report->columnType(i), report->columnPrecision(i));
+        }
+        for (size_t row = 0; row < report->rows(); row++) {
+            newReport->next();
+            for (size_t i = 0; i < newColsReport->columns(); ++i) {
+                newReport->add(newColsReport->data(i)[0]);
+            }
+            for (size_t col = 0; col < report->columns(); col++) {
+                newReport->add(report->data(col)[row]);
+            }
+        }
+        newReport->end();
+    }
+    return newReport;
+}
+
+QuantLib::ext::shared_ptr<ore::data::InMemoryReport>
 concatenateReports(const std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>& reports) {
     if (!reports.empty() && reports.front() != nullptr) {
         auto firstReport = reports.front();

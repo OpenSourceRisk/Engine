@@ -708,6 +708,18 @@ public:
     double parStressAccurary() const { return parStressAccurary_; };
 
     /*************************************
+     * XVA Sensitivity
+     *************************************/
+
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& xvaSensiSimMarketParams() const {
+        return xvaSensiSimMarketParams_;
+    }
+    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaSensiScenarioData() const {
+        return xvaSensiScenarioData_;
+    }
+    const QuantLib::ext::shared_ptr<ore::data::EngineData>& xvaSensiPricingEngine() const { return xvaSensiPricingEngine_; }
+
+    /*************************************
      * List of analytics that shall be run
      *************************************/
     const std::set<std::string>& analytics() const { return analytics_; }
@@ -996,6 +1008,13 @@ protected:
     double parStressLowerBoundRatesDiscountFactor_;
     double parStressUpperBoundRatesDiscountFactor_;
     double parStressAccurary_;
+
+    /*****************
+     * XVA Sensitivity analytic
+     *****************/
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaSensiSimMarketParams_;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaSensiScenarioData_;
+    QuantLib::ext::shared_ptr<ore::data::EngineData> xvaSensiPricingEngine_;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {
