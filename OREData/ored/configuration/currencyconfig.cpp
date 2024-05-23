@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/utilities/currencyconfig.hpp>
+#include <ored/configuration/currencyconfig.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
