@@ -63,13 +63,19 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
                          const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const IborFallbackConfig& iborFallbackConfig, const bool bumpCvaSensis,
+                         const bool useExternalComputeDevice, const bool externalDeviceCompatibilityMode,
+                         const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
                          const bool continueOnCalibrationError, const bool continueOnError, const std::string& context)
     : asof_(asof), loader_(loader), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), engineData_(engineData), crossAssetModelData_(crossAssetModelData),
       scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
       marketConfigurationInCcy_(marketConfigurationInCcy), sensitivityData_(sensitivityData),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), bumpCvaSensis_(bumpCvaSensis),
-      continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {
+      useExternalComputeDevice_(useExternalComputeDevice),
+      externalDeviceCompatibilityMode_(externalDeviceCompatibilityMode),
+      useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation),
+      externalComputeDevice_(externalComputeDevice), continueOnCalibrationError_(continueOnCalibrationError),
+      continueOnError_(continueOnError), context_(context) {
 
     // Just for performance testing, duplicate the trades in input portfolio as specified by env var N
 

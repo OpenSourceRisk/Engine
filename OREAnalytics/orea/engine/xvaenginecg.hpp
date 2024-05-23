@@ -60,9 +60,11 @@ public:
                 const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData = nullptr,
                 const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-		const bool bumpCvaSensis = false,
-                const bool continueOnCalibrationError = true, const bool continueOnError = true,
-                const std::string& context = "xva engine cg");
+                const bool bumpCvaSensis = false, const bool useExternalComputeDevice = false,
+                const bool externalDeviceCompatibilityMode = false,
+                const bool useDoublePrecisionForExternalCalculation = false,
+                const std::string& externalComputeDevice = std::string(), const bool continueOnCalibrationError = true,
+                const bool continueOnError = true, const std::string& context = "xva engine cg");
 
     QuantLib::ext::shared_ptr<InMemoryReport> exposureReport() { return epeReport_; }
     QuantLib::ext::shared_ptr<InMemoryReport> sensiReport() { return sensiReport_; }
@@ -89,14 +91,13 @@ private:
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
     bool bumpCvaSensis_;
+    bool useExternalComputeDevice_;
+    bool externalDeviceCompatibilityMode_;
+    bool useDoublePrecisionForExternalCalculation_;
+    std::string externalComputeDevice_;
     bool continueOnCalibrationError_;
     bool continueOnError_;
     std::string context_;
-
-    std::vector<bool> nodesA_;
-    std::vector<bool> nodesB_;
-    std::vector<bool> nodesC_;
-    std::vector<bool> nodesD_;
 
     // artefacts produced during run
     QuantLib::ext::shared_ptr<ore::data::Market> initMarket_;
@@ -109,6 +110,7 @@ private:
     std::vector<RandomVariableOp> ops_;
     std::vector<RandomVariableGrad> grads_;
 
+    // output reports
     QuantLib::ext::shared_ptr<InMemoryReport> epeReport_, sensiReport_; 
 };
 
