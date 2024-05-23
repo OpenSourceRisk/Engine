@@ -8,6 +8,7 @@ configuration/commoditycurveconfig.cpp
 configuration/commodityvolcurveconfig.cpp
 configuration/conventions.cpp
 configuration/correlationcurveconfig.cpp
+configuration/currencyconfig.cpp
 configuration/curveconfig.cpp
 configuration/curveconfigurations.cpp
 configuration/defaultcurveconfig.cpp
@@ -356,7 +357,6 @@ utilities/calendarparser.cpp
 utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
-utilities/currencyconfig.cpp
 utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
 utilities/databuilders.cpp
@@ -389,6 +389,7 @@ configuration/commoditycurveconfig.hpp
 configuration/commodityvolcurveconfig.hpp
 configuration/conventions.hpp
 configuration/correlationcurveconfig.hpp
+configuration/currencyconfig.hpp
 configuration/curveconfig.hpp
 configuration/curveconfigurations.hpp
 configuration/defaultcurveconfig.hpp
@@ -762,7 +763,6 @@ utilities/calendarparser.hpp
 utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
-utilities/currencyconfig.hpp
 utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
 utilities/databuilders.hpp
