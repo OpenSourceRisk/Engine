@@ -25,8 +25,8 @@
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
+#include <ored/configuration/currencyconfig.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
-#include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
 #include <orea/simm/crifloader.hpp>

@@ -13,6 +13,7 @@
 #include <ored/configuration/commodityvolcurveconfig.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/correlationcurveconfig.hpp>
+#include <ored/configuration/currencyconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
@@ -385,7 +386,6 @@
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/csvfilereader.hpp>
-#include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/databuilders.hpp>
