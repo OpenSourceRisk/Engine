@@ -105,6 +105,25 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
     const std::vector<QuantLib::Real>& pathTimes, std::vector<std::vector<QuantExt::RandomVariable>>& paths,
     const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) {
 
+    // the case of dirty strike corresponds here to an accrual of 0.0. This will be convenient in the code.
+    Date bondSettlementDate = engine_->arguments_.underlying->settlementDate(engine_->arguments_.fwdMaturityDate);
+    Real accruedAmount = engine_->arguments_.settlementDirty
+                             ? 0.0
+                             : engine_->arguments_.underlying->accruedAmount(bondSettlementDate) *
+                                   engine_->arguments_.underlying->notional(bondSettlementDate) / 100.0 *
+                                   engine_->arguments_.bondNotional;
+
+    double maturityTime = engine_->time(engine_->arguments_.fwdMaturityDate);
+
+    double settlementTime = engine_->time(bondSettlementDate);
+
+    double fwdSettlementTime = engine_->time(engine_->arguments_.fwdSettlementDate);
+
+    boost::shared_ptr<ForwardBondTypePayoff> fwdBndPayOff =
+        boost::dynamic_pointer_cast<ForwardBondTypePayoff>(engine_->arguments_.payoff);
+
+    QL_REQUIRE(fwdBndPayOff, "not a ForwardBondTypePayoff");
+
     // init result vector
     Size samples = paths.front().front().size();
     std::vector<RandomVariable> result(xvaTimes_.size() + 1, RandomVariable(paths.front().front().size(), 0.0));
@@ -129,6 +148,11 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
     Size counter = 0;
     for (auto t : xvaTimes_) {
 
+        // strip off values after expiry of forward contract
+        if (t >= maturityTime) {
+            result[++counter] = RandomVariable(samples, 0.0);
+            continue;
+        }
         Size ind = std::distance(exerciseXvaTimes_.begin(), exerciseXvaTimes_.find(t));
         QL_REQUIRE(ind < exerciseXvaTimes_.size(),
                    "MultiLegBaseAmcCalculator::simulatePath(): internal error, xva time "
@@ -136,12 +160,40 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
 
         auto underylingSpotRV = regModelUndDirty_[ind].apply(initialState_, effPaths, xvaTimes_);
 
-        double underlyingSpot =
-            expectation(underylingSpotRV).at(0) * engine_->model_->numeraire(0, 0.0, 0.0, engine_->discountCurves_[0]);
+        // cash settlement case
+        auto numeraire = engine_->lgmVectorised_[0].numeraire(
+            0.0, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)], engine_->discountCurves_[0]);
+        // use t instead of 0.0
 
-        result[++counter] = RandomVariable(samples, engine_->payOff(t, underlyingSpot));
+        auto disc1 = engine_->lgmVectorised_[0].discountBond(
+            0.0, settlementTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
+            engine_->incomeCurve_);
+
+        auto forwardBondValue = underylingSpotRV * numeraire / disc1;
+
+
+        //TODO: make this long/short dependent
+        auto forwardContractForwardValue = (forwardBondValue - RandomVariable(samples, accruedAmount)) -
+                                           RandomVariable(samples, fwdBndPayOff->strike());
+
+        auto disc2 = engine_->lgmVectorised_[0].discountBond(
+            0.0, fwdSettlementTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
+            engine_->discountContractCurve_);
+
+        // double underlyingSpot =
+        //     expectation(underylingSpotRV).at(0) * engine_->model_->numeraire(0, 0.0, 0.0,
+        //     engine_->discountCurves_[0]);
+
+        //forwardContractPresentValue
+        result[++counter] = forwardContractForwardValue * disc2;
     }
     return result;
+}
+
+RandomVariable McLgmFwdBondEngine::FwdBondAmcCalculator::payOff(double time, RandomVariable underlyingSpot,
+                                                                Size samples) const {
+
+    return RandomVariable(samples, time);
 }
 
 } // namespace QuantExt

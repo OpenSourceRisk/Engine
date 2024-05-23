@@ -83,6 +83,8 @@ public:
             engine_ = boost::make_shared<QuantExt::McLgmFwdBondEngine>(engine);
         };
 
+        RandomVariable payOff(double time, RandomVariable underlyingSpot, Size samples) const;
+
     private:
         boost::shared_ptr<QuantExt::McLgmFwdBondEngine> engine_;
     };
