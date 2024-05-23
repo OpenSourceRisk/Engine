@@ -36,7 +36,7 @@
 
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
-#include <ored/utilities/currencyconfig.hpp>
+#include <ored/configuration/currencyconfig.hpp>
 #include <ored/portfolio/collateralbalance.hpp>
 
 #include <qle/version.hpp>
