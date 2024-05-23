@@ -1444,6 +1444,21 @@
             "rel_tol": 1e-6
           }
         ]
+      },
+      "parshifts.csv": {
+        "keys": [
+          "ScenarioLabel",
+          "ParKey"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "ParShift"
+            ],
+            "abs_tol": 1E-8,
+            "rel_tol": 1E-12
+          }
+        ]
       }
     }
   },
