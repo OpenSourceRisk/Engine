@@ -20,6 +20,7 @@
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
@@ -110,7 +111,7 @@ bool Portfolio::remove(const std::string& tradeID) {
 void Portfolio::removeMatured(const Date& asof) {
     for (auto it = trades_.begin(); it != trades_.end(); /* manual */) {
         if ((*it).second->isExpired(asof)) {
-            StructuredTradeErrorMessage((*it).second, "", "Trade is Matured").log();
+            StructuredTradeWarningMessage((*it).second, "", "Trade is Matured").log();
             it=trades_.erase(it);
         } else {
             ++it;

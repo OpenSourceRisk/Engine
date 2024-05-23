@@ -112,6 +112,7 @@
 #include <ored/model/modeldata.hpp>
 #include <ored/model/modelparameter.hpp>
 #include <ored/model/structuredmodelerror.hpp>
+#include <ored/model/structuredmodelwarning.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/portfolio/accumulator.hpp>
 #include <ored/portfolio/ascot.hpp>
@@ -336,6 +337,7 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/report/report.hpp>
+#include <ored/report/utilities.hpp>
 #include <ored/scripting/ast.hpp>
 #include <ored/scripting/astprinter.hpp>
 #include <ored/scripting/astresetter.hpp>

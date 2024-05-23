@@ -311,6 +311,7 @@ portfolio/windowbarrieroption.cpp
 portfolio/worstofbasketswap.cpp
 report/csvreport.cpp
 report/inmemoryreport.cpp
+report/utilities.cpp
 scripting/ast.cpp
 scripting/astprinter.cpp
 scripting/astresetter.cpp
@@ -487,6 +488,7 @@ model/localvolmodelbuilder.hpp
 model/modeldata.hpp
 model/modelparameter.hpp
 model/structuredmodelerror.hpp
+model/structuredmodelwarning.hpp
 model/utilities.hpp
 portfolio/accumulator.hpp
 portfolio/ascot.hpp
@@ -711,6 +713,7 @@ portfolio/worstofbasketswap.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
+report/utilities.hpp
 scripting/ast.hpp
 scripting/astprinter.hpp
 scripting/astresetter.hpp

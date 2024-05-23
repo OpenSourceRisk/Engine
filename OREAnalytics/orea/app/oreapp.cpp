@@ -1415,10 +1415,18 @@ void OREAppInputParameters::loadParameters() {
         insertAnalytic("EXPOSURE");
     }
 
-    // check this here because we need to know 10 lines below
+    // check this here because we need to know further below when checking for EXPOSURE or XVA analytic
     tmp = params_->get("xva", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("XVA");
+
+    tmp = params_->get("xvaStress", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        insertAnalytic("XVA_STRESS");
+
+    tmp = params_->get("xvaSensitivity", "active", false);
+    if (!tmp.empty() && parseBool(tmp))
+        insertAnalytic("XVA_SENSITIVITY");
 
     tmp = params_->get("simulation", "salvageCorrelationMatrix", false);
     if (tmp != "")
@@ -1447,7 +1455,9 @@ void OREAppInputParameters::loadParameters() {
     setExposureObservationModel(observationModel());
     setExposureBaseCurrency(baseCurrency());
 
-    if (analytics().find("EXPOSURE") != analytics().end() || analytics().find("XVA") != analytics().end()) {
+    if (analytics().find("EXPOSURE") != analytics().end() || analytics().find("XVA") != analytics().end() ||
+        analytics().find("XVA_STRESS") != analytics().end() ||
+        analytics().find("XVA_SENSITIVITY") != analytics().end()) {
         tmp = params_->get("simulation", "simulationConfigFile", false);
         if (tmp != "") {
             string simulationConfigFile = (inputPath / tmp).generic_string();
@@ -1516,9 +1526,9 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setWriteScenarios(true);
 
-        tmp = params_->get("simulation", "cvaBumpSensis", false);
+        tmp = params_->get("simulation", "xvaCgBumpSensis", false);
 	if (tmp != "")
-	    setCvaBumpSensis(parseBool(tmp));
+	    setXvaCgBumpSensis(parseBool(tmp));
 
     }
 
@@ -1546,7 +1556,8 @@ void OREAppInputParameters::loadParameters() {
         }
     }
 
-    if (analytics().find("XVA") != analytics().end()) {
+    if (analytics().find("XVA") != analytics().end() || analytics().find("XVA_STRESS") != analytics().end() ||
+        analytics().find("XVA_SENSITIVITY") != analytics().end()) {
         tmp = params_->get("xva", "csaFile", false);
         QL_REQUIRE(tmp != "", "Netting set manager is required for XVA");
         string csaFile = (inputPath / tmp).generic_string();
@@ -1817,7 +1828,75 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setCreditMigrationOutputFiles(tmp);
 
-    // cashflow npv and dynamic backtesting
+    /*************
+     * XVA Stress
+     *************/
+
+    if (analytics().find("XVA_STRESS") != analytics().end()) {
+        tmp = params_->get("xvaStress", "marketConfigFile", false);
+        if (!tmp.empty()) {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Loading xva stress test scenario sim market parameters from file" << file);
+            setXvaStressSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for xva stress testing not loaded");
+        }
+
+        tmp = params_->get("xvaStress", "stressConfigFile", false);
+        if (!tmp.empty()) {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load xav stress test scenario data from file" << file);
+            setXvaStressScenarioDataFromFile(file);
+        } else {
+            WLOG("Xva Stress scenario data not loaded");
+        }
+
+        tmp = params_->get("xvaStress", "writeCubes", false);
+        if (!tmp.empty()) {
+            bool writeCubes = false;
+            bool success = tryParse<bool>(tmp, writeCubes, parseBool);
+            if (success) {
+                setXvaStressWriteCubes(writeCubes);
+            }
+        }
+
+        tmp = params_->get("xvaStress", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setXvaStressSensitivityScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded, don't support par stress tests");
+        }
+    }
+
+    /*************
+     * XVA Sensi
+     *************/
+
+    if (analytics().find("XVA_SENSITIVITY") != analytics().end()) {
+        tmp = params_->get("xvaSensitivity", "marketConfigFile", false);
+        if (!tmp.empty()) {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Loading xva sensitivity scenario sim market parameters from file" << file);
+            setXvaSensiSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for xva sensitivity not loaded");
+        }
+
+        tmp = params_->get("xvaSensitivity", "sensitivityConfigFile", false);
+        if (!tmp.empty()) {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load xva sensitivity scenario data from file" << file);
+            setXvaSensiScenarioDataFromFile(file);
+        } else {
+            WLOG("Xva sensitivity scenario data not loaded");
+        }
+    }
+
+    /*************
+     * cashflow npv and dynamic backtesting
+     *************/
 
     tmp = params_->get("cashflow", "cashFlowHorizon", false);
     if (tmp != "")

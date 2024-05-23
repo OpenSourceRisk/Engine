@@ -97,10 +97,12 @@
             "names": [
                 "TradeType",
                 "NettingSet",
+                "Asset",
+                "MaturityDate",
+                "Maturity",
                 "NPV",
-                "Notional",
-                "RiskWeight",
-                "SMRC"
+                "SignedNotional",
+                "RiskWeight"
             ],
             "abs_tol": null,
             "rel_tol": 1e-12
