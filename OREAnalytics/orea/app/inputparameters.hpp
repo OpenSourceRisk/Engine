@@ -555,6 +555,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::NettingSetManager>& nettingSetManager() const { return nettingSetManager_; }
     // const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
+    const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
 
     /*****************
      * Getters for xva
@@ -880,6 +881,7 @@ protected:
     // intermediate results of the exposure simulation, before aggregation
     QuantLib::ext::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_;
     QuantLib::ext::shared_ptr<AggregationScenarioData> mktCube_;
+    Real simulationBootstrapTolerance_ = 0.0001;
 
     /**************
      * XVA analytic
