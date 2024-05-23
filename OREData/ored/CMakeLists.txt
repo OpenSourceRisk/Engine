@@ -488,6 +488,7 @@ model/localvolmodelbuilder.hpp
 model/modeldata.hpp
 model/modelparameter.hpp
 model/structuredmodelerror.hpp
+model/structuredmodelwarning.hpp
 model/utilities.hpp
 portfolio/accumulator.hpp
 portfolio/ascot.hpp
