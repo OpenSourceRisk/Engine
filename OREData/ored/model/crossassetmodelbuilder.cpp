@@ -485,6 +485,8 @@ void CrossAssetModelBuilder::buildModel() const {
         }
         auto builder = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModelBuilder>(
             subBuilders_[CrossAssetModel::AssetType::COM][i]);
+        if (dontCalibrate_)
+            builder->freeze();
         csBuilder.push_back(builder);
         QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization = builder->parametrization();
         comOptionBaskets_[i] = builder->optionBasket();

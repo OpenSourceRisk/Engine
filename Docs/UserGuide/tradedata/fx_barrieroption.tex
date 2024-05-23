@@ -82,8 +82,8 @@ quoted as amount of EUR per unit JPY, which is not commonly seen on market and i
 
 
 \item \lstinline!BarrierData!: This is a trade component sub-node outlined in section \ref{ss:barrier_data}.
-Level specified in BarrierData should be quoted as the amount in SoldCurrency per unit BoughtCurrency, with both currencies as defined in FxBarrierOptionData node.
-Changing the option from Call to Put or vice versa does not require switching the barrier level, i.e. the level stays quoted as SoldCurrency per unit BoughtCurrency, regardless of Put/Call.
+\lstinline!Level! specified in BarrierData should be quoted as the amount in SoldCurrency per unit BoughtCurrency, with both currencies as defined in FxBarrierOptionData node.
+Note that the barrier  \lstinline!Level! stays quoted as SoldCurrency per unit BoughtCurrency, regardless of Put/Call.
 
 \item \lstinline!StartDate! [Optional]: The start date for checking if a barrier has been breached prior to today's date.  If omitted or left blank no check is made and it is assumed no barrier has been breached in the past. Has no impact if set to today's date or a date in the future.
 

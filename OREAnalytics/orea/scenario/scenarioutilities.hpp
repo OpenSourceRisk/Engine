@@ -25,6 +25,8 @@
 
 #include <orea/scenario/scenario.hpp>
 
+#include <set>
+
 namespace ore {
 namespace analytics {
 
