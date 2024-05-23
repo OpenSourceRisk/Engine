@@ -23,11 +23,11 @@
 
 #pragma once
 
+#include <orea/engine/parsensitivityinstrumentbuilder.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <ql/instrument.hpp>
 #include <ql/instruments/capfloor.hpp>
 #include <ql/instruments/inflationcapfloor.hpp>
-
 namespace ore {
 namespace analytics {
 
@@ -45,6 +45,10 @@ double impliedVolatility(const QuantLib::YoYInflationCapFloor& cap, double targe
                          const QuantLib::Handle<QuantLib::YieldTermStructure>& d, double guess,
                          QuantLib::VolatilityType type, double displacement,
                          const QuantLib::Handle<QuantLib::YoYInflationIndex>& index = {});
+
+double impliedVolatility(const RiskFactorKey& key, const ParSensitivityInstrumentBuilder::Instruments& instruments);
+
+
 
 } // namespace analytics
 } // namespace ore
