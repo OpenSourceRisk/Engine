@@ -50,16 +50,16 @@ public:
     QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> convertStressScenarioData(
         const QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData>& scenarioData) const;
 
-private:
-    //! get a set of risk factors which will be interpreted as zero rate shifts
-    std::set<RiskFactorKey::KeyType> zeroRateRiskFactors(bool irCurveParRates, bool irCapFloorParRates,
-                                                         bool creditParRates) const;
-
     //! Creates a SimMarket, aligns the pillars and strikes of sim and sensitivity scenario market, computes par
     //! sensitivites
     std::pair<QuantLib::ext::shared_ptr<ScenarioSimMarket>, QuantLib::ext::shared_ptr<ParSensitivityAnalysis>>
     computeParSensitivity(const std::set<RiskFactorKey::KeyType>& typesDisabled) const;
 
+private:
+    //! get a set of risk factors which will be interpreted as zero rate shifts
+    std::set<RiskFactorKey::KeyType> zeroRateRiskFactors(bool irCurveParRates, bool irCapFloorParRates,
+                                                         bool creditParRates) const;
+                                                         
     QuantLib::Date asof_;
     QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;
