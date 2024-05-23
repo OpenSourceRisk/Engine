@@ -39,7 +39,7 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     // basic setup
 
-    LOG("Running XVA Stress analytic.");
+    LOG("Running XVA_SENSITIVITY analytic.");
 
     Settings::instance().evaluationDate() = inputs_->asof();
 
@@ -67,7 +67,7 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
     auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
     auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
         analytic()->configurations().sensiScenarioData, baseScenario, analytic()->configurations().simMarketParams,
-        simMarket, scenarioFactory, simMarket->baseScenarioAbsolute());
+        simMarket, scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     CONSOLE("OK");
@@ -147,7 +147,7 @@ void XvaSensitivityAnalyticImpl::setUpConfigurations() {
 }
 
 XvaSensitivityAnalytic::XvaSensitivityAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<XvaSensitivityAnalyticImpl>(inputs), {"XVA_STRESS"}, inputs, true, false, false,
+    : Analytic(std::make_unique<XvaSensitivityAnalyticImpl>(inputs), {"XVA_SENSITIVITY"}, inputs, true, false, false,
                false) {
     impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
 }

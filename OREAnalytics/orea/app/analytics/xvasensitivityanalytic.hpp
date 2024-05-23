@@ -23,15 +23,15 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/report/inmemoryreport.hpp>
-
 
 namespace ore {
 namespace analytics {
 
 class XvaSensitivityAnalyticImpl : public Analytic::Impl {
 public:
-    static constexpr const char* LABEL = "XVA_SENSI";
+    static constexpr const char* LABEL = "XVA_SENSITIVITY";
     explicit XvaSensitivityAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
