@@ -311,6 +311,7 @@ portfolio/windowbarrieroption.cpp
 portfolio/worstofbasketswap.cpp
 report/csvreport.cpp
 report/inmemoryreport.cpp
+report/utilities.cpp
 scripting/ast.cpp
 scripting/astprinter.cpp
 scripting/astresetter.cpp
