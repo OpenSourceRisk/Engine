@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/engine/parsensitivityinstrumentbuilder.hpp>
 #include <orea/engine/parsensitivityutilities.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/instruments/creditdefaultswap.hpp>
@@ -284,6 +285,39 @@ Volatility impliedVolatility(const QuantLib::YoYInflationCapFloor& cap, Real tar
 
 bool riskFactorKeysAreSimilar(const ore::analytics::RiskFactorKey& x, const ore::analytics::RiskFactorKey& y) {
     return x.keytype == y.keytype && x.name == y.name;
+}
+
+double impliedVolatility(const RiskFactorKey& key, const ParSensitivityInstrumentBuilder::Instruments& instruments) {
+    if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
+        QL_REQUIRE(instruments.parCaps_.count(key) == 1, "Can not convert capFloor par shifts to zero Vols");
+        QL_REQUIRE(instruments.parCapsYts_.count(key) > 0,
+                   "getTodaysAndTargetQuotes: no cap yts found for key " << key);
+        QL_REQUIRE(instruments.parCapsVts_.count(key) > 0,
+                   "getTodaysAndTargetQuotes: no cap vts found for key " << key);
+        const auto cap = instruments.parCaps_.at(key);
+        Real price = cap->NPV();
+        Volatility parVol = impliedVolatility(*cap, price, instruments.parCapsYts_.at(key), 0.01,
+                                              instruments.parCapsVts_.at(key)->volatilityType(),
+                                              instruments.parCapsVts_.at(key)->displacement());
+        return parVol;
+    } else if (key.keytype == RiskFactorKey::KeyType::YoYInflationCapFloorVolatility) {
+        QL_REQUIRE(instruments.parYoYCaps_.count(key) == 1, "Can not convert capFloor par shifts to zero Vols");
+        QL_REQUIRE(instruments.parYoYCapsYts_.count(key) > 0,
+                   "getTodaysAndTargetQuotes: no cap yts found for key " << key);
+        QL_REQUIRE(instruments.parYoYCapsVts_.count(key) > 0,
+                   "getTodaysAndTargetQuotes: no cap vts found for key " << key);
+        QL_REQUIRE(instruments.parYoYCapsIndex_.count(key) > 0,
+                   "getTodaysAndTargetQuotes: no cap index found for key " << key);
+        const auto& cap = instruments.parYoYCaps_.at(key);
+        Real price = cap->NPV();
+        Volatility parVol = impliedVolatility(
+            *cap, price, instruments.parYoYCapsYts_.at(key), 0.01, instruments.parYoYCapsVts_.at(key)->volatilityType(),
+            instruments.parYoYCapsVts_.at(key)->displacement(), instruments.parYoYCapsIndex_.at(key));
+        return parVol;
+    } else {
+        QL_FAIL("impliedCapVolatility: Unsupported risk factor key "
+                << key.keytype << ". Support OptionletVolatility and YoYInflationCapFloorVolatility");
+    }
 }
 
 } // namespace analytics
