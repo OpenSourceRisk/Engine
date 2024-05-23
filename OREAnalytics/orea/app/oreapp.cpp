@@ -1082,6 +1082,51 @@ void OREAppInputParameters::loadParameters() {
         }
     }
 
+    /****************
+     * ZERO TO PAR SHIFT CONVERSION
+     ****************/
+
+    tmp = params_->get("zeroToParShift", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("ZEROTOPARSHIFT");
+        setZeroToParShiftPricingEngine(pricingEngine());
+        tmp = params_->get("zeroToParShift", "marketConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Loading zero to par shift conversion scenario sim market parameters from file " << file);
+            setZeroToParShiftSimMarketParamsFromFile(file);
+        } else {
+            WLOG("ScenarioSimMarket parameters for zero to par shift conversion not loaded");
+        }
+
+        tmp = params_->get("zeroToParShift", "stressConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load zero to par shift conversion scenario data from file" << file);
+            setZeroToParShiftScenarioDataFromFile(file);
+        } else {
+            WLOG("Zero to par shift conversion scenario data not loaded");
+        }
+
+        tmp = params_->get("zeroToParShift", "pricingEnginesFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load pricing engine data from file: " << file);
+            setZeroToParShiftPricingEngineFromFile(file);
+        } else {
+            WLOG("Pricing engine data not found for Zero to par shift conversion, using global");
+        }
+
+        tmp = params_->get("zeroToParShift", "sensitivityConfigFile", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            LOG("Load sensitivity scenario data from file" << file);
+            setZeroToParShiftSensitivityScenarioDataFromFile(file);
+        } else {
+            WLOG("Sensitivity scenario data not loaded for zero to par shift conversion");
+        }
+    }
+
     /********************
      * VaR - Parametric
      ********************/
