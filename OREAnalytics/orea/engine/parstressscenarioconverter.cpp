@@ -114,18 +114,6 @@ double getCapFloorStressShift(const RiskFactorKey& key, const StressTestScenario
     return shift;
 }
 
-double impliedCapVolatility(const RiskFactorKey& key, const ParSensitivityInstrumentBuilder::Instruments& instruments) {
-    QL_REQUIRE(instruments.parCaps_.count(key) == 1, "Can not convert capFloor par shifts to zero Vols");
-    QL_REQUIRE(instruments.parCapsYts_.count(key) > 0, "getTodaysAndTargetQuotes: no cap yts found for key " << key);
-    QL_REQUIRE(instruments.parCapsVts_.count(key) > 0, "getTodaysAndTargetQuotes: no cap vts found for key " << key);
-    const auto cap = instruments.parCaps_.at(key);
-    Real price = cap->NPV();
-    Volatility parVol = impliedVolatility(*cap, price, instruments.parCapsYts_.at(key), 0.01,
-                                          instruments.parCapsVts_.at(key)->volatilityType(),
-                                          instruments.parCapsVts_.at(key)->displacement());
-    return parVol;
-}
-
 //! Creates a copy from the parStressScenario and delete all par shifts  but keeps all zeroShifts
 StressTestScenarioData::StressTestData
 removeParShiftsCopy(const StressTestScenarioData::StressTestData& parStressScenario) {
@@ -508,7 +496,7 @@ double ParStressScenarioConverter::shiftsSizeForScenario(const RiskFactorKey rfK
 
 double ParStressScenarioConverter::impliedParRate(const RiskFactorKey& key) const {
     if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
-        return impliedCapVolatility(key, parInstruments_);
+        return impliedVolatility(key, parInstruments_);
     } else if (supportedCurveShiftTypes.count(key.keytype) == 1) {
         auto parInstIt = parInstruments_.parHelpers_.find(key);
         QL_REQUIRE(parInstIt != parInstruments_.parHelpers_.end(),
