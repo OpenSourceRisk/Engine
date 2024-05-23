@@ -52,17 +52,19 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     // build t0, sim market, stress scenario generator
 
-    CONSOLEW("XVA_STRESS: Build T0 and Sim Markets and Stress Scenario Generator");
+    CONSOLEW("XVA_SENSI: Build T0 and Sim Markets and Stress Scenario Generator");
 
     analytic()->buildMarket(loader);
 
-    LOG("XVA Stress: Build SimMarket and StressTestScenarioGenerator")
+    LOG("XvaSensitivityAnalytic: Build SimMarket")
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
         inputs_->continueOnError(), analytic()->configurations().sensiScenarioData->useSpreadedTermStructures(), false,
         false, *inputs_->iborFallbackConfig(), true);
 
+    LOG("XvaSensitivityAnalytic: Build SensitivityScenarioGenerator")
+    
     auto baseScenario = simMarket->baseScenario();
     auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
     auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
@@ -74,7 +76,7 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     // generate the stress scenarios and run dependent xva analytic under each of them
 
-    CONSOLE("XVA_STRESS: Running sensi scenarios");
+    CONSOLE("XVA_SENSI: Running sensi scenarios");
 
     // run stress test
     LOG("Run XVA Sensitivity")
@@ -91,30 +93,44 @@ void XvaSensitivityAnalyticImpl::runSensitivity(
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         auto desc = scenarioGenerator->scenarioDescriptions()[i];
+        const auto label = scenario->label();
         QuantLib::ext::shared_ptr<ore::data::InMemoryReport> descReport =
             QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+
+        double shiftSize1 = 0.0;
+        auto itShiftSize1 = scenarioGenerator->shiftSizes().find(desc.key1());
+        if (itShiftSize1 != scenarioGenerator->shiftSizes().end()){
+            shiftSize1 = (itShiftSize1->second);
+        }
+        double shiftSize2 = 0.0;
+        auto itShiftSize2 = scenarioGenerator->shiftSizes().find(desc.key2());
+        if (itShiftSize2 != scenarioGenerator->shiftSizes().end()) {
+            shiftSize2 = (itShiftSize2->second);
+        }
+        descReport->addColumn("Type", string());
         descReport->addColumn("IsPar", string());
         descReport->addColumn("Factor_1", string());
-        descReport->addColumn("ShiftSize_1", double(), 6);
+        descReport->addColumn("ShiftSize_1", double(), 8);
         descReport->addColumn("Factor_2", string());
-        descReport->addColumn("ShiftSize_2", double(), 6);
+        descReport->addColumn("ShiftSize_2", double(), 8);
         descReport->addColumn("Currency", string());
         descReport->next();
+        descReport->add(ore::data::to_string(desc.type()));
         descReport->add("false");
         descReport->add(desc.factor1());
-        descReport->add(scenarioGenerator->shiftSizes().at(desc.key1()));
+        descReport->add(shiftSize1);
         descReport->add(desc.factor2());
-        descReport->add(scenarioGenerator->shiftSizes().at(desc.key2()));
+        descReport->add(shiftSize2);
         descReport->add(inputs_->baseCurrency());
         descReport->end();
-        const std::string& label = scenario != nullptr ? scenario->label() : std::string();
+        
         try {
             DLOG("Calculate XVA for scenario " << label);
-            CONSOLE("XVA_STRESS: Apply scenario " << label);
+            CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
             auto newAnalytic = ext::make_shared<XvaAnalytic>(
                 inputs_, (label == "BASE" ? nullptr : scenario),
                 (label == "BASE" ? nullptr : analytic()->configurations().simMarketParams));
-            CONSOLE("XVA_STRESS: Calculate Exposure and XVA")
+            CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
             for (auto& [name, rpt] : newAnalytic->reports()["XVA"]) {

@@ -1832,19 +1832,19 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("xvaSensitivity", "marketConfigFile", false);
         if (!tmp.empty()) {
             string file = (inputPath / tmp).generic_string();
-            LOG("Loading xva stress test scenario sim market parameters from file" << file);
+            LOG("Loading xva sensitivity scenario sim market parameters from file" << file);
             setXvaSensiSimMarketParamsFromFile(file);
         } else {
-            WLOG("ScenarioSimMarket parameters for xva stress testing not loaded");
+            WLOG("ScenarioSimMarket parameters for xva sensitivity not loaded");
         }
 
-        tmp = params_->get("xvaStress", "sensitivityConfigFile", false);
+        tmp = params_->get("xvaSensitivity", "sensitivityConfigFile", false);
         if (!tmp.empty()) {
             string file = (inputPath / tmp).generic_string();
-            LOG("Load xav stress test scenario data from file" << file);
+            LOG("Load xva sensitivity scenario data from file" << file);
             setXvaSensiScenarioDataFromFile(file);
         } else {
-            WLOG("Xva Stress scenario data not loaded");
+            WLOG("Xva sensitivity scenario data not loaded");
         }
     }
 
