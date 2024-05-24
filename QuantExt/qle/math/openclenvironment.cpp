@@ -1530,25 +1530,33 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
                 // calculate conditional expectation value
 
-                QL_REQUIRE(v.size() >= 4,
-                           "OpenClContext::finalizeCalculation(): expected at least 4 varIds (3 args and 1 result) for "
+                QL_REQUIRE(v.size() >= 3,
+                           "OpenClContext::finalizeCalculation(): expected at least 3 varIds (2 args and 1 result) for "
                            "conditional expectation, got "
                                << v.size());
-                RandomVariable regressand(size_[currentId_ - 1], &values[valuesBufferId(v[1]) * size_[currentId_ - 1]]);
-                Filter filter = close_enough(
-                    RandomVariable(size_[currentId_ - 1], &values[valuesBufferId(v[2]) * size_[currentId_ - 1]]),
-                    RandomVariable(size_[currentId_ - 1], 1.0));
-                std::vector<RandomVariable> regressor(v.size() - 3);
-                for (std::size_t i = 3; i < v.size(); ++i) {
-                    regressor[i - 3] =
-                        RandomVariable(size_[currentId_ - 1], &values[valuesBufferId(v[i]) * size_[currentId_ - 1]]);
-                }
 
-                auto ce =
-                    conditionalExpectation(regressand, vec2vecptr(regressor),
-                                           multiPathBasisSystem(regressor.size(), settings_.regressionOrder,
-                                                                QuantLib::LsmBasisSystem::Monomial, regressand.size()),
-                                           filter);
+                RandomVariable ce;
+                RandomVariable regressand(size_[currentId_ - 1],
+                                          &values[valuesBufferId(v[1]) * size_[currentId_ - 1]]);
+                if (v.size() < 4) {
+                    // no regressor given -> take plain expectation
+                    ce = expectation(regressand);
+                } else {
+                    Filter filter = close_enough(
+                        RandomVariable(size_[currentId_ - 1], &values[valuesBufferId(v[2]) * size_[currentId_ - 1]]),
+                        RandomVariable(size_[currentId_ - 1], 1.0));
+                    std::vector<RandomVariable> regressor(v.size() - 3);
+                    for (std::size_t i = 3; i < v.size(); ++i) {
+                        regressor[i - 3] = RandomVariable(size_[currentId_ - 1],
+                                                          &values[valuesBufferId(v[i]) * size_[currentId_ - 1]]);
+                    }
+
+                    ce = conditionalExpectation(regressand, vec2vecptr(regressor),
+                                                multiPathBasisSystem(regressor.size(), settings_.regressionOrder,
+                                                                     QuantLib::LsmBasisSystem::Monomial,
+                                                                     regressand.size()),
+                                                filter);
+                }
 
                 // overwrite the value
 
