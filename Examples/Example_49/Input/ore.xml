@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <ORE>
   <Setup>
-    <Parameter name="asofDate">2022-06-01</Parameter>
+    <Parameter name="asofDate">2022-03-01</Parameter>
     <Parameter name="accrualDate">ASOF</Parameter>
     <Parameter name="dateCalendar">TARGET</Parameter>
     <Parameter name="dateConvention">P</Parameter>
@@ -9,8 +9,8 @@
     <Parameter name="inputPathMarket">./Input</Parameter>
     <Parameter name="inputPathPortfolio">./Input</Parameter>
     <Parameter name="outputPath">./Output</Parameter>
-    <Parameter name="marketDataFile">MD_2022-06-01.csv</Parameter>
-    <Parameter name="fixingDataFile">FD_2022-06-01.csv</Parameter>
+    <Parameter name="marketDataFile">MD_2022-03-01.csv</Parameter>
+    <Parameter name="fixingDataFile">FD_2022-03-01.csv</Parameter>
     <Parameter name="marketDataMappingFile" />
     <Parameter name="fixingDataMappingFile" />
     <Parameter name="logFile">log.txt</Parameter>
