@@ -57,7 +57,7 @@ public:
           upfrontFee_(upfrontFee), rebatesAccrual_(rebatesAccrual), recoveryRate_(recoveryRate),
 	  useSensitivitySimplification_(false) {}
 
-    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! Inspectors
     //@{
@@ -78,13 +78,13 @@ public:
     //@}
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     static vector<Time>
     extractTimeGridDefaultCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& dpts);
     QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> static buildCalibratedConstiuentCurve(
         const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
-        const boost::shared_ptr<SimpleQuote>& calibrationFactor);
+        const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor);
     
     /*! Get credit curve id with term suffix "_5Y". If the creditCurveId contains such a suffix already
        this is used. Otherwise we try to imply it from the schedule. If that is not possible, the

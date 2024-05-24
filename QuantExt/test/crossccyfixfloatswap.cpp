@@ -97,7 +97,7 @@ Handle<YieldTermStructure> usdDiscountCurve() {
     dates[26] = Date(13, Sep, 2068);
     dfs[26] = 0.28183300653329;
 
-    return Handle<YieldTermStructure>(boost::make_shared<DiscountCurve>(dates, dfs, dayCounter));
+    return Handle<YieldTermStructure>(QuantLib::ext::make_shared<DiscountCurve>(dates, dfs, dayCounter));
 }
 
 Handle<YieldTermStructure> usdProjectionCurve() {
@@ -157,7 +157,7 @@ Handle<YieldTermStructure> usdProjectionCurve() {
     dates[24] = Date(13, Sep, 2068);
     dfs[24] = 0.23210070222569;
 
-    return Handle<YieldTermStructure>(boost::make_shared<DiscountCurve>(dates, dfs, dayCounter));
+    return Handle<YieldTermStructure>(QuantLib::ext::make_shared<DiscountCurve>(dates, dfs, dayCounter));
 }
 
 Handle<YieldTermStructure> tryDiscountCurve() {
@@ -203,10 +203,10 @@ Handle<YieldTermStructure> tryDiscountCurve() {
     dates[17] = Date(13, Sep, 2033);
     dfs[17] = 0.122659501286113;
 
-    return Handle<YieldTermStructure>(boost::make_shared<DiscountCurve>(dates, dfs, dayCounter));
+    return Handle<YieldTermStructure>(QuantLib::ext::make_shared<DiscountCurve>(dates, dfs, dayCounter));
 }
 
-boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(Rate spotFx, Rate rate, Spread spread) {
+QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(Rate spotFx, Rate rate, Spread spread) {
 
     // USD nominal
     Real usdNominal = 10000000.0;
@@ -230,10 +230,10 @@ boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(Rate spotFx, Rate rate, Spr
     Schedule floatSchedule(start, end, 3 * Months, payCalendar, ModifiedFollowing, ModifiedFollowing,
                            DateGeneration::Backward, false);
 
-    boost::shared_ptr<IborIndex> index = boost::make_shared<USDLibor>(3 * Months, usdProjectionCurve());
+    QuantLib::ext::shared_ptr<IborIndex> index = QuantLib::ext::make_shared<USDLibor>(3 * Months, usdProjectionCurve());
 
     // Create swap
-    return boost::shared_ptr<CrossCcyFixFloatSwap>(
+    return QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap>(
         new CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Payer, usdNominal * spotFx, TRYCurrency(), fixedSchedule, rate,
                                  Actual360(), payConvention, payLag, payCalendar, usdNominal, USDCurrency(),
                                  floatSchedule, index, spread, payConvention, payLag, payCalendar));
@@ -257,11 +257,11 @@ BOOST_AUTO_TEST_CASE(testSwapPricing) {
     Rate spotFx = 6.4304;
     Rate rate = 0.249;
     Spread spread = 0.0;
-    boost::shared_ptr<CrossCcyFixFloatSwap> swap = makeTestSwap(spotFx, rate, spread);
+    QuantLib::ext::shared_ptr<CrossCcyFixFloatSwap> swap = makeTestSwap(spotFx, rate, spread);
 
     // Attach pricing engine
-    Handle<Quote> fxSpotQuote = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0 / spotFx));
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<CrossCcySwapEngine>(
+    Handle<Quote> fxSpotQuote = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0 / spotFx));
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<CrossCcySwapEngine>(
         USDCurrency(), usdDiscountCurve(), TRYCurrency(), tryDiscountCurve(), fxSpotQuote);
     swap->setPricingEngine(engine);
 

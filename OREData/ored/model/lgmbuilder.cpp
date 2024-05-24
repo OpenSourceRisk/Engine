@@ -44,16 +44,16 @@ using namespace std;
 namespace {
 
 // Return swaption data
-SwaptionData swaptionData(const boost::shared_ptr<Swaption> swaption, const Handle<YieldTermStructure>& yts,
+SwaptionData swaptionData(const QuantLib::ext::shared_ptr<Swaption> swaption, const Handle<YieldTermStructure>& yts,
                           const Handle<SwaptionVolatilityStructure>& svts) {
 
-    boost::shared_ptr<PricingEngine> engine;
+    QuantLib::ext::shared_ptr<PricingEngine> engine;
     switch (svts->volatilityType()) {
     case ShiftedLognormal:
-        engine = boost::make_shared<BlackSwaptionEngine>(yts, svts);
+        engine = QuantLib::ext::make_shared<BlackSwaptionEngine>(yts, svts);
         break;
     case Normal:
-        engine = boost::make_shared<BachelierSwaptionEngine>(yts, svts);
+        engine = QuantLib::ext::make_shared<BachelierSwaptionEngine>(yts, svts);
         break;
     default:
         QL_FAIL("Could not construct swaption engine for volatility type: " << svts->volatilityType());
@@ -76,9 +76,9 @@ SwaptionData swaptionData(const boost::shared_ptr<Swaption> swaption, const Hand
 
 // Utility function to create swaption helper. Returns helper and (possibly updated) strike
 template <typename E, typename T>
-std::pair<boost::shared_ptr<SwaptionHelper>, double>
+std::pair<QuantLib::ext::shared_ptr<SwaptionHelper>, double>
 createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolatilityStructure>& svts,
-                     const Handle<Quote>& vol, const boost::shared_ptr<IborIndex>& iborIndex,
+                     const Handle<Quote>& vol, const QuantLib::ext::shared_ptr<IborIndex>& iborIndex,
                      const Period& fixedLegTenor, const DayCounter& fixedDayCounter, const DayCounter& floatDayCounter,
                      const Handle<YieldTermStructure>& yts, BlackCalibrationHelper::CalibrationErrorType errorType,
                      Real strike, Real shift, const Size settlementDays, const RateAveraging::Type averagingMethod) {
@@ -102,7 +102,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
     // check 2 and 3 above. To check 1, the vol is not needed at all.
 
     auto vt = svts->volatilityType();
-    auto helper = boost::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
+    auto helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                      floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
                                                      settlementDays, averagingMethod);
     auto sd = swaptionData(helper->swaption(), yts, svts);
@@ -121,7 +121,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
             strike = sd.atmForward + maxAtmStdDev * atmStdDev;
         else
             strike = sd.atmForward - maxAtmStdDev * atmStdDev;
-        helper = boost::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
+        helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                     floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
                                                     settlementDays, averagingMethod);
     }
@@ -134,7 +134,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
                                    << std::scientific << mv << " which is lower than minimum market value " << mmv
                                    << " so switching to helper with atm rate " << sd.atmForward);
         strike = sd.atmForward;
-        helper = boost::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
+        helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                     floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
                                                     settlementDays, averagingMethod);
     }
@@ -147,7 +147,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
         TLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
                                    << std::scientific << mv << " which is lower than " << smv
                                    << " so switching to a price error helper.");
-        helper = boost::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
+        helper = QuantLib::ext::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                     floatDayCounter, yts, errorType, strike, 1.0, vt, shift,
                                                     settlementDays, averagingMethod);
     }
@@ -164,21 +164,21 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
 namespace ore {
 namespace data {
 
-LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
+LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
                        const std::string& configuration, const Real bootstrapTolerance, const bool continueOnError,
                        const std::string& referenceCalibrationGrid, const bool setCalibrationInfo,
                        const std::string& id)
     : market_(market), configuration_(configuration), data_(data), bootstrapTolerance_(bootstrapTolerance),
       continueOnError_(continueOnError), referenceCalibrationGrid_(referenceCalibrationGrid),
       setCalibrationInfo_(setCalibrationInfo), id_(id),
-      optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
+      optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),
       calibrationErrorType_(BlackCalibrationHelper::RelativePriceError) {
 
-    marketObserver_ = boost::make_shared<MarketObserver>();
+    marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     string qualifier = data_->qualifier();
     currency_ = qualifier;
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     if (tryParseIborIndex(qualifier, index)) {
         currency_ = index->currency().code();
     }
@@ -275,16 +275,16 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
         data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
         DLOG("IR parametrization for " << qualifier << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");
-        parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
             ccy, modelDiscountCurve_, aTimes, alpha, hTimes, h);
     } else if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
                data_->volatilityType() == LgmData::VolatilityType::Hagan) {
         DLOG("IR parametrization for " << qualifier << ": IrLgm1fPiecewiseConstant");
-        parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantParametrization>(
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::IrLgm1fPiecewiseConstantParametrization>(
             ccy, modelDiscountCurve_, aTimes, alpha, hTimes, h);
     } else if (data_->reversionType() == LgmData::ReversionType::Hagan &&
                data_->volatilityType() == LgmData::VolatilityType::Hagan) {
-        parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseLinearParametrization>(
+        parametrization_ = QuantLib::ext::make_shared<QuantExt::IrLgm1fPiecewiseLinearParametrization>(
             ccy, modelDiscountCurve_, aTimes, alpha, hTimes, h);
         DLOG("IR parametrization for " << qualifier << ": IrLgm1fPiecewiseLinear");
     } else {
@@ -293,7 +293,7 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     DLOG("alpha times size: " << aTimes.size());
     DLOG("lambda times size: " << hTimes.size());
 
-    model_ = boost::make_shared<QuantExt::LGM>(parametrization_);
+    model_ = QuantLib::ext::make_shared<QuantExt::LGM>(parametrization_);
     params_ = model_->params();
 }
 
@@ -302,17 +302,17 @@ Real LgmBuilder::error() const {
     return error_;
 }
 
-boost::shared_ptr<QuantExt::LGM> LgmBuilder::model() const {
+QuantLib::ext::shared_ptr<QuantExt::LGM> LgmBuilder::model() const {
     calculate();
     return model_;
 }
 
-boost::shared_ptr<QuantExt::IrLgm1fParametrization> LgmBuilder::parametrization() const {
+QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization> LgmBuilder::parametrization() const {
     calculate();
     return parametrization_;
 }
 
-std::vector<boost::shared_ptr<BlackCalibrationHelper>> LgmBuilder::swaptionBasket() const {
+std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> LgmBuilder::swaptionBasket() const {
     calculate();
     return swaptionBasket_;
 }
@@ -346,7 +346,8 @@ void LgmBuilder::performCalculations() const {
     }
 
     for (Size j = 0; j < swaptionBasket_.size(); j++) {
-        auto engine = boost::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_, calibrationDiscountCurve_);
+        auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_, calibrationDiscountCurve_,
+                                                                                      data_->floatSpreadMapping());
         engine->enableCache(!data_->calibrateH(), !data_->calibrateA());
         swaptionBasket_[j]->setPricingEngine(engine);
         // necessary if notifications are disabled (observation mode = Disable)
@@ -602,9 +603,9 @@ void LgmBuilder::buildSwaptionBasket() const {
         }
 
         Real dummyQuote = svts_->volatilityType() == Normal ? 0.0020 : 0.10;
-        auto volQuote = boost::make_shared<SimpleQuote>(dummyQuote);
+        auto volQuote = QuantLib::ext::make_shared<SimpleQuote>(dummyQuote);
         Handle<Quote> vol = Handle<Quote>(volQuote);
-        boost::shared_ptr<SwaptionHelper> helper;
+        QuantLib::ext::shared_ptr<SwaptionHelper> helper;
         Real updatedStrike;
 
         if (expiryDateBased && termDateBased) {
@@ -677,7 +678,7 @@ std::string LgmBuilder::getBasketDetails(LgmCalibrationInfo& info) const {
         << "vega" << std::setw(16) << "vol\n";
     info.swaptionData.clear();
     for (Size j = 0; j < swaptionBasket_.size(); ++j) {
-        auto swp = boost::static_pointer_cast<SwaptionHelper>(swaptionBasket_[j])->swaption();
+        auto swp = QuantLib::ext::static_pointer_cast<SwaptionHelper>(swaptionBasket_[j])->swaption();
         auto sd = swaptionData(swp, calibrationDiscountCurve_, svts_);
         log << std::right << std::setw(3) << j << std::setw(16) << sd.timeToExpiry << std::setw(16) << sd.swapLength
             << std::setw(16) << sd.strike << std::setw(16) << sd.atmForward << std::setw(16) << sd.annuity

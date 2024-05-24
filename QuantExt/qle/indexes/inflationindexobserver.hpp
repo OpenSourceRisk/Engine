@@ -30,7 +30,7 @@ namespace QuantExt {
 /*! \ingroup indexes */
 class InflationIndexObserver : public TermStructure {
 public:
-    InflationIndexObserver(const boost::shared_ptr<InflationIndex>& index, const Handle<Quote>& quote,
+    InflationIndexObserver(const QuantLib::ext::shared_ptr<InflationIndex>& index, const Handle<Quote>& quote,
                            const Period& observationLag, const DayCounter& dayCounter = DayCounter())
         : TermStructure(dayCounter), index_(index), quote_(quote), observationLag_(observationLag) {
         registerWith(quote_);
@@ -54,7 +54,7 @@ private:
         index_->addFixing(fixingDate, quote_->value(), true);
     }
 
-    boost::shared_ptr<InflationIndex> index_;
+    QuantLib::ext::shared_ptr<InflationIndex> index_;
     Handle<Quote> quote_;
     Period observationLag_;
 };

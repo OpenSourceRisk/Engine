@@ -1,0 +1,221 @@
+\subsubsection{Window Barrier Option}
+
+The \verb+FxWindowBarrierOptionData+, \verb+EquityWindowBarrierOptionData+, \verb+CommodityWindowBarrierOptionData+ is
+the trade data container for the FxWindowBarrierOption, EquityWindowBarrierOption, CommodityBarrierOption trade
+type. The following listing shows the structure of an example trade for an FX underlying.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="FX_Window_BarrierOption">
+  <TradeType>FxWindowBarrierOption</TradeType>
+  <Envelope>
+   ...
+  </Envelope>
+  <FxWindowBarrierOptionData>
+    <Currency>USD</Currency>
+    <FixingAmount>1000000</FixingAmount>
+    <Underlying>
+      <Type>FX</Type>
+      <Name>ECB-EUR_USD</Name>
+    </Underlying>
+    <Strike>1.1</Strike>
+    <StartDate>2023-03-01</StartDate>
+    <EndDate>024-03-01</EndDate>
+    <OptionData>
+      <LongShort>Long</LongShort>
+      <OptionType>Call</OptionType>
+      <ExerciseDates>
+        <ExerciseDate>2026-03-01</ExerciseDate>
+      </ExerciseDates>
+      <Premiums>
+        <Premium>
+          <Amount>10900</Amount>
+          <Currency>EUR</Currency>
+          <PayDate>2018-03-01</PayDate>
+        </Premium>
+      </Premiums>
+      <PaymentData>
+        <Dates>
+          <Date>2026-03-01</Date>
+        </Dates>
+      </PaymentData>
+    </OptionData>
+    <BarrierData>
+      <Type>UpAndOut</Type>
+      <Levels>
+        <Level>1.3</Level>
+      </Levels>
+    </BarrierData>
+  </FxWindowBarrierOptionData>
+</Trade>
+\end{minted}
+
+The meanings and allowable values of the elements in the data node follow below.
+
+\begin{itemize}
+
+\item Currency: The payout currency. The result of the payout formula above is treated to be in this currency. Note that
+  for (non-quanto) FxWindowBarrierOption this should be the domestic (\lstinline!CCY2!) currency. For non-quanto Equity-
+  and CommodityWindowBarrierOptions this should be the currency the equity or commodity is quoted in.
+  Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+
+Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+
+\item FixingAmount: The notional amount. For FxWindowBarrierOptions: The FixingAmount is expressed in the foreign currency
+  (\lstinline!CCY1!).  For EquityWindowBarrierOptions: The FixingAmount is expressed as number of shares/units of the underlying
+  equity or equity index. For CommodityWindowBarrierOptions: The FixingAmount is expressed as number of units of the underlying
+  commodity. \\
+
+Allowable values: Any positive real number.
+
+\item Underlying: A node with the underlying of the Window Barrier instrument. For FxWindowBarrierOption:
+  \lstinline!Type! is set to \emph{FX} and \lstinline!Name! is a string of the form \emph{SOURCE-CCY1-CCY2} where
+  \lstinline!CCY1! is the foreign currency, \lstinline!CCY2! is the domestic currency, and \emph{SOURCE} is the fixing
+  source, see Table \ref{tab:fxindex_data} and \ref{ss:underlying}. For EquityWindowBarrierOption: \lstinline!Type! is
+  set to \emph{Equity} and \lstinline!Name! and other fields are as outlined in \ref{ss:underlying}. For
+  CommodityWindowBarrierOption: \lstinline!Type! is set to \emph{Commodity} and \lstinline!Name! is an identifier of the
+  commodity as outlined in \ref{ss:underlying} and in Table \ref{tab:commodity_data}.\\
+
+Allowable values: Any FX, Equity or Commodity underlying as specified in \ref{ss:underlying}
+
+\item StrikeData [Optional]: A node containing the strike in \lstinline!Value! and the currency in which both the
+  underlying and the strike are quoted in \lstinline!Currency!. Only supported for EquityWindowBarrierOption.\\
+
+Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}. The strike may be any positive real
+number. The currency provided in this node may be quoted as corresponding minor currency to the underlying major
+currency.
+
+\item Strike [Optional]: For FxWindowBarrierOptions: The the fx strike rate is defined as amount in domestic currency
+  (\lstinline!CCY2!) for one unit of foreign currency (\lstinline!CCY1!). For Equity- and CommodityWindowBarrierOptions: The
+  strike value for one unit/share/contract of the underlying equity or commodity, expressed in the currency the equity
+  or commodity is quoted in. For EquityWindowBarrierOptions, the \lstinline!StrikeData! node (see above) should be used. \\
+
+Allowable values: Any positive real number.
+
+\item StartDate: The start date of the continuous observation window.\\
+
+Allowable values: Any valid date.
+
+\item EndDate: The end date of the continuous observation window.\\
+
+Allowable values: Any valid date.
+
+\item OptionData: See \ref{ss:option_data}. The relevant fields in the \lstinline!OptionData! node for a Window Barrier Option are:
+
+\begin{itemize}
+\item \lstinline!LongShort! The allowable values are \emph{Long} or \emph{Short}.
+\item \lstinline!OptionType! The allowable values are \emph{Call} or \emph{Put}.
+\item \lstinline!ExerciseDates! Must contain the single exercise date of the option.
+\item \lstinline!Premiums! [Optional] Option premium amounts paid by the option buyer to the option seller. See section \ref{ss:premiums}
+\item \lstinline!PaymentData! [Optional] Optional pay date associated to the exercise date.
+\end{itemize}
+
+\item BarrierData: Specification of the barrier type and level. The barrier is continuosly monitored between the
+  StartDate and EndDate. \\
+
+Allowable values: See \ref{ss:barrier_data}, allowable types are \emph{UpAndOut}, \emph{DownAndOut},\emph{UpAndIn},
+\emph{DownAndIn}. Exactly one level must be given as a positive real number.
+
+\end{itemize}
+
+% alternative representation as scripts
+
+Window Barrier Options can be alternatively represented as {\em scripted trades}, refer to ore/Docs/ScriptedTrade
+for an introduction.
+
+Trade input and the payoff script are described below.
+
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Trade id="WindowBarrierOption#1">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope/>
+  <WindowBarrierOptionData>
+    <PremiumPayDate type="event">2018-03-01</PremiumPayDate>
+    <Settlement type="event">2026-03-01</Settlement>
+    <Expiry type="event">2026-03-01</Expiry>
+    <StartDate type="event">2023-03-01</StartDate>
+    <EndDate type="event">2024-03-01</EndDate>
+    <PremiumAmount type="number">10900</PremiumAmount>
+    <BarrierLevel type="number">1.3</BarrierLevel>
+    <PutCall type="optionType">Call</PutCall>
+    <BarrierType type="barrierType">UpOut</BarrierType>
+    <LongShort type="longShort">Long</LongShort>
+    <Quantity type="number">1000000</Quantity>
+    <Strike type="number">1.1</Strike>
+    <PayCcy type="currency">USD</PayCcy>
+    <PremiumCcy type="currency">EUR</PremiumCcy>
+    <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+  </WindowBarrierOptionData>
+</Trade>
+\end{minted}
+
+The WindowBarrierOption script referenced in the trade above is
+shown in Listing \ref{lst:windowbarrieroption}.
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\footnotesize]{Basic}
+REQUIRE BarrierType == 1 OR BarrierType == 2 OR BarrierType == 3 OR BarrierType == 4;
+
+NUMBER i, Payoff, TriggerProbability, ExerciseProbability, isUp, currentNotional;
+
+IF BarrierType == 1 OR BarrierType == 3 THEN
+  TriggerProbability = BELOWPROB(Underlying, StartDate, EndDate, BarrierLevel);
+ELSE
+  TriggerProbability = ABOVEPROB(Underlying, StartDate, EndDate, BarrierLevel);
+END;
+
+Payoff = Quantity * PutCall * (Underlying(Expiry) - Strike);
+IF Payoff > 0.0 THEN
+  IF BarrierType == 1 OR BarrierType == 2 THEN
+    Option = PAY(Payoff * TriggerProbability, Expiry, Settlement, PayCcy);
+    ExerciseProbability = TriggerProbability;
+  ELSE
+    Option = PAY(Payoff * (1 - TriggerProbability), Expiry, Settlement, PayCcy);
+    ExerciseProbability = (1 - TriggerProbability);
+  END;
+END;
+
+Option = LongShort * (Option - PAY(PremiumAmount, PremiumPayDate, PremiumPayDate, PremiumCcy));
+currentNotional = Quantity * Strike;
+\end{minted}
+\caption{Payoff script for a WindowBarrierOption.}
+\label{lst:windowbarrieroption}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!WindowBarrierOptionData! node below.
+
+\begin{itemize}
+    \item{}[event] \lstinline!Expiry!: Option expiry date. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+    \item{}[event] \lstinline!Settlement!: Option settlement date. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+    \item{}[event] \lstinline!StartDate!: Barrier monitoring start date. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+    \item{}[event] \lstinline!EndDate!: Barrier monitoring start date. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+    \item{}[number] \lstinline!Strike!: The option strike price. For FX, this should be the amount of \lstinline!CCY1! divided by amount of \lstinline!CCY2! as defined in \emph{Index}. \\
+    Allowable values: Any positive real number.
+    \item{}[number] \lstinline!BarrierLevel!: Knock-in or knock-out barrier level. For FX, this should be quoted as amount of \lstinline!CCY2! per unit \lstinline!CCY1! as defined in \emph{Index}. \\
+    Allowable values: Any positive real number.
+    \item{}[barrierType] \lstinline!BarrierType!: Barrier type. \\
+    Allowable values: \emph{DownIn, UpIn, DownOut, UpOut}
+    \item{}[optionType] \lstinline!PutCall!: Option type. For FX, this should be Call if we buy \lstinline!CCY1! and sell \lstinline!CCY2!, Put if we buy \lstinline!CCY2! and sell \lstinline!CCY1! (with \lstinline!CCY1!, \lstinline!CCY2! defined in \emph{Index}). \\
+    Allowable values: \emph{Call, Put}
+    \item{}[longShort] \lstinline!LongShort!: \emph{Long} if we buy the option. \emph{Short} if we sell the option.
+    Allowable values: \emph{Long, Short}
+    \item{}[number] \lstinline!Quantity!: Number of option contracts. For FX, this should be the bought amount. \\
+    Allowable values: Any positive real number.
+    \item{}[index] \lstinline!Underlying!: Underlying index. \\
+    Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+    \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+    Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+    \item{}[event] \lstinline!PremiumPayDate!: Option premium payment date. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+    \item{}[number] \lstinline!PremiumAmount!: Option premium amount in \emph{PremiumPayCcy}. \\
+    Allowable values: Any positive real number.
+    \item{}[currency] \lstinline!PremiumCcy!: Option premium currency. \\
+    Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+\end{itemize}

@@ -54,15 +54,15 @@ public:
     enum class LoanExposureMode { Notional, Value };
     enum class Evaluation { Analytic, ForwardSimulationA, ForwardSimulationB, TerminalSimulation };
 
-    CreditMigrationHelper(const boost::shared_ptr<CreditSimulationParameters> parameters,
-                          const boost::shared_ptr<NPVCube> cube, const boost::shared_ptr<NPVCube> nettedCube,
-                          const boost::shared_ptr<AggregationScenarioData> aggData, const Size cubeIndexCashflows,
+    CreditMigrationHelper(const QuantLib::ext::shared_ptr<CreditSimulationParameters> parameters,
+                          const QuantLib::ext::shared_ptr<NPVCube> cube, const QuantLib::ext::shared_ptr<NPVCube> nettedCube,
+                          const QuantLib::ext::shared_ptr<AggregationScenarioData> aggData, const Size cubeIndexCashflows,
                           const Size cubeIndexStateNpvs, const Real distributionLowerBound,
                           const Real distributionUpperBound, const Size buckets, const Matrix& globalFactorCorrelation,
                           const std::string& baseCurrency);
 
     //! builds the helper for a specific subset of trades stored in the cube
-    void build(const std::map<std::string, boost::shared_ptr<Trade>>& trades);
+    void build(const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades);
 
     const std::vector<Real>& upperBucketBound() const { return bucketing_.upperBucketBound(); }
     //
@@ -106,9 +106,9 @@ private:
     void generateConditionalMigrationPnl(const Size date, const Size path, const std::map<string, Matrix>& transMat,
                                          std::vector<Array>& condProbs, std::vector<Array>& pnl) const;
 
-    boost::shared_ptr<CreditSimulationParameters> parameters_;
-    boost::shared_ptr<NPVCube> cube_, nettedCube_;
-    boost::shared_ptr<AggregationScenarioData> aggData_;
+    QuantLib::ext::shared_ptr<CreditSimulationParameters> parameters_;
+    QuantLib::ext::shared_ptr<NPVCube> cube_, nettedCube_;
+    QuantLib::ext::shared_ptr<AggregationScenarioData> aggData_;
     Size cubeIndexCashflows_, cubeIndexStateNpvs_;
     Matrix globalFactorCorrelation_;
     std::string baseCurrency_;

@@ -45,12 +45,12 @@ BOOST_AUTO_TEST_CASE(testBondSpreads) {
     Date today = Settings::instance().evaluationDate();
 
     // market data
-    Handle<Quote> rateQuote(boost::make_shared<SimpleQuote>(0.02));
-    Handle<Quote> issuerSpreadQuote(boost::make_shared<SimpleQuote>(0.01));
+    Handle<Quote> rateQuote(QuantLib::ext::make_shared<SimpleQuote>(0.02));
+    Handle<Quote> issuerSpreadQuote(QuantLib::ext::make_shared<SimpleQuote>(0.01));
     DayCounter dc = Actual365Fixed();
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Semiannual));
-    Handle<DefaultProbabilityTermStructure> dpts(boost::make_shared<FlatHazardRate>(today, issuerSpreadQuote, dc));
-    Handle<Quote> bondSpecificSpread(boost::make_shared<SimpleQuote>(0.005));
+    Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Semiannual));
+    Handle<DefaultProbabilityTermStructure> dpts(QuantLib::ext::make_shared<FlatHazardRate>(today, issuerSpreadQuote, dc));
+    Handle<Quote> bondSpecificSpread(QuantLib::ext::make_shared<SimpleQuote>(0.005));
 
     // build the bond
     Date startDate = today;
@@ -69,19 +69,19 @@ BOOST_AUTO_TEST_CASE(testBondSpreads) {
     Leg leg =
         FixedRateLeg(schedule).withNotionals(redemption).withCouponRates(couponRate, dc).withPaymentAdjustment(bdc);
 
-    boost::shared_ptr<QuantLib::Bond> bond(boost::make_shared<QuantLib::Bond>(0, WeekendsOnly(), today, leg));
+    QuantLib::ext::shared_ptr<QuantLib::Bond> bond(QuantLib::ext::make_shared<QuantLib::Bond>(0, WeekendsOnly(), today, leg));
     Handle<Quote> recovery;
-    boost::shared_ptr<PricingEngine> pricingEngine(
-        boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, bondSpecificSpread, 1 * Months));
+    QuantLib::ext::shared_ptr<PricingEngine> pricingEngine(
+        QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, bondSpecificSpread, 1 * Months));
     bond->setPricingEngine(pricingEngine);
 
     Real price = bond->dirtyPrice();
     BOOST_TEST_MESSAGE("Bond price = " << price);
 
     // now calculated the implied bond spread, given the price
-    boost::shared_ptr<SimpleQuote> tmpSpread = boost::make_shared<SimpleQuote>(0.0);
+    QuantLib::ext::shared_ptr<SimpleQuote> tmpSpread = QuantLib::ext::make_shared<SimpleQuote>(0.0);
     Handle<Quote> tmpSpreadH(tmpSpread);
-    boost::shared_ptr<PricingEngine> tmpEngine;
+    QuantLib::ext::shared_ptr<PricingEngine> tmpEngine;
     tmpEngine.reset(new QuantExt::DiscountingRiskyBondEngine(yts, dpts, recovery, tmpSpreadH, 1 * Months));
 
     Real impliedSpread = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, price, false,
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(testBondSpreads) {
     BOOST_CHECK_EQUAL(
         price, bond->dirtyPrice()); // ensure hypothetical impliedSpread calc has not affected the original position
 
-    boost::dynamic_pointer_cast<SimpleQuote>(*bondSpecificSpread)->setValue(impliedSpreadPar);
+    QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(*bondSpecificSpread)->setValue(impliedSpreadPar);
     Real pricePar = bond->dirtyPrice();
     BOOST_TEST_MESSAGE("Bond spread of " << bondSpecificSpread->value() << " means price of " << pricePar);
     BOOST_CHECK_CLOSE(pricePar, parRedemption, 0.0001);
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(testBondSpreads) {
                                                                             false, 1.e-12, 10000, -0.02, 1.00);
     BOOST_TEST_MESSAGE("Par bond price would require spread of " << impliedSpreadPar);
     BOOST_CHECK_CLOSE(impliedSpreadPar, bondSpecificSpread->value() + issuerSpreadQuote->value(), 0.0001);
-    boost::dynamic_pointer_cast<SimpleQuote>(*bondSpecificSpread)->setValue(impliedSpreadPar);
+    QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(*bondSpecificSpread)->setValue(impliedSpreadPar);
     pricePar = bond->dirtyPrice();
     BOOST_TEST_MESSAGE("Bond spread of " << bondSpecificSpread->value() << " means price of " << pricePar);
     BOOST_CHECK_CLOSE(pricePar, parRedemption, 0.0001);

@@ -34,7 +34,7 @@ namespace data {
 class FixedLegBuilder : public LegBuilder {
 public:
     FixedLegBuilder() : LegBuilder("Fixed") {}
-    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                  const bool useXbsCurves = false) const override;
@@ -43,7 +43,7 @@ public:
 class ZeroCouponFixedLegBuilder : public LegBuilder {
 public:
     ZeroCouponFixedLegBuilder() : LegBuilder("ZeroCouponFixed") {}
-    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                  const bool useXbsCurves = false) const override;
@@ -52,7 +52,7 @@ public:
 class FloatingLegBuilder : public LegBuilder {
 public:
     FloatingLegBuilder() : LegBuilder("Floating") {}
-    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                  const bool useXbsCurves = false) const override;
@@ -61,7 +61,7 @@ public:
 class CashflowLegBuilder : public LegBuilder {
 public:
     CashflowLegBuilder() : LegBuilder("Cashflow") {}
-    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                  const bool useXbsCurves = false) const override;
@@ -70,7 +70,7 @@ public:
 class CPILegBuilder : public LegBuilder {
 public:
     CPILegBuilder() : LegBuilder("CPI") {}
-    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                  const bool useXbsCurves = false) const override;
@@ -79,7 +79,7 @@ public:
 class YYLegBuilder : public LegBuilder {
 public:
     YYLegBuilder() : LegBuilder("YY") {}
-    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                  const bool useXbsCurves = false) const override;
@@ -88,7 +88,7 @@ public:
 class CMSLegBuilder : public LegBuilder {
 public:
     CMSLegBuilder() : LegBuilder("CMS") {}
-    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                  const bool useXbsCurves = false) const override;
@@ -97,7 +97,7 @@ public:
 class CMBLegBuilder : public LegBuilder {
 public:
     CMBLegBuilder() : LegBuilder("CMB") {}
-    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                  const bool useXbsCurves = false) const override;
@@ -106,7 +106,7 @@ public:
 class DigitalCMSLegBuilder : public LegBuilder {
 public:
     DigitalCMSLegBuilder() : LegBuilder("DigitalCMS") {}
-    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                  const bool useXbsCurves = false) const override;
@@ -115,7 +115,7 @@ public:
 class CMSSpreadLegBuilder : public LegBuilder {
 public:
     CMSSpreadLegBuilder() : LegBuilder("CMSSpread") {}
-    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                  const bool useXbsCurves = false) const override;
@@ -124,7 +124,7 @@ public:
 class DigitalCMSSpreadLegBuilder : public LegBuilder {
 public:
     DigitalCMSSpreadLegBuilder() : LegBuilder("DigitalCMSSpread") {}
-    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                  const bool useXbsCurves = false) const override;
@@ -133,7 +133,7 @@ public:
 class EquityLegBuilder : public LegBuilder {
 public:
     EquityLegBuilder() : LegBuilder("Equity") {}
-    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                  RequiredFixings& requiredFixings, const string& configuration,
                  const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                  const bool useXbsCurves = false) const override;

@@ -49,8 +49,8 @@ BlackScholesCGBase::BlackScholesCGBase(const Size paths, const std::string& curr
 BlackScholesCGBase::BlackScholesCGBase(
     const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
     const std::vector<Handle<Quote>>& fxSpots,
-    const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-    const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
@@ -175,7 +175,7 @@ std::size_t BlackScholesCGBase::getInfIndexValue(const Size indexNo, const Date&
 namespace {
 struct comp {
     comp(const std::string& indexInput) : indexInput_(indexInput) {}
-    template <typename T> bool operator()(const std::pair<IndexInfo, boost::shared_ptr<T>>& p) const {
+    template <typename T> bool operator()(const std::pair<IndexInfo, QuantLib::ext::shared_ptr<T>>& p) const {
         return p.first.name() == indexInput_;
     }
     const std::string indexInput_;
@@ -191,22 +191,22 @@ std::size_t BlackScholesCGBase::fwdCompAvg(const bool isAvg, const std::string& 
     auto index = std::find_if(irIndices_.begin(), irIndices_.end(), comp(indexInput));
     QL_REQUIRE(index != irIndices_.end(),
                "BlackScholesCGBase::fwdCompAvg(): did not find ir index " << indexInput << " - this is unexpected.");
-    auto on = boost::dynamic_pointer_cast<OvernightIndex>(index->second);
+    auto on = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index->second);
     QL_REQUIRE(on, "BlackScholesCGBase::fwdCompAvg(): expected on index for " << indexInput);
     // if we want to support cap / floors we need the OIS CF surface
     QL_REQUIRE(cap > 999998.0 && floor < -999998.0,
                "BlackScholesCGBase:fwdCompAvg(): cap (" << cap << ") / floor (" << floor << ") not supported");
-    boost::shared_ptr<QuantLib::FloatingRateCoupon> coupon;
-    boost::shared_ptr<QuantLib::FloatingRateCouponPricer> pricer;
+    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCoupon> coupon;
+    QuantLib::ext::shared_ptr<QuantLib::FloatingRateCouponPricer> pricer;
     if (isAvg) {
-        coupon = boost::make_shared<QuantExt::AverageONIndexedCoupon>(
+        coupon = QuantLib::ext::make_shared<QuantExt::AverageONIndexedCoupon>(
             end, 1.0, start, end, on, gearing, spread, rateCutoff, on->dayCounter(), lookback * Days, fixingDays);
-        pricer = boost::make_shared<AverageONIndexedCouponPricer>();
+        pricer = QuantLib::ext::make_shared<AverageONIndexedCouponPricer>();
     } else {
-        coupon = boost::make_shared<QuantExt::OvernightIndexedCoupon>(end, 1.0, start, end, on, gearing, spread, Date(),
+        coupon = QuantLib::ext::make_shared<QuantExt::OvernightIndexedCoupon>(end, 1.0, start, end, on, gearing, spread, Date(),
                                                                       Date(), on->dayCounter(), false, includeSpread,
                                                                       lookback * Days, rateCutoff, fixingDays);
-        pricer = boost::make_shared<OvernightIndexedCouponPricer>();
+        pricer = QuantLib::ext::make_shared<OvernightIndexedCouponPricer>();
     }
     coupon->setPricer(pricer);
     std::string id = "__fwdCompAvg_" + std::to_string(g_->size());

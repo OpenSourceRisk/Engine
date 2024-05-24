@@ -483,7 +483,7 @@ void FixingDateGetter::visit(FloatingRateCoupon& c) {
 }
 
 void FixingDateGetter::visit(IborCoupon& c) {
-    if (auto bma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(c.index())) {
+    if (auto bma = QuantLib::ext::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(c.index())) {
         // Handle bma indices which we allow in IborCoupon as an approximation to BMA
         // coupons. For these we allow fixing dates that are invalid as BMA fixing dates
         // and adjust these dates to the last valid BMA fixing date in the BMAIndexWrapper.
@@ -492,7 +492,7 @@ void FixingDateGetter::visit(IborCoupon& c) {
         requiredFixings_.addFixingDate(bma->adjustedFixingDate(c.fixingDate()),
                                        IndexNameTranslator::instance().oreName(c.index()->name()), c.date(), true);
     } else {
-        auto fallback = boost::dynamic_pointer_cast<FallbackIborIndex>(c.index());
+        auto fallback = QuantLib::ext::dynamic_pointer_cast<FallbackIborIndex>(c.index());
         if (fallback != nullptr && c.fixingDate() >= fallback->switchDate()) {
             requiredFixings_.addFixingDates(fallback->onCoupon(c.fixingDate())->fixingDates(),
                                             IndexNameTranslator::instance().oreName(fallback->rfrIndex()->name()),
@@ -516,7 +516,7 @@ void FixingDateGetter::visit(IndexedCashFlow& c) {
 
 void FixingDateGetter::visit(CPICashFlow& c) {
     // CPICashFlow must have a ZeroInflationIndex
-    auto zeroInflationIndex = boost::dynamic_pointer_cast<ZeroInflationIndex>(c.index());
+    auto zeroInflationIndex = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(c.index());
     QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
 
     QL_DEPRECATED_DISABLE_WARNING
@@ -565,7 +565,7 @@ void FixingDateGetter::visit(QuantLib::OvernightIndexedCoupon& c) {
 }
 
 void FixingDateGetter::visit(QuantExt::OvernightIndexedCoupon& c) {
-    auto fallback = boost::dynamic_pointer_cast<FallbackOvernightIndex>(c.index());
+    auto fallback = QuantLib::ext::dynamic_pointer_cast<FallbackOvernightIndex>(c.index());
     string indexName;
     if (fallback && c.fixingDate() >= fallback->switchDate())
         indexName = fallback->rfrIndex()->name();
@@ -683,7 +683,7 @@ void FixingDateGetter::visit(CommodityCashFlow& c) {
     for (const auto& [pricingDate, index] : indices) {
         // todays fixing is not mandatory, we will fallback to estimate it if its not there.
         bool isTodaysFixing = Settings::instance().evaluationDate() == pricingDate;
-        if (auto powerIndex = boost::dynamic_pointer_cast<OffPeakPowerIndex>(index)) {
+        if (auto powerIndex = QuantLib::ext::dynamic_pointer_cast<OffPeakPowerIndex>(index)) {
             // if powerindex, we need the offpeak index fixing and the peak index fixings
             requiredFixings_.addFixingDate(pricingDate, powerIndex->offPeakIndex()->name(), c.date(), false,
                                            !isTodaysFixing);
@@ -703,7 +703,7 @@ void FixingDateGetter::visit(CommodityCashFlow& c) {
                 requiredFixings_.addFixingDate(d, index->name(), c.date(), false, !isTodaysFixing);
             }
         } 
-        if (auto baseFutureIndex = boost::dynamic_pointer_cast<CommodityBasisFutureIndex>(index)) {
+        if (auto baseFutureIndex = QuantLib::ext::dynamic_pointer_cast<CommodityBasisFutureIndex>(index)) {
             RequiredFixings tmpFixings;
             FixingDateGetter baseCashflowGetter(tmpFixings);
             baseFutureIndex->baseCashflow(c.date())->accept(baseCashflowGetter);
@@ -730,7 +730,7 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
     vector<QuantLib::ext::shared_ptr<Index>> indexes;
     vector<QuantLib::ext::shared_ptr<FxIndex>> fxIndexes;
 
-    if (auto e = boost::dynamic_pointer_cast<QuantExt::CompositeIndex>(bc.index())) {
+    if (auto e = QuantLib::ext::dynamic_pointer_cast<QuantExt::CompositeIndex>(bc.index())) {
         indexes = e->indices();
         fxIndexes = e->fxConversion();
 
@@ -786,7 +786,7 @@ void FixingDateGetter::visit(TRSCashFlow& bc) {
     }
 }
 
-void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<FixingDateGetter>& fixingDateGetter) {
+void addToRequiredFixings(const QuantLib::Leg& leg, const QuantLib::ext::shared_ptr<FixingDateGetter>& fixingDateGetter) {
     for (auto const& c : leg) {
         QL_REQUIRE(c, "addToRequiredFixings(), got null cashflow, this is unexpected");
         c->accept(*fixingDateGetter);
@@ -825,7 +825,7 @@ void addMarketFixingDates(const Date& asof, map<string, RequiredFixings::FixingD
 
         LOG("Start adding market fixing dates for configuration '" << configuration << "'");
 
-        boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 
         // If there are ibor indices in the market parameters, add the lookback fixings
         // IF there are SIFMA / BMA indices, add lookback fixings for the Libor basis index
@@ -845,13 +845,13 @@ void addMarketFixingDates(const Date& asof, map<string, RequiredFixings::FixingD
                 indices.insert(i);
             }
             for (auto const& [i, _] : mktParams.mapping(MarketObject::YieldCurve, configuration)) {
-                boost::shared_ptr<IborIndex> dummy;
+                QuantLib::ext::shared_ptr<IborIndex> dummy;
                 if (tryParseIborIndex(i, dummy))
                     indices.insert(i);
             }
             for (auto const& [_, s] : mktParams.mapping(MarketObject::DiscountCurve, configuration)) {
                 auto spec = parseCurveSpec(s);
-                boost::shared_ptr<IborIndex> dummy;
+                QuantLib::ext::shared_ptr<IborIndex> dummy;
                 if (tryParseIborIndex(spec->curveConfigID(), dummy))
                     indices.insert(spec->curveConfigID());
             }
@@ -878,7 +878,7 @@ void addMarketFixingDates(const Date& asof, map<string, RequiredFixings::FixingD
                     }
                     std::set<string> liborNames;
                     for (auto const& c : conventions->get(Convention::Type::BMABasisSwap)) {
-                        auto bma = boost::dynamic_pointer_cast<BMABasisSwapConvention>(c);
+                        auto bma = QuantLib::ext::dynamic_pointer_cast<BMABasisSwapConvention>(c);
                         QL_REQUIRE(
                             bma, "internal error, could not cast to BMABasisSwapConvention in addMarketFixingDates()");
                         if (bma->bmaIndexName() == i) {
@@ -967,14 +967,14 @@ void addMarketFixingDates(const Date& asof, map<string, RequiredFixings::FixingD
             // the dates. Skip commodity names that do not have future conventions.
             for (const auto& kv : mktParams.mapping(MarketObject::CommodityCurve, configuration)) {
 
-                boost::shared_ptr<CommodityFutureConvention> cfc;
+                QuantLib::ext::shared_ptr<CommodityFutureConvention> cfc;
                 if (conventions->has(kv.first)) {
-                    cfc = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(kv.first));
+                    cfc = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(kv.first));
                 }
 
                 auto commIdx = parseCommodityIndex(kv.first, false);
                 if (cfc) {
-                    if (auto oppIdx = boost::dynamic_pointer_cast<OffPeakPowerIndex>(commIdx)) {
+                    if (auto oppIdx = QuantLib::ext::dynamic_pointer_cast<OffPeakPowerIndex>(commIdx)) {
                         DLOG("Commodity " << kv.first << " is off-peak power so adding underlying daily contracts.");
                         const auto& opIndex = oppIdx->offPeakIndex();
                         const auto& pIndex = oppIdx->peakIndex();

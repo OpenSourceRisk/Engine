@@ -49,33 +49,33 @@ public:
     //! Detailed constructor
     CommodityVolCurve(const QuantLib::Date& asof, const CommodityVolatilityCurveSpec& spec, const Loader& loader,
                       const CurveConfigurations& curveConfigs,
-                      const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves = {},
-                      const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {},
-                      const std::map<std::string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves = {},
-                      const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves = {},
-                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves = {},
+                      const std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves = {},
+                      const std::map<std::string, QuantLib::ext::shared_ptr<CommodityCurve>>& commodityCurves = {},
+                      const std::map<std::string, QuantLib::ext::shared_ptr<CommodityVolCurve>>& commodityVolCurves = {},
+                      const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves = {},
+                      const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves = {},
                       const Market* fxIndices = nullptr, const bool buildCalibrationInfo = true);
     //@}
 
     //! \name Inspectors
     //@{
     const CommodityVolatilityCurveSpec& spec() const { return spec_; }
-    const boost::shared_ptr<QuantLib::BlackVolTermStructure>& volatility() { return volatility_; }
+    const QuantLib::ext::shared_ptr<QuantLib::BlackVolTermStructure>& volatility() { return volatility_; }
 
     //! Build the calibration info
-    void buildVolCalibrationInfo(const Date& asof, boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+    void buildVolCalibrationInfo(const Date& asof, QuantLib::ext::shared_ptr<VolatilityConfig>& volatilityConfig,
                                     const CurveConfigurations& curveConfigs, const CommodityVolatilityConfig& config);
-    const boost::shared_ptr<FxEqCommVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }
+    const QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }
     //@}
 
 private:
     CommodityVolatilityCurveSpec spec_;
-    boost::shared_ptr<QuantLib::BlackVolTermStructure> volatility_;
-    boost::shared_ptr<QuantExt::FutureExpiryCalculator> expCalc_;
-    boost::shared_ptr<CommodityFutureConvention> convention_;
+    QuantLib::ext::shared_ptr<QuantLib::BlackVolTermStructure> volatility_;
+    QuantLib::ext::shared_ptr<QuantExt::FutureExpiryCalculator> expCalc_;
+    QuantLib::ext::shared_ptr<CommodityFutureConvention> convention_;
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
-    boost::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo_;
+    QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo_;
     QuantLib::Date maxExpiry_;
 
     // Populated for delta, moneyness and possibly absolute strike surfaces and left empty for others
@@ -125,10 +125,10 @@ private:
     //! Build a volatility surface as a proxy from another volatility surface
     void buildVolatility(const QuantLib::Date& asof, const CommodityVolatilityCurveSpec& spec,
                          const CurveConfigurations& curveConfigs, const ProxyVolatilityConfig& pvc,
-                         const map<string, boost::shared_ptr<CommodityCurve>>& comCurves,
-                         const map<string, boost::shared_ptr<CommodityVolCurve>>& volCurves,
-                         const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
-                         const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+                         const map<string, QuantLib::ext::shared_ptr<CommodityCurve>>& comCurves,
+                         const map<string, QuantLib::ext::shared_ptr<CommodityVolCurve>>& volCurves,
+                         const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVolCurves,
+                         const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves,
                          const Market* fxIndices = nullptr);
 
     /*! Assume that the input price curve \p pts is a future price curve giving the price of a sequence of future
@@ -140,17 +140,17 @@ private:
     */
     QuantLib::Handle<QuantExt::PriceTermStructure>
     correctFuturePriceCurve(const QuantLib::Date& asof, const std::string& contractName,
-                            const boost::shared_ptr<QuantExt::PriceTermStructure>& pts,
+                            const QuantLib::ext::shared_ptr<QuantExt::PriceTermStructure>& pts,
                             const std::vector<QuantLib::Date>& optionExpiries) const;
 
     //! Get an explicit expiry date from a commodity option quote's Expiry
-    QuantLib::Date getExpiry(const QuantLib::Date& asof, const boost::shared_ptr<Expiry>& expiry,
+    QuantLib::Date getExpiry(const QuantLib::Date& asof, const QuantLib::ext::shared_ptr<Expiry>& expiry,
                              const std::string& name, QuantLib::Natural rollDays) const;
 
     //! Populate price curve, \p pts_, and yield curve, \p yts_.
     void populateCurves(const CommodityVolatilityConfig& config,
-                        const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
+                        const std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                        const std::map<std::string, QuantLib::ext::shared_ptr<CommodityCurve>>& commodityCurves,
                         bool searchYield, bool dontThrow = false);
 
     //! Check and return moneyness levels.

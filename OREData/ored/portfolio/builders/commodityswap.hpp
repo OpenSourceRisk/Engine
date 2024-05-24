@@ -44,10 +44,10 @@ public:
 protected:
     virtual std::string keyImpl(const Currency& ccy) override { return ccy.code(); }
 
-    virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy) override {
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy) override {
 
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        return boost::make_shared<QuantLib::DiscountingSwapEngine>(yts);
+        return QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(yts);
     };
 };
 

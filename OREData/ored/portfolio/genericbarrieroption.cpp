@@ -269,7 +269,7 @@ namespace data {
 
 // clang-format on
 
-void GenericBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -527,7 +527,7 @@ void GenericBarrierOption::initIndices() {
     indices_.emplace_back("Index", "Underlyings", underlyings);
 }
 
-QuantLib::Calendar GenericBarrierOption::getUnderlyingCalendar(const boost::shared_ptr<EngineFactory>& factory) const {
+QuantLib::Calendar GenericBarrierOption::getUnderlyingCalendar(const QuantLib::ext::shared_ptr<EngineFactory>& factory) const {
     Calendar calendar = NullCalendar();
     QL_REQUIRE(underlyings_.size() > 0, "No underlyings provided.");
     IndexInfo ind(scriptedIndexName(underlyings_.front()));
@@ -611,7 +611,7 @@ void GenericBarrierOption::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* GenericBarrierOption::toXML(XMLDocument& doc) {
+XMLNode* GenericBarrierOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, dataNode);

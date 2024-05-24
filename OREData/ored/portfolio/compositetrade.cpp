@@ -30,29 +30,33 @@ namespace ore {
 namespace data {
 using QuantExt::MultiCcyCompositeInstrument;
 
-void CompositeTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Building Composite Trade: " << id());
     npvCurrency_ = currency_;
-    boost::shared_ptr<MultiCcyCompositeInstrument> compositeInstrument =
-	boost::make_shared<MultiCcyCompositeInstrument>();
+    QuantLib::ext::shared_ptr<MultiCcyCompositeInstrument> compositeInstrument =
+	QuantLib::ext::make_shared<MultiCcyCompositeInstrument>();
     fxRates_.clear();
     fxRatesNotional_.clear();
     legs_.clear();
-    for (const boost::shared_ptr<Trade>& trade : trades_) {
 
-	trade->reset();
-	trade->build(engineFactory);
-	trade->validate();
+    populateFromReferenceData(engineFactory->referenceData());
+
+    
+    for (const QuantLib::ext::shared_ptr<Trade>& trade : trades_) {
+
+	    trade->reset();
+	    trade->build(engineFactory);
+	    trade->validate();
 
         if (sensitivityTemplate_.empty())
             setSensitivityTemplate(trade->sensitivityTemplate());
 
-        Handle<Quote> fx = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
-	if (trade->npvCurrency() != npvCurrency_)
-	    fx = engineFactory->market()->fxRate(trade->npvCurrency() + npvCurrency_);
-	fxRates_.push_back(fx);
+        Handle<Quote> fx = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+	    if (trade->npvCurrency() != npvCurrency_)
+	        fx = engineFactory->market()->fxRate(trade->npvCurrency() + npvCurrency_);
+	    fxRates_.push_back(fx);
 
-        Handle<Quote> fxNotional = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+        Handle<Quote> fxNotional = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
         if (trade->notionalCurrency().empty()) {
             // trade is not guaranteed to provide a non-null notional, but if it does we require a notional currency
             if (trade->notional() != Null<Real>()) {
@@ -66,26 +70,33 @@ void CompositeTrade::build(const boost::shared_ptr<EngineFactory>& engineFactory
             fxNotional = engineFactory->market()->fxRate(trade->notionalCurrency() + npvCurrency_);
         fxRatesNotional_.push_back(fxNotional);
 
-        boost::shared_ptr<InstrumentWrapper> instrumentWrapper = trade->instrument();
+        QuantLib::ext::shared_ptr<InstrumentWrapper> instrumentWrapper = trade->instrument();
         Real effectiveMultiplier = instrumentWrapper->multiplier();
-	if (auto optionWrapper = boost::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
-	    effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
-	}
+        if (auto optionWrapper = QuantLib::ext::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
+	        effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
+	    }
 
-	compositeInstrument->add(instrumentWrapper->qlInstrument(), effectiveMultiplier, fx);
-	for (Size i = 0; i < instrumentWrapper->additionalInstruments().size(); ++i) {
-	    compositeInstrument->add(instrumentWrapper->additionalInstruments()[i],
-				     instrumentWrapper->additionalMultipliers()[i]);
-	}
+	    compositeInstrument->add(instrumentWrapper->qlInstrument(), effectiveMultiplier, fx);
+	    for (Size i = 0; i < instrumentWrapper->additionalInstruments().size(); ++i) {
+	        compositeInstrument->add(instrumentWrapper->additionalInstruments()[i],
+				         instrumentWrapper->additionalMultipliers()[i]);
+	    }
 
-	// For cashflows
-	legs_.insert(legs_.end(), trade->legs().begin(), trade->legs().end());
-	legPayers_.insert(legPayers_.end(), trade->legPayers().begin(), trade->legPayers().end());
-	legCurrencies_.insert(legCurrencies_.end(), trade->legCurrencies().begin(), trade->legCurrencies().end());
+        bool isDuplicate = false;
+        try {
+            if (instrumentWrapper->additionalResults().find("cashFlowResults") != trade->instrument()->additionalResults().end())
+                isDuplicate = true;
+        } catch (...) {}
+        if (!isDuplicate) {
+            // For cashflows
+            legs_.insert(legs_.end(), trade->legs().begin(), trade->legs().end());
+            legPayers_.insert(legPayers_.end(), trade->legPayers().begin(), trade->legPayers().end());
+            legCurrencies_.insert(legCurrencies_.end(), trade->legCurrencies().begin(), trade->legCurrencies().end());
+        }
 
-	maturity_ = std::max(maturity_, trade->maturity());
+	    maturity_ = std::max(maturity_, trade->maturity());
     }
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(compositeInstrument));
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(compositeInstrument));
 
     notionalCurrency_ = npvCurrency_;
 
@@ -98,7 +109,7 @@ QuantLib::Real CompositeTrade::notional() const {
     vector<Real> notionals;
     vector<Handle<Quote>> fxRates;
     // trade is not guaranteed to provide a non-null notional
-    for (const boost::shared_ptr<Trade>& trade : trades_)
+    for (const QuantLib::ext::shared_ptr<Trade>& trade : trades_)
         notionals.push_back(trade->notional() != Null<Real>() ? trade->notional() : 0.0);
 
     // need to convert the component notionals to the composite currency.
@@ -112,7 +123,6 @@ void CompositeTrade::fromXML(XMLNode* node) {
                "Wrong trade type in composite trade builder.");
     Trade::fromXML(node);
     this->id() = XMLUtils::getAttribute(node, "id");
-
     // We read the data particular to composite trades
     XMLNode* compNode = XMLUtils::getChildNode(node, "CompositeTradeData");
     QL_REQUIRE(compNode, "Could not find CompositeTradeData node.");
@@ -132,48 +142,61 @@ void CompositeTrade::fromXML(XMLNode* node) {
         QL_REQUIRE(notionalCalculation_ != "Override", "Notional override value has not been provided.");
     }
 
-    XMLNode* tradesNode = XMLUtils::getChildNode(compNode, "Components");
-    QL_REQUIRE(tradesNode, "Could not find Components node.");
-
-    vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(tradesNode, "Trade");
-    for (Size i = 0; i < nodes.size(); i++) {
-        string tradeType = XMLUtils::getChildValue(nodes[i], "TradeType", true);
-
-        string id = XMLUtils::getAttribute(nodes[i], "id");
-        if (id == "") {
-            WLOG("Empty component trade id being overwritten in composite trade " << this->id() << ".");
-        }
-        id = this->id() + "_" + std::to_string(i);
-        DLOG("Parsing composite trade " << this->id() << " node " << i << " with id: " << id);
-
-        boost::shared_ptr<Trade> trade;
-        try {
-            trade = TradeFactory::instance().build(tradeType);
-            trade->id() = id;
-            Envelope componentEnvelope;
-            if (XMLNode* envNode = XMLUtils::getChildNode(nodes[i], "Envelope")) {
-                componentEnvelope.fromXML(envNode);
-            }
-            Envelope env = this->envelope();
-            // the component trade's envelope is the main trade's envelope with possibly overwritten add fields
-            for (auto const& [k, v] : componentEnvelope.fullAdditionalFields())
-                env.setAdditionalField(k,v);
-            trade->setEnvelope(env);
-            trade->fromXML(nodes[i]);
-            trades_.push_back(trade);
-            DLOG("Added Trade " << id << " (" << trade->id() << ")"
-                                << " type:" << tradeType << " to composite trade " << this->id() << ".");
-        } catch (const std::exception& e) {
-            StructuredTradeErrorMessage(
-                id, this->tradeType(),
-                "Failed to build subtrade with id '" + id + "' inside composite trade: ", e.what())
-                .log();
-        }
+    if (XMLUtils::getChildNode(compNode, "PortfolioBasket")) {
+        portfolioBasket_ = XMLUtils::getChildValueAsBool(node, "PortfolioBasket", false);
+    } else {
+        portfolioBasket_ = false;
     }
-    LOG("Finished Parsing XML doc");
+
+    portfolioId_ = XMLUtils::getChildValue(compNode, "BasketName", false);
+
+    XMLNode* tradesNode = XMLUtils::getChildNode(compNode, "Components");
+    if (portfolioBasket_ && portfolioId_.empty()) {
+        QL_REQUIRE(tradesNode, "Required a Portfolio Id or a Components Node.");
+    }
+    if ((portfolioBasket_ && portfolioId_.empty()) || (!portfolioBasket_)) {
+    
+        vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(tradesNode, "Trade");
+        for (Size i = 0; i < nodes.size(); i++) {
+            string tradeType = XMLUtils::getChildValue(nodes[i], "TradeType", true);
+            string id = XMLUtils::getAttribute(nodes[i], "id");
+            if (id == "") {
+                WLOG("Empty component trade id being overwritten in composite trade " << this->id() << ".");
+            }
+            id = this->id() + "_" + std::to_string(i);
+            DLOG("Parsing composite trade " << this->id() << " node " << i << " with id: " << id);
+
+            QuantLib::ext::shared_ptr<Trade> trade;
+            try {
+                trade = TradeFactory::instance().build(tradeType);
+                trade->id() = id;
+                Envelope componentEnvelope;
+                if (XMLNode* envNode = XMLUtils::getChildNode(nodes[i], "Envelope")) {
+                    componentEnvelope.fromXML(envNode);
+                }
+                Envelope env = this->envelope();
+                // the component trade's envelope is the main trade's envelope with possibly overwritten add fields
+                for (auto const& [k, v] : componentEnvelope.fullAdditionalFields()) {
+                    env.setAdditionalField(k,v);
+                }
+                    
+                trade->setEnvelope(env);
+                trade->fromXML(nodes[i]);
+                trades_.push_back(trade);
+                DLOG("Added Trade " << id << " (" << trade->id() << ")"
+                                    << " type:" << tradeType << " to composite trade " << this->id() << ".");
+            } catch (const std::exception& e) {
+                StructuredTradeErrorMessage(
+                    id, this->tradeType(),
+                    "Failed to build subtrade with id '" + id + "' inside composite trade: ", e.what())
+                    .log();
+            }
+        }
+        LOG("Finished Parsing XML doc");
+    }
 }
 
-XMLNode* CompositeTrade::toXML(XMLDocument& doc) {
+XMLNode* CompositeTrade::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* compNode = doc.allocNode("CompositeTradeData");
     XMLUtils::appendNode(node, compNode);
@@ -224,7 +247,7 @@ map<string, RequiredFixings::FixingDates> CompositeTrade::fixings(const Date& se
 }
 
 std::map<AssetClass, std::set<std::string>>
-CompositeTrade::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+CompositeTrade::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     
     map<AssetClass, std::set<std::string>> result;
     for (const auto& t : trades_) {
@@ -246,6 +269,35 @@ const std::map<std::string, boost::any>& CompositeTrade::additionalData() const 
         ++counter;
     }
     return additionalData_;
+}
+
+void CompositeTrade::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) {
+
+    if (!portfolioId_.empty() && referenceData != nullptr &&
+        (referenceData->hasData(PortfolioBasketReferenceDatum::TYPE, portfolioId_))) {
+        auto ptfRefData = QuantLib::ext::dynamic_pointer_cast<PortfolioBasketReferenceDatum>(
+                referenceData->getData(PortfolioBasketReferenceDatum::TYPE, portfolioId_));
+            QL_REQUIRE(ptfRefData, "could not cast to PortfolioBasketReferenceDatum, this is unexpected");
+            getTradesFromReferenceData(ptfRefData);
+    } else {
+        DLOG("Could not get PortfolioBasketReferenceDatum for Id " << portfolioId_ << " leave data in trade unchanged");
+    }
+   
+}
+
+void CompositeTrade::getTradesFromReferenceData(
+    const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) {
+
+    DLOG("populating portfolio basket data from reference data");
+    QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty cbo reference datum given");
+
+    auto refData = ptfReferenceDatum->getTrades();
+    trades_.clear();
+    for (Size i = 0; i < refData.size(); i++) {
+        trades_.push_back(refData[i]);
+    }
+    LOG("Finished Parsing XML doc");
+
 }
 
 } // namespace data

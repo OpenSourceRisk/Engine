@@ -30,17 +30,17 @@ class ParConversionAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PARCONVERSION";
 
-    ParConversionAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    ParConversionAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
         setLabel(LABEL);
     }
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 };
 
 class ParConversionAnalytic : public Analytic {
 public:
-    ParConversionAnalytic(const boost::shared_ptr<InputParameters>& inputs)
+    ParConversionAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic(std::make_unique<ParConversionAnalyticImpl>(inputs), {"PARCONVERSION"}, inputs, false, false, false,
                    false) {
     }

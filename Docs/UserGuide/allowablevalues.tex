@@ -76,7 +76,7 @@ SVC,SYP,SZL,THB,TJS,TMT,TND,TOP,TRY,TTD,
 TWD,TZS,UAH,UGX,USD,USN,UYI,UYU,UYW,UZS,
 VES,VND,VUV,WST,XAF,XAU,XCD,XOF,
 XPF,XSU,XUA,YER,ZAR,ZMW,ZWL}
-\\ \hline Minor Currencies &  \makecell[l]{\emph{GBp, GBX} (for pennies of GBP) \\ \emph{ILa, ILX} (for agorot of ILS)  \\ \emph{ZAc, ZAC, ZAX} (for cents of ZAR) \\ 
+\\ \hline Minor Currencies &  \makecell[l]{\emph{GBp, GBX} (for pennies of GBP) \\ \emph{ILa, ILX, ILs, ILA} (for agorot of ILS)  \\ \emph{ZAc, ZAC, ZAX} (for cents of ZAR) \\ 
     Note: Minor Currency codes are only supported for equity products. } \\ \hline
 %Pre-Eurozone Currencies   &  \emph{ATS, BEF, DEM, ESP, FIM, FRF, GRD, IEP, ITL, LUF, NLG, PTE} \\ \hline
 Precious Metals treated as Currencies   &   \emph{XAG, XAU, XPD, XPT}  \\ \hline
@@ -146,6 +146,7 @@ Note: Currency codes must also match available currencies in the {\tt simulation
     \emph{US-NYSE, New York stock exchange} & US NYSE Calendar \\ \hline
     \emph{US with Libor impact} & US Calendar for Libor fixings \\ \hline
     \emph{US-NERC} & US NERC Calendar \\ \hline  
+    \emph{US-SOFR} & US SOFR fixing Calendar \\ \hline
     \emph{AR, ARG, ARS} & Argentina Calendar \\ \hline    
     \emph{AU, AUD, AUS} & Australia Calendar \\ \hline
     \emph{AT, AUT, ATS} & Austria Calendar \\ \hline    
@@ -211,6 +212,7 @@ Note: Currency codes must also match available currencies in the {\tt simulation
     \emph{XLON} & UK London Stock Exchange \\ \hline
     \emph{XLME} & UK London Metal Exchange \\ \hline
     \emph{XNYS} & US New York Stock Exchange Calendar \\ \hline
+    \emph{XPAR} & Paris stock exchange \\ \hline
     \emph{WMR} & Thomson Reuters QM/Reuters Spot \\ \hline
     \emph{WeekendsOnly} & Weekends Only Calendar \\ \hline
     \emph{ICE\_FuturesUS} & ICE Futures U.S. Currency, Stock and Credit Index, Metal, Nat Gas, Power, Oil and Environmental \\ \hline
@@ -235,7 +237,7 @@ Note: Currency codes must also match available currencies in the {\tt simulation
     % \emph{LNB\_NYB\_ZUB} & UK, US and Switzerland Calendar \\ \hline
     % \emph{LNB\_NYB\_TRB} & UK, US and Canada Calendar \\ \hline 
     % \emph{LNB\_NYB\_TKB} & UK, US and Japan Calendar \\ \hline   
-    % \emph{NullCalendar} & Null Calendar, i.e. all days are business days \\ \hline                 
+    \emph{NullCalendar, Null} & Null Calendar, i.e. all days are business days \\ \hline                 
   \caption{Allowable Values for Calendar. Combinations of calendars can be provided using comma separated calendar names.}
   \label{tab:calendar}
 \end{longtable}

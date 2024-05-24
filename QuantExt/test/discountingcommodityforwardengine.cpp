@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(testPricing) {
     dfs[0] = 1.0;
     dates[1] = maturity;
     dfs[1] = 0.85;
-    Handle<YieldTermStructure> discountCurve(boost::make_shared<InterpolatedDiscountCurve<LogLinear> >(
+    Handle<YieldTermStructure> discountCurve(QuantLib::ext::make_shared<InterpolatedDiscountCurve<LogLinear> >(
         InterpolatedDiscountCurve<LogLinear>(dates, dfs, dayCounter)));
 
     // Commodity Price curve
@@ -68,54 +68,54 @@ BOOST_AUTO_TEST_CASE(testPricing) {
     prices[0] = 1346.0;
     prices[1] = 1384.0;
     Handle<PriceTermStructure> priceCurve(
-        boost::make_shared<InterpolatedPriceCurve<Linear> >(asof, dates, prices, dayCounter, USDCurrency()));
+        QuantLib::ext::make_shared<InterpolatedPriceCurve<Linear> >(asof, dates, prices, dayCounter, USDCurrency()));
 
     // Create the engine
-    boost::shared_ptr<DiscountingCommodityForwardEngine> engine =
-        boost::make_shared<DiscountingCommodityForwardEngine>(discountCurve);
+    QuantLib::ext::shared_ptr<DiscountingCommodityForwardEngine> engine =
+        QuantLib::ext::make_shared<DiscountingCommodityForwardEngine>(discountCurve);
 
     // Set evaluation date
     Settings::instance().evaluationDate() = asof;
 
     // Long 100 units with strike 1380.0
-    boost::shared_ptr<CommodityIndex> index = boost::make_shared<CommoditySpotIndex>(
+    QuantLib::ext::shared_ptr<CommodityIndex> index = QuantLib::ext::make_shared<CommoditySpotIndex>(
         name, NullCalendar(), priceCurve);
     Position::Type position = Position::Long;
     Real quantity = 100;
     Real strike = 1380.0;
-    boost::shared_ptr<CommodityForward> forward =
-        boost::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
+    QuantLib::ext::shared_ptr<CommodityForward> forward =
+        QuantLib::ext::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
     forward->setPricingEngine(engine);
     BOOST_CHECK_CLOSE(forward->NPV(), quantity * (prices[1] - strike) * dfs[1], tolerance);
 
     // Short 100 units with strike 1380.0
     position = Position::Short;
-    forward = boost::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
+    forward = QuantLib::ext::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
     forward->setPricingEngine(engine);
     BOOST_CHECK_CLOSE(forward->NPV(), -quantity * (prices[1] - strike) * dfs[1], tolerance);
 
     // Short 50 units with strike 1380.0
     quantity = 50.0;
-    forward = boost::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
+    forward = QuantLib::ext::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
     forward->setPricingEngine(engine);
     BOOST_CHECK_CLOSE(forward->NPV(), -quantity * (prices[1] - strike) * dfs[1], tolerance);
 
     // Short 50 units with strike 1375.0
     strike = 1375.0;
-    forward = boost::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
+    forward = QuantLib::ext::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
     forward->setPricingEngine(engine);
     BOOST_CHECK_CLOSE(forward->NPV(), -quantity * (prices[1] - strike) * dfs[1], tolerance);
 
     // Bring maturity of forward in 6 months
     maturity = Date(19, Aug, 2018);
-    forward = boost::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
+    forward = QuantLib::ext::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
     forward->setPricingEngine(engine);
     BOOST_CHECK_CLOSE(forward->NPV(),
                       -quantity * (priceCurve->price(maturity) - strike) * discountCurve->discount(maturity),
                       tolerance);
 
     // Make maturity of forward equal to today
-    forward = boost::make_shared<CommodityForward>(index, currency, position, quantity, asof, strike);
+    forward = QuantLib::ext::make_shared<CommodityForward>(index, currency, position, quantity, asof, strike);
     // includeReferenceDateEvents_ of Settings is false by default => value should equal 0
     forward->setPricingEngine(engine);
     BOOST_CHECK_CLOSE(forward->NPV(), 0.0, tolerance);
@@ -125,20 +125,20 @@ BOOST_AUTO_TEST_CASE(testPricing) {
     BOOST_CHECK_CLOSE(forward->NPV(), -quantity * (prices[0] - strike), tolerance);
     // Override behaviour in engine i.e. don't include flows on reference date even when
     // Settings::instance().includeReferenceDateEvents() is true
-    engine = boost::make_shared<DiscountingCommodityForwardEngine>(discountCurve, false);
+    engine = QuantLib::ext::make_shared<DiscountingCommodityForwardEngine>(discountCurve, false);
     forward->setPricingEngine(engine);
     BOOST_CHECK_CLOSE(forward->NPV(), 0.0, tolerance);
     // Trying the other way around should not work as the trade is marked as expired
     Settings::instance().includeReferenceDateEvents() = false;
-    engine = boost::make_shared<DiscountingCommodityForwardEngine>(discountCurve, true);
+    engine = QuantLib::ext::make_shared<DiscountingCommodityForwardEngine>(discountCurve, true);
     forward->setPricingEngine(engine);
     BOOST_CHECK_CLOSE(forward->NPV(), 0.0, tolerance);
 
     // Reinstate original maturity and change the npv date in the engine to 2 days after asof
     maturity = Date(19, Feb, 2019);
-    forward = boost::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
+    forward = QuantLib::ext::make_shared<CommodityForward>(index, currency, position, quantity, maturity, strike);
     Date npvDate = asof + 2 * Days;
-    engine = boost::make_shared<DiscountingCommodityForwardEngine>(discountCurve, boost::none, npvDate);
+    engine = QuantLib::ext::make_shared<DiscountingCommodityForwardEngine>(discountCurve, boost::none, npvDate);
     forward->setPricingEngine(engine);
     DiscountFactor npvDateDiscount = discountCurve->discount(npvDate);
     BOOST_CHECK_CLOSE(forward->NPV(), -quantity * (prices[1] - strike) * dfs[1] / npvDateDiscount, tolerance);

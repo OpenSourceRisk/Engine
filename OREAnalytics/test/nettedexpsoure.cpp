@@ -74,14 +74,14 @@ BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CollateralisedExposureTest)
 
-boost::shared_ptr<data::Conventions> convs() {
-    boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
+QuantLib::ext::shared_ptr<data::Conventions> convs() {
+    QuantLib::ext::shared_ptr<data::Conventions> conventions(new data::Conventions());
 
-    boost::shared_ptr<data::Convention> swapIndexConv(
+    QuantLib::ext::shared_ptr<data::Convention> swapIndexConv(
         new data::SwapIndexConvention("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
     conventions->add(swapIndexConv);
 
-    boost::shared_ptr<data::Convention> swapConv(
+    QuantLib::ext::shared_ptr<data::Convention> swapConv(
         new data::IRSwapConvention("EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
     conventions->add(swapConv);
 
@@ -90,9 +90,9 @@ boost::shared_ptr<data::Conventions> convs() {
     return conventions;
 }
 
-boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_ptr<EngineFactory>& factory) {
+QuantLib::ext::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
 
     vector<string> ccys = {"EUR"};
 
@@ -155,15 +155,15 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
         bool isPayer = true;
 
         // fixed Leg - with dummy rate
-        LegData fixedLeg(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy, fixedSchedule,
+        LegData fixedLeg(QuantLib::ext::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy, fixedSchedule,
                          fixDC, notional);
 
         // float Leg
         vector<double> spreads(1, 0);
-        LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spread), !isPayer, ccy,
+        LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>(index, days, false, spread), !isPayer, ccy,
                             floatSchedule, floatDC, notional);
 
-        boost::shared_ptr<Trade> swap(new data::Swap(env, floatingLeg, fixedLeg));
+        QuantLib::ext::shared_ptr<Trade> swap(new data::Swap(env, floatingLeg, fixedLeg));
 
         // id
         oss.clear();
@@ -189,7 +189,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
         maturity += dc.yearFraction(today, trade->maturity());
 
         // fixed Freq
-        boost::shared_ptr<data::Swap> swap = boost::dynamic_pointer_cast<data::Swap>(trade);
+        QuantLib::ext::shared_ptr<data::Swap> swap = QuantLib::ext::dynamic_pointer_cast<data::Swap>(trade);
         string floatFreq = swap->legData()[0].schedule().rules().front().tenor();
         string fixFreq = swap->legData()[1].schedule().rules().front().tenor();
         QL_REQUIRE(swap->legData()[0].legType() == "Floating" && swap->legData()[1].legType() == "Fixed", "Leg mixup");
@@ -216,7 +216,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
     return portfolio;
 }
 
-boost::shared_ptr<CrossAssetModel> buildCrossAssetModel(boost::shared_ptr<Market>& initMarket){
+QuantLib::ext::shared_ptr<CrossAssetModel> buildCrossAssetModel(QuantLib::ext::shared_ptr<Market>& initMarket){
     // Config
     // Build IR configurations
     CalibrationType calibrationType = CalibrationType::Bootstrap;
@@ -228,17 +228,17 @@ boost::shared_ptr<CrossAssetModel> buildCrossAssetModel(boost::shared_ptr<Market
     vector<Time> hTimes = {};
     vector<Time> aTimes = {};
 
-    std::vector<boost::shared_ptr<IrModelData>> irConfigs;
+    std::vector<QuantLib::ext::shared_ptr<IrModelData>> irConfigs;
 
     vector<Real> hValues = {0.02};
     vector<Real> aValues = {0.008};
-    irConfigs.push_back(boost::make_shared<IrLgmData>(
+    irConfigs.push_back(QuantLib::ext::make_shared<IrLgmData>(
         "EUR", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
 
     hValues = {0.03};
     aValues = {0.009};
-    irConfigs.push_back(boost::make_shared<IrLgmData>(
+    irConfigs.push_back(QuantLib::ext::make_shared<IrLgmData>(
         "USD", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
 
@@ -248,29 +248,29 @@ boost::shared_ptr<CrossAssetModel> buildCrossAssetModel(boost::shared_ptr<Market
     vector<string> optionStrikes(optionExpiries.size(), "ATMF");
     vector<Time> sigmaTimes = {};
 
-    std::vector<boost::shared_ptr<FxBsData>> fxConfigs;
+    std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
 
     vector<Real> sigmaValues = {0.15};
-    fxConfigs.push_back(boost::make_shared<FxBsData>("USD", "EUR", calibrationType, true, ParamType::Piecewise,
+    fxConfigs.push_back(QuantLib::ext::make_shared<FxBsData>("USD", "EUR", calibrationType, true, ParamType::Piecewise,
                                                      sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
     map<CorrelationKey, Handle<Quote>> corr;
     CorrelationFactor f_1{ CrossAssetModel::AssetType::IR, "EUR", 0 };
     CorrelationFactor f_2{ CrossAssetModel::AssetType::IR, "USD", 0 };
-    corr[make_pair(f_1, f_2)] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
+    corr[make_pair(f_1, f_2)] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.6));
 
-    boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, corr));
+    QuantLib::ext::shared_ptr<CrossAssetModelData> config(QuantLib::ext::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, corr));
 
     // Model Builder & Model
     // model builder
-    boost::shared_ptr<CrossAssetModelBuilder> modelBuilder(new CrossAssetModelBuilder(initMarket, config));
+    QuantLib::ext::shared_ptr<CrossAssetModelBuilder> modelBuilder(new CrossAssetModelBuilder(initMarket, config));
     return *modelBuilder->model();
 
 }
 
-boost::shared_ptr<analytics::ScenarioSimMarket> buildScenarioSimMarket(boost::shared_ptr<DateGrid> dateGrid,
-                                                                       boost::shared_ptr<Market>& initMarket, 
-                                                                       boost::shared_ptr<CrossAssetModel>& model,  
+QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> buildScenarioSimMarket(QuantLib::ext::shared_ptr<DateGrid> dateGrid,
+                                                                       QuantLib::ext::shared_ptr<Market>& initMarket, 
+                                                                       QuantLib::ext::shared_ptr<CrossAssetModel>& model,  
                                                                        Size samples=1,
                                                                        Size seed=5,
                                                                        bool antithetic=false){
@@ -282,7 +282,7 @@ boost::shared_ptr<analytics::ScenarioSimMarket> buildScenarioSimMarket(boost::sh
     ccys.push_back(baseCcy);
     ccys.push_back("USD");
 
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
     parameters->baseCcy() = baseCcy;
     parameters->setDiscountCurveNames(ccys);
     parameters->setYieldCurveTenors("",
@@ -309,15 +309,15 @@ boost::shared_ptr<analytics::ScenarioSimMarket> buildScenarioSimMarket(boost::sh
     parameters->setAdditionalScenarioDataCcys({"EUR"});
 
     // Path generator
-    if (auto tmp = boost::dynamic_pointer_cast<CrossAssetStateProcess>(model->stateProcess())) {
+    if (auto tmp = QuantLib::ext::dynamic_pointer_cast<CrossAssetStateProcess>(model->stateProcess())) {
         tmp->resetCache(dateGrid->timeGrid().size() - 1);
     }
-    boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
-        boost::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dateGrid->timeGrid(), seed, antithetic);
+    QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
+        QuantLib::ext::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dateGrid->timeGrid(), seed, antithetic);
 
     // build scenario generator
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
-    boost::shared_ptr<ScenarioGenerator> scenarioGenerator = boost::make_shared<CrossAssetModelScenarioGenerator>(model, 
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator = QuantLib::ext::make_shared<CrossAssetModelScenarioGenerator>(model, 
                                                                                                                   pathGen, 
                                                                                                                   scenarioFactory, 
                                                                                                                   parameters, 
@@ -327,19 +327,19 @@ boost::shared_ptr<analytics::ScenarioSimMarket> buildScenarioSimMarket(boost::sh
 
     // build scenario sim market
     convs();
-    auto simMarket = boost::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters);
+    auto simMarket = QuantLib::ext::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
-    boost::shared_ptr<AggregationScenarioData> scenarioData = boost::make_shared<InMemoryAggregationScenarioData>(dateGrid->timeGrid().size(), samples);
+    QuantLib::ext::shared_ptr<AggregationScenarioData> scenarioData = QuantLib::ext::make_shared<InMemoryAggregationScenarioData>(dateGrid->timeGrid().size(), samples);
     simMarket->aggregationScenarioData() = scenarioData;
     
     return simMarket;
 }
 
-boost::shared_ptr<NPVCube> buildNPVCube(boost::shared_ptr<DateGrid> dateGrid, 
+QuantLib::ext::shared_ptr<NPVCube> buildNPVCube(QuantLib::ext::shared_ptr<DateGrid> dateGrid, 
                                         bool withCloseOutGrid,
-                                        boost::shared_ptr<analytics::ScenarioSimMarket>& simMarket,
-                                        boost::shared_ptr<Portfolio>& portfolio,
+                                        QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket>& simMarket,
+                                        QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                                         bool mporStickyDate=false,
                                         Size samples=1,
                                         Size seed=5){
@@ -355,14 +355,14 @@ boost::shared_ptr<NPVCube> buildNPVCube(boost::shared_ptr<DateGrid> dateGrid,
     // Calculate Cube
     boost::timer::cpu_timer t;
     //BOOST_TEST_MESSAGE("dg->numDates() " << dateGrid->valuationDates().size()<<", " <<"dg->dates() "<<dateGrid->dates().size());
-    boost::shared_ptr<NPVCube> cube =
-        boost::make_shared<DoublePrecisionInMemoryCubeN>(today, portfolio->ids(), dateGrid->valuationDates(), samples, depth);
+    QuantLib::ext::shared_ptr<NPVCube> cube =
+        QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(today, portfolio->ids(), dateGrid->valuationDates(), samples, depth);
 
-    vector<boost::shared_ptr<ValuationCalculator>> calculators;
-    boost::shared_ptr<NPVCalculator> npvCalc = boost::make_shared<NPVCalculator>("EUR");
+    vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
+    QuantLib::ext::shared_ptr<NPVCalculator> npvCalc = QuantLib::ext::make_shared<NPVCalculator>("EUR");
     calculators.push_back(npvCalc);
     if (withCloseOutGrid)
-        calculators.push_back(boost::make_shared<MPORCalculator>(npvCalc));
+        calculators.push_back(QuantLib::ext::make_shared<MPORCalculator>(npvCalc));
     BOOST_TEST_MESSAGE("mporStickyDate "<<mporStickyDate);
     valEngine.buildCube(portfolio, cube, calculators, mporStickyDate);
     t.stop();
@@ -386,10 +386,10 @@ boost::shared_ptr<NPVCube> buildNPVCube(boost::shared_ptr<DateGrid> dateGrid,
 
 struct TestData : ore::test::OreaTopLevelFixture {
 
-    TestData(Date referenceDate, boost::shared_ptr<DateGrid> dateGrid, bool withCloseOutGrid = false, bool mporStickyDate = false, Size samples=1, Size seed=5){
+    TestData(Date referenceDate, QuantLib::ext::shared_ptr<DateGrid> dateGrid, bool withCloseOutGrid = false, bool mporStickyDate = false, Size samples=1, Size seed=5){
         // Init market
         BOOST_TEST_MESSAGE("Setting initial market ...");
-        this->initMarket_ = boost::make_shared<TestMarket>(referenceDate);
+        this->initMarket_ = QuantLib::ext::make_shared<TestMarket>(referenceDate);
         BOOST_TEST_MESSAGE("Setting initial market done!");
 
         BOOST_TEST_MESSAGE("Building CAM ...");
@@ -402,11 +402,11 @@ struct TestData : ore::test::OreaTopLevelFixture {
 
         // Build Portfolio
         BOOST_TEST_MESSAGE("Building Portfolio ...");
-        boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
         data->model("Swap") = "DiscountedCashflows";
         data->engine("Swap") = "DiscountingSwapEngine";
-        boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, this->simMarket_);
-        //factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
+        QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(data, this->simMarket_);
+        //factory->registerBuilder(QuantLib::ext::make_shared<SwapEngineBuilder>());
         Size portfolioSize = 1;
         this->portfolio_ = buildPortfolio(portfolioSize, factory);
         BOOST_TEST_MESSAGE("Building Portfolio done!");
@@ -417,11 +417,11 @@ struct TestData : ore::test::OreaTopLevelFixture {
         BOOST_TEST_MESSAGE("Building NPV done!");
     }
 
-    boost::shared_ptr<Market> initMarket_;
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket_;
-    boost::shared_ptr<QuantExt::CrossAssetModel> model_;
-    boost::shared_ptr<NPVCube> cube_;
-    boost::shared_ptr<Portfolio> portfolio_;
+    QuantLib::ext::shared_ptr<Market> initMarket_;
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> simMarket_;
+    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;
+    QuantLib::ext::shared_ptr<NPVCube> cube_;
+    QuantLib::ext::shared_ptr<Portfolio> portfolio_;
 };
 
 struct CachedResultsData : ore::test::OreaTopLevelFixture {
@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
     Settings::instance().evaluationDate() = referenceDate;
 
     string dateGridStr;
-    boost::shared_ptr<DateGrid> dateGrid;
+    QuantLib::ext::shared_ptr<DateGrid> dateGrid;
     std::string nettingSetMpor = "1W";
     BOOST_TEST_MESSAGE("Neting-set mpor is "<< nettingSetMpor);
     vector<bool> withCloseOutGrid = {false, true}; 
@@ -534,12 +534,12 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         std::vector<CollateralExposureHelper::CalculationType> calcTypes; 
         if (withCloseOutGrid[k]){
             dateGridStr = "13,1M";
-            dateGrid = boost::make_shared<DateGrid>(dateGridStr);
+            dateGrid = QuantLib::ext::make_shared<DateGrid>(dateGridStr);
             calcTypes= {CollateralExposureHelper::CalculationType::NoLag};
         }
         else{
             dateGridStr = "13,1W";
-            dateGrid = boost::make_shared<DateGrid>(dateGridStr);
+            dateGrid = QuantLib::ext::make_shared<DateGrid>(dateGridStr);
             calcTypes= {CollateralExposureHelper::CalculationType::Symmetric,
                         CollateralExposureHelper::CalculationType::AsymmetricCVA,
                         CollateralExposureHelper::CalculationType::AsymmetricDVA
@@ -564,9 +564,9 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         for(Size i=0; i<dateGrid->times().size(); i++)
             BOOST_TEST_MESSAGE("t_"<<i+1<<", "<<QuantLib::io::iso_date(dateGrid->dates()[i]));
         
-        boost::shared_ptr<Market> initMarket = td.initMarket_;
-        boost::shared_ptr<NPVCube> cube = td.cube_;
-        boost::shared_ptr<Portfolio> portfolio = td.portfolio_;
+        QuantLib::ext::shared_ptr<Market> initMarket = td.initMarket_;
+        QuantLib::ext::shared_ptr<NPVCube> cube = td.cube_;
+        QuantLib::ext::shared_ptr<Portfolio> portfolio = td.portfolio_;
 
         std::string nettingSetId = portfolio->trades().begin()->second->envelope().nettingSetId();
         NettingSetDetails nettingSetDetails(nettingSetId);
@@ -577,16 +577,16 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         }
 
         std::vector<std::string> elgColls = {"EUR"};
-        boost::shared_ptr<NettingSetDefinition> nettingSetDefinition = boost::make_shared<NettingSetDefinition>(nettingSetDetails, 
+        QuantLib::ext::shared_ptr<NettingSetDefinition> nettingSetDefinition = QuantLib::ext::make_shared<NettingSetDefinition>(nettingSetDetails, 
                                                                                                                 "Bilateral", "EUR", "EUR-EONIA", 
                                                                                                                 0.0, 0.0, 0.0, 0.0, 0.0, 
                                                                                                                 "FIXED", "1D", "1D",
                                                                                                                 nettingSetMpor, 0.0, 0.0, elgColls);
-        boost::shared_ptr<NettingSetManager> nettingSetManager = boost::make_shared<NettingSetManager>();
+        QuantLib::ext::shared_ptr<NettingSetManager> nettingSetManager = QuantLib::ext::make_shared<NettingSetManager>();
         nettingSetManager->add(nettingSetDefinition);
 
         // Empty balances for now
-        boost::shared_ptr<CollateralBalances> collateralBalances = boost::make_shared<CollateralBalances>();
+        QuantLib::ext::shared_ptr<CollateralBalances> collateralBalances = QuantLib::ext::make_shared<CollateralBalances>();
         
         map<string, vector<vector<Real>>> nettingSetDefaultValue;
         map<string, vector<vector<Real>>> nettingSetCloseOutValue;
@@ -598,15 +598,15 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         
         std::string fileName;
         Handle<AggregationScenarioData> asd;
-        boost::shared_ptr<CubeInterpretation> cubeInterpreter;
+        QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpreter;
         if (withCloseOutGrid[k]) {
             fileName = "scenarioData_closeout.csv";
             asd = Handle<AggregationScenarioData>(loadAggregationScenarioData(fileName));
-            cubeInterpreter = boost::make_shared<CubeInterpretation>(true, true, asd, dateGrid);
+            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, true, asd, dateGrid);
         } else {
             fileName = "scenarioData.csv";
             asd = Handle<AggregationScenarioData>(loadAggregationScenarioData(fileName));
-            cubeInterpreter = boost::make_shared<CubeInterpretation>(true, false, asd);
+            cubeInterpreter = QuantLib::ext::make_shared<CubeInterpretation>(true, false, asd);
         }
 
         if (!withCompounding){
@@ -616,9 +616,9 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
         }
 
         vector<string> regressors = {"EUR-EURIBOR-6M"};
-        boost::shared_ptr<InputParameters> inputs = boost::make_shared<InputParameters>();
-        boost::shared_ptr<RegressionDynamicInitialMarginCalculator> dimCalculator =
-            boost::make_shared<RegressionDynamicInitialMarginCalculator>(inputs, portfolio, cube, cubeInterpreter, *asd,
+        QuantLib::ext::shared_ptr<InputParameters> inputs = QuantLib::ext::make_shared<InputParameters>();
+        QuantLib::ext::shared_ptr<RegressionDynamicInitialMarginCalculator> dimCalculator =
+            QuantLib::ext::make_shared<RegressionDynamicInitialMarginCalculator>(inputs, portfolio, cube, cubeInterpreter, *asd,
                                                                          0.99, 14, 2, regressors);
 
         BOOST_TEST_MESSAGE("initial NPV at "<< QuantLib::io::iso_date(referenceDate)<<": "<<cube->getT0(0));
@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
                 QL_FAIL("Collateral calculation type not covered");
             BOOST_TEST_MESSAGE("Calculation type: "<< calcTypeStr); 
 
-            boost::shared_ptr<ExposureCalculator> exposureCalculator = boost::make_shared<ExposureCalculator>(portfolio, cube, cubeInterpreter,
+            QuantLib::ext::shared_ptr<ExposureCalculator> exposureCalculator = QuantLib::ext::make_shared<ExposureCalculator>(portfolio, cube, cubeInterpreter,
                                                                     initMarket, false, "EUR", "Market",
                                                                     0.99, calcType, false, false);
             exposureCalculator->build();
@@ -658,8 +658,8 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
             nettingSetCloseOutValue = exposureCalculator->nettingSetCloseOutValue();
             nettingSetMporPositiveFlow = exposureCalculator->nettingSetMporPositiveFlow();
             nettingSetMporNegativeFlow = exposureCalculator->nettingSetMporNegativeFlow();
-            boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator =
-                boost::make_shared<NettedExposureCalculator>(
+            QuantLib::ext::shared_ptr<NettedExposureCalculator> nettedExposureCalculator =
+                QuantLib::ext::make_shared<NettedExposureCalculator>(
                     portfolio, initMarket, cube, "EUR", "Market", 0.99, calcType, false, nettingSetManager, collateralBalances,
                     nettingSetDefaultValue, nettingSetCloseOutValue, nettingSetMporPositiveFlow,
                     nettingSetMporNegativeFlow, *asd, cubeInterpreter, false, dimCalculator, false, false, 0.1,

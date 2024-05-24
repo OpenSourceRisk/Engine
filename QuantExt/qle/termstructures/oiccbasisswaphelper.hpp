@@ -40,8 +40,8 @@ class OICCBSHelper : public RelativeDateRateHelper {
 public:
     OICCBSHelper(Natural settlementDays,
                  const Period& term, // swap maturity
-                 const boost::shared_ptr<OvernightIndex>& payIndex, const Period& payTenor,
-                 const boost::shared_ptr<OvernightIndex>& recIndex, const Period& recTenor,
+                 const QuantLib::ext::shared_ptr<OvernightIndex>& payIndex, const Period& payTenor,
+                 const QuantLib::ext::shared_ptr<OvernightIndex>& recIndex, const Period& recTenor,
                  const Handle<Quote>& spreadQuote, const Handle<YieldTermStructure>& fixedDiscountCurve,
                  bool spreadQuoteOnPayLeg, bool fixedDiscountOnPayLeg);
     //! \name RateHelper interface
@@ -51,7 +51,7 @@ public:
     //@}
     //! \name inspectors
     //@{
-    boost::shared_ptr<OvernightIndexedCrossCcyBasisSwap> swap() const { return swap_; }
+    QuantLib::ext::shared_ptr<OvernightIndexedCrossCcyBasisSwap> swap() const { return swap_; }
     //@}
     //! \name Visitability
     //@{
@@ -62,15 +62,15 @@ protected:
 
     Natural settlementDays_;
     Period term_;
-    boost::shared_ptr<OvernightIndex> payIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> payIndex_;
     Period payTenor_;
-    boost::shared_ptr<OvernightIndex> recIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> recIndex_;
     Period recTenor_;
     Handle<YieldTermStructure> fixedDiscountCurve_;
     bool spreadQuoteOnPayLeg_;
     bool fixedDiscountOnPayLeg_;
 
-    boost::shared_ptr<OvernightIndexedCrossCcyBasisSwap> swap_;
+    QuantLib::ext::shared_ptr<OvernightIndexedCrossCcyBasisSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
 };
 } // namespace QuantExt

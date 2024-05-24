@@ -36,7 +36,7 @@ void EquityPositionData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* EquityPositionData::toXML(XMLDocument& doc) {
+XMLNode* EquityPositionData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("EquityPositionData");
     XMLUtils::addChild(doc, n, "Quantity", quantity_);
     for (auto& u : underlyings_) {
@@ -45,7 +45,15 @@ XMLNode* EquityPositionData::toXML(XMLDocument& doc) {
     return n;
 }
 
-void EquityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void EquityPosition::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has an EQ position underlying
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     DLOG("EquityPosition::build() called for " << id());
     QL_REQUIRE(!data_.underlyings().empty(), "EquityPosition::build(): no underlyings given");
     indices_.clear();
@@ -77,29 +85,22 @@ void EquityPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& en
 
     // set instrument
     auto qlInstr =
-        boost::make_shared<EquityPositionInstrumentWrapper>(data_.quantity(), indices_, weights_, fxConversion_);
-    qlInstr->setPricingEngine(boost::make_shared<EquityPositionInstrumentWrapperEngine>());
+        QuantLib::ext::make_shared<EquityPositionInstrumentWrapper>(data_.quantity(), indices_, weights_, fxConversion_);
+    qlInstr->setPricingEngine(QuantLib::ext::make_shared<EquityPositionInstrumentWrapperEngine>());
     setSensitivityTemplate(std::string());
-    instrument_ = boost::make_shared<VanillaInstrument>(qlInstr);
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qlInstr);
 
     // no sensible way to set these members
     maturity_ = Date::maxDate();
     notional_ = Null<Real>();
     notionalCurrency_ = "";
-
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has an EQ position underlying
-    additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
     
     // leave legs empty
 }
 
 void EquityPosition::setNpvCurrencyConversion(const std::string& ccy, const Handle<Quote>& conversion) {
     npvCurrency_ = ccy;
-    boost::static_pointer_cast<EquityPositionInstrumentWrapper>(instrument_->qlInstrument())
+    QuantLib::ext::static_pointer_cast<EquityPositionInstrumentWrapper>(instrument_->qlInstrument())
         ->setNpvCurrencyConversion(conversion);
 }
 
@@ -108,14 +109,14 @@ void EquityPosition::fromXML(XMLNode* node) {
     data_.fromXML(XMLUtils::getChildNode(node, "EquityPositionData"));
 }
 
-XMLNode* EquityPosition::toXML(XMLDocument& doc) {
+XMLNode* EquityPosition::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, data_.toXML(doc));
     return node;
 }
 
 std::map<AssetClass, std::set<std::string>>
-EquityPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+EquityPosition::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     for (auto const& u : data_.underlyings()) {
         result[AssetClass::EQ].insert(u.name());
@@ -124,7 +125,7 @@ EquityPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>&
 }
 
 EquityPositionInstrumentWrapper::EquityPositionInstrumentWrapper(
-    const Real quantity, const std::vector<boost::shared_ptr<QuantExt::EquityIndex2>>& equities,
+    const Real quantity, const std::vector<QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>>& equities,
     const std::vector<Real>& weights, const std::vector<Handle<Quote>>& fxConversion)
     : quantity_(quantity), equities_(equities), weights_(weights), fxConversion_(fxConversion) {
     QL_REQUIRE(equities_.size() == weights_.size(), "EquityPositionInstrumentWrapper: equities size ("

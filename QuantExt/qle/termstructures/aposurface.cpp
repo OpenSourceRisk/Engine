@@ -28,11 +28,11 @@ using std::vector;
 namespace QuantExt {
 
 ApoFutureSurface::ApoFutureSurface(const Date& referenceDate, const vector<Real>& moneynessLevels,
-                                   const boost::shared_ptr<CommodityIndex>& index,
+                                   const QuantLib::ext::shared_ptr<CommodityIndex>& index,
                                    const Handle<PriceTermStructure>& pts, const Handle<YieldTermStructure>& yts,
-                                   const boost::shared_ptr<FutureExpiryCalculator>& expCalc,
+                                   const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& expCalc,
                                    const Handle<BlackVolTermStructure>& baseVts,
-                                   const boost::shared_ptr<FutureExpiryCalculator>& baseExpCalc, Real beta,
+                                   const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& baseExpCalc, Real beta,
                                    bool flatStrikeExtrapolation, const boost::optional<Period>& maxTenor)
     : BlackVolatilityTermStructure(referenceDate, baseVts->calendar(), baseVts->businessDayConvention(),
                                    baseVts->dayCounter()),
@@ -80,9 +80,9 @@ ApoFutureSurface::ApoFutureSurface(const Date& referenceDate, const vector<Real>
     }
 
     // Spot quote based on the price curve and adapted yield term structure
-    Handle<Quote> spot(boost::make_shared<DerivedPriceQuote>(pts));
+    Handle<Quote> spot(QuantLib::ext::make_shared<DerivedPriceQuote>(pts));
     Handle<YieldTermStructure> pyts =
-        Handle<YieldTermStructure>(boost::make_shared<PriceTermStructureAdapter>(*pts, *yts));
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<PriceTermStructureAdapter>(*pts, *yts));
     pyts->enableExtrapolation();
 
     // Hard-code this to false.
@@ -94,20 +94,20 @@ ApoFutureSurface::ApoFutureSurface(const Date& referenceDate, const vector<Real>
     vector<vector<Handle<Quote> > > vols(moneynessLevels.size());
     for (Size i = 0; i < moneynessLevels.size(); i++) {
         for (Size j = 0; j < apoTimes.size(); j++) {
-            vols_[i].push_back(boost::make_shared<SimpleQuote>(0.0));
+            vols_[i].push_back(QuantLib::ext::make_shared<SimpleQuote>(0.0));
             vols[i].push_back(Handle<Quote>(vols_[i].back()));
         }
     }
 
     // Initialise the underlying helping volatility structure.
-    vts_ = boost::make_shared<BlackVarianceSurfaceMoneynessForward>(calendar_, spot, apoTimes, moneynessLevels, vols,
+    vts_ = QuantLib::ext::make_shared<BlackVarianceSurfaceMoneynessForward>(calendar_, spot, apoTimes, moneynessLevels, vols,
                                                                     baseVts->dayCounter(), pyts, yts, stickyStrike,
                                                                     flatStrikeExtrapolation);
 
     vts_->enableExtrapolation();
 
     // Initialise the engine for performing the APO valuations.
-    apoEngine_ = boost::make_shared<CommodityAveragePriceOptionAnalyticalEngine>(yts, baseVts, beta);
+    apoEngine_ = QuantLib::ext::make_shared<CommodityAveragePriceOptionAnalyticalEngine>(yts, baseVts, beta);
 }
 
 Date ApoFutureSurface::maxDate() const { return vts_->maxDate(); }
@@ -137,7 +137,7 @@ void ApoFutureSurface::performCalculations() const {
 
         // Set up the APO cashflow with from apoDates_[j-1] to apoDates_[j]
         auto cf =
-            boost::make_shared<CommodityIndexedAverageCashFlow>(quantity, apoDates_[j - 1], apoDates_[j], apoDates_[j],
+            QuantLib::ext::make_shared<CommodityIndexedAverageCashFlow>(quantity, apoDates_[j - 1], apoDates_[j], apoDates_[j],
                                                                 index_, Calendar(), 0.0, 1.0, true, 0, 0, baseExpCalc_);
 
         // The APO cashflow forward rate is the amount
@@ -150,7 +150,7 @@ void ApoFutureSurface::performCalculations() const {
         for (Size i = 0; i < vts_->moneyness().size(); i++) {
 
             // "exercise date" is just the last date of the APO cashflow.
-            auto exercise = boost::make_shared<EuropeanExercise>(apoDates_[j]);
+            auto exercise = QuantLib::ext::make_shared<EuropeanExercise>(apoDates_[j]);
 
             // Apply moneyness to forward rate to get current strike
             Real strike = vts_->moneyness()[i] * forward;
@@ -181,7 +181,7 @@ void ApoFutureSurface::performCalculations() const {
     }
 }
 
-const boost::shared_ptr<BlackVarianceSurfaceMoneyness>& ApoFutureSurface::vts() const { return vts_; }
+const QuantLib::ext::shared_ptr<BlackVarianceSurfaceMoneyness>& ApoFutureSurface::vts() const { return vts_; }
 
 Volatility ApoFutureSurface::blackVolImpl(Time t, Real strike) const {
     calculate();

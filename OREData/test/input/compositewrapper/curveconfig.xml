@@ -164,8 +164,8 @@
             <Quote>BASIS_SWAP/BASIS_SPREAD/6M/3M/GBP/70Y</Quote>
           </Quotes>
           <Conventions>GBP-LIBOR-3M-6M-BASIS-CONVENTIONS</Conventions>
-          <ProjectionCurveLong>GBP6M</ProjectionCurveLong>
-          <ProjectionCurveShort/>
+          <ProjectionCurvePay>GBP6M</ProjectionCurvePay>
+          <ProjectionCurveReceive/>
         </TenorBasis>
       </Segments>
     </YieldCurve>

@@ -79,13 +79,13 @@ public:
     Real fixedRecoveryRate() const { return fixedRecoveryRate_; }
     //@}
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
     virtual void fromXML(ore::data::XMLNode* node) override;
-    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
 private:
-    void buildWithSwapUnderlying(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory);
-    void buildWithTlockUnderlying(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory);
+    void buildWithSwapUnderlying(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory);
+    void buildWithTlockUnderlying(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory);
 
     std::vector<ore::data::LegData> underlying_;
     ore::data::TreasuryLockData tlockData_;

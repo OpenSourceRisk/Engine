@@ -36,7 +36,7 @@ void EquityOptionUnderlyingData::fromXML(XMLNode* node) {
     strike_ = XMLUtils::getChildValueAsDouble(node, "Strike");
 }
 
-XMLNode* EquityOptionUnderlyingData::toXML(XMLDocument& doc) {
+XMLNode* EquityOptionUnderlyingData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("Underlying");
     XMLUtils::appendNode(n, underlying_.toXML(doc));
     XMLUtils::appendNode(n, optionData_.toXML(doc));
@@ -55,7 +55,7 @@ void EquityOptionPositionData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* EquityOptionPositionData::toXML(XMLDocument& doc) {
+XMLNode* EquityOptionPositionData::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("EquityOptionPositionData");
     XMLUtils::addChild(doc, n, "Quantity", quantity_);
     for (auto& u : underlyings_) {
@@ -64,7 +64,15 @@ XMLNode* EquityOptionPositionData::toXML(XMLDocument& doc) {
     return n;
 }
 
-void EquityOptionPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void EquityOptionPosition::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has an EQ position underlying
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
     DLOG("EquityOptionPosition::build() called for " << id());
     QL_REQUIRE(!data_.underlyings().empty(), "EquityOptionPosition::build(): no underlyings given");
     options_.clear();
@@ -96,26 +104,26 @@ void EquityOptionPosition::build(const boost::shared_ptr<ore::data::EngineFactor
         QuantLib::Exercise::Type exerciseType = parseExerciseType(u.optionData().style());
         QL_REQUIRE(u.optionData().exerciseDates().size() == 1, "Invalid number of exercise dates");
         Date optionExpiry = parseDate(u.optionData().exerciseDates().front());
-        boost::shared_ptr<Exercise> exercise;
+        QuantLib::ext::shared_ptr<Exercise> exercise;
         switch (exerciseType) {
         case QuantLib::Exercise::Type::European: {
-            exercise = boost::make_shared<EuropeanExercise>(optionExpiry);
+            exercise = QuantLib::ext::make_shared<EuropeanExercise>(optionExpiry);
             break;
         }
         case QuantLib::Exercise::Type::American: {
-            exercise = boost::make_shared<AmericanExercise>(optionExpiry, u.optionData().payoffAtExpiry());
+            exercise = QuantLib::ext::make_shared<AmericanExercise>(optionExpiry, u.optionData().payoffAtExpiry());
             break;
         }
         default:
             QL_FAIL("Option Style " << u.optionData().style() << " is not supported");
         }
-        options_.push_back(boost::make_shared<VanillaOption>(
-            boost::make_shared<PlainVanillaPayoff>(optionType, u.strike()), exercise));
+        options_.push_back(QuantLib::ext::make_shared<VanillaOption>(
+            QuantLib::ext::make_shared<PlainVanillaPayoff>(optionType, u.strike()), exercise));
         if (!options_.back()->isExpired()) {
             std::string tradeTypeBuilder =
                 (exerciseType == QuantLib::Exercise::Type::European ? "EquityOption" : "EquityOptionAmerican");
-            boost::shared_ptr<VanillaOptionEngineBuilder> builder =
-                boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(engineFactory->builder(tradeTypeBuilder));
+            QuantLib::ext::shared_ptr<VanillaOptionEngineBuilder> builder =
+                QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(engineFactory->builder(tradeTypeBuilder));
             QL_REQUIRE(builder, "EquityOptionPosition::build(): no engine builder for '" << tradeTypeBuilder << "'");
             options_.back()->setPricingEngine(builder->engine(u.underlying().name(), eq->currency(), optionExpiry));
             setSensitivityTemplate(*builder);
@@ -130,10 +138,10 @@ void EquityOptionPosition::build(const boost::shared_ptr<ore::data::EngineFactor
         string underlyingName = u.underlying().name();
         if (engineFactory->referenceData() && engineFactory->referenceData()->hasData("Equity", underlyingName)) {
             const auto& underlyingRef = engineFactory->referenceData()->getData("Equity", underlyingName);
-            if (auto equityRef = boost::dynamic_pointer_cast<EquityReferenceDatum>(underlyingRef))
+            if (auto equityRef = QuantLib::ext::dynamic_pointer_cast<EquityReferenceDatum>(underlyingRef))
                 underlyingName = equityRef->equityData().equityId;
         }
-        indices_.push_back(boost::make_shared<QuantExt::GenericIndex>(
+        indices_.push_back(QuantLib::ext::make_shared<QuantExt::GenericIndex>(
             "GENERIC-MD/EQUITY_OPTION/PRICE/" + underlyingName + "/" + eq->currency().code() + "/" +
             ore::data::to_string(optionExpiry) + "/" + strikeStr.str() + "/" +
             (optionType == Option::Call ? "C" : "P"), optionExpiry));
@@ -154,28 +162,21 @@ void EquityOptionPosition::build(const boost::shared_ptr<ore::data::EngineFactor
 
     // set instrument
     auto qlInstr =
-        boost::make_shared<EquityOptionPositionInstrumentWrapper>(data_.quantity(), options_, weights_, positions_, fxConversion_);
-    qlInstr->setPricingEngine(boost::make_shared<EquityOptionPositionInstrumentWrapperEngine>());
-    instrument_ = boost::make_shared<VanillaInstrument>(qlInstr);
+        QuantLib::ext::make_shared<EquityOptionPositionInstrumentWrapper>(data_.quantity(), options_, weights_, positions_, fxConversion_);
+    qlInstr->setPricingEngine(QuantLib::ext::make_shared<EquityOptionPositionInstrumentWrapperEngine>());
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qlInstr);
 
     // no sensible way to set these members
     maturity_ = Date::maxDate();
     notional_ = Null<Real>();
     notionalCurrency_ = "";
 
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has an EQ position underlying
-    additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
-
     // leave legs empty
 }
 
 void EquityOptionPosition::setNpvCurrencyConversion(const std::string& ccy, const Handle<Quote>& conversion) {
     npvCurrency_ = ccy;
-    boost::static_pointer_cast<EquityOptionPositionInstrumentWrapper>(instrument_->qlInstrument())
+    QuantLib::ext::static_pointer_cast<EquityOptionPositionInstrumentWrapper>(instrument_->qlInstrument())
         ->setNpvCurrencyConversion(conversion);
 }
 
@@ -184,14 +185,14 @@ void EquityOptionPosition::fromXML(XMLNode* node) {
     data_.fromXML(XMLUtils::getChildNode(node, "EquityOptionPositionData"));
 }
 
-XMLNode* EquityOptionPosition::toXML(XMLDocument& doc) {
+XMLNode* EquityOptionPosition::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, data_.toXML(doc));
     return node;
 }
 
 std::map<AssetClass, std::set<std::string>>
-EquityOptionPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+EquityOptionPosition::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     for (auto const& u : data_.underlyings()) {
         result[AssetClass::EQ].insert(u.underlying().name());
@@ -200,7 +201,7 @@ EquityOptionPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataMan
 }
 
 EquityOptionPositionInstrumentWrapper::EquityOptionPositionInstrumentWrapper(
-    const Real quantity, const std::vector<boost::shared_ptr<QuantLib::VanillaOption>>& options,
+    const Real quantity, const std::vector<QuantLib::ext::shared_ptr<QuantLib::VanillaOption>>& options,
     const std::vector<Real>& weights, const std::vector<Real>& positions, const std::vector<Handle<Quote>>& fxConversion)
     : quantity_(quantity), options_(options), weights_(weights), positions_(positions), fxConversion_(fxConversion) {
     QL_REQUIRE(options_.size() == weights_.size(), "EquityOptionPositionInstrumentWrapper: options size ("
