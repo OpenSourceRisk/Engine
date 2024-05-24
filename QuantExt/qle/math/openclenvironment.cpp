@@ -965,10 +965,10 @@ OpenClContext::getArgString(const std::vector<std::size_t>& args) const {
     std::set<std::size_t> localIds;
     for (std::size_t i = 0; i < args.size(); ++i) {
         if (args[i] < inputVarOffset_.size()) {
-            argStr[i] = "input[" + std::to_string(inputVarOffset_[args[i]]) + "U" +
+            argStr[i] = "input[" + std::to_string(inputVarOffset_[args[i]]) + "UL" +
                         (inputVarIsScalar_[args[i]] ? "]" : " + i]");
         } else if (args[i] < inputVarOffset_.size() + nVariatesTmp_) {
-            argStr[i] = "rn[" + std::to_string((args[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) + "U + i]";
+            argStr[i] = "rn[" + std::to_string((args[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) + "UL + i]";
         } else {
             argStr[i] = "v" + std::to_string(args[i]);
             localIds.insert(args[i]);
@@ -998,14 +998,14 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
 
     auto [argStr, argLocalIds] = getArgString(args);
 
-    if (randomVariableOpCode == RandomVariableOpCode::ConditionalExpectation) {
+    if (std::find_if(argStr.begin(), argStr.end(), [this](const std::string& a) {
+            return currentConditionalExpectationArgs_.find(a) != currentConditionalExpectationArgs_.end();
+        }) != argStr.end()) {
+        startNewSsaPart();
+        currentConditionalExpectationArgs_.clear();
+    }
 
-        if (std::find_if(argStr.begin(), argStr.end(), [this](const std::string& a) {
-                return currentConditionalExpectationArgs_.find(a) != currentConditionalExpectationArgs_.end();
-            }) != argStr.end()) {
-            startNewSsaPart();
-            currentConditionalExpectationArgs_.clear();
-        }
+    if (randomVariableOpCode == RandomVariableOpCode::ConditionalExpectation) {
 
         std::vector<std::size_t> argIds;
         std::size_t regressandId;
@@ -1336,9 +1336,9 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
             kernelSource += "__kernel void " + kernelName + "(" + boost::join(inputArgs, ",") +
                             ") {\n"
-                            "unsigned int i = get_global_id(0);\n"
+                            "unsigned long i = get_global_id(0);\n"
                             "if(i < " +
-                            std::to_string(size_[currentId_ - 1]) + "U) {\n";
+                            std::to_string(size_[currentId_ - 1]) + "UL) {\n";
 
             std::vector<ssa_entry> ssa;
 
@@ -1348,7 +1348,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                     ssa.push_back(
                         {std::string("v") + std::to_string(i),
                          i,
-                         std::string("values[") + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "U + i]",
+                         std::string("values[") + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "UL + i]",
                          {}});
                 }
             }
@@ -1358,7 +1358,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             if (cacheToValues) {
                 for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1];
                      i < nVars_[currentId_ - 1][part]; ++i) {
-                    ssa.push_back({"values[" + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "U + i]",
+                    ssa.push_back({"values[" + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "UL + i]",
                                    std::nullopt,
                                    "v" + std::to_string(i),
                                    {i}});
@@ -1371,18 +1371,18 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                     std::string output;
                     std::set<std::size_t> rhsLocalIds;
                     if (outputVariables_[i] < inputVarOffset_.size()) {
-                        output = "input[" + std::to_string(inputVarOffset_[outputVariables_[i]]) + "U" +
+                        output = "input[" + std::to_string(inputVarOffset_[outputVariables_[i]]) + "UL" +
                                  (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
                     } else if (outputVariables_[i] < inputVarOffset_.size() + nVariates_[currentId_ - 1]) {
                         output =
                             "rn[" +
                             std::to_string((outputVariables_[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) +
-                            "U + i]";
+                            "UL + i]";
                     } else {
                         output = "v" + std::to_string(outputVariables_[i]);
                         rhsLocalIds.insert(outputVariables_[i]);
                     }
-                    ssa.push_back({"output[" + std::to_string(offset) + "U + i]", std::nullopt, output, rhsLocalIds});
+                    ssa.push_back({"output[" + std::to_string(offset) + "UL + i]", std::nullopt, output, rhsLocalIds});
                 }
             }
 
@@ -1536,8 +1536,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                                << v.size());
 
                 RandomVariable ce;
-                RandomVariable regressand(size_[currentId_ - 1],
-                                          &values[valuesBufferId(v[1]) * size_[currentId_ - 1]]);
+                RandomVariable regressand(size_[currentId_ - 1], &values[valuesBufferId(v[1]) * size_[currentId_ - 1]]);
                 if (v.size() < 4) {
                     // no regressor given -> take plain expectation
                     ce = expectation(regressand);
