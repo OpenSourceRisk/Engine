@@ -266,8 +266,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
         settings.debug = false;
         settings.useDoublePrecision = useDoublePrecisionForExternalCalculation_;
         // use default settings for the remaining parameters
-        auto [externalCalculationId_, _] =
-            ComputeEnvironment::instance().context().initiateCalculation(model_->size(), 0, 0, settings);
+        externalCalculationId_ =
+            ComputeEnvironment::instance().context().initiateCalculation(model_->size(), 0, 0, settings).first;
         DLOG("XvaEngineCG: initiated new external calculation id " << externalCalculationId_);
     }
 
@@ -280,16 +280,16 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
     if (useExternalComputeDevice_)
         valuesExternal.resize(g->size());
 
-    // Populate random variates
-
-    populateRandomVariates(values, valuesExternal);
-    boost::timer::nanosecond_type timing8 = timer.elapsed().wall;
-
     // Populate constants and model parameters
 
     baseModelParams_ = model_->modelParameters();
     populateConstants(values, valuesExternal);
     populateModelParameters(baseModelParams_, values, valuesExternal);
+    boost::timer::nanosecond_type timing8 = timer.elapsed().wall;
+
+    // Populate random variates
+
+    populateRandomVariates(values, valuesExternal);
     boost::timer::nanosecond_type timing9 = timer.elapsed().wall;
 
     std::size_t rvMemMax = numberOfStochasticRvs(values) + numberOfStochasticRvs(derivatives);
@@ -373,6 +373,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
 
     // Write epe / ene profile out
 
+    LOG("XvaEngineCG: Write epe report.");
+
     {
         epeReport_ = QuantLib::ext::make_shared<InMemoryReport>();
         epeReport_->addColumn("Date", Date()).addColumn("EPE", double(), 4).addColumn("ENE", double(), 4);
@@ -394,6 +396,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
     boost::timer::nanosecond_type timing11 = timing10, timing12 = timing11;
 
     if (sensitivityData_) {
+
+        LOG("XvaEngineCG: Calculate sensitivities (bump = " << std::boolalpha << bumpCvaSensis_);
 
         // Do backward derivatives run
 
@@ -516,6 +520,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
         LOG("XvaEngineCG: finished running " << resultCube->samples() << " sensi scenarios, thereof " << activeScenarios
                                              << " active.");
 
+        LOG("XvaEngineCG: write sensi report.");
+
         // write out sensi report
 
         {
@@ -549,7 +555,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
                                                    << " ms");
     LOG("XvaEngineCG: Part D CG build          : " << std::fixed << std::setprecision(1) << (timing7 - timing6) / 1E6
                                                    << " ms");
-    LOG("XvaEngineCG: RV gen                   : " << std::fixed << std::setprecision(1) << (timing8 - timing7) / 1E6
+    LOG("XvaEngineCG: Const and Model params   : " << std::fixed << std::setprecision(1) << (timing8 - timing7) / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: RV gen                   : " << std::fixed << std::setprecision(1) << (timing9 - timing8) / 1E6
                                                    << " ms");
     LOG("XvaEngineCG: Const and Model params   : " << std::fixed << std::setprecision(1) << (timing9 - timing8) / 1E6
                                                    << " ms");
@@ -560,6 +568,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
     LOG("XvaEngineCG: Sensi Cube Gen           : " << std::fixed << std::setprecision(1) << (timing12 - timing11) / 1E6
                                                    << " ms");
     LOG("XvaEngineCG: total                    : " << std::fixed << std::setprecision(1) << timing12 / 1E6 << " ms");
+    LOG("XvaEngineCG: all done.");
 }
 
 void XvaEngineCG::populateRandomVariates(std::vector<RandomVariable>& values,
