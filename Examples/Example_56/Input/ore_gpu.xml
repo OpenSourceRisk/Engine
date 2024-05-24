@@ -46,14 +46,14 @@
       <Parameter name="amc">Y</Parameter>
       <Parameter name="amcCg">Y</Parameter>
       <Parameter name="xvaCgBumpSensis">Y</Parameter>
-      <!-- <Parameter name="xvaCgSensitivityConfigFile">xvasensiconfig.xml</Parameter> -->
+      <Parameter name="xvaCgSensitivityConfigFile">xvasensiconfig.xml</Parameter>
       <Parameter name="xvaCgUseExternalComputeDevice">Y</Parameter>
       <Parameter name="xvaCgExternalDeviceCompatibilityMode">Y</Parameter>
       <Parameter name="xvaCgUseDoublePrecisionForExternalCalculation">N</Parameter>
       <Parameter name="xvaCgExternalComputeDevice">BasicCpu/Default/Default</Parameter>
       <!-- <Parameter name="xvaCgExternalComputeDevice">OpenCL/Apple/Apple M2 Max</Parameter> -->
       <Parameter name="amcTradeTypes">Swap</Parameter>
-      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation_gpu.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
