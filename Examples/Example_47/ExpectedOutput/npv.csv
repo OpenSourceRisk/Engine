@@ -1,2 +1,2 @@
 #TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
-Composite_Equity_Swap,CompositeTrade,2021-04-20,0.147945,4093277.401115,USD,4093277.401115,USD,538080000.00,USD,538080000.00,CPTY,CPTY
+Composite_Equity_Swap,CompositeTrade,2018-04-20,0.153425,4098494.609721,USD,4098494.609721,USD,538080000.00,USD,538080000.00,CPTY,CPTY

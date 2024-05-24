@@ -427,6 +427,13 @@ const std::string& IndexCreditDefaultSwapOption::indexTerm() const { return inde
 
 Real IndexCreditDefaultSwapOption::strike() const { return strike_; }
 
+QuantLib::Option::Type IndexCreditDefaultSwapOption::callPut() const {
+    if (swap().leg().isPayer())
+        return QuantLib::Option::Type::Call;
+    else
+        return QuantLib::Option::Type::Put;
+}
+
 const string& IndexCreditDefaultSwapOption::strikeType() const { return strikeType_; }
 
 const Date& IndexCreditDefaultSwapOption::tradeDate() const { return tradeDate_; }
