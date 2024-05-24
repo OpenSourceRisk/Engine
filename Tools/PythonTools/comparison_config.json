@@ -1834,6 +1834,8 @@
               "saccr/rW",
               "simmReport/initial_margin",
               "simmReport/initial_margin_in_report_ccy",
+              "simm_parameters/amount",
+              "simm_parameters/amount_usd",
               "totalIMReport/initial_margin",
               "totalIMReport/initial_margin_in_report_ccy",
               "xva/allocatedCVA",
