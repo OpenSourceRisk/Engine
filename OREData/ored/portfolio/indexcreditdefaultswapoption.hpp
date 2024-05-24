@@ -56,6 +56,7 @@ public:
     const ore::data::OptionData& option() const;
     const std::string& indexTerm() const;
     QuantLib::Real strike() const;
+    QuantLib::Option::Type callPut() const;
     const std::string& strikeType() const;
     const QuantLib::Date& tradeDate() const;
     const QuantLib::Date& fepStartDate() const;
