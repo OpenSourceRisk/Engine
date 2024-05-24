@@ -40,7 +40,7 @@
       <xs:element type="xs:boolean" name="SingleCurve" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="xs:string" name="DiscountCurve" maxOccurs="1" minOccurs="0"/>
       <xs:element type="currencyCode" name="OtherCurrency" maxOccurs="1" minOccurs="0"/>
-      <xs:element name="Conventions">
+      <xs:element name="Conventions" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element name="Convention" maxOccurs="unbounded" minOccurs="0">
@@ -399,6 +399,7 @@
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
       <xs:element type="indexNameType" name="Index" minOccurs="0"/>
       <xs:element type="xs:boolean" name="IsRelative" minOccurs="0"/>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="key"/>
     <xs:attribute type="currencyCode" name="ccy"/> <!-- deprecated -->

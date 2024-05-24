@@ -97,10 +97,12 @@
             "names": [
                 "TradeType",
                 "NettingSet",
+                "Asset",
+                "MaturityDate",
+                "Maturity",
                 "NPV",
-                "Notional",
-                "RiskWeight",
-                "SMRC"
+                "SignedNotional",
+                "RiskWeight"
             ],
             "abs_tol": null,
             "rel_tol": 1e-12
@@ -1376,6 +1378,87 @@
             "rel_tol": 1e-6
           }
         ]
+      },
+	  "pnl.csv":{
+        "keys": [
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+			  "NPV(t0)",
+			  "NPV(asof=t0;mkt=t1)",
+			  "NPV(asof=t1;mkt=t0)",
+			  "NPV(t1)",
+			  "PeriodCashFlow",
+			  "Theta",
+			  "HypotheticalCleanPnL",
+			  "CleanPnL",
+			  "DirtyPnL"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+	  "pnl_explain.csv":{
+        "keys": [
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+			  "NPV(t0)",
+			  "NPV(asof=t0;mkt=t1)",
+			  "NPV(asof=t1;mkt=t0)",
+			  "NPV(t1)",
+			  "PeriodCashFlow",
+			  "Theta",
+			  "HypotheticalCleanPnL",
+			  "CleanPnL",
+			  "DirtyPnL",
+			  "ScenarioPnl",
+			  "TotalDelta",
+			  "TotalGamma",
+			  "TotalVega",
+			  "IrDelta",
+			  "IrGamma",
+			  "IrVega",
+			  "EqDelta",
+			  "EqGamma",
+			  "EqVega",
+			  "FxDelta",
+			  "FxGamma",
+			  "FxVega",
+			  "InfDelta",
+			  "InfGamma",
+			  "InfVega",
+			  "CreditDelta",
+			  "CreditGamma",
+			  "CreditVega",
+			  "CommDelta",
+			  "CommGamma",
+			  "CommVega"
+            ],
+            "abs_tol": 1e-4,
+            "rel_tol": 1e-6
+          }
+        ]
+      },
+      "parshifts.csv": {
+        "keys": [
+          "ScenarioLabel",
+          "ParKey"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "ParShift"
+            ],
+            "abs_tol": 1E-8,
+            "rel_tol": 1E-12
+          }
+        ]
       }
     }
   },
@@ -1751,6 +1834,8 @@
               "saccr/rW",
               "simmReport/initial_margin",
               "simmReport/initial_margin_in_report_ccy",
+              "simm_parameters/amount",
+              "simm_parameters/amount_usd",
               "totalIMReport/initial_margin",
               "totalIMReport/initial_margin_in_report_ccy",
               "xva/allocatedCVA",
@@ -1793,6 +1878,24 @@
             ],
             "abs_tol": 0,
             "rel_tol": null
+          }
+        ]
+      },
+      "saccr.json": {
+        "settings": [
+          {
+            "names": [
+              "addOn",
+              "cC",
+              "eAD",
+              "multiplier",
+              "npv",
+              "pfe",
+              "rC",
+              "rW"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
           }
         ]
       }

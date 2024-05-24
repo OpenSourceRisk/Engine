@@ -25,8 +25,8 @@
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
+#include <ored/configuration/currencyconfig.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
-#include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/portfolio/scriptedtrade.hpp>
 #include <orea/simm/crifloader.hpp>
@@ -221,7 +221,17 @@ void InputParameters::setStressScenarioDataFromFile(const std::string& fileName)
     stressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
     stressScenarioData_->fromFile(fileName);
 }
-    
+
+void InputParameters::setStressSensitivityScenarioData(const std::string& xml) {
+    stressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    stressSensitivityScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setStressSensitivityScenarioDataFromFile(const std::string& fileName) {
+    stressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    stressSensitivityScenarioData_->fromFile(fileName);
+}
+
 void InputParameters::setStressPricingEngine(const std::string& xml) {
     stressPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     stressPricingEngine_->fromXMLString(xml);
@@ -285,6 +295,61 @@ void InputParameters::setXvaCgSensiScenarioData(const std::string& xml) {
 void InputParameters::setXvaCgSensiScenarioDataFromFile(const std::string& fileName) {
     xvaCgSensiScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     xvaCgSensiScenarioData_->fromFile(fileName);
+}
+
+void InputParameters::setXvaStressSimMarketParams(const std::string& xml) {
+    xvaStressSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    xvaStressSimMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaStressSimMarketParamsFromFile(const std::string& fileName) {
+    xvaStressSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    xvaStressSimMarketParams_->fromFile(fileName);
+}
+
+void InputParameters::setXvaStressScenarioData(const std::string& xml) {
+    xvaStressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    xvaStressScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaStressScenarioDataFromFile(const std::string& fileName) {
+    xvaStressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    xvaStressScenarioData_->fromFile(fileName);
+}
+
+void InputParameters::setXvaStressSensitivityScenarioData(const std::string& xml) {
+    xvaStressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaStressSensitivityScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaStressSensitivityScenarioDataFromFile(const std::string& fileName) {
+    xvaStressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaStressSensitivityScenarioData_->fromFile(fileName);
+}
+
+void InputParameters::setXvaSensiSimMarketParams(const std::string& xml) {
+    xvaSensiSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    xvaSensiSimMarketParams_->fromXMLString(xml);
+}
+void InputParameters::setXvaSensiSimMarketParamsFromFile(const std::string& fileName) {
+    xvaSensiSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    xvaSensiSimMarketParams_->fromFile(fileName);
+}
+void InputParameters::setXvaSensiScenarioData(const std::string& xml) {
+    xvaSensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaSensiScenarioData_->fromXMLString(xml);
+}
+void InputParameters::setXvaSensiScenarioDataFromFile(const std::string& fileName) {
+    xvaSensiScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaSensiScenarioData_->fromFile(fileName);
+}
+void InputParameters::setXvaSensiPricingEngine(const std::string& xml) {
+    xvaSensiPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    xvaSensiPricingEngine_->fromXMLString(xml);
+}
+void InputParameters::setXvaSensiPricingEngineFromFile(const std::string& fileName) {
+    xvaSensiPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    xvaSensiPricingEngine_->fromFile(fileName);
 }
 
 void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
@@ -387,8 +452,8 @@ void InputParameters::setHistoricalScenarioReader(const std::string& fileName) {
     QL_REQUIRE(exists(baseScenarioPath), "The provided base scenario file, " << baseScenarioPath << ", does not exist");
     QL_REQUIRE(is_regular_file(baseScenarioPath),
                "The provided base scenario file, " << baseScenarioPath << ", is not a file");
-    historicalScenarioReader_ =
-        QuantLib::ext::make_shared<HistoricalScenarioFileReader>(fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>());
+    historicalScenarioReader_ = QuantLib::ext::make_shared<HistoricalScenarioFileReader>(
+        fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
 }
 
 void InputParameters::setAmcTradeTypes(const std::string& s) {
@@ -544,13 +609,19 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     jacobiInverseFileName_ = params->get("sensitivity", "jacobiInverseOutputFile", false);    
     sensitivityScenarioFileName_ = params->get("sensitivity", "scenarioOutputFile", false);    
     stressTestFileName_ = params->get("stress", "scenarioOutputFile", false);
+    stressZeroScenarioDataFileName_ = params->get("stress", "stressZeroScenarioDataFile", false);
+    xvaStressTestFileName_ = params->get("xvaStress", "scenarioOutputFile", false);
     varFileName_ = params->get("parametricVar", "outputFile", false);
     if (varFileName_.empty())
         varFileName_ = params->get("historicalSimulationVar", "outputFile", false);
     parConversionOutputFileName_ = params->get("zeroToParSensiConversion", "outputFile", false);
     parConversionJacobiFileName_ = params->get("zeroToParSensiConversion", "jacobiOutputFile", false);
-    parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);  
+    parConversionJacobiInverseFileName_ = params->get("zeroToParSensiConversion", "jacobiInverseOutputFile", false);
+    pnlOutputFileName_ = params->get("pnl", "outputFileName", false);
+    parStressTestConversionFile_ = params->get("parStressConversion", "stressZeroScenarioDataFile", false);
+    pnlExplainOutputFileName_ = params->get("pnlExplain", "outputFileName", false);
 
+    zeroToParShiftFile_ = params->get("zeroToParShift", "parShiftsFile", false);
     // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;
     fileNameMap_["cashflow"] = cashflowOutputFileName_;
@@ -567,11 +638,17 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["jacobi"] = jacobiFileName_;
     fileNameMap_["jacobi_inverse"] = jacobiInverseFileName_;
     fileNameMap_["stress"] = stressTestFileName_;
+    fileNameMap_["stress_ZeroStressData"] = stressZeroScenarioDataFileName_;
+    fileNameMap_["xva_stress"] = xvaStressTestFileName_;
     fileNameMap_["var"] = varFileName_;
     fileNameMap_["parConversionSensitivity"] = parConversionOutputFileName_;
     fileNameMap_["parConversionJacobi"] = parConversionJacobiFileName_;
     fileNameMap_["parConversionJacobi_inverse"] = parConversionJacobiInverseFileName_;
+    fileNameMap_["pnl"] = pnlOutputFileName_;
+    fileNameMap_["parStress_ZeroStressData"] = parStressTestConversionFile_;
+    fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;
     
+    fileNameMap_["parshifts"] = zeroToParShiftFile_;
     vector<Size> dimOutputGridPoints;
     tmp = params->get("xva", "dimOutputGridPoints", false);
     if (tmp != "")
@@ -630,6 +707,86 @@ void InputParameters::setParConversionPricingEngine(const std::string& xml) {
 void InputParameters::setParConversionPricingEngineFromFile(const std::string& fileName) {
     parConversionPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     parConversionPricingEngine_->fromFile(fileName);
+}
+
+void InputParameters::setParStressSimMarketParams(const std::string& xml) {
+    parStressSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    parStressSimMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setParStressSimMarketParamsFromFile(const std::string& fileName) {
+    parStressSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    parStressSimMarketParams_->fromFile(fileName);
+}
+
+void InputParameters::setParStressScenarioData(const std::string& xml) {
+    parStressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    parStressScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setParStressScenarioDataFromFile(const std::string& fileName) {
+    parStressScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    parStressScenarioData_->fromFile(fileName);
+}
+
+void InputParameters::setParStressSensitivityScenarioData(const std::string& xml) {
+    parStressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    parStressSensitivityScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setParStressSensitivityScenarioDataFromFile(const std::string& fileName) {
+    parStressSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    parStressSensitivityScenarioData_->fromFile(fileName);
+}
+
+void InputParameters::setParStressPricingEngine(const std::string& xml) {
+    parStressPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    parStressPricingEngine_->fromXMLString(xml);
+}
+
+void InputParameters::setParStressPricingEngineFromFile(const std::string& fileName) {
+    parStressPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    parStressPricingEngine_->fromFile(fileName);
+}
+
+void InputParameters::setZeroToParShiftSimMarketParams(const std::string& xml) {
+    zeroToParShiftSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    zeroToParShiftSimMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setZeroToParShiftSimMarketParamsFromFile(const std::string& fileName) {
+    zeroToParShiftSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    zeroToParShiftSimMarketParams_->fromFile(fileName);
+}
+
+void InputParameters::setZeroToParShiftScenarioData(const std::string& xml) {
+    zeroToParShiftScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    zeroToParShiftScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setZeroToParShiftScenarioDataFromFile(const std::string& fileName) {
+    zeroToParShiftScenarioData_ = QuantLib::ext::make_shared<StressTestScenarioData>();
+    zeroToParShiftScenarioData_->fromFile(fileName);
+}
+
+void InputParameters::setZeroToParShiftSensitivityScenarioData(const std::string& xml) {
+    zeroToParShiftSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    zeroToParShiftSensitivityScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setZeroToParShiftSensitivityScenarioDataFromFile(const std::string& fileName) {
+    zeroToParShiftSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    zeroToParShiftSensitivityScenarioData_->fromFile(fileName);
+}
+
+void InputParameters::setZeroToParShiftPricingEngine(const std::string& xml) {
+    zeroToParShiftPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    zeroToParShiftPricingEngine_->fromXMLString(xml);
+}
+
+void InputParameters::setZeroToParShiftPricingEngineFromFile(const std::string& fileName) {
+    zeroToParShiftPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    zeroToParShiftPricingEngine_->fromFile(fileName);
 }
 
 Date InputParameters::mporDate() {

@@ -1,3 +1,120 @@
+Changes for the 12th ORE release:
+=================================
+
+ORE v12 includes the following notable changes.
+
+INSTRUMENTS & PRICING
+- add formula-based leg (ticket 12263), see Example 64
+- add Callable Swap (ticket 12370), see extended Example 5
+- add Flexi Swap (ticket 12370), see Example 65
+- add Balance Guaranteed Swap (ticket 12370), see Example 66
+- add American Swaption with finite difference pricing in LGM (ticket 11618), see extended Example 4
+- add Equity Outperformance Option (ticket 12456)
+- add Pairwise Variance Swap (ticket 12456)
+- add analytic pricer for Overnight Index Swaptions (ticket 11974)
+- add finite difference LGM pricers for Bermudan and European Swaptions
+- add numerical integration LGM pricer for European Swaptions
+- support indexed cashflows in AMC (ticket 12206)
+- scripted trades: support LGM1F using finite difference and numerical integration (ticket 12306)
+- scripted trades: support generating past cashflows (ticket 12417)
+- scripted trades: handle near-collinear predictor variables in linear regression for AMC (ticket 12419)
+- support for rules-based Bermudan exercise dates (ticket 11947)
+- improved AMC regression model for resetting XCCY Swaps (ticket 12119)
+- add Burley 2020 scrambled Sobol sequence (ticket 12140), used in Example 56
+- rates curve building: support mixed interpolations (ticket 12159), used in Example 53
+- add priorities to yield curve segments (ticket 9557)
+- configurable settlement date flows handling (ticket 12372)
+- introduce notional payment lag for resetting Cross Currency Swaps (ticket 12379)
+- support security spreads over discount in Single Currency Swaps, Swaptions and Scripted Trades
+  (ticket 12201 and 12275)
+- add pricing engines that provide analytical deltas and gammas for Swaps, Swaptions, FX Forwards,
+  FX Options (ticket 12456)
+
+MARKETS & TERMSTRUCTURES
+- SABR pricing for Swaptions and Caps/Floors (ticket 12325), see Example 59
+- allow importing external SABR parameters (ticket 12491)
+
+ANALYTICS
+- add XVA Sensitivity Proof of Concept using AAD (ticket 12028), see Example 56
+- support overlapping close-out date grid in exposure/XVA (ticket 9859), see Example 60
+- add scenario analytic (ticket 11990), see Example 57
+- add historical simulation VaR analytic (ticket 9793), see Example 58
+- add IM Schedule analytic (ticket 11730), see extended Example 44
+- add P&L and P&L Explain analytics (ticket 12458), see Example 62
+- add par stress test support (ticket 12148), see Example 63
+- add XVA stress testing (ticket 12376), see Example 67
+- add XVA bump & revalue sensitivities (ticket 12437), see Example 68
+- add bond spread imply to ORE (ticket 12370)
+- add market risk backtest analytic (ticket 12370)
+- add calculation of stoplight bounds for backtests (ticket 12370)
+- feed t0 Variation Margin into xVA calculation (ticket 12241)
+- support flat Initial Margin projection in exposure calculations (ticket 12318)
+- fix the Independent Amount implementation in exposure calculations (ticket 12277)
+- introduce configurable shift size and difference scheme per product for sensitivity analysis (ticket 12014)
+- improve performance of SIMM calculations for large CRIF files (ticket 12397)
+- output effective SOFR / RFR cap volatilities in reports (ticket 12192)
+
+TESTS
+- add a test suite for ORE-SWIG (ticket 11823)
+- add AD unit tests (ticket 12188)
+- add delta/gamma engine tests (ticket 12370)
+- add pairwise variance swap tests (ticket 12370)
+- add equity outperformance option tests (ticket 12370)
+- QuantExt: 298 test functions (vs 272 in the previous release)
+- OREData: 264 test functions (vs. 257 in the previous release)
+- OREAnalytics: 79 test functions (vs. 78 in the previous release)
+
+DOCUMENTATION
+- add documentation of pricing engine configuration (ticket 12337)
+- add documentation for added instruments (ticket 12317)
+- add supported compiler and boost versions (ticket 11431) 
+- update the ORE Design document (ticket 12375)
+- the user guide has grown significantly to about 830 pages, due to the migration of more instruments
+  into ORE, additional examples, and especially the added documentation of pricing engine configurations.
+
+LANGUAGE BINDINGS & PYTHON MODULE
+- add NPV Cube and joint cube to the swig interface (ticket 12421)
+- refactor OREApp to allow repeated run() calls (ticket 12317)
+- add Python wheels workflow on github (ticket 12436)
+
+ORE SERVICE
+- add a restful API to ORE, based on ORE-Python and the Flask web framework, see ore/Api
+  and the corresponding section in the user guide
+
+GPU
+- The external device interface based on the scripted trade and in particular its computation
+  graph implementation is progressing. This release has several notable changes including
+  * an option to use double precision in opencl (ticket 12386)
+  * a mersenne twister random number generator implementation for opencl (ticket 12387)
+  * a working example that parallelizes bump & reval sensitivity analysis on a GPU, see Example 61
+  * Smoke test are passing on several external devices 
+  Next steps include:
+  * implementation of the conditional expectation operator on the GPU
+  * implementation of several coupon types to cover IR/FX products more broadly
+  * implementation of a computation graph version of the post processor
+
+NEW & EXTENDED EXAMPLES
+-  4: American Swaption added
+-  5: Callable Swap instrument added  
+- 44: IM Schedule added
+- 54: Scripted Trade exposure with AMC: Bermudan Swaption and LPI Swap
+- 55: Scripted Trade exposure with AMC: TaRF
+- 56: Proof of Concept: CVA Sensitivities using AAD
+- 57: Base Scenario Analytic
+- 58: Historical Simulation VaR
+- 59: SABR model for Swaptions and Caps/Floors
+- 60: Exposure and XVA with Overlapping Close-Out Grid
+- 61: Fast Sensitivities using AAD and GPUs
+- 62: P&L and P&L Explain Analytic
+- 63: Stresstest with shifts in the par-rate domain
+- 64: Formual-based Coupon
+- 65: Flexi Swap
+- 66: Balance Guaranteed Swap 
+- 67: XVA Stress Testing
+- 68: XVA Bump & Revalue Sensitivities
+- 69: Convert Zero Rate Shifts into Par Rate Shifts
+
+
 Changes for the 11th ORE release (1.8.11.0):
 ============================================
 
