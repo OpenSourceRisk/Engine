@@ -1,9 +1,0 @@
-version: '3'
-
-services:
-  simplefileserver:
-    image: simplefileserver:latest
-    build:
-      context: ..
-      dockerfile: Dockerfiles/Dockerfile_simplefileserver
-
