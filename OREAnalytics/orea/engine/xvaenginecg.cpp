@@ -33,6 +33,7 @@
 #include <qle/ad/forwardderivatives.hpp>
 #include <qle/ad/forwardevaluation.hpp>
 #include <qle/ad/ssaform.hpp>
+#include <qle/math/computeenvironment.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
@@ -257,21 +258,38 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
         sumRedNodes += r.second - r.first;
     }
 
+    // Init external compute context if we want to use that
+
+    if (useExternalComputeDevice_) {
+        ComputeEnvironment::instance().selectContext(externalComputeDevice_);
+        ComputeContext::Settings settings;
+        settings.debug = false;
+        settings.useDoublePrecision = useDoublePrecisionForExternalCalculation_;
+        // use default settings for the remaining parameters
+        auto [externalCalculationId_, _] =
+            ComputeEnvironment::instance().context().initiateCalculation(model_->size(), 0, 0, settings);
+        DLOG("XvaEngineCG: initiated new external calculation id " << externalCalculationId_);
+    }
+
     // Create values and derivatives containers
 
     std::vector<RandomVariable> values(g->size(), RandomVariable(model_->size(), 0.0));
     std::vector<RandomVariable> derivatives(g->size(), RandomVariable(model_->size(), 0.0));
 
+    std::vector<ExternalRandomVariable> valuesExternal;
+    if (useExternalComputeDevice_)
+        valuesExternal.resize(g->size());
+
     // Populate random variates
 
-    populateRandomVariates(values);
+    populateRandomVariates(values, valuesExternal);
     boost::timer::nanosecond_type timing8 = timer.elapsed().wall;
 
     // Populate constants and model parameters
 
     baseModelParams_ = model_->modelParameters();
-    populateConstants(values);
-    populateModelParameters(values, baseModelParams_);
+    populateConstants(values, valuesExternal);
+    populateModelParameters(baseModelParams_, values, valuesExternal);
     boost::timer::nanosecond_type timing9 = timer.elapsed().wall;
 
     std::size_t rvMemMax = numberOfStochasticRvs(values) + numberOfStochasticRvs(derivatives);
@@ -286,37 +304,70 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
 
     LOG("XvaEngineCG: do forward evaluation");
 
-    Real eps = 0.0; // smoothing parameter for indicator functions
-    ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, bumpCvaSensis_ ? eps : 0.0,
-                                Null<Real>()); // todo set regression variance cutoff
-    grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, eps);
     opNodeRequirements_ = getRandomVariableOpNodeRequirements();
+    Real eps = 0.0; // smoothing parameter for indicator functions
+    if (useExternalComputeDevice_) {
+        opsExternal_ = getExternalRandomVariableOps();
+        gradsExternal_ = getExternalRandomVariableGradients();
+
+    } else {
+        ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, bumpCvaSensis_ ? eps : 0.0,
+                                    Null<Real>()); // todo set regression variance cutoff
+        grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, eps);
+    }
 
     std::vector<bool> keepNodes(g->size(), false);
 
-    for (auto const& c : g->constants()) {
-        keepNodes[c.second] = true;
-    }
+    if (sensitivityData_) {
 
-    for (auto const& [n, v] : baseModelParams_) {
-        keepNodes[n] = true;
-    }
+        // do we need to keep the next 3 for both backward derivatives and bump sensis?
 
-    for (auto const n : g->redBlockDependencies()) {
-        keepNodes[n] = true;
-    }
+        for (auto const& c : g->constants()) {
+            keepNodes[c.second] = true;
+        }
 
-    if (bumpCvaSensis_) {
-        for (auto const& rv : model_->randomVariates())
-            for (auto const& v : rv)
-                keepNodes[v] = true;
+        for (auto const& [n, v] : baseModelParams_) {
+            keepNodes[n] = true;
+        }
+
+        for (auto const n : g->redBlockDependencies()) {
+            keepNodes[n] = true;
+        }
+
+        // make sure we can revalue for bump sensis
+
+        if (bumpCvaSensis_) {
+            for (auto const& rv : model_->randomVariates())
+                for (auto const& v : rv)
+                    keepNodes[v] = true;
+        }
     }
 
     for (auto const& n : pfExposureNodes) {
         keepNodes[n] = true;
     }
 
-    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes);
+    std::vector<std::vector<double>> externalOutput;
+    std::vector<double*> externalOutputPtr;
+    if (useExternalComputeDevice_) {
+        forwardEvaluation(*g, valuesExternal, opsExternal_, ExternalRandomVariable::deleter, !bumpCvaSensis_,
+                          opNodeRequirements_, keepNodes);
+        for (Size i = 0; i < pfExposureNodes.size(); ++i) {
+            valuesExternal[pfExposureNodes[i]].declareAsOutput();
+        }
+        externalOutput.resize(pfExposureNodes.size(), std::vector<double>(model_->size()));
+        externalOutputPtr.resize(pfExposureNodes.size());
+        std::transform(externalOutput.begin(), externalOutput.end(), externalOutputPtr.begin(),
+                       [](std::vector<double>& v) { return &v[0]; });
+        ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr);
+        // could skip this and use externalOutput directly below, but it's more convenient to copy the results to values
+        for (Size i = 0; i < pfExposureNodes.size(); ++i) {
+            values[pfExposureNodes[i]] = RandomVariable(model_->size(), externalOutputPtr[i]);
+        }
+        ComputeEnvironment::instance().context().disposeCalculation(externalCalculationId_);
+    } else {
+        forwardEvaluation(*g, values, ops_, RandomVariable::deleter, !bumpCvaSensis_, opNodeRequirements_, keepNodes);
+    }
 
     boost::timer::nanosecond_type timing10 = timer.elapsed().wall;
 
@@ -449,7 +500,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
 
                     // calcuate CVA sensi doing full recalc of CVA
 
-                    populateModelParameters(values, model_->modelParameters());
+                    populateModelParameters(model_->modelParameters(), values, valuesExternal);
                     forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes);
                     sensi = expectation(values[cvaNode]).at(0) - cva;
                 }
@@ -511,47 +562,71 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
     LOG("XvaEngineCG: total                    : " << std::fixed << std::setprecision(1) << timing12 / 1E6 << " ms");
 }
 
-void XvaEngineCG::populateRandomVariates(std::vector<RandomVariable>& values) const {
+void XvaEngineCG::populateRandomVariates(std::vector<RandomVariable>& values,
+                                         std::vector<ExternalRandomVariable>& valuesExternal) const {
 
     DLOG("XvaEngineCG: populate random variates");
 
     auto const& rv = model_->randomVariates();
     if (!rv.empty()) {
-        auto gen = makeMultiPathVariateGenerator(scenarioGeneratorData_->sequenceType(), rv.size(), rv.front().size(),
-                                                 scenarioGeneratorData_->seed(), scenarioGeneratorData_->ordering(),
-                                                 scenarioGeneratorData_->directionIntegers());
-        for (Size path = 0; path < model_->size(); ++path) {
-            auto p = gen->next();
-            for (Size j = 0; j < rv.front().size(); ++j) {
-                for (Size k = 0; k < rv.size(); ++k) {
-                    values[rv[k][j]].set(path, p.value[j][k]);
+        if (useExternalComputeDevice_) {
+            auto gen = ComputeEnvironment::instance().context().createInputVariates(rv.size(), rv.front().size());
+            for (Size k = 0; k < rv.size(); ++k) {
+                for (Size j = 0; j < rv.front().size(); ++j)
+                    valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
+            }
+        } else {
+            if (externalDeviceCompatibilityMode_) {
+                QL_FAIL("externalDeviceCompatibilityModel not yet implemented...");
+            } else {
+                auto gen =
+                    makeMultiPathVariateGenerator(scenarioGeneratorData_->sequenceType(), rv.size(), rv.front().size(),
+                                                  scenarioGeneratorData_->seed(), scenarioGeneratorData_->ordering(),
+                                                  scenarioGeneratorData_->directionIntegers());
+                for (Size path = 0; path < model_->size(); ++path) {
+                    auto p = gen->next();
+                    for (Size j = 0; j < rv.front().size(); ++j) {
+                        for (Size k = 0; k < rv.size(); ++k) {
+                            values[rv[k][j]].set(path, p.value[j][k]);
+                        }
+                    }
                 }
             }
+            DLOG("XvaEngineCG: generated rvs for " << rv.size() << " underlyings and " << rv.front().size()
+                                                   << " time steps.");
         }
-        DLOG("XvaEngineCG: generated rvs for " << rv.size() << " underlyings and " << rv.front().size()
-                                               << " time steps.");
     }
 }
 
-void XvaEngineCG::populateConstants(std::vector<RandomVariable>& values) const {
+void XvaEngineCG::populateConstants(std::vector<RandomVariable>& values,
+                                    std::vector<ExternalRandomVariable>& valuesExternal) const {
 
     DLOG("XvaEngineCG: populate constants");
 
     auto g = model_->computationGraph();
     for (auto const& c : g->constants()) {
-        values[c.second] = RandomVariable(model_->size(), c.first);
+        if (useExternalComputeDevice_) {
+            valuesExternal[c.second] = ExternalRandomVariable(c.first);
+        } else {
+            values[c.second] = RandomVariable(model_->size(), c.first);
+        }
     }
 
     DLOG("XvaEngineCG: set " << g->constants().size() << " constants");
 }
 
-void XvaEngineCG::populateModelParameters(std::vector<RandomVariable>& values,
-                                          const std::vector<std::pair<std::size_t, double>>& modelParameters) const {
+void XvaEngineCG::populateModelParameters(const std::vector<std::pair<std::size_t, double>>& modelParameters,
+                                          std::vector<RandomVariable>& values,
+                                          std::vector<ExternalRandomVariable>& valuesExternal) const {
 
     DLOG("XvaEngineCG: populate model parameters");
 
     for (auto const& [n, v] : modelParameters) {
-        values[n] = RandomVariable(model_->size(), v);
+        if (useExternalComputeDevice_) {
+            valuesExternal[n] = ExternalRandomVariable(v);
+        } else {
+            values[n] = RandomVariable(model_->size(), v);
+        }
     }
 
     DLOG("XvaEngineCG: set " << modelParameters.size() << " model parameters.");

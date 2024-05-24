@@ -37,6 +37,8 @@
 
 #include <ored/marketdata/todaysmarket.hpp>
 
+#include <qle/ad/external_randomvariable_ops.hpp>
+
 #include <ql/types.hpp>
 
 namespace ore {
@@ -68,12 +70,15 @@ public:
 
     QuantLib::ext::shared_ptr<InMemoryReport> exposureReport() { return epeReport_; }
     QuantLib::ext::shared_ptr<InMemoryReport> sensiReport() { return sensiReport_; }
-    
+
 private:
-    void populateRandomVariates(std::vector<RandomVariable>& values) const;
-    void populateConstants(std::vector<RandomVariable>& values) const;
-    void populateModelParameters(std::vector<RandomVariable>& values,
-                                 const std::vector<std::pair<std::size_t, double>>& modelParameters) const;
+    void populateRandomVariates(std::vector<RandomVariable>& values,
+                                std::vector<ExternalRandomVariable>& valuesExternal) const;
+    void populateConstants(std::vector<RandomVariable>& values,
+                           std::vector<ExternalRandomVariable>& valuesExternal) const;
+    void populateModelParameters(const std::vector<std::pair<std::size_t, double>>& modelParameters,
+                                 std::vector<RandomVariable>& values,
+                                 std::vector<ExternalRandomVariable>& valuesExternal) const;
 
     // input parameters
     Date asof_;
@@ -109,9 +114,12 @@ private:
     std::vector<RandomVariableOpNodeRequirements> opNodeRequirements_;
     std::vector<RandomVariableOp> ops_;
     std::vector<RandomVariableGrad> grads_;
+    std::vector<ExternalRandomVariableOp> opsExternal_;
+    std::vector<ExternalRandomVariableGrad> gradsExternal_;
+    std::size_t externalCalculationId_;
 
     // output reports
-    QuantLib::ext::shared_ptr<InMemoryReport> epeReport_, sensiReport_; 
+    QuantLib::ext::shared_ptr<InMemoryReport> epeReport_, sensiReport_;
 };
 
 } // namespace analytics
