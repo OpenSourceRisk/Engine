@@ -265,7 +265,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
         ComputeContext::Settings settings;
         settings.debug = false;
         settings.useDoublePrecision = useDoublePrecisionForExternalCalculation_;
-        // use default settings for the remaining parameters
+        settings.rngSequenceType = scenarioGeneratorData_->sequenceType();
+        settings.rngSeed = scenarioGeneratorData_->seed();
+        settings.regressionOrder = 4;
         externalCalculationId_ =
             ComputeEnvironment::instance().context().initiateCalculation(model_->size(), 0, 0, settings).first;
         DLOG("XvaEngineCG: initiated new external calculation id " << externalCalculationId_);
@@ -309,7 +311,6 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
     if (useExternalComputeDevice_) {
         opsExternal_ = getExternalRandomVariableOps();
         gradsExternal_ = getExternalRandomVariableGradients();
-
     } else {
         ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, bumpCvaSensis_ ? eps : 0.0,
                                     Null<Real>()); // todo set regression variance cutoff
@@ -585,9 +586,21 @@ void XvaEngineCG::populateRandomVariates(std::vector<RandomVariable>& values,
                     valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
             }
         } else {
-            if (externalDeviceCompatibilityMode_) {
-                QL_FAIL("externalDeviceCompatibilityModel not yet implemented...");
+            if (scenarioGeneratorData_->sequenceType() == QuantExt::SequenceType::MersenneTwister &&
+                externalDeviceCompatibilityMode_) {
+                // use same order for rng generation as it is (usually) done on external devices
+                // this is mainly done to be able to reconcile results produced on external devices
+                auto rng = std::make_unique<MersenneTwisterUniformRng>(scenarioGeneratorData_->seed());
+                QuantLib::InverseCumulativeNormal icn;
+                for (Size j = 0; j < rv.front().size(); ++j) {
+                    for (Size i = 0; i < rv.size(); ++i) {
+                        for (Size path = 0; path < model_->size(); ++path) {
+                            values[rv[i][j]].set(path, icn(rng->nextReal()));
+                        }
+                    }
+                }
             } else {
+                // use the 'usual' path generation that we also use elsewhere
                 auto gen =
                     makeMultiPathVariateGenerator(scenarioGeneratorData_->sequenceType(), rv.size(), rv.front().size(),
                                                   scenarioGeneratorData_->seed(), scenarioGeneratorData_->ordering(),
