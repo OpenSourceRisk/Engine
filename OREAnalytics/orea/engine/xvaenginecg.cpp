@@ -260,16 +260,27 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
 
     // Init external compute context if we want to use that
 
+    struct disposeExternalCalculation {
+        ~disposeExternalCalculation() {
+            if (id)
+                ComputeEnvironment::instance().context().disposeCalculation(*id);
+        }
+        std::optional<std::size_t> id;
+    } disposeExtCalc;
+
+    ComputeContext::Settings externalComputeDeviceSettings;
     if (useExternalComputeDevice_) {
         ComputeEnvironment::instance().selectContext(externalComputeDevice_);
-        ComputeContext::Settings settings;
-        settings.debug = false;
-        settings.useDoublePrecision = useDoublePrecisionForExternalCalculation_;
-        settings.rngSequenceType = scenarioGeneratorData_->sequenceType();
-        settings.rngSeed = scenarioGeneratorData_->seed();
-        settings.regressionOrder = 4;
-        externalCalculationId_ =
-            ComputeEnvironment::instance().context().initiateCalculation(model_->size(), 0, 0, settings).first;
+        externalComputeDeviceSettings.debug = false;
+        externalComputeDeviceSettings.useDoublePrecision = useDoublePrecisionForExternalCalculation_;
+        externalComputeDeviceSettings.rngSequenceType = scenarioGeneratorData_->sequenceType();
+        externalComputeDeviceSettings.rngSeed = scenarioGeneratorData_->seed();
+        externalComputeDeviceSettings.regressionOrder = 4;
+        externalCalculationId_ = ComputeEnvironment::instance()
+                                     .context()
+                                     .initiateCalculation(model_->size(), 0, 0, externalComputeDeviceSettings)
+                                     .first;
+        disposeExtCalc.id = externalCalculationId_;
         DLOG("XvaEngineCG: initiated new external calculation id " << externalCalculationId_);
     }
 
@@ -348,6 +359,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
         keepNodes[n] = true;
     }
 
+    keepNodes[cvaNode] = true;
+
     std::vector<std::vector<double>> externalOutput;
     std::vector<double*> externalOutputPtr;
     if (useExternalComputeDevice_) {
@@ -356,8 +369,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
         for (Size i = 0; i < pfExposureNodes.size(); ++i) {
             valuesExternal[pfExposureNodes[i]].declareAsOutput();
         }
-        externalOutput.resize(pfExposureNodes.size(), std::vector<double>(model_->size()));
-        externalOutputPtr.resize(pfExposureNodes.size());
+        valuesExternal[cvaNode].declareAsOutput();
+        externalOutput.resize(pfExposureNodes.size() + 1, std::vector<double>(model_->size()));
+        externalOutputPtr.resize(externalOutput.size());
         std::transform(externalOutput.begin(), externalOutput.end(), externalOutputPtr.begin(),
                        [](std::vector<double>& v) { return &v[0]; });
         ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr);
@@ -365,7 +379,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
         for (Size i = 0; i < pfExposureNodes.size(); ++i) {
             values[pfExposureNodes[i]] = RandomVariable(model_->size(), externalOutputPtr[i]);
         }
-        ComputeEnvironment::instance().context().disposeCalculation(externalCalculationId_);
+        values[cvaNode] = RandomVariable(model_->size(), externalOutputPtr.back());
     } else {
         forwardEvaluation(*g, values, ops_, RandomVariable::deleter, !bumpCvaSensis_, opNodeRequirements_, keepNodes);
     }
@@ -505,8 +519,18 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
 
                     // calcuate CVA sensi doing full recalc of CVA
 
-                    populateModelParameters(model_->modelParameters(), values, valuesExternal);
-                    forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_, keepNodes);
+                    if (useExternalComputeDevice_) {
+                        ComputeEnvironment::instance().context().initiateCalculation(
+                            model_->size(), externalCalculationId_, 0, externalComputeDeviceSettings);
+                        populateConstants(values, valuesExternal);
+                        populateModelParameters(model_->modelParameters(), values, valuesExternal);
+                        ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr);
+                        values[cvaNode] = RandomVariable(model_->size(), externalOutputPtr.back());
+                    } else {
+                        populateModelParameters(model_->modelParameters(), values, valuesExternal);
+                        forwardEvaluation(*g, values, ops_, RandomVariable::deleter, true, opNodeRequirements_,
+                                          keepNodes);
+                    }
                     sensi = expectation(values[cvaNode]).at(0) - cva;
                 }
             }
