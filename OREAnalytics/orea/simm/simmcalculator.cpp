@@ -1272,6 +1272,12 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
             // Add to aggregation at portfolio level
             add(nettingSetDetails, regulation, ProductClass::All, RiskClass::All, MarginType::All, "All", pcmMargin, side,
                 overwrite);
+            CrifRecord spRecord = it;
+            if (side == SimmSide::Call)
+                spRecord.collectRegulations = regulation;
+            else
+                spRecord.postRegulations = regulation;
+            simmParameters_.addRecord(spRecord);
         }
     }
 
@@ -1292,6 +1298,12 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
         // Add to aggregation at portfolio level
         add(nettingSetDetails, regulation, ProductClass::All, RiskClass::All, MarginType::All, "All", fixedMargin, side,
             overwrite);
+        CrifRecord spRecord = it;
+        if (side == SimmSide::Call)
+            spRecord.collectRegulations = regulation;
+        else
+            spRecord.postRegulations = regulation;
+        simmParameters_.addRecord(spRecord);
     }
 
     // Third, add percentage of notional amounts IM, using "AddOnNotionalFactor"
@@ -1326,6 +1338,12 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
             add(nettingSetDetails, regulation, ProductClass::All, RiskClass::All, MarginType::All, "All",
                 notionalFactorMargin,
                 side, overwrite);
+            CrifRecord spRecord = it;
+            if (side == SimmSide::Call)
+                spRecord.collectRegulations = regulation;
+            else
+                spRecord.postRegulations = regulation;
+            simmParameters_.addRecord(spRecord);
         }
     }
 }

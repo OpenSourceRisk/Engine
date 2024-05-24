@@ -5,7 +5,7 @@
 
 2) Market
 
-   Market data as of 2022-08-29
+   Market data as of 2022-09-26
 
 3) Pricing
 
