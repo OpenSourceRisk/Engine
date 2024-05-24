@@ -8,7 +8,7 @@ This example demonstrates the use of the scripted trade representation
 
 2) Market
 
-   Market data as of 7 August 2023
+   Market data as of 5 June 2023
 
 3) Pricing
 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <ORE>
   <Setup>
-    <Parameter name="asofDate">2019-12-30</Parameter>
+    <Parameter name="asofDate">2020-12-28</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output/SIMM2.5A_1D_calibration</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
