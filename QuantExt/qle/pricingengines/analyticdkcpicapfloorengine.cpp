@@ -25,7 +25,7 @@ namespace QuantExt {
 
 using namespace CrossAssetAnalytics;
 
-AnalyticDkCpiCapFloorEngine::AnalyticDkCpiCapFloorEngine(const boost::shared_ptr<CrossAssetModel>& model,
+AnalyticDkCpiCapFloorEngine::AnalyticDkCpiCapFloorEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                          const Size index, const Real baseCPI)
     : model_(model), index_(index), baseCPI_(baseCPI) {}
 

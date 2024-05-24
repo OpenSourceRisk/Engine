@@ -75,6 +75,13 @@
       <xs:element type="totalReturnSwapData" name="TotalReturnSwapData"/>
       <xs:element type="totalReturnSwapData" name="ContractForDifferenceData"/>
       <xs:element type="compositeTradeData" name="CompositeTradeData"/>
+      <xs:element type="pairwiseVarianceSwapData1" name="PairwiseVarianceSwapData"/>
+      <xs:element type="pairwiseVarianceSwapData2" name="EquityPairwiseVarianceSwapData"/>
+      <xs:element type="pairwiseVarianceSwapData2" name="FxPairwiseVarianceSwapData"/>
+      <xs:element type="eqOutperformanceOptionData" name="EquityOutperformanceOptionData"/>
+      <xs:element type="flexiSwapData" name="FlexiSwapData"/>
+      <xs:element type="bgSwapData" name="BalanceGuaranteedSwapData"/>
+      <xs:element type="commodityRevenueOptionData" name="CommodityRevenueOptionData"/>
       <!-- scripted trades -->
       <xs:element type="basketVarianceSwapData" name="BasketVarianceSwapData"/>
       <xs:element type="basketVarianceSwapData2" name="EquityBasketVarianceSwapData"/>
@@ -519,7 +526,7 @@
         <xs:element type="xs:float" name="FinalFlowCap" minOccurs="0"/>
         <xs:element type="xs:float" name="FinalFlowFloor" minOccurs="0"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
-		<xs:element type="xs:boolean" name="SubtractInflationNotionalAllCoupons" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="SubtractInflationNotionalAllCoupons" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -788,6 +795,7 @@
       <xs:element type="extendedCurrencyCode" name="Currency" minOccurs="0"/>
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0"/>
       <xs:element type="paymentLag" name="PaymentLag" minOccurs="0"/>
+      <xs:element type="xs:integer" name="NotionalPaymentLag" minOccurs="0"/>
       <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <xs:element name="Amortizations" minOccurs="0" maxOccurs="1">
@@ -1224,6 +1232,13 @@
       <xs:enumeration value="CreditDefaultSwap"/>
       <xs:enumeration value="CreditDefaultSwapOption"/>
       <xs:enumeration value="Failed"/>
+      <xs:enumeration value="FlexiSwap"/>
+      <xs:enumeration value="BalanceGuaranteedSwap"/>
+      <xs:enumeration value="CallableSwap"/>
+      <xs:enumeration value="EquityOutperformanceOption"/>
+      <xs:enumeration value="EquityPairwiseVarianceSwap"/>
+      <xs:enumeration value="FxPairwiseVarianceSwap"/>
+      <xs:enumeration value="CommodityPairwiseVarianceSwap"/>
       <!-- scripted trades -->
       <xs:enumeration value="ScriptedTrade"/>
       <xs:enumeration value="EquityBasketVarianceSwap"/>
@@ -1414,12 +1429,12 @@
       <xs:element type="xs:float" name="Rebate" minOccurs="0"/>
       <xs:element type="currencyCode" name="RebateCurrency" minOccurs="0"/>
       <xs:element name="RebatePayTime" minOccurs="0">
-	<xs:simpleType>
-	  <xs:restriction base="xs:string">
-	    <xs:enumeration value="atHit"/>
-	    <xs:enumeration value="atExpiry"/>
-	  </xs:restriction>
-	</xs:simpleType>
+    <xs:simpleType>
+      <xs:restriction base="xs:string">
+        <xs:enumeration value="atHit"/>
+        <xs:enumeration value="atExpiry"/>
+      </xs:restriction>
+    </xs:simpleType>
       </xs:element>
     </xs:all>
   </xs:complexType>
@@ -1482,6 +1497,62 @@
         </xs:complexType>
       </xs:element>
     </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="flexiSwapData">
+    <xs:sequence>
+      <xs:element name="LowerNotionalBounds" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Notional" maxOccurs="unbounded" minOccurs="1">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:float">
+                    <xs:attribute name="startDate" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Prepayment" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="NoticePeriod" minOccurs="0"/>
+            <xs:element type="xs:string" name="NoticeCalendar" minOccurs="0"/>
+            <xs:element type="xs:string" name="NoticeConvention" minOccurs="0"/>
+            <xs:sequence>
+              <xs:element name="PrepaymentOptions" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="PrepaymentOption" maxOccurs="unbounded" minOccurs="0">
+                      <xs:complexType>
+                        <xs:all>
+                          <xs:element type="date" name="ExerciseDate"/>
+                          <xs:element type="xs:string" name="Type"/>
+                          <xs:element type="xs:float" name="Value"/>
+                        </xs:all>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="longShort" name="OptionLongShort"/>
+      <xs:element type="legData" name="LegData"  maxOccurs="2" minOccurs="2"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="bgSwapData">
+    <xs:sequence>
+      <xs:element type="xs:string" name="ReferenceSecurity"/>
+      <xs:element type="tranches" name="Tranches" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="legData" name="LegData"  maxOccurs="2" minOccurs="2"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="capFloorData">
@@ -1835,15 +1906,15 @@
   <xs:element type="xs:string" name="Strike" substitutionGroup="strikeGroup"/>
   <xs:element name="StrikeData" substitutionGroup="strikeGroup">
     <xs:complexType>
-	  <xs:choice>
+      <xs:choice>
         <xs:element type="strikePriceData" name="StrikePrice"/>
         <xs:element type="strikeYieldData" name="StrikeYield"/>
-	    <xs:sequence>
+        <xs:sequence>
           <xs:element type="xs:float" name="Value"/>
           <xs:element type="extendedCurrencyCode" name="Currency" minOccurs="0"/>
-	    </xs:sequence>
-	  </xs:choice>
-	</xs:complexType>
+        </xs:sequence>
+      </xs:choice>
+    </xs:complexType>
   </xs:element>
 
   <xs:element name="levelGroup" abstract="true"/>
@@ -1915,6 +1986,7 @@
   <xs:complexType name="indexCreditDefaultSwapOptionData">
     <xs:all>
       <xs:element type="xs:float" name="Strike" minOccurs="0"/>
+	  <!-- KnockOut is ignored. Remains in the schema for backward compatibility of the schema -->
       <xs:element type="bool" name="KnockOut" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="IndexTerm" minOccurs="0" maxOccurs="1"/>
       <xs:element type="cdsOptionstrikeType" name="StrikeType" minOccurs="0"/>
@@ -2004,7 +2076,7 @@
   <xs:complexType name="bondOptionData">
     <xs:all>
       <xs:element type="optionData" name="OptionData"/>
-	  <xs:element ref="strikeGroup"/>
+      <xs:element ref="strikeGroup"/>
       <xs:element type="xs:string" name="Redemption" maxOccurs="1" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceType" maxOccurs="1" minOccurs="0"/>
       <xs:element type="bool" name="KnocksOut" maxOccurs="1" minOccurs="0"/>
@@ -2094,33 +2166,33 @@
   <xs:complexType name="trsUnderlyingData">
     <xs:sequence>
       <xs:choice maxOccurs="unbounded">
-	<xs:element name="Derivative">
+    <xs:element name="Derivative">
           <xs:complexType>
             <xs:sequence>
-	      <xs:element type="xs:string" name="Id"/>
-	      <xs:element name="Trade">
-		<xs:complexType>
-		  <xs:sequence>
-		    <xs:element type="oreTradeType" name="TradeType"/>
-		    <xs:element type="envelope" name="Envelope" minOccurs="0"/>
-		    <xs:group ref="oreTradeData"/>
-		  </xs:sequence>
-		  <xs:attribute type="xs:string" name="id"/>
-		</xs:complexType>
-	      </xs:element>
-	    </xs:sequence>
-	  </xs:complexType>
-	</xs:element>
-	<xs:element name="Trade">
-	  <xs:complexType>
-	    <xs:sequence>
-	      <xs:element type="oreTradeType" name="TradeType"/>
-	      <xs:element type="envelope" name="Envelope" minOccurs="0"/>
-	      <xs:group ref="oreTradeData"/>
-	    </xs:sequence>
-	  <xs:attribute type="xs:string" name="id"/>
-	  </xs:complexType>
-	</xs:element>
+          <xs:element type="xs:string" name="Id"/>
+          <xs:element name="Trade">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="oreTradeType" name="TradeType"/>
+            <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+            <xs:group ref="oreTradeData"/>
+          </xs:sequence>
+          <xs:attribute type="xs:string" name="id"/>
+        </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
+    <xs:element name="Trade">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element type="oreTradeType" name="TradeType"/>
+          <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+          <xs:group ref="oreTradeData"/>
+        </xs:sequence>
+      <xs:attribute type="xs:string" name="id"/>
+      </xs:complexType>
+    </xs:element>
       </xs:choice>
     </xs:sequence>
   </xs:complexType>
@@ -2266,14 +2338,14 @@
       </xs:element>
       <xs:element name="Underlying">
         <xs:complexType>
-	      <xs:choice>
+          <xs:choice>
             <xs:sequence>
               <xs:element type="optionData" name="OptionData" minOccurs="0"/>
-	      <xs:element type="xs:boolean" name="NakedOption" minOccurs="0"/>
+          <xs:element type="xs:boolean" name="NakedOption" minOccurs="0"/>
               <xs:element type="legData" name="LegData" maxOccurs="unbounded"/>
             </xs:sequence>
-	        <xs:element type="tlockData" name="TreasuryLockData"/>
-	      </xs:choice>
+            <xs:element type="tlockData" name="TreasuryLockData"/>
+          </xs:choice>
         </xs:complexType>
       </xs:element>
     </xs:all>
@@ -2786,7 +2858,9 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="notionalCalculation" name="NotionalCalculation" minOccurs="0"/>
       <xs:element type="xs:float" name="NotionalOverride" minOccurs="0"/>
-      <xs:element type="compositeTradeComponents" name="Components"/>
+      <xs:element type="xs:boolean" name="PortfolioBasket" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="BasketName" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="compositeTradeComponents" name="Components" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -3791,6 +3865,8 @@
       <xs:element type="longShort" name="Position"/>
       <xs:element type="underlying" name="Underlying1" minOccurs="0"/>
       <xs:element type="underlying" name="Underlying2" minOccurs="0"/>
+      <xs:element type="underlying" name="Underlying3" minOccurs="0"/>
+      <xs:element type="underlying" name="Underlying4" minOccurs="0"/>
       <xs:element type="xs:string" name="Name1" minOccurs="0"/>
       <xs:element type="xs:string" name="Name2" minOccurs="0"/>
       <xs:element type="currencyCode" name="PayCcy"/>
@@ -3973,7 +4049,7 @@
   <xs:complexType name="constantMaturityVolatilitySwapData">
     <xs:all>
       <xs:element type="stFreeStyleNumber" name="NotionalAmount"/>
-	    <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
+        <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
       <xs:element type="stFreeStyleLongShort" name="LongShort"/>
       <xs:element type="stFreeStyleNumber" name="Strike"/>
       <xs:element type="stFreeStyleDayCounter" name="DayCountFraction"/>
@@ -4210,17 +4286,17 @@
 
   <xs:complexType name="ladderLockInOptionData">
     <xs:all>
-    	<xs:element type="stFreeStyleLongShort" name="LongShort"/>
-    	<xs:element type="stFreeStyleNumber" name="Quantity"/>
-    	<xs:element type="stFreeStyleOptionType" name="PutCall"/>
-    	<xs:element type="stFreeStyleNumber" name="PremiumAmount"/>
-    	<xs:element type="stFreeStyleEvent" name="PremiumDate"/>
-    	<xs:element type="stFreeStyleIndex" name="Underlying"/>
-    	<xs:element type="stFreeStyleNumberVector" name="LockInLevels"/>
-    	<xs:element type="stFreeStyleEventSchedule" name="ObservationSchedule"/>
-    	<xs:element type="stFreeStyleNumber" name="Strike"/>
-    	<xs:element type="stFreeStyleEvent" name="SettlementDate"/>
-    	<xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+        <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+        <xs:element type="stFreeStyleNumber" name="Quantity"/>
+        <xs:element type="stFreeStyleOptionType" name="PutCall"/>
+        <xs:element type="stFreeStyleNumber" name="PremiumAmount"/>
+        <xs:element type="stFreeStyleEvent" name="PremiumDate"/>
+        <xs:element type="stFreeStyleIndex" name="Underlying"/>
+        <xs:element type="stFreeStyleNumberVector" name="LockInLevels"/>
+        <xs:element type="stFreeStyleEventSchedule" name="ObservationSchedule"/>
+        <xs:element type="stFreeStyleNumber" name="Strike"/>
+        <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+        <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
     </xs:all>
   </xs:complexType>
 
@@ -4514,13 +4590,13 @@
       <xs:element type="xs:float" name="PremiumRate" minOccurs="0"/>
       <xs:element type="dayCounter" name="PremiumDayCounter" minOccurs="0"/>
       <xs:element name="PremiumData" minOccurs="0">
-	<xs:complexType>
-	  <xs:all>
-	    <xs:element type="legType" name="LegType"/>
-  	    <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
-	    <xs:element ref="legDataType"/>
-	  </xs:all>
-	</xs:complexType>
+    <xs:complexType>
+      <xs:all>
+        <xs:element type="legType" name="LegType"/>
+        <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
+        <xs:element ref="legDataType"/>
+      </xs:all>
+    </xs:complexType>
       </xs:element>
       <xs:element type="date" name="ProtectionStart" minOccurs="0"/>
       <xs:element type="date" name="ProtectionEnd" minOccurs="0"/>
@@ -4585,6 +4661,96 @@
       <xs:element type="stFreeStyleNumber" name="Floor"/>
       <xs:element type="stFreeStyleNumber" name="Cap"/>
       <xs:element type="stFreeStyleEventSchedule" name="FixingSchedule"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="pairwiseVarianceSwapData2">
+    <xs:all>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+      <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
+      <xs:element type="stFreeStyleNumberVector" name="UnderlyingStrikes"/>
+      <xs:element type="stFreeStyleNumberVector" name="UnderlyingNotionals"/>
+      <xs:element type="stFreeStyleNumber" name="BasketNotional"/>
+      <xs:element type="stFreeStyleNumber" name="BasketStrike"/>
+      <xs:element type="scheduleData" name="ValuationSchedule"/>
+      <xs:element type="scheduleData" name="LaggedValuationSchedule" minOccurs="0"/>
+      <xs:element type="stFreeStyleNumber" name="AccrualLag" minOccurs="0"/>
+      <xs:element type="stFreeStyleNumber" name="PayoffLimit" minOccurs="0"/>
+      <xs:element type="stFreeStyleNumber" name="Cap" minOccurs="0"/>
+      <xs:element type="stFreeStyleNumber" name="Floor" minOccurs="0"/>
+      <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="pairwiseVarianceSwapData1">
+    <xs:all>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+      <xs:element type="stFreeStyleIndexVector" name="Underlyings"/>
+      <xs:element type="stFreeStyleNumberVector" name="UnderlyingStrikes"/>
+      <xs:element type="stFreeStyleNumberVector" name="UnderlyingNotionals"/>
+      <xs:element type="stFreeStyleNumber" name="BasketNotional"/>
+      <xs:element type="stFreeStyleNumber" name="BasketStrike"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ValuationSchedule"/>
+      <xs:element type="stFreeStyleEventSchedule" name="LaggedValuationSchedule" minOccurs="0"/>
+      <xs:element type="stFreeStyleNumber" name="AccrualLag" minOccurs="0"/>
+      <xs:element type="stFreeStyleNumber" name="PayoffLimit" minOccurs="0"/>
+      <xs:element type="stFreeStyleNumber" name="Cap" minOccurs="0"/>
+      <xs:element type="stFreeStyleNumber" name="Floor" minOccurs="0"/>
+      <xs:element type="stFreeStyleEvent" name="SettlementDate"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
+    </xs:all>
+  </xs:complexType>
+
+
+  <xs:complexType name="eqOutperformanceOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData" minOccurs="1"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Notional"/>
+      <xs:element type="underlying" name="Underlying1"/>
+      <xs:element type="underlying" name="Underlying2"/>
+      <xs:element type="xs:float" name="InitialPrice1"/>
+      <xs:element type="xs:float" name="InitialPrice2"/>
+      <xs:element type="xs:float" name="StrikeReturn"/>
+      <xs:element type="xs:float" name="KnockInPrice" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:float" name="KnockOutPrice" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="currencyCode" name="InitialPriceCurrency1" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="fxTermsData" name="InitialPriceFXTerms1" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="currencyCode" name="InitialPriceCurrency2" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="fxTermsData" name="InitialPriceFXTerms2" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:element name="FormulaBasedLegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:all>
+        <xs:element type="xs:string" name="Index"/>
+        <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:integer" name="FixingDays"/>
+        <xs:element type="calendar" name="FixingCalendar" minOccurs="0" maxOccurs="1"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="commodityRevenueOptionData">
+    <xs:all>
+      <xs:element type="stFreeStyleOptionType" name="PutCall"/>
+      <xs:element type="stFreeStyleLongShort" name="LongShort"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ObservationDates"/>
+      <xs:element type="stFreeStyleEventSchedule" name="ValuationDates"/>
+      <xs:element type="stFreeStyleEventSchedule" name="SettlementSchedule"/>
+      <xs:element type="stFreeStyleNumber" name="TrueUp"/>
+      <xs:element type="stFreeStyleEventSchedule" name="MonthlySchedule"/>
+      <xs:element type="stFreeStyleNumberVector" name="MonthlyBaseloadCapacity"/>
+      <xs:element type="stFreeStyleNumberVector" name="MonthlyDuctFiredCapacity"/>
+      <xs:element type="stFreeStyleNumberVector" name="MonthlyBaseloadHeatRate"/>
+      <xs:element type="stFreeStyleNumberVector" name="MonthlyDuctFiredHeatRate"/>
+      <xs:element type="stFreeStyleNumberVector" name="VOM"/>
+      <xs:element type="stFreeStyleNumber" name="HoursPerDay"/>
+      <xs:element type="stFreeStyleIndex" name="GasIndex"/>
+      <xs:element type="stFreeStyleIndex" name="EnergyIndex"/>
+      <xs:element type="stFreeStyleCurrency" name="PayCcy"/>
     </xs:all>
   </xs:complexType>
 

@@ -23,15 +23,17 @@
 
 #pragma once
 
-#include <map>
-#include <vector>
-
-#include <boost/shared_ptr.hpp>
 #include <ored/utilities/serializationdate.hpp>
+
+#include <ql/shared_ptr.hpp>
 #include <ql/math/array.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 
+#include <boost/functional/hash.hpp>
+#include <map>
+#include <unordered_map>
+#include <vector>
 namespace ore {
 namespace analytics {
 using QuantLib::Array;
@@ -102,6 +104,8 @@ private:
     }
 };
 
+std::size_t hash_value(const RiskFactorKey& k);
+
 inline bool operator<(const RiskFactorKey& lhs, const RiskFactorKey& rhs) {
     return std::tie(lhs.keytype, lhs.name, lhs.index) < std::tie(rhs.keytype, rhs.name, rhs.index);
 }
@@ -138,6 +142,8 @@ public:
 
     //! Return the scenario asof date
     virtual const Date& asof() const = 0;
+    //! Set the asof date
+    virtual void setAsof(const Date& d) = 0;
 
     //! Get the scenario label
     virtual const string& label() const = 0;
@@ -158,11 +164,22 @@ public:
     //! Get an element from the scenario
     virtual Real get(const RiskFactorKey& key) const = 0;
 
+    //! Is this an absolute or difference scenario?
+    virtual bool isAbsolute() const = 0;
+    //! Set if this is an absolute scenario
+    virtual void setAbsolute(const bool b) = 0;
+    //! Get coordinates
+    virtual const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
+    coordinates() const = 0;
+
     //! clones a scenario and returns a pointer to the new object
-    virtual boost::shared_ptr<Scenario> clone() const = 0;
+    virtual QuantLib::ext::shared_ptr<Scenario> clone() const = 0;
 
     //! checks for equality up to numerical differences
-    virtual bool isCloseEnough(const boost::shared_ptr<Scenario>& s) const;
+    virtual bool isCloseEnough(const QuantLib::ext::shared_ptr<Scenario>& s) const;
+
+    //! return fingerprint identifying the set of rf keys of the scenarios, or 0 if not provided by the implementation
+    virtual std::size_t keysHash() const { return 0; }
 
 private:
     friend class boost::serialization::access;
@@ -180,3 +197,8 @@ std::ostream& operator<<(std::ostream& out, const ShiftType& shiftType);
 
 } // namespace analytics
 } // namespace ore
+
+template <> 
+struct std::hash<ore::analytics::RiskFactorKey> {
+    std::size_t operator()(const ore::analytics::RiskFactorKey& k) const { return hash_value(k); }
+};

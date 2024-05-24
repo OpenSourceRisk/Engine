@@ -26,6 +26,7 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/report/report.hpp>
 #include <ql/errors.hpp>
+#include <ql/tuple.hpp>
 #include <vector>
 
 namespace ore {
@@ -58,6 +59,7 @@ public:
     const vector<ReportType>& data(Size i) const;
     void toFile(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
                 const string& nullString = "#N/A", bool lowerHeader = false);
+    void jumpToColumn(Size i) { i_ = i; }
 
 private:
     Size i_;
@@ -70,7 +72,7 @@ private:
 //! InMemoryReport with access to plain types instead of boost::variant<>, to facilitate language bindings
 class PlainInMemoryReport {
 public:
-    PlainInMemoryReport(const boost::shared_ptr<InMemoryReport>& imReport)
+    PlainInMemoryReport(const QuantLib::ext::shared_ptr<InMemoryReport>& imReport)
         : imReport_(imReport) {}
     ~PlainInMemoryReport() {}
     Size columns() const { return imReport_->columns(); }
@@ -106,7 +108,7 @@ private:
             vi.push_back(int(s));
         return vi;
     }
-    boost::shared_ptr<InMemoryReport> imReport_;
+    QuantLib::ext::shared_ptr<InMemoryReport> imReport_;
 };
 
 } // namespace data

@@ -50,34 +50,33 @@ std::size_t numberOfStochasticRvs(const std::vector<RandomVariable>& v) {
 }
 } // namespace
 
-XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::shared_ptr<ore::data::Loader>& loader,
-                         const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-                         const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
-                         const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
-                         const boost::shared_ptr<ore::data::EngineData>& engineData,
-                         const boost::shared_ptr<ore::analytics::CrossAssetModelData>& crossAssetModelData,
-                         const boost::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
-                         const boost::shared_ptr<ore::data::Portfolio>& portfolio, const string& marketConfiguration,
+XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
+                         const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+                         const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+                         const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
+                         const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+                         const QuantLib::ext::shared_ptr<ore::analytics::CrossAssetModelData>& crossAssetModelData,
+                         const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
+                         const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const string& marketConfiguration,
                          const string& marketConfigurationInCcy,
-                         const boost::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
-                         const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                         const IborFallbackConfig& iborFallbackConfig, const bool continueOnCalibrationError,
+                         const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
+                         const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                         const IborFallbackConfig& iborFallbackConfig,
+			 const bool bumpCvaSensis, const bool continueOnCalibrationError,
                          const bool continueOnError, const std::string& context)
     : asof_(asof), loader_(loader), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), simMarketData_(simMarketData), engineData_(engineData),
       crossAssetModelData_(crossAssetModelData), scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio),
       marketConfiguration_(marketConfiguration), marketConfigurationInCcy_(marketConfigurationInCcy),
       sensitivityData_(sensitivityData), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
-      continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {
-
-    bool bumpCvaSensis = false;
+      bumpCvaSensis_(bumpCvaSensis), continueOnCalibrationError_(continueOnCalibrationError), continueOnError_(continueOnError), context_(context) {
 
     // Just for performance testing, duplicate the trades in input portfolio as specified by env var N
 
-    // portfolio_ = boost::make_shared<Portfolio>();
+    // portfolio_ = QuantLib::ext::make_shared<Portfolio>();
     // std::string pfxml = portfolio->toXMLString();
     // for (Size i = 0; i < atoi(getenv("N")); ++i) {
-    //     auto p = boost::make_shared<Portfolio>();
+    //     auto p = QuantLib::ext::make_shared<Portfolio>();
     //     p->fromXMLString(pfxml);
     //     for (auto const& [id, t] : p->trades()) {
     //         t->id() += "_" + std::to_string(i + 1);
@@ -94,7 +93,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     LOG("XvaEngineCG: build init market");
 
-    initMarket_ = boost::make_shared<ore::data::TodaysMarket>(asof_, todaysMarketParams_, loader_, curveConfigs_,
+    initMarket_ = QuantLib::ext::make_shared<ore::data::TodaysMarket>(asof_, todaysMarketParams_, loader_, curveConfigs_,
                                                               continueOnError_, true, true, referenceData_, false,
                                                               iborFallbackConfig_, false, true);
 
@@ -105,7 +104,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     LOG("XvaEngineCG: build sim market");
 
     // note: take "use spreaded term structures" from sensitivity config instead of hardcoding to true here?
-    simMarket_ = boost::make_shared<ore::analytics::ScenarioSimMarket>(
+    simMarket_ = QuantLib::ext::make_shared<ore::analytics::ScenarioSimMarket>(
         initMarket_, simMarketData_, marketConfiguration_, *curveConfigs_, *todaysMarketParams_, continueOnError_, true,
         false, false, iborFallbackConfig_, true);
 
@@ -116,7 +115,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     LOG("XvaEngineCG: build cam model builder");
 
     // note: sim market has one config only, no in-ccy config to calibrate IR components
-    camBuilder_ = boost::make_shared<CrossAssetModelBuilder>(
+    camBuilder_ = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         simMarket_, crossAssetModelData_, marketConfigurationInCcy_, marketConfiguration_, marketConfiguration_,
         marketConfiguration_, marketConfiguration_, marketConfiguration_, false, continueOnCalibrationError_,
         std::string(), SalvagingAlgorithm::Spectral, "xva engine cg - cam builder");
@@ -132,8 +131,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     std::vector<std::string> currencies;                                                   // from cam
     std::vector<Handle<YieldTermStructure>> curves;                                        // from cam
     std::vector<Handle<Quote>> fxSpots;                                                    // from cam
-    std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>> irIndices;   // from trade building
-    std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>> infIndices; // from trade building
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices;   // from trade building
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>> infIndices; // from trade building
     std::vector<std::string> indices;                                                      // from trade building
     std::vector<std::string> indexCurrencies;                                              // from trade building
 
@@ -149,7 +148,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     Size timeStepsPerYear = 1;
 
     // note: projectedStateProcessIndices can be removed from GaussianCamCG constructor most probably?
-    model_ = boost::make_shared<GaussianCamCG>(camBuilder_->model(), scenarioGeneratorData_->samples(), currencies,
+    model_ = QuantLib::ext::make_shared<GaussianCamCG>(camBuilder_->model(), scenarioGeneratorData_->samples(), currencies,
                                                curves, fxSpots, irIndices, infIndices, indices, indexCurrencies,
                                                simulationDates, timeStepsPerYear, iborFallbackConfig,
                                                std::vector<Size>(), std::vector<std::string>(), true);
@@ -160,7 +159,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     LOG("XvaEngineCG: build trades against global cam cg model");
 
-    auto edCopy = boost::make_shared<EngineData>(*engineData_);
+    auto edCopy = QuantLib::ext::make_shared<EngineData>(*engineData_);
     edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
     edCopy->globalParameters()["RunType"] = "NPV";
     map<MarketContext, string> configurations;
@@ -168,7 +167,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     configurations[MarketContext::fxCalibration] = marketConfiguration_;
     configurations[MarketContext::pricing] = marketConfiguration_;
     auto factory =
-        boost::make_shared<EngineFactory>(edCopy, simMarket_, configurations, referenceData_, iborFallbackConfig_,
+        QuantLib::ext::make_shared<EngineFactory>(edCopy, simMarket_, configurations, referenceData_, iborFallbackConfig_,
                                           EngineBuilderFactory::instance().generateAmcCgEngineBuilders(
                                               model_, scenarioGeneratorData_->getGrid()->dates()),
                                           true);
@@ -187,9 +186,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     auto g = model_->computationGraph();
 
     for (auto const& [id, trade] : portfolio_->trades()) {
-        auto qlInstr = boost::dynamic_pointer_cast<ScriptedInstrument>(trade->instrument()->qlInstrument());
+        auto qlInstr = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(trade->instrument()->qlInstrument());
         QL_REQUIRE(qlInstr, "XvaEngineCG: expeced trade to provide ScriptedInstrument, trade '" << id << "' does not.");
-        auto engine = boost::dynamic_pointer_cast<ScriptedInstrumentPricingEngineCG>(qlInstr->pricingEngine());
+        auto engine = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrumentPricingEngineCG>(qlInstr->pricingEngine());
         QL_REQUIRE(engine, "XvaEngineCG: expected to get ScriptedInstrumentPricingEngineCG, trade '"
                                << id << "' has a different engine.");
         g->startRedBlock();
@@ -281,7 +280,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     LOG("XvaEngineCG: do forward evaluation");
 
     Real eps = 0.0; // smoothing parameter for indicator functions
-    ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, bumpCvaSensis ? eps : 0.0);
+    ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, bumpCvaSensis_ ? eps : 0.0,
+                                Null<Real>()); // todo set regression variance cutoff
     grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, eps);
     opNodeRequirements_ = getRandomVariableOpNodeRequirements();
 
@@ -299,7 +299,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
         keepNodes[n] = true;
     }
 
-    if (bumpCvaSensis) {
+    if (bumpCvaSensis_) {
         for (auto const& rv : model_->randomVariates())
             for (auto const& v : rv)
                 keepNodes[v] = true;
@@ -316,17 +316,17 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // Write epe / ene profile out
 
     {
-        InMemoryReport epeReport;
-        epeReport.addColumn("Date", Date()).addColumn("EPE", double(), 4).addColumn("ENE", double(), 4);
+        epeReport_ = QuantLib::ext::make_shared<InMemoryReport>();
+        epeReport_->addColumn("Date", Date()).addColumn("EPE", double(), 4).addColumn("ENE", double(), 4);
 
         for (Size i = 0; i < simulationDates.size() + 1; ++i) {
-            epeReport.next();
-            epeReport.add(i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1))
+            epeReport_->next();
+            epeReport_->add(i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1))
                 .add(expectation(max(values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))).at(0))
                 .add(expectation(max(-values[pfExposureNodes[i]], RandomVariable(model_->size(), 0.0))).at(0));
         }
-        epeReport.end();
-        epeReport.toFile("Output/xvacg-exposure.csv");
+        epeReport_->end();
+        epeReport_->toFile("Output/xvacg-exposure.csv");
     }
 
     Real cva = expectation(values[cvaNode]).at(0);
@@ -340,7 +340,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     std::vector<double> modelParamDerivatives(baseModelParams_.size());
 
-    if (!bumpCvaSensis) {
+    if (!bumpCvaSensis_) {
 
         LOG("XvaEngineCG: run backward derivatives");
 
@@ -384,14 +384,14 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
 
     LOG("XvaEngineCG: running sensi scenarios");
 
-    sensiScenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
+    sensiScenarioGenerator_ = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
         sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
-        boost::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), false, std::string(), continueOnError,
+        QuantLib::ext::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), false, std::string(), continueOnError,
         simMarket_->baseScenarioAbsolute());
 
     simMarket_->scenarioGenerator() = sensiScenarioGenerator_;
 
-    auto resultCube = boost::make_shared<DoublePrecisionSensiCube>(std::set<std::string>{"CVA"}, asof_,
+    auto resultCube = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(std::set<std::string>{"CVA"}, asof_,
                                                                    sensiScenarioGenerator_->samples());
     resultCube->setT0(cva, 0, 0);
 
@@ -419,7 +419,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
             model_->calculate();
             ++activeScenarios;
 
-            if (!bumpCvaSensis) {
+            if (!bumpCvaSensis_) {
 
                 // calcuate CVA sensi using ad derivatives
 
@@ -459,13 +459,13 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof, const boost::sha
     // write out sensi report
 
     {
-        boost::shared_ptr<InMemoryReport> scenarioReport = boost::make_shared<InMemoryReport>();
-        auto sensiCube = boost::make_shared<SensitivityCube>(
+        sensiReport_ = QuantLib::ext::make_shared<InMemoryReport>();
+        auto sensiCube = QuantLib::ext::make_shared<SensitivityCube>(
             resultCube, sensiScenarioGenerator_->scenarioDescriptions(), sensiScenarioGenerator_->shiftSizes(),
             sensiScenarioGenerator_->shiftSizes(), sensiScenarioGenerator_->shiftSchemes());
-        auto sensiStream = boost::make_shared<SensitivityCubeStream>(sensiCube, simMarketData_->baseCcy());
-        ReportWriter().writeScenarioReport(*scenarioReport, {sensiCube}, 0.0);
-        scenarioReport->toFile("Output/xvacg-cva-sensi-scenario.csv");
+        auto sensiStream = QuantLib::ext::make_shared<SensitivityCubeStream>(sensiCube, simMarketData_->baseCcy());
+        ReportWriter().writeScenarioReport(*sensiReport_, {sensiCube}, 0.0);
+        sensiReport_->toFile("Output/xvacg-cva-sensi-scenario.csv");
     }
 
     // Output statistics

@@ -34,13 +34,13 @@ std::string getDateStr(const Date& d) {
 } // namespace
 
 FdConvertibleBondEvents::FdConvertibleBondEvents(const Date& today, const DayCounter& dc, const Real N0,
-                                                 const boost::shared_ptr<QuantExt::EquityIndex2>& equity,
-                                                 const boost::shared_ptr<FxIndex>& fxConversion)
+                                                 const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equity,
+                                                 const QuantLib::ext::shared_ptr<FxIndex>& fxConversion)
     : today_(today), dc_(dc), N0_(N0), equity_(equity), fxConversion_(fxConversion) {}
 
 Real FdConvertibleBondEvents::time(const Date& d) const { return dc_.yearFraction(today_, d); }
 
-void FdConvertibleBondEvents::registerBondCashflow(const boost::shared_ptr<CashFlow>& c) {
+void FdConvertibleBondEvents::registerBondCashflow(const QuantLib::ext::shared_ptr<CashFlow>& c) {
     if (c->date() > today_) {
         registeredBondCashflows_.push_back(c);
         times_.insert(time(c->date()));
@@ -128,11 +128,11 @@ Date FdConvertibleBondEvents::nextConversionDate(const Date& d) const {
 void FdConvertibleBondEvents::processBondCashflows() {
     lastRedemptionDate_ = Date::minDate();
     for (auto const& c : registeredBondCashflows_) {
-        if (boost::dynamic_pointer_cast<Coupon>(c) == nullptr)
+        if (QuantLib::ext::dynamic_pointer_cast<Coupon>(c) == nullptr)
             lastRedemptionDate_ = std::max(lastRedemptionDate_, c->date());
     }
     for (auto const& d : registeredBondCashflows_) {
-        bool isRedemption = boost::dynamic_pointer_cast<Coupon>(d) == nullptr;
+        bool isRedemption = QuantLib::ext::dynamic_pointer_cast<Coupon>(d) == nullptr;
         Size index = grid_.index(time(d->date()));
         hasBondCashflow_[index] = true;
         associatedDate_[index] = d->date();
@@ -210,7 +210,7 @@ void FdConvertibleBondEvents::processMakeWholeData() {
             }
         }
 
-        auto interpolation = boost::make_shared<BilinearInterpolation>(
+        auto interpolation = QuantLib::ext::make_shared<BilinearInterpolation>(
             mw_cr_inc_x_.begin(), mw_cr_inc_x_.end(), mw_cr_inc_y_.begin(), mw_cr_inc_y_.end(), mw_cr_inc_z_);
 
         // init cap (infty if not given)

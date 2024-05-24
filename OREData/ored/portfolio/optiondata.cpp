@@ -83,7 +83,7 @@ void OptionData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* OptionData::toXML(XMLDocument& doc) {
+XMLNode* OptionData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("OptionData");
     XMLUtils::addChild(doc, node, "LongShort", longShort_);
     if (callPut_ != "")
@@ -153,7 +153,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
     Date lastAccrualStartDate = Date::minDate();
     for (auto const& l : legs) {
         for (auto const& c : l) {
-            if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c))
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c))
                 lastAccrualStartDate = std::max(lastAccrualStartDate, cpn->accrualStartDate());
         }
     }
@@ -218,14 +218,14 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
             QL_REQUIRE(exerciseDates_.size() == 1, "Got 'European' option style, but "
                                                        << exerciseDates_.size()
                                                        << " exercise dates. Should the style be 'Bermudan'?");
-            exercise_ = boost::make_shared<EuropeanExercise>(noticeDates_.back());
+            exercise_ = QuantLib::ext::make_shared<EuropeanExercise>(noticeDates_.back());
         } else if (optionData.style() == "Bermudan" || optionData.style().empty()) {
             // Note: empty exercise style defaults to Bermudan for backwards compatibility
-            exercise_ = boost::make_shared<BermudanExercise>(noticeDates_);
+            exercise_ = QuantLib::ext::make_shared<BermudanExercise>(noticeDates_);
         } else if (optionData.style() == "American") {
             QL_REQUIRE(noticeDates_.size() == 2, "ExerciseBuilder: internal error, style is american but got "
                                                      << noticeDates_.size() << " notice dates, expected 2.");
-            exercise_ = boost::make_shared<AmericanExercise>(noticeDates_.front(), noticeDates_.back(),
+            exercise_ = QuantLib::ext::make_shared<AmericanExercise>(noticeDates_.front(), noticeDates_.back(),
                                                              optionData.payoffAtExpiry());
         } else {
             QL_FAIL("ExerciseBuilder: style '"
@@ -259,7 +259,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                     }
                 }
                 if (p != Null<Real>())
-                    cashSettlement_ = boost::make_shared<QuantLib::SimpleCashFlow>(p, cashSettlementDate);
+                    cashSettlement_ = QuantLib::ext::make_shared<QuantLib::SimpleCashFlow>(p, cashSettlementDate);
                 DLOG("Option is cash settled, amount " << p << " paid on " << cashSettlementDate);
             }
         }
@@ -303,7 +303,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                 std::set<std::pair<Date, Real>> notionals;
                 for (auto const& l : legs) {
                     for (auto const& c : l) {
-                        if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
+                        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
                             if (cpn->accrualStartDate() >= sortedExerciseDates[i])
                                 notionals.insert(std::make_pair(cpn->accrualStartDate(), cpn->nominal()));
                         }
@@ -343,7 +343,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
         // set fee settlement amount if option is exercised
 
         if (isExercised_) {
-            feeSettlement_ = boost::make_shared<QuantLib::SimpleCashFlow>(
+            feeSettlement_ = QuantLib::ext::make_shared<QuantLib::SimpleCashFlow>(
                 -allRebates[exerciseDateIndex_], feeSettlCal.advance(exerciseDate_, feeSettlPeriod, feeSettlBdc));
             DLOG("Settlement fee for exercised option is " << feeSettlement_->amount() << " paid on "
                                                            << feeSettlement_->date() << ".");
@@ -359,15 +359,15 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
             }
             if (optionData.style() == "American") {
                 // Note: we compute the settl date relative to notification, not exercise here
-                exercise_ = boost::make_shared<QuantExt::RebatedExercise>(*exercise_, rebates.front(), feeSettlPeriod,
+                exercise_ = QuantLib::ext::make_shared<QuantExt::RebatedExercise>(*exercise_, rebates.front(), feeSettlPeriod,
                                                                           feeSettlCal, feeSettlBdc);
-                auto dbgEx = boost::static_pointer_cast<QuantExt::RebatedExercise>(exercise_);
+                auto dbgEx = QuantLib::ext::static_pointer_cast<QuantExt::RebatedExercise>(exercise_);
                 DLOG("Got rebate " << dbgEx->rebate(0) << " for American exercise with fee settle period "
                                    << feeSettlPeriod << ", cal " << feeSettlCal << ", bdc " << feeSettlBdc);
             } else {
-                exercise_ = boost::make_shared<QuantExt::RebatedExercise>(*exercise_, exerciseDates_, rebates,
+                exercise_ = QuantLib::ext::make_shared<QuantExt::RebatedExercise>(*exercise_, exerciseDates_, rebates,
                                                                           feeSettlPeriod, feeSettlCal, feeSettlBdc);
-                auto dbgEx = boost::static_pointer_cast<QuantExt::RebatedExercise>(exercise_);
+                auto dbgEx = QuantLib::ext::static_pointer_cast<QuantExt::RebatedExercise>(exercise_);
                 for (Size i = 0; i < exerciseDates_.size(); ++i) {
                     DLOG("Got rebate " << dbgEx->rebate(i) << " with payment date "
                                        << QuantLib::io::iso_date(dbgEx->rebatePaymentDate(i))

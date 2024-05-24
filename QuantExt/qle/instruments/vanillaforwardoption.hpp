@@ -36,13 +36,13 @@ namespace QuantExt {
       public:
         class arguments;
         class engine;
-        VanillaForwardOption(const boost::shared_ptr<QuantLib::StrikedTypePayoff>& payoff,
-                             const boost::shared_ptr<QuantLib::Exercise>& exercise, const QuantLib::Date& forwardDate,
+        VanillaForwardOption(const QuantLib::ext::shared_ptr<QuantLib::StrikedTypePayoff>& payoff,
+                             const QuantLib::ext::shared_ptr<QuantLib::Exercise>& exercise, const QuantLib::Date& forwardDate,
                              const QuantLib::Date& paymentDate)
             : VanillaOption(payoff, exercise), forwardDate_(forwardDate), paymentDate_(paymentDate) {}
 
-        VanillaForwardOption(const boost::shared_ptr<QuantLib::StrikedTypePayoff>& payoff,
-            const boost::shared_ptr<QuantLib::Exercise>& exercise, const QuantLib::Date& forwardDate)
+        VanillaForwardOption(const QuantLib::ext::shared_ptr<QuantLib::StrikedTypePayoff>& payoff,
+            const QuantLib::ext::shared_ptr<QuantLib::Exercise>& exercise, const QuantLib::Date& forwardDate)
                 : VanillaOption(payoff, exercise), forwardDate_(forwardDate) {}
 
         void setupArguments(QuantLib::PricingEngine::arguments*) const override;

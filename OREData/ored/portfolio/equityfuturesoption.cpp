@@ -31,8 +31,8 @@ namespace ore {
 namespace data {
 
 EquityFutureOption::EquityFutureOption(Envelope& env, OptionData option, const string& currency, Real quantity,
-                                       const boost::shared_ptr<ore::data::Underlying>& underlying, TradeStrike strike,
-                                       QuantLib::Date forwardDate, const boost::shared_ptr<QuantLib::Index>& index,
+                                       const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying, TradeStrike strike,
+                                       QuantLib::Date forwardDate, const QuantLib::ext::shared_ptr<QuantLib::Index>& index,
                                        const std::string& indexName)
     : VanillaOptionTrade(env, AssetClass::EQ, option, underlying->name(), currency, quantity, strike, index, indexName,
                          forwardDate),
@@ -40,14 +40,14 @@ EquityFutureOption::EquityFutureOption(Envelope& env, OptionData option, const s
     tradeType_ = "EquityFutureOption";
 }
 
-void EquityFutureOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void EquityFutureOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(quantity_ > 0, "Equity futures option requires a positive quantity");
     assetName_ = name();
     // FIXME: use index once implemented
-    // const boost::shared_ptr<Market>& market = engineFactory->market();
+    // const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
     // Handle<PriceTermStructure> priceCurve =
     //    market->equityPriceCurve(underlying_->name(), engineFactory->configuration(MarketContext::pricing));
-    // index_ = boost::make_shared<EquityFuturesIndex>(underlying_->name(), forwardDate, NullCalendar(), priceCurve);
+    // index_ = QuantLib::ext::make_shared<EquityFuturesIndex>(underlying_->name(), forwardDate, NullCalendar(), priceCurve);
 
     // FIXME: we set the automatic exercise to false until the Equity Futures Index is implemented
 
@@ -77,7 +77,7 @@ void EquityFutureOption::fromXML(XMLNode* node) {
     forwardDate_ = parseDate(XMLUtils::getChildValue(eqNode, "FutureExpiryDate", true));
 }
 
-XMLNode* EquityFutureOption::toXML(XMLDocument& doc) {
+XMLNode* EquityFutureOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityFutureOptionData");
     XMLUtils::appendNode(node, eqNode);
@@ -95,7 +95,7 @@ XMLNode* EquityFutureOption::toXML(XMLDocument& doc) {
 }
 
 std::map<AssetClass, std::set<std::string>>
-EquityFutureOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+EquityFutureOption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::EQ, std::set<std::string>({name()})}};
 }
 

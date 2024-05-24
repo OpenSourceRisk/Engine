@@ -26,7 +26,7 @@
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ored/portfolio/envelope.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace ore {
 namespace data {
@@ -79,13 +79,13 @@ public:
     /*!
       adds a new NettingSetDefinition object to manager
     */
-    void add(const boost::shared_ptr<NettingSetDefinition>& nettingSet);
+    void add(const QuantLib::ext::shared_ptr<NettingSetDefinition>& nettingSet);
 
     /*!
       extracts a pointer to a NettingSetDefinition from manager
     */
-    boost::shared_ptr<NettingSetDefinition> get(const string& id) const;
-    boost::shared_ptr<NettingSetDefinition> get(const NettingSetDetails& nettingSetDetails) const;
+    QuantLib::ext::shared_ptr<NettingSetDefinition> get(const string& id) const;
+    QuantLib::ext::shared_ptr<NettingSetDefinition> get(const NettingSetDetails& nettingSetDetails) const;
 
     /*!
       vector containing the ids of all objects stored in manager
@@ -93,11 +93,11 @@ public:
     vector<NettingSetDetails> uniqueKeys() const { return uniqueKeys_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
-    const std::map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>>& nettingSetDefinitions() { return data_; }
+    XMLNode* toXML(XMLDocument& doc) const override;
+    const std::map<NettingSetDetails, const QuantLib::ext::shared_ptr<NettingSetDefinition>>& nettingSetDefinitions() { return data_; }
 
 private:
-    map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>> data_;
+    map<NettingSetDetails, const QuantLib::ext::shared_ptr<NettingSetDefinition>> data_;
     vector<NettingSetDetails> uniqueKeys_;
 };
 } // namespace data

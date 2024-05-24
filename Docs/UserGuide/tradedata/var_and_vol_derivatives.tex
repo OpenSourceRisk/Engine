@@ -1,0 +1,2442 @@
+\subsubsection{Exotic Variance and Volatility Derivatives}
+\label{SubSectionExoticVarianceSwap}
+
+Exotic variance/volatility swaps and options are represented as {\em scripted trades},
+refer to the scripted trade documentation in ore/Docs/ScriptedTrade for an introduction.
+Each of the supported variations and their payoff script
+name are shown in Table \ref{tab:exotic_variance_swap}. All swaps have an optional cap/floor feature.
+
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+Variance/Volatility Product Variation & Payoff Script Name \\
+\hline
+\hline
+Variance/Volatility Option & \lstinline!VarianceOption! \\
+\hline
+Variance/Volatility Swap with KI/KO Barrier & \lstinline!KIKOVarianceSwap! \\
+\hline
+Corridor Volatility/Variance Swap & \lstinline!CorridorVarianceSwap! \\
+\hline
+Corridor Variance Swap with KI/KO Barrier & \lstinline!KIKOCorridorVarianceSwap! \\
+\hline
+Conditional Variance/Volatility Swap &  \begin{tabular}{@{}l@{}} \lstinline!ConditionalVarianceSwap01!\\\lstinline!ConditionalVarianceSwap02!
+                                        \end{tabular} \\
+\hline
+Pairwise Variance Swap & \lstinline!PairwiseVarianceSwap! \\
+\hline
+Variance Dispersion Swap & \lstinline!VarianceDispersionSwap! \\
+\hline
+Corridor Variance Dispersion Swap & \lstinline!CorridorVarianceDispersionSwap! \\
+\hline
+Corridor Variance Dispersion Swap with KO Barrier & \lstinline!KOCorridorVarianceDispersionSwap! \\
+\hline
+Gamma Swap & \lstinline!GammaSwap! \\
+\hline
+Basket Variance Swap & \lstinline!BasketVarianceSwap! \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Exotic variance/volatility product types and associated script names.}
+\label{tab:exotic_variance_swap}
+\end{table}
+
+Trade input and the associated payoff script are described in the following for all supported variations.
+
+\subsubsection*{Variance Option}
+
+The traditional trade representation is as follows, using an EQ underlying in this example:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="EQ_VarianceOption">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    .....
+  </Envelope>
+  <VarianceOptionData>
+    <LongShort type="longShort">Long</LongShort>
+    <PutCall type="optionType">Call</PutCall>
+    <PremiumAmount type="number">0</PremiumAmount>
+    <PremiumDate type="event">2020-11-26</PremiumDate>
+    <Notional type="number">138000</Notional>
+    <VarianceReference type="number">0.19</VarianceReference>
+    <Strike type="number">0.19</Strike>
+    <Underlying type="index">EQ-RIC:.SPX</Underlying>
+    <ValuationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2020-11-26</StartDate>
+          <EndDate>2021-09-18</EndDate>
+          <Tenor>1D</Tenor>
+          <Convention>Following</Convention>
+          <TermConvention>Following</TermConvention>
+          <Calendar>USA</Calendar>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ValuationSchedule>
+    <SquaredPayoff type="bool">true</SquaredPayoff>
+    <SettlementDate type="event">2021-09-22</SettlementDate>
+    <PayCcy type="currency">USD</PayCcy>
+  </VarianceOptionData>
+</Trade>
+\end{minted}
+
+The VarianceOption script referenced in the trade above is shown in listing
+\ref{lst:variance_option}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+REQUIRE {Notional >= 0} AND {Strike >= 0};
+
+NUMBER expectedN, realisedVariance, currPrice, currentNotional;
+NUMBER prevPrice, payoff, realisedVariation, strike, premium, d;
+
+FOR d IN (2, SIZE(ValuationSchedule), 1) DO
+  currPrice = Underlying(ValuationSchedule[d]);
+  prevPrice = Underlying(ValuationSchedule[d-1]);
+  realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+END;
+
+expectedN = SIZE(ValuationSchedule) - 1;
+realisedVariance = (252/expectedN) * realisedVariance;
+
+IF SquaredPayoff == 1 THEN
+  realisedVariation = realisedVariance;
+  currentNotional = pow(100, 2) * Notional / (2 * 100 * VarianceReference);
+  strike = pow(Strike, 2);
+ELSE
+  realisedVariation = sqrt(realisedVariance);
+  currentNotional = 100 * Notional;
+  strike = Strike;
+END;
+
+payoff = currentNotional * max(PutCall * (realisedVariation - strike), 0);
+
+NUMBER ExerciseProbability;
+IF payoff > 0 THEN
+  ExerciseProbability = 1;
+END;
+
+premium = PAY(PremiumAmount, PremiumDate, SettlementDate, PayCcy);
+payoff = PAY(payoff, ValuationSchedule[SIZE(ValuationSchedule)],
+             SettlementDate, PayCcy);
+Option = LongShort * (payoff - premium);
+\end{minted}
+\caption{Payoff script for a VarianceOption.}
+\label{lst:variance_option}
+\end{listing}
+
+The payout formulas for a variance put and call option are:
+
+\begin{align*}
+  Put Payoff &= 100^2 * \frac{\text{\lstinline!Notional!}}{2 * 100 * \text{\lstinline!VarianceReference!}} * \max[\text{\lstinline!Strike!} - \text{\lstinline!RealisedVariance!}, 0], \\
+  Call Payoff &= 100^2 * \frac{\text{\lstinline!Notional!}}{2 * 100 * \text{\lstinline!VarianceReference!}} * \max[\text{\lstinline!Strike!} - \text{\lstinline!RealisedVariance!}, 0].
+\end{align*}
+
+The meanings and allowable values for the \lstinline!VarianceOptionData! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the option. \emph{Long} corresponds to paying out on the
+  fixed/strike variance (volatility) and receiving on the floating/realised variance (volatility). In other words,
+  a long position has positive value if the realised variance (volatility) exceeds the variance (volatility)
+  strike. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[optionType] \lstinline!PutCall!: Option type. For FX, this should be \emph{Call} if we buy
+  \lstinline!CCY1! and sell \lstinline!CCY2!,
+  \emph{Put} if we buy \lstinline!CCY2! and sell \lstinline!CCY1! (where the \lstinline!Underlying! is in the
+  form \lstinline!FX-SOURCE-CCY1-CCY2!). \\
+  Allowable values: \emph{Put, Call}
+  \item{}[number] \lstinline!PremiumAmount!: The total option premium amount.
+  Allowable values: Any non-negativenumber.
+  \item{}[event] \lstinline!PremiumDate!: The option premium payment date.
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[number] \lstinline!Notional!: The vega notional amount. If the option was struck in terms of a variance notional
+  $N_{var}$, the corresponding vega notional is given by $N_{vol} = N_{var} \cdot 2 \cdot 100 \cdot K_{vol}$ (where
+  $K_{vol}$ is in absolute terms). \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Strike!: The volatility strike $K_{vol}$ quoted in absolute terms. If
+  the option was struck in terms of variance, the square root of that variance should be used here. \\
+  Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!VarianceReference!: The parameter used to convert the vega notional amount into the corresponding
+  variance amount. Similar to the \lstinline!Strike!, this should be quoted in absolute terms, e.g.\ if the
+  (volatility) strike price is 20\% and the variance reference is 32.4\%, then the \lstinline!Strike! is \emph{0.20}
+  and the \lstinline!VarianceReference! should be \emph{0.324}. \\
+  Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[bool] \lstinline!SquaredPayoff!: Flag indicating whether the trade is a variance option (\emph{True}) or a volatility
+  option (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the option payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency}  for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Variance Swap with KI/KO Barrier}
+
+The traditional trade representation is as follows, using an FX underlying in this example:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="FX_VarianceSwap_KIKO">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    .....
+  </Envelope>
+  <KIKOVarianceSwapData>    
+    <LongShort type="longShort">Long</LongShort>
+    <Strike type="number">0.02</Strike>
+    <Notional type="number">50000</Notional>
+    <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+    <ValuationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2018-12-31</StartDate>
+          <EndDate>2019-05-05</EndDate>
+          <Tenor>1D</Tenor>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Calendar>US</Calendar>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ValuationSchedule>
+    <SquaredPayoff type="bool">true</SquaredPayoff>
+    <BarrierType type="barrierType">UpIn</BarrierType>
+    <BarrierLevel type="number">0</BarrierLevel>
+    <Cap type="number">2.5</Cap>
+    <Floor type="number">0</Floor>
+    <SettlementDate type="event">2019-05-06</SettlementDate>
+    <PayCcy type="currency">USD</PayCcy>
+  </KIKOVarianceSwapData>
+</Trade>
+\end{minted}
+
+The KIKOVarianceSwap script referenced in the trade above is shown in listing
+\ref{lst:kiko_variance_swap}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+REQUIRE {Notional >= 0} AND {Strike >= 0};
+REQUIRE {Cap >= 0} AND {Floor >= 0};
+
+alive = 1;
+FOR d IN (2, SIZE(ValuationSchedule), 1) DO
+  IF alive == 1 THEN
+    currPrice = Underlying(ValuationSchedule[d]);
+    prevPrice = Underlying(ValuationSchedule[d-1]);
+    realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+
+    IF BarrierType == 3 OR BarrierType == 4 THEN
+      daysBeforeKO = daysBeforeKO + 1;
+    END;
+
+    IF {BarrierType == 3 AND currPrice <= BarrierLevel} OR
+       {BarrierType == 4 AND currPrice >= BarrierLevel} THEN
+      alive = 0;
+    END;
+
+    IF knockedIn == 0 THEN
+      IF {BarrierType == 1 AND currPrice <= BarrierLevel} OR
+         {BarrierType == 2 AND currPrice >= BarrierLevel} THEN
+        knockedIn = 1;
+      END;
+    END;
+  END;
+END;
+
+expectedN = SIZE(ValuationSchedule) - 1;
+realisedVariance = (252/expectedN) * realisedVariance;
+
+IF SquaredPayoff == 1 THEN
+  realisedVariation = realisedVariance;
+  currentNotional = pow(100, 2) * Notional / (2 * 100 * Strike);
+  strike = pow(Strike, 2);
+ELSE
+  realisedVariation = sqrt(realisedVariance);
+  currentNotional = 100 * Notional;
+  strike = Strike;
+END;
+
+IF Floor > 0 THEN
+  IF SquaredPayoff == 1 THEN
+    floor = pow(Floor, 2);
+  ELSE
+    floor = Floor;
+  END;
+  realisedVariation = max(floor * strike, realisedVariation);
+END;
+IF Cap > 0 THEN
+  IF SquaredPayoff == 1 THEN
+    cap = pow(Cap, 2);
+  ELSE
+    cap = Cap;
+  END;
+  realisedVariation = min(cap * strike, realisedVariation);
+END;
+
+payoff = LongShort * knockedIn * (daysBeforeKO / expectedN) *
+         currentNotional * (realisedVariation - strike);
+
+Swap = PAY(payoff, ValuationSchedule[SIZE(ValuationSchedule)],
+           SettlementDate, PayCcy);
+\end{minted}
+\caption{Payoff script for a KIKOVarianceSwap.}
+\label{lst:kiko_variance_swap}
+\end{listing}
+
+The payout formula when no knock-out has occurred is:
+
+\begin{equation*}
+  Payout = 100^2 * varianceAmount * \Big[ \min \big( \max (realisedVariance^2, \text{\lstinline!Floor!}), \text{\lstinline!Cap!}\big) - \text{\lstinline!Strike!}^2 \Big].
+\end{equation*}
+
+If a knock-out has occurred, the above amount is scaled by the number of days between the first variance
+accrual date and the date of knock-out, as a fraction of the total number of variance accrual dates.
+
+The meanings and allowable values for the \lstinline!KIKOVarianceSwapData! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the swap. \emph{Long} corresponds to paying out on the
+  fixed/strike variance (volatility) and receiving on the floating/realised variance (volatility). In other words,
+  a long position has positive value if the realised variance (volatility) exceeds the variance (volatility)
+  strike. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!Strike!: The volatility strike $K_{vol}$ of the variance swap quoted in absolute terms.
+  If the swap was struck in terms of variance, the square root of that variance should be used here. \\
+  Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Notional!: The vega notional amount. If the swap was struck in terms of a variance notional
+  $N_{var}$, the corresponding vega notional is given by $N_{vol} = N_{var} \cdot 2 \cdot 100 \cdot K_{vol}$ (where
+  $K_{vol}$ is in absolute terms). \\
+  Allowable values: Any non-negative number.
+  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  Allowable values: \lstinline!See! Section \ref{ss:schedule_data}.
+  \item{}[bool] SquaredPayoff: Flag indicating whether the trade is a variance swap (\emph{True}) or a volatility
+  swap (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[barrierType] \lstinline!BarrierType!: Whether the barrier is a knock-in (\emph{DownIn} or \emph{UpIn}) or a knock-out
+  (\emph{DownOut} or \emph{UpOut}) barrier. For trades with no barrier, which is equivalent to a capped/floored
+  variance swap, set \lstinline!BarrierType! to \emph{UpIn} and \lstinline!BarrierLevel! to zero, as in the sample trade
+  representation above. \\
+  Allowable values: \emph{DownIn, UpIn, DownOut, UpOut}.
+  \item{}[number] \lstinline!BarrierLevel!: The agreed knock-in/knock-out barrier price level. \\
+  Allowable values: Any non-negative real number.
+  \item{}[number] \lstinline!Cap!: The cap on the realised variance (or volatility), as a factor of the \lstinline!Strike!. For example,
+  if \lstinline!Cap! is 2.5, then the cap level will be $2.5^2 \times \text{\lstinline!Strike!}^2$ for variance swaps, and
+  $2.5 \times \text{\lstinline!Strike!}$ for volatility swaps. For trades with no cap, set \lstinline!Cap! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floor!: The floor on the realised variance (or volatility), as a factor of the \lstinline!Strike!. For example,
+  if \lstinline!Floor! is 0.1, then the floor level will be $0.1^2 \times \text{\lstinline!Strike!}$ for variance swaps, and
+  $0.1 \times \text{\lstinline!Strike!}$ for volatility swaps. For trades with no floor, set
+  \lstinline!Floor! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Corridor Variance Swap}
+
+The traditional trade representation is as follows, using an FX underlying in this example:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="FX_VarianceSwap_Corridor">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    .....
+  </Envelope>
+  <CorridorVarianceSwapData>
+    <LongShort type="longShort">Long</LongShort>
+    <Strike type="number">0.02</Strike>
+    <Notional type="number">50000</Notional>
+    <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+    <ValuationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2018-12-31</StartDate>
+          <EndDate>2019-05-05</EndDate>
+          <Tenor>1D</Tenor>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Calendar>US</Calendar>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ValuationSchedule>
+    <SquaredPayoff type="bool">true</SquaredPayoff>
+    <UpperBarrierLevel type="number">1000000000</UpperBarrierLevel>
+    <LowerBarrierLevel type="number">0</LowerBarrierLevel>
+    <CountBothObservations type="bool">true</CountBothObservations>
+    <AccrualAdjustment type="bool">false</AccrualAdjustment>
+    <Cap type="number">2.5</Cap>
+    <Floor type="number">0</Floor>
+    <SettlementDate type="event">2019-05-06</SettlementDate>
+    <PayCcy type="currency">USD</PayCcy>
+  </CorridorVarianceSwapData>
+</Trade>
+\end{minted}
+
+The CorridorVarianceSwap script referenced in the trade above is shown in listing
+\ref{lst:corridor_variance_swap}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+REQUIRE {Notional >= 0} AND {Strike >= 0};
+REQUIRE UpperBarrierLevel >= LowerBarrierLevel;
+
+FOR d IN (2, SIZE(ValuationSchedule), 1) DO
+  currPrice = Underlying(ValuationSchedule[d]);
+  prevPrice = Underlying(ValuationSchedule[d-1]);
+
+  IF {CountBothObservations == 1 AND 
+      currPrice >= LowerBarrierLevel AND currPrice <= UpperBarrierLevel AND
+      prevPrice >= LowerBarrierLevel AND prevPrice <= UpperBarrierLevel} OR
+     {CountBothObservations == -1 AND
+      prevPrice >= LowerBarrierLevel AND prevPrice <= UpperBarrierLevel} THEN
+        realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+        accruedDays = accruedDays + 1;
+  END;
+END;
+
+expectedN = SIZE(ValuationSchedule) - 1;
+realisedVariance = (252/expectedN) * realisedVariance;
+
+IF AccrualAdjustment == -1 THEN
+  accruedDays = expectedN;
+END;
+
+IF SquaredPayoff == 1 THEN
+  realisedVariation = realisedVariance;
+  currentNotional = pow(100, 2) * Notional / (2 * 100 * Strike);
+  strike = pow(Strike, 2);
+  adjustedStrike = (accruedDays / expectedN) * strike;
+ELSE
+  realisedVariation = sqrt(realisedVariance);
+  currentNotional = 100 * Notional;
+  strike = Strike;
+  adjustedStrike = sqrt(accruedDays/expectedN) * strike;
+END;
+
+IF Floor > 0 THEN
+  IF SquaredPayoff == 1 THEN
+    floor = pow(Floor, 2);
+  ELSE
+    floor = Floor;
+  END;
+  realisedVariation = max(floor * adjustedStrike, realisedVariation);
+END;
+IF Cap > 0 THEN
+  IF SquaredPayoff == 1 THEN
+    cap = pow(Cap, 2);
+  ELSE
+    cap = Cap;
+  END;
+  realisedVariation = min(cap * adjustedStrike, realisedVariation);
+END;
+
+payoff = LongShort * currentNotional * (realisedVariation - adjustedStrike);
+
+Swap = PAY(payoff, ValuationSchedule[SIZE(ValuationSchedule)],
+           SettlementDate, PayCcy);
+\end{minted}
+\caption{Payoff script for a CorridorVarianceSwap.}
+\label{lst:corridor_variance_swap}
+\end{listing}
+
+The payout formula is:
+
+\begin{equation*}
+  Payout = 100^2 * varianceAmount * \Big[ \min \big( \max (realisedVariance^2, \text{\lstinline!Floor!}), \text{\lstinline!Cap!}\big) - \text{\lstinline!Strike!}^2 \Big],
+\end{equation*}
+
+where the $realisedVariance$ only consists of variance accrual contributions for when the underlying price/level
+was trading within the window defined by the corridor.
+
+The meanings and allowable values for the \lstinline!CorridorVarianceSwapData! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the swap. \emph{Long} corresponds to paying out on the
+  fixed/strike variance (volatility) and receiving on the floating/realised variance (volatility). In other words,
+  a long position has positive value if the realised variance (volatility) exceeds the variance (volatility)
+  strike. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!Strike!: The volatility strike $K_{vol}$ of the variance swap quoted in absolute terms.
+  If the swap was struck in terms of variance, the square root of that variance should be used here. \\
+  Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Notional!: The vega notional amount. If the swap was struck in terms of a variance notional
+  $N_{var}$, the corresponding vega notional is given by $N_{vol} = N_{var} \cdot 2 \cdot 100 \cdot K_{vol}$ (where
+  $K_{vol}$ is in absolute terms). \\
+  Allowable values: Any non-negative number.
+  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[bool] \lstinline!SquaredPayoff!: Flag indicating whether the trade is a variance swap (\emph{True}) or a volatility
+  swap (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[number] \lstinline!UpperBarrierLevel!: The agreed upper barrier price level. \\
+  Allowable values: Any non-negative real number.
+  \item{}[number] \lstinline!LowerBarrierLevel!: The agreed lower barrier price level. \\
+  Allowable values: Any non-negative real number.
+  \item{}[bool] \lstinline!CountBothObservations!: Whether the variance/volatility is accrued based on both the current and
+  previous underlying prices falling within the corridor (\emph{True}) or only on the previous underlying price
+  (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[bool] \lstinline!AccrualAdjustment!: Whether the strike will be scaled relative to the number of days that the
+  underlying traded within the corridor. See $\widetilde{K}_{var}$ (for variance swaps) and $\widetilde{K}_{vol}$
+  (for volatility swaps) in section Capped/Floored Corridor Variance Swap of the Product Description for
+  Exotic Variance and Volatility Swaps.
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  \item{}[number] \lstinline!Cap!: The cap on the realised variance (or volatility), as a factor of the \lstinline!Strike! after
+  the accrual adjustment is applied (only when \lstinline!AccrualAdjustment! is \emph{True}). For example,
+  if \lstinline!Cap! is 2.5, then the cap level will be $2.5^2 \times \widetilde{K}_{var}$ for variance swaps, and
+  $2.5 \times \widetilde{K}_{vol}$ for volatility swaps. For trades with no cap, set \lstinline!Cap! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floor!: The floor on the realised variance (or volatility), as a factor of the \lstinline!Strike! after
+  the accrual adjustment is applied (only when \lstinline!AccrualAdjustment! is \emph{True}). For example,
+  if \lstinline!Floor! is 0.1, then the floor level will be $0.1^2 \times \widetilde{K}_{var}$ for variance swaps, and
+  $0.1 \times \widetilde{K}_{var}$ for volatility swaps. For trades with no floor, set
+  \lstinline!Floor! to zero. \\
+  Allowable values: Any non-negative number.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency}  for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Corridor Variance Swap with KI/KO Barrier}
+
+The traditional trade representation is as follows, using an EQ underlying in this example:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="EQ_VarianceSwap_KIKO_Corridor">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+     .....
+  </Envelope>
+  <KIKOCorridorVarianceSwapData>
+    <LongShort type="longShort">Long</LongShort>
+    <Strike type="number">0.19</Strike>
+    <Notional type="number">1380</Notional>
+    <Underlying type="index">EQ-RIC:.SPX</Underlying>
+    <ValuationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2020-11-26</StartDate>
+          <EndDate>2021-09-18</EndDate>
+          <Tenor>1D</Tenor>
+          <Convention>Following</Convention>
+          <TermConvention>Following</TermConvention>
+          <Calendar>USA</Calendar>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ValuationSchedule>
+    <CorridorUpperBarrierLevel type="number">3469.18</CorridorUpperBarrierLevel>
+    <CorridorLowerBarrierLevel type="number">2207.66</CorridorLowerBarrierLevel>
+    <KIKOBarrierType type="barrierType">UpOut</KIKOBarrierType>
+    <KIKOBarrierLevel type="number">3469.18</KIKOBarrierLevel>
+    <CountBothObservations type="bool">true</CountBothObservations>
+    <AccrualAdjustment type="bool">true</AccrualAdjustment>
+    <Cap type="number">0</Cap>
+    <Floor type="number">0</Floor>
+    <SettlementSchedule type="event">
+      <DerivedSchedule>
+        <BaseSchedule>ValuationSchedule</BaseSchedule>
+        <Shift>2D</Shift>
+        <Calendar>USA</Calendar>
+        <Convention>Following</Convention>
+      </DerivedSchedule>
+    </SettlementSchedule>
+    <PayCcy type="currency">USD</PayCcy>
+  </KIKOCorridorVarianceSwapData>
+</Trade>
+\end{minted}
+
+The KIKOCorridorVarianceSwap script referenced in the trade above is shown in listing
+\ref{lst:kiko_variance_swap}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+REQUIRE {Notional >= 0} AND {Strike >= 0} AND {KIKOBarrierLevel > 0};
+REQUIRE CorridorUpperBarrierLevel >= CorridorLowerBarrierLevel;
+
+n = SIZE(ValuationSchedule);
+
+alive = 1;
+FOR d IN (2, n, 1) DO
+  currPrice = Underlying(ValuationSchedule[d]);
+  prevPrice = Underlying(ValuationSchedule[d-1]);
+
+  IF alive == 1 THEN
+    IF {CountBothObservations == 1 AND 
+        currPrice >= CorridorLowerBarrierLevel AND currPrice <= CorridorUpperBarrierLevel AND
+        prevPrice >= CorridorLowerBarrierLevel AND prevPrice <= CorridorUpperBarrierLevel} OR
+       {CountBothObservations == -1 AND
+        prevPrice >= CorridorLowerBarrierLevel AND prevPrice <= CorridorUpperBarrierLevel} THEN
+          realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+          accruedDays = accruedDays + 1;
+    END;
+
+    IF {KIKOBarrierType == 3 AND currPrice <= KIKOBarrierLevel} OR
+       {KIKOBarrierType == 4 AND currPrice >= KIKOBarrierLevel} THEN
+      alive = 0;
+    END;
+  END;
+
+  IF knockedIn == 0 THEN
+    IF {KIKOBarrierType == 1 AND currPrice <= KIKOBarrierLevel} OR
+       {KIKOBarrierType == 2 AND currPrice >= KIKOBarrierLevel} THEN
+      knockedIn = 1;
+    END;
+  END;
+
+  IF {alive == 0 OR d == n} AND {calculated == 0} THEN
+    calculated = 1;
+    expectedN = n - 1;
+    realisedVariance = (252/expectedN) * realisedVariance;
+
+    IF AccrualAdjustment == -1 THEN
+      accruedDays = expectedN;
+    END;
+
+    currentNotional = pow(100, 2) * Notional / (2 * 100 * Strike);
+    strike = pow(Strike, 2);
+    adjustedStrike = (accruedDays / expectedN) * strike;
+
+    IF Floor > 0 THEN
+      floor = pow(Floor, 2);
+      realisedVariance = max(floor * adjustedStrike, realisedVariance);
+    END;
+    IF Cap > 0 THEN
+      cap = pow(Cap, 2);
+      realisedVariance = min(cap * adjustedStrike, realisedVariance);
+    END;
+
+    IF {{KIKOBarrierType == 1 OR KIKOBarrierType == 2} AND {knockedIn == 1}} OR
+       {{KIKOBarrierType == 3 OR KIKOBarrierType == 4} AND {alive == 0}} THEN
+      TriggerProbability = 1;
+    END;
+
+    IF KIKOBarrierType == 3 OR KIKOBarrierType == 4 THEN
+      knockedIn = 1;
+    END;
+
+    payoff = LongShort * knockedIn * currentNotional
+              * (realisedVariance - adjustedStrike);
+
+    Swap = LOGPAY(payoff, ValuationSchedule[d], SettlementSchedule[d], PayCcy);
+  END;
+END;
+\end{minted}
+\caption{Payoff script for a KIKOCorridorVarianceSwap.}
+\label{lst:kiko_corridor_variance_swap}
+\end{listing}
+
+The meanings and allowable values for the \lstinline!KIKOCorridorVarianceSwapData! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the swap. \emph{Long} corresponds to paying out on the
+  fixed/strike variance and receiving on the floating/realised variance. In other words, a long position has
+  positive value if the realised variance exceeds the variance strike. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!Strike!: The volatility strike $K_{vol}$ of the variance swap quoted in absolute terms.
+  If the swap was struck in terms of variance, the square root of that variance should be used here. \\
+  Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Notional!: The vega notional amount. If the swap was struck in terms of a variance notional
+  $N_{var}$, the corresponding vega notional is given by $N_{vol} = N_{var} \cdot 2 \cdot 100 \cdot K_{vol}$ (where
+  $K_{vol}$ is in absolute terms). \\
+  Allowable values: Any non-negative number.
+  \item{}[index] \lstinline!Underlying!: Underlying index. Currently only EQ, FX and COMM underlyings are supported. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the
+  variance accrual. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[number] \lstinline!CorridorUpperBarrierLevel!: The agreed upper barrier price level for the corridor. \\
+  Allowable values: Any non-negative real number.
+  \item{}[number] \lstinline!CorridorLowerBarrierLevel!: The agreed lower barrier price level for the corridor. \\
+  Allowable values: Any non-negative real number.
+  \item{}[barrierType] \lstinline!KIKOBarrierType!: Whether the barrier is a knock-in (\emph{DownIn}
+  or \emph{UpIn}) or a knock-out (\emph{DownOut} or \emph{UpOut}) barrier. For trades with no barrier, which is
+  equivalent to a capped/floored corridor variance swap, set \lstinline!KIKOBarrierType! to \emph{UpIn} and
+  \lstinline!KIKOBarrierLevel! to zero, as in the sample trade representation above. \\
+  Allowable values: \emph{DownIn, UpIn, DownOut, UpOut}.
+  \item{}[number] \lstinline!KIKOBarrierLevel!: The agreed knock-in/knock-out barrier price level. \\
+  Allowable values: Any non-negative real number.
+  \item{}[bool] \lstinline!CountBothObservations!: Whether the variance is accrued based on both the current and
+  previous underlying prices falling within the corridor (\emph{True}) or only on the previous underlying price
+  (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[bool] \lstinline!AccrualAdjustment!: Whether the strike will be scaled relative to the number of days that the
+  underlying traded within the corridor. See $\widetilde{K}_{var}$ in section Capped/Floored Corridor Variance
+  Swap of the Product Description for Exotic Variance and Volatility Swaps.
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  \item{}[number] \lstinline!Cap!: The cap on the realised variance, as a factor of the \lstinline!Strike!. For example,
+  if \lstinline!Cap! is 2.5, then the cap level will be $2.5^2 \times \text{\lstinline!Strike!}^2$. For trades
+  with no cap, set \lstinline!Cap! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floor!: The floor on the realised variance, as a factor of the \lstinline!Strike!. For example,
+  if \lstinline!Floor! is 0.1, then the floor level will be $0.1^2 \times \text{\lstinline!Strike!}$. For trades
+  with no floor, set \lstinline!Floor! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[event] \lstinline!SettlementSchedule!: The settlement dates derived from the \lstinline!ValuationSchedule! using a
+  settlement lag to reflect settlement after a knock-out event, or after the final variance observation date if
+  no knock-out occurs. If the barrier is knock-in, this represents the settlement date, which is the final
+  valuation date plus the settlement lag. \\
+  Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see the scripted trade documentation in ore/Docs/ScriptedTrade).
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency}  for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Conditional Variance Swap 01}
+
+The traditional trade representation is as follows, using an FX underlying in this example:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="FX_VarianceSwap_Conditional_01">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    .....
+  </Envelope>
+  <ConditionalVarianceSwap01Data>
+    <LongShort type="longShort">Long</LongShort>
+    <Strike type="number">0.02</Strike>
+    <Notional type="number">50000</Notional>
+    <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+    <ValuationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2018-12-31</StartDate>
+          <EndDate>2019-05-05</EndDate>
+          <Tenor>1D</Tenor>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Calendar>US</Calendar>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ValuationSchedule>
+    <SquaredPayoff type="bool">true</SquaredPayoff>
+    <BarrierType type="barrierType">UpIn</BarrierType>
+    <BarrierLevel type="number">0</BarrierLevel>
+    <CountBothObservations type="bool">true</CountBothObservations>
+    <Cap type="number">2.5</Cap>
+    <Floor type="number">0</Floor>
+    <AccrualAdjustment type="bool">false</AccrualAdjustment>
+    <SettlementDate type="event">2019-05-06</SettlementDate>
+    <PayCcy type="currency">USD</PayCcy>
+  </ConditionalVarianceSwap01Data>
+</Trade>
+\end{minted}
+
+The ConditionalVarianceSwap01 script referenced in the trade above is shown in listing
+\ref{lst:conditional_variance_swap_01}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+REQUIRE {Notional >= 0} AND {Strike > 0};
+
+FOR d IN (2, SIZE(ValuationSchedule), 1) DO
+  currPrice = Underlying(ValuationSchedule[d]);
+  prevPrice = Underlying(ValuationSchedule[d-1]);
+
+  IF {CountBothObservations == 1 AND {
+      {{BarrierType == 1 OR BarrierType == 4} AND
+        currPrice <= BarrierLevel AND prevPrice <= BarrierLevel} OR
+      {{BarrierType == 2 OR BarrierType == 3} AND
+        currPrice >= BarrierLevel AND prevPrice >= BarrierLevel}}}
+  OR {CountBothObservations == -1 AND {
+      {{BarrierType == 1 OR BarrierType == 4} AND
+        prevPrice <= BarrierLevel} OR 
+      {{BarrierType == 2 OR BarrierType == 3} AND
+        prevPrice <= BarrierLevel} }}
+  THEN
+    realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+    accruedDays = accruedDays + 1;
+  END;
+END;
+
+expectedN = SIZE(ValuationSchedule) - 1;
+realisedVariance = (252/expectedN) * realisedVariance;
+
+IF AccrualAdjustment == -1 THEN
+  accruedDays = expectedN;
+END;
+
+IF SquaredPayoff == 1 THEN
+  realisedVariation = realisedVariance;
+  currentNotional = pow(100, 2) * Notional / (2 * 100 * Strike);
+  strike = pow(Strike, 2);
+  adjustedStrike = (accruedDays / expectedN) * strike;
+ELSE
+  realisedVariation = sqrt(realisedVariance);
+  currentNotional = 100 * Notional;
+  strike = Strike;
+  adjustedStrike = sqrt(accruedDays/expectedN) * strike;
+END;
+
+IF Floor > 0 THEN
+  IF SquaredPayoff == 1 THEN
+    floor = pow(Floor, 2);
+  ELSE
+    floor = Floor;
+  END;
+  realisedVariation = max(floor * adjustedStrike, realisedVariation);
+END;
+IF Cap > 0 THEN
+  IF SquaredPayoff == 1 THEN
+    cap = pow(Cap, 2);
+  ELSE
+    cap = Cap;
+  END;
+  realisedVariation = min(cap * adjustedStrike, realisedVariation);
+END;
+
+payoff = LongShort * currentNotional * (realisedVariation - adjustedStrike);
+
+Swap = PAY(payoff, ValuationSchedule[SIZE(ValuationSchedule)],
+           SettlementDate, PayCcy);
+\end{minted}
+\caption{Payoff script for a ConditionalVarianceSwap01.}
+\label{lst:conditional_variance_swap_01}
+\end{listing}
+
+The payout formula is:
+\begin{equation*}
+  Payout = 100^2 * varianceAmount * \Big[ \min \big( \max (realisedVariance^2, \text{\lstinline!Floor!}), \text{\lstinline!Cap!}\big) - \text{\lstinline!Strike!}^2 \Big],
+\end{equation*}
+where the $realisedVariance$ only consists of variance accrual contributions for when the underlying price/level
+was trading within the pre-defined window.
+
+The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData01! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the swap. \emph{Long} corresponds to paying out on the
+  fixed/strike variance (volatility) and receiving on the floating/realised variance (volatility). In other words,
+  a long position has positive value if the realised variance (volatility) exceeds the variance (volatility)
+  strike. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!Strike!: The volatility strike $K_{vol}$ of the variance swap quoted in absolute terms.
+  If the swap was struck in terms of variance, the square root of that variance should be used here. \\
+  Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Notional!: The vega notional amount. If the swap was struck in terms of a variance notional
+  $N_{var}$, the corresponding vega notional is given by $N_{vol} = N_{var} \cdot 2 \cdot 100 \cdot K_{vol}$ (where
+  $K_{vol}$ is in absolute terms). \\
+  Allowable values: Any non-negative number.
+  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[bool] \lstinline!SquaredPayoff!: Flag indicating whether the trade is a variance swap (\emph{True}) or a volatility
+  swap (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[barrierType] \lstinline!BarrierType!: Whether the instrument is an up-variance swap (\emph{UpIn} or \emph{DownOut}) or 
+  a down-variance swap (\emph{DownIn} or \emph{UpOut}). \\
+  Allowable values: \emph{DownIn, UpIn, DownOut, UpOut}.
+  \item{}[number] \lstinline!BarrierLevel!: The agreed barrier price level. \\
+  Allowable values: Any non-negative real number.
+  \item{}[bool] \lstinline!CountBothObservations!: Whether the variance/volatility is accrued based on both the current and
+  previous underlying prices falling within the range (\emph{True}) or only on the previous underlying price
+  (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[bool] \lstinline!AccrualAdjustment!: Whether the strike will be scaled relative to the number of days that the
+  underlying traded within the range. See $\widetilde{K}_{var}$ (for variance swaps) and $\widetilde{K}_{vol}$
+  (for volatility swaps) in section Capped/Floored Conditional Variance Swap of the Product Description for
+  Exotic Variance and Volatility Swaps.
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  \item{}[number] \lstinline!Cap!: The cap on the realised variance (or volatility), as a factor of the \lstinline!Strike! after
+  the accrual adjustment is applied (only when \lstinline!AccrualAdjustment! is \emph{True}). For example,
+  if \lstinline!Cap! is 2.5, then the cap level will be $2.5^2 \times \widetilde{K}_{var}$ for variance swaps, and
+  $2.5 \times \widetilde{K}_{vol}$ for volatility swaps. For trades with no cap, set \lstinline!Cap! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floor!: The floor on the realised variance (or volatility), as a factor of the \lstinline!Strike! after
+  the accrual adjustment is applied (only when \lstinline!AccrualAdjustment! is \emph{True}). For example,
+  if \lstinline!Floor! is 0.1, then the floor level will be $0.1^2 \times \widetilde{K}_{var}$ for variance swaps, and
+  $0.1 \times \widetilde{K}_{var}$ for volatility swaps. For trades with no floor, set
+  \lstinline!Floor! to zero. \\
+  Allowable values: Any non-negative number.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Conditional Variance Swap 02}
+
+The traditional trade representation is as follows, using an FX underlying in this example:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="FX_VarianceSwap_Conditional_02">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    .....
+  </Envelope>
+  <ConditionalVarianceSwap02Data>
+    <LongShort type="longShort">Long</LongShort>
+    <Strike type="number">0.02</Strike>
+    <Notional type="number">50000</Notional>
+    <VarianceReference type="number">0.03</VarianceReference>
+    <Underlying type="index">FX-ECB-EUR-USD</Underlying>
+    <ValuationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2018-12-31</StartDate>
+          <EndDate>2019-05-05</EndDate>
+          <Tenor>1D</Tenor>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Calendar>US</Calendar>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ValuationSchedule>
+    <SquaredPayoff type="bool">true</SquaredPayoff>
+    <BarrierType type="barrierType">UpIn</BarrierType>
+    <BarrierLevel type="number">0</BarrierLevel>
+    <CountBothObservations type="bool">true</CountBothObservations>
+    <Cap type="number">2.5</Cap>
+    <Floor type="number">0</Floor>
+    <AccrualAdjustment type="bool">false</AccrualAdjustment>
+    <SettlementDate type="event">2019-05-06</SettlementDate>
+    <PayCcy type="currency">USD</PayCcy>
+  </ConditionalVarianceSwap02Data>
+</Trade>
+\end{minted}
+
+The ConditionalVarianceSwap02 script referenced in the trade above is shown in listing
+\ref{lst:conditional_variance_swap_02}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+REQUIRE {Notional >= 0} AND {Strike > 0} AND {VarianceReference > 0};
+
+FOR d IN (2, SIZE(ValuationSchedule), 1) DO
+  currPrice = Underlying(ValuationSchedule[d]);
+  prevPrice = Underlying(ValuationSchedule[d-1]);
+
+  IF {CountBothObservations == 1 AND {
+      {{BarrierType == 1 OR BarrierType == 4} AND
+        currPrice <= BarrierLevel AND prevPrice <= BarrierLevel} OR
+      {{BarrierType == 2 OR BarrierType == 3} AND
+        currPrice >= BarrierLevel AND prevPrice >= BarrierLevel}}}
+  OR {CountBothObservations == -1 AND {
+      {{BarrierType == 1 OR BarrierType == 4} AND
+        prevPrice <= BarrierLevel} OR 
+      {{BarrierType == 2 OR BarrierType == 3} AND
+        prevPrice <= BarrierLevel} }}
+  THEN
+    realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+    accruedDays = accruedDays + 1;
+  END;
+END;
+
+expectedN = SIZE(ValuationSchedule) - 1;
+realisedVariance = (252/expectedN) * realisedVariance;
+
+IF AccrualAdjustment == -1 THEN
+  accruedDays = expectedN;
+END;
+
+IF SquaredPayoff == 1 THEN
+  realisedVariation = realisedVariance;
+  currentNotional = pow(100, 2) * Notional / (2 * 100 * VarianceReference);
+  strike = pow(Strike, 2);
+  adjustedStrike = (accruedDays / expectedN) * strike;
+ELSE
+  realisedVariation = sqrt(realisedVariance);
+  currentNotional = 100 * Notional;
+  strike = Strike;
+  adjustedStrike = sqrt(accruedDays/expectedN) * strike;
+END;
+
+IF Floor > 0 THEN
+  IF SquaredPayoff == 1 THEN
+    floor = pow(Floor, 2);
+  ELSE
+    floor = Floor;
+  END;
+  realisedVariation = max(floor * adjustedStrike, realisedVariation);
+END;
+IF Cap > 0 THEN
+  IF SquaredPayoff == 1 THEN
+    cap = pow(Cap, 2);
+  ELSE
+    cap = Cap;
+  END;
+  realisedVariation = min(cap * adjustedStrike, realisedVariation);
+END;
+
+payoff = LongShort * currentNotional * (realisedVariation - adjustedStrike);
+
+Swap = PAY(payoff, ValuationSchedule[SIZE(ValuationSchedule)],
+           SettlementDate, PayCcy);
+\end{minted}
+\caption{Payoff script for a ConditionalVarianceSwap02.}
+\label{lst:conditional_variance_swap_02}
+\end{listing}
+
+The payout formula is:
+\begin{equation*}
+  Payout = 100^2 * varianceAmount * \Big[ \min \big( \max (realisedVariance^2, \text{\lstinline!Floor!}), \text{\lstinline!Cap!}\big) - \text{\lstinline!Strike!}^2 \Big],
+\end{equation*}
+where the $realisedVariance$ only consists of variance accrual contributions for when the underlying price/level
+was trading within the pre-defined window, and the ``variance strike'' used to obtain the varianceAmount is 
+given by the variance reference strike (instead of the actual strike).
+
+The meanings and allowable values for the \lstinline!ConditionalVarianceSwapData02! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the swap. \emph{Long} corresponds to paying out on the
+  fixed/strike variance (volatility) and receiving on the floating/realised variance (volatility). In other words,
+  a long position has positive value if the realised variance (volatility) exceeds the variance (volatility)
+  strike. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!Strike!: The volatility strike $K_{vol}$ of the variance swap quoted in absolute terms.
+  If the swap was struck in terms of variance, the square root of that variance should be used here. \\
+  Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Notional!: The vega notional amount. If the swap was struck in terms of a variance notional
+  $N_{var}$, the corresponding vega notional is given by $N_{vol} = N_{var} \cdot 2 \cdot 100 \cdot K_{vol}$ (where
+  $K_{vol}$ is in absolute terms). \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!VarianceReference!: The (volatility) strike value used (in place of the actual strike) to scale down the
+  vega notional in order to obtain the variance amount. If the swap was struck in terms of variance, the square root of that
+  variance should be used here. \\
+  Allowable values: Any non-negative number.
+  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[bool] \lstinline!SquaredPayoff!: Flag indicating whether the trade is a variance swap (\emph{True}) or a volatility
+  swap (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[barrierType] \lstinline!BarrierType!: Whether the instrument is an up-variance swap (\emph{UpIn} or \emph{DownOut}) or 
+  a down-variance swap (\emph{DownIn} or \emph{UpOut}). \\
+  Allowable values: \emph{DownIn, UpIn, DownOut, UpOut}.
+  \item{}[number] \lstinline!BarrierLevel!: The agreed barrier price level. \\
+  Allowable values: Any non-negative real number.
+  \item{}[bool] \lstinline!CountBothObservations!: Whether the variance/volatility is accrued based on both the current and
+  previous underlying prices falling within the range (\emph{True}) or only on the previous underlying price
+  (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[bool] \lstinline!AccrualAdjustment!: Whether the strike will be scaled relative to the number of days that the
+  underlying traded within the range. See $\widetilde{K}_{var}$ (for variance swaps) and $\widetilde{K}_{vol}$
+  (for volatility swaps) in section Capped/Floored Conditional Variance Swap of the Product Description for
+  Exotic Variance and Volatility Swaps.
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  \item{}[number] \lstinline!Cap!: The cap on the realised variance (or volatility), as a factor of the \lstinline!Strike! after
+  the accrual adjustment is applied (only when \lstinline!AccrualAdjustment! is \emph{True}). For example,
+  if \lstinline!Cap! is 2.5, then the cap level will be $2.5^2 \times \widetilde{K}_{var}$ for variance swaps, and
+  $2.5 \times \widetilde{K}_{vol}$ for volatility swaps. For trades with no cap, set \lstinline!Cap! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floor!: The floor on the realised variance (or volatility), as a factor of the \lstinline!Strike! after
+  the accrual adjustment is applied (only when \lstinline!AccrualAdjustment! is \emph{True}). For example,
+  if \lstinline!Floor! is 0.1, then the floor level will be $0.1^2 \times \widetilde{K}_{var}$ for variance swaps, and
+  $0.1 \times \widetilde{K}_{var}$ for volatility swaps. For trades with no floor, set
+  \lstinline!Floor! to zero. \\
+  Allowable values: Any non-negative number.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Pairwise Variance Swap}
+
+The \lstinline!FxPairwiseVarianceSwap! and \lstinline!EquityPairwiseVarianceSwap! trade types
+have trade data containers (respectively):
+\begin{itemize}
+  \item \lstinline!FxPairwiseVarianceSwapData!
+  \item \lstinline!EquityPairwiseVarianceSwapData!
+\end{itemize}
+Listing \ref{lst:eqpairwisevarianceswap_data} shows the structure of example trades for an Equity underlying.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="EQ_VarianceSwap_Pairwise">
+  <TradeType>EquityPairwiseVarianceSwap</TradeType>
+  <Envelope>
+    .......
+  </Envelope>
+  <EquityPairwiseVarianceSwapData>
+    <LongShort>Long</LongShort>
+    <Underlyings>
+      <Value>EQ-RIC:.STOXX50E</Value>
+      <Value>EQ-RIC:.SPX</Value>
+    </Underlyings>
+    <UnderlyingStrikes>
+      <Value>0.33859119894055129</Value>
+      <Value>0.39039467209479178</Value>
+    </UnderlyingStrikes>
+    <UnderlyingNotionals>
+      <Value>577.75847822419905</Value>
+      <Value>603.54235516510619</Value>
+    </UnderlyingNotionals>
+    <BasketNotional>1339.2898822637151</BasketNotional>
+    <BasketStrike>0.31612972020991642</BasketStrike>
+    <ValuationSchedule>
+      <Rules>
+      .......
+      </Rules>
+    </ValuationSchedule>
+    <LaggedValuationSchedule>
+      <Derived>
+       .......
+      </Derived>
+    </LaggedValuationSchedule>
+    <AccrualLag>3</AccrualLag>
+    <PayoffLimit>5</PayoffLimit>
+    <Cap>2.5</Cap>
+    <Floor>0</Floor>
+    <SettlementDate>2022-06-29</SettlementDate>
+    <PayCcy>USD</PayCcy>
+  </EquityPairwiseVarianceSwapData>
+</Trade>
+\end{minted}
+\caption{EquityPairwiseVarianceSwap data}
+\label{lst:eqpairwisevarianceswap_data}
+\end{listing}
+
+The payout formula is:
+
+\begin{equation*}
+  Payout = \min \Big( \max(equityAmount1 + equityAmount2 + equityAmountBasket, LowerLimit), UpperLimit \Big)
+\end{equation*}
+
+where
+
+\begin{align*}
+  UpperLimit &= &&\text{\lstinline!PayoffLimit!} * \big( |notional1| + |notional2| \big) \\
+  LowerLimit &= - &&\text{\lstinline!PayoffLimit!} * \big( |notional1| + |notional2| \big)
+\end{align*}
+
+The meanings and allowable values of elements in the \lstinline!EquityPairwiseVarianceSwapData! node follow below.
+
+\begin{itemize}
+  \item \lstinline!LongShort!: Own party position. \\
+    Allowable values: \emph{Long}, \emph{Short}
+  \item \lstinline!Underlyings!: The basket of underlyings. \\
+    Allowable values: The format follows that of a scripted trade underlying. See the scripted trade documentation in
+    ore/Docs/ScriptedTrade (section Data Node / Index) for allowable values.
+  \item \lstinline!UnderlyingStrikes!: The volatility strikes $K^{1,2}_{vol}$ of the underlyings quoted in absolute terms.
+  If the swap was struck in terms of variance, the square roots of the variances should be used here. \\
+    Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item \lstinline!UnderlyingNotionals!: The vega notional amount. If the swap was struck in terms of variance notionals
+  $N_{var}$, the corresponding vega notionals are given by $N^{1,2}_{vol} = N^{1,2}_{var} \cdot 2 \cdot 100 \cdot K^{1,2}_{vol}$
+  (where $K^{1,2}_{vol}$ is in absolute terms). \\
+    Allowable values: Any non-negative number. 
+  \item{} \lstinline!BasketNotional!: The basket vega notional amount. \\
+    Allowable values: Any non-negative number.
+  \item{} \lstinline!ValuationSchedule!: The start dates of the variance accrual schedule. This node can
+  also be used to derive the variance accrual schedule (or vice versa) using a DerivedSchedule (e.g.\ with a two-day lag, \emph{-2D}).
+  For the standard accrual period lengths of one day, set \lstinline!Shift! to \emph{-1D}. \\
+    Allowable values: See Section \ref{ss:schedule_data}. If this uses a DerivedSchedule, the \lstinline!Shift! must be less
+  than or equal to \emph{-1D}.
+  \item{} \lstinline!LaggedValuationSchedule!: The end dates of the variance accrual schedule. This node can be derived from
+  the \lstinline!ValuationSchedule! (or vice versa) using a DerivedSchedule (e.g.\ with a two-day lag, \emph{2D}). For the standard
+  accrual period lengths of one day, set \lstinline!Shift! to \emph{1D}. \\
+    Allowable values: See section \ref{ss:schedule_data}. If this uses a DerivedSchedule, the \lstinline!Shift! must be greater
+  than or equal to \emph{1D}. If left blank or omitted, defaults to a derived schedule, with \lstinline!Shift! equal to \emph{1D}.
+  \item{} \lstinline!AccrualLag!: The length (in days) of each variance accrual period. For classic variance swaps,
+  set this to \emph{1}. \\
+    Allowable values: Any integer greater than or equal to \emph{1}. If left blank or omitted, defaults to \emph{1}.
+  \item{} \lstinline!PayoffLimit!: The factor used to determine the maximum/minimum payoff under the swap. This corresponds to $C$
+  in the final equation in the Product Description for Pairwise Variance Swap. \\
+    Allowable values: Any non-negative number. If left blank or omitted, defaults to zero, i.e.\ no payoff limit.
+  \item{} \lstinline!Cap!: The cap on the realised variances, as a factor of the corresponding strikes. For example,
+  if \lstinline!Cap! is 2.5, then the cap level will be $2.5^2 \times \hat{K}_{var}$ for the basket realised variance.
+  For trades with no cap, set \lstinline!Cap! to zero. \\
+    Allowable values: Any non-negative number.
+  \item{} \lstinline!Floor!:  The floor on the realised variances, as a factor of the corresponding strikes. For example,
+  if \lstinline!Floor! is 0.1, then the floor level will be $0.1^2 \times \hat{K}_{var}$ for the basket realised variance.
+  For trades with no floor, set \lstinline!Floor! to zero. \\
+    Allowable values: Any non-negative number.
+  \item{} \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{} \lstinline!PayCcy!: The settlement currency. \\
+    Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+\end{itemize}
+
+Pairwise variance swaps can alternatively be represented as {\em scripted trades}, refer to the scripted trade documentation
+in ore/Docs/ScriptedTrade for an introduction.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="EQ_VarianceSwap_Pairwise">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    .....
+  </Envelope>
+  <PairwiseVarianceSwapData>
+    <LongShort type="longShort">Long</LongShort>
+    <Underlyings type="index">
+      <Value>EQ-RIC:.STOXX50E</Value>
+      <Value>EQ-RIC:.SPX</Value>
+    </Underlyings>
+    <UnderlyingStrikes type="number">
+      <Value>0.3385911989405513</Value>
+      <Value>0.3903946720947918</Value>
+    </UnderlyingStrikes>
+    <UnderlyingNotionals type="number">
+      <Value>577.7584782241991</Value>
+      <Value>603.5423551651062</Value>
+    </UnderlyingNotionals>
+    <BasketNotional type="number">1339.289882263715</BasketNotional>
+    <BasketStrike type="number">0.3161297202099164</BasketStrike>
+    <ValuationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+          <StartDate>2021-06-25</StartDate>
+          <EndDate>2022-06-25</EndDate>
+          <Tenor>3D</Tenor>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Calendar>US</Calendar>
+          <Rule>Forward</Rule>
+        </Rules>
+      </ScheduleData>
+    </ValuationSchedule>
+    <LaggedValuationSchedule type="event">
+      <DerivedSchedule>
+        <BaseSchedule>ValuationSchedule</BaseSchedule>
+        <Shift>2D</Shift>
+        <Calendar>US</Calendar>
+        <Convention>F</Convention>
+      </DerivedSchedule>
+    </LaggedValuationSchedule>
+    <AccrualLag type="number">3</AccrualLag>
+    <PayoffLimit type="number">5</PayoffLimit>
+    <Cap type="number">2.5</Cap>
+    <Floor type="number">0</Floor>
+    <SettlementDate type="event">2022-06-29</SettlementDate>
+    <PayCcy type="currency">USD</PayCcy>
+  </PairwiseVarianceSwapData>
+</Trade>
+\end{minted}
+
+The PairwiseVarianceSwap script referenced in the trade above is shown in listing
+\ref{lst:pairwise_variance_swap}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+REQUIRE {SIZE(Underlyings) == 2} AND {SIZE(UnderlyingStrikes) == 2}
+REQUIRE {SIZE(UnderlyingNotionals) == 2} AND {UnderlyingStrikes[1] >= 0};
+REQUIRE {UnderlyingStrikes[2] >= 0} AND {BasketStrike >= 0};
+REQUIRE {UnderlyingNotionals[1] >= 0} AND {UnderlyingNotionals[2] >= 0};
+REQUIRE {BasketNotional >= 0} AND {PayoffLimit > 0};
+REQUIRE {SIZE(ValuationSchedule) == SIZE(LaggedValuationSchedule)};
+
+FOR d IN (1, SIZE(ValuationSchedule)-1, 1) DO
+  performance1 = ln(Underlyings[1](LaggedValuationSchedule[d]) /
+                    Underlyings[1](ValuationSchedule[d]));
+  performance2 = ln(Underlyings[2](LaggedValuationSchedule[d]) /
+                    Underlyings[2](ValuationSchedule[d]));
+  basketPerformance = (performance1 + performance2) / 2;
+  
+  realisedVariance1 = realisedVariance1 + pow(performance1, 2);
+  realisedVariance2 = realisedVariance2 + pow(performance2, 2);
+  realisedVarianceBasket = realisedVarianceBasket + pow(basketPerformance, 2);
+END;
+
+expectedN = SIZE(ValuationSchedule) - 1;
+realisedVariance1 = 252 / (expectedN * AccrualLag) * realisedVariance1;
+realisedVariance2 = 252 / (expectedN * AccrualLag) * realisedVariance2;
+realisedVarianceBasket = 252 / (expectedN * AccrualLag) * realisedVarianceBasket;
+
+currentNotional1 = pow(100, 2) * UnderlyingNotionals[1] /
+                                  (2 * 100 * UnderlyingStrikes[1]);
+currentNotional2 = pow(100, 2) * UnderlyingNotionals[2] /
+                                  (2 * 100 * UnderlyingStrikes[2]);
+currentNotionalBasket = pow(100, 2) * BasketNotional / (2 * 100 * BasketStrike);
+strike1 = pow(UnderlyingStrikes[1], 2);
+strike2 = pow(UnderlyingStrikes[2], 2);
+strikeBasket = pow(BasketStrike, 2);
+
+IF Floor > 0 THEN
+  floor = pow(Floor, 2);
+  realisedVariance1 = max(floor * strike1, realisedVariance1);
+  realisedVariance2 = max(floor * strike2, realisedVariance2);
+  realisedVarianceBasket = max(floor * strikeBasket, realisedVarianceBasket);
+END;
+IF Cap > 0 THEN
+  cap = pow(Cap, 2);
+  realisedVariance1 = min(cap * strike1, realisedVariance1);
+  realisedVariance2 = min(cap * strike2, realisedVariance2);
+  realisedVarianceBasket = min(cap * strikeBasket, realisedVarianceBasket);
+END;
+
+equityAmount1 = currentNotional1 * (realisedVariance1 - strike1);
+equityAmount2 = currentNotional2 * (realisedVariance2 - strike2);
+equityAmountBasket = currentNotionalBasket * (realisedVarianceBasket - strikeBasket);
+pairEquityAmount = equityAmount1 + equityAmount2 + equityAmountBasket;
+
+maxPairEquityAmount = PayoffLimit * (abs(UnderlyingNotionals[1]) +
+                                     abs(UnderlyingNotionals[2]));
+minPairEquityAmount = -maxPairEquityAmount;
+
+pairEquityAmount = max(minPairEquityAmount, pairEquityAmount);
+pairEquityAmount = min(maxPairEquityAmount, pairEquityAmount);
+
+Swap = PAY(LongShort * pairEquityAmount, ValuationSchedule[SIZE(ValuationSchedule)],
+           SettlementDate, PayCcy);
+\end{minted}
+\caption{Payoff script for a PairwiseVarianceSwap.}
+\label{lst:pairwise_variance_swap}
+\end{listing}
+
+The meanings and allowable values for the \lstinline!PairwiseVarianceSwapData! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the swap. \emph{Long} corresponds to paying out on the
+  fixed/strike variance (volatility) and receiving on the floating/realised variance (volatility). In other words,
+  a long position has positive value if the realised variance (volatility) exceeds the variance (volatility)
+  strike. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!UnderlyingStrikes!: The volatility strikes $K^{1,2}_{vol}$ of the underlyings quoted in
+  absolute terms. If the swap was struck in terms of variance, the square roots of the variances should be used here. \\
+  Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!UnderlyingNotionals!: The vega notional amount. If the swap was struck in terms of variance notionals
+  $N_{var}$, the corresponding vega notionals are given by $N^{1,2}_{vol} = N^{1,2}_{var} \cdot 2 \cdot 100 \cdot K^{1,2}_{vol}$
+  (where $K^{1,2}_{vol}$ is in absolute terms). \\
+  Allowable values: Any non-negative number.
+  \item{}[index] \lstinline!Underlyings!: Underlying index. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values. 
+  \item{}[number] \lstinline!BasketStrike!: The basket volatility strike $\hat{K}_{vol}$ quoted in absolute terms. \\
+  Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!BasketNotional!: The basket vega notional amount. \\
+  Allowable values: Any non-negative number.
+  \item{}[event] \lstinline!ValuationSchedule!: The base schedule which defines the start dates of the variance accrual schedule. This node is
+  also used to derive the variance accrual schedule. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[event] \lstinline!LaggedValuationSchedule!: The end dates of the variance accrual schedule. This can be derived from the \lstinline!Schedule!
+  using a DerivedSchedule (e.g.\ with a two-day lag, \emph{2D}). For the standard accrual period lengths of one day,
+  set \lstinline!Shift! to \emph{1D}. \\
+  Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see the scripted trade documentation in ore/Docs/ScriptedTrade).
+  \item{}[number] \lstinline!AccrualLag!: The length (in days) of each variance accrual period. For classic variance swaps with no lag, set this to 1. \\
+  Allowable values: Any integer greater than or equal to 1.
+  \item{}[number] \lstinline!PayoffLimit!: The factor used to determine the maximum/minimum payoff under the swap. This corresponds to $C$
+  in the final equation in the Product Description for Pairwise Variance Swap. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Cap!: The cap on the realised variances, as a factor of the corresponding strikes. For example,
+  if \lstinline!Cap! is 2.5, then the cap level will be $2.5^2 \times \hat{K}_{var}$ for the basket realised variance.
+  For trades with no cap, set \lstinline!Cap! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floor!: The floor on the realised variances, as a factor of the corresponding strikes. For example,
+  if \lstinline!Floor! is 0.1, then the floor level will be $0.1^2 \times \hat{K}_{var}$ for the basket realised variance.
+  For trades with no floor, set \lstinline!Floor! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Variance Dispersion Swap}
+
+The traditional trade representation is as follows, using EQ underlyings in this example:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="EQ_VarianceDispersionSwap">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    .....
+  </Envelope>
+  <VarianceDispersionSwapData>
+    <LongShort type="longShort">Long</LongShort>
+    <Underlyings1 type="index">
+      <Value>EQ-RIC:HSBA.L</Value>
+      <Value>EQ-RIC:MSFT.OQ</Value>
+      <Value>EQ-RIC:AMZN.O</Value>
+    </Underlyings1>
+    <Weights1 type="number">
+        .....
+    </Weights1>
+    <Strikes1 type="number">
+        .....
+    </Strikes1>
+    <Spreads1 type="number">
+        .....
+    </Spreads1>
+    <Notionals1 type="number">
+        .....
+    </Notionals1>
+    <Caps1 type="number">
+        .....
+    </Caps1>
+    <Floors1 type="number">
+        .....
+    </Floors1>
+    <Underlyings2 type="index">
+      <Value>EQ-RIC:.STOXX50E</Value>
+      <Value>EQ-RIC:.SPX</Value>
+    </Underlyings2>
+    <Weights2 type="number">
+        .....
+    </Weights2>
+    <Strikes2 type="number">
+        .....
+    </Strikes2>
+    <Spreads2 type="number">
+        .....
+    </Spreads2>
+    <Notionals2 type="number">
+        .....
+    </Notionals2>
+    <Caps2 type="number">
+        .....
+    </Caps2>
+    <Floors2 type="number">
+        .....
+    </Floors2>
+    <ValuationSchedule type="event">
+      <ScheduleData>
+        .....
+      </ScheduleData>
+    </ValuationSchedule>
+    <DividendAdjustment type="bool">false</DividendAdjustment>
+    <SettlementDate type="event">2021-01-10</SettlementDate>
+    <PayCcy type="currency">USD</PayCcy>
+  </VarianceDispersionSwapData>
+</Trade>
+\end{minted}
+
+The VarianceDispersionSwap script referenced in the trade above is shown in listing
+\ref{lst:variance_dispersion_swap}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+D = SIZE(ValuationSchedule);
+expectedN = D - 1;
+
+FOR u IN (1, n1, 1) DO
+  FOR d IN (2, D, 1) DO
+    currPrice = Underlyings1[u](ValuationSchedule[d]);
+    prevPrice = Underlyings1[u](ValuationSchedule[d-1]);
+    realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+  END;
+
+  realisedVariance = (252/expectedN) * realisedVariance + Spreads1[u];
+  currentNotional = pow(100, 2) * Notionals1[u] / (2 * 100 * Strikes1[u]);
+  strike = pow(Strikes1[u], 2);
+
+  IF Floors1[u] > 0 THEN
+    floor = pow(Floors1[u], 2);
+    realisedVariance = max(floor * strike, realisedVariance);
+  END;
+  IF Caps1[u] > 0 THEN
+    cap = pow(Caps1[u], 2);
+    realisedVariance = min(cap * strike, realisedVariance);
+  END;
+  payoff1 = payoff1 + currentNotional * (realisedVariance - strike) * Weights1[u];
+END;
+
+FOR u IN (1, n2, 1) DO
+  FOR d IN (2, D, 1) DO
+    currPrice = Underlyings2[u](ValuationSchedule[d]);
+    prevPrice = Underlyings2[u](ValuationSchedule[d-1]);
+    realisedVariance = realisedVariance + pow(ln(currPrice/prevPrice), 2);
+  END;
+
+  realisedVariance = (252/expectedN) * realisedVariance + Spreads2[u];
+  currentNotional = pow(100, 2) * Notionals2[u] / (2 * 100 * Strikes2[u]);
+  strike = pow(Strikes2[u], 2);
+
+  IF Floors2[u] > 0 THEN
+    floor = pow(Floors2[u], 2);
+    realisedVariance = max(floor * strike, realisedVariance);
+  END;
+  IF Caps2[u] > 0 THEN
+    cap = pow(Caps2[u], 2);
+    realisedVariance = min(cap * strike, realisedVariance);
+  END;
+  payoff2 = payoff2 + currentNotional * (realisedVariance - strike) * Weights2[u];
+END;
+
+payoff = LongShort * (payoff1 - payoff2);
+
+Swap = PAY(payoff, ValuationSchedule[D], SettlementDate, PayCcy);
+
+NUMBER currentNotional1, currentNotional2;
+
+FOR u IN (1, n1, 1) DO
+  currentNotional1 = currentNotional1 + (pow(100, 2) * Notionals1[u]
+                                         / (2 * 100 * Strikes1[u]));
+END;
+FOR u IN (1, n2, 1) DO
+  currentNotional2 = currentNotional2 + (pow(100, 2) * Notionals2[u]
+                                         / (2 * 100 * Strikes2[u]));
+END;
+\end{minted}
+\caption{Payoff script for a VarianceDispersionSwap.}
+\label{lst:variance_dispersion_swap}
+\end{listing}
+
+The meanings and allowable values for the \lstinline!VarianceDispersionSwapData! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the swap. \emph{Long} corresponds to selling volatility on
+  the \lstinline!Underlyings1! basket and buying volatility on \lstinline!Underlyings2!. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[index] \lstinline!Underlyings1!: The basket of underlyings whose volatility is bought in the \emph{Long} position. \\
+  Allowable values: For each underlying, see \ref{ss:underlying}.
+  \item{}[number] \lstinline!Weights1!: List of weights applied to the final realised volatility of each underlying
+  in the \lstinline!Underlyings1! basket. \\
+  Allowable values: Any positive number.
+  \item{}[number] \lstinline!Strikes1!: The volatility strike $K_{1,u,vol}$ of the variance swap for each underlying $u$
+  in the \lstinline!Underlyings1! basket, quoted in absolute terms. If the swap was
+  struck in terms of variance, the square root of that variance should be used here.\\
+  Allowable values: Any positive number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Spreads1!: Additional spread to the realised variance, for each underlying in the
+  \lstinline!Underlyings1! basket. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!Notionals1!: For each underlying $u$ in the \lstinline!Underlyings1! basket, the vega notional amount.
+  If the swap was struck in terms of variance notionals $N_{1,u,var}$, the corresponding vega notionals are given by
+  $N_{1,u,vol} = N_{1,u,var} \cdot 2 \cdot 100 \cdot K_{1,u,vol}$ (where $K_{1,u,vol}$ is in
+  absolute terms). \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!Caps1!: For each underlying $u$ in the \lstinline!Underlyings1! basket, the cap on the realised variance
+  as a factor of the strike. For example, if the value in \lstinline!Caps1! is 2.5, then the cap level will be
+  $2.5^2 \times K_{1,u,\text{var}}$. For underlyings with no cap, set the value in \lstinline!Caps1! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floors1!: For each underlying $u$ in the \lstinline!Underlyings1! basket, the floor on the realised
+  variance as a factor of the strike. For example, if the value in \lstinline!Floors1! is 0.1, then the floor level will
+  be $0.1^2 \times K_{1,u,\text{var}}$. For underlyings with no floor, set the value in \lstinline!Floors1! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[index] \lstinline!Underlyings2!: The basket of underlyings whose volatility is sold in the \emph{Long} position.\\
+  Allowable values: For each underlying, see \ref{ss:underlying}.
+  \item{}[number] \lstinline!Weights2!: List of weights applied to the final realised volatility of each underlying
+  in the \lstinline!Underlyings2! basket. \\
+  Allowable values: Any positive number.
+  \item{}[number] \lstinline!Strikes2!: The volatility strike $K_{2,u,vol}$ of the variance swap for each underlying $u$
+  in the \lstinline!Underlyings2! basket, quoted in absolute terms. If the swap was
+  struck in terms of variance, the square root of that variance should be used here.\\
+  Allowable values: Any positive number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Spreads2!: Additional spread to the realised variance, for each underlying in the
+  \lstinline!Underlyings2! basket. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!Notionals2!: For each underlying $u$ in the \lstinline!Underlyings2! basket, the vega notional amount.
+  If the swap was struck in terms of variance notionals $N_{2,u,var}$, the corresponding vega notionals are given by
+  $N_{2,u,vol} = N_{2,u,var} \cdot 2 \cdot 100 \cdot K_{2,u,vol}$ (where $K_{2,u,vol}$ is in
+  absolute terms). \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!Caps2!: For each underlying $u$ in the \lstinline!Underlyings2! basket, the cap on the realised variance
+  as a factor of the strike. For example, if the value in  \lstinline!Caps2! is 2.5, then the cap level will be
+  $2.5^2 \times K_{2,u,\text{var}}$. For underlyings with no cap, set the value in \lstinline!Caps2! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floors2!: For each underlying $u$ in the \lstinline!Underlyings2! basket, the floor on the realised
+  variance as a factor of the strike. For example, if the value in \lstinline!Floors2! is 0.1, then the floor level will
+  be $0.1^2 \times K_{2,u,\text{var}}$. For underlyings with no floor, set the value in \lstinline!Floors2! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[bool] \lstinline!DividendAdjustment!: Whether or not the underlying price is adjusted for dividend payments. This feature is
+  not yet supported.
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Corridor Variance Dispersion Swap}
+
+This instrument is a variance dispersion swap with a corridor feature, where variance is accrued only when the
+the price of the first underlying of each pair of underlyings (between the first and second basket) falls within
+the `corridor'. This means that the number of underlyings in each basket should be the same, and each pair is
+determined based on the order that they are provided in the trade XML, as in the example below.
+
+The traditional trade representation is as follows, using EQ underlyings in this example:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="EQ_VarianceDispersionSwap_Corridor">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    .....
+  </Envelope>
+  <CorridorVarianceDispersionSwapData>
+    <LongShort type="longShort">Long</LongShort>
+    <Weights type="number">
+        .....
+    </Weights>
+    <Underlyings1 type="index">
+      <Value>EQ-RIC:HSBA.L</Value>
+      <Value>EQ-RIC:MSFT.OQ</Value>
+      <Value>EQ-RIC:AMZN.O</Value>
+    </Underlyings1>
+    <Strikes1 type="number">
+        .....
+    </Strikes1>
+    <Spreads1 type="number">
+        .....
+    </Spreads1>
+    <Notionals1 type="number">
+        .....
+    </Notionals1>
+    <Caps1 type="number">
+        .....
+    </Caps1>
+    <Floors1 type="number">
+        .....
+    </Floors1>
+    <Underlyings2 type="index">
+      <Value>EQ-RIC:.STOXX50E</Value>
+      <Value>EQ-RIC:.SPX</Value>
+      <Value>EQ-RIC:.SPX</Value>
+    </Underlyings2>
+    <Strikes2 type="number">
+        .....
+    </Strikes2>
+    <Spreads2 type="number">
+        .....
+    </Spreads2>
+    <Notionals2 type="number">
+        .....
+    </Notionals2>
+    <Caps2 type="number">
+        .....
+    </Caps2>
+    <Floors2 type="number">
+        .....
+    </Floors2>
+    <UpperBarrierLevels type="number">
+        .....
+    </UpperBarrierLevels>
+    <LowerBarrierLevels type="number">
+        .....
+    </LowerBarrierLevels>
+    <CountBothObservations type="bool">true</CountBothObservations>
+    <AccrualAdjustment type="bool">true</AccrualAdjustment>
+    <DividendAdjustment type="bool">false</DividendAdjustment>
+    <ValuationSchedule type="event">
+      <ScheduleData>
+        .....
+      </ScheduleData>
+    </ValuationSchedule>
+    <SettlementDate type="event">2021-01-10</SettlementDate>
+    <PayCcy type="currency">USD</PayCcy>
+  </CorridorVarianceDispersionSwapData>
+</Trade>
+\end{minted}
+
+The CorridorVarianceDispersionSwap script referenced in the trade above is shown in listing
+\ref{lst:corridor_variance_dispersion_swap}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+N = SIZE(Underlyings1);
+D = SIZE(ValuationSchedule);
+expectedN = D - 1;
+
+FOR u IN (1, N, 1) DO
+  FOR d IN (2, D, 1) DO
+    currPrice1 = Underlyings1[u](ValuationSchedule[d]);
+    prevPrice1 = Underlyings1[u](ValuationSchedule[d-1]);
+
+    IF {CountBothObservations == 1 AND
+        currPrice1 >= LowerBarrierLevels[u] AND currPrice1 <= UpperBarrierLevels[u] AND
+        prevPrice1 >= LowerBarrierLevels[u] AND prevPrice1 <= UpperBarrierLevels[u]} OR
+       {CountBothObservations == -1 AND
+        prevPrice >= LowerBarrierLevels[u] AND prevPrice <= UpperBarrierLevels[u]} THEN
+          currPrice2 = Underlyings2[u](ValuationSchedule[d]);
+          prevPrice2 = Underlyings2[u](ValuationSchedule[d-1]);
+          realisedVariance1 = realisedVariance1 + pow(ln(currPrice1/prevPrice1), 2);
+          realisedVariance2 = realisedVariance2 + pow(ln(currPrice2/prevPrice2), 2);
+          accruedDays = accruedDays + 1;
+    END;
+  END;
+
+  IF AccrualAdjustment == -1 THEN
+    accruedDays = expectedN;
+  END;
+
+  realisedVariance1 = (252/expectedN) * realisedVariance1 + Spreads1[u];
+  realisedVariance2 = (252/expectedN) * realisedVariance2 + Spreads2[u];
+
+  currentNotional1 = pow(100, 2) * Notionals1[u] / (2 * 100 * Strikes1[u]);
+  currentNotional2 = pow(100, 2) * Notionals2[u] / (2 * 100 * Strikes2[u]);
+
+  strike1 = pow(Strikes1[u], 2);
+  strike2 = pow(Strikes2[u], 2);
+
+  adjustedStrike1 = (accruedDays / expectedN) * strike1;
+  adjustedStrike2 = (accruedDays / expectedN) * strike2;
+
+  IF Floors1[u] > 0 THEN
+    floor1 = pow(Floors1[u], 2);
+    realisedVariance1 = max(floor1 * adjustedStrike1, realisedVariance1);
+  END;
+  IF Floors2[u] > 0 THEN
+    floor2 = pow(Floors2[u], 2);
+    realisedVariance2 = max(floor2 * adjustedStrike2, realisedVariance2);
+  END;
+  IF Caps1[u] > 0 THEN
+    cap1 = pow(Caps1[u], 2);
+    realisedVariance1 = max(cap1 * adjustedStrike1, realisedVariance1);
+  END;
+  IF Caps2[u] > 0 THEN
+    cap2 = pow(Caps2[u], 2);
+    realisedVariance2 = max(cap2 * adjustedStrike2, realisedVariance2);
+  END;
+
+  payoff1 = currentNotional1 * (realisedVariance1 - adjustedStrike1);
+  payoff2 = currentNotional2 * (realisedVariance2 - adjustedStrike2);
+  payoff = payoff + LongShort * Weights[u] * (payoff1 - payoff2);
+END;
+
+Swap = PAY(payoff, ValuationSchedule[D], SettlementDate, PayCcy);
+\end{minted}
+\caption{Payoff script for a CorridorVarianceDispersionSwap.}
+\label{lst:corridor_variance_dispersion_swap}
+\end{listing}
+
+The meanings and allowable values for the \lstinline!CorridorVarianceDispersionSwapData! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the swap. \emph{Long} corresponds to selling volatility on
+  the \lstinline!Underlyings1! basket and buying volatility on \lstinline!Underlyings2!. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!Weights!: List of weights applied to the final realised volatility of each underlying
+  in the \lstinline!Underlyings1! and \lstinline!Underlyings2! baskets. \\
+  Allowable values: Any positive number.
+  \item{}[index] \lstinline!Underlyings1!: The basket of underlyings whose volatility is bought in the \emph{Long} position. \\
+  Allowable values: For each underlying, see \ref{ss:underlying}.
+  \item{}[number] \lstinline!Strikes1!: The volatility strike $K_{1,u,vol}$ of the variance swap for each underlying $u$
+  in the \lstinline!Underlyings1! basket, quoted in absolute terms. If the swap was
+  struck in terms of variance, the square root of that variance should be used here.\\
+  Allowable values: Any positive number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Spreads1!: Additional spread to the realised variance, for each underlying in the
+  \lstinline!Underlyings1! basket. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!Notionals1!: For each underlying $u$ in the \lstinline!Underlyings1! basket, the vega notional amount.
+  If the swap was struck in terms of variance notionals $N_{1,u,var}$, the corresponding vega notionals are given by
+  $N_{1,u,vol} = N_{1,u,var} \cdot 2 \cdot 100 \cdot K_{1,u,vol}$ (where $K_{1,u,vol}$ is in
+  absolute terms). \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!Caps1!: For each underlying $u$ in the \lstinline!Underlyings1! basket, the cap on the realised variance
+  as a factor of the strike. For example, if the value in \lstinline!Caps1! is 2.5, then the cap level will be
+  $2.5^2 \times K_{1,u,\text{var}}$. For underlyings with no cap, set the value in \lstinline!Caps1! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floors1!: For each underlying $u$ in the \lstinline!Underlyings1! basket, the floor on the realised
+  variance as a factor of the strike. For example, if the value in \lstinline!Floors1! is 0.1, then the floor level will
+  be $0.1^2 \times K_{1,u,\text{var}}$. For underlyings with no floor, set the value in \lstinline!Floors1! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[index] \lstinline!Underlyings2!: The basket of underlyings whose volatility is sold in the \emph{Long} position.\\
+  Allowable values: For each underlying, see \ref{ss:underlying}.
+  \item{}[number] \lstinline!Strikes2!: The volatility strike $K_{2,u,vol}$ of the variance swap for each underlying $u$
+  in the \lstinline!Underlyings2! basket, quoted in absolute terms. If the swap was
+  struck in terms of variance, the square root of that variance should be used here.\\
+  Allowable values: Any positive number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Spreads2!: Additional spread to the realised variance, for each underlying in the
+  \lstinline!Underlyings2! basket. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!Notionals2!: For each underlying $u$ in the \lstinline!Underlyings2! basket, the vega notional amount.
+  If the swap was struck in terms of variance notionals $N_{2,u,var}$, the corresponding vega notionals are given by
+  $N_{2,u,vol} = N_{2,u,var} \cdot 2 \cdot 100 \cdot K_{2,u,vol}$ (where $K_{2,u,vol}$ is in
+  absolute terms). \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!Caps2!: For each underlying $u$ in the \lstinline!Underlyings2! basket, the cap on the realised variance
+  as a factor of the strike. For example, if the value in  \lstinline!Caps2! is 2.5, then the cap level will be
+  $2.5^2 \times K_{2,u,\text{var}}$. For underlyings with no cap, set the value in \lstinline!Caps2! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floors2!: For each underlying $u$ in the \lstinline!Underlyings2! basket, the floor on the realised
+  variance as a factor of the strike. For example, if the value in \lstinline!Floors2! is 0.1, then the floor level will
+  be $0.1^2 \times K_{2,u,\text{var}}$. For underlyings with no floor, set the value in \lstinline!Floors2! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!UpperBarrierLevels!: The agreed upper barrier price levels for each underlying in \lstinline!Underlyings1!. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!LowerBarrierLevels!: The agreed lower barrier price levels for each underlying in \lstinline!Underlyings1!. \\
+  Allowable values: Any real number.
+  \item{}[bool] \lstinline!CountBothObservations!: Whether the variance is accrued based on both the current and
+  previous underlying prices (of each underlying in \lstinline!Underlyings1!) falling within the corridor (\emph{True})
+  or only on the previous underlying price (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[bool] \lstinline!AccrualAdjustment!: Whether the strike will be scaled relative to the number of days that the
+  underlying traded within the corridor. See, for example, $\widetilde{K}_{var}$ in section Corridor Variance Swap
+  of the Product Description for Exotic Variance and Volatility Swaps.
+  \item{}[bool] \lstinline!DividendAdjustment!: Whether or not the underlying price is adjusted for dividend payments. This feature is
+  not yet supported.
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{KO Corridor Variance Dispersion Swap}
+
+This instrument is a variance dispersion swap with a double-barrier knock-out and a corridor feature.
+
+With the corridor feature, variance is accrued only when the the price of the first underlying of each pair of
+underlyings (between the first and second basket) falls within the `corridor'. This means that the number of
+underlyings in each basket should be the same, and each pair is determined based on the order that they are
+provided in the trade XML, as in the example below.
+
+The traditional trade representation is as follows, using EQ underlyings in this example:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="EQ_VarianceDispersionSwap_Corridor_KO">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    .....
+  </Envelope>
+  <KOCorridorVarianceDispersionSwapData>
+    <LongShort type="longShort">Long</LongShort>
+    <Weights type="number">
+        .....
+    </Weights>
+    <Underlyings1 type="index">
+      <Value>EQ-RIC:HSBA.L</Value>
+      <Value>EQ-RIC:MSFT.OQ</Value>
+      <Value>EQ-RIC:AMZN.O</Value>
+    </Underlyings1>
+    <Strikes1 type="number">
+        .....
+    </Strikes1>
+    <Spreads1 type="number">
+        .....
+    </Spreads1>
+    <Notionals1 type="number">
+        .....
+    </Notionals1>
+    <Caps1 type="number">
+        .....
+    </Caps1>
+    <Floors1 type="number">
+        .....
+    </Floors1>
+    <Underlyings2 type="index">
+      <Value>EQ-RIC:.STOXX50E</Value>
+      <Value>EQ-RIC:.SPX</Value>
+      <Value>EQ-RIC:.SPX</Value>
+    </Underlyings2>
+    <Strikes2 type="number">
+        .....
+    </Strikes2>
+    <Spreads2 type="number">
+        .....
+    </Spreads2>
+    <Notionals2 type="number">
+        .....
+    </Notionals2>
+    <Caps2 type="number">
+        .....
+    </Caps2>
+    <Floors2 type="number">
+        .....
+    </Floors2>
+    <CorridorUpperBarrierLevels type="number">
+        .....
+    </CorridorUpperBarrierLevels>
+    <CorridorLowerBarrierLevels type="number">
+        .....
+    </CorridorLowerBarrierLevels>
+    <KOUpperBarrierLevels type="number">
+        .....
+    <KOUpperBarrierLevels/>
+    <KOLowerBarrierLevels type="number">
+        .....
+    </KOLowerBarrierLevels>
+    <CountBothObservations type="bool">true</CountBothObservations>
+    <AccrualAdjustment type="bool">true</AccrualAdjustment>
+    <DividendAdjustment type="bool">false</DividendAdjustment>
+    <KnockOutSchedule type="event">
+      <ScheduleData>
+        .....
+      </ScheduleData>
+    </KnockOutSchedule>
+    <VarianceAccrualStartDate type="event">2020-12-02</VarianceAccrualStartDate>
+    <SettlementSchedule type="event">
+      <DerivedSchedule>
+        <BaseSchedule>KnockOutSchedule</BaseSchedule>
+          .....
+      </DerivedSchedule>
+    </SettlementSchedule>
+    <PayCcy type="currency">USD</PayCcy>
+  </KOCorridorVarianceDispersionSwapData>
+</Trade>
+\end{minted}
+
+The KOCorridorVarianceDispersionSwap script referenced in the trade above is shown in listing
+\ref{lst:ko_corridor_variance_dispersion_swap}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+N = SIZE(Underlyings1);
+Dk = SIZE(KnockOutSchedule);
+expectedN = D - 1;
+
+FOR d IN (1, Dk, 1) DO
+  IF KnockOutSchedule[d] > VarianceAccrualStartDate THEN
+    expectedN = expectedN + 1;
+  END;
+END;
+
+alive = 1;
+FOR d IN (1, Dk, 1) DO
+  IF alive == 1 THEN
+    IF KnockOutSchedule[d] > VarianceAccrualStartDate THEN
+      FOR u IN (1, N, 1) DO
+        currPrice1 = Underlyings1[u](KnockOutSchedule[d]);
+        prevPrice1 = Underlyings1[u](KnockOutSchedule[d-1]);
+
+        IF {CountBothObservations == 1 AND
+            currPrice1 >= CorridorLowerBarrierLevels[u] AND currPrice1 <= CorridorUpperBarrierLevels[u] AND
+            prevPrice1 >= CorridorLowerBarrierLevels[u] AND prevPrice1 <= CorridorUpperBarrierLevels[u]} OR
+           {CountBothObservations == -1 AND
+            prevPrice >= CorridorLowerBarrierLevels[u] AND prevPrice <= CorridorUpperBarrierLevels[u]} THEN
+              currPrice2 = Underlyings2[u](KnockOutSchedule[d]);
+              prevPrice2 = Underlyings2[u](KnockOutSchedule[d-1]);
+              realisedVariance1 = realisedVariance1 + pow(ln(currPrice1/prevPrice1), 2);
+              realisedVariance2 = realisedVariance2 + pow(ln(currPrice2/prevPrice2), 2);
+              accruedDays = accruedDays + 1;
+        END;
+      END;
+    END;
+
+    FOR u IN (1, N, 1) DO
+      currPrice1 = Underlyings1[u](KnockOutSchedule[d]);
+      IF currPrice1 <= KOLowerBarrierLevels[u] OR currPrice1 >= KOUpperBarrierLevels[u] THEN
+        alive = 0;
+      END;
+    END;
+  END;
+
+  IF {alive == 0 OR d == Dk} AND {calculated == 0} THEN
+    calculated = 1;
+
+    realisedVariance1 = (252/expectedN) * realisedVariance1 + Spreads1[u];
+    realisedVariance2 = (252/expectedN) * realisedVariance2 + Spreads2[u];
+
+    IF AccrualAdjustment == -1 THEN
+      accruedDays = expectedN;
+    END;
+
+    currentNotional1 = pow(100, 2) * Notionals1[u] / (2 * 100 * Strikes1[u]);
+    currentNotional2 = pow(100, 2) * Notionals2[u] / (2 * 100 * Strikes2[u]);
+
+    strike1 = pow(Strikes1[u], 2);
+    strike2 = pow(Strikes2[u], 2);
+
+    adjustedStrike1 = (accruedDays / expectedN) * strike1;
+    adjustedStrike2 = (accruedDays / expectedN) * strike2;
+
+    IF Floors1[u] > 0 THEN
+      floor1 = pow(Floors1[u], 2);
+      realisedVariance1 = max(floor1 * adjustedStrike1, realisedVariance1);
+    END;
+    IF Floors2[u] > 0 THEN
+      floor2 = pow(Floors2[u], 2);
+      realisedVariance2 = max(floor2 * adjustedStrike2, realisedVariance2);
+    END;
+    IF Caps1[u] > 0 THEN
+      cap1 = pow(Caps1[u], 2);
+      realisedVariance1 = max(cap1 * adjustedStrike1, realisedVariance1);
+    END;
+    IF Caps2[u] > 0 THEN
+      cap2 = pow(Caps2[u], 2);
+      realisedVariance2 = max(cap2 * adjustedStrike2, realisedVariance2);
+    END;
+
+    payoff1 = currentNotional1 * (realisedVariance1 - adjustedStrike1);
+    payoff2 = currentNotional2 * (realisedVariance2 - adjustedStrike2);
+    payoff = payoff + LongShort * Weights[u] * (payoff1 - payoff2);
+
+    Swap = PAY(payoff, KnockOutSchedule[d], SettlementSchedule[d], PayCcy);
+  END;
+END;
+\end{minted}
+\caption{Payoff script for a KOCorridorVarianceDispersionSwap.}
+\label{lst:ko_corridor_variance_dispersion_swap}
+\end{listing}
+
+The meanings and allowable values for the \lstinline!KOCorridorVarianceDispersionSwapData! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the swap. \emph{Long} corresponds to selling volatility on
+  the \lstinline!Underlyings1! basket and buying volatility on \lstinline!Underlyings2!. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!Weights!: List of weights applied to the final realised volatility of each underlying
+  in the \lstinline!Underlyings1! and \lstinline!Underlyings2! baskets. \\
+  Allowable values: Any positive number.
+  \item{}[index] \lstinline!Underlyings1!: The basket of underlyings whose volatility is bought in the \emph{Long} position. \\
+  Allowable values: For each underlying, see \ref{ss:underlying}.
+  \item{}[number] \lstinline!Strikes1!: The volatility strike $K_{1,u,vol}$ of the variance swap for each underlying $u$
+  in the \lstinline!Underlyings1! basket, quoted in absolute terms. If the swap was
+  struck in terms of variance, the square root of that variance should be used here.\\
+  Allowable values: Any positive number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Spreads1!: Additional spread to the realised variance, for each underlying in the
+  \lstinline!Underlyings1! basket. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!Notionals1!: For each underlying $u$ in the \lstinline!Underlyings1! basket, the vega notional amount.
+  If the swap was struck in terms of variance notionals $N_{1,u,var}$, the corresponding vega notionals are given by
+  $N_{1,u,vol} = N_{1,u,var} \cdot 2 \cdot 100 \cdot K_{1,u,vol}$ (where $K_{1,u,vol}$ is in
+  absolute terms). \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!Caps1!: For each underlying $u$ in the \lstinline!Underlyings1! basket, the cap on the realised variance
+  as a factor of the strike. For example, if the value in \lstinline!Caps1! is 2.5, then the cap level will be
+  $2.5^2 \times K_{1,u,\text{var}}$. For underlyings with no cap, set the value in \lstinline!Caps1! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floors1!: For each underlying $u$ in the \lstinline!Underlyings1! basket, the floor on the realised
+  variance as a factor of the strike. For example, if the value in \lstinline!Floors1! is 0.1, then the floor level will
+  be $0.1^2 \times K_{1,u,\text{var}}$. For underlyings with no floor, set the value in \lstinline!Floors1! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[index] \lstinline!Underlyings2!: The basket of underlyings whose volatility is sold in the \emph{Long} position.\\
+  Allowable values: For each underlying, see \ref{ss:underlying}.
+  \item{}[number] \lstinline!Strikes2!: The volatility strike $K_{2,u,vol}$ of the variance swap for each underlying $u$
+  in the \lstinline!Underlyings2! basket, quoted in absolute terms. If the swap was
+  struck in terms of variance, the square root of that variance should be used here.\\
+  Allowable values: Any positive number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Spreads2!: Additional spread to the realised variance, for each underlying in the
+  \lstinline!Underlyings2! basket. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!Notionals2!: For each underlying $u$ in the \lstinline!Underlyings2! basket, the vega notional amount.
+  If the swap was struck in terms of variance notionals $N_{2,u,var}$, the corresponding vega notionals are given by
+  $N_{2,u,vol} = N_{2,u,var} \cdot 2 \cdot 100 \cdot K_{2,u,vol}$ (where $K_{2,u,vol}$ is in
+  absolute terms). \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!Caps2!: For each underlying $u$ in the \lstinline!Underlyings2! basket, the cap on the realised variance
+  as a factor of the strike. For example, if the value in  \lstinline!Caps2! is 2.5, then the cap level will be
+  $2.5^2 \times K_{2,u,\text{var}}$. For underlyings with no cap, set the value in \lstinline!Caps2! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floors2!: For each underlying $u$ in the \lstinline!Underlyings2! basket, the floor on the realised
+  variance as a factor of the strike. For example, if the value in \lstinline!Floors2! is 0.1, then the floor level will
+  be $0.1^2 \times K_{2,u,\text{var}}$. For underlyings with no floor, set the value in \lstinline!Floors2! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!CorridorUpperBarrierLevels!: The agreed corridor upper barrier price levels for each underlying
+  in \lstinline!Underlyings1!. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!CorridorLowerBarrierLevels!: The agreed corridor lower barrier price levels for each underlying
+  in \lstinline!Underlyings1!. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!KOUpperBarrierLevels!: The agreed knock-out upper barrier price levels for each underlying in
+  \lstinline!Underlyings1!. \\
+  Allowable values: Any real number.
+  \item{}[number] \lstinline!KOLowerBarrierLevels!: The agreed knock-out lower barrier price levels for each underlying in
+  \lstinline!Underlyings1!. \\
+  Allowable values: Any real number.
+  \item{}[bool] \lstinline!CountBothObservations!: Whether the variance is accrued based on both the current and
+  previous underlying prices (of each underlying in \lstinline!Underlyings1!) falling within the corridor (\emph{True})
+  or only on the previous underlying price (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[bool] \lstinline!AccrualAdjustment!: Whether the strike will be scaled relative to the number of days that the
+  underlying traded within the corridor. See, for example, $\widetilde{K}_{var}$ in section Corridor Variance Swap
+  of the Product Description for Exotic Variance and Volatility Swaps.
+  \item{}[bool] \lstinline!DividendAdjustment!: Whether or not the underlying price is adjusted for dividend payments. This feature is
+  not yet supported.
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[event] \lstinline!KnockOutSchedule!: The schedule defining the (daily) knock-out observation period. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[event] \lstinline!VarianceAccrualStartDate!: The date on which variance observation/accrual starts. The last variance
+  observation date is the same as the last date in the \lstinline!KnockOutSchedule!.  \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[event] \lstinline!SettlementSchedule!: The settlement dates derived from the \lstinline!KnockOutSchedule! using a
+  settlement lag to reflect settlement after a knock-out event, or after the final variance observation date if
+  no knock-out occurs.. \\
+  Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, or DerivedSchedule (see (see the scripted trade
+  documentation in ore/Docs/ScriptedTrade).
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Gamma Swap}
+
+The traditional trade representation is as follows, using EQ underlyings in this example:
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="EQ_GammaSwap">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+   .....
+  </Envelope>
+    <GammaSwapData>
+  <LongShort type="longShort">Long</LongShort>
+  <Strike type="number">0.19</Strike>
+  <Notional type="number">1380</Notional>
+  <SettlementDate type="event">2021-09-25</SettlementDate>
+  <Underlying type="index">EQ-RIC:.SPX</Underlying>
+  <ValuationSchedule type="event">
+    <ScheduleData>
+      <Rules>
+    <StartDate>2020-11-26</StartDate>
+    <EndDate>2021-09-18</EndDate>
+    <Tenor>1D</Tenor>
+    <Convention>Following</Convention>
+    <TermConvention>Following</TermConvention>
+    <Calendar>USA</Calendar>
+    <Rule>Forward</Rule>
+       </Rules>
+     </ScheduleData>
+  </ValuationSchedule>
+  <PayCcy type="currency">USD</PayCcy>
+  </GammaSwapData>
+</Trade>
+\end{minted}
+
+The GammaSwap script referenced in the trade above is shown in listing
+\ref{lst:gamma_swap}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+        REQUIRE {Notional >= 0} AND {Strike >= 0};
+
+        NUMBER d, expectedN, realisedVariance, currPrice, prevPrice, presPrice, currentNotional;
+        NUMBER payoff, realisedVariation, strike;
+
+        presPrice = Underlying(ValuationSchedule[1]);
+
+        FOR d IN (2, SIZE(ValuationSchedule), 1) DO
+          currPrice = Underlying(ValuationSchedule[d]);
+          prevPrice = Underlying(ValuationSchedule[d-1]);
+          realisedVariance = realisedVariance + (currPrice/presPrice) * pow(ln(currPrice/prevPrice), 2);
+        END;
+
+        expectedN = SIZE(ValuationSchedule) - 1;
+        realisedVariance = (252/expectedN) * realisedVariance;
+
+        realisedVariation = realisedVariance;
+        currentNotional = pow(100, 2) * Notional / (2 * 100 * Strike);
+        strike = pow(Strike, 2);
+
+        payoff = LongShort * currentNotional * (realisedVariation - 
+                    strike);
+
+        Swap = PAY(payoff, ValuationSchedule[SIZE(ValuationSchedule)],
+                   SettlementDate, PayCcy);
+\end{minted}
+\caption{Payoff script for a GammaSwap.}
+\label{lst:gamma_swap}
+\end{listing}
+
+The meanings and allowable values for the \lstinline!GammaSwapData! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the swap. \emph{Long} corresponds to paying out on the
+  fixed/strike variance (volatility) and receiving on the floating/realised variance (volatility). In other words,
+  a long position has positive value if the realised variance (volatility) exceeds the variance (volatility)
+  strike. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[number] \lstinline!Strike!: The volatility strike $K$ of the underlying quoted in absolute terms.
+  If the swap was struck in terms of variance, the square roots of the variances should be used here. \\
+  Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Notional!: The vega notional amount. If the swap was struck in terms of a variance notional
+  $N_{var}$, the corresponding vega notional is given by $N_{vol} = N_{var} \cdot 2 \cdot 100 \cdot K$
+  (where $K$ is in absolute terms). \\
+  Allowable values: Any non-negative number.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[index] \lstinline!Underlying!: Underlying index. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+  \item{}[event] \lstinline!ValuationSchedule!: The base schedule which defines the start dates of the variance accrual schedule. This node is
+  also used to derive the variance accrual schedule. Note that the end date (or last date) of this schedule must be the final
+  period end date of the instrument. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[currency] \lstinline!PayCcy!: The payment currency. For FX, where the underlying is provided
+      in the form \lstinline!FX-SOURCE-CCY1-CCY2! (see Table \ref{tab:fxindex_data}) this should
+      be \lstinline!CCY2!. If \lstinline!CCY1! or the currency of the underlying (for EQ and
+      COMM underlyings), this will result in a quanto payoff. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+        Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}
+
+\subsubsection*{Basket Variance Swap}
+
+The \lstinline!FxBasketVarianceSwap! and \lstinline!EquityBasketVarianceSwap! \lstinline!CommodityBasketVarianceSwap! trade types
+have trade data containers (respectively):
+\begin{itemize}
+  \item \lstinline!FxBasketVarianceSwapData!
+  \item \lstinline!EquityBasketVarianceSwapData!
+  \item \lstinline!CommodityBasketVarianceSwapData!
+\end{itemize}
+Listing \ref{lst:eqbasketvarianceswap_data} shows the structure of example trades for an Equity underlying.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="Equity_VarianceSwap_Basket">
+  <TradeType>EquityBasketVarianceSwap</TradeType>
+  <Envelope>
+    .......
+  </Envelope>
+  <EquityBasketVarianceSwapData>
+    <LongShort>Long</LongShort>
+    <Strike>0.31613</Strike>
+    <Notional>1340.0</Notional>
+    <Underlyings>
+      <Underlying>
+        <Type>Equity</Type>
+        <Name>RIC:.SPX</Name>
+        <Weight>0.75</Weight>
+      </Underlying>
+      <Underlying>
+        <Type>Equity</Type>
+        <Name>RIC:.STOXX50E</Name>
+        <Weight>0.25</Weight>
+      </Underlying>
+    </Underlyings>
+    <SquaredPayoff>true</SquaredPayoff>
+    <ValuationSchedule>
+        <Rules>
+        .......
+        </Rules>
+    </ValuationSchedule>
+    <Cap>2.5</Cap>
+    <SettlementDate>2022-06-29</SettlementDate>
+    <Currency>USD</Currency>
+  </EquityBasketVarianceSwapData>
+</Trade>
+\end{minted}
+\caption{EquityBasketVarianceSwap data}
+\label{lst:eqbasketvarianceswap_data}
+\end{listing}
+
+The payout formula is the same as for a standard capped/floored variance swap, with the
+realised variance calculated as follows:
+
+\begin{equation*}
+  Realised Variance = \frac{252}{D} \sum_{i=1}^D \left[\sum_{n=1}^N w_n \text{ln}\left(\frac{X_{i,n}}{X_{i-1,n}}\right) \right]^2,
+\end{equation*}
+
+for $D$ variance accrual/valuation dates over the life of the trade, where
+
+\begin{itemize}
+  \item $X_{i,n}$ denotes the fixing for the $n$-th underlying at $t_i$.
+  \item $w_n$ is the basket weight for the $n$-th underlying.
+\end{itemize}
+
+The meanings and allowable values of elements in the \lstinline!EquityBasketVarianceSwapData! node follow below.
+
+\begin{itemize}
+  \item{} \lstinline!LongShort!: Own party position. \\
+    Allowable values: \emph{Long}, \emph{Short}
+  \item{} \lstinline!Strike!: The volatility strike $K_{vol}$ of the variance swap quoted in absolute terms.
+  If the swap was struck in terms of variance, the square root of that variance should be used here. \\
+  Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item{} \lstinline!Notional!: The vega notional amount. If the swap was struck in terms of a variance notional
+  $N_{var}$, the corresponding vega notional is given by $N_{vol} = N_{var} \cdot 2 \cdot 100 \cdot K_{vol}$ (where
+  $K_{vol}$ is in absolute terms). \\
+  Allowable values: Any non-negative number.
+  \item \lstinline!Underlyings!: The basket of underlyings. \\
+    For \lstinline!FxBasketVarianceSwap!, \lstinline!Type! is set to \emph{FX}
+    and \lstinline!Name! is a string of the form \emph{SOURCE-CCY1-CCY2} where \emph{CCY1} is
+    the foreign currency, \emph{CCY2} is the domestic currency, and \emph{SOURCE} is the fixing
+    source, see Table \ref{tab:fxindex_data}.
+    (section Data Node / Index) for allowable values.
+
+    For \lstinline!EquityBasketVarianceSwap!, \lstinline!Type! is set to \emph{Equity} and
+    \lstinline!Name! and other fields are as outlined in \ref{ss:underlying}.
+
+    For \lstinline!CommodityBasketVarianceSwap!, \lstinline!Type! is set to \emph{Commodity} and
+    \lstinline!Name! is an identifier of the commodity as outlined in \ref{ss:underlying} and
+    in Table \ref{tab:commodity_data}
+
+    Allowable values: For each underlying, an \lstinline!Underlying! node as outlined in
+    \ref{ss:underlying}. All underlyings must be from the same asset class.
+  \item{} \lstinline!SquaredPayoff! [Optional]: Flag indicating whether the trade is a variance swap (\emph{True})
+  or a volatility swap (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  Defaults to \emph{False} if left blank or omitted. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+\item{} \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+    Allowable values: See Section \ref{ss:schedule_data}.
+  \item{} \lstinline!Cap! [Optional]: The cap on the realised variance, as a factor of the corresponding strike. For example,
+  if \lstinline!Cap! is 2.5, then the cap level will be $2.5^2 \times \hat{K}_{var}$ for the basket realised variance.
+  For trades with no cap, set \lstinline!Cap! to zero. \\
+    Allowable values: Any non-negative number. Defaults to zero if left blank or omitted.
+  \item{} \lstinline!Floor! [Optional]:  The floor on the realised variance, as a factor of the corresponding strike. For example,
+  if \lstinline!Floor! is 0.1, then the floor level will be $0.1^2 \times \hat{K}_{var}$ for the basket realised variance.
+  For trades with no floor, set \lstinline!Floor! to zero. \\
+    Allowable values: Any non-negative number. Defaults to zero if left blank or omitted.
+  \item{} \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{} \lstinline!Currency!: The settlement currency. \\
+    Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+\end{itemize}
+
+Basket variance swaps can alternatively be represented as {\em scripted trades}, refer to the scripted trade documentation in
+ore/Docs/ScriptedTrade for an introduction.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="EQ_VarianceSwap_Basket">
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+    ......
+  </Envelope>
+  <BasketVarianceSwapData>
+    <LongShort type="longShort">Long</LongShort>
+    <Underlyings type="index">
+      <Value>EQ-RIC:.STOXX50E</Value>
+      <Value>EQ-RIC:.SPX</Value>
+    </Underlyings>
+    <Weights type="number">
+      <Value>0.25</Value>
+      <Value>0.75</Value>
+    </Weights>
+    <Strike type="number">0.31613</Strike>
+    <Notional type="number">1339.0</Notional>
+    <SquaredPayoff type="bool">true</SquaredPayoff>
+    <ValuationSchedule type="event">
+      <ScheduleData>
+        <Rules>
+         ......
+        </Rules>
+      </ScheduleData>
+    </ValuationSchedule>
+    <Cap type="number">2.5</Cap>
+    <Floor type="number">0</Floor>
+    <SettlementDate type="event">2022-06-29</SettlementDate>
+    <PayCcy type="currency">USD</PayCcy>
+  </BasketVarianceSwapData>
+</Trade>
+\end{minted}
+
+The PairwiseVarianceSwap script referenced in the trade above is shown in listing
+\ref{lst:basket_variance_swap}
+
+\begin{listing}[hbt]
+\begin{minted}[fontsize=\scriptsize]{Basic}
+        NUMBER sumOfWeights;
+        FOR i IN (1, n, 1) DO
+          sumOfWeights = sumOfWeights + Weights[i];
+        END;
+        REQUIRE sumOfWeights == 1;
+
+        NUMBER d, expectedN, currPrice[n], prevPrice[n];
+        NUMBER realisedVariance, basketVariation, realisedVariation;
+        NUMBER strike, cap, floor, currentNotional, payoff;
+
+        FOR d IN (2, SIZE(ValuationSchedule), 1) DO
+          basketVariation = 0;
+          FOR i IN (1, n, 1) DO
+            currPrice[i] = Underlyings[i](ValuationSchedule[d]);
+            prevPrice[i] = Underlyings[i](ValuationSchedule[d-1]);
+            basketVariation = basketVariation + Weights[i] * ln(currPrice[i]/prevPrice[i]);
+          END;
+          realisedVariance = realisedVariance + pow(basketVariation, 2);
+        END;
+
+        expectedN = SIZE(ValuationSchedule) - 1;
+        realisedVariance = (252/expectedN) * realisedVariance;
+
+        IF SquaredPayoff == 1 THEN
+          realisedVariation = realisedVariance;
+          currentNotional = pow(100, 2) * Notional / (2 * 100 * Strike);
+          strike = pow(Strike, 2);
+        ELSE
+          realisedVariation = sqrt(realisedVariance);
+          currentNotional = 100 * Notional;
+          strike = Strike;
+        END;
+
+        IF Floor > 0 THEN
+          IF SquaredPayoff == 1 THEN
+            floor = pow(Floor, 2);
+          ELSE
+            floor = Floor;
+          END;
+          realisedVariation = max(floor * strike, realisedVariation);
+        END;
+        IF Cap > 0 THEN
+          IF SquaredPayoff == 1 THEN
+            cap = pow(Cap, 2);
+          ELSE
+            cap = Cap;
+          END;
+          realisedVariation = min(cap * strike, realisedVariation);
+        END;
+
+        payoff = LongShort * currentNotional * (realisedVariation - strike);
+
+        Swap = PAY(payoff, ValuationSchedule[SIZE(ValuationSchedule)],
+                   SettlementDate, PayCcy);
+\end{minted}
+\caption{Payoff script for a BasketVarianceSwap.}
+\label{lst:basket_variance_swap}
+\end{listing}
+
+The meanings and allowable values for the \lstinline!BasketVarianceSwapData! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position in the swap. \emph{Long} corresponds to paying out on the
+  fixed/strike variance (volatility) and receiving on the floating/realised variance (volatility). In other words,
+  a long position has positive value if the realised variance (volatility) exceeds the variance (volatility)
+  strike. \\
+  Allowable values: \emph{Long, Short}.
+  \item{}[index] \lstinline!Underlyings!: List of underlying indices. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values. 
+  \item{}[number] \lstinline!Strike!: The volatility strike $K_{vol}$ of the variance swap quoted in absolute terms.
+  If the swap was struck in terms of variance, the square root of that variance should be used here. \\
+  Allowable values: Any non-negative number, as a percentage expressed in decimal form.
+  \item{}[number] \lstinline!Notional!: The vega notional amount. If the swap was struck in terms of a variance notional
+  $N_{var}$, the corresponding vega notional is given by $N_{vol} = N_{var} \cdot 2 \cdot 100 \cdot K_{vol}$ (where
+  $K_{vol}$ is in absolute terms). \\
+  Allowable values: Any non-negative number.
+  \item{} \lstinline!SquaredPayoff!: Flag indicating whether the trade is a variance swap (\emph{True})
+  or a volatility swap (\emph{False}). \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  Defaults to \emph{False} if left blank or omitted. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[event] \lstinline!ValuationSchedule!: The schedule defining the (daily) observation period for the variance accrual. \\
+  Allowable values: See Section \ref{ss:schedule_data}.
+  \item{}[number] \lstinline!Cap!: The cap on the realised variance, as a factor of the corresponding strike. For example,
+  if \lstinline!Cap! is 2.5, then the cap level will be $2.5^2 \times \hat{K}_{var}$ for the basket realised variance.
+  For trades with no cap, set \lstinline!Cap! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[number] \lstinline!Floor!: The floor on the realised variance, as a factor of the corresponding strike. For example,
+  if \lstinline!Floor! is 0.1, then the floor level will be $0.1^2 \times \hat{K}_{var}$ for the basket realised variance.
+  For trades with no floor, set \lstinline!Floor! to zero. \\
+  Allowable values: Any non-negative number.
+  \item{}[event] \lstinline!SettlementDate!: The date on which the swap payoff is settled. \\
+  Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  \item{}[currency] \lstinline!PayCcy!: The settlement currency. \\
+  Allowable values: See Table \ref{tab:currency} for allowable currency codes.
+\end{itemize}

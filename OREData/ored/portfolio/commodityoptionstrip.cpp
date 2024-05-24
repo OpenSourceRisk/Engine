@@ -81,21 +81,30 @@ CommodityOptionStrip::CommodityOptionStrip(const Envelope& envelope, const LegDa
 }
 
 
-void CommodityOptionStrip::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CommodityOptionStrip::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     reset();
 
     DLOG("CommodityOptionStrip::build() called for trade " << id());
 
+    // ISDA taxonomy, assuming Commodity follows the Equity template
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Option");
+    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string();
+
+    npvCurrency_ = notionalCurrency_ = legData_.currency();
+
     // Check that the leg data is of type CommodityFloating
     auto conLegData = legData_.concreteLegData();
-    commLegData_ = boost::dynamic_pointer_cast<CommodityFloatingLegData>(conLegData);
+    commLegData_ = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(conLegData);
     QL_REQUIRE(commLegData_, "CommodityOptionStrip leg data should be of type CommodityFloating");
     if(!commLegData_->fxIndex().empty())
         fxIndex_= commLegData_->fxIndex();
     // Build the commodity floating leg data
     auto legBuilder = engineFactory->legBuilder(legData_.legType());
-    auto cflb = boost::dynamic_pointer_cast<CommodityFloatingLegBuilder>(legBuilder);
+    auto cflb = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegBuilder>(legBuilder);
     QL_REQUIRE(cflb, "Expected a CommodityFloatingLegBuilder for leg type " << legData_.legType());
     Leg leg =
         cflb->buildLeg(legData_, engineFactory, requiredFixings_, engineFactory->configuration(MarketContext::pricing));
@@ -105,9 +114,6 @@ void CommodityOptionStrip::build(const boost::shared_ptr<EngineFactory>& engineF
 
     // We update the notional_ in either buildAPOs or buildStandardOptions below.
     notional_ = Null<Real>();
-
-    npvCurrency_ = legData_.currency();
-    notionalCurrency_ = legData_.currency();
 
     // Build the strip of option trades
     legData_.concreteLegData();
@@ -122,24 +128,17 @@ void CommodityOptionStrip::build(const boost::shared_ptr<EngineFactory>& engineF
     legs_.push_back(leg);
     legPayers_.push_back(false);
     legCurrencies_.push_back(npvCurrency_);
-
-    // ISDA taxonomy, assuming Commodity follows the Equity template
-    additionalData_["isdaAssetClass"] = std::string("Commodity");
-    additionalData_["isdaBaseProduct"] = std::string("Option");
-    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = std::string();
 }
 
 std::map<ore::data::AssetClass, std::set<std::string>>
-CommodityOptionStrip::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+CommodityOptionStrip::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<ore::data::AssetClass, std::set<std::string>> result;
 
     set<string> indices = legData_.indices();
     for (auto ind : indices) {
-        boost::shared_ptr<Index> index = parseIndex(ind);
+        QuantLib::ext::shared_ptr<Index> index = parseIndex(ind);
         // only handle commodity
-        if (auto ci = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
+        if (auto ci = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
             result[ore::data::AssetClass::COM].insert(ci->name());
         }
     }
@@ -191,7 +190,7 @@ void CommodityOptionStrip::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommodityOptionStrip::toXML(XMLDocument& doc) {
+XMLNode* CommodityOptionStrip::toXML(XMLDocument& doc) const {
 
     XMLNode* node = Trade::toXML(doc);
 
@@ -237,7 +236,7 @@ XMLNode* CommodityOptionStrip::toXML(XMLDocument& doc) {
     return node;
 }
 
-void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CommodityOptionStrip::buildAPOs(const Leg& leg, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     // If style is set and not European, log a warning.
     if (!style_.empty() && style_ != "European") {
@@ -253,11 +252,11 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
 
 
     // Populate these with the call/put options requested in each period
-    vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
 
     for (Size i = 0; i < leg.size(); i++) {
-        auto cf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(leg[i]);
+        auto cf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(leg[i]);
         QL_REQUIRE(cf, "Expected a CommodityIndexedAverageCashFlow while building APO");
 
         // Populate call and/or put data at this leg period
@@ -287,10 +286,10 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
         // Build a commodity APO for the call and/or put in this period
         
         for (const auto& tempDatum : tempData) {
-            boost::shared_ptr<Trade> commOption;
+            QuantLib::ext::shared_ptr<Trade> commOption;
             OptionData optionData(to_string(tempDatum.position), tempDatum.type, "European", true, strExerciseDate);
              if (!isDigital()) {
-                commOption = boost::make_shared<CommodityAveragePriceOption>(
+                commOption = QuantLib::ext::make_shared<CommodityAveragePriceOption>(
                     envelope(), optionData, cf->quantity(), tempDatum.strike, legData_.currency(), commLegData_->name(),
                     commLegData_->priceType(), to_string(start), to_string(cf->endDate()), legData_.paymentCalendar(),
                     legData_.paymentLag(), legData_.paymentConvention(), commLegData_->pricingCalendar(),
@@ -302,7 +301,7 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
                  auto undCcy = cf->index()->priceCurve()->currency();
                  QL_REQUIRE(undCcy.code() == legData_.currency(),
                             "Strips of commodity digital options do not support intra-currency trades yet.");
-                 commOption = boost::make_shared<CommodityDigitalAveragePriceOption>(
+                 commOption = QuantLib::ext::make_shared<CommodityDigitalAveragePriceOption>(
                      envelope(), optionData, tempDatum.strike, cf->quantity() * payoffPerUnit(),
                      legData_.currency(), commLegData_->name(), commLegData_->priceType(), to_string(start),
                      to_string(cf->endDate()), legData_.paymentCalendar(), legData_.paymentLag(),
@@ -314,7 +313,7 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
              }
             commOption->id() = tempDatum.id;
             commOption->build(engineFactory);
-            boost::shared_ptr<InstrumentWrapper> instWrapper = commOption->instrument();
+            QuantLib::ext::shared_ptr<InstrumentWrapper> instWrapper = commOption->instrument();
             setSensitivityTemplate(commOption->sensitivityTemplate());
             additionalInstruments.push_back(instWrapper->qlInstrument());
             additionalMultipliers.push_back(instWrapper->multiplier());
@@ -324,7 +323,7 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
             notional_ = commOption->notional();
 
             if (!fxIndex_.empty()) { // if fx is applied, the notional is still quoted in the domestic ccy
-                auto underlyingCcy = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(leg[0])->index()->priceCurve()->currency();
+                auto underlyingCcy = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(leg[0])->index()->priceCurve()->currency();
                 notionalCurrency_ = underlyingCcy.code();
             }
         }
@@ -346,10 +345,10 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const boost::shared_ptr<Eng
     
     // Create the Trade's instrument wrapper
     instrument_ =
-        boost::make_shared<VanillaInstrument>(qlInst, qlInstMult, additionalInstruments, additionalMultipliers);
+        QuantLib::ext::make_shared<VanillaInstrument>(qlInst, qlInstMult, additionalInstruments, additionalMultipliers);
 }
 
-void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     QL_REQUIRE(!callBarrierData_.initialized(), "Commodity APO: standard option does not support barriers");
     QL_REQUIRE(!putBarrierData_.initialized(), "Commodity APO: standard option does not support barriers");
@@ -362,12 +361,12 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const boost::sha
     bool automaticExercise = settlement == "Cash";
 
     // Populate these with the call/put options requested in each period
-    vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
 
     for (Size i = 0; i < leg.size(); i++) {
 
-        auto cf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(leg[i]);
+        auto cf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(leg[i]);
         QL_REQUIRE(cf, "Expected a CommodityIndexedCashFlow while building standard option");
 
         // Exercise date is the pricing date.
@@ -423,21 +422,21 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const boost::sha
                                   automaticExercise, boost::none, paymentData);
 
 
-            boost::shared_ptr<Trade> commOption;
+            QuantLib::ext::shared_ptr<Trade> commOption;
             if(!isDigital()) {
-                commOption = boost::make_shared<CommodityOption>(
+                commOption = QuantLib::ext::make_shared<CommodityOption>(
                     envelope(), optionData, commLegData_->name(), legData_.currency(), effectiveQuantity,
                     effectiveStrike, cf->useFuturePrice(), cf->index()->expiryDate());
             } else {
                 auto undCcy = cf->index()->priceCurve()->currency();
                 QL_REQUIRE(undCcy.code() == legData_.currency(), "Strips of commodity digital options do not support intra-currency trades yet.");
-                commOption = boost::make_shared<CommodityDigitalOption>(
+                commOption = QuantLib::ext::make_shared<CommodityDigitalOption>(
                     envelope(), optionData, commLegData_->name(), legData_.currency(), effectiveStrike.value(), effectiveQuantity*payoffPerUnit(),
                     cf->useFuturePrice(), cf->index()->expiryDate());
             }
             commOption->id() = tempDatum.id;
             commOption->build(engineFactory);
-            boost::shared_ptr<InstrumentWrapper> instWrapper = commOption->instrument();
+            QuantLib::ext::shared_ptr<InstrumentWrapper> instWrapper = commOption->instrument();
             setSensitivityTemplate(commOption->sensitivityTemplate());
             additionalInstruments.push_back(instWrapper->qlInstrument());
             additionalMultipliers.push_back(instWrapper->multiplier());
@@ -464,7 +463,7 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const boost::sha
     
     // Create the Trade's instrument wrapper
     instrument_ =
-        boost::make_shared<VanillaInstrument>(qlInst, qlInstMult, additionalInstruments, additionalMultipliers);
+        QuantLib::ext::make_shared<VanillaInstrument>(qlInst, qlInstMult, additionalInstruments, additionalMultipliers);
 }
 
 void CommodityOptionStrip::check(Size numberPeriods) const {

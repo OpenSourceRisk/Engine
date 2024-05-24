@@ -64,16 +64,23 @@ double externalAverage(const std::vector<double>& v) {
 
 } // namespace
 
+ScriptedInstrumentPricingEngineCG::~ScriptedInstrumentPricingEngineCG() {
+    if (externalCalculationId_)
+        ComputeEnvironment::instance().context().disposeCalculation(externalCalculationId_);
+}
+
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
-    const boost::shared_ptr<ModelCG>& model, const ASTNodePtr ast, const boost::shared_ptr<Context>& context,
-    const Model::McParams& mcParams, const std::string& script, const bool interactive,
-    const bool generateAdditionalResults, const bool includePastCashflows, const bool useCachedSensis,
-    const bool useExternalComputeFramework)
+    const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
+    const QuantLib::ext::shared_ptr<Context>& context, const Model::McParams& mcParams, const std::string& script,
+    const bool interactive, const bool generateAdditionalResults, const bool includePastCashflows,
+    const bool useCachedSensis, const bool useExternalComputeFramework,
+    const bool useDoublePrecisionForExternalCalculation)
     : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
       mcParams_(mcParams), script_(script), interactive_(interactive),
       generateAdditionalResults_(generateAdditionalResults), includePastCashflows_(includePastCashflows),
-      useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework) {
+      useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework),
+      useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation) {
 
     // register with model
 
@@ -86,8 +93,10 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
         opsExternal_ = getExternalRandomVariableOps();
         gradsExternal_ = getExternalRandomVariableGradients();
     } else {
-        ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
-        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType);
+        ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.0,
+                                    mcParams_.regressionVarianceCutoff);
+        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.2,
+                                            mcParams_.regressionVarianceCutoff);
     }
 }
 
@@ -103,7 +112,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
 
         // set up copy of initial context to run the cg builder against
 
-        workingContext_ = boost::make_shared<Context>(*context_);
+        workingContext_ = QuantLib::ext::make_shared<Context>(*context_);
 
         // set TODAY in the context
 
@@ -116,7 +125,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
 
         for (auto const& v : workingContext_->scalars) {
             if (v.second.which() == ValueTypeWhich::Number) {
-                auto r = boost::get<RandomVariable>(v.second);
+                auto r = QuantLib::ext::get<RandomVariable>(v.second);
                 QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
                                                   << v.first << "' from initial context to be deterministic, got "
                                                   << r);
@@ -127,7 +136,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
         for (auto const& a : workingContext_->arrays) {
             for (Size i = 0; i < a.second.size(); ++i) {
                 if (a.second[i].which() == ValueTypeWhich::Number) {
-                    auto r = boost::get<RandomVariable>(a.second[i]);
+                    auto r = QuantLib::ext::get<RandomVariable>(a.second[i]);
                     QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
                                                       << a.first << "[" << i
                                                       << "]' from initial context to be deterministic, got " << r);
@@ -178,9 +187,15 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
         if (useExternalComputeFramework_) {
             QL_REQUIRE(ComputeEnvironment::instance().hasContext(),
                        "ScriptedInstrumentPricingEngineCG::calculate(): no compute enviroment context selected.");
+            ComputeContext::Settings settings;
+            settings.debug = false;
+            settings.useDoublePrecision = useDoublePrecisionForExternalCalculation_;
+            settings.rngSequenceType = mcParams_.sequenceType;
+            settings.rngSeed = mcParams_.seed;
+            settings.regressionOrder = mcParams_.regressionOrder;
             std::tie(externalCalculationId_, newExternalCalc) =
                 ComputeEnvironment::instance().context().initiateCalculation(model_->size(), externalCalculationId_,
-                                                                             cgVersion_);
+                                                                             cgVersion_, settings);
             DLOG("initiated external calculation id " << externalCalculationId_ << ", version " << cgVersion_);
         }
 
@@ -220,21 +235,39 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
         auto const& rv = model_->randomVariates();
         if (!rv.empty()) {
             if (useExternalComputeFramework_) {
-                auto gen =
-                    ComputeEnvironment::instance().context().createInputVariates(rv.size(), rv.front().size(), 42);
-                for (Size k = 0; k < rv.size(); ++k) {
-                    for (Size j = 0; j < rv.front().size(); ++j)
-                        valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
+                if (newExternalCalc) {
+                    auto gen =
+                        ComputeEnvironment::instance().context().createInputVariates(rv.size(), rv.front().size());
+                    for (Size k = 0; k < rv.size(); ++k) {
+                        for (Size j = 0; j < rv.front().size(); ++j)
+                            valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
+                    }
                 }
             } else {
-                auto gen =
-                    makeMultiPathVariateGenerator(mcParams_.sequenceType, rv.size(), rv.front().size(), mcParams_.seed,
-                                                  mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers);
-                for (Size path = 0; path < model_->size(); ++path) {
-                    auto p = gen->next();
+                if (mcParams_.sequenceType == QuantExt::SequenceType::MersenneTwister &&
+                    mcParams_.externalDeviceCompatibilityMode) {
+                    // use same order for rng generation as it is (usually) done on external devices
+                    // this is mainly done to be able to reconcile results produced on external devices
+                    auto rng = std::make_unique<MersenneTwisterUniformRng>(mcParams_.seed);
+                    QuantLib::InverseCumulativeNormal icn;
                     for (Size j = 0; j < rv.front().size(); ++j) {
-                        for (Size k = 0; k < rv.size(); ++k) {
-                            values[rv[k][j]].set(path, p.value[j][k]);
+                        for (Size i = 0; i < rv.size(); ++i) {
+                            for (Size path = 0; path < model_->size(); ++path) {
+                                values[rv[i][j]].set(path, icn(rng->nextReal()));
+                            }
+                        }
+                    }
+                } else {
+                    // use the 'usual' path generation that we also use elsewhere
+                    auto gen = makeMultiPathVariateGenerator(mcParams_.sequenceType, rv.size(), rv.front().size(),
+                                                             mcParams_.seed, mcParams_.sobolOrdering,
+                                                             mcParams_.sobolDirectionIntegers);
+                    for (Size path = 0; path < model_->size(); ++path) {
+                        auto p = gen->next();
+                        for (Size j = 0; j < rv.front().size(); ++j) {
+                            for (Size k = 0; k < rv.size(); ++k) {
+                                values[rv[k][j]].set(path, p.value[j][k]);
+                            }
                         }
                     }
                 }
@@ -292,8 +325,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
         // extract npv result and set it
 
         if (useExternalComputeFramework_) {
-            ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_,
-                                                                         {mcParams_.regressionOrder});
+            ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr_);
             baseNpv_ = results_.value = externalAverage(externalOutput_[0]);
         } else {
             baseNpv_ = results_.value = model_->extractT0Result(values[baseNpvNode]);
@@ -371,7 +403,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
             // set contents from paylog as additional results
 
-            auto paylog = boost::make_shared<PayLog>();
+            auto paylog = QuantLib::ext::make_shared<PayLog>();
             for (auto const& p : payLogEntries_) {
                 paylog->write(values[p.value],
                               !close_enough(values[p.filter], RandomVariable(values[p.filter].size(), 0.0)), p.obs,

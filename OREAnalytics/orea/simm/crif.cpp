@@ -76,27 +76,32 @@ void Crif::addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAm
 
 void Crif::insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies) {
 
-    auto it = records_.find(record);
-    if (aggregateDifferentAmountCurrencies) {
-        it = std::find_if(records_.begin(), records_.end(),
-                          [&record](const auto& x) { return CrifRecord::amountCcyEQCompare(x, record); });
-    }
-    if (it == records_.end()) {
-        records_.insert(record);
+    auto it = aggregateDifferentAmountCurrencies ? records_.end() : records_.find(record);
+    auto itDiffAmountCcy = aggregateDifferentAmountCurrencies
+                               ? diffAmountCurrenciesIndex_.find(record.getSimmAmountCcyKey())
+                               : diffAmountCurrenciesIndex_.end();
+
+    if (it == records_.end() && itDiffAmountCcy == diffAmountCurrenciesIndex_.end()) {
+        auto recordIt = records_.insert(record);
+        diffAmountCurrenciesIndex_[record.getSimmAmountCcyKey()] = &(*(recordIt.first));
         portfolioIds_.insert(record.portfolioId);
         nettingSetDetails_.insert(record.nettingSetDetails);
-    } else {
+    } else if (it != records_.end()) {
         updateAmountExistingRecord(it, record);
+    } else {
+        updateAmountExistingRecord(itDiffAmountCcy, record);
     }
 }
 
 void Crif::addSimmParameterRecord(const CrifRecord& record) {
     auto it = records_.find(record);
     if (it == records_.end()) {
-        records_.insert(record);
+        CrifRecord newRecord = record;
+        records_.insert(newRecord);
+        diffAmountCurrenciesIndex_[record.getSimmAmountCcyKey()] = &newRecord;
     } else if (it->riskType == CrifRecord::RiskType::AddOnFixedAmount) {
         updateAmountExistingRecord(it, record);
-    } else if (it->riskType == CrifRecord::RiskType::AddOnNotionalFactor &&
+    } else if (it->riskType == CrifRecord::RiskType::AddOnNotionalFactor ||
                it->riskType == CrifRecord::RiskType::ProductClassMultiplier) {
         // Only log warning if the values are not the same. If they are, then there is no material discrepancy.
         if (record.amount != it->amount) {
@@ -125,6 +130,25 @@ void Crif::updateAmountExistingRecord(std::set<CrifRecord>::iterator& it, const 
     }
     if (updated)
         DLOG("Updated net CRIF records: " << *it)
+}
+
+void Crif::updateAmountExistingRecord(std::map<CrifRecord::SimmAmountCcyKey, const CrifRecord*>::iterator& it,
+                                      const CrifRecord& record) {
+    bool updated = false;
+    if (record.hasAmountUsd()) {
+        it->second->amountUsd += record.amountUsd;
+        updated = true;
+    }
+    if (record.hasAmount() && record.hasAmountCcy() && it->second->amountCurrency == record.amountCurrency) {
+        it->second->amount += record.amount;
+        updated = true;
+    }
+    if (record.hasAmountResultCcy() && record.hasResultCcy() && it->second->resultCurrency == record.resultCurrency) {
+        it->second->amountResultCcy += record.amountResultCcy;
+        updated = true;
+    }
+    if (updated)
+        DLOG("Updated net CRIF records: " << *(it->second))
 }
 
 void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies, bool sortFxVolQualifer) {
@@ -324,7 +348,7 @@ bool Crif::hasNettingSetDetails() const {
     return hasNettingSetDetails;
 }
 
-void Crif::fillAmountUsd(const boost::shared_ptr<ore::data::Market> market) {
+void Crif::fillAmountUsd(const QuantLib::ext::shared_ptr<ore::data::Market> market) {
     if (!market) {
         WLOG("CrifLoader::fillAmountUsd() was called, but market object is empty.")
         return;

@@ -34,7 +34,7 @@ namespace analytics {
 class ScenarioWriter : public ScenarioGenerator {
 public:
     //! Constructor
-    ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename, const char sep = ',',
+    ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src, const std::string& filename, const char sep = ',',
                    const string& filemode = "w+", const std::vector<RiskFactorKey>& headerKeys = {});
 
     //! Constructor to write single scenarios
@@ -42,17 +42,17 @@ public:
                    const std::vector<RiskFactorKey>& headerKeys = {});
 
     //! Constructor to write into an in-memory report for later io
-    ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, boost::shared_ptr<ore::data::Report> report,
+    ScenarioWriter(const QuantLib::ext::shared_ptr<ScenarioGenerator>& src, QuantLib::ext::shared_ptr<ore::data::Report> report,
                    const std::vector<RiskFactorKey>& headerKeys = {});
 
     //! Destructor
     virtual ~ScenarioWriter();
 
     //! Return the next scenario for the given date.
-    virtual boost::shared_ptr<Scenario> next(const Date& d) override;
+    virtual QuantLib::ext::shared_ptr<Scenario> next(const Date& d) override;
 
     //! Write a single scenario
-    void writeScenario(const boost::shared_ptr<Scenario>& s, const bool writeHeader);
+    void writeScenario(const QuantLib::ext::shared_ptr<Scenario>& s, const bool writeHeader);
 
     //! Reset the generator so calls to next() return the first scenario.
     virtual void reset() override;
@@ -63,9 +63,9 @@ public:
 private:
     void open(const std::string& filename, const std::string& filemode = "w+");
 
-    boost::shared_ptr<ScenarioGenerator> src_;
+    QuantLib::ext::shared_ptr<ScenarioGenerator> src_;
     std::vector<RiskFactorKey> keys_;
-    boost::shared_ptr<ore::data::Report> report_;
+    QuantLib::ext::shared_ptr<ore::data::Report> report_;
     FILE* fp_;
     Date firstDate_;
     Size i_;

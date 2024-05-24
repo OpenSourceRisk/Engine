@@ -35,10 +35,27 @@ namespace analytics {
  */
 class SimpleScenarioFactory : public ScenarioFactory {
 public:
-    const boost::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
-                                                    Real numeraire = 0.0) const override {
-        return boost::make_shared<SimpleScenario>(asof, label, numeraire);
+    /*! use shared data block only if it is guarateed that all scenarios created by this factory:
+        - are all absolute or all relative
+        - provide values for exactly the same set of risk factor keys
+        - have the same coordinates for all risk factor keys (if any) */
+    explicit SimpleScenarioFactory(const bool useCommonSharedDataBlock = false)
+        : useCommonSharedDataBlock_(useCommonSharedDataBlock) {}
+    explicit SimpleScenarioFactory(const QuantLib::ext::shared_ptr<SimpleScenario::SharedData>& sharedData)
+        : useCommonSharedDataBlock_(true), sharedData_(sharedData) {}
+    const QuantLib::ext::shared_ptr<Scenario> buildScenario(Date asof, bool isAbsolute, const std::string& label = "",
+                                                            Real numeraire = 0.0) const override {
+        auto tmp = QuantLib::ext::make_shared<SimpleScenario>(asof, label, numeraire,
+                                                              useCommonSharedDataBlock_ ? sharedData_ : nullptr);
+        tmp->setAbsolute(isAbsolute);
+        if (useCommonSharedDataBlock_ && sharedData_ == nullptr)
+            sharedData_ = tmp->sharedData();
+        return tmp;
     }
+
+private:
+    bool useCommonSharedDataBlock_ = false;
+    mutable QuantLib::ext::shared_ptr<SimpleScenario::SharedData> sharedData_;
 };
 
 } // namespace analytics

@@ -52,7 +52,7 @@ public:
     void deepUpdate() override;
 
 protected:
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const override;
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const override;
     Volatility volatilityImpl(Time optionTime, Rate strike) const override;
     void performCalculations() const override;
 

@@ -31,9 +31,9 @@ namespace QuantExt {
 
 CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
     Real foreignNominal, const Currency& foreignCurrency, const Schedule& foreignSchedule,
-    const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread, const Currency& domesticCurrency,
-    const Schedule& domesticSchedule, const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
-    const boost::shared_ptr<FxIndex>& fxIdx, bool receiveDomestic, Size foreignPaymentLag, Size domesticPaymentLag,
+    const QuantLib::ext::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread, const Currency& domesticCurrency,
+    const Schedule& domesticSchedule, const QuantLib::ext::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
+    const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool receiveDomestic, Size foreignPaymentLag, Size domesticPaymentLag,
     boost::optional<bool> foreignIncludeSpread, boost::optional<Period> foreignLookback,
     boost::optional<Size> foreignFixingDays, boost::optional<Size> foreignRateCutoff,
     boost::optional<bool> foreignIsAveraged, boost::optional<bool> domesticIncludeSpread,
@@ -59,7 +59,7 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
 
 void CrossCcyBasisMtMResetSwap::initialize() {
     // Pay (foreign) leg
-    if (auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(foreignIndex_)) {
+    if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(foreignIndex_)) {
         // ON leg
         if (foreignIsAveraged_ && *foreignIsAveraged_) {
             legs_[0] = QuantExt::AverageONLeg(foreignSchedule_, on)
@@ -93,16 +93,16 @@ void CrossCcyBasisMtMResetSwap::initialize() {
     currencies_[0] = foreignCurrency_;
     // Pay leg notional exchange at start.
     Date initialPayDate = foreignSchedule_.dates().front();
-    boost::shared_ptr<CashFlow> initialPayCF(new SimpleCashFlow(-foreignNominal_, initialPayDate));
+    QuantLib::ext::shared_ptr<CashFlow> initialPayCF(new SimpleCashFlow(-foreignNominal_, initialPayDate));
     legs_[0].insert(legs_[0].begin(), initialPayCF);
     // Pay leg notional exchange at end.
     Date finalPayDate = foreignSchedule_.dates().back();
-    boost::shared_ptr<CashFlow> finalPayCF(new SimpleCashFlow(foreignNominal_, finalPayDate));
+    QuantLib::ext::shared_ptr<CashFlow> finalPayCF(new SimpleCashFlow(foreignNominal_, finalPayDate));
     legs_[0].push_back(finalPayCF);
 
     // Receive (domestic/resettable) leg
     // start by creating a dummy vanilla floating leg
-    if (auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(domesticIndex_)) {
+    if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndex>(domesticIndex_)) {
         // ON leg
         if (domesticIsAveraged_ && *domesticIsAveraged_) {
             legs_[1] = QuantExt::AverageONLeg(domesticSchedule_, on)
@@ -136,10 +136,10 @@ void CrossCcyBasisMtMResetSwap::initialize() {
     // replace the coupons with a FloatingRateFXLinkedNotionalCoupon
     // (skip the first coupon as it has a fixed notional)
     for (Size j = 0; j < legs_[1].size(); ++j) {
-        boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[1][j]);
+        QuantLib::ext::shared_ptr<FloatingRateCoupon> coupon = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(legs_[1][j]);
         Date fixingDate = fxIndex_->fixingCalendar().advance(coupon->accrualStartDate(),
                                                              -static_cast<Integer>(fxIndex_->fixingDays()), Days);
-        boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon(
+        QuantLib::ext::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon(
             new FloatingRateFXLinkedNotionalCoupon(fixingDate, foreignNominal_, fxIndex_, coupon));
         legs_[1][j] = fxLinkedCoupon;
     }
@@ -147,15 +147,15 @@ void CrossCcyBasisMtMResetSwap::initialize() {
     receiveDomestic_ ? payer_[2] = +1.0 : payer_[2] = -1.0;
     currencies_[2] = domesticCurrency_;
     for (Size j = 0; j < legs_[1].size(); j++) {
-        boost::shared_ptr<Coupon> c = boost::dynamic_pointer_cast<Coupon>(legs_[1][j]);
+        QuantLib::ext::shared_ptr<Coupon> c = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[1][j]);
         QL_REQUIRE(c, "Resetting XCCY - expected Coupon"); // TODO: fixed fx resettable?
         // build a pair of notional flows, one at the start and one at the end of
         // the accrual period. Both with the same FX fixing date
         Date fixingDate = fxIndex_->fixingCalendar().advance(c->accrualStartDate(),
                                                              -static_cast<Integer>(fxIndex_->fixingDays()), Days);
-        legs_[2].push_back(boost::shared_ptr<CashFlow>(
+        legs_[2].push_back(QuantLib::ext::shared_ptr<CashFlow>(
             new FXLinkedCashFlow(c->accrualStartDate(), fixingDate, -foreignNominal_, fxIndex_)));
-        legs_[2].push_back(boost::shared_ptr<CashFlow>(
+        legs_[2].push_back(QuantLib::ext::shared_ptr<CashFlow>(
             new FXLinkedCashFlow(c->accrualEndDate(), fixingDate, foreignNominal_, fxIndex_)));
     }
 

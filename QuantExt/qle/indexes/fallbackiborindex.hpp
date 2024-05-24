@@ -34,34 +34,32 @@ using namespace QuantLib;
 
 class FallbackIborIndex : public QuantLib::IborIndex {
 public:
-    FallbackIborIndex(const boost::shared_ptr<IborIndex> originalIndex,
-                      const boost::shared_ptr<OvernightIndex> rfrIndex, const Real spread, const Date& switchDate,
+    FallbackIborIndex(const QuantLib::ext::shared_ptr<IborIndex> originalIndex,
+                      const QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex, const Real spread, const Date& switchDate,
                       const bool useRfrCurve);
-    FallbackIborIndex(const boost::shared_ptr<IborIndex> originalIndex,
-                      const boost::shared_ptr<OvernightIndex> rfrIndex, const Real spread, const Date& switchDate,
+    FallbackIborIndex(const QuantLib::ext::shared_ptr<IborIndex> originalIndex,
+                      const QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex, const Real spread, const Date& switchDate,
                       const Handle<YieldTermStructure>& forwardingCurve);
 
     void addFixing(const Date& fixingDate, Real fixing, bool forceOverwrite = false) override;
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     Rate pastFixing(const Date& fixingDate) const override;
-    boost::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& forwarding) const override;
+    QuantLib::ext::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& forwarding) const override;
 
-    boost::shared_ptr<IborIndex> originalIndex() const;
-    boost::shared_ptr<OvernightIndex> rfrIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> originalIndex() const;
+    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex() const;
     Real spread() const;
     const Date& switchDate() const;
-    bool useRfrCurve() const;
 
-    boost::shared_ptr<OvernightIndexedCoupon> onCoupon(const Date& iborFixingDate,
+    QuantLib::ext::shared_ptr<OvernightIndexedCoupon> onCoupon(const Date& iborFixingDate,
                                                        const bool telescopicValueDates = false) const;
 
 private:
     Rate forecastFixing(const Date& valueDate, const Date& endDate, Time t) const override;
-    boost::shared_ptr<IborIndex> originalIndex_;
-    boost::shared_ptr<OvernightIndex> rfrIndex_;
+    QuantLib::ext::shared_ptr<IborIndex> originalIndex_;
+    QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex_;
     Real spread_;
     Date switchDate_;
-    bool useRfrCurve_;
 };
 
 } // namespace QuantExt

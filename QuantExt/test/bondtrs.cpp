@@ -84,20 +84,20 @@ BOOST_DATA_TEST_CASE(testBondTRS, boost::unit_test::data::make(testData), data) 
     Calendar calendar = TARGET();
 
     // bond market data
-    Handle<Quote> rateQuote(boost::make_shared<SimpleQuote>(data.benchmarkRate));
-    Handle<Quote> issuerSpreadQuote(boost::make_shared<SimpleQuote>(data.defaultSpread));
+    Handle<Quote> rateQuote(QuantLib::ext::make_shared<SimpleQuote>(data.benchmarkRate));
+    Handle<Quote> issuerSpreadQuote(QuantLib::ext::make_shared<SimpleQuote>(data.defaultSpread));
     DayCounter dc = Actual365Fixed();
-    Handle<YieldTermStructure> yieldCurve(boost::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Annual));
+    Handle<YieldTermStructure> yieldCurve(QuantLib::ext::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Annual));
     Handle<DefaultProbabilityTermStructure> defaultCurve(
-        boost::make_shared<FlatHazardRate>(today, issuerSpreadQuote, dc));
-    Handle<Quote> bondSpecificSpread(boost::make_shared<SimpleQuote>(data.securitySpread));
-    Handle<Quote> recoveryRateQuote(boost::make_shared<SimpleQuote>(0.4));
+        QuantLib::ext::make_shared<FlatHazardRate>(today, issuerSpreadQuote, dc));
+    Handle<Quote> bondSpecificSpread(QuantLib::ext::make_shared<SimpleQuote>(data.securitySpread));
+    Handle<Quote> recoveryRateQuote(QuantLib::ext::make_shared<SimpleQuote>(0.4));
 
     // derivatives market data
-    Handle<Quote> oisQuote(boost::make_shared<SimpleQuote>(data.oisRate));
-    Handle<YieldTermStructure> oisCurve(boost::make_shared<FlatForward>(today, oisQuote, dc, Compounded, Annual));
-    Handle<Quote> iborQuote(boost::make_shared<SimpleQuote>(data.euriborRate));
-    Handle<YieldTermStructure> iborCurve(boost::make_shared<FlatForward>(today, iborQuote, dc, Compounded, Annual));
+    Handle<Quote> oisQuote(QuantLib::ext::make_shared<SimpleQuote>(data.oisRate));
+    Handle<YieldTermStructure> oisCurve(QuantLib::ext::make_shared<FlatForward>(today, oisQuote, dc, Compounded, Annual));
+    Handle<Quote> iborQuote(QuantLib::ext::make_shared<SimpleQuote>(data.euriborRate));
+    Handle<YieldTermStructure> iborCurve(QuantLib::ext::make_shared<FlatForward>(today, iborQuote, dc, Compounded, Annual));
 
     // build the underlying bond
     Date startDate = data.seasoned ? today - 3 * Months : TARGET().advance(today, 2 * Days);
@@ -113,11 +113,11 @@ BOOST_DATA_TEST_CASE(testBondTRS, boost::unit_test::data::make(testData), data) 
     Leg leg =
         FixedRateLeg(schedule).withNotionals(redemption).withCouponRates(couponRate, dc).withPaymentAdjustment(bdc);
 
-    boost::shared_ptr<QuantLib::Bond> bond(boost::make_shared<QuantLib::Bond>(0, calendar, startDate, leg));
+    QuantLib::ext::shared_ptr<QuantLib::Bond> bond(QuantLib::ext::make_shared<QuantLib::Bond>(0, calendar, startDate, leg));
 
     // build associated bond index
     std::string secId = "SECURITY";
-    boost::shared_ptr<QuantExt::BondIndex> bondIndex = boost::make_shared<QuantExt::BondIndex>(
+    QuantLib::ext::shared_ptr<QuantExt::BondIndex> bondIndex = QuantLib::ext::make_shared<QuantExt::BondIndex>(
         secId, false, false, NullCalendar(), bond, yieldCurve, defaultCurve, recoveryRateQuote, bondSpecificSpread,
         Handle<YieldTermStructure>(), false);
     Date bondFixingDate(5, Nov, 2015);
@@ -125,14 +125,14 @@ BOOST_DATA_TEST_CASE(testBondTRS, boost::unit_test::data::make(testData), data) 
 
     // build and attach bond engine
     Period timeStep = 1 * Months;
-    boost::shared_ptr<PricingEngine> bondEngine(boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(
+    QuantLib::ext::shared_ptr<PricingEngine> bondEngine(QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
         yieldCurve, defaultCurve, recoveryRateQuote, bondSpecificSpread, timeStep));
     bond->setPricingEngine(bondEngine);
 
     // build the TRS funding leg
     Schedule floatingSchedule(startDate, endDate, 6 * Months, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate,
                               lastDate);
-    boost::shared_ptr<IborIndex> iborIndex = boost::make_shared<Euribor>(6 * Months, iborCurve);
+    QuantLib::ext::shared_ptr<IborIndex> iborIndex = QuantLib::ext::make_shared<Euribor>(6 * Months, iborCurve);
     Leg fundingLeg = IborLeg(schedule, iborIndex).withNotionals(redemption);
     Date iborFixingDate(3, Nov, 2015);
     iborIndex->addFixing(iborFixingDate, 0.03);
@@ -147,20 +147,20 @@ BOOST_DATA_TEST_CASE(testBondTRS, boost::unit_test::data::make(testData), data) 
     }
 
     // build TRS
-    boost::shared_ptr<BondTRS> trs = boost::make_shared<BondTRS>(
+    QuantLib::ext::shared_ptr<BondTRS> trs = QuantLib::ext::make_shared<BondTRS>(
         bondIndex, 1.0, Null<Real>(), std::vector<QuantLib::Leg>{fundingLeg, fundingNotionalLeg},
         true, valuationDates, paymentDates);
-    boost::shared_ptr<PricingEngine> trsEngine(new QuantExt::DiscountingBondTRSEngine(oisCurve));
+    QuantLib::ext::shared_ptr<PricingEngine> trsEngine(new QuantExt::DiscountingBondTRSEngine(oisCurve));
     trs->setPricingEngine(trsEngine);
 
     // build floating rate note (risk free, i.e. zero credit spread, security spread)
-    boost::shared_ptr<QuantLib::Bond> floater(boost::make_shared<QuantLib::Bond>(0, calendar, startDate, fundingLeg));
-    Handle<Quote> floaterIssuerSpreadQuote(boost::make_shared<SimpleQuote>(0.0));
+    QuantLib::ext::shared_ptr<QuantLib::Bond> floater(QuantLib::ext::make_shared<QuantLib::Bond>(0, calendar, startDate, fundingLeg));
+    Handle<Quote> floaterIssuerSpreadQuote(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     Handle<DefaultProbabilityTermStructure> floaterDefaultCurve(
-        boost::make_shared<FlatHazardRate>(today, floaterIssuerSpreadQuote, dc));
-    Handle<Quote> floaterSpecificSpread(boost::make_shared<SimpleQuote>(data.securitySpread));
-    Handle<Quote> floaterRecoveryRateQuote(boost::make_shared<SimpleQuote>(0.0));
-    boost::shared_ptr<PricingEngine> floaterEngine(boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(
+        QuantLib::ext::make_shared<FlatHazardRate>(today, floaterIssuerSpreadQuote, dc));
+    Handle<Quote> floaterSpecificSpread(QuantLib::ext::make_shared<SimpleQuote>(data.securitySpread));
+    Handle<Quote> floaterRecoveryRateQuote(QuantLib::ext::make_shared<SimpleQuote>(0.0));
+    QuantLib::ext::shared_ptr<PricingEngine> floaterEngine(QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(
         yieldCurve, floaterDefaultCurve, floaterRecoveryRateQuote, floaterSpecificSpread, timeStep));
     floater->setPricingEngine(floaterEngine);
 

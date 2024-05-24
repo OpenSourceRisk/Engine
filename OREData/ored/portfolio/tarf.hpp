@@ -39,14 +39,14 @@ public:
     explicit TaRF(const std::string& tradeType = "TaRF") : ScriptedTrade(tradeType) {}
     TaRF(const std::string& currency, const std::string& fixingAmount, const std::string& targetAmount,
          const std::string& targetPoints, const std::vector<std::string>& strikes,
-         const std::vector<std::string>& strikeDates, const boost::shared_ptr<Underlying>& underlying,
+         const std::vector<std::string>& strikeDates, const QuantLib::ext::shared_ptr<Underlying>& underlying,
          const ScheduleData& fixingDates, const std::string& settlementLag, const std::string& settlementCalendar,
          const std::string& settlementConvention, OptionData& optionData,
          const std::vector<std::vector<RangeBound>>& rangeBoundSet, const std::vector<std::string>& rangeBoundSetDates,
          const std::vector<BarrierData>& barriers);
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     //! \name Inspectors
     //@{
@@ -57,7 +57,7 @@ private:
     void initIndices();
     std::string currency_, fixingAmount_, targetAmount_, targetPoints_;
     std::vector<std::string> strikes_, strikeDates_;
-    boost::shared_ptr<Underlying> underlying_;
+    QuantLib::ext::shared_ptr<Underlying> underlying_;
     ScheduleData fixingDates_;
     std::string settlementLag_, settlementCalendar_, settlementConvention_;
     OptionData optionData_;

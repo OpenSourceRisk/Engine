@@ -51,14 +51,20 @@ CommodityDigitalAveragePriceOption::CommodityDigitalAveragePriceOption(
       commodityPayRelativeTo_(commodityPayRelativeTo), futureMonthOffset_(futureMonthOffset),
       deliveryRollDays_(deliveryRollDays), includePeriodEnd_(includePeriodEnd), fxIndex_(fxIndex) {}
 
-void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CommodityDigitalAveragePriceOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     reset();
 
     DLOG("CommodityDigitalAveragePriceOption::build() called for trade " << id());
+    
+    // ISDA taxonomy, assuming Commodity follows the Equity template
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Option");
+    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string("");
 
-    QL_REQUIRE(digitalCashPayoff_ > 0, "Commodity digital option requires a positive quatity");
-    QL_REQUIRE(optionData_.exerciseDates().size() == 1, "Invalid number of exercise dates");
+    QL_REQUIRE(optionData_.exerciseDates().size() == 1, "Invalid number of excercise dates");
     Date exDate = parseDate(optionData_.exerciseDates().front());
 
 
@@ -80,10 +86,10 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
 
     setSensitivityTemplate(opt1.sensitivityTemplate());
 
-    boost::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
-    boost::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();
+    QuantLib::ext::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
+    QuantLib::ext::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();
 
-    boost::shared_ptr<CompositeInstrument> composite = boost::make_shared<CompositeInstrument>();
+    QuantLib::ext::shared_ptr<CompositeInstrument> composite = QuantLib::ext::make_shared<CompositeInstrument>();
     // add and subtract such that the long call spread and long put spread have positive values
     if (optionData_.callPut() == "Call") {
         composite->add(inst1);
@@ -98,7 +104,7 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
     Position::Type positionType = parsePositionType(optionData_.longShort());
     Real bsIndicator = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real multiplier = digitalCashPayoff_ * bsIndicator / strikeSpread;
-    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     // FIXME: Do we need to retrieve the engine builder's configuration
     string configuration = Market::defaultConfiguration;
@@ -108,7 +114,7 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
         std::max(exDate, addPremiums(additionalInstruments, additionalMultipliers, multiplier,
                                           optionData_.premiumData(), -bsIndicator, ccy, engineFactory, configuration));
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(composite, multiplier, additionalInstruments, additionalMultipliers));
 
     npvCurrency_ = currency_;
@@ -126,17 +132,10 @@ void CommodityDigitalAveragePriceOption::build(const boost::shared_ptr<EngineFac
     additionalData_["strike"] = strike_;
     additionalData_["optionType"] = optionData_.callPut();
     additionalData_["strikeCurrency"] = currency_;
-
-    // ISDA taxonomy, assuming Commodity follows the Equity template
-    additionalData_["isdaAssetClass"] = std::string("Commodity");
-    additionalData_["isdaBaseProduct"] = std::string("Option");
-    additionalData_["isdaSubProduct"] = std::string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = std::string("");
 }
 
 std::map<AssetClass, std::set<std::string>> CommodityDigitalAveragePriceOption::underlyingIndices(
-    const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::COM, std::set<std::string>({name_})}};
 }
 
@@ -195,7 +194,7 @@ void CommodityDigitalAveragePriceOption::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommodityDigitalAveragePriceOption::toXML(XMLDocument& doc) {
+XMLNode* CommodityDigitalAveragePriceOption::toXML(XMLDocument& doc) const {
 
     XMLNode* node = Trade::toXML(doc);
 

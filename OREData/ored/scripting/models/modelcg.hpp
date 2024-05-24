@@ -53,7 +53,7 @@ public:
     virtual ~ModelCG() {}
 
     // computation graph
-    boost::shared_ptr<QuantExt::ComputationGraph> computationGraph() { return g_; }
+    QuantLib::ext::shared_ptr<QuantExt::ComputationGraph> computationGraph() { return g_; }
 
     // model type
     virtual Type type() const = 0;
@@ -146,7 +146,7 @@ protected:
     mutable std::map<std::string, boost::any> additionalResults_;
 
     // the underlying computation graph
-    boost::shared_ptr<QuantExt::ComputationGraph> g_;
+    QuantLib::ext::shared_ptr<QuantExt::ComputationGraph> g_;
 
 private:
     void performCalculations() const override {}

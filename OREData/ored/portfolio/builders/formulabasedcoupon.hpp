@@ -30,28 +30,28 @@ using namespace QuantLib;
 
 class FormulaBasedCouponPricerBuilder
     : public ore::data::CachingCouponPricerBuilder<
-          std::string, const std::string&, const std::map<std::string, boost::shared_ptr<QuantLib::IborCouponPricer>>&,
-          const std::map<std::string, boost::shared_ptr<QuantLib::CmsCouponPricer>>&,
-          const std::map<std::string, boost::shared_ptr<QuantLib::InterestRateIndex>>&> {
+          std::string, const std::string&, const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::IborCouponPricer>>&,
+          const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::CmsCouponPricer>>&,
+          const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>&> {
 public:
     FormulaBasedCouponPricerBuilder() : CachingEngineBuilder("BrigoMercurio", "MC", {"FormulaBasedCoupon"}) {}
 
 protected:
     virtual std::string
-    keyImpl(const std::string& paymentCcy, const std::map<std::string, boost::shared_ptr<QuantLib::IborCouponPricer>>&,
-            const std::map<std::string, boost::shared_ptr<QuantLib::CmsCouponPricer>>&,
-            const std::map<std::string, boost::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps) override {
+    keyImpl(const std::string& paymentCcy, const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::IborCouponPricer>>&,
+            const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::CmsCouponPricer>>&,
+            const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps) override {
         std::string key = paymentCcy;
         for (auto const& i : indexMaps) {
             key += ":" + i.first;
         }
         return key;
     }
-    virtual boost::shared_ptr<FloatingRateCouponPricer>
+    virtual QuantLib::ext::shared_ptr<FloatingRateCouponPricer>
     engineImpl(const std::string& paymentCcy,
-               const std::map<std::string, boost::shared_ptr<QuantLib::IborCouponPricer>>& iborPricers,
-               const std::map<std::string, boost::shared_ptr<QuantLib::CmsCouponPricer>>& cmsPricers,
-               const std::map<std::string, boost::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps) override;
+               const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::IborCouponPricer>>& iborPricers,
+               const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::CmsCouponPricer>>& cmsPricers,
+               const std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexMaps) override;
 };
 
 } // namespace data

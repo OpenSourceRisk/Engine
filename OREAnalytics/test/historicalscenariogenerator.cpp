@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(testHistoricalScenarioGeneratorTransform) {
     BOOST_TEST_MESSAGE(
         "Checking transformation of discount factors to zero rates in Historical Scenario Generator Transform...");
 
-    vector<boost::shared_ptr<Scenario>> scenarios;
+    vector<QuantLib::ext::shared_ptr<Scenario>> scenarios;
 
     // Make up some scenarios
     Date d1 = Date(14, April, 2016);
@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE(testHistoricalScenarioGeneratorTransform) {
                                      {{RiskFactorKey::KeyType::SurvivalProbability, "dc", 3}, 0.875},
                                      {{RiskFactorKey::KeyType::SurvivalProbability, "dc", 4}, 0.861}};
 
-    boost::shared_ptr<Scenario> s1 = boost::make_shared<SimpleScenario>(d1);
-    boost::shared_ptr<Scenario> s2 = boost::make_shared<SimpleScenario>(d2);
+    QuantLib::ext::shared_ptr<Scenario> s1 = QuantLib::ext::make_shared<SimpleScenario>(d1);
+    QuantLib::ext::shared_ptr<Scenario> s2 = QuantLib::ext::make_shared<SimpleScenario>(d2);
 
     for (auto rf : rfks) {
         s1->add(rf.first, 1);
@@ -57,29 +57,29 @@ BOOST_AUTO_TEST_CASE(testHistoricalScenarioGeneratorTransform) {
 
     scenarios.push_back(s1);
     scenarios.push_back(s2);
-    boost::shared_ptr<HistoricalScenarioLoader> histScenariosLoader = boost::make_shared<HistoricalScenarioLoader>();
+    QuantLib::ext::shared_ptr<HistoricalScenarioLoader> histScenariosLoader = QuantLib::ext::make_shared<HistoricalScenarioLoader>();
     histScenariosLoader->historicalScenarios() = scenarios;
     histScenariosLoader->dates() = vector<Date>{d1, d2};
-    boost::shared_ptr<HistoricalScenarioGenerator> histScenarios = boost::make_shared<HistoricalScenarioGenerator>(
-        histScenariosLoader, boost::make_shared<SimpleScenarioFactory>(), TARGET(), nullptr, 1);
+    QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> histScenarios = QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
+        histScenariosLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(true), TARGET(), nullptr, 1);
     histScenarios->baseScenario() = s1;
 
     // Init market
     testsuite::TestConfigurationObjects::setConventions();
-    boost::shared_ptr<Market> initMarket = boost::make_shared<testsuite::TestMarketParCurves>(d2);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<testsuite::TestMarketParCurves>(d2);
 
     // build scen sim market params
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
         testsuite::TestConfigurationObjects::setupSimMarketData();
 
     // build scenario sim market
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        QuantLib::ext::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
 
-    boost::shared_ptr<HistoricalScenarioGeneratorTransform> histScenTrasform =
-        boost::make_shared<HistoricalScenarioGeneratorTransform>(histScenarios, simMarket, simMarketData);
+    QuantLib::ext::shared_ptr<HistoricalScenarioGeneratorTransform> histScenTrasform =
+        QuantLib::ext::make_shared<HistoricalScenarioGeneratorTransform>(histScenarios, simMarket, simMarketData);
     histScenTrasform->reset();
-    boost::shared_ptr<Scenario> scenarioTransform = histScenTrasform->next(d2);
+    QuantLib::ext::shared_ptr<Scenario> scenarioTransform = histScenTrasform->next(d2);
 
     DayCounter dc;
     vector<Period> tenors;

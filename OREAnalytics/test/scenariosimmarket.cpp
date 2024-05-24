@@ -47,23 +47,23 @@ using testsuite::TestMarket;
 
 namespace {
 
-boost::shared_ptr<data::Conventions> convs() {
-    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+QuantLib::ext::shared_ptr<data::Conventions> convs() {
+    QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     conventions->clear();
     
-    boost::shared_ptr<data::Convention> swapIndexConv(
+    QuantLib::ext::shared_ptr<data::Convention> swapIndexConv(
         new data::SwapIndexConvention("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
     conventions->add(swapIndexConv);
 
-    boost::shared_ptr<data::Convention> swapConv(
+    QuantLib::ext::shared_ptr<data::Convention> swapConv(
         new data::IRSwapConvention("EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
     conventions->add(swapConv);
 
     return conventions;
 }
 
-boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
+QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
     parameters->baseCcy() = "EUR";
     parameters->setDiscountCurveNames({"EUR", "USD"});
     parameters->setYieldCurveTenors("", {6 * Months, 1 * Years, 2 * Years});
@@ -98,9 +98,9 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
 }
 } // namespace
 
-void testFxSpot(boost::shared_ptr<ore::data::Market>& initMarket,
-                boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-                boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+void testFxSpot(QuantLib::ext::shared_ptr<ore::data::Market>& initMarket,
+                QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
 
     for (const auto& ccy : parameters->ccys()) {
         if (ccy != parameters->baseCcy()) {
@@ -128,9 +128,9 @@ void testFxSpot(boost::shared_ptr<ore::data::Market>& initMarket,
     }
 }
 
-void testDiscountCurve(boost::shared_ptr<ore::data::Market>& initMarket,
-                       boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-                       boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+void testDiscountCurve(QuantLib::ext::shared_ptr<ore::data::Market>& initMarket,
+                       QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                       QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
 
     for (const auto& ccy : parameters->ccys()) {
         Handle<YieldTermStructure> simCurve = simMarket->discountCurve(ccy);
@@ -140,9 +140,9 @@ void testDiscountCurve(boost::shared_ptr<ore::data::Market>& initMarket,
     }
 }
 
-void testIndexCurve(boost::shared_ptr<ore::data::Market>& initMarket,
-                    boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-                    boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+void testIndexCurve(QuantLib::ext::shared_ptr<ore::data::Market>& initMarket,
+                    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
 
     for (const auto& ind : parameters->indices()) {
         Handle<YieldTermStructure> simCurve = simMarket->iborIndex(ind)->forwardingTermStructure();
@@ -152,9 +152,9 @@ void testIndexCurve(boost::shared_ptr<ore::data::Market>& initMarket,
     }
 }
 
-void testSwaptionVolCurve(boost::shared_ptr<ore::data::Market>& initMarket,
-                          boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-                          boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+void testSwaptionVolCurve(QuantLib::ext::shared_ptr<ore::data::Market>& initMarket,
+                          QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                          QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
     for (const auto& ccy : parameters->ccys()) {
         Handle<QuantLib::SwaptionVolatilityStructure> simCurve = simMarket->swaptionVol(ccy);
         Handle<QuantLib::SwaptionVolatilityStructure> initCurve = initMarket->swaptionVol(ccy);
@@ -167,9 +167,9 @@ void testSwaptionVolCurve(boost::shared_ptr<ore::data::Market>& initMarket,
     }
 }
 
-void testFxVolCurve(boost::shared_ptr<data::Market>& initMarket,
-                    boost::shared_ptr<analytics::ScenarioSimMarket>& simMarket,
-                    boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+void testFxVolCurve(QuantLib::ext::shared_ptr<data::Market>& initMarket,
+                    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket>& simMarket,
+                    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
     for (const auto& ccyPair : parameters->fxVolCcyPairs()) {
         Handle<BlackVolTermStructure> simCurve = simMarket->fxVol(ccyPair);
         Handle<BlackVolTermStructure> initCurve = initMarket->fxVol(ccyPair);
@@ -185,9 +185,9 @@ void testFxVolCurve(boost::shared_ptr<data::Market>& initMarket,
     }
 }
 
-void testDefaultCurve(boost::shared_ptr<ore::data::Market>& initMarket,
-                      boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-                      boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+void testDefaultCurve(QuantLib::ext::shared_ptr<ore::data::Market>& initMarket,
+                      QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                      QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
     for (const auto& spec : parameters->defaultNames()) {
 
         Handle<DefaultProbabilityTermStructure> simCurve = simMarket->defaultCurve(spec)->curve();
@@ -206,9 +206,9 @@ void testDefaultCurve(boost::shared_ptr<ore::data::Market>& initMarket,
     }
 }
 
-void testZeroInflationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
-                            boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-                            boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+void testZeroInflationCurve(QuantLib::ext::shared_ptr<ore::data::Market>& initMarket,
+                            QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                            QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
     for (const auto& spec : parameters->zeroInflationIndices()) {
 
         Handle<ZeroInflationTermStructure> simCurve = simMarket->zeroInflationIndex(spec)->zeroInflationTermStructure();
@@ -227,9 +227,9 @@ void testZeroInflationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
     }
 }
 
-void testCorrelationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
-                          boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-                          boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+void testCorrelationCurve(QuantLib::ext::shared_ptr<ore::data::Market>& initMarket,
+                          QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                          QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
     for (const auto& spec : parameters->correlationPairs()) {
         vector<string> tokens;
         boost::split(tokens, spec, boost::is_any_of(":&"));
@@ -250,7 +250,7 @@ void testCorrelationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
     }
 }
 
-void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params) {
+void testToXML(QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> params) {
 
     BOOST_TEST_MESSAGE("Testing to XML...");
     XMLDocument outDoc;
@@ -260,7 +260,7 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
     outDoc.appendNode(simulationNode);
     outDoc.toFile(testFile);
 
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> newParams(new analytics::ScenarioSimMarketParameters());
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> newParams(new analytics::ScenarioSimMarketParameters());
     newParams->fromFile(testFile);
     BOOST_CHECK(*params == *newParams);
 
@@ -281,16 +281,16 @@ BOOST_AUTO_TEST_CASE(testScenarioSimMarket) {
 
     Date today(20, Jan, 2015);
     Settings::instance().evaluationDate() = today;
-    boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<TestMarket>(today);
+    QuantLib::ext::shared_ptr<ore::data::Market> initMarket = QuantLib::ext::make_shared<TestMarket>(today);
 
     // Empty scenario generator
-    boost::shared_ptr<ore::analytics::ScenarioGenerator> scenarioGenerator;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator> scenarioGenerator;
 
     // build scenario
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters = scenarioParameters();
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> parameters = scenarioParameters();
     convs();
     // build scenario sim market
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket(
+    QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> simMarket(
         new analytics::ScenarioSimMarket(initMarket, parameters));
     simMarket->scenarioGenerator() = scenarioGenerator;
 

@@ -51,15 +51,15 @@ BOOST_AUTO_TEST_CASE(testFXLinkedCashFlow) {
     Date cfDate3(5, Jan, 2017); // future
 
     Real foreignAmount = 1000000; // 1M
-    boost::shared_ptr<SimpleQuote> sq = boost::make_shared<SimpleQuote>(123.45);
+    QuantLib::ext::shared_ptr<SimpleQuote> sq = QuantLib::ext::make_shared<SimpleQuote>(123.45);
     Handle<Quote> spot(sq);
     DayCounter dc = ActualActual(ActualActual::ISDA);
     Calendar cal = TARGET();
-    Handle<YieldTermStructure> domYTS(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.005, dc))); // JPY
-    Handle<YieldTermStructure> forYTS(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.03, dc)));  // USD
+    Handle<YieldTermStructure> domYTS(QuantLib::ext::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.005, dc))); // JPY
+    Handle<YieldTermStructure> forYTS(QuantLib::ext::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.03, dc)));  // USD
     // TODO foreign/domestic vs source/target
-    boost::shared_ptr<FxIndex> fxIndex =
-        boost::make_shared<FxIndex>("FX::USDJPY", 0, USDCurrency(), JPYCurrency(), TARGET(), spot, domYTS, forYTS);
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex =
+        QuantLib::ext::make_shared<FxIndex>("FX::USDJPY", 0, USDCurrency(), JPYCurrency(), TARGET(), spot, domYTS, forYTS);
 
     FXLinkedCashFlow fxlcf1(cfDate1, cfDate1, foreignAmount, fxIndex);
     FXLinkedCashFlow fxlcf2(cfDate2, cfDate2, foreignAmount, fxIndex);
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
 
     Real nominal = 1000000; // 1M - in USD
     string eqName = "SP5";
-    boost::shared_ptr<SimpleQuote> sq = boost::make_shared<SimpleQuote>(2100);
+    QuantLib::ext::shared_ptr<SimpleQuote> sq = QuantLib::ext::make_shared<SimpleQuote>(2100);
     Handle<Quote> spot(sq);
     DayCounter dc = ActualActual(ActualActual::ISDA);
     Calendar cal = TARGET();
@@ -117,12 +117,12 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     Natural fixingLag = 2;
     Real divFactor = 1.0;
     Handle<YieldTermStructure> dividend(
-        boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.01, dc))); // Dividend Curve
+        QuantLib::ext::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.01, dc))); // Dividend Curve
     Handle<YieldTermStructure> equityforecast(
-        boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.02, dc))); // Equity Forecast Curve
+        QuantLib::ext::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.02, dc))); // Equity Forecast Curve
 
-    boost::shared_ptr<EquityIndex2> eqIndex =
-        boost::make_shared<EquityIndex2>(eqName, cal, ccy, spot, equityforecast, dividend);
+    QuantLib::ext::shared_ptr<EquityIndex2> eqIndex =
+        QuantLib::ext::make_shared<EquityIndex2>(eqName, cal, ccy, spot, equityforecast, dividend);
 
     eqIndex->addFixing(cfDate1, 2000);
     eqIndex->addFixing(fixingDate1, 1980);
@@ -137,11 +137,11 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     EquityCoupon eq4(cfDate2, nominal, today, cfDate2, fixingLag, eqIndex, dc, EquityReturnType::Total);
 
     // Fx Index, coupon and underlying have different currency
-    Handle<YieldTermStructure> domYTS(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.01, dc))); // EUR
-    Handle<YieldTermStructure> forYTS(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.02, dc))); // USD
-    Handle<Quote> fxSpot(boost::make_shared<SimpleQuote>(1.1));
-    boost::shared_ptr<FxIndex> fxIndex =
-        boost::make_shared<FxIndex>("FX::EURUSD", 2, EURCurrency(), USDCurrency(), TARGET(), fxSpot, domYTS, forYTS);
+    Handle<YieldTermStructure> domYTS(QuantLib::ext::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.01, dc))); // EUR
+    Handle<YieldTermStructure> forYTS(QuantLib::ext::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.02, dc))); // USD
+    Handle<Quote> fxSpot(QuantLib::ext::make_shared<SimpleQuote>(1.1));
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex =
+        QuantLib::ext::make_shared<FxIndex>("FX::EURUSD", 2, EURCurrency(), USDCurrency(), TARGET(), fxSpot, domYTS, forYTS);
     // Add historical and todays fixing
     fxIndex->addFixing(cfDate1, 1.09);
 
@@ -149,11 +149,11 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     EquityCoupon eq5(cfDate2, nominal, today, cfDate2, 0, eqIndex, dc, EquityReturnType::Total, 1.0, false,
                      Null<Real>(), Null<Real>(), Date(), Date(), Date(), Date(), Date(), fxIndex);
 
-    boost::shared_ptr<EquityCouponPricer> pricer1(new EquityCouponPricer());
-    boost::shared_ptr<EquityCouponPricer> pricer2(new EquityCouponPricer());
-    boost::shared_ptr<EquityCouponPricer> pricer3(new EquityCouponPricer());
-    boost::shared_ptr<EquityCouponPricer> pricer4(new EquityCouponPricer());
-    boost::shared_ptr<EquityCouponPricer> pricer5(new EquityCouponPricer());
+    QuantLib::ext::shared_ptr<EquityCouponPricer> pricer1(new EquityCouponPricer());
+    QuantLib::ext::shared_ptr<EquityCouponPricer> pricer2(new EquityCouponPricer());
+    QuantLib::ext::shared_ptr<EquityCouponPricer> pricer3(new EquityCouponPricer());
+    QuantLib::ext::shared_ptr<EquityCouponPricer> pricer4(new EquityCouponPricer());
+    QuantLib::ext::shared_ptr<EquityCouponPricer> pricer5(new EquityCouponPricer());
     eq1.setPricer(pricer1);
     eq2.setPricer(pricer2);
     eq3.setPricer(pricer3);

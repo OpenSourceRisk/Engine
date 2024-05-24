@@ -59,7 +59,7 @@ private:
     void applyCallability(Size, bool convertible);
     void addCashflow(Size);
     ConvertibleBond::option::arguments arguments_;
-    boost::shared_ptr<GeneralizedBlackScholesProcess> process_;
+    QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess> process_;
     Handle<Quote> creditSpread_;
     std::vector<Time> stoppingTimes_;
     std::vector<Time> callabilityTimes_;

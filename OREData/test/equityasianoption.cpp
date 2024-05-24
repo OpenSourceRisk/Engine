@@ -52,27 +52,27 @@
          DayCounter dayCounter = Actual360();
 
          // Add USD discount curve
-         Handle<YieldTermStructure> discount(boost::make_shared<FlatForward>(asof_, riskFreeRate, dayCounter));
+         Handle<YieldTermStructure> discount(QuantLib::ext::make_shared<FlatForward>(asof_, riskFreeRate, dayCounter));
          yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = discount;
          yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "COMPANY")] = discount;
 
          // Add COMPANY dividend yield
-         Handle<YieldTermStructure> dividendYTS(boost::make_shared<FlatForward>(asof_, dividendYield, dayCounter));
+         Handle<YieldTermStructure> dividendYTS(QuantLib::ext::make_shared<FlatForward>(asof_, dividendYield, dayCounter));
          yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "COMPANY")] = dividendYTS;
 
          // Add equity spots
          equitySpots_[make_pair(Market::defaultConfiguration, "COMPANY")] =
-             Handle<Quote>(boost::make_shared<SimpleQuote>(spot));
+             Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spot));
 
          // Add COMPANY equity curve
          equityCurves_[make_pair(Market::defaultConfiguration, "COMPANY")] = Handle<EquityIndex2>(
-             boost::make_shared<EquityIndex2>("COMPANY", TARGET(), parseCurrency("USD"), equitySpot("COMPANY"),
+             QuantLib::ext::make_shared<EquityIndex2>("COMPANY", TARGET(), parseCurrency("USD"), equitySpot("COMPANY"),
                                              yieldCurve(YieldCurveType::Discount, "USD"),
                                              yieldCurve(YieldCurveType::EquityDividend, "COMPANY")));
 
          // Add COMPANY volatilities
          Handle<BlackVolTermStructure> volatility(
-             boost::make_shared<BlackConstantVol>(asof_, TARGET(), flatVolatility, dayCounter));
+             QuantLib::ext::make_shared<BlackConstantVol>(asof_, TARGET(), flatVolatility, dayCounter));
          equityVols_[make_pair(Market::defaultConfiguration, "COMPANY")] = volatility;
      }
  };
@@ -128,8 +128,8 @@
 
      Date asof = Date(01, Feb, 2021);
      Envelope env("CP1");
-     boost::shared_ptr<EngineFactory> engineFactory;
-     boost::shared_ptr<Market> market;
+     QuantLib::ext::shared_ptr<EngineFactory> engineFactory;
+     QuantLib::ext::shared_ptr<Market> market;
 
      for (const auto& a : asians) {
          Time deltaT = a.length / (a.fixings - 1);
@@ -145,15 +145,15 @@
          ScheduleDates scheduleDates("NullCalendar", "", "", strFixingDates);
          ScheduleData scheduleData(scheduleDates);
 
-         market = boost::make_shared<TestMarket>(a.spot, expiry, a.riskFreeRate, a.dividendYield, a.volatility);
-         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+         market = QuantLib::ext::make_shared<TestMarket>(a.spot, expiry, a.riskFreeRate, a.dividendYield, a.volatility);
+         QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
          std::string productName = "EquityAsianOptionArithmeticPrice";
          engineData->model(productName) = "BlackScholesMerton";
          engineData->engine(productName) = "MCDiscreteArithmeticAPEngine";
          engineData->engineParameters(productName) = {{"ProcessType", "Discrete"},    {"BrownianBridge", "True"},
                                                       {"AntitheticVariate", "False"}, {"ControlVariate", "True"},
                                                       {"RequiredSamples", "2047"},    {"Seed", "0"}};
-         engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+         engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
          // Set evaluation date
          Settings::instance().evaluationDate() = market->asofDate();
@@ -165,23 +165,23 @@
                                vector<string>(), "", "", "", "Asian", "Arithmetic", boost::none, boost::none,
                                boost::none);
 
-         boost::shared_ptr<EquityAsianOption> asianOption = boost::make_shared<EquityAsianOption>(
+         QuantLib::ext::shared_ptr<EquityAsianOption> asianOption = QuantLib::ext::make_shared<EquityAsianOption>(
              env, "EquityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
-             boost::make_shared<EquityUnderlying>("COMPANY"), Date(), "USD");
+             QuantLib::ext::make_shared<EquityUnderlying>("COMPANY"), Date(), "USD");
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected
-         boost::shared_ptr<Instrument> qlInstrument = asianOption->instrument()->qlInstrument();
+         QuantLib::ext::shared_ptr<Instrument> qlInstrument = asianOption->instrument()->qlInstrument();
 
-         boost::shared_ptr<DiscreteAveragingAsianOption> discreteAsian =
-             boost::dynamic_pointer_cast<DiscreteAveragingAsianOption>(qlInstrument);
+         QuantLib::ext::shared_ptr<DiscreteAveragingAsianOption> discreteAsian =
+             QuantLib::ext::dynamic_pointer_cast<DiscreteAveragingAsianOption>(qlInstrument);
 
          BOOST_CHECK(discreteAsian);
          BOOST_CHECK_EQUAL(discreteAsian->exercise()->type(), Exercise::Type::European);
          BOOST_CHECK_EQUAL(discreteAsian->exercise()->dates().size(), 1);
          BOOST_CHECK_EQUAL(discreteAsian->exercise()->dates()[0], expiry);
 
-         boost::shared_ptr<TypePayoff> payoff = boost::dynamic_pointer_cast<TypePayoff>(discreteAsian->payoff());
+         QuantLib::ext::shared_ptr<TypePayoff> payoff = QuantLib::ext::dynamic_pointer_cast<TypePayoff>(discreteAsian->payoff());
          BOOST_CHECK(payoff);
          BOOST_CHECK_EQUAL(payoff->optionType(), a.type);
 
@@ -225,8 +225,8 @@
 
      Date asof = Date(01, Feb, 2021);
      Envelope env("CP1");
-     boost::shared_ptr<EngineFactory> engineFactory;
-     boost::shared_ptr<Market> market;
+     QuantLib::ext::shared_ptr<EngineFactory> engineFactory;
+     QuantLib::ext::shared_ptr<Market> market;
 
      for (const auto& a : asians) {
          Time deltaT = a.length / (a.fixings - 1);
@@ -242,8 +242,8 @@
          ScheduleDates scheduleDates("NullCalendar", "", "", strFixingDates);
          ScheduleData scheduleData(scheduleDates);
 
-         market = boost::make_shared<TestMarket>(a.spot, expiry, a.riskFreeRate, a.dividendYield, a.volatility);
-         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+         market = QuantLib::ext::make_shared<TestMarket>(a.spot, expiry, a.riskFreeRate, a.dividendYield, a.volatility);
+         QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
          std::string productName = "EquityAsianOptionArithmeticStrike";
          engineData->model(productName) = "BlackScholesMerton";
          engineData->engine(productName) = "MCDiscreteArithmeticASEngine";
@@ -252,7 +252,7 @@
                                                       {"AntitheticVariate", "False"},
                                                       {"RequiredSamples", "1000"},
                                                       {"Seed", "3456789"}};
-         engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+         engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
          // Set evaluation date
          Settings::instance().evaluationDate() = market->asofDate();
@@ -264,23 +264,23 @@
                                vector<string>(), "", "", "", "AverageStrike", "Arithmetic", boost::none, boost::none,
                                boost::none);
 
-         boost::shared_ptr<EquityAsianOption> asianOption = boost::make_shared<EquityAsianOption>(
+         QuantLib::ext::shared_ptr<EquityAsianOption> asianOption = QuantLib::ext::make_shared<EquityAsianOption>(
              env, "EquityAsianOption", 1.0, TradeStrike(a.strike, "USD"), optionData, scheduleData,
-             boost::make_shared<EquityUnderlying>("COMPANY"), Date(), "USD");
+             QuantLib::ext::make_shared<EquityUnderlying>("COMPANY"), Date(), "USD");
          BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
          // Check the underlying instrument was built as expected
-         boost::shared_ptr<Instrument> qlInstrument = asianOption->instrument()->qlInstrument();
+         QuantLib::ext::shared_ptr<Instrument> qlInstrument = asianOption->instrument()->qlInstrument();
 
-         boost::shared_ptr<DiscreteAveragingAsianOption> discreteAsian =
-             boost::dynamic_pointer_cast<DiscreteAveragingAsianOption>(qlInstrument);
+         QuantLib::ext::shared_ptr<DiscreteAveragingAsianOption> discreteAsian =
+             QuantLib::ext::dynamic_pointer_cast<DiscreteAveragingAsianOption>(qlInstrument);
 
          BOOST_CHECK(discreteAsian);
          BOOST_CHECK_EQUAL(discreteAsian->exercise()->type(), Exercise::Type::European);
          BOOST_CHECK_EQUAL(discreteAsian->exercise()->dates().size(), 1);
          BOOST_CHECK_EQUAL(discreteAsian->exercise()->dates()[0], expiry);
 
-         boost::shared_ptr<TypePayoff> payoff = boost::dynamic_pointer_cast<TypePayoff>(discreteAsian->payoff());
+         QuantLib::ext::shared_ptr<TypePayoff> payoff = QuantLib::ext::dynamic_pointer_cast<TypePayoff>(discreteAsian->payoff());
          BOOST_CHECK(payoff);
          BOOST_CHECK_EQUAL(payoff->optionType(), a.type);
 
@@ -360,8 +360,8 @@
      portfolio.fromXMLString(tradeXml);
 
      // Extract EquityAsianOption trade from portfolio
-     boost::shared_ptr<Trade> trade = portfolio.trades().begin()->second;
-     boost::shared_ptr<EquityAsianOption> option = boost::dynamic_pointer_cast<ore::data::EquityAsianOption>(trade);
+     QuantLib::ext::shared_ptr<Trade> trade = portfolio.trades().begin()->second;
+     QuantLib::ext::shared_ptr<EquityAsianOption> option = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityAsianOption>(trade);
      BOOST_CHECK(option != nullptr);
 
      // Check fields after checking that the cast was successful

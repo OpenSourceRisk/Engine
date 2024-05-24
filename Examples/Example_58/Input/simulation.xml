@@ -2,8 +2,8 @@
 	<Market>
 		<BaseCurrency>EUR</BaseCurrency>
 		<Currencies>
-			<Currency>USD</Currency>
 			<Currency>EUR</Currency>
+			<Currency>USD</Currency>
 		</Currencies>
 		<YieldCurves>
 			<Configuration curve="">
@@ -12,15 +12,24 @@
 				<Extrapolation>FlatZero</Extrapolation>
 			</Configuration>
 		</YieldCurves>
+		<FxRates>
+			<CurrencyPairs>
+				<CurrencyPair>USDEUR</CurrencyPair>
+			</CurrencyPairs>
+		</FxRates>
 		<Indices>
-			<Index>USD-FedFunds</Index>
-			<Index>USD-Libor-3M</Index>
 			<Index>EUR-EONIA</Index>
 			<Index>EUR-EURIBOR-3M</Index>
+			<Index>EUR-EURIBOR-6M</Index>
+			<Index>USD-FedFunds</Index>
+			<Index>USD-LIBOR-3M</Index>
 		</Indices>
-		<BenchmarkCurves/>
-		<FxRates>
-			<CurrencyPairs/>
-		</FxRates>
+		<CreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</CreditStates>
+		<AggregationScenarioDataCreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</AggregationScenarioDataCreditStates>
 	</Market>
 </Simulation>
+

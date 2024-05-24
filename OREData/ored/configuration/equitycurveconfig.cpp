@@ -87,7 +87,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("EquityCurve");
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
@@ -141,17 +141,6 @@ EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str) {
     else if (str == "NoDividends")
         return EquityCurveConfig::Type::NoDividends;
     QL_FAIL("Invalid EquityCurveConfig::Type " << str);
-}
-
-std::ostream& operator<<(std::ostream& out, Exercise::Type t) {
-    switch (t) {
-    case Exercise::American:
-        return out << "American";
-    case Exercise::European:
-        return out << "European";
-    default:
-        QL_FAIL("invalid Exercise::Type(" << int(t) << ")");
-    }
 }
 
 } // namespace data

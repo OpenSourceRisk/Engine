@@ -149,7 +149,7 @@ void SimmBasicNameMapper::fromXML(XMLNode* node) {
     LOG("Finished parsing SIMMNameMappings");
 }
 
-XMLNode* SimmBasicNameMapper::toXML(ore::data::XMLDocument& doc) {
+XMLNode* SimmBasicNameMapper::toXML(ore::data::XMLDocument& doc) const {
 
     LOG("Start toXML for SIMM name mappings");
 

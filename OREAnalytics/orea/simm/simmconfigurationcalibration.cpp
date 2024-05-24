@@ -83,8 +83,8 @@ QuantLib::Real SimmConfigurationCalibration::correlation(const RiskType& firstRt
                                               secondQualifier, secondLabel_1, secondLabel_2);
 }
 
-SimmConfigurationCalibration::SimmConfigurationCalibration(const boost::shared_ptr<SimmBucketMapper>& simmBucketMapper,
-                                                           const boost::shared_ptr<SimmCalibration>& simmCalibration,
+SimmConfigurationCalibration::SimmConfigurationCalibration(const QuantLib::ext::shared_ptr<SimmBucketMapper>& simmBucketMapper,
+                                                           const QuantLib::ext::shared_ptr<SimmCalibration>& simmCalibration,
                                                            const QuantLib::Size& mporDays, const string& name)
     : SimmConfigurationBase(simmBucketMapper, name, "", mporDays) {
 
@@ -97,10 +97,10 @@ SimmConfigurationCalibration::SimmConfigurationCalibration(const boost::shared_p
 
     // Set up the correct concentration threshold getter
     if (mporDays == 10) {
-        simmConcentration_ = boost::make_shared<SimmConcentrationCalibration>(simmCalibration, simmBucketMapper_);
+        simmConcentration_ = QuantLib::ext::make_shared<SimmConcentrationCalibration>(simmCalibration, simmBucketMapper_);
     } else {
         // SIMM:Technical Paper, Section I.4: "The Concentration Risk feature is disabled"
-        simmConcentration_ = boost::make_shared<SimmConcentrationBase>();
+        simmConcentration_ = QuantLib::ext::make_shared<SimmConcentrationBase>();
     }
 
     for (const auto& [riskClass, rcData] : simmCalibration->riskClassData()) {
@@ -112,7 +112,7 @@ SimmConfigurationCalibration::SimmConfigurationCalibration(const boost::shared_p
         // Populate CCY groups that are used for FX correlations and risk weights
         // The groups consists of High Vol Currencies & regular vol currencies
         if (riskClass == RiskClass::FX) {
-            const auto& fxRiskWeights = boost::dynamic_pointer_cast<SimmCalibration::RiskClassData::FXRiskWeights>(riskWeights);
+            const auto& fxRiskWeights = QuantLib::ext::dynamic_pointer_cast<SimmCalibration::RiskClassData::FXRiskWeights>(riskWeights);
             QL_REQUIRE(fxRiskWeights, "Cannot cast RiskWeights to FXRiskWeights");
             const auto& ccyLists = fxRiskWeights->currencyLists();
 
@@ -217,7 +217,7 @@ SimmConfigurationCalibration::SimmConfigurationCalibration(const boost::shared_p
 
         // Correlations unique to other risk class
         if (riskClass == RiskClass::InterestRate) {
-            const auto& irCorrelations = boost::dynamic_pointer_cast<SimmCalibration::RiskClassData::IRCorrelations>(correlations);
+            const auto& irCorrelations = QuantLib::ext::dynamic_pointer_cast<SimmCalibration::RiskClassData::IRCorrelations>(correlations);
             irSubCurveCorr_ = ore::data::parseReal(irCorrelations->subCurves()->value());
             infCorr_ = ore::data::parseReal(irCorrelations->inflation()->value());
             infVolCorr_ = ore::data::parseReal(irCorrelations->inflation()->value());
@@ -225,11 +225,11 @@ SimmConfigurationCalibration::SimmConfigurationCalibration(const boost::shared_p
             irInterCurrencyCorr_ = ore::data::parseReal(irCorrelations->outer()->value());
         } else if (riskClass == RiskClass::FX) {
             const auto& fxCorrelations =
-                boost::dynamic_pointer_cast<SimmCalibration::RiskClassData::FXCorrelations>(correlations);
+                QuantLib::ext::dynamic_pointer_cast<SimmCalibration::RiskClassData::FXCorrelations>(correlations);
             fxCorr_ = ore::data::parseReal(fxCorrelations->volatility()->value());
         } else if (riskClass == RiskClass::CreditQualifying) {
             const auto& creditQCorrelations =
-                boost::dynamic_pointer_cast<SimmCalibration::RiskClassData::CreditQCorrelations>(correlations);
+                QuantLib::ext::dynamic_pointer_cast<SimmCalibration::RiskClassData::CreditQCorrelations>(correlations);
             basecorrCorr_ = ore::data::parseReal(creditQCorrelations->baseCorrelation()->value());
         } else if (riskClass == RiskClass::CreditNonQualifying) {
             crnqInterCorr_ = ore::data::parseReal(correlations->interBucketCorrelations().begin()->second);
@@ -360,14 +360,14 @@ void SimmConfigurationCalibration::addLabels2(const RiskType& rt, const string& 
     SimmConfigurationBase::addLabels2Impl(rt, label_2);
 }
 
-string SimmConfigurationCalibration::labels2(const boost::shared_ptr<InterestRateIndex>& irIndex) const {
+string SimmConfigurationCalibration::label2(const QuantLib::ext::shared_ptr<InterestRateIndex>& irIndex) const {
     // Special for BMA
     if (boost::algorithm::starts_with(irIndex->name(), "BMA")) {
         return "Municipal";
     }
 
     // Otherwise pass off to base class
-    return SimmConfigurationBase::labels2(irIndex);
+    return SimmConfigurationBase::label2(irIndex);
 }
 
 } // namespace analytics

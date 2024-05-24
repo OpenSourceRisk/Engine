@@ -37,10 +37,10 @@ using namespace QuantLib;
  */
 class IrHwStateProcess : public StochasticProcess {
 public:
-    IrHwStateProcess(const boost::shared_ptr<IrHwParametrization>& parametrization, const IrModel::Measure measure,
+    IrHwStateProcess(const QuantLib::ext::shared_ptr<IrHwParametrization>& parametrization, const IrModel::Measure measure,
                      const HwModel::Discretization discretization = HwModel::Discretization::Euler,
                      const bool evaluateBankAccount = true)
-        : StochasticProcess(discretization == HwModel::Discretization::Euler ? boost::make_shared<EulerDiscretization>()
+        : StochasticProcess(discretization == HwModel::Discretization::Euler ? QuantLib::ext::make_shared<EulerDiscretization>()
                                                                              : nullptr),
           parametrization_(parametrization), measure_(measure), discretization_(discretization),
           evaluateBankAccount_(evaluateBankAccount) {
@@ -63,7 +63,7 @@ public:
     Matrix diffusion(Time t, const Array& s) const override;
 
 private:
-    boost::shared_ptr<IrHwParametrization> parametrization_;
+    QuantLib::ext::shared_ptr<IrHwParametrization> parametrization_;
     IrModel::Measure measure_;
     HwModel::Discretization discretization_;
     bool evaluateBankAccount_;

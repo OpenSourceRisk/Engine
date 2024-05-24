@@ -37,21 +37,22 @@ class BasketOption : public ScriptedTrade {
 public:
     explicit BasketOption(const std::string& tradeType = "BasketOption") : ScriptedTrade(tradeType) {}
     BasketOption(const std::string& currency, const std::string& notional, const TradeStrike& strike,
-                 const std::vector<boost::shared_ptr<ore::data::Underlying>>& underlyings, const OptionData& optionData,
+                 const std::vector<QuantLib::ext::shared_ptr<ore::data::Underlying>>& underlyings, const OptionData& optionData,
                  const std::string& settlement, const ScheduleData& observationDates)
         : currency_(currency), notional_(notional), tradeStrike_(strike), underlyings_(underlyings),
           optionData_(optionData), settlement_(settlement), observationDates_(observationDates) {
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void setIsdaTaxonomyFields() override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 protected:
     void initIndices();
     std::string currency_, notional_;
     TradeStrike tradeStrike_;
-    std::vector<boost::shared_ptr<ore::data::Underlying>> underlyings_;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::Underlying>> underlyings_;
     OptionData optionData_;
     std::string settlement_;
     ScheduleData observationDates_;

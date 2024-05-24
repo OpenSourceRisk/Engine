@@ -31,7 +31,7 @@ namespace ore {
 namespace data {
 
 CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveId, const string& curveDescription,
-                                                   const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                                   const QuantLib::ext::shared_ptr<VolatilityConfig>& volatilityConfig,
                                                    const string& dayCounter, const string& calendar,
                                                    const string& strikeType, const string& quoteName, Real strikeFactor,
                                                    const std::vector<QuantLib::Period>& terms,
@@ -47,7 +47,7 @@ CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveId, const 
     populateRequiredCurveIds();
 }
 
-const boost::shared_ptr<VolatilityConfig>& CDSVolatilityCurveConfig::volatilityConfig() const {
+const QuantLib::ext::shared_ptr<VolatilityConfig>& CDSVolatilityCurveConfig::volatilityConfig() const {
     return volatilityConfig_;
 }
 
@@ -113,25 +113,25 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
 
         // Create the relevant volatilityConfig_ object.
         if (quotes.size() == 1) {
-            volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>(quotes[0]);
+            volatilityConfig_ = QuantLib::ext::make_shared<ConstantVolatilityConfig>(quotes[0]);
         } else {
-            volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>(quotes, "Linear", "Flat");
+            volatilityConfig_ = QuantLib::ext::make_shared<VolatilityCurveConfig>(quotes, "Linear", "Flat");
         }
 
     } else {
         XMLNode* n;
         if ((n = XMLUtils::getChildNode(node, "Constant"))) {
-            volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>();
+            volatilityConfig_ = QuantLib::ext::make_shared<ConstantVolatilityConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "Curve"))) {
-            volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>();
+            volatilityConfig_ = QuantLib::ext::make_shared<VolatilityCurveConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "StrikeSurface"))) {
-            volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
+            volatilityConfig_ = QuantLib::ext::make_shared<VolatilityStrikeSurfaceConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
             QL_FAIL("CDSVolatilityCurveConfig does not yet support a DeltaSurface.");
         } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
             QL_FAIL("CDSVolatilityCurveConfig does not yet support a MoneynessSurface.");
         } else if ((n = XMLUtils::getChildNode(node, "ProxySurface"))) {
-            volatilityConfig_ = boost::make_shared<CDSProxyVolatilityConfig>();
+            volatilityConfig_ = QuantLib::ext::make_shared<CDSProxyVolatilityConfig>();
         } else {
             QL_FAIL("CDSVolatility node expects one child node with name in list: Constant,"
                     << " Curve, StrikeSurface, ProxySurface.");
@@ -159,7 +159,7 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CDSVolatility");
 
@@ -195,11 +195,11 @@ XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
 void CDSVolatilityCurveConfig::populateQuotes() {
 
     // The quotes depend on the type of volatility structure that has been configured.
-    if (auto vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(volatilityConfig_)) {
+    if (auto vc = QuantLib::ext::dynamic_pointer_cast<ConstantVolatilityConfig>(volatilityConfig_)) {
         quotes_ = {vc->quote()};
-    } else if (auto vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(volatilityConfig_)) {
+    } else if (auto vc = QuantLib::ext::dynamic_pointer_cast<VolatilityCurveConfig>(volatilityConfig_)) {
         quotes_ = vc->quotes();
-    } else if (auto vc = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(volatilityConfig_)) {
+    } else if (auto vc = QuantLib::ext::dynamic_pointer_cast<VolatilitySurfaceConfig>(volatilityConfig_)) {
 
         // Clear the quotes_ if necessary and populate with surface quotes
         quotes_.clear();
@@ -216,7 +216,7 @@ void CDSVolatilityCurveConfig::populateQuotes() {
             }
         }
 
-    } else if (auto vc = boost::dynamic_pointer_cast<CDSProxyVolatilityConfig>(volatilityConfig_)) {
+    } else if (auto vc = QuantLib::ext::dynamic_pointer_cast<CDSProxyVolatilityConfig>(volatilityConfig_)) {
         // no quotes required in this case
     } else {
         QL_FAIL("CDSVolatilityCurveConfig expected a constant, curve or surface");
@@ -224,7 +224,7 @@ void CDSVolatilityCurveConfig::populateQuotes() {
 }
 
 void CDSVolatilityCurveConfig::populateRequiredCurveIds() {
-    if (auto vc = boost::dynamic_pointer_cast<CDSProxyVolatilityConfig>(volatilityConfig_)) {
+    if (auto vc = QuantLib::ext::dynamic_pointer_cast<CDSProxyVolatilityConfig>(volatilityConfig_)) {
         requiredCurveIds_[CurveSpec::CurveType::CDSVolatility].insert(vc->cdsVolatilityCurve());
     }
     for (auto const& c : termCurves_) {

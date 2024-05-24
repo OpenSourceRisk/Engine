@@ -36,6 +36,7 @@
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
+#include <qle/termstructures/sabrparametricvolatility.hpp>
 
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
@@ -81,6 +82,12 @@ QuantLib::Date parseDate(const string& s);
   \ingroup utilities
 */
 QuantLib::Real parseReal(const string& s);
+
+//! Convert text to Real, empty string to Null<Real>()
+/*!
+  \ingroup utilities
+*/
+Real parseRealOrNull(const string& s);
 
 //! Attempt to convert text to Real
 /*! Attempts to convert text to Real
@@ -417,7 +424,7 @@ QuantLib::DoubleBarrier::Type parseDoubleBarrierType(const string& s);
 
     \ingroup utilities
 */
-template <class T> bool tryParse(const std::string& str, T& obj, std::function<T(std::string)> parser) {
+template <class T> bool tryParse(const std::string& str, T& obj, std::function<T(const std::string&)> parser) {
     DLOG("tryParse: attempting to parse " << str);
     try {
         obj = parser(str);
@@ -591,6 +598,24 @@ MporCashFlowMode parseMporCashFlowMode(const std::string& s);
 \ingroup utilities
 */
 std::ostream& operator<<(std::ostream& os, MporCashFlowMode t);
+
+//! Parse SabrParametricVolatility::ModelVariant
+/*!
+\ingroup utilities
+*/
+QuantExt::SabrParametricVolatility::ModelVariant parseSabrParametricVolatilityModelVariant(const std::string& s);
+
+//! Write SabrParametricVolatility::ModelVariant
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& out, QuantExt::SabrParametricVolatility::ModelVariant m);
+
+//! Write QuantLib::Exercise::Type
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, QuantLib::Exercise::Type type);
 
 } // namespace data
 } // namespace ore

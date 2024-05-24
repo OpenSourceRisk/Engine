@@ -41,7 +41,7 @@ public:
     const std::vector<CommodityUnderlying>& underlyings() const { return underlyings_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     Real quantity_ = QuantLib::Null<Real>();
@@ -55,15 +55,15 @@ public:
     CommodityPosition(const Envelope& env, const CommodityPositionData& data) : Trade("CommodityPosition", env), data_(data) {}
 
     // trade interface
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     // additional inspectors
     const CommodityPositionData& data() const { return data_; }
-    const std::vector<boost::shared_ptr<QuantExt::CommodityIndex>>& indices() const { return indices_; }
+    const std::vector<QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>>& indices() const { return indices_; }
     const std::vector<Real>& weights() const { return weights_; }
     bool isSingleCurrency() const { return isSingleCurrency_; }
 
@@ -74,7 +74,7 @@ public:
 private:
     CommodityPositionData data_;
     // populated during build()
-    std::vector<boost::shared_ptr<QuantExt::CommodityIndex>> indices_;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>> indices_;
     std::vector<Real> weights_;
     std::vector<Handle<Quote>> fxConversion_;
     bool isSingleCurrency_;
@@ -88,7 +88,7 @@ public:
     class engine;
 
     CommodityPositionInstrumentWrapper(const Real quantity,
-                                       const std::vector<boost::shared_ptr<QuantExt::CommodityIndex>>& commodities,
+                                       const std::vector<QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>>& commodities,
                                     const std::vector<Real>& weights,
                                     const std::vector<Handle<Quote>>& fxConversion = {});
     //! \name Instrument interface
@@ -103,7 +103,7 @@ public:
 private:
     void setupExpired() const override;
     Real quantity_;
-    std::vector<boost::shared_ptr<QuantExt::CommodityIndex>> commodities_;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>> commodities_;
     std::vector<Real> weights_;
     std::vector<Handle<Quote>> fxConversion_;
     Handle<Quote> npvCcyConversion_;
@@ -112,7 +112,7 @@ private:
 class CommodityPositionInstrumentWrapper::arguments : public virtual QuantLib::PricingEngine::arguments {
 public:
     Real quantity_;
-    std::vector<boost::shared_ptr<QuantExt::CommodityIndex>> commodities_;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::CommodityIndex>> commodities_;
     std::vector<Real> weights_;
     std::vector<Handle<Quote>> fxConversion_;
     Handle<Quote> npvCcyConversion_;

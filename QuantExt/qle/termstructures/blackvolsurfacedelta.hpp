@@ -124,9 +124,9 @@ public:
      *
      *  This is not really FX specific
      */
-    boost::shared_ptr<FxSmileSection> blackVolSmile(Time t) const;
+    QuantLib::ext::shared_ptr<FxSmileSection> blackVolSmile(Time t) const;
 
-    boost::shared_ptr<FxSmileSection> blackVolSmile(const QuantLib::Date& d) const;
+    QuantLib::ext::shared_ptr<FxSmileSection> blackVolSmile(const QuantLib::Date& d) const;
 
 protected:
     virtual Volatility blackVolImpl(Time t, Real strike) const override;
@@ -138,7 +138,7 @@ private:
     std::vector<Real> putDeltas_;
     std::vector<Real> callDeltas_;
     bool hasAtm_;
-    std::vector<boost::shared_ptr<BlackVarianceCurve> > interpolators_;
+    std::vector<QuantLib::ext::shared_ptr<BlackVarianceCurve> > interpolators_;
 
     Handle<Quote> spot_;
     Handle<YieldTermStructure> domesticTS_;
