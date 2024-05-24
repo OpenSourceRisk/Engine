@@ -22,7 +22,7 @@
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>true</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2023-11-07</ExerciseDate>
+          <ExerciseDate>2023-09-05</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <Name>RIC:.STOXX50E</Name>
@@ -61,11 +61,11 @@
       <Data>
         <Event>
           <Name>Expiry</Name>
-          <Value>2023-11-07</Value>
+          <Value>2023-09-05</Value>
         </Event>
         <Event>
           <Name>Settlement</Name>
-          <Value>2023-11-07</Value>
+          <Value>2023-09-05</Value>
         </Event>
         <Number>
           <Name>Strike</Name>
@@ -124,11 +124,11 @@
       <Data>
         <Event>
           <Name>Expiry</Name>
-          <Value>2023-11-07</Value>
+          <Value>2023-09-05</Value>
         </Event>
         <Event>
           <Name>Settlement</Name>
-          <Value>2023-11-07</Value>
+          <Value>2023-09-05</Value>
         </Event>
         <Number>
           <Name>Strike</Name>
@@ -191,11 +191,11 @@
         </Currency>
         <Event>
           <Name>Expiry</Name>
-          <Value>2023-11-07</Value>
+          <Value>2023-09-05</Value>
         </Event>
         <Event>
           <Name>Settlement</Name>
-          <Value>2023-11-07</Value>
+          <Value>2023-09-05</Value>
         </Event>
         <Number>
           <Name>Quantity</Name>
@@ -250,7 +250,7 @@
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>true</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2023-11-07</ExerciseDate>
+          <ExerciseDate>2023-09-05</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <BarrierData>
@@ -263,7 +263,7 @@
         <RebateCurrency>EUR</RebateCurrency>
         <RebatePayTime>atExpiry</RebatePayTime>
       </BarrierData>      
-      <StartDate>2023-08-07</StartDate>
+      <StartDate>2023-06-05</StartDate>
       <Calendar>TARGET</Calendar>
       <Name>RIC:.STOXX50E</Name>
       <Currency>EUR</Currency>
@@ -289,7 +289,7 @@
         </Index>
         <Event>
           <Name>StartDate</Name>
-          <Value>2023-08-07</Value>
+          <Value>2023-06-05</Value>
         </Event>
         <Number>
           <Name>Strike</Name>
@@ -309,11 +309,11 @@
         </Currency>
         <Event>
           <Name>Expiry</Name>
-          <Value>2023-11-07</Value>
+          <Value>2023-09-05</Value>
         </Event>
         <Event>
           <Name>Settlement</Name>
-          <Value>2023-11-07</Value>
+          <Value>2023-09-05</Value>
         </Event>
         <Number>
           <Name>Quantity</Name>
@@ -353,8 +353,8 @@
           <Name>BarrierMonitoringDates</Name>
           <ScheduleData>
             <Rules>
-              <StartDate>2023-08-07</StartDate>
-              <EndDate>2023-11-07</EndDate>
+              <StartDate>2023-06-05</StartDate>
+              <EndDate>2023-09-05</EndDate>
               <Tenor>1D</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -435,7 +435,7 @@
         </Index>
         <Event>
           <Name>StartDate</Name>
-          <Value>2023-08-07</Value>
+          <Value>2023-06-05</Value>
         </Event>
         <Number>
           <Name>Strike</Name>
@@ -455,11 +455,11 @@
         </Currency>
         <Event>
           <Name>Expiry</Name>
-          <Value>2023-11-07</Value>
+          <Value>2023-09-05</Value>
         </Event>
         <Event>
           <Name>Settlement</Name>
-          <Value>2023-11-07</Value>
+          <Value>2023-09-05</Value>
         </Event>
         <Number>
           <Name>Quantity</Name>
@@ -498,8 +498,8 @@
           <Name>BarrierMonitoringDates</Name>
           <ScheduleData>
             <Rules>
-              <StartDate>2023-08-07</StartDate>
-              <EndDate>2023-11-07</EndDate>
+              <StartDate>2023-06-05</StartDate>
+              <EndDate>2023-09-05</EndDate>
               <Tenor>1D</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -600,18 +600,18 @@
         </Currency>
         <Event>
           <Name>StartDate</Name>
-          <Value>2023-08-09</Value>
+          <Value>2023-06-07</Value>
         </Event>
         <Event>
           <Name>FixingDates</Name>
           <ScheduleData>
             <Dates>
               <Dates>
-                <Date>2024-08-09</Date>
-                <Date>2025-08-09</Date>
-                <Date>2026-08-09</Date>
-                <Date>2027-08-09</Date>
-                <Date>2028-08-09</Date>
+                <Date>2024-06-07</Date>
+                <Date>2025-06-07</Date>
+                <Date>2026-06-07</Date>
+                <Date>2027-06-07</Date>
+                <Date>2028-06-07</Date>
               </Dates>
             </Dates>
           </ScheduleData>
