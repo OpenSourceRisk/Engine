@@ -174,6 +174,8 @@ HistoricalScenarioGenerator::HistoricalScenarioGenerator(
       returnConfiguration_(returnConfiguration), labelPrefix_(labelPrefix) {
 
     QL_REQUIRE(mporDays > 0, "Invalid mpor days of 0");
+    QL_REQUIRE(historicalScenarioLoader_->numScenarios() > 1,
+               "HistoricalScenarioGenerator: require more than 1 scenario from historicalScenarioLoader_");
 
     // check they are in order and all before the base scenario
     // we do not make any assumptions here about the length
@@ -209,6 +211,26 @@ void HistoricalScenarioGenerator::setDates() {
     }
 }
 
+HistoricalScenarioGenerator::HistoricalScenarioGenerator(
+    const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
+    const boost::shared_ptr<ScenarioFactory>& scenarioFactory,
+    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
+    const ReturnConfiguration& returnConfiguration, const std::string& labelPrefix)
+    : i_(0), historicalScenarioLoader_(historicalScenarioLoader), scenarioFactory_(scenarioFactory),
+      adjFactors_(adjFactors), returnConfiguration_(returnConfiguration), labelPrefix_(labelPrefix) {
+
+    QL_REQUIRE(historicalScenarioLoader_->numScenarios() > 1,
+               "HistoricalScenarioGenerator: require more than 1 scenario from historicalScenarioLoader_");
+
+    // check they are in order and all before the base scenario and add the dates
+    for (Size i = 1; i < historicalScenarioLoader_->numScenarios(); ++i) {
+        QL_REQUIRE(historicalScenarioLoader_->dates()[i] > historicalScenarioLoader_->dates()[i - 1],
+                   "historical scenarios are not ordered");
+        startDates_.push_back(historicalScenarioLoader_->dates()[i - 1]);
+        endDates_.push_back(historicalScenarioLoader_->dates()[i]);
+    }
+}
+
 std::pair<QuantLib::ext::shared_ptr<Scenario>, QuantLib::ext::shared_ptr<Scenario>> HistoricalScenarioGenerator::scenarioPair() {
     // Get the two historicals we are using
     QL_REQUIRE(i_ < numScenarios(),
@@ -238,7 +260,7 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date
 
     // build the scenarios
     QL_REQUIRE(d >= baseScenario_->asof(), "Cannot generate a scenario in the past");
-    QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, "", 1.0);
+    QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, true, std::string(), 1.0);
 
     // loop over all keys
     calculationDetails_.resize(baseScenario_->keys().size());
@@ -322,7 +344,7 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorRandom::next(cons
     // build the scenarios
     QL_REQUIRE(d >= baseScenario()->asof(),
                "HistoricalScenarioGeneratorRandom: Cannot generate a scenario in the past");
-    QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, "", 1.0);
+    QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, true, std::string(), 1.0);
 
     // loop over all keys
     for (auto key : baseScenario()->keys()) {
@@ -423,8 +445,7 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorTransform::next(c
 
 HistoricalScenarioGeneratorWithFilteredDates::HistoricalScenarioGeneratorWithFilteredDates(
     const std::vector<TimePeriod>& filter, const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& gen)
-    : HistoricalScenarioGenerator(gen->scenarioLoader(), gen->scenarioFactory(), gen->cal(), gen->adjFactors(),
-                                  gen->mporDays(), gen->overlapping(), gen->returnConfiguration(), gen->labelPrefix()),
+    : HistoricalScenarioGenerator(*gen),
       gen_(gen), i_orig_(0) {
 
     // set base scenario
@@ -490,7 +511,7 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
 
     hsr->load(simParams, marketParams);
 
-    auto scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    auto scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
 
     QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader = QuantLib::ext::make_shared<HistoricalScenarioLoader>(
         hsr, period.startDates().front(), period.endDates().front(), calendar);
@@ -498,6 +519,25 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
     // Create the historical scenario generator
     return QuantLib::ext::make_shared<HistoricalScenarioGenerator>(scenarioLoader, scenarioFactory, calendar, adjFactors,
                                                            mporDays, overlapping, ReturnConfiguration(), "hs_");
+}
+
+QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
+    const QuantLib::ext::shared_ptr<HistoricalScenarioReader>& hsr,
+    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const std::set<QuantLib::Date>& dates,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
+    const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParams) {
+
+    hsr->load(simParams, marketParams);
+
+    auto scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+
+    QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader =
+        QuantLib::ext::make_shared<HistoricalScenarioLoader>(
+        hsr, dates);
+
+    // Create the historical scenario generator
+    return QuantLib::ext::make_shared<HistoricalScenarioGenerator>(scenarioLoader, scenarioFactory, 
+        adjFactors, ReturnConfiguration(), "hs_");
 }
 
 } // namespace analytics

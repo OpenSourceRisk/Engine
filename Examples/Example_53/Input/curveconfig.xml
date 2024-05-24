@@ -10,13 +10,13 @@
         <Simple>
           <Type>OIS</Type>
           <Quotes>
-            <Quote optional="false">IR_SWAP/RATE/GBP/20230921/1D/20231102</Quote>
-            <Quote optional="false">IR_SWAP/RATE/GBP/20231102/1D/20231214</Quote>
-            <Quote optional="false">IR_SWAP/RATE/GBP/20231214/1D/20240201</Quote>
-            <Quote optional="false">IR_SWAP/RATE/GBP/20240201/1D/20240321</Quote>
-            <Quote optional="false">IR_SWAP/RATE/GBP/20240321/1D/20240509</Quote>
-            <Quote optional="false">IR_SWAP/RATE/GBP/20240509/1D/20240620</Quote>
-            <Quote optional="false">IR_SWAP/RATE/GBP/20240620/1D/20240801</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20220922/1D/20221103</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20221103/1D/20221215</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20221215/1D/20230202</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20230202/1D/20230323</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20230323/1D/20230511</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20230511/1D/20230622</Quote>
+            <Quote optional="false">IR_SWAP/RATE/GBP/20230622/1D/20230803</Quote>
           </Quotes>
           <Conventions>GBP-OIS</Conventions>
           <Priority>0</Priority>

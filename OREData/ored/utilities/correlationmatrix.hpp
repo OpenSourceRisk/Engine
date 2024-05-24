@@ -54,7 +54,7 @@ std::ostream& operator<<(std::ostream& out, const CorrelationFactor& f);
     \c type, \c name and \c index set to \c IR, \c EUR and \c 0 respectively. Note that the name is of the form 
     \c type:name and the index is always set to 0 initially. The actual index is set separately.
 */
-CorrelationFactor parseCorrelationFactor(const std::string& name);
+CorrelationFactor parseCorrelationFactor(const std::string& name, const char separator = ':');
 
 /*! The key for storing the correlation data is the pair of factors.
 */

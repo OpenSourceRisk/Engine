@@ -33,7 +33,6 @@
 #include <ql/indexes/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
-#include <ql/version.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/yearcounter.hpp>
 
@@ -957,6 +956,10 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         resultType = "array";
         QuantLib::Array r = boost::any_cast<QuantLib::Array>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
+    } else if (anyType.type() == typeid(QuantLib::Currency)) {
+        resultType = "currency";
+        QuantLib::Currency r = boost::any_cast<QuantLib::Currency>(anyType);
+        oss << r;
     } else {
         ALOG("Unsupported Boost::Any type");
         resultType = "unsupported_type";

@@ -888,11 +888,11 @@ void McMultiLegBaseEngine::calculate() const {
                 regressorModel_, regressionVarianceCutoff_);
             regModelContinuationValue[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef,
                                                      simulationTimes,
-                                                     exerciseValue > RandomVariable(calibrationSamples_, 0));
+                                                     exerciseValue > RandomVariable(calibrationSamples_, 0.0));
             auto continuationValue = regModelContinuationValue[counter].apply(model_->stateProcess()->initialValues(),
                                                                               pathValuesRef, simulationTimes);
             pathValueOption = conditionalResult(exerciseValue > continuationValue &&
-                                                    exerciseValue > RandomVariable(calibrationSamples_, 0),
+                                                    exerciseValue > RandomVariable(calibrationSamples_, 0.0),
                                                 pathValueUndExInto, pathValueOption);
             regModelOption[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
@@ -1256,6 +1256,7 @@ McMultiLegBaseEngine::RegressionModel::apply(const Array& initialState,
 
             if (t2 == pathTimes.end()) {
                 regressor[i] = paths[pathTimes.size() - 1][modelIdx];
+                ++i;
                 continue;
             }
 

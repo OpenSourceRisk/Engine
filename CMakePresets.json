@@ -187,6 +187,20 @@
       }
     },
     {
+      "name": "apple-arm64-base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "architecture": {
+        "value": "arm64",
+        "strategy": "external"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
       "name": "_release",
       "hidden": true,
       "cacheVariables": {
@@ -204,7 +218,7 @@
       "name": "_relwithdebinfo",
       "hidden": true,
       "cacheVariables": {
-          "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
     {
@@ -285,6 +299,33 @@
       "name": "linux-clang-ninja-relwithdebinfo",
       "inherits": [
         "linux-clang-base",
+        "_ninja",
+        "_relwithdebinfo"
+      ]
+    },
+    {
+      "name": "apple-arm64-ninja-debug",
+      "description": "Apple M series preset Debug",
+      "inherits": [
+        "apple-arm64-base",
+        "_ninja",
+        "_debug"
+      ]
+    },
+    {
+      "name": "apple-arm64-ninja-release",
+      "description": "Apple M series preset Release",
+      "inherits": [
+        "apple-arm64-base",
+        "_ninja",
+        "_release"
+      ]
+    },
+    {
+      "name": "apple-arm64-ninja-relwithdebinfo",
+      "description": "Apple M series preset RelWithDebInfo",
+      "inherits": [
+        "apple-arm64-base",
         "_ninja",
         "_relwithdebinfo"
       ]

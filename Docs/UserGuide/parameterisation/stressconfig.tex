@@ -8,10 +8,16 @@ Stress tests can be applied in ORE to the same market segments and with same gra
 This file {\tt stressconfig.xml} specifies how stress tests can be configured. The general structure is shown in listing
 \ref{lst:stress_config}.
 
-In this example, two stress scenarios ``parallel\_rates'' and ``twist'' are defined. Each scenario definition contains
+In this example, two zero stress scenarios ``parallel\_rates'' and ``twist'' and one par rate ``par_parallel'' are defined. 
+Each scenario definition contains
 the market components to be shifted in this scenario in a similar syntax that is also used for the sensitivity
 configuration, see \ref{sec:sensitivity}. Components that should not be shifted, can just be omitted in the definition
-of the scenario.
+of the scenario. Shifts for rate curves, credit curves and interest rate cap/floors can be given as par or zero rate shifts.
+By default shifts are zero rate shifts. If shifts are marked as par rate shifts all components (rate/credit/caps) shifts are 
+par shifts in that category, for example it is not possible to have par rate first for one yield curve and zero rate for 
+another curve in the same scenario. In case of par stress scenario, the shifted par instruments and related conventions are defined 
+in a sensitivity configuration.  The number number stress shifts (tenors/expiries and strikes) need to be allign with
+ the tenors/expiries and strikes of par instruments \ref{sec:sensitivity}.
 
 However, instead of specifying one shift size per market component, here a whole vector of shifts can be given, with
 different shift sizes applied to each point of the curve (or surface / cube).
@@ -19,10 +25,14 @@ different shift sizes applied to each point of the curve (or surface / cube).
 In case of the swaption volatility shifts, the single value given as {\tt Shift} (without the attributes {\tt expiry}
 and {\tt term}) represents a default value that is used whenever no explicit value is given for a expiry / term pair.
 
+UseSpreadedTermStructures: If set to true, spreaded termstructures over t0 will be used for the scenario calculation, to
+improve the alignment of the scenario sim market and t0 curves.
+
 \begin{longlisting}
 %\hrule\medskip
   \begin{minted}[fontsize=\scriptsize]{xml}
 <StressTesting>
+  <UseSpreadedTermStructures>false</UseSpreadedTermStructures>
   <StressTest id="parallel_rates">
     <DiscountCurves>
       <DiscountCurve ccy="EUR">
@@ -73,6 +83,56 @@ and {\tt term}) represents a default value that is used whenever no explicit val
   </StressTest>
   <StressTest id="twist">
     ...
+  </StressTest>
+  <StressTest id="par_parallel">
+    <ParShifts>
+      <IRCurves>true</IRCurves>
+      <SurvivalProbability>true</SurvivalProbability>
+      <CapFloorVolatilities>true</CapFloorVolatilities>
+    </ParShifts>
+    <DiscountCurves>
+      <DiscountCurve ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+        <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+      </DiscountCurve>
+      ...
+    </DiscountCurves>
+    <IndexCurves>
+      ...
+    </IndexCurves>
+    <YieldCurves />
+    <FxSpots />
+    <FxVolatilities />
+    <SwaptionVolatilities />
+    <CapFloorVolatilities>
+      <CapFloorVolatility key="EUR-EURIBOR-6M">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftExpiries>1Y, 2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 8Y, 9Y</ShiftExpiries>
+        <Shifts>
+          <Shift tenor="1Y">0.01</Shift>
+          <Shift tenor="2Y">0.01</Shift>
+          <Shift tenor="3Y">0.01</Shift>
+          <Shift tenor="4Y">0.01</Shift>
+          <Shift tenor="5Y">0.01</Shift>
+          <Shift tenor="6Y">0.01</Shift>
+          <Shift tenor="7Y">0.01</Shift>
+          <Shift tenor="8Y">0.01</Shift>
+          <Shift tenor="9Y">0.01</Shift>
+        </Shifts>
+      </CapFloorVolatility>
+    </CapFloorVolatilities>
+    <EquitySpots />
+    <EquityVolatilities />
+    <SecuritySpreads />
+    <RecoveryRates />
+    <SurvivalProbabilities>
+      <SurvivalProbability name="Underlying1">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.01, 0.01, 0.01, 0.01, 0.01</Shifts>
+        <ShiftTenors>1Y, 2Y, 3Y, 5Y, 10Y</ShiftTenors>
+      </SurvivalProbability>
+    </SurvivalProbabilities>
   </StressTest>
 </StressTesting>
   \end{minted}

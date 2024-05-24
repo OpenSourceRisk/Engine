@@ -42,10 +42,12 @@ public:
     ScheduleRules(const string& startDate, const string& endDate, const string& tenor, const string& calendar,
                   const string& convention, const string& termConvention, const string& rule,
                   const string& endOfMonth = "N", const string& firstDate = "", const string& lastDate = "",
-                  const bool removeFirstDate = false, const bool removeLastDate = false)
+                  const bool removeFirstDate = false, const bool removeLastDate = false,
+                  const string& endOfMonthConvention = "")
         : startDate_(startDate), endDate_(endDate), tenor_(tenor), calendar_(calendar), convention_(convention),
-          termConvention_(termConvention), rule_(rule), endOfMonth_(endOfMonth), firstDate_(firstDate),
-          lastDate_(lastDate), removeFirstDate_(removeFirstDate), removeLastDate_(removeLastDate) {}
+          termConvention_(termConvention), rule_(rule), endOfMonth_(endOfMonth),
+          endOfMonthConvention_(endOfMonthConvention), firstDate_(firstDate), lastDate_(lastDate),
+          removeFirstDate_(removeFirstDate), removeLastDate_(removeLastDate) {}
 
     //! Check if key attributes are empty
     const bool hasData() const { return !startDate_.empty() && !tenor_.empty(); }
@@ -61,6 +63,7 @@ public:
     const string& termConvention() const { return termConvention_; }
     const string& rule() const { return rule_; }
     const string& endOfMonth() const { return endOfMonth_; }
+    const string& endOfMonthConvention() const { return endOfMonthConvention_; }
     const string& firstDate() const { return firstDate_; }
     const string& lastDate() const { return lastDate_; }
     bool removeFirstDate() const { return removeFirstDate_; }
@@ -74,6 +77,7 @@ public:
     string& modifyCalendar() { return calendar_; }
     string& modifyConvention() { return convention_; }
     string& modifyTermConvention() { return termConvention_; }
+    string& modifyEndOfMonthConvention() { return endOfMonthConvention_; }
     //@}
 
     //! \name Serialisation
@@ -90,6 +94,7 @@ private:
     string termConvention_;
     string rule_;
     string endOfMonth_;
+    string endOfMonthConvention_;
     string firstDate_;
     string lastDate_;
     bool adjustEndDateToPreviousMonthEnd_{false};
@@ -108,8 +113,9 @@ public:
     ScheduleDates() {}
     //! Constructor
     ScheduleDates(const string& calendar, const string& convention, const string& tenor, const vector<string>& dates,
-                  const string& endOfMonth = "")
-        : calendar_(calendar), convention_(convention), tenor_(tenor), endOfMonth_(endOfMonth), dates_(dates) {}
+                  const string& endOfMonth = "", const string& endOfMonthConvention = "")
+        : calendar_(calendar), convention_(convention), tenor_(tenor), endOfMonth_(endOfMonth),
+          endOfMonthConvention_(endOfMonthConvention), dates_(dates) {}
 
     //! Check if key attributes are empty
     bool hasData() const { return dates_.size() > 0 && !tenor_.empty(); }
@@ -120,6 +126,7 @@ public:
     const string& convention() const { return convention_; }
     const string& tenor() const { return tenor_; }
     const string& endOfMonth() const { return endOfMonth_; }
+    const string& endOfMonthConvention() const { return endOfMonthConvention_; }
     const vector<string>& dates() const { return dates_; }
     //@}
 
@@ -138,6 +145,7 @@ private:
     string convention_;
     string tenor_;
     string endOfMonth_;
+    string endOfMonthConvention_;
     vector<string> dates_;
     bool was1T_ = false;
 };

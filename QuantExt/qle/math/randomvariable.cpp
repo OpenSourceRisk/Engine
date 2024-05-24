@@ -407,21 +407,27 @@ RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real
     time_ = time;
 }
 
-RandomVariable::RandomVariable(const QuantLib::Array& array, const Real time) {
-    n_ = array.size();
+RandomVariable::RandomVariable(const Size n, const Real* const data, const Real time) {
+    n_ = n;
     deterministic_ = false;
     time_ = time;
     if (n_ != 0) {
         resumeDataStats();
         data_ = new double[n_];
         // std::memcpy(data_, array.begin(), n_ * sizeof(double));
-        std::copy(array.begin(), array.end(), data_);
+        std::copy(data, data + n_, data_);
         stopDataStats(n_);
     } else {
         data_ = nullptr;
     }
     constantData_ = 0.0;
 }
+
+RandomVariable::RandomVariable(const std::vector<Real>& data, const Real time)
+    : RandomVariable(data.size(), &data[0], time) {}
+
+RandomVariable::RandomVariable(const QuantLib::Array& data, const Real time)
+    : RandomVariable(data.size(), data.begin(), time) {}
 
 void RandomVariable::copyToMatrixCol(QuantLib::Matrix& m, const Size j) const {
     if (deterministic_)
@@ -1239,6 +1245,7 @@ RandomVariable conditionalExpectation(
     QL_REQUIRE(!regressor.empty(), "regressor vector is empty");
     Size n = regressor.front()->size();
     for (Size i = 1; i < regressor.size(); ++i) {
+        QL_REQUIRE(regressor[i] != nullptr, "regressor #" << i << " is null.");
         QL_REQUIRE(n == regressor[i]->size(), "regressor #" << i << " size (" << regressor[i]->size()
                                                             << ") must match regressor #0 size (" << n << ")");
     }

@@ -26,7 +26,6 @@
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/pricingengines/swaption/blackswaptionengine.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <ql/version.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -189,11 +188,6 @@ QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConvert
 
 } // namespace QuantExt
 
-// Ignore "warning C4996: 'Quantlib::Swaption::impliedVolatility': was declared deprecated"
-#ifdef BOOST_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#endif
 Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swapTenor, Real strikeSpread,
                                           const DayCounter& volDayCounter, VolatilityType outType,
                                           Real outShift) const {
@@ -281,14 +275,9 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
                 guess = inVol * (atmRate + inShift);
         }
 
-// Note: In implying the volatility the volatility day counter is hardcoded to Actual365Fixed
-#if QL_HEX_VERSION < 0x011000f0
-        impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, maxEvaluations_, minVol_, maxVol_,
-                                                 outShift, outType);
-#else
+        // Note: In implying the volatility the volatility day counter is hardcoded to Actual365Fixed
         impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, maxEvaluations_, minVol_, maxVol_,
                                                  outType, outShift);
-#endif
 
     } catch (std::exception& e) {
         // couldn't find implied volatility
@@ -299,7 +288,4 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
 
     return impliedVol;
 }
-#ifdef BOOST_MSVC
-#pragma warning(pop)
-#endif
 } // namespace QuantExt
