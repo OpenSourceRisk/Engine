@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <ORE>
   <Setup>
-    <Parameter name="asofDate">2023-01-31</Parameter>
+    <Parameter name="asofDate">2022-01-31</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
