@@ -355,6 +355,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -374,6 +376,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
     <EngineParameters>
@@ -4410,6 +4413,7 @@ The parameters have the following meaning:
     <Engine>DiscountingFxForwardEngine</Engine>
     <EngineParameters>
         <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+        <Parameter name="IncludeSettlementDateFlows">true</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -4419,6 +4423,10 @@ The parameters have the following meaning:
 
 CrossAssetModel/AMC builds a McCamFxForwardEngine for use in AMC simulations. We refer to the AMC module documentation
 for further details.
+
+Parameter IncludeSettlementDateFlows is set to false by default, i.e. cash flows on the maturity date of the trade are
+not taken into account when pricing as of maturity date so that the trade has zero value on maturity. In case of true
+we do take the final flows into account while the trade is ``maturing''.
 
 %--------------------------------------------------------
 \subsubsection{Product Type: FxOption}

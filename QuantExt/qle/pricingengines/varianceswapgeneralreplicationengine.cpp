@@ -39,7 +39,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 GeneralisedReplicatingVarianceSwapEngine::GeneralisedReplicatingVarianceSwapEngine(
-    const boost::shared_ptr<Index>& index, const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
+    const QuantLib::ext::shared_ptr<Index>& index, const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
     const Handle<YieldTermStructure>& discountingTS, const VarSwapSettings settings, const bool staticTodaysSpot)
     : index_(index), process_(process), discountingTS_(discountingTS), settings_(settings),
       staticTodaysSpot_(staticTodaysSpot) {
@@ -119,7 +119,7 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateAccruedVariance(const Ca
 
     std::map<Date, Real> dividends;
     if (arguments_.addPastDividends) {
-        if (auto eqIndex = boost::dynamic_pointer_cast<EquityIndex2>(index_)) {
+        if (auto eqIndex = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(index_)) {
             auto divs = eqIndex->dividendFixings();
             for (const auto& d : divs)
                 dividends[d.exDate] = d.rate;
@@ -176,11 +176,11 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateFutureVariance(const Dat
 
     // set up integrator
 
-    boost::shared_ptr<Integrator> integrator;
+    QuantLib::ext::shared_ptr<Integrator> integrator;
     if (settings_.scheme == VarSwapSettings::Scheme::GaussLobatto) {
-        integrator = boost::make_shared<GaussLobattoIntegral>(settings_.maxIterations, QL_MAX_REAL, settings_.accuracy);
+        integrator = QuantLib::ext::make_shared<GaussLobattoIntegral>(settings_.maxIterations, QL_MAX_REAL, settings_.accuracy);
     } else if (settings_.scheme == VarSwapSettings::Scheme::Segment) {
-        integrator = boost::make_shared<SegmentIntegral>(settings_.steps);
+        integrator = QuantLib::ext::make_shared<SegmentIntegral>(settings_.steps);
     } else {
         QL_FAIL("GeneralisedReplicationVarianceSwapEngine: internal error, unknown scheme");
     }

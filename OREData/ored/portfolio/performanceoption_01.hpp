@@ -34,27 +34,28 @@ using namespace ore::data;
 
 class PerformanceOption_01 : public ScriptedTrade {
 public:
-    explicit PerformanceOption_01(const boost::shared_ptr<Conventions>& conventions = nullptr)
+    explicit PerformanceOption_01(const QuantLib::ext::shared_ptr<Conventions>& conventions = nullptr)
         : ScriptedTrade("PerformanceOption_01") {}
     PerformanceOption_01(const Envelope& env, const string& notionalAmount, const string& participationRate,
                          const string& valuationDate, const string& settlementDate,
-                         const vector<boost::shared_ptr<Underlying>>& underlyings, const vector<string>& strikePrices,
+                         const vector<QuantLib::ext::shared_ptr<Underlying>>& underlyings, const vector<string>& strikePrices,
                          const string& strike, const bool strikeIncluded, const string& position, const string& payCcy,
-                         const boost::shared_ptr<Conventions>& conventions = nullptr)
+                         const QuantLib::ext::shared_ptr<Conventions>& conventions = nullptr)
         : ScriptedTrade("PerformanceOption_01", env), notionalAmount_(notionalAmount),
           participationRate_(participationRate), valuationDate_(valuationDate), settlementDate_(settlementDate),
           underlyings_(underlyings), strikePrices_(strikePrices), strike_(strike), strikeIncluded_(strikeIncluded),
           position_(position), payCcy_(payCcy) {
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void setIsdaTaxonomyFields() override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     void initIndices();
     string notionalAmount_, participationRate_, valuationDate_, settlementDate_;
-    vector<boost::shared_ptr<Underlying>> underlyings_;
+    vector<QuantLib::ext::shared_ptr<Underlying>> underlyings_;
     vector<string> strikePrices_;
     string strike_;
     bool strikeIncluded_ = true;

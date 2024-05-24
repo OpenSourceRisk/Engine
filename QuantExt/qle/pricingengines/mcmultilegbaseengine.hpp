@@ -46,6 +46,13 @@ struct McEngineStats : public QuantLib::Singleton<McEngineStats> {
         calc_timer.start();
         calc_timer.stop();
     }
+
+    void reset() {
+        other_timer.stop();
+        path_timer.stop();
+        calc_timer.stop();
+    }
+
     boost::timer::cpu_timer other_timer;
     boost::timer::cpu_timer path_timer;
     boost::timer::cpu_timer calc_timer;
@@ -73,20 +80,22 @@ protected:
         const std::vector<Handle<YieldTermStructure>>& discountCurves = std::vector<Handle<YieldTermStructure>>(),
         const std::vector<Date>& simulationDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
-        const RegressorModel regressorModel = RegressorModel::Simple);
+        const RegressorModel regressorModel = RegressorModel::Simple,
+        const Real regressionVarianceCutoff = Null<Real>());
 
     // run calibration and pricing (called from derived engines)
     void calculate() const;
 
     // return AmcCalculator instance (called from derived engines, calculate must be called before)
-    boost::shared_ptr<AmcCalculator> amcCalculator() const;
+    QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator() const;
 
     // input data from the derived pricing engines, to be set in these engines
     mutable std::vector<Leg> leg_;
     mutable std::vector<Currency> currency_;
     mutable std::vector<bool> payer_;
-    mutable boost::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
+    mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
+    mutable bool includeSettlementDateFlows_ = false;
 
     // data members
     Handle<CrossAssetModel> model_;
@@ -101,14 +110,17 @@ protected:
     std::vector<Size> externalModelIndices_;
     bool minimalObsDate_;
     RegressorModel regressorModel_;
+    Real regressionVarianceCutoff_;
 
     // the generated amc calculator
-    mutable boost::shared_ptr<AmcCalculator> amcCalculator_;
+    mutable QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator_;
 
     // results, these are read from derived engines
     mutable Real resultUnderlyingNpv_, resultValue_;
 
 private:
+    static constexpr Real tinyTime = 1E-10;
+
     // data structure storing info needed to generate the amount for a cashflow
     struct CashflowInfo {
         Size legNo = Null<Size>(), cfNo = Null<Size>();
@@ -128,7 +140,7 @@ private:
         RegressionModel() = default;
         RegressionModel(const Real observationTime, const std::vector<CashflowInfo>& cashflowInfo,
                         const std::function<bool(std::size_t)>& cashflowRelevant, const CrossAssetModel& model,
-                        const RegressorModel regressorModel);
+                        const RegressorModel regressorModel, const Real regressionVarianceCutoff = Null<Real>());
         // pathTimes must contain the observation time and the relevant cashflow simulation times
         void train(const Size polynomOrder, const LsmBasisSystem::PolynomialType polynomType,
                    const RandomVariable& regressand, const std::vector<std::vector<const RandomVariable*>>& paths,
@@ -139,8 +151,10 @@ private:
 
     private:
         Real observationTime_ = Null<Real>();
+        Real regressionVarianceCutoff_ = Null<Real>();
         bool isTrained_ = false;
         std::set<std::pair<Real, Size>> regressorTimesModelIndices_;
+        Matrix coordinateTransform_;
         std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
         Array regressionCoeffs_;
     };
@@ -160,8 +174,8 @@ private:
         Currency npvCurrency() override { return baseCurrency_; }
         std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
                                                            std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-                                                           const std::vector<bool>& isRelevantTime,
-                                                           const bool stickyCloseOutRun) override;
+                                                           const std::vector<size_t>& relevantPathIndex,
+                                                           const std::vector<size_t>& relevantTimeIndex) override;
 
     private:
         std::vector<Size> externalModelIndices_;
@@ -184,7 +198,7 @@ private:
     Real time(const Date& d) const;
 
     // create the info for a given flow
-    CashflowInfo createCashflowInfo(boost::shared_ptr<CashFlow> flow, const Currency& payCcy, bool payer, Size legNo,
+    CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const Currency& payCcy, bool payer, Size legNo,
                                     Size cfNo) const;
 
     // get the index of a time in the given simulation times set

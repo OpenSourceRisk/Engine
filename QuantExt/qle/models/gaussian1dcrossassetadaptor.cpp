@@ -23,19 +23,19 @@
 
 namespace QuantExt {
 
-Gaussian1dCrossAssetAdaptor::Gaussian1dCrossAssetAdaptor(const boost::shared_ptr<LinearGaussMarkovModel>& model)
+Gaussian1dCrossAssetAdaptor::Gaussian1dCrossAssetAdaptor(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model)
     : Gaussian1dModel(model->parametrization()->termStructure()), x_(model) {
     initialize();
 }
 
-Gaussian1dCrossAssetAdaptor::Gaussian1dCrossAssetAdaptor(Size ccy, const boost::shared_ptr<CrossAssetModel>& model)
+Gaussian1dCrossAssetAdaptor::Gaussian1dCrossAssetAdaptor(Size ccy, const QuantLib::ext::shared_ptr<CrossAssetModel>& model)
     : Gaussian1dModel(model->irlgm1f(ccy)->termStructure()), x_(model->lgm(ccy)) {
     initialize();
 }
 
 void Gaussian1dCrossAssetAdaptor::initialize() {
     registerWith(x_);
-    stateProcess_ = boost::dynamic_pointer_cast<StochasticProcess1D>(x_->stateProcess());
+    stateProcess_ = QuantLib::ext::dynamic_pointer_cast<StochasticProcess1D>(x_->stateProcess());
 }
 
 } // namespace QuantExt

@@ -64,7 +64,7 @@ class CmsSpreadCouponPricer2 : public CmsSpreadCouponPricer {
 public:
     explicit CmsSpreadCouponPricer2(
         const Handle<CorrelationTermStructure>& correlation = Handle<CorrelationTermStructure>())
-        : CmsSpreadCouponPricer(Handle<Quote>(boost::make_shared<ExceptionQuote>(
+        : CmsSpreadCouponPricer(Handle<Quote>(QuantLib::ext::make_shared<ExceptionQuote>(
               "CmsSpreadPricer2 doesn't support 'correlation()', instead use 'correlation(Time, Strike)'"))),
           correlationCurve_(correlation) {
         registerWith(correlationCurve_);
@@ -105,7 +105,7 @@ private:
 class LognormalCmsSpreadPricer : public CmsSpreadCouponPricer2 {
 
 public:
-    LognormalCmsSpreadPricer(const boost::shared_ptr<CmsCouponPricer> cmsPricer,
+    LognormalCmsSpreadPricer(const QuantLib::ext::shared_ptr<CmsCouponPricer> cmsPricer,
                              const Handle<QuantExt::CorrelationTermStructure>& correlation,
                              const Handle<YieldTermStructure>& couponDiscountCurve = Handle<YieldTermStructure>(),
                              const Size IntegrationPoints = 16,
@@ -131,7 +131,7 @@ private:
     class integrand_f;
     friend class integrand_f;
 
-    boost::shared_ptr<CmsCouponPricer> cmsPricer_;
+    QuantLib::ext::shared_ptr<CmsCouponPricer> cmsPricer_;
 
     Handle<YieldTermStructure> couponDiscountCurve_;
 
@@ -145,10 +145,10 @@ private:
     Real spreadLegValue_;
     Real discount_;
 
-    boost::shared_ptr<SwapSpreadIndex> index_;
+    QuantLib::ext::shared_ptr<SwapSpreadIndex> index_;
 
-    boost::shared_ptr<CumulativeNormalDistribution> cnd_;
-    boost::shared_ptr<GaussianQuadrature> integrator_;
+    QuantLib::ext::shared_ptr<CumulativeNormalDistribution> cnd_;
+    QuantLib::ext::shared_ptr<GaussianQuadrature> integrator_;
 
     Real swapRate1_, swapRate2_, gearing1_, gearing2_;
     Real adjustedRate1_, adjustedRate2_;
@@ -163,7 +163,7 @@ private:
     mutable Real alpha_, psi_;
     mutable Option::Type optionType_;
 
-    boost::shared_ptr<CmsCoupon> c1_, c2_;
+    QuantLib::ext::shared_ptr<CmsCoupon> c1_, c2_;
 };
 
 } // namespace QuantExt

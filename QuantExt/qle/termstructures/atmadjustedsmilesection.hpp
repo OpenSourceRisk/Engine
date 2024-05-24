@@ -24,7 +24,7 @@ namespace QuantExt {
 
 class AtmAdjustedSmileSection : public QuantLib::SmileSection {
 public:
-    AtmAdjustedSmileSection(const boost::shared_ptr<QuantLib::SmileSection>& base, const QuantLib::Real baseAtmLevel,
+    AtmAdjustedSmileSection(const QuantLib::ext::shared_ptr<QuantLib::SmileSection>& base, const QuantLib::Real baseAtmLevel,
                             const QuantLib::Real targetAtmLevel)
         : SmileSection(), base_(base), baseAtmLevel_(baseAtmLevel), targetAtmLevel_(targetAtmLevel) {}
     QuantLib::Real minStrike() const override { return base_->minStrike(); }
@@ -46,7 +46,7 @@ private:
         return base_->volatility(strike + baseAtmLevel_ - targetAtmLevel_);
     };
 
-    boost::shared_ptr<QuantLib::SmileSection> base_;
+    QuantLib::ext::shared_ptr<QuantLib::SmileSection> base_;
     QuantLib::Real baseAtmLevel_;
     QuantLib::Real targetAtmLevel_;
 };

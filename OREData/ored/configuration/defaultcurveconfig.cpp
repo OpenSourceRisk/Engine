@@ -98,7 +98,7 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("DefaultCurve");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
@@ -229,7 +229,7 @@ void DefaultCurveConfig::Config::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) {
+XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Configuration");
     XMLUtils::addAttribute(doc, node, "priority", std::to_string(priority_));
     if (type_ == Type::SpreadCDS || type_ == Type::HazardRate || type_ == Type::Price) {

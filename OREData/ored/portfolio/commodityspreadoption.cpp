@@ -109,21 +109,29 @@ private:
     int lag_;
 };
 
-boost::shared_ptr<OptionPaymentDateAdjuster> makeOptionPaymentDateAdjuster(CommoditySpreadOptionData& optionData,
+QuantLib::ext::shared_ptr<OptionPaymentDateAdjuster> makeOptionPaymentDateAdjuster(CommoditySpreadOptionData& optionData,
                                                                            const std::vector<Date>& expiryDates) {
 
     if (optionData.optionStrip().has_value()) {
-        return boost::make_shared<OptionStripPaymentDateAdjuster>(expiryDates, optionData.optionStrip().get());
+        return QuantLib::ext::make_shared<OptionStripPaymentDateAdjuster>(expiryDates, optionData.optionStrip().get());
     } else if (optionData.optionData().paymentData().has_value()) {
-        return boost::make_shared<OptionPaymentDataAdjuster>(optionData.optionData().paymentData().get());
+        return QuantLib::ext::make_shared<OptionPaymentDataAdjuster>(optionData.optionData().paymentData().get());
     } else {
-        return boost::make_shared<OptionPaymentDateAdjuster>();
+        return QuantLib::ext::make_shared<OptionPaymentDateAdjuster>();
     }
 }
 
-void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
 
     DLOG("CommoditySpreadOption::build() called for trade " << id());
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = std::string("Commodity");
+    additionalData_["isdaBaseProduct"] = std::string("Other");
+    additionalData_["isdaSubProduct"] = std::string("");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = std::string("");
+
     reset();
     auto legData_ = csoData_.legData();
     auto optionData_ = csoData_.optionData();
@@ -143,13 +151,13 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
     Size payerLegId = legData_[0].isPayer() ? 0 : 1;
 
     // build the relevant fxIndexes;
-    std::vector<boost::shared_ptr<QuantExt::FxIndex>> fxIndexes(2, nullptr);
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexes(2, nullptr);
     Currency ccy = parseCurrency(npvCurrency_);
     Option::Type optionType = parseOptionType(optionData_.callPut());
 
     // init engine factory builder
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    auto engineBuilder = boost::dynamic_pointer_cast<CommoditySpreadOptionEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+    auto engineBuilder = QuantLib::ext::dynamic_pointer_cast<CommoditySpreadOptionEngineBuilder>(builder);
     // get config
     auto config = builder->configuration(MarketContext::pricing);
 
@@ -165,11 +173,11 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
 
         // build legs
 
-        auto commLegData = (boost::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[i].concreteLegData()));
+        auto commLegData = (QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legData_[i].concreteLegData()));
         QL_REQUIRE(commLegData, "CommoditySpreadOption leg data should be of type CommodityFloating");
 
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
-        auto cflb = boost::dynamic_pointer_cast<CommodityFloatingLegBuilder>(legBuilder);
+        auto cflb = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegBuilder>(legBuilder);
 
         QL_REQUIRE(cflb, "CommoditySpreadOption: Expected a CommodityFloatingLegBuilder for leg "
                              << i << " but got " << legData_[i].legType());
@@ -177,7 +185,7 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
 
         // setup the cf indexes
         QL_REQUIRE(!leg.empty(), "CommoditySpreadOption: Leg " << i << " has no coupons");
-        auto index = boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(leg.front())->index();
+        auto index = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(leg.front())->index();
 
         // check ccy consistency
         auto underlyingCcy = index->priceCurve()->currency();
@@ -224,23 +232,23 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
     Position::Type positionType = parsePositionType(optionData_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
 
-    boost::shared_ptr<QuantLib::Instrument> firstInstrument;
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> firstInstrument;
     double firstMultiplier = 0.0;
-    vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
 
     vector<Date> expiryDates;
     for (size_t i = 0; i < legs_[0].size(); ++i) {
-        auto longFlow = boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[1 - payerLegId][i]);
-        auto shortFlow = boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[payerLegId][i]);
+        auto longFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[1 - payerLegId][i]);
+        auto shortFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[payerLegId][i]);
         expiryDates.push_back(std::max(longFlow->lastPricingDate(), shortFlow->lastPricingDate()));
     }
 
     auto paymentDateAdjuster = makeOptionPaymentDateAdjuster(csoData_, expiryDates);
 
     for (size_t i = 0; i < legs_[0].size(); ++i) {
-        auto longFlow = boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[1 - payerLegId][i]);
-        auto shortFlow = boost::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[payerLegId][i]);
+        auto longFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[1 - payerLegId][i]);
+        auto shortFlow = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityCashFlow>(legs_[payerLegId][i]);
 
         QuantLib::Real quantity = longFlow->periodQuantity();
 
@@ -257,20 +265,20 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
 
         QL_REQUIRE(paymentDate >= expiryDate, "Payment date must be greater than or equal to expiry date.");
 
-        boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
+        QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
 
         // maturity gets overwritten every time, and it is ok. If the last option is settled with delay, maturity is set
         // to the settlement date.
         maturity_ = maturity_ == Date() ? paymentDate : std::max(maturity_, paymentDate);
 
         // build the instrument for the i-th cfs
-        boost::shared_ptr<QuantExt::CommoditySpreadOption> spreadOption =
-            boost::make_shared<QuantExt::CommoditySpreadOption>(longFlow, shortFlow, exercise, quantity, strike_,
+        QuantLib::ext::shared_ptr<QuantExt::CommoditySpreadOption> spreadOption =
+            QuantLib::ext::make_shared<QuantExt::CommoditySpreadOption>(longFlow, shortFlow, exercise, quantity, strike_,
                                                                 optionType, paymentDate, fxIndexes[1 - payerLegId],
                                                                 fxIndexes[1 - payerLegId]);
 
         // build and assign the engine
-        boost::shared_ptr<PricingEngine> commoditySpreadOptionEngine =
+        QuantLib::ext::shared_ptr<PricingEngine> commoditySpreadOptionEngine =
             engineBuilder->engine(ccy, longFlow->index(), shortFlow->index(), id());
         spreadOption->setPricingEngine(commoditySpreadOptionEngine);
         setSensitivityTemplate(*engineBuilder);
@@ -288,15 +296,8 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
     maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, firstMultiplier,
                                                 optionData_.premiumData(), -bsInd, ccy, engineFactory, configuration));
 
-    instrument_ = boost::make_shared<VanillaInstrument>(firstInstrument, firstMultiplier, additionalInstruments,
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(firstInstrument, firstMultiplier, additionalInstruments,
                                                         additionalMultipliers);
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = std::string("Commodity");
-    additionalData_["isdaBaseProduct"] = std::string("Other");
-    additionalData_["isdaSubProduct"] = std::string("");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = std::string("");
     if (!optionData_.premiumData().premiumData().empty()) {
         auto premium = optionData_.premiumData().premiumData().front();
         additionalData_["premiumAmount"] = -bsInd * premium.amount;
@@ -306,15 +307,15 @@ void CommoditySpreadOption::build(const boost::shared_ptr<ore::data::EngineFacto
 }
 
 std::map<ore::data::AssetClass, std::set<std::string>>
-CommoditySpreadOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+CommoditySpreadOption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<ore::data::AssetClass, std::set<std::string>> result;
     auto legData = csoData_.legData();
     for (const auto& leg : legData) {
         set<string> indices = leg.indices();
         for (auto ind : indices) {
-            boost::shared_ptr<Index> index = parseIndex(ind);
+            QuantLib::ext::shared_ptr<Index> index = parseIndex(ind);
             // only handle commodity
-            if (auto ci = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
+            if (auto ci = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
                 result[ore::data::AssetClass::COM].insert(ci->name());
             }
         }
@@ -328,7 +329,7 @@ void CommoditySpreadOption::fromXML(XMLNode* node) {
     XMLNode* csoNode = XMLUtils::getChildNode(node, "CommoditySpreadOptionData");
     csoData_.fromXML(csoNode);
 }
-XMLNode* CommoditySpreadOption::toXML(XMLDocument& doc) {
+XMLNode* CommoditySpreadOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     auto csoNode = csoData_.toXML(doc);
     XMLUtils::appendNode(node, csoNode);
@@ -362,7 +363,7 @@ void CommoditySpreadOptionData::fromXML(XMLNode* csoNode) {
                "CommoditySpreadOption: both a long and a short Assets are required.");
 }
 
-XMLNode* CommoditySpreadOptionData::toXML(XMLDocument& doc) {
+XMLNode* CommoditySpreadOptionData::toXML(XMLDocument& doc) const {
     XMLNode* csoNode = doc.allocNode("CommoditySpreadOptionData");
     for (size_t i = 0; i < legData_.size(); ++i) {
         XMLUtils::appendNode(csoNode, legData_[i].toXML(doc));
@@ -386,7 +387,7 @@ void CommoditySpreadOptionData::OptionStripData::fromXML(XMLNode* node) {
     bdc_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "PaymentConvention", false, "MF"));
 }
 
-XMLNode* CommoditySpreadOptionData::OptionStripData::toXML(XMLDocument& doc) {
+XMLNode* CommoditySpreadOptionData::OptionStripData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("OptionStripPaymentDates");
     auto tmp = schedule_.toXML(doc);
     XMLUtils::setNodeName(doc, tmp, "OptionStripDefinition");

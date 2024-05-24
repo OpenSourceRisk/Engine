@@ -36,15 +36,34 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("IndexCreditDefaultSwap::build() called for trade " << id());
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("IndexCreditDefaultSwap");
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Index");
+    string entity = swap_.creditCurveId();
+    QuantLib::ext::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
+    if (refData && refData->hasData("CreditIndex", entity)) {
+        auto refDatum = refData->getData("CreditIndex", entity);
+        QuantLib::ext::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum =
+            QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
+        additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
+        if (creditIndexRefDatum->indexFamily() == "") {
+            ALOG("IndexFamily is blank in credit index reference data for entity " << entity);
+        }
+    } else {
+        ALOG("Credit index reference data missing for entity " << entity << ", isdaSubProduct left blank");
+    }
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("IndexCreditDefaultSwap");
 
     QL_REQUIRE(swap_.leg().legType() == "Fixed", "IndexCreditDefaultSwap requires Fixed leg");
-    boost::shared_ptr<FixedLegData> fixedLegData =
-        boost::dynamic_pointer_cast<FixedLegData>(swap_.leg().concreteLegData());
+    QuantLib::ext::shared_ptr<FixedLegData> fixedLegData =
+        QuantLib::ext::dynamic_pointer_cast<FixedLegData>(swap_.leg().concreteLegData());
 
     auto configuration = builder->configuration(MarketContext::pricing);
     FixedLegBuilder flb;
@@ -133,10 +152,10 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
         QL_REQUIRE(engineFactory->referenceData(), "No BasketData or ReferenceDataManager");
         QL_REQUIRE(engineFactory->referenceData()->hasData(CreditIndexReferenceDatum::TYPE, id),
                    "No CreditIndex reference data for " << id);
-        boost::shared_ptr<ReferenceDatum> refData =
+        QuantLib::ext::shared_ptr<ReferenceDatum> refData =
             engineFactory->referenceData()->getData(CreditIndexReferenceDatum::TYPE, id);
-        boost::shared_ptr<CreditIndexReferenceDatum> creditRefData =
-            boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refData);
+        QuantLib::ext::shared_ptr<CreditIndexReferenceDatum> creditRefData =
+            QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(refData);
         DLOG("Got CreditIndexReferenceDatum for id " << id);
 
         Real totalWeight = 0.0;
@@ -166,22 +185,22 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
         }
     }
 
-    boost::shared_ptr<QuantExt::IndexCreditDefaultSwap> cds;
+    QuantLib::ext::shared_ptr<QuantExt::IndexCreditDefaultSwap> cds;
     if (swap_.upfrontFee() == Null<Real>()) {
-        cds = boost::make_shared<QuantExt::IndexCreditDefaultSwap>(
+        cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, indexFactor * notional_, basketNotionals, fixedLegData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), boost::shared_ptr<Claim>(),
+            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), QuantLib::ext::shared_ptr<Claim>(),
             lastPeriodDayCounter, true, swap_.tradeDate(), swap_.cashSettlementDays());
     } else {
-        cds = boost::make_shared<QuantExt::IndexCreditDefaultSwap>(
+        cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, indexFactor * notional_, basketNotionals, swap_.upfrontFee(), fixedLegData->rates().front(), schedule,
             payConvention, dc, swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
-            swap_.upfrontDate(), boost::shared_ptr<Claim>(), lastPeriodDayCounter, true, swap_.tradeDate(),
+            swap_.upfrontDate(), QuantLib::ext::shared_ptr<Claim>(), lastPeriodDayCounter, true, swap_.tradeDate(),
             swap_.cashSettlementDays());
     }
 
-    boost::shared_ptr<IndexCreditDefaultSwapEngineBuilder> cdsBuilder =
-        boost::dynamic_pointer_cast<IndexCreditDefaultSwapEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<IndexCreditDefaultSwapEngineBuilder> cdsBuilder =
+        QuantLib::ext::dynamic_pointer_cast<IndexCreditDefaultSwapEngineBuilder>(builder);
 
     npvCurrency_ = swap_.leg().currency();
     notionalCurrency_ = swap_.leg().currency();
@@ -196,13 +215,14 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
                 swap_.creditCurveId() + "')").log();
     }
 
+    maturity_ = cds->coupons().back()->date();
+
     cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveIdWithTerm(),
                                              basketCreditCurves, boost::none, swap_.recoveryRate(), false));
     setSensitivityTemplate(*cdsBuilder);
 
     instrument_.reset(new VanillaInstrument(cds));
 
-    maturity_ = cds->coupons().back()->date();
 
     legs_ = {cds->coupons()};
     legCurrencies_ = {npvCurrency_};
@@ -214,25 +234,6 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
         additionalData_["startDate"] = to_string(schedule.dates().front());
 
     sensitivityDecomposition_ = cdsBuilder->sensitivityDecomposition();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("Index");
-    string entity = swap_.creditCurveId();   
-    boost::shared_ptr<ReferenceDataManager> refData = engineFactory->referenceData();
-    if (refData && refData->hasData("CreditIndex", entity)) {
-        auto refDatum = refData->getData("CreditIndex", entity);
-        boost::shared_ptr<CreditIndexReferenceDatum> creditIndexRefDatum = boost::dynamic_pointer_cast<CreditIndexReferenceDatum>(refDatum);
-        additionalData_["isdaSubProduct"] = creditIndexRefDatum->indexFamily();
-        if (creditIndexRefDatum->indexFamily() == "") {
-            ALOG("IndexFamily is blank in credit index reference data for entity " << entity);
-        }
-    } else {
-        ALOG("Credit index reference data missing for entity " << entity << ", isdaSubProduct left blank");
-    }
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");  
-
 }
 
 const std::map<std::string, boost::any>& IndexCreditDefaultSwap::additionalData() const {
@@ -257,7 +258,7 @@ QuantLib::Real IndexCreditDefaultSwap::notional() const {
     Date asof = Settings::instance().evaluationDate();
     // get the current notional from the premium leg
     for (Size i = 0; i < legs_[0].size(); ++i) {
-        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[0][i]);
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[0][i]);
         if (coupon->date() > asof)
             return coupon->nominal();
     }
@@ -274,7 +275,7 @@ void IndexCreditDefaultSwap::fromXML(XMLNode* node) {
     swap_.fromXML(cdsNode);
 }
 
-XMLNode* IndexCreditDefaultSwap::toXML(XMLDocument& doc) {
+XMLNode* IndexCreditDefaultSwap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, swap_.toXML(doc));
     return node;

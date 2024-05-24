@@ -34,11 +34,11 @@ BOOST_AUTO_TEST_CASE(testAbsoluteDiscountShift) {
     BOOST_TEST_MESSAGE("Testing absolute shift in a discount curve");
 
     // Set up
-    auto ssd = boost::make_shared<SensitivityScenarioData>();
-    auto ssp = boost::make_shared<ScenarioSimMarketParameters>();
+    auto ssd = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    auto ssp = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
 
     // Discount curve sensitivity set up to have 1bp absolute shift
-    ssd->discountCurveShiftData()["EUR"] = boost::make_shared<CurveShiftData>();
+    ssd->discountCurveShiftData()["EUR"] = QuantLib::ext::make_shared<CurveShiftData>();
     ssd->discountCurveShiftData()["EUR"]->shiftSize = 0.0001;
     ssd->discountCurveShiftData()["EUR"]->shiftType = ShiftType::Absolute;
 
@@ -76,11 +76,11 @@ BOOST_AUTO_TEST_CASE(testRelativeDiscountShift) {
     BOOST_TEST_MESSAGE("Testing relative shift in a discount curve");
 
     // Set up
-    auto ssd = boost::make_shared<SensitivityScenarioData>();
-    auto ssp = boost::make_shared<ScenarioSimMarketParameters>();
+    auto ssd = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    auto ssp = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
 
     // Discount curve sensitivity set up to have 1% relative shift
-    ssd->discountCurveShiftData()["EUR"] = boost::make_shared<CurveShiftData>();
+    ssd->discountCurveShiftData()["EUR"] = QuantLib::ext::make_shared<CurveShiftData>();
     ssd->discountCurveShiftData()["EUR"]->shiftSize = 0.01;
     ssd->discountCurveShiftData()["EUR"]->shiftType = ShiftType::Relative;
 
@@ -118,11 +118,11 @@ BOOST_AUTO_TEST_CASE(testAbsoluteSurvivalShift) {
     BOOST_TEST_MESSAGE("Testing absolute shift in a survival curve");
 
     // Set up
-    auto ssd = boost::make_shared<SensitivityScenarioData>();
-    auto ssp = boost::make_shared<ScenarioSimMarketParameters>();
+    auto ssd = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    auto ssp = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
 
     // Credit curve sensitivity set up to have 10bp absolute shift
-    ssd->creditCurveShiftData()["APPLE"] = boost::make_shared<CurveShiftData>();
+    ssd->creditCurveShiftData()["APPLE"] = QuantLib::ext::make_shared<CurveShiftData>();
     ssd->creditCurveShiftData()["APPLE"]->shiftSize = 0.0010;
     ssd->creditCurveShiftData()["APPLE"]->shiftType = ShiftType::Absolute;
 
@@ -166,11 +166,11 @@ BOOST_AUTO_TEST_CASE(testRelativeSurvivalShift) {
     BOOST_TEST_MESSAGE("Testing relative shift in a survival curve");
 
     // Set up
-    auto ssd = boost::make_shared<SensitivityScenarioData>();
-    auto ssp = boost::make_shared<ScenarioSimMarketParameters>();
+    auto ssd = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    auto ssp = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
 
     // Credit curve sensitivity set up to have 10% relative shift
-    ssd->creditCurveShiftData()["APPLE"] = boost::make_shared<CurveShiftData>();
+    ssd->creditCurveShiftData()["APPLE"] = QuantLib::ext::make_shared<CurveShiftData>();
     ssd->creditCurveShiftData()["APPLE"]->shiftSize = 0.10;
     ssd->creditCurveShiftData()["APPLE"]->shiftType = ShiftType::Relative;
 
@@ -208,8 +208,8 @@ BOOST_AUTO_TEST_CASE(testAbsoluteFxShift) {
     BOOST_TEST_MESSAGE("Testing absolute shift in a FX spot rate");
 
     // Set up
-    auto ssd = boost::make_shared<SensitivityScenarioData>();
-    auto ssp = boost::make_shared<ScenarioSimMarketParameters>();
+    auto ssd = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    auto ssp = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
 
     Rate shift = 0.0005;
     Real exp = 3.0;
@@ -252,8 +252,8 @@ BOOST_AUTO_TEST_CASE(testRelativeFxShift) {
     Real exp = 4.5;
 
     // Set up
-    auto ssd = boost::make_shared<SensitivityScenarioData>();
-    auto ssp = boost::make_shared<ScenarioSimMarketParameters>();
+    auto ssd = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    auto ssp = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
 
     // FX spot sensitivity set up to have 2% relative shift
     ssd->fxShiftData()["EURUSD"].shiftSize = shift;
@@ -290,8 +290,8 @@ BOOST_AUTO_TEST_CASE(testAbsoluteSwaptionVolShift) {
     BOOST_TEST_MESSAGE("Testing absolute shift in a swaption volatility");
 
     // Set up
-    auto ssd = boost::make_shared<SensitivityScenarioData>();
-    auto ssp = boost::make_shared<ScenarioSimMarketParameters>();
+    auto ssd = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    auto ssp = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
 
     Rate shift = 0.0001;
     Real exp = 8.45;
@@ -332,8 +332,8 @@ BOOST_AUTO_TEST_CASE(testRelativeSwaptionVolShift) {
     BOOST_TEST_MESSAGE("Testing relative shift in a swaption volatility");
 
     // Set up
-    auto ssd = boost::make_shared<SensitivityScenarioData>();
-    auto ssp = boost::make_shared<ScenarioSimMarketParameters>();
+    auto ssd = QuantLib::ext::make_shared<SensitivityScenarioData>();
+    auto ssp = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
 
     Rate shift = 0.01;
     Real exp = 5.5;

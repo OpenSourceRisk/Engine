@@ -27,7 +27,7 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<PricingEngine> CpiCapFloorEngineBuilder::engineImpl(const string& indexName) {
+QuantLib::ext::shared_ptr<PricingEngine> CpiCapFloorEngineBuilder::engineImpl(const string& indexName) {
     Handle<ZeroInflationIndex> cpiIndex = market_->zeroInflationIndex(indexName, configuration(MarketContext::pricing));
     // QL_REQUIRE(!cpiIndex.empty(), "engineFactory error, cpi index " << indexName << " not found");
     std::string ccyCode = cpiIndex->currency().code();
@@ -42,9 +42,9 @@ boost::shared_ptr<PricingEngine> CpiCapFloorEngineBuilder::engineImpl(const stri
     bool isLogNormal = QuantExt::ZeroInflation::isCPIVolSurfaceLogNormal(ovs.currentLink());
 
     if (isLogNormal) {
-        return boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, ovs, useLastFixingDate);
+        return QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, ovs, useLastFixingDate);
     } else {
-        return boost::make_shared<QuantExt::CPIBachelierCapFloorEngine>(discountCurve, ovs, useLastFixingDate);
+        return QuantLib::ext::make_shared<QuantExt::CPIBachelierCapFloorEngine>(discountCurve, ovs, useLastFixingDate);
     }
     
 }

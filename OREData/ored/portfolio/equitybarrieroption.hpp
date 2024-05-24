@@ -51,11 +51,11 @@ public:
     void checkBarriers() override;
 
     //! create the pricing engines
-    boost::shared_ptr<QuantLib::PricingEngine>
-    vanillaPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
-    boost::shared_ptr<QuantLib::PricingEngine>
-    barrierPricingEngine(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
+    QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
+    barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFactory>& ef, const QuantLib::Date& expiryDate,
                            const QuantLib::Date& paymentDate = QuantLib::Date()) override;
 };
 

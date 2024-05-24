@@ -28,6 +28,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/erase.hpp>
 
 // we only want to include these here.
 #if defined(__clang__)
@@ -62,14 +63,12 @@ namespace {
 // handle rapid xml parser errors
 
 void handle_rapidxml_parse_error(const rapidxml::parse_error& e) {
-    // limit to first 30 chars.
-    string where(e.where<char>(), std::min<std::size_t>(strlen(e.where<char>()), 30));
-    QL_FAIL("RapidXML Parse Error : " << e.what() << ". where=" << where);
+    string where = e.where<char>();
+    boost::erase_all(where, "\n");
+    boost::erase_all(where, "\r");
+    QL_FAIL("RapidXML Parse Error (" << e.what() << ") at '" << where.substr(0, 400) << "'");
 }
 
-// FIXME just for backwards compatibility, we should get rid of one of these two methods eventually
-string convertToString2(const std::string& s) { return s; }
-template <class T> string convertToString2(const T& value) { return std::to_string(value); }
 
 } // namespace
 
@@ -114,17 +113,17 @@ void XMLDocument::fromXMLString(const string& xmlString) {
     }
 }
 
-XMLNode* XMLDocument::getFirstNode(const string& name) { return _doc->first_node(name == "" ? NULL : name.c_str()); }
+XMLNode* XMLDocument::getFirstNode(const string& name) const { return _doc->first_node(name == "" ? NULL : name.c_str()); }
 
 void XMLDocument::appendNode(XMLNode* node) { _doc->append_node(node); }
 
-void XMLDocument::toFile(const string& fileName) {
+void XMLDocument::toFile(const string& fileName) const {
     std::ofstream ofs(fileName.c_str());
     ofs << *_doc;
     ofs.close();
 }
 
-string XMLDocument::toString() {
+string XMLDocument::toString() const {
     ostringstream oss;
     oss << *_doc;
     return oss.str();
@@ -153,7 +152,7 @@ void XMLSerializable::fromFile(const string& filename) {
     fromXML(doc.getFirstNode(""));
 }
 
-void XMLSerializable::toFile(const string& filename) {
+void XMLSerializable::toFile(const string& filename) const {
     XMLDocument doc;
     XMLNode* node = toXML(doc);
     doc.appendNode(node);
@@ -166,7 +165,7 @@ void XMLSerializable::fromXMLString(const string& xml) {
     fromXML(doc.getFirstNode(""));
 }
 
-string XMLSerializable::toXMLString() {
+string XMLSerializable::toXMLString() const {
     XMLDocument doc;
     XMLNode* node = toXML(doc);
     doc.appendNode(node);
@@ -258,7 +257,7 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* parent, const string& name, const vector<Real>& values) {
     vector<string> strings(values.size());
-    std::transform(values.begin(), values.end(), strings.begin(), [](Real x) { return convertToString2(x); });
+    std::transform(values.begin(), values.end(), strings.begin(), [](Real x) { return convertToString(x); });
     addChild(doc, parent, name, boost::algorithm::join(strings, ","));
 }
 
@@ -499,16 +498,6 @@ string XMLUtils::getNodeValue(XMLNode* node) {
 
 // template implementations
 
-// FIXME only needed as long as we want convert2String2() here, can be removed once we have consolidated
-// convert2String() and convert2String()
-template <>
-void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
-                           const vector<Real>& values) {
-    vector<string> strings(values.size());
-    std::transform(values.begin(), values.end(), strings.begin(), [](Real x) { return convertToString2(x); });
-    addChildren(doc, parent, names, name, strings);
-}
-
 template <class T>
 void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
                            const vector<T>& values) {
@@ -537,7 +526,7 @@ void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, cons
         QL_REQUIRE(parent, "XML Node is null (Adding " << names << ")");
         XMLNode* node = addChild(doc, parent, names);
         for (Size i = 0; i < values.size(); i++) {
-            XMLNode* c = doc.allocNode(name, convertToString2(values[i]));
+            XMLNode* c = doc.allocNode(name, convertToString(values[i]));
             QL_REQUIRE(c, "XML AllocNode failure (" << name << ")");
             QL_REQUIRE(node, "XML Node is NULL (" << name << ")");
             node->insert_node(0, c);
@@ -646,6 +635,8 @@ string XMLUtils::convertToString(const Real value) {
     return result;
 }
 
+template <class T> string XMLUtils::convertToString(const T& value) { return boost::lexical_cast<std::string>(value); }
+
 /* Instantiate some template functions above for types T we want to support. Add instantiations for more types here,
    if required. This has two advantages over putting the templated version of the functions in the header file:
    - faster compile times
@@ -656,6 +647,8 @@ template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const str
 // throws a warning currently, but that is ok, see the FIXME above in template <> void XMLUtils::addChildren(...)
 // template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
 //                                     const vector<double>& values);
+template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
+                                     const vector<Real>& values);
 template void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
                                     const vector<bool>& values);
 

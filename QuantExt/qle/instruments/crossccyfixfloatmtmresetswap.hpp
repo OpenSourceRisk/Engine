@@ -51,9 +51,9 @@ public:
     CrossCcyFixFloatMtMResetSwap(QuantLib::Real nominal, const QuantLib::Currency& fixedCurrency, const QuantLib::Schedule& fixedSchedule,
         QuantLib::Rate fixedRate, const QuantLib::DayCounter& fixedDayCount, const QuantLib::BusinessDayConvention& fixedPaymentBdc,
         QuantLib::Natural fixedPaymentLag, const QuantLib::Calendar& fixedPaymentCalendar, const QuantLib::Currency& floatCurrency,
-        const QuantLib::Schedule& floatSchedule, const boost::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
+        const QuantLib::Schedule& floatSchedule, const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
         const QuantLib::BusinessDayConvention& floatPaymentBdc, QuantLib::Natural floatPaymentLag, const QuantLib::Calendar& floatPaymentCalendar,
-        const boost::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg = true, bool receiveFixed = true);
+        const QuantLib::ext::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg = true, bool receiveFixed = true);
 
     //@}
     //! \name Instrument interface
@@ -74,7 +74,7 @@ public:
 
     const QuantLib::Currency& floatCurrency() const { return floatCurrency_; }
     const QuantLib::Schedule& floatSchedule() const { return floatSchedule_; }
-    const boost::shared_ptr<QuantLib::IborIndex>& floatIndex() const { return floatIndex_; }
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& floatIndex() const { return floatIndex_; }
     QuantLib::Spread floatSpread() const { return floatSpread_; }
     //@}
 
@@ -114,13 +114,13 @@ private:
 
     QuantLib::Currency floatCurrency_;
     QuantLib::Schedule floatSchedule_;
-    boost::shared_ptr<QuantLib::IborIndex> floatIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> floatIndex_;
     QuantLib::Spread floatSpread_;
     QuantLib::BusinessDayConvention floatPaymentBdc_;
     QuantLib::Natural floatPaymentLag_;
     QuantLib::Calendar floatPaymentCalendar_;
 
-    boost::shared_ptr<FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     bool resetsOnFloatLeg_;
     bool receiveFixed_;
 

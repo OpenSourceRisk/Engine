@@ -32,7 +32,7 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
-boost::shared_ptr<PricingEngine> CamAmcFxOptionEngineBuilder::engineImpl(const string& assetName,
+QuantLib::ext::shared_ptr<PricingEngine> CamAmcFxOptionEngineBuilder::engineImpl(const string& assetName,
                                                                          const Currency& domCcy,
                                                                          const AssetClass& assetClassUnderlying,
                                                                          const Date& expiryDate, const bool useFxSpot) {
@@ -49,8 +49,8 @@ boost::shared_ptr<PricingEngine> CamAmcFxOptionEngineBuilder::engineImpl(const s
     std::vector<Size> externalModelIndices;
     std::vector<Handle<YieldTermStructure>> discountCurves;
     std::vector<Size> cIdx;
-    std::vector<boost::shared_ptr<IrModel>> lgm;
-    std::vector<boost::shared_ptr<FxBsParametrization>> fx;
+    std::vector<QuantLib::ext::shared_ptr<IrModel>> lgm;
+    std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>> fx;
 
     // add the IR and FX components in the order they appear in the CAM; this way
     // we can sort the external model indices and be sure that they match up with
@@ -79,14 +79,14 @@ boost::shared_ptr<PricingEngine> CamAmcFxOptionEngineBuilder::engineImpl(const s
             corr(i, j) = corr(j, i) = cam_->correlation()(cIdx[i], cIdx[j]);
         }
     }
-    Handle<CrossAssetModel> model(boost::make_shared<CrossAssetModel>(lgm, fx, corr));
+    Handle<CrossAssetModel> model(QuantLib::ext::make_shared<CrossAssetModel>(lgm, fx, corr));
     // we assume that the model has the pricing discount curves attached already, so
     // we leave the discountCurves vector empty here
 
     // build the pricing engine
 
     // NPV should be in domCcy, consistent with the npv currency of an ORE FX Option Trade
-    auto engine = boost::make_shared<McCamFxOptionEngine>(
+    auto engine = QuantLib::ext::make_shared<McCamFxOptionEngine>(
         model, domCcy, forCcy, domCcy, parseSequenceType(engineParameter("Training.Sequence")),
         parseSequenceType(engineParameter("Pricing.Sequence")), parseInteger(engineParameter("Training.Samples")),
         parseInteger(engineParameter("Pricing.Samples")), parseInteger(engineParameter("Training.Seed")),
@@ -95,7 +95,8 @@ boost::shared_ptr<PricingEngine> CamAmcFxOptionEngineBuilder::engineImpl(const s
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurves, simulationDates_,
         externalModelIndices, parseBool(engineParameter("MinObsDate")),
-        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")));
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
 
     return engine;
 }

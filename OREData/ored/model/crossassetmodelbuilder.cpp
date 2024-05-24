@@ -28,7 +28,7 @@
 #include <ored/model/inflation/infjydata.hpp>
 #include <ored/model/irhwmodeldata.hpp>
 #include <ored/model/lgmbuilder.hpp>
-#include <ored/model/structuredmodelerror.hpp>
+#include <ored/model/structuredmodelwarning.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
@@ -76,7 +76,7 @@ namespace ore {
 namespace data {
 
 CrossAssetModelBuilder::CrossAssetModelBuilder(
-    const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CrossAssetModelData>& config,
+    const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<CrossAssetModelData>& config,
     const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
     const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
     const std::string& configurationCrCalibration, const std::string& configurationFinalModel, const bool dontCalibrate,
@@ -89,7 +89,7 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
       configurationComCalibration_(Market::defaultConfiguration), configurationFinalModel_(configurationFinalModel),
       dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
       referenceCalibrationGrid_(referenceCalibrationGrid), salvaging_(salvaging), id_(id),
-      optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
+      optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
     buildModel();
     // register with sub builders
@@ -98,7 +98,7 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
             registerWith(ikv.second);
         }
     // register market observer with correlations
-    marketObserver_ = boost::make_shared<MarketObserver>();
+    marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     for (auto const& c : config->correlations())
         marketObserver_->addObservable(c.second);
     // reset market observer's updated flag
@@ -253,27 +253,27 @@ void CrossAssetModelBuilder::buildModel() const {
     /*******************************************************
      * Build the IR parametrizations and calibration baskets
      */
-    std::vector<boost::shared_ptr<QuantExt::Parametrization>> irParametrizations;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::Parametrization>> irParametrizations;
     std::vector<RelinkableHandle<YieldTermStructure>> irDiscountCurves;
     std::vector<std::string> currencies, regions, crNames, eqNames, infIndices, comNames;
-    std::vector<boost::shared_ptr<LgmBuilder>> lgmBuilder;
-    std::vector<boost::shared_ptr<HwBuilder>> hwBuilder;
-    std::vector<boost::shared_ptr<FxBsBuilder>> fxBuilder;
-    std::vector<boost::shared_ptr<EqBsBuilder>> eqBuilder;
-    std::vector<boost::shared_ptr<CommoditySchwartzModelBuilder>> csBuilder;
+    std::vector<QuantLib::ext::shared_ptr<LgmBuilder>> lgmBuilder;
+    std::vector<QuantLib::ext::shared_ptr<HwBuilder>> hwBuilder;
+    std::vector<QuantLib::ext::shared_ptr<FxBsBuilder>> fxBuilder;
+    std::vector<QuantLib::ext::shared_ptr<EqBsBuilder>> eqBuilder;
+    std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzModelBuilder>> csBuilder;
 
     std::set<std::string> recalibratedCurrencies;
     for (Size i = 0; i < config_->irConfigs().size(); i++) {
         auto irConfig = config_->irConfigs()[i];
         DLOG("IR Parametrization " << i << " qualifier " << irConfig->qualifier());
 
-        if (auto ir = boost::dynamic_pointer_cast<IrLgmData>(irConfig)) {
+        if (auto ir = QuantLib::ext::dynamic_pointer_cast<IrLgmData>(irConfig)) {
             if (!buildersAreInitialized) {
-                subBuilders_[CrossAssetModel::AssetType::IR][i] = boost::make_shared<LgmBuilder>(
+                subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<LgmBuilder>(
                     market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
                     referenceCalibrationGrid_, false, id_);
             }
-            auto builder = boost::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
+            auto builder = QuantLib::ext::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             lgmBuilder.push_back(builder);
             if (dontCalibrate_) {
                 builder->freeze();
@@ -291,16 +291,16 @@ void CrossAssetModelBuilder::buildModel() const {
             irParametrizations.push_back(parametrization);
             irDiscountCurves.push_back(builder->discountCurve());
             processInfo[CrossAssetModel::AssetType::IR].emplace_back(ir->ccy(), 1);
-        } else if (auto ir = boost::dynamic_pointer_cast<HwModelData>(irConfig)) {
+        } else if (auto ir = QuantLib::ext::dynamic_pointer_cast<HwModelData>(irConfig)) {
             bool evaluateBankAccount = true; // updated in cross asset model for non-base ccys
             bool setCalibrationInfo = false;
             HwModel::Discretization discr = HwModel::Discretization::Euler;
             if (!buildersAreInitialized) {
-                subBuilders_[CrossAssetModel::AssetType::IR][i] = boost::make_shared<HwBuilder>(
+                subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<HwBuilder>(
                     market_, ir, measure, discr, evaluateBankAccount, configurationLgmCalibration_,
                     config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, setCalibrationInfo);
             }
-            auto builder = boost::dynamic_pointer_cast<HwBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
+            auto builder = QuantLib::ext::dynamic_pointer_cast<HwBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
             hwBuilder.push_back(builder);
             if (builder->requiresRecalibration())
                 recalibratedCurrencies.insert(builder->parametrization()->currency().code());
@@ -327,10 +327,10 @@ void CrossAssetModelBuilder::buildModel() const {
     /*******************************************************
      * Build the FX parametrizations and calibration baskets
      */
-    std::vector<boost::shared_ptr<QuantExt::FxBsParametrization>> fxParametrizations;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization>> fxParametrizations;
     for (Size i = 0; i < config_->fxConfigs().size(); i++) {
         DLOG("FX Parametrization " << i);
-        boost::shared_ptr<FxBsData> fx = config_->fxConfigs()[i];
+        QuantLib::ext::shared_ptr<FxBsData> fx = config_->fxConfigs()[i];
         QuantLib::Currency ccy = ore::data::parseCurrency(fx->foreignCcy());
         QuantLib::Currency domCcy = ore::data::parseCurrency(fx->domesticCcy());
 
@@ -343,12 +343,12 @@ void CrossAssetModelBuilder::buildModel() const {
 
         if (!buildersAreInitialized) {
             subBuilders_[CrossAssetModel::AssetType::FX][i] =
-                boost::make_shared<FxBsBuilder>(market_, fx, configurationFxCalibration_, referenceCalibrationGrid_);
+                QuantLib::ext::make_shared<FxBsBuilder>(market_, fx, configurationFxCalibration_, referenceCalibrationGrid_);
         }
-        auto builder = boost::dynamic_pointer_cast<FxBsBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);
+        auto builder = QuantLib::ext::dynamic_pointer_cast<FxBsBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);
         fxBuilder.push_back(builder);
 
-        boost::shared_ptr<QuantExt::FxBsParametrization> parametrization = builder->parametrization();
+        QuantLib::ext::shared_ptr<QuantExt::FxBsParametrization> parametrization = builder->parametrization();
 
         fxOptionBaskets_[i] = builder->optionBasket();
         fxParametrizations.push_back(parametrization);
@@ -358,22 +358,22 @@ void CrossAssetModelBuilder::buildModel() const {
     /*******************************************************
      * Build the EQ parametrizations and calibration baskets
      */
-    std::vector<boost::shared_ptr<QuantExt::EqBsParametrization>> eqParametrizations;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::EqBsParametrization>> eqParametrizations;
     for (Size i = 0; i < config_->eqConfigs().size(); i++) {
         DLOG("EQ Parametrization " << i);
-        boost::shared_ptr<EqBsData> eq = config_->eqConfigs()[i];
+        QuantLib::ext::shared_ptr<EqBsData> eq = config_->eqConfigs()[i];
         string eqName = eq->eqName();
         QuantLib::Currency eqCcy = ore::data::parseCurrency(eq->currency());
         QL_REQUIRE(std::find(currencies.begin(), currencies.end(), eqCcy.code()) != currencies.end(),
                    "Currency (" << eqCcy << ") for equity " << eqName << " not covered by CrossAssetModelData");
         if (!buildersAreInitialized) {
-            subBuilders_[CrossAssetModel::AssetType::EQ][i] = boost::make_shared<EqBsBuilder>(
+            subBuilders_[CrossAssetModel::AssetType::EQ][i] = QuantLib::ext::make_shared<EqBsBuilder>(
                 market_, eq, domesticCcy, configurationEqCalibration_, referenceCalibrationGrid_);
         }
-        boost::shared_ptr<EqBsBuilder> builder =
-            boost::dynamic_pointer_cast<EqBsBuilder>(subBuilders_[CrossAssetModel::AssetType::EQ][i]);
+        QuantLib::ext::shared_ptr<EqBsBuilder> builder =
+            QuantLib::ext::dynamic_pointer_cast<EqBsBuilder>(subBuilders_[CrossAssetModel::AssetType::EQ][i]);
         eqBuilder.push_back(builder);
-        boost::shared_ptr<QuantExt::EqBsParametrization> parametrization = builder->parametrization();
+        QuantLib::ext::shared_ptr<QuantExt::EqBsParametrization> parametrization = builder->parametrization();
         eqOptionBaskets_[i] = builder->optionBasket();
         eqParametrizations.push_back(parametrization);
         eqNames.push_back(eqName);
@@ -383,20 +383,20 @@ void CrossAssetModelBuilder::buildModel() const {
     /*******************************************************
      * Build the INF parametrizations and calibration baskets
      */
-    vector<boost::shared_ptr<Parametrization>> infParameterizations;
+    vector<QuantLib::ext::shared_ptr<Parametrization>> infParameterizations;
     for (Size i = 0; i < config_->infConfigs().size(); i++) {
-        boost::shared_ptr<InflationModelData> imData = config_->infConfigs()[i];
+        QuantLib::ext::shared_ptr<InflationModelData> imData = config_->infConfigs()[i];
         DLOG("Inflation parameterisation (" << i << ") for index " << imData->index());
-        if (auto dkData = boost::dynamic_pointer_cast<InfDkData>(imData)) {
+        if (auto dkData = QuantLib::ext::dynamic_pointer_cast<InfDkData>(imData)) {
             if (!buildersAreInitialized) {
-                subBuilders_[CrossAssetModel::AssetType::INF][i] = boost::make_shared<InfDkBuilder>(
+                subBuilders_[CrossAssetModel::AssetType::INF][i] = QuantLib::ext::make_shared<InfDkBuilder>(
                     market_, dkData, configurationInfCalibration_, referenceCalibrationGrid_, dontCalibrate_);
             }
-            boost::shared_ptr<InfDkBuilder> builder =
-                boost::dynamic_pointer_cast<InfDkBuilder>(subBuilders_[CrossAssetModel::AssetType::INF][i]);
+            QuantLib::ext::shared_ptr<InfDkBuilder> builder =
+                QuantLib::ext::dynamic_pointer_cast<InfDkBuilder>(subBuilders_[CrossAssetModel::AssetType::INF][i]);
             infParameterizations.push_back(builder->parametrization());
             processInfo[CrossAssetModel::AssetType::INF].emplace_back(dkData->index(), 1);
-        } else if (auto jyData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
+        } else if (auto jyData = QuantLib::ext::dynamic_pointer_cast<InfJyData>(imData)) {
             if (!buildersAreInitialized) {
                 // for linked real rate params we have to resize the real rate params here again, because their time grid
                 // might have been overwritten in the ir calibration step
@@ -419,10 +419,10 @@ void CrossAssetModelBuilder::buildModel() const {
                     jyData->setRealRateReversion(rrRev);
                     jyData->setRealRateVolatility(rrVol);
                 }
-                subBuilders_[CrossAssetModel::AssetType::INF][i] = boost::make_shared<InfJyBuilder>(
+                subBuilders_[CrossAssetModel::AssetType::INF][i] = QuantLib::ext::make_shared<InfJyBuilder>(
                     market_, jyData, configurationInfCalibration_, referenceCalibrationGrid_, dontCalibrate_);
             }
-            auto builder = boost::dynamic_pointer_cast<InfJyBuilder>(subBuilders_[CrossAssetModel::AssetType::INF][i]);
+            auto builder = QuantLib::ext::dynamic_pointer_cast<InfJyBuilder>(subBuilders_[CrossAssetModel::AssetType::INF][i]);
             infParameterizations.push_back(builder->parameterization());
             processInfo[CrossAssetModel::AssetType::INF].emplace_back(jyData->index(), 2);
         } else {
@@ -435,34 +435,34 @@ void CrossAssetModelBuilder::buildModel() const {
      * Build the CR parametrizations and calibration baskets
      */
     // LGM (if any)
-    std::vector<boost::shared_ptr<QuantExt::CrLgm1fParametrization>> crLgmParametrizations;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::CrLgm1fParametrization>> crLgmParametrizations;
     for (Size i = 0; i < config_->crLgmConfigs().size(); ++i) {
         LOG("CR LGM Parametrization " << i);
-        boost::shared_ptr<CrLgmData> cr = config_->crLgmConfigs()[i];
+        QuantLib::ext::shared_ptr<CrLgmData> cr = config_->crLgmConfigs()[i];
         string crName = cr->name();
         if (!buildersAreInitialized) {
             subBuilders_[CrossAssetModel::AssetType::CR][i] =
-                boost::make_shared<CrLgmBuilder>(market_, cr, configurationCrCalibration_);
+                QuantLib::ext::make_shared<CrLgmBuilder>(market_, cr, configurationCrCalibration_);
         }
-        auto builder = boost::dynamic_pointer_cast<CrLgmBuilder>(subBuilders_[CrossAssetModel::AssetType::CR][i]);
-        boost::shared_ptr<QuantExt::CrLgm1fParametrization> parametrization = builder->parametrization();
+        auto builder = QuantLib::ext::dynamic_pointer_cast<CrLgmBuilder>(subBuilders_[CrossAssetModel::AssetType::CR][i]);
+        QuantLib::ext::shared_ptr<QuantExt::CrLgm1fParametrization> parametrization = builder->parametrization();
         crLgmParametrizations.push_back(parametrization);
         crNames.push_back(crName);
         processInfo[CrossAssetModel::AssetType::CR].emplace_back(crName, 1);
     }
 
     // CIR (if any)
-    std::vector<boost::shared_ptr<QuantExt::CrCirppParametrization>> crCirParametrizations;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::CrCirppParametrization>> crCirParametrizations;
     for (Size i = 0; i < config_->crCirConfigs().size(); ++i) {
         LOG("CR CIR Parametrization " << i);
-        boost::shared_ptr<CrCirData> cr = config_->crCirConfigs()[i];
+        QuantLib::ext::shared_ptr<CrCirData> cr = config_->crCirConfigs()[i];
         string crName = cr->name();
         if (!buildersAreInitialized) {
             subBuilders_[CrossAssetModel::AssetType::CR][i] =
-                boost::make_shared<CrCirBuilder>(market_, cr, configurationCrCalibration_);
+                QuantLib::ext::make_shared<CrCirBuilder>(market_, cr, configurationCrCalibration_);
         }
-        auto builder = boost::dynamic_pointer_cast<CrCirBuilder>(subBuilders_[CrossAssetModel::AssetType::CR][i]);
-        boost::shared_ptr<QuantExt::CrCirppParametrization> parametrization = builder->parametrization();
+        auto builder = QuantLib::ext::dynamic_pointer_cast<CrCirBuilder>(subBuilders_[CrossAssetModel::AssetType::CR][i]);
+        QuantLib::ext::shared_ptr<QuantExt::CrCirppParametrization> parametrization = builder->parametrization();
         crCirParametrizations.push_back(parametrization);
         crNames.push_back(crName);
         processInfo[CrossAssetModel::AssetType::CR].emplace_back(crName, 1);
@@ -471,22 +471,24 @@ void CrossAssetModelBuilder::buildModel() const {
     /*******************************************************
      * Build the COM parametrizations and calibration baskets
      */
-    std::vector<boost::shared_ptr<QuantExt::CommoditySchwartzParametrization>> comParametrizations;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzParametrization>> comParametrizations;
     for (Size i = 0; i < config_->comConfigs().size(); i++) {
         DLOG("COM Parametrization " << i);
-        boost::shared_ptr<CommoditySchwartzData> com = config_->comConfigs()[i];
+        QuantLib::ext::shared_ptr<CommoditySchwartzData> com = config_->comConfigs()[i];
         string comName = com->name();
         QuantLib::Currency comCcy = ore::data::parseCurrency(com->currency());
         QL_REQUIRE(std::find(currencies.begin(), currencies.end(), comCcy.code()) != currencies.end(),
                    "Currency (" << comCcy << ") for commodity " << comName << " not covered by CrossAssetModelData");
         if (!buildersAreInitialized) {
-            subBuilders_[CrossAssetModel::AssetType::COM][i] = boost::make_shared<CommoditySchwartzModelBuilder>(
+            subBuilders_[CrossAssetModel::AssetType::COM][i] = QuantLib::ext::make_shared<CommoditySchwartzModelBuilder>(
                 market_, com, domesticCcy, configurationComCalibration_, referenceCalibrationGrid_);
         }
-        auto builder = boost::dynamic_pointer_cast<CommoditySchwartzModelBuilder>(
+        auto builder = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModelBuilder>(
             subBuilders_[CrossAssetModel::AssetType::COM][i]);
+        if (dontCalibrate_)
+            builder->freeze();
         csBuilder.push_back(builder);
-        boost::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization = builder->parametrization();
+        QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization = builder->parametrization();
         comOptionBaskets_[i] = builder->optionBasket();
         comParametrizations.push_back(parametrization);
         comNames.push_back(comName);
@@ -496,14 +498,14 @@ void CrossAssetModelBuilder::buildModel() const {
     /*******************************************************
      * Build the CrState parametrizations
      */
-    std::vector<boost::shared_ptr<QuantExt::CrStateParametrization>> crStateParametrizations;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::CrStateParametrization>> crStateParametrizations;
     for (Size i = 0; i < config_->numberOfCreditStates(); i++) {
         DLOG("CrState Parametrization " << i);
-        crStateParametrizations.push_back(boost::make_shared<QuantExt::CrStateParametrization>(i));
+        crStateParametrizations.push_back(QuantLib::ext::make_shared<QuantExt::CrStateParametrization>(i));
         processInfo[CrossAssetModel::AssetType::CrState].emplace_back(std::to_string(i), 1);
     }
 
-    std::vector<boost::shared_ptr<QuantExt::Parametrization>> parametrizations;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::Parametrization>> parametrizations;
     for (Size i = 0; i < irParametrizations.size(); i++)
         parametrizations.push_back(irParametrizations[i]);
     for (Size i = 0; i < fxParametrizations.size(); i++)
@@ -541,7 +543,7 @@ void CrossAssetModelBuilder::buildModel() const {
      * Build the cross asset model
      */
 
-    model_.linkTo(boost::make_shared<QuantExt::CrossAssetModel>(parametrizations, corrMatrix, salvaging_, measure,
+    model_.linkTo(QuantLib::ext::make_shared<QuantExt::CrossAssetModel>(parametrizations, corrMatrix, salvaging_, measure,
                                                                 config_->discretization()));
 
     /* Store initial params to ensure identical start values when recalibrating a component.
@@ -581,7 +583,7 @@ void CrossAssetModelBuilder::buildModel() const {
      */
 
     for (Size i = 0; i < fxParametrizations.size(); i++) {
-        boost::shared_ptr<FxBsData> fx = config_->fxConfigs()[i];
+        QuantLib::ext::shared_ptr<FxBsData> fx = config_->fxConfigs()[i];
 
         if (fx->calibrationType() == CalibrationType::None || !fx->calibrateSigma()) {
             DLOG("FX Calibration " << i << " skipped");
@@ -599,8 +601,8 @@ void CrossAssetModelBuilder::buildModel() const {
         DLOG("FX Calibration " << i);
 
         // attach pricing engines to helpers
-        boost::shared_ptr<QuantExt::AnalyticCcLgmFxOptionEngine> engine =
-            boost::make_shared<QuantExt::AnalyticCcLgmFxOptionEngine>(*model_, i);
+        QuantLib::ext::shared_ptr<QuantExt::AnalyticCcLgmFxOptionEngine> engine =
+            QuantLib::ext::make_shared<QuantExt::AnalyticCcLgmFxOptionEngine>(*model_, i);
         // enable caching for calibration
         // TODO: review this
         engine->cache(true);
@@ -632,7 +634,7 @@ void CrossAssetModelBuilder::buildModel() const {
                                                    std::to_string(fxOptionCalibrationErrors_[i]) +
                                                    " exceeds tolerance " +
                                                    std::to_string(config_->bootstrapTolerance());
-                    StructuredModelErrorMessage("Failed to calibrate FX BS Model", exceptionMessage, id_).log();
+                    StructuredModelWarningMessage("Failed to calibrate FX BS Model", exceptionMessage, id_).log();
                     WLOGGERSTREAM("Calibration details:");
                     WLOGGERSTREAM(
                         getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]));
@@ -660,7 +662,7 @@ void CrossAssetModelBuilder::buildModel() const {
      */
 
     for (Size i = 0; i < eqParametrizations.size(); i++) {
-        boost::shared_ptr<EqBsData> eq = config_->eqConfigs()[i];
+        QuantLib::ext::shared_ptr<EqBsData> eq = config_->eqConfigs()[i];
         if (!eq->calibrateSigma()) {
             DLOG("EQ Calibration " << i << " skipped");
             continue;
@@ -677,8 +679,8 @@ void CrossAssetModelBuilder::buildModel() const {
         // attach pricing engines to helpers
         Currency eqCcy = eqParametrizations[i]->currency();
         Size eqCcyIdx = model_->ccyIndex(eqCcy);
-        boost::shared_ptr<QuantExt::AnalyticXAssetLgmEquityOptionEngine> engine =
-            boost::make_shared<QuantExt::AnalyticXAssetLgmEquityOptionEngine>(*model_, i, eqCcyIdx);
+        QuantLib::ext::shared_ptr<QuantExt::AnalyticXAssetLgmEquityOptionEngine> engine =
+            QuantLib::ext::make_shared<QuantExt::AnalyticXAssetLgmEquityOptionEngine>(*model_, i, eqCcyIdx);
         for (Size j = 0; j < eqOptionBaskets_[i].size(); j++)
             eqOptionBaskets_[i][j]->setPricingEngine(engine);
 
@@ -706,7 +708,7 @@ void CrossAssetModelBuilder::buildModel() const {
                                                    std::to_string(eqOptionCalibrationErrors_[i]) +
                                                    " exceeds tolerance " +
                                                    std::to_string(config_->bootstrapTolerance());
-                    StructuredModelErrorMessage("Failed to calibrate EQ BS Model", exceptionMessage, id_).log();
+                    StructuredModelWarningMessage("Failed to calibrate EQ BS Model", exceptionMessage, id_).log();
                     WLOGGERSTREAM("Calibration details:");
                     WLOGGERSTREAM(
                         getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]));
@@ -740,12 +742,12 @@ void CrossAssetModelBuilder::buildModel() const {
 
     // Calibrate INF components
     for (Size i = 0; i < infParameterizations.size(); i++) {
-        boost::shared_ptr<InflationModelData> imData = config_->infConfigs()[i];
-        if (auto dkData = boost::dynamic_pointer_cast<InfDkData>(imData)) {
-            auto dkParam = boost::dynamic_pointer_cast<InfDkParametrization>(infParameterizations[i]);
+        QuantLib::ext::shared_ptr<InflationModelData> imData = config_->infConfigs()[i];
+        if (auto dkData = QuantLib::ext::dynamic_pointer_cast<InfDkData>(imData)) {
+            auto dkParam = QuantLib::ext::dynamic_pointer_cast<InfDkParametrization>(infParameterizations[i]);
             QL_REQUIRE(dkParam, "Expected DK model data to have given a DK parameterisation.");
             const auto& builder = subBuilders_.at(CrossAssetModel::AssetType::INF).at(i);
-            const auto& dkBuilder = boost::dynamic_pointer_cast<InfDkBuilder>(builder);
+            const auto& dkBuilder = QuantLib::ext::dynamic_pointer_cast<InfDkBuilder>(builder);
             if (!dkBuilder->requiresRecalibration() &&
                 recalibratedCurrencies.find(infParameterizations[i]->currency().code()) ==
                     recalibratedCurrencies.end()) {
@@ -755,11 +757,11 @@ void CrossAssetModelBuilder::buildModel() const {
             }
             calibrateInflation(*dkData, i, dkBuilder->optionBasket(), dkParam);
             dkBuilder->setCalibrationDone();
-        } else if (auto jyData = boost::dynamic_pointer_cast<InfJyData>(imData)) {
-            auto jyParam = boost::dynamic_pointer_cast<InfJyParameterization>(infParameterizations[i]);
+        } else if (auto jyData = QuantLib::ext::dynamic_pointer_cast<InfJyData>(imData)) {
+            auto jyParam = QuantLib::ext::dynamic_pointer_cast<InfJyParameterization>(infParameterizations[i]);
             QL_REQUIRE(jyParam, "Expected JY model data to have given a JY parameterisation.");
             const auto& builder = subBuilders_.at(CrossAssetModel::AssetType::INF).at(i);
-            const auto& jyBuilder = boost::dynamic_pointer_cast<InfJyBuilder>(builder);
+            const auto& jyBuilder = QuantLib::ext::dynamic_pointer_cast<InfJyBuilder>(builder);
             if (!jyBuilder->requiresRecalibration() &&
                 recalibratedCurrencies.find(infParameterizations[i]->currency().code()) ==
                     recalibratedCurrencies.end()) {
@@ -794,8 +796,8 @@ void CrossAssetModelBuilder::forceRecalculate() {
 }
 
 void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size modelIdx,
-                                                const vector<boost::shared_ptr<BlackCalibrationHelper>>& cb,
-                                                const boost::shared_ptr<InfDkParametrization>& inflationParam) const {
+                                                const vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& cb,
+                                                const QuantLib::ext::shared_ptr<InfDkParametrization>& inflationParam) const {
 
     LOG("Calibrate DK inflation model for inflation index " << data.index());
 
@@ -808,7 +810,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
     Handle<ZeroInflationIndex> zInfIndex =
         market_->zeroInflationIndex(model_->infdk(modelIdx)->name(), configurationInfCalibration_);
     Real baseCPI = dontCalibrate_ ? 100. : zInfIndex->fixing(zInfIndex->zeroInflationTermStructure()->baseDate());
-    auto engine = boost::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(*model_, modelIdx, baseCPI);
+    auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(*model_, modelIdx, baseCPI);
     for (Size j = 0; j < cb.size(); j++)
         cb[j]->setPricingEngine(engine);
 
@@ -846,7 +848,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
             string exceptionMessage = "INF (DK) " + std::to_string(modelIdx) + " calibration error " +
                                       std::to_string(inflationCalibrationErrors_[modelIdx]) + " exceeds tolerance " +
                                       std::to_string(config_->bootstrapTolerance());
-            StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage, id_).log();
+            StructuredModelWarningMessage("Failed to calibrate INF DK Model", exceptionMessage, id_).log();
             WLOGGERSTREAM("Calibration details:");
             WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
             WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
@@ -857,8 +859,8 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
 }
 
 void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size modelIdx,
-                                                const boost::shared_ptr<InfJyBuilder>& jyBuilder,
-                                                const boost::shared_ptr<InfJyParameterization>& inflationParam) const {
+                                                const QuantLib::ext::shared_ptr<InfJyBuilder>& jyBuilder,
+                                                const QuantLib::ext::shared_ptr<InfJyParameterization>& inflationParam) const {
 
     LOG("Calibrate JY inflation model for inflation index " << data.index());
 
@@ -888,7 +890,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
         return;
 
     // Single basket of helpers is useful in various places below.
-    vector<boost::shared_ptr<CalibrationHelper>> allHelpers = rrBasket;
+    vector<QuantLib::ext::shared_ptr<CalibrationHelper>> allHelpers = rrBasket;
     allHelpers.insert(allHelpers.end(), idxBasket.begin(), idxBasket.end());
 
     // Calibration configuration.
@@ -979,7 +981,9 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
             resetModelParams(CrossAssetModel::AssetType::INF, 2, modelIdx, Null<Size>());
             resetModelParams(CrossAssetModel::AssetType::INF, rrIdx, modelIdx, Null<Size>());
 
-            while (inflationCalibrationErrors_[modelIdx] > cc.rmseTolerance() && numIts < cc.maxIterations()) {
+            while (inflationCalibrationErrors_[modelIdx] >
+                       std::min(cc.rmseTolerance(), config_->bootstrapTolerance()) &&
+                   numIts < cc.maxIterations()) {
                 model_->calibrateInfJyIterative(modelIdx, 2, idxBasket, *optimizationMethod_, endCriteria_);
                 model_->calibrateInfJyIterative(modelIdx, rrIdx, rrBasket, *optimizationMethod_, endCriteria_);
                 numIts++;
@@ -1008,16 +1012,16 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     DLOG("INF (JY) " << data.index() << " calibration errors:");
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(allHelpers);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
-        if (fabs(inflationCalibrationErrors_[modelIdx]) < cc.rmseTolerance()) {
+        if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
             TLOGGERSTREAM("Calibration details:");
             TLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
             TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             std::stringstream ss;
             ss << "INF (JY) " << modelIdx << " calibration error " << std::scientific
-               << inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << cc.rmseTolerance();
+               << inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << config_->bootstrapTolerance();
             string exceptionMessage = ss.str();
-            StructuredModelErrorMessage("Failed to calibrate INF JY Model", exceptionMessage, id_).log();
+            StructuredModelWarningMessage("Failed to calibrate INF JY Model", exceptionMessage, id_).log();
             WLOGGERSTREAM("Calibration details:");
             WLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
             WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
@@ -1030,51 +1034,51 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
 }
 
 void CrossAssetModelBuilder::setJyPricingEngine(Size modelIdx,
-                                                const vector<boost::shared_ptr<CalibrationHelper>>& calibrationBasket,
+                                                const vector<QuantLib::ext::shared_ptr<CalibrationHelper>>& calibrationBasket,
                                                 bool indexIsInterpolated) const {
 
     DLOG("Start setting pricing engines on JY calibration instruments.");
 
     // JY supports three types of calibration helpers. Generally, all of the calibration instruments in a basket will
     // be of the same type but we support all three here.
-    boost::shared_ptr<PricingEngine> cpiCapFloorEngine;
-    boost::shared_ptr<PricingEngine> yoyCapFloorEngine;
-    boost::shared_ptr<PricingEngine> yoySwapEngine;
-    boost::shared_ptr<InflationCouponPricer> yoyCouponPricer;
+    QuantLib::ext::shared_ptr<PricingEngine> cpiCapFloorEngine;
+    QuantLib::ext::shared_ptr<PricingEngine> yoyCapFloorEngine;
+    QuantLib::ext::shared_ptr<PricingEngine> yoySwapEngine;
+    QuantLib::ext::shared_ptr<InflationCouponPricer> yoyCouponPricer;
 
     for (auto& ci : calibrationBasket) {
 
-        if (boost::shared_ptr<CpiCapFloorHelper> h = boost::dynamic_pointer_cast<CpiCapFloorHelper>(ci)) {
+        if (QuantLib::ext::shared_ptr<CpiCapFloorHelper> h = QuantLib::ext::dynamic_pointer_cast<CpiCapFloorHelper>(ci)) {
             if (!cpiCapFloorEngine) {
-                cpiCapFloorEngine = boost::make_shared<AnalyticJyCpiCapFloorEngine>(*model_, modelIdx);
+                cpiCapFloorEngine = QuantLib::ext::make_shared<AnalyticJyCpiCapFloorEngine>(*model_, modelIdx);
             }
             h->setPricingEngine(cpiCapFloorEngine);
             continue;
         }
 
-        if (boost::shared_ptr<YoYCapFloorHelper> h = boost::dynamic_pointer_cast<YoYCapFloorHelper>(ci)) {
+        if (QuantLib::ext::shared_ptr<YoYCapFloorHelper> h = QuantLib::ext::dynamic_pointer_cast<YoYCapFloorHelper>(ci)) {
             if (!yoyCapFloorEngine) {
                 yoyCapFloorEngine =
-                    boost::make_shared<AnalyticJyYoYCapFloorEngine>(*model_, modelIdx, indexIsInterpolated);
+                    QuantLib::ext::make_shared<AnalyticJyYoYCapFloorEngine>(*model_, modelIdx, indexIsInterpolated);
             }
             h->setPricingEngine(yoyCapFloorEngine);
             continue;
         }
 
-        if (boost::shared_ptr<YoYSwapHelper> h = boost::dynamic_pointer_cast<YoYSwapHelper>(ci)) {
+        if (QuantLib::ext::shared_ptr<YoYSwapHelper> h = QuantLib::ext::dynamic_pointer_cast<YoYSwapHelper>(ci)) {
             // Here we need to attach the coupon pricer to all the YoY coupons and then the generic discounting swap
             // engine to the helper.
             if (!yoyCouponPricer) {
-                yoyCouponPricer = boost::make_shared<JyYoYInflationCouponPricer>(*model_, modelIdx);
+                yoyCouponPricer = QuantLib::ext::make_shared<JyYoYInflationCouponPricer>(*model_, modelIdx);
 
                 Size irIdx = model_->ccyIndex(model_->infjy(modelIdx)->currency());
                 auto yts = model_->irlgm1f(irIdx)->termStructure();
-                yoySwapEngine = boost::make_shared<DiscountingSwapEngine>(yts);
+                yoySwapEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(yts);
             }
 
             const auto& yoyLeg = h->yoySwap()->yoyLeg();
             for (const auto& cf : yoyLeg) {
-                if (auto yoyCoupon = boost::dynamic_pointer_cast<YoYInflationCoupon>(cf))
+                if (auto yoyCoupon = QuantLib::ext::dynamic_pointer_cast<YoYInflationCoupon>(cf))
                     yoyCoupon->setPricer(yoyCouponPricer);
             }
 

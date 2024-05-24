@@ -1,10 +1,19 @@
 {
   "csv_settings": {
     "files": {
-      "scenario.csv": {
+      ".*npv.*\\.csv": {
         "keys": [
-          "Date", 
-		  "Scenario"
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "NPV",
+              "NPV(Base)"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
         ]
       }
     }

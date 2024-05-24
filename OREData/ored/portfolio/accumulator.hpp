@@ -39,7 +39,7 @@ class Accumulator : public ScriptedTrade {
 public:
     explicit Accumulator(const std::string& tradeType = "Accumulator") : ScriptedTrade(tradeType) {}
     Accumulator(const std::string& currency, const std::string& fixingAmount, const TradeStrike& strike,
-                const boost::shared_ptr<Underlying>& underlying, const OptionData& optionData,
+                const QuantLib::ext::shared_ptr<Underlying>& underlying, const OptionData& optionData,
                 const std::string& startDate, const ScheduleData& observationDates, const ScheduleData& pricingDates,
                 const ScheduleData& settlementDates, const std::string& settlementLag,
                 const std::string& settlementCalendar, const std::string& settlementConvention,
@@ -51,9 +51,10 @@ public:
           rangeBounds_(rangeBounds), barriers_(barriers) {
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    void setIsdaTaxonomyFields() override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     //! \name Inspectors
     //@{
@@ -64,7 +65,7 @@ private:
     void initIndices();
     std::string currency_, fixingAmount_;
     TradeStrike strike_;
-    boost::shared_ptr<Underlying> underlying_;
+    QuantLib::ext::shared_ptr<Underlying> underlying_;
     OptionData optionData_;
     std::string startDate_;
     ScheduleData observationDates_, pricingDates_, settlementDates_;

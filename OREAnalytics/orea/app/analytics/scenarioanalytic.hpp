@@ -30,39 +30,38 @@ class ScenarioAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "SCENARIO";
 
-    ScenarioAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    ScenarioAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : 
+        Analytic::Impl(inputs) {
+        setLabel(LABEL);
+    }
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 
-    const boost::shared_ptr<ore::analytics::Scenario>& scenario() const { return scenario_; };
-    void setScenario(const boost::shared_ptr<ore::analytics::Scenario>& scenario) { scenario_ = scenario; }
+    const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario() const { return scenario_; };
+    void setScenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario) { scenario_ = scenario; }
+    void setUseSpreadedTermStructures(const bool useSpreadedTermStructures) {
+        useSpreadedTermStructures_ = useSpreadedTermStructures;
+    }
 
-    const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& scenarioSimMarket() const {
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& scenarioSimMarket() const {
         return scenarioSimMarket_;
     };
-    void setScenarioSimMarket(const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& ssm) {
+    void setScenarioSimMarket(const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket>& ssm) {
         scenarioSimMarket_ = ssm;
     }
 
 private:
-    boost::shared_ptr<ore::analytics::Scenario> scenario_;
-    boost::shared_ptr<ore::analytics::ScenarioSimMarket> scenarioSimMarket_;
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> scenario_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> scenarioSimMarket_;
+    bool useSpreadedTermStructures_ = false;
 };
 
 class ScenarioAnalytic : public Analytic {
 public:
-    ScenarioAnalytic(const boost::shared_ptr<InputParameters>& inputs);
-
-    const boost::shared_ptr<ore::analytics::Scenario>& scenario() const {
-        auto sai = static_cast<ScenarioAnalyticImpl*>(impl_.get());
-        return sai->scenario();
-    };
-
-    const boost::shared_ptr<ore::analytics::ScenarioSimMarket>& scenarioSimMarket() const {
-        auto sai = static_cast<ScenarioAnalyticImpl*>(impl_.get());
-        return sai->scenarioSimMarket();
-    };
+    ScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs), {"SCENARIO"}, inputs,
+                   true, false, false, false) {}
 };
 
 } // namespace analytics

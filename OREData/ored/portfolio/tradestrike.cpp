@@ -83,11 +83,11 @@ void TradeStrike::fromXML(XMLNode* node, const bool isRequired, const bool allow
     }
 }
 
-XMLNode* TradeStrike::toXML(XMLDocument& doc) {
+XMLNode* TradeStrike::toXML(XMLDocument& doc) const {
     XMLNode* node;
     if (onlyStrike_) {
         // can only happen for a StrikePrice
-        auto sp = strikePrice();
+        auto sp = QuantLib::ext::get<StrikePrice>(strike_);
         node = doc.allocNode("Strike", boost::lexical_cast<std::string>(sp.valueString()));
     } else {
         node = doc.allocNode("StrikeData");
@@ -139,7 +139,7 @@ void TradeStrike::setCurrency(const std::string& currency) {
     strikePrice().setCurrency(currency);
 }
 
-const bool TradeStrike::empty() {
+const bool TradeStrike::empty() const {
     try {      
         return value() == Null<Real>();
     } catch (...) {

@@ -35,7 +35,7 @@ namespace data {
 class MultiLegOptionEngineBuilderBase
     : public CachingPricingEngineBuilder<string, const string&, const std::vector<Date>&, const Date&,
                                          const std::vector<Currency>&, const std::vector<Date>&,
-                                         const std::vector<boost::shared_ptr<QuantLib::InterestRateIndex>>&> {
+                                         const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>&> {
 public:
     MultiLegOptionEngineBuilderBase(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"MultiLegOption"}) {}
@@ -43,7 +43,7 @@ public:
 protected:
     string keyImpl(const string& id, const std::vector<Date>& exDates, const Date& maturityDate,
                    const std::vector<Currency>& currencies, const std::vector<Date>& fixingDates,
-                   const std::vector<boost::shared_ptr<QuantLib::InterestRateIndex>>& indexes) override {
+                   const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexes) override {
         return id;
     }
 };
@@ -54,10 +54,10 @@ public:
     CamMcMultiLegOptionEngineBuilder() : MultiLegOptionEngineBuilderBase("CrossAssetModel", "MC") {}
 
 protected:
-    boost::shared_ptr<PricingEngine>
+    QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const std::vector<Date>& exDates, const Date& maturityDate,
                const std::vector<Currency>& currencies, const std::vector<Date>& fixingDates,
-               const std::vector<boost::shared_ptr<QuantLib::InterestRateIndex>>& indexes) override;
+               const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexes) override;
 
 private:
     std::string getCcyValue(const std::string& s, const std::string& c, const bool mandatory);
@@ -67,7 +67,7 @@ private:
 class CamAmcMultiLegOptionEngineBuilder : public MultiLegOptionEngineBuilderBase {
 public:
     // for external cam, with additional simulation dates (AMC)
-    CamAmcMultiLegOptionEngineBuilder(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+    CamAmcMultiLegOptionEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                       const std::vector<Date>& simulationDates)
         : MultiLegOptionEngineBuilderBase("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
 
@@ -75,7 +75,7 @@ protected:
     // the pricing engine depends on the ccys only
     string keyImpl(const string& id, const std::vector<Date>& exDates, const Date& maturityDate,
                    const std::vector<Currency>& currencies, const std::vector<Date>& fixingDates,
-                   const std::vector<boost::shared_ptr<QuantLib::InterestRateIndex>>& indexes) override {
+                   const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexes) override {
         std::string res;
         for (auto const& c : currencies) {
             res += c.code() + "_";
@@ -83,13 +83,13 @@ protected:
         return res;
     }
 
-    boost::shared_ptr<PricingEngine>
+    QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const std::vector<Date>& exDates, const Date& maturityDate,
                const std::vector<Currency>& currencies, const std::vector<Date>& fixingDates,
-               const std::vector<boost::shared_ptr<QuantLib::InterestRateIndex>>& indexes) override;
+               const std::vector<QuantLib::ext::shared_ptr<QuantLib::InterestRateIndex>>& indexes) override;
 
 private:
-    const boost::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
 };
 

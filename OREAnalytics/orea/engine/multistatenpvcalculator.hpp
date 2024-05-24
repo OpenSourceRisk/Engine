@@ -37,17 +37,17 @@ public:
     MultiStateNPVCalculator(const std::string& baseCcyCode, Size index, Size states)
         : NPVCalculator(baseCcyCode, index), states_(states) {}
 
-    void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                   const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                   boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex, Size sample,
+    void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                   const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                   QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex, Size sample,
                    bool isCloseOut = false) override;
 
-    void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                     const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                     boost::shared_ptr<NPVCube>& outputCubeNettingSet) override;
+    void calculateT0(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
+                     const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
+                     QuantLib::ext::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
-    std::vector<Real> multiStateNpv(Size tradeIndex, const boost::shared_ptr<Trade>& trade,
-                                    const boost::shared_ptr<SimMarket>& simMarket);
+    std::vector<Real> multiStateNpv(Size tradeIndex, const QuantLib::ext::shared_ptr<Trade>& trade,
+                                    const QuantLib::ext::shared_ptr<SimMarket>& simMarket);
 
 protected:
     Size states_;

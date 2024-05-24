@@ -29,7 +29,7 @@
 namespace ore::data {
 
 QuantLib::Leg makeNonStandardIborLeg(
-    const boost::shared_ptr<QuantLib::IborIndex>& index, const std::vector<QuantLib::Date>& calcDates,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index, const std::vector<QuantLib::Date>& calcDates,
     const std::vector<QuantLib::Date>& payDates, const std::vector<QuantLib::Date>& fixingDates,
     const std::vector<QuantLib::Date>& resetDates, const QuantLib::Size fixingDays,
     const std::vector<QuantLib::Real>& notionals, const std::vector<QuantLib::Date>& notionalDates,

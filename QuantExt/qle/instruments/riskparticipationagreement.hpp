@@ -42,8 +42,9 @@ public:
                                const bool protectionFeePayer, const std::vector<std::string>& protectionFeeCcys,
                                const Real participationRate, const Date& protectionStart, const Date& protectionEnd,
                                const bool settlesAccrual, const Real fixedRecoveryRate = Null<Real>(),
-                               const boost::shared_ptr<QuantLib::Exercise>& exercise = nullptr,
-                               const bool exerciseIsLong = false, const bool nakedOption = false);
+                               const QuantLib::ext::shared_ptr<QuantLib::Exercise>& exercise = nullptr,
+                               const bool exerciseIsLong = false, const std::vector<QuantLib::ext::shared_ptr<CashFlow>>& premium = std::vector<QuantLib::ext::shared_ptr<CashFlow>>(),
+                               const bool nakedOption = false);
     //! Instrument interface
     bool isExpired() const override;
 
@@ -59,7 +60,7 @@ public:
     const Date& protectionEnd() const { return protectionEnd_; }
     bool settlesAccrual() const { return settlesAccrual_; }
     Real fixedRecoveryRate() const { return fixedRecoveryRate_; }
-    const boost::shared_ptr<Exercise>& exercise() const { return exercise_; }
+    const QuantLib::ext::shared_ptr<Exercise>& exercise() const { return exercise_; }
     const bool nakedOption() const { return nakedOption_; }
     //
     const Date& maturity() const { return maturity_; }
@@ -80,8 +81,9 @@ private:
     const Date protectionStart_, protectionEnd_;
     const bool settlesAccrual_;
     const Real fixedRecoveryRate_;
-    const boost::shared_ptr<Exercise> exercise_;
+    const QuantLib::ext::shared_ptr<Exercise> exercise_;
     const bool exerciseIsLong_;
+    const std::vector<QuantLib::ext::shared_ptr<CashFlow>> premium_;
     const bool nakedOption_;
 
     //
@@ -90,7 +92,7 @@ private:
     // this might or might not be populated / used by an engine
     mutable Date optionRepresentationReferenceDate_;
     mutable std::vector<std::tuple<Date, Date, Date>> optionRepresentationPeriods_;
-    mutable std::vector<boost::shared_ptr<Instrument>> optionRepresentation_;
+    mutable std::vector<QuantLib::ext::shared_ptr<Instrument>> optionRepresentation_;
     mutable std::vector<Real> optionMultiplier_;
 };
 
@@ -108,10 +110,11 @@ public:
     Date protectionStart, protectionEnd, underlyingMaturity;
     bool settlesAccrual;
     Real fixedRecoveryRate;
-    boost::shared_ptr<Exercise> exercise;
+    QuantLib::ext::shared_ptr<Exercise> exercise;
     bool exerciseIsLong;
+    std::vector<QuantLib::ext::shared_ptr<CashFlow>> premium;
     bool nakedOption;
-    std::vector<boost::shared_ptr<Instrument>> optionRepresentation;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> optionRepresentation;
     std::vector<Real> optionMultiplier;
     std::vector<std::tuple<Date, Date, Date>> optionRepresentationPeriods;
     Date optionRepresentationReferenceDate;
@@ -119,7 +122,7 @@ public:
 
 class RiskParticipationAgreement::results : public Instrument::results {
 public:
-    std::vector<boost::shared_ptr<Instrument>> optionRepresentation;
+    std::vector<QuantLib::ext::shared_ptr<Instrument>> optionRepresentation;
     std::vector<Real> optionMultiplier;
     std::vector<std::tuple<Date, Date, Date>> optionRepresentationPeriods;
     Date optionRepresentationReferenceDate;

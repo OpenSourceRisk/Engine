@@ -31,7 +31,7 @@ namespace QuantExt {
 class IborFraCoupon : public QuantLib::IborCoupon {
 public:
     IborFraCoupon(const QuantLib::Date& startDate, const QuantLib::Date& endDate, QuantLib::Real nominal,
-                  const boost::shared_ptr<QuantLib::IborIndex>& index, const double strikeRate);
+                  const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index, const double strikeRate);
 
     QuantLib::Real amount() const override;
 };

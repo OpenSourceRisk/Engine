@@ -220,7 +220,7 @@ namespace data {
 
 // clang-format on
 
-void Accumulator::build(const boost::shared_ptr<EngineFactory>& factory) {
+void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -412,6 +412,10 @@ void Accumulator::build(const boost::shared_ptr<EngineFactory>& factory) {
     // build trade
 
     ScriptedTrade::build(factory);
+}
+
+void Accumulator::setIsdaTaxonomyFields() {
+    ScriptedTrade::setIsdaTaxonomyFields();
 
     // ISDA taxonomy, asset class set in the base class build
     // asset class set in the base class already
@@ -480,7 +484,7 @@ void Accumulator::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* Accumulator::toXML(XMLDocument& doc) {
+XMLNode* Accumulator::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, dataNode);
