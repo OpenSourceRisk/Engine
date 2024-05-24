@@ -40,12 +40,12 @@ class CommoditySpreadOption : public Option {
 public:
     class arguments;
     class engine;
-    CommoditySpreadOption(const boost::shared_ptr<CommodityCashFlow>& longAssetCashflow,
-                          const boost::shared_ptr<CommodityCashFlow>& shortAssetCashflow,
+    CommoditySpreadOption(const QuantLib::ext::shared_ptr<CommodityCashFlow>& longAssetCashflow,
+                          const QuantLib::ext::shared_ptr<CommodityCashFlow>& shortAssetCashflow,
                           const ext::shared_ptr<Exercise>& exercise, const Real quantity, const Real strikePrice,
                           Option::Type type, const QuantLib::Date& paymentDate = Date(),
-                          const boost::shared_ptr<FxIndex>& longAssetFxIndex = nullptr,
-                          const boost::shared_ptr<FxIndex>& shortAssetFxIndex = nullptr,
+                          const QuantLib::ext::shared_ptr<FxIndex>& longAssetFxIndex = nullptr,
+                          const QuantLib::ext::shared_ptr<FxIndex>& shortAssetFxIndex = nullptr,
                           Settlement::Type delivery = Settlement::Physical,
                           Settlement::Method settlementMethod = Settlement::PhysicalOTC);
           
@@ -58,11 +58,11 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<CommodityCashFlow>& underlyingLongAssetFlow() const { return longAssetFlow_; }
-    const boost::shared_ptr<CommodityCashFlow>& underlyingShortAssetFlow() const { return shortAssetFlow_; }
+    const QuantLib::ext::shared_ptr<CommodityCashFlow>& underlyingLongAssetFlow() const { return longAssetFlow_; }
+    const QuantLib::ext::shared_ptr<CommodityCashFlow>& underlyingShortAssetFlow() const { return shortAssetFlow_; }
 
-    const boost::shared_ptr<FxIndex>& longAssetFxIndex() const { return longAssetFxIndex_; }
-    const boost::shared_ptr<FxIndex>& shortAssetFxIndex() const { return shortAssetFxIndex_; }
+    const QuantLib::ext::shared_ptr<FxIndex>& longAssetFxIndex() const { return longAssetFxIndex_; }
+    const QuantLib::ext::shared_ptr<FxIndex>& shortAssetFxIndex() const { return shortAssetFxIndex_; }
     Real effectiveStrike() const;
     //@}
 
@@ -70,14 +70,14 @@ public:
 
 private:
     // arguments
-    boost::shared_ptr<CommodityCashFlow> longAssetFlow_;
-    boost::shared_ptr<CommodityCashFlow> shortAssetFlow_;
+    QuantLib::ext::shared_ptr<CommodityCashFlow> longAssetFlow_;
+    QuantLib::ext::shared_ptr<CommodityCashFlow> shortAssetFlow_;
     Real quantity_;
     Real strikePrice_;
     Option::Type type_;
     Date paymentDate_;
-    boost::shared_ptr<FxIndex> longAssetFxIndex_;
-    boost::shared_ptr<FxIndex> shortAssetFxIndex_;
+    QuantLib::ext::shared_ptr<FxIndex> longAssetFxIndex_;
+    QuantLib::ext::shared_ptr<FxIndex> shortAssetFxIndex_;
     QuantLib::Settlement::Type settlementType_;
     QuantLib::Settlement::Method settlementMethod_;
 };
@@ -86,15 +86,15 @@ private:
 class CommoditySpreadOption::arguments : public Option::arguments {
 public:
     arguments();
-    boost::shared_ptr<CommodityCashFlow> longAssetFlow;
-    boost::shared_ptr<CommodityCashFlow> shortAssetFlow;
+    QuantLib::ext::shared_ptr<CommodityCashFlow> longAssetFlow;
+    QuantLib::ext::shared_ptr<CommodityCashFlow> shortAssetFlow;
     Real quantity;
     Real strikePrice;
     Real effectiveStrike;
     Option::Type type;
     Date paymentDate;
-    boost::shared_ptr<FxIndex> longAssetFxIndex;
-    boost::shared_ptr<FxIndex> shortAssetFxIndex;
+    QuantLib::ext::shared_ptr<FxIndex> longAssetFxIndex;
+    QuantLib::ext::shared_ptr<FxIndex> shortAssetFxIndex;
     bool isCalendarSpread;
     Date longAssetLastPricingDate;
     Date shortAssetLastPricingDate;

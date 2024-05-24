@@ -1,0 +1,156 @@
+\subsubsection{Flexi Swap}
+
+A Flexi Swap is an amortizing swap in which one party has the option to further 
+reduce the notional in each period to each value between the current notional and 
+a specified lower bound for that period.
+
+Flexi Swaps are priced in ORE following the Replication Approach described in (F. Jamshidian, 2005). The replicating basket of
+Bermudan Swaptions is priced using the method as described under Product Type ``Bermudan Swaption'', but using one
+global calibration for all swaptions derived from the flexi swap structure.
+Prepayment option types ``ReductionByAbsoluteAmount'' and ``ReductionUpToAbsoluteAmount'' are both treated approximately
+by generating a schedule of deterministic, lower notional bounds from assuming that all earlier prepayment options
+were executed.
+
+The \lstinline!FlexiSwapData! node is the trade data container for trade type Flexi Swap. A Flexi Swap is a two-legged
+swap with optional and customisable pre-payments. Flexi Swaps are typically used for representing swaps linked to Asset
+Backed Securities with flexible amortisation. A Flexi Swap must have two legs, one fixed and one floating. The floating
+leg must have a pay frequency that is a multiple of the fixed leg frequency and corresponding floating and fixed leg
+periods must have the same notional. The legs typically have an amortising notional and are represented by
+\lstinline!LegData! trade component sub-nodes, described in section \ref{ss:leg_data}. The \lstinline!FlexiSwapData!
+node also contains a \lstinline!OptionLongShort! node indicating the holder of the prepayment option and a node
+describing the optional prepayments, see below.
+
+An example structure of a \lstinline!FlexiSwapData! node is shown in Listing \ref{lst:flexiswap_data}. In this case the
+optional pre-payments are given by a subnode \lstinline!LowerNotionalBounds!  meaning that the notional of the swap can
+be reduced to any value between the given lower bound and the original notional in each fixed leg period.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<FlexiSwapData>
+  <LowerNotionalBounds>
+        <Notional>451389557.145667</Notional>
+        <Notional>427876791.621303</Notional>
+        <Notional>404435982.369285</Notional>
+        <Notional>379353200.32956</Notional>
+        ...
+  </LowerNotionalBounds>
+  <OptionLongShort>Short</OptionLongShort>
+  <LegData>
+    <LegType>Fixed</LegType>
+    ...
+  </LegData>
+  <LegData>
+    <LegType>Floating</LegType>
+    ...
+  </LegData>
+</FlexiSwapData>
+\end{minted}
+\caption{Flexi Swap data}
+\label{lst:flexiswap_data}
+\end{listing}
+
+Alternatively the optional pre-payments can be described by a subnode \lstinline!NotionalDecreases! which is more
+general than the description via LowerNotionalBounds (using the reduction type RedutionToLowerBound, see below for more
+details on this), see Listing \ref{lst:flexiswap_data2} for an example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<FlexiSwapData>
+  <Prepayment>
+    <NoticePeriod>5D</NoticePeriod>
+    <NoticeCalendar>TARGET</NoticeCalendar>
+    <NoticeConvention>F</NoticePeriod>
+    <PrepaymentOptions>
+      <PrepaymentOption>
+        <ExerciseDate>2015-02-01</ExerciseDate>
+        <Type>ReductionUpToLowerBound</Type>
+        <Value>404435982.369285</Value>
+      </PrepaymentOption>
+      <PrepaymentOption>
+        <ExerciseDate>2016-02-01</ExerciseDate>
+        <Type>ReductionByAbsoluteAmount</Type>
+        <Value>100000.0</Value>
+      </PrepaymentOption>
+      <PrepaymentOption>
+        <ExerciseDate>2017-02-01</ExerciseDate>
+        <Type>ReductionUpToAbsoluteAmount</Type>
+        <Value>50000.0</Value>
+      </PrepaymentOption>
+    <PrepaymentOptions>
+  </Prepayment>
+  <OptionLongShort>Short</OptionLongShort>
+  <LegData>
+    <LegType>Fixed</LegType>
+    ...
+  </LegData>
+  <LegData>
+    <LegType>Floating</LegType>
+    ...
+  </LegData>
+</FlexiSwapData>
+\end{minted}
+\caption{Flexi Swap data}
+\label{lst:flexiswap_data2}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!FlexiSwapData!  node follow below.
+
+\begin{itemize}
+
+\item OptionLongShort: Specifies which party has the right to pre-pay the notional down to the lower notional
+  bound. \emph{Short} means that for pricing purposes pre-payments are assumed to be done in such a way to maximise the
+  value of the Flexi Swap for the ``other'' counterparty, \emph{Long} means that the Flexi Swap value is maximised from
+  ``our'' point of view.
+
+Allowable values: \emph{Long} or \emph{Short}
+
+\item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data}. A Flexi Swap must have two
+  \lstinline!LegData! nodes and the LegType element must be set to \emph{Floating} on one leg and \emph{Fixed} on the
+  other. The two legs must have the same \lstinline!Currency!. The float leg pay frequency must be a multiple of the
+  fixed leg frequency.
+
+\end{itemize}
+
+The optional prepayments are described by either a \verb+LowerNotionalBounds+ node or a \verb+Prepyment+ node.
+
+In case the optional prepayments are described by a \verb+LowerNotionalBounds+ node, the minimum level to which the
+notional can be amortised down to must be given as a notional schedule. The schedule can be specified as described in
+\ref{ss:leg_data}, i.e. using a sequence of \verb+Notional+ subnodes or using the \verb+startDate+ attribute to specify
+notional changes. The given schedule must be given for the fixed leg periods since the notional can be decreased for
+each whole fixed leg period and the corresponding floating leg periods (remember that the floating leg frequency must be
+a multiple of the fixed leg frequency). Each lower notional bound child element can take a positive real number that
+cannot exceed the notional amount of the corresponding coupon period on either leg and (from the second fixed coupon
+period on) the lower notional bound of the previous coupon period.
+
+In case the optional prepayments are described by a \verb+Prepayment+ node, the the single exercise opportunities are
+described by a \verb+PrepaymentOptions+ subnode that contains one or several \verb+PerpaymentOption+ subnodes, each of
+which comprises the following elements:
+
+\begin{itemize}
+\item ExerciseDate: The date on which the notional can be decreased.
+\item Type: The type of the allowed notional reduction. The allowable types are
+  \begin{itemize}
+    \item ReductionUpTpLowerBound: The notional can be reduced to any value between the current notional and the
+      lower bound given in the Value node.
+    \item ReductionByAbsoluteAmount: The notional can be reduced by an absolute amount given in the Value node. If this
+      value is greater than the current notional, the reduction amount is equal to the current notional.
+    \item ReductionUpToAbsoluteAmount: The notional can be reduced by any value between zero and a
+      given absolute amount (given in the Value node).
+  \end{itemize}
+\item Value: The value that together with the type describes the amount by which the notional can be decreased.
+\end{itemize}
+
+In addition the \verb+Prepayment+ node contains the following optional subnodes describing the conventions for deriving
+the option notice date from the exercise date:
+
+\begin{itemize}
+\item NoticePeriod [Optional]: The notice period defining the date (relative to the exercise date) on which the exercise
+  decision has to be taken. If not given the notice period defaults to 0D, i.e. the notice date is identical to the
+  exercise date.
+\item NoticeCalendar [Optional]: The calendar used to compute the notice date from the exercise date. If not given
+  defaults to the null calendar (no holidays, weekends are no holidays either).
+\item NoticeConvention [Optional]: The convention used to compute the notice date from the exercise date. Defaults to
+  Unadjusted if not given.
+\end{itemize}

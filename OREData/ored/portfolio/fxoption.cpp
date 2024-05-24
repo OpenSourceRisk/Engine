@@ -38,10 +38,21 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Vanilla Option");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
+    additionalData_["boughtCurrency"] = assetName_;
+    additionalData_["boughtAmount"] = quantity_;
+    additionalData_["soldCurrency"] = currency_;
+    additionalData_["soldAmount"] = quantity_ * strike_.value();
 
     QuantLib::Date today = Settings::instance().evaluationDate();
-    const boost::shared_ptr<Market>& market = engineFactory->market();
+    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
 
     // If automatic exercise, check that we have a non-empty FX index string, parse it and attach curves from market.
     if (option_.isAutomaticExercise()) {
@@ -105,28 +116,13 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             }
             forwardDate_ = paymentDate;
             paymentDate_ = paymentDate;
-            VanillaOptionTrade::build(engineFactory);
-
-        } else {
-            // Build the trade using the shared functionality in the base class.
-            VanillaOptionTrade::build(engineFactory);
         }
+        // Build the trade using the shared functionality in the base class.
+        VanillaOptionTrade::build(engineFactory);
         maturity_ = paymentDate;
     } else {
         VanillaOptionTrade::build(engineFactory);
     }
-    
-    
-    additionalData_["boughtCurrency"] = assetName_; 
-    additionalData_["boughtAmount"] = quantity_;
-    additionalData_["soldCurrency"] = currency_;
-    additionalData_["soldAmount"] = quantity_ * strike_.value();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string("Vanilla Option");
-    additionalData_["isdaSubProduct"] = string("");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void FxOption::fromXML(XMLNode* node) {
@@ -145,7 +141,7 @@ void FxOption::fromXML(XMLNode* node) {
     QL_REQUIRE(soldAmount > 0.0, "positive SoldAmount required");
 }
 
-XMLNode* FxOption::toXML(XMLDocument& doc) {
+XMLNode* FxOption::toXML(XMLDocument& doc) const {
     // TODO: Should call parent class to xml?
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxOptionData");

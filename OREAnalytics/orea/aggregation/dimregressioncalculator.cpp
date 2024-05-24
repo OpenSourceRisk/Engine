@@ -21,7 +21,6 @@
 #include <ored/utilities/vectorutils.hpp>
 #include <ql/errors.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
-#include <ql/version.hpp>
 
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
@@ -46,10 +45,10 @@ namespace ore {
 namespace analytics {
 
 RegressionDynamicInitialMarginCalculator::RegressionDynamicInitialMarginCalculator(
-    const boost::shared_ptr<InputParameters>& inputs,
-    const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NPVCube>& cube,
-    const boost::shared_ptr<CubeInterpretation>& cubeInterpretation,
-    const boost::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays,
+    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NPVCube>& cube,
+    const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
+    const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData, Real quantile, Size horizonCalendarDays,
     Size regressionOrder, std::vector<std::string> regressors, Size localRegressionEvaluations,
     Real localRegressionBandWidth, const std::map<std::string, Real>& currentIM)
 : DynamicInitialMarginCalculator(inputs, portfolio, cube, cubeInterpretation, scenarioData, quantile, horizonCalendarDays,
@@ -109,13 +108,8 @@ void RegressionDynamicInitialMarginCalculator::build() {
     LsmBasisSystem::PolynomialType polynomType = LsmBasisSystem::Monomial;
     Size regressionDimension = regressors_.empty() ? 1 : regressors_.size();
     LOG("DIM regression dimension = " << regressionDimension);
-#if QL_HEX_VERSION > 0x01150000
     std::vector<ext::function<Real(Array)>> v(
         LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
-#else // QL 1.14 and below
-    std::vector<boost::function1<Real, Array>> v(
-        LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
-#endif
     Real confidenceLevel = QuantLib::InverseCumulativeNormal()(quantile_);
     LOG("DIM confidence level " << confidenceLevel);
 
@@ -402,7 +396,7 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
     return t0dimReg;
 }
 
-void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) {
+void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Report& dimEvolutionReport) const {
 
     Size samples = dimCube_->samples();
     Size stopDatesLoop = datesLoopSize_;
@@ -424,7 +418,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
         for (Size i = 0; i < stopDatesLoop; ++i) {
             Real expectedFlow = 0.0;
             for (Size j = 0; j < samples; ++j) {
-                expectedFlow += nettingSetFLOW_[nettingSet][i][j] / samples;
+                expectedFlow += nettingSetFLOW_.find(nettingSet)->second[i][j] / samples;
             }
 
             Date defaultDate = dimCube_->dates()[i];
@@ -434,10 +428,10 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
                 .add(i)
                 .add(defaultDate)
                 .add(days)
-                .add(nettingSetZeroOrderDIM_[nettingSet][i])
-                .add(nettingSetExpectedDIM_[nettingSet][i])
+                .add(nettingSetZeroOrderDIM_.find(nettingSet)->second[i])
+                .add(nettingSetExpectedDIM_.find(nettingSet)->second[i])
                 .add(expectedFlow)
-                .add(nettingSetSimpleDIMh_[nettingSet][i])
+                .add(nettingSetSimpleDIMh_.find(nettingSet)->second[i])
                 .add(nettingSet)
                 .add(t);
         }
@@ -448,7 +442,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
 
 void RegressionDynamicInitialMarginCalculator::exportDimRegression(
     const std::string& nettingSet, const std::vector<Size>& timeSteps,
-    const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports) {
+    const std::vector<QuantLib::ext::shared_ptr<ore::data::Report>>& dimRegReports) {
 
     QL_REQUIRE(dimRegReports.size() == timeSteps.size(),
                "number of file names (" << dimRegReports.size() << ") does not match number of time steps ("
@@ -480,7 +474,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimRegression(
         vector<Real> delta = apply_permutation(nettingSetDeltaNPV_[nettingSet][timeStep], p);
         vector<Real> num = apply_permutation(numeraires, p);
 
-        boost::shared_ptr<ore::data::Report> regReport = dimRegReports[ii];
+        QuantLib::ext::shared_ptr<ore::data::Report> regReport = dimRegReports[ii];
         regReport->addColumn("Sample", Size());
         for (Size k = 0; k < reg[0].size(); ++k) {
             ostringstream o;

@@ -110,7 +110,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! Automatic exercise assumed false if not explicitly provided.
@@ -154,7 +154,7 @@ public:
                     bool removeNoticeDatesAfterLastAccrualStart = true);
 
     // null if exercsied or no alive exercise dates
-    boost::shared_ptr<QuantLib::Exercise> exercise() const { return exercise_; }
+    QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise() const { return exercise_; }
     // exercise dates associated to alive notice dates, for American style -> only start, end exercise date
     const std::vector<QuantLib::Date>& exerciseDates() const { return exerciseDates_; }
     /* alive notice dates (w.r.t. global eval date), for American style -> only start, end notice date */
@@ -165,20 +165,20 @@ public:
     // only for exercised option: The applicable exercise date
     const QuantLib::Date& exerciseDate() const { return exerciseDate_; }
     // only for exercised options: cash settlement amount or null
-    boost::shared_ptr<QuantLib::CashFlow> cashSettlement() const { return cashSettlement_; }
+    QuantLib::ext::shared_ptr<QuantLib::CashFlow> cashSettlement() const { return cashSettlement_; }
     // only for exercised options: exercise fee amount or null
-    boost::shared_ptr<QuantLib::CashFlow> feeSettlement() const { return feeSettlement_; }
+    QuantLib::ext::shared_ptr<QuantLib::CashFlow> feeSettlement() const { return feeSettlement_; }
 
 private:
-    boost::shared_ptr<QuantLib::Exercise> exercise_;
+    QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise_;
 
     std::vector<QuantLib::Date> exerciseDates_;
     std::vector<QuantLib::Date> noticeDates_;
 
     bool isExercised_ = false;
     QuantLib::Date exerciseDate_;
-    boost::shared_ptr<QuantLib::CashFlow> cashSettlement_;
-    boost::shared_ptr<QuantLib::CashFlow> feeSettlement_;
+    QuantLib::ext::shared_ptr<QuantLib::CashFlow> cashSettlement_;
+    QuantLib::ext::shared_ptr<QuantLib::CashFlow> feeSettlement_;
 
     // index in all exercise date vector if exercised
     Size exerciseDateIndex_ = QuantLib::Null<QuantLib::Size>();

@@ -52,11 +52,11 @@ public:
         QuantLib::Natural futureMonthOffset = 0, QuantLib::Natural deliveryRollDays = 0, bool includePeriodEnd = true,
         const BarrierData& barrierData = {}, const std::string& fxIndex = "");
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) override;
 
     //! Add underlying Commodity names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! \name Inspectors
     //@{
@@ -87,7 +87,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(ore::data::XMLNode* node) override;
-    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
     //! \name Trade

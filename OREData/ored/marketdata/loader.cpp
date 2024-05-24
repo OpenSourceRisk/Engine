@@ -21,7 +21,7 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<MarketDatum> Loader::get(const std::string& name, const QuantLib::Date& d) const {
+QuantLib::ext::shared_ptr<MarketDatum> Loader::get(const std::string& name, const QuantLib::Date& d) const {
     for (const auto& md : loadQuotes(d)) {
         if (md->name() == name)
             return md;
@@ -29,9 +29,9 @@ boost::shared_ptr<MarketDatum> Loader::get(const std::string& name, const QuantL
     QL_FAIL("No MarketDatum for name " << name << " and date " << d);
 }
 
-std::set<boost::shared_ptr<MarketDatum>> Loader::get(const std::set<std::string>& names,
+std::set<QuantLib::ext::shared_ptr<MarketDatum>> Loader::get(const std::set<std::string>& names,
                                                      const QuantLib::Date& asof) const {
-    std::set<boost::shared_ptr<MarketDatum>> result;
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>> result;
     for (auto const& md : loadQuotes(asof)) {
         if (names.find(md->name()) != names.end()) {
             result.insert(md);
@@ -40,8 +40,8 @@ std::set<boost::shared_ptr<MarketDatum>> Loader::get(const std::set<std::string>
     return result;
 }
 
-std::set<boost::shared_ptr<MarketDatum>> Loader::get(const Wildcard& wildcard, const QuantLib::Date& asof) const {
-    std::set<boost::shared_ptr<MarketDatum>> result;
+std::set<QuantLib::ext::shared_ptr<MarketDatum>> Loader::get(const Wildcard& wildcard, const QuantLib::Date& asof) const {
+    std::set<QuantLib::ext::shared_ptr<MarketDatum>> result;
     for (auto const& md : loadQuotes(asof)) {
         if (wildcard.matches(md->name())) {
             result.insert(md);
@@ -66,7 +66,7 @@ bool Loader::hasQuotes(const QuantLib::Date& d) const {
     }
 }
 
-boost::shared_ptr<MarketDatum> Loader::get(const std::pair<std::string, bool>& name, const QuantLib::Date& d) const {
+QuantLib::ext::shared_ptr<MarketDatum> Loader::get(const std::pair<std::string, bool>& name, const QuantLib::Date& d) const {
     if (has(name.first, d)) {
         return get(name.first, d);
     } else {
@@ -74,12 +74,27 @@ boost::shared_ptr<MarketDatum> Loader::get(const std::pair<std::string, bool>& n
         if (name.second) {
             DLOG("Could not find quote for ID " << name.first << " with as of date " << QuantLib::io::iso_date(originalDate)
                                                 << ".");
-            return boost::shared_ptr<MarketDatum>();
+            return QuantLib::ext::shared_ptr<MarketDatum>();
         } else {
             QL_FAIL("Could not find quote for Mandatory ID " << name.first << " with as of date "
                                                              << QuantLib::io::iso_date(originalDate));
         }
     }
+}
+
+std::pair<bool, string> Loader::checkFxDuplicate(const ext::shared_ptr<MarketDatum> md, const QuantLib::Date& d) {
+    string cc1 = ext::dynamic_pointer_cast<FXSpotQuote>(md)->unitCcy();
+    string cc2 = ext::dynamic_pointer_cast<FXSpotQuote>(md)->ccy();
+    string tmp = "FX/RATE/" + cc2 + "/" + cc1;
+    if (Loader::has(tmp, d)) {
+        string dom = fxDominance(cc1, cc2);
+        if (dom == (cc1 + cc2)) {
+            return {true, tmp};
+        } else {
+            return {false, ""};
+        }
+    }
+    return {true, ""};
 }
 
 bool Loader::hasFixing(const string& name, const QuantLib::Date& d) const {

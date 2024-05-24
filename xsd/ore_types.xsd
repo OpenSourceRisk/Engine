@@ -270,7 +270,9 @@
 				<xs:enumeration value="GBp" />
 				<xs:enumeration value="GBX" />
 				<xs:enumeration value="ILa" />
+                <xs:enumeration value="ILA" />
 				<xs:enumeration value="ILX" />
+                <xs:enumeration value="ILs" />
 				<xs:enumeration value="KWf" />
 				<xs:enumeration value="ZAc" />
 				<xs:enumeration value="ZAC" />
@@ -321,7 +323,7 @@
 
   <xs:simpleType name="calendar">
     <xs:restriction base="xs:string">
-      <xs:pattern value="(JoinHolidays\(|JoinBusinessDays\()?((,)?(, )?(^)?(TGT|TARGET|CN-IB|US-FED|US-GOV|US-NERC|US-NYSE|US-SET||Australia|Australia settlement|Botswana|Brazil|Canada|Denmark|Hungary|Japan|Norway|Switzerland|Sweden|Belgium|Finland|Luxembourg|Spain|Austria|Romania|Poland|New Zealand|FRA|CATO|CHZU|JPTO|GBLO|SEST|TRIS|USNY|EUTA|BEBR|AE|AT|AR|AU|BW|BR|CA|CL|CN|CO|CZ|DK|FI|FR|DE|HK|HU|IE|IS|IN|ID|IL|IT|JE|JP|MX|MY|NL|NO|NZ|PE|PH|PL|RO|RU|SG|ZA|KR|SE|CH|TW|TH|TR|UA|GB|US|BE|LU|ES|ARE|ARG|AUS|BWA|BRA|CAN|CHL|CHN|COL|CZE|DNK|FIN|DEU|HKG|HUN|ISL|IND|IDN|ISR|ITA|JOD|JPN|KES|LKR|MEX|MUR|MYS|NLD|NOR|NZL|PER|PHL|POL|ROU|RSD|RUS|SAU|SGP|UGX|ZAF|ZMW|KOR|SWE|CHE|TWN|THA|TUR|UKR|GBR|USA|BEL|LUX|ESP|AUT|ARS|AUD|BGN|BWP|BRL|CAD|CLP|CNH|CNY|COP|CZK|DKK|FRF|GHS|HKD|HRK|HUF|INR|IDR|ILS|IRL|ISK|ITL|JPY|MXN|MYR|NOK|NZD|PEN|PHP|PLN|RON|RUB|SAR|SGD|ZAR|KRW|SEK|CHF|EUR|TWD|THB|TRY|UAH|GBP|USD|BEF|LUF|ATS|AED|BHD|CLF|EGP|KWD|KZT|MAD|MXV|NGN|OMR|PKR|QAR|UYU|TND|AOA|GEL|ETB|XOF|VND|GBp|GBX|ILa|ILX|ZAc|ZAC|ZAX|XASX|BVMF|XTSE|XSHG|XFRA|XDUB|XETR|ECAG|EUWA|XJKT|XIDX|XTAE|XMIL|MISX|XKRX|XSWX|XLON|XLME|XNYS|DEN|TSX|Australia exchange|BOVESPA|Euwax|CME Group|Eurex|Xetra|Frankfurt stock exchange|French settlement|German settlement|Paris stock exchange|Telbor|National Stock Exchange of India|London stock exchange|LNB|London metals exchange|Iceland stock exchange|New York stock exchange|Italian settlement|Santiago Stock Exchange|Ukrainian stock exchange|NGL|NYB|SA|SS|SYB|TKB|TRB|UK|UK settlement|Jakarta stock exchange|US settlement|Belgian settlement|US with Libor impact|US government bond market|North American Energy Reliability Council|Federal Reserve Bankwire System|WMR|ZUB|ICE_FuturesUS|ICE_FuturesUS_1|ICE_FuturesUS_2|ICE_FuturesEU|ICE_FuturesEU_1|ICE_EndexEnergy|ICE_EndexEquities|ICE_SwapTradeUS|ICE Futures U.S.|ICE Futures U.S. 1|ICE Futures U.S. 2|ICE Futures Europe|ICE Futures Europe 1|ICE Endex Energy|ICE Endex Equities|ICE Swap Trade U.S.|ICE Swap Trade U.K.|ICE Futures Singapore|ICE_SwapTradeUK|ICE_FuturesSingapore|CME|Thailand stock exchange|Turkey|Milan stock exchange|Taiwan stock exchange|South-Korean settlement|South-Korea exchange|South Africa|Bratislava stock exchange|Moscow exchange|Mexican stock exchange|Russian settlement|Spanish settlement|Luxembourgish settlement|Dutch settlement|Austrian settlement|Tadawul|Tel Aviv stock exchange|Bucharest stock exchange|Singapore exchange|Hong Kong stock exchange|Vienna stock exchange|Prague stock exchange|China inter bank market|Shanghai stock exchange|Colombia Stock Exchange|Buenos Aires stock exchange|Philippine stock exchange|Lima stock exchange|SIX Swiss Exchange|Malaysia Stock Exchange|Thomson Reuters QM/Reuters Spot|Israel Telbor Implementation|WeekendsOnly|weekends only|UNMAPPED|Null|NullCalendar|[A-Z]{4}|CUSTOM_.*))*(\))?"/>
+      <xs:pattern value="(JoinHolidays\(|JoinBusinessDays\()?((,)?(, )?(^)?(TGT|TARGET|CN-IB|US-FED|US-GOV|US-NERC|US-NYSE|US-SET|US-SOFR||Australia|Australia settlement|Botswana|Brazil|Canada|Denmark|Hungary|Japan|Norway|Switzerland|Sweden|Belgium|Finland|Luxembourg|Spain|Austria|Romania|Poland|New Zealand|FRA|CATO|CHZU|JPTO|GBLO|SEST|TRIS|USNY|EUTA|BEBR|AE|AT|AR|AU|BW|BR|CA|CL|CN|CO|CZ|DK|FI|FR|DE|HK|HU|IE|IS|IN|ID|IL|IT|JE|JP|MX|MY|NL|NO|NZ|PE|PH|PL|RO|RU|SG|ZA|KR|SE|CH|TW|TH|TR|UA|GB|US|BE|LU|ES|ARE|ARG|AUS|BWA|BRA|CAN|CHL|CHN|COL|CZE|DNK|FIN|DEU|HKG|HUN|ISL|IND|IDN|ISR|ITA|JOD|JPN|KES|LKR|MEX|MUR|MYS|NLD|NOR|NZL|PER|PHL|POL|ROU|RSD|RUS|SAU|SGP|UGX|ZAF|ZMW|KOR|SWE|CHE|TWN|THA|TUR|UKR|GBR|USA|BEL|LUX|ESP|AUT|ARS|AUD|BGN|BWP|BRL|CAD|CLP|CNH|CNY|COP|CZK|DKK|FRF|GHS|HKD|HRK|HUF|INR|IDR|ILS|IRL|ISK|ITL|JPY|MXN|MYR|NOK|NZD|PEN|PHP|PLN|RON|RUB|SAR|SGD|ZAR|KRW|SEK|CHF|EUR|TWD|THB|TRY|UAH|GBP|USD|BEF|LUF|ATS|AED|BHD|CLF|EGP|KWD|KZT|MAD|MXV|NGN|OMR|PKR|QAR|UYU|TND|AOA|GEL|ETB|XOF|VND|GBp|GBX|ILa|ILA|ILs|ILX|ZAc|ZAC|ZAX|XASX|BVMF|XTSE|XSHG|XFRA|XDUB|XPAR|XETR|ECAG|EUWA|XJKT|XIDX|XTAE|XMIL|MISX|XKRX|XSWX|XLON|XLME|XNYS|DEN|TSX|Australia exchange|BOVESPA|Euwax|CME Group|Eurex|Xetra|Frankfurt stock exchange|French settlement|German settlement|Paris stock exchange|Telbor|National Stock Exchange of India|London stock exchange|LNB|London metals exchange|Iceland stock exchange|New York stock exchange|Italian settlement|Santiago Stock Exchange|Ukrainian stock exchange|NGL|NYB|SA|SS|SYB|TKB|TRB|UK|UK settlement|Jakarta stock exchange|US settlement|Belgian settlement|US with Libor impact|US government bond market|North American Energy Reliability Council|Federal Reserve Bankwire System|WMR|ZUB|ICE_FuturesUS|ICE_FuturesUS_1|ICE_FuturesUS_2|ICE_FuturesEU|ICE_FuturesEU_1|ICE_EndexEnergy|ICE_EndexEquities|ICE_SwapTradeUS|ICE Futures U.S.|ICE Futures U.S. 1|ICE Futures U.S. 2|ICE Futures Europe|ICE Futures Europe 1|ICE Endex Energy|ICE Endex Equities|ICE Swap Trade U.S.|ICE Swap Trade U.K.|ICE Futures Singapore|ICE_SwapTradeUK|ICE_FuturesSingapore|CME|Thailand stock exchange|Turkey|Milan stock exchange|Taiwan stock exchange|South-Korean settlement|South-Korea exchange|South Africa|Bratislava stock exchange|Moscow exchange|Mexican stock exchange|Russian settlement|Spanish settlement|Luxembourgish settlement|Dutch settlement|Austrian settlement|Tadawul|Tel Aviv stock exchange|Bucharest stock exchange|Singapore exchange|Hong Kong stock exchange|Vienna stock exchange|Prague stock exchange|China inter bank market|Shanghai stock exchange|Colombia Stock Exchange|Buenos Aires stock exchange|Philippine stock exchange|Lima stock exchange|SIX Swiss Exchange|Malaysia Stock Exchange|Thomson Reuters QM/Reuters Spot|Israel Telbor Implementation|WeekendsOnly|weekends only|UNMAPPED|Null|NullCalendar|[A-Z]{4}|CUSTOM_.*))*(\))?"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="dayCounter">
@@ -478,6 +480,9 @@
       <xs:enumeration value="Hermite"/>
       <xs:enumeration value="Quadratic"/>
       <xs:enumeration value="LogQuadratic"/>
+      <xs:enumeration value="LogNaturalCubic"/>
+      <xs:enumeration value="LogFinancialCubic"/>
+      <xs:enumeration value="LogCubicSpline"/>
       <xs:enumeration value="CubicSpline"/>
       <xs:enumeration value="LinearFlat"/>
       <xs:enumeration value="LogLinearFlat"/>
@@ -830,6 +835,7 @@
             <xs:element type="businessDayConvention" name="TermConvention" minOccurs="0"/>
             <xs:element type="dateRule" name="Rule" minOccurs="0"/>
             <xs:element type="bool" name="EndOfMonth" minOccurs="0"/>
+            <xs:element type="businessDayConvention" name="EndOfMonthConvention" minOccurs="0"/>
             <xs:element type="date" name="FirstDate" minOccurs="0"/>
             <xs:element type="date" name="LastDate" minOccurs="0"/>
             <xs:element type="xs:boolean" name="RemoveFirstDate" minOccurs="0"/>

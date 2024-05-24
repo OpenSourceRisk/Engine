@@ -31,7 +31,7 @@ SpreadedSurvivalProbabilityTermStructure::SpreadedSurvivalProbabilityTermStructu
     for (Size i = 0; i < spreads_.size(); ++i) {
         registerWith(spreads_[i]);
     }
-    interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+    interpolation_ = QuantLib::ext::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
     interpolation_->enableExtrapolation();
     registerWith(Settings::instance().evaluationDate());
     registerWith(referenceCurve_);

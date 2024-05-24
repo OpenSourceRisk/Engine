@@ -36,11 +36,11 @@ class FixedRateFXLinkedNotionalCoupon : public QuantLib::Observer, public FixedR
 public:
     //! FloatingRateFXLinkedNotionalCoupon
     FixedRateFXLinkedNotionalCoupon(const QuantLib::Date& fxFixingDate, QuantLib::Real foreignAmount,
-        boost::shared_ptr<FxIndex> fxIndex, const boost::shared_ptr<FixedRateCoupon>& underlying);
+        QuantLib::ext::shared_ptr<FxIndex> fxIndex, const QuantLib::ext::shared_ptr<FixedRateCoupon>& underlying);
     
     //! \name FXLinked interface
     //@{
-    boost::shared_ptr<FXLinked> clone(boost::shared_ptr<FxIndex> fxIndex) override;
+    QuantLib::ext::shared_ptr<FXLinked> clone(QuantLib::ext::shared_ptr<FxIndex> fxIndex) override;
     //@}
 
     //! \name Coupon interface
@@ -60,10 +60,10 @@ public:
     //@}
 
     //! more inspectors
-    boost::shared_ptr<FixedRateCoupon> underlying() const;
+    QuantLib::ext::shared_ptr<FixedRateCoupon> underlying() const;
 
 private:
-    const boost::shared_ptr<FixedRateCoupon> underlying_;
+    const QuantLib::ext::shared_ptr<FixedRateCoupon> underlying_;
 };
 
 } // namespace QuantExt

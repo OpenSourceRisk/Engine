@@ -111,9 +111,9 @@
   <xs:complexType name="swapType">
     <xs:all>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="FixedCalendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FixedCalendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="frequencyType" name="FixedFrequency" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="FixedDayCounter" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
       <xs:element type="frequencyType" name="FloatFrequency" minOccurs="0" maxOccurs="1"/>
@@ -140,13 +140,19 @@
   <xs:complexType name="tenorBasisSwapType">
     <xs:all>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="LongIndex" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="period" name="LongPayTenor" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="ShortIndex" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="period" name="ShortPayTenor" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="bool" name="SpreadOnShort" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="PayIndex" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="period" name="PayFrequency" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ReceiveIndex" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="period" name="ReceiveFrequency" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="SpreadOnRec" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="IncludeSpread" minOccurs="0" maxOccurs="1"/>
       <xs:element type="subPeriodsCouponType" name="SubPeriodsCouponType" minOccurs="0" maxOccurs="1"/>
+      <!-- deprecated fields -->
+      <xs:element type="xs:string" name="LongIndex" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="period" name="LongPayTenor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ShortIndex" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="period" name="ShortPayTenor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="SpreadOnShort" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

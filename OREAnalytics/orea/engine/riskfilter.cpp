@@ -42,45 +42,45 @@ struct string_cmp {
 template <typename T> using bm = boost::bimap<T, boost::bimaps::set_of<string, string_cmp>>;
 
 // Initialise the bimaps
-const bm<VarConfiguration::RiskClass> riskClassMap = list_of<bm<VarConfiguration::RiskClass>::value_type>(
-    VarConfiguration::RiskClass::All, "All")
-        (VarConfiguration::RiskClass::InterestRate, "InterestRate")
-        (VarConfiguration::RiskClass::Inflation, "Inflation")
-        (VarConfiguration::RiskClass::Credit, "Credit")
-        (VarConfiguration::RiskClass::Equity, "Equity")
-        (VarConfiguration::RiskClass::FX, "FX");
+const bm<MarketRiskConfiguration::RiskClass> riskClassMap = list_of<bm<MarketRiskConfiguration::RiskClass>::value_type>(
+    MarketRiskConfiguration::RiskClass::All, "All")
+        (MarketRiskConfiguration::RiskClass::InterestRate, "InterestRate")
+        (MarketRiskConfiguration::RiskClass::Inflation, "Inflation")
+        (MarketRiskConfiguration::RiskClass::Credit, "Credit")
+        (MarketRiskConfiguration::RiskClass::Equity, "Equity")
+        (MarketRiskConfiguration::RiskClass::FX, "FX");
 
-const bm<VarConfiguration::RiskType> riskTypeMap = list_of<bm<VarConfiguration::RiskType>::value_type>(
-    VarConfiguration::RiskType::All, "All")(
-    VarConfiguration::RiskType::DeltaGamma, "DeltaGamma")(VarConfiguration::RiskType::Vega, "Vega")(
-    VarConfiguration::RiskType::BaseCorrelation, "BaseCorrelation");
+const bm<MarketRiskConfiguration::RiskType> riskTypeMap = list_of<bm<MarketRiskConfiguration::RiskType>::value_type>(
+    MarketRiskConfiguration::RiskType::All, "All")(
+    MarketRiskConfiguration::RiskType::DeltaGamma, "DeltaGamma")(MarketRiskConfiguration::RiskType::Vega, "Vega")(
+    MarketRiskConfiguration::RiskType::BaseCorrelation, "BaseCorrelation");
 
-ostream& operator<<(ostream& out, const VarConfiguration::RiskClass& rc) {
+ostream& operator<<(ostream& out, const MarketRiskConfiguration::RiskClass& rc) {
     QL_REQUIRE(riskClassMap.left.count(rc) > 0,
-               "Risk class (" << static_cast<int>(rc) << ") not a valid VarConfiguration::RiskClass");
+               "Risk class (" << static_cast<int>(rc) << ") not a valid MarketRiskConfiguration::RiskClass");
     return out << riskClassMap.left.at(rc);
 }
 
-ostream& operator<<(ostream& out, const VarConfiguration::RiskType& mt) {
+ostream& operator<<(ostream& out, const MarketRiskConfiguration::RiskType& mt) {
     QL_REQUIRE(riskTypeMap.left.count(mt) > 0,
-               "Risk type (" << static_cast<int>(mt) << ") not a valid VarConfiguration::RiskType");
+               "Risk type (" << static_cast<int>(mt) << ") not a valid MarketRiskConfiguration::RiskType");
     return out << riskTypeMap.left.at(mt);
 }
 
-VarConfiguration::RiskClass parseVarRiskClass(const string& rc) {
+MarketRiskConfiguration::RiskClass parseVarRiskClass(const string& rc) {
     QL_REQUIRE(riskClassMap.right.count(rc) > 0,
-               "Risk class string " << rc << " does not correspond to a valid VarConfiguration::RiskClass");
+               "Risk class string " << rc << " does not correspond to a valid MarketRiskConfiguration::RiskClass");
     return riskClassMap.right.at(rc);
 }
 
-VarConfiguration::RiskType parseVarMarginType(const string& mt) {
+MarketRiskConfiguration::RiskType parseVarMarginType(const string& mt) {
     QL_REQUIRE(riskTypeMap.right.count(mt) > 0,
-               "Risk type string " << mt << " does not correspond to a valid VarConfiguration::RiskType");
+               "Risk type string " << mt << " does not correspond to a valid MarketRiskConfiguration::RiskType");
     return riskTypeMap.right.at(mt);
 }
 
 //! Give back a set containing the RiskClass values optionally excluding 'All'
-std::set<VarConfiguration::RiskClass> VarConfiguration::riskClasses(bool includeAll) {
+std::set<MarketRiskConfiguration::RiskClass> MarketRiskConfiguration::riskClasses(bool includeAll) {
     Size numberOfRiskClasses = riskClassMap.size();
 
     // Return the set of values
@@ -92,7 +92,7 @@ std::set<VarConfiguration::RiskClass> VarConfiguration::riskClasses(bool include
 }
 
 //! Give back a set containing the RiskType values optionally excluding 'All'
-std::set<VarConfiguration::RiskType> VarConfiguration::riskTypes(bool includeAll) {
+std::set<MarketRiskConfiguration::RiskType> MarketRiskConfiguration::riskTypes(bool includeAll) {
     Size numberOfRiskTypes = riskTypeMap.size();
 
     // Return the set of values
@@ -103,7 +103,7 @@ std::set<VarConfiguration::RiskType> VarConfiguration::riskTypes(bool includeAll
     return result;
 }
 
-RiskFilter::RiskFilter(const VarConfiguration::RiskClass& riskClass, const VarConfiguration::RiskType& riskType) {
+RiskFilter::RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, const MarketRiskConfiguration::RiskType& riskType) {
 
     static const std::set<RiskFactorKey::KeyType> all = {RiskFactorKey::KeyType::DiscountCurve,
                                                          RiskFactorKey::KeyType::YieldCurve,
@@ -128,34 +128,37 @@ RiskFilter::RiskFilter(const VarConfiguration::RiskClass& riskClass, const VarCo
 
     std::set<RiskFactorKey::KeyType> allowed_type, allowed;
 
-    if (riskType == VarConfiguration::RiskType::All) {
+    if (riskType == MarketRiskConfiguration::RiskType::All) {
         allowed_type = all;
     } else {
         switch (riskType) {
-        case VarConfiguration::RiskType::DeltaGamma:
+        case MarketRiskConfiguration::RiskType::DeltaGamma:
             allowed_type = {RiskFactorKey::KeyType::DiscountCurve,
                             RiskFactorKey::KeyType::YieldCurve,
                             RiskFactorKey::KeyType::IndexCurve,
                             RiskFactorKey::KeyType::FXSpot,
                             RiskFactorKey::KeyType::EquitySpot,
                             RiskFactorKey::KeyType::DividendYield,
-                            RiskFactorKey::KeyType::SurvivalProbability,
+                            RiskFactorKey::KeyType::SurvivalProbability, 
+                            RiskFactorKey::KeyType::CommodityCurve,
                             RiskFactorKey::KeyType::RecoveryRate,
                             RiskFactorKey::KeyType::CPIIndex,
                             RiskFactorKey::KeyType::ZeroInflationCurve,
                             RiskFactorKey::KeyType::YoYInflationCurve,
                             RiskFactorKey::KeyType::SecuritySpread};
             break;
-        case VarConfiguration::RiskType::Vega:
+        case MarketRiskConfiguration::RiskType::Vega:
             allowed_type = {RiskFactorKey::KeyType::SwaptionVolatility,
                             RiskFactorKey::KeyType::OptionletVolatility,
                             RiskFactorKey::KeyType::FXVolatility,
                             RiskFactorKey::KeyType::EquityVolatility,
                             RiskFactorKey::KeyType::CDSVolatility,
+                            RiskFactorKey::KeyType::CommodityVolatility,
                             RiskFactorKey::KeyType::YieldVolatility,
+                            RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility,
                             RiskFactorKey::KeyType::YoYInflationCapFloorVolatility};
             break;
-        case VarConfiguration::RiskType::BaseCorrelation:
+        case MarketRiskConfiguration::RiskType::BaseCorrelation:
             allowed_type = {RiskFactorKey::KeyType::BaseCorrelation};
             break;
         default:
@@ -163,31 +166,31 @@ RiskFilter::RiskFilter(const VarConfiguration::RiskClass& riskClass, const VarCo
         }
     }
 
-    if (riskClass == VarConfiguration::RiskClass::All) {
+    if (riskClass == MarketRiskConfiguration::RiskClass::All) {
         allowed = allowed_type;
     } else {
         std::set<RiskFactorKey::KeyType> allowed_class;
         switch (riskClass) {
-        case VarConfiguration::RiskClass::InterestRate:
+        case MarketRiskConfiguration::RiskClass::InterestRate:
             allowed_class = {
                 RiskFactorKey::KeyType::DiscountCurve,       RiskFactorKey::KeyType::YieldCurve,
                 RiskFactorKey::KeyType::IndexCurve,          RiskFactorKey::KeyType::SwaptionVolatility,
                 RiskFactorKey::KeyType::OptionletVolatility, RiskFactorKey::KeyType::SecuritySpread,
                 RiskFactorKey::KeyType::YieldVolatility,     RiskFactorKey::KeyType::YoYInflationCapFloorVolatility};
             break;
-        case VarConfiguration::RiskClass::Inflation:
+        case MarketRiskConfiguration::RiskClass::Inflation:
             allowed_class = {RiskFactorKey::KeyType::CPIIndex, RiskFactorKey::KeyType::ZeroInflationCurve,
                              RiskFactorKey::KeyType::YoYInflationCurve};
             break;
-        case VarConfiguration::RiskClass::Credit:
+        case MarketRiskConfiguration::RiskClass::Credit:
             allowed_class = {RiskFactorKey::KeyType::SurvivalProbability, RiskFactorKey::KeyType::RecoveryRate,
                              RiskFactorKey::KeyType::CDSVolatility, RiskFactorKey::KeyType::BaseCorrelation};
             break;
-        case VarConfiguration::RiskClass::Equity:
+        case MarketRiskConfiguration::RiskClass::Equity:
             allowed_class = {RiskFactorKey::KeyType::EquitySpot, RiskFactorKey::KeyType::EquityVolatility,
                              RiskFactorKey::KeyType::DividendYield};
             break;
-        case VarConfiguration::RiskClass::FX:
+        case MarketRiskConfiguration::RiskClass::FX:
             allowed_class = {RiskFactorKey::KeyType::FXSpot, RiskFactorKey::KeyType::FXVolatility};
             break;
         default:

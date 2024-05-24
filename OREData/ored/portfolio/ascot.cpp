@@ -31,12 +31,18 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 std::map<AssetClass, std::set<std::string>>
-Ascot::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+Ascot::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return bond_.underlyingIndices(referenceDataManager);
 }
 
-void Ascot::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void Ascot::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     DLOG("Ascot::build() called for trade " << id());
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("Exotic");
+    additionalData_["isdaSubProduct"] = string("Other");  
+    additionalData_["isdaTransaction"] = string("");  
 
     // build underlying convertible bond
     bond_.reset();
@@ -44,8 +50,8 @@ void Ascot::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFacto
     bond_.id() = id() + "_Bond";
     bond_.build(engineFactory);
     requiredFixings_.addData(bond_.requiredFixings());
-    boost::shared_ptr<QuantExt::ConvertibleBond2> cb =
-        boost::dynamic_pointer_cast<QuantExt::ConvertibleBond2>(bond_.instrument()->qlInstrument());
+    QuantLib::ext::shared_ptr<QuantExt::ConvertibleBond2> cb =
+        QuantLib::ext::dynamic_pointer_cast<QuantExt::ConvertibleBond2>(bond_.instrument()->qlInstrument());
 
     // check option fields
     Exercise::Type exerciseType = parseExerciseType(optionData_.style());
@@ -53,7 +59,7 @@ void Ascot::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFacto
     QL_REQUIRE(optionData_.exerciseDates().size() == 1,
                "Ascot::build(): exactly one option date required, found " << optionData_.exerciseDates().size());
     Date exerciseDate = parseDate(optionData_.exerciseDates().back());
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<AmericanExercise>(exerciseDate);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<AmericanExercise>(exerciseDate);
     Option::Type type = parseOptionType(optionData_.callPut());
 
     // build funding leg
@@ -62,7 +68,7 @@ void Ascot::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFacto
     QL_REQUIRE(fundingLegData_.isPayer() == false, "expected isPayer == false for funding leg");
     Leg fundingLeg;
 
-    auto builder = boost::dynamic_pointer_cast<AscotEngineBuilder>(engineFactory->builder("Ascot"));
+    auto builder = QuantLib::ext::dynamic_pointer_cast<AscotEngineBuilder>(engineFactory->builder("Ascot"));
     auto configuration = builder->configuration(MarketContext::pricing);
     auto legBuilder = engineFactory->legBuilder(fundingLegData_.legType());
     fundingLeg = legBuilder->buildLeg(fundingLegData_, engineFactory, requiredFixings_, configuration);
@@ -70,13 +76,13 @@ void Ascot::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFacto
     QL_REQUIRE(builder, "Ascot::build(): could not cast to AscotBuilder, this is unexpected");
 
     auto qlAscot =
-        boost::make_shared<QuantExt::Ascot>(type, exercise, bond_.data().bondData().bondNotional(), cb, fundingLeg);
+        QuantLib::ext::make_shared<QuantExt::Ascot>(type, exercise, bond_.data().bondData().bondNotional(), cb, fundingLeg);
     qlAscot->setPricingEngine(builder->engine(id(), bond_.data().bondData().currency()));
     setSensitivityTemplate(*builder);
 
     Real multiplier = (parsePositionType(optionData_.longShort()) == Position::Long ? 1.0 : -1.0);
     instrument_ =
-        boost::shared_ptr<ore::data::InstrumentWrapper>(new ore::data::VanillaInstrument(qlAscot, multiplier));
+        QuantLib::ext::shared_ptr<ore::data::InstrumentWrapper>(new ore::data::VanillaInstrument(qlAscot, multiplier));
 
     npvCurrency_ = notionalCurrency_ = bond_.notionalCurrency();
     legs_ = {cb->cashflows()};
@@ -85,12 +91,6 @@ void Ascot::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFacto
 
     notional_ = bond_.data().bondData().bondNotional();
     maturity_ = bond_.maturity();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("Exotic");
-    additionalData_["isdaSubProduct"] = string("Other");  
-    additionalData_["isdaTransaction"] = string("");  
 }
 
 void Ascot::fromXML(XMLNode* node) {
@@ -111,7 +111,7 @@ void Ascot::fromXML(XMLNode* node) {
     fundingLegData_.fromXML(legNode);
 }
 
-XMLNode* Ascot::toXML(XMLDocument& doc) {
+XMLNode* Ascot::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode("AscotData");
     XMLUtils::appendNode(node, dataNode);

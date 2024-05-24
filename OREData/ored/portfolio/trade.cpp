@@ -43,7 +43,7 @@ void Trade::fromXML(XMLNode* node) {
         tradeActions_.fromXML(taNode);
 }
 
-XMLNode* Trade::toXML(XMLDocument& doc) {
+XMLNode* Trade::toXML(XMLDocument& doc) const {
     // Crete Trade Node with Id attribute.
     XMLNode* node = doc.allocNode("Trade");
     QL_REQUIRE(node, "Failed to create trade node");
@@ -55,9 +55,9 @@ XMLNode* Trade::toXML(XMLDocument& doc) {
     return node;
 }
 
-Date Trade::addPremiums(std::vector<boost::shared_ptr<Instrument>>& addInstruments, std::vector<Real>& addMultipliers,
+Date Trade::addPremiums(std::vector<QuantLib::ext::shared_ptr<Instrument>>& addInstruments, std::vector<Real>& addMultipliers,
                         const Real tradeMultiplier, const PremiumData& premiumData, const Real premiumMultiplier,
-                        const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
+                        const Currency& tradeCurrency, const QuantLib::ext::shared_ptr<EngineFactory>& factory,
                         const string& configuration) {
 
     Date latestPremiumPayDate = Date::minDate();
@@ -67,7 +67,7 @@ Date Trade::addPremiums(std::vector<boost::shared_ptr<Instrument>>& addInstrumen
 
         Currency premiumCurrency = parseCurrencyWithMinors(d.ccy);
         Real premiumAmount = convertMinorToMajorCurrency(d.ccy, d.amount);
-        auto fee = boost::make_shared<QuantExt::Payment>(premiumAmount, premiumCurrency, d.payDate);
+        auto fee = QuantLib::ext::make_shared<QuantExt::Payment>(premiumAmount, premiumCurrency, d.payDate);
 
         addMultipliers.push_back(premiumMultiplier);
 
@@ -76,7 +76,7 @@ Date Trade::addPremiums(std::vector<boost::shared_ptr<Instrument>>& addInstrumen
         if (tradeCurrency.code() != d.ccy) {
             fx = factory->market()->fxRate(d.ccy + tradeCurrency.code(), configuration);
         }
-        boost::shared_ptr<PricingEngine> discountingEngine(new QuantExt::PaymentDiscountingEngine(yts, fx));
+        QuantLib::ext::shared_ptr<PricingEngine> discountingEngine(new QuantExt::PaymentDiscountingEngine(yts, fx));
         fee->setPricingEngine(discountingEngine);
 
         // 1) Add to additional instruments for pricing
@@ -85,7 +85,7 @@ Date Trade::addPremiums(std::vector<boost::shared_ptr<Instrument>>& addInstrumen
         // 2) Add a trade leg for cash flow reporting, divide the amount by the multiplier, because the leg entries
         //    are multiplied with the trade multiplier in the cashflow report (and if used elsewhere)
         legs_.push_back(
-            Leg(1, boost::make_shared<SimpleCashFlow>(fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier,
+            Leg(1, QuantLib::ext::make_shared<SimpleCashFlow>(fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier,
                                                       fee->cashFlow()->date())));
         legCurrencies_.push_back(fee->currency().code());
 
@@ -123,6 +123,10 @@ void Trade::setEnvelope(const Envelope& envelope) {
     envelope_ = envelope;
 }
 
+void Trade::setAdditionalData(const std::map<std::string, boost::any>& additionalData) {
+    additionalData_ = additionalData;
+}
+
 void Trade::reset() {
     // save accumulated timings from wrapper to trade before resetting
     if (instrument_ != nullptr) {
@@ -130,7 +134,7 @@ void Trade::reset() {
         savedCumulativePricingTime_ += instrument_->getCumulativePricingTime();
     }
     // reset members
-    instrument_ = boost::shared_ptr<InstrumentWrapper>();
+    instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>();
     legs_.clear();
     legCurrencies_.clear();
     legPayers_.clear();
@@ -152,7 +156,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
     Date asof = Settings::instance().evaluationDate();
     string legID = std::to_string(resultLegId == Null<Size>() ? i + 1 : resultLegId);
     for (Size j = 0; j < legs_[i].size(); ++j) {
-        boost::shared_ptr<CashFlow> flow = legs_[i][j];
+        QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
         // pick flow with earliest future payment date on this leg
         if (flow->date() > asof) {
             Real flowAmount = 0.0;
@@ -163,7 +167,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
             }
             additionalData_["amount[" + legID + "]"] = flowAmount;
             additionalData_["paymentDate[" + legID + "]"] = ore::data::to_string(flow->date());
-            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
             if (coupon) {
                 Real currentNotional = 0;
                 try {
@@ -182,12 +186,12 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                 }
                 additionalData_["rate[" + legID + "]"] = rate;
 
-                if (auto frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow)) {
+                if (auto frc = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(flow)) {
                     additionalData_["index[" + legID + "]"] = frc->index()->name();
                     additionalData_["spread[" + legID + "]"] = frc->spread();
                 }
 
-                if (auto eqc = boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(flow)) {
+                if (auto eqc = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(flow)) {
                     auto arc = eqc->pricer()->additionalResultCache();
                     additionalData_["initialPrice[" + legID + "]"] = arc.initialPrice;
                     additionalData_["endEquityFixing[" + legID + "]"] = arc.endFixing;
@@ -208,7 +212,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                         additionalData_["forecastDividends[" + legID + "]"] = arc.forecastDividends;
                 }
 
-                if (auto cpic = boost::dynamic_pointer_cast<QuantExt::CPICoupon>(flow)) {
+                if (auto cpic = QuantLib::ext::dynamic_pointer_cast<QuantExt::CPICoupon>(flow)) {
                     Real baseCPI;
                     baseCPI = cpic->baseCPI();
                     if (baseCPI == Null<Real>()) {
@@ -223,7 +227,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                     }
 
                     additionalData_["baseCPI[" + legID + "]"] = baseCPI;
-                } else if (auto cpicf = boost::dynamic_pointer_cast<QuantLib::CPICashFlow>(flow)) {
+                } else if (auto cpicf = QuantLib::ext::dynamic_pointer_cast<QuantLib::CPICashFlow>(flow)) {
                     Real baseCPI;
                     baseCPI = cpicf->baseFixing();
                     if (baseCPI == Null<Real>()) {
@@ -244,7 +248,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
         }
     }
     if (legs_[i].size() > 0) {
-        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[i][0]);
+        QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[i][0]);
         if (coupon) {
             Real originalNotional = 0.0;
             try {
@@ -253,7 +257,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
                 ALOG("original nominal could not be determined for trade " << id() << ", set to zero: " << e.what());
             }
             additionalData_["originalNotional[" + legID + "]"] = originalNotional;
-            if (auto eqc = boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(coupon)) {
+            if (auto eqc = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(coupon)) {
                 Real quantity = eqc->quantity();
                 if (quantity == Null<Real>()) {
                     if (eqc->legInitialNotional() != Null<Real>() && eqc->initialPrice() != Null<Real>()) {
@@ -273,7 +277,7 @@ void Trade::setLegBasedAdditionalData(const Size i, Size resultLegId) const {
         }
     }
     for (Size j = 0; j < legs_[i].size(); ++j) {
-        boost::shared_ptr<CashFlow> flow = legs_[i][j];
+        QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
         if (flow->date() > asof) {
             Size k = 0;
             for (auto const& [fixingDate, index, multiplier] :

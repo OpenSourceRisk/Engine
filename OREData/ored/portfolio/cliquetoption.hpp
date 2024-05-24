@@ -39,7 +39,7 @@ public:
     CliquetOption(const std::string& tradeType) : ore::data::Trade(tradeType) {}
     //! Constructor
     CliquetOption(const std::string& tradeType, ore::data::Envelope& env,
-                  const boost::shared_ptr<ore::data::Underlying>& underlying, std::string currency,
+                  const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying, std::string currency,
                   QuantLib::Real notional, std::string longShort, std::string callPut,
                   ore::data::ScheduleData scheduleData, QuantLib::Real moneyness = 1.0,
                   QuantLib::Real localCap = QuantLib::Null<QuantLib::Real>(),
@@ -55,12 +55,12 @@ public:
     }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
 
     //! \name Inspectors
     //@{
     const std::string& name() const { return underlying_->name(); }
-    const boost::shared_ptr<ore::data::Underlying>& underlying() const { return underlying_; }
+    const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying() const { return underlying_; }
     const std::string& currency() const { return currency_; }
     const std::string& longShort() const { return longShort_; }
     const std::string& callPut() const { return callPut_; }
@@ -79,11 +79,11 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(ore::data::XMLNode* node) override;
-    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
 private:
-    boost::shared_ptr<ore::data::Underlying> underlying_;
+    QuantLib::ext::shared_ptr<ore::data::Underlying> underlying_;
     std::string currency_;
     QuantLib::Real cliquetNotional_;
     std::set<QuantLib::Date> valuationDates_;
@@ -105,7 +105,7 @@ class EquityCliquetOption : public CliquetOption {
 public:
     EquityCliquetOption() : CliquetOption("EquityCliquetOption") {}
     EquityCliquetOption(const std::string& tradeType, ore::data::Envelope& env,
-                        const boost::shared_ptr<ore::data::Underlying>& underlying, std::string currency,
+                        const QuantLib::ext::shared_ptr<ore::data::Underlying>& underlying, std::string currency,
                         QuantLib::Real notional, std::string longShort, std::string callPut,
                         ore::data::ScheduleData scheduleData, QuantLib::Real moneyness = 1.0,
                         QuantLib::Real localCap = QuantLib::Null<QuantLib::Real>(),
@@ -120,7 +120,7 @@ public:
 
     //! Add underlying Equity names
     std::map<ore::data::AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceDataManager) const override {
+    underlyingIndices(const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceDataManager) const override {
         return {{ore::data::AssetClass::EQ, std::set<std::string>({name()})}};
     };
 };

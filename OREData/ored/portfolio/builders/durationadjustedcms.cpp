@@ -33,18 +33,18 @@ namespace data {
 
 using namespace QuantExt;
 
-boost::shared_ptr<FloatingRateCouponPricer>
+QuantLib::ext::shared_ptr<FloatingRateCouponPricer>
 LinearTsrDurationAdjustedCmsCouponPricerBuilder::engineImpl(const std::string& key) {
     std::string ccy = key;
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     if (tryParseIborIndex(key, index))
         ccy = index->currency().code();
     Real reversion = parseReal(engineParameter("MeanReversion", {key, ccy}, true));
 
-    Handle<Quote> reversionQuote(boost::make_shared<SimpleQuote>(reversion));
+    Handle<Quote> reversionQuote(QuantLib::ext::make_shared<SimpleQuote>(reversion));
     Handle<SwaptionVolatilityStructure> vol;
     if (parseBool(engineParameter("ZeroVolatility", {}, false, "false"))) {
-        vol = Handle<SwaptionVolatilityStructure>(boost::make_shared<ConstantSwaptionVolatility>(
+        vol = Handle<SwaptionVolatilityStructure>(QuantLib::ext::make_shared<ConstantSwaptionVolatility>(
             0, NullCalendar(), Unadjusted, 0.0, Actual365Fixed(), Normal));
     } else {
         vol = market_->swaptionVol(key, configuration(MarketContext::pricing));
@@ -58,8 +58,8 @@ LinearTsrDurationAdjustedCmsCouponPricerBuilder::engineImpl(const std::string& k
     Real lower = parseReal(engineParameter(lowerBoundStr));
     Real upper = parseReal(engineParameter(upperBoundStr));
 
-    return boost::make_shared<DurationAdjustedCmsCouponTsrPricer>(
-        vol, boost::make_shared<LinearAnnuityMappingBuilder>(reversionQuote), lower, upper);
+    return QuantLib::ext::make_shared<DurationAdjustedCmsCouponTsrPricer>(
+        vol, QuantLib::ext::make_shared<LinearAnnuityMappingBuilder>(reversionQuote), lower, upper);
 };
 
 } // namespace data

@@ -34,16 +34,38 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void EquityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Equity");
+    additionalData_["isdaBaseProduct"] = string("Option");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");
+
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = strike_.value();
+    additionalData_["strikeCurrency"] = strike_.currency();
 
     // Set the assetName_ as it may have changed after lookup
     assetName_ = equityName();
 
-    // Populate the index_ in case the option is automatic exercise.
-    const boost::shared_ptr<Market>& market = engineFactory->market();
-    index_ = *market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing));
-
     Currency ccy = parseCurrencyWithMinors(currency_);
+    npvCurrency_ = notionalCurrency_ = ccy.code();
+
+    // Notional - we really need todays spot to get the correct notional.
+    // But rather than having it move around we use strike * quantity
+    notional_ = strike_.value() * quantity_;
+
+    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
+    expiryDate_ = parseDate(option_.exerciseDates().front());
+    // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with
+    // payment after expiry.
+    maturity_ = expiryDate_;
+
+    // Populate the index_ in case the option is automatic exercise.
+    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
+    index_ = *market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing));
 
     // check the equity currency
     underlyingCurrency_ =
@@ -64,7 +86,6 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
             QL_FAIL("Strike currency must be specified for a quanto payoff for trade " << id() << ".");
         }
     }
-
     // Quanto payoff condition, i.e. currency_ != underlyingCurrency_, will be checked in VanillaOptionTrade::build()
     // Build the trade using the shared functionality in the base class.
     if (strike_.currency() != underlyingCurrency_.code()) {
@@ -77,19 +98,12 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
                                          << "), quanto composite options are not supported (underlying currency is "
                                          << underlyingCurrency_.code() << ")");
 
-        Option::Type type = parseOptionType(option_.callPut());
-        boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_.value()));
-        QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
-        QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
-        expiryDate_ = parseDate(option_.exerciseDates().front());
-        // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with
-        // payment after expiry.
-        maturity_ = expiryDate_;
         // Exercise
-        boost::shared_ptr<Exercise> exercise;
+        QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
+        QuantLib::ext::shared_ptr<Exercise> exercise;
         switch (exerciseType) {
         case QuantLib::Exercise::Type::European: {
-            exercise = boost::make_shared<EuropeanExercise>(expiryDate_);
+            exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate_);
             break;
         }
         default:
@@ -97,7 +111,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         }
         Settlement::Type settlementType = parseSettlementType(option_.settlement());
         // Create the instrument and then populate the name for the engine builder.
-        boost::shared_ptr<Instrument> vanilla;
+        QuantLib::ext::shared_ptr<Instrument> vanilla;
         if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
             // We have a European cash settled option.
 
@@ -123,16 +137,18 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         QL_REQUIRE(forwardDate_ ==
                     QuantLib::Date(), "Composite payoff is not currently supported for Forward Options: Trade "
                         << id());
-        vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+        Option::Type type = parseOptionType(option_.callPut());
+        QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_.value()));
+        vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
 
         string tradeTypeBuilder = "EquityEuropeanCompositeOption";
 
-        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
+        QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
         QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
 
         // TODO cast and set pricing engine
 
-        auto compositeBuilder = boost::dynamic_pointer_cast<EquityEuropeanCompositeEngineBuilder>(builder);
+        auto compositeBuilder = QuantLib::ext::dynamic_pointer_cast<EquityEuropeanCompositeEngineBuilder>(builder);
         vanilla->setPricingEngine(compositeBuilder->engine(assetName_, underlyingCurrency_, 
             parseCurrency(strike_.currency()), expiryDate_));
         setSensitivityTemplate(*compositeBuilder);
@@ -142,34 +158,18 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
         Real mult = quantity_ * bsInd;
 
-        std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+        std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
         maturity_ =
             std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
                                             -bsInd, ccy, engineFactory, configuration));
 
-        instrument_ = boost::shared_ptr<InstrumentWrapper>(
+        instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
             new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
-        npvCurrency_ = ccy.code();
 
-        // Notional - we really need todays spot to get the correct notional.
-        // But rather than having it move around we use strike * quantity
-        notional_ = strike_.value() * quantity_;
-        notionalCurrency_ = ccy.code();
     } else {
         VanillaOptionTrade::build(engineFactory);
     }
-
-    additionalData_["quantity"] = quantity_;
-    additionalData_["strike"] = strike_.value();
-    additionalData_["strikeCurrency"] = strike_.currency();
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Equity");
-    additionalData_["isdaBaseProduct"] = string("Option");
-    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");
 }
 
 void EquityOption::fromXML(XMLNode* node) {
@@ -190,7 +190,7 @@ void EquityOption::fromXML(XMLNode* node) {
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
 }
 
-XMLNode* EquityOption::toXML(XMLDocument& doc) {
+XMLNode* EquityOption::toXML(XMLDocument& doc) const {
     XMLNode* node = VanillaOptionTrade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityOptionData");
     XMLUtils::appendNode(node, eqNode);
@@ -208,7 +208,7 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
     return node;
 }
 
-std::map<AssetClass, std::set<std::string>> EquityOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+std::map<AssetClass, std::set<std::string>> EquityOption::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::EQ, std::set<std::string>({equityName()})}};
 }
 

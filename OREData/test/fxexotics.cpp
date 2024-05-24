@@ -86,12 +86,12 @@ public:
 
         // add fx rates
         std::map<std::string, QuantLib::Handle<QuantLib::Quote>> quotes;
-        quotes["EURJPY"] = Handle<Quote>(boost::make_shared<SimpleQuote>(spot));
-        fx_ = boost::make_shared<FXTriangulation>(quotes);
+        quotes["EURJPY"] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spot));
+        fx_ = QuantLib::ext::make_shared<FXTriangulation>(quotes);
 
 	// add fx conventions
-	auto conventions = boost::make_shared<Conventions>();
-        conventions->add(boost::make_shared<FXConvention>("EUR-JPY-FX", "0", "EUR", "JPY", "10000", "EUR,JPY"));
+	auto conventions = QuantLib::ext::make_shared<Conventions>();
+        conventions->add(QuantLib::ext::make_shared<FXConvention>("EUR-JPY-FX", "0", "EUR", "JPY", "10000", "EUR,JPY"));
         InstrumentConventions::instance().setConventions(conventions);
 
         // build fx vols
@@ -111,22 +111,22 @@ public:
     }
 
     void setFxSpot(string ccyPair, Real spot) {
-        auto q = boost::dynamic_pointer_cast<SimpleQuote>(fx_->getQuote(ccyPair).currentLink());
+        auto q = QuantLib::ext::dynamic_pointer_cast<SimpleQuote>(fx_->getQuote(ccyPair).currentLink());
         QL_REQUIRE(q, "internal error: could not cast quote to SimpleQuote in TestMarket::setFxSpot()");
         q->setValue(spot);
     }
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, Actual360()));
+        QuantLib::ext::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, Actual360()));
         return Handle<YieldTermStructure>(yts);
     }
     Handle<BlackVolTermStructure> flatRateFxv(Volatility forward) {
-        boost::shared_ptr<BlackVolTermStructure> fxv(new BlackConstantVol(0, NullCalendar(), forward, Actual360()));
+        QuantLib::ext::shared_ptr<BlackVolTermStructure> fxv(new BlackConstantVol(0, NullCalendar(), forward, Actual360()));
         return Handle<BlackVolTermStructure>(fxv);
     }
 
-    boost::shared_ptr<SimpleQuote> fxSpot_;
+    QuantLib::ext::shared_ptr<SimpleQuote> fxSpot_;
 };
 } // namespace
 
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(testFXDigitalOptionPrice) {
 
     for (auto& f : fxd) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
 
@@ -154,11 +154,11 @@ BOOST_AUTO_TEST_CASE(testFXDigitalOptionPrice) {
         Real expectedNPV = f.result;
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDigitalOption") = "GarmanKohlhagen";
         engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         fxOption.build(engineFactory);
 
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(testFXBarrierOptionPrice) {
     for (auto& f : fxb) {
         for (auto& position : positions) {
             // build market
-            boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+            QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
             Date today = Settings::instance().evaluationDate();
             Settings::instance().evaluationDate() = market->asofDate();
 
@@ -335,13 +335,13 @@ BOOST_AUTO_TEST_CASE(testFXBarrierOptionPrice) {
             Real expectedNPV = f.result;
 
             // Build and price
-            boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+            QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
             engineData->model("FxBarrierOption") = "GarmanKohlhagen";
             engineData->engine("FxBarrierOption") = "AnalyticBarrierEngine";
             engineData->model("FxOption") = "GarmanKohlhagen";
             engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-            boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+            QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
             fxBarrierOption.build(engineFactory);
             fxBarrierOptionNotional.build(engineFactory);
@@ -386,8 +386,8 @@ BOOST_AUTO_TEST_CASE(testFXBarrierOptionSymmetry) {
 
     for (auto& f : fxb) {
         // build market
-        boost::shared_ptr<Market> marketCall = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
-        boost::shared_ptr<Market> marketPut = boost::make_shared<TestMarket>(f.k, f.r, f.q, f.v);
+        QuantLib::ext::shared_ptr<Market> marketCall = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> marketPut = QuantLib::ext::make_shared<TestMarket>(f.k, f.r, f.q, f.v);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = marketCall->asofDate();
 
@@ -409,14 +409,14 @@ BOOST_AUTO_TEST_CASE(testFXBarrierOptionSymmetry) {
                                     "JPY", f.s);                                                 // domestic
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxBarrierOption") = "GarmanKohlhagen";
         engineData->engine("FxBarrierOption") = "AnalyticBarrierEngine";
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactoryCall = boost::make_shared<EngineFactory>(engineData, marketCall);
-        boost::shared_ptr<EngineFactory> engineFactoryPut = boost::make_shared<EngineFactory>(engineData, marketPut);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactoryCall = QuantLib::ext::make_shared<EngineFactory>(engineData, marketCall);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactoryPut = QuantLib::ext::make_shared<EngineFactory>(engineData, marketPut);
 
         fxCallOption.build(engineFactoryCall);
         fxPutOption.build(engineFactoryPut);
@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(testFXBarrierOptionParity) {
 
     for (auto& f : fxb) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
 
@@ -488,13 +488,13 @@ BOOST_AUTO_TEST_CASE(testFXBarrierOptionParity) {
                                     "JPY", f.k);                                          // domestic
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxBarrierOption") = "GarmanKohlhagen";
         engineData->engine("FxBarrierOption") = "AnalyticBarrierEngine";
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         fxOption.build(engineFactory);
         downInOption.build(engineFactory);
@@ -560,7 +560,7 @@ BOOST_AUTO_TEST_CASE(testFXBarrierOptionTouched) {
 
     for (auto& f : fxb) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
 
@@ -584,13 +584,13 @@ BOOST_AUTO_TEST_CASE(testFXBarrierOptionTouched) {
             "JPY", f.k, "FX-Reuters-JPY-EUR"); // domestic
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxBarrierOption") = "GarmanKohlhagen";
         engineData->engine("FxBarrierOption") = "AnalyticBarrierEngine";
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         fxOption.build(engineFactory);
         fxBarrierOption.build(engineFactory);
@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionPrice) {
 
     for (auto& f : fxb) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
         Date today = market->asofDate();
         Settings::instance().evaluationDate() = market->asofDate();
 
@@ -675,13 +675,13 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionPrice) {
         engineParamMap["XGrid"] = "400";
         engineParamMap["DampingSteps"] = "100";
 
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDigitalBarrierOption") = "GarmanKohlhagen";
         engineData->engine("FxDigitalBarrierOption") = "FdBlackScholesBarrierEngine";
         engineData->engineParameters("FxDigitalBarrierOption") = engineParamMap;
         engineData->model("FxDigitalOption") = "GarmanKohlhagen";
         engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
         barrierOption.build(engineFactory);
 
         Real npv = barrierOption.instrument()->NPV() / f.cash;
@@ -722,7 +722,7 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionParity) {
     vector<string> payoutCcys = {"EUR", "JPY"};
     for (auto& f : fxb) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
         Date today = market->asofDate();
         Settings::instance().evaluationDate() = market->asofDate();
         for (auto& payoutCcy : payoutCcys) {
@@ -760,13 +760,13 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionParity) {
             engineParamMap["XGrid"] = "400";
             engineParamMap["DampingSteps"] = "100";
 
-            boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+            QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
             engineData->model("FxDigitalBarrierOption") = "GarmanKohlhagen";
             engineData->engine("FxDigitalBarrierOption") = "FdBlackScholesBarrierEngine";
             engineData->engineParameters("FxDigitalBarrierOption") = engineParamMap;
             engineData->model("FxDigitalOption") = "GarmanKohlhagen";
             engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
-            boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+            QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
             fxOption.build(engineFactory);
             downInOption.build(engineFactory);
@@ -813,7 +813,7 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionTouched) {
     vector<string> fxIndices = {"FX-Reuters-EUR-JPY", "FX-Reuters-JPY-EUR"};
     for (auto& f : fxb) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
         Date today = market->asofDate();
         Settings::instance().evaluationDate() = market->asofDate();
         for (auto& payoutCcy : payoutCcys) {
@@ -849,13 +849,13 @@ BOOST_AUTO_TEST_CASE(testFXDigitalBarrierOptionTouched) {
                 engineParamMap["XGrid"] = "400";
                 engineParamMap["DampingSteps"] = "100";
 
-                boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+                QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
                 engineData->model("FxDigitalBarrierOption") = "GarmanKohlhagen";
                 engineData->engine("FxDigitalBarrierOption") = "FdBlackScholesBarrierEngine";
                 engineData->engineParameters("FxDigitalBarrierOption") = engineParamMap;
                 engineData->model("FxDigitalOption") = "GarmanKohlhagen";
                 engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
-                boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+                QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
                 fxOption.build(engineFactory);
                 downInOption.build(engineFactory);
@@ -922,7 +922,7 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionPrice) {
     };
 
     // Set engineData
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("FxTouchOption") = "GarmanKohlhagen";
     engineData->engine("FxTouchOption") = "AnalyticDigitalAmericanEngine";
     engineData->model("Swap") = "DiscountedCashflows";
@@ -930,7 +930,7 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionPrice) {
 
     for (auto& f : fxd) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
 
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
@@ -948,7 +948,7 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionPrice) {
         Real expectedNPV = f.result;
 
         // Build and price
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         fxTouchOption.build(engineFactory);
 
@@ -979,7 +979,7 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionParity) {
 
     for (auto& f : fxb) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
 
@@ -1000,7 +1000,7 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionParity) {
         vector<double> amounts = {f.cash};
         vector<string> dates = {"2016-08-01"};
 
-        LegData legData(boost::make_shared<CashflowData>(amounts, dates), true,
+        LegData legData(QuantLib::ext::make_shared<CashflowData>(amounts, dates), true,
                         f.payoffCurrencyDomestic ? "JPY" : "EUR");
         legData.isPayer() = false;
         ore::data::Swap swap(env, {legData});
@@ -1015,13 +1015,13 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionParity) {
                                   f.cash);
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxTouchOption") = "GarmanKohlhagen";
         engineData->engine("FxTouchOption") = "AnalyticDigitalAmericanEngine";
         engineData->model("Swap") = "DiscountedCashflows";
         engineData->engine("Swap") = "DiscountingSwapEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         swap.build(engineFactory);
         downInOption.build(engineFactory);
@@ -1092,7 +1092,7 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionTouched) {
     vector<string> fxIndices = {"FX-Reuters-EUR-JPY", "FX-Reuters-JPY-EUR"};
     for (auto& f : fxt) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
         TimeSeries<Real> pastFixings;
@@ -1118,7 +1118,7 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionTouched) {
                 vector<double> amounts = {f.cash};
                 vector<string> dates = {"2016-08-01"};
 
-                LegData legData(boost::make_shared<CashflowData>(amounts, dates), true, payoutCcy);
+                LegData legData(QuantLib::ext::make_shared<CashflowData>(amounts, dates), true, payoutCcy);
                 legData.isPayer() = false;
                 ore::data::Swap swap(env, {legData});
 
@@ -1126,13 +1126,13 @@ BOOST_AUTO_TEST_CASE(testFXTouchOptionTouched) {
                                           "TARGET", fxIndex);
 
                 // Build and price
-                boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+                QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
                 engineData->model("FxTouchOption") = "GarmanKohlhagen";
                 engineData->engine("FxTouchOption") = "AnalyticDigitalAmericanEngine";
                 engineData->model("Swap") = "DiscountedCashflows";
                 engineData->engine("Swap") = "DiscountingSwapEngine";
 
-                boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+                QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
                 touchOption.build(engineFactory);
                 swap.build(engineFactory);
@@ -1247,7 +1247,7 @@ BOOST_AUTO_TEST_CASE(testFXDoubleBarrierOptionPrice) {
     BOOST_TEST_MESSAGE("Testing FXDoubleBarrierOption Price...");
     for (auto& f : fxdb) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
 
@@ -1275,13 +1275,13 @@ BOOST_AUTO_TEST_CASE(testFXDoubleBarrierOptionPrice) {
         Real expectedNPV = f.result;
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDoubleBarrierOption") = "GarmanKohlhagen";
         engineData->engine("FxDoubleBarrierOption") = "AnalyticDoubleBarrierEngine";
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         fxDoubleBarrierOption.build(engineFactory);
 
@@ -1303,7 +1303,7 @@ BOOST_AUTO_TEST_CASE(testFXDoubleBarrierOptionParity) {
     BOOST_TEST_MESSAGE("Testing FXDoubleBarrierOption Parity ...");
     for (auto& f : fxdb) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
 
@@ -1335,13 +1335,13 @@ BOOST_AUTO_TEST_CASE(testFXDoubleBarrierOptionParity) {
             "JPY", Notional * f.k); // domestic
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDoubleBarrierOption") = "GarmanKohlhagen";
         engineData->engine("FxDoubleBarrierOption") = "AnalyticDoubleBarrierEngine";
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         fxDoubleBarrierInOption.build(engineFactory);
         fxDoubleBarrierOutOption.build(engineFactory);
@@ -1445,7 +1445,7 @@ BOOST_AUTO_TEST_CASE(testFXDoubleBarrierOptionTouched) {
 
     for (auto& f : fxdb) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
         TimeSeries<Real> pastFixings;
@@ -1476,13 +1476,13 @@ BOOST_AUTO_TEST_CASE(testFXDoubleBarrierOptionTouched) {
             "JPY", f.k);               // domestic
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDoubleBarrierOption") = "GarmanKohlhagen";
         engineData->engine("FxDoubleBarrierOption") = "AnalyticDoubleBarrierEngine";
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         doubleBarrierOption.build(engineFactory);
         doubleBarrierOptionInverted.build(engineFactory);
@@ -1506,7 +1506,7 @@ BOOST_AUTO_TEST_CASE(testFXDoubleTouchOptionPrice) {
     BOOST_TEST_MESSAGE("Testing FXDoubleTouchOption Price...");
 
     // Set engineData
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("FxDoubleTouchOption") = "GarmanKohlhagen";
     engineData->engine("FxDoubleTouchOption") = "AnalyticDoubleBarrierBinaryEngine";
     engineData->model("Swap") = "DiscountedCashflows";
@@ -1514,7 +1514,7 @@ BOOST_AUTO_TEST_CASE(testFXDoubleTouchOptionPrice) {
 
     for (auto& f : fxdt) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
 
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
@@ -1532,7 +1532,7 @@ BOOST_AUTO_TEST_CASE(testFXDoubleTouchOptionPrice) {
         Real expectedNPV = f.result;
 
         // Build and price
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         fxDoubleTouchOption.build(engineFactory);
 
@@ -1555,7 +1555,7 @@ BOOST_AUTO_TEST_CASE(testFXDoubleTouchOptionParity) {
 
     for (auto& f : fxdt) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
 
@@ -1574,7 +1574,7 @@ BOOST_AUTO_TEST_CASE(testFXDoubleTouchOptionParity) {
         vector<double> amounts = {f.cash};
         vector<string> dates = {"2016-08-01"};
 
-        LegData legData(boost::make_shared<CashflowData>(amounts, dates), true, "JPY");
+        LegData legData(QuantLib::ext::make_shared<CashflowData>(amounts, dates), true, "JPY");
         legData.isPayer() = false;
         ore::data::Swap swap(env, {legData});
 
@@ -1582,13 +1582,13 @@ BOOST_AUTO_TEST_CASE(testFXDoubleTouchOptionParity) {
         FxDoubleTouchOption knockInOption(env, optionData, knonkInData, "EUR", "JPY", "JPY", f.cash);
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDoubleTouchOption") = "GarmanKohlhagen";
         engineData->engine("FxDoubleTouchOption") = "AnalyticDoubleBarrierBinaryEngine";
         engineData->model("Swap") = "DiscountedCashflows";
         engineData->engine("Swap") = "DiscountingSwapEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         swap.build(engineFactory);
         knockOutOption.build(engineFactory);
@@ -1653,7 +1653,7 @@ BOOST_AUTO_TEST_CASE(testFXDoubleTouchOptionTouched) {
     vector<string> fxIndices = {"FX-Reuters-EUR-JPY", "FX-Reuters-JPY-EUR"};
     for (auto& f : fxdt) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
         TimeSeries<Real> pastFixings;
@@ -1681,20 +1681,20 @@ BOOST_AUTO_TEST_CASE(testFXDoubleTouchOptionTouched) {
                 vector<double> amounts = {f.cash};
                 vector<string> dates = {"2016-08-01"};
 
-                LegData legData(boost::make_shared<CashflowData>(amounts, dates), true, payoutCcy);
+                LegData legData(QuantLib::ext::make_shared<CashflowData>(amounts, dates), true, payoutCcy);
                 legData.isPayer() = false;
                 ore::data::Swap swap(env, {legData});
                 FxDoubleTouchOption doubleTouchOption(env, optionData, barrierData, "EUR", "JPY", payoutCcy, f.cash,
                                                       "20160201", "TARGET", fxIndex);
 
                 // Build and price
-                boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+                QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
                 engineData->model("FxDoubleTouchOption") = "GarmanKohlhagen";
                 engineData->engine("FxDoubleTouchOption") = "AnalyticDoubleBarrierBinaryEngine";
                 engineData->model("Swap") = "DiscountedCashflows";
                 engineData->engine("Swap") = "DiscountingSwapEngine";
 
-                boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+                QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
                 doubleTouchOption.build(engineFactory);
                 swap.build(engineFactory);
@@ -1734,8 +1734,8 @@ BOOST_AUTO_TEST_CASE(testFXEuropeanBarrierOptionSymmetry) {
 
     for (auto& f : fxb) {
         // build market
-        boost::shared_ptr<Market> marketCall = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
-        boost::shared_ptr<Market> marketPut = boost::make_shared<TestMarket>(f.k, f.r, f.q, f.v);
+        QuantLib::ext::shared_ptr<Market> marketCall = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+        QuantLib::ext::shared_ptr<Market> marketPut = QuantLib::ext::make_shared<TestMarket>(f.k, f.r, f.q, f.v);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = marketCall->asofDate();
 
@@ -1758,14 +1758,14 @@ BOOST_AUTO_TEST_CASE(testFXEuropeanBarrierOptionSymmetry) {
                                             "JPY", f.s);                                     // domestic
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDigitalOption") = "GarmanKohlhagen";
         engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactoryCall = boost::make_shared<EngineFactory>(engineData, marketCall);
-        boost::shared_ptr<EngineFactory> engineFactoryPut = boost::make_shared<EngineFactory>(engineData, marketPut);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactoryCall = QuantLib::ext::make_shared<EngineFactory>(engineData, marketCall);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactoryPut = QuantLib::ext::make_shared<EngineFactory>(engineData, marketPut);
 
         fxCallOption.build(engineFactoryCall);
         fxPutOption.build(engineFactoryPut);
@@ -1810,7 +1810,7 @@ BOOST_AUTO_TEST_CASE(testFXEuropeanBarrierOptionParity) {
     for (auto& f : fxb) {
         for (auto& optionType : optionTypes) {
             // build market
-            boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
+            QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v);
             Date today = Settings::instance().evaluationDate();
             Settings::instance().evaluationDate() = market->asofDate();
 
@@ -1842,11 +1842,11 @@ BOOST_AUTO_TEST_CASE(testFXEuropeanBarrierOptionParity) {
 
             vector<double> amounts = {f.rebate};
             vector<string> dates = {"2016-08-01"};
-            LegData legData(boost::make_shared<CashflowData>(amounts, dates), false, "JPY");
+            LegData legData(QuantLib::ext::make_shared<CashflowData>(amounts, dates), false, "JPY");
             ore::data::Swap swap(env, {legData});
 
             // Build and price
-            boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+            QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
             engineData->model("FxDigitalOption") = "GarmanKohlhagen";
             engineData->engine("FxDigitalOption") = "AnalyticEuropeanEngine";
             engineData->model("FxOption") = "GarmanKohlhagen";
@@ -1854,7 +1854,7 @@ BOOST_AUTO_TEST_CASE(testFXEuropeanBarrierOptionParity) {
             engineData->model("Swap") = "DiscountedCashflows";
             engineData->engine("Swap") = "DiscountingSwapEngine";
 
-            boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+            QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
             fxOption.build(engineFactory);
             downInOption.build(engineFactory);
@@ -1907,7 +1907,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
     // we test that the trades knocks in and knocks out as expected when seasoned
     for (auto& f : fxdb) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = today; // reset
         Settings::instance().evaluationDate() = market->asofDate();
@@ -1933,7 +1933,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
                           "JPY", f.k);               // domestic
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDoubleBarrierOption") = "GarmanKohlhagen";
         engineData->engine("FxDoubleBarrierOption") = "AnalyticDoubleBarrierEngine";
         engineData->model("FxBarrierOption") = "GarmanKohlhagen";
@@ -1941,7 +1941,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         // knocked in npv = knockOut npv
         TimeSeries<Real> pastFixings;
@@ -1977,7 +1977,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
     // we test trades that are knocked in but unseasoned
     for (auto& f : fxdb3) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = today; // reset
         Settings::instance().evaluationDate() = market->asofDate();
@@ -2003,7 +2003,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
                           "JPY", f.k);               // domestic
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDoubleBarrierOption") = "GarmanKohlhagen";
         engineData->engine("FxDoubleBarrierOption") = "AnalyticDoubleBarrierEngine";
         engineData->model("FxBarrierOption") = "GarmanKohlhagen";
@@ -2011,7 +2011,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         kikoBarrierOption.build(engineFactory);
         koBarrierOption.build(engineFactory);
@@ -2029,7 +2029,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
     // we test trades that are knocked out but unseasoned
     for (auto& f : fxdb4) {
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = today; // reset
         Settings::instance().evaluationDate() = market->asofDate();
@@ -2055,7 +2055,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
                           "JPY", f.k);               // domestic
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDoubleBarrierOption") = "GarmanKohlhagen";
         engineData->engine("FxDoubleBarrierOption") = "AnalyticDoubleBarrierEngine";
         engineData->model("FxBarrierOption") = "GarmanKohlhagen";
@@ -2063,7 +2063,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         // knocked out npv = 0
         kikoBarrierOption.build(engineFactory);
@@ -2084,7 +2084,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
     for (auto& f : fxdb2) {
         BOOST_TEST_MESSAGE("testing " << f.knockInType << " " << f.knockOutType);
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = today; // reset
         Settings::instance().evaluationDate() = market->asofDate();
@@ -2124,7 +2124,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
                           "JPY", f.k);               // domestic
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDoubleBarrierOption") = "GarmanKohlhagen";
         engineData->engine("FxDoubleBarrierOption") = "AnalyticDoubleBarrierEngine";
         engineData->model("FxBarrierOption") = "GarmanKohlhagen";
@@ -2132,7 +2132,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         TimeSeries<Real> pastFixings;
         IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings);
@@ -2194,7 +2194,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
     for (auto& f : fxdb5) {
         BOOST_TEST_MESSAGE("testing " << f.knockInType << " " << f.knockOutType);
         // build market
-        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
+        QuantLib::ext::shared_ptr<Market> market = QuantLib::ext::make_shared<TestMarket>(f.s, f.q, f.r, f.v, true);
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = today; // reset
         Settings::instance().evaluationDate() = market->asofDate();
@@ -2233,7 +2233,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
             "JPY", f.k);               // domestic
 
         // Build and price
-        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
         engineData->model("FxDoubleBarrierOption") = "GarmanKohlhagen";
         engineData->engine("FxDoubleBarrierOption") = "AnalyticDoubleBarrierEngine";
         engineData->model("FxBarrierOption") = "GarmanKohlhagen";
@@ -2241,7 +2241,7 @@ BOOST_AUTO_TEST_CASE(testFXKIKOBarrierOption) {
         engineData->model("FxOption") = "GarmanKohlhagen";
         engineData->engine("FxOption") = "AnalyticEuropeanEngine";
 
-        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
         TimeSeries<Real> pastFixings;
         IndexManager::instance().setHistory("Reuters EUR/JPY", pastFixings);

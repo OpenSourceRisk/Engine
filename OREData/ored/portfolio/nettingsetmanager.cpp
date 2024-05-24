@@ -26,10 +26,10 @@ namespace data {
 
 using ore::data::NettingSetDetails;
 
-void NettingSetManager::add(const boost::shared_ptr<NettingSetDefinition>& nettingSet) {
+void NettingSetManager::add(const QuantLib::ext::shared_ptr<NettingSetDefinition>& nettingSet) {
     const NettingSetDetails& k = nettingSet->nettingSetDetails();
 
-    std::pair<NettingSetDetails, boost::shared_ptr<NettingSetDefinition>> newNetSetDef(k, nettingSet);
+    std::pair<NettingSetDetails, QuantLib::ext::shared_ptr<NettingSetDefinition>> newNetSetDef(k, nettingSet);
 
     bool added = data_.insert(newNetSetDef).second;
     if (added)
@@ -73,14 +73,14 @@ const set<NettingSetDetails> NettingSetManager::calculateIMNettingSets() const {
     return calculateIMNettingSets;
 }
 
-boost::shared_ptr<NettingSetDefinition> NettingSetManager::get(const NettingSetDetails& nettingSetDetails) const {
+QuantLib::ext::shared_ptr<NettingSetDefinition> NettingSetManager::get(const NettingSetDetails& nettingSetDetails) const {
     if (has(nettingSetDetails))
         return data_.find(nettingSetDetails)->second;
     else
         QL_FAIL("NettingSetDefinition not found in manager: " << nettingSetDetails);
 }
 
-boost::shared_ptr<NettingSetDefinition> NettingSetManager::get(const string& id) const {
+QuantLib::ext::shared_ptr<NettingSetDefinition> NettingSetManager::get(const string& id) const {
     auto found = std::find_if(data_.begin(), data_.end(),
                               [&id](const auto& details) { return details.first.nettingSetId() == id; });
     if (found != data_.end())
@@ -95,7 +95,7 @@ void NettingSetManager::fromXML(XMLNode* node) {
     for (unsigned i = 0; i < nettingSetNodes.size(); i++) {
         XMLNode* child = nettingSetNodes[i];
         try {
-            boost::shared_ptr<NettingSetDefinition> nettingSet(new NettingSetDefinition(child));
+            QuantLib::ext::shared_ptr<NettingSetDefinition> nettingSet(new NettingSetDefinition(child));
             add(nettingSet);
         } catch (std::exception& ex) {
             StructuredConfigurationWarningMessage("Netting set manager", "", "Failed to parse netting set definition",
@@ -105,10 +105,10 @@ void NettingSetManager::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* NettingSetManager::toXML(XMLDocument& doc) {
+XMLNode* NettingSetManager::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("NettingSetDefinitions");
-    map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>>::iterator it;
-    for (it = data_.begin(); it != data_.end(); ++it)
+    // map<NettingSetDetails, const QuantLib::ext::shared_ptr<NettingSetDefinition>>::iterator it;
+    for (auto it = data_.begin(); it != data_.end(); ++it)
         XMLUtils::appendNode(node, it->second->toXML(doc));
     return node;
 }

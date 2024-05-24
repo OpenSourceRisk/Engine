@@ -100,7 +100,7 @@ public:
 private:
     Handle<YieldTermStructure> intDiscCurve(vector<Date> dates, vector<DiscountFactor> dfs, DayCounter dc,
                                             Calendar cal) {
-        boost::shared_ptr<YieldTermStructure> idc(
+        QuantLib::ext::shared_ptr<YieldTermStructure> idc(
             new QuantLib::InterpolatedDiscountCurve<LogLinear>(dates, dfs, dc, cal));
         return Handle<YieldTermStructure>(idc);
     }
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(testZeroCouponSwapPrice) {
     // build market
     Date today(28, August, 2018);
     Settings::instance().evaluationDate() = today;
-    boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
+    QuantLib::ext::shared_ptr<TestMarket> market = QuantLib::ext::make_shared<TestMarket>();
     Date marketDate = market->asofDate();
     BOOST_CHECK_EQUAL(today, marketDate);
     Settings::instance().evaluationDate() = marketDate;
@@ -168,22 +168,22 @@ BOOST_AUTO_TEST_CASE(testZeroCouponSwapPrice) {
     // GBP Libor Leg
     bool isPayerLibor = true;
     string indexLibor = "GBP-LIBOR-6M";
-    LegData leg(boost::make_shared<ZeroCouponFixedLegData>(rates), isPayerLibor, "GBP", scheduleData, "Year", notional,
+    LegData leg(QuantLib::ext::make_shared<ZeroCouponFixedLegData>(rates), isPayerLibor, "GBP", scheduleData, "Year", notional,
                 vector<string>(), paymentConvention);
 
     // Build swap trades
     vector<LegData> legData;
     legData.push_back(leg);
-    boost::shared_ptr<Trade> swap(new ore::data::Swap(env, legData));
+    QuantLib::ext::shared_ptr<Trade> swap(new ore::data::Swap(env, legData));
 
     // engine data and factory
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> engineData = QuantLib::ext::make_shared<EngineData>();
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";
-    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    QuantLib::ext::shared_ptr<EngineFactory> engineFactory = QuantLib::ext::make_shared<EngineFactory>(engineData, market);
 
     // build swaps and portfolio
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
     swap->id() = "Swap";
 
     portfolio->add(swap);

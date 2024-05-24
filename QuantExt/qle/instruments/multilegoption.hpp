@@ -41,14 +41,14 @@ public:
 
     //! exercise = nullptr means that the instrument is identical to the underlying itself (i.e. a swap)
     MultiLegOption(const std::vector<Leg>& legs, const std::vector<bool>& payer, const std::vector<Currency>& currency,
-                   const boost::shared_ptr<Exercise>& exercise = boost::shared_ptr<Exercise>(),
+                   const QuantLib::ext::shared_ptr<Exercise>& exercise = QuantLib::ext::shared_ptr<Exercise>(),
                    const Settlement::Type settlementType = Settlement::Physical,
                    Settlement::Method settlementMethod = Settlement::PhysicalOTC);
 
     const std::vector<Leg>& legs() const { return legs_; }
     const std::vector<bool>& payer() const { return payer_; }
     const std::vector<Currency>& currency() const { return currency_; }
-    const boost::shared_ptr<Exercise> exercise() const { return exercise_; }
+    const QuantLib::ext::shared_ptr<Exercise> exercise() const { return exercise_; }
     const Settlement::Type settlementType() const { return settlementType_; }
     const Settlement::Method settlementMethod() const { return settlementMethod_; }
 
@@ -64,7 +64,7 @@ private:
     const std::vector<Leg> legs_;
     const std::vector<bool> payer_;
     const std::vector<Currency> currency_;
-    const boost::shared_ptr<Exercise> exercise_;
+    const QuantLib::ext::shared_ptr<Exercise> exercise_;
     const Settlement::Type settlementType_;
     const Settlement::Method settlementMethod_;
     Date maturity_;
@@ -77,7 +77,7 @@ public:
     std::vector<Leg> legs;
     std::vector<bool> payer;
     std::vector<Currency> currency;
-    boost::shared_ptr<Exercise> exercise;
+    QuantLib::ext::shared_ptr<Exercise> exercise;
     Settlement::Type settlementType;
     Settlement::Method settlementMethod;
     void validate() const override {}

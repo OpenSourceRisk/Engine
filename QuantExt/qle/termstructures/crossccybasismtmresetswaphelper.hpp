@@ -55,8 +55,8 @@ public:
     CrossCcyBasisMtMResetSwapHelper(
         const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
         const Calendar& settlementCalendar, const Period& swapTenor, BusinessDayConvention rollConvention,
-        const boost::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
-        const boost::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
         const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
         const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
         const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
@@ -77,7 +77,7 @@ public:
     //@}
     //! \name inspectors
     //@{
-    boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap() const { return swap_; }
+    QuantLib::ext::shared_ptr<CrossCcyBasisMtMResetSwap> swap() const { return swap_; }
     //@}
     //! \name Visitability
     //@{
@@ -92,8 +92,8 @@ protected:
     Calendar settlementCalendar_;
     Period swapTenor_;
     BusinessDayConvention rollConvention_;
-    boost::shared_ptr<QuantLib::IborIndex> foreignCcyIndex_;
-    boost::shared_ptr<QuantLib::IborIndex> domesticCcyIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> foreignCcyIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> domesticCcyIndex_;
     Handle<YieldTermStructure> foreignCcyDiscountCurve_;
     Handle<YieldTermStructure> domesticCcyDiscountCurve_;
     Handle<YieldTermStructure> foreignCcyFxFwdRateCurve_;
@@ -118,7 +118,7 @@ protected:
 
     Currency foreignCurrency_;
     Currency domesticCurrency_;
-    boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap_;
+    QuantLib::ext::shared_ptr<CrossCcyBasisMtMResetSwap> swap_;
 
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     RelinkableHandle<YieldTermStructure> foreignDiscountRLH_;

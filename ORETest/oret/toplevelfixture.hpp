@@ -32,7 +32,7 @@
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/currencyparser.hpp>
-#include <ored/utilities/initbuilders.hpp>
+#include <ored/utilities/databuilders.hpp>
 
 using QuantExt::SavedObservableSettings;
 using QuantLib::IndexManager;
@@ -51,7 +51,7 @@ public:
     /*! Constructor
         Add things here that you want to happen at the start of every test case
     */
-    TopLevelFixture() { ore::data::initBuilders(); }
+    TopLevelFixture() { ore::data::dataBuilders(); }
 
     /*! Destructor
         Add things here that you want to happen after _every_ test case
@@ -60,7 +60,7 @@ public:
         // Clear and fixings that have been added
         IndexManager::instance().clearHistories();
 	// Clear conventions that have been set
-        ore::data::InstrumentConventions::instance().setConventions(boost::make_shared<ore::data::Conventions>());
+        ore::data::InstrumentConventions::instance().setConventions(QuantLib::ext::make_shared<ore::data::Conventions>());
         // Clear contents of the index name translator
 	ore::data::IndexNameTranslator::instance().clear();
 	// Clear custom calendars and modified holidays

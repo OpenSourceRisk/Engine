@@ -97,6 +97,29 @@ std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type)
     return oss;
 }
 
+QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping parseFloatSpreadMapping(const string& s) {
+    if (boost::algorithm::to_upper_copy(s) == "NEXTCOUPON")
+        return QuantExt::AnalyticLgmSwaptionEngine::nextCoupon;
+    else if (boost::algorithm::to_upper_copy(s) == "PRORATA")
+        return QuantExt::AnalyticLgmSwaptionEngine::proRata;
+    else if (boost::algorithm::to_upper_copy(s) == "SIMPLE")
+        return QuantExt::AnalyticLgmSwaptionEngine::simple;
+    else
+        QL_FAIL("FloatSpreadMapping '" << s << "' not recognized");
+}
+
+std::ostream& operator<<(std::ostream& oss, const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping& m) {
+    if (m == QuantExt::AnalyticLgmSwaptionEngine::nextCoupon)
+        oss << "NEXTCOUPON";
+    else if (m == QuantExt::AnalyticLgmSwaptionEngine::proRata)
+        oss << "PRORATA";
+    else if (m == QuantExt::AnalyticLgmSwaptionEngine::simple)
+        oss << "SIMPLE";
+    else
+        QL_FAIL("FloatSpreadMapping type not covered");
+    return oss;
+}
+
 void LgmData::clear() {
     optionExpiries_.clear();
     optionTerms_.clear();
@@ -117,7 +140,6 @@ void LgmData::reset() {
     aValues_ = {0.01};
     shiftHorizon_ = 0.0;
     scaling_ = 1.0;
-    
 }
 
 void LgmData::fromXML(XMLNode* node) {
@@ -174,12 +196,15 @@ void LgmData::fromXML(XMLNode* node) {
         scaling_ = 1.0;
     }
 
+    floatSpreadMapping_ =
+        parseFloatSpreadMapping(XMLUtils::getChildValue(node, "FloatSpreadMapping", false, "proRata"));
+
     IrModelData::fromXML(node);
 
     LOG("LgmData done");
 }
 
-XMLNode* LgmData::toXML(XMLDocument& doc) {
+XMLNode* LgmData::toXML(XMLDocument& doc) const {
 
     XMLNode* lgmNode = IrModelData::toXML(doc);
 
@@ -210,6 +235,8 @@ XMLNode* LgmData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, parameterTransformationNode, "ShiftHorizon", shiftHorizon_);
     XMLUtils::addChild(doc, parameterTransformationNode, "Scaling", scaling_);
 
+    XMLUtils::addChild(doc, lgmNode, "FloatSpreadMapping", ore::data::to_string(floatSpreadMapping_));
+
     return lgmNode;
 }
 
@@ -236,7 +263,7 @@ void LgmReversionTransformation::fromXML(XMLNode* node) {
     scaling_ = XMLUtils::getChildValueAsDouble(node, "Scaling", true);
 }
 
-XMLNode* LgmReversionTransformation::toXML(XMLDocument& doc) {
+XMLNode* LgmReversionTransformation::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ParameterTransformation");
     XMLUtils::addChild(doc, node, "ShiftHorizon", horizon_);
     XMLUtils::addChild(doc, node, "Scaling", scaling_);

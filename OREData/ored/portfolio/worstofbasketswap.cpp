@@ -26,9 +26,9 @@
 namespace ore {
 namespace data {
 
-void WorstOfBasketSwap::build(const boost::shared_ptr<EngineFactory>& factory) {
+void WorstOfBasketSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
-    auto builder = boost::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(factory->builder("ScriptedTrade"));
+    auto builder = QuantLib::ext::dynamic_pointer_cast<ScriptedTradeEngineBuilder>(factory->builder("ScriptedTrade"));
 
     // set script parameters
 
@@ -116,7 +116,7 @@ void WorstOfBasketSwap::build(const boost::shared_ptr<EngineFactory>& factory) {
         QL_REQUIRE(u->type() == type, "All of Underlyings must be from the same asset class.");
     }
     auto floatingIndex = *factory->market()->iborIndex(floatingIndex_, builder->configuration(MarketContext::pricing));
-    auto ois = boost::dynamic_pointer_cast<OvernightIndex>(floatingIndex);
+    auto ois = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(floatingIndex);
 
     if (ois) {
         DLOG("building WorstOfBasketSwap scripted trade wrapper using (internal) script \'Overnight\'")
@@ -344,24 +344,26 @@ void WorstOfBasketSwap::build(const boost::shared_ptr<EngineFactory>& factory) {
     // build trade
 
     ScriptedTrade::build(factory);
+}
+
+void WorstOfBasketSwap::setIsdaTaxonomyFields() {
+    ScriptedTrade::setIsdaTaxonomyFields();
 
     // ISDA taxonomy
     // asset class set in the base class already
     std::string assetClass = boost::any_cast<std::string>(additionalData_["isdaAssetClass"]);
     if (assetClass == "Equity") {
         additionalData_["isdaBaseProduct"] = string("Other");
-        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
-    }
-    else if (assetClass == "Commodity") {
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    } else if (assetClass == "Commodity") {
         // isda taxonomy missing for this class, using the same as equity
         additionalData_["isdaBaseProduct"] = string("Other");
-        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");  
-    }
-    else if (assetClass == "Foreign Exchange") {
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    } else if (assetClass == "Foreign Exchange") {
         additionalData_["isdaBaseProduct"] = string("Exotic");
-        additionalData_["isdaSubProduct"] = string("Generic");  
+        additionalData_["isdaSubProduct"] = string("Generic");
     }
-    additionalData_["isdaTransaction"] = string("Basket");  
+    additionalData_["isdaTransaction"] = string("Basket");
 }
 
 void WorstOfBasketSwap::initIndices() {
@@ -525,7 +527,7 @@ XMLNode* writeEventData(XMLDocument& doc, ScriptedTradeEventData& eventData) {
     return n;
 }
 
-XMLNode* WorstOfBasketSwap::toXML(XMLDocument& doc) {
+XMLNode* WorstOfBasketSwap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, tradeNode);

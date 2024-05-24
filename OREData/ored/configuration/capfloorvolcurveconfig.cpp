@@ -58,14 +58,16 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const BusinessDayConvention& businessDayConvention, const std::string& index,
     const QuantLib::Period& rateComputationPeriod, const Size onCapSettlementDays, const string& discountCurve,
     const string& interpolationMethod, const string& interpolateOn, const string& timeInterpolation,
-    const string& strikeInterpolation, const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig, const string& inputType)
+    const string& strikeInterpolation, const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig,
+    const string& inputType, const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration)
     : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
       flatExtrapolation_(flatExtrapolation), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes),
       dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), rateComputationPeriod_(rateComputationPeriod),
       onCapSettlementDays_(onCapSettlementDays), discountCurve_(discountCurve),
       interpolationMethod_(interpolationMethod), interpolateOn_(interpolateOn), timeInterpolation_(timeInterpolation),
-      strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors), bootstrapConfig_(bootstrapConfig), inputType_(inputType) {
+      strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors), bootstrapConfig_(bootstrapConfig),
+      inputType_(inputType), parametricSmileConfiguration_(parametricSmileConfiguration) {
 
     // Set extrapolation string. "Linear" just means extrapolation allowed and non-flat.
     extrapolation_ = !extrapolate_ ? "None" : (flatExtrapolation_ ? "Flat" : "Linear");
@@ -214,7 +216,13 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
             bootstrapConfig_.fromXML(n);
         }
 
-		// Optional Input Type
+        // Optional parametric smile configuration
+        if(XMLNode* n = XMLUtils::getChildNode(node, "ParametricSmileConfiguration")) {
+            parametricSmileConfiguration_ = ParametricSmileConfiguration();
+            parametricSmileConfiguration_->fromXML(n);
+        }
+
+        // Optional Input Type
         inputType_ = "TermVolatilities";
         if (XMLNode* n = XMLUtils::getChildNode(node, "InputType")) {
             inputType_ = XMLUtils::getNodeValue(n);
@@ -239,7 +247,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CapFloorVolatility");
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
@@ -321,7 +329,7 @@ void CapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
 
 string CapFloorVolatilityCurveConfig::indexTenor() const {
     string tenor;
-    boost::shared_ptr<IborIndex> index = parseIborIndex(index_, tenor);
+    QuantLib::ext::shared_ptr<IborIndex> index = parseIborIndex(index_, tenor);
     // for ON indices we get back an empty string
     if (tenor.empty())
         tenor = "1D";
@@ -397,7 +405,11 @@ void CapFloorVolatilityCurveConfig::validate() const {
                "InterpolateOn (" << interpolateOn_ << ") must be TermVolatilities or OptionletVolatilities");
     QL_REQUIRE(validInterps.count(timeInterpolation_) == 1,
                "TimeInterpolation, " << timeInterpolation_ << ", not recognised");
-    QL_REQUIRE(validInterps.count(strikeInterpolation_) == 1,
+    QuantExt::SabrParametricVolatility::ModelVariant dummySabrVariant;
+    QL_REQUIRE(validInterps.count(strikeInterpolation_) == 1 ||
+                   tryParse(strikeInterpolation_, dummySabrVariant,
+                            std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
+                                [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); })),
                "StrikeInterpolation, " << strikeInterpolation_ << ", not recognised");
     QL_REQUIRE(strikeInterpolation_ != "BackwardFlat", "BackwardFlat StrikeInterpolation is not allowed");
     if (!strikes_.empty()) {

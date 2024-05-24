@@ -19,16 +19,20 @@
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 
+#include <ql/experimental/math/moorepenroseinverse.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
 #include <ql/math/matrixutilities/qrdecomposition.hpp>
+#include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
 
 #include <boost/math/distributions/normal.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/covariance.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/statistics/variates/covariate.hpp>
 
 #include <iostream>
 #include <map>
@@ -403,21 +407,27 @@ RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real
     time_ = time;
 }
 
-RandomVariable::RandomVariable(const QuantLib::Array& array, const Real time) {
-    n_ = array.size();
+RandomVariable::RandomVariable(const Size n, const Real* const data, const Real time) {
+    n_ = n;
     deterministic_ = false;
     time_ = time;
     if (n_ != 0) {
         resumeDataStats();
         data_ = new double[n_];
         // std::memcpy(data_, array.begin(), n_ * sizeof(double));
-        std::copy(array.begin(), array.end(), data_);
+        std::copy(data, data + n_, data_);
         stopDataStats(n_);
     } else {
         data_ = nullptr;
     }
     constantData_ = 0.0;
 }
+
+RandomVariable::RandomVariable(const std::vector<Real>& data, const Real time)
+    : RandomVariable(data.size(), &data[0], time) {}
+
+RandomVariable::RandomVariable(const QuantLib::Array& data, const Real time)
+    : RandomVariable(data.size(), data.begin(), time) {}
 
 void RandomVariable::copyToMatrixCol(QuantLib::Matrix& m, const Size j) const {
     if (deterministic_)
@@ -1099,8 +1109,59 @@ RandomVariable applyInverseFilter(RandomVariable x, const Filter& f) {
     return x;
 }
 
+Matrix pcaCoordinateTransform(const std::vector<const RandomVariable*>& regressor, const Real varianceCutoff) {
+    if (regressor.empty())
+        return {};
+
+    Matrix cov(regressor.size(), regressor.size());
+    for (Size i = 0; i < regressor.size(); ++i) {
+        cov(i, i) = variance(*regressor[i]).at(0);
+        for (Size j = 0; j < i; ++j) {
+            cov(i, j) = cov(j, i) = covariance(*regressor[i], *regressor[j]).at(0);
+        }
+    }
+
+    QuantLib::SymmetricSchurDecomposition schur(cov);
+    Real totalVariance = std::accumulate(schur.eigenvalues().begin(), schur.eigenvalues().end(), 0.0);
+
+    Size keep = 0;
+    Real explainedVariance = 0.0;
+    while (keep < schur.eigenvalues().size() && explainedVariance < totalVariance * (1.0 - varianceCutoff)) {
+        explainedVariance += schur.eigenvalues()[keep++];
+    }
+
+    Matrix result(keep, regressor.size());
+    for (Size i = 0; i < keep; ++i) {
+        std::copy(schur.eigenvectors().column_begin(i), schur.eigenvectors().column_end(i), result.row_begin(i));
+    }
+    return result;
+}
+
+std::vector<RandomVariable> applyCoordinateTransform(const std::vector<const RandomVariable*>& regressor,
+                                                     const Matrix& transform) {
+    QL_REQUIRE(transform.columns() == regressor.size(),
+               "applyCoordinateTransform(): number of random variables ("
+                   << regressor.size() << ") does not match number of columns in transform (" << transform.columns());
+    if (regressor.empty())
+        return {};
+    Size n = regressor.front()->size();
+    std::vector<RandomVariable> result(transform.rows(), RandomVariable(n, 0.0));
+    for (Size i = 0; i < transform.rows(); ++i) {
+        for (Size j = 0; j < transform.columns(); ++j) {
+            result[i] += RandomVariable(n, transform(i, j)) * (*regressor[j]);
+        }
+    }
+    return result;
+}
+
+std::vector<const RandomVariable*> vec2vecptr(const std::vector<RandomVariable>& values) {
+    std::vector<const RandomVariable*> result(values.size());
+    std::transform(values.begin(), values.end(), result.begin(), [](const RandomVariable& v) { return &v; });
+    return result;
+}
+
 Array regressionCoefficients(
-    RandomVariable r, const std::vector<const RandomVariable*>& regressor,
+    RandomVariable r, std::vector<const RandomVariable*> regressor,
     const std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>& basisFn,
     const Filter& filter, const RandomVariableRegressionMethod regressionMethod, const std::string& debugLabel) {
 
@@ -1151,7 +1212,7 @@ Array regressionCoefficients(
         r.copyToArray(b);
 
     Array res;
-    if (regressionMethod == RandomVariableRegressionMethod::SVI) {
+    if (regressionMethod == RandomVariableRegressionMethod::SVD) {
         SVD svd(A);
         const Matrix& V = svd.V();
         const Matrix& U = svd.U();
@@ -1169,10 +1230,10 @@ Array regressionCoefficients(
     } else if (regressionMethod == RandomVariableRegressionMethod::QR) {
         res = qrSolve(A, b);
     } else {
-        QL_FAIL("regressionCoefficients(): unknown regression method, expected SVI or QR.");
+        QL_FAIL("regressionCoefficients(): unknown regression method, expected SVD or QR");
     }
 
-    // rough estimate, SVI is O(mn min(m,n))
+    // rough estimate, SVD is O(mn min(m,n))
     stopCalcStats(r.size() * basisFn.size() * std::min(r.size(), basisFn.size()));
     return res;
 }
@@ -1184,6 +1245,7 @@ RandomVariable conditionalExpectation(
     QL_REQUIRE(!regressor.empty(), "regressor vector is empty");
     Size n = regressor.front()->size();
     for (Size i = 1; i < regressor.size(); ++i) {
+        QL_REQUIRE(regressor[i] != nullptr, "regressor #" << i << " is null.");
         QL_REQUIRE(n == regressor[i]->size(), "regressor #" << i << " size (" << regressor[i]->size()
                                                             << ") must match regressor #0 size (" << n << ")");
     }
@@ -1226,6 +1288,23 @@ RandomVariable variance(const RandomVariable& r) {
     }
     stopCalcStats(r.size());
     return RandomVariable(r.size(), boost::accumulators::variance(acc));
+}
+
+RandomVariable covariance(const RandomVariable& r, const RandomVariable& s) {
+    QL_REQUIRE(r.size() == s.size(), "covariance(RandomVariable r, RandomVariable s): inconsistent sizes r ("
+                                         << r.size() << "), s(" << s.size() << ")");
+    if (r.deterministic() || s.deterministic())
+        return RandomVariable(r.size(), 0.0);
+    resumeCalcStats();
+    boost::accumulators::accumulator_set<
+        double,
+        boost::accumulators::stats<boost::accumulators::tag::covariance<double, boost::accumulators::tag::covariate1>>>
+        acc;
+    for (Size i = 0; i < r.size(); ++i) {
+        acc(r[i], boost::accumulators::covariate1 = s[i]);
+    }
+    stopCalcStats(r.size());
+    return RandomVariable(r.size(), boost::accumulators::covariance(acc));
 }
 
 RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const RandomVariable& strike,

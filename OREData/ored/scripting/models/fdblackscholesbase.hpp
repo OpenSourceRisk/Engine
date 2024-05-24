@@ -52,8 +52,8 @@ public:
     FdBlackScholesBase(
         const Size stateGridPoints, const std::vector<std::string>& currencies,
         const std::vector<Handle<YieldTermStructure>>& curves, const std::vector<Handle<Quote>>& fxSpots,
-        const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-        const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+        const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+        const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
         const std::set<std::string>& payCcys_, const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
@@ -129,9 +129,9 @@ protected:
     mutable std::set<Date> effectiveSimulationDates_; // the dates effectively simulated (including today)
     mutable TimeGrid timeGrid_;                       // the (possibly refined) time grid for the FD solver
     mutable std::vector<Size> positionInTimeGrid_;    // for each effective simulation date the index in the time grid
-    mutable boost::shared_ptr<FdmMesher> mesher_;     // the mesher for the FD solver
-    mutable boost::shared_ptr<FdmLinearOpComposite> operator_; // the operator
-    mutable boost::shared_ptr<FdmBackwardSolver> solver_;      // the sovler
+    mutable QuantLib::ext::shared_ptr<FdmMesher> mesher_;     // the mesher for the FD solver
+    mutable QuantLib::ext::shared_ptr<FdmLinearOpComposite> operator_; // the operator
+    mutable QuantLib::ext::shared_ptr<FdmBackwardSolver> solver_;      // the sovler
     mutable RandomVariable underlyingValues_;                  // the discretised underlying
 };
 

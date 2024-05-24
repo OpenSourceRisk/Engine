@@ -151,7 +151,7 @@ void HwModelData::fromXML(XMLNode* node) {
     LOG("HwModelData done");
 }
 
-XMLNode* HwModelData::toXML(XMLDocument& doc) {
+XMLNode* HwModelData::toXML(XMLDocument& doc) const {
 
     XMLNode* hwModelNode = IrModelData::toXML(doc);
     // reversion

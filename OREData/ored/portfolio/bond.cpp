@@ -92,7 +92,7 @@ void BondData::fromXML(XMLNode* node) {
     initialise();
 }
 
-XMLNode* BondData::toXML(XMLDocument& doc) {
+XMLNode* BondData::toXML(XMLDocument& doc) const {
     XMLNode* bondNode = doc.allocNode("BondData");
     if (!subType_.empty())
         XMLUtils::addChild(doc, bondNode, "SubType", subType_);
@@ -172,7 +172,7 @@ void BondData::initialise() {
     }
 }
 
-void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum,
+void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<BondReferenceDatum>& referenceDatum,
 					       const std::string& startDate, const std::string& endDate) {
     DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
     ore::data::populateFromBondReferenceData(subType_, issuerId_, settlementDays_, calendar_, issueDate_, priceQuoteMethod_,
@@ -183,7 +183,7 @@ void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferen
     checkData();
 }
 
-void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData,
+void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
 					     const std::string& startDate, const std::string& endDate) {
     QL_REQUIRE(!securityId_.empty(), "BondData::populateFromBondReferenceData(): no security id given");
     if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, securityId_)) {
@@ -191,7 +191,7 @@ void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDa
         initialise();
         checkData();
     } else {
-        auto bondRefData = boost::dynamic_pointer_cast<BondReferenceDatum>(
+        auto bondRefData = QuantLib::ext::dynamic_pointer_cast<BondReferenceDatum>(
             referenceData->getData(BondReferenceDatum::TYPE, securityId_));
         QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
         populateFromBondReferenceData(bondRefData, startDate, endDate);
@@ -225,11 +225,18 @@ std::string BondData::isdaBaseProduct() const {
     }
 }
 
-void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Bond::build() called for trade " << id());
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has Bond underlyings
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
     QL_REQUIRE(builder, "Bond::build(): internal error, builder is null");
 
     bondData_ = originalBondData_;
@@ -241,7 +248,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                "no bond settlement days given, if reference data is used, check if securityId '"
                    << bondData_.securityId() << "' is present and of type Bond.");
     Natural settlementDays = parseInteger(bondData_.settlementDays());
-    boost::shared_ptr<QuantLib::Bond> bond;
+    QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
 
     std::string openEndDateStr = builder->modelParameter("OpenEndDateReplacement", {}, false, "");
     Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
@@ -264,7 +271,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     Currency currency = parseCurrency(bondData_.currency());
-    boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<BondEngineBuilder> bondBuilder = QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
     bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
                                                bondData_.securityId(), bondData_.referenceCurveId()));
@@ -283,13 +290,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {bondData_.isPayer()};
 
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has Bond underlyings
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
-
     DLOG("Bond::build() finished for trade " << id());
 }
 
@@ -299,14 +299,14 @@ void Bond::fromXML(XMLNode* node) {
     bondData_ = originalBondData_;
 }
 
-XMLNode* Bond::toXML(XMLDocument& doc) {
+XMLNode* Bond::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLUtils::appendNode(node, originalBondData_.toXML(doc));
     return node;
 }
 
 std::map<AssetClass, std::set<std::string>>
-Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+Bond::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     result[AssetClass::BOND] = {bondData_.securityId()};
     return result;
@@ -328,8 +328,8 @@ double BondBuilder::Result::inflationFactor() const {
     }
 }
 
-BondBuilder::Result BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                       const boost::shared_ptr<ReferenceDataManager>& referenceData,
+BondBuilder::Result BondFactory::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                       const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                        const std::string& securityId) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto const& b : builders_) {
@@ -346,15 +346,15 @@ BondBuilder::Result BondFactory::build(const boost::shared_ptr<EngineFactory>& e
                "data and that there is a builder for the reference data type.");
 }
 
-void BondFactory::addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder,
+void BondFactory::addBuilder(const std::string& referenceDataType, const QuantLib::ext::shared_ptr<BondBuilder>& builder,
                              const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(builders_.insert(std::make_pair(referenceDataType, builder)).second || allowOverwrite,
                "BondFactory::addBuilder(" << referenceDataType << "): builder for key already exists.");
 }
 
-BondBuilder::Result VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                              const boost::shared_ptr<ReferenceDataManager>& referenceData,
+BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                              const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                               const std::string& securityId) const {
     BondData data(securityId, 1.0);
     data.populateFromBondReferenceData(referenceData);
@@ -363,7 +363,7 @@ BondBuilder::Result VanillaBondBuilder::build(const boost::shared_ptr<EngineFact
     bond.build(engineFactory);
 
     QL_REQUIRE(bond.instrument(), "VanillaBondBuilder: constructed bond is null, this is unexpected");
-    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
 
     QL_REQUIRE(bond.instrument() && bond.instrument()->qlInstrument(),
                "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "

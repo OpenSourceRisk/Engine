@@ -65,7 +65,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -118,7 +118,6 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t);
-std::ostream& operator<<(std::ostream& out, QuantLib::Exercise::Type t);
 
 EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str);
 

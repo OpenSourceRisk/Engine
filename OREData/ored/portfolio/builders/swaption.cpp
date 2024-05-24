@@ -39,12 +39,12 @@ using namespace std;
 using namespace ore::data;
 
 namespace {
-boost::shared_ptr<PricingEngine> buildMcEngine(
+QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(
     const std::function<string(string, const std::vector<std::string>&, const bool, const string&)>& engineParameter,
-    const boost::shared_ptr<LGM>& lgm, const Handle<YieldTermStructure>& discountCurve,
+    const QuantLib::ext::shared_ptr<LGM>& lgm, const Handle<YieldTermStructure>& discountCurve,
     const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices) {
 
-    return boost::make_shared<QuantExt::McMultiLegOptionEngine>(
+    return QuantLib::ext::make_shared<QuantExt::McMultiLegOptionEngine>(
         lgm, parseSequenceType(engineParameter("Training.Sequence", {}, false, "SobolBrownianBridge")),
         parseSequenceType(engineParameter("Pricing.Sequence", {}, false, "SobolBrownianBridge")),
         parseInteger(engineParameter("Training.Samples", {}, true, std::string())),
@@ -56,34 +56,35 @@ boost::shared_ptr<PricingEngine> buildMcEngine(
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering", {}, false, "Steps")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers", {}, false, "JoeKuoD7")), discountCurve,
         simulationDates, externalModelIndices, parseBool(engineParameter("MinObsDate", {}, false, "true")),
-        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")));
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
 }
 } // namespace
 
 namespace ore {
 namespace data {
 
-boost::shared_ptr<PricingEngine>
+QuantLib::ext::shared_ptr<PricingEngine>
 EuropeanSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
                                           const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
                                           const std::string& discountCurve, const std::string& securitySpread) {
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     string ccyCode = tryParseIborIndex(key, index) ? index->currency().code() : key;
     Handle<YieldTermStructure> yts =
         discountCurve.empty() ? market_->discountCurve(ccyCode, configuration(MarketContext::pricing))
                               : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
     if (!securitySpread.empty())
-        yts = Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(
+        yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
             yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
     Handle<SwaptionVolatilityStructure> svts = market_->swaptionVol(key, configuration(MarketContext::pricing));
-    return boost::make_shared<BlackMultiLegOptionEngine>(yts, svts);
+    return QuantLib::ext::make_shared<BlackMultiLegOptionEngine>(yts, svts);
 }
 
-boost::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const string& id, const string& key,
+QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const string& id, const string& key,
                                                                  const std::vector<Date>& expiries,
                                                                  const Date& maturity, const std::vector<Real>& strikes,
                                                                  const bool isAmerican) {
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
 
     DLOG("Get model data");
@@ -103,7 +104,9 @@ boost::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const string& i
     bool continueOnCalibrationError = globalParameters_.count("ContinueOnCalibrationError") > 0 &&
                                       parseBool(globalParameters_.at("ContinueOnCalibrationError"));
 
-    auto data = boost::make_shared<IrLgmData>();
+    auto floatSpreadMapping = parseFloatSpreadMapping(modelParameter("FloatSpreadMapping", {}, false, "proRata"));
+
+    auto data = QuantLib::ext::make_shared<IrLgmData>();
 
     // check for allowed calibration / bermudan strategy settings
     std::vector<std::pair<CalibrationType, CalibrationStrategy>> validCalPairs = {
@@ -137,6 +140,7 @@ boost::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const string& i
     data->volatilityType() = volatilityType;
     data->calibrationType() = calibration;
     data->shiftHorizon() = shiftHorizon;
+    data->floatSpreadMapping() = floatSpreadMapping;
 
     std::vector<Date> effExpiries;
     std::vector<Real> effStrikes;
@@ -211,12 +215,12 @@ boost::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const string& i
 
     // Build and calibrate model
     DLOG("Build LGM model");
-    boost::shared_ptr<LgmBuilder> calib = boost::make_shared<LgmBuilder>(
+    QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
         market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
         referenceCalibrationGrid, generateAdditionalResults, id);
 
     // In some cases, we do not want to calibrate the model
-    boost::shared_ptr<QuantExt::LGM> model;
+    QuantLib::ext::shared_ptr<QuantExt::LGM> model;
     if (globalParameters_.count("Calibrate") == 0 || parseBool(globalParameters_.at("Calibrate"))) {
         DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
         model = calib->model();
@@ -231,13 +235,13 @@ boost::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const string& i
     return model;
 }
 
-boost::shared_ptr<PricingEngine>
+QuantLib::ext::shared_ptr<PricingEngine>
 LGMGridSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
                                          const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
                                          const std::string& discountCurve, const std::string& securitySpread) {
     DLOG("Building LGM Grid Bermudan/American Swaption engine for trade " << id);
 
-    boost::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes, isAmerican);
+    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes, isAmerican);
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameter("sy"));
@@ -247,25 +251,25 @@ LGMGridSwaptionEngineBuilder::engineImpl(const string& id, const string& key, co
 
     // Build engine
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     Handle<YieldTermStructure> yts =
         discountCurve.empty() ? market_->discountCurve(ccy, configuration(MarketContext::pricing))
                               : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
     if (!securitySpread.empty())
-        yts = Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(
+        yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
             yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
-    return boost::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
+    return QuantLib::ext::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
         lgm, sy, ny, sx, nx, yts, isAmerican ? parseInteger(modelParameter("ExerciseTimeStepsPerYear")) : 0);
 }
 
-boost::shared_ptr<PricingEngine>
+QuantLib::ext::shared_ptr<PricingEngine>
 LGMFDSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
                                        const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
                                        const std::string& discountCurve, const std::string& securitySpread) {
     DLOG("Building LGM FD Bermudan/American Swaption engine for trade " << id);
 
-    boost::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes, isAmerican);
+    QuantLib::ext::shared_ptr<QuantExt::LGM> lgm = model(id, key, expiries, maturity, strikes, isAmerican);
 
     DLOG("Get engine data");
     QuantLib::FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
@@ -276,20 +280,20 @@ LGMFDSwaptionEngineBuilder::engineImpl(const string& id, const string& key, cons
     Real maxTime = lgm->termStructure()->timeFromReference(maturity);
 
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     Handle<YieldTermStructure> yts =
         discountCurve.empty() ? market_->discountCurve(ccy, configuration(MarketContext::pricing))
                               : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
     if (!securitySpread.empty())
-        yts = Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(
+        yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
             yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
-    return boost::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
+    return QuantLib::ext::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
         lgm, maxTime, scheme, stateGridPoints, timeStepsPerYear, mesherEpsilon, yts,
         isAmerican ? parseInteger(modelParameter("ExerciseTimeStepsPerYear")) : 0);
 }
 
-boost::shared_ptr<PricingEngine>
+QuantLib::ext::shared_ptr<PricingEngine>
 LGMMCSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
                                        const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
                                        const std::string& discountCurve, const std::string& securitySpread) {
@@ -299,24 +303,24 @@ LGMMCSwaptionEngineBuilder::engineImpl(const string& id, const string& key, cons
 
     // Build engine
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     Handle<YieldTermStructure> yts =
         discountCurve.empty() ? market_->discountCurve(ccy, configuration(MarketContext::pricing))
                               : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
     if (!securitySpread.empty())
-        yts = Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(
+        yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
             yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
     return buildMcEngine([this](const std::string& p, const std::vector<std::string>& q, const bool m,
                                 const std::string& d) { return this->engineParameter(p, q, m, d); },
                          lgm, yts, std::vector<Date>(), std::vector<Size>());
 } // LgmMc engineImpl()
 
-boost::shared_ptr<PricingEngine>
+QuantLib::ext::shared_ptr<PricingEngine>
 LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& expiries,
                                         const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
                                         const std::string& discountCurve, const std::string& securitySpread) {
-    boost::shared_ptr<IborIndex> index;
+    QuantLib::ext::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     Currency curr = parseCurrency(ccy);
     DLOG("Building AMC Bermudan/American Swaption engine for key " << key << ", ccy " << ccy
@@ -333,7 +337,7 @@ LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, con
         discountCurve.empty() ? market_->discountCurve(ccy, configuration(MarketContext::pricing))
                               : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
     if (!securitySpread.empty())
-        yts = Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(
+        yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
             yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
     return buildMcEngine([this](const std::string& p, const std::vector<std::string>& q, const bool m,
                                 const std::string& d) { return this->engineParameter(p, q, m, d); },

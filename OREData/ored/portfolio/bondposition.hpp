@@ -43,9 +43,9 @@ public:
     const std::vector<BondUnderlying>& underlyings() const { return underlyings_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
-    void populateFromBondBasketReferenceData(const boost::shared_ptr<ReferenceDataManager>& ref);
+    void populateFromBondBasketReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& ref);
 
 private:
     Real quantity_ = QuantLib::Null<Real>();
@@ -60,11 +60,11 @@ public:
         : Trade("BondPosition", env), originalData_(data), data_(data) {}
 
     // trade interface
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     // additional inspectors
     const BondPositionData& data() const { return data_; }
@@ -90,7 +90,7 @@ private:
 //! Equity Position instrument wrapper
 class BondPositionInstrumentWrapper : public InstrumentWrapper {
 public:
-    BondPositionInstrumentWrapper(const Real quantity, const std::vector<boost::shared_ptr<QuantLib::Bond>>& bonds,
+    BondPositionInstrumentWrapper(const Real quantity, const std::vector<QuantLib::ext::shared_ptr<QuantLib::Bond>>& bonds,
                                   const std::vector<Real>& weights, const std::vector<Real>& bidAskAdjstments,
                                   const std::vector<Handle<Quote>>& fxConversion = {});
     void initialise(const std::vector<QuantLib::Date>& dates) override {}
@@ -103,7 +103,7 @@ public:
 
 private:
     Real quantity_;
-    std::vector<boost::shared_ptr<QuantLib::Bond>> bonds_;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Bond>> bonds_;
     std::vector<Real> weights_;
     std::vector<Real> bidAskAdjustments_;
     std::vector<Handle<Quote>> fxConversion_;
