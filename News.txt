@@ -112,6 +112,8 @@ NEW & EXTENDED EXAMPLES
 - 66: Balance Guaranteed Swap 
 - 67: XVA Stress Testing
 - 68: XVA Bump & Revalue Sensitivities
+- 69: Convert Zero Rate Shifts into Par Rate Shifts
+
 
 Changes for the 11th ORE release (1.8.11.0):
 ============================================
