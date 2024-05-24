@@ -45,10 +45,11 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
       <Parameter name="amcCg">Y</Parameter>
+      <Parameter name="xvaCgBumpSensis">Y</Parameter>
       <!-- <Parameter name="xvaCgSensitivityConfigFile">xvasensiconfig.xml</Parameter> -->
-      <Parameter name="xvaCgUseExternalComputeDevice">true</Parameter>
-      <Parameter name="xvaCgExternalDeviceCompatibilityMode">true</Parameter>
-      <Parameter name="xvaCgUseDoublePrecisionForExternalCalculation">false</Parameter>
+      <Parameter name="xvaCgUseExternalComputeDevice">Y</Parameter>
+      <Parameter name="xvaCgExternalDeviceCompatibilityMode">Y</Parameter>
+      <Parameter name="xvaCgUseDoublePrecisionForExternalCalculation">N</Parameter>
       <Parameter name="xvaCgExternalComputeDevice">BasicCpu/Default/Default</Parameter>
       <!-- <Parameter name="xvaCgExternalComputeDevice">OpenCL/Apple/Apple M2 Max</Parameter> -->
       <Parameter name="amcTradeTypes">Swap</Parameter>
