@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <ORE>
   <Setup>
-    <Parameter name="asofDate">2022-08-29</Parameter>
+    <Parameter name="asofDate">2022-09-26</Parameter>
     <Parameter name="inputPath">./Input</Parameter>
     <Parameter name="outputPath">./Output</Parameter>
     <Parameter name="marketDataFile">market.txt</Parameter>
