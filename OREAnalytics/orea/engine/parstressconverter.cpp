@@ -140,9 +140,14 @@ QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> ParStressTestC
 //! sensitivites
 std::pair<QuantLib::ext::shared_ptr<ScenarioSimMarket>, QuantLib::ext::shared_ptr<ParSensitivityAnalysis>>
 ParStressTestConverter::computeParSensitivity(const std::set<RiskFactorKey::KeyType>& typesDisabled) const {
+    QL_REQUIRE(simMarketParams_ != nullptr, "computeParSensitivity: simMarketData required to compute par sensitivity before "
+                                 "converting par to zero stress test shifts");
+    QL_REQUIRE(sensiScenarioData_ != nullptr,
+               "computeParSensitivity: sensiScenarioData required to compute par sensitivity before "
+               "converting par to zero stress test shifts");
     auto parAnalysis = ext::make_shared<ParSensitivityAnalysis>(asof_, simMarketParams_, *sensiScenarioData_,
-                                                                Market::defaultConfiguration, true, typesDisabled);
-
+                                                                    Market::defaultConfiguration, true, typesDisabled);
+    QL_REQUIRE(parAnalysis != nullptr, "ParStressConverter: failed to generate parAnalysis");
     LOG("ParStressConverter: Allign Pillars for par sensitivity analysis");
     parAnalysis->alignPillars();
     // Align Cap Floor Strikes

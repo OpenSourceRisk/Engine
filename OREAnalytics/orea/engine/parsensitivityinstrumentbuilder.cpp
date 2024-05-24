@@ -317,7 +317,8 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 *QuantLib::ext::static_pointer_cast<SensitivityScenarioData::CurveShiftParData>(index.second);
             Size n_ten = data.shiftTenors.size();
             QL_REQUIRE(data.parInstruments.size() == n_ten,
-                       "number of tenors does not match number of index curve par instruments");
+                       indexName  << " number of tenors " << n_ten << "does not match number of index curve par instruments"
+                                                     << data.parInstruments.size());
             vector<string> tokens;
             boost::split(tokens, indexName, boost::is_any_of("-"));
             QL_REQUIRE(tokens.size() >= 2, "index name " << indexName << " unexpected");

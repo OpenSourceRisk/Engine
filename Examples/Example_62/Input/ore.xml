@@ -1,14 +1,16 @@
 <?xml version="1.0"?>
 <ORE>
   <Setup>
-    <Parameter name="asofDate">2023-08-07</Parameter>
+    <Parameter name="asofDate">2023-01-31</Parameter>
+    <Parameter name="baseCurrency">USD</Parameter>
     <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output/bump</Parameter><!-- bump -->
+    <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
-    <Parameter name="marketDataFile">marketdata.csv</Parameter>
-    <Parameter name="fixingDataFile">fixings.csv</Parameter>
+    <Parameter name="marketDataFile">market.txt</Parameter>
+    <Parameter name="fixingDataFile">fixings.txt</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>
+    <Parameter name="fixingCutoff">2023-02-14</Parameter>
     <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
@@ -16,19 +18,19 @@
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
     <Parameter name="continueOnError">false</Parameter>
-    <Parameter name="scriptLibrary">scriptlibrary.xml</Parameter> 
   </Setup>
   <Markets>
-    <Parameter name="pricing">inccy</Parameter>
-    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="lgmcalibration">inccy</Parameter>
     <Parameter name="fxcalibration">default</Parameter>
-    <Parameter name="eqcalibration">default</Parameter>
+    <Parameter name="infcalibration">inccy</Parameter>
+    <Parameter name="pricing">default</Parameter>
     <Parameter name="simulation">default</Parameter>
+    <Parameter name="sensitivity">default</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="baseCurrency">USD</Parameter>
       <Parameter name="outputFileName">npv.csv</Parameter>
       <Parameter name="additionalResults">Y</Parameter>
     </Analytic>
@@ -41,17 +43,14 @@
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
-      <Parameter name="outputTodaysMarketCalibration">Y</Parameter>
     </Analytic>
-    <Analytic type="sensitivity">
+    <Analytic type="pnl">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="marketConfigFile">simulation.xml</Parameter>
-      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
-      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-      <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
-      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
-      <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
-      <Parameter name="recalibrateModels">Y</Parameter>
-    </Analytic>
+      <!--<Parameter name="mporDate">2023-02-14</Parameter>-->
+      <Parameter name="mporDays">10</Parameter>
+      <Parameter name="mporCalendar">US</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="outputFileName">pnl.csv</Parameter>
+      </Analytic>
   </Analytics>
 </ORE>

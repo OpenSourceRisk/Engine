@@ -3865,6 +3865,8 @@
       <xs:element type="longShort" name="Position"/>
       <xs:element type="underlying" name="Underlying1" minOccurs="0"/>
       <xs:element type="underlying" name="Underlying2" minOccurs="0"/>
+      <xs:element type="underlying" name="Underlying3" minOccurs="0"/>
+      <xs:element type="underlying" name="Underlying4" minOccurs="0"/>
       <xs:element type="xs:string" name="Name1" minOccurs="0"/>
       <xs:element type="xs:string" name="Name2" minOccurs="0"/>
       <xs:element type="currencyCode" name="PayCcy"/>

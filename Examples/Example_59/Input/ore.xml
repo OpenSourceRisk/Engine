@@ -1,20 +1,20 @@
 <?xml version="1.0"?>
 <ORE>
   <Setup>
-    <Parameter name="asofDate">2019-12-30</Parameter>
+    <Parameter name="asofDate">2024-03-19</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
-    <Parameter name="marketDataFile">market.txt</Parameter>
-    <Parameter name="fixingDataFile">fixings.txt</Parameter>
+    <Parameter name="marketDataFile">marketdata.csv</Parameter>
+    <Parameter name="fixingDataFile">fixings.csv</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
-    <Parameter name="baseCurrency">EUR</Parameter>
+    <Parameter name="baseCurrency">USD</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="nThreads">1</Parameter>
   </Setup>
@@ -26,18 +26,18 @@
     <Parameter name="sensitivity">default</Parameter>
   </Markets>
   <Analytics>
-    <Analytic type="historicalSimulationVar">
+    <Analytic type="npv">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="historicalScenarioFile">scenarios.csv</Parameter>
-      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
-      <Parameter name="historicalPeriod">2017-01-17,2019-12-30</Parameter>
-      <Parameter name="mporDays">10</Parameter>
-      <Parameter name="mporCalendar">USD</Parameter>
-      <Parameter name="mporOverlappingPeriods">true</Parameter>
-      <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
-      <Parameter name="breakdown">Y</Parameter>
-      <Parameter name="portfolioFilter">PF1</Parameter>
-      <Parameter name="outputFile">var.csv</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="additionalResults">Y</Parameter>
+    </Analytic>
+    <Analytic type="curves">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configuration">default</Parameter>
+      <Parameter name="grid">240,1M</Parameter>
+      <Parameter name="outputFileName">curves.csv</Parameter>
+      <Parameter name="outputTodaysMarketCalibration">Y</Parameter>
     </Analytic>
   </Analytics>
 </ORE>
