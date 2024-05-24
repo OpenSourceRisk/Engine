@@ -480,6 +480,9 @@
       <xs:enumeration value="Hermite"/>
       <xs:enumeration value="Quadratic"/>
       <xs:enumeration value="LogQuadratic"/>
+      <xs:enumeration value="LogNaturalCubic"/>
+      <xs:enumeration value="LogFinancialCubic"/>
+      <xs:enumeration value="LogCubicSpline"/>
       <xs:enumeration value="CubicSpline"/>
       <xs:enumeration value="LinearFlat"/>
       <xs:enumeration value="LogLinearFlat"/>
@@ -832,6 +835,7 @@
             <xs:element type="businessDayConvention" name="TermConvention" minOccurs="0"/>
             <xs:element type="dateRule" name="Rule" minOccurs="0"/>
             <xs:element type="bool" name="EndOfMonth" minOccurs="0"/>
+            <xs:element type="businessDayConvention" name="EndOfMonthConvention" minOccurs="0"/>
             <xs:element type="date" name="FirstDate" minOccurs="0"/>
             <xs:element type="date" name="LastDate" minOccurs="0"/>
             <xs:element type="xs:boolean" name="RemoveFirstDate" minOccurs="0"/>

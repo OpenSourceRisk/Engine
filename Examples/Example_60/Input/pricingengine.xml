@@ -1,46 +1,38 @@
 <?xml version="1.0"?>
 <PricingEngines>
-  <Product type="Swap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingSwapEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="EuropeanSwaption">
-    <Model>BlackBachelier</Model>
-    <ModelParameters/>
-    <Engine>BlackBachelierSwaptionEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="CapFlooredIborLeg">
-    <Model>BlackOrBachelier</Model>
-    <ModelParameters/>
-    <Engine>BlackIborCouponPricer</Engine>
+  <Product type="ScriptedTrade">
+    <Model>Generic</Model>
+    <ModelParameters>
+      <Parameter name="Model">GaussianCam</Parameter>
+      <Parameter name="BaseCcy">USD</Parameter>
+      <Parameter name="EnforceBaseCcy">false</Parameter>
+      <Parameter name="GridCoarsening">3M(1W),1Y(1M),5Y(3M),10Y(1Y),50Y(5Y)</Parameter>
+      <Parameter name="IrReversion_EUR">0.01</Parameter>
+      <Parameter name="IrReversion_USD">0.01</Parameter>
+      <Parameter name="FullDynamicFx">true</Parameter>
+      <Parameter name="FullDynamicIr">true</Parameter>
+      <!-- DK or JY -->
+      <Parameter name="InfModelType">JY</Parameter>
+    </ModelParameters>
+    <Engine>Generic</Engine>
     <EngineParameters>
-      <Parameter name="TimingAdjustment">Black76</Parameter>
-      <Parameter name="Correlation">1.0</Parameter>
+      <Parameter name="Engine">MC</Parameter>
+      <Parameter name="Samples">10000</Parameter>
+      <Parameter name="RegressionOrder">4</Parameter>
+      <Parameter name="TimeStepsPerYear">24</Parameter>
+      <Parameter name="Interactive">false</Parameter>
+      <Parameter name="BootstrapTolerance">1.0</Parameter>
+      <Parameter name="ZeroVolatility">false</Parameter>
+      <Parameter name="Interactive">false</Parameter>
     </EngineParameters>
   </Product>
-  <Product type="CapFlooredOvernightIndexedCouponLeg">
-    <Model>BlackOrBachelier</Model>
+  <Product type="FxForward">
+    <Model>DiscountedCashflows</Model>
     <ModelParameters/>
-    <Engine>BlackOvernightIndexedCouponPricer</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="CapFlooredAverageONIndexedCouponLeg">
-    <Model>BlackOrBachelier</Model>
-    <ModelParameters/>
-    <Engine>BlackAverageONIndexedCouponPricer</Engine>
+    <Engine>DiscountingFxForwardEngine</Engine>
     <EngineParameters/>
   </Product>
   <GlobalParameters>
     <Parameter name="ContinueOnCalibrationError">true</Parameter>
-    <Parameter name="PseudoCurrency.TreatAsFX">false</Parameter>
-    <Parameter name="PseudoCurrency.BaseCurrency">USD</Parameter>
-    <Parameter name="PseudoCurrency.FXIndexTag">GENERIC</Parameter>
-    <Parameter name="PseudoCurrency.Curve.XAU">PM:XAUUSD</Parameter>
-    <Parameter name="PseudoCurrency.Curve.XAG">PM:XAGUSD</Parameter>
-    <Parameter name="PseudoCurrency.Curve.XPT">PM:XPTUSD</Parameter>
-    <Parameter name="PseudoCurrency.Curve.XPD">PM:XPDUSD</Parameter>
   </GlobalParameters>
 </PricingEngines>
