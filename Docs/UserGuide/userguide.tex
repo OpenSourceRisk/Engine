@@ -3760,8 +3760,8 @@ current and past CPRs or expert judgement.
 %--------------------------------------------------------------------
 
 The example in folder {\\tt Examples/Example\_67} demonstrates the XVA stresstesting with the classical and AMC XVA engine.
-The new analytic type \\emph{XVA_STRESS} leverages the existing stresstest framework and supports stresstests in zero and par domain. 
-The Stresstest scenarios are given in the same format as for the regular stresstest. 
+The new analytic type \\emph{XVA_STRESS} utilizes the existing stresstest framework and supports stresstests in both zero and par domain. 
+The Stresstest scenarios are given in the same input format as for the regular stresstest. 
 
 To analyse the impact of market rate shifts (Swap rates, CDS spreads, flat vols), one had to
 manipulate the market data input into ORE and re-run the entire ORE process multiple times.
@@ -3774,11 +3774,11 @@ The generated outputs are the xva and exposure reports under each scenario.
 %--------------------------------------------------------------------
 
 The example in folder {\\tt Examples/Example\_68} demonstrates the XVA sensitivity analysis with the AMC XVA engine.
-The new analytic type \\emph{XVA_SENSITIVITY} applies zero shifts as defined in the sensitivity.xml in the usual input format to the market data and 
-computes the xva and exposure measures under each market rate shift.
+The new analytic type \\emph{XVA_SENSITIVITY} applies zero shifts as specified in the sensitivity.xml and 
+computes the xva and exposure measures under each shifted market condition.
 
-The aggregation of the results to sensitivites need to handled outside of ORE for now. 
-Those external computed sensitivites could be converted to par-sensi with the 
+The aggregation of the results to sensitivites need to handled outside of ORE. 
+These external computed sensitivites can be converted to par sensitivities with the 
 zero-to-par conversion analytic (see \ref{example:50}).
 
 %--------------------------------------------------------------------
@@ -3788,7 +3788,7 @@ zero-to-par conversion analytic (see \ref{example:50}).
 
 The example in folder {\\tt Examples/Example\_69} demonstrates the conversion of zero shifts to par rate shifts.
 ORE applies the zero rate shifts to the zero curves and computes the resulting shifts in the implied fair rate of a given set of par instruments. 
-The zero rate shifts are given as stresstest and the par instruments are defined in the usual sensitivity configuration.
+The zero rate shifts are defined as stresstests and the par instruments are defined in the usual sensitivity configuration.
 
 \clearpage
 %========================================================
