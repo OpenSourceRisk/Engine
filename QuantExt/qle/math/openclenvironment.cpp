@@ -30,6 +30,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <optional>
 
 #define ORE_OPENCL_MAX_N_DEV_INFO 1024U
 #define ORE_OPENCL_MAX_N_DEV_INFO_LARGE 65536U
