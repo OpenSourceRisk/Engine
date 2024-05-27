@@ -605,7 +605,7 @@ void ConvertibleBondTrsUnderlyingBuilder::build(
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
     const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
@@ -641,8 +641,6 @@ void ConvertibleBondTrsUnderlyingBuilder::build(
         SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup());
     creditQualifierMapping[t->bondData().creditCurveId()] =
         SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup());
-    // FIXME shouldn't we leave that empty and let TRS determine the maturity date based on valuation / funding dates?
-    maturity = qlBond->maturityDate();
 }
 
 void ConvertibleBondTrsUnderlyingBuilder::updateUnderlying(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData,
