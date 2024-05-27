@@ -1174,6 +1174,7 @@ std::size_t OpenClContext::valuesBufferId(const std::size_t i) const {
 }
 
 std::string OpenClContext::generateSsaCode(const std::vector<ssa_entry>& ssa) const {
+    std::cout << "generating ssa code from " << ssa.size() << " entries" << std::endl;
     std::set<std::size_t> localVars;
     for (auto const& s : ssa) {
         localVars.insert(s.rhs_local_id.begin(), s.rhs_local_id.end());
@@ -1227,7 +1228,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     if (nVariates_[currentId_ - 1] == 0)
         nVariates_[currentId_ - 1] = nVariatesTmp_;
 
-    std::cout << "finalize calculation, nVars = " << nVars_[currentId_-1] << std::endl
+    std::cout << "finalize calculation, nVars = " << nVars_[currentId_-1].back() << std::endl;
 
     boost::timer::cpu_timer timer;
     boost::timer::nanosecond_type timerBase;
@@ -1424,6 +1425,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): error during clCreateKernel(), part #"
                                               << part << ": " << errorText(err));
         }
+
+        std::cerr << "kernel built done" << std::endl;
 
         hasKernel_[currentId_ - 1] = true;
         inputBufferSize_[currentId_ - 1] = inputBufferSize;
