@@ -22,6 +22,9 @@
 
 namespace QuantExt {
 
+std::size_t ExternalRandomVariable::nCreated_ = 0;
+std::size_t ExternalRandomVariable::nDeleted_ = 0;
+
 ExternalRandomVariable::ExternalRandomVariable(std::size_t id) : initialized_(true), id_(id) {}
 
 ExternalRandomVariable::ExternalRandomVariable(double v) : initialized_(true), v_(v) {
@@ -38,12 +41,20 @@ ExternalRandomVariable::ExternalRandomVariable(const std::size_t randomVariableO
     });
     id_ = ComputeEnvironment::instance().context().applyOperation(randomVariableOpCode, argIds);
     initialized_ = true;
+    nCreated_++;
 }
 
 void ExternalRandomVariable::clear() {
     if (initialized_) {
-        ComputeEnvironment::instance().context().freeVariable(id_);
+        free();
         initialized_ = false;
+    }
+}
+
+void ExternalRandomVariable::free() {
+    if (initialized_ && !freed_) {
+        ComputeEnvironment::instance().context().freeVariable(id_);
+        freed_ = true;
     }
 }
 
@@ -56,6 +67,9 @@ std::size_t ExternalRandomVariable::id() const {
     QL_REQUIRE(initialized_, "ExternalRandomVariable::id(): not initialized");
     return id_;
 }
+
+std::function<void(ExternalRandomVariable&)> ExternalRandomVariable::preDeleter =
+    std::function<void(ExternalRandomVariable&)>([](ExternalRandomVariable& x) { x.free(); });
 
 std::function<void(ExternalRandomVariable&)> ExternalRandomVariable::deleter =
     std::function<void(ExternalRandomVariable&)>([](ExternalRandomVariable& x) { x.clear(); });
@@ -162,5 +176,10 @@ std::vector<ExternalRandomVariableOp> getExternalRandomVariableOps() {
 }
 
 std::vector<ExternalRandomVariableGrad> getExternalRandomVariableGradients() { return {}; }
+
+std::ostream& operator<<(std::ostream& out, const ExternalRandomVariable& r) {
+    out << (r.freed() ? "F" : ".") << (r.initialised() ? "I" : ".");
+    return out;
+}
 
 } // namespace QuantExt
