@@ -33,7 +33,10 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return RandomVariable(); });
 
     // Add = 1
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] + (*args[1]); });
+    ops.push_back([](const std::vector<const RandomVariable*>& args) {
+        return std::accumulate(args.begin(), args.end(), RandomVariable(args.front()->size(), 0.0),
+                               [](const RandomVariable x, const RandomVariable* y) { return x + *y; });
+    });
 
     // Subtract = 2
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] - (*args[1]); });
