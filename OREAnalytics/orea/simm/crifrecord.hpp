@@ -189,16 +189,6 @@ struct CrifRecord {
         }
     }
 
-    CrifRecord(std::string tradeId, std::string tradeType, std::string portfolioId,
-               ProductClass productClass, RiskType riskType,
-               std::string qualifier, std::string bucket, std::string label1, std::string label2,
-               std::string amountCurrency, QuantLib::Real amount, QuantLib::Real amountUsd, std::string imModel = "",
-               std::string collectRegulations = "", std::string postRegulations = "", std::string endDate = "",
-               std::map<std::string, std::string> additionalFields = {})
-        : CrifRecord(tradeId, tradeType, NettingSetDetails(portfolioId), productClass, riskType, qualifier,
-                     bucket, label1, label2, amountCurrency, amount, amountUsd, imModel,
-                     collectRegulations, postRegulations, endDate, additionalFields) {}
-
     RecordType type() const;
 
     bool hasAmountCcy() const { return !amountCurrency.empty(); }
