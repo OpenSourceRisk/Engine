@@ -80,16 +80,18 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
 
     // Just for performance testing, duplicate the trades in input portfolio as specified by env var N
 
-    // portfolio_ = QuantLib::ext::make_shared<Portfolio>();
-    // std::string pfxml = portfolio->toXMLString();
-    // for (Size i = 0; i < atoi(getenv("N")); ++i) {
-    //     auto p = QuantLib::ext::make_shared<Portfolio>();
-    //     p->fromXMLString(pfxml);
-    //     for (auto const& [id, t] : p->trades()) {
-    //         t->id() += "_" + std::to_string(i + 1);
-    //         portfolio_->add(t);
-    //     }
-    // }
+    if (auto param_N = getenv("N")) {
+        portfolio_ = QuantLib::ext::make_shared<Portfolio>();
+        std::string pfxml = portfolio->toXMLString();
+        for (Size i = 0; i < atoi(param_N); ++i) {
+            auto p = QuantLib::ext::make_shared<Portfolio>();
+            p->fromXMLString(pfxml);
+            for (auto const& [id, t] : p->trades()) {
+                t->id() += "_" + std::to_string(i + 1);
+                portfolio_->add(t);
+            }
+        }
+    }
 
     // Start Engine
 
@@ -187,6 +189,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
     // Build computation graph for all trades ("part B") and
     // - store npv, amc npv nodes
 
+    std::cout << "building computation graph for trades" << std::endl;
+
     LOG("XvaEngineCG: build computation graph for all trades");
 
     std::vector<std::vector<std::size_t>> amcNpvNodes; // includes time zero npv
@@ -257,6 +261,8 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
         DLOG("XvaEngineCG: red block range " << r.first << " ... " << r.second);
         sumRedNodes += r.second - r.first;
     }
+
+    std::cout << "building computation graph for trades done, size is " << g->size() << ", number of red nodes = " << sumRedNodes << std::endl;
 
     // Init external compute context if we want to use that
 

@@ -1227,6 +1227,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     if (nVariates_[currentId_ - 1] == 0)
         nVariates_[currentId_ - 1] = nVariatesTmp_;
 
+    std::cout << "finalize calculation, nVars = " << nVars_[currentId_-1] << std::endl
+
     boost::timer::cpu_timer timer;
     boost::timer::nanosecond_type timerBase;
 
@@ -1393,6 +1395,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         } // for part
 
         // std::cerr << "generated kernel: \n" + kernelSource + "\n";
+        std::cerr << "generated kernel is " << kernelSource.size() / 1024 / 1024 << " MB" << std::endl;
 
         if (settings_.debug) {
             timerBase = timer.elapsed().wall;
@@ -1412,6 +1415,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                     << kernelNameStem << "*': " << errorText(err) << ": "
                     << std::string(buffer).substr(ORE_OPENCL_MAX_BUILD_LOG_LOGFILE));
         }
+
+        std::cerr << "program built done" << std::endl;
 
         for (std::size_t part = 0; part < currentSsa_.size(); ++part) {
             std::string kernelName = kernelNameStem + std::to_string(part);
