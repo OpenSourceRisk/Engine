@@ -1174,7 +1174,6 @@ std::size_t OpenClContext::valuesBufferId(const std::size_t i) const {
 }
 
 std::string OpenClContext::generateSsaCode(const std::vector<ssa_entry>& ssa) const {
-    std::cout << "generating ssa code from " << ssa.size() << " entries" << std::endl;
     std::set<std::size_t> localVars;
     for (auto const& s : ssa) {
         localVars.insert(s.rhs_local_id.begin(), s.rhs_local_id.end());
@@ -1258,7 +1257,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     if (currentSsa_.size() > 1) {
         valuesBufferSize = (nVars_[currentId_ - 1].back() - inputVarOffset_.size() - nVariates_[currentId_ - 1]) *
                            size_[currentId_ - 1];
-        std::cout << "values cache: " << nVars_[currentId_ - 1].back() - inputVarOffset_.size() - nVariates_[currentId_ - 1] << " (" << valuesBufferSize * fpSize / 1024 / 1024 << "MB)" << std::endl;
         if (valuesBufferSize > 0) {
             valuesBuffer = clCreateBuffer(*context_, CL_MEM_READ_WRITE, fpSize * valuesBufferSize, NULL, &err);
             guard.mem.push_back(valuesBuffer);

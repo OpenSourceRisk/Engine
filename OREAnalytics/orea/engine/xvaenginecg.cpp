@@ -189,8 +189,6 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
     // Build computation graph for all trades ("part B") and
     // - store npv, amc npv nodes
 
-    std::cout << "building computation graph for trades (" << data::os::getPeakMemoryUsage() << ")" << std::endl;
-
     LOG("XvaEngineCG: build computation graph for all trades");
 
     std::vector<std::vector<std::size_t>> amcNpvNodes; // includes time zero npv
@@ -261,9 +259,6 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
         DLOG("XvaEngineCG: red block range " << r.first << " ... " << r.second);
         sumRedNodes += r.second - r.first;
     }
-
-    std::cout << "building computation graph for trades done, size is " << g->size()
-              << ", number of red nodes = " << sumRedNodes << " (" << data::os::getPeakMemoryUsage() << ")" << std::endl;
 
     // Init external compute context if we want to use that
 
