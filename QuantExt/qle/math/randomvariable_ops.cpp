@@ -88,8 +88,7 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
 
     // Min = 10
     if (eps == 0.0) {
-        ops.push_back(
-            [](const std::vector<const RandomVariable*>& args) { return QuantExt::min(*args[0], *args[1]); });
+        ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::min(*args[0], *args[1]); });
     } else {
         ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
             return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps) * (*args[1] - *args[0]) + *args[0];
@@ -98,8 +97,7 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
 
     // Max = 11
     if (eps == 0.0) {
-        ops.push_back(
-            [](const std::vector<const RandomVariable*>& args) { return QuantExt::max(*args[0], *args[1]); });
+        ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::max(*args[0], *args[1]); });
     } else {
         ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
             return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps) * (*args[0] - *args[1]) + *args[1];
