@@ -82,7 +82,7 @@ void BondTrsUnderlyingBuilder::build(
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
     const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
@@ -120,8 +120,6 @@ void BondTrsUnderlyingBuilder::build(
         SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup());
     creditQualifierMapping[t->bondData().creditCurveId()] =
         SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup());
-    // FIXME shouldn't we leave that empty and let TRS determine the maturity date based on valuation / funding dates?
-    maturity = qlBond->maturityDate();
 }
 
 void ForwardBondTrsUnderlyingBuilder::build(
@@ -131,7 +129,7 @@ void ForwardBondTrsUnderlyingBuilder::build(
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
     const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
@@ -181,7 +179,7 @@ void AssetPositionTrsUnderlyingBuilder<T>::build(
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
     const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
@@ -267,7 +265,7 @@ void EquityOptionPositionTrsUnderlyingBuilder::build(
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
     const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
@@ -325,7 +323,7 @@ void BondPositionTrsUnderlyingBuilder::build(
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
     const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
@@ -388,9 +386,6 @@ void BondPositionTrsUnderlyingBuilder::build(
 
     if (hasCreditRisk)
         creditRiskCurrency = assetCurrency;
-    // FIXME same question as for single bond underlying: shouldn't we leave that empty and let TRS determine the
-    // maturity date based on valuation / funding dates?
-    maturity = t->maturity();
 }
 
 void DerivativeTrsUnderlyingBuilder::build(
@@ -400,7 +395,7 @@ void DerivativeTrsUnderlyingBuilder::build(
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
     std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
     const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
         const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
         const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
@@ -412,9 +407,6 @@ void DerivativeTrsUnderlyingBuilder::build(
     underlyingIndex = QuantLib::ext::make_shared<QuantExt::GenericIndex>(indexName);
     indexQuantities[indexName] = 1.0;
     underlyingMultiplier = 1.0;
-    // FIXME same question as for single bond underlying: shouldn't we leave that empty and let TRS determine the
-    // maturity date based on valuation / funding dates?
-    maturity = underlying->maturity();
     
     auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
                               assetCurrency, fundingCurrency, fxIndices);
