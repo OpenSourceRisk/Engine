@@ -5,10 +5,12 @@ ORE v12 includes the following notable changes.
 
 INSTRUMENTS & PRICING
 - add formula-based leg (ticket 12263), see Example 64
-- add Callable Swap (ticket 12370), Example, see extended Example 5
+- add Callable Swap (ticket 12370), see extended Example 5
 - add Flexi Swap (ticket 12370), see Example 65
 - add Balance Guaranteed Swap (ticket 12370), see Example 66
 - add American Swaption with finite difference pricing in LGM (ticket 11618), see extended Example 4
+- add Equity Outperformance Option (ticket 12456)
+- add Pairwise Variance Swap (ticket 12456)
 - add analytic pricer for Overnight Index Swaptions (ticket 11974)
 - add finite difference LGM pricers for Bermudan and European Swaptions
 - add numerical integration LGM pricer for European Swaptions
@@ -25,19 +27,23 @@ INSTRUMENTS & PRICING
 - introduce notional payment lag for resetting Cross Currency Swaps (ticket 12379)
 - support security spreads over discount in Single Currency Swaps, Swaptions and Scripted Trades
   (ticket 12201 and 12275)
+- add pricing engines that provide analytical deltas and gammas for Swaps, Swaptions, FX Forwards,
+  FX Options (ticket 12456)
 
 MARKETS & TERMSTRUCTURES
 - SABR pricing for Swaptions and Caps/Floors (ticket 12325), see Example 59
 - allow importing external SABR parameters (ticket 12491)
 
 ANALYTICS
-- add XVA Sensitivitiy Proof of Concept using AAD (ticket 12028), see Example 56
+- add XVA Sensitivity Proof of Concept using AAD (ticket 12028), see Example 56
 - support overlapping close-out date grid in exposure/XVA (ticket 9859), see Example 60
 - add scenario analytic (ticket 11990), see Example 57
 - add historical simulation VaR analytic (ticket 9793), see Example 58
 - add IM Schedule analytic (ticket 11730), see extended Example 44
 - add P&L and P&L Explain analytics (ticket 12458), see Example 62
 - add par stress test support (ticket 12148), see Example 63
+- add XVA stress testing (ticket 12376), see Example 67
+- add XVA bump & revalue sensitivities (ticket 12437), see Example 68
 - add bond spread imply to ORE (ticket 12370)
 - add market risk backtest analytic (ticket 12370)
 - add calculation of stoplight bounds for backtests (ticket 12370)
@@ -47,7 +53,6 @@ ANALYTICS
 - introduce configurable shift size and difference scheme per product for sensitivity analysis (ticket 12014)
 - improve performance of SIMM calculations for large CRIF files (ticket 12397)
 - output effective SOFR / RFR cap volatilities in reports (ticket 12192)
-- XVA Stress testing (ticket 12376)
 
 TESTS
 - add a test suite for ORE-SWIG (ticket 11823)
@@ -105,7 +110,9 @@ NEW & EXTENDED EXAMPLES
 - 64: Formual-based Coupon
 - 65: Flexi Swap
 - 66: Balance Guaranteed Swap 
-- 67: XVA Stress Analytic
+- 67: XVA Stress Testing
+- 68: XVA Bump & Revalue Sensitivities
+- 69: Convert Zero Rate Shifts into Par Rate Shifts
 
 
 Changes for the 11th ORE release (1.8.11.0):

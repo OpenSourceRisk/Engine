@@ -135,7 +135,7 @@
 \title{ORE User Guide}
 %\author{Quaternion Risk Management Ltd.}
 %\author{Acadia Inc.}
-\date{15 January 2024}
+\date{24 May 2024}
 \maketitle
 
 \newpage
@@ -339,7 +339,7 @@ Scripted Trades & Y & Y & Y & Y \\
 Flexi Swaps and Balance Guaranteed Swaps & Y & Y & Y & Y \\
 \hline
 \end{tabular}
-\caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options. Scripted Trades cover single and multi-asset products across all asset classes except Credit (so far), see Example\_52 and the separate documentation in Docs/ScriptedTrade.}
+\caption{ORE product coverage. FX/Equity Exotics include Barrier, Digital, Digital Barrier (FX only), Double Barrier, European Barrier, KIKO Barrier (FX only), Touch and Double Touch Options, Outperformance options and Pairwise Variance Swaps. Scripted Trades cover single and multi-asset products across all asset classes except Credit (so far), see Example\_52 and the separate documentation in Docs/ScriptedTrade.}
 \label{tab_coverage}
 \end{center}
 \end{table}
@@ -418,6 +418,8 @@ INSTRUMENTS \& PRICING
 \item add Flexi Swap (ticket 12370), see Example 65
 \item add Balance Guaranteed Swap (ticket 12370), see Example 66
 \item add American Swaption with finite difference pricing in LGM (ticket 11618), see extended Example 4
+\item add Equity Outperformance Option (ticket 12456)
+\item add Pairwise Variance Swap (ticket 12456)
 \item add analytic pricer for Overnight Index Swaptions (ticket 11974)
 \item add finite difference LGM pricers for Bermudan and European Swaptions
 \item add numerical integration LGM pricer for European Swaptions
@@ -434,6 +436,8 @@ INSTRUMENTS \& PRICING
 \item introduce notional payment lag for resetting Cross Currency Swaps (ticket 12379)
 \item support security spreads over discount in Single Currency Swaps, Swaptions and Scripted Trades
   (ticket 12201 and 12275)
+\item add pricing engines that provide analytical deltas and gammas for Swaps, Swaptions, FX Forwards,
+  FX Options (ticket 12456)
 \end{itemize}
 
 \bigskip
@@ -453,6 +457,8 @@ ANALYTICS
 \item add IM Schedule analytic (ticket 11730), see extended Example 44
 \item add P\&L and P\&L Explain analytics (ticket 12458), see Example 62
 \item add par stress test support (ticket 12148), see Example 63
+\item add XVA stress testing (ticket 12376), see Example 67
+\item add XVA bump \& revalue sensitivities (ticket 12437), see Example 68
 \item add bond spread imply to ORE (ticket 12370)
 \item add market risk backtest analytic (ticket 12370)
 \item add calculation of stoplight bounds for backtests (ticket 12370)
@@ -462,7 +468,6 @@ ANALYTICS
 \item introduce configurable shift size and difference scheme per product for sensitivity analysis (ticket 12014)
 \item improve performance of SIMM calculations for large CRIF files (ticket 12397)
 \item output effective SOFR / RFR cap volatilities in reports (ticket 12192)
-\item XVA Stress testing (ticket 12376)
 \end{itemize}
 
 \bigskip
@@ -542,7 +547,8 @@ NEW \& EXTENDED EXAMPLES
 \item 64: Formual-based Coupon
 \item 65: Flexi Swap
 \item 66: Balance Guaranteed Swap 
-\item 67: XVA Stress Analytic
+\item 67: XVA Stress Testing
+\item 68: XVA Bump \& Revalue Sensitivities
 \end{itemize}
 
 %========================================================
@@ -980,7 +986,7 @@ The {\tt README.md} in the top level directory of this git repository contains b
 for installing and building Python wrappers and wheels.
 
 \medskip
-Typical usage of the Python wrapper is shown in ORE's {\tt Example\_42} and in ORE SWIG's {\tt OREAnalytics/Python/Examples} directory.
+Typical usage of the Python wrapper is shown in ORE's {\tt Example\_42} and in ORE SWIG's {\tt OREAnalytics/Python/Examples} directory.
 
 %========================================================
 \section{Examples}\label{sec:examples}
@@ -1135,6 +1141,10 @@ Example & Description \\
 66 &  Balance Guaranteed Swap \\
 \hline
 67 &  XVA Stress Testing \\
+\hline
+68 &  XVA Bump \& Revalue Sensitivities \\
+\hline
+69 &  Convert Zero Rate Shifts into Par Rate Shifts \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -2374,7 +2384,7 @@ Run as usual calling {\tt python run.py}.
 \label{example:32}
 %--------------------------------------------------------------------
 
-The example here is similar to that in Section \ref{example:17} in that we are generating exposures for inflation swaps. The example in Section \ref{example:17} uses the Dodgson-Kainth model whereas this example uses the Jarrow-Yildrim model. The valuation date is 5 Oct 2020 and the portfolio contains four spot starting inflation swaps:
+The example here is similar to that in Section \ref{example:17} in that we are generating exposures for inflation swaps. The example in Section \ref{example:17} uses the Dodgson-Kainth model whereas this example uses the Jarrow-Yildrim model. The valuation date is 2 Nov 2020 and the portfolio contains four spot starting inflation swaps:
 
 \begin{itemize}
 \item trade\_01: 20Y standard UKRPI ZCIIS struck at the fair market rate of 3.1925\% giving an NPV of 0.0. 
@@ -3319,8 +3329,8 @@ In particular, it builds the curve {\tt USD.BMK.GVN.CURVE\_SHIFTED} shifted by t
 The resulting curve is exhibited in the {\tt curves.csv} output file.
 Moreover, the results can be crosschecked against the NPVs, i.e. prices, of the ZeroBonds comprised in the portfolio.
 \begin{itemize}
-\item {\tt ZeroBond\_long}, maturing 2052-06-03 shows a price of 0.2022 akin to the 0.2022 in the curves output at the same date.
-\item {\tt ZeroBond\_short}, maturing 2032-06-01 shows a price of 0.5754 aktin to the 0.5754 in the curves output at the same date.
+\item {\tt ZeroBond\_long}, maturing 2052-03-01 shows a price of 0.2080 akin to the 0.2080 in the curves output at the same date.
+\item {\tt ZeroBond\_short}, maturing 2032-06-01 shows a price of 0.5808 aktin to the 0.808 in the curves output at the same date.
 \end{itemize}
 
 The example can be run calling {\tt python run.py}.
@@ -3745,6 +3755,41 @@ that match prepayments in an underlying reference security. In ORE this
 BGS is approximated by a FlexiSwap instrument with amorization bounds
 given by two ``conditional prepayment rate (CPR)'' levels, e.g. determined by
 current and past CPRs or expert judgement.
+
+%--------------------------------------------------------------------
+\subsection{XVA Stress Testing}% Example 67
+\label{example:67}
+%--------------------------------------------------------------------
+
+The example in folder {\\tt Examples/Example\_67} demonstrates the XVA stresstesting with the classical and AMC XVA engine.
+The new analytic type \\emph{XVA\_STRESS} utilizes the existing stresstest framework and supports stresstests in both zero and par domain. 
+The Stresstest scenarios are given in the same input format as for the regular stresstest. 
+
+To analyse the impact of market rate shifts (Swap rates, CDS spreads, flat vols), one had to
+manipulate the market data input into ORE and re-run the entire ORE process multiple times.
+
+The generated outputs are the xva and exposure reports under each scenario.
+
+%--------------------------------------------------------------------
+\subsection{XVA Bump \& Revalue Sensitivities}% Example 68
+\label{example:68}
+%--------------------------------------------------------------------
+
+The example in folder {\\tt Examples/Example\_68} demonstrates the XVA sensitivity analysis with the AMC XVA engine.
+The new analytic type \emph{XVA\_SENSITIVITY} applies zero shifts as specified in the sensitivity.xml and 
+computes the xva and exposure measures under each shifted market condition.
+
+The aggregation of the results to sensitivites need to handled outside of ORE. 
+These external computed sensitivites can be converted to par sensitivities with the 
+zero-to-par conversion analytic (see \ref{example:50}).
+%--------------------------------------------------------------------
+\subsection{Zero Rate Shifts To Par Shifts}% Example 69
+\label{example:69}
+%--------------------------------------------------------------------
+
+The example in folder {\\tt Examples/Example\_69} demonstrates the conversion of zero shifts to par rate shifts.
+ORE applies the zero rate shifts to the zero curves and computes the resulting shifts in the implied fair rate of a given set of par instruments. 
+The zero rate shifts are defined as stresstests and the par instruments are defined in the usual sensitivity configuration.
 
 \clearpage
 %========================================================
