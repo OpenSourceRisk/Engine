@@ -203,6 +203,8 @@ std::size_t cg_add(ComputationGraph& g, const std::size_t a, const std::size_t b
 }
 
 std::size_t cg_add(ComputationGraph& g, const std::vector<std::size_t>& a, const std::string& label) {
+    if (a.size() == 2)
+        return cg_add(g, a[0], a[1], label);
     return g.insert(a, RandomVariableOpCode::Add, label);
 }
 
