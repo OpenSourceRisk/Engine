@@ -1227,7 +1227,11 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     if (nVariates_[currentId_ - 1] == 0)
         nVariates_[currentId_ - 1] = nVariatesTmp_;
 
-    std::cout << "finalize calculation, nVars = " << nVars_[currentId_-1].back() << std::endl;
+    std::cout << "finalize calculation, nVars     = " << nVars_[currentId_ - 1].back() << std::endl;
+    std::cout << "                      inputvars = " << inputVarOffset_.size() << std::endl;
+    std::cout << "                      nVariates = " << nVariates_[currentId_ - 1] << std::endl;
+    std::cout << "                                = "
+              << nVars_[currentId_ - 1].back() - inputVarOffset_.size() - nVariates_[currentId_ - 1] << std::endl;
 
     boost::timer::cpu_timer timer;
     boost::timer::nanosecond_type timerBase;
@@ -1394,8 +1398,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
         } // for part
 
+        std::cerr << "generated kernel is " << kernelSource.size() / 1024.0 / 1024.0 << " MB" << std::endl;
         // std::cerr << "generated kernel: \n" + kernelSource + "\n";
-        std::cerr << "generated kernel is " << kernelSource.size() / 1024 / 1024 << " MB" << std::endl;
 
         if (settings_.debug) {
             timerBase = timer.elapsed().wall;
