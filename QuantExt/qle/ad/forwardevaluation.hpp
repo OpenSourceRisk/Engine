@@ -36,7 +36,7 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
                            opRequiresNodesForDerivatives = {},
                        const std::vector<bool>& keepNodes = {}, const std::size_t startNode = 0,
                        const std::size_t endNode = ComputationGraph::nan, const bool redBlockReconstruction = false,
-                       std::function<void(T&)> preDeleter = {}) {
+                       std::function<void(T&)> preDeleter = {}, const std::vector<bool>& opAllowsPredeletion = {}) {
 
     std::vector<bool> keepNodesDerivatives;
     if (deleter && keepValuesForDerivatives)
@@ -90,7 +90,7 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
                 } // for arg over g.predecessors
             }
 
-            if(preDeleter) {
+            if (preDeleter && !opAllowsPredeletion.empty() && opAllowsPredeletion[g.opId(node)]) {
                 for(auto n: nodesToDelete)
                     preDeleter(values[n]);
             }

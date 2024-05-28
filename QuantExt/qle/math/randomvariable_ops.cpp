@@ -310,4 +310,10 @@ std::vector<RandomVariableOpNodeRequirements> getRandomVariableOpNodeRequirement
     return res;
 }
 
+std::vector<bool> getRandomVariableOpAllowsPredeletion() {
+    std::vector<bool> result(19, true);
+    result[6] = false; // conditional expectation
+    return result;
+}
+
 } // namespace QuantExt
