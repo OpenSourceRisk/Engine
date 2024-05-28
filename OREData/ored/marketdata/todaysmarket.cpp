@@ -291,8 +291,6 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             QuantLib::ext::shared_ptr<YieldCurveSpec> ycspec = QuantLib::ext::dynamic_pointer_cast<YieldCurveSpec>(spec);
             QL_REQUIRE(ycspec, "Failed to convert spec " << *spec << " to yield curve spec");
 
-            QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-
             auto itr = requiredYieldCurves_.find(ycspec->name());
             if (itr == requiredYieldCurves_.end()) {
                 DLOG("Building YieldCurve for asof " << asof_);
