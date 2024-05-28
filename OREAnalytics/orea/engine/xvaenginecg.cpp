@@ -34,6 +34,7 @@
 #include <qle/ad/forwardevaluation.hpp>
 #include <qle/ad/ssaform.hpp>
 #include <qle/math/computeenvironment.hpp>
+#include <qle/math/randomvariable_ops.hpp>
 #include <qle/methods/multipathvariategenerator.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
@@ -204,9 +205,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
         g->startRedBlock();
         engine->buildComputationGraph();
         std::vector<std::size_t> tmp;
-        tmp.push_back(cg_add(*g, cg_const(*g, 0.0), g->variable(engine->npvName() + "_0")));
+        tmp.push_back(g->variable(engine->npvName() + "_0"));
         for (std::size_t i = 0; i < simulationDates.size(); ++i) {
-            tmp.push_back(cg_add(*g, cg_const(*g, 0.0), g->variable("_AMC_NPV_" + std::to_string(i))));
+            tmp.push_back(g->variable("_AMC_NPV_" + std::to_string(i)));
         }
         amcNpvNodes.push_back(tmp);
         g->endRedBlock();
@@ -220,11 +221,10 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
     // - pfExposureNodes:     the corresponding conditional expectations
 
     std::vector<std::size_t> pfPathExposureNodes, pfExposureNodes;
-    std::vector<std::size_t> tradeSum(simulationDates.size() + 1);
-    tradeSum[0] = cg_const(*g, 0.0);
+    std::vector<std::size_t> tradeSum(portfolio_->trades().size());
     for (Size i = 0; i < simulationDates.size() + 1; ++i) {
-        for (Size j = 0; i < amcNpvNodes[i].size(); ++j) {
-            tradeSum[j + 1] = amcNpvNodes[i][j];
+        for (Size j = 0; j < portfolio_->trades().size(); ++j) {
+            tradeSum[j] = amcNpvNodes[j][i];
         }
         pfPathExposureNodes.push_back(cg_add(*g, tradeSum));
         pfExposureNodes.push_back(model_->npv(
@@ -364,14 +364,14 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
 
     keepNodes[cvaNode] = true;
 
-    auto rvOpAllowsPredeletion = getRandomVariableOpAllowsPredeletion;
+    std::vector<bool> rvOpAllowsPredeletion = QuantExt::getRandomVariableOpAllowsPredeletion();
 
     std::vector<std::vector<double>> externalOutput;
     std::vector<double*> externalOutputPtr;
     if (useExternalComputeDevice_) {
         forwardEvaluation(*g, valuesExternal, opsExternal_, ExternalRandomVariable::deleter, !bumpCvaSensis_,
                           opNodeRequirements_, keepNodes, 0, ComputationGraph::nan, false,
-                          ExternalRandomVariable::deleter, rvOpAllowsPredeletion);
+                          ExternalRandomVariable::preDeleter, rvOpAllowsPredeletion);
         for (Size i = 0; i < pfExposureNodes.size(); ++i) {
             valuesExternal[pfExposureNodes[i]].declareAsOutput();
         }
