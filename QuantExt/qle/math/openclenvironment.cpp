@@ -29,8 +29,8 @@
 
 #include <chrono>
 #include <iostream>
-#include <thread>
 #include <optional>
+#include <thread>
 
 #define ORE_OPENCL_MAX_N_DEV_INFO 1024U
 #define ORE_OPENCL_MAX_N_DEV_INFO_LARGE 65536U
@@ -199,18 +199,24 @@ public:
     const DebugInfo& debugInfo() const override final;
 
 private:
-    struct ssa_entry {
-        std::string lhs_str;
-        std::optional<std::size_t> lhs_local_id;
-        std::string rhs_str;
-        std::set<std::size_t> rhs_local_id;
+    struct SSA {
+        struct ssa_entry {
+            std::string lhs_str;
+            std::optional<std::size_t> lhs_local_id;
+            std::string rhs_str;
+            std::set<std::size_t> rhs_local_id;
+        };
+        void init();
+        void startNewPart();
+        void finalize();
+        std::vector<std::vector<ssa_entry>> ssa;
+        std::vector<std::set<std::size_t>> localIds;
     };
 
     std::size_t generateResultId();
     std::pair<std::vector<std::string>, std::set<std::size_t>> getArgString(const std::vector<std::size_t>& args) const;
-    std::size_t valuesBufferId(const std::size_t i) const;
     void startNewSsaPart();
-    std::string generateSsaCode(const std::vector<ssa_entry>& ssa) const;
+    std::string generateSsaCode(const std::vector<SSA::ssa_entry>& ssa) const;
 
     void updateVariatesPool();
 
@@ -280,7 +286,7 @@ private:
     std::vector<std::size_t> outputVariables_;
 
     // 2d kernel ssa
-    std::vector<std::vector<ssa_entry>> currentSsa_;
+    SSA currentSsa_;
 };
 
 bool OpenClFramework::initialized_ = false;
@@ -629,7 +635,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
     if (newCalc) {
         freedVariables_.clear();
         outputVariables_.clear();
-        currentSsa_ = std::vector<std::vector<ssa_entry>>(1);
+        currentSsa_.init();
         currentConditionalExpectationArgs_.clear();
     }
 
@@ -640,6 +646,24 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
     // return calc id
 
     return std::make_pair(currentId_, newCalc);
+}
+
+void OpenClContext::SSA::init() {
+    ssa = std::vector<std::vector<ssa_entry>>(1);
+    localIds.clear();
+}
+
+void OpenClContext::SSA::startNewPart() { ssa.push_back(std::vector<ssa_entry>()); }
+
+void OpenClContext::SSA::finalize() {
+    for (auto const& p : ssa) {
+        localIds.push_back(std::set<std::size_t>());
+        for (auto const& l : p) {
+            if (l.lhs_local_id)
+                localIds.back().insert(*l.lhs_local_id);
+            localIds.back().insert(l.rhs_local_id.begin(), l.rhs_local_id.end());
+        }
+    }
 }
 
 std::size_t OpenClContext::createInputVariable(double v) {
@@ -979,7 +1003,7 @@ OpenClContext::getArgString(const std::vector<std::size_t>& args) const {
 }
 
 void OpenClContext::startNewSsaPart() {
-    currentSsa_.push_back(std::vector<ssa_entry>());
+    currentSsa_.startNewPart();
     conditionalExpectationVarIds_[currentId_ - 1].push_back(std::vector<std::vector<std::size_t>>());
     nVars_[currentId_ - 1].push_back(nVarsTmp_);
 }
@@ -1013,7 +1037,7 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
         for (std::size_t i = 0; i < argStr.size() + 1; ++i) {
             auto resultId = generateResultId();
             // no harm in pushing all arg local ids here for each entry
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {std::string("v") + std::to_string(resultId), resultId, i == 0 ? "0.0" : argStr[i - 1], argLocalIds});
             argIds.push_back(resultId);
             if (i == 0) {
@@ -1037,87 +1061,87 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
             break;
         }
         case RandomVariableOpCode::Add: {
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {"v" + std::to_string(resultId), resultId, boost::join(argStr, "+"), argLocalIds});
             break;
         }
         case RandomVariableOpCode::Subtract: {
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {"v" + std::to_string(resultId), resultId, argStr[0] + " - " + argStr[1], argLocalIds});
             break;
         }
         case RandomVariableOpCode::Negative: {
-            currentSsa_.back().push_back({"v" + std::to_string(resultId), resultId, "-" + argStr[0], argLocalIds});
+            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId), resultId, "-" + argStr[0], argLocalIds});
             break;
         }
         case RandomVariableOpCode::Mult: {
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {"v" + std::to_string(resultId), resultId, argStr[0] + " * " + argStr[1], argLocalIds});
             break;
         }
         case RandomVariableOpCode::Div: {
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {"v" + std::to_string(resultId), resultId, argStr[0] + " / " + argStr[1], argLocalIds});
             break;
         }
         case RandomVariableOpCode::IndicatorEq: {
-            currentSsa_.back().push_back({"v" + std::to_string(resultId), resultId,
-                                          "ore_indicatorEq(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
+            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId), resultId,
+                                              "ore_indicatorEq(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::IndicatorGt: {
-            currentSsa_.back().push_back({"v" + std::to_string(resultId), resultId,
-                                          "ore_indicatorGt(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
+            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId), resultId,
+                                              "ore_indicatorGt(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::IndicatorGeq: {
-            currentSsa_.back().push_back({"v" + std::to_string(resultId), resultId,
-                                          "ore_indicatorGeq(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
+            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId), resultId,
+                                              "ore_indicatorGeq(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Min: {
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {"v" + std::to_string(resultId), resultId, "fmin(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Max: {
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {"v" + std::to_string(resultId), resultId, "fmax(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Abs: {
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {"v" + std::to_string(resultId), resultId, "fabs(" + argStr[0] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Exp: {
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {"v" + std::to_string(resultId), resultId, "exp(" + argStr[0] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Sqrt: {
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {"v" + std::to_string(resultId), resultId, "sqrt(" + argStr[0] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Log: {
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {"v" + std::to_string(resultId), resultId, "log(" + argStr[0] + ")", argLocalIds});
             break;
         }
         case RandomVariableOpCode::Pow: {
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {"v" + std::to_string(resultId), resultId, "pow(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
             break;
         }
         // TODO add this in the kernel code below first before activating it here
         // case RandomVariableOpCode::NormalCdf: {
-        //     currentSsa_.back().push_back(
+        //     currentSsa_.ssa.back().push_back(
         //         std::make_tuple(true, "v" + std::to_string(resultId), "ore_normalCdf(" + argStr[0] + ")"));
         //     break;
         // }
         case RandomVariableOpCode::NormalPdf: {
-            currentSsa_.back().push_back(
+            currentSsa_.ssa.back().push_back(
                 {"v" + std::to_string(resultId), resultId, "ore_normalPdf(" + argStr[0] + ")", argLocalIds});
             break;
         }
@@ -1169,11 +1193,7 @@ void OpenClContext::declareOutputVariable(const std::size_t id) {
     }
 }
 
-std::size_t OpenClContext::valuesBufferId(const std::size_t i) const {
-    return i - inputVarOffset_.size() - nVariates_[currentId_ - 1];
-}
-
-std::string OpenClContext::generateSsaCode(const std::vector<ssa_entry>& ssa) const {
+std::string OpenClContext::generateSsaCode(const std::vector<SSA::ssa_entry>& ssa) const {
     std::set<std::size_t> localVars;
     for (auto const& s : ssa) {
         localVars.insert(s.rhs_local_id.begin(), s.rhs_local_id.end());
@@ -1221,22 +1241,51 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
     // update nVars_, nVariates_ for this calculation if it was a new calculation
 
-    if (nVars_[currentId_ - 1].size() < currentSsa_.size())
+    if (nVars_[currentId_ - 1].size() < currentSsa_.ssa.size())
         nVars_[currentId_ - 1].push_back(nVarsTmp_);
 
     if (nVariates_[currentId_ - 1] == 0)
         nVariates_[currentId_ - 1] = nVariatesTmp_;
 
-    std::cout << "finalize calculation, nVars     = " << nVars_[currentId_ - 1].back() << std::endl;
-    std::cout << "                      inputvars = " << inputVarOffset_.size() << std::endl;
-    std::cout << "                      nVariates = " << nVariates_[currentId_ - 1] << std::endl;
-    std::cout << "                                = "
-              << nVars_[currentId_ - 1].back() - inputVarOffset_.size() - nVariates_[currentId_ - 1] << std::endl;
+    // add code to output results and finalize ssa
+
+    for (std::size_t i = 0; i < nOutputVars_[currentId_ - 1]; ++i) {
+        std::size_t offset = i * size_[currentId_ - 1];
+        std::string output;
+        std::set<std::size_t> rhsLocalIds;
+        if (outputVariables_[i] < inputVarOffset_.size()) {
+            output = "input[" + std::to_string(inputVarOffset_[outputVariables_[i]]) + "UL" +
+                     (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
+        } else if (outputVariables_[i] < inputVarOffset_.size() + nVariates_[currentId_ - 1]) {
+            output = "rn[" + std::to_string((outputVariables_[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) +
+                     "UL + i]";
+        } else {
+            output = "v" + std::to_string(outputVariables_[i]);
+            rhsLocalIds.insert(outputVariables_[i]);
+        }
+        currentSsa_.ssa.back().push_back(
+            {"output[" + std::to_string(offset) + "UL + i]", std::nullopt, output, rhsLocalIds});
+    }
+
+    currentSsa_.finalize();
+
+    // generate local var id mapping to values buffer offset
+
+    std::map<std::size_t, std::size_t> valuesBufferMap;
+    if (currentSsa_.ssa.size() > 1) {
+        std::set<std::size_t> allIds;
+        for (auto const& s : currentSsa_.localIds) {
+            allIds.insert(s.begin(), s.end());
+        }
+        std::size_t counter = 0;
+        for (auto const id : allIds)
+            valuesBufferMap[id] = counter++;
+    }
+
+    // create input, values and output buffers
 
     boost::timer::cpu_timer timer;
     boost::timer::nanosecond_type timerBase;
-
-    // create input, values and output buffers
 
     std::size_t fpSize = settings_.useDoublePrecision ? sizeof(double) : sizeof(float);
 
@@ -1256,17 +1305,14 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                                           << inputBufferSize << " fails: " << errorText(err));
     }
 
-    std::size_t valuesBufferSize = 0;
     cl_mem valuesBuffer;
-    if (currentSsa_.size() > 1) {
-        valuesBufferSize = (nVars_[currentId_ - 1].back() - inputVarOffset_.size() - nVariates_[currentId_ - 1]) *
-                           size_[currentId_ - 1];
-        if (valuesBufferSize > 0) {
-            valuesBuffer = clCreateBuffer(*context_, CL_MEM_READ_WRITE, fpSize * valuesBufferSize, NULL, &err);
-            guard.mem.push_back(valuesBuffer);
-            QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): creating values buffer of size "
-                                              << valuesBufferSize << " fails: " << errorText(err));
-        }
+    if (!valuesBufferMap.empty()) {
+        valuesBuffer = clCreateBuffer(*context_, CL_MEM_READ_WRITE,
+                                      fpSize * valuesBufferMap.size() * size_[currentId_ - 1], NULL, &err);
+        guard.mem.push_back(valuesBuffer);
+        QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): creating values buffer of size "
+                                          << valuesBufferMap.size() * size_[currentId_ - 1]
+                                          << " fails: " << errorText(err));
     }
 
     std::size_t outputBufferSize = nOutputVars_[currentId_ - 1] * size_[currentId_ - 1];
@@ -1323,11 +1369,11 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         std::string kernelNameStem =
             "ore_kernel_" + std::to_string(currentId_) + "_" + std::to_string(version_[currentId_ - 1]) + "_";
 
-        for (std::size_t part = 0; part < currentSsa_.size(); ++part) {
+        for (std::size_t part = 0; part < currentSsa_.ssa.size(); ++part) {
 
             bool initFromValues = part > 0;
-            bool cacheToValues = currentSsa_.size() > 1 && part < currentSsa_.size() - 1;
-            bool generateOutputValues = part == currentSsa_.size() - 1;
+            bool cacheToValues = currentSsa_.ssa.size() > 1 && part < currentSsa_.ssa.size() - 1;
+            bool generateOutputValues = part == currentSsa_.ssa.size() - 1;
 
             std::string kernelName = kernelNameStem + std::to_string(part);
 
@@ -1336,7 +1382,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                 inputArgs.push_back("__global " + fpTypeStr + "* input");
             if (nVariates_[currentId_ - 1] > 0)
                 inputArgs.push_back("__global " + fpTypeStr + "* rn");
-            if (valuesBufferSize > 0 && (initFromValues || cacheToValues))
+            if (!valuesBufferMap.empty() && (initFromValues || cacheToValues))
                 inputArgs.push_back("__global " + fpTypeStr + "* values");
             if (outputBufferSize > 0 && generateOutputValues)
                 inputArgs.push_back("__global " + fpTypeStr + "* output");
@@ -1347,49 +1393,27 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                             "if(i < " +
                             std::to_string(size_[currentId_ - 1]) + "UL) {\n";
 
-            std::vector<ssa_entry> ssa;
+            std::vector<SSA::ssa_entry> ssa;
 
             if (initFromValues) {
-                for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1];
-                     i < nVars_[currentId_ - 1][part]; ++i) {
-                    ssa.push_back(
-                        {std::string("v") + std::to_string(i),
-                         i,
-                         std::string("values[") + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "UL + i]",
-                         {}});
+                for (auto const i : currentSsa_.localIds[part]) {
+                    ssa.push_back({std::string("v") + std::to_string(i),
+                                   i,
+                                   std::string("values[") +
+                                       std::to_string(valuesBufferMap.at(i) * size_[currentId_ - 1]) + "UL + i]",
+                                   {}});
                 }
             }
 
-            ssa.insert(ssa.end(), currentSsa_[part].begin(), currentSsa_[part].end());
+            ssa.insert(ssa.end(), currentSsa_.ssa[part].begin(), currentSsa_.ssa[part].end());
 
             if (cacheToValues) {
-                for (std::size_t i = inputVarOffset_.size() + nVariates_[currentId_ - 1];
-                     i < nVars_[currentId_ - 1][part]; ++i) {
-                    ssa.push_back({"values[" + std::to_string(valuesBufferId(i) * size_[currentId_ - 1]) + "UL + i]",
-                                   std::nullopt,
-                                   "v" + std::to_string(i),
-                                   {i}});
-                }
-            }
-
-            if (generateOutputValues) {
-                for (std::size_t i = 0; i < nOutputVars_[currentId_ - 1]; ++i) {
-                    std::size_t offset = i * size_[currentId_ - 1];
-                    std::string output;
-                    std::set<std::size_t> rhsLocalIds;
-                    if (outputVariables_[i] < inputVarOffset_.size()) {
-                        output = "input[" + std::to_string(inputVarOffset_[outputVariables_[i]]) + "UL" +
-                                 (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
-                    } else if (outputVariables_[i] < inputVarOffset_.size() + nVariates_[currentId_ - 1]) {
-                        output =
-                            "rn[" +
-                            std::to_string((outputVariables_[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) +
-                            "UL + i]";
-                    } else {
-                        output = "v" + std::to_string(outputVariables_[i]);
-                        rhsLocalIds.insert(outputVariables_[i]);
-                    }
-                    ssa.push_back({"output[" + std::to_string(offset) + "UL + i]", std::nullopt, output, rhsLocalIds});
+                for (auto const i : currentSsa_.localIds[part]) {
+                    ssa.push_back(
+                        {"values[" + std::to_string(valuesBufferMap.at(i) * size_[currentId_ - 1]) + "UL + i]",
+                         std::nullopt,
+                         "v" + std::to_string(i),
+                         {i}});
                 }
             }
 
@@ -1398,7 +1422,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
         } // for part
 
-        std::cerr << "generated kernel is " << kernelSource.size() / 1024.0 / 1024.0 << " MB" << std::endl;
+        // std::cerr << "generated kernel is " << kernelSource.size() / 1024.0 / 1024.0 << " MB" << std::endl;
         // std::cerr << "generated kernel: \n" + kernelSource + "\n";
 
         if (settings_.debug) {
@@ -1420,16 +1444,12 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                     << std::string(buffer).substr(ORE_OPENCL_MAX_BUILD_LOG_LOGFILE));
         }
 
-        std::cerr << "program built done" << std::endl;
-
-        for (std::size_t part = 0; part < currentSsa_.size(); ++part) {
+        for (std::size_t part = 0; part < currentSsa_.ssa.size(); ++part) {
             std::string kernelName = kernelNameStem + std::to_string(part);
             kernel_[currentId_ - 1].push_back(clCreateKernel(program_[currentId_ - 1], kernelName.c_str(), &err));
             QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): error during clCreateKernel(), part #"
                                               << part << ": " << errorText(err));
         }
-
-        std::cerr << "kernel built done" << std::endl;
 
         hasKernel_[currentId_ - 1] = true;
         inputBufferSize_[currentId_ - 1] = inputBufferSize;
@@ -1470,7 +1490,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     if (inputBufferSize > 0)
         runWaitEvents.push_back(inputBufferEvent);
 
-    std::vector<double> values(valuesBufferSize);
+    std::vector<double> values(valuesBufferMap.size() * size_[currentId_ - 1]);
     std::vector<float> valuesFloat;
     if (!settings_.useDoublePrecision) {
         valuesFloat.resize(values.size());
@@ -1479,8 +1499,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     for (std::size_t part = 0; part < kernel_[currentId_ - 1].size(); ++part) {
 
         bool initFromValues = part > 0;
-        bool cacheToValues = currentSsa_.size() > 1 && part < currentSsa_.size() - 1;
-        bool generateOutputValues = part == currentSsa_.size() - 1;
+        bool cacheToValues = currentSsa_.ssa.size() > 1 && part < currentSsa_.ssa.size() - 1;
+        bool generateOutputValues = part == currentSsa_.ssa.size() - 1;
 
         // set kernel args
 
@@ -1492,7 +1512,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         if (nVariates_[currentId_ - 1] > 0) {
             err |= clSetKernelArg(kernel_[currentId_ - 1][part], kidx++, sizeof(cl_mem), &variatesPool_);
         }
-        if (valuesBufferSize > 0 && (initFromValues || cacheToValues)) {
+        if (!valuesBufferMap.empty() && (initFromValues || cacheToValues)) {
             err |= clSetKernelArg(kernel_[currentId_ - 1][part], kidx++, sizeof(cl_mem), &valuesBuffer);
         }
         if (outputBufferSize > 0 && generateOutputValues) {
@@ -1521,10 +1541,10 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             // copy values from device to host
 
             cl_event readEvent;
-            err =
-                clEnqueueReadBuffer(queue_, valuesBuffer, CL_FALSE, 0, fpSize * valuesBufferSize,
-                                    settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0],
-                                    runWaitEvents.size(), runWaitEvents.empty() ? NULL : &runWaitEvents[0], &readEvent);
+            err = clEnqueueReadBuffer(
+                queue_, valuesBuffer, CL_FALSE, 0, fpSize * valuesBufferMap.size() * size_[currentId_ - 1],
+                settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0], runWaitEvents.size(),
+                runWaitEvents.empty() ? NULL : &runWaitEvents[0], &readEvent);
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClContext::finalizeCalculation(): enqueue read values buffer fails: " << errorText(err));
 
@@ -1548,18 +1568,20 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                                << v.size());
 
                 RandomVariable ce;
-                RandomVariable regressand(size_[currentId_ - 1], &values[valuesBufferId(v[1]) * size_[currentId_ - 1]]);
+                RandomVariable regressand(size_[currentId_ - 1],
+                                          &values[valuesBufferMap.at(v[1]) * size_[currentId_ - 1]]);
                 if (v.size() < 4) {
                     // no regressor given -> take plain expectation
                     ce = expectation(regressand);
                 } else {
-                    Filter filter = close_enough(
-                        RandomVariable(size_[currentId_ - 1], &values[valuesBufferId(v[2]) * size_[currentId_ - 1]]),
-                        RandomVariable(size_[currentId_ - 1], 1.0));
+                    Filter filter =
+                        close_enough(RandomVariable(size_[currentId_ - 1],
+                                                    &values[valuesBufferMap.at(v[2]) * size_[currentId_ - 1]]),
+                                     RandomVariable(size_[currentId_ - 1], 1.0));
                     std::vector<RandomVariable> regressor(v.size() - 3);
                     for (std::size_t i = 3; i < v.size(); ++i) {
                         regressor[i - 3] = RandomVariable(size_[currentId_ - 1],
-                                                          &values[valuesBufferId(v[i]) * size_[currentId_ - 1]]);
+                                                          &values[valuesBufferMap.at(v[i]) * size_[currentId_ - 1]]);
                     }
 
                     ce = conditionalExpectation(regressand, vec2vecptr(regressor),
@@ -1572,7 +1594,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                 // overwrite the value
 
                 ce.expand();
-                std::copy(ce.data(), ce.data() + ce.size(), &values[valuesBufferId(v[0]) * size_[currentId_ - 1]]);
+                std::copy(ce.data(), ce.data() + ce.size(), &values[valuesBufferMap.at(v[0]) * size_[currentId_ - 1]]);
             }
 
             if (!settings_.useDoublePrecision) {
@@ -1582,7 +1604,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             // copy values from host to device
 
             runWaitEvents.push_back(cl_event());
-            err = clEnqueueWriteBuffer(queue_, valuesBuffer, CL_FALSE, 0, fpSize * valuesBufferSize,
+            err = clEnqueueWriteBuffer(queue_, valuesBuffer, CL_FALSE, 0,
+                                       fpSize * valuesBufferMap.size() * size_[currentId_ - 1],
                                        settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0], 0,
                                        NULL, &runWaitEvents.back());
             QL_REQUIRE(err == CL_SUCCESS,
