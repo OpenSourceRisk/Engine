@@ -1048,11 +1048,8 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
         std::set<std::size_t> argIdsSet(argIds.begin(), argIds.end());
 
         for (std::size_t i = 0; i < argStr.size() + 1; ++i) {
-            currentSsa_.ssa.back().push_back({std::string("v") + std::to_string(argIds[i]),
-                                              argIds[i],
-                                              i == 0 ? "0.0" : argStr[i - 1],
-                                              {},
-                                              argIdsSet});
+            currentSsa_.ssa.back().push_back({std::string("v") + std::to_string(argIds[i]), argIds[i],
+                                              i == 0 ? "0.0" : argStr[i - 1], argLocalIds, argIdsSet});
             currentConditionalExpectationArgs_.insert("v" + std::to_string(argIds[i]));
         }
 
@@ -1447,10 +1444,13 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
             if (cacheToValues) {
                 std::set<std::size_t> tmp;
-                tmp.insert(currentSsa_.cond_exp_local_id[part].begin(), currentSsa_.cond_exp_local_id[part].end());
                 for (std::size_t p = part + 1; p < currentSsa_.ssa.size(); ++p)
                     tmp.insert(currentSsa_.rhs_local_id[p].begin(), currentSsa_.rhs_local_id[p].end());
-                for (auto const i : tmp) {
+                std::set<std::size_t> tmp2;
+                std::set_intersection(tmp.begin(), tmp.end(), currentSsa_.lhs_local_id[part].begin(),
+                                      currentSsa_.lhs_local_id[part].end(), std::inserter(tmp2, tmp2.end()));
+                tmp2.insert(currentSsa_.cond_exp_local_id[part].begin(), currentSsa_.cond_exp_local_id[part].end());
+                for (auto const i : tmp2) {
                     ssa.push_back(
                         {"values[" + std::to_string(valuesBufferMap.at(i) * size_[currentId_ - 1]) + "UL + i]",
                          std::nullopt,
