@@ -202,6 +202,10 @@ std::size_t cg_add(ComputationGraph& g, const std::size_t a, const std::size_t b
     return g.insert({a, b}, RandomVariableOpCode::Add, label);
 }
 
+std::size_t cg_add(ComputationGraph& g, const std::vector<std::size_t>& a, const std::string& label) {
+    return g.insert(a, RandomVariableOpCode::Add, label);
+}
+
 std::size_t cg_subtract(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label) {
     if (a == b)
         return cg_const(g, 0.0);
