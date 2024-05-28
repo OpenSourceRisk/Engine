@@ -205,12 +205,15 @@ private:
             std::optional<std::size_t> lhs_local_id;
             std::string rhs_str;
             std::set<std::size_t> rhs_local_id;
+            std::set<std::size_t> cond_exp_local_id;
         };
         void init();
         void startNewPart();
         void finalize();
         std::vector<std::vector<ssa_entry>> ssa;
-        std::vector<std::set<std::size_t>> localIds;
+        std::vector<std::set<std::size_t>> lhs_local_id;
+        std::vector<std::set<std::size_t>> rhs_local_id;
+        std::vector<std::set<std::size_t>> cond_exp_local_id;
     };
 
     std::size_t generateResultId();
@@ -650,18 +653,23 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
 
 void OpenClContext::SSA::init() {
     ssa = std::vector<std::vector<ssa_entry>>(1);
-    localIds.clear();
+    lhs_local_id.clear();
+    rhs_local_id.clear();
+    cond_exp_local_id.clear();
 }
 
 void OpenClContext::SSA::startNewPart() { ssa.push_back(std::vector<ssa_entry>()); }
 
 void OpenClContext::SSA::finalize() {
     for (auto const& p : ssa) {
-        localIds.push_back(std::set<std::size_t>());
+        lhs_local_id.push_back(std::set<std::size_t>());
+        rhs_local_id.push_back(std::set<std::size_t>());
+        cond_exp_local_id.push_back(std::set<std::size_t>());
         for (auto const& l : p) {
             if (l.lhs_local_id)
-                localIds.back().insert(*l.lhs_local_id);
-            localIds.back().insert(l.rhs_local_id.begin(), l.rhs_local_id.end());
+                lhs_local_id.back().insert(*l.lhs_local_id);
+            rhs_local_id.back().insert(l.rhs_local_id.begin(), l.rhs_local_id.end());
+            cond_exp_local_id.back().insert(l.cond_exp_local_id.begin(), l.cond_exp_local_id.end());
         }
     }
 }
@@ -1033,22 +1041,24 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
     if (randomVariableOpCode == RandomVariableOpCode::ConditionalExpectation) {
 
         std::vector<std::size_t> argIds;
-        std::size_t regressandId;
         for (std::size_t i = 0; i < argStr.size() + 1; ++i) {
-            auto resultId = generateResultId();
-            // no harm in pushing all arg local ids here for each entry
-            currentSsa_.ssa.back().push_back(
-                {std::string("v") + std::to_string(resultId), resultId, i == 0 ? "0.0" : argStr[i - 1], argLocalIds});
-            argIds.push_back(resultId);
-            if (i == 0) {
-                regressandId = resultId;
-                currentConditionalExpectationArgs_.insert("v" + std::to_string(resultId));
-            }
+            argIds.push_back(generateResultId());
+        }
+
+        std::set<std::size_t> argIdsSet(argIds.begin(), argIds.end());
+
+        for (std::size_t i = 0; i < argStr.size() + 1; ++i) {
+            currentSsa_.ssa.back().push_back({std::string("v") + std::to_string(argIds[i]),
+                                              argIds[i],
+                                              i == 0 ? "0.0" : argStr[i - 1],
+                                              {},
+                                              argIdsSet});
+            currentConditionalExpectationArgs_.insert("v" + std::to_string(argIds[i]));
         }
 
         conditionalExpectationVarIds_[currentId_ - 1].back().push_back(argIds);
 
-        return regressandId;
+        return argIds[0];
 
     } else {
 
@@ -1062,76 +1072,95 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
         }
         case RandomVariableOpCode::Add: {
             currentSsa_.ssa.back().push_back(
-                {"v" + std::to_string(resultId), resultId, boost::join(argStr, "+"), argLocalIds});
+                {"v" + std::to_string(resultId), resultId, boost::join(argStr, "+"), argLocalIds, {}});
             break;
         }
         case RandomVariableOpCode::Subtract: {
             currentSsa_.ssa.back().push_back(
-                {"v" + std::to_string(resultId), resultId, argStr[0] + " - " + argStr[1], argLocalIds});
+                {"v" + std::to_string(resultId), resultId, argStr[0] + " - " + argStr[1], argLocalIds, {}});
             break;
         }
         case RandomVariableOpCode::Negative: {
-            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId), resultId, "-" + argStr[0], argLocalIds});
+            currentSsa_.ssa.back().push_back(
+                {"v" + std::to_string(resultId), resultId, "-" + argStr[0], argLocalIds, {}});
             break;
         }
         case RandomVariableOpCode::Mult: {
             currentSsa_.ssa.back().push_back(
-                {"v" + std::to_string(resultId), resultId, argStr[0] + " * " + argStr[1], argLocalIds});
+                {"v" + std::to_string(resultId), resultId, argStr[0] + " * " + argStr[1], argLocalIds, {}});
             break;
         }
         case RandomVariableOpCode::Div: {
             currentSsa_.ssa.back().push_back(
-                {"v" + std::to_string(resultId), resultId, argStr[0] + " / " + argStr[1], argLocalIds});
+                {"v" + std::to_string(resultId), resultId, argStr[0] + " / " + argStr[1], argLocalIds, {}});
             break;
         }
         case RandomVariableOpCode::IndicatorEq: {
-            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId), resultId,
-                                              "ore_indicatorEq(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
+            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId),
+                                              resultId,
+                                              "ore_indicatorEq(" + argStr[0] + "," + argStr[1] + ")",
+                                              argLocalIds,
+                                              {}});
             break;
         }
         case RandomVariableOpCode::IndicatorGt: {
-            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId), resultId,
-                                              "ore_indicatorGt(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
+            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId),
+                                              resultId,
+                                              "ore_indicatorGt(" + argStr[0] + "," + argStr[1] + ")",
+                                              argLocalIds,
+                                              {}});
             break;
         }
         case RandomVariableOpCode::IndicatorGeq: {
-            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId), resultId,
-                                              "ore_indicatorGeq(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
+            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId),
+                                              resultId,
+                                              "ore_indicatorGeq(" + argStr[0] + "," + argStr[1] + ")",
+                                              argLocalIds,
+                                              {}});
             break;
         }
         case RandomVariableOpCode::Min: {
-            currentSsa_.ssa.back().push_back(
-                {"v" + std::to_string(resultId), resultId, "fmin(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
+            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId),
+                                              resultId,
+                                              "fmin(" + argStr[0] + "," + argStr[1] + ")",
+                                              argLocalIds,
+                                              {}});
             break;
         }
         case RandomVariableOpCode::Max: {
-            currentSsa_.ssa.back().push_back(
-                {"v" + std::to_string(resultId), resultId, "fmax(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
+            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId),
+                                              resultId,
+                                              "fmax(" + argStr[0] + "," + argStr[1] + ")",
+                                              argLocalIds,
+                                              {}});
             break;
         }
         case RandomVariableOpCode::Abs: {
             currentSsa_.ssa.back().push_back(
-                {"v" + std::to_string(resultId), resultId, "fabs(" + argStr[0] + ")", argLocalIds});
+                {"v" + std::to_string(resultId), resultId, "fabs(" + argStr[0] + ")", argLocalIds, {}});
             break;
         }
         case RandomVariableOpCode::Exp: {
             currentSsa_.ssa.back().push_back(
-                {"v" + std::to_string(resultId), resultId, "exp(" + argStr[0] + ")", argLocalIds});
+                {"v" + std::to_string(resultId), resultId, "exp(" + argStr[0] + ")", argLocalIds, {}});
             break;
         }
         case RandomVariableOpCode::Sqrt: {
             currentSsa_.ssa.back().push_back(
-                {"v" + std::to_string(resultId), resultId, "sqrt(" + argStr[0] + ")", argLocalIds});
+                {"v" + std::to_string(resultId), resultId, "sqrt(" + argStr[0] + ")", argLocalIds, {}});
             break;
         }
         case RandomVariableOpCode::Log: {
             currentSsa_.ssa.back().push_back(
-                {"v" + std::to_string(resultId), resultId, "log(" + argStr[0] + ")", argLocalIds});
+                {"v" + std::to_string(resultId), resultId, "log(" + argStr[0] + ")", argLocalIds, {}});
             break;
         }
         case RandomVariableOpCode::Pow: {
-            currentSsa_.ssa.back().push_back(
-                {"v" + std::to_string(resultId), resultId, "pow(" + argStr[0] + "," + argStr[1] + ")", argLocalIds});
+            currentSsa_.ssa.back().push_back({"v" + std::to_string(resultId),
+                                              resultId,
+                                              "pow(" + argStr[0] + "," + argStr[1] + ")",
+                                              argLocalIds,
+                                              {}});
             break;
         }
         // TODO add this in the kernel code below first before activating it here
@@ -1142,7 +1171,7 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
         // }
         case RandomVariableOpCode::NormalPdf: {
             currentSsa_.ssa.back().push_back(
-                {"v" + std::to_string(resultId), resultId, "ore_normalPdf(" + argStr[0] + ")", argLocalIds});
+                {"v" + std::to_string(resultId), resultId, "ore_normalPdf(" + argStr[0] + ")", argLocalIds, {}});
             break;
         }
         default: {
@@ -1264,7 +1293,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             rhsLocalIds.insert(outputVariables_[i]);
         }
         currentSsa_.ssa.back().push_back(
-            {"output[" + std::to_string(offset) + "UL + i]", std::nullopt, output, rhsLocalIds});
+            {"output[" + std::to_string(offset) + "UL + i]", std::nullopt, output, rhsLocalIds, {}});
     }
 
     currentSsa_.finalize();
@@ -1274,8 +1303,17 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     std::map<std::size_t, std::size_t> valuesBufferMap;
     if (currentSsa_.ssa.size() > 1) {
         std::set<std::size_t> allIds;
-        for (auto const& s : currentSsa_.localIds) {
-            allIds.insert(s.begin(), s.end());
+        for (std::size_t part = 0; part < currentSsa_.ssa.size(); ++part) {
+            bool initFromValues = part > 0;
+            bool cacheToValues = part < currentSsa_.ssa.size() - 1;
+            if (initFromValues) {
+                allIds.insert(currentSsa_.rhs_local_id[part].begin(), currentSsa_.rhs_local_id[part].end());
+            }
+            if (cacheToValues) {
+                allIds.insert(currentSsa_.cond_exp_local_id[part].begin(), currentSsa_.cond_exp_local_id[part].end());
+                for (std::size_t p = part + 1; p < currentSsa_.ssa.size(); ++p)
+                    allIds.insert(currentSsa_.rhs_local_id[p].begin(), currentSsa_.rhs_local_id[p].end());
+            }
         }
         std::size_t counter = 0;
         for (auto const id : allIds)
@@ -1396,7 +1434,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             std::vector<SSA::ssa_entry> ssa;
 
             if (initFromValues) {
-                for (auto const i : currentSsa_.localIds[part]) {
+                for (auto const i : currentSsa_.rhs_local_id[part]) {
                     ssa.push_back({std::string("v") + std::to_string(i),
                                    i,
                                    std::string("values[") +
@@ -1408,7 +1446,11 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             ssa.insert(ssa.end(), currentSsa_.ssa[part].begin(), currentSsa_.ssa[part].end());
 
             if (cacheToValues) {
-                for (auto const i : currentSsa_.localIds[part]) {
+                std::set<std::size_t> tmp;
+                tmp.insert(currentSsa_.cond_exp_local_id[part].begin(), currentSsa_.cond_exp_local_id[part].end());
+                for (std::size_t p = part + 1; p < currentSsa_.ssa.size(); ++p)
+                    tmp.insert(currentSsa_.rhs_local_id[p].begin(), currentSsa_.rhs_local_id[p].end());
+                for (auto const i : tmp) {
                     ssa.push_back(
                         {"values[" + std::to_string(valuesBufferMap.at(i) * size_[currentId_ - 1]) + "UL + i]",
                          std::nullopt,
