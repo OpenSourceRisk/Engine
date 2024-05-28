@@ -121,7 +121,7 @@ protected:
 
     static constexpr Real tinyTime = 1E-10;
 
-   // data structure storing info needed to generate the amount for a cashflow
+    // data structure storing info needed to generate the amount for a cashflow
     struct CashflowInfo {
         Size legNo = Null<Size>(), cfNo = Null<Size>();
         Real payTime = Null<Real>();
