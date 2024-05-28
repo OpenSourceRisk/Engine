@@ -1038,7 +1038,7 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
         }
         case RandomVariableOpCode::Add: {
             currentSsa_.back().push_back(
-                {"v" + std::to_string(resultId), resultId, argStr[0] + " + " + argStr[1], argLocalIds});
+                {"v" + std::to_string(resultId), resultId, boost::join(argStr, "+"), argLocalIds});
             break;
         }
         case RandomVariableOpCode::Subtract: {
