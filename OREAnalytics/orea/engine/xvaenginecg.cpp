@@ -220,15 +220,16 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
     // - pfExposureNodes:     the corresponding conditional expectations
 
     std::vector<std::size_t> pfPathExposureNodes, pfExposureNodes;
+    std::vector<std::size_t> tradeSum(simulationDates.size() + 1);
+    tradeSum[0] = cg_const(*g, 0.0);
     for (Size i = 0; i < simulationDates.size() + 1; ++i) {
-        std::size_t sumNode = cg_const(*g, 0.0);
-        for (auto const& v : amcNpvNodes) {
-            sumNode = cg_add(*g, sumNode, v[i]);
+        for (Size j = 0; i < amcNpvNodes[i].size(); ++j) {
+            tradeSum[j + 1] = amcNpvNodes[i][j];
         }
-        pfPathExposureNodes.push_back(sumNode);
-        pfExposureNodes.push_back(
-            model_->npv(sumNode, i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1),
-                        cg_const(*g, 1.0), boost::none, ComputationGraph::nan, ComputationGraph::nan));
+        pfPathExposureNodes.push_back(cg_add(*g, tradeSum));
+        pfExposureNodes.push_back(model_->npv(
+            pfPathExposureNodes.back(), i == 0 ? model_->referenceDate() : *std::next(simulationDates.begin(), i - 1),
+            cg_const(*g, 1.0), boost::none, ComputationGraph::nan, ComputationGraph::nan));
     }
 
     boost::timer::nanosecond_type timing6 = timer.elapsed().wall;
@@ -363,11 +364,14 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
 
     keepNodes[cvaNode] = true;
 
+    auto rvOpAllowsPredeletion = getRandomVariableOpAllowsPredeletion;
+
     std::vector<std::vector<double>> externalOutput;
     std::vector<double*> externalOutputPtr;
     if (useExternalComputeDevice_) {
         forwardEvaluation(*g, valuesExternal, opsExternal_, ExternalRandomVariable::deleter, !bumpCvaSensis_,
-                          opNodeRequirements_, keepNodes);
+                          opNodeRequirements_, keepNodes, 0, ComputationGraph::nan, false,
+                          ExternalRandomVariable::deleter, rvOpAllowsPredeletion);
         for (Size i = 0; i < pfExposureNodes.size(); ++i) {
             valuesExternal[pfExposureNodes[i]].declareAsOutput();
         }
