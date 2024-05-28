@@ -96,7 +96,6 @@ protected:
     mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
     mutable bool includeSettlementDateFlows_ = false;
-    mutable Real multiplier_ = 1.0;
 
     // data members
     Handle<CrossAssetModel> model_;
