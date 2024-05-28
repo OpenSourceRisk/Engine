@@ -929,8 +929,8 @@ void McMultiLegBaseEngine::calculate() const {
 
     resultUnderlyingNpv_ = expectation(pathValueUndDirty).at(0) * model_->numeraire(0, 0.0, 0.0, discountCurves_[0]);
     resultValue_ = exercise_ == nullptr
-                        ? resultUnderlyingNpv_
-                        : expectation(pathValueOption).at(0) * model_->numeraire(0, 0.0, 0.0, discountCurves_[0]);
+                       ? resultUnderlyingNpv_
+                       : expectation(pathValueOption).at(0) * model_->numeraire(0, 0.0, 0.0, discountCurves_[0]);
 
     McEngineStats::instance().calc_timer.stop();
 
