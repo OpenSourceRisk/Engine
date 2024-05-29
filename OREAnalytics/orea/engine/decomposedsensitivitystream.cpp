@@ -75,8 +75,14 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decompose(const Sens
     bool decomposeCommoditySpot = tradeMarkedForDecomposition && (isCommoditySpotSensi || isEquitySpotSensi) &&
                                   refDataManager_ != nullptr &&
                                   refDataManager_->hasData("CommodityIndex", record.key_1.name);
+    bool isIndex = false;
+    if (isEquitySpotSensi && refDataManager_->hasData("Equity", record.key_1.name)) {
+        auto eqRefData = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(
+            refDataManager_->getData("Equity", record.key_1.name));
+        isIndex = eqRefData->equityData().isIndex;
+    }
 
-    try {
+    try {       
         if (tradeMarkedForDecompositionDefaultRisk && isSurvivalProbSensi && isNotCrossGamma) {
             return decomposeSurvivalProbability(record);
         } else if (decomposeEquitySpot && isNotCrossGamma) {
@@ -91,7 +97,7 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decompose(const Sens
                 indexDecomposition(record.delta, record.key_1.name, ore::data::CurveSpec::CurveType::Commodity);
             return sensitivityRecords(decompResults.spotRisk, decompResults.fxRisk, decompResults.indexCurrency,
                                       record);
-        } else if (tradeMarkedForDecomposition && (isCommoditySpotSensi || isEquitySpotSensi) && isNotCrossGamma) {
+        } else if (tradeMarkedForDecomposition && (isCommoditySpotSensi || (isEquitySpotSensi && isIndex)) && isNotCrossGamma) {
             auto subFields = std::map<std::string, std::string>({{"tradeId", record.tradeId}});
             StructuredAnalyticsErrorMessage(
                 "Sensitivity Decomposition", "Index decomposition failed",
