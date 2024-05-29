@@ -20,6 +20,7 @@
 
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_io.hpp>
+#include <qle/ad/external_randomvariable_ops.hpp>
 
 #include <sstream>
 
@@ -77,5 +78,8 @@ template std::string ssaForm(const ComputationGraph& g, const std::vector<std::s
                              const std::vector<double>& values, const std::vector<double>& values2);
 template std::string ssaForm(const ComputationGraph& g, const std::vector<std::string>& opCodeLabels,
                              const std::vector<RandomVariable>& values, const std::vector<RandomVariable>& values2);
+template std::string ssaForm(const ComputationGraph& g, const std::vector<std::string>& opCodeLabels,
+                             const std::vector<ExternalRandomVariable>& values,
+                             const std::vector<ExternalRandomVariable>& values2);
 
 } // namespace QuantExt

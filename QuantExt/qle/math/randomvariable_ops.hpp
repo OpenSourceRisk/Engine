@@ -57,4 +57,6 @@ std::vector<RandomVariableGrad> getRandomVariableGradients(
 using RandomVariableOpNodeRequirements = std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>;
 std::vector<RandomVariableOpNodeRequirements> getRandomVariableOpNodeRequirements();
 
+std::vector<bool> getRandomVariableOpAllowsPredeletion();
+
 } // namespace QuantExt
