@@ -325,7 +325,6 @@ void OpenClFramework::init() {
         for (std::size_t d = 0; d < nDevices_[p]; ++d) {
             char deviceName[ORE_OPENCL_MAX_N_DEV_INFO], driverVersion[ORE_OPENCL_MAX_N_DEV_INFO],
                 deviceVersion[ORE_OPENCL_MAX_N_DEV_INFO], deviceExtensions[ORE_OPENCL_MAX_N_DEV_INFO_LARGE];
-            cl_device_fp_config doubleFpConfig;
 
             clGetDeviceInfo(devices_[p][d], CL_DEVICE_NAME, ORE_OPENCL_MAX_N_DEV_INFO, &deviceName, NULL);
             clGetDeviceInfo(devices_[p][d], CL_DRIVER_VERSION, ORE_OPENCL_MAX_N_DEV_INFO, &driverVersion, NULL);
@@ -342,6 +341,7 @@ void OpenClFramework::init() {
 
             supportsDoublePrecision_[p][d] = false;
 #if CL_VERSION_1_2
+            cl_device_fp_config doubleFpConfig;
             clGetDeviceInfo(devices_[p][d], CL_DEVICE_DOUBLE_FP_CONFIG, sizeof(cl_device_fp_config), &doubleFpConfig,
                             NULL);
             deviceInfo_[p][d].push_back(std::make_pair(
