@@ -193,6 +193,10 @@ public:
     void setAmc(bool b) { amc_ = b; }
     void setAmcCg(bool b) { amcCg_ = b; }
     void setXvaCgBumpSensis(bool b) { xvaCgBumpSensis_ = b; }
+    void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
+    void setXvaCgExternalDeviceCompatibilityMode(bool b) { xvaCgExternalDeviceCompatibilityMode_ = b; }
+    void setXvaCgUseDoublePrecisionForExternalCalculation(bool b) { xvaCgUseDoublePrecisionForExternalCalculation_ = b; }
+    void setXvaCgExternalComputeDevice(string s) { xvaCgExternalComputeDevice_ = std::move(s); }
     void setXvaCgSensiScenarioData(const std::string& xml);
     void setXvaCgSensiScenarioDataFromFile(const std::string& fileName);
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
@@ -561,6 +565,12 @@ public:
     bool amc() const { return amc_; }
     bool amcCg() const { return amcCg_; }
     bool xvaCgBumpSensis() const { return xvaCgBumpSensis_; }
+    bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
+    bool xvaCgExternalDeviceCompatibilityMode() const { return xvaCgExternalDeviceCompatibilityMode_; }
+    bool xvaCgUseDoublePrecisionForExternalCalculation() const {
+        return xvaCgUseDoublePrecisionForExternalCalculation_;
+    }
+    const std::string& xvaCgExternalComputeDevice() const { return xvaCgExternalComputeDevice_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaCgSensiScenarioData() const { return xvaCgSensiScenarioData_; }
     const std::set<std::string>& amcTradeTypes() const { return amcTradeTypes_; }
     const std::string& exposureBaseCurrency() const { return exposureBaseCurrency_; }
@@ -900,6 +910,10 @@ protected:
     bool amc_ = false;
     bool amcCg_ = false;
     bool xvaCgBumpSensis_ = false;
+    bool xvaCgUseExternalComputeDevice_ = false;
+    bool xvaCgExternalDeviceCompatibilityMode_ = false;
+    bool xvaCgUseDoublePrecisionForExternalCalculation_ = false;
+    string xvaCgExternalComputeDevice_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string exposureBaseCurrency_ = "";
