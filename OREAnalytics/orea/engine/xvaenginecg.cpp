@@ -81,7 +81,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
 
     // Just for performance testing, duplicate the trades in input portfolio as specified by env var N
 
-    if (auto param_N = getenv("N")) {
+    if (auto param_N = getenv("XVA_ENGINE_CG_N")) {
         portfolio_ = QuantLib::ext::make_shared<Portfolio>();
         std::string pfxml = portfolio->toXMLString();
         for (Size i = 0; i < atoi(param_N); ++i) {
