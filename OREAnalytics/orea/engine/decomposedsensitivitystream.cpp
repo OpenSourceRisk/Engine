@@ -78,11 +78,11 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decompose(const Sens
     bool isIndex = false;
     if (isEquitySpotSensi && refDataManager_->hasData("Equity", record.key_1.name)) {
         auto eqRefData = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(
-            refDataManager_->getData("Equity", record.key_1.name));
-        isIndex = eqRefData->equityData().isIndex;
+                refDataManager_->getData("Equity", record.key_1.name));
+        isIndex = eqRefData->equityData().isIndex;       
     }
 
-    try {       
+    try {
         if (tradeMarkedForDecompositionDefaultRisk && isSurvivalProbSensi && isNotCrossGamma) {
             return decomposeSurvivalProbability(record);
         } else if (decomposeEquitySpot && isNotCrossGamma) {
