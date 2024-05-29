@@ -45,6 +45,8 @@ public:
     static std::function<void(ExternalRandomVariable&)> preDeleter;
     static std::function<void(ExternalRandomVariable&)> deleter;
 
+    static std::size_t nCreated_, nDeleted_;
+
 private:
     bool initialized_ = false;
     bool freed_ = false;
