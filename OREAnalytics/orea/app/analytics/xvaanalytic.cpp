@@ -655,16 +655,19 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     if(inputs_->amcCg()) {
         LOG("XVA analytic is running with amc cg engine (experimental).");
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config in sim market there...
-        XvaEngineCG engine(inputs_->nThreads(), inputs_->asof(), loader, inputs_->curveConfigs().get(),
-                           analytic()->configurations().todaysMarketParams,
-                           analytic()->configurations().simMarketParams, inputs_->amcPricingEngine(),
-                           inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(), inputs_->portfolio(),
-                           inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
-                           inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-                           inputs_->xvaCgBumpSensis());
+        XvaEngineCG engine(
+            inputs_->nThreads(), inputs_->asof(), loader, inputs_->curveConfigs().get(),
+            analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
+            inputs_->amcPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
+            inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
+            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
+            inputs_->xvaCgBumpSensis(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
+            inputs_->xvaCgExternalComputeDevice(), true, true);
 
         analytic()->reports()["XVA"]["xvacg-exposure"] = engine.exposureReport();
-	analytic()->reports()["XVA"]["xvacg-cva-sensi-scenario"] = engine.sensiReport();
+        if(inputs_->xvaCgSensiScenarioData())
+            analytic()->reports()["XVA"]["xvacg-cva-sensi-scenario"] = engine.sensiReport();
 	return;
     }
 

@@ -1527,7 +1527,25 @@ void OREAppInputParameters::loadParameters() {
             setWriteScenarios(true);
 
         tmp = params_->get("simulation", "xvaCgBumpSensis", false);
-	if (tmp != "")
+	if (!tmp.empty())
+	    setXvaCgBumpSensis(parseBool(tmp));
+
+        tmp = params_->get("simulation", "xvaCgUseExternalComputeDevice", false);
+	if (!tmp.empty())
+	    setXvaCgUseExternalComputeDevice(parseBool(tmp));
+
+        tmp = params_->get("simulation", "xvaCgExternalDeviceCompatibilityMode", false);
+	if (!tmp.empty())
+	    setXvaCgExternalDeviceCompatibilityMode(parseBool(tmp));
+
+        tmp = params_->get("simulation", "xvaCgUseDoublePrecisionForExternalCalculation", false);
+	if (!tmp.empty())
+	    setXvaCgUseDoublePrecisionForExternalCalculation(parseBool(tmp));
+
+        setXvaCgExternalComputeDevice(params_->get("simulation", "xvaCgExternalComputeDevice", false));
+
+        tmp = params_->get("simulation", "xvaCgBumpSensis", false);
+	if (!tmp.empty())
 	    setXvaCgBumpSensis(parseBool(tmp));
 
     }
