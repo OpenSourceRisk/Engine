@@ -22,9 +22,6 @@
 
 namespace QuantExt {
 
-std::size_t ExternalRandomVariable::nCreated_ = 0;
-std::size_t ExternalRandomVariable::nDeleted_ = 0;
-
 ExternalRandomVariable::ExternalRandomVariable(std::size_t id) : initialized_(true), id_(id) {}
 
 ExternalRandomVariable::ExternalRandomVariable(double v) : initialized_(true), v_(v) {
@@ -41,7 +38,6 @@ ExternalRandomVariable::ExternalRandomVariable(const std::size_t randomVariableO
     });
     id_ = ComputeEnvironment::instance().context().applyOperation(randomVariableOpCode, argIds);
     initialized_ = true;
-    nCreated_++;
 }
 
 void ExternalRandomVariable::clear() {
