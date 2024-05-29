@@ -403,13 +403,13 @@ OpenClContext::~OpenClContext() {
         }
 
         for (Size i = 0; i < kernel_.size(); ++i) {
-            if (disposed_[i])
+            if (disposed_[i] || !hasKernel_[i])
                 continue;
             releaseKernel(kernel_[i], "ore kernel");
         }
 
         for (Size i = 0; i < program_.size(); ++i) {
-            if (disposed_[i])
+            if (disposed_[i] || !hasKernel_[i])
                 continue;
             releaseProgram(program_[i], "ore program");
         }
@@ -565,8 +565,10 @@ void OpenClContext::init() {
 void OpenClContext::disposeCalculation(const std::size_t id) {
     QL_REQUIRE(!disposed_[id - 1], "OpenClContext::disposeCalculation(): id " << id << " was already disposed.");
     disposed_[id - 1] = true;
-    releaseKernel(kernel_[id - 1], "kernel id " + std::to_string(id) + " (during dispose())");
-    releaseProgram(program_[id - 1], "program id " + std::to_string(id) + " (during dispose())");
+    if (hasKernel_[id - 1]) {
+        releaseKernel(kernel_[id - 1], "kernel id " + std::to_string(id) + " (during dispose())");
+        releaseProgram(program_[id - 1], "program id " + std::to_string(id) + " (during dispose())");
+    }
 }
 
 std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_t n, const std::size_t id,
@@ -722,6 +724,10 @@ void OpenClContext::updateVariatesPool() {
     constexpr std::size_t mt_N = 624;   // mersenne twister N
 
     std::size_t fpSize = settings_.useDoublePrecision ? sizeof(double) : sizeof(float);
+
+    QL_REQUIRE(!settings_.useDoublePrecision || supportsDoublePrecision(),
+               "OpenClContext::updateVariatesPool(): double precision is configured for this calculation, but not "
+               "supported by the device. Switch to single precision or use an appropriate device.");
 
     cl_event initEvent;
     if (variatesPoolSize_ == 0) {
@@ -1366,7 +1372,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     // build kernel if necessary
 
     if (!hasKernel_[currentId_ - 1]) {
-
         std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
         std::string fpEpsStr = settings_.useDoublePrecision ? "0x1.0p-52" : "0x1.0p-23f";
         std::string fpSuffix = settings_.useDoublePrecision ? std::string() : "f";
@@ -1539,7 +1544,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     }
 
     for (std::size_t part = 0; part < kernel_[currentId_ - 1].size(); ++part) {
-
         bool initFromValues = part > 0;
         bool cacheToValues = currentSsa_.ssa.size() > 1 && part < currentSsa_.ssa.size() - 1;
         bool generateOutputValues = part == currentSsa_.ssa.size() - 1;

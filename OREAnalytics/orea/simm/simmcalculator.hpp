@@ -92,6 +92,8 @@ public:
 
     const std::map<SimmSide, std::set<std::string>>& finalTradeIds() const { return finalTradeIds_; }
 
+    const Crif& simmParameters() const { return simmParameters_; }
+
     //! Return the calculator's calculation currency
     const std::string& calculationCurrency(const SimmSide& side) const {
         return side == SimmSide::Call ? calculationCcyCall_ : calculationCcyPost_;
@@ -111,6 +113,9 @@ private:
 
     //! Net sentivities at the regulation level within each netting set
     std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, Crif>>> regSensitivities_;
+
+    //! Record of SIMM parameters that were used in the calculation
+    ore::analytics::Crif simmParameters_;
 
     //! The SIMM configuration governing the calculation
     QuantLib::ext::shared_ptr<SimmConfiguration> simmConfiguration_;

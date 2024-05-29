@@ -429,7 +429,6 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         DLOG("build underlying index for underlying #" << (i + 1));
 
         std::string localCreditRiskCurrency;
-        Date localMaturity;
         std::map<std::string, double> localIndexNamesAndQuantities;
         std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> localFxIndices = initialFxIndices;
         Real dummyInitialPrice = 1.0; // initial price is only updated if we have one underlying
@@ -440,7 +439,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         builder->build(id(), underlying_[i], valuationDates, paymentDates, fundingCurrency, engineFactory,
                        underlyingIndex[i], underlyingMultiplier[i], localIndexNamesAndQuantities, localFxIndices,
                        underlying_.size() == 1 ? initialPrice : dummyInitialPrice, assetCurrency[i],
-                       localCreditRiskCurrency, creditQualifierMapping_, localMaturity,
+                       localCreditRiskCurrency, creditQualifierMapping_,
                        std::bind(&TRS::getFxIndex, this, std::placeholders::_1, std::placeholders::_2,
                                  std::placeholders::_3, std::placeholders::_4, std::placeholders::_5,
                                  std::ref(missingFxIndexPairs)),
@@ -458,10 +457,6 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
                                                        localCreditRiskCurrency + "' in addition.")
                 .log();
         }
-
-        // update global maturity date
-
-        maturity_ = std::max(maturity_, localMaturity);
 
         // get fx indices for conversion of asset to funding ccy
 

@@ -432,9 +432,14 @@
         "column_settings": [
           {
             "names": [
-              "NPV",
-              "RC",
               "AddOn",
+              "NPV",
+              "IndependentAmountHeld",
+              "InitialMargin",
+              "VariationMargin",
+              "ThresholdAmount",
+              "MinimumTransferAmount",
+              "RC",
               "Multiplier",
               "PFE",
               "EAD",
@@ -1444,6 +1449,21 @@
             "rel_tol": 1e-6
           }
         ]
+      },
+      "parshifts.csv": {
+        "keys": [
+          "ScenarioLabel",
+          "ParKey"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "ParShift"
+            ],
+            "abs_tol": 1E-8,
+            "rel_tol": 1E-12
+          }
+        ]
       }
     }
   },
@@ -1812,13 +1832,20 @@
               "saccr/addOn",
               "saccr/cC",
               "saccr/eAD",
+              "saccr/independent_amount_held",
+              "saccr/initial_margin",
+              "saccr/minimum_transfer_amount",
               "saccr/multiplier",
               "saccr/npv",
               "saccr/pfe",
               "saccr/rC",
               "saccr/rW",
+              "saccr/threhshold_amount",
+              "saccr/variation_margin",
               "simmReport/initial_margin",
               "simmReport/initial_margin_in_report_ccy",
+              "simm_parameters/amount",
+              "simm_parameters/amount_usd",
               "totalIMReport/initial_margin",
               "totalIMReport/initial_margin_in_report_ccy",
               "xva/allocatedCVA",
@@ -1871,11 +1898,16 @@
               "addOn",
               "cC",
               "eAD",
+              "independent_amount_held",
+              "initial_margin",
+              "minimum_transfer_amount",
               "multiplier",
               "npv",
               "pfe",
               "rC",
-              "rW"
+              "rW",
+              "threhshold_amount",
+              "variation_margin"
             ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12
