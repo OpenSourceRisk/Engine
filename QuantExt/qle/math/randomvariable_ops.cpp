@@ -33,7 +33,10 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return RandomVariable(); });
 
     // Add = 1
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] + (*args[1]); });
+    ops.push_back([](const std::vector<const RandomVariable*>& args) {
+        return std::accumulate(args.begin(), args.end(), RandomVariable(args.front()->size(), 0.0),
+                               [](const RandomVariable x, const RandomVariable* y) { return x + *y; });
+    });
 
     // Subtract = 2
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] - (*args[1]); });
@@ -85,8 +88,7 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
 
     // Min = 10
     if (eps == 0.0) {
-        ops.push_back(
-            [](const std::vector<const RandomVariable*>& args) { return QuantExt::min(*args[0], *args[1]); });
+        ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::min(*args[0], *args[1]); });
     } else {
         ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
             return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps) * (*args[1] - *args[0]) + *args[0];
@@ -95,8 +97,7 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
 
     // Max = 11
     if (eps == 0.0) {
-        ops.push_back(
-            [](const std::vector<const RandomVariable*>& args) { return QuantExt::max(*args[0], *args[1]); });
+        ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::max(*args[0], *args[1]); });
     } else {
         ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
             return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps) * (*args[0] - *args[1]) + *args[1];
@@ -307,6 +308,12 @@ std::vector<RandomVariableOpNodeRequirements> getRandomVariableOpNodeRequirement
     res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), true); });
 
     return res;
+}
+
+std::vector<bool> getRandomVariableOpAllowsPredeletion() {
+    std::vector<bool> result(19, true);
+    result[6] = false; // conditional expectation
+    return result;
 }
 
 } // namespace QuantExt
