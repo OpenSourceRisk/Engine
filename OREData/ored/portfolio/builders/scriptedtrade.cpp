@@ -374,6 +374,8 @@ void ScriptedTradeEngineBuilder::clear() {
     simulationDates_.clear();
     addDates_.clear();
     calibrationStrikes_.clear();
+    model_ = nullptr;
+    modelCG_ = nullptr;
 }
 
 void ScriptedTradeEngineBuilder::extractIndices(
