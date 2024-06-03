@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/instruments/forwardbond.hpp>
+#include <qle/pricingengines/mcmultilegbaseengine.hpp>
 
 namespace QuantExt {
 
@@ -87,7 +87,6 @@ public:
         boost::shared_ptr<QuantExt::McLgmFwdBondEngine> engine_;
     };
 
-
 private:
     Handle<YieldTermStructure> incomeCurve_;
     Handle<YieldTermStructure> discountContractCurve_;
@@ -97,7 +96,6 @@ private:
     mutable Date incomeCurveDate_;
     mutable Date discountContractCurveDate_;
     mutable Date cmpPaymentDate_;
-
 };
 
 } // namespace QuantExt

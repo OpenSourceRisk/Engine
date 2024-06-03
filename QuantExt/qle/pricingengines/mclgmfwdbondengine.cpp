@@ -82,7 +82,7 @@ void McLgmFwdBondEngine::calculate() const {
     // fixed for underlying bonds ...
     payer_.resize(true);
 
-    //no option
+    // no option
     exercise_ = nullptr;
 
     McMultiLegBaseEngine::calculate();
@@ -106,7 +106,7 @@ void McLgmFwdBondEngine::calculate() const {
 
 } // McLgmSwaptionEngine::calculate
 
-double McLgmFwdBondEngine::payOff() const{
+double McLgmFwdBondEngine::payOff() const {
 
     // engine ignores credit curve and uses the spread on discount only ...
     // ignores T-lock feature
