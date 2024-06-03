@@ -21,13 +21,11 @@
 namespace ore {
 namespace analytics {
 
-void addNonScriptedTradeToCG(const QuantLib::ext::shared_ptr<Trade>& trade,
-                             const QuantLib::ext::shared_ptr<GaussianCamCG>& model) {
+void addNonScriptedTradeToCG(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade,
+                             const QuantLib::ext::shared_ptr<ore::data::GaussianCamCG>& model) {
 
     QL_FAIL("not implemented: addNonScriptedTradeToCG");
-
 }
-
 
 } // namespace analytics
 } // namespace ore
