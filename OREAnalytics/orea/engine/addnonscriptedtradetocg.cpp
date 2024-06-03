@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/engine/addnonscriptetradetocg.hpp>
+#include <orea/engine/addnonscriptedtradetocg.hpp>
 
 namespace ore {
 namespace analytics {

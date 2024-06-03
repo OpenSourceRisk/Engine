@@ -23,7 +23,8 @@
 
 #pragma once
 
-#include <>
+#include <ored/portfolio/trade.hpp>
+#include <ored/scripting/models/gaussiancamcg.hpp>
 
 namespace ore {
 namespace analytics {
