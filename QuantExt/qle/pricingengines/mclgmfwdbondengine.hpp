@@ -64,8 +64,8 @@ public:
     }
 
     void calculate() const override;
-
-    double payOff(double time, double underlyingSpot) const;
+    void setMember() const;
+    double payOff() const;
 
     class FwdBondAmcCalculator : public McMultiLegBaseEngine::MultiLegBaseAmcCalculator {
     public:
@@ -83,15 +83,21 @@ public:
             engine_ = boost::make_shared<QuantExt::McLgmFwdBondEngine>(engine);
         };
 
-        RandomVariable payOff(double time, RandomVariable underlyingSpot, Size samples) const;
-
     private:
         boost::shared_ptr<QuantExt::McLgmFwdBondEngine> engine_;
     };
 
+
 private:
     Handle<YieldTermStructure> incomeCurve_;
     Handle<YieldTermStructure> discountContractCurve_;
+
+    mutable Real accruedAmount_;
+    mutable Real cmpPayment_;
+    mutable Date incomeCurveDate_;
+    mutable Date discountContractCurveDate_;
+    mutable Date cmpPaymentDate_;
+
 };
 
 } // namespace QuantExt
