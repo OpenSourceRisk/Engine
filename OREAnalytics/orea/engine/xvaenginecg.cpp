@@ -21,6 +21,7 @@
 #include <orea/cube/npvsensicube.hpp>
 #include <orea/cube/sensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
+#include <orea/engine/addnonscriptedtradetocg.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
 #include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
@@ -166,9 +167,26 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
     model_->calculate();
     boost::timer::nanosecond_type timing3 = timer.elapsed().wall;
 
-    // Build trades against global cg cam model
+    // Split portfolio in scripted trade, non-scripted trade
 
-    LOG("XvaEngineCG: build trades against global cam cg model");
+    LOG("XvaEngineCG: separate portfolio in scripted and non-scripted trades");
+
+    auto pfNonScripted =
+        boost::make_shared<Portfolio>(portfolio_->buildFailedTrades(), portfolio_->ignoreTradeBuildFail());
+    auto pfScripted = boost::make_shared<Portfolio>(portfolio_->buildFailedTrades(), portfolio_->ignoreTradeBuildFail());
+
+    for (auto const& [id, t] : portfolio_->trades()) {
+        if (t->tradeType() == "ScriptedTrade") {
+            pfScripted->add(t);
+        } else {
+            pfNonScripted->add(t);
+        }
+    }
+
+    // Build scripted trades against global cg cam model
+
+    LOG("XvaEngineCG: build scripted trades (" << pfScripted->size() << " out of " << portfolio_->size()
+                                               << ") against global cam cg model");
 
     auto edCopy = QuantLib::ext::make_shared<EngineData>(*engineData_);
     edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
@@ -183,7 +201,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
                                                                      scenarioGeneratorData_->getGrid()->dates()),
         true);
 
-    portfolio_->build(factory, "xva engine cg", true);
+    pfScripted->build(factory, "xva engine cg", true);
 
     boost::timer::nanosecond_type timing4 = timer.elapsed().wall;
 
@@ -197,19 +215,30 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
     auto g = model_->computationGraph();
 
     for (auto const& [id, trade] : portfolio_->trades()) {
-        auto qlInstr = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(trade->instrument()->qlInstrument());
-        QL_REQUIRE(qlInstr, "XvaEngineCG: expeced trade to provide ScriptedInstrument, trade '" << id << "' does not.");
-        auto engine = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrumentPricingEngineCG>(qlInstr->pricingEngine());
-        QL_REQUIRE(engine, "XvaEngineCG: expected to get ScriptedInstrumentPricingEngineCG, trade '"
-                               << id << "' has a different engine.");
         g->startRedBlock();
-        engine->buildComputationGraph();
-        std::vector<std::size_t> tmp;
-        tmp.push_back(g->variable(engine->npvName() + "_0"));
-        for (std::size_t i = 0; i < simulationDates.size(); ++i) {
-            tmp.push_back(g->variable("_AMC_NPV_" + std::to_string(i)));
+        if (auto qlInstr =
+                QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(trade->instrument()->qlInstrument())) {
+
+            // handle scripted trade
+
+            auto engine =
+                QuantLib::ext::dynamic_pointer_cast<ScriptedInstrumentPricingEngineCG>(qlInstr->pricingEngine());
+            QL_REQUIRE(engine, "XvaEngineCG: expected to get ScriptedInstrumentPricingEngineCG, trade '"
+                                   << id << "' has a different engine.");
+            engine->buildComputationGraph();
+            std::vector<std::size_t> tmp;
+            tmp.push_back(g->variable(engine->npvName() + "_0"));
+            for (std::size_t i = 0; i < simulationDates.size(); ++i) {
+                tmp.push_back(g->variable("_AMC_NPV_" + std::to_string(i)));
+            }
+            amcNpvNodes.push_back(tmp);
+
+        } else {
+
+            // handle non-scripted trade
+
+            addNonScriptedTradeToCG(trade, model_);
         }
-        amcNpvNodes.push_back(tmp);
         g->endRedBlock();
     }
 
