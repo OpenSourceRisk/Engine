@@ -32,7 +32,9 @@
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/xvasensitivityanalytic.hpp>
 #include <orea/app/analytics/xvastressanalytic.hpp>
+#include <orea/app/analytics/zerotoparshiftanalytic.hpp>
 
 #include <ored/utilities/databuilders.hpp>
 
@@ -65,7 +67,9 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("XVA", xvaAnalyticSubAnalytics, XvaAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("STRESS", {}, StressTestAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PARSTRESSCONVERSION", {}, ParStressConversionAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("ZEROTOPARSHIFT", {}, ZeroToParShiftAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("XVA_STRESS", {}, XvaStressAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("XVA_SENSITIVITY", {}, XvaSensitivityAnalytic, false);
     }
 }
 
