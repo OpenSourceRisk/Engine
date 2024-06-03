@@ -112,7 +112,7 @@ public:
     /*!
       adds a new collateral balance to manager
     */
-    void add(const QuantLib::ext::shared_ptr<CollateralBalance>& cb);
+    void add(const QuantLib::ext::shared_ptr<CollateralBalance>& cb, const bool overwrite = false);
 
     /*!
       extracts a collateral balance from manager
