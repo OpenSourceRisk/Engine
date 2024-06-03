@@ -30,10 +30,11 @@ using ore::data::parseReal;
 namespace ore {
 namespace data {
 
-void CollateralBalances::add(const QuantLib::ext::shared_ptr<CollateralBalance>& cb) {
-    std::pair<NettingSetDetails, QuantLib::ext::shared_ptr<CollateralBalance>> newCollateralBalance(cb->nettingSetDetails(),
-                                                                                            cb);
-    collateralBalances_.insert(newCollateralBalance);
+void CollateralBalances::add(const QuantLib::ext::shared_ptr<CollateralBalance>& cb, const bool overwrite) {
+    if (collateralBalances_.find(cb->nettingSetDetails()) != collateralBalances_.end() && !overwrite)
+        QL_FAIL("Cannot add collateral balances since it already exists and overwrite=false: " << cb->nettingSetDetails());
+
+    collateralBalances_[cb->nettingSetDetails()] = cb;
 }
 
 bool CollateralBalances::has(const NettingSetDetails& nettingSetDetails) const {
