@@ -69,7 +69,7 @@ protected:
     Period recFrequency_;
     bool telescopicValueDates_;
     QuantExt::SubPeriodsCoupon1::Type type_;
-    bool setDiscountRelinkableHandle_; 
+    bool automaticDiscountRelinkableHandle_;
 
     QuantLib::ext::shared_ptr<TenorBasisSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
