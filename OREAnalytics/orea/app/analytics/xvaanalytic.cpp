@@ -654,7 +654,11 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     if(inputs_->amcCg()) {
         LOG("XVA analytic is running with amc cg engine (experimental).");
-        // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config in sim market there...
+        // build the portfolio linked to today's market, XvaEngineCG assumes that the non-scripted trades
+        // are in status "built"
+        analytic()->buildPortfolio();
+        // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
+        // in sim market there...
         XvaEngineCG engine(
             inputs_->nThreads(), inputs_->asof(), loader, inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
