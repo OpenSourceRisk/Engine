@@ -232,6 +232,27 @@
       "generator": "Unix Makefiles"
     },
     {
+      "name": "windows-msvc-x64-debug",
+      "inherits": [
+        "windows-msvc-x64",
+        "_debug"
+      ]
+    },
+    {
+      "name": "windows-msvc-x64-release",
+      "inherits": [
+        "windows-msvc-x64",
+        "_release"
+      ]
+    },
+    {
+      "name": "windows-msvc-x64-relWithDebInfo",
+      "inherits": [
+        "windows-msvc-x64",
+        "_relwithdebinfo"
+      ]
+    },
+    {
       "name": "linux-gcc-ninja-debug",
       "inherits": [
         "linux-gcc-base",
@@ -349,7 +370,7 @@
     },
     {
       "name": "windows-msvc-x64-release",
-      "configurePreset": "windows-msvc-x64",
+      "configurePreset": "windows-msvc-x64-release",
       "configuration": "Release",
       "nativeToolOptions": [
         "-m"
@@ -357,7 +378,7 @@
     },
     {
       "name": "windows-msvc-x64-relWithDebInfo",
-      "configurePreset": "windows-msvc-x64",
+      "configurePreset": "windows-msvc-x64-relWithDebInfo",
       "configuration": "RelWithDebInfo",
       "nativeToolOptions": [
         "-m"
@@ -365,7 +386,7 @@
     },
     {
       "name": "windows-msvc-x64-debug",
-      "configurePreset": "windows-msvc-x64",
+      "configurePreset": "windows-msvc-x64-debug",
       "configuration": "Debug",
       "nativeToolOptions": [
         "-m"
