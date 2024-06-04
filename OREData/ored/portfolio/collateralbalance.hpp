@@ -39,26 +39,25 @@ public:
       default constructor
     */
     CollateralBalance()
-        : nettingSetId_(""), nettingSetDetails_(NettingSetDetails()), currency_(""), 
+        : nettingSetDetails_(NettingSetDetails()), currency_(""), 
           im_(QuantLib::Null<QuantLib::Real>()), vm_(QuantLib::Null<QuantLib::Real>()) {}
 
     CollateralBalance(ore::data::XMLNode* node);
 
-    CollateralBalance(const std::string& nettingSetId, const std::string& currency,
-                      const QuantLib::Real& im, const QuantLib::Real& vm = QuantLib::Null<QuantLib::Real>())
-        : nettingSetId_(nettingSetId), nettingSetDetails_(NettingSetDetails()), currency_(currency),
-          im_(im), vm_(vm) {}
-
     CollateralBalance(const NettingSetDetails& nettingSetDetails, const std::string& currency,
                       const QuantLib::Real& im, const QuantLib::Real& vm = QuantLib::Null<QuantLib::Real>())
-         : nettingSetId_(""), nettingSetDetails_(nettingSetDetails), currency_(currency), im_(im), vm_(vm) {}
+         : nettingSetDetails_(nettingSetDetails), currency_(currency), im_(im), vm_(vm) {}
+
+    CollateralBalance(const std::string& nettingSetId, const std::string& currency,
+                      const QuantLib::Real& im, const QuantLib::Real& vm = QuantLib::Null<QuantLib::Real>())
+        : CollateralBalance(NettingSetDetails(nettingSetId), currency, im, vm) {}
 
     void fromXML(ore::data::XMLNode* node) override;
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     // Getters
     const std::string& nettingSetId() const {
-        return (nettingSetDetails_.empty() ? nettingSetId_ : nettingSetDetails_.nettingSetId());
+        return nettingSetDetails_.nettingSetId();
     }
     const NettingSetDetails nettingSetDetails() const { return nettingSetDetails_; }
     const std::string& currency() const { return currency_; }
@@ -70,7 +69,6 @@ public:
     QuantLib::Real& variationMargin() { return vm_; }
 
 private:
-    std::string nettingSetId_;
     NettingSetDetails nettingSetDetails_;
     std::string currency_;
     QuantLib::Real im_, vm_;
