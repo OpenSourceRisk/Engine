@@ -374,6 +374,8 @@ void ScriptedTradeEngineBuilder::clear() {
     simulationDates_.clear();
     addDates_.clear();
     calibrationStrikes_.clear();
+    model_ = nullptr;
+    modelCG_ = nullptr;
 }
 
 void ScriptedTradeEngineBuilder::extractIndices(
@@ -970,7 +972,9 @@ void ScriptedTradeEngineBuilder::setupBlackScholesProcesses() {
             auto spot = Handle<Quote>(QuantLib::ext::make_shared<DerivedPriceQuote>(
                 market_->commodityPriceCurve(name, configuration(MarketContext::pricing))));
             auto priceCurve = market_->commodityPriceCurve(name, configuration(MarketContext::pricing));
-            auto fc = market_->discountCurve(modelIndicesCurrencies_[i], configuration(MarketContext::pricing));
+            auto fc = modelIndicesCurrencies_[i] == baseCcy_
+                          ? modelCurves_.front()
+                          : market_->discountCurve(modelIndicesCurrencies_[i], configuration(MarketContext::pricing));
             auto div = Handle<YieldTermStructure>(QuantLib::ext::make_shared<PriceTermStructureAdapter>(*priceCurve, *fc));
             div->enableExtrapolation();
             if (!zeroVolatility_)
@@ -981,8 +985,10 @@ void ScriptedTradeEngineBuilder::setupBlackScholesProcesses() {
             std::string targetCcy = ind.fx()->targetCurrency().code();
             std::string sourceCcy = ind.fx()->sourceCurrency().code();
             auto spot = market_->fxSpot(sourceCcy + targetCcy, configuration(MarketContext::pricing));
-            auto div = market_->discountCurve(sourceCcy, configuration(MarketContext::pricing));
-            auto fc = market_->discountCurve(targetCcy, configuration(MarketContext::pricing));
+            auto div = sourceCcy == baseCcy_ ? modelCurves_.front()
+                                             : market_->discountCurve(sourceCcy, configuration(MarketContext::pricing));
+            auto fc = targetCcy == baseCcy_ ? modelCurves_.front()
+                                            : market_->discountCurve(targetCcy, configuration(MarketContext::pricing));
             if (!zeroVolatility_)
                 vol = market_->fxVol(sourceCcy + targetCcy, configuration(MarketContext::pricing));
             processes_.push_back(QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(spot, div, fc, vol));
