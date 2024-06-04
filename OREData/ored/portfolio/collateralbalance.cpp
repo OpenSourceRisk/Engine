@@ -85,8 +85,8 @@ void CollateralBalance::fromXML(XMLNode* node) {
     if (nettingSetDetailsNode) {
         nettingSetDetails_.fromXML(nettingSetDetailsNode);
     } else {
-        nettingSetId_ = XMLUtils::getChildValue(node, "NettingSetId", false);
-        nettingSetDetails_ = NettingSetDetails(nettingSetId_);
+        const string nettingSetId = XMLUtils::getChildValue(node, "NettingSetId", false);
+        nettingSetDetails_ = NettingSetDetails(nettingSetId);
     }   
 
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
@@ -112,8 +112,8 @@ void CollateralBalance::fromXML(XMLNode* node) {
 XMLNode* CollateralBalance::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("CollateralBalance");
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    if (nettingSetDetails_.empty()) {
-        XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
+    if (nettingSetDetails_.emptyOptionalFields()) {
+        XMLUtils::addChild(doc, node, "NettingSetId", nettingSetDetails_.nettingSetId());
     } else {
         XMLUtils::appendNode(node, nettingSetDetails_.toXML(doc));
     }
