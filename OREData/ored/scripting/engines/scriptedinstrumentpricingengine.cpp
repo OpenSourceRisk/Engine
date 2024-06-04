@@ -206,6 +206,7 @@ void ScriptedInstrumentPricingEngine::calculate() const {
             cashFlowResults[i].currency = paylog->currencies().at(i);
             cashFlowResults[i].legNumber = paylog->legNos().at(i);
             cashFlowResults[i].type = paylog->cashflowTypes().at(i);
+            cashFlowResults[i].discountFactor = discount;
             DLOG("got cashflow " << QuantLib::io::iso_date(cashFlowResults[i].payDate) << " "
                                  << cashFlowResults[i].currency << cashFlowResults[i].amount << " "
                                  << cashFlowResults[i].currency << "-" << model_->baseCcy() << " " << fx << " discount("
