@@ -197,6 +197,7 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                     additionalData_["quantity[" + label + "]"] = indexedFlow->quantity();
                     additionalData_["periodQuantity[" + label + "]"] = indexedFlow->periodQuantity();
                     additionalData_["gearing[" + label + "]"] = indexedFlow->gearing();
+                    additionalData_["spread[" + label + "]"] = indexedFlow->spread();
                     if (indexedFlow->isAveragingFrontMonthCashflow(asof)) {
                         std::vector<Real> priceVec;
                         std::vector<std::string> indexVec;
@@ -242,6 +243,7 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                     additionalData_["quantity[" + label + "]"] = indexedAvgFlow->quantity();
                     additionalData_["periodQuantity[" + label + "]"] = indexedAvgFlow->periodQuantity();
                     additionalData_["gearing[" + label + "]"] = indexedAvgFlow->gearing();
+                    additionalData_["spread[" + label + "]"] = indexedAvgFlow->spread();
                     std::vector<Real> priceVec;
                     std::vector<std::string> indexVec;
                     std::vector<Date> indexExpiryVec, pricingDateVec;
