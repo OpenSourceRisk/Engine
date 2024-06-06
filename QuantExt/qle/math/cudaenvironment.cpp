@@ -123,6 +123,8 @@ private:
     
     std::vector<std::pair<std::string, std::string>> deviceInfo_;
     bool supportsDoublePrecision_;
+    bool initiatedVariates_;
+    double* d_randomVariables_;
 
     // will be accumulated over all calcs
     ComputeContext::DebugInfo debugInfo_;
@@ -475,6 +477,13 @@ std::vector<std::vector<std::size_t>> CudaContext::createInputVariates(const std
             nRandomVariables_[currentId_ - 1]++;
         }
     }
+    initiatedVariates_ = true;
+
+    // Allocate memory for random variables
+    cudaErr = cudaMalloc(&d_randomVariables_, nRandomVariables_[currentId_ - 1] * size_[currentId_ - 1] * sizeof(double));
+    QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::createInputVariates(): memory allocate for d_randomVariables_ fails: "
+                                           << cudaGetErrorString(cudaErr));
+
     return resultIds;
 }
 
@@ -685,20 +694,44 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
             "ore_kernel_" + std::to_string(currentId_) + "_" + std::to_string(version_[currentId_ - 1]);
 
         std::string kernelSource = includeSource + "extern \"C\" __global__ void " + kernelName +
-                                   "(double** input, double** output, curandStateMtgp32 *mtStates, int n) {\n"
+                                   "(double** input, double** output, curandStateMtgp32 *mtStates, int n,  double* randomVariables, bool initiatedVariates) {\n"
                                    "    int tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
-
         for (size_t id = nInputVars_; id < nInputVars_ + nRandomVariables_[currentId_ - 1]; ++id) {
-            kernelSource += "    double v" + std::to_string(id) + " = curand_normal_double(&mtStates[blockIdx.x]);\n";
+            kernelSource += "       double v" + std::to_string(id) + ";\n";
             if (settings_.debug)
                 debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
         }
+        kernelSource += "   if (initiatedVariates) {\n";
+        for (size_t id = nInputVars_; id < nInputVars_ + nRandomVariables_[currentId_ - 1]; ++id) {
+            kernelSource += "       v" + std::to_string(id) + " = curand_normal_double(&mtStates[blockIdx.x]);\n";
+            if (settings_.debug)
+                debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
+        }
+        kernelSource += "   }\n";
 
         kernelSource += "    if (tid < n) {\n";
+
+        kernelSource += "       if (initiatedVariates) {\n";
+        for (size_t id = 0; id < nRandomVariables_[currentId_ - 1]; ++id) {
+            kernelSource += "           randomVariables[tid + " + std::to_string(id * size_[currentId_ - 1]) + "] = v" +
+                            std::to_string(id + nInputVars_) + ";\n";
+            if (settings_.debug)
+                debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
+        }
+        kernelSource += "       } else {\n";
+        for (size_t id = 0; id < nRandomVariables_[currentId_ - 1]; ++id) {
+            kernelSource += "           v" + std::to_string(id + nInputVars_) + " = randomVariables[tid + " +
+                           std::to_string(id * size_[currentId_ - 1]) + "];\n";
+            if (settings_.debug)
+                debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
+        }
+        kernelSource += "       }\n";
         kernelSource += source_;
         size_t ii = 0;
         for (auto const& out : outputVariables_) {
             kernelSource += "       output[" + std::to_string(ii) + "][tid] = v" + std::to_string(out) + ";\n";
+            //kernelSource += "       printf(\"output[" + std::to_string(ii) + "][%d] = %.5f \\n\", tid, output[" +
+            //                std::to_string(ii) + "][tid]);\n";
             ++ii;
         }
         kernelSource += "   }\n"
@@ -828,8 +861,12 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
 
     // set kernel args
 
-    void* args[] = {&input, &nOutputPtr_[nOutputVariables_[currentId_ - 1]], &mersenneTwisterStates_[currentId_ - 1],
-                    &size_[currentId_ - 1]};
+    void* args[] = {&input,
+                    &nOutputPtr_[nOutputVariables_[currentId_ - 1]],
+                    &mersenneTwisterStates_[currentId_ - 1],
+                    &size_[currentId_ - 1],
+                    &d_randomVariables_,
+                    &initiatedVariates_};
 
     // execute kernel
 
@@ -870,6 +907,8 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
             delete hostVarList_[i];
     }
 
+    initiatedVariates_ = false;
+
     for (auto ptr : deviceVarList_) {
         releaseMem(ptr);
     }
@@ -880,6 +919,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
     if (settings_.debug) {
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
     }
+    //std::cout << "================================================" << std::endl;
 }
 
 const ComputeContext::DebugInfo& CudaContext::debugInfo() const { return debugInfo_; }
