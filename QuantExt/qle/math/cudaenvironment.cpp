@@ -109,10 +109,11 @@ public:
 
 private:
 
-    void releaseMem(double*& m);
-    void releaseMem(size_t id);
-    void releaseModule(CUmodule& k);
-    void releaseMersenneTwisterStates(curandStateMtgp32*& rngState);
+    void releaseMem(double*& m, const std::string& desc);
+    void releaseMem(size_t id, const std::string& desc);
+    void releaseModule(CUmodule& k, const std::string& desc);
+    void releaseMersenneTwisterStates(curandStateMtgp32*& rngState, const std::string& desc);
+    void updateVariates();
 
     enum class ComputeState { idle, createInput, createVariates, calc };
 
@@ -123,7 +124,7 @@ private:
     
     std::vector<std::pair<std::string, std::string>> deviceInfo_;
     bool supportsDoublePrecision_;
-    bool initiatedVariates_;
+    size_t maxRandomVariates_;
     double* d_randomVariables_;
 
     // will be accumulated over all calcs
@@ -194,16 +195,16 @@ CudaContext::CudaContext(
 CudaContext::~CudaContext() {
     if (initialized_) {
         CUresult err;
-
+        
         for (Size i = 0; i < mersenneTwisterStates_.size(); ++i) {
             if (disposed_[i])
                 continue;
-            releaseMersenneTwisterStates(mersenneTwisterStates_[i]);
+            releaseMersenneTwisterStates(mersenneTwisterStates_[i], "~CudaContext()");
         }
 
         for (auto& outer : nOutputPtrList_) {
             for (auto& ptr : outer.second) {
-                releaseMem(ptr);
+                releaseMem(ptr, "~CudaContext()");
             }
         }
 
@@ -217,7 +218,7 @@ CudaContext::~CudaContext() {
         for (Size i = 0; i < module_.size(); ++i) {
             if (disposed_[i])
                 continue;
-            releaseModule(module_[i]);
+            releaseModule(module_[i], "~CudaContext()");
         }
 
         err = cuCtxDestroy(context_);
@@ -226,36 +227,40 @@ CudaContext::~CudaContext() {
             cuGetErrorString(err, &errorStr);
             std::cerr << "CudaContext: error during cuCtxDestroy: " << errorStr << std::endl;
         }
+        
     }
 }
 
-void CudaContext::releaseMem(double*& m) {
+void CudaContext::releaseMem(double*& m, const std::string& description) {
     cudaError_t err;
     if (err = cudaFree(m); err != cudaSuccess) {
-        std::cerr << "CudaContext: error during cudaFree: " << cudaGetErrorString(err) << std::endl;
+        std::cerr << "CudaContext: error during cudaFree at "<< description
+                  << ": " << cudaGetErrorString(err) << std::endl;
     }
 }
 
-void CudaContext::releaseMem(size_t id) {
+void CudaContext::releaseMem(size_t id, const std::string& description) {
     cudaError_t err;
     if (err = cudaFree(deviceVarList_[id]); err != cudaSuccess) {
-        std::cerr << "CudaContext: error during releaseMem: " << cudaGetErrorString(err) << std::endl;
+        std::cerr << "CudaContext: error during releaseMem at " << description << ": " << cudaGetErrorString(err)
+                  << std::endl;
     }
 }
 
-void CudaContext::releaseMersenneTwisterStates(curandStateMtgp32*& rngState) {
+void CudaContext::releaseMersenneTwisterStates(curandStateMtgp32*& rngState, const std::string& description) {
     cudaError_t err;
     if (err = cudaFree(rngState); err != cudaSuccess) {
-        std::cerr << "CudaContext: error during releaseMersenneTwisterStates: " << cudaGetErrorString(err) << std::endl;
+        std::cerr << "CudaContext: error during releaseMersenneTwisterStates at " << description << ": "
+                  << cudaGetErrorString(err) << std::endl;
     }
 }
 
-void CudaContext::releaseModule(CUmodule& k) {
+void CudaContext::releaseModule(CUmodule& k, const std::string& description) {
     CUresult err = cuModuleUnload(k);
     if (err != CUDA_SUCCESS) {
         const char* errorStr;
         cuGetErrorString(err, &errorStr);
-        std::cerr << "CudaContext: error during cuModuleUnload: "  << errorStr << std::endl;
+        std::cerr << "CudaContext: error during cuModuleUnload at " << description << ": " << errorStr << std::endl;
     }
 }
 
@@ -271,6 +276,7 @@ void CudaContext::init() {
     debugInfo_.nanoSecondsCalculation = 0;
 
     const char* errStr;
+    maxRandomVariates_ = 0;
 
     // Initialize CUDA context and module
     cuInit(0);
@@ -321,9 +327,9 @@ void CudaContext::init() {
 
 void CudaContext::disposeCalculation(const std::size_t id) {
     QL_REQUIRE(!disposed_[id - 1], "CudaContext::disposeCalculation(): id " << id << " was already disposed.");
-    disposed_[id - 1] = true;
-    releaseMersenneTwisterStates(mersenneTwisterStates_[id - 1]);
-    releaseModule(module_[id - 1]);
+    //disposed_[id - 1] = true;
+    //releaseMersenneTwisterStates(mersenneTwisterStates_[id - 1]);
+    //releaseModule(module_[id - 1]);
 }
 
 std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t n, const std::size_t id,
@@ -374,7 +380,7 @@ std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t 
         if (version != version_[id - 1]) {
             hasKernel_[id - 1] = false;
             version_[id - 1] = version;
-            releaseModule(module_[id - 1]); // releaseModule will also release the linked kernel
+            releaseModule(module_[id - 1], "initiateCalculation"); // releaseModule will also release the linked kernel
             nOutputVariables_[id - 1] = 0;
             nRandomVariables_[id - 1] = 0;
             nOperations_[id - 1] = 0;
@@ -477,14 +483,119 @@ std::vector<std::vector<std::size_t>> CudaContext::createInputVariates(const std
             nRandomVariables_[currentId_ - 1]++;
         }
     }
-    initiatedVariates_ = true;
 
-    // Allocate memory for random variables
-    cudaErr = cudaMalloc(&d_randomVariables_, nRandomVariables_[currentId_ - 1] * size_[currentId_ - 1] * sizeof(double));
-    QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::createInputVariates(): memory allocate for d_randomVariables_ fails: "
-                                           << cudaGetErrorString(cudaErr));
+    updateVariates();
 
     return resultIds;
+}
+
+void CudaContext::updateVariates() {
+    cudaError_t cudaErr;
+
+    if (nRandomVariables_[currentId_ - 1] > maxRandomVariates_) {
+        if (maxRandomVariates_ == 0)
+            releaseMem(d_randomVariables_, "updateVariates()");
+        // Allocate memory for random variables
+        cudaErr =
+            cudaMalloc(&d_randomVariables_, nRandomVariables_[currentId_ - 1] * size_[currentId_ - 1] * sizeof(double));
+        QL_REQUIRE(cudaErr == cudaSuccess,
+                   "CudaContext::createInputVariates(): memory allocate for d_randomVariables_ fails: "
+                       << cudaGetErrorString(cudaErr));
+
+        std::string rngIncludeSource = "#include <curand_kernel.h>\n\n";
+
+        std::string rngKernelName = "ore_rngKernel";
+
+        std::string rngKernelSource = rngIncludeSource + "extern \"C\" __global__ void " + rngKernelName +
+                                      "(curandStateMtgp32 *mtStates, int n,  double* randomVariables) {\n"
+                                      "    int tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
+        for (size_t i = 0; i < nRandomVariables_[currentId_ - 1]; ++i) {
+            rngKernelSource += "    double v" + std::to_string(i) + " = curand_normal_double(&mtStates[blockIdx.x]);\n";
+            if (settings_.debug)
+                debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
+        }
+        rngKernelSource += "    if (tid < n) {\n";
+        for (size_t i = 0; i < nRandomVariables_[currentId_ - 1]; ++i) {
+            rngKernelSource += "        randomVariables[tid + " + std::to_string(i * size_[currentId_ - 1]) + "] = v" +
+                               std::to_string(i) + ";\n";
+            if (settings_.debug)
+                debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
+        }
+        rngKernelSource += "    }\n"
+                           "}\n";
+
+        std::cout << rngKernelSource << std::endl;
+        // Compile source code
+        nvrtcResult nvrtcErr;
+        nvrtcProgram nvrtcProgram;
+        CUmodule cuModule;
+        CUfunction rngKernel;
+        nvrtcErr = nvrtcCreateProgram(&nvrtcProgram, rngKernelSource.c_str(), "kernel.cu", 0, nullptr, nullptr);
+        QL_REQUIRE(nvrtcErr == NVRTC_SUCCESS, "CudaContext::createInputVariates(): error during nvrtcCreateProgram(): "
+                                                  << nvrtcGetErrorString(nvrtcErr));
+        // const char* compileOptions[] = {
+        //    "--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
+        //    (std::string("--gpu-architecture=") + getGPUArchitecture[device_prop.name]).c_str(), " - std = c++ 17 ",
+        //    nullptr};
+        // const char* compileOptions[] = {
+        //    "--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
+        //    "--gpu-architecture=compute_75", "-std=c++17", "-dopt=on",
+        //    "--time=D:/GitHub/Engine/build/QuantExt/test/Debug/time.txt", nullptr};
+        // nvrtcErr = nvrtcCompileProgram(nvrtcProgram, 5, compileOptions);
+        const char* compileOptions[] = {
+            "--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
+            "--gpu-architecture=compute_75", "-std=c++17", "-dopt=on",
+            //"--time=D:/GitHub/Engine/build/QuantExt/test/Debug/time.txt",
+            nullptr};
+        nvrtcErr = nvrtcCompileProgram(nvrtcProgram, 4, compileOptions);
+        QL_REQUIRE(nvrtcErr == NVRTC_SUCCESS, "CudaContext::createInputVariates(): error during nvrtcCompileProgram(): "
+                                                  << nvrtcGetErrorString(nvrtcErr));
+
+        // Retrieve the compiled PTX code
+        size_t ptxSize;
+        nvrtcErr = nvrtcGetPTXSize(nvrtcProgram, &ptxSize);
+        QL_REQUIRE(nvrtcErr == NVRTC_SUCCESS, "CudaContext::createInputVariates(): error during nvrtcGetPTXSize(): "
+                                                  << nvrtcGetErrorString(nvrtcErr));
+        char* ptx = new char[ptxSize];
+        nvrtcErr = nvrtcGetPTX(nvrtcProgram, ptx);
+        QL_REQUIRE(nvrtcErr == NVRTC_SUCCESS, "CudaContext::createInputVariates(): error during nvrtcGetPTXSize(): "
+                                                  << nvrtcGetErrorString(nvrtcErr));
+        nvrtcErr = nvrtcDestroyProgram(&nvrtcProgram);
+        QL_REQUIRE(nvrtcErr == NVRTC_SUCCESS, "CudaContext::createInputVariates(): error during nvrtcDestroyProgram(): "
+                                                  << nvrtcGetErrorString(nvrtcErr));
+
+        CUresult cuErr = cuModuleLoadData(&cuModule, ptx);
+        if (cuErr != CUDA_SUCCESS) {
+            const char* errStr;
+            cuGetErrorString(cuErr, &errStr);
+            std::cerr << "CudaContext::finalizeCalculation(): error during cuModuleLoadData(): " << errStr << std::endl;
+        }
+        cuErr = cuModuleGetFunction(&rngKernel, cuModule, rngKernelName.c_str());
+        if (cuErr != CUDA_SUCCESS) {
+            const char* errStr;
+            cuGetErrorString(cuErr, &errStr);
+            std::cerr << "CudaContext::createInputVariates(): error during cuModuleGetFunction(): " << errStr
+                      << std::endl;
+        }
+        delete[] ptx;
+
+        // set kernel args
+
+        void* args[] = {&mersenneTwisterStates_[currentId_ - 1], &size_[currentId_ - 1], &d_randomVariables_};
+
+        // execute kernel
+        cuErr = cuLaunchKernel(rngKernel, nNUM_BLOCKS_[currentId_ - 1], 1, 1, NUM_THREADS_, 1, 1, 0, 0, args, nullptr);
+        if (cuErr != CUDA_SUCCESS) {
+            const char* errStr;
+            cuGetErrorString(cuErr, &errStr);
+            std::cerr << "CudaContext::createInputVariates(): error during cuLaunchKernel(): " << errStr << std::endl;
+        }
+
+        // releaseMersenneTwisterStates(mersenneTwisterStates_[id - 1]);
+        releaseModule(cuModule, "createInputVariates");
+
+        maxRandomVariates_ = nRandomVariables_[currentId_ - 1];
+    }
 }
 
 std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
@@ -673,7 +784,6 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
     if (!hasKernel_[currentId_ - 1]) {
 
         const std::string includeSource =
-            "#include <curand_kernel.h>\n\n"
             "__constant__ double PI = 3.1415926535897932384626;\n"
             "__constant__ double tol = 42.0 * 1.1920929e-07;\n\n"
             "__device__ bool ore_closeEnough(const double x, const double y) {\n"
@@ -694,38 +804,16 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
             "ore_kernel_" + std::to_string(currentId_) + "_" + std::to_string(version_[currentId_ - 1]);
 
         std::string kernelSource = includeSource + "extern \"C\" __global__ void " + kernelName +
-                                   "(double** input, double** output, curandStateMtgp32 *mtStates, int n,  double* randomVariables, bool initiatedVariates) {\n"
+                                   "(double** input, double** output, int n,  double* randomVariables) {\n"
                                    "    int tid = blockIdx.x * blockDim.x + threadIdx.x;\n";
-        for (size_t id = nInputVars_; id < nInputVars_ + nRandomVariables_[currentId_ - 1]; ++id) {
-            kernelSource += "       double v" + std::to_string(id) + ";\n";
-            if (settings_.debug)
-                debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
-        }
-        kernelSource += "   if (initiatedVariates) {\n";
-        for (size_t id = nInputVars_; id < nInputVars_ + nRandomVariables_[currentId_ - 1]; ++id) {
-            kernelSource += "       v" + std::to_string(id) + " = curand_normal_double(&mtStates[blockIdx.x]);\n";
-            if (settings_.debug)
-                debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
-        }
-        kernelSource += "   }\n";
 
         kernelSource += "    if (tid < n) {\n";
-
-        kernelSource += "       if (initiatedVariates) {\n";
         for (size_t id = 0; id < nRandomVariables_[currentId_ - 1]; ++id) {
-            kernelSource += "           randomVariables[tid + " + std::to_string(id * size_[currentId_ - 1]) + "] = v" +
-                            std::to_string(id + nInputVars_) + ";\n";
-            if (settings_.debug)
-                debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
-        }
-        kernelSource += "       } else {\n";
-        for (size_t id = 0; id < nRandomVariables_[currentId_ - 1]; ++id) {
-            kernelSource += "           v" + std::to_string(id + nInputVars_) + " = randomVariables[tid + " +
+            kernelSource += "       double v" + std::to_string(id + nInputVars_) + " = randomVariables[tid + " +
                            std::to_string(id * size_[currentId_ - 1]) + "];\n";
             if (settings_.debug)
                 debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
         }
-        kernelSource += "       }\n";
         kernelSource += source_;
         size_t ii = 0;
         for (auto const& out : outputVariables_) {
@@ -757,13 +845,13 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
         //    "--gpu-architecture=compute_75", "-std=c++17", "-dopt=on", "--time=D:/GitHub/Engine/build/QuantExt/test/Debug/time.txt", nullptr};
         //nvrtcErr = nvrtcCompileProgram(nvrtcProgram, 5, compileOptions);
         const char* compileOptions[] = {
-            "--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
+            //"--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
             "--gpu-architecture=compute_75",
             "-std=c++17",
             "-dopt=on",
             //"--time=D:/GitHub/Engine/build/QuantExt/test/Debug/time.txt",
             nullptr};
-        nvrtcErr = nvrtcCompileProgram(nvrtcProgram, 4, compileOptions);
+        nvrtcErr = nvrtcCompileProgram(nvrtcProgram, 3, compileOptions);
         QL_REQUIRE(nvrtcErr == NVRTC_SUCCESS, "CudaContext::finalizeCalculation(): error during nvrtcCompileProgram(): "
                                                   << nvrtcGetErrorString(nvrtcErr));
 
@@ -863,10 +951,8 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
 
     void* args[] = {&input,
                     &nOutputPtr_[nOutputVariables_[currentId_ - 1]],
-                    &mersenneTwisterStates_[currentId_ - 1],
                     &size_[currentId_ - 1],
-                    &d_randomVariables_,
-                    &initiatedVariates_};
+                    &d_randomVariables_};
 
     // execute kernel
 
@@ -907,10 +993,8 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
             delete hostVarList_[i];
     }
 
-    initiatedVariates_ = false;
-
     for (auto ptr : deviceVarList_) {
-        releaseMem(ptr);
+        releaseMem(ptr, "finalizeCalculation");
     }
     cudaErr = cudaFree(input);
     QL_REQUIRE(cudaErr == cudaSuccess,
