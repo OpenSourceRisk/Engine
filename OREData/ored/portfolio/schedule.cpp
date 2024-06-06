@@ -128,6 +128,7 @@ void ScheduleDates::fromXML(XMLNode* node) {
     tenor_ = XMLUtils::getChildValue(node, "Tenor") == "1T" ? "0D" : XMLUtils::getChildValue(node, "Tenor");
     was1T_ = XMLUtils::getChildValue(node, "Tenor") == "1T" ? true : false;
     endOfMonth_ = XMLUtils::getChildValue(node, "EndOfMonth");
+    endOfMonthConvention_ = XMLUtils::getChildValue(node, "EndOfMonthConvention");
     dates_ = XMLUtils::getChildrenValues(node, "Dates", "Date");
 }
 
@@ -139,6 +140,8 @@ XMLNode* ScheduleDates::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Tenor", was1T_ ? "1T" : tenor_);
     if (!endOfMonth_.empty())
         XMLUtils::addChild(doc, node, "EndOfMonth", endOfMonth_);
+    if (!endOfMonthConvention_.empty())
+        XMLUtils::addChild(doc, node, "EndOfMonthConvention", endOfMonthConvention_);
     XMLUtils::addChildren(doc, node, "Dates", "Date", dates_);
     return node;
 }
