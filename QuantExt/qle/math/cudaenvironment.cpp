@@ -113,7 +113,7 @@ private:
     void releaseMem(size_t id, const std::string& desc);
     void releaseModule(CUmodule& k, const std::string& desc);
     void releaseMersenneTwisterStates(curandStateMtgp32*& rngState, const std::string& desc);
-    void updateVariates();
+    void updateVariatesMTGP32();
 
     enum class ComputeState { idle, createInput, createVariates, calc };
 
@@ -141,7 +141,6 @@ private:
     std::vector<std::size_t> nRandomVariables_;
     std::vector<std::size_t> nOperations_;
     std::vector<std::size_t> nNUM_BLOCKS_;
-    std::vector<curandStateMtgp32*> mersenneTwisterStates_;
     std::vector<std::size_t> nOutputVariables_;
 
     std::map<std::size_t, std::vector<double*>> nOutputPtrList_;
@@ -163,7 +162,6 @@ private:
     std::vector<std::size_t> outputVariables_;
 
     // 2c variate states
-    //curandStateMtgp32* mersenneTwisterStates_
 
     // 2d kernel source code
     std::string source_;
@@ -195,12 +193,6 @@ CudaContext::CudaContext(
 CudaContext::~CudaContext() {
     if (initialized_) {
         CUresult err;
-        
-        for (Size i = 0; i < mersenneTwisterStates_.size(); ++i) {
-            if (disposed_[i])
-                continue;
-            releaseMersenneTwisterStates(mersenneTwisterStates_[i], "~CudaContext()");
-        }
 
         for (auto& outer : nOutputPtrList_) {
             for (auto& ptr : outer.second) {
@@ -327,9 +319,8 @@ void CudaContext::init() {
 
 void CudaContext::disposeCalculation(const std::size_t id) {
     QL_REQUIRE(!disposed_[id - 1], "CudaContext::disposeCalculation(): id " << id << " was already disposed.");
-    //disposed_[id - 1] = true;
-    //releaseMersenneTwisterStates(mersenneTwisterStates_[id - 1]);
-    //releaseModule(module_[id - 1]);
+    disposed_[id - 1] = true;
+    releaseModule(module_[id - 1], "disposeCalculation");
 }
 
 std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t n, const std::size_t id,
@@ -359,8 +350,6 @@ std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t 
         nOutputVariables_.push_back(0);
         nRandomVariables_.push_back(0);
         nOperations_.push_back(0);
-
-        mersenneTwisterStates_.push_back(nullptr);
 
         currentId_ = hasKernel_.size();
         newCalc = true;
@@ -444,37 +433,6 @@ std::vector<std::vector<std::size_t>> CudaContext::createInputVariates(const std
                                                 << currentId_ << ") in version " << version_[currentId_ - 1]
                                                 << " has a kernel already, input variates cannot be regenerated.");
     currentState_ = ComputeState::createVariates;
-    // For Mersenne Twister device API, at most 200 states can be generated one time.
-    // If this passed the test, we will generate 2 separate mtStates for blocks after 200.
-    // Need to test if using same seed will generate same random numbers
-    QL_REQUIRE(nNUM_BLOCKS_[currentId_ - 1] <= 200,
-               "When using Mersenne Twister, at most 200 states can be generate now");
-    cudaError_t cudaErr;
-    curandStatus_t curandErr;
-
-    // Random generator state
-    curandStateMtgp32* mtStates;
-    cudaErr = cudaMalloc(&mtStates, nNUM_BLOCKS_[currentId_ - 1] * sizeof(curandStateMtgp32));
-    QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::initMersenneTwisterRng(): memory allocate for mtStates_ fails: "
-                                           << cudaGetErrorString(cudaErr));
-
-    // Define MTGP32 parameters
-    mtgp32_kernel_params* kernelParams;
-    cudaErr = cudaMalloc((void**)&kernelParams, sizeof(mtgp32_kernel_params));
-    QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::initMersenneTwisterRng(): memory allocate for kernelParams fails: "
-                                           << cudaGetErrorString(cudaErr));
-
-    // Initialize MTGP32 states
-    curandErr = curandMakeMTGP32Constants(mtgp32dc_params_fast_11213, kernelParams);
-    QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
-               "CudaContext::initMersenneTwisterRng(): error during curandMakeMTGP32Constants(): "
-                   << curandGetErrorString(curandErr));
-    curandErr = curandMakeMTGP32KernelState(mtStates, mtgp32dc_params_fast_11213, kernelParams,
-                                            nNUM_BLOCKS_[currentId_ - 1], settings_.rngSeed);
-    QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
-               "CudaContext::initMersenneTwisterRng(): error during curandMakeMTGP32KernelState(): "
-                   << curandGetErrorString(curandErr));
-    mersenneTwisterStates_[currentId_ - 1] = mtStates;
 
     std::vector<std::vector<std::size_t>> resultIds(dim, std::vector<std::size_t>(steps));
     for (std::size_t i = 0; i < dim; ++i) {
@@ -484,16 +442,19 @@ std::vector<std::vector<std::size_t>> CudaContext::createInputVariates(const std
         }
     }
 
-    updateVariates();
+    updateVariatesMTGP32();
 
     return resultIds;
 }
 
-void CudaContext::updateVariates() {
-    cudaError_t cudaErr;
+void CudaContext::updateVariatesMTGP32() {
 
     if (nRandomVariables_[currentId_ - 1] > maxRandomVariates_) {
-        if (maxRandomVariates_ == 0)
+
+        cudaError_t cudaErr;
+        curandStatus_t curandErr;
+
+        if (maxRandomVariates_ > 0)
             releaseMem(d_randomVariables_, "updateVariates()");
         // Allocate memory for random variables
         cudaErr =
@@ -501,6 +462,37 @@ void CudaContext::updateVariates() {
         QL_REQUIRE(cudaErr == cudaSuccess,
                    "CudaContext::createInputVariates(): memory allocate for d_randomVariables_ fails: "
                        << cudaGetErrorString(cudaErr));
+
+        // For Mersenne Twister device API, at most 200 states can be generated one time.
+        // If this passed the test, we will generate 2 separate mtStates for blocks after 200.
+        // Need to test if using same seed will generate same random numbers
+        QL_REQUIRE(nNUM_BLOCKS_[currentId_ - 1] <= 200,
+                   "When using Mersenne Twister, at most 200 states can be generate now");
+
+        // Random generator state
+        curandStateMtgp32* mtStates;
+        cudaErr = cudaMalloc(&mtStates, nNUM_BLOCKS_[currentId_ - 1] * sizeof(curandStateMtgp32));
+        QL_REQUIRE(cudaErr == cudaSuccess,
+                   "CudaContext::initMersenneTwisterRng(): memory allocate for mtStates_ fails: "
+                       << cudaGetErrorString(cudaErr));
+
+        // Define MTGP32 parameters
+        mtgp32_kernel_params* kernelParams;
+        cudaErr = cudaMalloc((void**)&kernelParams, sizeof(mtgp32_kernel_params));
+        QL_REQUIRE(cudaErr == cudaSuccess,
+                   "CudaContext::initMersenneTwisterRng(): memory allocate for kernelParams fails: "
+                       << cudaGetErrorString(cudaErr));
+
+        // Initialize MTGP32 states
+        curandErr = curandMakeMTGP32Constants(mtgp32dc_params_fast_11213, kernelParams);
+        QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
+                   "CudaContext::initMersenneTwisterRng(): error during curandMakeMTGP32Constants(): "
+                       << curandGetErrorString(curandErr));
+        curandErr = curandMakeMTGP32KernelState(mtStates, mtgp32dc_params_fast_11213, kernelParams,
+                                                nNUM_BLOCKS_[currentId_ - 1], settings_.rngSeed);
+        QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
+                   "CudaContext::initMersenneTwisterRng(): error during curandMakeMTGP32KernelState(): "
+                       << curandGetErrorString(curandErr));
 
         std::string rngIncludeSource = "#include <curand_kernel.h>\n\n";
 
@@ -581,7 +573,7 @@ void CudaContext::updateVariates() {
 
         // set kernel args
 
-        void* args[] = {&mersenneTwisterStates_[currentId_ - 1], &size_[currentId_ - 1], &d_randomVariables_};
+        void* args[] = {&mtStates, &size_[currentId_ - 1], &d_randomVariables_};
 
         // execute kernel
         cuErr = cuLaunchKernel(rngKernel, nNUM_BLOCKS_[currentId_ - 1], 1, 1, NUM_THREADS_, 1, 1, 0, 0, args, nullptr);
@@ -591,8 +583,8 @@ void CudaContext::updateVariates() {
             std::cerr << "CudaContext::createInputVariates(): error during cuLaunchKernel(): " << errStr << std::endl;
         }
 
-        // releaseMersenneTwisterStates(mersenneTwisterStates_[id - 1]);
-        releaseModule(cuModule, "createInputVariates");
+        releaseMersenneTwisterStates(mtStates, "updateVariatesMTGP32");
+        releaseModule(cuModule, "updateVariatesMTGP32");
 
         maxRandomVariates_ = nRandomVariables_[currentId_ - 1];
     }
@@ -835,8 +827,8 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
         nvrtcErr = nvrtcCreateProgram(&nvrtcProgram, kernelSource.c_str(), "kernel.cu", 0, nullptr, nullptr);
         QL_REQUIRE(nvrtcErr == NVRTC_SUCCESS, "CudaContext::finalizeCalculation(): error during nvrtcCreateProgram(): "
                                                   << nvrtcGetErrorString(nvrtcErr));
-        cudaDeviceProp device_prop;
-        cudaGetDeviceProperties(&device_prop, device_);
+        //cudaDeviceProp device_prop;
+        //cudaGetDeviceProperties(&device_prop, device_);
         //const char* compileOptions[] = {
         //    "--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
         //    (std::string("--gpu-architecture=") + getGPUArchitecture[device_prop.name]).c_str(), " - std = c++ 17 ", nullptr};
