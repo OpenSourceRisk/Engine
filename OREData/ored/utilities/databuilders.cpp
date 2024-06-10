@@ -402,6 +402,7 @@ void dataBuilders() {
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcMultiLegOptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
 
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgSwapEngineBuilder, false)
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
 
     ORE_REGISTER_ENGINE_BUILDER(CommoditySpreadOptionEngineBuilder, false)
