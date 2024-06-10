@@ -40,6 +40,7 @@ public:
         registerWith(modelCg);
     }
 
+    void buildComputationGraph() const override;
     void calculate() const override;
 
 private:
