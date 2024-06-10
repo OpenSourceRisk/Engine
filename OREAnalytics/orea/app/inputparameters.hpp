@@ -225,6 +225,11 @@ public:
     void setAmcPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
         amcPricingEngine_ = engineData;
     }
+    void setAmcCgPricingEngine(const std::string& xml);
+    void setAmcCgPricingEngineFromFile(const std::string& fileName);
+    void setAmcCgPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
+        amcCgPricingEngine_ = engineData;
+    }
     void setNettingSetManager(const std::string& xml);
     void setNettingSetManagerFromFile(const std::string& fileName);
     void setCollateralBalances(const std::string& xml); 
@@ -587,6 +592,7 @@ public:
     const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData() const { return crossAssetModelData_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& simulationPricingEngine() const { return simulationPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& amcPricingEngine() const { return amcPricingEngine_; }
+    const QuantLib::ext::shared_ptr<ore::data::EngineData>& amcCgPricingEngine() const { return amcCgPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::NettingSetManager>& nettingSetManager() const { return nettingSetManager_; }
     // const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
@@ -930,6 +936,7 @@ protected:
     QuantLib::ext::shared_ptr<CrossAssetModelData> crossAssetModelData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> simulationPricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> amcPricingEngine_;
+    QuantLib::ext::shared_ptr<ore::data::EngineData> amcCgPricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
     QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
     bool exposureProfiles_ = true;

@@ -287,6 +287,11 @@ void InputParameters::setAmcPricingEngine(const std::string& xml) {
     amcPricingEngine_->fromXMLString(xml);
 }
 
+void InputParameters::setAmcCgPricingEngine(const std::string& xml) {
+    amcCgPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    amcCgPricingEngine_->fromXMLString(xml);
+}
+
 void InputParameters::setXvaCgSensiScenarioData(const std::string& xml) {
     xvaCgSensiScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     xvaCgSensiScenarioData_->fromXMLString(xml);
@@ -355,6 +360,11 @@ void InputParameters::setXvaSensiPricingEngineFromFile(const std::string& fileNa
 void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
     amcPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     amcPricingEngine_->fromFile(fileName);
+}
+
+void InputParameters::setAmcCgPricingEngineFromFile(const std::string& fileName) {
+    amcCgPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    amcCgPricingEngine_->fromFile(fileName);
 }
 
 void InputParameters::setNettingSetManager(const std::string& xml) {

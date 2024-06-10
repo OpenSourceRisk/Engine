@@ -1491,6 +1491,13 @@ void OREAppInputParameters::loadParameters() {
             setAmcPricingEngine(pricingEngine());
         }
 
+        tmp = params_->get("simulation", "amcCgPricingEnginesFile", false);
+        if (tmp != "") {
+            string pricingEnginesFile = (inputPath / tmp).generic_string();            ;
+            LOG("Load amccg pricing engine data from file: " << pricingEnginesFile);
+            setAmcCgPricingEngineFromFile(pricingEnginesFile);
+        }
+
         setExposureBaseCurrency(baseCurrency());
         tmp = params_->get("simulation", "baseCurrency", false);
         if (tmp != "")

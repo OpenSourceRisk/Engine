@@ -666,7 +666,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         XvaEngineCG engine(
             inputs_->nThreads(), inputs_->asof(), loader, inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
-            inputs_->amcPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
+            inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgUseExternalComputeDevice(),
