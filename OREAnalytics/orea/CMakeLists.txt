@@ -55,7 +55,6 @@ cube/jointnpvcube.cpp
 cube/jointnpvsensicube.cpp
 cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
-engine/addnonscriptedtradetocg.cpp
 engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
 engine/cptycalculator.cpp
@@ -225,7 +224,6 @@ cube/npvsensicube.hpp
 cube/sensicube.hpp
 cube/sensitivitycube.hpp
 cube/sparsenpvcube.hpp
-engine/addnonscriptedtradetocg.hpp
 engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cptycalculator.hpp

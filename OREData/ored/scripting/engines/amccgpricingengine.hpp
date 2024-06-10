@@ -16,16 +16,23 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/engine/addnonscriptedtradetocg.hpp>
+/*! \file ored/scripting/engines/amccgpricingengine.hpp
+    \brief pricing engine suitable to be used in amc-cg framework
+*/
+
+#pragma once
+
+#include <string>
 
 namespace ore {
-namespace analytics {
+namespace data {
 
-void addNonScriptedTradeToCG(const QuantLib::ext::shared_ptr<ore::data::Trade>& trade,
-                             const QuantLib::ext::shared_ptr<ore::data::GaussianCamCG>& model) {
+class AmcCgPricingEngine {
+public:
+    virtual ~AmcCgPricingEngine() {}
+    virtual std::string npvName() const = 0;
+    virtual void buildComputationGraph() const = 0;
+};
 
-    QL_FAIL("not implemented: addNonScriptedTradeToCG");
-}
-
-} // namespace analytics
+} // namespace data
 } // namespace ore
