@@ -319,6 +319,8 @@ scripting/astresetter.cpp
 scripting/asttoscriptconverter.cpp
 scripting/computationgraphbuilder.cpp
 scripting/context.cpp
+scripting/engines/amccgbaseengine.cpp
+scripting/engines/amccgswapengine.cpp
 scripting/engines/analyticblackriskparticipationagreementengine.cpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.cpp
 scripting/engines/cliquetoptionmcscriptengine.cpp
@@ -721,6 +723,9 @@ scripting/astresetter.hpp
 scripting/asttoscriptconverter.hpp
 scripting/computationgraphbuilder.hpp
 scripting/context.hpp
+scripting/engines/amccgbaseengine.hpp
+scripting/engines/amccgpricingengine.hpp
+scripting/engines/amccgswapengine.hpp
 scripting/engines/analyticblackriskparticipationagreementengine.hpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp
 scripting/engines/cliquetoptionmcscriptengine.hpp

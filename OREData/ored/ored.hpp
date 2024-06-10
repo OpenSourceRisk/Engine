@@ -345,6 +345,9 @@
 #include <ored/scripting/asttoscriptconverter.hpp>
 #include <ored/scripting/computationgraphbuilder.hpp>
 #include <ored/scripting/context.hpp>
+#include <ored/scripting/engines/amccgbaseengine.hpp>
+#include <ored/scripting/engines/amccgpricingengine.hpp>
+#include <ored/scripting/engines/amccgswapengine.hpp>
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/cliquetoptionmcscriptengine.hpp>
