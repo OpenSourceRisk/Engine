@@ -16,9 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/app/analytics/xvastressanalytic.hpp>
-
+#include <orea/app/analytics/analyticfactory.hpp>
+#include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/xvaexplainanalytic.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/cube_io.hpp>
@@ -30,89 +31,77 @@
 namespace ore {
 namespace analytics {
 
-void XvaStressAnalyticImpl::writeCubes(const std::string& label,
-                                       const QuantLib::ext::shared_ptr<XvaAnalytic>& xvaAnalytic) {
-    if (!inputs_->xvaStressWriteCubes() || xvaAnalytic == nullptr) {
-        return;
-    }
 
-    if (inputs_->rawCubeOutput()) {
-        DLOG("Write raw cube under scenario " << label);
-        // analytic()->reports()["XVA_STRESS"]["rawcube_" + label] = xvaAnalytic->reports()["XVA"]["rawcube"];
-        xvaAnalytic->reports()["XVA"]["rawcube"]->toFile(inputs_->resultsPath().string() + "/rawcube_" + label +
-                                                         ".csv");
-    }
-
-    if (inputs_->netCubeOutput()) {
-        DLOG("Write raw cube under scenario " << label);
-        // analytic()->reports()["XVA_STRESS"]["netcube_" + label] = xvaAnalytic->reports()["XVA"]["netcube"];
-        xvaAnalytic->reports()["XVA"]["netcube"]->toFile(inputs_->resultsPath().string() + "/netcube_" + label +
-                                                         ".csv");
-    }
-
-    if (inputs_->writeCube()) {
-        const auto& cubes = xvaAnalytic->npvCubes()["XVA"];
-        for (const auto& [name, cube] : cubes) {
-            DLOG("Write cube under scenario " << name << " for scenario" << label);
-            // analytic()->npvCubes()["XVA_STRESS"][name + "_" + label] = cube;
-            NPVCubeWithMetaData r;
-            r.cube = cube;
-            if (name == "cube") {
-                // store meta data together with npv cube
-                r.scenarioGeneratorData = inputs_->scenarioGeneratorData();
-                r.storeFlows = inputs_->storeFlows();
-                r.storeCreditStateNPVs = inputs_->storeCreditStateNPVs();
-            }
-            saveCube(inputs_->resultsPath().string() + "/" + name + "_" + label + ".csv.gz", r);
-        }
-    }
-
-    if (inputs_->writeScenarios()) {
-        DLOG("Write scenario report under scenario " << label);
-        // analytic()->reports()["XVA_STRESS"]["scenario" + label] = xvaAnalytic->reports()["XVA"]["scenario"];
-        xvaAnalytic->reports()["XVA"]["scenario"]->toFile(inputs_->resultsPath().string() + "/scenario" + label +
-                                                          ".csv");
-    }
-}
-
-XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                                             const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic::Impl(inputs), stressScenarios_(scenarios.get_value_or(inputs->xvaStressScenarioData())) {
+XvaExplainAnalyticImpl::XvaExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    : Analytic::Impl(inputs) {
     setLabel(LABEL);
+    auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs);
+    if (mporAnalytic.second) {
+        auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic.second->impl().get());
+        sai->setUseSpreadedTermStructures(true);
+        addDependentAnalytic(mporLookupKey, mporAnalytic.second);
+    }
 }
 
-void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                         const std::set<std::string>& runTypes) {
 
     // basic setup
 
-    LOG("Running XVA Stress analytic.");
+    LOG("Running XVA Explain analytic.");
+    QL_REQUIRE(inputs_->portfolio(), "XvaExplainAnalytic::run: No portfolio loaded.");
 
     Settings::instance().evaluationDate() = inputs_->asof();
-
-    QL_REQUIRE(inputs_->portfolio(), "XvaStressAnalytic::run: No portfolio loaded.");
-
-    Settings::instance().evaluationDate() = inputs_->asof();
-    std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
+    std::string marketConfig = inputs_->marketConfig("pricing");
 
     auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
 
-    // build t0, sim market, stress scenario generator
-
-    CONSOLEW("XVA_STRESS: Build T0 and Sim Markets and Stress Scenario Generator");
+    CONSOLEW("XVA_EXPLAIN: Build T0 and Sim Market");
 
     analytic()->buildMarket(loader);
 
-    QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = stressScenarios_;
+    ParStressTestConverter converter(
+        inputs_->asof(), analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
+        analytic()->configurations().sensiScenarioData, analytic()->configurations().curveConfig, analytic()->market(),
+        inputs_->iborFallbackConfig());
+
+    auto [simMarket, parSensiAnalysis] = converter.computeParSensitivity({});
+
+    // compute t0 parRates
+    std::map<RiskFactorKey, double> parRateT0;
+    for(const auto& [key, instrument] : parSensiAnalysis->parInstruments().parHelpers_){
+        parRateT0[key] = instrument->NPV();
+    }
+
+    // Get Shift scenario for t1, apply it and compute t1;
+
+    auto mporAnalytic = dependentAnalytic(mporLookupKey);
+    // FIXME: load mpor date from command line
+    mporAnalytic->configurations().asofDate = inputs_->asof() + 1  * Days;
+    mporAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    mporAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+
+    // Run the mpor analytic to generate the market scenario as of t1
+    mporAnalytic->runAnalytic(loader);
+
+    // Set the evaluation date back to t0
+    Settings::instance().evaluationDate() = inputs_->asof();
+        
+    QuantLib::ext::shared_ptr<Scenario> asofBaseScenario = simMarket->baseScenarioAbsolute();
+    auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic->impl().get());
+    QuantLib::ext::shared_ptr<Scenario> mporBaseScenario = sai->scenarioSimMarket()->baseScenarioAbsolute();
+
+
+
+
+    QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = inputs_->XvaExplainScenarioData();
     if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
         try {
-            ParStressTestConverter converter(
-                inputs_->asof(), analytic()->configurations().todaysMarketParams,
-                analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
-                analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
+            
             scenarioData = converter.convertStressScenarioData(scenarioData);
             analytic()->stressTests()[label()]["stress_ZeroStressData"] = scenarioData;
         } catch (const std::exception& e) {
+            scenarioData = inputs_->XvaExplainScenarioData();
             StructuredAnalyticsErrorMessage(label(), "ParConversionFailed", e.what()).log();
         }
     }
@@ -144,7 +133,7 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
     LOG("Running XVA Stress analytic finished.");
 }
 
-void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<StressScenarioGenerator>& scenarioGenerator,
+void XvaExplainAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<StressScenarioGenerator>& scenarioGenerator,
                                           const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
 
     std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> xvaReports;
@@ -169,7 +158,7 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
             }
             writeCubes(label, newAnalytic);
         } catch (const std::exception& e) {
-            StructuredAnalyticsErrorMessage("XvaStress", "XVACalc",
+            StructuredAnalyticsErrorMessage("XvaExplain", "XVACalc",
                                             "Error during XVA calc under scenario " + label + ", got " + e.what() +
                                                 ". Skip it")
                 .log();
@@ -178,7 +167,7 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
     concatReports(xvaReports);
 }
 
-void XvaStressAnalyticImpl::concatReports(
+void XvaExplainAnalyticImpl::concatReports(
     const std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>& xvaReports) {
     DLOG("Concat exposure and xva reports");
     for (auto& [name, reports] : xvaReports) {
@@ -189,17 +178,14 @@ void XvaStressAnalyticImpl::concatReports(
     }
 }
 
-void XvaStressAnalyticImpl::setUpConfigurations() {
+void XvaExplainAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
-    analytic()->configurations().simMarketParams = inputs_->xvaStressSimMarketParams();
-    analytic()->configurations().sensiScenarioData = inputs_->xvaStressSensitivityScenarioData();
+    analytic()->configurations().simMarketParams = inputs_->XvaExplainSimMarketParams();
+    analytic()->configurations().sensiScenarioData = inputs_->XvaExplainSensitivityScenarioData();
 }
 
-XvaStressAnalytic::XvaStressAnalytic(
-    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-    const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic(std::make_unique<XvaStressAnalyticImpl>(inputs, scenarios), {"XVA_STRESS"}, inputs, true, false, false,
-               false) {
+XvaExplainAnalytic::XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    : Analytic(std::make_unique<XvaExplainAnalyticImpl>(inputs), {"XVA_STRESS"}, inputs, true, false, false, false) {
     impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
 }
 
