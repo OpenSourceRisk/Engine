@@ -197,11 +197,10 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
     auto g = model_->computationGraph();
 
     for (auto const& [id, trade] : portfolio_->trades()) {
-        auto qlInstr = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrument>(trade->instrument()->qlInstrument());
-        QL_REQUIRE(qlInstr, "XvaEngineCG: expeced trade to provide ScriptedInstrument, trade '" << id << "' does not.");
-        auto engine = QuantLib::ext::dynamic_pointer_cast<ScriptedInstrumentPricingEngineCG>(qlInstr->pricingEngine());
-        QL_REQUIRE(engine, "XvaEngineCG: expected to get ScriptedInstrumentPricingEngineCG, trade '"
-                               << id << "' has a different engine.");
+        auto engine = QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
+            trade->instrument()->qlInstrument()->pricingEngine());
+        QL_REQUIRE(engine,
+                   "XvaEngineCG: expected to get AmcCgPricingEngine, trade '" << id << "' has a different engine.");
         g->startRedBlock();
         engine->buildComputationGraph();
         std::vector<std::size_t> tmp;
