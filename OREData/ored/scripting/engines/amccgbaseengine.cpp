@@ -28,6 +28,10 @@
 namespace ore {
 namespace data {
 
+AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
+                                 const std::vector<QuantLib::Date>& simulationDates)
+    : modelCg_(modelCg), simulationDates_(simulationDates) {}
+
 std::string AmcCgBaseEngine::npvName() const { return std::string(); }
 
 void AmcCgBaseEngine::buildComputationGraph() const {}

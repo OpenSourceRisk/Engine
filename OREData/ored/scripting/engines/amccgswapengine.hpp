@@ -33,8 +33,10 @@ namespace data {
 class AmcCgSwapEngine : public GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>,
                         public AmcCgBaseEngine {
 public:
-    AmcCgSwapEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::string& ccy)
-        : GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(), AmcCgBaseEngine(modelCg), ccy_(ccy) {
+    AmcCgSwapEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates,
+                    const std::string& ccy)
+        : GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
+          AmcCgBaseEngine(modelCg, simulationDates), ccy_(ccy) {
         registerWith(modelCg);
     }
 

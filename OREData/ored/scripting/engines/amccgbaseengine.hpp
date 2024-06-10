@@ -32,13 +32,15 @@ namespace data {
 
 class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
-    AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg) {}
+    AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
+                    const std::vector<QuantLib::Date>& simulationDates);
     std::string npvName() const override;
     void buildComputationGraph() const override;
     void calculate() const;
 
 protected:
     QuantLib::ext::shared_ptr<ModelCG> modelCg_;
+    std::vector<QuantLib::Date> simulationDates_;
 
     // input data from the derived pricing engines, to be set in these engines
     mutable std::vector<Leg> leg_;
