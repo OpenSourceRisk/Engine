@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytics/xvastressanalytic.hpp
-    \brief xva stress analytic
+/*! \file orea/app/analytics/xvaanalytic.hpp
+    \brief xva explain analytic 
 */
 
 #pragma once
@@ -29,28 +29,25 @@
 namespace ore {
 namespace analytics {
 
-class XvaStressAnalyticImpl : public Analytic::Impl {
+class XvaExplainAnalyticImpl : public Analytic::Impl {
 public:
-    static constexpr const char* LABEL = "XVA_STRESS";
-    explicit XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {});
+    static constexpr const char* LABEL = "XVA_EXPLAIN";
+    static constexpr const char* mporLookupKey = "MPOR";
+    explicit XvaExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 
 private:
-    void runStressTest(const QuantLib::ext::shared_ptr<ore::analytics::StressScenarioGenerator>& scenarioGenerator,
-                       const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
-    void writeCubes(const std::string& label, const QuantLib::ext::shared_ptr<XvaAnalytic>& xvaAnalytic);
-    void concatReports(const std::map<std::string, std::vector<QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>>& xvaReports);
+    void createStressTestData() const;
+    void runStressTests() const;
 
-    QuantLib::ext::shared_ptr<StressTestScenarioData> stressScenarios_;
 };
 
-class XvaStressAnalytic : public Analytic {
+class XvaExplainAnalytic : public Analytic {
 public:
-    explicit XvaStressAnalytic(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-        const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {});
+    explicit XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
+
 };
 
 
