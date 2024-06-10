@@ -186,7 +186,7 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
         // mclgmfwdbondengine.cpp line 1019 (no numeraire)
 
         auto disc_income = engine_->lgmVectorised_[0].discountBond(
-            t, incomeCurveTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
+            0.0, incomeCurveTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
             engine_->incomeCurve_);
 
         RandomVariable forwardBondValue = underylingSpotRV / disc_income;
@@ -202,11 +202,11 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
 
         // PV and compensation payment...
         auto disc_contract = engine_->lgmVectorised_[0].discountBond(
-            t, discountContractCurveTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
+            0.0, discountContractCurveTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
             engine_->discountContractCurve_);
 
         auto disc_cmpPayment = engine_->lgmVectorised_[0].discountBond(
-            t, cmpPaymentTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
+            0.0, cmpPaymentTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
             engine_->discountContractCurve_);
 
         // forwardContractPresentValue
