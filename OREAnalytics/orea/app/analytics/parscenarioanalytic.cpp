@@ -17,7 +17,8 @@
 */
 
 #include <orea/app/analytics/parscenarioanalytic.hpp>
-#include <orea/scenario/scenariowriter.hpp>
+#include <orea/engine/parstressconverter.hpp>
+#include <orea/engine/parsensitivityutilities.hpp>
 
 using namespace ore::analytics;
 
@@ -27,6 +28,7 @@ namespace analytics {
 void ParScenarioAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->scenarioSimMarketParams();
+    analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
 }
 
 void ParScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoader>& loader,
@@ -39,11 +41,35 @@ void ParScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemo
 
     analytic()->buildMarket(loader);
 
-    LOG("Building scenario simulation market for date " << io::iso_date(asof_));
-    
+    LOG("Building scenario simulation market for date " << io::iso_date(analytic()->configurations().asofDate));
 
+    ParStressTestConverter converter(
+        analytic()->configurations().asofDate, analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
+        analytic()->configurations().sensiScenarioData, analytic()->configurations().curveConfig, analytic()->market(),
+        inputs_->iborFallbackConfig());
 
+    auto [simMarket, parSensiAnalysis] = converter.computeParSensitivity({});
 
+    for(const auto& key : simMarket->baseScenarioAbsolute()->keys()){
+        switch(key.keytype){
+            case RiskFactorKey::KeyType::DiscountCurve:
+            case RiskFactorKey::KeyType::YieldCurve:
+            case RiskFactorKey::KeyType::IndexCurve:
+            case RiskFactorKey::KeyType::SurvivalProbability:
+            {
+                auto parInstrument = parSensiAnalysis->parInstruments().parHelpers_.find(key);
+                QL_REQUIRE(parInstrument != parSensiAnalysis->parInstruments().parHelpers_.end(),
+                           "ParScenarioAnalysis: Can not compute parRate, instrument missing for " << key);
+                parRates_[key] = impliedQuote(parInstrument->second);
+                break;
+            }
+            case RiskFactorKey::KeyType::OptionletVolatility:
+                parRates_[key] = impliedVolatility(key, parSensiAnalysis->parInstruments());
+                break;
+            default:
+                parRates_[key] = simMarket->baseScenarioAbsolute()->get(key);
+            }
+    }
 }
 
 } // namespace analytics

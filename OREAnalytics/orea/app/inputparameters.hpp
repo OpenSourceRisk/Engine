@@ -324,7 +324,7 @@ public:
     void setXvaStressSensitivityScenarioDataFromFile(const std::string& fileName);
     void setXvaStressWriteCubes(const bool writeCubes) { xvaStressWriteCubes_ = writeCubes; }
 
-    // Setters for xvaStress
+    // Setters for xvaSensi
     void setXvaSensiSimMarketParams(const std::string& xml);
     void setXvaSensiSimMarketParamsFromFile(const std::string& fileName);
     void setXvaSensiScenarioData(const std::string& xml);
@@ -334,6 +334,12 @@ public:
     void setXvaSensiPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
         sensiPricingEngine_ = engineData;
     }
+
+    // Setters for XVA Explain
+    void setXvaExplainSimMarketParams(const std::string& xml);
+    void setXvaExplainSimMarketParamsFromFile(const std::string& f);
+    void setXvaExplainSensitivityScenarioData(const std::string& xml);
+    void setXvaExplainSensitivityScenarioDataFromFile(const std::string& fileName);
 
     // Setters for SIMM
     void setSimmVersion(const std::string& s) { simmVersion_ = s; }
@@ -671,6 +677,15 @@ public:
         return xvaStressSensitivityScenarioData_;
     }
     bool xvaStressWriteCubes() const { return xvaStressWriteCubes_; }
+
+    // Getters for XVA Explain
+    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& xvaExplainSimMarketParams() const {
+        return xvaExplainSimMarketParams_;
+    }
+    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& xvaExplainSensitivityScenarioData() const {
+        return xvaExplainSensitivityScenarioData_;
+    }
+
     /**************************************************
      * Getters for cashflow npv and dynamic backtesting
      **************************************************/
@@ -1074,6 +1089,12 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaSensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaSensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> xvaSensiPricingEngine_;
+
+    /*****************
+     * XVA Explain analytic
+     *****************/
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaExplainSimMarketParams_;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaExplainSensitivityScenarioData_;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {
