@@ -1,0 +1,64 @@
+<StressTesting>
+  <UseSpreadedTermStructures>true</UseSpreadedTermStructures>
+  <StressTest id="eur_6m_up">
+
+    <ParShifts>
+      <IRCurves>true</IRCurves>
+      <SurvivalProbability>true</SurvivalProbability>
+      <CapFloorVolatilities>true</CapFloorVolatilities>
+    </ParShifts>
+
+    <DiscountCurves>
+    </DiscountCurves>
+
+    <IndexCurves>
+      <IndexCurve index="EUR-EURIBOR-6M">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.02, 0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02,0.02</Shifts>
+        <ShiftTenors> 6M,  2Y, 3Y, 4Y, 5Y, 6Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y, 30Y 40Y, 50Y</ShiftTenors>
+      </IndexCurve>
+    </IndexCurves>
+
+    <YieldCurves/>
+
+    <FxSpots>
+    </FxSpots>
+
+    <FxVolatilities>
+      <FxVolatility ccypair="USDEUR">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02</Shifts>
+        <ShiftExpiries> 1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y</ShiftExpiries>
+      </FxVolatility>
+    </FxVolatilities>
+
+
+    <SwaptionVolatilities>
+      <SwaptionVolatility ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftTerms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTerms>
+        <ShiftExpiries> 1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y</ShiftExpiries>
+        <Shifts>
+          <Shift expiry="" term="">0.01</Shift>
+        </Shifts>
+      </SwaptionVolatility>
+    </SwaptionVolatilities>
+
+
+    <CapFloorVolatilities>
+    </CapFloorVolatilities>
+
+
+    <EquitySpots>
+    </EquitySpots>
+
+
+    <EquityVolatilities>
+    </EquityVolatilities>
+    <SecuritySpreads />
+    <RecoveryRates/>
+    <SurvivalProbabilities/>
+
+  </StressTest>
+
+</StressTesting>
