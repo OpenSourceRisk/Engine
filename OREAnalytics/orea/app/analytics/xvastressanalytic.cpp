@@ -91,8 +91,7 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
     Settings::instance().evaluationDate() = inputs_->asof();
 
     QL_REQUIRE(inputs_->portfolio(), "XvaStressAnalytic::run: No portfolio loaded.");
-
-    Settings::instance().evaluationDate() = inputs_->asof();
+    
     std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
 
     auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");

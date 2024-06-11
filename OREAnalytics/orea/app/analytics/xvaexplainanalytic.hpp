@@ -29,19 +29,18 @@
 namespace ore {
 namespace analytics {
 
+//! Explain market implied XVA changes by full revalulation in par rate domain
+//! Time and portfolio effects are excluded by this explain
 class XvaExplainAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "XVA_EXPLAIN";
-    static constexpr const char* mporLookupKey = "MPOR";
     explicit XvaExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
-
 private:
     void createStressTestData() const;
     void runStressTests() const;
-
 };
 
 class XvaExplainAnalytic : public Analytic {

@@ -20,6 +20,7 @@ app/analytic.cpp
 app/analytics/analyticfactory.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
+app/analytics/parscenarioanalytic.cpp
 app/analytics/parstressconversionanalytic.cpp
 app/analytics/pnlanalytic.cpp
 app/analytics/pnlexplainanalytic.cpp
@@ -30,6 +31,7 @@ app/analytics/simmanalytic.cpp
 app/analytics/stresstestanalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
+app/analytics/xvaexplainanalytic.cpp
 app/analytics/xvasensitivityanalytic.cpp
 app/analytics/xvastressanalytic.cpp
 app/analytics/zerotoparshiftanalytic.cpp
@@ -181,6 +183,7 @@ app/analytic.hpp
 app/analytics/analyticfactory.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
+app/analytics/parscenarioanalytic.hpp
 app/analytics/parstressconversionanalytic.hpp
 app/analytics/pnlanalytic.hpp
 app/analytics/pnlexplainanalytic.hpp
@@ -191,6 +194,7 @@ app/analytics/simmanalytic.hpp
 app/analytics/stresstestanalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
+app/analytics/xvaexplainanalytic.hpp
 app/analytics/xvasensitivityanalytic.hpp
 app/analytics/xvastressanalytic.hpp
 app/analytics/zerotoparshiftanalytic.hpp

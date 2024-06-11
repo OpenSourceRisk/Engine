@@ -25,37 +25,32 @@
 
 namespace ore {
 namespace analytics {
-    
-// Computes the fair par rates    
+
+// Computes the fair par rates
 class ParScenarioAnalyticImpl : public Analytic::Impl {
 public:
-    static constexpr const char* LABEL = "SCENARIO";
+    static constexpr const char* LABEL = "PAR_SCENARIO";
 
-    ParScenarioAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, boost::optional<QuantLib::Date> asof = {}) : 
-        Analytic::Impl(inputs) ,asof_(asof.get_value_or(inputs->asof())) {
+    ParScenarioAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
         setLabel(LABEL);
     }
 
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
-                             const std::set<std::string>& runTypes = {}) override;
-    
+                     const std::set<std::string>& runTypes = {}) override;
+
     void setUpConfigurations() override;
 
-    void setUseSpreadedTermStructures(const bool useSpreadedTermStructures) {
-        useSpreadedTermStructures_ = useSpreadedTermStructures;
-    }
+    const std::map<RiskFactorKey, double>& parRates() const { return parRates_; }
 
 private:
-    std::map<RiskFactorKey, double> fairRates_;
-    QuantLib::Date asof_;
-    bool useSpreadedTermStructures_ = false;
+    std::map<RiskFactorKey, double> parRates_;
 };
 
 class ParScenarioAnalytic : public Analytic {
 public:
     ParScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<ParScenarioAnalyticImpl>(inputs), {"PARSCENARIO"}, inputs,
-                   true, false, false, false) {}
+        : Analytic(std::make_unique<ParScenarioAnalyticImpl>(inputs), {"PAR_SCENARIO"}, inputs, true, false, false,
+                   false) {}
 };
 
 } // namespace analytics
