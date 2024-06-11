@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionJaggedCube) {
     IndexManager::instance().clearHistories();
 }
 
-string writeCube(const QuantLib::ext::shared_ptr<NPVCube>& cube, int bufferSize) {
+string writeCube(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size bufferSize) {
     auto report = QuantLib::ext::make_shared<InMemoryReport>(bufferSize);
     ReportWriter().writeCube(*report, cube);
     string fileName = boost::filesystem::unique_path().string();
