@@ -67,16 +67,29 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     todayParAnalytic.configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
     todayParAnalytic.runAnalytic(loader);
     auto todaysRates = dynamic_cast<ParScenarioAnalyticImpl*>(todayParAnalytic.impl().get())->parRates();
-    for(const auto& [key, value] : todaysRates){
-        std::cout << key << " : " << value << std::endl;
-    }
-}
 
+    CONSOLEW("XVA_EXPLAIN: Build MPOR Market and get par rates");
+    ParScenarioAnalytic mporParAnalytic(inputs_);
+    Settings::instance().evaluationDate() = inputs_->asof() + 1 * Days;
+    mporParAnalytic.configurations().asofDate = inputs_->asof() + 1 * Days;
+    mporParAnalytic.configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    mporParAnalytic.configurations().simMarketParams = analytic()->configurations().simMarketParams;
+    mporParAnalytic.configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+    mporParAnalytic.runAnalytic(loader);
+    auto mporRates = dynamic_cast<ParScenarioAnalyticImpl*>(mporParAnalytic.impl().get())->parRates();
+    std::cout << "Key,Today,Mpor,Shift" << std::endl;
+    for (const auto& [key, value] : mporRates) {
+        std::cout << key << "," << todaysRates[key] << "," << value << "," << value - todaysRates[key] << std::endl;
+    }
+    Settings::instance().evaluationDate() = inputs_->asof();
+}
 
 XvaExplainAnalytic::XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
     : Analytic(std::make_unique<XvaExplainAnalyticImpl>(inputs), {"XVA_STRESS"}, inputs, true, false, false, false) {
     impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
 }
+
+std::vector<QuantLib::Date> XvaExplainAnalyticImpl::additionalMarketDates() const { return {inputs_->asof() + 1 * Days}; }
 
 } // namespace analytics
 } // namespace ore
