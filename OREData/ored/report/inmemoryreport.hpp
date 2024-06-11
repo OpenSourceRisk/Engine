@@ -40,7 +40,7 @@ using std::vector;
  */
 class InMemoryReport : public Report {
 public:
-    InMemoryReport() : i_(0) {}
+    explicit InMemoryReport(Size bufferSize=100000) : i_(0), bufferSize_(bufferSize) {}
 
     Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override;
     Report& next() override;
@@ -50,7 +50,7 @@ public:
 
     // InMemoryInterface
     Size columns() const { return headers_.size(); }
-    Size rows() const { return columns() == 0 ? 0 : data_[0].size(); }
+    Size rows() const { return columns() == 0 ? 0 : files_.size() * bufferSize_ + data_[0].size(); }
     const string& header(Size i) const { return headers_[i]; }
     bool hasHeader(string h) const { return std::find(headers_.begin(), headers_.end(), h) != headers_.end(); }
     ReportType columnType(Size i) const { return columnTypes_[i]; }
@@ -63,10 +63,12 @@ public:
 
 private:
     Size i_;
+    Size bufferSize_;
     vector<string> headers_;
     vector<ReportType> columnTypes_;
     vector<Size> columnPrecision_;
     vector<vector<ReportType>> data_;
+    vector<string> files_;
 };
 
 //! InMemoryReport with access to plain types instead of boost::variant<>, to facilitate language bindings
