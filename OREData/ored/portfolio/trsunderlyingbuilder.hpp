@@ -37,7 +37,7 @@ struct TrsUnderlyingBuilder {
           QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
           std::map<std::string, double>& indexQuantities, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
-          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
@@ -71,7 +71,7 @@ struct BondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           std::map<std::string, double>& indexQuantities,
           std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
-          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
@@ -88,7 +88,7 @@ struct ForwardBondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           std::map<std::string, double>& indexQuantities,
           std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
-          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
@@ -105,7 +105,7 @@ struct AssetPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           std::map<std::string, double>& indexQuantities,
           std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
-          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
@@ -129,7 +129,7 @@ struct EquityOptionPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
           std::map<std::string, double>& indexQuantities, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
-          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
@@ -145,7 +145,7 @@ struct BondPositionTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
           std::map<std::string, double>& indexQuantities, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
-          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,
@@ -160,7 +160,7 @@ struct DerivativeTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
           QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
           std::map<std::string, double>& indexQuantities, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
-          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
+          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
           const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
               const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>& getFxIndex,

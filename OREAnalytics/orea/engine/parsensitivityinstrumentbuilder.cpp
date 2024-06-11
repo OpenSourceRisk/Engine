@@ -317,7 +317,8 @@ void ParSensitivityInstrumentBuilder::createParInstruments(
                 *QuantLib::ext::static_pointer_cast<SensitivityScenarioData::CurveShiftParData>(index.second);
             Size n_ten = data.shiftTenors.size();
             QL_REQUIRE(data.parInstruments.size() == n_ten,
-                       "number of tenors does not match number of index curve par instruments");
+                       indexName  << " number of tenors " << n_ten << "does not match number of index curve par instruments"
+                                                     << data.parInstruments.size());
             vector<string> tokens;
             boost::split(tokens, indexName, boost::is_any_of("-"));
             QL_REQUIRE(tokens.size() >= 2, "index name " << indexName << " unexpected");
@@ -1062,29 +1063,33 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
     Date settlementDate = payIndexCalendar.advance(payIndexCalendar.adjust(asof), payIndex->fixingDays() * Days);
 
     bool telescopicValueDates = true;
-    QuantLib::ext::shared_ptr<Swap> helper = QuantLib::ext::make_shared<TenorBasisSwap>(
+    auto helper = QuantLib::ext::make_shared<TenorBasisSwap>(
         settlementDate, 1.0, term, payIndex, 0.0, conv->payFrequency(), receiveIndex, 0.0, conv->receiveFrequency(),
         DateGeneration::Backward, conv->includeSpread(), conv->spreadOnRec(), conv->subPeriodsCouponType(),
         telescopicValueDates);
 
-    QuantLib::ext::shared_ptr<IborCoupon> lastCoupon1 =
-        QuantLib::ext::dynamic_pointer_cast<IborCoupon>(QuantLib::ext::static_pointer_cast<TenorBasisSwap>(helper)->payLeg().back());
-    Date maxDate2;
-    QuantLib::ext::shared_ptr<IborCoupon> lastCoupon2 =
-        QuantLib::ext::dynamic_pointer_cast<IborCoupon>(QuantLib::ext::static_pointer_cast<TenorBasisSwap>(helper)->recLeg().back());
-    if (lastCoupon2 != nullptr)
-        maxDate2 = lastCoupon2->fixingEndDate();
-    else {
-        QuantLib::ext::shared_ptr<QuantExt::SubPeriodsCoupon1> lastCoupon2;
-        if (conv->spreadOnRec())
-            lastCoupon2 = QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(
-                QuantLib::ext::static_pointer_cast<TenorBasisSwap>(helper)->payLeg().back());
-        else
-            lastCoupon2 = QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(
-                QuantLib::ext::static_pointer_cast<TenorBasisSwap>(helper)->recLeg().back());
-        maxDate2 = receiveIndexCalendar.advance(lastCoupon2->valueDates().back(), conv->receiveFrequency());
-    }
-    Date latestRelevantDate = std::max(helper->maturityDate(), std::max(lastCoupon1->fixingEndDate(), maxDate2));
+    auto lastPayCoupon = helper->payLeg().back();
+    auto lastReceiveCoupon = helper->recLeg().back();
+
+    auto lastCouponDate = [](QuantLib::ext::shared_ptr<CashFlow> flow, Period freq, Calendar cal) -> Date {
+        if (auto c = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(flow))
+            return c->fixingEndDate();
+        Date d{};
+        if (auto c = QuantLib::ext::dynamic_pointer_cast<SubPeriodsCoupon1>(flow))
+            d = c->valueDates().back();
+        else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(flow)) {
+            d = c->valueDates().back();
+            freq = 1 * Days;
+        } else {
+            QL_FAIL("makeTenorBasisSwap(): Either IborCoupon, SubPeriodsCoupon1 or OvernightIndexedCoupon cashflow "
+                    "expected.");
+        }
+        return cal.advance(d, freq);
+    };
+
+    Date maxDate1 = lastCouponDate(lastPayCoupon, conv->payFrequency(), payIndexCalendar);
+    Date maxDate2 = lastCouponDate(lastReceiveCoupon, conv->receiveFrequency(), receiveIndexCalendar);
+    Date latestRelevantDate = std::max(helper->maturityDate(), std::max(maxDate1, maxDate2));
 
     if (market != nullptr) {
         QuantLib::ext::shared_ptr<PricingEngine> swapEngine = QuantLib::ext::make_shared<DiscountingSwapEngine>(discountCurve);
