@@ -17,15 +17,15 @@
 */
 
 /*! \file orea/app/analytics/xvaanalytic.hpp
-    \brief xva explain analytic 
+    \brief xva explain analytic
 */
 
 #pragma once
 
 #include <orea/app/analytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
-#include <ored/report/inmemoryreport.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
+#include <ored/report/inmemoryreport.hpp>
 namespace ore {
 namespace analytics {
 
@@ -38,6 +38,8 @@ public:
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+    std::vector<QuantLib::Date> additionalMarketDates() const override;
+
 private:
     void createStressTestData() const;
     void runStressTests() const;
@@ -46,10 +48,7 @@ private:
 class XvaExplainAnalytic : public Analytic {
 public:
     explicit XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
-
 };
-
-
 
 } // namespace analytics
 } // namespace ore
