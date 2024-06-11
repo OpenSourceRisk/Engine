@@ -156,6 +156,16 @@ RiskFactorKey SensitivityCube::upDownFactor(const Size index) const {
     }
 }
 
+SensitivityCube::FactorData SensitivityCube::upThenDownFactorData(const RiskFactorKey& rfkey) {
+    if (auto f = upFactors_.find(rfkey); f != upFactors_.end())
+        return f->second;
+    else if (auto f = downFactors_.find(rfkey); f != downFactors_.end())
+        return f->second;
+    else {
+        QL_FAIL("SensitivityCube::upThenDownFactorData(): no up or down factor data found for " << rfkey);
+    }
+}
+
 SensitivityCube::crossPair SensitivityCube::crossFactor(const Size crossIndex) const {
     if (auto k = crossIndexToKey_.find(crossIndex); k != crossIndexToKey_.end()) {
         return k->second;

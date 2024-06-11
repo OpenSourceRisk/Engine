@@ -84,7 +84,7 @@ SensitivityRecord SensitivityCubeStream::next() {
     sr.baseNpv = cubes_[currentCubeIdx_]->npv(tradeIdx);
 
     if (currentDeltaKey_ != currentDeltaKeys_.end()) {
-        auto fd = cubes_[currentCubeIdx_]->upFactors().at(*currentDeltaKey_);
+        auto const& fd = cubes_[currentCubeIdx_]->upThenDownFactorData(*currentDeltaKey_);
         sr.key_1 = *currentDeltaKey_;
         sr.desc_1 = fd.factorDesc;
         sr.shift_1 = fd.targetShiftSize;
@@ -95,7 +95,7 @@ SensitivityRecord SensitivityCubeStream::next() {
             sr.gamma = Null<Real>();
         ++currentDeltaKey_;
     } else if (currentCrossGammaKey_ != currentCrossGammaKeys_.end()) {
-        auto fd = cubes_[currentCubeIdx_]->crossFactors().at(*currentCrossGammaKey_);
+        auto const& fd = cubes_[currentCubeIdx_]->crossFactors().at(*currentCrossGammaKey_);
         sr.key_1 = currentCrossGammaKey_->first;
         sr.desc_1 = std::get<0>(fd).factorDesc;
         sr.shift_1 = std::get<0>(fd).targetShiftSize;
