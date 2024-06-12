@@ -190,7 +190,7 @@ void AmcCgBaseEngine::buildComputationGraph() const {
             pathValueUndDirty = cg_add(g, pathValueUndDirty, cashflowInfo[i].flowNode);
     }
 
-    g.setVariable(npvName(), pathValueUndDirty);
+    g.setVariable(npvName() + "_0", pathValueUndDirty);
 }
 
 void AmcCgBaseEngine::calculate() const {}
