@@ -50,6 +50,7 @@
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
+      <Parameter name="amcCgPricingEnginesFile">pricingengine_amccg.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.csv.gz</Parameter>

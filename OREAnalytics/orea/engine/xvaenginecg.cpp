@@ -170,6 +170,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
 
     LOG("XvaEngineCG: build trades (" << portfolio_->size() << ") against global cam cg model");
 
+    QL_REQUIRE(engineData_, "XvaEngineCG: no engine data given.");
     auto edCopy = QuantLib::ext::make_shared<EngineData>(*engineData_);
     edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
     edCopy->globalParameters()["RunType"] = "NPV";
