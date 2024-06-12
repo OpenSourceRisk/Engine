@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2024 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -31,6 +31,9 @@
 namespace ore {
 namespace data {
 
+using QuantLib::Real;
+using QuantLib::Size;
+
 class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
     AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
@@ -44,11 +47,11 @@ protected:
     std::vector<QuantLib::Date> simulationDates_;
 
     // input data from the derived pricing engines, to be set in these engines
-    mutable std::vector<Leg> leg_;
+    mutable std::vector<QuantLib::Leg> leg_;
     mutable std::vector<std::string> currency_;
     mutable std::vector<bool> payer_;
-    mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
-    mutable Settlement::Type optionSettlement_ = Settlement::Physical;
+    mutable QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise_; // may be empty, if underlying is the actual trade
+    mutable QuantLib::Settlement::Type optionSettlement_ = QuantLib::Settlement::Physical;
     mutable bool includeSettlementDateFlows_ = false;
 
     // set by engine
@@ -71,8 +74,8 @@ private:
     Real time(const Date& d) const;
 
     // create the info for a given flow
-    CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const std::string& payCcy, bool payer,
-                                    Size legNo, Size cfNo) const;
+    CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow, const std::string& payCcy,
+                                    bool payer, Size legNo, Size cfNo) const;
 };
 
 } // namespace data
