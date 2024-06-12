@@ -49,6 +49,29 @@ protected:
     mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
     mutable bool includeSettlementDateFlows_ = false;
+
+    // set by engine
+    std::string npvName_;
+
+private:
+    static constexpr Real tinyTime = 1E-10;
+
+    // data structure storing info needed to generate the amount for a cashflow
+    struct CashflowInfo {
+        Size legNo = Null<Size>(), cfNo = Null<Size>();
+        Real payTime = Null<Real>();
+        Real exIntoCriterionTime = Null<Real>();
+        std::string payCcy;
+        bool payer = false;
+        std::size_t flowNode;
+    };
+
+    // convert a date to a time w.r.t. the valuation date
+    Real time(const Date& d) const;
+
+    // create the info for a given flow
+    CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow, const std::string& payCcy, bool payer,
+                                    Size legNo, Size cfNo) const;
 };
 
 } // namespace data
