@@ -27,12 +27,14 @@
 #include <ored/scripting/models/modelcg.hpp>
 
 #include <ql/instruments/swap.hpp>
+#include <ql/exercise.hpp>
 
 namespace ore {
 namespace data {
 
 using QuantLib::Real;
 using QuantLib::Size;
+using QuantLib::Null;
 
 class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
