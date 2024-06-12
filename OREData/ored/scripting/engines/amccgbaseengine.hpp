@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/scripting/engines/amccgpricingengine.hpp>
+#include <ored/scripting/models/modelcg.hpp>
 
 #include <ql/instruments/swap.hpp>
 
