@@ -30,7 +30,7 @@
 namespace ore {
 namespace data {
 
-class AmcCgSwapEngine : public GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>,
+class AmcCgSwapEngine : public QuantLib::GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>,
                         public AmcCgBaseEngine {
 public:
     AmcCgSwapEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates,

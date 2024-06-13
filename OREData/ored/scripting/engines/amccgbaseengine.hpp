@@ -27,6 +27,7 @@
 #include <ored/scripting/models/modelcg.hpp>
 
 #include <ql/instruments/swap.hpp>
+#include <ql/instruments/swaption.hpp>
 #include <ql/exercise.hpp>
 
 namespace ore {
