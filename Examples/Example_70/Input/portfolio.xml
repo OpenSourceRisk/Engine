@@ -24,8 +24,8 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160301</StartDate>
-            <EndDate>20360301</EndDate>
+            <StartDate>20240610</StartDate>
+            <EndDate>20440610</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -56,8 +56,8 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160301</StartDate>
-            <EndDate>20360301</EndDate>
+            <StartDate>20240610</StartDate>
+            <EndDate>20440610</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>MF</Convention>
@@ -95,8 +95,8 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160301</StartDate>
-            <EndDate>20360301</EndDate>
+            <StartDate>20240610</StartDate>
+            <EndDate>20440610</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>USD</Calendar>
             <Convention>F</Convention>
@@ -118,17 +118,16 @@
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>USD-LIBOR-3M</Index>
+          <Index>USD-SOFR</Index>
           <Spreads>
             <Spread>0.000000</Spread>
           </Spreads>
-          <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160301</StartDate>
-            <EndDate>20360301</EndDate>
+            <StartDate>20240610</StartDate>
+            <EndDate>20440610</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>USD</Calendar>
             <Convention>MF</Convention>
