@@ -162,6 +162,8 @@ void AmcCgBaseEngine::buildComputationGraph() const {
 
         Real t = time(simulationDates_[i]);
 
+        std::vector<std::size_t> pathValueUndDirtyContribution(1, pathValueUndDirty);
+
         for (Size j = 0; j < cashflowInfo.size(); ++j) {
 
             /* we assume here that exIntoCriterionTime > t implies payTime > t, this must be ensured by the
@@ -169,10 +171,10 @@ void AmcCgBaseEngine::buildComputationGraph() const {
 
             if (cfStatus[j] == CfStatus::open) {
                 if (cashflowInfo[j].exIntoCriterionTime > t) {
-                    pathValueUndDirty = cg_add(g, pathValueUndDirty, cashflowInfo[j].flowNode);
+                    pathValueUndDirtyContribution.push_back(cashflowInfo[j].flowNode);
                     cfStatus[j] = CfStatus::done;
                 } else if (cashflowInfo[j].payTime > t - (includeSettlementDateFlows_ ? tinyTime : 0.0)) {
-                    pathValueUndDirty = cg_add(g, pathValueUndDirty, cashflowInfo[j].flowNode);
+                    pathValueUndDirtyContribution.push_back(cashflowInfo[j].flowNode);
                     cfStatus[j] = CfStatus::cached;
                 }
             } else if (cfStatus[j] == CfStatus::cached) {
@@ -182,15 +184,22 @@ void AmcCgBaseEngine::buildComputationGraph() const {
             }
         }
 
+        if (pathValueUndDirtyContribution.size() > 1)
+            pathValueUndDirty = cg_add(g, pathValueUndDirtyContribution);
+
         g.setVariable("_AMC_NPV_" + std::to_string(i), pathValueUndDirty);
     }
 
     // add the remaining live cashflows to get the underlying value
 
+    std::vector<std::size_t> pathValueUndDirtyContribution(1, pathValueUndDirty);
     for (Size i = 0; i < cashflowInfo.size(); ++i) {
         if (cfStatus[i] == CfStatus::open)
-            pathValueUndDirty = cg_add(g, pathValueUndDirty, cashflowInfo[i].flowNode);
+            pathValueUndDirtyContribution.push_back(cashflowInfo[i].flowNode);
     }
+
+    if (pathValueUndDirtyContribution.size() > 1)
+        pathValueUndDirty = cg_add(g, pathValueUndDirtyContribution);
 
     g.setVariable(npvName() + "_0", pathValueUndDirty);
 }
