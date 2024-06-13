@@ -29,7 +29,8 @@ using namespace QuantExt;
 QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngine(
     const QuantLib::ext::shared_ptr<LGM>& lgm, const Handle<YieldTermStructure>& discountCurve,
     const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices,
-    const Handle<YieldTermStructure>& incomeCurve, const Handle<YieldTermStructure>& discountContractCurve) {
+    const Handle<YieldTermStructure>& incomeCurve, const Handle<YieldTermStructure>& contractCurve,
+    const Handle<YieldTermStructure>& referenceCurve) {
 
     return QuantLib::ext::make_shared<QuantExt::McLgmFwdBondEngine>(
         lgm, parseSequenceType(engineParameter("Training.Sequence")),
@@ -41,8 +42,8 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngi
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurve, simulationDates,
         externalModelIndices, parseBool(engineParameter("MinObsDate")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
-        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
-        incomeCurve, discountContractCurve);
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())), incomeCurve,
+        contractCurve, referenceCurve);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
@@ -60,25 +61,24 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
     WLOG("CamAmcFwdBondEngineBuilder : creditCurveId not used at present");
 
     // for discounting underlying bond make use of reference curve
-    Handle<YieldTermStructure> yts =
+    Handle<YieldTermStructure> referenceCurve =
         referenceCurveId.empty() ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                                  : indexOrYieldCurve(market_, referenceCurveId, configuration(MarketContext::pricing));
 
+    Handle<YieldTermStructure> spreadedCurve = referenceCurve;
     if (!securityId.empty())
-        yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
-            yts, market_->securitySpread(securityId, configuration(MarketContext::pricing))));
+        spreadedCurve = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
+            spreadedCurve, market_->securitySpread(securityId, configuration(MarketContext::pricing))));
 
     // fall back on reference curve if no income curve is specified
-    Handle<YieldTermStructure> incomeTS = market_->yieldCurve(incomeCurveId.empty() ? referenceCurveId : incomeCurveId,
-                                                              configuration(MarketContext::pricing));
+    Handle<YieldTermStructure> incomeCurve = market_->yieldCurve(
+        incomeCurveId.empty() ? referenceCurveId : incomeCurveId, configuration(MarketContext::pricing));
 
-    //to discount the contract, might be a OIS curve
-    Handle<YieldTermStructure> discountTS =
-            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+    // to discount the contract, might be a OIS curve
+    Handle<YieldTermStructure> contractCurve =
+        market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
 
-    // todo registering of the yts,incomets ???
-    // done in qle/pricingengines/mclgmfwdbondengine.hpp
-    return buildMcEngine(lgm, yts, simulationDates_, modelIndex, incomeTS, discountTS);
+    return buildMcEngine(lgm, spreadedCurve, simulationDates_, modelIndex, incomeCurve, contractCurve, referenceCurve);
 }
 
 } // namespace data

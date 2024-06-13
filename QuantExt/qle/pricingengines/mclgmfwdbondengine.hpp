@@ -44,7 +44,8 @@ public:
                        const bool minimalObsDate = true, const RegressorModel regressorModel = RegressorModel::Simple,
                        const Real regressionVarianceCutoff = Null<Real>(),
                        const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-                       const Handle<YieldTermStructure>& discountContractCurve = Handle<YieldTermStructure>())
+                       const Handle<YieldTermStructure>& contractCurve = Handle<YieldTermStructure>(),
+                       const Handle<YieldTermStructure>& referenceCurve = Handle<YieldTermStructure>())
         : GenericEngine<QuantExt::ForwardBond::arguments, QuantExt::ForwardBond::results>(),
           McMultiLegBaseEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
                                    std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
@@ -55,12 +56,14 @@ public:
                                regressionVarianceCutoff) {
 
         incomeCurve_ = incomeCurve;
-        discountContractCurve_ = discountContractCurve;
+        contractCurve_ = contractCurve;
+        referenceCurve_ = referenceCurve;
         registerWith(model);
         for (auto& h : discountCurves_)
             registerWith(h);
         registerWith(incomeCurve_);
-        registerWith(discountContractCurve_);
+        registerWith(contractCurve_);
+        registerWith(referenceCurve_);
     }
 
     void calculate() const override;
@@ -89,12 +92,13 @@ public:
 
 private:
     Handle<YieldTermStructure> incomeCurve_;
-    Handle<YieldTermStructure> discountContractCurve_;
+    Handle<YieldTermStructure> contractCurve_;
+    Handle<YieldTermStructure> referenceCurve_;
 
     mutable Real accruedAmount_;
     mutable Real cmpPayment_;
     mutable Date incomeCurveDate_;
-    mutable Date discountContractCurveDate_;
+    mutable Date contractCurveDate_;
     mutable Date cmpPaymentDate_;
 };
 

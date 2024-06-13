@@ -42,7 +42,8 @@ public:
                     const std::vector<Date> simulationDates = std::vector<Date>(),
                     const std::vector<Size> externalModelIndices = std::vector<Size>(),
                     const bool minimalObsDate = true, const RegressorModel regressorModel = RegressorModel::Simple,
-                    const Real regressionVarianceCutoff = Null<Real>())
+                    const Real regressionVarianceCutoff = Null<Real>(),
+                    const Handle<YieldTermStructure>& referenceCurve = Handle<YieldTermStructure>())
         : GenericEngine<QuantLib::Bond::arguments, QuantLib::Bond::results>(),
           McMultiLegBaseEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
                                    std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
@@ -54,9 +55,35 @@ public:
         registerWith(model);
         for (auto& h : discountCurves_)
             registerWith(h);
+        referenceCurve_ = referenceCurve;
+        registerWith(referenceCurve_);
+
     }
 
     void calculate() const override;
+
+    class BondAmcCalculator : public McMultiLegBaseEngine::MultiLegBaseAmcCalculator {
+    public:
+        BondAmcCalculator(McMultiLegBaseEngine::MultiLegBaseAmcCalculator c)
+            : McMultiLegBaseEngine::MultiLegBaseAmcCalculator(c){};
+
+        std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
+                                                           std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+                                                           const std::vector<size_t>& relevantPathIndex,
+                                                           const std::vector<size_t>& relevantTimeIndex) override;
+
+        Currency npvCurrency() override { return baseCurrency_; }
+
+        void addEngine(const QuantExt::McLgmBondEngine& engine) {
+            engine_ = boost::make_shared<QuantExt::McLgmBondEngine>(engine);
+        };
+
+    private:
+        boost::shared_ptr<QuantExt::McLgmBondEngine> engine_;
+    };
+
+private:
+    Handle<YieldTermStructure> referenceCurve_;
 };
 
 } // namespace QuantExt
