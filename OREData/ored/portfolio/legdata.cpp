@@ -942,7 +942,9 @@ Leg makeSimpleLeg(const LegData& data) {
     Leg leg;
     for (Size i = 0; i < dates.size(); i++) {
         Date d = parseDate(dates[i]);
-        leg.push_back(QuantLib::ext::shared_ptr<CashFlow>(new SimpleCashFlow(amounts[i], d)));
+        if (!data.paymentCalendar().empty() && !data.paymentConvention().empty())
+            d = parseCalendar(data.paymentCalendar()).adjust(d, parseBusinessDayConvention(data.paymentConvention()));
+        leg.push_back(QuantLib::ext::make_shared<SimpleCashFlow>(amounts[i], d));
     }
     return leg;
 }

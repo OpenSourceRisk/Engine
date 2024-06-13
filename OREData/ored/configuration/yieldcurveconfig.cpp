@@ -235,8 +235,15 @@ const vector<string>& YieldCurveConfig::quotes() {
             // Check if the segment is a CrossCcyYieldCurveSegment and add the FX spot rate to the
             // set of quotes needed for the YieldCurveConfig if it has not already been added.
             if (auto xccySegment = QuantLib::ext::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(c)) {
-                if (!addedFxSpot)
+                if (!addedFxSpot) {
                     quotes_.push_back(xccySegment->spotRateID());
+                    // we add the inverted pair as well, because the original pair might get removed from the market
+                    // data loader if both are present in the input market data
+                    if (auto md = boost::dynamic_pointer_cast<FXSpotQuote>(
+                            parseMarketDatum(Date(), xccySegment->spotRateID(), 1.0))) {
+                        quotes_.push_back("FX/RATE/" + md->ccy() + "/" + md->unitCcy());
+                    }
+                }
             }
         }
     }
