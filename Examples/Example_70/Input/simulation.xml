@@ -151,11 +151,15 @@
     <Indices>
       <Index>EUR-EURIBOR-6M</Index>
       <Index>EUR-EURIBOR-3M</Index>
-      <Index>EUR-EONIA</Index>
-      <Index>USD-FedFunds</Index>
-      <Index>USD-LIBOR-3M</Index>
+      <Index>EUR-ESTER</Index>
+      <Index>USD-SOFR</Index>
     </Indices>
     <BenchmarkCurves>
+      <!--BenchmarkCurve>
+        <Name>EUR-IN-USD</Name>
+        <Currency>EUR</Currency>
+      </BenchmarkCurve-->
+      
       <BenchmarkCurve>
         <Name>BANK_EUR_LEND</Name>
         <Currency>EUR</Currency>
@@ -168,19 +172,19 @@
     <SwapIndices>
       <SwapIndex>
         <Name>EUR-CMS-1Y</Name>
-        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+        <DiscountingIndex>EUR-ESTER</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
         <Name>EUR-CMS-30Y</Name>
-        <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+        <DiscountingIndex>EUR-ESTER</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
-        <Name>USD-CMS-1Y</Name>
-        <DiscountingIndex>USD-FedFunds</DiscountingIndex>
+        <Name>USD-CMS-SOFR-1Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
-        <Name>USD-CMS-30Y</Name>
-        <DiscountingIndex>USD-FedFunds</DiscountingIndex>
+        <Name>USD-CMS-SOFR-30Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
       </SwapIndex>
     </SwapIndices>
     <DefaultCurves>
@@ -203,10 +207,10 @@
       <Simulate>true</Simulate>
       <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
-      <Currencies>
-        <Currency>EUR</Currency>
-        <Currency>USD</Currency>
-      </Currencies>
+      <Keys>
+        <Key>EUR-EURIBOR-6M</Key>
+        <Key>USD-SOFR</Key>
+      </Keys>
       <Expiries>1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</Expiries>
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</Terms>
     </SwaptionVolatilities>
@@ -215,9 +219,9 @@
       <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <CurrencyPairs>
-        <CurrencyPair>USDEUR</CurrencyPair>
+        <CurrencyPair>EURUSD</CurrencyPair>
       </CurrencyPairs>
-      <Expiries>1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y</Expiries>
+      <Expiries>1M,3M,6M,1Y,2Y,3Y,5Y,10Y</Expiries>
     </FxVolatilities>
     
     <!-- Additional data that is recorded during simulation for later
@@ -227,9 +231,6 @@
       <Currency>USD</Currency>
     </AggregationScenarioDataCurrencies>
     <AggregationScenarioDataIndices>
-      <Index>EUR-EURIBOR-3M</Index>
-      <Index>EUR-EONIA</Index>
-      <Index>USD-LIBOR-3M</Index>
     </AggregationScenarioDataIndices>
   </Market>
 </Simulation>

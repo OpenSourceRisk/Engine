@@ -19,11 +19,12 @@
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/parscenarioanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/xvastressanalytic.hpp>
 #include <orea/app/analytics/xvaexplainanalytic.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/cube_io.hpp>
-
+#include <orea/engine/parstressconverter.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
@@ -31,43 +32,85 @@
 namespace ore {
 namespace analytics {
 
-StressTestScenarioData::CurveShiftData
-curveShiftData(const RiskFactorKey& key, double mporValue, const std::map<RiskFactorKey, double>& t0Values,
-               const boost::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
-    auto t0Value = t0Values.find(key);
-    QL_REQUIRE(t0Value != t0Values.end(), "XVAExplain: Mismatch between t0 and mpor riskfactors, can not find "
-                                              << key << " in todays riskfactors");
-    StressTestScenarioData::CurveShiftData shiftData;
-    shiftData.shiftType = ShiftType::Absolute;
-    shiftData.shiftTenors = simParameters->yieldCurveTenors(key.name);
-    shiftData.shifts = std::vector<double>(shiftData.shiftTenors.size(), 0.0);
-    shiftData.shifts[key.index] = mporValue - t0Value->second;
-    return shiftData;
+void curveShiftData(std::map<std::string, StressTestScenarioData::CurveShiftData>& data, const RiskFactorKey& key, double shift,
+                    const std::vector<Period>& tenors) {
+    if(data.count(key.name)==0){
+        StressTestScenarioData::CurveShiftData shiftData;
+        shiftData.shiftType = ShiftType::Absolute;
+        shiftData.shiftTenors = tenors;
+        shiftData.shifts = std::vector<double>(tenors.size(), 0.0);
+        data[key.name] = shiftData;
+    }
+    data[key.name].shifts[key.index] = shift;
 }
 
-StressTestScenarioData::VolShiftData volShiftData(const RiskFactorKey& key, double mporValue,
-                                                  const std::map<RiskFactorKey, double>& t0Values,
-                                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
-    auto t0Value = t0Values.find(key);
-    QL_REQUIRE(t0Value != t0Values.end(), "XVAExplain: Mismatch between t0 and mpor riskfactors, can not find "
-                                              << key << " in todays riskfactors");
-    StressTestScenarioData::VolShiftData shiftData;
-    shiftData.shiftType = ShiftType::Absolute;
-    shiftData.shiftExpiries = simParameters->yieldCurveTenors(key.name);
-    shiftData.shifts = std::vector<double>(shiftData.shiftExpiries.size(), 0.0);
-    shiftData.shifts[key.index] = mporValue - t0Value->second;
-    return shiftData;
+void volShiftData(std::map<std::string, StressTestScenarioData::VolShiftData> volData, const RiskFactorKey& key, double shift, const std::vector<QuantLib::Period>& tenors) {
+    if (volData.count(key.name) == 0) {
+        StressTestScenarioData::VolShiftData shiftData;
+        shiftData.shiftType = ShiftType::Absolute;
+        shiftData.shiftExpiries = tenors;
+        shiftData.shifts = std::vector<double>(shiftData.shiftExpiries.size(), 0.0);
+        volData[key.name] = shiftData;
+    }
+    volData[key.name].shifts[key.index] = shift;
+}
+
+void swaptionVolShiftData(std::map<std::string, StressTestScenarioData::SwaptionVolShiftData> volData,
+                          const RiskFactorKey& key, double shift, const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
+    
+    if(volData.count(key.name) == 0){
+
+        StressTestScenarioData::SwaptionVolShiftData shiftData;
+        shiftData.shiftType = ShiftType::Absolute;
+        shiftData.shiftExpiries = simParameters->swapVolExpiries(key.name);
+        shiftData.shiftTerms = simParameters->swapVolTerms(key.name);
+        for (const auto& expiry : shiftData.shiftExpiries) {
+            for (const auto& term : shiftData.shiftTerms) {
+                shiftData.shifts[std::make_pair(expiry, term)] = 0;
+            }
+        }
+        volData[key.name] = shiftData;
+    }
+    auto& shiftData = volData[key.name];
+    size_t expiryIndex = key.index / shiftData.shiftTerms.size();
+    size_t termIndex = key.index % shiftData.shiftTerms.size();
+    auto expiry = shiftData.shiftExpiries[expiryIndex];
+    auto term = shiftData.shiftTerms[termIndex];
+    //    std::cout << key << " expiryIndex " << expiryIndex << " " << expiry << " termindex " << termIndex << " " << term
+    //          << std::endl;
+    shiftData.shifts[std::make_pair(expiry, term)] = shift;
+}
+
+void capFloorVolShiftData(std::map<std::string, StressTestScenarioData::CapFloorVolShiftData> volData,
+                          const RiskFactorKey& key, double shift,
+                          const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
+    if (volData.count(key.name) == 0) {
+
+        StressTestScenarioData::CapFloorVolShiftData shiftData;
+        shiftData.shiftType = ShiftType::Absolute;
+        shiftData.shiftExpiries = simParameters->capFloorVolExpiries(key.name);
+        shiftData.shiftStrikes = simParameters->capFloorVolStrikes(key.name);
+        for (const auto& expiry : shiftData.shiftExpiries) {
+            shiftData.shifts[expiry] = std::vector<double>(shiftData.shiftStrikes.size(), 0.0);
+        }
+        volData[key.name] = shiftData;
+    }
+    auto& shiftData = volData[key.name];
+    size_t expiryIndex = key.index / shiftData.shiftStrikes.size();
+    size_t strikeIndex = key.index % shiftData.shiftStrikes.size();
+    auto expiry = shiftData.shiftExpiries[expiryIndex];
+    // auto strike = shiftData.shiftStrikes[strikeIndex];
+    // std::cout << key << " expiryIndex " << expiryIndex << " " << expiry << " termindex " << strikeIndex << " " <<
+    // strike
+    //           << std::endl;
+    shiftData.shifts[expiry][strikeIndex] = shift;
 }
 
 StressTestScenarioData::SpotShiftData
-spotShiftData(const RiskFactorKey& key, double mporValue, const std::map<RiskFactorKey, double>& t0Values,
-              const boost::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
-    auto t0Value = t0Values.find(key);
-    QL_REQUIRE(t0Value != t0Values.end(), "XVAExplain: Mismatch between t0 and mpor riskfactors, can not find "
-                                              << key << " in todays riskfactors");
+spotShiftData(const RiskFactorKey& key, double shift) {
     StressTestScenarioData::SpotShiftData shiftData;
     shiftData.shiftType = ShiftType::Absolute;
-    shiftData.shiftSize = mporValue - t0Value->second;
+    shiftData.shiftSize = shift;
     return shiftData;
 }
 
@@ -93,12 +136,11 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     Settings::instance().evaluationDate() = inputs_->asof();
     std::string marketConfig = inputs_->marketConfig("pricing");
 
-    auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
-
     CONSOLEW("XVA_EXPLAIN: Build T0 and Sim Market");
-
     analytic()->buildMarket(loader);
+    CONSOLE("OK");
 
+    CONSOLEW("XVA_EXPLAIN: Compute t0 par rates");
     ParScenarioAnalytic todayParAnalytic(inputs_);
     todayParAnalytic.configurations().asofDate = inputs_->asof();
     todayParAnalytic.configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
@@ -106,8 +148,9 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     todayParAnalytic.configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
     todayParAnalytic.runAnalytic(loader);
     auto todaysRates = dynamic_cast<ParScenarioAnalyticImpl*>(todayParAnalytic.impl().get())->parRates();
+    CONSOLE("OK");
 
-    CONSOLEW("XVA_EXPLAIN: Build MPOR Market and get par rates");
+    CONSOLEW("XVA_EXPLAIN: Compute t1 par rates");
     ParScenarioAnalytic mporParAnalytic(inputs_);
     Settings::instance().evaluationDate() = inputs_->asof() + 1 * Days;
     mporParAnalytic.configurations().asofDate = inputs_->asof() + 1 * Days;
@@ -115,128 +158,147 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     mporParAnalytic.configurations().simMarketParams = analytic()->configurations().simMarketParams;
     mporParAnalytic.configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
     mporParAnalytic.runAnalytic(loader);
+    CONSOLE("OK");
+    CONSOLEW("XVA_EXPLAIN: Generate Stresstests");
     auto mporRates = dynamic_cast<ParScenarioAnalyticImpl*>(mporParAnalytic.impl().get())->parRates();
-    std::cout << "Key,Today,Mpor,Shift" << std::endl;
-    for (const auto& [key, value] : mporRates) {
-        std::cout << key << "," << todaysRates[key] << "," << value << "," << value - todaysRates[key] << std::endl;
-    }
     Settings::instance().evaluationDate() = inputs_->asof();
     const auto& simParameters = analytic()->configurations().simMarketParams;
+    const auto& sensitivityData = analytic()->configurations().sensiScenarioData;
     // Build Stresstest Data
-    StressTestScenarioData scenarioData;
-    scenarioData.useSpreadedTermStructures() = true;
-    for (const auto& [key, value] : mporRates) {
-        StressTestScenarioData::StressTestData scenario;
-        scenario.label = to_string(key);
-        scenario.irCurveParShifts = true;
-        scenario.irCapFloorParShifts = true;
-        scenario.creditCurveParShifts = true;
-        bool inScope = false;
-        switch (key.keytype) {
-        case RiskFactorKey::KeyType::DiscountCurve: {
-            scenario.discountCurveShifts[key.name] = curveShiftData(key, value, todaysRates, simParameters);
-            inScope = true;
-            break;
-        }
-        case RiskFactorKey::KeyType::YieldCurve: {
-            scenario.yieldCurveShifts[key.name] = curveShiftData(key, value, todaysRates, simParameters);
-            inScope = true;
-            break;
-        }
-        case RiskFactorKey::KeyType::IndexCurve: {
-            scenario.indexCurveShifts[key.name] = curveShiftData(key, value, todaysRates, simParameters);
-            inScope = true;
-            break;
-        }
-        case RiskFactorKey::KeyType::SurvivalProbability: {
-            scenario.survivalProbabilityShifts[key.name] = curveShiftData(key, value, todaysRates, simParameters);
-            inScope = true;
-            break;
-        }
-        case RiskFactorKey::KeyType::RecoveryRate: {
-            scenario.recoveryRateShifts[key.name] = spotShiftData(key, value, todaysRates, simParameters);
-            inScope = true;
-            break;
-        }
-        case RiskFactorKey::KeyType::EquitySpot: {
-            scenario.equityShifts[key.name] = spotShiftData(key, value, todaysRates, simParameters);
-            inScope = true;
-            break;
-        }
-        case RiskFactorKey::KeyType::FXSpot: {
-            scenario.fxShifts[key.name] = spotShiftData(key, value, todaysRates, simParameters);
-            inScope = true;
-            break;
-        }
-        case RiskFactorKey::KeyType::EquityVolatility: {
-            scenario.equityVolShifts[key.name] = volShiftData(key, value, todaysRates, simParameters);
-            inScope = true;
-            break;
-        }
-        case RiskFactorKey::KeyType::FXVolatility: {
-            scenario.equityVolShifts[key.name] = volShiftData(key, value, todaysRates, simParameters);
-            inScope = true;
-            break;
-        }
-        case RiskFactorKey::KeyType::SwaptionVolatility: {
-            QL_REQUIRE(todaysRates.count(key) == 1, "XVA Explain, can not find " << key << "in todaysMarket");
-            StressTestScenarioData::SwaptionVolShiftData shiftData;
-            shiftData.shiftType = ShiftType::Absolute;
-            shiftData.shiftExpiries = simParameters->swapVolExpiries(key.name);
-            shiftData.shiftTerms = simParameters->swapVolTerms(key.name);
-            for (const auto& expiry : shiftData.shiftExpiries) {
-                for (const auto& term : shiftData.shiftTerms) {
-                    shiftData.shifts[std::make_pair(expiry, term)] = 0;
-                }
+    auto scenarioData = QuantLib::ext::make_shared<StressTestScenarioData>();
+    scenarioData->useSpreadedTermStructures() = true;
+    StressTestScenarioData::StressTestData fullRevalScenario;
+    fullRevalScenario.label = "t1";
+    fullRevalScenario.irCurveParShifts = true;
+    fullRevalScenario.irCapFloorParShifts = true;
+    fullRevalScenario.creditCurveParShifts = true;
+    for (const auto& [key, mporValue] : mporRates) {
+        auto t0Value = todaysRates.find(key);
+        QL_REQUIRE(t0Value != todaysRates.end(), "XVAExplain: Mismatch between t0 and mpor riskfactors, can not find "
+                                                     << key << " in todays riskfactors");
+        double shift = mporValue - t0Value->second;
+        
+        if (std::abs(shift) > 1e-4) {
+            std::cout << key << " " << t0Value->second << " " << mporValue << " " << shift << std::endl;
+            StressTestScenarioData::StressTestData scenario;
+            scenario.label = to_string(key);
+            scenario.irCurveParShifts = true;
+            scenario.irCapFloorParShifts = true;
+            scenario.creditCurveParShifts = true;
+            bool inScope = false;
+            switch (key.keytype) {
+            case RiskFactorKey::KeyType::DiscountCurve: {
+                curveShiftData(scenario.discountCurveShifts, key, shift,
+                                            sensitivityData->discountCurveShiftData()[key.name]->shiftTenors);
+                curveShiftData(fullRevalScenario.discountCurveShifts, key, shift,
+                               sensitivityData->discountCurveShiftData()[key.name]->shiftTenors);
+                inScope = true;
+                break;
             }
-            size_t expiryIndex = key.index / shiftData.shiftTerms.size();
-            size_t termIndex = key.index % shiftData.shiftTerms.size();
-            auto expiry = shiftData.shiftExpiries[expiryIndex];
-            auto term = shiftData.shiftTerms[termIndex];
-            std::cout << key << " expiryIndex " << expiryIndex << " " << expiry << " termindex " << termIndex << " "
-                      << term << std::endl;
-            shiftData.shifts[std::make_pair(expiry, term)] = value - todaysRates[key];
-            scenario.swaptionVolShifts[key.name] = shiftData;
-            inScope = true;
-            break;
-        }
-        case RiskFactorKey::KeyType::OptionletVolatility: {
-            std::cout << "Optionlet" << std::endl;
-            StressTestScenarioData::CapFloorVolShiftData shiftData;
-            shiftData.shiftType = ShiftType::Absolute;
-            shiftData.shiftExpiries = simParameters->capFloorVolExpiries(key.name);
-            shiftData.shiftStrikes = simParameters->capFloorVolStrikes(key.name);
-            for (const auto& expiry : shiftData.shiftExpiries) {
-                shiftData.shifts[expiry] = std::vector<double>(shiftData.shiftStrikes.size(), 0.0);
+            case RiskFactorKey::KeyType::YieldCurve: {
+                curveShiftData(fullRevalScenario.yieldCurveShifts, key, shift,
+                               sensitivityData->yieldCurveShiftData()[key.name]->shiftTenors);
+                curveShiftData(scenario.yieldCurveShifts, key, shift,
+                               sensitivityData->yieldCurveShiftData()[key.name]->shiftTenors);
+                inScope = true;
+                break;
             }
-
-            size_t expiryIndex = key.index / shiftData.shiftStrikes.size();
-            size_t strikeIndex = key.index % shiftData.shiftStrikes.size();
-            auto expiry = shiftData.shiftExpiries[expiryIndex];
-            auto strike = shiftData.shiftStrikes[strikeIndex];
-            std::cout << key << " expiryIndex " << expiryIndex << " " << expiry << " termindex " << strikeIndex << " "
-                      << strike << std::endl;
-
-            shiftData.shifts[expiry][strikeIndex] = value - todaysRates[key];
-            scenario.capVolShifts[key.name] = shiftData;
-            inScope = true;
-            break;
-        }
-        default:
-            inScope = false;
-            break;
-        }
-        if (inScope) {
-            scenarioData.data().push_back(scenario);
+            case RiskFactorKey::KeyType::IndexCurve: {
+                curveShiftData(fullRevalScenario.indexCurveShifts, key, shift,
+                               sensitivityData->indexCurveShiftData()[key.name]->shiftTenors);
+                curveShiftData(scenario.indexCurveShifts, key, shift,
+                               sensitivityData->indexCurveShiftData()[key.name]->shiftTenors);
+                inScope = true;
+                break;
+            }
+            case RiskFactorKey::KeyType::SurvivalProbability: {
+                curveShiftData(fullRevalScenario.survivalProbabilityShifts, key, shift,
+                               sensitivityData->creditCurveShiftData()[key.name]->shiftTenors);
+                curveShiftData(scenario.survivalProbabilityShifts, key, shift,
+                               sensitivityData->creditCurveShiftData()[key.name]->shiftTenors);
+                inScope = true;
+                break;
+            }
+            case RiskFactorKey::KeyType::RecoveryRate: {
+                fullRevalScenario.recoveryRateShifts[key.name] = spotShiftData(key, shift);
+                scenario.recoveryRateShifts[key.name] = spotShiftData(key, shift);
+                inScope = true;
+                break;
+            }
+            case RiskFactorKey::KeyType::EquitySpot: {
+                fullRevalScenario.equityShifts[key.name] = spotShiftData(key, shift);
+                scenario.equityShifts[key.name] = spotShiftData(key, shift);
+                inScope = true;
+                break;
+            }
+            case RiskFactorKey::KeyType::FXSpot: {
+                fullRevalScenario.fxShifts[key.name] = spotShiftData(key, shift);
+                scenario.fxShifts[key.name] = spotShiftData(key, shift);
+                inScope = true;
+                break;
+            }
+            case RiskFactorKey::KeyType::EquityVolatility: {                
+                volShiftData(fullRevalScenario.equityVolShifts,key, shift, simParameters->equityVolExpiries(key.name));
+                volShiftData(scenario.equityVolShifts, key, shift, simParameters->equityVolExpiries(key.name));
+                inScope = true;
+                break;
+            }
+            case RiskFactorKey::KeyType::FXVolatility: {
+                volShiftData(fullRevalScenario.fxVolShifts, key, shift, simParameters->fxVolExpiries(key.name));
+                volShiftData(scenario.fxVolShifts, key, shift, simParameters->fxVolExpiries(key.name));
+                inScope = true;
+                break;
+            }
+            case RiskFactorKey::KeyType::SwaptionVolatility: {
+                swaptionVolShiftData(fullRevalScenario.swaptionVolShifts, key, shift, simParameters);
+                swaptionVolShiftData(scenario.swaptionVolShifts, key, shift, simParameters);
+                inScope = true;
+                break;
+            }
+            case RiskFactorKey::KeyType::OptionletVolatility: {
+                capFloorVolShiftData(fullRevalScenario.capVolShifts, key, shift, simParameters);
+                capFloorVolShiftData(scenario.capVolShifts, key, shift, simParameters);
+                inScope = true;
+                break;
+            }
+            default:
+                inScope = false;
+                break;
+            }
+            if (inScope) {
+                scenarioData->data().push_back(scenario);
+            }
         }
     }
-    CONSOLEW("XVA_EXPLAIN: Export generated Stresstestfile");
-    scenarioData.toFile("xvaExplainStress.xml");
+    scenarioData->data().push_back(fullRevalScenario);
+    CONSOLE("OK");
+    scenarioData->toFile("xvaExplainStress.xml");
+    CONSOLEW("XVA_EXPLAIN: Convert Stresstest to zero domain");
+    ParStressTestConverter converter(
+        analytic()->configurations().asofDate, analytic()->configurations().todaysMarketParams,
+        analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
+        analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
+    auto zeroScenarioData = converter.convertStressScenarioData(scenarioData);
+    CONSOLE("OK");
+    zeroScenarioData->toFile("xvaExplainZeroStress.xml");
+
+    
+
+
+
+    auto stressAnalytic = QuantLib::ext::make_shared<XvaStressAnalytic>(inputs_, zeroScenarioData);
+
+    stressAnalytic->configurations().asofDate = inputs_->asof();
+    stressAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    stressAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+    //stressTestAnalytic->runAnalytic(loader);
+
+
+
 }
 
 XvaExplainAnalytic::XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<XvaExplainAnalyticImpl>(inputs), {"XVA_STRESS"}, inputs, true, false, false, false) {
-    impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
+    : Analytic(std::make_unique<XvaExplainAnalyticImpl>(inputs), {"XVA_EXPLAIN"}, inputs, true, false, false, false) {
 }
 
 std::vector<QuantLib::Date> XvaExplainAnalyticImpl::additionalMarketDates() const {
