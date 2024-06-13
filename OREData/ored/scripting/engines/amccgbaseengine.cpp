@@ -184,8 +184,7 @@ void AmcCgBaseEngine::buildComputationGraph() const {
             }
         }
 
-        if (pathValueUndDirtyContribution.size() > 1)
-            pathValueUndDirty = cg_add(g, pathValueUndDirtyContribution);
+        pathValueUndDirty = cg_add(g, pathValueUndDirtyContribution);
 
         g.setVariable("_AMC_NPV_" + std::to_string(i), pathValueUndDirty);
     }
@@ -198,8 +197,7 @@ void AmcCgBaseEngine::buildComputationGraph() const {
             pathValueUndDirtyContribution.push_back(cashflowInfo[i].flowNode);
     }
 
-    if (pathValueUndDirtyContribution.size() > 1)
-        pathValueUndDirty = cg_add(g, pathValueUndDirtyContribution);
+    pathValueUndDirty = cg_add(g, pathValueUndDirtyContribution);
 
     g.setVariable(npvName() + "_0", pathValueUndDirty);
 }

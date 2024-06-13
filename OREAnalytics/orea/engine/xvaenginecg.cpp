@@ -421,7 +421,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
 
     if (sensitivityData_) {
 
-        LOG("XvaEngineCG: Calculate sensitivities (bump = " << std::boolalpha << bumpCvaSensis_);
+        LOG("XvaEngineCG: Calculate sensitivities (bump = " << std::boolalpha << bumpCvaSensis_ << ")");
 
         // Do backward derivatives run
 
