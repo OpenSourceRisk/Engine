@@ -41,6 +41,8 @@
 namespace ore {
 namespace data {
 
+using namespace QuantLib;
+
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                                  const std::vector<QuantLib::Date>& simulationDates)
     : modelCg_(modelCg), simulationDates_(simulationDates) {
@@ -61,7 +63,7 @@ Real AmcCgBaseEngine::time(const Date& d) const {
     return QuantLib::ActualActual(QuantLib::ActualActual::ISDA).yearFraction(modelCg_->referenceDate(), d);
 }
 
-AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<CashFlow> flow,
+AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow,
                                                                   const std::string& payCcy, bool payer, Size legNo,
                                                                   Size cfNo) const {
 
