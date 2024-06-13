@@ -28,10 +28,7 @@
 namespace ore {
 namespace data {
 
-void AmcCgSwapEngine::buildComputationGraph() const {
-    calculate();
-    AmcCgBaseEngine::buildComputationGraph();
-}
+void AmcCgSwapEngine::buildComputationGraph() const { AmcCgBaseEngine::buildComputationGraph(); }
 
 void AmcCgSwapEngine::calculate() const {
     leg_ = arguments_.legs;

@@ -203,6 +203,9 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
         QL_REQUIRE(engine,
                    "XvaEngineCG: expected to get AmcCgPricingEngine, trade '" << id << "' has a different engine.");
         g->startRedBlock();
+        // trigger setupArguments
+        if (!trade->instrument()->qlInstrument()->isCalculated())
+            trade->instrument()->qlInstrument()->recalculate();
         engine->buildComputationGraph();
         std::vector<std::size_t> tmp;
         tmp.push_back(g->variable(engine->npvName() + "_0"));

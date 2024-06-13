@@ -76,6 +76,8 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     info.payCcy = payCcy;
     info.payer = payer;
 
+    Real payMult = payer ? -1.0 : 1.0;
+
     if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow)) {
         QL_REQUIRE(cpn->accrualStartDate() < flow->date(),
                    "AmcCgBaseEngine::createCashflowInfo(): coupon leg "
@@ -90,14 +92,14 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     // handle SimpleCashflow
 
     if (QuantLib::ext::dynamic_pointer_cast<SimpleCashFlow>(flow) != nullptr) {
-        info.flowNode = modelCg_->pay(cg_const(g, flow->amount()), flow->date(), flow->date(), payCcy);
+        info.flowNode = modelCg_->pay(cg_const(g, payMult * flow->amount()), flow->date(), flow->date(), payCcy);
         return info;
     }
 
     // handle the coupon types
 
     if (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(flow) != nullptr) {
-        info.flowNode = modelCg_->pay(cg_const(g, flow->amount()), flow->date(), flow->date(), payCcy);
+        info.flowNode = modelCg_->pay(cg_const(g, payMult * flow->amount()), flow->date(), flow->date(), payCcy);
         return info;
     }
 
@@ -105,7 +107,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         std::string indexName = IndexNameTranslator::instance().oreName(ibor->index()->name());
         Date obsDate = ibor->fixingDate();
         info.flowNode = modelCg_->pay(
-            cg_mult(g, cg_const(g, ibor->nominal() * ibor->accrualPeriod()),
+            cg_mult(g, cg_const(g, payMult * ibor->nominal() * ibor->accrualPeriod()),
                     cg_add(g,
                            cg_mult(g, cg_const(g, ibor->gearing()), modelCg_->eval(indexName, obsDate, Null<Date>())),
                            cg_const(g, ibor->spread()))),
@@ -160,22 +162,22 @@ void AmcCgBaseEngine::buildComputationGraph() const {
 
         Real t = time(simulationDates_[i]);
 
-        for (Size i = 0; i < cashflowInfo.size(); ++i) {
+        for (Size j = 0; j < cashflowInfo.size(); ++j) {
 
             /* we assume here that exIntoCriterionTime > t implies payTime > t, this must be ensured by the
                createCashflowInfo method */
 
-            if (cfStatus[i] == CfStatus::open) {
-                if (cashflowInfo[i].exIntoCriterionTime > t) {
-                    pathValueUndDirty = cg_add(g, pathValueUndDirty, cashflowInfo[i].flowNode);
-                    cfStatus[i] = CfStatus::done;
-                } else if (cashflowInfo[i].payTime > t - (includeSettlementDateFlows_ ? tinyTime : 0.0)) {
-                    pathValueUndDirty = cg_add(g, pathValueUndDirty, cashflowInfo[i].flowNode);
-                    cfStatus[i] = CfStatus::cached;
+            if (cfStatus[j] == CfStatus::open) {
+                if (cashflowInfo[j].exIntoCriterionTime > t) {
+                    pathValueUndDirty = cg_add(g, pathValueUndDirty, cashflowInfo[j].flowNode);
+                    cfStatus[j] = CfStatus::done;
+                } else if (cashflowInfo[j].payTime > t - (includeSettlementDateFlows_ ? tinyTime : 0.0)) {
+                    pathValueUndDirty = cg_add(g, pathValueUndDirty, cashflowInfo[j].flowNode);
+                    cfStatus[j] = CfStatus::cached;
                 }
-            } else if (cfStatus[i] == CfStatus::cached) {
-                if (cashflowInfo[i].exIntoCriterionTime > t) {
-                    cfStatus[i] = CfStatus::done;
+            } else if (cfStatus[j] == CfStatus::cached) {
+                if (cashflowInfo[j].exIntoCriterionTime > t) {
+                    cfStatus[j] = CfStatus::done;
                 }
             }
         }
