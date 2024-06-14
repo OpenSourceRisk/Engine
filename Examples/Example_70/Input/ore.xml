@@ -44,7 +44,7 @@
       <Parameter name="active">N</Parameter>
       <Parameter name="amc">Y</Parameter>
       <Parameter name="amcTradeTypes">Swap,Swaption,FxOption</Parameter>
-      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation_xva.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
@@ -114,7 +114,7 @@
     </Analytic>
     <Analytic type="xvaStress">
       <Parameter name="active">N</Parameter>
-      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="marketConfigFile">simulation_xva.xml</Parameter>
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity_stress.xml</Parameter>
       <Parameter name="writeCubes">N</Parameter>

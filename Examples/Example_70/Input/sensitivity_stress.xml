@@ -186,7 +186,7 @@
 		</FxSpot>
 	</FxSpots>
 	<SwaptionVolatilities>
-		<SwaptionVolatility ccy="EUR-EURIBOR-6M">
+		<SwaptionVolatility ccy="EUR">
 			<ShiftType>Relative</ShiftType>
 			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
@@ -194,7 +194,7 @@
 			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
 			<ShiftTerms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTerms>
 		</SwaptionVolatility>
-		<SwaptionVolatility ccy="USD-SOFR">
+		<SwaptionVolatility ccy="USD">
 			<ShiftType>Relative</ShiftType>
 			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
