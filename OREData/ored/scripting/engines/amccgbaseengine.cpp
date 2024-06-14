@@ -26,6 +26,14 @@
 #include <ored/utilities/indexnametranslator.hpp>
 
 #include <qle/ad/computationgraph.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
+#include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/subperiodscoupon.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -42,6 +50,7 @@ namespace ore {
 namespace data {
 
 using namespace QuantLib;
+using namespace QuantExt;
 
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                                  const std::vector<QuantLib::Date>& simulationDates)
@@ -92,10 +101,62 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     // handle SimpleCashflow
-
     if (QuantLib::ext::dynamic_pointer_cast<SimpleCashFlow>(flow) != nullptr) {
         info.flowNode = modelCg_->pay(cg_const(g, payMult * flow->amount()), flow->date(), flow->date(), payCcy);
         return info;
+    }
+
+    // handle fx linked fixed cashflow
+    if (auto fxl = QuantLib::ext::dynamic_pointer_cast<FXLinkedCashFlow>(flow)) {
+        Date fxLinkedFixingDate = fxl->fxFixingDate();
+        std::string fxIndex = IndexNameTranslator::instance().oreName(fxl->fxIndex()->name());
+        info.flowNode = modelCg_->pay(
+            cg_mult(g, cg_const(g, fxl->foreignAmount()), modelCg_->eval(fxIndex, fxLinkedFixingDate, Null<Date>())),
+            flow->date(), flow->date(), payCcy);
+        return info;
+    }
+
+    // handle some wrapped coupon types: extract the wrapper info and continue with underlying flow
+    bool isFxLinked = false;
+    bool isFxIndexed = false;
+    std::string fxLinkedIndex;
+    Date fxLinkedFixingDate;
+    Real fxLinkedForeignNominal = Null<Real>();
+
+    // A Coupon could be wrapped in a FxLinkedCoupon or IndexedCoupon but not both at the same time
+    if (auto indexCpn = QuantLib::ext::dynamic_pointer_cast<IndexedCoupon>(flow)) {
+        if (auto fxIndex = QuantLib::ext::dynamic_pointer_cast<FxIndex>(indexCpn->index())) {
+            isFxIndexed = true;
+            fxLinkedFixingDate = indexCpn->fixingDate();
+            fxLinkedIndex = IndexNameTranslator::instance().oreName(fxIndex->name());
+            flow = indexCpn->underlying();
+        }
+    } else if (auto fxl = QuantLib::ext::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(flow)) {
+        isFxLinked = true;
+        fxLinkedFixingDate = fxl->fxFixingDate();
+        fxLinkedIndex = IndexNameTranslator::instance().oreName(fxl->fxIndex()->name());
+        flow = fxl->underlying();
+        fxLinkedForeignNominal = fxl->foreignAmount();
+    }
+
+    std::size_t fxLinkedNode = ComputationGraph::nan;
+    if(isFxLinked || isFxIndexed) {
+        fxLinkedNode = modelCg_->eval(fxLinkedIndex, fxLinkedFixingDate, Null<Date>());
+    }
+
+    bool isCapFloored = false;
+    bool isNakedOption = false;
+    Real effCap = Null<Real>(), effFloor = Null<Real>();
+    if (auto stripped = QuantLib::ext::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow)) {
+        isNakedOption = true;
+        flow = stripped->underlying(); // this is a CappedFlooredCoupon, handled below
+    }
+
+    if (auto cf = QuantLib::ext::dynamic_pointer_cast<CappedFlooredCoupon>(flow)) {
+        isCapFloored = true;
+        effCap = cf->effectiveCap();
+        effFloor = cf->effectiveFloor();
+        flow = cf->underlying();
     }
 
     // handle the coupon types
@@ -107,13 +168,47 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 
     if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(flow)) {
         std::string indexName = IndexNameTranslator::instance().oreName(ibor->index()->name());
-        Date obsDate = ibor->fixingDate();
+        std::size_t fixing = modelCg_->eval(indexName, ibor->fixingDate(), Null<Date>());
+
+        std::size_t effectiveRate;
+        if (isCapFloored) {
+            std::size_t swapletRate = ComputationGraph::nan;
+            std::size_t floorletRate = ComputationGraph::nan;
+            std::size_t capletRate = ComputationGraph::nan;
+            if (!isNakedOption)
+                swapletRate = cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), fixing), cg_const(g, ibor->spread()));
+            if (effFloor != Null<Real>())
+                floorletRate = cg_mult(g, cg_const(g, ibor->gearing()),
+                                       cg_max(g, cg_subtract(g, cg_const(g, effFloor), fixing), cg_const(g, 0.0)));
+            if (effCap != Null<Real>())
+                capletRate = cg_mult(g, cg_const(g, ibor->gearing()),
+                                     cg_max(g, cg_subtract(g, fixing, cg_const(g, effCap)), cg_const(g, 0.0)));
+            if (isNakedOption && effFloor == Null<Real>()) {
+                capletRate = cg_mult(g, capletRate, cg_const(g, -1.0));
+            }
+            effectiveRate = swapletRate;
+            if (floorletRate != ComputationGraph::nan)
+                effectiveRate = cg_add(g, effectiveRate, floorletRate);
+            if (capletRate != ComputationGraph::nan) {
+                if (isNakedOption && effFloor == Null<Real>()) {
+                    effectiveRate = cg_subtract(g, effectiveRate, capletRate);
+                } else {
+                    effectiveRate = cg_add(g, effectiveRate, capletRate);
+                }
+            }
+        } else {
+            effectiveRate = cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), fixing), cg_const(g, ibor->spread()));
+        }
+
         info.flowNode = modelCg_->pay(
-            cg_mult(g, cg_const(g, payMult * ibor->nominal() * ibor->accrualPeriod()),
-                    cg_add(g,
-                           cg_mult(g, cg_const(g, ibor->gearing()), modelCg_->eval(indexName, obsDate, Null<Date>())),
-                           cg_const(g, ibor->spread()))),
-            obsDate, flow->date(), payCcy);
+            cg_mult(
+                g,
+                cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) * ibor->accrualPeriod()),
+                cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), effectiveRate), cg_const(g, ibor->spread()))),
+            flow->date(), flow->date(), payCcy);
+        if (isFxLinked || isFxIndexed) {
+            info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
+        }
         return info;
     }
 
