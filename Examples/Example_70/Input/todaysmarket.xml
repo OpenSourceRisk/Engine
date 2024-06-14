@@ -88,8 +88,8 @@
     <FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
   </FxVolatilities>
   <SwaptionVolatilities id="default">
-    <SwaptionVolatility key="EUR-EURIBOR-6M">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
-    <SwaptionVolatility key="USD-SOFR">SwaptionVolatility/USD-SOFR/USD-SOFR</SwaptionVolatility>
+    <SwaptionVolatility key="EUR">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
+    <SwaptionVolatility key="USD">SwaptionVolatility/USD-SOFR/USD-SOFR</SwaptionVolatility>
   </SwaptionVolatilities>
 
   <DefaultCurves id="default">

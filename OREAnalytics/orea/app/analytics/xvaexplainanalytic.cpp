@@ -44,7 +44,7 @@ void curveShiftData(std::map<std::string, StressTestScenarioData::CurveShiftData
     data[key.name].shifts[key.index] = shift;
 }
 
-void volShiftData(std::map<std::string, StressTestScenarioData::VolShiftData> volData, const RiskFactorKey& key, double shift, const std::vector<QuantLib::Period>& tenors) {
+void volShiftData(std::map<std::string, StressTestScenarioData::VolShiftData>& volData, const RiskFactorKey& key, double shift, const std::vector<QuantLib::Period>& tenors) {
     if (volData.count(key.name) == 0) {
         StressTestScenarioData::VolShiftData shiftData;
         shiftData.shiftType = ShiftType::Absolute;
@@ -55,12 +55,12 @@ void volShiftData(std::map<std::string, StressTestScenarioData::VolShiftData> vo
     volData[key.name].shifts[key.index] = shift;
 }
 
-void swaptionVolShiftData(std::map<std::string, StressTestScenarioData::SwaptionVolShiftData> volData,
+void swaptionVolShiftData(std::map<std::string, StressTestScenarioData::SwaptionVolShiftData>& volData,
                           const RiskFactorKey& key, double shift, const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
     
     if(volData.count(key.name) == 0){
-
         StressTestScenarioData::SwaptionVolShiftData shiftData;
+
         shiftData.shiftType = ShiftType::Absolute;
         shiftData.shiftExpiries = simParameters->swapVolExpiries(key.name);
         shiftData.shiftTerms = simParameters->swapVolTerms(key.name);
@@ -72,16 +72,15 @@ void swaptionVolShiftData(std::map<std::string, StressTestScenarioData::Swaption
         volData[key.name] = shiftData;
     }
     auto& shiftData = volData[key.name];
+
     size_t expiryIndex = key.index / shiftData.shiftTerms.size();
     size_t termIndex = key.index % shiftData.shiftTerms.size();
     auto expiry = shiftData.shiftExpiries[expiryIndex];
     auto term = shiftData.shiftTerms[termIndex];
-    //    std::cout << key << " expiryIndex " << expiryIndex << " " << expiry << " termindex " << termIndex << " " << term
-    //          << std::endl;
     shiftData.shifts[std::make_pair(expiry, term)] = shift;
 }
 
-void capFloorVolShiftData(std::map<std::string, StressTestScenarioData::CapFloorVolShiftData> volData,
+void capFloorVolShiftData(std::map<std::string, StressTestScenarioData::CapFloorVolShiftData>& volData,
                           const RiskFactorKey& key, double shift,
                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
     if (volData.count(key.name) == 0) {
@@ -95,15 +94,14 @@ void capFloorVolShiftData(std::map<std::string, StressTestScenarioData::CapFloor
         }
         volData[key.name] = shiftData;
     }
-    auto& shiftData = volData[key.name];
-    size_t expiryIndex = key.index / shiftData.shiftStrikes.size();
-    size_t strikeIndex = key.index % shiftData.shiftStrikes.size();
-    auto expiry = shiftData.shiftExpiries[expiryIndex];
+    size_t expiryIndex = key.index / volData[key.name].shiftStrikes.size();
+    size_t strikeIndex = key.index % volData[key.name].shiftStrikes.size();
+    auto expiry = volData[key.name].shiftExpiries[expiryIndex];
     // auto strike = shiftData.shiftStrikes[strikeIndex];
     // std::cout << key << " expiryIndex " << expiryIndex << " " << expiry << " termindex " << strikeIndex << " " <<
     // strike
     //           << std::endl;
-    shiftData.shifts[expiry][strikeIndex] = shift;
+    volData[key.name].shifts[expiry][strikeIndex] = shift;
 }
 
 StressTestScenarioData::SpotShiftData
@@ -291,10 +289,11 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     stressAnalytic->configurations().asofDate = inputs_->asof();
     stressAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
     stressAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
-    //stressTestAnalytic->runAnalytic(loader);
+    stressAnalytic->runAnalytic(loader);
 
+    auto xvaReport = stressAnalytic->reports()["XVA_STRESS"]["xva"];
 
-
+    analytic()->reports()[label()]["xvaExplain_details"] = xvaReport;
 }
 
 XvaExplainAnalytic::XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
