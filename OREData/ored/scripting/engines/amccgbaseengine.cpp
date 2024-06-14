@@ -278,20 +278,20 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     if (auto cfon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(flow)) {
-        std::string indexName = IndexNameTranslator::instance().oreName(cfon->index()->name());
-        QL_REQUIRE(cfon->lookback().units() == QuantLib::Days,
+        auto on = cfon->underlying();
+        std::string indexName = IndexNameTranslator::instance().oreName(on->index()->name());
+        QL_REQUIRE(on->lookback().units() == QuantLib::Days,
                    "AmcCgBaseEngine::createCashflowInfo(): cfon coupon has lookback with units != Days ("
-                       << cfon->lookback() << "), this is not allowed.");
+                       << on->lookback() << "), this is not allowed.");
         std::size_t fixing = modelCg_->fwdCompAvg(
-            false, indexName, cfon->valueDates().front(), cfon->valueDates().front(), cfon->valueDates().back(),
-            cfon->spread(), cfon->gearing(), cfon->lookback().length(), cfon->rateCutoff(), cfon->fixingDays(),
-            cfon->includeSpread(), cfon->cap(), cfon->floor(), cfon->nakedOption(), cfon->localCapFloor());
-        info.flowNode =
-            modelCg_->pay(cg_mult(g,
-                                  cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : cfon->nominal()) *
-                                                  cfon->accrualPeriod()),
-                                  fixing),
-                          flow->date(), flow->date(), payCcy);
+            false, indexName, on->valueDates().front(), on->valueDates().front(), on->valueDates().back(), on->spread(),
+            on->gearing(), on->lookback().length(), on->rateCutoff(), on->fixingDays(), on->includeSpread(),
+            cfon->cap(), cfon->floor(), cfon->nakedOption(), cfon->localCapFloor());
+        info.flowNode = modelCg_->pay(
+            cg_mult(g,
+                    cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : on->nominal()) * on->accrualPeriod()),
+                    fixing),
+            flow->date(), flow->date(), payCcy);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -303,10 +303,10 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         QL_REQUIRE(av->lookback().units() == QuantLib::Days,
                    "AmcCgBaseEngine::createCashflowInfo(): av coupon has lookback with units != Days ("
                        << av->lookback() << "), this is not allowed.");
-        std::size_t fixing = modelCg_->fwdCompAvg(false, indexName, av->valueDates().front(), av->valueDates().front(),
-                                                  av->valueDates().back(), av->spread(), av->gearing(),
-                                                  av->lookback().length(), av->rateCutoff(), av->fixingDays(),
-                                                  av->includeSpread(), Null<Real>(), Null<Real>(), false, false);
+        std::size_t fixing =
+            modelCg_->fwdCompAvg(false, indexName, av->valueDates().front(), av->valueDates().front(),
+                                 av->valueDates().back(), av->spread(), av->gearing(), av->lookback().length(),
+                                 av->rateCutoff(), av->fixingDays(), false, Null<Real>(), Null<Real>(), false, false);
         info.flowNode = modelCg_->pay(
             cg_mult(g,
                     cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : av->nominal()) * av->accrualPeriod()),
@@ -319,18 +319,97 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     }
 
     if (auto cfav = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(flow)) {
-        std::string indexName = IndexNameTranslator::instance().oreName(cfav->index()->name());
-        QL_REQUIRE(cfav->lookback().units() == QuantLib::Days,
+        auto av = cfav->underlying();
+        std::string indexName = IndexNameTranslator::instance().oreName(av->index()->name());
+        QL_REQUIRE(av->lookback().units() == QuantLib::Days,
                    "AmcCgBaseEngine::createCashflowInfo(): cfon coupon has lookback with units != Days ("
-                       << cfav->lookback() << "), this is not allowed.");
+                       << av->lookback() << "), this is not allowed.");
         std::size_t fixing = modelCg_->fwdCompAvg(
-            false, indexName, cfav->valueDates().front(), cfav->valueDates().front(), cfav->valueDates().back(), cfav->spread(),
-            cfav->gearing(), cfav->lookback().length(), cfav->rateCutoff(), cfav->fixingDays(), cfav->includeSpread(),
-            cfav->cap(), cfav->floor(), cfav->nakedOption(), cfcfav->localCapFloor());
+            false, indexName, av->valueDates().front(), av->valueDates().front(), av->valueDates().back(), av->spread(),
+            av->gearing(), av->lookback().length(), av->rateCutoff(), av->fixingDays(), cfav->includeSpread(),
+            cfav->cap(), cfav->floor(), cfav->nakedOption(), cfav->localCapFloor());
         info.flowNode = modelCg_->pay(
             cg_mult(g,
-                    cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : cfav->nominal()) * cfav->accrualPeriod()),
+                    cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : av->nominal()) * av->accrualPeriod()),
                     fixing),
+            flow->date(), flow->date(), payCcy);
+        if (isFxLinked || isFxIndexed) {
+            info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
+        }
+        return info;
+    }
+
+    if (auto bma = QuantLib::ext::dynamic_pointer_cast<AverageBMACoupon>(flow)) {
+        std::string indexName = IndexNameTranslator::instance().oreName(bma->index()->name());
+        std::size_t fixing = modelCg_->eval(indexName, bma->fixingDates().front(), Null<Date>());
+        std::size_t effectiveRate =
+            cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), fixing), cg_const(g, bma->spread()));
+        info.flowNode = modelCg_->pay(
+            cg_mult(
+                g, cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : bma->nominal()) * bma->accrualPeriod()),
+                cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), effectiveRate), cg_const(g, bma->spread()))),
+            flow->date(), flow->date(), payCcy);
+        if (isFxLinked || isFxIndexed) {
+            info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
+        }
+        return info;
+    }
+
+    if (auto cfbma = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageBMACoupon>(flow)) {
+        auto bma = cfbma->underlying();
+        std::string indexName = IndexNameTranslator::instance().oreName(bma->index()->name());
+        std::size_t fixing = modelCg_->eval(indexName, bma->fixingDates().front(), Null<Date>());
+
+        effFloor = cfbma->effectiveFloor();
+        effCap = cfbma->effectiveFloor();
+        isNakedOption = cfbma->nakedOption();
+
+        std::size_t effectiveRate;
+        std::size_t swapletRate = ComputationGraph::nan;
+        std::size_t floorletRate = ComputationGraph::nan;
+        std::size_t capletRate = ComputationGraph::nan;
+        if (!isNakedOption)
+            swapletRate = cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), fixing), cg_const(g, bma->spread()));
+        if (effFloor != Null<Real>())
+            floorletRate = cg_mult(g, cg_const(g, bma->gearing()),
+                                   cg_max(g, cg_subtract(g, cg_const(g, effFloor), fixing), cg_const(g, 0.0)));
+        if (effCap != Null<Real>())
+            capletRate = cg_mult(g, cg_const(g, bma->gearing()),
+                                 cg_max(g, cg_subtract(g, fixing, cg_const(g, effCap)), cg_const(g, 0.0)));
+        if (isNakedOption && effFloor == Null<Real>()) {
+            capletRate = cg_mult(g, capletRate, cg_const(g, -1.0));
+        }
+        effectiveRate = swapletRate;
+        if (floorletRate != ComputationGraph::nan)
+            effectiveRate = cg_add(g, effectiveRate, floorletRate);
+        if (capletRate != ComputationGraph::nan) {
+            if (isNakedOption && effFloor == Null<Real>()) {
+                effectiveRate = cg_subtract(g, effectiveRate, capletRate);
+            } else {
+                effectiveRate = cg_add(g, effectiveRate, capletRate);
+            }
+        }
+
+        info.flowNode = modelCg_->pay(
+            cg_mult(
+                g, cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : bma->nominal()) * bma->accrualPeriod()),
+                cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), effectiveRate), cg_const(g, bma->spread()))),
+            flow->date(), flow->date(), payCcy);
+        if (isFxLinked || isFxIndexed) {
+            info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
+        }
+        return info;
+    }
+
+    if (auto sub = QuantLib::ext::dynamic_pointer_cast<SubPeriodsCoupon1>(flow)) {
+        std::string indexName = IndexNameTranslator::instance().oreName(sub->index()->name());
+        std::size_t fixing = modelCg_->eval(indexName, sub->fixingDates().front(), Null<Date>());
+        std::size_t effectiveRate =
+            cg_add(g, cg_mult(g, cg_const(g, sub->gearing()), fixing), cg_const(g, sub->spread()));
+        info.flowNode = modelCg_->pay(
+            cg_mult(
+                g, cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : sub->nominal()) * sub->accrualPeriod()),
+                cg_add(g, cg_mult(g, cg_const(g, sub->gearing()), effectiveRate), cg_const(g, sub->spread()))),
             flow->date(), flow->date(), payCcy);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
