@@ -94,13 +94,6 @@ protected:
     mutable bool conditionalExpectationUseAsset_; // derived from input conditionalExpectationModelState
 
     mutable std::size_t underlyingPathsCgVersion_ = 0;
-
-    // data when paths are injected via the AMCModelCG interface
-    const std::vector<QuantLib::Real>* injectedPathTimes_ = nullptr;
-    const std::vector<std::vector<std::size_t>>* injectedPaths_ = nullptr;
-    const std::vector<bool>* injectedPathIsRelevantTime_;
-    bool injectedPathStickyCloseOutRun_;
-    Size overwriteModelSize_ = Null<Size>();
 };
 
 } // namespace data

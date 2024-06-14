@@ -93,11 +93,7 @@ const Date& GaussianCamCG::referenceDate() const {
 }
 
 Size GaussianCamCG::size() const {
-    if (injectedPathTimes_ == nullptr)
         return ModelCG::size();
-    else {
-        return overwriteModelSize_;
-    }
 }
 
 void GaussianCamCG::performCalculations() const {
