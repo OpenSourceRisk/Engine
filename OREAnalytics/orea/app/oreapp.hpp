@@ -135,7 +135,7 @@ public:
     //! write out parameters
     virtual void writeOutParameters() override{};
 
-private:
+protected:
     QuantLib::ext::shared_ptr<Parameters> params_;
 };
 

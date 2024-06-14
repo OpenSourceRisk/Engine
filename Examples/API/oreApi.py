@@ -211,7 +211,57 @@ class oreApi():
                            bool)
 
 
-        self.setSimpleParameter(data_dict["analytics"], "exposureProfilesByTrade", "xva", params.setExposureProfilesByTrade, bool)        self.setSimpleParameter(data_dict["analytics"], "exposureProfiles", "xva", params.setExposureProfiles, bool)        self.setSimpleParameter(data_dict["analytics"], "quantile", "xva", params.setPfeQuantile, float)        self.setSimpleParameter(data_dict["analytics"], "calculationType", "xva", params.setCollateralCalculationType, str)        self.setSimpleParameter(data_dict["analytics"], "allocationMethod", "xva", params.setExposureAllocationMethod, str)        self.setSimpleParameter(data_dict["analytics"], "marginalAllocationLimit", "xva", params.setMarginalAllocationLimit, float)        self.setSimpleParameter(data_dict["analytics"], "exerciseNextBreak", "xva", params.setExerciseNextBreak, bool)        self.setSimpleParameter(data_dict["analytics"], "cva", "xva", params.setCvaAnalytic, bool)        self.setSimpleParameter(data_dict["analytics"], "dva", "xva", params.setDvaAnalytic, bool)        self.setSimpleParameter(data_dict["analytics"], "fva", "xva", params.setFvaAnalytic, bool)        self.setSimpleParameter(data_dict["analytics"], "colva", "xva", params.setColvaAnalytic, bool)        self.setSimpleParameter(data_dict["analytics"], "collateralFloor", "xva", params.setCollateralFloorAnalytic, bool)        self.setSimpleParameter(data_dict["analytics"], "dim", "xva", params.setDimAnalytic, bool)        self.setSimpleParameter(data_dict["analytics"], "mva", "xva", params.setMvaAnalytic, bool)        self.setSimpleParameter(data_dict["analytics"], "kva", "xva", params.setKvaAnalytic, bool)        self.setSimpleParameter(data_dict["analytics"], "dynamicCredit", "xva", params.setDynamicCredit, bool)        self.setSimpleParameter(data_dict["analytics"], "cvaSensi", "xva", params.setCvaSensi, bool)        self.setSimpleParameter(data_dict["analytics"], "cvaSensiGrid", "xva", params.setCvaSensiGrid, str)        self.setSimpleParameter(data_dict["analytics"], "cvaSensiShiftSize", "xva", params.setCvaSensiShiftSize, float)        self.setSimpleParameter(data_dict["analytics"], "dvaName", "xva", params.setDvaName, str)        self.setUriParameter(data_dict["analytics"], "rawCubeOutputUri", "xva", params.setRawCubeOutput)        self.setUriParameter(data_dict["analytics"], "netCubeOutputUri", "xva", params.setNetCubeOutput)        # FVA variables        self.setSimpleParameter(data_dict["analytics"], "fvaBorrowingCurve", "xva", params.setFvaBorrowingCurve)        self.setSimpleParameter(data_dict["analytics"], "fvaLendingCurve", "xva", params.setFvaLendingCurve)        self.setSimpleParameter(data_dict["analytics"], "flipViewBorrowingCurvePostfix", "xva",                                params.setFlipViewBorrowingCurvePostfix)        self.setSimpleParameter(data_dict["analytics"], "flipViewLendingCurvePostfix", "xva", params.setFlipViewLendingCurvePostfix)        # DIM variables        #  Fill Time series param        self.setUriParameter(data_dict["analytics"], "deterministicInitialMarginUri", "xva", params.setDeterministicInitialMargin)        self.setSimpleParameter(data_dict["analytics"], "dimQuantile", "xva", params.setDimQuantile, float)        self.setSimpleParameter(data_dict["analytics"], "dimHorizonCalendarDays", "xva", params.setDimHorizonCalendarDays, int)        self.setSimpleParameter(data_dict["analytics"], "dimRegressionOrder", "xva", params.setDimRegressionOrder, int)        self.setSimpleParameter(data_dict["analytics"], "dimRegressors", "xva", params.setDimRegressors, str)        self.setSimpleParameter(data_dict["analytics"], "dimOutputGridPoints", "xva", params.setDimOutputGridPoints, str)        self.setSimpleParameter(data_dict["analytics"], "dimOutputNettingSet", "xva", params.setDimOutputNettingSet, str)        self.setSimpleParameter(data_dict["analytics"], "dimLocalRegressionEvaluations", "xva", params.setDimLocalRegressionEvaluations,                           int)        self.setSimpleParameter(data_dict["analytics"], "dimLocalRegressionBandwidth", "xva", params.setDimLocalRegressionBandwidth,                           float)        # KVA Variables        self.setSimpleParameter(data_dict["analytics"], "kvaCapitalDiscountRate", "xva", params.setKvaCapitalDiscountRate, float)        self.setSimpleParameter(data_dict["analytics"], "kvaAlpha", "xva", params.setKvaAlpha, float)        self.setSimpleParameter(data_dict["analytics"], "kvaRegAdjustment", "xva", params.setKvaRegAdjustment, float)        self.setSimpleParameter(data_dict["analytics"], "kvaCapitalHurdle", "xva", params.setKvaCapitalHurdle, float)        self.setSimpleParameter(data_dict["analytics"], "kvaOurPdFloor", "xva", params.setKvaOurPdFloor, float)        self.setSimpleParameter(data_dict["analytics"], "kvaTheirPdFloor", "xva", params.setKvaTheirPdFloor, float)        self.setSimpleParameter(data_dict["analytics"], "kvaOurCvaRiskWeight", "xva", params.setKvaOurCvaRiskWeight, float)        self.setSimpleParameter(data_dict["analytics"], "kvaTheirCvaRiskWeight", "xva", params.setKvaTheirCvaRiskWeight, float)
+        self.setSimpleParameter(data_dict["analytics"], "exposureProfilesByTrade", "xva", params.setExposureProfilesByTrade, bool)
+        self.setSimpleParameter(data_dict["analytics"], "exposureProfiles", "xva", params.setExposureProfiles, bool)
+        self.setSimpleParameter(data_dict["analytics"], "quantile", "xva", params.setPfeQuantile, float)
+        self.setSimpleParameter(data_dict["analytics"], "calculationType", "xva", params.setCollateralCalculationType, str)
+        self.setSimpleParameter(data_dict["analytics"], "allocationMethod", "xva", params.setExposureAllocationMethod, str)
+        self.setSimpleParameter(data_dict["analytics"], "marginalAllocationLimit", "xva", params.setMarginalAllocationLimit, float)
+        self.setSimpleParameter(data_dict["analytics"], "exerciseNextBreak", "xva", params.setExerciseNextBreak, bool)
+        self.setSimpleParameter(data_dict["analytics"], "cva", "xva", params.setCvaAnalytic, bool)
+        self.setSimpleParameter(data_dict["analytics"], "dva", "xva", params.setDvaAnalytic, bool)
+        self.setSimpleParameter(data_dict["analytics"], "fva", "xva", params.setFvaAnalytic, bool)
+        self.setSimpleParameter(data_dict["analytics"], "colva", "xva", params.setColvaAnalytic, bool)
+        self.setSimpleParameter(data_dict["analytics"], "collateralFloor", "xva", params.setCollateralFloorAnalytic, bool)
+        self.setSimpleParameter(data_dict["analytics"], "dim", "xva", params.setDimAnalytic, bool)
+        self.setSimpleParameter(data_dict["analytics"], "mva", "xva", params.setMvaAnalytic, bool)
+        self.setSimpleParameter(data_dict["analytics"], "kva", "xva", params.setKvaAnalytic, bool)
+        self.setSimpleParameter(data_dict["analytics"], "dynamicCredit", "xva", params.setDynamicCredit, bool)
+        self.setSimpleParameter(data_dict["analytics"], "cvaSensi", "xva", params.setCvaSensi, bool)
+        self.setSimpleParameter(data_dict["analytics"], "cvaSensiGrid", "xva", params.setCvaSensiGrid, str)
+        self.setSimpleParameter(data_dict["analytics"], "cvaSensiShiftSize", "xva", params.setCvaSensiShiftSize, float)
+        self.setSimpleParameter(data_dict["analytics"], "dvaName", "xva", params.setDvaName, str)
+        self.setUriParameter(data_dict["analytics"], "rawCubeOutputUri", "xva", params.setRawCubeOutput)
+        self.setUriParameter(data_dict["analytics"], "netCubeOutputUri", "xva", params.setNetCubeOutput)
+
+        # FVA variables
+        self.setSimpleParameter(data_dict["analytics"], "fvaBorrowingCurve", "xva", params.setFvaBorrowingCurve)
+        self.setSimpleParameter(data_dict["analytics"], "fvaLendingCurve", "xva", params.setFvaLendingCurve)
+        self.setSimpleParameter(data_dict["analytics"], "flipViewBorrowingCurvePostfix", "xva",
+                                params.setFlipViewBorrowingCurvePostfix)
+        self.setSimpleParameter(data_dict["analytics"], "flipViewLendingCurvePostfix", "xva", params.setFlipViewLendingCurvePostfix)
+
+        # DIM variables
+        # Fill Time series param
+        self.setUriParameter(data_dict["analytics"], "deterministicInitialMarginUri", "xva", params.setDeterministicInitialMargin)
+        self.setSimpleParameter(data_dict["analytics"], "dimQuantile", "xva", params.setDimQuantile, float)
+        self.setSimpleParameter(data_dict["analytics"], "dimHorizonCalendarDays", "xva", params.setDimHorizonCalendarDays, int)
+        self.setSimpleParameter(data_dict["analytics"], "dimRegressionOrder", "xva", params.setDimRegressionOrder, int)
+        self.setSimpleParameter(data_dict["analytics"], "dimRegressors", "xva", params.setDimRegressors, str)
+        self.setSimpleParameter(data_dict["analytics"], "dimOutputGridPoints", "xva", params.setDimOutputGridPoints, str)
+        self.setSimpleParameter(data_dict["analytics"], "dimOutputNettingSet", "xva", params.setDimOutputNettingSet, str)
+        self.setSimpleParameter(data_dict["analytics"], "dimLocalRegressionEvaluations", "xva", params.setDimLocalRegressionEvaluations, int)
+        self.setSimpleParameter(data_dict["analytics"], "dimLocalRegressionBandwidth", "xva", params.setDimLocalRegressionBandwidth, float)
+
+        # KVA Variables
+        self.setSimpleParameter(data_dict["analytics"], "kvaCapitalDiscountRate", "xva", params.setKvaCapitalDiscountRate, float)
+        self.setSimpleParameter(data_dict["analytics"], "kvaAlpha", "xva", params.setKvaAlpha, float)
+        self.setSimpleParameter(data_dict["analytics"], "kvaRegAdjustment", "xva", params.setKvaRegAdjustment, float)
+        self.setSimpleParameter(data_dict["analytics"], "kvaCapitalHurdle", "xva", params.setKvaCapitalHurdle, float)
+        self.setSimpleParameter(data_dict["analytics"], "kvaOurPdFloor", "xva", params.setKvaOurPdFloor, float)
+        self.setSimpleParameter(data_dict["analytics"], "kvaTheirPdFloor", "xva", params.setKvaTheirPdFloor, float)
+        self.setSimpleParameter(data_dict["analytics"], "kvaOurCvaRiskWeight", "xva", params.setKvaOurCvaRiskWeight, float)
+        self.setSimpleParameter(data_dict["analytics"], "kvaTheirCvaRiskWeight", "xva", params.setKvaTheirCvaRiskWeight, float)
 
         
         # Credit Simulation Variables
@@ -454,8 +504,9 @@ class oreApi():
         ore_app = ore.OREApp(inputParams, logFile, 63, True)
 
         print("Running ORE process...")
+        # try catch error needed (500 error)
         try:
-            ore_app.run(ore.StrVector(market_data), ore.StrVector(fixings_data))  # try catch error needed (500 error)
+            ore_app.run(ore.StrVector(market_data), ore.StrVector(fixings_data))  
         except Exception as e:
             error_message = "Internal server error from ore app failing"
             error = str(e.args[0])
