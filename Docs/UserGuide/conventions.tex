@@ -474,6 +474,8 @@ structure of this node is shown in Listing \ref{lst:fx_conventions}.
   <PointsFactor> </PointsFactor>
   <AdvanceCalendar> </AdvanceCalendar>
   <SpotRelative> </SpotRelative>
+  <EOM> </EOM>
+  <Convention> </Convention>
 </FX>
 \end{minted}
 \caption{FX conventions}
@@ -494,6 +496,8 @@ not provided, it defaults to a calendar with no holidays.
 \item SpotRelative [Optional]: \emph{True} if the forward tenor is to be interpreted as being relative to the spot date.
 \emph{False} if the forward tenor is to be interpreted as being relative to the valuation date. If not provided, it
 defaults to \emph{True}.
+\item EOM [Optional]: A flag indicating whether the end of month roll convention is to be used for FX forward quotes. If not provided, it defaults to \emph{False}.
+\item Convention [Optional]: The business day convention used when advancing dates. If not provided, it defaults to \emph{Following}.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
