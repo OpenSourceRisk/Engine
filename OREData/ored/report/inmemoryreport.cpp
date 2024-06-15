@@ -26,6 +26,7 @@
 #include <boost/serialization/variant.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
+#include <boost/filesystem.hpp>
 
 #include <fstream>
 
@@ -46,7 +47,7 @@ Report& InMemoryReport::next() {
                                                                       << boost::join(headers_, ","));
     i_ = 0;
     if (bufferSize_ && data_[0].size() == bufferSize_ && !headers_.empty()) {
-        std::string s = std::tmpnam(nullptr);
+        std::string s = boost::filesystem::unique_path().string();
         std::ofstream os(s.c_str(), std::ios::binary);
         boost::archive::binary_oarchive oa(os, boost::archive::no_header);
         for (Size i = 0; i < headers_.size(); i++) {
