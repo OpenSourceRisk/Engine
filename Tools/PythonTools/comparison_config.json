@@ -464,6 +464,7 @@
             "names": [
               "NPV",
               "NpvCcy",
+              "SD",
               "delta",
               "d",
               "MF",
@@ -471,6 +472,8 @@
               "S",
               "E",
               "T",
+              "CurrentPrice1",
+              "CurrentPrice2",
               "NumNominalFlows",
               "Price",
               "Strike"
