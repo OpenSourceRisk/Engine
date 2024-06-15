@@ -464,7 +464,6 @@
             "names": [
               "NPV",
               "NpvCcy",
-              "CurrentNotional",
               "delta",
               "d",
               "MF",
