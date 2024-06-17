@@ -222,17 +222,18 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
 
 Date BondSpreadImply::checkForwardBond(const std::string& securityId) {
 
-    // forward bonds shall have a security id of type isin_expiry
+    // forward bonds shall have a security id of type isin_FWDEXP_expiry
     vector<string> tokens;
     boost::split(tokens, securityId, boost::is_any_of("_"));
 
-    QL_REQUIRE(tokens.size() <= 2, "unexpected number of elements");
+    //QL_REQUIRE(tokens.size() <= 2, "unexpected number of elements");
 
     // string id = tokens[0];
     Date expiry = Date();
-    if (tokens.size() == 2)
-        expiry = parseDate(tokens[1]);
-
+    if (tokens.size() == 3){
+        if(tokens[2] == "FWDEXP")
+            expiry = parseDate(tokens[2]);
+    }
     return expiry;
 }
 
