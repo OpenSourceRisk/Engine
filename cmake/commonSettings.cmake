@@ -197,16 +197,6 @@ if(NOT Boost_USE_STATIC_LIBS)
     add_definitions(-DBOOST_ALL_DYN_LINK)
     add_definitions(-DBOOST_TEST_DYN_LINK)
 endif()
-
-# Use Boost Release/Debug
-if(CMAKE_BUILD_TYPE MATCHES Release)
-    set(Boost_USE_DEBUG_LIBS        OFF)
-    set(Boost_USE_RELEASE_LIBS       ON)
-elseif(CMAKE_BUILD_TYPE MATCHES Debug)
-    set(Boost_USE_DEBUG_LIBS         ON)
-    set(Boost_USE_RELEASE_LIBS      OFF)
-endif()
-
 # Boost end #
 
 # workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111
