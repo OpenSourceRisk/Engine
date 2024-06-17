@@ -546,7 +546,7 @@
 	</YieldCurves>
 	<DefaultCurves>
 		<DefaultCurve>
-			<CurveId>Underlying1</CurveId>
+			<CurveId>BANK</CurveId>
 			<CurveDescription/>
 			<Currency>USD</Currency>
 			<Configurations>
@@ -554,13 +554,40 @@
 					<Type>SpreadCDS</Type>
 					<DiscountCurve>Yield/USD/USD-SOFR</DiscountCurve>
 					<DayCounter>Actual/365 (Fixed)</DayCounter>
-					<RecoveryRate>RECOVERY_RATE/RATE/Underlying1/SNRFOR/USD</RecoveryRate>
+					<RecoveryRate>RECOVERY_RATE/RATE/BANK/SNRFOR/USD</RecoveryRate>
 					<Quotes>
-						<Quote>CDS/CREDIT_SPREAD/Underlying1/SNRFOR/USD/*</Quote>
+						<Quote>CDS/CREDIT_SPREAD/BANK/SNRFOR/USD/*</Quote>
 					</Quotes>
 					<Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
 					<Extrapolation>true</Extrapolation>
-					<StartDate>2018-09-20</StartDate>
+					<BootstrapConfig>
+						<Accuracy>0.0000000000010000</Accuracy>
+						<GlobalAccuracy>0.0000000000010000</GlobalAccuracy>
+						<DontThrow>true</DontThrow>
+						<MaxAttempts>10</MaxAttempts>
+						<MaxFactor>1</MaxFactor>
+						<MinFactor>2</MinFactor>
+						<DontThrowSteps>5</DontThrowSteps>
+					</BootstrapConfig>
+					<AllowNegativeRates>false</AllowNegativeRates>
+				</Configuration>
+			</Configurations>
+		</DefaultCurve>
+		<DefaultCurve>
+			<CurveId>CPTY_A</CurveId>
+			<CurveDescription/>
+			<Currency>USD</Currency>
+			<Configurations>
+				<Configuration priority="0">
+					<Type>SpreadCDS</Type>
+					<DiscountCurve>Yield/USD/USD-SOFR</DiscountCurve>
+					<DayCounter>Actual/365 (Fixed)</DayCounter>
+					<RecoveryRate>RECOVERY_RATE/RATE/CPTY_A/SNRFOR/USD</RecoveryRate>
+					<Quotes>
+						<Quote>CDS/CREDIT_SPREAD/CPTY_A/SNRFOR/USD/*</Quote>
+					</Quotes>
+					<Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+					<Extrapolation>true</Extrapolation>
 					<BootstrapConfig>
 						<Accuracy>0.0000000000010000</Accuracy>
 						<GlobalAccuracy>0.0000000000010000</GlobalAccuracy>

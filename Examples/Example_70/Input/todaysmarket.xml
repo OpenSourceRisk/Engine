@@ -93,8 +93,8 @@
   </SwaptionVolatilities>
 
   <DefaultCurves id="default">
-    <DefaultCurve name="BANK">Default/USD/Underlying1</DefaultCurve>
-    <DefaultCurve name="CPTY_A">Default/USD/Underlying1</DefaultCurve>
+    <DefaultCurve name="BANK">Default/USD/BANK</DefaultCurve>
+    <DefaultCurve name="CPTY_A">Default/USD/CPTY_A</DefaultCurve>
   </DefaultCurves>
 </TodaysMarket>
 
