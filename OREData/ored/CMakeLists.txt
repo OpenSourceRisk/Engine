@@ -339,7 +339,6 @@ scripting/models/fdblackscholesbase.cpp
 scripting/models/fdgaussiancam.cpp
 scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
-scripting/models/hwcg.cpp
 scripting/models/lgmcg.cpp
 scripting/models/localvol.cpp
 scripting/models/modelcg.cpp
@@ -746,7 +745,6 @@ scripting/models/fdblackscholesbase.hpp
 scripting/models/fdgaussiancam.hpp
 scripting/models/gaussiancam.hpp
 scripting/models/gaussiancamcg.hpp
-scripting/models/hwcg.hpp
 scripting/models/lgmcg.hpp
 scripting/models/localvol.hpp
 scripting/models/model.hpp
