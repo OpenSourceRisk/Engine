@@ -19,8 +19,9 @@
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/parscenarioanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
-#include <orea/app/analytics/xvastressanalytic.hpp>
 #include <orea/app/analytics/xvaexplainanalytic.hpp>
+#include <orea/app/analytics/xvastressanalytic.hpp>
+#include <orea/app/reportwriter.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/cube_io.hpp>
@@ -110,6 +111,42 @@ spotShiftData(const RiskFactorKey& key, double shift) {
     shiftData.shiftType = ShiftType::Absolute;
     shiftData.shiftSize = shift;
     return shiftData;
+}
+
+XvaExplainResults::XvaExplainResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaReport) {
+    size_t tradeIdColumn = xvaReport->columnPosition("TradeId");
+    size_t nettingSetIdColumn = xvaReport->columnPosition("TradeId");
+    size_t scenarioIdColumn = xvaReport->columnPosition("Scenario");
+    size_t cvaColumn = xvaReport->columnPosition("CVA");
+    for (size_t i = 0; i < xvaReport->rows(); ++i) {
+
+        const std::string& scenario = boost::get<std::string>(xvaReport->data(scenarioIdColumn)[i]);
+
+        const std::string& tradeId = boost::get<std::string>(xvaReport->data(tradeIdColumn)[i]);
+
+        const std::string& nettingset = boost::get<std::string>(xvaReport->data(nettingSetIdColumn)[i]);
+
+        const double cva = boost::get<double>(xvaReport->data(cvaColumn)[i]);
+
+        const auto key = XvaReportKey{tradeId, nettingset};
+        if (scenario != "BASE" && scenario != "t1") {
+            try {
+                auto rfKey = parseRiskFactorKey(scenario);
+                fullRevalScenarioCva_[rfKey][key] = cva;
+            } catch (const std::exception& e) {
+                StructuredAnalyticsErrorMessage("XvaExplain", "Unexpected RiskFactor",
+                                                scenario + "is not a valid riskfactor, skip it in xva explain report");
+            }
+        } else if (scenario == "BASE") {
+            baseCvaData_[key] = cva;
+        } else {
+            fullRevalCva_[key] = cva;
+        }
+    }
+}
+
+bool operator<(const XvaExplainResults::XvaReportKey& a, const XvaExplainResults::XvaReportKey& b) {
+    return std::tie(a.tradeId, a.nettingSet) < std::tie(b.tradeId, b.nettingSet);
 }
 
 XvaExplainAnalyticImpl::XvaExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
@@ -270,19 +307,15 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     }
     scenarioData->data().push_back(fullRevalScenario);
     CONSOLE("OK");
-    scenarioData->toFile("xvaExplainStress.xml");
+    analytic()->stressTests()[label()]["xvaExplain_parStressTest"] = scenarioData;
     CONSOLEW("XVA_EXPLAIN: Convert Stresstest to zero domain");
     ParStressTestConverter converter(
         analytic()->configurations().asofDate, analytic()->configurations().todaysMarketParams,
         analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
         analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
     auto zeroScenarioData = converter.convertStressScenarioData(scenarioData);
-    CONSOLE("OK");
-    zeroScenarioData->toFile("xvaExplainZeroStress.xml");
 
-    
-
-
+    analytic()->stressTests()[label()]["xvaExplain_zeroStressTest"] = zeroScenarioData;
 
     auto stressAnalytic = QuantLib::ext::make_shared<XvaStressAnalytic>(inputs_, zeroScenarioData);
 
@@ -294,6 +327,17 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     auto xvaReport = stressAnalytic->reports()["XVA_STRESS"]["xva"];
 
     analytic()->reports()[label()]["xvaExplain_details"] = xvaReport;
+
+    XvaExplainResults xvaData(xvaReport);
+
+    // Report Write
+    auto xvaExplainReport = QuantLib::ext::make_shared<InMemoryReport>();
+    ReportWriter(inputs_->reportNaString()).writeXvaExplainReport(*xvaExplainReport, xvaData);
+    analytic()->reports()[label()]["xvaExplain"] = xvaExplainReport;
+
+    
+
+    analytic()->reports()[label()]["xvaExplain_summary"] = reportAgg;
 }
 
 XvaExplainAnalytic::XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)

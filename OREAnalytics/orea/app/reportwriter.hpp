@@ -27,6 +27,7 @@
 #include <map>
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/app/parameters.hpp>
+#include <orea/app/analytics/xvaexplainanalytic.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/sensitivitystream.hpp>
@@ -200,7 +201,7 @@ public:
     virtual void writeIMScheduleTradeReport(const std::map<std::string, std::vector<IMScheduleCalculator::IMScheduleTradeData>>& tradeResults,
                                             const QuantLib::ext::shared_ptr<ore::data::Report> report,
                                             const bool hasNettingSetDetails = false);
-
+                                            
     virtual void writePnlReport(ore::data::Report& report,
 	const ext::shared_ptr<InMemoryReport>& t0NpvReport,
 	const ext::shared_ptr<InMemoryReport>& t0NpvLaggedReport,
@@ -211,6 +212,8 @@ public:
 	const std::string& baseCurrency,
 	const ext::shared_ptr<ore::data::Market>& market, const std::string& configuration,
 	const ext::shared_ptr<Portfolio>& portfolio);
+
+    virtual void writeXvaExplainReport(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData);
 
 protected:
     std::string nullString_;

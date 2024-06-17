@@ -29,6 +29,32 @@
 namespace ore {
 namespace analytics {
 
+class XvaExplainResults {
+
+public:
+    struct XvaReportKey {
+        std::string tradeId;
+        std::string nettingSet;
+    };
+
+    XvaExplainResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaReport);
+
+    const std::map<XvaReportKey, double>& baseCvaData() const {return baseCvaData_;}
+    const std::map<XvaReportKey, double>& fullRevalCva() const {return fullRevalCva_;}
+    const std::map<RiskFactorKey, std::map<XvaReportKey, double>>& fullRevalScenarioCva() const {
+        return fullRevalScenarioCva_;
+    }
+    const std::set<RiskFactorKey::KeyType> keyTypes() const { return keyTypes_; }
+
+private:
+    std::map<XvaReportKey, double> baseCvaData_;
+    std::map<XvaReportKey, double> fullRevalCva_;
+    std::map<RiskFactorKey, std::map<XvaReportKey, double>> fullRevalScenarioCva_;
+    std::set<RiskFactorKey::KeyType> keyTypes_;
+};
+
+bool operator<(const XvaExplainResults::XvaReportKey& lhs, const XvaExplainResults::XvaReportKey& rhs);
+
 //! Explain market implied XVA changes by full revalulation in par rate domain
 //! Time and portfolio effects are excluded by this explain
 class XvaExplainAnalyticImpl : public Analytic::Impl {
@@ -45,10 +71,10 @@ private:
     void runStressTests() const;
 };
 
-class XvaExplainAnalytic : public Analytic {
-public:
-    explicit XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
-};
+    class XvaExplainAnalytic : public Analytic {
+    public:
+        explicit XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
+    };
 
 } // namespace analytics
 } // namespace ore
