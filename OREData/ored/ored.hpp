@@ -368,7 +368,6 @@
 #include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
-#include <ored/scripting/models/hwcg.hpp>
 #include <ored/scripting/models/lgmcg.hpp>
 #include <ored/scripting/models/localvol.hpp>
 #include <ored/scripting/models/model.hpp>
