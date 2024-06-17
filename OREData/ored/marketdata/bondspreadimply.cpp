@@ -226,13 +226,13 @@ Date BondSpreadImply::checkForwardBond(const std::string& securityId) {
     vector<string> tokens;
     boost::split(tokens, securityId, boost::is_any_of("_"));
 
-    //QL_REQUIRE(tokens.size() <= 2, "unexpected number of elements");
-
     // string id = tokens[0];
     Date expiry = Date();
     if (tokens.size() == 3){
-        if(tokens[2] == "FWDEXP")
+        if(tokens[1] == "FWDEXP"){
+            DLOG("BondSpreadImply::checkForwardBond : Forward Bond identified " << securityId);
             expiry = parseDate(tokens[2]);
+        }
     }
     return expiry;
 }
@@ -241,6 +241,7 @@ void BondSpreadImply::modifyToForwardBond(const Date& expiry, BondBuilder::Resul
                                           const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                           const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) {
 
+    DLOG("BondSpreadImply::modifyToForwardBond called for " << bondstructure.securityId);
     auto originalBond = bondstructure.bond;
 
     // truncate legs akin to fwd bond method...
@@ -272,7 +273,6 @@ void BondSpreadImply::modifyToForwardBond(const Date& expiry, BondBuilder::Resul
 
     // store modified bond
     bondstructure.bond = modifiedBond;
-    std::cout << "BondSpreadImply::modifyToForwardBond completed for " << bondstructure.securityId << std::endl;
 }
 
 } // namespace data
