@@ -214,6 +214,7 @@ public:
 	const ext::shared_ptr<Portfolio>& portfolio);
 
     virtual void writeXvaExplainReport(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData);
+    virtual void writeXvaExplainSummary(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData);
 
 protected:
     std::string nullString_;
