@@ -184,9 +184,9 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
             RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, k);
-            Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+            Real shiftedDiscount = std::exp(-shiftedZeros[k] * times[k]);
             if (stressData_->useSpreadedTermStructures()) {
-                Real discount = exp(-zeros[k] * times[k]);
+                Real discount = std::exp(-zeros[k] * times[k]);
                 scenario->add(key, shiftedDiscount / discount);
             } else {
                 scenario->add(key, shiftedDiscount);
@@ -244,9 +244,9 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
             RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, k);
-            Real shiftedSurvivalProbability = exp(-shiftedZeros[k] * times[k]);
+            Real shiftedSurvivalProbability = std::exp(-shiftedZeros[k] * times[k]);
             if (stressData_->useSpreadedTermStructures()) {
-                Real survivalProbability = exp(-zeros[k] * times[k]);
+                Real survivalProbability = std::exp(-zeros[k] * times[k]);
                 scenario->add(key, shiftedSurvivalProbability / survivalProbability);
             } else {
                 scenario->add(key, shiftedSurvivalProbability);
@@ -305,9 +305,9 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
         // store shifted discount curve for this index in the scenario
         for (Size k = 0; k < n_ten; ++k) {
             RiskFactorKey key(RiskFactorKey::KeyType::IndexCurve, indexName, k);
-            Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+            Real shiftedDiscount = std::exp(-shiftedZeros[k] * times[k]);
             if (stressData_->useSpreadedTermStructures()) {
-                Real discount = exp(-zeros[k] * times[k]);
+                Real discount = std::exp(-zeros[k] * times[k]);
                 scenario->add(key, shiftedDiscount / discount);
             } else {
                 scenario->add(key, shiftedDiscount);
@@ -370,9 +370,9 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
             RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, name, k);
-            Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+            Real shiftedDiscount = std::exp(-shiftedZeros[k] * times[k]);
             if (stressData_->useSpreadedTermStructures()) {
-                Real discount = exp(-zeros[k] * times[k]);
+                Real discount = std::exp(-zeros[k] * times[k]);
                 scenario->add(key, shiftedDiscount / discount);
             } else {
                 scenario->add(key, shiftedDiscount);
