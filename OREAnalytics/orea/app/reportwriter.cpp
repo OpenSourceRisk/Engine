@@ -2592,7 +2592,6 @@ void ReportWriter::writeXvaExplainReport(ore::data::Report& report, const ore::a
     }
 }
 
-
 void ReportWriter::writeXvaExplainSummary(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData){
     
     std::map<XvaExplainResults::XvaReportKey, std::map<RiskFactorKey::KeyType, double>> aggData;

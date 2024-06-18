@@ -125,6 +125,10 @@
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity_stress.xml</Parameter>
       <Parameter name="writeCubes">N</Parameter>
+      <Parameter name="shiftThreshold">1e-4</Parameter>
+      <Parameter name="mporDays">1</Parameter>
+      <Parameter name="mporCalendar">EUR</Parameter>
+
     </Analytic>
   </Analytics>
 </ORE>

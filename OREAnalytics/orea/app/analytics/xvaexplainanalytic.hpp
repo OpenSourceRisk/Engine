@@ -67,11 +67,13 @@ public:
     std::vector<QuantLib::Date> additionalMarketDates() const override;
 
 private:
-    void createStressTestData() const;
-    void runStressTests() const;
+    QuantLib::ext::shared_ptr<StressTestScenarioData>
+    createStressTestData(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) const;
+
+    QuantLib::Date mporDate_;
 };
 
-    class XvaExplainAnalytic : public Analytic {
+class XvaExplainAnalytic : public Analytic {
     public:
         explicit XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
     };

@@ -1939,6 +1939,25 @@ void OREAppInputParameters::loadParameters() {
         } else {
             WLOG("xvaExplain scenario data not loaded");
         }
+
+        tmp = params_->get("xvaExplain", "shiftThreshold", false);
+        if(!tmp.empty()){
+            setXvaExplainShiftThreshold(parseReal(tmp));
+        } else{
+            setXvaExplainShiftThreshold(0.0);
+        }
+
+        tmp = params_->get("xvaExplain", "mporDate", false);
+        if (tmp != "")
+            setMporDate(parseDate(tmp));
+
+        tmp = params_->get("xvaExplain", "mporDays", false);
+        if (tmp != "")
+            setMporDays(parseInteger(tmp));
+
+        tmp = params_->get("xvaExplain", "mporCalendar", false);
+        if (tmp != "")
+            setMporCalendar(tmp);
     }
 
     /*************

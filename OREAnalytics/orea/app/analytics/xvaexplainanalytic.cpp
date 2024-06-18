@@ -33,9 +33,9 @@
 namespace ore {
 namespace analytics {
 
-void curveShiftData(std::map<std::string, StressTestScenarioData::CurveShiftData>& data, const RiskFactorKey& key, double shift,
-                    const std::vector<Period>& tenors) {
-    if(data.count(key.name)==0){
+void curveShiftData(std::map<std::string, StressTestScenarioData::CurveShiftData>& data, const RiskFactorKey& key,
+                    double shift, const std::vector<Period>& tenors) {
+    if (data.count(key.name) == 0) {
         StressTestScenarioData::CurveShiftData shiftData;
         shiftData.shiftType = ShiftType::Absolute;
         shiftData.shiftTenors = tenors;
@@ -45,7 +45,8 @@ void curveShiftData(std::map<std::string, StressTestScenarioData::CurveShiftData
     data[key.name].shifts[key.index] = shift;
 }
 
-void volShiftData(std::map<std::string, StressTestScenarioData::VolShiftData>& volData, const RiskFactorKey& key, double shift, const std::vector<QuantLib::Period>& tenors) {
+void volShiftData(std::map<std::string, StressTestScenarioData::VolShiftData>& volData, const RiskFactorKey& key,
+                  double shift, const std::vector<QuantLib::Period>& tenors) {
     if (volData.count(key.name) == 0) {
         StressTestScenarioData::VolShiftData shiftData;
         shiftData.shiftType = ShiftType::Absolute;
@@ -57,9 +58,10 @@ void volShiftData(std::map<std::string, StressTestScenarioData::VolShiftData>& v
 }
 
 void swaptionVolShiftData(std::map<std::string, StressTestScenarioData::SwaptionVolShiftData>& volData,
-                          const RiskFactorKey& key, double shift, const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
-    
-    if(volData.count(key.name) == 0){
+                          const RiskFactorKey& key, double shift,
+                          const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
+
+    if (volData.count(key.name) == 0) {
         StressTestScenarioData::SwaptionVolShiftData shiftData;
 
         shiftData.shiftType = ShiftType::Absolute;
@@ -98,15 +100,10 @@ void capFloorVolShiftData(std::map<std::string, StressTestScenarioData::CapFloor
     size_t expiryIndex = key.index / volData[key.name].shiftStrikes.size();
     size_t strikeIndex = key.index % volData[key.name].shiftStrikes.size();
     auto expiry = volData[key.name].shiftExpiries[expiryIndex];
-    // auto strike = shiftData.shiftStrikes[strikeIndex];
-    // std::cout << key << " expiryIndex " << expiryIndex << " " << expiry << " termindex " << strikeIndex << " " <<
-    // strike
-    //           << std::endl;
     volData[key.name].shifts[expiry][strikeIndex] = shift;
 }
 
-StressTestScenarioData::SpotShiftData
-spotShiftData(const RiskFactorKey& key, double shift) {
+StressTestScenarioData::SpotShiftData spotShiftData(const RiskFactorKey& key, double shift) {
     StressTestScenarioData::SpotShiftData shiftData;
     shiftData.shiftType = ShiftType::Absolute;
     shiftData.shiftSize = shift;
@@ -152,6 +149,11 @@ bool operator<(const XvaExplainResults::XvaReportKey& a, const XvaExplainResults
 XvaExplainAnalyticImpl::XvaExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
     : Analytic::Impl(inputs) {
     setLabel(LABEL);
+    mporDate_ = inputs_->mporDate() != Date()
+                    ? inputs_->mporDate()
+                    : inputs_->mporCalendar().advance(inputs_->asof(), int(inputs_->mporDays()), QuantExt::Days);
+    LOG("ASOF date " << io::iso_date(inputs_->asof()));
+    LOG("MPOR date " << io::iso_date(mporDate_));
 }
 
 void XvaExplainAnalyticImpl::setUpConfigurations() {
@@ -175,6 +177,46 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     analytic()->buildMarket(loader);
     CONSOLE("OK");
 
+    auto scenarioData = createStressTestData(loader);
+
+    analytic()->stressTests()[label()]["xvaExplain_parStressTest"] = scenarioData;
+    
+    CONSOLEW("XVA_EXPLAIN: Convert Stresstest to zero domain");
+    CONSOLE("");
+    ParStressTestConverter converter(
+        analytic()->configurations().asofDate, analytic()->configurations().todaysMarketParams,
+        analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
+        analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
+    auto zeroScenarioData = converter.convertStressScenarioData(scenarioData);
+    analytic()->stressTests()[label()]["xvaExplain_zeroStressTest"] = zeroScenarioData;
+    CONSOLE("OK");
+    
+    auto stressAnalytic = QuantLib::ext::make_shared<XvaStressAnalytic>(inputs_, zeroScenarioData);
+    stressAnalytic->configurations().asofDate = inputs_->asof();
+    stressAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    stressAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+    stressAnalytic->runAnalytic(loader);
+    CONSOLEW("XVA_EXPLAIN: Write Reports");
+    auto xvaReport = stressAnalytic->reports()["XVA_STRESS"]["xva"];
+    analytic()->reports()[label()]["xvaExplain_details"] = xvaReport;
+    XvaExplainResults xvaData(xvaReport);
+
+    auto xvaExplainReport = QuantLib::ext::make_shared<InMemoryReport>();
+    ReportWriter(inputs_->reportNaString()).writeXvaExplainReport(*xvaExplainReport, xvaData);
+    analytic()->reports()[label()]["xvaExplain"] = xvaExplainReport;
+
+    auto xvaExplainSummaryReport = QuantLib::ext::make_shared<InMemoryReport>();
+    ReportWriter(inputs_->reportNaString()).writeXvaExplainSummary(*xvaExplainSummaryReport, xvaData);
+
+    analytic()->reports()[label()]["xvaExplain_summary"] = xvaExplainSummaryReport;
+    CONSOLE("OK");
+}
+
+std::vector<QuantLib::Date> XvaExplainAnalyticImpl::additionalMarketDates() const { return {mporDate_}; }
+
+QuantLib::ext::shared_ptr<StressTestScenarioData>
+XvaExplainAnalyticImpl::createStressTestData(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) const {
+
     CONSOLEW("XVA_EXPLAIN: Compute t0 par rates");
     ParScenarioAnalytic todayParAnalytic(inputs_);
     todayParAnalytic.configurations().asofDate = inputs_->asof();
@@ -187,8 +229,8 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
 
     CONSOLEW("XVA_EXPLAIN: Compute t1 par rates");
     ParScenarioAnalytic mporParAnalytic(inputs_);
-    Settings::instance().evaluationDate() = inputs_->asof() + 1 * Days;
-    mporParAnalytic.configurations().asofDate = inputs_->asof() + 1 * Days;
+    Settings::instance().evaluationDate() = mporDate_;
+    mporParAnalytic.configurations().asofDate = mporDate_;
     mporParAnalytic.configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
     mporParAnalytic.configurations().simMarketParams = analytic()->configurations().simMarketParams;
     mporParAnalytic.configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
@@ -212,9 +254,8 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         QL_REQUIRE(t0Value != todaysRates.end(), "XVAExplain: Mismatch between t0 and mpor riskfactors, can not find "
                                                      << key << " in todays riskfactors");
         double shift = mporValue - t0Value->second;
-        
-        if (std::abs(shift) > 1e-4) {
-            std::cout << key << " " << t0Value->second << " " << mporValue << " " << shift << std::endl;
+
+        if (std::abs(shift) > inputs_->xvaExplainShiftThreshold()) {
             StressTestScenarioData::StressTestData scenario;
             scenario.label = to_string(key);
             scenario.irCurveParShifts = true;
@@ -224,7 +265,7 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
             switch (key.keytype) {
             case RiskFactorKey::KeyType::DiscountCurve: {
                 curveShiftData(scenario.discountCurveShifts, key, shift,
-                                            sensitivityData->discountCurveShiftData()[key.name]->shiftTenors);
+                               sensitivityData->discountCurveShiftData()[key.name]->shiftTenors);
                 curveShiftData(fullRevalScenario.discountCurveShifts, key, shift,
                                sensitivityData->discountCurveShiftData()[key.name]->shiftTenors);
                 inScope = true;
@@ -272,8 +313,8 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
                 inScope = true;
                 break;
             }
-            case RiskFactorKey::KeyType::EquityVolatility: {                
-                volShiftData(fullRevalScenario.equityVolShifts,key, shift, simParameters->equityVolExpiries(key.name));
+            case RiskFactorKey::KeyType::EquityVolatility: {
+                volShiftData(fullRevalScenario.equityVolShifts, key, shift, simParameters->equityVolExpiries(key.name));
                 volShiftData(scenario.equityVolShifts, key, shift, simParameters->equityVolExpiries(key.name));
                 inScope = true;
                 break;
@@ -306,47 +347,11 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         }
     }
     scenarioData->data().push_back(fullRevalScenario);
-    CONSOLE("OK");
-    analytic()->stressTests()[label()]["xvaExplain_parStressTest"] = scenarioData;
-    CONSOLEW("XVA_EXPLAIN: Convert Stresstest to zero domain");
-    ParStressTestConverter converter(
-        analytic()->configurations().asofDate, analytic()->configurations().todaysMarketParams,
-        analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
-        analytic()->configurations().curveConfig, analytic()->market(), inputs_->iborFallbackConfig());
-    auto zeroScenarioData = converter.convertStressScenarioData(scenarioData);
-
-    analytic()->stressTests()[label()]["xvaExplain_zeroStressTest"] = zeroScenarioData;
-
-    auto stressAnalytic = QuantLib::ext::make_shared<XvaStressAnalytic>(inputs_, zeroScenarioData);
-
-    stressAnalytic->configurations().asofDate = inputs_->asof();
-    stressAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
-    stressAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
-    stressAnalytic->runAnalytic(loader);
-
-    auto xvaReport = stressAnalytic->reports()["XVA_STRESS"]["xva"];
-
-    analytic()->reports()[label()]["xvaExplain_details"] = xvaReport;
-
-    XvaExplainResults xvaData(xvaReport);
-
-    // Report Write
-    auto xvaExplainReport = QuantLib::ext::make_shared<InMemoryReport>();
-    ReportWriter(inputs_->reportNaString()).writeXvaExplainReport(*xvaExplainReport, xvaData);
-    analytic()->reports()[label()]["xvaExplain"] = xvaExplainReport;
-
-    
-
-    analytic()->reports()[label()]["xvaExplain_summary"] = reportAgg;
+    return scenarioData;
 }
 
 XvaExplainAnalytic::XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<XvaExplainAnalyticImpl>(inputs), {"XVA_EXPLAIN"}, inputs, true, false, false, false) {
-}
-
-std::vector<QuantLib::Date> XvaExplainAnalyticImpl::additionalMarketDates() const {
-    return {inputs_->asof() + 1 * Days};
-}
+    : Analytic(std::make_unique<XvaExplainAnalyticImpl>(inputs), {"XVA_EXPLAIN"}, inputs, true, false, false, false) {}
 
 } // namespace analytics
 } // namespace ore

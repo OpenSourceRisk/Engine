@@ -340,10 +340,11 @@ public:
     void setXvaExplainSimMarketParamsFromFile(const std::string& f);
     void setXvaExplainSensitivityScenarioData(const std::string& xml);
     void setXvaExplainSensitivityScenarioDataFromFile(const std::string& fileName);
+    void setXvaExplainShiftThreshold(const double threshold) { xvaExplainShiftThreshold_ = threshold; }
 
     // Setters for SIMM
     void setSimmVersion(const std::string& s) { simmVersion_ = s; }
-    
+
     void setCrifFromFile(const std::string& fileName,
                          char eol = '\n', char delim = ',', char quoteChar = '\0', char escapeChar = '\\');
     void setCrifFromBuffer(const std::string& csvBuffer,
@@ -686,10 +687,12 @@ public:
         return xvaExplainSensitivityScenarioData_;
     }
 
+    double xvaExplainShiftThreshold() const { return xvaExplainShiftThreshold_; }
+
     /**************************************************
      * Getters for cashflow npv and dynamic backtesting
      **************************************************/
-    
+
     const QuantLib::Date& cashflowHorizon() const { return cashflowHorizon_; };
     const QuantLib::Date& portfolioFilterDate() const { return portfolioFilterDate_; }    
 
@@ -1095,6 +1098,7 @@ protected:
      *****************/
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaExplainSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaExplainSensitivityScenarioData_;
+    double xvaExplainShiftThreshold_ = 0;
 };
 
 inline const std::string& InputParameters::marketConfig(const std::string& context) {
