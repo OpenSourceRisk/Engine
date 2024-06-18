@@ -75,15 +75,18 @@ void DiscountingCommodityForwardEngine::calculate() const {
 
         // populate cashflow results
         std::vector<CashFlowResults> cashFlowResults;
+        // cf1 floating, cf2 fixed
         CashFlowResults cf1, cf2;
         cf1.payDate = cf2.payDate = arguments_.paymentDate;
-        cf1.type = cf2.type = "Notional";
+        cf1.type = "Notional (units)";
+        cf2.type = "Notional";
         cf1.discountFactor = cf2.discountFactor = paymentDateDiscountFactor / discountCurve_->discount(npvDate);
         cf1.legNumber = 0;
         cf2.legNumber = 1;
+        cf1.fixingDate = cf2.fixingDate = maturity;
+        cf1.fixingValue = forwardPrice;
+        cf2.fixingValue = arguments_.strike;
         if (!arguments_.physicallySettled) {
-            cf1.fixingDate = maturity;
-            cf1.fixingValue = forwardPrice;
             cf1.amount = arguments_.quantity * buySell * forwardPrice * fxRate;
             cf2.amount = arguments_.quantity * buySell * -arguments_.strike * fxRate;
             cf1.currency = cf2.currency =
