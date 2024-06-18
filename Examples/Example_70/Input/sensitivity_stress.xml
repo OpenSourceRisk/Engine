@@ -93,12 +93,12 @@
 			</ParConversion>
 		</IndexCurve>
 	</IndexCurves>
-	
-
-
-
-
 	<FxSpots>
+		<FxSpot ccypair="USDEUR">
+			<ShiftType>Relative</ShiftType>
+			<ShiftSize>0.001</ShiftSize>
+			<ShiftScheme>Central</ShiftScheme>
+		</FxSpot>
 	</FxSpots>
 	<CreditCurves>
 		<CreditCurve name="BANK">
@@ -178,13 +178,7 @@
 		</ParConversion>
 	</YieldCurve>
 	</YieldCurves>
-	<FxSpots>
-		<FxSpot ccypair="USDEUR">
-			<ShiftType>Relative</ShiftType>
-			<ShiftSize>0.001</ShiftSize>
-			<ShiftScheme>Central</ShiftScheme>
-		</FxSpot>
-	</FxSpots>
+	
 	<SwaptionVolatilities>
 		<SwaptionVolatility ccy="EUR">
 			<ShiftType>Relative</ShiftType>

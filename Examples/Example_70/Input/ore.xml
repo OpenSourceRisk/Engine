@@ -128,7 +128,6 @@
       <Parameter name="shiftThreshold">1e-4</Parameter>
       <Parameter name="mporDays">1</Parameter>
       <Parameter name="mporCalendar">EUR</Parameter>
-
     </Analytic>
   </Analytics>
 </ORE>
