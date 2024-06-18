@@ -44,7 +44,8 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
-      <Parameter name="amcCg">Y</Parameter>
+      <!-- CubeGeneration, Full (i.e. incl. PP) -->
+      <Parameter name="amcCg">CubeGeneration</Parameter>
       <Parameter name="xvaCgSensitivityConfigFile">xvasensiconfig.xml</Parameter>
       <Parameter name="amcTradeTypes">Swap</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
