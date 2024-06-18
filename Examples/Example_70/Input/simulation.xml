@@ -205,25 +205,25 @@
 	   vol structure and what its composition will be -->
     <SwaptionVolatilities>
       <Simulate>true</Simulate>
-      <SimulateATMOnly>true</SimulateATMOnly>
-      <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!-- Alternative: ConstantVariance -->
       <Keys>
         <Key>EUR</Key>
         <Key>USD</Key>
       </Keys>
       <Expiries>1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</Expiries>
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</Terms>
+      <SimulateATMOnly>true</SimulateATMOnly>
     </SwaptionVolatilities>
     <FxVolatilities>
       <Simulate>true</Simulate>
-      <SimulateATMOnly>true</SimulateATMOnly>
       <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <CurrencyPairs>
         <CurrencyPair>EURUSD</CurrencyPair>
       </CurrencyPairs>
       <Expiries>1M,3M,6M,1Y,2Y,3Y,5Y,10Y</Expiries>
+      <SimulateATMOnly>true</SimulateATMOnly>
     </FxVolatilities>
     
     <!-- Additional data that is recorded during simulation for later
