@@ -1010,11 +1010,16 @@ Listing \ref{lst:security_configuration} shows the configuration of the Securiti
 \item an optional RecoveryRateQuote. Usually a pricer will fall back on the recovery rate associated to the credit curve
   involved in the pricing if no security specific recovery rate is given. If no credit curve is given either, a zero
   recovery rate will be assumed.
+\item an optional PriceQuote. If the bond spread imply analytics is available, this is used to imply a SpreadQuote to
+  match a given bond price. Notice that if a SpreadQuote is given explicitly in the market data, this will override an
+  implied spread. Also see \ref{example:70}.
 \end{itemize}
 
 If no configuration is given for a security, in general a pricer will assume as zero spread and recovery rate. Notice
 that in this case the spread and recovery will not be simulated and therefore also be excluded from the sensitivity and
 stress analysis.
+
+Note: in case of a forward bond, the convention for security specification requires the format \emph{securityId\_FWDEXP\_expiryDate}.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -1025,6 +1030,7 @@ stress analysis.
     <CurveDescription>Security</CurveDescription>
     <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
     <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
+    <PriceQuote>BOND/PRICE/SECURITY_1</PriceQuote>
   </Security>
 </Securities>
 \end{minted}
