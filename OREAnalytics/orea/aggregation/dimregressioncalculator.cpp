@@ -186,9 +186,9 @@ void RegressionDynamicInitialMarginCalculator::build() {
             }
 
             Size mporCalendarDays = cubeInterpretation_->getMporCalendarDays(cube_, j);
-            Real horizonScaling = sqrt(1.0 * horizonCalendarDays_ / mporCalendarDays);
+            Real horizonScaling = std::sqrt(1.0 * horizonCalendarDays_ / mporCalendarDays);
 
-            Real stdevDiff = sqrt(boost::accumulators::variance(accDiff));
+            Real stdevDiff = std::sqrt(boost::accumulators::variance(accDiff));
             Real E_OneOverNumeraire =
                 mean(accOneOverNumeraire); // "re-discount" (the stdev is calculated on non-discounted deltaNPVs)
 
@@ -269,7 +269,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
                     // 2) In particular the linear regression function can yield negative variance values in
                     //    extreme scenarios where an exact analytical or delta VaR calculation would yield a
                     //    variance approaching zero. We correct this here by taking the positive part.
-                    Real std = sqrt(std::max(e, 0.0));
+                    Real std = std::sqrt(std::max(e, 0.0));
                     Real scalingFactor = horizonScaling * confidenceLevel * nettingSetDimScaling;
                     // Real dim = std * scalingFactor / num1;
                     Real dim = std * scalingFactor / numDefault;
@@ -383,7 +383,7 @@ map<string, Real> RegressionDynamicInitialMarginCalculator::unscaledCurrentDIM()
         }
         Real E_OneOverNumeraire = mean(acc_OneOverNum);
         Real variance_t0 = boost::accumulators::variance(acc_delMtm);
-        Real sqrt_t0 = sqrt(variance_t0);
+        Real sqrt_t0 = std::sqrt(variance_t0);
         t0dimReg[key] = (sqrt_t0 * confidenceLevel * E_OneOverNumeraire);
         std::sort(t0_delMtM_dist.begin(), t0_delMtM_dist.end());
         t0dimSimple[key] = (t0_delMtM_dist[simple_dim_index_h] * E_OneOverNumeraire);
