@@ -2553,8 +2553,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
 
 void ReportWriter::writeXvaExplainReport(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData) {
     try {
-        report
-            .addColumn("RiskFactor", string())
+        report.addColumn("RiskFactor", string())
             .addColumn("TradeId", string())
             .addColumn("NettingSetId", string())
             .addColumn("CVA_Base", double(), 4)
@@ -2588,43 +2587,49 @@ void ReportWriter::writeXvaExplainReport(ore::data::Report& report, const ore::a
             }
         }
     } catch (const std::exception& e) {
-        ALOG("Failed to write xva explain report");
+        ALOG("Failed to write xva explain report, got " << e.what());
     }
 }
 
-void ReportWriter::writeXvaExplainSummary(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData){
-    
-    std::map<XvaExplainResults::XvaReportKey, std::map<RiskFactorKey::KeyType, double>> aggData;
-    
-    for (auto& [rfKey, scenarioValues] : xvaData.fullRevalScenarioCva()) {
-        for (const auto& [key, baseValue] : xvaData.baseCvaData()) {
-            auto it = scenarioValues.find(key);
-            auto scenarioValue = it == scenarioValues.end() ? 0.0 : it->second;
-            auto diff = scenarioValue - baseValue;
-            aggData[key][rfKey.keytype] += diff;
+void ReportWriter::writeXvaExplainSummary(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData) {
+    try {
+        std::map<XvaExplainResults::XvaReportKey, std::map<RiskFactorKey::KeyType, double>> aggData;
+
+        for (auto& [rfKey, scenarioValues] : xvaData.fullRevalScenarioCva()) {
+            for (const auto& [key, baseValue] : xvaData.baseCvaData()) {
+                auto it = scenarioValues.find(key);
+                auto scenarioValue = it == scenarioValues.end() ? 0.0 : it->second;
+                auto diff = scenarioValue - baseValue;
+                aggData[key][rfKey.keytype] += diff;
+            }
         }
-    }
 
-    
-    report.addColumn("TradeId", string())
-        .addColumn("NettingSet", string())
-        .addColumn("CVA_Base", double(), 4)
-        .addColumn("CVA", double(), 4)
-        .addColumn("Change", double(), 4);
+        report.addColumn("TradeId", string())
+            .addColumn("NettingSet", string())
+            .addColumn("CVA_Base", double(), 4)
+            .addColumn("CVA", double(), 4)
+            .addColumn("Change", double(), 4);
 
-    for (const auto& keyType : xvaData.keyTypes()) {
-        report.addColumn(to_string(keyType), double(), 4);
-    }
-
-    // Add full reval report
-    for (const auto& [key, baseValue] : xvaData.baseCvaData()) {
-        report.next();
-        auto it = xvaData.fullRevalCva().find(key);
-        auto scenarioValue = it == xvaData.fullRevalCva().end() ? 0.0 : it->second;
-        report.add(key.tradeId).add(key.nettingSet).add(baseValue).add(scenarioValue).add(scenarioValue - baseValue);
         for (const auto& keyType : xvaData.keyTypes()) {
-            report.add(aggData[key][keyType]);
+            report.addColumn(to_string(keyType), double(), 4);
         }
+
+        // Add full reval report
+        for (const auto& [key, baseValue] : xvaData.baseCvaData()) {
+            report.next();
+            auto it = xvaData.fullRevalCva().find(key);
+            auto scenarioValue = it == xvaData.fullRevalCva().end() ? 0.0 : it->second;
+            report.add(key.tradeId)
+                .add(key.nettingSet)
+                .add(baseValue)
+                .add(scenarioValue)
+                .add(scenarioValue - baseValue);
+            for (const auto& keyType : xvaData.keyTypes()) {
+                report.add(aggData[key][keyType]);
+            }
+        }
+    } catch (const std::exception& e) {
+        ALOG("Error during xva explain report generation, got " << e.what());
     }
 }
 
