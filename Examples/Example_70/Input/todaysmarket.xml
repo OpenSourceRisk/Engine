@@ -17,7 +17,9 @@
 			<Discounting>EUR-EONIA</Discounting>
 		</SwapIndex>
 	</SwapIndexCurves>
-	<FxSpots id="default"/>
+	<SwaptionVolatilities id="default">
+		<SwaptionVolatility key="EUR">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
+	</SwaptionVolatilities>
 	<DefaultCurves id="default">
 		<DefaultCurve name="CPTY_C">Default/EUR/CPTY_C</DefaultCurve>
 	</DefaultCurves>
@@ -25,8 +27,5 @@
 		<Security name="SECURITY_FWDEXP_20251220">Security/SECURITY_FWDEXP_20251220</Security>
 		<Security name="SECURITY_cutted">Security/SECURITY_cutted</Security>
 	</Securities>
-	<SwaptionVolatilities id="default">
-		<SwaptionVolatility key="EUR">SwaptionVolatility/EUR/EUR</SwaptionVolatility>
-	</SwaptionVolatilities>
 </TodaysMarket>
 
