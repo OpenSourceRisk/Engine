@@ -1037,7 +1037,7 @@ of the ISDA-SIMM-v2.1 documentation).
 */
 QuantLib::Real SimmConfiguration_ISDA_V2_1::curvatureMarginScaling() const {
     QuantLib::Real hvr = 0.62;
-    return pow(hvr, -2.0);
+    return std::pow(hvr, -2.0);
 }
 
 void SimmConfiguration_ISDA_V2_1::addLabels2(const RiskType& rt, const string& label_2) {
