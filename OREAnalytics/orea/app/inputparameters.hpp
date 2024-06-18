@@ -27,6 +27,7 @@
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/historicalscenarioreader.hpp>
@@ -192,7 +193,7 @@ public:
     // Setters for exposure simulation
     void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
     void setAmc(bool b) { amc_ = b; }
-    void setAmcCg(bool b) { amcCg_ = b; }
+    void setAmcCg(XvaEngineCG::Mode b) { amcCg_ = b; }
     void setXvaCgBumpSensis(bool b) { xvaCgBumpSensis_ = b; }
     void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
     void setXvaCgExternalDeviceCompatibilityMode(bool b) { xvaCgExternalDeviceCompatibilityMode_ = b; }
@@ -569,7 +570,7 @@ public:
      *********************************/
     bool salvageCorrelationMatrix() const { return salvageCorrelationMatrix_; }
     bool amc() const { return amc_; }
-    bool amcCg() const { return amcCg_; }
+    XvaEngineCG::Mode amcCg() const { return amcCg_; }
     bool xvaCgBumpSensis() const { return xvaCgBumpSensis_; }
     bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
     bool xvaCgExternalDeviceCompatibilityMode() const { return xvaCgExternalDeviceCompatibilityMode_; }
@@ -915,7 +916,7 @@ protected:
      *******************/
     bool salvageCorrelationMatrix_ = false;
     bool amc_ = false;
-    bool amcCg_ = false;
+    XvaEngineCG::Mode amcCg_ = XvaEngineCG::Mode::Disabled;
     bool xvaCgBumpSensis_ = false;
     bool xvaCgUseExternalComputeDevice_ = false;
     bool xvaCgExternalDeviceCompatibilityMode_ = false;

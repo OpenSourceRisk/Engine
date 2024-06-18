@@ -659,12 +659,12 @@ void XvaAnalyticImpl::runPostProcessor() {
 void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                   const std::set<std::string>& runTypes) {
 
-    if (inputs_->amcCg()) {
+    if (inputs_->amcCg() != XvaEngineCG::Mode::Disabled) {
         LOG("XVA analytic is running with amc cg engine (experimental).");
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
         // in sim market there...
         XvaEngineCG engine(
-            inputs_->nThreads(), inputs_->asof(), loader, inputs_->curveConfigs().get(),
+            inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), loader, inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
             inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),

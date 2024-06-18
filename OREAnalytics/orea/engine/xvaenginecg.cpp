@@ -45,6 +45,27 @@
 namespace ore {
 namespace analytics {
 
+XvaEngineCG::Mode parseXvaEngineCgMode(const std::string& s) {
+    if (s == "CubeGeneration") {
+        return XvaEngineCG::Mode::CubeGeneration;
+    } else if (s == "Full") {
+        return XvaEngineCG::Mode::Full;
+    } else {
+        QL_FAIL("parseXvaEngineCgMode(" << s << "): not recognized, expected 'CubeGeneration' or 'Full'.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, XvaEngineCG::Mode m) {
+    if (m == XvaEngineCG::Mode::CubeGeneration)
+        return os << "CubeGeneration";
+    else if (m == XvaEngineCG::Mode::Full)
+        return os << "Full";
+    else
+        QL_FAIL(
+            "operator<<(" << static_cast<int>(m)
+                          << "): enum with this integer representation is not handled. Internal error, contact dev.");
+}
+
 namespace {
 std::size_t numberOfStochasticRvs(const std::vector<RandomVariable>& v) {
     return std::count_if(v.begin(), v.end(),
@@ -52,7 +73,7 @@ std::size_t numberOfStochasticRvs(const std::vector<RandomVariable>& v) {
 }
 } // namespace
 
-XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
+XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
                          const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
                          const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
@@ -68,7 +89,7 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
                          const bool useExternalComputeDevice, const bool externalDeviceCompatibilityMode,
                          const bool useDoublePrecisionForExternalCalculation, const std::string& externalComputeDevice,
                          const bool continueOnCalibrationError, const bool continueOnError, const std::string& context)
-    : asof_(asof), loader_(loader), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
+    : mode_(mode), asof_(asof), loader_(loader), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), engineData_(engineData), crossAssetModelData_(crossAssetModelData),
       scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
       marketConfigurationInCcy_(marketConfigurationInCcy), sensitivityData_(sensitivityData),

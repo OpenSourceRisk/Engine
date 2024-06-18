@@ -32,6 +32,7 @@
 #include <ored/marketdata/loader.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
 #include <ored/utilities/progressbar.hpp>
 
@@ -44,12 +45,12 @@
 namespace ore {
 namespace analytics {
 
-using namespace QuantLib;
-using namespace ore::data;
-
 class XvaEngineCG : public ore::data::ProgressReporter {
 public:
-    XvaEngineCG(const Size nThreads, const Date& asof, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
+    enum class Mode { Disabled, CubeGeneration, Full };
+
+    XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
+                const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
                 const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
                 const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
                 const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
@@ -81,6 +82,7 @@ private:
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
 
     // input parameters
+    Mode mode_;
     Date asof_;
     QuantLib::ext::shared_ptr<ore::data::Loader> loader_;
     QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
@@ -121,6 +123,9 @@ private:
     // output reports
     QuantLib::ext::shared_ptr<InMemoryReport> epeReport_, sensiReport_;
 };
+
+XvaEngineCG::Mode parseXvaEngineCgMode(const std::string& s);
+std::ostream& operator<<(std::ostream& os, XvaEngineCG::Mode m);
 
 } // namespace analytics
 } // namespace ore
