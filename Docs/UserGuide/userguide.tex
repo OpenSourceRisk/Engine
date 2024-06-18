@@ -1146,6 +1146,8 @@ Example & Description \\
 \hline
 69 &  Convert Zero Rate Shifts into Par Rate Shifts \\
 \hline
+70 &  Forward Bond Exposure with AMC and implied Bondspread \\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -3792,21 +3794,20 @@ ORE applies the zero rate shifts to the zero curves and computes the resulting s
 The zero rate shifts are defined as stresstests and the par instruments are defined in the usual sensitivity configuration.
 
 %--------------------------------------------------------------------
-\subsection{Forward Bond Exposure with AMC and implied Bondspread }% Example 70
+\subsection{Forward Bond Exposure with AMC and implied Bondspread}% Example 70
 \label{example:70}
 %--------------------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_70} demonstrates exposure simulation and XVA for a forward and a plain vanilla bond.
-The results can be compared to a classical exposure simulation by switchting the parameter \emph{amc} in the main configuration 
+The results can be compared to a classical exposure simulation by switchting the parameter \emph{amc} in the main configuration
 file \emph{ore.xml}, section analytic type \emph{Simulation} to \emph{N}.
 
-For both cases, forward and plain vanilla bond, the security spread is implied from given bond prices. 
+For both cases, forward and plain vanilla bond, the security spread is implied from given bond prices.
 This requires a proper security specification in the curve configuration. Compare \emph{Securities} node within \emph{curveconfig.xml}.
 Both fields, PriceQuote and SpreadQuote, are mandatory. In the market data file, if the price quote is given in the absence of a spread quote, the spread is implied.
-Otherwise the spread quote is used or none. 
+Otherwise the spread quote is used or none.
 
-In case of a forward bond, the convention for security specification requires the format \emph{securityId_FWDEXP_expiryDate}.
-
+In case of a forward bond, the convention for security specification requires the format \emph{securityId\_FWDEXP\_expiryDate}.
 
 \clearpage
 %========================================================
