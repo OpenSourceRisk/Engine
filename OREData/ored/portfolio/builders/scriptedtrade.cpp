@@ -1411,7 +1411,9 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
         auto config = QuantLib::ext::make_shared<IrLgmData>();
         config->qualifier() = getFirstIrIndexOrCcy(modelCcys_[i], irIndices_);
         config->reversionType() = LgmData::ReversionType::HullWhite;
-        config->volatilityType() = LgmData::VolatilityType::Hagan;
+        config->volatilityType() = parseVolatilityType(modelParameter(
+            "IrVolatilityType", {resolvedProductTag_ + "_" + modelCcys_[i], modelCcys_[i], resolvedProductTag_}, false,
+            "Hagan"));
         config->calibrateH() = false;
         config->hParamType() = ParamType::Constant;
         config->hTimes() = std::vector<Real>();
@@ -1496,13 +1498,40 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
                     true);
             } else if (infModelType_ == "JY") {
                 // build JY config
-                // we calibrate the index ("fx") process to CPI cap/floors and set the real rate process reversion equal to
-                // the nominal process reversion. The real rate vol is set to a fixed multiple of nominal rate vol, the
-                // multiplier is taken from the pe config model parameter "InfJyRealToNominalVolRatio"
                 std::string infName = IndexInfo(modelInfIndices_[i].first).infName();
                 Size ccyIndex =
                     std::distance(modelCcys_.begin(), std::find(modelCcys_.begin(), modelCcys_.end(),
                                                                 modelInfIndices_[i].second->currency().code()));
+                // check if vol / reversion is overwritten by pricing engine config parameters
+                if (auto tmp = modelParameter("InfJyTimes",
+                                              {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_},
+                                              false, std::string());
+                    !tmp.empty()) {
+                    auto tmp2 = modelParameter(
+                        "InfJyRealRateVol", {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_}, true);
+                    auto tmp3 = modelParameter(
+                        "InfJyIndexVol", {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_}, true);
+                    auto tmp4 =
+                        modelParameter("InfJyRealRateReversion",
+                                       {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_}, true);
+                    auto irVolType = *QuantLib::ext::static_pointer_cast<LgmData>(irConfigs[ccyIndex])
+                                          ->volatilityParameter()
+                                          .volatilityType();
+                    VolatilityParameter realRateVol(irVolType, false, ParamType::Piecewise,
+                                                    parseListOfValues<double>(tmp, parseReal),
+                                                    parseListOfValues<double>(tmp2, parseReal));
+                    VolatilityParameter indexVol(false, ParamType::Piecewise, parseListOfValues<double>(tmp, parseReal),
+                                                 parseListOfValues<double>(tmp3, parseReal));
+                    ReversionParameter realRateRev(LgmData::ReversionType::HullWhite, false, ParamType::Piecewise, {},
+                                                   {parseReal(tmp4)});
+                    config = QuantLib::ext::make_shared<InfJyData>(
+                        CalibrationType::None, std::vector<CalibrationBasket>{},
+                        modelInfIndices_[i].second->currency().code(), infName, realRateRev, realRateVol, indexVol,
+                        LgmReversionTransformation(), CalibrationConfiguration(), true, false);
+                } else {
+                // we calibrate the index ("fx") process to CPI cap/floors and set the real rate process reversion equal
+                // to the nominal process reversion. The real rate vol is set to a fixed multiple of nominal rate vol,
+                // the multiplier is taken from the pe config model parameter "InfJyRealToNominalVolRatio"
                 ReversionParameter realRateRev = QuantLib::ext::static_pointer_cast<LgmData>(irConfigs[ccyIndex])->reversionParameter();
                 VolatilityParameter realRateVol = QuantLib::ext::static_pointer_cast<LgmData>(irConfigs[ccyIndex])->volatilityParameter();
                 realRateRev.setCalibrate(false);
@@ -1528,6 +1557,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
                     true,
                     // real rate to nominal rate ratio
                     realRateToNominalRateRatio);
+                }
             } else {
                 QL_FAIL("invalid infModelType '" << infModelType_ << "', expected DK or JY");
             }
