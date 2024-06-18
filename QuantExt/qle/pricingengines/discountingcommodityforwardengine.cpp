@@ -19,6 +19,7 @@
 #include <ql/event.hpp>
 
 #include <qle/pricingengines/discountingcommodityforwardengine.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -55,11 +56,13 @@ void DiscountingCommodityForwardEngine::calculate() const {
 
         Real buySell = arguments_.position == Position::Long ? 1.0 : -1.0;
         Real forwardPrice = index->fixing(maturity);
-        Real discountPaymentDate = discountCurve_->discount(paymentDate);
-        auto value = arguments_.quantity * buySell * (forwardPrice - arguments_.strike) * discountPaymentDate /
+        Real paymentDateDiscountFactor = discountCurve_->discount(paymentDate);
+
+        auto value = arguments_.quantity * buySell * (forwardPrice - arguments_.strike) * paymentDateDiscountFactor /
                      discountCurve_->discount(npvDate);
+        Real fxRate = 1.0;
         if(arguments_.fxIndex && (arguments_.fixingDate!=Date()) && (arguments_.payCcy!=arguments_.currency)){ // NDF
-            auto fxRate = arguments_.fxIndex->fixing(arguments_.fixingDate);
+            fxRate = arguments_.fxIndex->fixing(arguments_.fixingDate);
             value*=fxRate;
             results_.additionalResults["productCurrency"] = arguments_.currency;
             results_.additionalResults["settlementCurrency"] = arguments_.payCcy;
@@ -68,7 +71,31 @@ void DiscountingCommodityForwardEngine::calculate() const {
         results_.value = value;
         results_.additionalResults["forwardPrice"] = forwardPrice;
         results_.additionalResults["currentNotional"] = forwardPrice * arguments_.quantity;
-        results_.additionalResults["discountPaymentDate"] = discountPaymentDate;
+        results_.additionalResults["paymentDateDiscountFactor"] = paymentDateDiscountFactor;
+
+        // populate cashflow results
+        std::vector<CashFlowResults> cashFlowResults;
+        CashFlowResults cf1, cf2;
+        cf1.payDate = cf2.payDate = arguments_.paymentDate;
+        cf1.type = cf2.type = "Notional";
+        cf1.discountFactor = cf2.discountFactor = paymentDateDiscountFactor / discountCurve_->discount(npvDate);
+        cf1.legNumber = 0;
+        cf2.legNumber = 1;
+        if (!arguments_.physicallySettled) {
+            cf1.fixingDate = maturity;
+            cf1.fixingValue = forwardPrice;
+            cf1.amount = arguments_.quantity * buySell * forwardPrice * fxRate;
+            cf2.amount = arguments_.quantity * buySell * -arguments_.strike * fxRate;
+            cf1.currency = cf2.currency =
+                arguments_.payCcy.empty() ? arguments_.currency.code() : arguments_.payCcy.code();
+        } else {
+            cf1.amount = arguments_.quantity * buySell * forwardPrice;
+            cf2.amount = arguments_.quantity * buySell * -arguments_.strike;
+            cf1.currency = cf2.currency = arguments_.currency.code();
+        }
+        cashFlowResults.push_back(cf1);
+        cashFlowResults.push_back(cf2);
+        results_.additionalResults["cashFlowResults"] = cashFlowResults;
     }
 }
 

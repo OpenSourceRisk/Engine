@@ -192,6 +192,11 @@ void InputParameters::setScenarioSimMarketParamsFromFile(const std::string& file
     scenarioSimMarketParams_->fromFile(fileName);
 }
 
+void InputParameters::setHistVarSimMarketParams(const std::string& xml) {
+    histVarSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    histVarSimMarketParams_->fromXMLString(xml);
+}
+
 void InputParameters::setHistVarSimMarketParamsFromFile(const std::string& fileName) {
     histVarSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
     histVarSimMarketParams_->fromFile(fileName);
