@@ -1295,7 +1295,7 @@ SimmConfiguration_ISDA_V2_2::SimmConfiguration_ISDA_V2_2(const QuantLib::ext::sh
 is the historical volatility ratio for the interest-rate risk class (see page 5 section 11
 of the ISDA-SIMM-v2.1 documentation).
 */
-QuantLib::Real SimmConfiguration_ISDA_V2_2::curvatureMarginScaling() const { return pow(hvr_ir_, -2.0); }
+QuantLib::Real SimmConfiguration_ISDA_V2_2::curvatureMarginScaling() const { return std::pow(hvr_ir_, -2.0); }
 
 void SimmConfiguration_ISDA_V2_2::addLabels2(const RiskType& rt, const string& label_2) {
     // Call the shared implementation
