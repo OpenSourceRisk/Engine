@@ -24,6 +24,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <ql/time/imm.hpp>
+
 #include <boost/algorithm/string.hpp>
 
 using QuantLib::DefaultProbabilityTermStructure;
@@ -251,6 +253,30 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const QuantLib::ext
 
     auto p = splitCurveIdWithTenor(creditCurveId);
     return market->defaultCurve(p.first, config);
+}
+
+// will have to split the date into month and year in caller.  are there any utilities to do this?
+// Is the FutureConvention rule available from caller?
+std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear, QuantLib::Period tenor,
+                                              FutureConvention::DateGenerationRule rule) { 
+    // Create a Overnight index future helper
+    Date startDate, endDate;
+    if (rule == FutureConvention::DateGenerationRule::IMM) {
+        Date refEnd = Date(1, expiryMonth, expiryYear);
+        Date refStart = refEnd - tenor;
+        startDate = IMM::nextDate(refStart, false);
+        endDate = IMM::nextDate(refEnd, false);
+    } else if (rule  == FutureConvention::DateGenerationRule::FirstDayOfMonth) {
+        endDate = Date(1, expiryMonth, expiryYear) + 1 * Months;
+        startDate = endDate - tenor;
+    }
+    return std::make_pair(startDate, endDate);
+}
+
+Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear) { 
+    Date refDate(1, expiryMonth, expiryYear);
+    Date immDate = IMM::nextDate(refDate, false);
+    return immDate;
 }
 
 } // namespace data

@@ -479,8 +479,8 @@ void IMScheduleCalculator::populateResults(const NettingSetDetails& nettingSetDe
         // Sum up trade details to obtain netting set level values:
         // - Gross margin, gross RC, net RC, PVs
         grossMarginCalc += tradeData.grossMarginCalc;
-        grossRCCalc +=
-            side == SimmSide::Call ? max(0.0, tradeData.presentValueCalc) : min(0.0, tradeData.presentValueCalc);
+        grossRCCalc += side == SimmSide::Call ? std::max(0.0, tradeData.presentValueCalc)
+                                              : std::min(0.0, tradeData.presentValueCalc);
 
         presentValueCalc += tradeData.presentValueCalc;
     }
@@ -488,7 +488,7 @@ void IMScheduleCalculator::populateResults(const NettingSetDetails& nettingSetDe
     // Calculate other amounts at the nettingSet-regulator level
 
     // Net replacement cost
-    Real netRCCalc = side == SimmSide::Call ? max(0.0, presentValueCalc) : min(0.0, presentValueCalc);
+    Real netRCCalc = side == SimmSide::Call ? std::max(0.0, presentValueCalc) : std::min(0.0, presentValueCalc);
 
     // Net-to-gross ratio
     Real netToGrossCalc = close_enough(grossRCCalc, 0.0) ? 1.0 : netRCCalc / grossRCCalc;

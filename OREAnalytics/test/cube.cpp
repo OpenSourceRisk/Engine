@@ -53,6 +53,8 @@
 #include <ql/time/daycounters/actualactual.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <test/oreatoplevelfixture.hpp>
+#include <ored/report/inmemoryreport.hpp>
+#include <orea/app/reportwriter.hpp>
 
 #include "testmarket.hpp"
 
@@ -535,6 +537,49 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionJaggedCube) {
     JaggedCube<double> jaggedCube(today, portfolio, d->dates(), samples, depth);
     testCube(jaggedCube, "DoublePrecisionJaggedCube", 1e-5, portfolio, d);
     IndexManager::instance().clearHistories();
+}
+
+string writeCube(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size bufferSize) {
+    auto report = QuantLib::ext::make_shared<InMemoryReport>(bufferSize);
+    ReportWriter().writeCube(*report, cube);
+    string fileName = boost::filesystem::unique_path().string();
+    report->toFile(fileName);
+    return fileName;
+}
+
+void diffFiles(string filename1, string filename2) {
+    std::ifstream ifs1(filename1);
+    std::ifstream ifs2(filename2);
+
+    std::istream_iterator<char> b1(ifs1), e1;
+    std::istream_iterator<char> b2(ifs2), e2;
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(b1, e1, b2, e2);
+}
+
+// Test the functionality of class InMemoryReport to cache data on disk
+BOOST_AUTO_TEST_CASE(testInMemoryReportBuffer) {
+
+    // Generate a cube
+    std::set<string> ids{string("id")}; // the overlap doesn't matter
+    vector<Date> dates(50, Date());
+    Size samples = 200;
+    Size depth = 6;
+    auto c = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(Date(), ids, dates, samples, depth);
+
+    // From the cube, generate multiple copies of the report, each of which which will have ~60K rows.
+    // Specify different values for the buffer size in InMemoryReport:
+    string filename_0 = writeCube(c, 0);            // no buffering
+    string filename_100 = writeCube(c, 100);
+    string filename_1000 = writeCube(c, 1000);
+    string filename_10000 = writeCube(c, 10000);
+    string filename_100000 = writeCube(c, 100000);  // buffer size > report size, resulting in no buffering
+
+    // Verify that buffering generates the same output as no buffering
+    diffFiles(filename_0, filename_100);
+    diffFiles(filename_0, filename_1000);
+    diffFiles(filename_0, filename_10000);
+    diffFiles(filename_0, filename_100000);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
