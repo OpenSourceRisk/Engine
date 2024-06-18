@@ -2605,30 +2605,25 @@ void ReportWriter::writeXvaExplainSummary(ore::data::Report& report, const ore::
         }
     }
 
-    auto reportAgg = QuantLib::ext::make_shared<InMemoryReport>();
-    (*reportAgg)
-        .addColumn("TradeId", string())
+    
+    report.addColumn("TradeId", string())
         .addColumn("NettingSet", string())
         .addColumn("CVA_Base", double(), 4)
         .addColumn("CVA", double(), 4)
         .addColumn("Change", double(), 4);
 
     for (const auto& keyType : xvaData.keyTypes()) {
-        (*reportAgg).addColumn(to_string(keyType), double(), 4);
+        report.addColumn(to_string(keyType), double(), 4);
     }
 
     // Add full reval report
     for (const auto& [key, baseValue] : xvaData.baseCvaData()) {
-        reportAgg->next();
+        report.next();
         auto it = xvaData.fullRevalCva().find(key);
         auto scenarioValue = it == xvaData.fullRevalCva().end() ? 0.0 : it->second;
-        reportAgg->add(key.tradeId)
-            .add(key.nettingSet)
-            .add(baseValue)
-            .add(scenarioValue)
-            .add(scenarioValue - baseValue);
+        report.add(key.tradeId).add(key.nettingSet).add(baseValue).add(scenarioValue).add(scenarioValue - baseValue);
         for (const auto& keyType : xvaData.keyTypes()) {
-            (*reportAgg).add(aggData[key][keyType]);
+            report.add(aggData[key][keyType]);
         }
     }
 }
