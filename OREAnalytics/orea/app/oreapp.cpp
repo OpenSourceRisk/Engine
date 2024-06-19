@@ -1451,6 +1451,14 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setAmcTradeTypes(tmp);
 
+    tmp = params_->get("simulation", "amcPathDataInput", false);
+    if (tmp != "")
+        setAmcPathDataInput(tmp);
+
+    tmp = params_->get("simulation", "amcPathDataOutput", false);
+    if (tmp != "")
+        setAmcPathDataOutput(tmp);
+
     setSimulationPricingEngine(pricingEngine());
     setExposureObservationModel(observationModel());
     setExposureBaseCurrency(baseCurrency());
