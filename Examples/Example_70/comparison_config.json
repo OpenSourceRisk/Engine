@@ -28,8 +28,7 @@
             "names": [
               "EPE"
             ],
-            "abs_tol": 10000,
-            "rel_tol": 0.001
+            "rel_tol": 0.01
           }
         ]
       }
