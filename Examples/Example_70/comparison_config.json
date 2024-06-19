@@ -20,13 +20,16 @@
         "keys": [
           "TradeId"
         ],
+        "use_cols": [
+          "EPE"
+        ],
         "column_settings": [
           {
             "names": [
               "EPE"
             ],
-            "abs_tol": 1e+4,
-            "rel_tol": 1e-3
+            "abs_tol": 10000,
+            "rel_tol": 0.001
           }
         ]
       }
