@@ -110,21 +110,27 @@ public:
 private:
 
     void releaseMem(double*& m, const std::string& desc);
+    void releaseMemCU(CUdeviceptr dptr, const std::string& description);
     void releaseModule(CUmodule& k, const std::string& desc);
     void releaseMersenneTwisterStates(curandStateMtgp32*& rngState, const std::string& desc);
     void updateVariatesMTGP32();
+    void updateVariatesMTGP32_dynamic();
+    void updateVariatesMT19937();
 
     enum class ComputeState { idle, createInput, createVariates, calc };
 
+    CUcontext context_;
+    CUdevice cuDevice_;
+
     bool initialized_ = false;
     size_t device_;
-    CUcontext context_;
     size_t NUM_THREADS_ = 256;
     
     std::vector<std::pair<std::string, std::string>> deviceInfo_;
     bool supportsDoublePrecision_;
     size_t maxRandomVariates_;
     double* d_randomVariables_;
+    //CUdeviceptr d_randomVariables_;
 
     // will be accumulated over all calcs
     ComputeContext::DebugInfo debugInfo_;
@@ -169,6 +175,7 @@ private:
 
 CudaFramework::CudaFramework() {
     int nDevices;
+    cuInit(0);
     cudaGetDeviceCount(&nDevices);
     for (std::size_t d = 0; d < nDevices; ++d) {
         cudaDeviceProp device_prop;
@@ -193,31 +200,53 @@ CudaContext::CudaContext(
 CudaContext::~CudaContext() {
     if (initialized_) {
         CUresult err;
+        cudaError_t cudaErr;
 
-        //for (auto& ptr : hOutput_) {
-        //    delete ptr.second;
-        //}
+        for (auto& ptr : hOutput_) {
+            delete[] ptr.second;
+        }
         
         //for (auto& ptr : dOutput_) {
         //    releaseMem(ptr.second, "~CudaContext()::");
         //}
-        releaseMem(dOutput_[0], "~CudaContext()::dOutput_[0]");
-        releaseMem(d_randomVariables_, "~CudaContext()::d_randomVariables_");
+        //cudaErr = cudaSetDevice(device_);
+        //if (cudaErr != cudaSuccess) {
+        //    std::cerr << "~CudaContext: error during cudaSetDevice: " << cudaGetErrorString(cudaErr) << std::endl;
+        //}
+        
+        //err = cuCtxPushCurrent(context_);
+        //if (err != CUDA_SUCCESS) {
+        //    const char* errorStr;
+        //    cuGetErrorString(err, &errorStr);
+        //    std::cerr << "CudaContext: error during cuCtxPushCurrent: " << errorStr << std::endl;
+        //} else {
+        //    std::cout << "Context set successfully!" << std::endl;
+        //}
+
+        //releaseMem(dOutput_[0], "~CudaContext()::dOutput_[0]");
+        //releaseMem(d_randomVariables_, "~CudaContext()::d_randomVariables_");
+        //cudaErr = cudaFree(d_randomVariables_);
+        //std::cout << "cudaFree(d_randomVariables_): " << cudaGetErrorString(cudaErr) << std::endl; 
+        //releaseMemCU(d_randomVariables_, "~CudaContext()");
+
 
         for (Size i = 0; i < module_.size(); ++i) {
             if (disposed_[i])
                 continue;
             releaseModule(module_[i], "~CudaContext()");
         }
-
+        
         err = cuCtxDestroy(context_);
         if (err != CUDA_SUCCESS) {
             const char* errorStr;
             cuGetErrorString(err, &errorStr);
             std::cerr << "CudaContext: error during cuCtxDestroy: " << errorStr << std::endl;
-        //} else {
-        //    std::cout << "Context released successfully!" << std::endl;
+        } else {
+            std::cout << "Context released successfully!" << std::endl;
         }
+        
+
+        //releaseMemCU(d_randomVariables_, "~CudaContext()");
         
     }
 }
@@ -226,7 +255,7 @@ void CudaContext::releaseMem(double*& m, const std::string& description) {
     cudaError_t err;
     if (err = cudaFree(m); err != cudaSuccess) {
         std::cerr << "CudaContext: error during cudaFree at "<< description
-                  << ": " << cudaGetErrorString(err) << std::endl;
+                  << ": " << cudaGetErrorName(err) << std::endl;
     }
 }
 
@@ -250,6 +279,18 @@ void CudaContext::releaseModule(CUmodule& k, const std::string& description) {
    // }
 }
 
+void CudaContext::releaseMemCU(CUdeviceptr dptr, const std::string& description) {
+    CUresult err = cuMemFree(dptr);
+    if (err != CUDA_SUCCESS) {
+        const char* errorStr;
+        cuGetErrorName(err, &errorStr);
+        std::cerr << "CudaContext: error during cuMemFree at " << description << ": " << errorStr << std::endl;
+    }
+    // else {
+    //    std::cout << "Module released successfully!" << std::endl;
+    // }
+}
+
 void CudaContext::init() {
 
     if (initialized_) {
@@ -265,13 +306,19 @@ void CudaContext::init() {
     maxRandomVariates_ = 0;
 
     // Initialize CUDA context and module
-    cuInit(0);
-    CUresult err = cuCtxCreate(&context_, 0, 0);
+
+    CUresult err;
+    
+    //cuInit(0);
+
+    
+    err = cuCtxCreate(&context_, 0, 0);
     if (err != CUDA_SUCCESS) {
         cuGetErrorString(err, &errStr);
         std::cerr << "CUDAContext::CUDAContext(): error during cuCtxCreate(): " << errStr << std::endl;
     }
-
+    
+    
     initialized_ = true;
 }
 
@@ -399,6 +446,8 @@ std::vector<std::vector<std::size_t>> CudaContext::createInputVariates(const std
     }
 
     updateVariatesMTGP32();
+    //updateVariatesMTGP32_dynamic();
+    //updateVariatesMT19937();
 
     return resultIds;
 }
@@ -409,6 +458,62 @@ void CudaContext::updateVariatesMTGP32() {
 
         cudaError_t cudaErr;
         curandStatus_t curandErr;
+        CUresult cuErr;
+
+        if (maxRandomVariates_ > 0)
+            releaseMem(d_randomVariables_, "updateVariates()");
+        // Allocate memory for random variables
+        cudaErr = cudaMalloc(&d_randomVariables_,
+                             nRandomVariables_[currentId_ - 1] * size_[currentId_ - 1] * sizeof(double));
+        QL_REQUIRE(cudaErr == cudaSuccess,
+                   "CudaContext::updateVariatesMTGP32(): memory allocate for d_randomVariables_ fails: "
+                       << cudaGetErrorString(cudaErr));
+        /*
+        cuErr = cuMemAlloc(&d_randomVariables_,
+                           nRandomVariables_[currentId_ - 1] * size_[currentId_ - 1] * sizeof(double));
+        if (cuErr != CUDA_SUCCESS) {
+            const char* errorStr;
+            cuGetErrorString(cuErr, &errorStr);
+            std::cerr << "CudaContext: error during cuMemFree at " << "updateVariatesMTGP32()" << ": " << errorStr <<
+        std::endl;
+        };*/
+
+        // Random number generator setup
+        curandGenerator_t generator;
+        curandErr = curandCreateGenerator(&generator, CURAND_RNG_PSEUDO_MTGP32);
+        QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
+                   "CudaContext::updateVariatesMTGP32(): error during curandCreateGenerator(): "
+                       << curandGetErrorString(curandErr));
+        curandErr = curandSetPseudoRandomGeneratorSeed(generator, settings_.rngSeed);
+        QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
+                   "CudaContext::updateVariatesMTGP32(): error during curandSetPseudoRandomGeneratorSeed(): "
+                       << curandGetErrorString(curandErr));
+
+        // Generator random numbers
+        curandErr =
+            curandGenerateNormalDouble(generator, d_randomVariables_,
+                                       nRandomVariables_[currentId_ - 1] * size_[currentId_ - 1], 0.0, 1.0);
+        QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
+                   "CudaContext::updateVariatesMTGP32(): error during curandGenerateNormalDouble(): "
+                       << curandGetErrorString(curandErr));
+
+        // Release generator
+        curandErr = curandDestroyGenerator(generator);
+        QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
+                   "CudaContext::updateVariatesMTGP32(): error during curandDestroyGenerator(): "
+                       << curandGetErrorString(curandErr));
+
+        maxRandomVariates_ = nRandomVariables_[currentId_ - 1];
+    }
+}
+
+void CudaContext::updateVariatesMTGP32_dynamic() {
+
+    if (nRandomVariables_[currentId_ - 1] > maxRandomVariates_) {
+
+        cudaError_t cudaErr;
+        curandStatus_t curandErr;
+        CUresult cuErr;
 
         if (maxRandomVariates_ > 0)
             releaseMem(d_randomVariables_, "updateVariates()");
@@ -418,6 +523,14 @@ void CudaContext::updateVariatesMTGP32() {
         QL_REQUIRE(cudaErr == cudaSuccess,
                    "CudaContext::createInputVariates(): memory allocate for d_randomVariables_ fails: "
                        << cudaGetErrorString(cudaErr));
+        /*
+        cuErr = cuMemAlloc(&d_randomVariables_,
+                           nRandomVariables_[currentId_ - 1] * size_[currentId_ - 1] * sizeof(double));
+        if (cuErr != CUDA_SUCCESS) {
+            const char* errorStr;
+            cuGetErrorString(cuErr, &errorStr);
+            std::cerr << "CudaContext: error during cuMemFree at " << "updateVariatesMTGP32()" << ": " << errorStr << std::endl;
+        };*/
 
         // For Mersenne Twister device API, at most 200 states can be generated one time.
         // If this passed the test, we will generate 2 separate mtStates for blocks after 200.
@@ -512,7 +625,7 @@ void CudaContext::updateVariatesMTGP32() {
         QL_REQUIRE(nvrtcErr == NVRTC_SUCCESS, "CudaContext::createInputVariates(): error during nvrtcDestroyProgram(): "
                                                   << nvrtcGetErrorString(nvrtcErr));
 
-        CUresult cuErr = cuModuleLoadData(&cuModule, ptx);
+        cuErr = cuModuleLoadData(&cuModule, ptx);
         if (cuErr != CUDA_SUCCESS) {
             const char* errStr;
             cuGetErrorString(cuErr, &errStr);
@@ -542,6 +655,72 @@ void CudaContext::updateVariatesMTGP32() {
         releaseMersenneTwisterStates(mtStates, "updateVariatesMTGP32");
         releaseModule(cuModule, "updateVariatesMTGP32");
 
+        maxRandomVariates_ = nRandomVariables_[currentId_ - 1];
+    }
+}
+
+void CudaContext::updateVariatesMT19937() {
+
+    if (nRandomVariables_[currentId_ - 1] > maxRandomVariates_) {
+
+        cudaError_t cudaErr;
+        curandStatus_t curandErr;
+        CUresult cuErr;
+
+        if (maxRandomVariates_ > 0)
+            releaseMem(d_randomVariables_, "updateVariates()");
+        // Allocate memory for random variables
+        cudaErr =
+            cudaMalloc(&d_randomVariables_, 8192 * 4 * nRandomVariables_[currentId_ - 1] * size_[currentId_ - 1] * sizeof(double));
+        QL_REQUIRE(cudaErr == cudaSuccess,
+                   "CudaContext::createInputVariates(): memory allocate for d_randomVariables_ fails: "
+                       << cudaGetErrorString(cudaErr));
+        /*
+        cuErr = cuMemAlloc(&d_randomVariables_,
+                           nRandomVariables_[currentId_ - 1] * size_[currentId_ - 1] * sizeof(double));
+        if (cuErr != CUDA_SUCCESS) {
+            const char* errorStr;
+            cuGetErrorString(cuErr, &errorStr);
+            std::cerr << "CudaContext: error during cuMemFree at " << "updateVariatesMTGP32()" << ": " << errorStr <<
+        std::endl;
+        };*/
+
+        // Random number generator setup
+        curandGenerator_t generator;
+        curandErr = curandCreateGenerator(&generator, CURAND_RNG_PSEUDO_MT19937);
+        QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
+                   "CudaContext::updateVariatesMT19937(): error during curandCreateGenerator(): "
+                       << curandGetErrorString(curandErr));
+        curandErr = curandSetPseudoRandomGeneratorSeed(generator, settings_.rngSeed);
+        QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
+                   "CudaContext::updateVariatesMT19937(): error during curandSetPseudoRandomGeneratorSeed(): "
+                       << curandGetErrorString(curandErr));
+
+        // Generator random numbers
+        curandErr = curandGenerateNormalDouble(generator, d_randomVariables_,
+                                               8192 * 4 * nRandomVariables_[currentId_ - 1] * size_[currentId_ - 1], 0.0, 1.0);
+        QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
+                   "CudaContext::updateVariatesMT19937(): error during curandGenerateNormalDouble(): "
+                       << curandGetErrorString(curandErr));
+
+        // Release generator
+        curandErr = curandDestroyGenerator(generator);
+        QL_REQUIRE(curandErr == CURAND_STATUS_SUCCESS,
+                   "CudaContext::updateVariatesMT19937(): error during curandDestroyGenerator(): "
+                       << curandGetErrorString(curandErr));
+        /*
+        // temp code
+        
+        cudaDeviceSynchronize();
+        // Copy random numbers back to host
+        double* h_randomVariables = new double[nRandomVariables_[currentId_ - 1] * size_[currentId_ - 1]];
+        cudaErr = cudaMemcpyAsync(h_randomVariables, d_randomVariables_,
+                                  nRandomVariables_[currentId_ - 1] * size_[currentId_ - 1],
+                                  cudaMemcpyDeviceToHost);
+        QL_REQUIRE(cudaErr == cudaSuccess,
+                   "CudaContext::updateVariatesMT19937(): memory copy for d_randomVariables_ to host fails: " << cudaGetErrorString(cudaErr));
+
+        */
         maxRandomVariates_ = nRandomVariables_[currentId_ - 1];
     }
 }
@@ -754,8 +933,12 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
 
         kernelSource += "    if (tid < n) {\n";
         for (size_t id = 0; id < nRandomVariables_[currentId_ - 1]; ++id) {
+            // original version
             kernelSource += "       double v" + std::to_string(id + nInputVars_) + " = randomVariables[tid + " +
                            std::to_string(id * size_[currentId_ - 1]) + "];\n";
+            // MT19937 version
+            //kernelSource += "       double v" + std::to_string(id + nInputVars_) + " = randomVariables[(tid * " +
+            //                std::to_string(nRandomVariables_[currentId_ - 1]) + " + " + std::to_string(id) + ") * 8192 * 4];\n";
             if (settings_.debug)
                 debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
         }
@@ -769,7 +952,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
         }
         kernelSource += "   }\n"
                         "}\n";
-        std::cout << kernelName << std::endl;
+        std::cout << kernelSource << std::endl;
         if (settings_.debug) {
             timerBase = timer.elapsed().wall;
         }
