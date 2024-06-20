@@ -28,6 +28,7 @@
 #include <ql/errors.hpp>
 #include <ql/tuple.hpp>
 #include <vector>
+#include <map>
 
 namespace ore {
 namespace data {
@@ -60,7 +61,13 @@ public:
     void toFile(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
                 const string& nullString = "#N/A", bool lowerHeader = false);
     void jumpToColumn(Size i) { i_ = i; }
-
+    
+    //! Return the position of a column, throws an exception if columnName not in report
+    size_t columnPosition(const std::string& columnName) {
+        auto it = headersMap_.find(columnName);
+        QL_REQUIRE(it != headersMap_.end(), "Invalid column name " << columnName);
+        return it->second;
+    }  
 private:
     Size i_;
     Size bufferSize_;
@@ -69,6 +76,7 @@ private:
     vector<Size> columnPrecision_;
     vector<vector<ReportType>> data_;
     vector<string> files_;
+    std::map<std::string, size_t> headersMap_;
 };
 
 //! InMemoryReport with access to plain types instead of boost::variant<>, to facilitate language bindings

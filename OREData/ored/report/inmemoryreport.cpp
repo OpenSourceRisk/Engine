@@ -38,6 +38,7 @@ Report& InMemoryReport::addColumn(const string& name, const ReportType& rt, Size
     columnTypes_.push_back(rt);
     columnPrecision_.push_back(precision);
     data_.push_back(vector<ReportType>()); // Initialise vector for column
+    headersMap_[name] = i_;
     i_++;
     return *this;
 }
