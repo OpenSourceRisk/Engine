@@ -514,7 +514,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
         AMCValuationEngine amcEngine(model_, inputs_->scenarioGeneratorData(), market,
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
                                      inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
-                                     inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates());
+                                     inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates(),
+                                     inputs_->amcPathDataInput(), inputs_->amcPathDataOutput());
         amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);
         if (!scenarioData_.empty())
@@ -543,8 +544,9 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
             analytic()->configurations().todaysMarketParams, inputs_->marketConfig("lgmcalibration"),
             inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
             inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
-            inputs_->marketConfig("simulation"), inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true,
-            cubeFactory, offsetScenario_, simMarketParams);
+            inputs_->marketConfig("simulation"), inputs_->amcPathDataInput(), inputs_->amcPathDataOutput(),
+            inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory, offsetScenario_,
+            simMarketParams);
 
         amcEngine.registerProgressIndicator(progressBar);
         amcEngine.registerProgressIndicator(progressLog);

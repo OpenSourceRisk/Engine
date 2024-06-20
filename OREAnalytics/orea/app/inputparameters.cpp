@@ -466,7 +466,11 @@ void InputParameters::setAmcTradeTypes(const std::string& s) {
     auto v = parseListOfValues(s);
     amcTradeTypes_ = std::set<std::string>(v.begin(), v.end());
 }
-    
+
+void InputParameters::setAmcPathDataInput(const std::string& s) { amcPathDataInput_ = s; }
+
+void InputParameters::setAmcPathDataOutput(const std::string& s) { amcPathDataOutput_ = s; }
+
 void InputParameters::setCvaSensiGrid(const std::string& s) {
     // parse to vector<Period>
     cvaSensiGrid_ = parseListOfValues<Period>(s, &parsePeriod);
