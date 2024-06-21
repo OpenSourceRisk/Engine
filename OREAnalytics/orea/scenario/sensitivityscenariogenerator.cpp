@@ -489,9 +489,9 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
                 RiskFactorKey key(RFType::DiscountCurve, ccy, k);
                 // FIXME why do we have that here, but not in generateIndexCurveScenarios?
                 if (!close_enough(shiftedZeros[k], zeros[k])) {
-                    Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+                    Real shiftedDiscount = std::exp(-shiftedZeros[k] * times[k]);
                     if (sensitivityData_->useSpreadedTermStructures()) {
-                        Real discount = exp(-zeros[k] * times[k]);
+                        Real discount = std::exp(-zeros[k] * times[k]);
                         scenario->add(key, shiftedDiscount / discount);
                     } else {
                         scenario->add(key, shiftedDiscount);
@@ -592,9 +592,9 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
             for (Size k = 0; k < n_ten; ++k) {
                 RiskFactorKey key(RFType::IndexCurve, indexName, k);
 
-                Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+                Real shiftedDiscount = std::exp(-shiftedZeros[k] * times[k]);
                 if (sensitivityData_->useSpreadedTermStructures()) {
-                    Real discount = exp(-zeros[k] * times[k]);
+                    Real discount = std::exp(-zeros[k] * times[k]);
                     scenario->add(key, shiftedDiscount / discount);
                 } else {
                     scenario->add(key, shiftedDiscount);
@@ -692,10 +692,10 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
 
             // store shifted discount curve in the scenario
             for (Size k = 0; k < n_ten; ++k) {
-                Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+                Real shiftedDiscount = std::exp(-shiftedZeros[k] * times[k]);
                 RiskFactorKey key(RFType::YieldCurve, name, k);
                 if (sensitivityData_->useSpreadedTermStructures()) {
-                    Real discount = exp(-zeros[k] * times[k]);
+                    Real discount = std::exp(-zeros[k] * times[k]);
                     scenario->add(key, shiftedDiscount / discount);
                 } else {
                     scenario->add(key, shiftedDiscount);
@@ -794,10 +794,10 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
 
             // store shifted discount curve in the scenario
             for (Size k = 0; k < n_ten; ++k) {
-                Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+                Real shiftedDiscount = std::exp(-shiftedZeros[k] * times[k]);
                 RiskFactorKey key(RFType::DividendYield, name, k);
                 if (sensitivityData_->useSpreadedTermStructures()) {
-                    Real discount = exp(-zeros[k] * times[k]);
+                    Real discount = std::exp(-zeros[k] * times[k]);
                     scenario->add(key, shiftedDiscount / discount);
                 } else {
                     scenario->add(key, shiftedDiscount);
@@ -1495,9 +1495,9 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
             // store shifted survival Prob in the scenario
             for (Size k = 0; k < n_ten; ++k) {
                 RiskFactorKey key(RFType::SurvivalProbability, name, k);
-                Real shiftedProb = exp(-shiftedHazardRates[k] * times[k]);
+                Real shiftedProb = std::exp(-shiftedHazardRates[k] * times[k]);
                 if (sensitivityData_->useSpreadedTermStructures()) {
-                    Real prob = exp(-hazardRates[k] * times[k]);
+                    Real prob = std::exp(-hazardRates[k] * times[k]);
                     scenario->add(key, shiftedProb / prob);
                 } else {
                     scenario->add(key, shiftedProb);

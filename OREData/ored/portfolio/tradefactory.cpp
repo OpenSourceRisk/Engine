@@ -1,6 +1,7 @@
 /*
  Copyright (C) 2016-2022 Quaternion Risk Management Ltd
  Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
+ Copyright (C) 2023 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -41,8 +42,11 @@ QuantLib::ext::shared_ptr<AbstractTradeBuilder> TradeFactory::getBuilder(const s
 void TradeFactory::addBuilder(const std::string& className, const QuantLib::ext::shared_ptr<AbstractTradeBuilder>& builder,
                               const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    QL_REQUIRE(builders_.insert(std::make_pair(className, builder)).second || allowOverwrite,
-               "TradeFactory: duplicate builder for className '" << className << "'.");
+    {
+        auto [it, ins] = builders_.try_emplace(className, builder);
+        if (!ins) QL_REQUIRE(allowOverwrite && (it->second = builder),
+                       "TradeFactory: duplicate builder for className '" << className << "'.");
+    }
 }
 
 QuantLib::ext::shared_ptr<Trade> TradeFactory::build(const string& className) const { return getBuilder(className)->build(); }

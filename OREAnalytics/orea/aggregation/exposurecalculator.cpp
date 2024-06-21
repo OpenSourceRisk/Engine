@@ -154,16 +154,16 @@ void ExposureCalculator::build() {
                 Real negativeCashFlow = cubeInterpretation_->getMporNegativeFlows(cube_, i, j, k);
                 //for single trade exposures, always default value is relevant
                 Real npv = defaultValue;
-                epe[j + 1] += max(npv, 0.0) / cube_->samples();
-                ene[j + 1] += max(-npv, 0.0) / cube_->samples();
+                epe[j + 1] += std::max(npv, 0.0) / cube_->samples();
+                ene[j + 1] += std::max(-npv, 0.0) / cube_->samples();
                 nettingSetDefaultValue_[nettingSetId][j][k] += defaultValue;
                 nettingSetCloseOutValue_[nettingSetId][j][k] += closeOutValue;
                 nettingSetMporPositiveFlow_[nettingSetId][j][k] += positiveCashFlow;
                 nettingSetMporNegativeFlow_[nettingSetId][j][k] += negativeCashFlow;
                 distribution[k] = npv;
                 if (multiPath_) {
-                    exposureCube_->set(max(npv, 0.0), tradeId, d, k, ExposureIndex::EPE);
-                    exposureCube_->set(max(-npv, 0.0), tradeId, d, k, ExposureIndex::ENE);
+                    exposureCube_->set(std::max(npv, 0.0), tradeId, d, k, ExposureIndex::EPE);
+                    exposureCube_->set(std::max(-npv, 0.0), tradeId, d, k, ExposureIndex::ENE);
                 }
             }
             if (!multiPath_) {

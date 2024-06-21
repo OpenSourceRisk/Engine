@@ -91,7 +91,7 @@ void CreditMigrationCalculator::build() {
             stdev += pnl * pnl * dist[j];
             sum += dist[j];
         }
-        stdev = sqrt(stdev - mean * mean);
+        stdev = std::sqrt(stdev - mean * mean);
         TLOG("Total PnL at time step " << creditMigrationTimeSteps_[i] << ": Mean " << std::fixed << mean << " StdDev "
                                        << stdev << " Prob " << std::scientific << sum << " Left " << dist[0]
                                        << " Right " << dist[hlp.upperBucketBound().size() - 1]);

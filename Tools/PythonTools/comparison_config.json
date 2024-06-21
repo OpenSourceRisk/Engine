@@ -1178,6 +1178,47 @@
           }
         ]
       },
+      "xvaExplain.csv": {
+        "keys": [
+          "RiskFactor",
+          "TradeId",
+          "NettingSetId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "CVA_Base",
+              "CVA",
+              "Change"
+            ],
+            "abs_tol": 1e-2,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "xvaExplain_details.csv": {
+        "keys": [
+          "Scenario",
+          "TradeId",
+          "NettingSetId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "CVA",
+              "DVA",
+              "FBA",
+              "FCA",
+              "FBAexOwnSP",
+              "FCAexOwnSP",
+              "FBAexAllSP",
+              "FCAexAllSP"
+            ],
+            "abs_tol": 1e-2,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       ".*xva.*\\.csv": {
         "keys": [
           "TradeId",

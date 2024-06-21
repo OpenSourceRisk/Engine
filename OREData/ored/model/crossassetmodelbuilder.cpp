@@ -872,6 +872,12 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     if ((!rrVol.calibrate() && !rrRev.calibrate() && !idxVol.calibrate()) ||
         (data.calibrationType() == CalibrationType::None)) {
         LOG("Calibration of JY inflation model for inflation index " << data.index() << " not requested.");
+        LOG("Real    rate vol times   : " << inflationParam->parameterTimes(0));
+        LOG("Real    rate vol values  : " << inflationParam->parameterValues(0));
+        LOG("Real    rate rev times   : " << inflationParam->parameterTimes(1));
+        LOG("Real    rate rev values  : " << inflationParam->parameterValues(1));
+        LOG("R/N conversion   times   : " << inflationParam->parameterTimes(2));
+        LOG("R/N conversion   values  : " << inflationParam->parameterValues(2));
         return;
     }
 
@@ -899,8 +905,9 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     // if we link the real rate params to the nominal rate params, we copy them over now (ir calibration is done at this point)
     if(data.linkRealRateParamsToNominalRateParams()) {
         Size irIdx = model_->ccyIndex(model_->infjy(modelIdx)->currency());
+        // the multiplier is applied to the raw model value which is squared to get the actual vol value
         copyModelParams(CrossAssetModel::AssetType::IR, 0, irIdx, Null<Size>(), CrossAssetModel::AssetType::INF, 0,
-                        modelIdx, Null<Size>(), data.linkedRealRateVolatilityScaling());
+                        modelIdx, Null<Size>(), std::sqrt(data.linkedRealRateVolatilityScaling()));
         copyModelParams(CrossAssetModel::AssetType::IR, 1, irIdx, Null<Size>(), CrossAssetModel::AssetType::INF, 1,
                         modelIdx, Null<Size>(), 1.0);
     }

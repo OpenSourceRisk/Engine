@@ -75,8 +75,9 @@ void XvaStressAnalyticImpl::writeCubes(const std::string& label,
     }
 }
 
-XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic::Impl(inputs) {
+XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                             const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
+    : Analytic::Impl(inputs), stressScenarios_(scenarios.get_value_or(inputs->xvaStressScenarioData())) {
     setLabel(LABEL);
 }
 
@@ -90,8 +91,7 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
     Settings::instance().evaluationDate() = inputs_->asof();
 
     QL_REQUIRE(inputs_->portfolio(), "XvaStressAnalytic::run: No portfolio loaded.");
-
-    Settings::instance().evaluationDate() = inputs_->asof();
+    
     std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
 
     auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
@@ -102,7 +102,7 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
 
     analytic()->buildMarket(loader);
 
-    QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = inputs_->xvaStressScenarioData();
+    QuantLib::ext::shared_ptr<StressTestScenarioData> scenarioData = stressScenarios_;
     if (scenarioData != nullptr && scenarioData->hasScenarioWithParShifts()) {
         try {
             ParStressTestConverter converter(
@@ -112,7 +112,6 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
             scenarioData = converter.convertStressScenarioData(scenarioData);
             analytic()->stressTests()[label()]["stress_ZeroStressData"] = scenarioData;
         } catch (const std::exception& e) {
-            scenarioData = inputs_->xvaStressScenarioData();
             StructuredAnalyticsErrorMessage(label(), "ParConversionFailed", e.what()).log();
         }
     }
@@ -195,8 +194,11 @@ void XvaStressAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().sensiScenarioData = inputs_->xvaStressSensitivityScenarioData();
 }
 
-XvaStressAnalytic::XvaStressAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<XvaStressAnalyticImpl>(inputs), {"XVA_STRESS"}, inputs, true, false, false, false) {
+XvaStressAnalytic::XvaStressAnalytic(
+    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+    const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
+    : Analytic(std::make_unique<XvaStressAnalyticImpl>(inputs, scenarios), {"XVA_STRESS"}, inputs, true, false, false,
+               false) {
     impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
 }
 
