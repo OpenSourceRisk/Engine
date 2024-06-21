@@ -82,7 +82,6 @@ private:
     QuantLib::DeltaVolQuote::DeltaType longTermDeltaType_;
     QuantLib::Option::Type riskReversalInFavorOf_;
     bool butterflyIsBrokerStyle_;
-    const Market* market_;
 
     QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo> calibrationInfo_;
 

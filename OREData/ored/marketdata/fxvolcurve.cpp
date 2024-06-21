@@ -930,9 +930,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             }
 
             if (!config->fxForeignYieldCurveID().empty()) {
-                domYts_ = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
+                forYts_ = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
             } else {
-                domYts_ = market->discountCurve(spotSpec->unitCcy(), Market::inCcyConfiguration);
+                forYts_ = market->discountCurve(spotSpec->unitCcy(), Market::inCcyConfiguration);
             }
         }
 
