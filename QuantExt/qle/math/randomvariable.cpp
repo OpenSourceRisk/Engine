@@ -33,12 +33,14 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 #include <boost/accumulators/statistics/variates/covariate.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 #include <iostream>
 #include <map>
 
 // if defined, RandomVariableStats are updated (this might impact perfomance!), default is undefined
-//#define ENABLE_RANDOMVARIABLE_STATS
+// #define ENABLE_RANDOMVARIABLE_STATS
 
 namespace QuantExt {
 
@@ -1374,4 +1376,43 @@ multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialT
     return tmp;
 }
 
+template <class Archive> void Filter::serialize(Archive& ar, const unsigned int version) {
+    ar & n_;
+    ar & deterministic_;
+    if (deterministic_) {
+        if (Archive::is_loading::value)
+            data_ = nullptr;
+        ar & constantData_;
+    } else if (n_ > 0) {
+        if (Archive::is_loading::value)
+            data_ = new bool[n_];
+        auto tmpData = boost::serialization::make_array(data_, n_);
+        ar & tmpData;
+    }
+}
+
+template <class Archive> void RandomVariable::serialize(Archive& ar, const unsigned int version) {
+    ar & n_;
+    ar & deterministic_;
+    ar & time_;
+    if (deterministic_) {
+        if (Archive::is_loading::value)
+            data_ = nullptr;
+        ar & constantData_;
+    } else if (n_ > 0) {
+        if (Archive::is_loading::value)
+            data_ = new double[n_];
+        auto tmpData = boost::serialization::make_array(data_, n_);
+        ar & tmpData;
+    }
+}
+
+template void Filter::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void Filter::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void RandomVariable::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void RandomVariable::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+
 } // namespace QuantExt
+
+BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::Filter);
+BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::RandomVariable);

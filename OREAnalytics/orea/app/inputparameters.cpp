@@ -362,6 +362,28 @@ void InputParameters::setXvaSensiPricingEngineFromFile(const std::string& fileNa
     xvaSensiPricingEngine_->fromFile(fileName);
 }
 
+// XVA Explain
+
+void InputParameters::setXvaExplainSimMarketParams(const std::string& xml) {
+    xvaExplainSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    xvaExplainSimMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaExplainSimMarketParamsFromFile(const std::string& fileName) {
+    xvaExplainSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    xvaExplainSimMarketParams_->fromFile(fileName);
+}
+
+void InputParameters::setXvaExplainSensitivityScenarioData(const std::string& xml) {
+    xvaExplainSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaExplainSensitivityScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaExplainSensitivityScenarioDataFromFile(const std::string& fileName) {
+    xvaExplainSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaExplainSensitivityScenarioData_->fromFile(fileName);
+}
+
 void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
     amcPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     amcPricingEngine_->fromFile(fileName);
@@ -476,7 +498,11 @@ void InputParameters::setAmcTradeTypes(const std::string& s) {
     auto v = parseListOfValues(s);
     amcTradeTypes_ = std::set<std::string>(v.begin(), v.end());
 }
-    
+
+void InputParameters::setAmcPathDataInput(const std::string& s) { amcPathDataInput_ = s; }
+
+void InputParameters::setAmcPathDataOutput(const std::string& s) { amcPathDataOutput_ = s; }
+
 void InputParameters::setCvaSensiGrid(const std::string& s) {
     // parse to vector<Period>
     cvaSensiGrid_ = parseListOfValues<Period>(s, &parsePeriod);

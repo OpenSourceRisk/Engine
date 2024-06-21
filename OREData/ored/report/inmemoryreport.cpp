@@ -33,11 +33,17 @@
 namespace ore {
 namespace data {
 
+InMemoryReport::~InMemoryReport() {
+    for (const auto &f : files_)
+        std::remove(f.c_str());
+}
+
 Report& InMemoryReport::addColumn(const string& name, const ReportType& rt, Size precision) {
     headers_.push_back(name);
     columnTypes_.push_back(rt);
     columnPrecision_.push_back(precision);
     data_.push_back(vector<ReportType>()); // Initialise vector for column
+    headersMap_[name] = i_;
     i_++;
     return *this;
 }
@@ -47,7 +53,8 @@ Report& InMemoryReport::next() {
                                                                       << boost::join(headers_, ","));
     i_ = 0;
     if (bufferSize_ && data_[0].size() == bufferSize_ && !headers_.empty()) {
-        std::string s = boost::filesystem::unique_path().string();
+        boost::filesystem::path p = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        std::string s = p.string();
         std::ofstream os(s.c_str(), std::ios::binary);
         boost::archive::binary_oarchive oa(os, boost::archive::no_header);
         for (Size i = 0; i < headers_.size(); i++) {

@@ -269,14 +269,13 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
         } else {
             // interpolate new values from old values
             Size newKeyIndex = 0;
-            std::vector<Size> indices(c0->second.size(), 0);
+            std::vector<Size> indices(c1->second.size(), 0);
             int workingIndex;
             do {
                 workingIndex = indices.size() - 1;
                 while (workingIndex >= 0 && indices[workingIndex] == c1->second[workingIndex].size()) {
+                    indices[workingIndex] = 0;
                     --workingIndex;
-                    if (workingIndex >= 0)
-                        indices[workingIndex] = 0;
                 }
                 if (workingIndex >= 0) {
                     RiskFactorKey key(k.first, k.second, newKeyIndex++);
