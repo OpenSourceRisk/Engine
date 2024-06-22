@@ -88,13 +88,15 @@ public:
     void setIborFallbackConfig(const std::string& xml);
     void setIborFallbackConfigFromFile(const std::string& fileName);
     void setCurveConfigs(const std::string& xml);
-    void setCurveConfigsFromFile(const std::string& fileName);
+    void setCurveConfigsFromFile(const std::string& fileName, std::string id = "");
     void setPricingEngine(const std::string& xml);
     void setPricingEngineFromFile(const std::string& fileName);
     void setTodaysMarketParams(const std::string& xml);
     void setTodaysMarketParamsFromFile(const std::string& fileName);
     void setPortfolio(const std::string& xml); 
-    void setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath); 
+    void setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath);
+    void setMporPortfolio(const std::string& xml);
+    void setMporPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath); 
     void setMarketConfigs(const std::map<std::string, std::string>& m);
     void setThreads(int i) { nThreads_ = i; }
     void setEntireMarket(bool b) { entireMarket_ = b; }
@@ -457,6 +459,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& useCounterpartyOriginalPortfolio() const {
         return useCounterpartyOriginalPortfolio_;
     }
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& mporPortfolio() const { return mporPortfolio_; }
 
     QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return nThreads_; }
@@ -829,7 +832,7 @@ protected:
     CurveConfigurationsManager curveConfigs_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> pricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
-    QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_, useCounterpartyOriginalPortfolio_;
+    QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_, useCounterpartyOriginalPortfolio_, mporPortfolio_;
     QuantLib::Size maxRetries_ = 7;
     QuantLib::Size nThreads_ = 1;
    

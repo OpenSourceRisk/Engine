@@ -49,6 +49,9 @@
       <!--<Parameter name="mporDate">2023-02-14</Parameter>-->
       <Parameter name="mporDays">10</Parameter>
       <Parameter name="mporCalendar">US</Parameter>
+      <Parameter name="curveConfigMporFile">curveconfig.xml</Parameter>
+      <Parameter name="conventionsMporFile">conventions.xml</Parameter>
+      <Parameter name="portfolioMporFile">mporportfolio.xml</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="outputFileName">pnl.csv</Parameter>
       </Analytic>

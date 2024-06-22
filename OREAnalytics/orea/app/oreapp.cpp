@@ -771,37 +771,6 @@ void OREAppInputParameters::loadParameters() {
         setAdditionalResultsReportPrecision(parseInteger(tmp));
 
     /*************
-     * P&L
-     *************/
-    
-    tmp = params_->get("pnl", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
-        insertAnalytic("PNL");
-
-	tmp = params_->get("pnl", "mporDate", false);
-	if (tmp != "")
-	    setMporDate(parseDate(tmp));
-
-	tmp = params_->get("pnl", "mporDays", false);
-	if (tmp != "")
-	    setMporDays(parseInteger(tmp));
-
-	tmp = params_->get("pnl", "mporCalendar", false);
-	if (tmp != "")
-	    setMporCalendar(tmp);
-
-	tmp = params_->get("pnl", "simulationConfigFile", false);
-	if (tmp != "") {
-	    string simulationConfigFile = (inputPath / tmp).generic_string();
-	    LOG("Loading scenario simulation config from file" << simulationConfigFile);
-	    // Should we check whether other analytics are setting this, too?
-	    setScenarioSimMarketParamsFromFile(simulationConfigFile);
-	} else {
-	    ALOG("Scenario Simulation market data not loaded");
-	}
-    }
-
-    /*************
      * CASHFLOW
      *************/
 
@@ -1231,6 +1200,59 @@ void OREAppInputParameters::loadParameters() {
             setOutputHistoricalScenarios(parseBool(tmp));
     }
 
+    /*************
+     * P&L
+     *************/
+
+    tmp = params_->get("pnl", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("PNL");
+
+        tmp = params_->get("pnl", "mporDate", false);
+        if (tmp != "")
+            setMporDate(parseDate(tmp));
+
+        tmp = params_->get("pnl", "mporDays", false);
+        if (tmp != "")
+            setMporDays(parseInteger(tmp));
+
+        tmp = params_->get("pnl", "mporCalendar", false);
+        if (tmp != "")
+            setMporCalendar(tmp);
+
+        tmp = params_->get("pnl", "simulationConfigFile", false);
+        if (tmp != "") {
+            string simulationConfigFile = (inputPath / tmp).generic_string();
+            LOG("Loading scenario simulation config from file" << simulationConfigFile);
+            // Should we check whether other analytics are setting this, too?
+            setScenarioSimMarketParamsFromFile(simulationConfigFile);
+        } else
+            ALOG("Scenario Simulation market data not loaded");
+        
+        tmp = params_->get("pnl", "conventionsMporFile", false);
+        if (tmp != "") {
+            filesystem::path conventionsMporFile = inputPath / params_->get("pnl", "conventionsMporFile");
+            LOG("Loading mpor conventions from file: " << conventionsMporFile);
+            
+            // Initialize the conventions singleton before loading the conventions from file,
+            // so that a convention can use a custom index that is defined further up in the file.
+            QuantLib::ext::shared_ptr<Conventions> mporConventions = QuantLib::ext::make_shared<Conventions>();
+            ore::data::InstrumentConventions::instance().setConventions(mporConventions, mporDate());
+            mporConventions->fromFile(conventionsMporFile.generic_string());
+        }
+
+        tmp = params_->get("pnl", "curveConfigMporFile", false);
+        if (tmp != "") {
+            filesystem::path curveConfigFile = inputPath / params_->get("pnl", "curveConfigMporFile");
+            LOG("Load curve configurations from file: ");
+            setCurveConfigsFromFile(curveConfigFile.generic_string(), "mpor");
+        }
+
+        tmp = params_->get("pnl", "portfolioMporFile", false);
+        if (tmp != "")
+            setMporPortfolioFromFile(tmp, inputPath);
+    }
+
     /****************
      * PNL Explain
      ****************/
@@ -1266,6 +1288,29 @@ void OREAppInputParameters::loadParameters() {
         } else {
             WLOG("Sensitivity scenario data not loaded");
         }
+
+        tmp = params_->get("pnlExplain", "conventionsMporFile", false);
+        if (tmp != "") {
+            filesystem::path conventionsMporFile = inputPath / tmp;
+            LOG("Loading mpor conventions from file: " << conventionsMporFile);
+
+            // Initialize the conventions singleton before loading the conventions from file,
+            // so that a convention can use a custom index that is defined further up in the file.
+            QuantLib::ext::shared_ptr<Conventions> mporConventions = QuantLib::ext::make_shared<Conventions>();
+            ore::data::InstrumentConventions::instance().setConventions(mporConventions, mporDate());
+            mporConventions->fromFile(conventionsMporFile.generic_string());
+        }
+                
+        tmp = params_->get("pnlExplain", "curveConfigMporFile", false);
+        if (tmp != "") {
+            filesystem::path curveConfigFile = inputPath / tmp;
+            LOG("Load curve configurations from file: ");
+            setCurveConfigsFromFile(curveConfigFile.generic_string(), "mpor");
+        }
+
+        tmp = params_->get("pnlExplain", "portfolioMporFile", false);
+        if (tmp != "")
+            setMporPortfolioFromFile(tmp, inputPath);
     }
     /****************
      * SIMM and IM Schedule

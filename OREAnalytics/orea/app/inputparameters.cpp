@@ -99,10 +99,10 @@ void InputParameters::setCurveConfigs(const std::string& xml) {
     curveConfigs_.add(curveConfig);
 }
 
-void InputParameters::setCurveConfigsFromFile(const std::string& fileName) {
+void InputParameters::setCurveConfigsFromFile(const std::string& fileName, std::string id) {
     auto curveConfig = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfig->fromFile(fileName);
-    curveConfigs_.add(curveConfig);
+    curveConfigs_.add(curveConfig, id);
 }
 
 void InputParameters::setIborFallbackConfig(const std::string& xml) {
@@ -146,6 +146,20 @@ void InputParameters::setPortfolioFromFile(const std::string& fileNameString, co
     for (auto file : files) {
         LOG("Loading portfolio from file: " << file);
         portfolio_->fromFile(file);
+    }
+}
+
+void InputParameters::setMporPortfolio(const std::string& xml) {
+    mporPortfolio_ = QuantLib::ext::make_shared<Portfolio>(buildFailedTrades_);
+    mporPortfolio_->fromXMLString(xml);
+}
+
+void InputParameters::setMporPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath) {
+    vector<string> files = getFileNames(fileNameString, inputPath);
+    mporPortfolio_ = QuantLib::ext::make_shared<Portfolio>(buildFailedTrades_);
+    for (auto file : files) {
+        LOG("Loading mpor portfolio from file: " << file);
+        mporPortfolio_->fromFile(file);
     }
 }
 
