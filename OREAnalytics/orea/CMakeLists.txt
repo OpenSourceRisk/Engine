@@ -20,9 +20,10 @@ app/analytic.cpp
 app/analytics/analyticfactory.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
-app/analytics/pnlexplainanalytic.cpp
-app/analytics/pnlanalytic.cpp
+app/analytics/parscenarioanalytic.cpp
 app/analytics/parstressconversionanalytic.cpp
+app/analytics/pnlanalytic.cpp
+app/analytics/pnlexplainanalytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
@@ -30,6 +31,10 @@ app/analytics/simmanalytic.cpp
 app/analytics/stresstestanalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
+app/analytics/xvaexplainanalytic.cpp
+app/analytics/xvasensitivityanalytic.cpp
+app/analytics/xvastressanalytic.cpp
+app/analytics/zerotoparshiftanalytic.cpp
 app/analyticsmanager.cpp
 app/cleanupsingletons.cpp
 app/initbuilders.cpp
@@ -89,6 +94,7 @@ engine/varbacktest.cpp
 engine/varcalculator.cpp
 engine/xvaenginecg.cpp
 engine/zerotoparcube.cpp
+engine/zerotoparshift.cpp
 scenario/clonedscenariogenerator.cpp
 scenario/clonescenariofactory.cpp
 scenario/crossassetmodelscenariogenerator.cpp
@@ -177,9 +183,10 @@ app/analytic.hpp
 app/analytics/analyticfactory.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
-app/analytics/pnlexplainanalytic.hpp
-app/analytics/pnlanalytic.hpp
+app/analytics/parscenarioanalytic.hpp
 app/analytics/parstressconversionanalytic.hpp
+app/analytics/pnlanalytic.hpp
+app/analytics/pnlexplainanalytic.hpp
 app/analytics/pricinganalytic.hpp
 app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
@@ -187,6 +194,10 @@ app/analytics/simmanalytic.hpp
 app/analytics/stresstestanalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
+app/analytics/xvaexplainanalytic.hpp
+app/analytics/xvasensitivityanalytic.hpp
+app/analytics/xvastressanalytic.hpp
+app/analytics/zerotoparshiftanalytic.hpp
 app/analyticsmanager.hpp
 app/cleanupsingletons.hpp
 app/initbuilders.hpp
@@ -256,6 +267,7 @@ engine/varbacktest.hpp
 engine/varcalculator.hpp
 engine/xvaenginecg.hpp
 engine/zerotoparcube.hpp
+engine/zerotoparshift.hpp
 scenario/aggregationscenariodata.hpp
 scenario/clonedscenariogenerator.hpp
 scenario/clonescenariofactory.hpp

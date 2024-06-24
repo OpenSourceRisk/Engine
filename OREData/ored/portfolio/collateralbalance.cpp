@@ -30,10 +30,11 @@ using ore::data::parseReal;
 namespace ore {
 namespace data {
 
-void CollateralBalances::add(const QuantLib::ext::shared_ptr<CollateralBalance>& cb) {
-    std::pair<NettingSetDetails, QuantLib::ext::shared_ptr<CollateralBalance>> newCollateralBalance(cb->nettingSetDetails(),
-                                                                                            cb);
-    collateralBalances_.insert(newCollateralBalance);
+void CollateralBalances::add(const QuantLib::ext::shared_ptr<CollateralBalance>& cb, const bool overwrite) {
+    if (collateralBalances_.find(cb->nettingSetDetails()) != collateralBalances_.end() && !overwrite)
+        QL_FAIL("Cannot add collateral balances since it already exists and overwrite=false: " << cb->nettingSetDetails());
+
+    collateralBalances_[cb->nettingSetDetails()] = cb;
 }
 
 bool CollateralBalances::has(const NettingSetDetails& nettingSetDetails) const {
@@ -84,8 +85,8 @@ void CollateralBalance::fromXML(XMLNode* node) {
     if (nettingSetDetailsNode) {
         nettingSetDetails_.fromXML(nettingSetDetailsNode);
     } else {
-        nettingSetId_ = XMLUtils::getChildValue(node, "NettingSetId", false);
-        nettingSetDetails_ = NettingSetDetails(nettingSetId_);
+        const string nettingSetId = XMLUtils::getChildValue(node, "NettingSetId", false);
+        nettingSetDetails_ = NettingSetDetails(nettingSetId);
     }   
 
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
@@ -111,8 +112,8 @@ void CollateralBalance::fromXML(XMLNode* node) {
 XMLNode* CollateralBalance::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("CollateralBalance");
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    if (nettingSetDetails_.empty()) {
-        XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
+    if (nettingSetDetails_.emptyOptionalFields()) {
+        XMLUtils::addChild(doc, node, "NettingSetId", nettingSetDetails_.nettingSetId());
     } else {
         XMLUtils::appendNode(node, nettingSetDetails_.toXML(doc));
     }

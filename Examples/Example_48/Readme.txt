@@ -8,7 +8,7 @@ Portfolio
 
 Market
 
-   Pseudo market as of 28/08/2018
+   Pseudo market as of 25/08/2020
    
 Analytics
 

@@ -65,8 +65,9 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
                        const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
                        const std::map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVols,
                        const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves,
-                       const bool buildCalibrationInfo) {
-    init(asof, spec, loader, curveConfigs, fxSpots, yieldCurves, fxVols, correlationCurves, buildCalibrationInfo);
+                       const bool buildCalibrationInfo, const Market* market) {
+    init(asof, spec, loader, curveConfigs, fxSpots, yieldCurves, fxVols, correlationCurves, buildCalibrationInfo,
+         market);
 }
 
 void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
@@ -217,6 +218,19 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         QL_FAIL("Delta FX vol surface: invalid interpolation, expected Linear, Cubic");
     }
 
+    bool flatExtrapolation = true;
+    auto smileExtrapType = parseExtrapolation(config->smileExtrapolation());
+    if (smileExtrapType == Extrapolation::UseInterpolator) {
+        DLOG("Smile extrapolation switched to using interpolator.");
+        flatExtrapolation = false;
+    } else if (smileExtrapType == Extrapolation::None) {
+        DLOG("Smile extrapolation cannot be turned off on its own so defaulting to flat.");
+    } else if (smileExtrapType == Extrapolation::Flat) {
+        DLOG("Smile extrapolation has been set to flat.");
+    } else {
+        DLOG("Smile extrapolation " << smileExtrapType << " not expected so defaulting to flat.");
+    }
+
     // daycounter used for interpolation in time.
     // TODO: push into conventions or config
     DayCounter dc = config->dayCounter();
@@ -227,7 +241,8 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                    [](const std::pair<Real, string>& x) { return x.first; });
     vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
         asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot_, domYts_, forYts_,
-        deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_, boost::none, interp);
+        deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_, boost::none, interp,
+        flatExtrapolation);
 
     vol_->enableExtrapolation();
 }
@@ -788,7 +803,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                       const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
                       const std::map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVols,
                       const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves,
-                      const bool buildCalibrationInfo) {
+                      const bool buildCalibrationInfo, const Market* market) {
     try {
 
         const QuantLib::ext::shared_ptr<FXVolatilityCurveConfig>& config = curveConfigs.fxVolCurveConfig(spec.curveConfigID());
@@ -900,10 +915,26 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         QL_REQUIRE(spotSpec != nullptr,
                    "could not parse '" << config->fxSpotID() << "' to FXSpotSpec, expected FX/CCY1/CCY2");
         fxSpot_ = fxSpots.getQuote(spotSpec->unitCcy() + spotSpec->ccy());
-        if (!config->fxDomesticYieldCurveID().empty())
-            domYts_ = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
-        if (!config->fxForeignYieldCurveID().empty())
-            forYts_ = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
+
+        if (!config->fxDomesticYieldCurveID().empty() || !config->fxForeignYieldCurveID().empty()) {
+
+            /* If at least one curve is specified and the other is empty, we populate the empty one with the inccy
+               discount curve. This is for cases like EUR-USD where we leave the USD discount curve empty in the
+               EUR-IN-USD curve config and fill it in dynamically with the inccy USD discount curve. The same has
+               to be done for fx vol surfaces to get consistent fx forwards. */
+
+            if (!config->fxDomesticYieldCurveID().empty()) {
+                domYts_ = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
+            } else {
+                domYts_ = market->discountCurve(spotSpec->ccy(), Market::inCcyConfiguration);
+            }
+
+            if (!config->fxForeignYieldCurveID().empty()) {
+                forYts_ = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
+            } else {
+                forYts_ = market->discountCurve(spotSpec->unitCcy(), Market::inCcyConfiguration);
+            }
+        }
 
         if (config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta) {
             buildSmileDeltaCurve(asof, spec, loader, config, fxSpots, yieldCurves);

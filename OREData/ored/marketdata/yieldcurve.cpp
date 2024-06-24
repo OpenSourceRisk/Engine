@@ -72,6 +72,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -194,6 +195,12 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::Quadratic;
     else if (s == "LogQuadratic")
         return YieldCurve::InterpolationMethod::LogQuadratic;
+    else if (s == "LogNaturalCubic")
+        return YieldCurve::InterpolationMethod::LogNaturalCubic;
+    else if (s == "LogFinancialCubic")
+        return YieldCurve::InterpolationMethod::LogFinancialCubic;
+    else if (s == "LogCubicSpline")
+        return YieldCurve::InterpolationMethod::LogCubicSpline;
     else if (s == "Hermite")
         return YieldCurve::InterpolationMethod::Hermite;
     else if (s == "CubicSpline")
@@ -242,6 +249,12 @@ std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMetho
         return out << "Quadratic";
     else if (m == YieldCurve::InterpolationMethod::LogQuadratic)
         return out << "LogQuadratic";
+    else if (m == YieldCurve::InterpolationMethod::LogNaturalCubic)
+        return out << "LogNaturalCubic";
+    else if (m == YieldCurve::InterpolationMethod::LogFinancialCubic)
+        return out << "LogFinancialCubic";
+    else if (m == YieldCurve::InterpolationMethod::LogCubicSpline)
+        return out << "LogCubicSpline";
     else if (m == YieldCurve::InterpolationMethod::Hermite)
         return out << "Hermite";
     else if (m == YieldCurve::InterpolationMethod::CubicSpline)
@@ -442,9 +455,10 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
              typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_,
-                 Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative, 0.0),
-                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
-                                                        minFactor, dontThrowSteps));
+                 Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
          } break;
          case InterpolationMethod::Quadratic: {
              typedef PiecewiseYieldCurve<ZeroYield, QuantExt::Quadratic, QuantExt::IterativeBootstrap> my_curve;
@@ -460,6 +474,31 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
                  asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0, 1),
                  my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogNaturalCubic: {
+             typedef PiecewiseYieldCurve<ZeroYield, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, LogCubic(CubicInterpolation::Kruger, true),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogFinancialCubic: {
+             typedef PiecewiseYieldCurve<ZeroYield, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::FirstDerivative),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogCubicSpline: {
+             typedef PiecewiseYieldCurve<ZeroYield, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
          } break;
          case InterpolationMethod::DefaultLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<ZeroYield, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
@@ -565,6 +604,31 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
                  my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
+         case InterpolationMethod::LogNaturalCubic: {
+             typedef PiecewiseYieldCurve<Discount, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, LogCubic(CubicInterpolation::Kruger, true),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogFinancialCubic: {
+             typedef PiecewiseYieldCurve<Discount, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 QuantLib::LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                                 CubicInterpolation::FirstDerivative),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogCubicSpline: {
+             typedef PiecewiseYieldCurve<Discount,LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
          case InterpolationMethod::DefaultLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<Discount, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
              yieldts = QuantLib::ext::make_shared<my_curve>(
@@ -668,6 +732,31 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
                  asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0, 1),
                  my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogNaturalCubic: {
+             typedef PiecewiseYieldCurve<ForwardRate, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, LogCubic(CubicInterpolation::Kruger, true),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogFinancialCubic: {
+             typedef PiecewiseYieldCurve<ForwardRate, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::FirstDerivative),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogCubicSpline: {
+             typedef PiecewiseYieldCurve<ForwardRate, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
          } break;
          case InterpolationMethod::DefaultLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<ForwardRate, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
@@ -1738,16 +1827,11 @@ void YieldCurve::addFutures(const QuantLib::ext::shared_ptr<YieldCurveSegment>& 
 
                 // Create a Overnight index future helper
                 Date startDate, endDate;
-                if (futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM) {
-                    Date refEnd = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
-                    Date refStart = refEnd - futureQuote->tenor();
-                    startDate = IMM::nextDate(refStart, false);
-                    endDate = IMM::nextDate(refEnd, false);
-                } else if (futureConvention->dateGenerationRule() ==
-                           FutureConvention::DateGenerationRule::FirstDayOfMonth) {
-                    endDate = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear()) + 1 * Months;
-                    startDate = endDate - futureQuote->tenor();
-                }
+                std::pair<Date, Date> startEndDate;
+                startEndDate = getOiFutureStartEndDate(futureQuote->expiryMonth(), futureQuote->expiryYear(),
+                                                    futureQuote->tenor(), futureConvention->dateGenerationRule());
+                startDate = startEndDate.first;
+                endDate = startEndDate.second;
 
                 if (endDate <= asofDate_) {
                     DLOG("Skipping the " << io::ordinal(i + 1) << " overnight index future instrument because its "
@@ -1777,8 +1861,7 @@ void YieldCurve::addFutures(const QuantLib::ext::shared_ptr<YieldCurveSegment>& 
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM,
                     "For MM Futures only 'IMM' is allowed as the date generation rule, check the future convention '"
                         << segment->conventionsID() << "'");
-                Date refDate(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
-                Date immDate = IMM::nextDate(refDate, false);
+                Date immDate = getMmFutureExpiryDate(futureQuote->expiryMonth(), futureQuote->expiryYear());
 
                 if (immDate < asofDate_) {
                     DLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its "

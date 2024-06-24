@@ -189,6 +189,7 @@
       <xs:element type="xs:string" name="BaseVolatility1" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BaseVolatility2" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+      <xs:element type="extrapolationType" name="SmileExtrapolation" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

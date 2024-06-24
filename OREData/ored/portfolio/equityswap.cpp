@@ -130,10 +130,12 @@ void EquitySwap::setIsdaTaxonomyFields() {
 
 QuantLib::Real EquitySwap::notional() const {
     Date asof = Settings::instance().evaluationDate();
-    for (auto const& c : legs_[equityLegIndex_]) {
-        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(c)) {
-            if (c->date() > asof)
-                return cpn->nominal();
+    if (legs_.size() > equityLegIndex_) {
+        for (auto const& c : legs_[equityLegIndex_]) {
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(c)) {
+                if (c->date() > asof)
+                    return cpn->nominal();
+            }
         }
     }
     ALOG("Error retrieving current notional for equity swap " << id() << " as of " << io::iso_date(asof));

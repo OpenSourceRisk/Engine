@@ -100,8 +100,9 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
-                       "number of tenors and shifts does not match in discount curve stress data");
-            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in discount curve stress data");
+                       "number of tenors (" << data.shiftTenors.size() << ")and shifts (" << data.shifts.size()
+                                            << ") does not match in discount curve stress data for ccy = " << ccy);
+            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in discount curve stress data for ccy = " << ccy);
             test.discountCurveShifts[ccy] = data;
         }
 
@@ -119,8 +120,9 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
-                       "number of tenors and shifts does not match in index curve stress data");
-            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in index curve stress data");
+                       "number of tenors (" << data.shiftTenors.size() << ")and shifts (" << data.shifts.size()
+                                            << ") does not match in index curve stress data curve = " << index);
+            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in index curve stress data curve = " << index);
             test.indexCurveShifts[index] = data;
         }
 
@@ -138,8 +140,9 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
-                       "number of tenors and shifts does not match in yield curve stress data");
-            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in yield curve stress data");
+                       "number of tenors (" << data.shiftTenors.size() << ")and shifts (" << data.shifts.size()
+                                            << ") does not match in yield curve stress data curve = " << name);
+            QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in yield curve stress data curve = " << name);
             test.yieldCurveShifts[name] = data;
         }
 
@@ -370,8 +373,7 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
             XMLNode* swaptionVolNode = XMLUtils::addChild(doc, swaptionVolsNode, "SwaptionVolatility");
             XMLUtils::addAttribute(doc, swaptionVolNode, "ccy", key);
             XMLUtils::addChild(doc, swaptionVolNode, "ShiftType", ore::data::to_string(data.shiftType));
-            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftTerms", data.shiftTerms);
-            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftExpiries", data.shiftExpiries);
+            
             XMLNode* shiftSizesNode = XMLUtils::addChild(doc, swaptionVolNode, "Shifts");
 
             if (data.shifts.empty()) {
@@ -386,6 +388,9 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
                                        swaptionAttributeNames, attributeValues);
                 }
             }
+            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftExpiries", data.shiftExpiries);
+            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftTerms", data.shiftTerms);
+            
         }
         // Credit
         curveShiftDataToXml(doc, testNode, test.survivalProbabilityShifts, "name", "SurvivalProbability",

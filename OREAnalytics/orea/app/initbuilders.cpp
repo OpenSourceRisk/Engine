@@ -22,6 +22,7 @@
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
+#include <orea/app/analytics/parscenarioanalytic.hpp>
 #include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/pnlexplainanalytic.hpp>
@@ -32,6 +33,10 @@
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/xvaexplainanalytic.hpp>
+#include <orea/app/analytics/xvasensitivityanalytic.hpp>
+#include <orea/app/analytics/xvastressanalytic.hpp>
+#include <orea/app/analytics/zerotoparshiftanalytic.hpp>
 
 #include <ored/utilities/databuilders.hpp>
 
@@ -63,7 +68,12 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("SIMM", {}, SimmAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("XVA", xvaAnalyticSubAnalytics, XvaAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("STRESS", {}, StressTestAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("PAR_SCENARIO", {}, ParScenarioAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PARSTRESSCONVERSION", {}, ParStressConversionAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("ZEROTOPARSHIFT", {}, ZeroToParShiftAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("XVA_STRESS", {}, XvaStressAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("XVA_SENSITIVITY", {}, XvaSensitivityAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("XVA_EXPLAIN", {}, XvaExplainAnalytic, false);
     }
 }
 

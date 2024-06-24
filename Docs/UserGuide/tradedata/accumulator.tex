@@ -43,7 +43,7 @@ takes place on specific period end dates for all observation dates in that perio
           <Date>2025-03-03</Date>
           <Date>2029-03-03</Date>
         </Dates>
-      </Dates>
+     </Dates>
     </SettlementDates>
     <RangeBounds>
       <RangeBound>
@@ -204,7 +204,7 @@ The meanings and allowable values of the elements in the data node follow below.
 
 Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}. The strike may be any positive real number. The currency provided in this node may be quoted as corresponding minor currency to the underlying major currency. If omitted, local strikes should be used in each \lstinline!RangeBound! node.
 
-\item Currency: The payout currency. The result of the payout formula above is treated to be in this currency. Note that for (non-quanto) FxAccumulators this should be the domestic (\lstinline!CCY2!) currency. For non-quanto Equity- and CommodityAccumulators this should be the currency the equity or commodity is quoted in. Notice section \ref{sss:payccy_st}. \\
+\item Currency: The payout currency. The result of the payout formula above is treated to be in this currency. Note that for (non-quanto) FxAccumulators this should be the domestic (\lstinline!CCY2!) currency. For non-quanto Equity- and CommodityAccumulators this should be the currency the equity or commodity is quoted in. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
 
 Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
 
@@ -309,7 +309,7 @@ The relevant fields in the \lstinline!OptionData! node for an Accumulator are:
 
 % scripted trade representation type 01
 
-Accumulators can also be represented as scripted trades, refer to Section \ref{app:scriptedtrade} for an
+Accumulators can also be represented as scripted trades, refer to the separate documentation in ore/Docs/ScriptedTrade for an
 introduction. Listing \ref{lst:fxaccumulator01} shows the structure of an Accumulator (type 01) example, here on a FX
 underlying (EQ or COMM underlyings are possible as well).
 
@@ -378,12 +378,12 @@ The meanings and allowable values of the elements in the \verb+Accumulator01Data
 \item Strike: The strike value the bought currency is purchased at.
 \item FixedAmount: The unleveraged notional amount accumulated at each fixing date
 \item LongShort: 1 for a long, -1 for a short position
-\item Underlying: See Section \ref{data_index} for allowable values.
-\item PayCcy: The payment currency of the trade. Notice section \ref{sss:payccy_st}.
+\item Underlying: See ore/Docs/ScriptedTrade's Index section for allowable values.
+\item PayCcy: The payment currency of the trade. Notice section Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade.
 \item StartDate: The start date. American knock out events are monitored from this date on. Notice that the start date
   must be given in the scripted trade representation for European knock outs, although it is not used for this variant.
-\item FixingDates: The fixing dates, given as a ScheduleData, or DerivedSchedule (see \ref{app:scriptedtrade}).
-\item SettlementDates: The fixing dates, given as a ScheduleData, or DerivedSchedule (see \ref{app:scriptedtrade}).
+\item FixingDates: The fixing dates, given as a ScheduleData, or DerivedSchedule (see ore/Docs/ScriptedTrade).
+\item SettlementDates: The fixing dates, given as a ScheduleData, or DerivedSchedule (see ore/Docs/ScriptedTrade).
 \item RangeUpperBound: Values of upperbounds for the leverage ranges. If a given range has no upperbound add 100000
 \item RangeLowerBound: Values of lowerbounds for the leverage ranges. If a given range has no lowerbound add 0
 \item RangeLeverages: Values of leverages for the leverage ranges.
@@ -455,7 +455,7 @@ currentNotional = FixingAmount * Strike;
 
 % scripted trade representation type 02
 
-Accumulators of Type 02 can also be represented as scripted trades, refer to Section \ref{app:scriptedtrade} for an
+Accumulators of Type 02 can also be represented as scripted trades, see ore/Docs/ScriptedTrade for an
 introduction.  Listing \ref{lst:eqaccumulator02} shows the structure of an Accumulator (Type 02) example, here on an
 equity underlying. FX and COMM underlyings are possible as well.
 
@@ -551,16 +551,16 @@ The meanings and allowable values of the elements in the \verb+DecumulatorData+ 
   are non-negative values.
 \item LongShort: The position, allowable values are ``Long'' and ``Short''
 \item Underlying:  The underlying index \\
-  See Section \ref{data_index} for allowable values.
-\item PayCcy: The payment currency. See the appendix for allowable currency codes.  Notice section \ref{sss:payccy_st}.
-\item ObservationDates: The observation date schedule. See section \ref{app:scriptedtrade} on how this is set up.
+  See ore/Docs/ScriptedTrade's Index section for allowable values.
+\item PayCcy: The payment currency. See the appendix for allowable currency codes.  Notice section Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade.
+\item ObservationDates: The observation date schedule. See ore/Docs/ScriptedTrade on how this is set up.
 \item KnowOutSettlementDates: The settlement dates associated to the observation dates in case of a knock out event, the
-  number of observation and knock out settlement dates must be equal. See section \ref{app:scriptedtrade} on how this is
+  number of observation and knock out settlement dates must be equal. See ore/Docs/ScriptedTrade on how this is
   set up.
-\item ObservationPeriodEndDates: The last date for each observation period. See section \ref{app:scriptedtrade} on how
+\item ObservationPeriodEndDates: The last date for each observation period. See ore/Docs/ScriptedTrade on how
   this is set up.
 \item SettlementDates: The settlement dates for each observation period, the number of settlement dates and the number
-  of observation period end dates must be equal. See section \ref{app:scriptedtrade} on how this is set up.
+  of observation period end dates must be equal. See ore/Docs/ScriptedTrade on how this is set up.
 \item RangeUpperBounds: The multiplier for the ``number of days below'' in the payoff. Allowable values are non-negative numbers.
 \item RangeLowerBounds: The multiplier for the ``number of days above'' in the payoff. Allowable values are non-negative numbers.
 \item RangeLeverages: The multiplier for the defined ranges. Allowable values are non-negative numbers.

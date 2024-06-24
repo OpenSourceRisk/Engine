@@ -1,5 +1,16 @@
 \subsubsection{Flexi Swap}
 
+A Flexi Swap is an amortizing swap in which one party has the option to further 
+reduce the notional in each period to each value between the current notional and 
+a specified lower bound for that period.
+
+Flexi Swaps are priced in ORE following the Replication Approach described in (F. Jamshidian, 2005). The replicating basket of
+Bermudan Swaptions is priced using the method as described under Product Type ``Bermudan Swaption'', but using one
+global calibration for all swaptions derived from the flexi swap structure.
+Prepayment option types ``ReductionByAbsoluteAmount'' and ``ReductionUpToAbsoluteAmount'' are both treated approximately
+by generating a schedule of deterministic, lower notional bounds from assuming that all earlier prepayment options
+were executed.
+
 The \lstinline!FlexiSwapData! node is the trade data container for trade type Flexi Swap. A Flexi Swap is a two-legged
 swap with optional and customisable pre-payments. Flexi Swaps are typically used for representing swaps linked to Asset
 Backed Securities with flexible amortisation. A Flexi Swap must have two legs, one fixed and one floating. The floating
