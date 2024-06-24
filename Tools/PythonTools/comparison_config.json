@@ -464,7 +464,7 @@
             "names": [
               "NPV",
               "NpvCcy",
-              "CurrentNotional",
+              "SD",
               "delta",
               "d",
               "MF",
@@ -472,6 +472,8 @@
               "S",
               "E",
               "T",
+              "CurrentPrice1",
+              "CurrentPrice2",
               "NumNominalFlows",
               "Price",
               "Strike"
@@ -1914,6 +1916,7 @@
           }
         ]
       },
+      "simmTradeIds.json": {},
       "flownpv\\.json": {
         "settings": [
           {
