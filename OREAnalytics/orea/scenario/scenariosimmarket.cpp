@@ -3250,6 +3250,44 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldS
     return Handle<YieldTermStructure>();
 }
 
+Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const std::string& key) const {
+    RiskFactorKey rf = parseRiskFactorKey(key + "/0");
+    switch (rf.keytype) {
+    case RiskFactorKey::KeyType::DiscountCurve:
+        return this->discountCurve(rf.name);
+    case RiskFactorKey::KeyType::YieldCurve:
+        return this->yieldCurve(rf.name);
+    case RiskFactorKey::KeyType::IndexCurve:
+        return this->iborIndex(rf.name)->forwardingTermStructure();
+    default:
+        QL_FAIL("ScenarioSimMarket::getYieldCurve(" << key << "): key type " << rf.keytype
+                                                    << " not suitable for yield curves. Internal error. Contact dev.");
+    }
+}
+
+void ScenarioSimMarket::applyCurveAlgebra() {
+    // LOG("Applying " << parameters_->curveAlgebra().size() < " curve algebra rules...");
+    // for (auto const& a : parameters_ > curveAlgebra()) {
+    //     if (a.rule().type() == "Spreaded") {
+    //         applyCurveAlgebraSpreadedRateCurve(getRateCurve(a.key()), getRateCurve(a.rule().Argument1()));
+    //     } else {
+    //         QL_FAIL("curve algebra rule type '" << a.rule().type() << "' not recognized. Expected one of 'Spreaded'.");
+    //     }
+    // }
+}
+
+void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
+                                                           const Handle<YieldTermStructure>& base) {
+    if (auto c = boost::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
+        c->makeThisCurveSpreaded(base);
+    } else if (auto c = boost::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
+        c->makeThisCurveSpreaded(base);
+    } else {
+        QL_FAIL("ScenarioSimMarket::applyCurveAlgebraSpreadedRateCurve(): target curve could not be cast to one of the "
+                "supported curve types. Internal error, contact dev.");
+    }
+}
+
 } // namespace analytics
 } // namespace ore
 

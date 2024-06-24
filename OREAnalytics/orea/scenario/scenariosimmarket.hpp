@@ -152,6 +152,12 @@ protected:
                        const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
                        bool& simDataWritten, bool simulate = true, bool spreaded = false);
 
+    QuantLib::Handle<QuantLib::YieldTermStructure> getYieldCurve(const std::string& key) const;
+
+    void applyCurveAlgebra();
+    void applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
+                                             const Handle<YieldTermStructure>& base);
+
     /*! Given a yield curve spec ID, \p yieldSpecId, return the corresponding yield term structure
     from the \p market. If \p market is `nullptr`, then the yield term structure is taken from
     this ScenarioSimMarket instance.
