@@ -38,5 +38,19 @@
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
     </Analytic>
+    <Analytic type="sensitivity">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="scenarioOutputFile">sensi_scenarios.csv</Parameter>
+      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+      <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+      <Parameter name="parSensitivity">Y</Parameter>
+      <Parameter name="parSensitivityOutputFile">parsensitivity.csv</Parameter>
+      <Parameter name="outputJacobi">Y</Parameter>
+      <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
+      <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
+    </Analytic>
   </Analytics>
 </ORE>

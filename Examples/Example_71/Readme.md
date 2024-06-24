@@ -6,4 +6,4 @@ This example shows how to price NDFs in two different representation in portofli
 1. FxForward with SettlementData
 2. Swap with two FixedLegs with Indexings
 
-The NPV of the two trades should be identical, as shown in the example.
+The metrics of the two trades should be identical, as shown in the example.
