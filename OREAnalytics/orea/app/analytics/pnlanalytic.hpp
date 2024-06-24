@@ -37,14 +37,13 @@ public:
     PnlAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic::Impl(inputs), useSpreadedTermStructures_(true) {
         setLabel(LABEL);
-        mporDate_ = inputs_->mporDate() != Date()
-                        ? inputs_->mporDate()
-                        : inputs_->mporCalendar().advance(inputs_->asof(), int(inputs_->mporDays()), QuantExt::Days);
+        mporDate_ = inputs_->mporDate();
         LOG("ASOF date " << io::iso_date(inputs_->asof()));
         LOG("MPOR date " << io::iso_date(mporDate_));
     
         auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs);
         if (mporAnalytic.second) {
+            mporAnalytic.second->configurations().curveConfig = inputs->curveConfigs().get("mpor");
             auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic.second->impl().get());
             sai->setUseSpreadedTermStructures(true);
             addDependentAnalytic(mporLookupKey, mporAnalytic.second);

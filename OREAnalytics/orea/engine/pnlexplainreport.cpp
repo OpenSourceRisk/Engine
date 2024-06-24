@@ -186,37 +186,37 @@ void PnlExplainReport::closeReports(const QuantLib::ext::shared_ptr<MarketRiskRe
     const vector<ore::data::Report::ReportType>& tradeIds = report->data(0);
     for (Size j = 0; j < tradeIds.size(); j++) {
         string tradeId = QuantLib::ext::get<std::string>(tradeIds[j]);
+        PnlExplainResults res;
         const auto& r = results_.find(tradeId);
-        if (r == results_.end()) {
-            StructuredAnalyticsWarningMessage("Pnl Explain", "Failed to generate Pnl Explain Records",
-                                              "Could not find Pnl Explain record for trade ID: " + tradeId)
-                .log();
-        } else {
-            report->next();
-            report->jumpToColumn(pnlReportColumnSize_);
-            report->add(r->second.pnl)
-                .add(r->second.delta)
-                .add(r->second.gamma)
-                .add(r->second.vega)
-                .add(r->second.irDelta)
-                .add(r->second.irGamma)
-                .add(r->second.irVega)
-                .add(r->second.eqDelta)
-                .add(r->second.eqGamma)
-                .add(r->second.eqVega)
-                .add(r->second.fxDelta)
-                .add(r->second.fxGamma)
-                .add(r->second.fxVega)
-                .add(r->second.infDelta)
-                .add(r->second.infGamma)
-                .add(r->second.infVega)
-                .add(r->second.creditDelta)
-                .add(r->second.creditGamma)
-                .add(r->second.creditVega)
-                .add(r->second.comDelta)
-                .add(r->second.comGamma)
-                .add(r->second.comVega);
-        }
+        if (r == results_.end())
+            res = PnlExplainResults();
+        else
+            res = r->second;            
+        
+        report->next();
+        report->jumpToColumn(pnlReportColumnSize_);
+        report->add(res.pnl)
+            .add(res.delta)
+            .add(res.gamma)
+            .add(res.vega)
+            .add(res.irDelta)
+            .add(res.irGamma)
+            .add(res.irVega)
+            .add(res.eqDelta)
+            .add(res.eqGamma)
+            .add(res.eqVega)
+            .add(res.fxDelta)
+            .add(res.fxGamma)
+            .add(res.fxVega)
+            .add(res.infDelta)
+            .add(res.infGamma)
+            .add(res.infVega)
+            .add(res.creditDelta)
+            .add(res.creditGamma)
+            .add(res.creditVega)
+            .add(res.comDelta)
+            .add(res.comGamma)
+            .add(res.comVega);
     }
 
     MarketRiskReport::closeReports(reports);
