@@ -74,14 +74,14 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     QL_REQUIRE(analytic()->configurations().simMarketParams, "scenario sim market parameters not set");
     QL_REQUIRE(analytic()->configurations().todaysMarketParams, "today's market parameters not set");
     
-    auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
+    t0SimMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, inputs_->marketConfig("pricing"),
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
         inputs_->continueOnError(), useSpreadedTermStructures(), false, false, *inputs_->iborFallbackConfig());
     auto sgen = QuantLib::ext::make_shared<StaticScenarioGenerator>();
-    simMarket->scenarioGenerator() = sgen;
+    t0SimMarket_->scenarioGenerator() = sgen;
 
-    analytic()->setMarket(simMarket);
+    analytic()->setMarket(t0SimMarket_);
     analytic()->buildPortfolio();
 
     QuantLib::ext::shared_ptr<InMemoryReport> t0NpvReport = QuantLib::ext::make_shared<InMemoryReport>();
@@ -137,7 +137,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     // Set the evaluation date back to t0
     Settings::instance().evaluationDate() = inputs_->asof();
         
-    QuantLib::ext::shared_ptr<Scenario> asofBaseScenario = simMarket->baseScenarioAbsolute();
+    QuantLib::ext::shared_ptr<Scenario> asofBaseScenario = t0SimMarket_->baseScenarioAbsolute();
     auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic->impl().get());
     QuantLib::ext::shared_ptr<Scenario> mporBaseScenario = sai->scenarioSimMarket()->baseScenarioAbsolute();
 
@@ -159,8 +159,8 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     // Now update simMarket on asof date t0, with the t0 shift scenario
     sgen->setScenario(t0Scenario);
-    simMarket->update(simMarket->asofDate());
-    analytic()->setMarket(simMarket);
+    t0SimMarket_->update(t0SimMarket_->asofDate());
+    analytic()->setMarket(t0SimMarket_);
 
     // Build the portfolio, linked to the shifted market
     analytic()->buildPortfolio();

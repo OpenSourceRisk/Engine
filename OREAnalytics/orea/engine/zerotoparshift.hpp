@@ -42,6 +42,7 @@ public:
                             const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket);
 
     std::unordered_map<RiskFactorKey, double> parShifts(QuantLib::ext::shared_ptr<Scenario> scenario) const;
+    std::unordered_map<RiskFactorKey, double> baseValues() const { return baseValues_; }
 
 private:
     std::unordered_map<RiskFactorKey, double> parRates() const;
