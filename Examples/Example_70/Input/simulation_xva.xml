@@ -1,0 +1,236 @@
+<?xml version="1.0"?>
+<Simulation>
+  <!--
+	This section determines the scenario generation
+	given the model defined below.
+    -->
+  <Parameters>
+    <Discretization>Exact</Discretization>
+    <Grid>88,3M</Grid>
+    <Calendar>EUR,USD</Calendar>
+    <Sequence>SobolBrownianBridge</Sequence>
+    <Scenario>Simple</Scenario>
+    <Seed>42</Seed>
+    <Samples>100</Samples>
+    <CloseOutLag>2W</CloseOutLag>
+    <MporMode>StickyDate</MporMode>
+    <DayCounter>A365F</DayCounter>
+  </Parameters>
+  <!--
+	This section determines the simulation model composition
+	and the calibration of all components.
+    -->
+  <CrossAssetModel>
+    <DomesticCcy>EUR</DomesticCcy>
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </Currencies>
+    <BootstrapTolerance>0.0001</BootstrapTolerance>
+    <InterestRateModels>
+      <LGM ccy="default">
+        <CalibrationType>Bootstrap</CalibrationType>
+        <!-- Bootstrap, BestFit -->
+        <Volatility>
+          <Calibrate>Y</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <!-- Hagan, HullWhite -->
+          <ParamType>Piecewise</ParamType>
+          <!-- Constant, Piecewise -->
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <!-- <TimeGrid/> -->
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+          <!-- <InitialValue>0.01</InitialValue>-->
+        </Volatility>
+        <Reversion>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
+          <!-- Hagan, HullWhite -->
+          <ParamType>Constant</ParamType>
+          <!-- Constant, Piecewise -->
+          <TimeGrid/>
+          <InitialValue>0.0</InitialValue>
+        </Reversion>
+        <CalibrationSwaptions>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+          <Strikes/>
+        </CalibrationSwaptions>
+        <ParameterTransformation>
+          <ShiftHorizon>20.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+      <LGM ccy="EUR">
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Volatility>
+          <Calibrate>Y</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+        </Volatility>
+        <Reversion>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.0</InitialValue>
+        </Reversion>
+        <CalibrationSwaptions>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+          <Strikes/>
+        </CalibrationSwaptions>
+        <ParameterTransformation>
+          <ShiftHorizon>20.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+    </InterestRateModels>
+    <ForeignExchangeModels>
+      <CrossCcyLGM foreignCcy="default">
+        <DomesticCcy>EUR</DomesticCcy>
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Sigma>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
+        </Sigma>
+        <CalibrationOptions>
+          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+          <Strikes/>
+          <!-- ATMF, +25D, -25D, 1.2345 -->
+        </CalibrationOptions>
+      </CrossCcyLGM>
+      <CrossCcyLGM foreignCcy="USD">
+        <DomesticCcy>EUR</DomesticCcy>
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Sigma>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
+        </Sigma>
+        <CalibrationOptions>
+          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+          <Strikes/>
+          <!-- ATMF, +25D, -25D, 1.2345 -->
+        </CalibrationOptions>
+      </CrossCcyLGM>
+    </ForeignExchangeModels>
+    <InstantaneousCorrelations>
+      <Correlation factor1="IR:EUR" factor2="IR:USD">0</Correlation>
+      <Correlation factor1="IR:EUR" factor2="FX:USDEUR">0</Correlation>
+      <Correlation factor1="IR:USD" factor2="FX:USDEUR">0</Correlation>
+      <!-- ... -->
+    </InstantaneousCorrelations>
+  </CrossAssetModel>
+  <!--
+	This setion determines the composition of the market used for
+	pricing under future market scenarios,
+	1) the structure/composition of the actively simulated market (IR, FX)
+	2) the method applied to evolve volatility structures even if not
+	simulated (roll or push)
+    -->
+  <Market>
+    <BaseCurrency>EUR</BaseCurrency>
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </Currencies>
+    <YieldCurves>
+      <Configuration>
+        <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
+        <Interpolation>LogLinear</Interpolation>
+        <!-- Alternative: LinearZero -->
+        <Extrapolation>Y</Extrapolation>
+      </Configuration>
+    </YieldCurves>
+    <Indices>
+      <Index>EUR-EURIBOR-6M</Index>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-ESTER</Index>
+      <Index>USD-SOFR</Index>
+    </Indices>
+    <BenchmarkCurves>
+      <!--BenchmarkCurve>
+        <Name>EUR-IN-USD</Name>
+        <Currency>EUR</Currency>
+      </BenchmarkCurve-->
+      
+      <BenchmarkCurve>
+        <Name>BANK_EUR_LEND</Name>
+        <Currency>EUR</Currency>
+      </BenchmarkCurve>
+      <BenchmarkCurve>
+        <Name>BANK_EUR_BORROW</Name>
+        <Currency>EUR</Currency>
+      </BenchmarkCurve>
+    </BenchmarkCurves>
+    <SwapIndices>
+      <SwapIndex>
+        <Name>EUR-CMS-1Y</Name>
+        <DiscountingIndex>EUR-ESTER</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>EUR-CMS-30Y</Name>
+        <DiscountingIndex>EUR-ESTER</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-SOFR-1Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-SOFR-30Y</Name>
+        <DiscountingIndex>USD-SOFR</DiscountingIndex>
+      </SwapIndex>
+    </SwapIndices>
+    <DefaultCurves>
+      <Names>
+        <Name>CPTY_A</Name>
+        <Name>BANK</Name>
+      </Names>
+      <Tenors>1Y, 2Y, 3Y, 5Y, 10Y</Tenors>
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
+      <SimulateRecoveryRates>true</SimulateRecoveryRates>
+      <Calendars>
+        <Calendar name="">TARGET</Calendar>
+      </Calendars>
+      <Extrapolation>FlatZero</Extrapolation>
+    </DefaultCurves>
+    <!-- Even if we do not simulate them - option pricing needs vol
+	   surfaces, so we need to specify here how we propagate the
+	   vol structure and what its composition will be -->
+    <SwaptionVolatilities>
+      <Simulate>false</Simulate>
+      <!-- Alternative: ConstantVariance -->
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Keys>
+        <Key>EUR</Key>
+        <Key>USD</Key>
+      </Keys>
+      <Expiries>1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</Expiries>
+      <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</Terms>
+    </SwaptionVolatilities>
+    <FxVolatilities>
+      <Simulate>false</Simulate>
+      <!-- Alternative: ConstantVariance -->
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <CurrencyPairs>
+        <CurrencyPair>EURUSD</CurrencyPair>
+      </CurrencyPairs>
+      <Expiries>1M,3M,6M,1Y,2Y,3Y,5Y,10Y</Expiries>
+    </FxVolatilities>
+    
+    <!-- Additional data that is recorded during simulation for later
+	   use in the post processor -->
+    <AggregationScenarioDataCurrencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </AggregationScenarioDataCurrencies>
+    <AggregationScenarioDataIndices>
+    </AggregationScenarioDataIndices>
+  </Market>
+</Simulation>

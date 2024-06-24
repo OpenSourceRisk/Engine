@@ -135,7 +135,7 @@ Real ScenarioShiftCalculator::transform(const RiskFactorKey& key, Real value, co
         return 0.0;
     }
 
-    return -log(value) / t;
+    return -std::log(value) / t;
 }
 
 } // namespace analytics

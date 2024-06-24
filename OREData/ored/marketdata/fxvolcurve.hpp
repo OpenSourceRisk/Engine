@@ -55,7 +55,7 @@ public:
                const std::map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
                const std::map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVols,
                const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves,
-               const bool buildCalibrationInfo);
+               const bool buildCalibrationInfo, const Market* market);
     //@}
 
     //! \name Inspectors
@@ -89,7 +89,7 @@ private:
               const FXTriangulation& fxSpots, const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
               const std::map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVols,
               const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves,
-              const bool buildCalibrationInfo);
+              const bool buildCalibrationInfo, const Market* market);
 
     void buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                               QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,

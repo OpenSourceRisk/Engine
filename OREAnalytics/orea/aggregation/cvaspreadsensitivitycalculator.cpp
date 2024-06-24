@@ -79,12 +79,12 @@ Real CVASpreadSensitivityCalculator::survivalProbability(Time t, bool shift, Siz
     if (t < t1)
         return dts_->survivalProbability(t);
     else if (t < t2) {
-        return dts_->survivalProbability(t) * exp(-shiftSize_ * (t - t1));
+        return dts_->survivalProbability(t) * std::exp(-shiftSize_ * (t - t1));
     } else { // t >= t2
         if (!lastBucket)
-            return dts_->survivalProbability(t) * exp(-shiftSize_ * (t2 - t1));
+            return dts_->survivalProbability(t) * std::exp(-shiftSize_ * (t2 - t1));
         else
-            return dts_->survivalProbability(t) * exp(-shiftSize_ * (t - t1));
+            return dts_->survivalProbability(t) * std::exp(-shiftSize_ * (t - t1));
     }
 }
 

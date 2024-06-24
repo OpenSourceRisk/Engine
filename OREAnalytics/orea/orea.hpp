@@ -25,6 +25,7 @@
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
+#include <orea/app/analytics/parscenarioanalytic.hpp>
 #include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/pnlexplainanalytic.hpp>
@@ -35,6 +36,7 @@
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/xvaexplainanalytic.hpp>
 #include <orea/app/analytics/xvasensitivityanalytic.hpp>
 #include <orea/app/analytics/xvastressanalytic.hpp>
 #include <orea/app/analytics/zerotoparshiftanalytic.hpp>

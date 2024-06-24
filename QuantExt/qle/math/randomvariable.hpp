@@ -25,9 +25,11 @@
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/types.hpp>
-
 #include <ql/functional.hpp>
+
 #include <boost/timer/timer.hpp>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/export.hpp>
 
 #include <initializer_list>
 #include <vector>
@@ -107,6 +109,9 @@ private:
     bool constantData_;
     bool* data_;
     bool deterministic_;
+    // serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 // inline element-wise access operators
@@ -248,6 +253,9 @@ private:
     double* data_;
     bool deterministic_;
     Real time_;
+    // serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 bool operator==(const RandomVariable& a, const RandomVariable& b);
@@ -379,3 +387,6 @@ multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialT
                      Size basisSystemSizeBound = Null<Size>());
 
 } // namespace QuantExt
+
+BOOST_CLASS_EXPORT_KEY(QuantExt::Filter);
+BOOST_CLASS_EXPORT_KEY(QuantExt::RandomVariable);
