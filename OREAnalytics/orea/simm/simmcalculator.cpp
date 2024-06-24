@@ -174,7 +174,7 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
             }
             // Aggreggate now all Crif Records
             for (auto& [regulation, crif] : regulationCrifMap) {
-                crif = crif.aggregate();
+                crif = crif.aggregate(true);
             }
 
             // If netting set has "Unspecified" plus other regulations, the "Unspecified" sensis are to be excluded.

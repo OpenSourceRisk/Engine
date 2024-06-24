@@ -157,7 +157,7 @@ void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies,
     }
 }
 
-Crif Crif::aggregate() const {
+Crif Crif::aggregate(bool aggregateDifferentAmountCurrencies) const {
     Crif result;
     for (auto cr : records_) {
         // We set the trade ID to an empty string because we are netting at portfolio level
@@ -166,7 +166,7 @@ Crif Crif::aggregate() const {
         if (cr.imModel != "Schedule") {
             cr.tradeId = "";
         }
-        result.addRecord(cr);
+        result.addRecord(cr, aggregateDifferentAmountCurrencies);
     }
     return result;
 }
