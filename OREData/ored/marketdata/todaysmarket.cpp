@@ -378,7 +378,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building FXVolatility for asof " << asof_);
                 QuantLib::ext::shared_ptr<FXVolCurve> fxVolCurve = QuantLib::ext::make_shared<FXVolCurve>(
                     asof_, *fxvolspec, *loader_, *curveConfigs_, *fx_, requiredYieldCurves_, requiredFxVolCurves_,
-                    requiredCorrelationCurves_, buildCalibrationInfo_);
+                    requiredCorrelationCurves_, buildCalibrationInfo_, this);
                 calibrationInfo_->fxVolCalibrationInfo[fxvolspec->name()] = fxVolCurve->calibrationInfo();
                 itr = requiredFxVolCurves_.insert(make_pair(fxvolspec->name(), fxVolCurve)).first;
             }
