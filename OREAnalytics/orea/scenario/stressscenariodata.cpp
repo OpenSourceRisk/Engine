@@ -373,8 +373,7 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
             XMLNode* swaptionVolNode = XMLUtils::addChild(doc, swaptionVolsNode, "SwaptionVolatility");
             XMLUtils::addAttribute(doc, swaptionVolNode, "ccy", key);
             XMLUtils::addChild(doc, swaptionVolNode, "ShiftType", ore::data::to_string(data.shiftType));
-            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftTerms", data.shiftTerms);
-            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftExpiries", data.shiftExpiries);
+            
             XMLNode* shiftSizesNode = XMLUtils::addChild(doc, swaptionVolNode, "Shifts");
 
             if (data.shifts.empty()) {
@@ -389,6 +388,9 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
                                        swaptionAttributeNames, attributeValues);
                 }
             }
+            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftExpiries", data.shiftExpiries);
+            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftTerms", data.shiftTerms);
+            
         }
         // Credit
         curveShiftDataToXml(doc, testNode, test.survivalProbabilityShifts, "name", "SurvivalProbability",
