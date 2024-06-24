@@ -87,7 +87,7 @@ public:
     bool hasNettingSetDetails() const;
 
     //! Aggregate all existing records
-    Crif aggregate() const;
+    Crif aggregate(bool aggregateDifferentAmountCurrencies = false) const;
 
     size_t countMatching(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
                    const std::string& qualifier) const;
