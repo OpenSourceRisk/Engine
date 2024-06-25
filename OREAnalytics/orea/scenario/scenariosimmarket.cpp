@@ -3266,14 +3266,16 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const std::string& k
 }
 
 void ScenarioSimMarket::applyCurveAlgebra() {
-    // LOG("Applying " << parameters_->curveAlgebra().size() < " curve algebra rules...");
-    // for (auto const& a : parameters_ > curveAlgebra()) {
-    //     if (a.rule().type() == "Spreaded") {
-    //         applyCurveAlgebraSpreadedRateCurve(getRateCurve(a.key()), getRateCurve(a.rule().Argument1()));
-    //     } else {
-    //         QL_FAIL("curve algebra rule type '" << a.rule().type() << "' not recognized. Expected one of 'Spreaded'.");
-    //     }
-    // }
+    LOG("Applying " << parameters_->curveAlgebraData().data().size() << " curve algebra rules...");
+    for (auto const& a : parameters_->curveAlgebraData().data()) {
+        if (a.operationType() == "Spreaded") {
+            applyCurveAlgebraSpreadedYieldCurve(getYieldCurve(a.key()), getYieldCurve(a.argument(0)));
+        } else
+        // add more operations here...
+        {
+            QL_FAIL("curve algebra rule type '" << a.operationType() << "' not recognized. Expected: 'Spreaded'.");
+        }
+    }
 }
 
 void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
