@@ -41,21 +41,22 @@ NettedExposureCalculator::NettedExposureCalculator(
     const map<string, vector<vector<Real>>>& nettingSetMporNegativeFlow,
     const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
     const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation, const bool applyInitialMargin,
-    const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator, const bool fullInitialCollateralisation,
-    const bool marginalAllocation, const Real marginalAllocationLimit,
-    const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex, const Size allocatedEneIndex,
-    const bool flipViewXVA, const bool withMporStickyDate, const MporCashFlowMode mporCashFlowMode)
+    const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
+    const bool fullInitialCollateralisation, const bool marginalAllocation, const Real marginalAllocationLimit,
+    const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex,
+    const Size allocatedEneIndex, const bool flipViewXVA, const bool withMporStickyDate,
+    const MporCashFlowMode mporCashFlowMode, const bool constantInitialVmMarginMismatch)
     : portfolio_(portfolio), market_(market), cube_(cube), baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType), multiPath_(multiPath), nettingSetManager_(nettingSetManager),
-      collateralBalances_(collateralBalances),
-      nettingSetDefaultValue_(nettingSetDefaultValue), nettingSetCloseOutValue_(nettingSetCloseOutValue),
-      nettingSetMporPositiveFlow_(nettingSetMporPositiveFlow), nettingSetMporNegativeFlow_(nettingSetMporNegativeFlow),
-      scenarioData_(scenarioData), cubeInterpretation_(cubeInterpretation), applyInitialMargin_(applyInitialMargin),
-      dimCalculator_(dimCalculator), fullInitialCollateralisation_(fullInitialCollateralisation),
-      marginalAllocation_(marginalAllocation), marginalAllocationLimit_(marginalAllocationLimit),
-      tradeExposureCube_(tradeExposureCube), allocatedEpeIndex_(allocatedEpeIndex),
-      allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA), withMporStickyDate_(withMporStickyDate),
-      mporCashFlowMode_(mporCashFlowMode) {
+      collateralBalances_(collateralBalances), nettingSetDefaultValue_(nettingSetDefaultValue),
+      nettingSetCloseOutValue_(nettingSetCloseOutValue), nettingSetMporPositiveFlow_(nettingSetMporPositiveFlow),
+      nettingSetMporNegativeFlow_(nettingSetMporNegativeFlow), scenarioData_(scenarioData),
+      cubeInterpretation_(cubeInterpretation), applyInitialMargin_(applyInitialMargin), dimCalculator_(dimCalculator),
+      fullInitialCollateralisation_(fullInitialCollateralisation), marginalAllocation_(marginalAllocation),
+      marginalAllocationLimit_(marginalAllocationLimit), tradeExposureCube_(tradeExposureCube),
+      allocatedEpeIndex_(allocatedEpeIndex), allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA),
+      withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode),
+      constantInitialVmMarginMismatch_(constantInitialVmMarginMismatch) {
 
     set<string> nettingSetIds;
     for (auto nettingSet : nettingSetDefaultValue) {
@@ -220,12 +221,15 @@ void NettedExposureCalculator::build() {
         vector<Real> colvaInc(cube_->dates().size() + 1, 0.0);
         vector<Real> eoniaFloorInc(cube_->dates().size() + 1, 0.0);
         Real npv = nettingSetValueToday[nettingSetId];
+        Real initalVmCollateralMismatch = 0.0;
+        Date endFirstMpor = netting->activeCsaFlag() ? today + netting->csaDetails()->marginPeriodOfRisk() : today;
         if ((fullInitialCollateralisation_) & (netting->activeCsaFlag())) {
             // This assumes that the collateral at t=0 is the same as the npv at t=0.
             epe[0] = 0;
             ene[0] = 0;
             pfe[0] = 0;
         } else {
+            initalVmCollateralMismatch = constantInitialVmMarginMismatch_ ? std::min(0.0, initialVMbase - npv) : 0.0;
             epe[0] = std::max(npv - initialVMbase - initialIMbase, 0.0);
             ene[0] = std::max(-npv + initialVMbase, 0.0);
             pfe[0] = std::max(npv - initialVMbase - initialIMbase, 0.0);
@@ -280,8 +284,13 @@ void NettedExposureCalculator::build() {
                         // incorporated in the exposure,  ince we do not pay out cash
                         // flows
                         mporCashFlow = nettingSetMporNegativeFlow[j][k];
+                 
                     }
                 }
+                if (netting->activeCsaFlag() && constantInitialVmMarginMismatch_ && date <= endFirstMpor) {
+                    balance += initalVmCollateralMismatch;
+                }
+
                 Real exposure = data[j][k] - balance + mporCashFlow;
                 Real dim = 0.0;
                 if (applyInitialMargin && collateral) { // don't apply initial margin without VM, i.e. inactive CSA
@@ -309,6 +318,10 @@ void NettedExposureCalculator::build() {
                 
                 Real epeIncrement = std::max(exposure - dim_epe, 0.0) / cube_->samples();
                 DLOG("sample " << k << " date " << j << fixed << showpos << setprecision(2)
+                     << ": MporFLow " << setw(15) << mporCashFlow
+                     << ": Dim " << setw(15) << dim
+                     << ": Exposure " << setw(15) <<exposure
+                     << ": InitalCollateralMismatch " << setw(15) << initalVmCollateralMismatch
                      << ": VM "  << setw(15) << balance
                      << ": NPV " << setw(15) << data[j][k]
                      << ": NPV-C " << setw(15) << distribution[k]

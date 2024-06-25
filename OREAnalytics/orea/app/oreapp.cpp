@@ -1904,6 +1904,11 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setCreditMigrationOutputFiles(tmp);
 
+    tmp = params_->get("xva", "constantInitialVMDifference", false);
+    if (tmp != "") {
+        setConstantInitialVmDifference(parseBool(tmp));
+    }
+
     /*************
      * XVA Stress
      *************/

@@ -169,7 +169,11 @@ public:
         //! If set to true, cash flows in the margin period of risk are ignored in the collateral modelling
         bool withMporStickyDate = false,
         //! Treatment of cash flows over the margin period of risk
-        const MporCashFlowMode mporCashFlowMode = MporCashFlowMode::Unspecified);
+        const MporCashFlowMode mporCashFlowMode = MporCashFlowMode::Unspecified,
+        //! Treatment of the initial difference between vm collateral balance and mtm
+        //! if true, it keeps an under-collateralisation for in case of a negative mtm constant
+        //! and vice-versa for over-collateralisation in case of positive mtm
+        const bool constantInitialVmDifference = false);
 
     void setDimCalculator(QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
@@ -381,6 +385,7 @@ protected:
     std::vector<std::vector<Real>> creditMigrationPdf_;
     bool withMporStickyDate_;
     MporCashFlowMode mporCashFlowMode_;
+    bool constantInitialVmDifference_;
 };
 
 } // namespace analytics
