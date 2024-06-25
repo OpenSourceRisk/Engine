@@ -18,13 +18,8 @@
       <Index>GBP-LIBOR-3M</Index>
     </Indices>
     <SwapIndices />
-    <DefaultCurves />
-    <Equities />
-    <SwaptionVolatilities />
-    <CapFloorVolatilities />
     <FxVolatilities />
     <CpiIndices />
-    <ZeroInflationIndexCurves />
     <AggregationScenarioDataCurrencies>
       <Currency>USD</Currency>
     </AggregationScenarioDataCurrencies>
