@@ -146,7 +146,7 @@ QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex,
     string target = fxInd->targetCurrency().code();
     string family = fxInd->familyName();
 
-    fxInd = *market->fxIndex("FX-" + family + "-" + foreign + "-" + domestic);
+    fxInd = *market->fxIndex("FX-" + family + "-" + foreign + "-" + domestic, configuration);
 
     QL_REQUIRE((domestic == target && foreign == source) || (domestic == source && foreign == target),
                "buildFxIndex(): index '" << fxIndex << "' does not match given currencies " << domestic << ", "
