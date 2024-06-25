@@ -851,7 +851,7 @@ void OpenClContext::updateVariatesPool() {
             clGetProgramBuildInfo(variatesProgram_, *device_, CL_PROGRAM_BUILD_LOG,
                                   ORE_OPENCL_MAX_BUILD_LOG * sizeof(char), buffer, NULL);
             QL_FAIL("OpenClContext::updateVariatesPool(): error during program build: "
-                    << errorText(err) << ": " << std::string(buffer).substr(ORE_OPENCL_MAX_BUILD_LOG_LOGFILE));
+                    << errorText(err) << ": " << std::string(buffer).substr(0, ORE_OPENCL_MAX_BUILD_LOG_LOGFILE));
         }
 
         variatesKernelSeedInit_ = clCreateKernel(variatesProgram_, "ore_seedInitialization", &err);
@@ -1488,7 +1488,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                                   ORE_OPENCL_MAX_BUILD_LOG * sizeof(char), buffer, NULL);
             QL_FAIL("OpenClContext::finalizeCalculation(): error during program build for kernel '"
                     << kernelNameStem << "*': " << errorText(err) << ": "
-                    << std::string(buffer).substr(ORE_OPENCL_MAX_BUILD_LOG_LOGFILE));
+                    << std::string(buffer).substr(0, ORE_OPENCL_MAX_BUILD_LOG_LOGFILE));
         }
 
         for (std::size_t part = 0; part < currentSsa_.ssa.size(); ++part) {
