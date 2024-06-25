@@ -54,6 +54,30 @@ public:
         setDefaults();
     }
 
+    //! Sub-Container for Curve Algebra Data
+    class CurveAlgebraData : public XMLSerializable {
+    public:
+        class Curve : public XMLSerializable {
+        public:
+            const std::string& key() const { return key_; }
+            const std::string& operationType() const { return operationType_; }
+            const std::vector<std::string>& arguments() const { return arguments_; }
+            const std::string& argument(const std::size_t i) const;
+            void fromXML(XMLNode* node) override;
+            XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+        private:
+            std::string key_, operationType_;
+            std::vector<std::string> arguments_;
+        };
+        const std::vector<Curve>& data() const { return data_; }
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+    private:
+        std::vector<Curve> data_;
+    };
+
     //! \name Inspectors
     //@{
     const string& baseCcy() const { return baseCcy_; }
@@ -230,6 +254,8 @@ public:
     const vector<Real>& correlationStrikes() const { return correlationStrikes_; }
 
     Size numberOfCreditStates() const { return numberOfCreditStates_; }
+
+    CurveAlgebraData curveAlgebraData() const { return curveAlgebraData_; }
 
     // Get the parameters
     const std::map<RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>>& parameters() const {
@@ -503,6 +529,8 @@ private:
     vector<Period> correlationExpiries_;
     vector<Real> correlationStrikes_;
     Size numberOfCreditStates_ = 0;
+
+    CurveAlgebraData curveAlgebraData_;
 
     // Store sim market params as a map from RiskFactorKey::KeyType to a pair,
     // boolean of whether to simulate and a set of curve names
