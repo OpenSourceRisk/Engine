@@ -180,9 +180,9 @@ void TRS::fromXML(XMLNode* node) {
     QL_REQUIRE(underlyingDataNode, "UnderlyingData node required");
     std::vector<XMLNode*> underlyingTradeNodes = XMLUtils::getChildrenNodes(underlyingDataNode, "Trade");
     std::vector<XMLNode*> underlyingTradeNodes2 = XMLUtils::getChildrenNodes(underlyingDataNode, "Derivative");
-    XMLNode* underlyingTradeNodes3 = XMLUtils::getChildNode(underlyingDataNode, "PortfolioIndexTradeData");
-    if (underlyingTradeNodes3) {
+    if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(underlyingDataNode, "PortfolioIndexTradeData")) {
         portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
+        returnData_.setPortfolioId(portfolioId_);
     }
     QL_REQUIRE(!underlyingTradeNodes.empty() || !underlyingTradeNodes2.empty() || !portfolioId_.empty(),
                "at least one 'Trade' or 'Derivative' or 'PortfolioIndexTradeData' node required");
@@ -220,9 +220,7 @@ void TRS::fromXML(XMLNode* node) {
     // read return data
     XMLNode* returnDataNode = XMLUtils::getChildNode(dataNode, "ReturnData");
     returnData_.fromXML(returnDataNode);
-    if (underlyingTradeNodes3) {
-        returnData_.setPortfolioId(portfolioId_);
-    }
+
     // read funding data
     XMLNode* fundingDataNode = XMLUtils::getChildNode(dataNode, "FundingData");
     if (fundingDataNode)
@@ -329,14 +327,15 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     if (!portfolioId_.empty()) {
         populateFromReferenceData(engineFactory->referenceData());
         std::string indexName = "GENERIC-" + portfolioId_;
+        RequiredFixings portfolioFixing;
+        QuantLib::Schedule schedule = makeSchedule(returnData_.scheduleData());
+        Date date = schedule.dates().at(0);
+        portfolioFixing.addFixingDate(date, indexName);
+        requiredFixings_.addData(portfolioFixing);
+        IndexNameTranslator::instance().add(indexName, indexName);
+        auto underlyingIndex = QuantLib::ext::make_shared<QuantExt::GenericIndex>(indexName);
+        // The try-catch is used to avoid a failure as we load the data (i.e fixings) at the second run after portfolio construction.
         try {
-            RequiredFixings portfolioFixing;
-            QuantLib::Schedule schedule = makeSchedule(returnData_.scheduleData());
-            Date date = schedule.dates().at(0);
-            portfolioFixing.addFixingDate(date, indexName);
-            requiredFixings_.addData(portfolioFixing);  
-            IndexNameTranslator::instance().add(indexName, indexName);
-            auto underlyingIndex = QuantLib::ext::make_shared<QuantExt::GenericIndex>(indexName);
             portfolioInitialPrice = underlyingIndex->fixing(date);
         } catch (...) { }                
     }
@@ -833,18 +832,14 @@ void TRS::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDat
 void TRS::getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) {
 
     DLOG("populating portfolio basket data from reference data");
-    QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty cbo reference datum given");
+    QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty portfolio reference datum given");
 
     auto refData = ptfReferenceDatum->getTrades();
     underlying_.clear();
-    int sub_trade_counter = 0;
-    for (Size i = 0; i < refData.size(); i++) {
-    
-        underlyingDerivativeId_.push_back(std::to_string(sub_trade_counter));
-        auto t = refData[i];
-        QL_REQUIRE(t != nullptr, "expected 'Trade' node under 'Derivative' node");
+    for (Size i = 0; i < refData.size(); i++) {   
+        underlyingDerivativeId_.push_back(std::to_string(i));
+        QL_REQUIRE(refData[i] != nullptr, "expected 'Trade' node under 'Derivative' node");
         underlying_.push_back(refData[i]);
-        sub_trade_counter += 1;
     }
     LOG("Finished Parsing XML doc");
 }

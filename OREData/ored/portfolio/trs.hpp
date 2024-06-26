@@ -66,7 +66,6 @@ public:
         const std::string& initialPriceCurrency() const { return initialPriceCurrency_; }
         const std::vector<std::string>& fxTerms() const { return fxTerms_; }
         boost::optional<bool> payUnderlyingCashFlowsImmediately() const { return payUnderlyingCashFlowsImmediately_; }
-        void setInitialPrice(Real initialPrice) { initialPrice_ = initialPrice; }
         const std::string& portfolioId() const { return portfolioId_; }
         void setPortfolioId(std::string portfolioId) { portfolioId_ = portfolioId; }
 
