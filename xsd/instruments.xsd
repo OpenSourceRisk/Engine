@@ -173,7 +173,7 @@
 
   <xs:complexType name="envelope">
     <xs:all>
-      <xs:element type="xs:string" name="CounterParty"/>
+      <xs:element type="xs:string" name="CounterParty" minOccurs="0"/>
       <xs:element ref="nettingSetGroup" minOccurs="0"/>
       <xs:element name="PortfolioIds" minOccurs="0">
         <xs:complexType>
