@@ -1540,6 +1540,10 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     DLOG("Loading AggregationScenarioDataSurvivalWeights");
     additionalScenarioDataSurvivalWeights_ = XMLUtils::getChildrenValues(node, "AggregationScenarioDataSurvivalWeights", "Name");
 
+    DLOG("Loading Curve Algebra Data");
+    if (auto tmp = XMLUtils::getChildNode(node, "CurveAlgebra")) {
+        curveAlgebraData_.fromXML(tmp);
+    }
 
     DLOG("Loaded ScenarioSimMarketParameters");
 }

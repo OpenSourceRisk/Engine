@@ -2847,6 +2847,9 @@ ScenarioSimMarket::ScenarioSimMarket(
         addSwapIndexToSsm(it.first, continueOnError);
     }
 
+    // if specified, modify curves following the curve algebra specs
+    applyCurveAlgebra();
+
     if (offsetScenario_ != nullptr && offsetScenario_->isAbsolute() && !useSpreadedTermStructures_) {
         auto recastedScenario = recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
         QL_REQUIRE(recastedScenario != nullptr, "ScenarioSimMarke: Offset Scenario couldn't applied");
