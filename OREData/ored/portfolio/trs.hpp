@@ -173,14 +173,11 @@ protected:
     ReturnData returnData_;
     FundingData fundingData_;
     AdditionalCashflowData additionalCashflowData_;
-    
     std::string creditRiskCurrency_;
     std::map<std::string, SimmCreditQualifierMapping> creditQualifierMapping_;
-
     void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager);
     void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum);
     std::string portfolioId_;
-    //const vector<QuantLib::ext::shared_ptr<Trade>>& trades;
 };
 
 TRS::FundingData::NotionalType parseTrsFundingNotionalType(const std::string& s);

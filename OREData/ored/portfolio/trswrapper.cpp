@@ -200,8 +200,7 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
     for (Size i = 0; i < arguments_.underlying_.size(); ++i) {
         if (arguments_.initialPrice_ == Null<Real>() && !arguments_.portfolioId_.empty()) {
             arguments_.initialPrice_ = arguments_.portfolioInitialPrice_;
-        }
-            
+        }      
         if (payIdx < arguments_.paymentSchedule_.size()) {
             if (v0 > today) {
                 // The start valuation date is > today: we return null, except an initial price is given, in which case

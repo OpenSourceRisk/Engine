@@ -215,8 +215,7 @@ void TRS::fromXML(XMLNode* node) {
                   (underlyingTradeNodes.size() > 1 ? "_" + std::to_string(underlyingCounter++) : "");
         u->fromXML(t);
         underlying_.push_back(u);
-    }
-    
+    } 
     // read return data
     XMLNode* returnDataNode = XMLUtils::getChildNode(dataNode, "ReturnData");
     returnData_.fromXML(returnDataNode);

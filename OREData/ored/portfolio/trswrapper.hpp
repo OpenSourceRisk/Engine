@@ -173,7 +173,6 @@ private:
     // return underlying #i fixing on date < today
     Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection) const;
 
-
     // additional inspectors
     QuantLib::Real currentNotional() const;
 };
