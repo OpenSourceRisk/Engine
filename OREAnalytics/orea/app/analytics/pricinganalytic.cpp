@@ -84,10 +84,11 @@ void PricingAnalyticImpl::runAnalytic(
 
         std::string effectiveResultCurrency =
             inputs_->resultCurrency().empty() ? inputs_->baseCurrency() : inputs_->resultCurrency();
+        auto marketConfig = inputs_->marketConfig("pricing");
         if (type == "NPV") {
             CONSOLEW("Pricing: NPV Report");
             ReportWriter(inputs_->reportNaString())
-                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), inputs_->marketConfig("pricing"),
+                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), marketConfig,
                           analytic()->portfolio());
             analytic()->reports()[type]["npv"] = report;
             CONSOLE("OK");
@@ -96,7 +97,7 @@ void PricingAnalyticImpl::runAnalytic(
                 QuantLib::ext::shared_ptr<InMemoryReport> addReport = QuantLib::ext::make_shared<InMemoryReport>();;
                 ReportWriter(inputs_->reportNaString())
                     .writeAdditionalResultsReport(*addReport, analytic()->portfolio(), analytic()->market(),
-                                                  effectiveResultCurrency, inputs_->additionalResultsReportPrecision());
+                                                  marketConfig, effectiveResultCurrency, inputs_->additionalResultsReportPrecision());
                 analytic()->reports()[type]["additional_results"] = addReport;
                 CONSOLE("OK");
             }
@@ -115,7 +116,6 @@ void PricingAnalyticImpl::runAnalytic(
         }
         else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");
-            string marketConfig = inputs_->marketConfig("pricing");
             ReportWriter(inputs_->reportNaString())
                 .writeCashflow(*report, effectiveResultCurrency, analytic()->portfolio(),
                                analytic()->market(),
@@ -125,7 +125,6 @@ void PricingAnalyticImpl::runAnalytic(
         }
         else if (type == "CASHFLOWNPV") {
             CONSOLEW("Pricing: Cashflow NPV report");
-            string marketConfig = inputs_->marketConfig("pricing");
             ReportWriter(inputs_->reportNaString())
                 .writeCashflow(tmpReport, effectiveResultCurrency, analytic()->portfolio(),
                                analytic()->market(),
@@ -141,11 +140,12 @@ void PricingAnalyticImpl::runAnalytic(
             LOG("Sensi Analysis - Initialise");
             bool recalibrateModels = true;
             bool ccyConv = false;
+            QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis;
             std::string configuration = inputs_->marketConfig("pricing");
             if (inputs_->nThreads() == 1) {
                 LOG("Single-threaded sensi analysis");
-                sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
-                    analytic()->portfolio(), analytic()->market(), configuration, inputs_->pricingEngine(),
+                sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
+                    analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
                     recalibrateModels, analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
@@ -154,8 +154,8 @@ void PricingAnalyticImpl::runAnalytic(
             }
             else {
                 LOG("Multi-threaded sensi analysis");
-                sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
-                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), configuration,
+                sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
+                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), marketConfig,
                     inputs_->pricingEngine(), analytic()->configurations().simMarketParams,
                     analytic()->configurations().sensiScenarioData, recalibrateModels,
                     analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
