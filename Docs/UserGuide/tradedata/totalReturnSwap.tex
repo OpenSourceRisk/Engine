@@ -66,9 +66,14 @@ indices.
   \item Derivative: An arbitrary underlying derivative trade (of any type covered by ORE), allowing the set up of a so called Portfolio Swap with multiple underlying derivatives. The derivative subnode has
     exactly two subnodes
     \begin{itemize}
-      \item Id: A unqiue identifier for the derivative position. Historical prices must be given under the fixing name
+      \item Id: A unique identifier for the derivative position. Historical prices must be given under the fixing name
         ``GENERIC-$<Id>$''.
       \item Trade: The root node of a derivative trade.
+    \end{itemize}
+  \item PortfolioIndexTradeData: A collection of {\tt Trade} subnodes that must be part of the referencedata.
+    \begin{itemize}
+      \item BasketName: A unique identifier for the portfolioIndex. Historical prices must be given under the fixing name
+        ``GENERIC-$<BasketName>$''.
     \end{itemize}
 
   \end{itemize}
