@@ -140,11 +140,10 @@ void PricingAnalyticImpl::runAnalytic(
             LOG("Sensi Analysis - Initialise");
             bool recalibrateModels = true;
             bool ccyConv = false;
-            QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis;
             std::string configuration = inputs_->marketConfig("pricing");
             if (inputs_->nThreads() == 1) {
                 LOG("Single-threaded sensi analysis");
-                sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
+                sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
                     analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
                     recalibrateModels, analytic()->configurations().curveConfig,
@@ -154,7 +153,7 @@ void PricingAnalyticImpl::runAnalytic(
             }
             else {
                 LOG("Multi-threaded sensi analysis");
-                sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
+                sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
                     inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), marketConfig,
                     inputs_->pricingEngine(), analytic()->configurations().simMarketParams,
                     analytic()->configurations().sensiScenarioData, recalibrateModels,
