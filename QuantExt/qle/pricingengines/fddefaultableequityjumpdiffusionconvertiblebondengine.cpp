@@ -517,10 +517,12 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                             // compuate forced conversion value and update npv node
                             Real forcedConversionValue = S[j] * cr * notional(grid[i]) / N0 + accrual(grid[i]);
                             if (forcedConversionValue > c && forcedConversionValue < value[plane][j]) {
-                                // conversion is forced -> update flags
+                                // the issuer executes the call and triggers a forced conversion because
+                                // a) the forced conversion value is greater than the issuer call price but
+                                // b) the forced conversion value is still below the current continuation value
                                 if (!conversionIndicator.empty())
-                                    conversionIndicator[plane][j] = 0.0;
-                                conversionExercised[plane][j] = false;
+                                    conversionIndicator[plane][j] = 1.0;
+                                conversionExercised[plane][j] = true;
                             }
                             value[plane][j] = std::min(std::max(forcedConversionValue, c), value[plane][j]);
                             if (!valueNoConversion.empty()) {
