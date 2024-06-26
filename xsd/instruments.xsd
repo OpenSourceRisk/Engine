@@ -2166,33 +2166,40 @@
   <xs:complexType name="trsUnderlyingData">
     <xs:sequence>
       <xs:choice maxOccurs="unbounded">
-    <xs:element name="Derivative">
-          <xs:complexType>
-            <xs:sequence>
-          <xs:element type="xs:string" name="Id"/>
-          <xs:element name="Trade">
-        <xs:complexType>
+        <xs:element name="Derivative">
+         <xs:complexType>
           <xs:sequence>
+           <xs:element type="xs:string" name="Id"/>
+           <xs:element name="Trade">
+            <xs:complexType>
+             <xs:sequence>
+              <xs:element type="oreTradeType" name="TradeType"/>
+              <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+              <xs:group ref="oreTradeData"/>
+             </xs:sequence>
+             <xs:attribute type="xs:string" name="id"/>
+            </xs:complexType>
+           </xs:element>
+          </xs:sequence>
+         </xs:complexType>
+        </xs:element>
+        <xs:element name="Trade">
+         <xs:complexType>
+           <xs:sequence>
             <xs:element type="oreTradeType" name="TradeType"/>
             <xs:element type="envelope" name="Envelope" minOccurs="0"/>
             <xs:group ref="oreTradeData"/>
-          </xs:sequence>
+            </xs:sequence>
           <xs:attribute type="xs:string" name="id"/>
-        </xs:complexType>
-          </xs:element>
-        </xs:sequence>
-      </xs:complexType>
-    </xs:element>
-    <xs:element name="Trade">
-      <xs:complexType>
-        <xs:sequence>
-          <xs:element type="oreTradeType" name="TradeType"/>
-          <xs:element type="envelope" name="Envelope" minOccurs="0"/>
-          <xs:group ref="oreTradeData"/>
-        </xs:sequence>
-      <xs:attribute type="xs:string" name="id"/>
-      </xs:complexType>
-    </xs:element>
+         </xs:complexType>
+        </xs:element>
+        <xs:element name="PortfolioIndexTradeData" minOccurs="0">
+         <xs:complexType>
+           <xs:sequence>
+            <xs:element type="xs:string" name="BasketName" minOccurs="1"/>
+           </xs:sequence>
+         </xs:complexType>
+        </xs:element>
       </xs:choice>
     </xs:sequence>
   </xs:complexType>

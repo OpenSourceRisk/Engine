@@ -37,7 +37,7 @@ using namespace QuantExt;
 TRSWrapper::TRSWrapper(
     const std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>>& underlying,
     const std::vector<QuantLib::ext::shared_ptr<Index>>& underlyingIndex, const std::vector<Real> underlyingMultiplier,
-    const bool includeUnderlyingCashflowsInReturn, const Real initialPrice, const Currency& initialPriceCurrency,
+    const bool includeUnderlyingCashflowsInReturn, const Real initialPrice, const Real portfolioInitialPrice, const std::string portfolioId, const Currency& initialPriceCurrency,
     const std::vector<Currency>& assetCurrency, const Currency& returnCurrency,
     const std::vector<Date>& valuationSchedule, const std::vector<Date>& paymentSchedule,
     const std::vector<Leg>& fundingLegs, const std::vector<TRS::FundingData::NotionalType>& fundingNotionalTypes,
@@ -48,6 +48,7 @@ TRSWrapper::TRSWrapper(
     const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxIndices)
     : underlying_(underlying), underlyingIndex_(underlyingIndex), underlyingMultiplier_(underlyingMultiplier),
       includeUnderlyingCashflowsInReturn_(includeUnderlyingCashflowsInReturn), initialPrice_(initialPrice),
+      portfolioInitialPrice_(portfolioInitialPrice), portfolioId_(portfolioId),
       initialPriceCurrency_(initialPriceCurrency), assetCurrency_(assetCurrency), returnCurrency_(returnCurrency),
       valuationSchedule_(valuationSchedule), paymentSchedule_(paymentSchedule), fundingLegs_(fundingLegs),
       fundingNotionalTypes_(fundingNotionalTypes), fundingCurrency_(fundingCurrency),
@@ -141,6 +142,8 @@ void TRSWrapper::setupArguments(PricingEngine::arguments* args) const {
     a->underlyingMultiplier_ = underlyingMultiplier_;
     a->includeUnderlyingCashflowsInReturn_ = includeUnderlyingCashflowsInReturn_;
     a->initialPrice_ = initialPrice_;
+    a->portfolioInitialPrice_ = portfolioInitialPrice_;
+    a->portfolioId_ = portfolioId_;
     a->initialPriceCurrency_ = initialPriceCurrency_;
     a->assetCurrency_ = assetCurrency_;
     a->returnCurrency_ = returnCurrency_;
@@ -195,6 +198,10 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
     usingInitialPrice = false;
 
     for (Size i = 0; i < arguments_.underlying_.size(); ++i) {
+        if (arguments_.initialPrice_ == Null<Real>() && !arguments_.portfolioId_.empty()) {
+            arguments_.initialPrice_ = arguments_.portfolioInitialPrice_;
+        }
+            
         if (payIdx < arguments_.paymentSchedule_.size()) {
             if (v0 > today) {
                 // The start valuation date is > today: we return null, except an initial price is given, in which case

@@ -62,7 +62,8 @@ public:
     TRSWrapper(const std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>>& underlying,
                const std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>>& underlyingIndex,
                const std::vector<QuantLib::Real> underlyingMultiplier, const bool includeUnderlyingCashflowsInReturn,
-               const QuantLib::Real initialPrice, const QuantLib::Currency& initialPriceCurrency,
+               const QuantLib::Real initialPrice, const QuantLib::Real portfolioInitialPrice, const std::string portfolioId,
+               const QuantLib::Currency& initialPriceCurrency,
                const std::vector<QuantLib::Currency>& assetCurrency, const QuantLib::Currency& returnCurrency,
                const std::vector<QuantLib::Date>& valuationSchedule, const std::vector<QuantLib::Date>& paymentSchedule,
                const std::vector<QuantLib::Leg>& fundingLegs,
@@ -88,6 +89,8 @@ private:
     std::vector<QuantLib::Real> underlyingMultiplier_;
     bool includeUnderlyingCashflowsInReturn_;
     QuantLib::Real initialPrice_;
+    QuantLib::Real portfolioInitialPrice_;
+    const std::string portfolioId_;
     const QuantLib::Currency initialPriceCurrency_;
     const std::vector<QuantLib::Currency> assetCurrency_;
     const QuantLib::Currency returnCurrency_;
@@ -115,7 +118,9 @@ public:
     std::vector<QuantLib::Real> underlyingMultiplier_;
     bool includeUnderlyingCashflowsInReturn_;
     QuantLib::Real initialPrice_;
-    QuantLib::Currency initialPriceCurrency_;
+    QuantLib::Real portfolioInitialPrice_;
+    std::string portfolioId_;
+    QuantLib::Currency initialPriceCurrency_; 
     std::vector<QuantLib::Currency> assetCurrency_;
     QuantLib::Currency returnCurrency_;
     std::vector<QuantLib::Date> valuationSchedule_, paymentSchedule_;
@@ -167,6 +172,7 @@ private:
 
     // return underlying #i fixing on date < today
     Real getUnderlyingFixing(const Size i, const QuantLib::Date& date, const bool enforceProjection) const;
+
 
     // additional inspectors
     QuantLib::Real currentNotional() const;
