@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
@@ -85,7 +86,11 @@ public:
 
     /* Approximation via plain Ibor coupon with fixing date = first fixing date and the fixing() method above. */
     RandomVariable subPeriodsRate(const QuantLib::ext::shared_ptr<InterestRateIndex>& index,
-                                  const std::vector<Date>& fixingDates, const Time t, const RandomVariable& x) const;
+                                  const std::vector<Date>& fixingDates, const Time t, const RandomVariable& x,
+                                  const std::vector<Time>& accrualFractions,
+                                  const SubPeriodsCoupon1::Type type, const bool includeSpread,
+                                  const Spread spread, const Real gearing,
+                                  const Time accrualPeriod) const;
 
 private:
     QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;
