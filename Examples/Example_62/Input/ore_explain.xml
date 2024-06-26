@@ -49,6 +49,9 @@
       <Parameter name="mporDate">2023-02-14</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="curveConfigMporFile">curveconfig.xml</Parameter>
+      <Parameter name="conventionsMporFile">conventions.xml</Parameter>
+      <Parameter name="portfolioMporFile">mporportfolio.xml</Parameter>
       <Parameter name="outputFileName">pnl_explain.csv</Parameter>
       </Analytic>
   </Analytics>

@@ -67,8 +67,8 @@ public:
 
     virtual void writeCashflow(ore::data::Report& report, const std::string& baseCurrency,
                                QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
-                               QuantLib::ext::shared_ptr<ore::data::Market> market = QuantLib::ext::shared_ptr<ore::data::Market>(),
-                               const std::string& configuration = ore::data::Market::defaultConfiguration,
+                               QuantLib::ext::shared_ptr<ore::data::Market> market,
+                               const std::string& configuration,
                                const bool includePastCashflows = false);
 
     virtual void writeCashflowNpv(ore::data::Report& report,
@@ -115,7 +115,8 @@ public:
 
     virtual void writeAdditionalResultsReport(ore::data::Report& report,
                                               QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
-                                              QuantLib::ext::shared_ptr<Market> market, const std::string& baseCurrency,
+                                              QuantLib::ext::shared_ptr<Market> market,
+                                              const std::string& configuration, const std::string& baseCurrency,
                                               const std::size_t precision = 6);
 
     virtual void writeMarketData(ore::data::Report& report, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader, const QuantLib::Date& asof,
@@ -203,15 +204,16 @@ public:
                                             const bool hasNettingSetDetails = false);
                                             
     virtual void writePnlReport(ore::data::Report& report,
-	const ext::shared_ptr<InMemoryReport>& t0NpvReport,
-	const ext::shared_ptr<InMemoryReport>& t0NpvLaggedReport,
-	const ext::shared_ptr<InMemoryReport>& t1NpvLaggedReport,
-	const ext::shared_ptr<InMemoryReport>& t1NpvReport,
-	const ext::shared_ptr<InMemoryReport>& t0CashFlowReport,			
-	const Date& startDate, const Date& endDate,
-	const std::string& baseCurrency,
-	const ext::shared_ptr<ore::data::Market>& market, const std::string& configuration,
-	const ext::shared_ptr<Portfolio>& portfolio);
+	    const ext::shared_ptr<InMemoryReport>& t0NpvReport,
+	    const ext::shared_ptr<InMemoryReport>& t0NpvLaggedReport,
+        const ext::shared_ptr<InMemoryReport>& t1NpvLaggedReport,
+        const ext::shared_ptr<InMemoryReport>& t1Npvt0PortReport,
+	    const ext::shared_ptr<InMemoryReport>& t1NpvReport,
+	    const ext::shared_ptr<InMemoryReport>& t0CashFlowReport,			
+	    const Date& startDate, const Date& endDate,
+	    const std::string& baseCurrency,
+	    const ext::shared_ptr<ore::data::Market>& market, const std::string& configuration,
+	    const ext::shared_ptr<Portfolio>& portfolio);
 
     virtual void writeXvaExplainReport(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData);
     virtual void writeXvaExplainSummary(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData);

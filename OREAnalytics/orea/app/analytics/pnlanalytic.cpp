@@ -70,12 +70,14 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
      *
      ****************************************************/
 
+    auto marketConfig = inputs_->marketConfig("pricing");
+
     // Build a simMarket on the asof date
     QL_REQUIRE(analytic()->configurations().simMarketParams, "scenario sim market parameters not set");
     QL_REQUIRE(analytic()->configurations().todaysMarketParams, "today's market parameters not set");
     
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
-        analytic()->market(), analytic()->configurations().simMarketParams, inputs_->marketConfig("pricing"),
+        analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
         inputs_->continueOnError(), useSpreadedTermStructures(), false, false, *inputs_->iborFallbackConfig());
     auto sgen = QuantLib::ext::make_shared<StaticScenarioGenerator>();
@@ -84,18 +86,18 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     analytic()->setMarket(simMarket);
     analytic()->buildPortfolio();
 
-    boost::shared_ptr<InMemoryReport> t0NpvReport = boost::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> t0NpvReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
-        .writeNpv(*t0NpvReport, effectiveResultCurrency, analytic()->market(), inputs_->marketConfig("pricing"),
+        .writeNpv(*t0NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
                   analytic()->portfolio());
     analytic()->reports()[LABEL]["pnl_npv_t0"] = t0NpvReport;
 
     if (inputs_->outputAdditionalResults()) {
         CONSOLEW("Pricing: Additional t0 Results");
-	boost::shared_ptr<InMemoryReport> t0AddReport = boost::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> t0AddReport = QuantLib::ext::make_shared<InMemoryReport>();
         ReportWriter(inputs_->reportNaString())
             .writeAdditionalResultsReport(*t0AddReport, analytic()->portfolio(), analytic()->market(),
-                                          effectiveResultCurrency);
+                                          marketConfig, effectiveResultCurrency);
         analytic()->reports()[LABEL]["pnl_additional_results_t0"] = t0AddReport;
         CONSOLE("OK");
     }
@@ -106,12 +108,10 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
      *
      ****************************************************/
 
-    boost::shared_ptr<InMemoryReport> t0CashFlowReport = boost::make_shared<InMemoryReport>();
-    string marketConfig = inputs_->marketConfig("pricing");
+    QuantLib::ext::shared_ptr<InMemoryReport> t0CashFlowReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
       .writeCashflow(*t0CashFlowReport, effectiveResultCurrency, analytic()->portfolio(),
-		     analytic()->market(),
-		     marketConfig, inputs_->includePastCashflows());
+		     analytic()->market(), marketConfig, inputs_->includePastCashflows());
     analytic()->reports()[LABEL]["pnl_cashflow"] = t0CashFlowReport;
     
     /*******************************************************************************************
@@ -122,7 +122,7 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
      *
      *******************************************************************************************/
 
-    // Set eveluationDate to t1 > t0
+    // Set evaluationDate to t1 > t0
     Settings::instance().evaluationDate() = mporDate();
 
     // Set the configurations asof date for the mpor analytic to t1, too
@@ -170,15 +170,15 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     
     QuantLib::ext::shared_ptr<InMemoryReport> t0NpvLaggedReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
-        .writeNpv(*t0NpvLaggedReport, effectiveResultCurrency, analytic()->market(), inputs_->marketConfig("pricing"),
+        .writeNpv(*t0NpvLaggedReport, effectiveResultCurrency, analytic()->market(), marketConfig,
                   analytic()->portfolio());
 
     if (inputs_->outputAdditionalResults()) {
         CONSOLEW("Pricing: Additional Results, t0 lagged");
-        boost::shared_ptr<InMemoryReport> t0LaggedAddReport = boost::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> t0LaggedAddReport = QuantLib::ext::make_shared<InMemoryReport>();
         ReportWriter(inputs_->reportNaString())
             .writeAdditionalResultsReport(*t0LaggedAddReport, analytic()->portfolio(), analytic()->market(),
-                                          effectiveResultCurrency);
+                                          marketConfig, effectiveResultCurrency);
         analytic()->reports()[LABEL]["pnl_additional_results_lagged_t0"] = t0LaggedAddReport;
         CONSOLE("OK");
     }
@@ -204,17 +204,17 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     QuantLib::ext::shared_ptr<InMemoryReport> t1NpvLaggedReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
-        .writeNpv(*t1NpvLaggedReport, effectiveResultCurrency, analytic()->market(), inputs_->marketConfig("pricing"),
+        .writeNpv(*t1NpvLaggedReport, effectiveResultCurrency, analytic()->market(), marketConfig,
                   analytic()->portfolio());
 
     analytic()->reports()[LABEL]["pnl_npv_lagged_t1"] = t1NpvLaggedReport;
 
     if (inputs_->outputAdditionalResults()) {
         CONSOLEW("Pricing: Additional Results t1");
-        boost::shared_ptr<InMemoryReport> t1AddReport = boost::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> t1AddReport = QuantLib::ext::make_shared<InMemoryReport>();
         ReportWriter(inputs_->reportNaString())
             .writeAdditionalResultsReport(*t1AddReport, analytic()->portfolio(), analytic()->market(),
-                                          effectiveResultCurrency);
+                                          marketConfig, effectiveResultCurrency);
         analytic()->reports()[LABEL]["pnl_additional_results_lagged_t1"] = t1AddReport;
         CONSOLE("OK");
     }
@@ -222,58 +222,95 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     /***************************************************************************************
      *
      * 6. Price the t0 portfolio as of t1 using the t1 market for the actual P&L calculation
-     *    TODO: This should use the t1 portfolio instead.
      *
      ***************************************************************************************/
         
     sgen1->setScenario(sai->scenarioSimMarket()->baseScenario());
     simMarket1->scenarioGenerator() = sgen1;
     simMarket1->update(d1);
+
     analytic()->buildPortfolio();
 
-    QuantLib::ext::shared_ptr<InMemoryReport> t1NpvReport = QuantLib::ext::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> t1Npvt0PortReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
-        .writeNpv(*t1NpvReport, effectiveResultCurrency, analytic()->market(), inputs_->marketConfig("pricing"),
+        .writeNpv(*t1Npvt0PortReport, effectiveResultCurrency, analytic()->market(), marketConfig,
                   analytic()->portfolio());
 
-    analytic()->reports()[LABEL]["pnl_npv_t1"] = t1NpvReport;
+    analytic()->reports()[LABEL]["pnl_npv_t1_port_t0"] = t1Npvt0PortReport;
 
+    QuantLib::ext::shared_ptr<InMemoryReport> t1AddReport;
     if (inputs_->outputAdditionalResults()) {
         CONSOLEW("Pricing: Additional t1 Results");
-	boost::shared_ptr<InMemoryReport> t1AddReport = boost::make_shared<InMemoryReport>();
+        t1AddReport = QuantLib::ext::make_shared<InMemoryReport>();
         ReportWriter(inputs_->reportNaString())
             .writeAdditionalResultsReport(*t1AddReport, analytic()->portfolio(), analytic()->market(),
-                                          effectiveResultCurrency);
-        analytic()->reports()[LABEL]["pnl_additional_results_t1"] = t1AddReport;
+                                          marketConfig, effectiveResultCurrency);
+        analytic()->reports()[LABEL]["pnl_additional_results_t1_port_t0"] = t1AddReport;
         CONSOLE("OK");
     }
 
+    /***************************************************************************************
+     *
+     * 7. Price the t1 portfolio as of t1 using the t1 market for the actual P&L calculation
+     *
+     ***************************************************************************************/
+
+    sgen1->setScenario(sai->scenarioSimMarket()->baseScenario());
+    simMarket1->scenarioGenerator() = sgen1;
+    simMarket1->update(d1);
+
+    QuantLib::ext::shared_ptr<InMemoryReport> t1NpvReport;
+    if (inputs_->mporPortfolio()) {
+
+        analytic()->setPortfolio(inputs_->mporPortfolio());
+        analytic()->buildPortfolio();
+
+        t1NpvReport = QuantLib::ext::make_shared<InMemoryReport>();
+        ReportWriter(inputs_->reportNaString())
+            .writeNpv(*t1NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
+                      analytic()->portfolio());
+
+        if (inputs_->outputAdditionalResults()) {
+            CONSOLEW("Pricing: Additional t1 Results");
+            t1AddReport = QuantLib::ext::make_shared<InMemoryReport>();
+            ReportWriter(inputs_->reportNaString())
+                .writeAdditionalResultsReport(*t1AddReport, analytic()->portfolio(), analytic()->market(),
+                                              marketConfig, effectiveResultCurrency);            
+            CONSOLE("OK");
+        }
+    } else
+        t1NpvReport = t1Npvt0PortReport;
+
+    analytic()->reports()[LABEL]["pnl_npv_t1"] = t1NpvReport;
+    if (inputs_->outputAdditionalResults())
+        analytic()->reports()[LABEL]["pnl_additional_results_t1"] = t1AddReport;
+
     /****************************
      *
-     * 7. Generate the P&L report
+     * 8. Generate the P&L report
      *
      ****************************/
 
     // FIXME: check which market and which portfolio to pass to the report writer
     QuantLib::ext::shared_ptr<InMemoryReport> pnlReport = QuantLib::ext::make_shared<InMemoryReport>();
     ReportWriter(inputs_->reportNaString())
-        .writePnlReport(*pnlReport, t0NpvReport, t0NpvLaggedReport, t1NpvLaggedReport, t1NpvReport,
-			t0CashFlowReport, inputs_->asof(), mporDate(),
-			effectiveResultCurrency, analytic()->market(), inputs_->marketConfig("pricing"), analytic()->portfolio());
+        .writePnlReport(*pnlReport, t0NpvReport, t0NpvLaggedReport, t1NpvLaggedReport, t1Npvt0PortReport, t1NpvReport,
+			t0CashFlowReport, inputs_->asof(), mporDate(), effectiveResultCurrency, analytic()->market(), 
+            marketConfig, analytic()->portfolio());
     analytic()->reports()[LABEL]["pnl"] = pnlReport;
 
     /***************************
      *
-     * 8. Write Scenario Reports
+     * 9. Write Scenario Reports
      *
      ***************************/
 
-    boost::shared_ptr<InMemoryReport> t0ScenarioReport = boost::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> t0ScenarioReport = QuantLib::ext::make_shared<InMemoryReport>();
     auto t0sw = ScenarioWriter(nullptr, t0ScenarioReport);
     t0sw.writeScenario(asofBaseScenario, true);
     analytic()->reports()[label()]["pnl_scenario_t0"] = t0ScenarioReport;
 
-    boost::shared_ptr<InMemoryReport> t1ScenarioReport = boost::make_shared<InMemoryReport>();
+     QuantLib::ext::shared_ptr<InMemoryReport> t1ScenarioReport = QuantLib::ext::make_shared<InMemoryReport>();
     auto t1sw = ScenarioWriter(nullptr, t1ScenarioReport);
     t1sw.writeScenario(mporBaseScenario, true);
     analytic()->reports()[label()]["pnl_scenario_t1"] = t1ScenarioReport;    

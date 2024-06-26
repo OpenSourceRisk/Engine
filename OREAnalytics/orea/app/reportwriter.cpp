@@ -261,7 +261,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                             fxRateLocalBase = cf.fxRateLocalBase;
                         } else if (market) {
                             try {
-                                fxRateLocalBase = market->fxRate(ccy + baseCurrency)->value();
+                                fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
                             } catch (...) {
                             }
                         }
@@ -501,7 +501,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 if (effectiveAmount != Null<Real>())
                                     presentValue = discountFactor * effectiveAmount;
                                 try {
-                                    fxRateLocalBase = market->fxRate(ccy + baseCurrency)->value();
+                                    fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
                                     presentValueBase = presentValue * fxRateLocalBase;
                                 } catch (...) {
                                 }
@@ -684,7 +684,7 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
         string ccy = QuantLib::ext::get<string>(cashflowReport.data(ccyColumn).at(i));
         Real pv = QuantLib::ext::get<Real>(cashflowReport.data(pvColumn).at(i));
         Real fx = 1.0;
-	// There shouldn't be entries in the cf report without ccy. We assume ccy = baseCcy in this case and log an error.
+    // There shouldn't be entries in the cf report without ccy. We assume ccy = baseCcy in this case and log an error.
         if (ccy.empty()) {
             StructuredTradeErrorMessage(tradeId, tradeType, "Error during CashflowNpv calculation.",
                                         "Cashflow in row " + std::to_string(i) +
@@ -1261,7 +1261,8 @@ void addMapResults(boost::any resultMap, const std::string& tradeId, const std::
 }
 
 void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::shared_ptr<Portfolio> portfolio,
-                                                QuantLib::ext::shared_ptr<Market> market, const std::string& baseCurrency,
+                                                QuantLib::ext::shared_ptr<Market> market,
+                                                const std::string& configuration, const std::string& baseCurrency,
                                                 const std::size_t precision) {
 
     LOG("Writing AdditionalResults report");
@@ -1313,7 +1314,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
             if (notional2 != Null<Real>() && notional2Ccy != "") {
                 Real fx = 1.0;
                 if (notional2Ccy != baseCurrency)
-                    fx = market->fxRate(notional2Ccy + baseCurrency)->value();
+                    fx = market->fxRate(notional2Ccy + baseCurrency, configuration)->value();
                 std::ostringstream oss;
                 oss << std::fixed << std::setprecision(8) << notional2 * fx;
                 // report.next().add(tradeId).add("notionalInBaseCurrency[2]").add("double").add(oss.str());
@@ -2398,9 +2399,9 @@ void ReportWriter::writeIMScheduleTradeReport(const map<string, vector<IMSchedul
 }
 
 Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& d1, 
-			const ext::shared_ptr<InMemoryReport>& cashFlowReport,
-			const ext::shared_ptr<ore::data::Market>& market,
-			const std::string& baseCurrency)  {
+            const ext::shared_ptr<InMemoryReport>& cashFlowReport,
+            const ext::shared_ptr<ore::data::Market>& market, const std::string& configuration,
+            const std::string& baseCurrency)  {
     Size tradeIdColumn = 0;
     Size dateColumn = 4;
     Size amountColumn = 6;
@@ -2413,33 +2414,34 @@ Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& 
     Real flow = 0.0;
     for (Size i = 0; i < cashFlowReport->rows(); ++i) {
         string id = boost::get<string>(cashFlowReport->data(tradeIdColumn).at(i));
-	if (id != tradeId)
-	    continue;
-	Date date = boost::get<Date>(cashFlowReport->data(dateColumn).at(i));
-	if (date <= d0 || date > d1)
-	    continue;
-	string ccy = boost::get<string>(cashFlowReport->data(ccyColumn).at(i));
-	Real amount = boost::get<Real>(cashFlowReport->data(amountColumn).at(i));
-	Real fx = 1.0;
-	if (ccy != baseCurrency)
-	    fx = market->fxRate(ccy + baseCurrency)->value();
-	flow += fx * amount; 
+    if (id != tradeId)
+        continue;
+    Date date = boost::get<Date>(cashFlowReport->data(dateColumn).at(i));
+    if (date <= d0 || date > d1)
+        continue;
+    string ccy = boost::get<string>(cashFlowReport->data(ccyColumn).at(i));
+    Real amount = boost::get<Real>(cashFlowReport->data(amountColumn).at(i));
+    Real fx = 1.0;
+    if (ccy != baseCurrency)
+        fx = market->fxRate(ccy + baseCurrency, configuration)->value();
+    flow += fx * amount; 
     }
     
     return flow;
 }
 
 void ReportWriter::writePnlReport(ore::data::Report& report,
-                          const ext::shared_ptr<InMemoryReport>& t0NpvReport,
-			  const ext::shared_ptr<InMemoryReport>& t0NpvLaggedReport,
-			  const ext::shared_ptr<InMemoryReport>& t1NpvLaggedReport,
-			  const ext::shared_ptr<InMemoryReport>& t1NpvReport,
-			  const ext::shared_ptr<InMemoryReport>& t0CashFlowReport,
-			  const Date& startDate, const Date& endDate,
-			  const std::string& baseCurrency,
-                          const ext::shared_ptr<ore::data::Market>& market,
-			  const std::string& configuration,
-			  const ext::shared_ptr<Portfolio>& portfolio) {
+            const ext::shared_ptr<InMemoryReport>& t0NpvReport,
+            const ext::shared_ptr<InMemoryReport>& t0NpvLaggedReport,
+            const ext::shared_ptr<InMemoryReport>& t1NpvLaggedReport,
+            const ext::shared_ptr<InMemoryReport>& t1Npvt0PortReport,
+            const ext::shared_ptr<InMemoryReport>& t1NpvReport,
+            const ext::shared_ptr<InMemoryReport>& t0CashFlowReport,
+            const Date& startDate, const Date& endDate,
+            const std::string& baseCurrency,
+                        const ext::shared_ptr<ore::data::Market>& market,
+            const std::string& configuration,
+            const ext::shared_ptr<Portfolio>& portfolio) {
   
     LOG("PnL report");
 
@@ -2452,8 +2454,13 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
         .addColumn("NPV(t0)", double(), 6)
         .addColumn("NPV(asof=t0;mkt=t1)", double(), 6)
         .addColumn("NPV(asof=t1;mkt=t0)", double(), 6)
+        .addColumn("NPV(t1;portfolio=t0)", double(), 6)
         .addColumn("NPV(t1)", double(), 6)
         .addColumn("PeriodCashFlow", double(), 6)
+        .addColumn("New", double(), 6)
+        .addColumn("Matured", double(), 6)
+        .addColumn("Terminated", double(), 6)
+        .addColumn("Amendments", double(), 6)
         .addColumn("Theta", double(), 6)
         .addColumn("HypotheticalCleanPnL", double(), 6)
         .addColumn("CleanPnL", double(), 6)
@@ -2499,51 +2506,110 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
     QL_REQUIRE(t1NpvReport->header(npvBaseColumn) == "NPV(Base)", "incorrect npv base column " << npvBaseColumn);
     QL_REQUIRE(t1NpvReport->header(baseCcyColumn) == "BaseCurrency", "incorrect base currency column " << baseCcyColumn);
 
+    map<string, Size> t1IdMap;
+    for (Size j = 0; j < t1NpvReport->rows(); ++j) {
+    string tradeId = boost::get<string>(t1NpvReport->data(tradeIdColumn).at(j));
+        t1IdMap[tradeId] = j;
+    }
+
+    std::set<string> t0Ids;
     for (Size i = 0; i < t0NpvReport->rows(); ++i) {
         try {
-	    string tradeId = boost::get<string>(t0NpvReport->data(tradeIdColumn).at(i));
-	    string tradeId2 = boost::get<string>(t0NpvLaggedReport->data(tradeIdColumn).at(i));
-	    string tradeId3 = boost::get<string>(t1NpvLaggedReport->data(tradeIdColumn).at(i));
-	    string tradeId4 = boost::get<string>(t1NpvReport->data(tradeIdColumn).at(i));
-	    QL_REQUIRE(tradeId == tradeId2 && tradeId == tradeId3 && tradeId == tradeId4, "inconsistent ordering of NPV reports");
-	    string tradeType = boost::get<string>(t0NpvReport->data(tradeTypeColumn).at(i));
-	    Date maturityDate = boost::get<Date>(t0NpvReport->data(maturityDateColumn).at(i));
+            string tradeId = boost::get<string>(t0NpvReport->data(tradeIdColumn).at(i));
+            t0Ids.insert(tradeId);
+            string tradeId2 = boost::get<string>(t0NpvLaggedReport->data(tradeIdColumn).at(i));
+            string tradeId3 = boost::get<string>(t1NpvLaggedReport->data(tradeIdColumn).at(i));
+            QL_REQUIRE(tradeId == tradeId2 && tradeId == tradeId3, "inconsistent ordering of NPV reports");
+            string tradeType = boost::get<string>(t0NpvReport->data(tradeTypeColumn).at(i));
+            Date maturityDate = boost::get<Date>(t0NpvReport->data(maturityDateColumn).at(i));
             Real maturityTime = boost::get<Real>(t0NpvReport->data(maturityTimeColumn).at(i));
-	    string ccy = boost::get<string>(t0NpvReport->data(baseCcyColumn).at(i));
-	    QL_REQUIRE(ccy == baseCurrency, "inconsistent NPV and base currencies");
+            string ccy = boost::get<string>(t0NpvReport->data(baseCcyColumn).at(i));
+            QL_REQUIRE(ccy == baseCurrency, "inconsistent NPV and base currencies");
             Real t0Npv = boost::get<Real>(t0NpvReport->data(npvBaseColumn).at(i));
             Real t0NpvLagged = boost::get<Real>(t0NpvLaggedReport->data(npvBaseColumn).at(i));
-	    Real t1NpvLagged = boost::get<Real>(t1NpvLaggedReport->data(npvBaseColumn).at(i));
-	    Real t1Npv = boost::get<Real>(t1NpvReport->data(npvBaseColumn).at(i));
+            Real t1NpvLagged = boost::get<Real>(t1NpvLaggedReport->data(npvBaseColumn).at(i));
+            Real t1Npvt0Port = boost::get<Real>(t1Npvt0PortReport->data(npvBaseColumn).at(i));
+
+            auto it = t1IdMap.find(tradeId);
+            Real t1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1NpvReport->data(npvBaseColumn).at(it->second));
             
-	    Real hypotheticalCleanPnl = t0NpvLagged - t0Npv;
-	    Real periodFlow = aggregateTradeFlow(tradeId, startDate, endDate, t0CashFlowReport, market, baseCurrency);
-	    Real theta = t1NpvLagged - t0Npv + periodFlow;
-	    Real dirtyPnl = t1Npv - t0Npv;
-	    Real cleanPnl = dirtyPnl + periodFlow;
-	    LOG("PnL report, writing line " << i << " tradeId " << tradeId);
-	    
-	    report.next()
-	        .add(tradeId)
-	        .add(tradeType)
-	        .add(maturityDate)
+            Real hypotheticalCleanPnl = t0NpvLagged - t0Npv;
+            Real periodFlow = aggregateTradeFlow(tradeId, startDate, endDate, t0CashFlowReport, market, configuration, baseCurrency);
+            Real matured =
+                (maturityDate <= endDate && close_enough(t1Npvt0Port, 0.0) && close_enough(t1Npv, 0.0)) ? t0Npv : 0.0;
+            Real terminated = (close_enough(t1Npv, 0.0) && !close_enough(t1Npvt0Port, 0.0)) ? t0Npv : 0.0;
+            Real amendments = (close_enough(matured, 0.0) && close_enough(terminated, 0.0)) ? t1Npv - t1Npvt0Port : 0.0;            
+            Real theta = t1NpvLagged - t0Npv + periodFlow;
+            Real dirtyPnl = t1Npv - t0Npv;
+            Real cleanPnl = dirtyPnl + periodFlow;
+            LOG("PnL report, writing line " << i << " tradeId " << tradeId);
+        
+            report.next()
+                .add(tradeId)
+                .add(tradeType)
+                .add(maturityDate)
                 .add(maturityTime)
-	        .add(startDate)
+                .add(startDate)
                 .add(endDate)
                 .add(t0Npv)
                 .add(t0NpvLagged)
                 .add(t1NpvLagged)
+                .add(t1Npvt0Port)
                 .add(t1Npv)
                 .add(periodFlow)
+                .add(0.0)
+                .add(matured)
+                .add(terminated)
+                .add(amendments)
                 .add(theta)
                 .add(hypotheticalCleanPnl)
                 .add(cleanPnl)
                 .add(dirtyPnl)
-	        .add(ccy);
+                .add(ccy);
 
-	} catch (std::exception& e) {
-	  ALOG("Error writing PnL report line: " << e.what()); 
-	}
+        } catch (std::exception& e) {
+          ALOG("Error writing PnL report line: " << e.what()); 
+        }
+    }
+
+    for (const auto& tId : t1IdMap) {
+        auto it = t0Ids.find(tId.first);
+        if (it == t0Ids.end()) {
+
+          string tradeId = tId.first;
+          Size loc = tId.second;
+          string tradeType = boost::get<string>(t1NpvReport->data(tradeTypeColumn).at(loc));
+          Date maturityDate = boost::get<Date>(t1NpvReport->data(maturityDateColumn).at(loc));
+          Real maturityTime = boost::get<Real>(t1NpvReport->data(maturityTimeColumn).at(loc));
+          string ccy = boost::get<string>(t1NpvReport->data(baseCcyColumn).at(loc));
+          QL_REQUIRE(ccy == baseCurrency, "inconsistent NPV and base currencies");
+
+          Real t1Npv = boost::get<Real>(t1NpvReport->data(npvBaseColumn).at(loc));
+          LOG("PnL report, writing line " << loc << " tradeId " << tradeId);
+
+          report.next()
+              .add(tradeId)
+              .add(tradeType)
+              .add(maturityDate)
+              .add(maturityTime)
+              .add(startDate)
+              .add(endDate)
+              .add(0.0)
+              .add(0.0)
+              .add(0.0)
+              .add(0.0)
+              .add(t1Npv)
+              .add(0.0)
+              .add(t1Npv)
+              .add(0.0)
+              .add(0.0)
+              .add(0.0)
+              .add(0.0)
+              .add(0.0)
+              .add(t1Npv)
+              .add(t1Npv)
+              .add(ccy);
+        }
     }
 
     report.end();
