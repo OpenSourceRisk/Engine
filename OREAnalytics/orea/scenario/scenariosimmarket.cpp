@@ -3271,7 +3271,9 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const std::string& k
 void ScenarioSimMarket::applyCurveAlgebra() {
     LOG("Applying " << parameters_->curveAlgebraData().data().size() << " curve algebra rules...");
     for (auto const& a : parameters_->curveAlgebraData().data()) {
+        DLOG("Applying operation type " << a.operationType());
         if (a.operationType() == "Spreaded") {
+            DLOG("curve " << a.key() << " is spreaded over " << a.argument(0));
             applyCurveAlgebraSpreadedYieldCurve(getYieldCurve(a.key()), getYieldCurve(a.argument(0)));
         } else
         // add more operations here...

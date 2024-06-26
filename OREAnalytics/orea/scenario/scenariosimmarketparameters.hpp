@@ -255,7 +255,7 @@ public:
 
     Size numberOfCreditStates() const { return numberOfCreditStates_; }
 
-    CurveAlgebraData curveAlgebraData() const { return curveAlgebraData_; }
+    const CurveAlgebraData& curveAlgebraData() const { return curveAlgebraData_; }
 
     // Get the parameters
     const std::map<RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>>& parameters() const {
