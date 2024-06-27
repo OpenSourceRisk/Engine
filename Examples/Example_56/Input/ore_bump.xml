@@ -44,9 +44,12 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
-      <Parameter name="amcCg">Y</Parameter>
-      <Parameter name="xvaCgBumpSensis">Y</Parameter>
+      <!-- Disabled (legacy AMC), CubeGeneration (AMC-CG, classic PP), Full (AMC-CG, cg PP) -->
+      <Parameter name="amcCg">Full</Parameter>
+      <!-- If given and amcCg=Full, we compute xva sensis in the AMC-CG engine -->
       <Parameter name="xvaCgSensitivityConfigFile">xvasensiconfig.xml</Parameter>
+      <!-- If true, AMC-CG engine uses bump, otherwise AD to compute xva sensis -->
+      <Parameter name="xvaCgBumpSensis">true</Parameter>
       <Parameter name="amcTradeTypes">Swap</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>

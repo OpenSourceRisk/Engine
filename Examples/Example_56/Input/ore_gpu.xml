@@ -44,10 +44,14 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
-      <Parameter name="amcCg">Y</Parameter>
-      <Parameter name="xvaCgBumpSensis">Y</Parameter>
+      <!-- Disabled (legacy AMC), CubeGeneration (AMC-CG, classic PP), Full (AMC-CG, cg PP) -->
+      <Parameter name="amcCg">Full</Parameter>
+      <!-- If given and amcCg=Full, we compute xva sensis in the AMC-CG engine -->
       <Parameter name="xvaCgSensitivityConfigFile">xvasensiconfig.xml</Parameter>
-      <Parameter name="xvaCgUseExternalComputeDevice">Y</Parameter>
+      <!-- If true, AMC-CG engine uses bump, otherwise AD to compute xva sensis -->
+      <Parameter name="xvaCgBumpSensis">true</Parameter>
+      <!-- external device config -->
+      <Parameter name="xvaCgUseExternalComputeDevice">true</Parameter>
       <Parameter name="xvaCgExternalDeviceCompatibilityMode">Y</Parameter>
       <Parameter name="xvaCgUseDoublePrecisionForExternalCalculation">N</Parameter>
       <Parameter name="xvaCgExternalComputeDevice">BasicCpu/Default/Default</Parameter>
