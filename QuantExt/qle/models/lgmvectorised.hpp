@@ -84,7 +84,7 @@ public:
                                    const Real spread, const Real gearing, Real cap, Real floor, const bool nakedOption,
                                    const Time t, const RandomVariable& x) const;
 
-    /* Approximation via plain Ibor coupon with fixing date = first fixing date and the fixing() method above. */
+    /* Exact. Requires observation time t <= fixingDate */
     RandomVariable subPeriodsRate(const QuantLib::ext::shared_ptr<InterestRateIndex>& index,
                                   const std::vector<Date>& fixingDates, const Time t, const RandomVariable& x,
                                   const std::vector<Time>& accrualFractions,
