@@ -30,8 +30,8 @@ macro(add_linker_flag flag supportsFlag)
     endif()
 endmacro()
 
-# use CXX 17, disable gnu extensions
-set(CMAKE_CXX_STANDARD 17)
+# use CXX 20, disable gnu extensions
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS FALSE)
 
 # If available, use PIC for shared libs and PIE for executables
