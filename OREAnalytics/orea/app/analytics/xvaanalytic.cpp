@@ -607,7 +607,7 @@ void XvaAnalyticImpl::runPostProcessor() {
     string marketConfiguration = inputs_->marketConfig("simulation");
 
     bool fullInitialCollateralisation = inputs_->fullInitialCollateralisation();
-    bool constantInitialVmDifference = inputs_->constantInitialVmDifference();
+    bool firstMporCollateralAdjustment = inputs_->firstMporCollateralAdjustment();
     checkConfigurations(analytic()->portfolio());
 
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
@@ -655,7 +655,7 @@ void XvaAnalyticImpl::runPostProcessor() {
         flipViewLendingCurvePostfix, inputs_->creditSimulationParameters(), inputs_->creditMigrationDistributionGrid(),
         inputs_->creditMigrationTimeSteps(), creditStateCorrelationMatrix(),
         analytic()->configurations().scenarioGeneratorData->withMporStickyDate(), inputs_->mporCashFlowMode(),
-        constantInitialVmDifference);
+        firstMporCollateralAdjustment);
     LOG("post done");
 }
 

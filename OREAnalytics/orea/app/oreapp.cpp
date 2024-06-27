@@ -1904,9 +1904,9 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setCreditMigrationOutputFiles(tmp);
 
-    tmp = params_->get("xva", "constantInitialVMDifference", false);
+    tmp = params_->get("xva", "firstMporCollateralAdjustment", false);
     if (tmp != "") {
-        setConstantInitialVmDifference(parseBool(tmp));
+        setfirstMporCollateralAdjustment(parseBool(tmp));
     }
 
     /*************

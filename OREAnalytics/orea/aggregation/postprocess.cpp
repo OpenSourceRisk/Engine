@@ -72,7 +72,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
                          const std::vector<Real>& creditMigrationDistributionGrid,
                          const std::vector<Size>& creditMigrationTimeSteps, const Matrix& creditStateCorrelationMatrix,
                          bool withMporStickyDate, MporCashFlowMode mporCashFlowMode,
-                         const bool constantInitialVmDifference)
+                         const bool firstMporCollateralAdjustment)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), collateralBalances_(collateralBalances),
       market_(market), configuration_(configuration), cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData),
       analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
@@ -87,7 +87,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
       creditMigrationDistributionGrid_(creditMigrationDistributionGrid),
       creditMigrationTimeSteps_(creditMigrationTimeSteps), creditStateCorrelationMatrix_(creditStateCorrelationMatrix),
       withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode),
-      constantInitialVmDifference_(constantInitialVmDifference) {
+      firstMporCollateralAdjustment_(firstMporCollateralAdjustment) {
 
     QL_REQUIRE(cubeInterpretation_ != nullptr, "PostProcess: cubeInterpretation is not given.");
 
@@ -206,7 +206,7 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         dimCalculator_, fullInitialCollateralisation_,
         allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,
         exposureCalculator_->exposureCube(), ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
-        analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_, constantInitialVmDifference_);
+        analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_, firstMporCollateralAdjustment_);
     nettedExposureCalculator_->build();
 
     /********************************************************

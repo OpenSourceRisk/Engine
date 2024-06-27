@@ -45,7 +45,7 @@ NettedExposureCalculator::NettedExposureCalculator(
     const bool fullInitialCollateralisation, const bool marginalAllocation, const Real marginalAllocationLimit,
     const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex,
     const Size allocatedEneIndex, const bool flipViewXVA, const bool withMporStickyDate,
-    const MporCashFlowMode mporCashFlowMode, const bool constantInitialVmMarginMismatch)
+    const MporCashFlowMode mporCashFlowMode, const bool firstMporCollateralAdjustment)
     : portfolio_(portfolio), market_(market), cube_(cube), baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType), multiPath_(multiPath), nettingSetManager_(nettingSetManager),
       collateralBalances_(collateralBalances), nettingSetDefaultValue_(nettingSetDefaultValue),
@@ -56,7 +56,7 @@ NettedExposureCalculator::NettedExposureCalculator(
       marginalAllocationLimit_(marginalAllocationLimit), tradeExposureCube_(tradeExposureCube),
       allocatedEpeIndex_(allocatedEpeIndex), allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA),
       withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode),
-      constantInitialVmMarginMismatch_(constantInitialVmMarginMismatch) {
+      firstMporCollateralAdjustment_(firstMporCollateralAdjustment) {
 
     set<string> nettingSetIds;
     for (auto nettingSet : nettingSetDefaultValue) {
@@ -229,7 +229,7 @@ void NettedExposureCalculator::build() {
             ene[0] = 0;
             pfe[0] = 0;
         } else {
-            initalVmCollateralMismatch = constantInitialVmMarginMismatch_ ? std::min(0.0, initialVMbase - npv) : 0.0;
+            initalVmCollateralMismatch = firstMporCollateralAdjustment_ ? std::min(0.0, initialVMbase - npv) : 0.0;
             epe[0] = std::max(npv - initialVMbase - initialIMbase, 0.0);
             ene[0] = std::max(-npv + initialVMbase, 0.0);
             pfe[0] = std::max(npv - initialVMbase - initialIMbase, 0.0);
@@ -287,7 +287,7 @@ void NettedExposureCalculator::build() {
                  
                     }
                 }
-                if (netting->activeCsaFlag() && constantInitialVmMarginMismatch_ && date <= endFirstMpor) {
+                if (netting->activeCsaFlag() && firstMporCollateralAdjustment_ && date <= endFirstMpor) {
                     balance += initalVmCollateralMismatch;
                 }
 

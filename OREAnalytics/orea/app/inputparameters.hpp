@@ -306,7 +306,7 @@ public:
     void setKvaTheirPdFloor(Real r) { kvaTheirPdFloor_ = r; }
     void setKvaOurCvaRiskWeight(Real r) { kvaOurCvaRiskWeight_ = r; }
     void setKvaTheirCvaRiskWeight(Real r) { kvaTheirCvaRiskWeight_ = r; }
-    void setConstantInitialVmDifference(const bool constantInitialVm) { constantInitialVmDifference_ = constantInitialVm; }
+    void setfirstMporCollateralAdjustment(const bool constantInitialVm) { firstMporCollateralAdjustment_ = constantInitialVm; }
     // credit simulation
     void setCreditMigrationAnalytic(bool b) { creditMigrationAnalytic_ = b; }
     void setCreditMigrationDistributionGrid(const std::vector<Real>& grid) { creditMigrationDistributionGrid_ = grid; }
@@ -698,7 +698,7 @@ public:
 
     double xvaExplainShiftThreshold() const { return xvaExplainShiftThreshold_; }
 
-    bool constantInitialVmDifference() const { return constantInitialVmDifference_; }
+    bool firstMporCollateralAdjustment() const { return firstMporCollateralAdjustment_; }
 
     /**************************************************
      * Getters for cashflow npv and dynamic backtesting
@@ -1035,7 +1035,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> xvaStressScenarioData_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaStressSensitivityScenarioData_;
     bool xvaStressWriteCubes_ = false;
-    bool constantInitialVmDifference_ = false;
+    bool firstMporCollateralAdjustment_ = false;
     /***************
      * SIMM analytic
      ***************/
