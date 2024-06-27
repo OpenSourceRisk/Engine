@@ -1466,6 +1466,33 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element type="curveAlgebra" name="CurveAlgebra" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="curveAlgebra">
+    <xs:sequence>
+      <xs:element type="curveAlgebraCurve" name="Curve" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="curveAlgebraCurve">
+    <xs:all>
+      <xs:element type="xs:string" name="Key"/>
+      <xs:element type="curveAlgebraCurveOperation" name="Operation"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="curveAlgebraCurveOperation">
+    <xs:all>
+      <xs:element type="xs:string" name="Type"/>
+      <xs:element name="Arguments" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="Argument" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
     </xs:all>
   </xs:complexType>
 

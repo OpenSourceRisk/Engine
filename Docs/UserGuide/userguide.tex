@@ -5992,6 +5992,36 @@ StickyStrike.
 
 \todo[inline]{Comment on cap/floor surface structure and reaction to time decay}
 
+The inital build of the scenario simulation market curves can be modified in a post-processing step by specifying a
+CurveAlgebra node as a subnode of Market. The following operations are supported:
+
+\begin{itemize}
+\item Spreaded: A curve given under Key can be defined to be a spreaded curve over another curve given under
+  Arguments. A shift in the base curve will propagate to the result curve. In the example in \ref{lst:curve_algebra} a
+  shift of the EUR-EONIA index curve will cause a shift in the EUR discount curve of the same size.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Market>
+  ...
+    <CurveAlgebra>
+      <Curve>
+        <Key>DiscountCurve/EUR</Key>
+        <Operation>
+          <Type>Spreaded</Type>
+          <Arguments>
+            <Argument>IndexCurve/EUR-EONIA</Argument>
+          </Arguments>
+        </Operation>
+      </Curve>
+    </CurveAlgebra>
+
+\end{minted}
+\caption{Curve Algebra specification}
+\label{lst:curve_algebra}
+\end{longlisting}
+
 %--------------------------------------------------------
 \subsection{Sensitivity Analysis: {\tt sensitivity.xml}}\label{sec:sensitivity}
 %--------------------------------------------------------
