@@ -24,21 +24,16 @@
 #ifndef quantext_cashposition_hpp
 #define quantext_cashposition_hpp
 
-#include <ql/cashflows/simplecashflow.hpp>
-#include <ql/currency.hpp>
 #include <ql/instrument.hpp>
-#include <ql/quote.hpp>
-#include <ql/time/calendar.hpp>
-#include <ql/time/daycounter.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
 //! Payment Instrument
 
-/*! This class holds the data for single payment.
+/*! This class holds the data a cash position.
 
-        \ingroup instruments
+    \ingroup instruments
 */
 class CashPosition : public Instrument {
 public:
@@ -63,7 +58,6 @@ public:
     void setupArguments(PricingEngine::arguments* args) const override {
         CashPosition::arguments* arguments = dynamic_cast<CashPosition::arguments*>(args);
 
-        // We have a VanillaOption engine that will ignore the deferred payment.
         if (!arguments)
             return;
 

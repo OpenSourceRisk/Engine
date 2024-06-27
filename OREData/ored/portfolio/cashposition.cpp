@@ -25,10 +25,9 @@ namespace data {
 
 void CashPosition::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine) {
     // ISDA taxonomy 
-    additionalData_["isdaAssetClass"] = string("");
-    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string("Spot");
     additionalData_["isdaSubProduct"] = string("");
-    // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");
     
     Currency ccy = parseCurrencyWithMinors(currency_);
