@@ -161,6 +161,7 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(QuantLib::ext::shared_ptr
 
     hisScenGen_->reset();
     QuantLib::ext::shared_ptr<Scenario> baseScenario = hisScenGen_->baseScenario();
+    bool isPar = baseScenario->isPar();
 
     set<string> keyNames;
     std::map<std::string, RiskFactorKey> keyNameMapping;
@@ -180,7 +181,7 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(QuantLib::ext::shared_ptr
         Size j = 0;
         for (const auto& [_, key] : keyNameMapping) {
             try {
-                Real shift = shiftCalculator->shift(key, *baseScenario, *scenario);
+                Real shift = shiftCalculator->shift(key, *baseScenario, *scenario, isPar);
                 cube->set(shift, j, 0, i);
             } catch (const std::exception& e) {
                 StructuredAnalyticsErrorMessage(
