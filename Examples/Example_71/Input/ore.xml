@@ -84,13 +84,13 @@
       <Parameter name="dimScaling">1.0</Parameter>
       <Parameter name="dimEvolutionFile">dim_evolution.csv</Parameter>
       <Parameter name="dimRegressionFiles">dim_regression.csv</Parameter>
-      <Parameter name="dimOutputNettingSet">CPTY_B</Parameter>
+      <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
       <Parameter name="dimOutputGridPoints">0</Parameter>
       <Parameter name="dimLocalRegressionEvaluations">0</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">1.0</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-      <Parameter name="constantInitialVMDifference">true</Parameter>
+      <Parameter name="firstMporCollateralAdjustment">true</Parameter>
     </Analytic>
 
   </Analytics>
