@@ -65,8 +65,10 @@ public:
     void add(const ore::analytics::RiskFactorKey& key, Real value) override;
     Real get(const ore::analytics::RiskFactorKey& key) const override;
 
-    bool isAbsolute() const override { return baseScenario_->isAbsolute(); }
+    const bool isAbsolute() const override { return baseScenario_->isAbsolute(); }
     void setAbsolute(const bool b) override { baseScenario_->setAbsolute(b); }
+    const bool isPar() const override { return baseScenario_->isPar(); }
+    void setPar(const bool b) override { baseScenario_->setPar(b); }
 
     const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>&
     coordinates() const override {

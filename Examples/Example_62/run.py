@@ -11,3 +11,6 @@ oreex.run("Input/ore_pnl.xml")
 
 oreex.print_headline("Run ORE PNL Explain")
 oreex.run("Input/ore_explain.xml")
+
+oreex.print_headline("Run ORE PNL Explain with Par Rates")
+oreex.run("Input/ore_explain_par.xml")
