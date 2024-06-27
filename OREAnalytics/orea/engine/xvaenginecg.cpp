@@ -46,7 +46,9 @@ namespace ore {
 namespace analytics {
 
 XvaEngineCG::Mode parseXvaEngineCgMode(const std::string& s) {
-    if (s == "CubeGeneration") {
+    if (s == "Disabled") {
+        return XvaEngineCG::Mode::Disabled;
+    } else if (s == "CubeGeneration") {
         return XvaEngineCG::Mode::CubeGeneration;
     } else if (s == "Full") {
         return XvaEngineCG::Mode::Full;
@@ -56,7 +58,9 @@ XvaEngineCG::Mode parseXvaEngineCgMode(const std::string& s) {
 }
 
 std::ostream& operator<<(std::ostream& os, XvaEngineCG::Mode m) {
-    if (m == XvaEngineCG::Mode::CubeGeneration)
+    if (m == XvaEngineCG::Mode::Disabled)
+        return os << "Disabled";
+    else if (m == XvaEngineCG::Mode::CubeGeneration)
         return os << "CubeGeneration";
     else if (m == XvaEngineCG::Mode::Full)
         return os << "Full";
@@ -706,6 +710,10 @@ void XvaEngineCG::populateModelParameters(const std::vector<std::pair<std::size_
     }
 
     DLOG("XvaEngineCG: set " << modelParameters.size() << " model parameters.");
+}
+
+void XvaEngineCG::buildCube(QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& outputCube) const {
+    
 }
 
 } // namespace analytics

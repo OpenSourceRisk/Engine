@@ -69,8 +69,13 @@ public:
                 const std::string& externalComputeDevice = std::string(), const bool continueOnCalibrationError = true,
                 const bool continueOnError = true, const std::string& context = "xva engine cg");
 
-    QuantLib::ext::shared_ptr<InMemoryReport> exposureReport() { return epeReport_; }
-    QuantLib::ext::shared_ptr<InMemoryReport> sensiReport() { return sensiReport_; }
+    // to be used only for Mode == CubeGeneration
+    QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData>& aggregationScenarioData() { return asd_; }
+    void buildCube(QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& outputCube) const;
+
+    // to be used only for Mode == Full
+    QuantLib::ext::shared_ptr<InMemoryReport> exposureReport() const { return epeReport_; }
+    QuantLib::ext::shared_ptr<InMemoryReport> sensiReport() const { return sensiReport_; }
 
 private:
     void populateRandomVariates(std::vector<RandomVariable>& values,
@@ -80,6 +85,9 @@ private:
     void populateModelParameters(const std::vector<std::pair<std::size_t, double>>& modelParameters,
                                  std::vector<RandomVariable>& values,
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
+
+    // set / get via additional methods
+    QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData> asd_;
 
     // input parameters
     Mode mode_;
