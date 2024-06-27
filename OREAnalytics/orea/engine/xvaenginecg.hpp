@@ -69,11 +69,11 @@ public:
                 const std::string& externalComputeDevice = std::string(), const bool continueOnCalibrationError = true,
                 const bool continueOnError = true, const std::string& context = "xva engine cg");
 
-    // to be used only for Mode == CubeGeneration
+    // to be used for Mode == CubeGeneration only
     QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData>& aggregationScenarioData() { return asd_; }
     void buildCube(QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& outputCube) const;
 
-    // to be used only for Mode == Full
+    // to be used for Mode == Full only
     QuantLib::ext::shared_ptr<InMemoryReport> exposureReport() const { return epeReport_; }
     QuantLib::ext::shared_ptr<InMemoryReport> sensiReport() const { return sensiReport_; }
 
