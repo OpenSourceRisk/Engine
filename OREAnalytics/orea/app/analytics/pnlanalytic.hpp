@@ -61,11 +61,13 @@ public:
     const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& t1Scenario() const { return t1Scenario_; }
     void setT0Scenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario) { t0Scenario_ = scenario; }
     void setT1Scenario(const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario) { t1Scenario_ = scenario; }
+    const QuantLib::ext::shared_ptr<ScenarioSimMarket>& t0SimMarket() { return t0SimMarket_; }
 
 private:
     bool useSpreadedTermStructures_ = true;
     QuantLib::Date mporDate_;
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> t0Scenario_, t1Scenario_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> t0SimMarket_;
 };
 
 /*!

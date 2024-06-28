@@ -55,7 +55,7 @@ public:
         scenario \p s_2.
     */
     QuantLib::Real shift(const ore::analytics::RiskFactorKey& key, const ore::analytics::Scenario& s_1,
-                         const ore::analytics::Scenario& s_2) const;
+                         const ore::analytics::Scenario& s_2, const bool isPar = false) const;
 
 private:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityConfig_;

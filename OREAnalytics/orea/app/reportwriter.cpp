@@ -261,7 +261,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                             fxRateLocalBase = cf.fxRateLocalBase;
                         } else if (market) {
                             try {
-                                fxRateLocalBase = market->fxRate(ccy + baseCurrency)->value();
+                                fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
                             } catch (...) {
                             }
                         }
@@ -501,7 +501,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                 if (effectiveAmount != Null<Real>())
                                     presentValue = discountFactor * effectiveAmount;
                                 try {
-                                    fxRateLocalBase = market->fxRate(ccy + baseCurrency)->value();
+                                    fxRateLocalBase = market->fxRate(ccy + baseCurrency, configuration)->value();
                                     presentValueBase = presentValue * fxRateLocalBase;
                                 } catch (...) {
                                 }
@@ -1261,7 +1261,8 @@ void addMapResults(boost::any resultMap, const std::string& tradeId, const std::
 }
 
 void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::shared_ptr<Portfolio> portfolio,
-                                                QuantLib::ext::shared_ptr<Market> market, const std::string& baseCurrency,
+                                                QuantLib::ext::shared_ptr<Market> market,
+                                                const std::string& configuration, const std::string& baseCurrency,
                                                 const std::size_t precision) {
 
     LOG("Writing AdditionalResults report");
@@ -1313,7 +1314,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
             if (notional2 != Null<Real>() && notional2Ccy != "") {
                 Real fx = 1.0;
                 if (notional2Ccy != baseCurrency)
-                    fx = market->fxRate(notional2Ccy + baseCurrency)->value();
+                    fx = market->fxRate(notional2Ccy + baseCurrency, configuration)->value();
                 std::ostringstream oss;
                 oss << std::fixed << std::setprecision(8) << notional2 * fx;
                 // report.next().add(tradeId).add("notionalInBaseCurrency[2]").add("double").add(oss.str());
@@ -2399,7 +2400,7 @@ void ReportWriter::writeIMScheduleTradeReport(const map<string, vector<IMSchedul
 
 Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& d1, 
             const ext::shared_ptr<InMemoryReport>& cashFlowReport,
-            const ext::shared_ptr<ore::data::Market>& market,
+            const ext::shared_ptr<ore::data::Market>& market, const std::string& configuration,
             const std::string& baseCurrency)  {
     Size tradeIdColumn = 0;
     Size dateColumn = 4;
@@ -2422,7 +2423,7 @@ Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& 
     Real amount = boost::get<Real>(cashFlowReport->data(amountColumn).at(i));
     Real fx = 1.0;
     if (ccy != baseCurrency)
-        fx = market->fxRate(ccy + baseCurrency)->value();
+        fx = market->fxRate(ccy + baseCurrency, configuration)->value();
     flow += fx * amount; 
     }
     
@@ -2533,7 +2534,7 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
             Real t1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1NpvReport->data(npvBaseColumn).at(it->second));
             
             Real hypotheticalCleanPnl = t0NpvLagged - t0Npv;
-            Real periodFlow = aggregateTradeFlow(tradeId, startDate, endDate, t0CashFlowReport, market, baseCurrency);
+            Real periodFlow = aggregateTradeFlow(tradeId, startDate, endDate, t0CashFlowReport, market, configuration, baseCurrency);
             Real matured =
                 (maturityDate <= endDate && close_enough(t1Npvt0Port, 0.0) && close_enough(t1Npv, 0.0)) ? t0Npv : 0.0;
             Real terminated = (close_enough(t1Npv, 0.0) && !close_enough(t1Npvt0Port, 0.0)) ? t0Npv : 0.0;

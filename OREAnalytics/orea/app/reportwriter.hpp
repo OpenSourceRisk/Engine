@@ -67,8 +67,8 @@ public:
 
     virtual void writeCashflow(ore::data::Report& report, const std::string& baseCurrency,
                                QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
-                               QuantLib::ext::shared_ptr<ore::data::Market> market = QuantLib::ext::shared_ptr<ore::data::Market>(),
-                               const std::string& configuration = ore::data::Market::defaultConfiguration,
+                               QuantLib::ext::shared_ptr<ore::data::Market> market,
+                               const std::string& configuration,
                                const bool includePastCashflows = false);
 
     virtual void writeCashflowNpv(ore::data::Report& report,
@@ -115,7 +115,8 @@ public:
 
     virtual void writeAdditionalResultsReport(ore::data::Report& report,
                                               QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio,
-                                              QuantLib::ext::shared_ptr<Market> market, const std::string& baseCurrency,
+                                              QuantLib::ext::shared_ptr<Market> market,
+                                              const std::string& configuration, const std::string& baseCurrency,
                                               const std::size_t precision = 6);
 
     virtual void writeMarketData(ore::data::Report& report, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader, const QuantLib::Date& asof,

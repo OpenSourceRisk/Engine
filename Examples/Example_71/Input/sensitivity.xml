@@ -1,0 +1,39 @@
+<SensitivityAnalysis>
+  <DiscountCurves>
+    <DiscountCurve ccy="USD">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W, 1M, 3M, 6M, 1Y, 2Y, 3Y, 5Y, 10Y, 15Y, 20Y, 30Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP, DEP, DEP, DEP, OIS, OIS, OIS, OIS, OIS, OIS, OIS, OIS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">USD-LIBOR-CONVENTIONS</Convention>
+          <Convention id="OIS">USD-OIS-CONVENTIONS</Convention>
+        </Conventions>
+      </ParConversion>
+    </DiscountCurve>
+    <DiscountCurve ccy="GBP">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>3M,6M,1Y,2Y,3Y,5Y,10Y,15Y,20Y,30Y,40Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>FXF,FXF,FXF,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="FXF">GBP-USD-FX-CONVENTIONS</Convention>
+          <Convention id="XBS">USD-GBP-XCCY-BASIS-CONVENTIONS</Convention>
+        </Conventions>
+      </ParConversion>
+    </DiscountCurve>
+  </DiscountCurves>
+  <IndexCurves />
+  <YieldCurves />
+  <FxSpots>
+    <FxSpot ccypair="GBPUSD">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+  </FxSpots>
+  <CrossGammaFilter />
+</SensitivityAnalysis>
