@@ -28,6 +28,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
@@ -155,11 +156,18 @@ protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClassUnderlying,
                                                         const Date& expiryDate, const bool useFxSpot) override {
+        QuantLib::ext::optional<unsigned int> spotDays;
+        QuantLib::ext::optional<QuantLib::Calendar> spotCalendar;
         QuantLib::ext::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        return QuantLib::ext::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve);
+        if (assetClassUnderlying == AssetClass::FX && useFxSpot){
+            auto [fixingDays, calendar, bdc] = ore::data::getFxIndexConventions(assetName + ccy.code());
+            spotDays = fixingDays;
+            spotCalendar = calendar;
+        }
+        return QuantLib::ext::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve, spotDays, spotCalendar);
     }
 };
 

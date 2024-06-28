@@ -1307,7 +1307,7 @@ BOOST_AUTO_TEST_CASE(testFXDoubleBarrierOptionParity) {
         Date today = Settings::instance().evaluationDate();
         Settings::instance().evaluationDate() = market->asofDate();
 
-        Date exDate = today + Integer(f.t * 360 + 0.5);
+        Date exDate = parseCalendar("EUR,JPY").adjust(today + Integer(f.t * 360 + 0.5));
         OptionData optionData("Long", f.optionType, "European", true, vector<string>(1, ore::data::to_string(exDate)));
         vector<Real> barriers = {f.barrierLow, f.barrierHigh};
         vector<TradeBarrier> tradeBarriers;
