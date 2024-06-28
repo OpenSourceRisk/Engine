@@ -642,13 +642,14 @@ public:
     //! create JSON-like output from the data
     const std::string json() const { return jsonify(data_); }
     void set(const std::string& key, const boost::any& value) { data_[key] = value; }
+    virtual void emitLog() const = 0;
 
 protected:
     //! generate Boost log record - this method is called by log()
-    virtual void emitLog() const = 0;
     static std::string jsonify(const boost::any&);
 
     std::map<std::string, boost::any> data_;
+    mutable bool logged_ = false;
 };
 
 // This can be used directly in log messages, e.g.
@@ -687,16 +688,16 @@ public:
                       const std::pair<std::string, std::string>& subField = std::pair<std::string, std::string>())
         : StructuredMessage(category, group, message, std::map<std::string, std::string>({subField})) {}
 
-    virtual ~StructuredMessage() {}
+    virtual ~StructuredMessage();
 
     static constexpr const char* name = "StructuredMessage";
 
     //! return a std::string for the log file
-    std::string msg() const { return std::string(name) + std::string(" ") + json(); }
+    std::string msg() const override { return std::string(name) + std::string(" ") + json(); }
     //! generate Boost log record to pass to corresponding sinks
-    void emitLog() const;
 
 protected:
+    void emitLog() const override;
     void addSubFields(const std::map<std::string, std::string>&);
 };
 
@@ -721,9 +722,11 @@ public:
     static constexpr const char* name = "EventMessage";
 
     //! return a std::string for the log file
-    std::string msg() const { return std::string(name) + std::string(" ") + json(); }
+    std::string msg() const override { return std::string(name) + std::string(" ") + json(); }
     //! generate Boost log record to pass to corresponding sinks
-    void emitLog() const;
+
+protected:
+    void emitLog() const override;
 
 private:
     std::string message_;
@@ -736,9 +739,11 @@ public:
     static constexpr const char* name = "ProgressMessage";
 
     //! return a std::string for the log file
-    std::string msg() const { return std::string(name) + std::string(" ") + json(); }
+    std::string msg() const override { return std::string(name) + std::string(" ") + json(); }
     //! generate Boost log record to pass to corresponding sinks
-    void emitLog() const;
+
+protected:
+    void emitLog() const override;
 };
 
 //! Singleton to control console logging
