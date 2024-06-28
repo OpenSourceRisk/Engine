@@ -219,7 +219,8 @@ void PricingAnalyticImpl::runAnalytic(
                     QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis_->parSensitivities(),
                                                                         parAnalysis_->shiftSizes());
                 auto parCube =
-                    QuantLib::ext::make_shared<ZeroToParCube>(sensiAnalysis_->sensiCubes(), parConverter, true);
+                    QuantLib::ext::make_shared<ZeroToParCube>(sensiAnalysis_->sensiCubes(), parConverter,
+                                                              std::set<ore::analytics::RiskFactorKey::KeyType>{}, true);
                 LOG("Sensi analysis - write par sensitivity report in memory");
                 QuantLib::ext::shared_ptr<ParSensitivityCubeStream> pss =
                     QuantLib::ext::make_shared<ParSensitivityCubeStream>(parCube, baseCurrency);
