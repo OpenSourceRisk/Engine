@@ -3791,6 +3791,17 @@ The example in folder {\\tt Examples/Example\_69} demonstrates the conversion of
 ORE applies the zero rate shifts to the zero curves and computes the resulting shifts in the implied fair rate of a given set of par instruments. 
 The zero rate shifts are defined as stresstests and the par instruments are defined in the usual sensitivity configuration.
 
+
+%--------------------------------------------------------------------
+\subsection{First Margin Period of Risk Collateral Adjustment}% Example 72
+\label{example:72}
+%--------------------------------------------------------------------
+
+The example in folder {\\tt Examples/Example\72} demonstrates the use of the firstMporCollateralAdjustment flag.
+To have a conservative estimation of the expected positive exposure ORE applies the difference between the initial variational margin 
+collateral balance and the t0 mtm on the simulated collateral during the first margin period of risk, if the difference would yield 
+a higher expected exposure (in case of over collateralisation in case of a negative mtm or under-collateralisation if the mtm is positive).
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
