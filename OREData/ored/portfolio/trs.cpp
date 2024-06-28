@@ -19,6 +19,7 @@
 #include <ored/portfolio/trs.hpp>
 #include <ored/portfolio/trsunderlyingbuilder.hpp>
 #include <ored/portfolio/trswrapper.hpp>
+#include <ored/portfolio/convertiblebond.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/indexes/compositeindex.hpp>
@@ -416,6 +417,11 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("payment schedule:");
     for (auto const& d : paymentDates)
         DLOG(ore::data::to_string(d));
+
+    for (Size i = 0; i < underlying_.size(); ++i) {
+        QL_REQUIRE(valuationDates[0] > underlying_[i]->issueDate(),
+                   "TRS start date should be > than the underlying bond issue date");
+    }
 
     // build indices corresponding to underlying trades and populate necessary data
 
