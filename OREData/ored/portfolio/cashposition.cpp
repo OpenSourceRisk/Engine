@@ -36,8 +36,7 @@ void CashPosition::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine)
     QuantLib::ext::shared_ptr<Instrument> inst =
         QuantLib::ext::make_shared<QuantExt::CashPosition>(amountMajor);
 
-    // set up other Trade details
-    instrument_ = QuantLib::ext::make_shared<InstrumentWrapper>(new VanillaInstrument(inst));
+    instrument_.reset(new VanillaInstrument(inst));
     npvCurrency_ = ccy.code();
 
     maturity_ = Date::maxDate();
