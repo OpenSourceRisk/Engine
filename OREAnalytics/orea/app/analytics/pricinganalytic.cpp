@@ -138,7 +138,6 @@ void PricingAnalyticImpl::runAnalytic(
         else if (type == "SENSITIVITY") {
             CONSOLEW("Risk: Sensitivity Report");
             LOG("Sensi Analysis - Initialise");
-            bool recalibrateModels = true;
             bool ccyConv = false;
             std::string configuration = inputs_->marketConfig("pricing");
             if (inputs_->nThreads() == 1) {
@@ -146,7 +145,7 @@ void PricingAnalyticImpl::runAnalytic(
                 sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
                     analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
-                    recalibrateModels, analytic()->configurations().curveConfig,
+                    inputs_->sensiRecalibrateModels(), analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
                     *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Single-threaded sensi analysis created");
