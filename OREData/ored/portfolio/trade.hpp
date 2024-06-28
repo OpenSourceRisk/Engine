@@ -223,9 +223,6 @@ protected:
     RequiredFixings requiredFixings_;
     mutable std::map<std::string,boost::any> additionalData_;
 
-    // Can override if trade doesn't have fixed maturity
-    virtual void validateMaturity() const;
-
     /* sets additional data based on given internal legNo (0, 1, ...), the result leg id is derived from this
        as "legNo + 1", i.e. starting with 1 (1, 2, ...). The result leg id can be overwriten using the second
        parameter resultLegId. */

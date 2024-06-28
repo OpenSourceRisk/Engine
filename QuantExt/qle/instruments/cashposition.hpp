@@ -29,7 +29,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Payment Instrument
+//! Cash position Instrument
 
 /*! This class holds the data a cash position.
 
@@ -50,17 +50,15 @@ public:
 
     class engine : public GenericEngine<CashPosition::arguments, CashPosition::results> {};
 
-    CashPosition(const Real amount) : amount_(amount){};
+    explicit CashPosition(const Real amount) : amount_(amount){};
 
     //! \name Instrument interface
     //@{
     bool isExpired() const override { return false; }
     void setupArguments(PricingEngine::arguments* args) const override {
         CashPosition::arguments* arguments = dynamic_cast<CashPosition::arguments*>(args);
-
-        if (!arguments)
-            return;
-
+        
+        QL_REQUIRE(arguments, "wrong argument type in CashPosition instrument");
         arguments->amount = amount_;
     }
     //@}
@@ -70,7 +68,7 @@ public:
     //@}
 
 private:
-    QuantLib::Real amount_;
+    QuantLib::Real amount_ = QuantLib::Null<QuantLib::Real>();
 };
 
 } // namespace QuantExt

@@ -41,7 +41,6 @@ public:
     CashPosition(const Envelope& env, const string& currency, double amount)
         : Trade("CashPosition", env), currency_(currency), amount_(amount) {}
 
-    bool isExpired(const Date& d) override { return false; };
     bool hasCashflows() const override { return false; }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
@@ -59,9 +58,6 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
-
-protected:
-    void validateMaturity() const override {}
 
 private:
     string currency_;
