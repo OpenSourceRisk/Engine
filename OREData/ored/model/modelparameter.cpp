@@ -29,14 +29,8 @@ namespace data {
 ModelParameter::ModelParameter()
     : calibrate_(false), type_(ParamType::Constant) {}
 
-ModelParameter::ModelParameter(bool calibrate,
-    ParamType type,
-    const vector<Time>& times,
-    const vector<Real>& values)
-    : calibrate_(calibrate),
-      type_(type),
-      times_(times),
-      values_(values) {
+ModelParameter::ModelParameter(bool calibrate, ParamType type, vector<Time> times, vector<Real> values)
+    : calibrate_(calibrate), type_(type), times_(std::move(times)), values_(std::move(values)) {
     check();
 }
 
@@ -55,6 +49,16 @@ const vector<Time>& ModelParameter::times() const {
 const vector<Real>& ModelParameter::values() const {
     return values_;
 }
+
+void ModelParameter::setTimes(std::vector<Real> times) { times_ = std::move(times); }
+
+void ModelParameter::setValues(std::vector<Real> values) { values_ = std::move(values); }
+
+void ModelParameter::mult(const Real f) {
+    std::transform(values_.begin(), values_.end(), values_.begin(), [&f](const Real v) { return f * v; });
+}
+
+void ModelParameter::setCalibrate(const bool b) { calibrate_ = b; }
 
 void ModelParameter::fromXML(XMLNode* node) {
     calibrate_ = XMLUtils::getChildValueAsBool(node, "Calibrate", true);
@@ -87,29 +91,18 @@ void ModelParameter::check() const {
 VolatilityParameter::VolatilityParameter()
     : volatilityType_(LgmData::VolatilityType::Hagan) {}
 
-VolatilityParameter::VolatilityParameter(LgmData::VolatilityType volatilityType,
-    bool calibrate,
-    ParamType type,
-    const vector<Time>& times,
-    const vector<Real>& values)
-    : ModelParameter(calibrate, type, times, values),
-      volatilityType_(volatilityType) {}
+VolatilityParameter::VolatilityParameter(LgmData::VolatilityType volatilityType, bool calibrate, ParamType type,
+                                         vector<Time> times, vector<Real> values)
+    : ModelParameter(calibrate, type, times, values), volatilityType_(volatilityType) {}
 
-VolatilityParameter::VolatilityParameter(LgmData::VolatilityType volatilityType,
-    bool calibrate,
-    QuantLib::Real value)
-    : ModelParameter(calibrate, ParamType::Constant, {}, { value }),
-      volatilityType_(volatilityType) {}
+VolatilityParameter::VolatilityParameter(LgmData::VolatilityType volatilityType, bool calibrate, QuantLib::Real value)
+    : ModelParameter(calibrate, ParamType::Constant, {}, {value}), volatilityType_(volatilityType) {}
 
-VolatilityParameter::VolatilityParameter(bool calibrate,
-    ParamType type,
-    const vector<Time>& times,
-    const vector<Real>& values)
+VolatilityParameter::VolatilityParameter(bool calibrate, ParamType type, vector<Time> times, vector<Real> values)
     : ModelParameter(calibrate, type, times, values) {}
 
-VolatilityParameter::VolatilityParameter(bool calibrate,
-    QuantLib::Real value)
-    : ModelParameter(calibrate, ParamType::Constant, {}, { value }) {}
+VolatilityParameter::VolatilityParameter(bool calibrate, QuantLib::Real value)
+    : ModelParameter(calibrate, ParamType::Constant, {}, {value}) {}
 
 const boost::optional<LgmData::VolatilityType>& VolatilityParameter::volatilityType() const {
     return volatilityType_;
@@ -123,7 +116,7 @@ void VolatilityParameter::fromXML(XMLNode* node) {
     ModelParameter::fromXML(node);
 }
 
-XMLNode* VolatilityParameter::toXML(XMLDocument& doc) {
+XMLNode* VolatilityParameter::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Volatility");
     if (volatilityType_)
         XMLUtils::addChild(doc, node, "VolatilityType", to_string(*volatilityType_));
@@ -134,13 +127,9 @@ XMLNode* VolatilityParameter::toXML(XMLDocument& doc) {
 ReversionParameter::ReversionParameter()
     : reversionType_(LgmData::ReversionType::HullWhite) {}
 
-ReversionParameter::ReversionParameter(LgmData::ReversionType reversionType,
-    bool calibrate,
-    ParamType type,
-    const vector<Time>& times,
-    const vector<Real>& values)
-    : ModelParameter(calibrate, type, times, values),
-      reversionType_(reversionType) {}
+ReversionParameter::ReversionParameter(LgmData::ReversionType reversionType, bool calibrate, ParamType type,
+                                       vector<Time> times, vector<Real> values)
+    : ModelParameter(calibrate, type, times, values), reversionType_(reversionType) {}
 
 ReversionParameter::ReversionParameter(LgmData::ReversionType reversionType,
     bool calibrate,
@@ -158,7 +147,7 @@ void ReversionParameter::fromXML(XMLNode* node) {
     ModelParameter::fromXML(node);
 }
 
-XMLNode* ReversionParameter::toXML(XMLDocument& doc) {
+XMLNode* ReversionParameter::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Reversion");
     XMLUtils::addChild(doc, node, "ReversionType", to_string(reversionType_));
     ModelParameter::append(doc, node);

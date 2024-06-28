@@ -82,7 +82,8 @@ void ScheduleRules::fromXML(XMLNode* node) {
         while(!Date::isEndOfMonth(ed))ed--;
         endDate_ = to_string(ed);
     }
-    tenor_ = XMLUtils::getChildValue(node, "Tenor");
+    tenor_ = XMLUtils::getChildValue(node, "Tenor") == "1T" ? "0D" : XMLUtils::getChildValue(node, "Tenor");
+    was1T_ = XMLUtils::getChildValue(node, "Tenor") == "1T" ? true : false;
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
     convention_ = XMLUtils::getChildValue(node, "Convention");
     termConvention_ = XMLUtils::getChildValue(node, "TermConvention", false);
@@ -91,23 +92,26 @@ void ScheduleRules::fromXML(XMLNode* node) {
     }
     rule_ = XMLUtils::getChildValue(node, "Rule");
     endOfMonth_ = XMLUtils::getChildValue(node, "EndOfMonth");
+    endOfMonthConvention_ = XMLUtils::getChildValue(node, "EndOfMonthConvention");
     firstDate_ = XMLUtils::getChildValue(node, "FirstDate");
     lastDate_ = XMLUtils::getChildValue(node, "LastDate");
     removeFirstDate_ = XMLUtils::getChildValueAsBool(node, "RemoveFirstDate", false, false);
     removeLastDate_ = XMLUtils::getChildValueAsBool(node, "RemoveLastDate", false, false);
 }
 
-XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
+XMLNode* ScheduleRules::toXML(XMLDocument& doc) const {
     XMLNode* rules = doc.allocNode("Rules");
     XMLUtils::addChild(doc, rules, "StartDate", startDate_);
     if (!endDate_.empty())
         XMLUtils::addChild(doc, rules, "EndDate", endDate_);
-    XMLUtils::addChild(doc, rules, "Tenor", tenor_);
+    XMLUtils::addChild(doc, rules, "Tenor", was1T_ ? "1T" : tenor_);
     XMLUtils::addChild(doc, rules, "Calendar", calendar_);
     XMLUtils::addChild(doc, rules, "Convention", convention_);
     XMLUtils::addChild(doc, rules, "TermConvention", termConvention_);
     XMLUtils::addChild(doc, rules, "Rule", rule_);
     XMLUtils::addChild(doc, rules, "EndOfMonth", endOfMonth_);
+    if (!endOfMonthConvention_.empty())
+        XMLUtils::addChild(doc, rules, "EndOfMonthConvention", endOfMonthConvention_);
     XMLUtils::addChild(doc, rules, "FirstDate", firstDate_);
     XMLUtils::addChild(doc, rules, "LastDate", lastDate_);
     if(removeFirstDate_)
@@ -121,19 +125,23 @@ void ScheduleDates::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Dates");
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
     convention_ = XMLUtils::getChildValue(node, "Convention");
-    tenor_ = XMLUtils::getChildValue(node, "Tenor");
+    tenor_ = XMLUtils::getChildValue(node, "Tenor") == "1T" ? "0D" : XMLUtils::getChildValue(node, "Tenor");
+    was1T_ = XMLUtils::getChildValue(node, "Tenor") == "1T" ? true : false;
     endOfMonth_ = XMLUtils::getChildValue(node, "EndOfMonth");
+    endOfMonthConvention_ = XMLUtils::getChildValue(node, "EndOfMonthConvention");
     dates_ = XMLUtils::getChildrenValues(node, "Dates", "Date");
 }
 
-XMLNode* ScheduleDates::toXML(XMLDocument& doc) {
+XMLNode* ScheduleDates::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Dates");
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
-    if (convention_ != "")
+    if (!convention_.empty())
         XMLUtils::addChild(doc, node, "Convention", convention_);
-    XMLUtils::addChild(doc, node, "Tenor", tenor_);
-    if (endOfMonth_ != "")
+    XMLUtils::addChild(doc, node, "Tenor", was1T_ ? "1T" : tenor_);
+    if (!endOfMonth_.empty())
         XMLUtils::addChild(doc, node, "EndOfMonth", endOfMonth_);
+    if (!endOfMonthConvention_.empty())
+        XMLUtils::addChild(doc, node, "EndOfMonthConvention", endOfMonthConvention_);
     XMLUtils::addChildren(doc, node, "Dates", "Date", dates_);
     return node;
 }
@@ -148,7 +156,7 @@ void ScheduleDerived::fromXML(XMLNode* node) {
     removeLastDate_ = XMLUtils::getChildValueAsBool(node, "RemoveLastDate", false, false);
 }
 
-XMLNode* ScheduleDerived::toXML(XMLDocument& doc) {
+XMLNode* ScheduleDerived::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Derived");
     XMLUtils::addChild(doc, node, "BaseSchedule", baseSchedule_);
     if (!shift_.empty())
@@ -190,7 +198,7 @@ void ScheduleData::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* ScheduleData::toXML(XMLDocument& doc) {
+XMLNode* ScheduleData::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("ScheduleData");
     for (auto& r : rules_)
         XMLUtils::appendNode(node, r.toXML(doc));
@@ -259,25 +267,28 @@ Schedule makeSchedule(const ScheduleDates& data) {
     QL_REQUIRE(data.dates().size() > 0, "Must provide at least 1 date for Schedule");
     Calendar calendar = parseCalendar(data.calendar());
     BusinessDayConvention convention = ModifiedFollowing;
-    if (data.convention() != "")
+    if (!data.convention().empty())
         convention = parseBusinessDayConvention(data.convention());
     // Avoid compiler warning on gcc
     // https://www.boost.org/doc/libs/1_74_0/libs/optional/doc/html/boost_optional/tutorial/
     // gotchas/false_positive_with__wmaybe_uninitialized.html
     auto tenor = boost::make_optional(false, Period());
-    if (data.tenor() != "")
+    if (!data.tenor().empty())
         tenor = parsePeriod(data.tenor());
     bool endOfMonth = false;
-    if (data.endOfMonth() != "")
+    if (!data.endOfMonth().empty())
         endOfMonth = parseBool(data.endOfMonth());
+    ext::optional<BusinessDayConvention> endOfMonthConvention = boost::none;
+    if (!data.endOfMonthConvention().empty())
+        endOfMonthConvention = parseBusinessDayConvention(data.endOfMonthConvention());
 
     // Ensure that Schedule ctor is passed a vector of unique ordered dates.
     std::set<Date> uniqueDates;
     for (const string& d : data.dates())
         uniqueDates.insert(calendar.adjust(parseDate(d), convention));
 
-    return Schedule(vector<Date>(uniqueDates.begin(), uniqueDates.end()), calendar, convention, boost::none, tenor,
-                    boost::none, endOfMonth);
+    return QuantLib::Schedule(vector<Date>(uniqueDates.begin(), uniqueDates.end()), calendar, convention, boost::none,
+                              tenor, boost::none, endOfMonth, vector<bool>(0), false, false, endOfMonthConvention);
 }
 
 Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule) {
@@ -312,9 +323,14 @@ Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule)
         derivedDate = calendar.advance(d, shift, convention);
         derivedDates.push_back(derivedDate);
     }
-    return Schedule(vector<Date>(derivedDates.begin(), derivedDates.end()), calendar, convention, boost::none,
-                    baseSchedule.tenor(), boost::none, baseSchedule.endOfMonth(), std::vector<bool>(0), 
-                    data.removeFirstDate(), data.removeLastDate());
+    ext::optional<BusinessDayConvention> endOfMonthConvention = boost::none;
+    if (baseSchedule.hasEndOfMonthBusinessDayConvention())
+        endOfMonthConvention = baseSchedule.endOfMonthBusinessDayConvention();
+
+    return QuantLib::Schedule(vector<Date>(derivedDates.begin(), derivedDates.end()), calendar, convention, boost::none,
+                              baseSchedule.tenor(), boost::none, baseSchedule.endOfMonth(), std::vector<bool>(0),
+                              data.removeFirstDate(), data.removeLastDate(),
+                              endOfMonthConvention);
 }
 
 Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacement) {
@@ -347,6 +363,7 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
     BusinessDayConvention bdcEnd = ModifiedFollowing;
     DateGeneration::Rule rule = DateGeneration::Forward;
     bool endOfMonth = false;
+    ext::optional<BusinessDayConvention> endOfMonthConvention = boost::none;
 
     // now check the strings, if they are empty we take defaults
     if (!data.convention().empty())
@@ -358,6 +375,8 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
 
     if (!data.endOfMonth().empty())
         endOfMonth = parseBool(data.endOfMonth());
+    if (!data.endOfMonthConvention().empty())
+        endOfMonthConvention = parseBusinessDayConvention(data.endOfMonthConvention());
 
     if (!data.rule().empty()) {
 
@@ -367,12 +386,12 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
             auto dates = everyWeekDayDates(startDate, endDate, firstDate, QuantLib::Thursday);
             for (auto& d : dates)
                 d = calendar.adjust(d, bdc);
-            return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth);
+            return QuantLib::Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth, std::vector<bool>(0), false, false, endOfMonthConvention);
         } else if (data.rule() == "BusinessWeek" || data.rule() == "CalendarWeek") {
             auto dates = weeklyDates(startDate, endDate, firstDate, data.rule() == "CalendarWeek");
             for (auto& d : dates)
                 d = calendar.adjust(d, bdc);
-            return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth, std::vector<bool>(0), data.removeFirstDate(), data.removeLastDate());
+            return QuantLib::Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth, std::vector<bool>(0), data.removeFirstDate(), data.removeLastDate(), endOfMonthConvention);
         }
 
         // parse rule for further processing below
@@ -389,21 +408,23 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
         // first (last) date of the schedule built in QL with a given first (last) date
         // The schedule builder in QL itself is not capable of doing this, it just throws an exception
         // if a first (last) date is given in combination with a CDS / CDS2015 date generation rule.
-        std::vector<Date> dates = Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth).dates();
+        std::vector<Date> dates = QuantLib::Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth,
+                                                     Date(), Date(), false, false, endOfMonthConvention)
+                                      .dates();
         QL_REQUIRE(!dates.empty(),
                    "got empty CDS or CDS2015 schedule, startDate = " << startDate << ", endDate = " << endDate);
         if (firstDate != Date())
             dates.front() = firstDate;
         if (lastDate != Date())
             dates.back() = lastDate;
-        return Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth, std::vector<bool>(0),
-                        data.removeFirstDate(), data.removeLastDate());
+        return QuantLib::Schedule(dates, calendar, bdc, bdcEnd, tenor, rule, endOfMonth, std::vector<bool>(0),
+                        data.removeFirstDate(), data.removeLastDate(), endOfMonthConvention);
     }
 
     // default handling (QuantLib scheduler)
 
-    return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate,
-                    data.removeFirstDate(), data.removeLastDate());
+    return QuantLib::Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate,
+                              data.removeFirstDate(), data.removeLastDate(), endOfMonthConvention);
 }
 
 namespace {
@@ -463,9 +484,11 @@ Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplaceme
         Period tenor;
         DateGeneration::Rule rule = DateGeneration::Zero; // initialization prevents gcc warning
         bool endOfMonth = false;                          // initialization prevents gcc warning
+        BusinessDayConvention endOfMonthConvention = Null<BusinessDayConvention>();
         bool hasCalendar = false, hasConvention = false, hasTermConvention = false, hasTenor = false, hasRule = false,
-             hasEndOfMonth = false, hasConsistentCalendar = true, hasConsistentConvention = true,
-             hasConsistentTenor = true, hasConsistentRule = true, hasConsistentEndOfMonth = true;
+             hasEndOfMonth = false, hasEndOfMonthConvention = false, hasConsistentCalendar = true,
+             hasConsistentConvention = true, hasConsistentTenor = true, hasConsistentRule = true,
+             hasConsistentEndOfMonth = true, hasConsistentEndOfMonthConvention = true;
         for (auto& d : data.dates()) {
             updateData<Calendar>(d.calendar(), calendar, hasCalendar, hasConsistentCalendar, parseCalendarTemp);
             updateData<BusinessDayConvention>(d.convention(), convention, hasConvention, hasConsistentConvention,
@@ -478,6 +501,8 @@ Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplaceme
                                               parseBusinessDayConvention);
             updateData<Period>(d.tenor(), tenor, hasTenor, hasConsistentTenor, parsePeriod);
             updateData<bool>(d.endOfMonth(), endOfMonth, hasEndOfMonth, hasConsistentEndOfMonth, parseBool);
+            updateData<BusinessDayConvention>(d.endOfMonthConvention(), endOfMonthConvention, hasEndOfMonthConvention,
+                                              hasConsistentEndOfMonthConvention, parseBusinessDayConvention);
             updateData<DateGeneration::Rule>(d.rule(), rule, hasRule, hasConsistentRule, parseDateGenerationRule);
             if (d.termConvention() != "") {
                 hasTermConvention = true;
@@ -516,13 +541,17 @@ Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplaceme
         }
 
         // 4) Build schedule
-        return Schedule(dates, hasCalendar && hasConsistentCalendar ? calendar : NullCalendar(),
-                        hasConvention && hasConsistentConvention ? convention : Unadjusted,
-                        hasTermConvention ? boost::optional<BusinessDayConvention>(termConvention) : boost::none,
-                        hasTenor && hasConsistentTenor ? boost::optional<Period>(tenor) : boost::none,
-                        hasRule && hasConsistentRule ? boost::optional<DateGeneration::Rule>(rule) : boost::none,
-                        hasEndOfMonth && hasConsistentEndOfMonth ? boost::optional<bool>(endOfMonth) : boost::none,
-                        isRegular);
+        return QuantLib::Schedule(
+            dates, hasCalendar && hasConsistentCalendar ? calendar : NullCalendar(),
+            hasConvention && hasConsistentConvention ? convention : Unadjusted,
+            hasTermConvention ? ext::optional<BusinessDayConvention>(termConvention) : boost::none,
+            hasTenor && hasConsistentTenor ? ext::optional<Period>(tenor) : boost::none,
+            hasRule && hasConsistentRule ? ext::optional<DateGeneration::Rule>(rule) : boost::none,
+            hasEndOfMonth && hasConsistentEndOfMonth ? ext::optional<bool>(endOfMonth) : boost::none, isRegular,
+            false, false,
+            hasEndOfMonthConvention && hasConsistentEndOfMonthConvention
+                ? ext::optional<BusinessDayConvention>(endOfMonthConvention)
+                : boost::none);
     }
 }
 } // namespace data

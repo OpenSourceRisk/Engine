@@ -173,7 +173,7 @@ namespace data {
 
 // clang-format on
 
-void BasketOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void BasketOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -239,27 +239,28 @@ void BasketOption::build(const boost::shared_ptr<EngineFactory>& factory) {
     // build trade
 
     ScriptedTrade::build(factory, optionData_.premiumData(), positionType == QuantLib::Position::Long ? -1.0 : 1.0);
+}
+
+void BasketOption::setIsdaTaxonomyFields() {
+    ScriptedTrade::setIsdaTaxonomyFields();
 
     // ISDA taxonomy
     // asset class set in the base class already
     std::string assetClass = boost::any_cast<std::string>(additionalData_["isdaAssetClass"]);
     if (assetClass == "Equity") {
         additionalData_["isdaBaseProduct"] = string("Option");
-        additionalData_["isdaSubProduct"] =  string("Price Return Basic Performance");  
-    }
-    else if (assetClass == "Foreign Exchange") {
-        additionalData_["isdaBaseProduct"] =  string("Complex Exotic");
-        additionalData_["isdaSubProduct"] =  string("Generic");  
-    }
-    else if (assetClass == "Commodity") {
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    } else if (assetClass == "Foreign Exchange") {
+        additionalData_["isdaBaseProduct"] = string("Complex Exotic");
+        additionalData_["isdaSubProduct"] = string("Generic");
+    } else if (assetClass == "Commodity") {
         // isda taxonomy missing for this class, using the same as equity
-        additionalData_["isdaBaseProduct"] =  string("Option");
-        additionalData_["isdaSubProduct"] =  string("Price Return Basic Performance");  
-    }
-    else {
+        additionalData_["isdaBaseProduct"] = string("Option");
+        additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    } else {
         WLOG("ISDA taxonomy incomplete for trade " << id());
     }
-    additionalData_["isdaTransaction"] =  string("Basket");  
+    additionalData_["isdaTransaction"] = string("Basket");
 }
 
 void BasketOption::initIndices() {
@@ -297,7 +298,7 @@ void BasketOption::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* BasketOption::toXML(XMLDocument& doc) {
+XMLNode* BasketOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, dataNode);

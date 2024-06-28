@@ -113,6 +113,7 @@ ORE+ Release & Date & Author & Comment \\
 \hline
 na & 25 February 2019  & Peter Caspers & initial version\\
 na & 23 October 2023 & Peter Caspers & add parameter RegressorModel\\
+na & 4 April 2024 & Peter Caspers & add parameter RegressionVarianceCutoff\\
 \hline
 \end{supertabular}
 \end{center}
@@ -203,14 +204,16 @@ cubes is automatic. The post processing step is run on the joint cube from the c
 
 \subsection{Application}\label{sec:application_config}
 
-To use the AMC engine for an XVA simulation the following analytic type should be active (in addition to the usual
-simulation and xva analytic types required to do an exposure analysis):
+To use the AMC engine for an XVA simulation the following parameters can be added to the simulation setup:
 
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Analytic type="amc">
-  <Parameter name="active">Y</Parameter>
-  <Parameter name="pricingEnginesFile">pricingengine_amc.xml</Parameter>
-  <Parameter name="amcTradeTypes">Swap,FxOption</Parameter>
+<Analytic type="simulation">
+  ...
+  <Parameter name="amc">Y</Parameter>
+  <Parameter name="amcPathDataInput">amcpathdata.dat</Parameter>
+  <Parameter name="amcPathDataOutput">amcpathdata.dat</Parameter>
+  <Parameter name="amcTradeTypes">Swap,Swaption,CapFloor,ForwardRateAgreement,FxOption,BermudanSwaption</Parameter>
+  <Parameter name="amcPricingEnginesFile">pricingengines_amc.xml</Parameter>
 </Analytic>
 \end{minted}
 
@@ -224,6 +227,11 @@ simulation are joined and passed to the post processor in the usual way.
 Note that since sometimes the AMC pricing engines have a different base ccy than the risk factor evolution model (see
 below), a horizon shift parameter in the simulation set up should be set for all currencies, so that the shift also
 applies to these reduced models.
+
+The \verb+amcPathDataInput+ and \verb+amcPathDataOutput+ parameters are optional. If the output path is given, the
+generated path data is serialized to disk. The path should be either absolute or relative to the working directory. If
+the input path is given, path generation is suppressed and paths are deserialized from the specified file. This can be
+used to speed up calculations using the same simulation setup.
 
 \subsection{Pricing Engine Configuration}\label{sec:pricing_engine_config}
 
@@ -247,6 +255,7 @@ The pricing engine configuration is similar for all AMC enabled products, e.g. f
     <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
     <Parameter name="MinObsDate">true</Parameter>
     <Parameter name="RegressorModel">Simple</Parameter>
+    <Parameter name="RegressionVarianceCutoff">1E-5</Parameter>
   </EngineParameters>
 </Product>
 \end{minted}
@@ -286,6 +295,9 @@ engine types. The engine parameters are the same for all products:
       addition, past FX states that are relevant for future cashflows are included. For example, for a FX resettable
       cashflow the FX state observed on the FX reset date is included.
   \end{itemize}
+\item \verb+RegressionVarianceCutoff+: Optional. If given, a coordinate transform and (possibly) a factor reduction is
+  applied to the regressors, such that $1-\epsilon$ of the total variance of regressors is kept, where $\epsilon$ the
+  given parameter. This helps dealing with collinearity and also reducing the dimnensionality of the regression model.
 \end{enumerate}
 
 \begin{table}[hbt]

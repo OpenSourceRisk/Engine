@@ -49,8 +49,8 @@ public:
 
     MCGaussianFormulaBasedCouponPricer(
         const std::string& paymentCurrencyCode,
-        const std::map<std::string, boost::shared_ptr<IborCouponPricer>>& iborPricers,
-        const std::map<std::string, boost::shared_ptr<CmsCouponPricer>>& cmsPricers,
+        const std::map<std::string, QuantLib::ext::shared_ptr<IborCouponPricer>>& iborPricers,
+        const std::map<std::string, QuantLib::ext::shared_ptr<CmsCouponPricer>>& cmsPricers,
         const std::map<std::string, Handle<BlackVolTermStructure>>& fxVolatilities,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlation,
         const Handle<YieldTermStructure>& couponDiscountCurve, const Size samples = 10000, const Size seed = 42,
@@ -69,8 +69,8 @@ private:
     //
     void compute() const;
     //
-    const std::map<std::string, boost::shared_ptr<IborCouponPricer>> iborPricers_;
-    const std::map<std::string, boost::shared_ptr<CmsCouponPricer>> cmsPricers_;
+    const std::map<std::string, QuantLib::ext::shared_ptr<IborCouponPricer>> iborPricers_;
+    const std::map<std::string, QuantLib::ext::shared_ptr<CmsCouponPricer>> cmsPricers_;
     const Handle<YieldTermStructure> couponDiscountCurve_;
     const Size samples_, seed_;
     const bool useSobol_;
@@ -79,7 +79,7 @@ private:
     Size n_;
     Date today_, fixingDate_, paymentDate_;
     Real discount_;
-    boost::shared_ptr<FormulaBasedIndex> index_;
+    QuantLib::ext::shared_ptr<FormulaBasedIndex> index_;
     const FormulaBasedCoupon* coupon_;
     //
     std::vector<VolatilityType> volType_;

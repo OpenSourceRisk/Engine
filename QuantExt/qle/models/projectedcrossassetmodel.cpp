@@ -20,8 +20,8 @@
 
 namespace QuantExt {
 
-boost::shared_ptr<CrossAssetModel>
-getProjectedCrossAssetModel(const boost::shared_ptr<CrossAssetModel>& model,
+QuantLib::ext::shared_ptr<CrossAssetModel>
+getProjectedCrossAssetModel(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                             const std::vector<std::pair<CrossAssetModel::AssetType, Size>>& selectedComponents,
                             std::vector<Size>& projectedStateProcessIndices) {
 
@@ -29,7 +29,7 @@ getProjectedCrossAssetModel(const boost::shared_ptr<CrossAssetModel>& model,
 
     // vectors holding the selected parametrizations and associated indices in the correlation matrix
 
-    std::vector<boost::shared_ptr<Parametrization>> parametrizations;
+    std::vector<QuantLib::ext::shared_ptr<Parametrization>> parametrizations;
     std::vector<Size> correlationIndices;
 
     // loop over selected components and fill
@@ -58,12 +58,12 @@ getProjectedCrossAssetModel(const boost::shared_ptr<CrossAssetModel>& model,
 
     // build projected cam and return it
 
-    return boost::make_shared<CrossAssetModel>(parametrizations, correlation, model->salvagingAlgorithm(),
+    return QuantLib::ext::make_shared<CrossAssetModel>(parametrizations, correlation, model->salvagingAlgorithm(),
                                                model->measure(), model->discretization());
 }
 
-std::vector<Size> getStateProcessProjection(const boost::shared_ptr<CrossAssetModel>& model,
-                                            const boost::shared_ptr<CrossAssetModel>& projectedModel) {
+std::vector<Size> getStateProcessProjection(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
+                                            const QuantLib::ext::shared_ptr<CrossAssetModel>& projectedModel) {
 
     std::vector<Size> stateProcessProjection(projectedModel->stateProcess()->size(), Null<Size>());
 

@@ -39,7 +39,7 @@ void Underlying::fromXML(XMLNode* node) {
         weight_ = 1.0;
 }
 
-XMLNode* Underlying::toXML(XMLDocument& doc) {
+XMLNode* Underlying::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(nodeName_);
     XMLUtils::addChild(doc, node, "Type", type_);
     XMLUtils::addChild(doc, node, "Name", name_);
@@ -57,7 +57,7 @@ void BasicUnderlying::fromXML(XMLNode* node) {
     setType("Basic");
 }
 
-XMLNode* BasicUnderlying::toXML(XMLDocument& doc) {
+XMLNode* BasicUnderlying::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode(basicUnderlyingNodeName_, name_);
     return node;
 }
@@ -99,7 +99,7 @@ void EquityUnderlying::fromXML(XMLNode* node) {
     setType("Equity");
 }
 
-XMLNode* EquityUnderlying::toXML(XMLDocument& doc) {
+XMLNode* EquityUnderlying::toXML(XMLDocument& doc) const {
     XMLNode* node;
     if (isBasic_) {
         node = doc.allocNode(basicUnderlyingNodeName_, name_);
@@ -143,7 +143,7 @@ void CommodityUnderlying::fromXML(XMLNode* node) {
     setType("Commodity");
 }
 
-XMLNode* CommodityUnderlying::toXML(XMLDocument& doc) {
+XMLNode* CommodityUnderlying::toXML(XMLDocument& doc) const {
     XMLNode* node;
     if (isBasic_) {
         node = doc.allocNode(basicUnderlyingNodeName_, name_);
@@ -178,7 +178,7 @@ void FXUnderlying::fromXML(XMLNode* node) {
     setType("FX");
 }
 
-XMLNode* FXUnderlying::toXML(XMLDocument& doc) {
+XMLNode* FXUnderlying::toXML(XMLDocument& doc) const {
     XMLNode* node;
     if (isBasic_) {
         node = doc.allocNode(basicUnderlyingNodeName_, name_);
@@ -201,7 +201,7 @@ void InterestRateUnderlying::fromXML(XMLNode* node) {
     setType("InterestRate");
 }
 
-XMLNode* InterestRateUnderlying::toXML(XMLDocument& doc) {
+XMLNode* InterestRateUnderlying::toXML(XMLDocument& doc) const {
     XMLNode* node;
     if (isBasic_) {
         node = doc.allocNode(basicUnderlyingNodeName_, name_);
@@ -224,7 +224,7 @@ void CreditUnderlying::fromXML(XMLNode* node) {
     setType("Credit");
 }
 
-XMLNode* CreditUnderlying::toXML(XMLDocument& doc) {
+XMLNode* CreditUnderlying::toXML(XMLDocument& doc) const {
     XMLNode* node;
     if (isBasic_) {
         node = doc.allocNode(basicUnderlyingNodeName_, name_);
@@ -253,7 +253,7 @@ void InflationUnderlying::fromXML(XMLNode* node) {
     setType("Inflation");
 }
 
-XMLNode* InflationUnderlying::toXML(XMLDocument& doc) {
+XMLNode* InflationUnderlying::toXML(XMLDocument& doc) const {
     XMLNode* node;
     if (isBasic_) {
         node = doc.allocNode(basicUnderlyingNodeName_, name_);
@@ -290,7 +290,7 @@ void BondUnderlying::fromXML(XMLNode* node) {
     setType("Bond");
 }
 
-XMLNode* BondUnderlying::toXML(XMLDocument& doc) {
+XMLNode* BondUnderlying::toXML(XMLDocument& doc) const {
     XMLNode* node;
     if (isBasic_) {
         node = doc.allocNode(basicUnderlyingNodeName_, name_);
@@ -304,23 +304,23 @@ XMLNode* BondUnderlying::toXML(XMLDocument& doc) {
 
 void UnderlyingBuilder::fromXML(XMLNode* node) {
     if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
-        underlying_ = boost::make_shared<BasicUnderlying>();
+        underlying_ = QuantLib::ext::make_shared<BasicUnderlying>();
     } else if (XMLUtils::getNodeName(node) == nodeName_) {
         string type = XMLUtils::getChildValue(node, "Type", true);
         if (type == "Equity")
-            underlying_ = boost::make_shared<EquityUnderlying>();
+            underlying_ = QuantLib::ext::make_shared<EquityUnderlying>();
         else if (type == "Commodity")
-            underlying_ = boost::make_shared<CommodityUnderlying>();
+            underlying_ = QuantLib::ext::make_shared<CommodityUnderlying>();
         else if (type == "FX")
-            underlying_ = boost::make_shared<FXUnderlying>();
+            underlying_ = QuantLib::ext::make_shared<FXUnderlying>();
         else if (type == "InterestRate")
-            underlying_ = boost::make_shared<InterestRateUnderlying>();
+            underlying_ = QuantLib::ext::make_shared<InterestRateUnderlying>();
         else if (type == "Inflation")
-            underlying_ = boost::make_shared<InflationUnderlying>();
+            underlying_ = QuantLib::ext::make_shared<InflationUnderlying>();
         else if (type == "Credit")
-            underlying_ = boost::make_shared<CreditUnderlying>();
+            underlying_ = QuantLib::ext::make_shared<CreditUnderlying>();
         else if (type == "Bond")
-            underlying_ = boost::make_shared<BondUnderlying>();
+            underlying_ = QuantLib::ext::make_shared<BondUnderlying>();
         else {
             QL_FAIL("Unknown Underlying type " << type);
         }
@@ -333,7 +333,7 @@ void UnderlyingBuilder::fromXML(XMLNode* node) {
     underlying_->fromXML(node);
 }
 
-XMLNode* UnderlyingBuilder::toXML(XMLDocument& doc) { return NULL; }
+XMLNode* UnderlyingBuilder::toXML(XMLDocument& doc) const { return NULL; }
 
 } // namespace data
 } // namespace ore

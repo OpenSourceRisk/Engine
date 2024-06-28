@@ -889,6 +889,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
+    <RateCutoff>1</RateCutoff>
   </OIS>
   <OIS>
     <Id>DKK-OIS-CONVENTIONS</Id>
@@ -901,6 +902,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
+    <RateCutoff>1</RateCutoff>
   </OIS>
   <OIS>
     <Id>SEK-OIS-CONVENTIONS</Id>
@@ -913,6 +915,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
+    <RateCutoff>1</RateCutoff>
   </OIS>
   <OIS>
     <Id>CHF-OIS-CONVENTIONS</Id>
@@ -925,6 +928,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
+    <RateCutoff>1</RateCutoff>
   </OIS>
   <OIS>
     <Id>CHF-OIS-SARON-CONVENTIONS</Id>
@@ -937,6 +941,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
+    <RateCutoff>1</RateCutoff>
   </OIS>
   <OIS>
     <Id>USD-OIS-CONVENTIONS</Id>
@@ -949,6 +954,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
+    <RateCutoff>1</RateCutoff>
   </OIS>
   <AverageOIS>
     <Id>USD-AVERAGE-OIS-CONVENTIONS</Id>
@@ -973,6 +979,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
+    <RateCutoff>1</RateCutoff>
   </OIS>
   <OIS>
     <Id>JPY-OIS-CONVENTIONS</Id>
@@ -985,6 +992,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
+    <RateCutoff>1</RateCutoff>
   </OIS>
   <OIS>
     <Id>CAD-OIS-CONVENTIONS</Id>
@@ -997,6 +1005,7 @@
     <FixedConvention>Following</FixedConvention>
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
+    <RateCutoff>1</RateCutoff>
   </OIS>
   <!-- Tenor Basis Swaps -->
   <TenorBasisTwoSwap>
@@ -1027,42 +1036,42 @@
   </TenorBasisTwoSwap>
   <TenorBasisSwap>
     <Id>USD-LIBOR-3M-6M-BASIS-CONVENTIONS</Id>
-    <LongIndex>USD-LIBOR-6M</LongIndex>
-    <ShortIndex>USD-LIBOR-3M</ShortIndex>
-    <ShortPayTenor>6M</ShortPayTenor>
-    <SpreadOnShort>true</SpreadOnShort>
+    <PayIndex>USD-LIBOR-6M</PayIndex>
+    <ReceiveIndex>USD-LIBOR-3M</ReceiveIndex>
+    <ReceiveFrequency>6M</ReceiveFrequency>
+    <SpreadOnRec>true</SpreadOnRec>
     <IncludeSpread>false</IncludeSpread>
     <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
   </TenorBasisSwap>
   <TenorBasisSwap>
     <Id>USD-LIBOR-1M-3M-BASIS-CONVENTIONS</Id>
-    <LongIndex>USD-LIBOR-3M</LongIndex>
-    <ShortIndex>USD-LIBOR-1M</ShortIndex>
-    <ShortPayTenor>3M</ShortPayTenor>
-    <SpreadOnShort>true</SpreadOnShort>
+    <PayIndex>USD-LIBOR-3M</PayIndex>
+    <ReceiveIndex>USD-LIBOR-1M</ReceiveIndex>
+    <ReceiveFrequency>3M</ReceiveFrequency>
+    <SpreadOnRec>true</SpreadOnRec>
     <IncludeSpread>false</IncludeSpread>
     <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
   </TenorBasisSwap>
   <TenorBasisSwap>
     <Id>GBP-LIBOR-3M-6M-BASIS-CONVENTIONS</Id>
-    <LongIndex>GBP-LIBOR-6M</LongIndex>
-    <ShortIndex>GBP-LIBOR-3M</ShortIndex>
+    <PayIndex>GBP-LIBOR-6M</PayIndex>
+    <ReceiveIndex>GBP-LIBOR-3M</ReceiveIndex>
   </TenorBasisSwap>
   <TenorBasisSwap>
     <Id>CHF-LIBOR-3M-6M-BASIS-CONVENTIONS</Id>
-    <LongIndex>CHF-LIBOR-6M</LongIndex>
-    <ShortIndex>CHF-LIBOR-3M</ShortIndex>
+    <PayIndex>CHF-LIBOR-6M</PayIndex>
+    <ReceiveIndex>CHF-LIBOR-3M</ReceiveIndex>
   </TenorBasisSwap>
   <TenorBasisSwap>
     <Id>JPY-LIBOR-3M-6M-BASIS-CONVENTIONS</Id>
-    <LongIndex>JPY-LIBOR-6M</LongIndex>
-    <ShortIndex>JPY-LIBOR-3M</ShortIndex>
+    <PayIndex>JPY-LIBOR-6M</PayIndex>
+    <ReceiveIndex>JPY-LIBOR-3M</ReceiveIndex>
   </TenorBasisSwap>
   <TenorBasisSwap>
     <Id>EUR-OIS-1M-BASIS-CONVENTIONS</Id>
-    <LongIndex>EUR-EURIBOR-1M</LongIndex>
-    <ShortIndex>EUR-EONIA</ShortIndex>
-    <ShortPayTenor>1Y</ShortPayTenor>
+    <PayIndex>EUR-EURIBOR-1M</PayIndex>
+    <ReceiveIndex>EUR-EONIA</ReceiveIndex>
+    <ReceiveFrequency>1Y</ReceiveFrequency>
   </TenorBasisSwap>
   <BMABasisSwap>
     <Id>USD-LIBOR-SIFMA-3M-BASIS-CONVENTIONS</Id>

@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
@@ -37,9 +38,9 @@ using namespace QuantLib;
 class LgmVectorised {
 public:
     LgmVectorised() = default;
-    LgmVectorised(const boost::shared_ptr<IrLgm1fParametrization>& p) : p_(p) {}
+    LgmVectorised(const QuantLib::ext::shared_ptr<IrLgm1fParametrization>& p) : p_(p) {}
 
-    boost::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_; }
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_; }
 
     RandomVariable numeraire(const Time t, const RandomVariable& x,
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>()) const;
@@ -55,12 +56,12 @@ public:
                                       const RandomVariable& x, const Handle<YieldTermStructure>& discountCurve) const;
 
     /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
-    RandomVariable fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Time t,
+    RandomVariable fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Time t,
                           const RandomVariable& x) const;
 
     /* Exact if no cap/floors are present and t <= first value date.
        Approximations are applied for t > first value date or when cap / floors are present. */
-    RandomVariable compoundedOnRate(const boost::shared_ptr<OvernightIndex>& index,
+    RandomVariable compoundedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex>& index,
                                     const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
                                     const std::vector<Real>& dt, const Natural rateCutoff, const bool includeSpread,
                                     const Real spread, const Real gearing, const Period lookback, Real cap, Real floor,
@@ -69,7 +70,7 @@ public:
 
     /* Exact if no cap/floors are present and t <= first value date.
        Approximations are applied for t > first value date or when cap / floors are present. */
-    RandomVariable averagedOnRate(const boost::shared_ptr<OvernightIndex>& index, const std::vector<Date>& fixingDates,
+    RandomVariable averagedOnRate(const QuantLib::ext::shared_ptr<OvernightIndex>& index, const std::vector<Date>& fixingDates,
                                   const std::vector<Date>& valueDates, const std::vector<Real>& dt,
                                   const Natural rateCutoff, const bool includeSpread, const Real spread,
                                   const Real gearing, const Period lookback, Real cap, Real floor,
@@ -78,17 +79,21 @@ public:
 
     /* Exact if no cap/floors are present and t <= first value date.
        Approximations are applied for t > first value date or when cap / floors are present. */
-    RandomVariable averagedBmaRate(const boost::shared_ptr<BMAIndex>& index, const std::vector<Date>& fixingDates,
+    RandomVariable averagedBmaRate(const QuantLib::ext::shared_ptr<BMAIndex>& index, const std::vector<Date>& fixingDates,
                                    const Date& accrualStartDate, const Date& accrualEndDate, const bool includeSpread,
                                    const Real spread, const Real gearing, Real cap, Real floor, const bool nakedOption,
                                    const Time t, const RandomVariable& x) const;
 
-    /* Approximation via plain Ibor coupon with fixing date = first fixing date and the fixing() method above. */
-    RandomVariable subPeriodsRate(const boost::shared_ptr<InterestRateIndex>& index,
-                                  const std::vector<Date>& fixingDates, const Time t, const RandomVariable& x) const;
+    /* Exact. Requires observation time t <= fixingDate */
+    RandomVariable subPeriodsRate(const QuantLib::ext::shared_ptr<InterestRateIndex>& index,
+                                  const std::vector<Date>& fixingDates, const Time t, const RandomVariable& x,
+                                  const std::vector<Time>& accrualFractions,
+                                  const SubPeriodsCoupon1::Type type, const bool includeSpread,
+                                  const Spread spread, const Real gearing,
+                                  const Time accrualPeriod) const;
 
 private:
-    boost::shared_ptr<IrLgm1fParametrization> p_;
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;
 };
 
 } // namespace QuantExt

@@ -29,6 +29,7 @@
 #include <ql/types.hpp>
 
 #include <qle/models/lgm.hpp>
+#include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/market.hpp>
@@ -38,6 +39,9 @@
 namespace ore {
 namespace data {
 using namespace QuantLib;
+
+class VolatilityParameter;
+class ReversionParameter;
 
 //! Linear Gauss Markov Model Parameters
 /*!
@@ -79,11 +83,13 @@ public:
             ParamType aType, std::vector<Time> aTimes, std::vector<Real> aValues, Real shiftHorizon = 0.0,
             Real scaling = 1.0, std::vector<std::string> optionExpiries = std::vector<std::string>(),
             std::vector<std::string> optionTerms = std::vector<std::string>(),
-            std::vector<std::string> optionStrikes = std::vector<std::string>())
-        : IrModelData("LGM", qualifier, calibrationType), revType_(revType), volType_(volType),
-          calibrateH_(calibrateH), hType_(hType), hTimes_(hTimes), hValues_(hValues), calibrateA_(calibrateA),
-          aType_(aType), aTimes_(aTimes), aValues_(aValues), shiftHorizon_(shiftHorizon), scaling_(scaling),
-          optionExpiries_(optionExpiries), optionTerms_(optionTerms), optionStrikes_(optionStrikes) {}
+            std::vector<std::string> optionStrikes = std::vector<std::string>(),
+            const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping inputFloatSpreadMapping =
+                QuantExt::AnalyticLgmSwaptionEngine::proRata)
+        : IrModelData("LGM", qualifier, calibrationType), revType_(revType), volType_(volType), calibrateH_(calibrateH),
+          hType_(hType), hTimes_(hTimes), hValues_(hValues), calibrateA_(calibrateA), aType_(aType), aTimes_(aTimes),
+          aValues_(aValues), shiftHorizon_(shiftHorizon), scaling_(scaling), optionExpiries_(optionExpiries),
+          optionTerms_(optionTerms), optionStrikes_(optionStrikes), floatSpreadMapping_(inputFloatSpreadMapping) {}
 
     //! Clear list of calibration instruments
     void clear() override;
@@ -94,7 +100,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
     //! \name Setters/Getters
@@ -111,9 +117,12 @@ public:
     std::vector<Real>& aValues() { return aValues_; }
     Real& shiftHorizon() { return shiftHorizon_; }
     Real& scaling() { return scaling_; }
-    std::vector<std::string>& optionExpiries() { return optionExpiries_; }
-    std::vector<std::string>& optionTerms() { return optionTerms_; }
-    std::vector<std::string>& optionStrikes() { return optionStrikes_; }
+    QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping& floatSpreadMapping() { return floatSpreadMapping_; }
+    std::vector<std::string>& optionExpiries() const { return optionExpiries_; }
+    std::vector<std::string>& optionTerms() const { return optionTerms_; }
+    std::vector<std::string>& optionStrikes() const { return optionStrikes_; }
+    ReversionParameter reversionParameter() const;
+    VolatilityParameter volatilityParameter() const;
     //@}
 
     //! \name Operators
@@ -134,18 +143,22 @@ private:
     std::vector<Time> aTimes_;
     std::vector<Real> aValues_;
     Real shiftHorizon_, scaling_;
-    std::vector<std::string> optionExpiries_;
-    std::vector<std::string> optionTerms_;
-    std::vector<std::string> optionStrikes_;
+    mutable std::vector<std::string> optionExpiries_;
+    mutable std::vector<std::string> optionTerms_;
+    mutable std::vector<std::string> optionStrikes_;
+    QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping floatSpreadMapping_ =
+        QuantExt::AnalyticLgmSwaptionEngine::proRata;
 };
 
-//! Enum parsers used in CrossAssetModelBuilder's fromXML
+//! Enum parsers
 LgmData::ReversionType parseReversionType(const string& s);
 LgmData::VolatilityType parseVolatilityType(const string& s);
+QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping parseFloatSpreadMapping(const string& s);
 
-//! Enum to string used in CrossAssetModelBuilder's toXML
+//! Enum to string
 std::ostream& operator<<(std::ostream& oss, const LgmData::ReversionType& type);
 std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type);
+std::ostream& operator<<(std::ostream& oss, const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping& m);
 
 /*! LGM reversion transformation.
     
@@ -171,7 +184,7 @@ public:
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 private:

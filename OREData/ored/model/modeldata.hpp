@@ -60,7 +60,7 @@ private:
 
 protected:
     //! Method used by toXML in derived classes to add the members here to a node.
-    virtual void append(XMLDocument& doc, XMLNode* node);
+    virtual void append(XMLDocument& doc, XMLNode* node) const;
     
     // Protected so that we can support population from legacy XML in fromXML in derived classes.
     std::vector<CalibrationBasket> calibrationBaskets_;

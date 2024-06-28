@@ -1,0 +1,87 @@
+{
+    "setup": {
+        "inputPath": "Input",
+        "outputPath": "Output",
+        "resultsUri": "http://127.0.0.1:5000/report",
+        "nThreads": 1,
+        "asofDate": "2016-02-05",
+        "implyTodaysFixings": "N",
+        "logFile": "log.txt",
+        "observationModel": "Disable",
+        "marketData": "http://127.0.0.1:5000/file/market_20160205.txt",
+        "fixingData": "http://127.0.0.1:5000/file/fixings_20160205.txt",
+        "conventionsUri": "http://127.0.0.1:5000/file/conventions.xml",
+        "pricingEnginesUri": "http://127.0.0.1:5000/file/pricingengine.xml",
+        "portfolioUri": "http://127.0.0.1:5000/file/portfolio.xml",
+        "marketConfigUri": "http://127.0.0.1:5000/file/todaysmarket.xml",
+        "curveConfigUri": "http://127.0.0.1:5000/file/curveconfig.xml"
+    },
+    "markets": {
+        "fxcalibration": "collateral_eur",
+        "simulation": "collateral_eur",
+        "pricing": "collateral_eur",
+        "lgmcalibration": "collateral_inccy"
+    },
+    "analytics": {
+        "npv": {
+            "active": "Y",
+            "baseCurrency": "EUR",
+            "outputFileName": "npv.csv"
+        },
+        "cashflow": {
+            "active": "Y",
+            "outputFileName": "npv.csv"
+        },
+        "curves": {
+            "active": "Y",
+            "configuration": "default",
+            "outputFileName": "curves.csv"
+        },
+        "simulation": {
+            "active": "Y",
+            "simulationConfigUri": "http://127.0.0.1:5000/file/simulation.xml",
+            "pricingEnginesUri": "http://127.0.0.1:5000/file/pricingengine.xml",
+            "baseCurrency": "EUR",
+            "scenariodump": "scenariodump.csv",
+            "CubeUri": "cube.csv.gz",
+            "storeFlows": "N",
+            "storeSurvivalProbabilities": "N"
+        },
+        "stress": {
+            "active": "N"
+        },
+        "parametricVar": {
+            "active": "N"
+        },
+        "simm": {
+            "active": "N"
+        },
+        "sensitivity": {
+            "active": "N"
+        },
+        "xva": {
+            "active": "Y",
+            "csaUri": "http://127.0.0.1:5000/file/netting.xml",
+            "cubeFile": "cube.csv.gz",
+            "scenarioFile": "scenariodata.csv.gz",
+            "baseCurrency": "EUR",
+            "exposureProfiles": "Y",
+            "exposureProfilesByTrade": "Y",
+            "quantile": 0.95,
+            "calculationType": "Symmetric",
+            "allocationMethod": "None",
+            "marginalAllocationLimit": 1.0,
+            "exerciseNextBreak": "N",
+            "cva": "Y",
+            "dva": "N",
+            "dvaName": "BANK",
+            "fva": "N",
+            "fvaBorrowingCurve": "BANK_EUR_BORROW",
+            "fvaLendingCurve": "BANK_EUR_LEND",
+            "colva": "N",
+            "collateralFloor": "N",
+            "rawCubeOutputFile": "rawcube.csv",
+            "netCubeOutputFile": "netcube.csv"
+        }
+    }
+}

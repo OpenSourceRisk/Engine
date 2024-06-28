@@ -37,7 +37,7 @@ std::pair<std::string, std::string> getLowerAndUpperBound(const std::string& typ
     }
 }
 
-void DoubleDigitalOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void DoubleDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -70,6 +70,24 @@ void DoubleDigitalOption::build(const boost::shared_ptr<EngineFactory>& factory)
     QL_REQUIRE(underlying2_->type() == "Equity" || underlying2_->type() == "Commodity" ||
                    underlying2_->type() == "FX" || underlying2_->type() == "InterestRate",
                "underlying type " << underlying2_->type() << " not supported");
+    if (underlying3_) {
+        QL_REQUIRE(underlying3_->type() == "Equity" || underlying3_->type() == "Commodity" ||
+                       underlying3_->type() == "FX" || underlying3_->type() == "InterestRate",
+                   "underlying type " << underlying3_->type() << " not supported");
+
+        QL_REQUIRE(underlying1_->type() == underlying3_->type(),
+                   "Underlying1 and Underlying3 must belong to the same asset class. Got "
+                       << underlying1_->type() << " and " << underlying3_->type());
+    }
+    if (underlying4_) {
+        QL_REQUIRE(underlying4_->type() == "Equity" || underlying4_->type() == "Commodity" ||
+                       underlying4_->type() == "FX" || underlying4_->type() == "InterestRate",
+                   "underlying type " << underlying4_->type() << " not supported");
+        
+        QL_REQUIRE(underlying2_->type() == underlying4_->type(),
+                   "Underlying2 and Underlying4 must belong to the same asset class. Got "
+                       << underlying2_->type() << " and " << underlying4_->type());
+    }
 
     // set product tag accordingly
     if (underlying1_->type() == "InterestRate" && underlying2_->type() == "InterestRate")
@@ -83,10 +101,15 @@ void DoubleDigitalOption::build(const boost::shared_ptr<EngineFactory>& factory)
 
     // set script
 
+    string underlying1Str, underlying2Str;
+    underlying1Str = underlying3_ ? "(Underlying1(Expiry) - Underlying3(Expiry))" : "Underlying1(Expiry)";
+    underlying2Str = underlying4_ ? "(Underlying2(Expiry) - Underlying4(Expiry))" : "Underlying2(Expiry)";
+
+    // clang-format off
     script_ = {
         {"", ScriptedTradeScriptData("NUMBER ExerciseProbability;\n"
-                                     "IF Underlying1(Expiry) >= LowerBound1 AND Underlying1(Expiry) <= UpperBound1 AND\n"
-                                     "   Underlying2(Expiry) >= LowerBound2 AND Underlying2(Expiry) <= UpperBound2 THEN\n"
+                                     "IF " + underlying1Str + " >= LowerBound1 AND " + underlying1Str + " <= UpperBound1 AND\n"
+                                     "   " + underlying2Str + " >= LowerBound2 AND " + underlying2Str + " <= UpperBound2 THEN\n"
                                      "     Option = LongShort * LOGPAY( BinaryPayout, Expiry, Settlement, PayCcy);\n"
                                      "     ExerciseProbability = 1;\n"
                                      "END;\n",
@@ -95,6 +118,7 @@ void DoubleDigitalOption::build(const boost::shared_ptr<EngineFactory>& factory)
                                       {"currentNotional", "BinaryPayout"},
                                       {"notionalCurrency", "PayCcy"}},
                                      {})}};
+    // clang-format on
 
     // build trade
 
@@ -104,6 +128,10 @@ void DoubleDigitalOption::build(const boost::shared_ptr<EngineFactory>& factory)
 void DoubleDigitalOption::initIndices() {
     indices_.emplace_back("Index", "Underlying1", scriptedIndexName(underlying1_));
     indices_.emplace_back("Index", "Underlying2", scriptedIndexName(underlying2_));
+    if (underlying3_)
+        indices_.emplace_back("Index", "Underlying3", scriptedIndexName(underlying3_));
+    if (underlying4_)
+        indices_.emplace_back("Index", "Underlying4", scriptedIndexName(underlying4_));
 }
 
 void DoubleDigitalOption::fromXML(XMLNode* node) {
@@ -148,12 +176,30 @@ void DoubleDigitalOption::fromXML(XMLNode* node) {
     underlyingBuilder2.fromXML(tmp);
     underlying2_ = underlyingBuilder2.underlying();
 
+    tmp = XMLUtils::getChildNode(tradeDataNode, "Underlying3");
+    if (!tmp)
+        tmp = XMLUtils::getChildNode(tradeDataNode, "Name3");
+    if (tmp) {
+        UnderlyingBuilder underlyingBuilder3("Underlying3", "Name3");
+        underlyingBuilder3.fromXML(tmp);
+        underlying3_ = underlyingBuilder3.underlying();
+    }
+
+    tmp = XMLUtils::getChildNode(tradeDataNode, "Underlying4");
+    if (!tmp)
+        tmp = XMLUtils::getChildNode(tradeDataNode, "Name4");
+    if (tmp) {
+        UnderlyingBuilder underlyingBuilder4("Underlying4", "Name4");
+        underlyingBuilder4.fromXML(tmp);
+        underlying4_ = underlyingBuilder4.underlying();
+    }
+
     payCcy_ = XMLUtils::getChildValue(tradeDataNode, "PayCcy", true);
 
     initIndices();
 }
 
-XMLNode* DoubleDigitalOption::toXML(XMLDocument& doc) {
+XMLNode* DoubleDigitalOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* tradeNode = doc.allocNode("DoubleDigitalOptionData");
     XMLUtils::appendNode(node, tradeNode);
@@ -173,6 +219,10 @@ XMLNode* DoubleDigitalOption::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, tradeNode, "Position", position_);
     XMLUtils::appendNode(tradeNode, underlying1_->toXML(doc));
     XMLUtils::appendNode(tradeNode, underlying2_->toXML(doc));
+    if (underlying3_)
+        XMLUtils::appendNode(tradeNode, underlying3_->toXML(doc));
+    if (underlying4_)
+        XMLUtils::appendNode(tradeNode, underlying4_->toXML(doc));
     XMLUtils::addChild(doc, tradeNode, "PayCcy", payCcy_);
     return node;
 }

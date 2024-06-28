@@ -23,18 +23,18 @@ using namespace QuantLib;
 namespace ore {
 namespace analytics {
 
-LgmScenarioGenerator::LgmScenarioGenerator(boost::shared_ptr<QuantExt::LGM> model,
-                                           boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
-                                           boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                                           boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig, Date today,
+LgmScenarioGenerator::LgmScenarioGenerator(QuantLib::ext::shared_ptr<QuantExt::LGM> model,
+                                           QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
+                                           QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
+                                           QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig, Date today,
                                            DateGrid grid)
     : ScenarioPathGenerator(today, grid.dates(), grid.timeGrid()), model_(model), pathGenerator_(pathGenerator),
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig) {
     QL_REQUIRE(timeGrid_.size() == dates_.size() + 1, "date/time grid size mismatch");
 }
 
-std::vector<boost::shared_ptr<Scenario>> LgmScenarioGenerator::nextPath() {
-    std::vector<boost::shared_ptr<Scenario>> scenarios(dates_.size());
+std::vector<QuantLib::ext::shared_ptr<Scenario>> LgmScenarioGenerator::nextPath() {
+    std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios(dates_.size());
     Sample<MultiPath> sample = pathGenerator_->next();
 
     DayCounter dc = model_->parametrization()->termStructure()->dayCounter();
@@ -47,7 +47,7 @@ std::vector<boost::shared_ptr<Scenario>> LgmScenarioGenerator::nextPath() {
     for (Size i = 0; i < dates_.size(); i++) {
         Real t = timeGrid_[i + 1]; // recall: time grid has inserted t=0
 
-        scenarios[i] = scenarioFactory_->buildScenario(dates_[i]);
+        scenarios[i] = scenarioFactory_->buildScenario(dates_[i], true);
 
         // Set numeraire, numeraire currency and the (deterministic) domestic discount
         // Asset index 0 in sample.value[0][i+1] refers to the domestic currency process,

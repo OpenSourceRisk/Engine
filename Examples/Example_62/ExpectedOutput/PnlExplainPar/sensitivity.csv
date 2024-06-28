@@ -1,0 +1,19 @@
+#TradeId,IsPar,Factor_1,ShiftSize_1,Factor_2,ShiftSize_2,Currency,Base NPV,Delta,Gamma
+SwapLeg,true,DiscountCurve/USD/0/2W,0.000100,,0.000000,USD,47649.66,-0.03,#N/A
+SwapLeg,true,DiscountCurve/USD/4/1Y,0.000100,,0.000000,USD,47649.66,-4.62,#N/A
+SwapLeg,true,DiscountCurve/USD/5/2Y,0.000100,,0.000000,USD,47649.66,0.03,#N/A
+SwapLeg,true,DiscountCurve/USD/6/3Y,0.000100,,0.000000,USD,47649.66,0.00,#N/A
+SwapLeg,true,DiscountCurve/USD/7/5Y,0.000100,,0.000000,USD,47649.66,0.00,#N/A
+SwapLeg,true,DiscountCurve/USD/8/10Y,0.000100,,0.000000,USD,47649.66,0.00,#N/A
+SwapLeg,true,DiscountCurve/USD/9/15Y,0.000100,,0.000000,USD,47649.66,0.00,#N/A
+SwapLeg,true,DiscountCurve/USD/10/20Y,0.000100,,0.000000,USD,47649.66,0.00,#N/A
+SwapLeg,true,DiscountCurve/USD/11/30Y,0.000100,,0.000000,USD,47649.66,0.00,#N/A
+SwapLegFlow,true,DiscountCurve/USD/0/2W,0.000100,,0.000000,USD,97317.38,-0.11,#N/A
+SwapLegFlow,true,DiscountCurve/USD/4/1Y,0.000100,,0.000000,USD,97317.38,-4.55,#N/A
+SwapLegFlow,true,DiscountCurve/USD/5/2Y,0.000100,,0.000000,USD,97317.38,-0.08,#N/A
+SwapLegFlow,true,DiscountCurve/USD/6/3Y,0.000100,,0.000000,USD,97317.38,0.00,#N/A
+SwapLegFlow,true,DiscountCurve/USD/7/5Y,0.000100,,0.000000,USD,97317.38,0.00,#N/A
+SwapLegFlow,true,DiscountCurve/USD/8/10Y,0.000100,,0.000000,USD,97317.38,0.00,#N/A
+SwapLegFlow,true,DiscountCurve/USD/9/15Y,0.000100,,0.000000,USD,97317.38,0.00,#N/A
+SwapLegFlow,true,DiscountCurve/USD/10/20Y,0.000100,,0.000000,USD,97317.38,0.00,#N/A
+SwapLegFlow,true,DiscountCurve/USD/11/30Y,0.000100,,0.000000,USD,97317.38,0.00,#N/A

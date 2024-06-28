@@ -67,7 +67,7 @@ void AdjustmentFactors::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* AdjustmentFactors::toXML(ore::data::XMLDocument& doc) {
+XMLNode* AdjustmentFactors::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("AdjustmentFactors");
     for (auto d : data_) {
         for (auto f : d.second) {

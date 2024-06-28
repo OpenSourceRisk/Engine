@@ -43,20 +43,20 @@ BOOST_AUTO_TEST_CASE(testCorrectedYts) {
     Date refDate(18, Feb, 2016);
     Settings::instance().evaluationDate() = refDate;
 
-    boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(0.02);
+    QuantLib::ext::shared_ptr<SimpleQuote> q = QuantLib::ext::make_shared<SimpleQuote>(0.02);
     Handle<Quote> hq(q);
-    Handle<YieldTermStructure> floating(boost::make_shared<FlatForward>(0, NullCalendar(), hq, Actual365Fixed()));
+    Handle<YieldTermStructure> floating(QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), hq, Actual365Fixed()));
 
-    Handle<YieldTermStructure> source(boost::make_shared<FlatForward>(refDate, 0.02, Actual365Fixed()));
-    Handle<YieldTermStructure> target(boost::make_shared<FlatForward>(refDate, 0.03, Actual365Fixed()));
+    Handle<YieldTermStructure> source(QuantLib::ext::make_shared<FlatForward>(refDate, 0.02, Actual365Fixed()));
+    Handle<YieldTermStructure> target(QuantLib::ext::make_shared<FlatForward>(refDate, 0.03, Actual365Fixed()));
 
     // we can not test the flavours of roll down with flat
     // termstructures, todo add tests with non-flat ts for this
 
     Handle<YieldTermStructure> corrected1(
-        boost::make_shared<StaticallyCorrectedYieldTermStructure>(floating, source, target, ConstantDiscounts));
+        QuantLib::ext::make_shared<StaticallyCorrectedYieldTermStructure>(floating, source, target, ConstantDiscounts));
     Handle<YieldTermStructure> corrected2(
-        boost::make_shared<StaticallyCorrectedYieldTermStructure>(floating, source, target, ForwardForward));
+        QuantLib::ext::make_shared<StaticallyCorrectedYieldTermStructure>(floating, source, target, ForwardForward));
 
     Real tol = 1.0E-12;
 

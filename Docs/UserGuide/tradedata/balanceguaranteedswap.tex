@@ -1,0 +1,88 @@
+\subsubsection{Balance Guaranteed Swap (BGS)}
+
+A Balance Guaranteed Swap is similar to an amortizing interest rate swap, but the  
+notional amortization matches actual prepayments of a Reference Security which can 
+be either a tranche or a reference pool of assets, or securitized interest backed 
+by a pool of assets. The BGS differs from an amortizing swap in that the notional 
+amortizations are uncertain.
+
+BGS are priced in ORE yusing an auxiliary Flexi Swap as a proxy. The amortization schedule 
+of the Flexi Swap is set up as the notional schedule of the BGS assuming a zero 
+CPR (Conditional Prepayment Rate). The lower notional bound of the Flexi Swap is 
+constructed assuming a MaxCPR (Maximum Conditional Prepayment Rate) which is 
+dependent on the Reference Security. The MaxCPR is estimated on the basis of 
+the current CPR, historical CPRs and / or expert judgement as to provide a 
+(hypothetical) sufficiently realistic hedge for the BGS. The option holder in 
+the Flexi Swap is the payer of the structured leg (i.e. the leg replicating the 
+payments of the reference security) in the BGS.
+
+The \lstinline!BalanceGuaranteedSwapData! node is the trade data container for trade type \emph{BalanceGuaranteedSwap}.  A BGS must have two legs, one fixed and one floating. Each leg typically has an amortising notional and is represented by a \lstinline!LegData! trade component sub-node, described in section \ref{ss:leg_data}.
+The \lstinline!BalanceGuaranteedSwapData! node also contains a \lstinline!ReferenceSecurity! sub-node specifying the Asset Backed Security to which the notional schedule of the BGS is linked. 
+%and a \lstinline!MaxCPR!  sub-node indicating the maximum allowable prepayment. 
+An example structure of a  \lstinline!BalanceGuaranteedSwapData! node is shown in Listing \ref{lst:bgs_data}.
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BalanceGuaranteedSwapData>
+  <ReferenceSecurity>ISIN:XS0983610930</ReferenceSecurity>
+  <Tranches>
+    <Tranche>
+      <Description>Class A</Description>
+      <SecurityId>ISIN:XS0983610930</SecurityId>
+      <Seniority>1</Seniority>
+      <Notionals>
+      ...
+      </Notionals>
+    </Tranche>
+    <Tranche>
+      <Description>Class B</Description>
+      <SecurityId>ISIN:XS0983610931</SecurityId>
+      <Seniority>2</Seniority>
+      <Notionals>
+      ...
+      </Notionals>
+    </Tranche>
+    <ScheduleData>
+    ...
+    </ScheduleData>
+  </Tranches>
+  <LegData>
+	<LegType>Fixed</LegType>
+	 ...
+  </LegData>
+  <LegData>
+	<LegType>Floating</LegType>
+	 ...
+  </LegData>
+<BalanceGuaranteedSwapData>
+\end{minted}
+\caption{Balance Guaranteed Swap data}
+\label{lst:bgs_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!BalanceGuaranteedSwapData!  node follow below.
+
+\begin{itemize}
+
+\item ReferenceSecurity: The ISIN of the Asset Backed Security tranche to which the BGS is linked.
+
+Allowable values:  The prefix {\tt ISIN:} followed by an ISIN code for the Reference Security.
+
+\item Tranches: A description of the Asset Backed Security tranche notionals. Each Tranche is identified by a {\tt
+    SecurityId} and an optional {\tt Description}. Each Tranche has a {\tt Seniority} given as a positive integer value
+  where lower values mean higher seniority, i.e. $1$ is the most senior tranche (e.g. ``class A'') followed by $2$
+  (e.g. ``class B'') etc.  The notionals are given in a sub-node {\tt Notionals} as described in section
+  \ref{ss:leg_data} w.r.t. a schedule given in {\tt ScheduleData} which is shared across all tranches. There must be
+  exactly one tranche with a security id matching the reference security.
+
+\item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data}. A BGS must have two  \lstinline!LegData! nodes and the LegType element must be set to \emph{Floating} on one leg and \emph{Fixed} on the other. The two legs must have the same \lstinline!Currency!.
+
+\end{itemize}
+
+The notionals of the swap and the referenced tranche must be consistent. Furthermore, notionals for periods with a start
+date in the past must be given with their actual value, i.e. including actual prepayments that were made in the previous
+periods. Notionals for periods with a start dats in the future on the other hand must be given assuming a zero
+conditional prepayment rate. For the latter periods a prepayment model is used to generate suitable notional schedules
+when pricing the swap. The prepayment model assumes that tranches with higher seniority are amortised first, i.e. in the
+example here the class A tranche is amortised before the class B tranche.
+

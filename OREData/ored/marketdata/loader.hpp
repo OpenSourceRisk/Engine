@@ -34,7 +34,7 @@
 #include <qle/indexes/dividendmanager.hpp>
 #include <ql/time/date.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 #include <vector>
 
@@ -52,17 +52,17 @@ public:
     //@{
 
     //! get all quotes, TODO change the return value to std::set
-    virtual std::vector<boost::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const = 0;
+    virtual std::vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const = 0;
 
     //! get quote by its unique name, throws if not existent, override in derived classes for performance
-    virtual boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date& d) const;
+    virtual QuantLib::ext::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date& d) const;
 
     //! get quotes matching a set of names, this should be overridden in derived classes for performance
-    virtual std::set<boost::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
+    virtual std::set<QuantLib::ext::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
                                                          const QuantLib::Date& asof) const;
 
     //! get quotes matching a wildcard, this should be overriden in derived classes for performance
-    virtual std::set<boost::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const;
+    virtual std::set<QuantLib::ext::shared_ptr<MarketDatum>> get(const Wildcard& wildcard, const QuantLib::Date& asof) const;
 
     //! Default implementation, returns false if get throws or returns a null pointer
     virtual bool has(const std::string& name, const QuantLib::Date& d) const;
@@ -75,10 +75,10 @@ public:
         is a flag to indicate if the market data point is optional, <code>true</code>, or not, <code>false</code>.
         - if the quote is in the loader for date \p d, it is returned
         - if the quote is not in the loader for date \p d and it is optional,
-          a warning is logged and a <code>boost::shared_ptr<MarketDatum>()</code> is returned
+          a warning is logged and a <code>QuantLib::ext::shared_ptr<MarketDatum>()</code> is returned
         - if the quote is not in the loader for date \p d and it is not optional, an exception is thrown
      */
-    virtual boost::shared_ptr<MarketDatum> get(const std::pair<std::string, bool>& name, const QuantLib::Date& d) const;
+    virtual QuantLib::ext::shared_ptr<MarketDatum> get(const std::pair<std::string, bool>& name, const QuantLib::Date& d) const;
 
     virtual std::set<Fixing> loadFixings() const = 0;
 
@@ -93,6 +93,8 @@ public:
 
     void setActualDate(const QuantLib::Date& d) { actualDate_ = d; }
     const Date& actualDate() const { return actualDate_; }
+
+	std::pair<bool, string> checkFxDuplicate(const ext::shared_ptr<MarketDatum>, const QuantLib::Date&);
 
 private:
     //! Serialization

@@ -44,12 +44,12 @@ Size CalibrationConfiguration::maxIterations() const {
     return maxIterations_;
 }
 
-boost::shared_ptr<Constraint> CalibrationConfiguration::constraint(const string& name) const {
+QuantLib::ext::shared_ptr<Constraint> CalibrationConfiguration::constraint(const string& name) const {
     auto it = constraints_.find(name);
     if (it != constraints_.end()) {
-        return boost::make_shared<BoundaryConstraint>(it->second.first, it->second.second);
+        return QuantLib::ext::make_shared<BoundaryConstraint>(it->second.first, it->second.second);
     } else {
-        return boost::make_shared<NoConstraint>();
+        return QuantLib::ext::make_shared<NoConstraint>();
     }
 }
 
@@ -102,7 +102,7 @@ void CalibrationConfiguration::fromXML(XMLNode* node) {
 
 }
 
-XMLNode* CalibrationConfiguration::toXML(XMLDocument& doc) {
+XMLNode* CalibrationConfiguration::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CalibrationConfiguration");
 

@@ -21,8 +21,8 @@
 namespace QuantExt {
 
 TRSCashFlow::TRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, const Date& fixingEndDate,
-                                 const Real notional, const boost::shared_ptr<Index>& index,
-                                 const Real initialPrice, const boost::shared_ptr<FxIndex>& fxIndex)
+                                 const Real notional, const QuantLib::ext::shared_ptr<Index>& index,
+                                 const Real initialPrice, const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
     : paymentDate_(paymentDate), fixingStartDate_(fixingStartDate), fixingEndDate_(fixingEndDate),
       notional_(notional), index_(index), initialPrice_(initialPrice), fxIndex_(fxIndex) {
     //QL_REQUIRE(!index->relative(), "TRSCashFlow: index should not use relative prices");
@@ -57,8 +57,8 @@ Real TRSCashFlow::assetStart() const {
 Real TRSCashFlow::assetEnd() const { return index_->fixing(fixingEndDate_); }
 
 TRSLeg::TRSLeg(const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
-                       const Real notional, const boost::shared_ptr<Index>& index,
-                       const boost::shared_ptr<FxIndex>& fxIndex)
+                       const Real notional, const QuantLib::ext::shared_ptr<Index>& index,
+                       const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
     : valuationDates_(valuationDates), paymentDates_(paymentDates), notional_(notional), index_(index),
       fxIndex_(fxIndex) {}
 
@@ -73,7 +73,7 @@ TRSLeg::operator Leg() const {
 
     for (Size i = 0; i < valuationDates_.size() - 1; ++i) {
         initialPrice = i == 0 ? initialPrice_ : Null<Real>();
-        leg.push_back(boost::make_shared<TRSCashFlow>(paymentDates_[i], valuationDates_[i], valuationDates_[i + 1],
+        leg.push_back(QuantLib::ext::make_shared<TRSCashFlow>(paymentDates_[i], valuationDates_[i], valuationDates_[i + 1],
                                                           notional_, index_, initialPrice, fxIndex_));
     }
     return leg;

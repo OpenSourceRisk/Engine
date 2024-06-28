@@ -61,7 +61,7 @@ class MarketDataLoader : public Loader {
 public:
     MarketDataLoader();
     MarketDataLoader(vector<string> data);
-    vector<boost::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override;
+    vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override;
     set<Fixing> loadFixings() const override { return fixings_; }
     set<QuantExt::Dividend> loadDividends() const override { return dividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
@@ -69,12 +69,12 @@ public:
     void addDividend(const QuantExt::Dividend& div) {}
 
 private:
-    map<Date, vector<boost::shared_ptr<MarketDatum>>> data_;
+    map<Date, vector<QuantLib::ext::shared_ptr<MarketDatum>>> data_;
     set<Fixing> fixings_;
     set<QuantExt::Dividend> dividends_;
 };
 
-vector<boost::shared_ptr<MarketDatum>> MarketDataLoader::loadQuotes(const Date& d) const {
+vector<QuantLib::ext::shared_ptr<MarketDatum>> MarketDataLoader::loadQuotes(const Date& d) const {
     auto it = data_.find(d);
     QL_REQUIRE(it != data_.end(), "Loader has no data for date " << d);
     return it->second;
@@ -148,14 +148,14 @@ struct TodaysMarketArguments {
 
         filename = inputDir + "/market.txt";
         string fixingsFilename = inputDir + "/fixings.txt";
-        loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
+        loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
     }
 
     Date asof;
-    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
-    boost::shared_ptr<CurveConfigurations> curveConfigs = boost::make_shared<CurveConfigurations>();
-    boost::shared_ptr<TodaysMarketParameters> todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
-    boost::shared_ptr<Loader> loader;
+    QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
+    QuantLib::ext::shared_ptr<CurveConfigurations> curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
+    QuantLib::ext::shared_ptr<TodaysMarketParameters> todaysMarketParameters = QuantLib::ext::make_shared<TodaysMarketParameters>();
+    QuantLib::ext::shared_ptr<Loader> loader;
 };
 
 // Used to check that the exception message contains the expected message string, expMsg.
@@ -220,27 +220,27 @@ BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
     YieldCurveSpec spec("JPY", "JPY6M");
 
     CurveConfigurations curveConfigs;
-    vector<boost::shared_ptr<YieldCurveSegment>> segments{boost::make_shared<SimpleYieldCurveSegment>(
+    vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> segments{QuantLib::ext::make_shared<SimpleYieldCurveSegment>(
         "Swap", "JPY-SWAP-CONVENTIONS", vector<string>(1, "IR_SWAP/RATE/JPY/2D/6M/2Y"))};
-    boost::shared_ptr<YieldCurveConfig> jpyYieldConfig =
-        boost::make_shared<YieldCurveConfig>("JPY6M", "JPY 6M curve", "JPY", "", segments);
+    QuantLib::ext::shared_ptr<YieldCurveConfig> jpyYieldConfig =
+        QuantLib::ext::make_shared<YieldCurveConfig>("JPY6M", "JPY 6M curve", "JPY", "", segments);
     curveConfigs.add(CurveSpec::CurveType::Yield, "JPY6M", jpyYieldConfig);
 
     MarketDataLoader loader;
 
     // QL >= 1.19 should not throw, no matter if the float convention has the correct calendar
 
-    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
+    QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
     InstrumentConventions::instance().setConventions(conventions);
 
-    boost::shared_ptr<Convention> convention =
-        boost::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M");
+    QuantLib::ext::shared_ptr<Convention> convention =
+        QuantLib::ext::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M");
     conventions->add(convention);
 
     BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader));
 
     conventions->clear();
-    convention = boost::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP,UK", "Semiannual", "MF", "A365",
+    convention = QuantLib::ext::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP,UK", "Semiannual", "MF", "A365",
                                                       "JPY-LIBOR-6M");
     conventions->add(convention);
     BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader));
@@ -259,11 +259,11 @@ BOOST_AUTO_TEST_CASE(testBuildDiscountCurveDirectSegment) {
     quotes.emplace_back("DISCOUNT/RATE/EUR/EUR-CURVE/2023-10-14");
     quotes.emplace_back("DISCOUNT/RATE/EUR/EUR-CURVE/2023-10-15");
 
-    vector<boost::shared_ptr<YieldCurveSegment>> segments{boost::make_shared<DirectYieldCurveSegment>(
+    vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> segments{QuantLib::ext::make_shared<DirectYieldCurveSegment>(
         "Discount", "", quotes)};
 
-    boost::shared_ptr<YieldCurveConfig> yCConfig =
-        boost::make_shared<YieldCurveConfig>("EUR-CURVE", "ORE YieldCurve built from EUR-CURVE", "EUR", "", segments);
+    QuantLib::ext::shared_ptr<YieldCurveConfig> yCConfig =
+        QuantLib::ext::make_shared<YieldCurveConfig>("EUR-CURVE", "ORE YieldCurve built from EUR-CURVE", "EUR", "", segments);
     curveConfigs.add(CurveSpec::CurveType::Yield, "EUR-CURVE", yCConfig);
 
     vector<string> data{"2023-10-12 DISCOUNT/RATE/SEK/STINA-CURVE/2023-10-13 0.77",
@@ -293,10 +293,10 @@ BOOST_AUTO_TEST_CASE(testBuildDiscountCurveDirectSegmentWildcard) {
     vector<string> quotes;
     quotes.emplace_back("DISCOUNT/RATE/EUR/EUR-CURVE/*");
 
-    vector<boost::shared_ptr<YieldCurveSegment>> segments{
-        boost::make_shared<DirectYieldCurveSegment>("Discount", "", quotes)};
+    vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> segments{
+        QuantLib::ext::make_shared<DirectYieldCurveSegment>("Discount", "", quotes)};
 
-    boost::shared_ptr<YieldCurveConfig> yCConfig = boost::make_shared<YieldCurveConfig>(
+    QuantLib::ext::shared_ptr<YieldCurveConfig> yCConfig = QuantLib::ext::make_shared<YieldCurveConfig>(
         "EUR-CURVE", "ORE YieldCurve built from EUR-CURVE", "EUR", "", segments);
     curveConfigs.add(CurveSpec::CurveType::Yield, "EUR-CURVE", yCConfig);
 
@@ -322,9 +322,9 @@ BOOST_DATA_TEST_CASE(testBootstrapARSinUSDFailures, bdata::make(curveConfigFiles
 
     TodaysMarketArguments tma(Date(25, Sep, 2019), "ars_in_usd", "failing/" + curveConfigFile);
 
-    boost::shared_ptr<TodaysMarket> todaysMarket;
+    QuantLib::ext::shared_ptr<TodaysMarket> todaysMarket;
     BOOST_CHECK_EXCEPTION(todaysMarket =
-                              boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
+                              QuantLib::ext::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
                                                                tma.curveConfigs, false, false),
                           Error, ExpErrorPred("yield curve building failed for curve ARS-IN-USD"));
 }
@@ -336,9 +336,9 @@ BOOST_DATA_TEST_CASE(testBootstrapARSinUSDPasses, bdata::make(curveConfigFiles),
 
     TodaysMarketArguments tma(Date(25, Sep, 2019), "ars_in_usd", "passing/" + curveConfigFile);
 
-    boost::shared_ptr<TodaysMarket> todaysMarket;
+    QuantLib::ext::shared_ptr<TodaysMarket> todaysMarket;
     BOOST_REQUIRE_NO_THROW(todaysMarket =
-                               boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
+                               QuantLib::ext::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
                                                                 tma.curveConfigs, false, false));
 
     Handle<YieldTermStructure> yts = todaysMarket->discountCurve("ARS");
@@ -353,9 +353,9 @@ BOOST_DATA_TEST_CASE(testOiFirstFutureDateVsValuationDate, bdata::make(oiFutureC
 
         TodaysMarketArguments tma(oiFutureCase.date, "oi_future/" + oiFutureCase.desc);
 
-        boost::shared_ptr<TodaysMarket> todaysMarket;
+        QuantLib::ext::shared_ptr<TodaysMarket> todaysMarket;
         BOOST_REQUIRE_NO_THROW(todaysMarket =
-                                   boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
+                                   QuantLib::ext::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
                                                                     tma.curveConfigs, false, true));
 
         Handle<YieldTermStructure> yts;
@@ -372,9 +372,9 @@ BOOST_DATA_TEST_CASE(testMmFirstFutureDateVsValuationDate, bdata::make(mmFutureC
 
         TodaysMarketArguments tma(mmFutureCase.date, "mm_future/" + mmFutureCase.desc);
 
-        boost::shared_ptr<TodaysMarket> todaysMarket;
+        QuantLib::ext::shared_ptr<TodaysMarket> todaysMarket;
         BOOST_REQUIRE_NO_THROW(todaysMarket =
-                                   boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
+                                   QuantLib::ext::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
                                                                     tma.curveConfigs, false, true));
 
         Handle<YieldTermStructure> yts;
@@ -420,21 +420,21 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
     }
     
     CurveConfigurations curveConfigs;
-    vector<boost::shared_ptr<YieldCurveSegment>> segments{
-        boost::make_shared<DirectYieldCurveSegment>(
+    vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> segments{
+        QuantLib::ext::make_shared<DirectYieldCurveSegment>(
             "Zero", "CHF-ZERO-CONVENTIONS", quotes)
     };
-    boost::shared_ptr<YieldCurveConfig> chfYieldConfig =
-        boost::make_shared<YieldCurveConfig>("CHF-OIS", "CHF OIS curve", "CHF",
+    QuantLib::ext::shared_ptr<YieldCurveConfig> chfYieldConfig =
+        QuantLib::ext::make_shared<YieldCurveConfig>("CHF-OIS", "CHF OIS curve", "CHF",
                                              "", segments,
                                              "Discount", "LogQuadratic");
     curveConfigs.add(CurveSpec::CurveType::Yield, "CHF-OIS", chfYieldConfig);
     
-    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();;
+    QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();;
     InstrumentConventions::instance().setConventions(conventions);
     
-    boost::shared_ptr<Convention> convention =
-        boost::make_shared<ZeroRateConvention>("CHF-ZERO-CONVENTIONS", "A365",
+    QuantLib::ext::shared_ptr<Convention> convention =
+        QuantLib::ext::make_shared<ZeroRateConvention>("CHF-ZERO-CONVENTIONS", "A365",
                                                "CHF", "Compounded", "Annual");
     conventions->add(convention);
     

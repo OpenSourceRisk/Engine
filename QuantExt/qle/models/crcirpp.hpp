@@ -48,7 +48,7 @@ using namespace QuantLib;
 class CrCirpp : public LinkableCalibratedModel {
 
 public:
-    CrCirpp(const boost::shared_ptr<CrCirppParametrization>& parametrization);
+    CrCirpp(const QuantLib::ext::shared_ptr<CrCirppParametrization>& parametrization);
 
     Real zeroBond(Real t, Real T, Real y) const;
     Real survivalProbability(Real t, Real T, Real y) const;
@@ -63,8 +63,8 @@ public:
 
     Handle<DefaultProbabilityTermStructure> defaultCurve(std::vector<Date> dateGrid = std::vector<Date>()) const;
 
-    const boost::shared_ptr<CrCirppParametrization> parametrization() const;
-    const boost::shared_ptr<StochasticProcess> stateProcess() const;
+    const QuantLib::ext::shared_ptr<CrCirppParametrization> parametrization() const;
+    const QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const;
 
     Real A(Real t, Real T) const;
     Real B(Real t, Real T) const;
@@ -74,8 +74,8 @@ public:
     void generateArguments() override;
 
 private:
-    boost::shared_ptr<CrCirppParametrization> parametrization_;
-    boost::shared_ptr<CrCirppStateProcess> stateProcess_;
+    QuantLib::ext::shared_ptr<CrCirppParametrization> parametrization_;
+    QuantLib::ext::shared_ptr<CrCirppStateProcess> stateProcess_;
 }; // class CrCirpp
 
 inline void CrCirpp::update() {
@@ -85,11 +85,11 @@ inline void CrCirpp::update() {
 
 inline void CrCirpp::generateArguments() { update(); }
 
-inline const boost::shared_ptr<CrCirppParametrization> CrCirpp::parametrization() const {
+inline const QuantLib::ext::shared_ptr<CrCirppParametrization> CrCirpp::parametrization() const {
     return parametrization_;
 }
 
-inline const boost::shared_ptr<StochasticProcess> CrCirpp::stateProcess() const {
+inline const QuantLib::ext::shared_ptr<StochasticProcess> CrCirpp::stateProcess() const {
     QL_REQUIRE(stateProcess_ != NULL, "stateProcess has null pointer in CIR++ stateProcess!");
     return stateProcess_;
 }

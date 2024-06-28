@@ -29,23 +29,25 @@ public:
     explicit BestEntryOption(const string& tradeType = "BestEntryOption") : ScriptedTrade(tradeType) {}
     BestEntryOption(const Envelope& env, const string& longShort, const string& notional, const string& multiplier,
                     const string& strike, const string& cap, const string& resetMinimum, const string& triggerLevel,
-                    const boost::shared_ptr<Underlying> underlying, const string& currency,
+                    const QuantLib::ext::shared_ptr<Underlying> underlying, const string& currency,
                     const ScheduleData& observationDates, const string& premiumDate)
         : longShort_(longShort), notional_(notional), multiplier_(multiplier), strike_(strike), cap_(cap),
           resetMinimum_(resetMinimum), triggerLevel_(triggerLevel), underlying_(underlying), currency_(currency),
           observationDates_(observationDates), premiumDate_(premiumDate) {
         initIndices();
     }
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
+    // This is called within ScriptedTrade::build()
+    void setIsdaTaxonomyFields() override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     void initIndices();
 
     std::string longShort_, notional_, multiplier_, strike_;
     std::string cap_, resetMinimum_, triggerLevel_;
-    boost::shared_ptr<Underlying> underlying_;
+    QuantLib::ext::shared_ptr<Underlying> underlying_;
     std::string currency_;
     ScheduleData observationDates_;
     std::string expiryDate_, premium_, settlementDate_;

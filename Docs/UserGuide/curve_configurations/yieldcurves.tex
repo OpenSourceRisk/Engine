@@ -83,14 +83,18 @@ in section \ref{sec:bootstrap_config} are used.
     \hline
     Linear & Linear interpolation \\ \hline
     LogLinear & Linear interpolation on the natural log of the interpolation variable \\ \hline
-    NaturalCubic & Monotonic Kruger cubic interpolation with second derivative at left and right \\ \hline
-    FinancialCubic & Monotonic Kruger cubic interpolation with second derivative at left and 
-                     first derivative at right \\ \hline
+    NaturalCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and right \\ \hline
+    FinancialCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and 
+                     zero first derivative at right \\ \hline
     ConvexMonotone & Convex Monotone Interpolation (Hagan, West) \\ \hline
     Quadratic & Quadratic interpolation \\ \hline
     LogQuadratic & Quadratic interpolation on the natural log of the interpolation variable \\ \hline
+    LogNaturalCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and right \\hline
+    LogFinancialCubic & Monotonic Kruger cubic interpolation with zero second derivative at left and 
+                     zero first derivative at right \\hline
+    LogCubicSpline & Non-monotonic cubic spline interpolation with zero second derivative at left and right \\hline
     Hermite & Hermite cubic spline interpolation \\ \hline
-    CubicSpline & Non-monotonic cubic spline interpolation with second derivative at left and right \\ \hline
+    CubicSpline & Non-monotonic cubic spline interpolation with zero second derivative at left and right \\ \hline
     DefaultLogMixedLinearCubic & Mixed interpolation, first linear, then monotonic Kruger cubic spline \\ \hline
     MonotonicLogMixedLinearCubic & Mixed interpolation, first linear, then monotonic natural cubic spline \\ \hline
     KrugerLogMixedLinearCubic & Mixed interpolation, first linear, then non-monotonic Kruger cubic spline \\ \hline
@@ -278,14 +282,13 @@ Ibor of one tenor is swapped for Ibor of another tenor plus a spread. In this ca
 value \emph{Tenor Basis Swap}. The quotes may also be for the difference in fixed rates on two fair swaps where one swap
 is against Ibor of one tenor and the other swap is against Ibor of another tenor. In this case, the \lstinline!Type!
 node has the value \emph{Tenor Basis Two Swaps}. Again, the structure is similar to the simple segment in Listing
-\ref{lst:simple_segment} except that there are two projection curve nodes. There is a \lstinline!ProjectionCurveShort!
+\ref{lst:simple_segment} except that there are two projection curve nodes. There is a \lstinline!ProjectionCurveReceive!
 node for the index with the shorter tenor. This node holds the CurveId of a curve for projecting the floating rates on
-the short tenor index. Similarly, there is a \lstinline!ProjectionCurveLong! node for the index with the longer
-tenor. This node holds the CurveId of a curve for projecting the floating rates on the long tenor index. These are
-optional nodes. If they are left blank or omitted, then the projection curve is assumed to equal the curve being
-bootstrapped i.e.\ the current CurveId. However, at least one of the nodes needs to be populated to allow the bootstrap
-to proceed. The \lstinline!PillarChoice! node determines the bootstrap pillars that are used (MaturityDate,
-LastRelevantDate, if not given 'LastRelevantDate' is the default value).
+the receiving side. Similarly, there is a \lstinline!ProjectionCurvePay! node for the index of the pay side. The deprecated 
+values are short for receive, and long for pay. These are optional nodes. If they are left blank or omitted, then the projection 
+curve is assumed to equal the curve being bootstrapped i.e.\ the current CurveId. However, at least one of the nodes 
+needs to be populated to allow the bootstrap to proceed. The \lstinline!PillarChoice! node determines the bootstrap pillars
+that are used (MaturityDate, LastRelevantDate, if not given 'LastRelevantDate' is the default value).
 
 For the \lstinline!Priority! and \lstinline!MinDistance! nodes see the explanation under ``Simple Segment''.
 
@@ -303,8 +306,8 @@ For the \lstinline!Priority! and \lstinline!MinDistance! nodes see the explanati
   <PillarChoice> </PillarChoice>
   <Priority> </Priority>
   <MinDistance> </MinDistance>
-  <ProjectionCurveLong> </ProjectionCurveLong>
-  <ProjectionCurveShort> </ProjectionCurveShort>
+  <ProjectionCurvePay> </ProjectionCurvePay>
+  <ProjectionCurveReceive> </ProjectionCurveReceive>
 </TenorBasis>
 \end{minted}
 \caption{Tenor basis yield curve segment}
@@ -457,7 +460,7 @@ The \lstinline!BootstrapConfig! has the following interpretation for a fitted bo
           </Quotes>
           <!-- mapping of Ibor curves used in the bonds from which the curve is built -->
           <IborIndexCurves>
-            <IborIndexCurve iborIndex="EUR-EURIBOR-6M">EUR-EURIBOR-6M</IborIndexCurve>
+            <IborIndexCurve iborIndex="EUR-EURIBOR-6M">EUR6M</IborIndexCurve>
           </IborIndexCurves>
           <!-- flat extrapolation before first and after last bond maturity -->
           <ExtrapolateFlat>true</ExtrapolateFlat>

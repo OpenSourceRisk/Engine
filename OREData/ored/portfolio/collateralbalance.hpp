@@ -26,7 +26,7 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <ored/portfolio/nettingsetdetails.hpp>
 #include <ql/utilities/null.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 using ore::data::NettingSetDetails;
 
@@ -39,26 +39,25 @@ public:
       default constructor
     */
     CollateralBalance()
-        : nettingSetId_(""), nettingSetDetails_(NettingSetDetails()), currency_(""), 
+        : nettingSetDetails_(NettingSetDetails()), currency_(""), 
           im_(QuantLib::Null<QuantLib::Real>()), vm_(QuantLib::Null<QuantLib::Real>()) {}
 
     CollateralBalance(ore::data::XMLNode* node);
 
-    CollateralBalance(const std::string& nettingSetId, const std::string& currency,
-                      const QuantLib::Real& im, const QuantLib::Real& vm = QuantLib::Null<QuantLib::Real>())
-        : nettingSetId_(nettingSetId), nettingSetDetails_(NettingSetDetails()), currency_(currency),
-          im_(im), vm_(vm) {}
-
     CollateralBalance(const NettingSetDetails& nettingSetDetails, const std::string& currency,
                       const QuantLib::Real& im, const QuantLib::Real& vm = QuantLib::Null<QuantLib::Real>())
-         : nettingSetId_(""), nettingSetDetails_(nettingSetDetails), currency_(currency), im_(im), vm_(vm) {}
+         : nettingSetDetails_(nettingSetDetails), currency_(currency), im_(im), vm_(vm) {}
+
+    CollateralBalance(const std::string& nettingSetId, const std::string& currency,
+                      const QuantLib::Real& im, const QuantLib::Real& vm = QuantLib::Null<QuantLib::Real>())
+        : CollateralBalance(NettingSetDetails(nettingSetId), currency, im, vm) {}
 
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     // Getters
     const std::string& nettingSetId() const {
-        return (nettingSetDetails_.empty() ? nettingSetId_ : nettingSetDetails_.nettingSetId());
+        return nettingSetDetails_.nettingSetId();
     }
     const NettingSetDetails nettingSetDetails() const { return nettingSetDetails_; }
     const std::string& currency() const { return currency_; }
@@ -70,7 +69,6 @@ public:
     QuantLib::Real& variationMargin() { return vm_; }
 
 private:
-    std::string nettingSetId_;
     NettingSetDetails nettingSetDetails_;
     std::string currency_;
     QuantLib::Real im_, vm_;
@@ -112,13 +110,13 @@ public:
     /*!
       adds a new collateral balance to manager
     */
-    void add(const boost::shared_ptr<CollateralBalance>& cb);
+    void add(const QuantLib::ext::shared_ptr<CollateralBalance>& cb, const bool overwrite = false);
 
     /*!
       extracts a collateral balance from manager
     */
-    const boost::shared_ptr<CollateralBalance>& get(const std::string& nettingSetId) const;
-    const boost::shared_ptr<CollateralBalance>& get(const NettingSetDetails& nettingSetDetails) const;
+    const QuantLib::ext::shared_ptr<CollateralBalance>& get(const std::string& nettingSetId) const;
+    const QuantLib::ext::shared_ptr<CollateralBalance>& get(const NettingSetDetails& nettingSetDetails) const;
     
     /*!
         gets currentIM for DIM calculation
@@ -126,11 +124,11 @@ public:
     void currentIM(const std::string& baseCurrency, std::map<std::string, QuantLib::Real>& currentIM);
     
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
-    const std::map<NettingSetDetails, boost::shared_ptr<CollateralBalance>>& collateralBalances();
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+    const std::map<NettingSetDetails, QuantLib::ext::shared_ptr<CollateralBalance>>& collateralBalances();
 
 private:
-    std::map<NettingSetDetails, boost::shared_ptr<CollateralBalance>> collateralBalances_;
+    std::map<NettingSetDetails, QuantLib::ext::shared_ptr<CollateralBalance>> collateralBalances_;
 };
 
 } // namespace data

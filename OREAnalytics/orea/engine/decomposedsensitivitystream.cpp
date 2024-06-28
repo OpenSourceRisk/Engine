@@ -28,14 +28,14 @@ namespace analytics {
 namespace {} // namespace
 
 DecomposedSensitivityStream::DecomposedSensitivityStream(
-    const boost::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
+    const QuantLib::ext::shared_ptr<SensitivityStream>& ss, const std::string& baseCurrency,
     std::map<std::string, std::map<std::string, double>> defaultRiskDecompositionWeights,
     const std::set<std::string>& eqComDecompositionTradeIds,
     const std::map<std::string, std::map<std::string, double>>& currencyHedgedIndexQuantities,
-    const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
-    const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-    const boost::shared_ptr<SensitivityScenarioData>& scenarioData,
-    const boost::shared_ptr<ore::data::Market>& todaysMarket)
+    const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
+    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+    const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData,
+    const QuantLib::ext::shared_ptr<ore::data::Market>& todaysMarket)
     : ss_(ss), baseCurrency_(baseCurrency), defaultRiskDecompositionWeights_(defaultRiskDecompositionWeights),
       eqComDecompositionTradeIds_(eqComDecompositionTradeIds),
       currencyHedgedIndexQuantities_(currencyHedgedIndexQuantities), refDataManager_(refDataManager),
@@ -76,6 +76,12 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decompose(const Sens
                                   refDataManager_ != nullptr &&
                                   refDataManager_->hasData("CommodityIndex", record.key_1.name);
 
+    if (isEquitySpotSensi && refDataManager_->hasData("Equity", record.key_1.name)) {
+        auto eqRefData = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(
+                refDataManager_->getData("Equity", record.key_1.name));
+        isEquitySpotSensi = eqRefData->equityData().isIndex;       
+    }
+
     try {
         if (tradeMarkedForDecompositionDefaultRisk && isSurvivalProbSensi && isNotCrossGamma) {
             return decomposeSurvivalProbability(record);
@@ -91,7 +97,7 @@ std::vector<SensitivityRecord> DecomposedSensitivityStream::decompose(const Sens
                 indexDecomposition(record.delta, record.key_1.name, ore::data::CurveSpec::CurveType::Commodity);
             return sensitivityRecords(decompResults.spotRisk, decompResults.fxRisk, decompResults.indexCurrency,
                                       record);
-        } else if (tradeMarkedForDecomposition && (isCommoditySpotSensi || isEquitySpotSensi) && isNotCrossGamma) {
+        } else if (tradeMarkedForDecomposition && (isCommoditySpotSensi || isEquitySpotSensi ) && isNotCrossGamma) {
             auto subFields = std::map<std::string, std::string>({{"tradeId", record.tradeId}});
             StructuredAnalyticsErrorMessage(
                 "Sensitivity Decomposition", "Index decomposition failed",
@@ -244,7 +250,7 @@ DecomposedSensitivityStream::indexDecomposition(double delta, const std::string&
                    << indexName << ") for trade: no reference data found. Continuing without decomposition.");
 
     auto refDatum = refDataManager_->getData(refDataType, indexName);
-    auto indexRefDatum = boost::dynamic_pointer_cast<ore::data::IndexReferenceDatum>(refDatum);
+    auto indexRefDatum = QuantLib::ext::dynamic_pointer_cast<ore::data::IndexReferenceDatum>(refDatum);
     std::string indexCurrency = curveCurrency(indexName, curveType);
     std::map<string, double> indexWeights = indexRefDatum->underlyings();
     auto spotRisk = constituentSpotRiskFromDecomposition(delta, indexWeights);
@@ -264,7 +270,7 @@ DecomposedSensitivityStream::decomposeCurrencyHedgedIndexRisk(const SensitivityR
     auto indexName = sr.key_1.name;
     auto indexCurrency = curveCurrency(indexName, ore::data::CurveSpec::CurveType::Equity);
 
-    boost::shared_ptr<ore::data::CurrencyHedgedEquityIndexDecomposition> decomposeCurrencyHedgedIndexHelper;
+    QuantLib::ext::shared_ptr<ore::data::CurrencyHedgedEquityIndexDecomposition> decomposeCurrencyHedgedIndexHelper;
     decomposeCurrencyHedgedIndexHelper =
         loadCurrencyHedgedIndexDecomposition(indexName, refDataManager_, curveConfigs_);
     if (decomposeCurrencyHedgedIndexHelper != nullptr) {

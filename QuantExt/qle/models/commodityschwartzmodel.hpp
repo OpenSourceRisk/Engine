@@ -53,12 +53,12 @@ class CommoditySchwartzModel : public CommodityModel {
 public:
     enum class Discretization { Euler, Exact };
 
-    CommoditySchwartzModel(const boost::shared_ptr<CommoditySchwartzParametrization>& parametrization, 
+    CommoditySchwartzModel(const QuantLib::ext::shared_ptr<CommoditySchwartzParametrization>& parametrization, 
             const Discretization discretization = Discretization::Euler);
 
     // CommodityModel interface
 
-    const boost::shared_ptr<Parametrization> parametrizationBase() const override { return parametrization_; }
+    const QuantLib::ext::shared_ptr<Parametrization> parametrizationBase() const override { return parametrization_; }
 
     Handle<PriceTermStructure> termStructure() const override { return parametrization_->priceCurve(); }
 
@@ -67,23 +67,23 @@ public:
     Size n() const override { return 1; }
     Size m() const override { return 1; }
 
-    boost::shared_ptr<StochasticProcess> stateProcess() const override { return stateProcess_; }
+    QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const override { return stateProcess_; }
 
     QuantLib::Real forwardPrice(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
                                 const QuantLib::Handle<QuantExt::PriceTermStructure>& priceCurve
                                 = QuantLib::Handle<QuantExt::PriceTermStructure>()) const override;
 
     //! Schwartz model specific methods
-    const boost::shared_ptr<CommoditySchwartzParametrization> parametrization() const { return parametrization_; }
+    const QuantLib::ext::shared_ptr<CommoditySchwartzParametrization> parametrization() const { return parametrization_; }
 
     //! observer and linked calibrated model interface
     void update() override;
     void generateArguments() override;
 
 private:
-    boost::shared_ptr<CommoditySchwartzParametrization> parametrization_;
+    QuantLib::ext::shared_ptr<CommoditySchwartzParametrization> parametrization_;
     Discretization discretization_;
-    boost::shared_ptr<StochasticProcess> stateProcess_;
+    QuantLib::ext::shared_ptr<StochasticProcess> stateProcess_;
 };
 
 } // namespace QuantExt

@@ -43,7 +43,7 @@ bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const MultiLegOption& m,
 
 bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const std::vector<Leg>& legs, const std::vector<bool>& payer,
                                                         const std::vector<Currency>& currency,
-                                                        const boost::shared_ptr<Exercise>& exercise,
+                                                        const QuantLib::ext::shared_ptr<Exercise>& exercise,
                                                         const Settlement::Type& settlementType,
                                                         const Settlement::Method& settlementMethod,
                                                         std::vector<std::string>& messages) {
@@ -63,7 +63,7 @@ bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const std::vector<Leg>& 
 
     for (Size i = 0; i < legs.size(); ++i) {
         for (Size j = 0; j < legs[i].size(); ++j) {
-            if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(legs[i][j])) {
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(legs[i][j])) {
                 if (cpn->index()->currency() != currency[0]) {
                     messages.push_back("NumericLgmMultilegOptionEngine: can only handle indices (" +
                                        cpn->index()->name() + ") with same currency as unqiue pay currency (" +
@@ -77,12 +77,12 @@ bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const std::vector<Leg>& 
 
     for (Size i = 0; i < legs.size(); ++i) {
         for (Size j = 0; j < legs[i].size(); ++j) {
-            if (auto c = boost::dynamic_pointer_cast<Coupon>(legs[i][j])) {
-                if (!(boost::dynamic_pointer_cast<IborCoupon>(c) || boost::dynamic_pointer_cast<FixedRateCoupon>(c) ||
-                      boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
-                      boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c) ||
-                      boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(c) ||
-                      boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(c))) {
+            if (auto c = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs[i][j])) {
+                if (!(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c) || QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(c))) {
                     messages.push_back(
                         "BlackMultilegOptionEngine: coupon type not handled, supported coupon types: Fix, "
                         "Ibor, ON comp, ON avg, BMA/SIFMA, subperiod. leg = " +
@@ -127,7 +127,8 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     Date exerciseDate = exercise_->date(0);
     Real exerciseTime = volatility_->timeFromReference(exerciseDate);
 
-    // filter on future coupons and store the necessary data
+    // filter on future coupons and store the necessary data,
+    // also determine fixed day count (one of the fixed cpn), earliest and latest accrual dates
 
     struct CfInfo {
         Real fixedRate = Null<Real>();       // for fixed cpn
@@ -142,42 +143,59 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     std::vector<CfInfo> cfInfo;
 
-    for (Size i = 0; i < legs_.size(); ++i) {
-        for (Size j = 0; j < legs_[i].size(); ++j) {
-            Real payer = payer_[i] ? -1.0 : 1.0;
-            cfInfo.push_back(CfInfo());
-            if (auto c = boost::dynamic_pointer_cast<Coupon>(legs_[i][j])) {
-                if (c->accrualStartDate() >= exerciseDate) {
-                    if (auto f = boost::dynamic_pointer_cast<FixedRateCoupon>(c)) {
-                        cfInfo.back().fixedRate = f->rate();
-                        cfInfo.back().nominal = c->nominal() * payer;
-                    } else if (auto f = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
-                        cfInfo.back().floatingSpread = f->spread();
-                        cfInfo.back().floatingGearing = f->gearing();
-                        cfInfo.back().nominal = f->nominal() * payer;
-                    }
-                    cfInfo.back().accrual = c->accrualPeriod();
-                }
-            }
-            cfInfo.back().discountFactor = discountCurve_->discount(legs_[i][j]->date());
-            cfInfo.back().amount = legs_[i][j]->amount() * payer;
-            cfInfo.back().payDate = legs_[i][j]->date();
-        }
-    }
-
-    // determine fixed day count (one of the fixed cpn), earliest and latest accrual dates
-
     DayCounter fixedDayCount;
     Date earliestAccrualStartDate = Date::maxDate();
     Date latestAccrualEndDate = Date::minDate();
+
+    Size numFixed = 0, numFloat = 0;
+
     for (Size i = 0; i < legs_.size(); ++i) {
         for (Size j = 0; j < legs_[i].size(); ++j) {
-            if (auto cpn = boost::dynamic_pointer_cast<Coupon>(legs_[i][j])) {
-                earliestAccrualStartDate = std::min(earliestAccrualStartDate, cpn->accrualStartDate());
-                latestAccrualEndDate = std::max(latestAccrualEndDate, cpn->accrualEndDate());
+            Real payer = payer_[i] ? -1.0 : 1.0;
+            if (auto c = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[i][j])) {
+                auto fixedCoupon = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c);
+                if (fixedCoupon)
+                    fixedDayCount = c->dayCounter();
+                if (c->accrualStartDate() >= exerciseDate) {
+                    cfInfo.push_back(CfInfo());
+                    earliestAccrualStartDate = std::min(earliestAccrualStartDate, c->accrualStartDate());
+                    latestAccrualEndDate = std::max(latestAccrualEndDate, c->accrualEndDate());
+                    if (fixedCoupon) {
+                        cfInfo.back().fixedRate = fixedCoupon->rate();
+                        cfInfo.back().nominal = c->nominal() * payer;
+                        ++numFixed;
+                    } else if (auto f = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+                        cfInfo.back().floatingSpread = f->spread();
+                        cfInfo.back().floatingGearing = f->gearing();
+                        cfInfo.back().nominal = f->nominal() * payer;
+                        ++numFloat;
+                    }
+                    cfInfo.back().accrual = c->accrualPeriod();
+                    cfInfo.back().discountFactor = discountCurve_->discount(c->date());
+                    cfInfo.back().amount = c->amount() * payer;
+                    cfInfo.back().payDate = c->date();
+                }
+            } else if (legs_[i][j]->date() > exerciseDate) {
+                cfInfo.push_back(CfInfo());
+                cfInfo.back().discountFactor = discountCurve_->discount(legs_[i][j]->date());
+                cfInfo.back().amount = legs_[i][j]->amount() * payer;
+                cfInfo.back().payDate = legs_[i][j]->date();
             }
-            if (auto cpn = boost::dynamic_pointer_cast<FixedRateCoupon>(legs_[i][j])) {
-                fixedDayCount = cpn->dayCounter();
+        }
+    }
+
+    // if there are future floating coupons, but no fixed, we add a dummy fixed with 0 fixed rate to 
+    // ensure we can calculate the ATM rate
+    if (numFloat > 0 && numFixed == 0) {
+        for (auto const& c : cfInfo) {
+            if (c.floatingSpread != Null<Real>()) {
+                cfInfo.push_back(CfInfo());
+                cfInfo.back().fixedRate = 0.0;
+                cfInfo.back().nominal = c.nominal * -1; // assume opposite direction
+                cfInfo.back().accrual = c.accrual;
+                cfInfo.back().discountFactor = c.discountFactor;
+                cfInfo.back().amount = 0.0;
+                cfInfo.back().payDate = c.payDate;
             }
         }
     }
@@ -190,7 +208,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     // add the rebate (if any) as a fixed cashflow to the exercise-into underlying
 
-    if (auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
+    if (auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
         cfInfo.push_back(CfInfo());
         cfInfo.back().amount = rebatedExercise->rebate(0);
         cfInfo.back().discountFactor = discountCurve_->discount(rebatedExercise->rebatePaymentDate(0));
@@ -251,7 +269,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     Real simpleCfCorrection = 0.0;
     for (auto const& c : cfInfo) {
         if (c.fixedRate == Null<Real>() && c.floatingSpread == Null<Real>()) {
-            simpleCfCorrection = c.amount * c.discountFactor / fixedBps;
+            simpleCfCorrection += c.amount * c.discountFactor / fixedBps;
         }
     }
 
@@ -299,13 +317,14 @@ void BlackMultiLegOptionEngineBase::calculate() const {
         npv_ = blackFormula(optionType, effectiveFixedRate, effectiveAtmForward, stdDev, annuity, displacement);
         vega = std::sqrt(exerciseTime) *
                blackFormulaStdDevDerivative(effectiveFixedRate, effectiveAtmForward, stdDev, annuity, displacement);
-        delta =
-            blackFormulaForwardDerivative(optionType, effectiveFixedRate, effectiveAtmForward, stdDev, annuity, displacement);
+        delta = blackFormulaForwardDerivative(optionType, effectiveFixedRate, effectiveAtmForward, stdDev, annuity,
+                                              displacement);
     } else {
         npv_ = bachelierBlackFormula(optionType, effectiveFixedRate, effectiveAtmForward, stdDev, annuity);
         vega = std::sqrt(exerciseTime) *
                bachelierBlackFormulaStdDevDerivative(effectiveFixedRate, effectiveAtmForward, stdDev, annuity);
-        delta = bachelierBlackFormulaForwardDerivative(optionType, effectiveFixedRate, effectiveAtmForward, stdDev, annuity);
+        delta = bachelierBlackFormulaForwardDerivative(optionType, effectiveFixedRate, effectiveAtmForward, stdDev,
+                                                       annuity);
     }
 
     underlyingNpv_ = fixedNpv + floatingNpv + simpleCfNpv;
@@ -322,6 +341,13 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     additionalResults_["stdDev"] = stdDev;
     additionalResults_["delta"] = delta;
     additionalResults_["vega"] = vega;
+    additionalResults_["fixedNpv"] = fixedNpv;
+    additionalResults_["fixedBps"] = fixedBps;
+    additionalResults_["weightedFixedRate"] = weightedFixedRate;
+    additionalResults_["floatingNpv"] = floatingNpv;
+    additionalResults_["floatingBps"] = floatingBps;
+    additionalResults_["weightedFloatingSpread"] = weightedFloatingSpread;
+    additionalResults_["simpleCfNpv"] = simpleCfNpv;
 }
 
 BlackMultiLegOptionEngine::BlackMultiLegOptionEngine(const Handle<YieldTermStructure>& discountCurve,

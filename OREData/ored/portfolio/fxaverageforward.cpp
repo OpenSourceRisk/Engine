@@ -30,7 +30,14 @@
 namespace ore {
 namespace data {
 
-void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void FxAverageForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
+    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");  
+
     LOG("FxAverageForward::build() called");
     QL_REQUIRE(!settlementCurrency_.empty(), "settlement currency must not be blank");
     QL_REQUIRE(!referenceCurrency_.empty(), "reference currency must not be blank");
@@ -43,7 +50,7 @@ void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
 	       "payment date >= last observation date required");
     
     QL_REQUIRE(!fxIndex_.empty(), "FX settlement index must be specified for averaging forwards");
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex = buildFxIndex(fxIndex_, payCcy.code(), refCcy.code(), engineFactory->market(),
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex = buildFxIndex(fxIndex_, payCcy.code(), refCcy.code(), engineFactory->market(),
 								engineFactory->configuration(MarketContext::pricing));
     for (const auto& date : observationSchedule.dates()) {
 	if (date <= Settings::instance().evaluationDate())
@@ -53,16 +60,16 @@ void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
 
     // Set up Legs
     inverted_ = parseFxIndex(fxIndex_)->targetCurrency() != payCcy;
-    legs_ = {{boost::make_shared<SimpleCashFlow>(settlementNotional_, payDate)},
-             {boost::make_shared<QuantExt::AverageFXLinkedCashFlow>(payDate, observationSchedule.dates(),
+    legs_ = {{QuantLib::ext::make_shared<SimpleCashFlow>(settlementNotional_, payDate)},
+             {QuantLib::ext::make_shared<QuantExt::AverageFXLinkedCashFlow>(payDate, observationSchedule.dates(),
                                                                     referenceNotional_, fxIndex, inverted_)}};
     legCurrencies_ = {settlementCurrency_, settlementCurrency_};
     legPayers_ = {fixedPayer_, !fixedPayer_};
 
     // Set up instrument and engine
-    boost::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Swap");
-    boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("Swap");
+    QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
     QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
     swap->setPricingEngine(swapBuilder->engine(payCcy, std::string(), std::string()));
     setSensitivityTemplate(*swapBuilder);
@@ -72,12 +79,6 @@ void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     notional_ = settlementNotional_;
     notionalCurrency_ = settlementCurrency_;
     maturity_ = payDate;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Foreign Exchange");
-    additionalData_["isdaBaseProduct"] = string(settlement_ == "Cash" ? "NDF" : "Forward");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");  
 
     LOG("FxAverageForward::build() done");
 }
@@ -89,7 +90,7 @@ const std::map<std::string, boost::any>& FxAverageForward::additionalData() cons
     additionalData_["referenceCurrency"] = referenceCurrency_;
     additionalData_["referenceNotional"] = referenceNotional_;
     if (legs_.size() == 2 && !legs_[1].empty()) {
-        auto avg = boost::dynamic_pointer_cast<QuantExt::AverageFXLinkedCashFlow>(legs_[1].front());
+        auto avg = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageFXLinkedCashFlow>(legs_[1].front());
         if (avg) {
             for (auto [date, value] : avg->fixings())
                 additionalData_["fixing_" + ore::data::to_string(date)] = value;
@@ -119,7 +120,7 @@ void FxAverageForward::fromXML(XMLNode* node) {
         settlement_ = "Cash";
 }
 
-XMLNode* FxAverageForward::toXML(XMLDocument& doc) {
+XMLNode* FxAverageForward::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxAverageForwardData");
     XMLUtils::appendNode(node, fxNode);

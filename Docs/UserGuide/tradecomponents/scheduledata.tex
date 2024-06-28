@@ -38,6 +38,7 @@ respectively.
                   <Convention>Following</Convention>
                   <Tenor>3M</Tenor>
                   <EndOfMonth>false</EndOfMonth>
+                  <EndOfMOnthConvention>Following</EndOfMOnthConvention>
                   <Dates>
                     <Date>2012-01-06</Date>
                     <Date>2012-04-10</Date>
@@ -104,7 +105,7 @@ Allowable values: A string where the last character must be \emph{D} or \emph{W}
 \emph{M} or \emph{Y}.  The characters before that must be a positive integer. \\ \emph{D}
 $=$ Day, \emph{W} $=$ Week, \emph{M} $=$ Month, \emph{Y} $=$ Year
 
-Note that \emph{0D} is a valid value, and causes there to be no intermediate dates between \lstinline!StartDate! and \lstinline!EndDate!.
+Note that \emph{0D} and \emph{1T} are equivalent valid values, and both cause there to be no intermediate dates between \lstinline!StartDate! and \lstinline!EndDate!.
 
 \item \lstinline!Calendar!: The calendar used to generate schedule  dates. Also used to determine payment dates (except for compounding OIS index legs, which use the index calendar to determine payment dates).
 
@@ -126,6 +127,14 @@ Allowable values: See Table \ref{tab:convention} Roll Convention.
 Allowable values and descriptions: See Table \ref{tab:rule} Rule. Defaults to \emph{Forward} if omitted. Cannot be left blank.
 
 \item \lstinline!EndOfMonth! [Optional]: Specifies whether the date generation rule is different for end of month, so that the last date of each month is generated, regardless of number of days in the month.
+
+Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if left blank or omitted. Must be set to \emph{false} or omitted if the date generation Rule is set to \emph{CDS} or \emph{CDS2015}.
+
+\item \lstinline!EndOfMonthConvention! [Optional]: Determines the adjustment of the end-of-month schedule dates with regards to the selected calendar.
+This field is only used when \lstinline!EndOfMonth! is true. If left blank or omitted, then the default \lstinline!Preceding! convention is applied
+(i.e.\ end-of-month dates will never be adjusted over to the beginning of the next month)
+
+Allowable values: See Table \ref{tab:convention} Roll Convention.
 
 Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if left blank or omitted. Must be set to \emph{false} or omitted if the date generation Rule is set to \emph{CDS} or \emph{CDS2015}.
 
@@ -177,6 +186,10 @@ Defaults to \emph{null} if omitted.
   for irregular periods when the day count convention is ActActICMA and the schedule is dates based.
 
 Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}. Defaults to \emph{false} if left blank or omitted.
+
+\item \lstinline!EndOfMonthConvention! [Optional]: Whenever the \lstinline!EndOfMonth! logic is applied, this is used as the roll convention along with the \lstinline!Calendar!for any date adjustments.
+
+Allowable values: See Table \ref{tab:convention} Roll Convention. Defaults to \emph{Preceding} if omitted.
 
 \item \lstinline!Dates!: This is a sub-sub-node and contains child elements of type
   \lstinline!Date!. In this case the schedule dates are determined

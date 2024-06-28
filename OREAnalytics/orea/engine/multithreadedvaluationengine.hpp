@@ -42,91 +42,92 @@ public:
        - cptyCubeFactory:       creates nullptr */
     MultiThreadedValuationEngine(
         const QuantLib::Size nThreads, const QuantLib::Date& today,
-        const boost::shared_ptr<ore::analytics::DateGrid>& dateGrid, const QuantLib::Size nSamples,
-        const boost::shared_ptr<ore::data::Loader>& loader,
-        const boost::shared_ptr<ore::analytics::ScenarioGenerator>& scenarioGenerator,
-        const boost::shared_ptr<ore::data::EngineData>& engineData,
-        const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-        const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
+        const QuantLib::ext::shared_ptr<ore::analytics::DateGrid>& dateGrid, const QuantLib::Size nSamples,
+        const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
+        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator>& scenarioGenerator,
+        const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+        const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
         const std::string& configuration,
-        const boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
+        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
         const bool useSpreadedTermStructures = false, const bool cacheSimData = false,
-        const boost::shared_ptr<ore::analytics::ScenarioFilter>& scenarioFilter =
-            boost::make_shared<ore::analytics::ScenarioFilter>(),
-        const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter>& scenarioFilter =
+            QuantLib::ext::make_shared<ore::analytics::ScenarioFilter>(),
+        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
         const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
         const bool handlePseudoCurrenciesTodaysMarket = true, const bool handlePseudoCurrenciesSimMarket = true,
         const bool recalibrateModels = true,
-        const std::function<boost::shared_ptr<ore::analytics::NPVCube>(
+        const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
             const QuantLib::Size)>& cubeFactory = {},
-        const std::function<boost::shared_ptr<ore::analytics::NPVCube>(
+        const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
             const QuantLib::Date&, const std::vector<QuantLib::Date>&, const QuantLib::Size)>& nettingSetCubeFactory =
             {},
-        const std::function<boost::shared_ptr<ore::analytics::NPVCube>(
+        const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
             const QuantLib::Size)>& cptyCubeFactory = {},
-        const std::string& context = "unspecified");
+        const std::string& context = "unspecified",
+        const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario = nullptr);
 
     // can be optionally called to set the agg scen data (which is done in the ssm for single-threaded runs)
-    void setAggregationScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData);
+    void setAggregationScenarioData(const QuantLib::ext::shared_ptr<AggregationScenarioData>& aggregationScenarioData);
 
     /* analoguous to buildCube() in the single-threaded engine, results are retrieved using below constructors
        if no cptyCalculators is given a function returning an empty vector of calculators will be returned */
     void
-    buildCube(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-              const std::function<std::vector<boost::shared_ptr<ore::analytics::ValuationCalculator>>()>& calculators,
-              const std::function<std::vector<boost::shared_ptr<ore::analytics::CounterpartyCalculator>>()>&
+    buildCube(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+              const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>()>& calculators,
+              const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::CounterpartyCalculator>>()>&
                   cptyCalculators = {},
               bool mporStickyDate = true, bool dryRun = false);
 
     // result output cubes (mini-cubes, one per thread)
-    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> outputCubes() const { return miniCubes_; }
+    std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> outputCubes() const { return miniCubes_; }
 
     // result netting cubes (might be null, if nettingSetCubeFactory is returning null)
-    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> outputNettingSetCubes() const {
+    std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> outputNettingSetCubes() const {
         return miniNettingSetCubes_;
     }
 
     // result cpty cubes (might be null, if cptyCubeFactory is returning null)
-    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> outputCptyCubes() const { return miniCptyCubes_; }
+    std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> outputCptyCubes() const { return miniCptyCubes_; }
 
 private:
     QuantLib::Size nThreads_;
     QuantLib::Date today_;
-    boost::shared_ptr<ore::data::DateGrid> dateGrid_;
+    QuantLib::ext::shared_ptr<ore::data::DateGrid> dateGrid_;
     QuantLib::Size nSamples_;
-    boost::shared_ptr<ore::data::Loader> loader_;
-    boost::shared_ptr<ore::analytics::ScenarioGenerator> scenarioGenerator_;
-    boost::shared_ptr<ore::data::EngineData> engineData_;
-    boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
-    boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
+    QuantLib::ext::shared_ptr<ore::data::Loader> loader_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator> scenarioGenerator_;
+    QuantLib::ext::shared_ptr<ore::data::EngineData> engineData_;
+    QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
+    QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     std::string configuration_;
-    boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketData_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketData_;
     bool useSpreadedTermStructures_;
     bool cacheSimData_;
-    boost::shared_ptr<ore::analytics::ScenarioFilter> scenarioFilter_;
-    boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioFilter> scenarioFilter_;
+    QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
     ore::data::IborFallbackConfig iborFallbackConfig_;
     bool handlePseudoCurrenciesTodaysMarket_;
     bool handlePseudoCurrenciesSimMarket_;
     bool recalibrateModels_;
-    std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
+    std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                              const std::vector<QuantLib::Date>&, const QuantLib::Size)>
         cubeFactory_;
-    std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::vector<QuantLib::Date>&,
+    std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::vector<QuantLib::Date>&,
                                                              const QuantLib::Size)>
         nettingSetCubeFactory_;
-    std::function<boost::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
+    std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                              const std::vector<QuantLib::Date>&, const QuantLib::Size)>
         cptyCubeFactory_;
     std::string context_;
-
-    boost::shared_ptr<AggregationScenarioData> aggregationScenarioData_;
-
-    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> miniCubes_;
-    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> miniNettingSetCubes_;
-    std::vector<boost::shared_ptr<ore::analytics::NPVCube>> miniCptyCubes_;
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<AggregationScenarioData>
+            aggregationScenarioData_;
+    std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> miniCubes_;
+    std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> miniNettingSetCubes_;
+    std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> miniCptyCubes_;
 };
 
 } // namespace analytics

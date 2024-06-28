@@ -205,7 +205,7 @@ void DateGrid::truncate(Size len) {
 }
 
 void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
-    closeOutToValuation_.clear();
+    valuationCloseOutMap_.clear();
     if (p == QuantLib::Period(0, QuantLib::Days)) {
         for (Size i = 0; i < dates_.size(); ++i) {
             if (i == 0) {
@@ -219,9 +219,10 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
                 isValuationDate_[i] = true;
             }
             if (isCloseOutDate_[i] && i > 0)
-                closeOutToValuation_[dates_[i]] = dates_[i - 1];
+                valuationCloseOutMap_[dates_[i-1]] = dates_[i];
         }
     } else {
+        std::set<QuantLib::Date> tmpCloseOutDates;
         std::set<QuantLib::Date> tmpDates;
         std::set<QuantLib::Date> tmpValueDates;
         for (Size i = 0; i < dates_.size(); ++i) {
@@ -230,7 +231,8 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
                 c = calendar_.adjust(dates_[i] + p);
             else
                 c = calendar_.advance(dates_[i], p, Following, false);
-            closeOutToValuation_[c] = dates_[i];
+            tmpCloseOutDates.insert(c);
+            valuationCloseOutMap_[dates_[i]] = c;
             tmpDates.insert(dates_[i]);
             tmpDates.insert(c);
             tmpValueDates.insert(dates_[i]);
@@ -241,7 +243,7 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
         isValuationDate_ = std::vector<bool>(dates_.size(), true);
         for(size_t i = 0; i < dates_.size(); ++i){
             Date d = dates_[i];
-            if(closeOutToValuation_.count(d) == 1){
+            if (tmpCloseOutDates.count(d) == 1) {
                 isCloseOutDate_[i] = true;
             }
             if(tmpValueDates.count(d) == 0){
@@ -299,13 +301,15 @@ QuantLib::TimeGrid DateGrid::closeOutTimeGrid() const {
     return TimeGrid(times.begin(), times.end());
 }
 
-QuantLib::Date DateGrid::valuationDateFromCloseOutDate(const QuantLib::Date& closeOutDate) const {
-    auto it = closeOutToValuation_.find(closeOutDate);
-    QL_REQUIRE(it != closeOutToValuation_.end(), "close out date " << closeOutDate << " not found in dategrid");
+QuantLib::Date DateGrid::closeOutDateFromValuationDate(const QuantLib::Date& d) const {
+    auto it = valuationCloseOutMap_.find(d);
+    if(it == valuationCloseOutMap_.end()){
+        return Date();
+    } 
     return it->second;
 }
 
-boost::shared_ptr<DateGrid> generateShiftedDateGrid(const boost::shared_ptr<DateGrid>& dg,
+QuantLib::ext::shared_ptr<DateGrid> generateShiftedDateGrid(const QuantLib::ext::shared_ptr<DateGrid>& dg,
                                                     const QuantLib::Period& shift) {
     DLOG("Building shifted date grid with shift of " << shift);
     vector<Date> defaultDates = dg->dates();
@@ -314,12 +318,12 @@ boost::shared_ptr<DateGrid> generateShiftedDateGrid(const boost::shared_ptr<Date
         Date closeOut = dg->calendar().adjust(d + shift);
         closeOutDates.push_back(closeOut);
     }
-    boost::shared_ptr<DateGrid> newDg = boost::make_shared<DateGrid>(closeOutDates, dg->calendar(), dg->dayCounter());
+    QuantLib::ext::shared_ptr<DateGrid> newDg = QuantLib::ext::make_shared<DateGrid>(closeOutDates, dg->calendar(), dg->dayCounter());
     return newDg;
 }
 
-boost::shared_ptr<DateGrid> combineDateGrids(const boost::shared_ptr<DateGrid>& dg1,
-                                             const boost::shared_ptr<DateGrid>& dg2) {
+QuantLib::ext::shared_ptr<DateGrid> combineDateGrids(const QuantLib::ext::shared_ptr<DateGrid>& dg1,
+                                             const QuantLib::ext::shared_ptr<DateGrid>& dg2) {
     DLOG("Combining date grids");
     vector<Date> combinedVec;
     vector<Date> dates1 = dg1->dates();
@@ -331,7 +335,7 @@ boost::shared_ptr<DateGrid> combineDateGrids(const boost::shared_ptr<DateGrid>& 
     auto last = std::unique(combinedVec.begin(), combinedVec.end());
     combinedVec.erase(last, combinedVec.end());
     // FIXME: Check that grid calendars and day counters match?
-    boost::shared_ptr<DateGrid> newDg = boost::make_shared<DateGrid>(combinedVec, dg1->calendar(), dg1->dayCounter());
+    QuantLib::ext::shared_ptr<DateGrid> newDg = QuantLib::ext::make_shared<DateGrid>(combinedVec, dg1->calendar(), dg1->dayCounter());
     return newDg;
 }
 

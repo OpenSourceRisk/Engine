@@ -42,20 +42,22 @@ namespace analytics {
 using RiskType = CrifRecord::RiskType;
 
 // Helper variable for switching risk type before lookup
-const map<RiskType, RiskType> nonVolRiskTypeMap = {
-    {RiskType::IRVol, RiskType::IRCurve},     {RiskType::InflationVol, RiskType::IRCurve},
-    {RiskType::CreditVol, RiskType::CreditQ}, {RiskType::CreditVolNonQ, RiskType::CreditNonQ},
-    {RiskType::EquityVol, RiskType::Equity},  {RiskType::CommodityVol, RiskType::Commodity}};
+const map<RiskType, RiskType> nonVolRiskTypeMap = {{RiskType::IRVol, RiskType::IRCurve},
+                                                   {RiskType::InflationVol, RiskType::IRCurve},
+                                                   {RiskType::CreditVol, RiskType::CreditQ},
+                                                   {RiskType::CreditVolNonQ, RiskType::CreditNonQ},
+                                                   {RiskType::EquityVol, RiskType::Equity},
+                                                   {RiskType::CommodityVol, RiskType::Commodity}};
 
 SimmBucketMapperBase::SimmBucketMapperBase(
-    const boost::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
-    const boost::shared_ptr<SimmBasicNameMapper>& nameMapper) :
+    const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& refDataManager,
+    const QuantLib::ext::shared_ptr<SimmBasicNameMapper>& nameMapper) :
     refDataManager_(refDataManager), nameMapper_(nameMapper){
 
     // Fill the set of risk types that have buckets
-    rtWithBuckets_ = {RiskType::IRCurve,       RiskType::CreditQ,   RiskType::CreditNonQ,   RiskType::Equity,
-                      RiskType::Commodity,     RiskType::IRVol,     RiskType::InflationVol, RiskType::CreditVol,
-                      RiskType::CreditVolNonQ, RiskType::EquityVol, RiskType::CommodityVol};
+    rtWithBuckets_ = {RiskType::IRCurve,       RiskType::CreditQ,      RiskType::CreditNonQ,   RiskType::Equity,
+                      RiskType::Commodity,     RiskType::IRVol,        RiskType::InflationVol, RiskType::CreditVol,
+                      RiskType::CreditVolNonQ, RiskType::EquityVol,    RiskType::CommodityVol};
 }
 
 std::string BucketMapping::name() const {
@@ -84,6 +86,10 @@ QuantLib::Date BucketMapping::validFromDate() const {
 
 string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qualifier) const {
 
+    auto key = std::make_pair(riskType, qualifier);
+    if (auto b = cache_.find(key); b != cache_.end())
+        return b->second;
+
     QL_REQUIRE(hasBuckets(riskType), "The risk type " << riskType << " does not have buckets");
 
     // Vol risk type bucket mappings are stored in their non-vol counterparts
@@ -94,8 +100,10 @@ string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qual
     }
 
     // Deal with RiskType::IRCurve
-    if (lookupRiskType == RiskType::IRCurve) {
-        return irBucket(qualifier);
+    if (lookupRiskType == RiskType::IRCurve || lookupRiskType == RiskType::GIRR_DELTA) {
+        auto tmp = irBucket(qualifier);
+        cache_[key] = tmp;
+        return tmp;
     }
 
     string bucket;
@@ -105,12 +113,12 @@ string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qual
     bool haveFallback = has(lookupRiskType, lookupName, true);
     bool noBucket = !haveMapping && !haveFallback;
 
-    if (noBucket && nameMapper_ != nullptr && lookupRiskType == RiskType::Equity) {
+    if (noBucket && nameMapper_ != nullptr &&
+        (lookupRiskType == RiskType::Equity || lookupRiskType == RiskType::EQ_DELTA)) {
         // if we have a simm name mapping we do a reverse lookup on the name as the CRIF qualifier isn't in reference data
         lookupName = nameMapper_->externalName(qualifier);
         haveMapping = has(lookupRiskType, lookupName, false);
-	haveFallback = has(lookupRiskType, lookupName, true);
-	noBucket = !haveMapping && ! haveFallback;
+        noBucket = !haveMapping && !haveFallback;
     }
 
     // Do some checks and return the lookup
@@ -119,7 +127,7 @@ string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qual
             bool commIndex = false;
             // first check is there is an entry under equity reference, this may tell us if it is an index
             if (refDataManager_ != nullptr && refDataManager_->hasData("Equity", lookupName)) {
-                auto refData = boost::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(
+                auto refData = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(
                     refDataManager_->getData("Equity", lookupName));
                 if (refData->equityData().isIndex)
                     commIndex = true;
@@ -136,7 +144,7 @@ string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qual
         } else if (lookupRiskType == RiskType::Equity) {
             // check if it is an index
             if (refDataManager_ != nullptr && refDataManager_->hasData("Equity", lookupName)) {
-                auto refData = boost::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(refDataManager_->getData("Equity", lookupName));
+                auto refData = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(refDataManager_->getData("Equity", lookupName));
                 // if the equity is an index we assign to bucket 11
                 if (refData->equityData().isIndex) {
                     TLOG("Don't have any bucket mappings for the "
@@ -167,6 +175,7 @@ string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qual
         for (auto m : bucketMapping_.at(lookupRiskType).at(lookupName)) {
             if (m.validToDate() >= today && m.validFromDate() <= today && m.fallback() == !haveMapping) {
                 bucket = m.bucket();
+                cache_[key] = bucket;
                 return bucket;
             }
         }
@@ -174,6 +183,7 @@ string SimmBucketMapperBase::bucket(const RiskType& riskType, const string& qual
         bucket = "Residual";
     }
 
+    cache_[key] = bucket;
     return bucket;
 }
 
@@ -189,7 +199,7 @@ bool SimmBucketMapperBase::has(const RiskType& riskType, const string& qualifier
         lookupRiskType = nv->second;
     }
 
-    if (lookupRiskType == RiskType::IRCurve)
+    if (lookupRiskType == RiskType::IRCurve || lookupRiskType == RiskType::GIRR_DELTA)
         return true;
 
     auto bm = bucketMapping_.find(lookupRiskType);
@@ -285,7 +295,7 @@ void SimmBucketMapperBase::fromXML(XMLNode* node) {
     LOG("Finished parsing SIMMBucketMappings");
 }
 
-XMLNode* SimmBucketMapperBase::toXML(ore::data::XMLDocument& doc) {
+XMLNode* SimmBucketMapperBase::toXML(ore::data::XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("SIMMBucketMappings");
     for (auto const& b : bucketMapping_) {
         XMLNode* n = doc.allocNode(ore::data::to_string(b.first));
@@ -312,6 +322,8 @@ XMLNode* SimmBucketMapperBase::toXML(ore::data::XMLDocument& doc) {
 
 void SimmBucketMapperBase::addMapping(const RiskType& riskType, const string& qualifier, const string& bucket,
                                       const string& validFrom, const string& validTo, bool fallback) {
+
+    cache_.clear();
 
     // Possibly map to non-vol counterpart for lookup
     RiskType rt = riskType;
@@ -374,6 +386,7 @@ void SimmBucketMapperBase::checkRiskType(const RiskType& riskType) const {
 }
 
 void SimmBucketMapperBase::reset() {
+    cache_.clear();
     // Clear the bucket mapper and add back the commodity mappings
     bucketMapping_.clear();
     failedMappings_.clear();

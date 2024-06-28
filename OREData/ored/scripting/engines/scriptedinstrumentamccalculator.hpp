@@ -37,8 +37,8 @@ namespace data {
 
 class ScriptedInstrumentAmcCalculator : public QuantExt::AmcCalculator {
 public:
-    ScriptedInstrumentAmcCalculator(const std::string& npv, const boost::shared_ptr<Model>& model, const ASTNodePtr ast,
-                                    const boost::shared_ptr<Context>& context, const std::string& script = "",
+    ScriptedInstrumentAmcCalculator(const std::string& npv, const QuantLib::ext::shared_ptr<Model>& model, const ASTNodePtr ast,
+                                    const QuantLib::ext::shared_ptr<Context>& context, const std::string& script = "",
                                     const bool interactive = false,
                                     const std::set<std::string>& stickyCloseOutStates = {})
         : npv_(npv), model_(model), ast_(ast), context_(context), script_(script), interactive_(interactive),
@@ -48,14 +48,14 @@ public:
 
     std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
                                                        std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-                                                       const std::vector<bool>& isRelevantTime,
-                                                       const bool stickyCloseOutRun) override;
+                                                       const std::vector<size_t>& relevantPathIndex,
+                                                       const std::vector<size_t>& relevantTimeIndex) override;
 
 private:
     const std::string npv_;
-    const boost::shared_ptr<Model> model_;
+    const QuantLib::ext::shared_ptr<Model> model_;
     const ASTNodePtr ast_;
-    const boost::shared_ptr<Context> context_;
+    const QuantLib::ext::shared_ptr<Context> context_;
     const std::string script_;
     const bool interactive_;
     const std::set<std::string> stickyCloseOutStates_;

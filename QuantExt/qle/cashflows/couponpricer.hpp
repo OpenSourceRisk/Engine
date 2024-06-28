@@ -24,7 +24,7 @@
 #ifndef quantext_coupon_pricer_hpp
 #define quantext_coupon_pricer_hpp
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 #include <ql/cashflows/couponpricer.hpp>
 
@@ -34,9 +34,9 @@ using namespace QuantLib;
     @{
 */
 //! Set Coupon Pricer
-void setCouponPricer(const Leg& leg, const boost::shared_ptr<FloatingRateCouponPricer>&);
+void setCouponPricer(const Leg& leg, const QuantLib::ext::shared_ptr<FloatingRateCouponPricer>&);
 //! Set Coupon Pricers
-void setCouponPricers(const Leg& leg, const std::vector<boost::shared_ptr<FloatingRateCouponPricer> >&);
+void setCouponPricers(const Leg& leg, const std::vector<QuantLib::ext::shared_ptr<FloatingRateCouponPricer> >&);
 
 // @}
 } // namespace QuantExt

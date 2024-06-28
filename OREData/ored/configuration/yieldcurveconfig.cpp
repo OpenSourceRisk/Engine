@@ -138,11 +138,11 @@ void SegmentIDGetter::visit(AverageOISYieldCurveSegment& s) {
 }
 
 void SegmentIDGetter::visit(TenorBasisYieldCurveSegment& s) {
-    string aCurveID = s.shortProjectionCurveID();
+    string aCurveID = s.receiveProjectionCurveID();
     if (curveID_ != aCurveID && !aCurveID.empty()) {
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
-    aCurveID = s.longProjectionCurveID();
+    aCurveID = s.payProjectionCurveID();
     if (curveID_ != aCurveID && !aCurveID.empty()) {
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(aCurveID);
     }
@@ -214,7 +214,7 @@ void SegmentIDGetter::visit(IborFallbackCurveSegment& s) {
 // YieldCurveConfig
 YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                    const string& discountCurveID,
-                                   const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments,
+                                   const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                                    const string& interpolationVariable, const string& interpolationMethod,
                                    const string& zeroDayCounter, bool extrapolation,
                                    const BootstrapConfig& bootstrapConfig, const Size mixedInterpolationCutoff)
@@ -234,9 +234,16 @@ const vector<string>& YieldCurveConfig::quotes() {
 
             // Check if the segment is a CrossCcyYieldCurveSegment and add the FX spot rate to the
             // set of quotes needed for the YieldCurveConfig if it has not already been added.
-            if (auto xccySegment = boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(c)) {
-                if (!addedFxSpot)
+            if (auto xccySegment = QuantLib::ext::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(c)) {
+                if (!addedFxSpot) {
                     quotes_.push_back(xccySegment->spotRateID());
+                    // we add the inverted pair as well, because the original pair might get removed from the market
+                    // data loader if both are present in the input market data
+                    if (auto md = boost::dynamic_pointer_cast<FXSpotQuote>(
+                            parseMarketDatum(Date(), xccySegment->spotRateID(), 1.0))) {
+                        quotes_.push_back("FX/RATE/" + md->ccy() + "/" + md->unitCcy());
+                    }
+                }
             }
         }
     }
@@ -258,7 +265,7 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
     if (segmentsNode) {
         for (XMLNode* child = XMLUtils::getChildNode(segmentsNode); child; child = XMLUtils::getNextSibling(child)) {
 
-            boost::shared_ptr<YieldCurveSegment> segment;
+            QuantLib::ext::shared_ptr<YieldCurveSegment> segment;
             string childName = XMLUtils::getNodeName(child);
 
             if (childName == "Direct") {
@@ -332,7 +339,7 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) {
+XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) const {
     // Allocate a node.
     XMLNode* node = doc.allocNode("YieldCurve");
 
@@ -437,7 +444,7 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
     minDistance_ = XMLUtils::getChildValueAsInt(node, "MinDistance", false, 1);
 }
 
-XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = doc.allocNode("Segment");
     XMLUtils::addChild(doc, node, "Type", typeID_);
     if (!quotes_.empty()) {
@@ -491,7 +498,7 @@ void DirectYieldCurveSegment::fromXML(XMLNode* node) {
     YieldCurveSegment::fromXML(node);
 }
 
-XMLNode* DirectYieldCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* DirectYieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "Direct");
     return node;
@@ -515,7 +522,7 @@ void SimpleYieldCurveSegment::fromXML(XMLNode* node) {
     projectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurve", false);
 }
 
-XMLNode* SimpleYieldCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* SimpleYieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "Simple");
     if (!projectionCurveID_.empty())
@@ -541,7 +548,7 @@ void AverageOISYieldCurveSegment::fromXML(XMLNode* node) {
     projectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurve", false);
 }
 
-XMLNode* AverageOISYieldCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* AverageOISYieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "AverageOIS");
     if (!projectionCurveID_.empty())
@@ -559,25 +566,40 @@ void AverageOISYieldCurveSegment::accept(AcyclicVisitor& v) {
 
 TenorBasisYieldCurveSegment::TenorBasisYieldCurveSegment(const string& typeID, const string& conventionsID,
                                                          const vector<string>& quotes,
-                                                         const string& shortProjectionCurveID,
-                                                         const string& longProjectionCurveID)
-    : YieldCurveSegment(typeID, conventionsID, quotes), shortProjectionCurveID_(shortProjectionCurveID),
-      longProjectionCurveID_(longProjectionCurveID) {}
+                                                         const string& receiveProjectionCurveID,
+                                                         const string& payProjectionCurveID)
+    : YieldCurveSegment(typeID, conventionsID, quotes), receiveProjectionCurveID_(receiveProjectionCurveID),
+      payProjectionCurveID_(payProjectionCurveID) {}
 
 void TenorBasisYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "TenorBasis");
     YieldCurveSegment::fromXML(node);
-    shortProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveShort", false);
-    longProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveLong", false);
+    receiveProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveReceive", false);
+    payProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurvePay", false);
+
+    // handle deprecated fields...
+    XMLNode* projectionCurveShort = XMLUtils::getChildNode(node, "ProjectionCurveShort");
+    if (projectionCurveShort) {
+        ALOG("TenorBasisYieldCurveSegment: ProjectionCurveShort is deprecated, fill empty receiveProjectionCurveID");
+        if (receiveProjectionCurveID_.empty())
+            receiveProjectionCurveID_ = XMLUtils::getNodeValue(projectionCurveShort);
+    }
+
+    XMLNode* projectionCurveLong = XMLUtils::getChildNode(node, "ProjectionCurveLong");
+    if (projectionCurveLong) {
+        ALOG("TenorBasisYieldCurveSegment: projectionCurveLong is deprecated, fill empty payProjectionCurveID");
+        if (payProjectionCurveID_.empty())
+            payProjectionCurveID_ = XMLUtils::getNodeValue(projectionCurveLong);
+    }
 }
 
-XMLNode* TenorBasisYieldCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* TenorBasisYieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "TenorBasis");
-    if (!longProjectionCurveID_.empty())
-        XMLUtils::addChild(doc, node, "ProjectionCurveLong", longProjectionCurveID_);
-    if (!shortProjectionCurveID_.empty())
-        XMLUtils::addChild(doc, node, "ProjectionCurveShort", shortProjectionCurveID_);
+    if (!payProjectionCurveID_.empty())
+        XMLUtils::addChild(doc, node, "ProjectionCurvePay", payProjectionCurveID_);
+    if (!receiveProjectionCurveID_.empty())
+        XMLUtils::addChild(doc, node, "ProjectionCurveReceive", receiveProjectionCurveID_);
     return node;
 }
 
@@ -607,7 +629,7 @@ void CrossCcyYieldCurveSegment::fromXML(XMLNode* node) {
     foreignProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveForeign", false);
 }
 
-XMLNode* CrossCcyYieldCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* CrossCcyYieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "CrossCurrency");
     XMLUtils::addChild(doc, node, "DiscountCurve", foreignDiscountCurveID_);
@@ -638,7 +660,7 @@ void ZeroSpreadedYieldCurveSegment::fromXML(XMLNode* node) {
     referenceCurveID_ = XMLUtils::getChildValue(node, "ReferenceCurve", false);
 }
 
-XMLNode* ZeroSpreadedYieldCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* ZeroSpreadedYieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "ZeroSpread");
     XMLUtils::addChild(doc, node, "ReferenceCurve", referenceCurveID_);
@@ -680,7 +702,7 @@ void DiscountRatioYieldCurveSegment::fromXML(XMLNode* node) {
     denominatorCurveCurrency_ = XMLUtils::getAttribute(aNode, "currency");
 }
 
-XMLNode* DiscountRatioYieldCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* DiscountRatioYieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "DiscountRatio");
 
@@ -729,7 +751,7 @@ void FittedBondYieldCurveSegment::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* FittedBondYieldCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* FittedBondYieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "FittedBond");
 
@@ -770,7 +792,7 @@ void WeightedAverageYieldCurveSegment::fromXML(XMLNode* node) {
     weight2_ = XMLUtils::getChildValueAsDouble(node, "Weight2", true);
 }
 
-XMLNode* WeightedAverageYieldCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* WeightedAverageYieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "WeightedAverage");
     XMLUtils::addChild(doc, node, "ReferenceCurve1", referenceCurveID1_);
@@ -803,7 +825,7 @@ void YieldPlusDefaultYieldCurveSegment::fromXML(XMLNode* node) {
     weights_ = XMLUtils::getChildrenValuesAsDoubles(node, "Weights", "Weight", true);
 }
 
-XMLNode* YieldPlusDefaultYieldCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* YieldPlusDefaultYieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "YieldPlusDefault");
     XMLUtils::addChild(doc, node, "ReferenceCurve", referenceCurveID_);
@@ -839,7 +861,7 @@ void IborFallbackCurveSegment::fromXML(XMLNode* node) {
         spread_ = parseReal(XMLUtils::getNodeValue(n));
 }
 
-XMLNode* IborFallbackCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* IborFallbackCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "IborFallback");
     XMLUtils::addChild(doc, node, "IborIndex", iborIndex_);
@@ -884,7 +906,7 @@ void BondYieldShiftedYieldCurveSegment::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* BondYieldShiftedYieldCurveSegment::toXML(XMLDocument& doc) {
+XMLNode* BondYieldShiftedYieldCurveSegment::toXML(XMLDocument& doc) const {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "BondYieldShifted");
     XMLUtils::addChild(doc, node, "ReferenceCurve", referenceCurveID_);

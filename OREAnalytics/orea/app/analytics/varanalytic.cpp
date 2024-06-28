@@ -88,7 +88,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
     ParametricVarCalculator::ParametricVarParams varParams(inputs_->varMethod(), inputs_->mcVarSamples(),
                                                            inputs_->mcVarSeed());
 
-    boost::shared_ptr<SensitivityStream> ss = sensiStream(loader);
+    QuantLib::ext::shared_ptr<SensitivityStream> ss = sensiStream(loader);
 
     LOG("Build VaR calculator");
     if (inputs_->covarianceData().size() > 0) {
@@ -103,9 +103,9 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
                                       inputs_->mporDays(), inputs_->mporCalendar());
 
-        boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
-        if (auto adjLoader = boost::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
-            adjFactors = boost::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
+        QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
+        if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
+            adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
         auto scenarios = buildHistoricalScenarioGenerator(inputs_->historicalScenarioReader(), adjFactors,
             benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(), analytic()->configurations().simMarketParams,
@@ -114,7 +114,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         if (inputs_->outputHistoricalScenarios())
             ReportWriter().writeHistoricalScenarios(
                 scenarios->scenarioLoader(),
-                boost::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "backtest_histscenrios.csv").string(),
+                QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "backtest_histscenrios.csv").string(),
                                                   ',', false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
 
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
@@ -124,7 +124,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         simMarket->scenarioGenerator() = scenarios;
         scenarios->baseScenario() = simMarket->baseScenario();
 
-        boost::shared_ptr<ScenarioShiftCalculator> shiftCalculator = boost::make_shared<ScenarioShiftCalculator>(
+        QuantLib::ext::shared_ptr<ScenarioShiftCalculator> shiftCalculator = QuantLib::ext::make_shared<ScenarioShiftCalculator>(
             analytic()->configurations().sensiScenarioData, analytic()->configurations().simMarketParams);
 
         std::unique_ptr<MarketRiskReport::SensiRunArgs> sensiArgs =
@@ -148,9 +148,9 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     LOG("Build VaR calculator");
     TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate), inputs_->mporDays(), inputs_->mporCalendar());
         
-    boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
-    if (auto adjLoader = boost::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
-        adjFactors = boost::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
+    QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors> adjFactors;
+    if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
+        adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
         
     auto scenarios =
         buildHistoricalScenarioGenerator(inputs_->historicalScenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(),
@@ -160,7 +160,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     if (inputs_->outputHistoricalScenarios())
         ore::analytics::ReportWriter().writeHistoricalScenarios(
             scenarios->scenarioLoader(),
-            boost::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "var_histscenarios.csv").string(), ',',
+            QuantLib::ext::make_shared<CSVFileReport>(path(inputs_->resultsPath() / "var_histscenarios.csv").string(), ',',
                                               false, inputs_->csvQuoteChar(), inputs_->reportNaString()));
 
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
@@ -171,7 +171,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     scenarios->baseScenario() = simMarket->baseScenario();
 
     std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs = std::make_unique<MarketRiskReport::FullRevalArgs>(
-        analytic()->portfolio(), simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+        simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
 
     varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
         inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), 

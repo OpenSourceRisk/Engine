@@ -40,13 +40,13 @@ public:
     ConvertibleBond(const Envelope& env, const ConvertibleBondData& data)
         : Trade("ConvertibleBond", env), originalData_(data), data_(data) {}
 
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     const ConvertibleBondData& data() const { return data_; }
     const BondData& bondData() const { return data_.bondData(); }
@@ -58,25 +58,25 @@ private:
 
 struct ConvertibleBondTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
     void
-    build(const std::string& parentId, const boost::shared_ptr<Trade>& underlying,
+    build(const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying,
           const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
-          const std::string& fundingCurrency, const boost::shared_ptr<EngineFactory>& engineFactory,
-          boost::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
-          std::map<std::string, double>& indexQuantities, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
+          const std::string& fundingCurrency, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+          QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
+          std::map<std::string, double>& indexQuantities, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
-          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
-          const std::function<boost::shared_ptr<QuantExt::FxIndex>(
-              const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
+          const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+              const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+              const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
               getFxIndex,
            const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
-    void updateUnderlying(const boost::shared_ptr<ReferenceDataManager>& refData, boost::shared_ptr<Trade>& underlying,
+    void updateUnderlying(const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData, QuantLib::ext::shared_ptr<Trade>& underlying,
                           const std::string& parentId) const override;
 };
 
 struct ConvertibleBondBuilder : public BondBuilder {
-    BondBuilder::Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                              const boost::shared_ptr<ReferenceDataManager>& referenceData,
+    BondBuilder::Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                              const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                               const std::string& securityId) const override;
 };
 

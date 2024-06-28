@@ -26,7 +26,7 @@
 
 #include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -44,7 +44,7 @@ class SwaptionVolCubeWithATM : public SwaptionVolatilityStructure {
 public:
     //! Constructor. This is a floating term structure (settlement days is zero) to match
     //! QuantLib::SwaptionVolatilityCube
-    SwaptionVolCubeWithATM(const boost::shared_ptr<SwaptionVolatilityCube>& cube)
+    SwaptionVolCubeWithATM(const QuantLib::ext::shared_ptr<SwaptionVolatilityCube>& cube)
         : SwaptionVolatilityStructure(0, cube->calendar(), cube->businessDayConvention(), cube->dayCounter()),
           cube_(cube) {
         enableExtrapolation(cube_->allowsExtrapolation());
@@ -70,11 +70,11 @@ public:
     VolatilityType volatilityType() const override { return cube_->volatilityType(); }
     //@}
 
-    boost::shared_ptr<SwaptionVolatilityCube> cube() const { return cube_; }
+    QuantLib::ext::shared_ptr<SwaptionVolatilityCube> cube() const { return cube_; }
 
 protected:
     // Nothing to do here, just ask the cube
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override {
+    QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override {
         return cube_->smileSection(optionTime, swapLength);
     }
 
@@ -90,7 +90,7 @@ protected:
     Real shiftImpl(Time optionTime, Time swapLength) const override { return cube_->shift(optionTime, swapLength); }
 
 private:
-    boost::shared_ptr<SwaptionVolatilityCube> cube_;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityCube> cube_;
 };
 
 } // namespace QuantExt

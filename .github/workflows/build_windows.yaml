@@ -3,13 +3,14 @@ name: C/C++ CI Windows
 on:
   push:
     branches: [master]
+    tags:
+       - 'v*'
   release:
    types: [published]
   pull_request:
     branches: [master]
     types: [ready_for_review, opened, synchronize, reopened]
     paths:
-      - .github/workflows/linux_build.yaml
       - ./App/**
       - ./OREAnalytics/**
       - '!./OREAnalytics/doc/**'
@@ -35,7 +36,7 @@ jobs:
             platform: x64
             boost-lib: 64
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: get QuantLib
       run: |
         git submodule update --init
@@ -52,12 +53,12 @@ jobs:
       run: |
         mkdir build
         cd build
-        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Vc\Auxiliary\Build\vcvarsall.bat" ${{ matrix.arch }} -vcvars_ver=14.3 || exit 1
-        cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DBOOST_INCLUDEDIR=C:\local\boost -DBOOST_LIBRARYDIR=C:\local\boost\lib64-msvc-14.3 -L
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Vc\Auxiliary\Build\vcvarsall.bat" ${{ matrix.arch }} -vcvars_ver=14.2 || exit 1
+        cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=true -DORE_BUILD_DOC=false -DBOOST_INCLUDEDIR=C:\local\boost -DBOOST_LIBRARYDIR=C:\local\boost\lib${{ matrix.boost-lib }}-msvc-14.2 -L
         cmake --build . -j 2 --verbose
     - name: Save executables as artifacts
-      #if: startsWith(github.ref, 'refs/tags/v')
-      uses: actions/upload-artifact@v3
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: actions/upload-artifact@v4
       with:
         name: ore-windows-${{ matrix.arch }}
         path: D:\a\Engine\Engine\build\App\ore.exe

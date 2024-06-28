@@ -55,7 +55,7 @@ void InflationModelData::fromXML(XMLNode* node) {
     ModelData::fromXML(node);
 }
 
-void InflationModelData::append(XMLDocument& doc, XMLNode* node) {
+void InflationModelData::append(XMLDocument& doc, XMLNode* node) const {
     XMLUtils::addAttribute(doc, node, "index", index_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
     ModelData::append(doc, node);

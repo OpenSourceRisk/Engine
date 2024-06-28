@@ -46,9 +46,11 @@ public:
         interpreted as the number of USD per unit of \p calculationCcy.
     */
     SimmCalculator(const ore::analytics::Crif& crif,
-                   const boost::shared_ptr<SimmConfiguration>& simmConfiguration,
-                   const std::string& calculationCcy = "USD", const std::string& resultCcy = "",
-                   const boost::shared_ptr<ore::data::Market> market = nullptr,
+                   const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
+                   const std::string& calculationCcyCall = "USD",
+                   const std::string& calculationCcyPost = "USD",
+                   const std::string& resultCcy = "",
+                   const QuantLib::ext::shared_ptr<ore::data::Market> market = nullptr,
                    const bool determineWinningRegulations = true, const bool enforceIMRegulations = false,
                    const bool quiet = false,
                    const std::map<SimmSide, std::set<NettingSetDetails>>& hasSEC =
@@ -90,8 +92,12 @@ public:
 
     const std::map<SimmSide, std::set<std::string>>& finalTradeIds() const { return finalTradeIds_; }
 
+    const Crif& simmParameters() const { return simmParameters_; }
+
     //! Return the calculator's calculation currency
-    const std::string& calculationCurrency() const { return calculationCcy_; }
+    const std::string& calculationCurrency(const SimmSide& side) const {
+        return side == SimmSide::Call ? calculationCcyCall_ : calculationCcyPost_;
+    }
 
     //! Return the calculator's result currency
     const std::string& resultCurrency() const { return resultCcy_; }
@@ -108,17 +114,20 @@ private:
     //! Net sentivities at the regulation level within each netting set
     std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, Crif>>> regSensitivities_;
 
+    //! Record of SIMM parameters that were used in the calculation
+    ore::analytics::Crif simmParameters_;
+
     //! The SIMM configuration governing the calculation
-    boost::shared_ptr<SimmConfiguration> simmConfiguration_;
+    QuantLib::ext::shared_ptr<SimmConfiguration> simmConfiguration_;
 
     //! The SIMM exposure calculation currency i.e. the currency for which FX delta risk is ignored
-    std::string calculationCcy_;
+    std::string calculationCcyCall_, calculationCcyPost_;
 
     //! The SIMM result currency i.e. the currency in which the main SIMM results are denominated
     std::string resultCcy_;
 
     //! Market data for FX rates to use for converting amounts to USD
-    boost::shared_ptr<ore::data::Market> market_;
+    QuantLib::ext::shared_ptr<ore::data::Market> market_;
 
     //! If true, no logging is written out
     bool quiet_;
@@ -156,12 +165,12 @@ private:
     //! Calculate the Interest Rate delta margin component for the given portfolio and product class
     std::pair<std::map<std::string, QuantLib::Real>, bool>
     irDeltaMargin(const ore::data::NettingSetDetails& nettingSetDetails, const CrifRecord::ProductClass& pc,
-                  const ore::analytics::Crif& netRecords) const;
+                  const ore::analytics::Crif& netRecords, const SimmSide& side) const;
 
     //! Calculate the Interest Rate vega margin component for the given portfolio and product class
     std::pair<std::map<std::string, QuantLib::Real>, bool>
     irVegaMargin(const ore::data::NettingSetDetails& nettingSetDetails, const CrifRecord::ProductClass& pc,
-                 const ore::analytics::Crif& netRecords) const;
+                 const ore::analytics::Crif& netRecords, const SimmSide& side) const;
 
     //! Calculate the Interest Rate curvature margin component for the given portfolio and product class
     std::pair<std::map<std::string, QuantLib::Real>, bool>
@@ -175,7 +184,8 @@ private:
     std::pair<std::map<std::string, QuantLib::Real>, bool> margin(const ore::data::NettingSetDetails& nettingSetDetails,
                                                                   const CrifRecord::ProductClass& pc,
                                                                   const CrifRecord::RiskType& rt,
-                                                                  const ore::analytics::Crif& netRecords) const;
+                                                                  const ore::analytics::Crif& netRecords,
+                                                                  const SimmSide& side) const;
 
     /*! Calculate the curvature margin component for the given portfolio, product class and risk type
         Used to calculate curvature margin for all risk types except IR

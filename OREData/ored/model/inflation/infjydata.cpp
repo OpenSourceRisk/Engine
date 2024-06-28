@@ -29,22 +29,18 @@ namespace data {
 
 InfJyData::InfJyData() {}
 
-InfJyData::InfJyData(CalibrationType calibrationType,
-    const vector<CalibrationBasket>& calibrationBaskets,
-    const std::string& currency,
-    const std::string& index,
-    const ReversionParameter& realRateReversion,
-    const VolatilityParameter& realRateVolatility,
-    const VolatilityParameter& indexVolatility,
-    const LgmReversionTransformation& reversionTransformation,
-    const CalibrationConfiguration& calibrationConfiguration,
-    const bool ignoreDuplicateCalibrationExpiryTimes)
+InfJyData::InfJyData(CalibrationType calibrationType, const vector<CalibrationBasket>& calibrationBaskets,
+                     const std::string& currency, const std::string& index, const ReversionParameter& realRateReversion,
+                     const VolatilityParameter& realRateVolatility, const VolatilityParameter& indexVolatility,
+                     const LgmReversionTransformation& reversionTransformation,
+                     const CalibrationConfiguration& calibrationConfiguration,
+                     const bool ignoreDuplicateCalibrationExpiryTimes, const bool linkRealToNominalRateParams,
+                     const Real linkedRealRateVolatilityScaling)
     : InflationModelData(calibrationType, calibrationBaskets, currency, index, ignoreDuplicateCalibrationExpiryTimes),
-      realRateReversion_(realRateReversion),
-      realRateVolatility_(realRateVolatility),
-      indexVolatility_(indexVolatility),
-      reversionTransformation_(reversionTransformation),
-      calibrationConfiguration_(calibrationConfiguration) {}
+      realRateReversion_(realRateReversion), realRateVolatility_(realRateVolatility), indexVolatility_(indexVolatility),
+      reversionTransformation_(reversionTransformation), calibrationConfiguration_(calibrationConfiguration),
+      linkRealToNominalRateParams_(linkRealToNominalRateParams),
+      linkedRealRateVolatilityScaling_(linkedRealRateVolatilityScaling) {}
 
 const ReversionParameter& InfJyData::realRateReversion() const {
     return realRateReversion_;
@@ -65,6 +61,14 @@ const LgmReversionTransformation& InfJyData::reversionTransformation() const {
 const CalibrationConfiguration& InfJyData::calibrationConfiguration() const {
     return calibrationConfiguration_;
 }
+
+void InfJyData::setRealRateReversion(ReversionParameter p) { realRateReversion_ = std::move(p); }
+
+void InfJyData::setRealRateVolatility(VolatilityParameter p) { realRateVolatility_ = std::move(p); }
+
+bool InfJyData::linkRealRateParamsToNominalRateParams() const { return linkRealToNominalRateParams_; }
+
+Real InfJyData::linkedRealRateVolatilityScaling() const { return linkedRealRateVolatilityScaling_; }
 
 void InfJyData::fromXML(XMLNode* node) {
     
@@ -88,12 +92,19 @@ void InfJyData::fromXML(XMLNode* node) {
     indexVolatility_.fromXML(XMLUtils::getChildNode(idxNode, "Volatility"));
 
     // Get the calibration configuration
-    XMLNode* ccNode = XMLUtils::getChildNode(node, "CalibrationConfiguration");
-    if (ccNode)
+    if (XMLNode* ccNode = XMLUtils::getChildNode(node, "CalibrationConfiguration"))
         calibrationConfiguration_.fromXML(ccNode);
+
+    // Get the link to nominal param fields
+    linkRealToNominalRateParams_ =
+        parseBool(XMLUtils::getChildValue(node, "LinkRealToNominalRateParams", false, "false"));
+    if (linkRealToNominalRateParams_) {
+        linkedRealRateVolatilityScaling_ =
+            parseReal(XMLUtils::getChildValue(node, "LinkedRealRateVolatilityScaling", false, "1.0"));
+    }
 }
 
-XMLNode* InfJyData::toXML(XMLDocument& doc) {
+XMLNode* InfJyData::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("JarrowYildirim");
     InflationModelData::append(doc, node);
@@ -109,6 +120,11 @@ XMLNode* InfJyData::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, idxNode);
 
     XMLUtils::appendNode(node, calibrationConfiguration_.toXML(doc));
+
+    if (linkRealToNominalRateParams_) {
+        XMLUtils::addChild(doc, node, "LinkRealToNominalRateParams", linkRealToNominalRateParams_);
+        XMLUtils::addChild(doc, node, "LinkedRealRateVolatilityScaling", linkedRealRateVolatilityScaling_);
+    }
 
     return node;
 }

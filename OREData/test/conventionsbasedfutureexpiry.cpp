@@ -66,7 +66,7 @@ BOOST_DATA_TEST_CASE(testExpiryDates, bdata::make(commodityNames), commodityName
 
     // Create the conventions based expiry calculator
     BOOST_TEST_REQUIRE(conventions.has(commodityName));
-    auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(commodityName));
+    auto convention = QuantLib::ext::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(commodityName));
     BOOST_TEST_REQUIRE(convention);
     ConventionsBasedFutureExpiry cbfe(*convention);
 

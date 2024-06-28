@@ -29,12 +29,12 @@
         <Settlement>Physical</Settlement>
         <!-- The last possible exercise date -->
         <ExerciseDates>
-          <ExerciseDate>2026-02-03</ExerciseDate>
+          <ExerciseDate>2028-02-01</ExerciseDate>
         </ExerciseDates>
         <!-- The option premiumn paid by the option holder -->
         <PremiumAmount>166000</PremiumAmount>
         <PremiumCurrency>EUR</PremiumCurrency>
-        <PremiumPayDate>20170205</PremiumPayDate>
+        <PremiumPayDate>20210205</PremiumPayDate>
       </OptionData>
       <!-- The reference swap funding leg, the asset leg is implied from the bond data. Payer should be false, 
            i.e. the swap is entered from the viewpoint of the asset swap buyer. -->
@@ -52,13 +52,13 @@
             <Index>EUR-EURIBOR-3M</Index>
             <!-- The recall spread goes here. -->
             <Spreads>
-              <Spread>0.02</Spread>
+              <Spread>0.025</Spread>
             </Spreads>
           </FloatingLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20170203</StartDate>
-              <EndDate>20260203</EndDate>
+              <StartDate>20190201</StartDate>
+              <EndDate>20280201</EndDate>
               <Tenor>3M</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>ModifiedFollowing</Convention>
@@ -117,8 +117,8 @@
           </FloatingLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20140203</StartDate>
-              <EndDate>20260203</EndDate>
+              <StartDate>20160201</StartDate>
+              <EndDate>20280201</EndDate>
               <Tenor>6M</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -143,13 +143,13 @@
             <Index>EUR-EURIBOR-3M</Index>
             <!-- The recall spread goes here. -->
             <Spreads>
-              <Spread>0.02</Spread>
+              <Spread>0.025</Spread>
             </Spreads>
           </FloatingLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20170203</StartDate>
-              <EndDate>20260203</EndDate>
+              <StartDate>20190201</StartDate>
+              <EndDate>20280201</EndDate>
               <Tenor>3M</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>ModifiedFollowing</Convention>

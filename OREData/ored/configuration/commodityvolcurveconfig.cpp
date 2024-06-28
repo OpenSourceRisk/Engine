@@ -33,7 +33,7 @@ CommodityVolatilityConfig::CommodityVolatilityConfig()
 
 CommodityVolatilityConfig::CommodityVolatilityConfig(
     const string& curveId, const string& curveDescription, const std::string& currency,
-    const vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& dayCounter,
+    const vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& dayCounter,
     const string& calendar, const std::string& futureConventionsId, QuantLib::Natural optionExpiryRollDays,
     const std::string& priceCurveId, const std::string& yieldCurveId, const std::string& quoteSuffix,
     const OneDimSolverConfig& solverConfig, const boost::optional<bool>& preferOutOfTheMoney)
@@ -51,11 +51,11 @@ void CommodityVolatilityConfig::populateRequiredCurveIds() {
     if (!yieldCurveId().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(yieldCurveId())->curveConfigID());
     for (auto vc : volatilityConfig()) {
-        if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
+        if (auto vapo = QuantLib::ext::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
             requiredCurveIds_[CurveSpec::CurveType::CommodityVolatility].insert(
                 parseCurveSpec(vapo->baseVolatilityId())->curveConfigID());
         }
-        if (auto p = boost::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
+        if (auto p = QuantLib::ext::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
             requiredCurveIds_[CurveSpec::CurveType::Commodity].insert(p->proxyVolatilityCurve());
             requiredCurveIds_[CurveSpec::CurveType::CommodityVolatility].insert(p->proxyVolatilityCurve());
             if (!p->fxVolatilityCurve().empty())
@@ -70,7 +70,7 @@ const string& CommodityVolatilityConfig::currency() const { return currency_; }
 
 const string& CommodityVolatilityConfig::dayCounter() const { return dayCounter_; }
 
-const vector<boost::shared_ptr<VolatilityConfig>>& CommodityVolatilityConfig::volatilityConfig() const {
+const vector<QuantLib::ext::shared_ptr<VolatilityConfig>>& CommodityVolatilityConfig::volatilityConfig() const {
     return volatilityConfig_;
 }
 
@@ -151,7 +151,7 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
     populateRequiredCurveIds();
 }
 
-XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
+XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CommodityVolatility");
 
@@ -189,12 +189,12 @@ void CommodityVolatilityConfig::populateQuotes() {
 
     for (auto config : volatilityConfig_) {
         // The quotes depend on the type of volatility structure that has been configured.
-        if (auto vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(config)) {
+        if (auto vc = QuantLib::ext::dynamic_pointer_cast<ConstantVolatilityConfig>(config)) {
             quotes_.push_back(vc->quote());
-        } else if (auto vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(config)) {
+        } else if (auto vc = QuantLib::ext::dynamic_pointer_cast<VolatilityCurveConfig>(config)) {
             auto qs = vc->quotes();
             quotes_.insert(quotes_.end(), qs.begin(), qs.end());
-        } else if (auto vc = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(config)) {
+        } else if (auto vc = QuantLib::ext::dynamic_pointer_cast<VolatilitySurfaceConfig>(config)) {
             string quoteType = to_string(vc->quoteType());
             string stem = "COMMODITY_OPTION/" + quoteType + "/" + curveID_ + "/" + currency_ + "/";
             for (const pair<string, string>& p : vc->quotes()) {

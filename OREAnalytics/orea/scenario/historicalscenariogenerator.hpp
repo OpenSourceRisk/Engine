@@ -102,13 +102,13 @@ public:
     //! Default constructor
     HistoricalScenarioGenerator(
         //! Historical Scenario Loader containing all scenarios
-        const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
+        const QuantLib::ext::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
         //! Scenario factory to use
-        const boost::shared_ptr<ScenarioFactory>& scenarioFactory,
+        const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory,
         //! Calendar to use
         const QuantLib::Calendar& cal,
         //! optional adjustment factors for stock splits etc
-        const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
         //! Mpor days or step size
         const Size mporDays = 10,
         //! overlapping scenarios
@@ -116,12 +116,30 @@ public:
         //! return configuration
         const ReturnConfiguration& returnConfiguration = ReturnConfiguration(),
         //! string prepended to label of all scenarios generated
-        const std::string& labelPrefix = "");
+        const std::string& labelPrefix = "",
+        //! indicates if the generated sceanrios will be absolute or difference
+        const bool generateDifferenceScenarios = false);
+
+    
+    //! Constructor with no mporDays/Calendar, construct historical shift scenario between each scneario
+    HistoricalScenarioGenerator(
+        //! Historical Scenario Loader containing all scenarios
+        const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
+        //! Scenario factory to use
+        const boost::shared_ptr<ScenarioFactory>& scenarioFactory,
+        //! optional adjustment factors for stock splits etc
+        const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
+        //! return configuration
+        const ReturnConfiguration& returnConfiguration = ReturnConfiguration(),
+        //! string prepended to label of all scenarios generated
+        const std::string& labelPrefix = "",
+        //! indicates if the generated sceanrios will be absolute or difference
+        const bool generateDifferenceScenarios = false);
 
     //! Set base scenario, this also defines the asof date
-    boost::shared_ptr<Scenario>& baseScenario() { return baseScenario_; }
+    QuantLib::ext::shared_ptr<Scenario>& baseScenario() { return baseScenario_; }
     //! Get base scenario
-    const boost::shared_ptr<Scenario>& baseScenario() const { return baseScenario_; }
+    virtual const QuantLib::ext::shared_ptr<Scenario>& baseScenario() const { return baseScenario_; }
 
     //! Get calendar
     const QuantLib::Calendar& cal() const { return cal_; }
@@ -144,7 +162,7 @@ public:
 
         If Mpor > 1 than the scenarios will overlap.
     */
-    boost::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
+    QuantLib::ext::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
 
     //! Return the calculation details of the last generated scenario */
     const std::vector<HistoricalScenarioCalculationDetails>& lastHistoricalScenarioCalculationDetails() const;
@@ -165,13 +183,13 @@ public:
     const std::vector<QuantLib::Date>& endDates() const { return endDates_; }
 
     //! Get the HistoricalScenarioLoader
-    const boost::shared_ptr<HistoricalScenarioLoader>& scenarioLoader() const { return historicalScenarioLoader_; }
+    const QuantLib::ext::shared_ptr<HistoricalScenarioLoader>& scenarioLoader() const { return historicalScenarioLoader_; }
 
     //! Get the ScenarioFactory
-    const boost::shared_ptr<ScenarioFactory>& scenarioFactory() const { return scenarioFactory_; }
+    const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory() const { return scenarioFactory_; }
 
     //! Get the adj factors
-    const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors() const { return adjFactors_; }
+    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors() const { return adjFactors_; }
 
     //! Get (start, end) scenario date pairs filtered on the given period
     std::vector<std::pair<QuantLib::Date, QuantLib::Date>> filteredScenarioDates(const ore::data::TimePeriod& period) const;
@@ -179,18 +197,21 @@ public:
     //! Get the scenario label prefix
     const std::string& labelPrefix() const { return labelPrefix_; }
 
+    void setGenerateDifferenceScenarios(const bool b) { generateDifferenceScenarios_ = b; }
+    const bool generateDifferenceScenarios() const { return generateDifferenceScenarios_; }
+
 protected:
     // to be managed in derived classes, if next is overwritten
     Size i_;
 
-    boost::shared_ptr<HistoricalScenarioLoader> historicalScenarioLoader_;
+    QuantLib::ext::shared_ptr<HistoricalScenarioLoader> historicalScenarioLoader_;
     std::vector<QuantLib::Date> startDates_, endDates_;
 
-    boost::shared_ptr<ScenarioFactory> scenarioFactory_;
-    boost::shared_ptr<Scenario> baseScenario_;
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory_;
+    QuantLib::ext::shared_ptr<Scenario> baseScenario_;
 
     //! The Scenario Pairs for a given index
-    std::pair<boost::shared_ptr<Scenario>, boost::shared_ptr<Scenario>> scenarioPair();
+    std::pair<QuantLib::ext::shared_ptr<Scenario>, QuantLib::ext::shared_ptr<Scenario>> scenarioPair();
 
     //! Returns the adjusted price
     /*! Scenarios may contian unadjusted market prices e.g equity spot prices,
@@ -201,15 +222,15 @@ protected:
     // details on the last generated scenario
     std::vector<HistoricalScenarioCalculationDetails> calculationDetails_;
 
-protected:
     QuantLib::Calendar cal_;
-    QuantLib::Size mporDays_;
+    QuantLib::Size mporDays_ = 10;
 
 private:
-    boost::shared_ptr<ore::data::AdjustmentFactors> adjFactors_;
-    bool overlapping_;
+    QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors> adjFactors_;
+    bool overlapping_ = true;
     ReturnConfiguration returnConfiguration_;
     std::string labelPrefix_;
+    bool generateDifferenceScenarios_ = false;
 };
 
 //! Historical scenario generator generating random scenarios, for testing purposes
@@ -217,13 +238,13 @@ class HistoricalScenarioGeneratorRandom : public HistoricalScenarioGenerator {
 public:
     HistoricalScenarioGeneratorRandom(
         //! Historical Scenario Loader containing all scenarios
-        const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
+        const QuantLib::ext::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
         /*! Scenario factory to use */
-        const boost::shared_ptr<ScenarioFactory>& scenarioFactory,
+        const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory,
         //! Calendar to use
         const QuantLib::Calendar& cal,
         //! optional adjustment factors for stock splits etc
-        const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
         //! MPOR days
         const QuantLib::Size mporDays = 10,
         //! overlapping scenarios
@@ -232,14 +253,14 @@ public:
         const ReturnConfiguration& returnConfiguration = ReturnConfiguration())
         : HistoricalScenarioGenerator(historicalScenarioLoader, scenarioFactory, cal, adjFactors, 
             mporDays, overlapping, returnConfiguration) {
-        normalrng_ = boost::make_shared<QuantLib::PseudoRandom::rng_type>(MersenneTwisterUniformRng(42));
+        normalrng_ = QuantLib::ext::make_shared<QuantLib::PseudoRandom::rng_type>(MersenneTwisterUniformRng(42));
     };
 
-    boost::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
+    QuantLib::ext::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
     void reset() override;
 
 private:
-    boost::shared_ptr<QuantLib::PseudoRandom::rng_type> normalrng_;
+    QuantLib::ext::shared_ptr<QuantLib::PseudoRandom::rng_type> normalrng_;
 };
 
 //! Historical scenario generator transform
@@ -250,9 +271,9 @@ private:
  */
 class HistoricalScenarioGeneratorTransform : public HistoricalScenarioGenerator {
 public:
-    HistoricalScenarioGeneratorTransform(boost::shared_ptr<HistoricalScenarioGenerator>& hsg,
-                                         const boost::shared_ptr<ScenarioSimMarket>& simMarket,
-                                         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig)
+    HistoricalScenarioGeneratorTransform(QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& hsg,
+                                         const QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
+                                         const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketConfig)
         : HistoricalScenarioGenerator(hsg->scenarioLoader(), hsg->scenarioFactory(), hsg->cal(), hsg->adjFactors(),
                                       hsg->mporDays(), hsg->overlapping(), hsg->returnConfiguration(),
                                       hsg->labelPrefix()),
@@ -260,11 +281,11 @@ public:
         baseScenario_ = hsg->baseScenario();
     }
 
-    boost::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
+    QuantLib::ext::shared_ptr<Scenario> next(const QuantLib::Date& d) override;
 
 private:
-    boost::shared_ptr<ScenarioSimMarket> simMarket_;
-    boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
 };
 
 // Historical scenario generator with filtered scenario dates
@@ -291,6 +312,12 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
     const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParam,
     const bool overlapping = true);
+
+QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
+    const QuantLib::ext::shared_ptr<HistoricalScenarioReader>& hsr,
+    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const std::set<QuantLib::Date>& dates,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
+    const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParam);
 
 } // namespace analytics
 } // namespace ore

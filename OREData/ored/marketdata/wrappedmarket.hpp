@@ -39,8 +39,8 @@ namespace data {
 */
 class WrappedMarket : public Market {
 public:
-    WrappedMarket(const boost::shared_ptr<Market>& market, const bool handlePseudoCurrencies);
-    boost::shared_ptr<Market> underlyingMarket() const;
+    WrappedMarket(const QuantLib::ext::shared_ptr<Market>& market, const bool handlePseudoCurrencies);
+    QuantLib::ext::shared_ptr<Market> underlyingMarket() const;
 
     // market interface
     Date asofDate() const override;
@@ -124,7 +124,7 @@ public:
                       const string& configuration = Market::defaultConfiguration) const override;
 
 protected:
-    boost::shared_ptr<Market> market_;
+    QuantLib::ext::shared_ptr<Market> market_;
 };
 
 } // namespace data

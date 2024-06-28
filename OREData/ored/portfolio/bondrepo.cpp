@@ -38,19 +38,19 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void BondRepo::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void BondRepo::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("BondRepo::build() called for trade " << id());
 
     // get bond repo engine builder
 
-    auto builder = boost::dynamic_pointer_cast<BondRepoEngineBuilderBase>(engineFactory->builder("BondRepo"));
+    auto builder = QuantLib::ext::dynamic_pointer_cast<BondRepoEngineBuilderBase>(engineFactory->builder("BondRepo"));
     QL_REQUIRE(builder, "BondRepo::build(): engine builder is null");
 
     // build security leg (as a bond)
 
     securityLegData_ = originalSecurityLegData_;
     securityLegData_.populateFromBondReferenceData(engineFactory->referenceData());
-    securityLeg_ = boost::make_shared<ore::data::Bond>(Envelope(), securityLegData_);
+    securityLeg_ = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), securityLegData_);
     securityLeg_->id() = id() + "_SecurityLeg";
     securityLeg_->build(engineFactory);
     QL_REQUIRE(!securityLeg_->legs().empty(), "BondRepo::build(): security leg has no cashflows");
@@ -64,9 +64,9 @@ void BondRepo::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // add notional payment
 
     QL_REQUIRE(!cashLeg_.empty(), "BondRepo::build(): cash leg empty");
-    auto lastCpn = boost::dynamic_pointer_cast<Coupon>(cashLeg_.back());
+    auto lastCpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(cashLeg_.back());
     QL_REQUIRE(lastCpn, "BondRepo::build(): expected coupon on cash leg");
-    cashLeg_.push_back(boost::make_shared<QuantLib::SimpleCashFlow>(lastCpn->nominal(), lastCpn->date()));
+    cashLeg_.push_back(QuantLib::ext::make_shared<QuantLib::SimpleCashFlow>(lastCpn->nominal(), lastCpn->date()));
 
     // add required fixings from bond
 
@@ -95,13 +95,13 @@ void BondRepo::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                "BondRepo: cash leg currency (" << cashLegData_.currency() << ") must match security leg currency ("
                                                << securityLeg_->bondData().currency() << ")");
 
-    auto qlBondInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(securityLeg_->instrument()->qlInstrument());
+    auto qlBondInstr = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(securityLeg_->instrument()->qlInstrument());
     QL_REQUIRE(qlBondInstr, "BondRepo: could not cast to QuantLib::Bond instrument, this is unexpected");
-    auto qlInstr = boost::make_shared<QuantExt::BondRepo>(cashLeg_, cashLegData_.isPayer(), qlBondInstr,
+    auto qlInstr = QuantLib::ext::make_shared<QuantExt::BondRepo>(cashLeg_, cashLegData_.isPayer(), qlBondInstr,
                                                           std::abs(securityLeg_->instrument()->multiplier()));
 
     qlInstr->setPricingEngine(builder->engine(securityLegData_.incomeCurveId()));
-    instrument_ = boost::make_shared<VanillaInstrument>(qlInstr);
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qlInstr);
     setSensitivityTemplate(*builder);
 
     // set additionalData
@@ -134,7 +134,7 @@ void BondRepo::fromXML(XMLNode* node) {
     cashLegData_.fromXML(legNode);
 }
 
-XMLNode* BondRepo::toXML(XMLDocument& doc) {
+XMLNode* BondRepo::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode("BondRepoData");
     XMLUtils::appendNode(node, dataNode);
@@ -149,7 +149,7 @@ XMLNode* BondRepo::toXML(XMLDocument& doc) {
 }
 
 std::map<AssetClass, std::set<std::string>>
-BondRepo::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+BondRepo::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     result[AssetClass::BOND] = {securityLegData_.securityId()};
     return result;

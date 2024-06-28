@@ -51,7 +51,7 @@ public:
         The discounting curve to price calibrating swaptions is derived from the swap index directly though,
         i.e. it is not read as a discount curve from the market (except as a fallback in case we do not find
         the swap index). */
-    LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
+    LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
                const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
                const bool setCalibrationInfo = false, const std::string& id = "unknwon");
@@ -62,13 +62,13 @@ public:
     //@{
     std::string qualifier() { return data_->qualifier(); }
     std::string ccy() { return currency_; }
-    boost::shared_ptr<QuantExt::LGM> model() const;
+    QuantLib::ext::shared_ptr<QuantExt::LGM> model() const;
     /* The curve used to build the lgm parametrization. This is initially the swap index discount curve (see ctor). It
        can be relinked later outside this builder to calibrate fx processes, for which one wants to use a xccy curve
        instead of the in-ccy curve that is used to calibrate the LGM model within this builder. */
     RelinkableHandle<YieldTermStructure> discountCurve() { return modelDiscountCurve_; }
-    boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
-    std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
+    QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
     //@}
 
     //! \name ModelBuilder interface
@@ -90,9 +90,9 @@ private:
     // get strike for jth option (or Null<Real>() if ATM)
     Real getStrike(const Size j) const;
 
-    boost::shared_ptr<ore::data::Market> market_;
+    QuantLib::ext::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
-    boost::shared_ptr<IrLgmData> data_;
+    QuantLib::ext::shared_ptr<IrLgmData> data_;
     const Real bootstrapTolerance_;
     const bool continueOnError_;
     const std::string referenceCalibrationGrid_;
@@ -102,15 +102,15 @@ private:
     std::string currency_; // derived from data->qualifier()
 
     mutable Real error_;
-    mutable boost::shared_ptr<QuantExt::LGM> model_;
+    mutable QuantLib::ext::shared_ptr<QuantExt::LGM> model_;
     mutable Array params_;
-    mutable boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization_;
+    mutable QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization_;
 
     // which swaptions in data->optionExpries() are actually in the basket?
     mutable std::vector<bool> swaptionActive_;
-    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket_;
+    mutable std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> swaptionBasket_;
     mutable std::vector<Real> swaptionStrike_;
-    mutable std::vector<boost::shared_ptr<SimpleQuote>> swaptionBasketVols_;
+    mutable std::vector<QuantLib::ext::shared_ptr<SimpleQuote>> swaptionBasketVols_;
     mutable Array swaptionExpiries_;
     mutable Array swaptionMaturities_;
     mutable Date swaptionBasketRefDate_;
@@ -121,7 +121,7 @@ private:
     Handle<YieldTermStructure> calibrationDiscountCurve_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
-    boost::shared_ptr<OptimizationMethod> optimizationMethod_;
+    QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
     BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
 
@@ -131,7 +131,7 @@ private:
     bool forceCalibration_ = false;
 
     // LGM Observer
-    boost::shared_ptr<QuantExt::MarketObserver> marketObserver_;
+    QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;
 };
 } // namespace data
 } // namespace ore

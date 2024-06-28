@@ -93,7 +93,7 @@ SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness
     // create data matrix used for interpolation and the interpolation object
 
     data_ = Matrix(moneyness_.size(), times_.size(), 0.0);
-    volSpreadSurface_ = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+    volSpreadSurface_ = FlatExtrapolator2D(QuantLib::ext::make_shared<BilinearInterpolation>(
         times_.begin(), times_.end(), moneyness_.begin(), moneyness_.end(), data_));
     volSpreadSurface_.enableExtrapolation();
 }
