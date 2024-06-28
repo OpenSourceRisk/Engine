@@ -519,24 +519,21 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
 
-        auto simMarketParams =
-            offsetScenario_ == nullptr ? analytic()->configurations().simMarketParams : offsetSimMarketParams_;
-
-        XvaEngineCG engine(inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(),
-                           inputs_->curveConfigs().get(), analytic()->configurations().todaysMarketParams,
-                           simMarketParams, inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(),
-                           inputs_->scenarioGeneratorData(), amcPortfolio_, inputs_->marketConfig("simulation"),
-                           inputs_->marketConfig("lgmcalibration"), inputs_->xvaCgSensiScenarioData(),
-                           inputs_->refDataManager(), *inputs_->iborFallbackConfig(), inputs_->xvaCgBumpSensis(),
-                           inputs_->xvaCgUseExternalComputeDevice(), inputs_->xvaCgExternalDeviceCompatibilityMode(),
-                           inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
-                           inputs_->xvaCgExternalComputeDevice(), true, true);
+        XvaEngineCG engine(
+            inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
+            analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
+            inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
+            amcPortfolio_, inputs_->marketConfig("simulation"), inputs_->marketConfig("lgmcalibration"),
+            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
+            inputs_->xvaCgBumpSensis(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
+            inputs_->xvaCgExternalComputeDevice(), true, true);
 
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
         if (!scenarioData_.empty())
             engine.aggregationScenarioData() = *scenarioData_;
-        engine.buildCube(amcCube_);
+        engine.buildCube(amcCube_, offsetScenario_);
 
     } else {
 

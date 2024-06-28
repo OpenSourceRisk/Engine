@@ -71,7 +71,8 @@ public:
 
     // to be used for Mode == CubeGeneration only
     QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData>& aggregationScenarioData() { return asd_; }
-    void buildCube(QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& outputCube) const;
+    void buildCube(QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& outputCube,
+                   const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) const;
 
     // to be used for Mode == Full only
     QuantLib::ext::shared_ptr<InMemoryReport> exposureReport() const { return epeReport_; }
