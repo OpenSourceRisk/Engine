@@ -1908,6 +1908,11 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setCreditMigrationOutputFiles(tmp);
 
+    tmp = params_->get("xva", "firstMporCollateralAdjustment", false);
+    if (tmp != "") {
+        setfirstMporCollateralAdjustment(parseBool(tmp));
+    }
+
     /*************
      * XVA Stress
      *************/
