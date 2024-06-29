@@ -175,6 +175,7 @@
 #include <qle/instruments/bondtotalreturnswap.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
 #include <qle/instruments/cashflowresults.hpp>
+#include <qle/instruments/cashposition.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
 #include <qle/instruments/cbo.hpp>
 #include <qle/instruments/cdsoption.hpp>
@@ -377,6 +378,7 @@
 #include <qle/pricingengines/blackindexcdsoptionengine.hpp>
 #include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/blackswaptionenginedeltagamma.hpp>
+#include <qle/pricingengines/cashpositionengine.hpp>
 #include <qle/pricingengines/cboengine.hpp>
 #include <qle/pricingengines/cbomcengine.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>

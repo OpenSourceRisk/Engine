@@ -192,6 +192,7 @@ portfolio/builders/varianceswap.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/callableswap.cpp
 portfolio/capfloor.cpp
+portfolio/cashposition.cpp
 portfolio/cbo.cpp
 portfolio/cdo.cpp
 portfolio/cliquetoption.cpp
@@ -589,6 +590,7 @@ portfolio/capfloor.hpp
 portfolio/cbo.hpp
 portfolio/cdo.hpp
 portfolio/cliquetoption.hpp
+portfolio/cashposition.hpp
 portfolio/collateralbalance.hpp
 portfolio/commodityapo.hpp
 portfolio/commoditydigitalapo.hpp

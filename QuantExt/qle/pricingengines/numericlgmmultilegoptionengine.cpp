@@ -209,7 +209,9 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
             info.maxEstimationTime_ = ts->timeFromReference(sub->fixingDates().front());
             info.calculator_ = [sub, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
                                                 const Handle<YieldTermStructure>& discountCurve) {
-                return lgm.subPeriodsRate(sub->index(), sub->fixingDates(), t, x) *
+                return lgm.subPeriodsRate(sub->index(), sub->fixingDates(), t, x,
+                                          sub->accrualFractions(), sub->type(), sub->includeSpread(),
+                                          sub->spread(), sub->gearing(), sub->accrualPeriod()) *
                        RandomVariable(x.size(), sub->accrualPeriod() * sub->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };

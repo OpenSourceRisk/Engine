@@ -1290,6 +1290,10 @@ void OREAppInputParameters::loadParameters() {
             WLOG("Sensitivity scenario data not loaded");
         }
 
+        tmp = params_->get("pnlExplain", "parSensitivity", false);
+        if (tmp != "")
+            setParSensi(parseBool(tmp));
+
         tmp = params_->get("pnlExplain", "conventionsMporFile", false);
         if (tmp != "") {
             filesystem::path conventionsMporFile = inputPath / tmp;

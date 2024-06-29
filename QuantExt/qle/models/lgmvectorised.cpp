@@ -587,9 +587,36 @@ RandomVariable LgmVectorised::averagedBmaRate(const QuantLib::ext::shared_ptr<BM
 
 RandomVariable LgmVectorised::subPeriodsRate(const QuantLib::ext::shared_ptr<InterestRateIndex>& index,
                                              const std::vector<Date>& fixingDates, const Time t,
-                                             const RandomVariable& x) const {
+                                             const RandomVariable& x,
+                                             const std::vector<Time>& accrualFractions,
+                                             const SubPeriodsCoupon1::Type type, const bool includeSpread,
+                                             const Spread spread, const Real gearing,
+                                             const Time accrualPeriod) const {
+    Size numPeriods = accrualFractions.size();
+    auto incSpread = RandomVariable(x.size(), includeSpread ? spread : 0.0);
+    auto excSpread = includeSpread ? 0.0 : spread;
+    RandomVariable accumulatedRate;
+    RandomVariable rate;
 
-    return fixing(index, fixingDates.front(), t, x);
+    if (type == SubPeriodsCoupon1::Averaging) {
+        accumulatedRate = RandomVariable(x.size(), 0.0);
+        for (Size i = 0; i < numPeriods; ++i) {
+            RandomVariable indexFixing = fixing(index, fixingDates[i], t, x);
+            accumulatedRate += (indexFixing + incSpread) * RandomVariable(x.size(), accrualFractions[i]);
+        }
+        rate = RandomVariable(x.size(), gearing / accrualPeriod + excSpread) * accumulatedRate;
+    } else if (type == SubPeriodsCoupon1::Compounding) {
+        accumulatedRate = RandomVariable(x.size(), 1.0);
+        for (Size i = 0; i < numPeriods; ++i) {
+            RandomVariable indexFixing = fixing(index, fixingDates[i], t, x);
+            accumulatedRate *= (RandomVariable(x.size(), 1.0) + (indexFixing + incSpread) * RandomVariable(x.size(), accrualFractions[i]));
+        }
+        rate = RandomVariable(x.size(), gearing / accrualPeriod + excSpread) *
+               (accumulatedRate - RandomVariable(x.size(), 1.0));
+    } else {
+        QL_FAIL("LgmVectorised::subPeriodsRate(): Invalid sub-period coupon type");
+    }
+    return rate;
 }
 
 } // namespace QuantExt

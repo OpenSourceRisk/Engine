@@ -140,6 +140,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
+#include <orea/scenario/zerotoparscenariogenerator.hpp>
 #include <orea/simm/crif.hpp>
 #include <orea/simm/crifconfiguration.hpp>
 #include <orea/simm/crifloader.hpp>
