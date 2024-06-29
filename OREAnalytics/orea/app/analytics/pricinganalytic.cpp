@@ -160,10 +160,13 @@ void PricingAnalyticImpl::runAnalytic(
                     inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
+            // FIXME: Why are these disabled?
+            set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
             if (inputs_->parSensi() || inputs_->alignPillars()) {
-                parAnalysis_ = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
+                parAnalysis_= QuantLib::ext::make_shared<ParSensitivityAnalysis>(
                     inputs_->asof(), analytic()->configurations().simMarketParams,
-                    *analytic()->configurations().sensiScenarioData, "", true);
+                    *analytic()->configurations().sensiScenarioData, "",
+                    true, typesDisabled);
                 if (inputs_->alignPillars()) {
                     LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
                     parAnalysis_->alignPillars();
@@ -218,9 +221,8 @@ void PricingAnalyticImpl::runAnalytic(
                 QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
                     QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis_->parSensitivities(),
                                                                         parAnalysis_->shiftSizes());
-                auto parCube =
-                    QuantLib::ext::make_shared<ZeroToParCube>(sensiAnalysis_->sensiCubes(), parConverter,
-                                                              std::set<ore::analytics::RiskFactorKey::KeyType>{}, true);
+                auto parCube = QuantLib::ext::make_shared<ZeroToParCube>(sensiAnalysis_->sensiCubes(), parConverter,
+                                                                         typesDisabled, true);
                 LOG("Sensi analysis - write par sensitivity report in memory");
                 QuantLib::ext::shared_ptr<ParSensitivityCubeStream> pss =
                     QuantLib::ext::make_shared<ParSensitivityCubeStream>(parCube, baseCurrency);
