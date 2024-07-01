@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurface) {
     Calendar cal = TARGET();
     DayCounter dc = ActualActual(ActualActual::ISDA);
 
-    auto surface = boost::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc);
+    auto surface = QuantLib::ext::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc);
 
     // 1. Check that we recover all of the above inputs
     for (auto vd : volData) {
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceAxisInterp) {
     Calendar cal = TARGET();
     DayCounter dc = ActualActual(ActualActual::ISDA);
 
-    auto surface = boost::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc);
+    auto surface = QuantLib::ext::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc);
 
     // query points
     auto t1 = surface->timeFromReference(Date(1, Mar, 2011)); // on first date
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceFlatExtrapolation) {
     Calendar cal = TARGET();
     DayCounter dc = ActualActual(ActualActual::ISDA);
 
-    auto surface = boost::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc, true,
+    auto surface = QuantLib::ext::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc, true,
                                                                             true, true);
 
     Real s1 = 2000; // on first strike

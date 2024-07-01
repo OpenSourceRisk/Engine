@@ -34,20 +34,20 @@ public:
 
     //! Detailed constructor
     IndexCreditDefaultSwapOption(const ore::data::Envelope& env, const IndexCreditDefaultSwapData& swap,
-                                 const ore::data::OptionData& option, QuantLib::Real strike, bool knockOut = false,
+                                 const ore::data::OptionData& option, QuantLib::Real strike,
                                  const std::string& indexTerm = "", const std::string& strikeType = "Spread",
                                  const QuantLib::Date& tradeDate = Date(), const QuantLib::Date& fepStartDate = Date());
 
     //! \name Trade
     //@{
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
     //@}
 
     //! \name Serialisation
     //@{
     void fromXML(ore::data::XMLNode* node) override;
-    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     //@}
 
     //! \name Inspectors
@@ -55,8 +55,8 @@ public:
     const IndexCreditDefaultSwapData& swap() const;
     const ore::data::OptionData& option() const;
     const std::string& indexTerm() const;
-    bool knockOut() const;
     QuantLib::Real strike() const;
+    QuantLib::Option::Type callPut() const;
     const std::string& strikeType() const;
     const QuantLib::Date& tradeDate() const;
     const QuantLib::Date& fepStartDate() const;
@@ -74,7 +74,6 @@ private:
     IndexCreditDefaultSwapData swap_;
     ore::data::OptionData option_;
     QuantLib::Real strike_;
-    bool knockOut_;
     std::string indexTerm_;
     std::string strikeType_;
     QuantLib::Date tradeDate_;
@@ -109,7 +108,7 @@ private:
 
     //! Populate constituent notionals and curve IDs from reference data
     void fromReferenceData(const QuantLib::Date& asof, std::map<std::string, QuantLib::Real>& constituents,
-                           const boost::shared_ptr<ReferenceDataManager>& refData);
+                           const QuantLib::ext::shared_ptr<ReferenceDataManager>& refData);
 };
 
 } // namespace data

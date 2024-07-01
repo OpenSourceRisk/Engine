@@ -34,13 +34,13 @@ namespace analytics {
 class CloneScenarioFactory : public ScenarioFactory {
 public:
     //! Constructor
-    CloneScenarioFactory(const boost::shared_ptr<Scenario>& baseScenario);
+    CloneScenarioFactory(const QuantLib::ext::shared_ptr<Scenario>& baseScenario);
     //! returns a new scenario, using the base scenario as a starting point
-    const boost::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
-                                                    Real numeraire = 0.0) const override;
+    const QuantLib::ext::shared_ptr<Scenario> buildScenario(Date asof, bool isAbsolute, const std::string& label = "",
+                                                            Real numeraire = 0.0) const override;
 
 private:
-    boost::shared_ptr<Scenario> baseScenario_;
+    QuantLib::ext::shared_ptr<Scenario> baseScenario_;
 };
 
 } // namespace analytics

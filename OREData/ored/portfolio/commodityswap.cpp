@@ -40,18 +40,20 @@ using std::max;
 namespace ore {
 namespace data {
 
-void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     reset();
 
     LOG("CommoditySwap::build() called for trade " << id());
-    check();
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CommoditySwap");
-    boost::shared_ptr<CommoditySwapEngineBuilder> engineBuilder =
-        boost::dynamic_pointer_cast<CommoditySwapEngineBuilder>(builder);
-    const string& configuration = builder->configuration(MarketContext::pricing);
+    // ISDA taxonomy, assuming Commodity follows the Equity template
+    additionalData_["isdaAssetClass"] = string("Commodity");
+    additionalData_["isdaBaseProduct"] = string("Swap");
+    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
+    // skip the transaction level mapping for now
+    additionalData_["isdaTransaction"] = string("");  
+
+    check();
 
     // Arbitrarily choose NPV currency from 1st leg. Already checked that both leg currencies equal.
     npvCurrency_ = legData_[0].currency();
@@ -59,6 +61,12 @@ void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     // Set notional to N/A for now, but reset this for a commodity fixed respectively floating leg below.
     notional_ = Null<Real>();
     notionalCurrency_ = legData_[0].currency();
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CommoditySwap");
+    QuantLib::ext::shared_ptr<CommoditySwapEngineBuilder> engineBuilder =
+        QuantLib::ext::dynamic_pointer_cast<CommoditySwapEngineBuilder>(builder);
+    const string& configuration = builder->configuration(MarketContext::pricing);
 
     // Build the commodity swap legs
     
@@ -68,7 +76,9 @@ void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     // the map entry gets overwritten and the fixed leg with empty tag matches a random floating leg with empty tag. 
     // This is by design i.e. use tags if you want to link specific legs.
     map<string, Leg> floatingLegs;
-    for (const auto& legDatum : legData_) {
+    vector<Size> legsIdx;
+    for (Size t = 0; t < legData_.size(); t++) {
+        const auto& legDatum = legData_.at(t);
 
         const string& type = legDatum.legType();
         if (type == "CommodityFixed")
@@ -76,15 +86,17 @@ void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
         // Build the leg and add it to legs_
         buildLeg(engineFactory, legDatum, configuration);
+        legsIdx.push_back(t);
 
         // Only add to map if CommodityFloatingLegData
-        if (auto cfld = boost::dynamic_pointer_cast<CommodityFloatingLegData>(legDatum.concreteLegData())) {
+        if (auto cfld = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legDatum.concreteLegData())) {
             floatingLegs[cfld->tag()] = legs_.back();
         }
     }
 
     // Build any fixed legs skipped above.
-    for (const auto& legDatum : legData_) {
+    for (Size t = 0; t < legData_.size();  t++) {
+        const auto& legDatum = legData_.at(t);
 
         // take a copy, since we might modify the leg datum below
         auto effLegDatum = legDatum;
@@ -94,7 +106,7 @@ void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             continue;
 
         // Update the commodity fixed leg quantities if necessary.
-        auto cfld = boost::dynamic_pointer_cast<CommodityFixedLegData>(effLegDatum.concreteLegData());
+        auto cfld = QuantLib::ext::dynamic_pointer_cast<CommodityFixedLegData>(effLegDatum.concreteLegData());
         QL_REQUIRE(cfld, "CommodityFixed leg should have valid CommodityFixedLegData");
         if (cfld->quantities().empty()) {
 
@@ -108,9 +120,9 @@ void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory)
             for (const auto& cf : leg) {
                 // If more options arise here, may think of visitor to get the commodity notional.
                 auto ucf = unpackIndexWrappedCashFlow(cf);
-                if (auto cicf = boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(ucf)) {
+                if (auto cicf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(ucf)) {
                     quantities.push_back(cicf->periodQuantity());
-                } else if (auto ciacf = boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(ucf)) {
+                } else if (auto ciacf = QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(ucf)) {
                     quantities.push_back(ciacf->periodQuantity());
                 } else {
                     QL_FAIL("Expected a commodity indexed cashflow while building commodity fixed" <<
@@ -136,29 +148,35 @@ void CommoditySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
         // Build the leg and add it to legs_
         buildLeg(engineFactory, effLegDatum, configuration);
+        legsIdx.push_back(t);
     }
 
+    // Reposition the leg-based data to match the original order according to legData_
+    vector<Leg> legsTmp;
+    vector<bool> legPayersTmp;
+    vector<string> legCurrenciesTmp;
+    for (const Size idx : legsIdx) {
+        legsTmp.push_back(legs_.at(idx));
+        legPayersTmp.push_back(legPayers_.at(idx));
+        legCurrenciesTmp.push_back(legCurrencies_.at(idx));
+    }
+    legs_ = legsTmp;
+    legPayers_ = legPayersTmp;
+    legCurrencies_ = legCurrenciesTmp;
 
     // Create the QuantLib swap instrument and assign pricing engine
-    auto swap = boost::make_shared<QuantLib::Swap>(legs_, legPayers_);
-    boost::shared_ptr<PricingEngine> engine = engineBuilder->engine(parseCurrency(npvCurrency_));
+    auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
+    QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(parseCurrency(npvCurrency_));
     swap->setPricingEngine(engine);
     setSensitivityTemplate(*engineBuilder);
-    instrument_ = boost::make_shared<VanillaInstrument>(swap);
-
-    // ISDA taxonomy, assuming Commodity follows the Equity template
-    additionalData_["isdaAssetClass"] = string("Commodity");
-    additionalData_["isdaBaseProduct"] = string("Swap");
-    additionalData_["isdaSubProduct"] = string("Price Return Basic Performance");
-    // skip the transaction level mapping for now
-    additionalData_["isdaTransaction"] = string("");  
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap);
 }
 
 const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
     Size numLegs = legData_.size();
     // use the build time as of date to determine current notionals
     Date asof = Settings::instance().evaluationDate();
-    boost::shared_ptr<QuantLib::Swap> swap = boost::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap = QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
     for (Size i = 0; i < numLegs; ++i) {
         string legID = to_string(i+1);
         additionalData_["legType[" + legID + "]"] = legData_[i].legType();
@@ -169,16 +187,17 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
         else
             ALOG("commodity swap underlying instrument not set, skip leg npv reporting");
         for (Size j = 0; j < legs_[i].size(); ++j) {
-            boost::shared_ptr<CashFlow> flow = legs_[i][j];
+            QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
             if (flow->date() > asof) {
                 std::string label = legID + ":" + std::to_string(j + 1);
                 // CommodityFloatingLeg consists of indexed or indexed average cash flows
-                boost::shared_ptr<CommodityIndexedCashFlow> indexedFlow =
-                    boost::dynamic_pointer_cast<CommodityIndexedCashFlow>(unpackIndexWrappedCashFlow(flow));
+                QuantLib::ext::shared_ptr<CommodityIndexedCashFlow> indexedFlow =
+                    QuantLib::ext::dynamic_pointer_cast<CommodityIndexedCashFlow>(unpackIndexWrappedCashFlow(flow));
                 if (indexedFlow) {
                     additionalData_["quantity[" + label + "]"] = indexedFlow->quantity();
                     additionalData_["periodQuantity[" + label + "]"] = indexedFlow->periodQuantity();
                     additionalData_["gearing[" + label + "]"] = indexedFlow->gearing();
+                    additionalData_["spread[" + label + "]"] = indexedFlow->spread();
                     if (indexedFlow->isAveragingFrontMonthCashflow(asof)) {
                         std::vector<Real> priceVec;
                         std::vector<std::string> indexVec;
@@ -218,12 +237,13 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                     }
                     additionalData_["paymentDate[" + label + "]"] = to_string(indexedFlow->date());
                 }
-                boost::shared_ptr<CommodityIndexedAverageCashFlow> indexedAvgFlow =
-                    boost::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(unpackIndexWrappedCashFlow(flow));
+                QuantLib::ext::shared_ptr<CommodityIndexedAverageCashFlow> indexedAvgFlow =
+                    QuantLib::ext::dynamic_pointer_cast<CommodityIndexedAverageCashFlow>(unpackIndexWrappedCashFlow(flow));
                 if (indexedAvgFlow) {
                     additionalData_["quantity[" + label + "]"] = indexedAvgFlow->quantity();
                     additionalData_["periodQuantity[" + label + "]"] = indexedAvgFlow->periodQuantity();
                     additionalData_["gearing[" + label + "]"] = indexedAvgFlow->gearing();
+                    additionalData_["spread[" + label + "]"] = indexedAvgFlow->spread();
                     std::vector<Real> priceVec;
                     std::vector<std::string> indexVec;
                     std::vector<Date> indexExpiryVec, pricingDateVec;
@@ -255,7 +275,7 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
             }
         }
         if (legs_[i].size() > 0) {
-            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[i][0]);
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[i][0]);
             if (coupon) {
                 Real originalNotional = 0.0;
                 try { originalNotional = coupon->nominal(); }
@@ -274,9 +294,9 @@ QuantLib::Real CommoditySwap::notional() const {
     Real currentAmount = Null<Real>();
     // Get maximum current cash flow amount (quantity * strike, quantity * spot/forward price) across legs
     // include gearings and spreads; note that the swap is in a single currency.
-    for (Size i = 0; i < legData_.size(); ++i) {
+    for (Size i = 0; i < legs_.size(); ++i) {
         for (Size j = 0; j < legs_[i].size(); ++j) {
-            boost::shared_ptr<CashFlow> flow = legs_[i][j];
+            QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
             // pick flow with earliest payment date on this leg
             if (flow->date() > asof) {
                 if (currentAmount == Null<Real>())
@@ -297,16 +317,16 @@ QuantLib::Real CommoditySwap::notional() const {
 }
 
 std::map<AssetClass, std::set<std::string>>
-CommoditySwap::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+CommoditySwap::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
 
     std::map<AssetClass, std::set<std::string>> result;
 
     for (auto ld : legData_) {
         set<string> indices = ld.indices();
         for (auto ind : indices) {
-            boost::shared_ptr<Index> index = parseIndex(ind);
+            QuantLib::ext::shared_ptr<Index> index = parseIndex(ind);
             // only handle commodity
-            if (auto ci = boost::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
+            if (auto ci = QuantLib::ext::dynamic_pointer_cast<QuantExt::CommodityIndex>(index)) {
                 result[AssetClass::COM].insert(ci->name());
             }
         }
@@ -330,7 +350,7 @@ void CommoditySwap::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* CommoditySwap::toXML(XMLDocument& doc) {
+XMLNode* CommoditySwap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* swapNode = doc.allocNode("SwapData");
     XMLUtils::appendNode(node, swapNode);
@@ -347,7 +367,7 @@ void CommoditySwap::check() const {
     }
 }
 
-void CommoditySwap::buildLeg(const boost::shared_ptr<EngineFactory>& ef,
+void CommoditySwap::buildLeg(const QuantLib::ext::shared_ptr<EngineFactory>& ef,
     const LegData& legDatum, const string& configuration) {
 
     auto legBuilder = ef->legBuilder(legDatum.legType());

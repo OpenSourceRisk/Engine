@@ -26,7 +26,6 @@
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/pricingengines/swaption/blackswaptionengine.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <ql/version.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -37,9 +36,9 @@ const Volatility SwaptionVolatilityConverter::maxVol_ = 10.0;
 const Real SwaptionVolatilityConverter::minVega_ = 1.0e-6;
 
 SwaptionVolatilityConverter::SwaptionVolatilityConverter(
-    const Date& asof, const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
+    const Date& asof, const QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>& svsIn,
     const Handle<YieldTermStructure>& discount, const Handle<YieldTermStructure>& shortDiscount,
-    const boost::shared_ptr<SwapConventions>& conventions, const boost::shared_ptr<SwapConventions>& shortConventions,
+    const QuantLib::ext::shared_ptr<SwapConventions>& conventions, const QuantLib::ext::shared_ptr<SwapConventions>& shortConventions,
     const Period& conventionsTenor, const Period& shortConventionsTenor, const VolatilityType targetType,
     const Matrix& targetShifts)
     : asof_(asof), svsIn_(svsIn), discount_(discount), shortDiscount_(shortDiscount), conventions_(conventions),
@@ -52,16 +51,16 @@ SwaptionVolatilityConverter::SwaptionVolatilityConverter(
 }
 
 SwaptionVolatilityConverter::SwaptionVolatilityConverter(const Date& asof,
-                                                         const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
-                                                         const boost::shared_ptr<SwapIndex>& swapIndex,
-                                                         const boost::shared_ptr<SwapIndex>& shortSwapIndex,
+                                                         const QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>& svsIn,
+                                                         const QuantLib::ext::shared_ptr<SwapIndex>& swapIndex,
+                                                         const QuantLib::ext::shared_ptr<SwapIndex>& shortSwapIndex,
                                                          const VolatilityType targetType, const Matrix& targetShifts)
     : asof_(asof), svsIn_(svsIn), discount_(swapIndex->discountingTermStructure()),
       shortDiscount_(shortSwapIndex->discountingTermStructure()),
-      conventions_(boost::make_shared<SwapConventions>(swapIndex->fixingDays(), swapIndex->fixedLegTenor(),
+      conventions_(QuantLib::ext::make_shared<SwapConventions>(swapIndex->fixingDays(), swapIndex->fixedLegTenor(),
                                                        swapIndex->fixingCalendar(), swapIndex->fixedLegConvention(),
                                                        swapIndex->dayCounter(), swapIndex->iborIndex())),
-      shortConventions_(boost::make_shared<SwapConventions>(
+      shortConventions_(QuantLib::ext::make_shared<SwapConventions>(
           shortSwapIndex->fixingDays(), shortSwapIndex->fixedLegTenor(), shortSwapIndex->fixingCalendar(),
           shortSwapIndex->fixedLegConvention(), shortSwapIndex->dayCounter(), shortSwapIndex->iborIndex())),
       conventionsTenor_(swapIndex->tenor()), shortConventionsTenor_(shortSwapIndex->tenor()), targetType_(targetType),
@@ -85,29 +84,29 @@ void SwaptionVolatilityConverter::checkInputs() const {
                "SwaptionVolatilityConverter requires a valid forward curve with reference date equal to asof date");
 }
 
-boost::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::convert() const {
+QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::convert() const {
 
-    boost::shared_ptr<SwaptionVolatilityDiscrete> svDisc;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityDiscrete> svDisc;
 
     // We expect either the wrapper adding ATM to a cube or a swaption vol discrete
     // instance (like a matrix, a regular cube).
 
     vector<Real> strikeSpreads(1, 0.0);
-    boost::shared_ptr<SwapIndex> swapIndexBase, shortSwapIndexBase;
-    boost::shared_ptr<SwaptionVolatilityCube> cube;
-    if (boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(svsIn_)) {
-        cube = boost::static_pointer_cast<SwaptionVolCubeWithATM>(svsIn_)->cube();
+    QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase, shortSwapIndexBase;
+    QuantLib::ext::shared_ptr<SwaptionVolatilityCube> cube;
+    if (QuantLib::ext::dynamic_pointer_cast<SwaptionVolCubeWithATM>(svsIn_)) {
+        cube = QuantLib::ext::static_pointer_cast<SwaptionVolCubeWithATM>(svsIn_)->cube();
     }
-    if (boost::dynamic_pointer_cast<SwaptionVolatilityCube>(svsIn_)) {
-        cube = boost::static_pointer_cast<SwaptionVolatilityCube>(svsIn_);
+    if (QuantLib::ext::dynamic_pointer_cast<SwaptionVolatilityCube>(svsIn_)) {
+        cube = QuantLib::ext::static_pointer_cast<SwaptionVolatilityCube>(svsIn_);
     }
     if (cube) {
         svDisc = cube;
         strikeSpreads = cube->strikeSpreads();
         swapIndexBase = cube->swapIndexBase();
         shortSwapIndexBase = cube->shortSwapIndexBase();
-    } else if (boost::dynamic_pointer_cast<SwaptionVolatilityDiscrete>(svsIn_)) {
-        svDisc = boost::static_pointer_cast<SwaptionVolatilityDiscrete>(svsIn_);
+    } else if (QuantLib::ext::dynamic_pointer_cast<SwaptionVolatilityDiscrete>(svsIn_)) {
+        svDisc = QuantLib::ext::static_pointer_cast<SwaptionVolatilityDiscrete>(svsIn_);
     } else {
         QL_FAIL("SwaptionVolatilityConverter: unknown input volatility structure");
     }
@@ -152,10 +151,10 @@ boost::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::conv
     if (calendar.empty() || optionTenors.empty()) {
         // Original matrix was created with fixed option dates
         atmStructure = Handle<SwaptionVolatilityStructure>(
-            boost::make_shared<SwaptionVolatilityMatrix>(asof_, calendar, bdc, optionDates, swapTenors, volatilities,
+            QuantLib::ext::make_shared<SwaptionVolatilityMatrix>(asof_, calendar, bdc, optionDates, swapTenors, volatilities,
                                                          Actual365Fixed(), extrapolation, targetType_, targetShifts_));
     } else {
-        atmStructure = Handle<SwaptionVolatilityStructure>(boost::shared_ptr<SwaptionVolatilityMatrix>(
+        atmStructure = Handle<SwaptionVolatilityStructure>(QuantLib::ext::shared_ptr<SwaptionVolatilityMatrix>(
             new SwaptionVolatilityMatrix(asof_, calendar, bdc, optionTenors, swapTenors, volatilities, Actual365Fixed(),
                                          extrapolation, targetType_, targetShifts_)));
     }
@@ -175,38 +174,33 @@ boost::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::conv
                     targetShift = targetShifts_[i][j];
                 Real outVol =
                     convert(optionDates[i], swapTenors[j], strikeSpreads[k], dayCounter, targetType_, targetShift);
-                volSpreads[i * nSwapLengths + j][k] = Handle<Quote>(boost::make_shared<SimpleQuote>(outVol));
+                volSpreads[i * nSwapLengths + j][k] = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(outVol));
             }
         }
     }
 
     // Build and return cube, note that we hardcode flat extrapolation
-    boost::shared_ptr<SwaptionVolatilityCube> cubeOut = boost::shared_ptr<QuantExt::SwaptionVolCube2>(
+    QuantLib::ext::shared_ptr<SwaptionVolatilityCube> cubeOut = QuantLib::ext::shared_ptr<QuantExt::SwaptionVolCube2>(
         new QuantExt::SwaptionVolCube2(atmStructure, optionTenors, swapTenors, strikeSpreads, volSpreads, swapIndexBase,
                                        shortSwapIndexBase, false, true, false));
     cubeOut->enableExtrapolation(cube->allowsExtrapolation());
-    return boost::make_shared<SwaptionVolCubeWithATM>(cubeOut);
+    return QuantLib::ext::make_shared<SwaptionVolCubeWithATM>(cubeOut);
 
 } // namespace QuantExt
 
-// Ignore "warning C4996: 'Quantlib::Swaption::impliedVolatility': was declared deprecated"
-#ifdef BOOST_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#endif
 Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swapTenor, Real strikeSpread,
                                           const DayCounter& volDayCounter, VolatilityType outType,
                                           Real outShift) const {
 
-    const boost::shared_ptr<SwapConventions> tmpConv =
+    const QuantLib::ext::shared_ptr<SwapConventions> tmpConv =
         swapTenor <= shortConventionsTenor_ ? shortConventions_ : conventions_;
     Handle<YieldTermStructure> tmpDiscount = swapTenor <= shortConventionsTenor_ ? shortDiscount_ : discount_;
 
     // Create the underlying swap with fixed rate = fair rate
     // We rely on the fact that MakeVanillaSwap sets the fixed rate to the fair rate if it is left null in the ctor
     Date effectiveDate = tmpConv->fixedCalendar().advance(expiry, tmpConv->settlementDays(), Days);
-    boost::shared_ptr<PricingEngine> engine = boost::make_shared<DiscountingSwapEngine>(tmpDiscount);
-    boost::shared_ptr<VanillaSwap> swap = MakeVanillaSwap(swapTenor, tmpConv->floatIndex())
+    QuantLib::ext::shared_ptr<PricingEngine> engine = QuantLib::ext::make_shared<DiscountingSwapEngine>(tmpDiscount);
+    QuantLib::ext::shared_ptr<VanillaSwap> swap = MakeVanillaSwap(swapTenor, tmpConv->floatIndex())
                                               .withType(strikeSpread < 0.0 ? VanillaSwap::Receiver : VanillaSwap::Payer)
                                               .withEffectiveDate(effectiveDate)
                                               .withFixedLegCalendar(tmpConv->fixedCalendar())
@@ -243,15 +237,15 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
     Real inVol = svsIn_->volatility(expiry, swapTenor, strike);
 
     // Create the swaption
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiry);
-    boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise, Settlement::Physical);
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiry);
+    QuantLib::ext::shared_ptr<Swaption> swaption = QuantLib::ext::make_shared<Swaption>(swap, exercise, Settlement::Physical);
 
     // Price the swaption with the input volatility
-    boost::shared_ptr<PricingEngine> swaptionEngine;
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine;
     if (inType == ShiftedLognormal) {
-        swaptionEngine = boost::make_shared<BlackSwaptionEngine>(discount_, inVol, volDayCounter, inShift);
+        swaptionEngine = QuantLib::ext::make_shared<BlackSwaptionEngine>(discount_, inVol, volDayCounter, inShift);
     } else {
-        swaptionEngine = boost::make_shared<BachelierSwaptionEngine>(discount_, inVol, volDayCounter);
+        swaptionEngine = QuantLib::ext::make_shared<BachelierSwaptionEngine>(discount_, inVol, volDayCounter);
     }
     swaption->setPricingEngine(swaptionEngine);
 
@@ -281,14 +275,9 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
                 guess = inVol * (atmRate + inShift);
         }
 
-// Note: In implying the volatility the volatility day counter is hardcoded to Actual365Fixed
-#if QL_HEX_VERSION < 0x011000f0
-        impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, maxEvaluations_, minVol_, maxVol_,
-                                                 outShift, outType);
-#else
+        // Note: In implying the volatility the volatility day counter is hardcoded to Actual365Fixed
         impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, maxEvaluations_, minVol_, maxVol_,
                                                  outType, outShift);
-#endif
 
     } catch (std::exception& e) {
         // couldn't find implied volatility
@@ -299,7 +288,4 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
 
     return impliedVol;
 }
-#ifdef BOOST_MSVC
-#pragma warning(pop)
-#endif
 } // namespace QuantExt

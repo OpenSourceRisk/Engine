@@ -27,7 +27,7 @@
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/smilesection.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -39,7 +39,7 @@ public:
           can be provided.
         - If stickyAbsMoney = true, simulatedAtmLevel must be provided and represent the ATM
           level that _does_ react to changes in the rate levels. */
-    SpreadedSmileSection2(const boost::shared_ptr<SmileSection>& base, const std::vector<Real>& volSpreads,
+    SpreadedSmileSection2(const QuantLib::ext::shared_ptr<SmileSection>& base, const std::vector<Real>& volSpreads,
                           const std::vector<Real>& strikes, const bool strikesRelativeToAtm = false,
                           const Real baseAtmLevel = Null<Real>(), const Real simulatedAtmLevel = Null<Real>(),
                           const bool stickyAbsMoney = false);
@@ -51,7 +51,7 @@ protected:
     Volatility volatilityImpl(Rate strike) const override;
 
 private:
-    boost::shared_ptr<SmileSection> base_;
+    QuantLib::ext::shared_ptr<SmileSection> base_;
     std::vector<Real> volSpreads_;
     std::vector<Real> strikes_;
     bool strikesRelativeToAtm_;

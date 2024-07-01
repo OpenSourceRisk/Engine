@@ -55,7 +55,7 @@ private:
     bool antitheticSampling_;
     mutable bool antitheticVariate_;
 
-    boost::shared_ptr<PseudoRandom::rsg_type> rsg_;
+    QuantLib::ext::shared_ptr<PseudoRandom::rsg_type> rsg_;
 };
 
 class MultiPathVariateGeneratorMersenneTwisterAntithetic : public MultiPathVariateGeneratorMersenneTwister {
@@ -76,7 +76,7 @@ private:
     BigNatural seed_;
     SobolRsg::DirectionIntegers directionIntegers_;
 
-    boost::shared_ptr<LowDiscrepancy::rsg_type> rsg_;
+    QuantLib::ext::shared_ptr<LowDiscrepancy::rsg_type> rsg_;
 };
 
 class MultiPathVariateGeneratorBurley2020Sobol : public MultiPathVariateGeneratorBase {
@@ -92,7 +92,7 @@ private:
     SobolRsg::DirectionIntegers directionIntegers_;
     BigNatural scrambleSeed_;
 
-    boost::shared_ptr<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>> rsg_;
+    QuantLib::ext::shared_ptr<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>> rsg_;
 };
 
 class MultiPathVariateGeneratorSobolBrownianBridgeBase : public MultiPathVariateGeneratorBase {
@@ -110,7 +110,7 @@ protected:
     BigNatural seed_;
     SobolRsg::DirectionIntegers directionIntegers_;
 
-    boost::shared_ptr<SobolBrownianGeneratorBase> gen_;
+    QuantLib::ext::shared_ptr<SobolBrownianGeneratorBase> gen_;
 };
 
 class MultiPathVariateGeneratorSobolBrownianBridge : public MultiPathVariateGeneratorSobolBrownianBridgeBase {
@@ -134,7 +134,7 @@ protected:
     BigNatural scrambleSeed_;
 };
 
-boost::shared_ptr<MultiPathVariateGeneratorBase>
+QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>
 makeMultiPathVariateGenerator(const SequenceType s, const Size dimension, const Size timeSteps, const BigNatural seed,
                               const SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                               const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);

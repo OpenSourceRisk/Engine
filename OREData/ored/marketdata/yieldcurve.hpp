@@ -72,6 +72,9 @@ public:
         ConvexMonotone,
         Quadratic,
         LogQuadratic,
+        LogNaturalCubic,
+        LogFinancialCubic,
+        LogCubicSpline,
         Hermite,
         CubicSpline,
         DefaultLogMixedLinearCubic,
@@ -94,15 +97,15 @@ public:
         //! Market data loader
         const Loader& loader,
         //! Map of underlying yield curves if required
-        const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves =
-            map<string, boost::shared_ptr<YieldCurve>>(),
+        const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& requiredYieldCurves =
+            map<string, QuantLib::ext::shared_ptr<YieldCurve>>(),
         //! Map of underlying default curves if required
-        const map<string, boost::shared_ptr<DefaultCurve>>& requiredDefaultCurves =
-            map<string, boost::shared_ptr<DefaultCurve>>(),
+        const map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& requiredDefaultCurves =
+            map<string, QuantLib::ext::shared_ptr<DefaultCurve>>(),
         //! FxTriangultion to get FX rate from cross if needed
         const FXTriangulation& fxTriangulation = FXTriangulation(),
         //! optional pointer to reference data, needed to build fitted bond curves
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! ibor fallback config
         const IborFallbackConfig& iborfallbackConfig = IborFallbackConfig::defaultConfig(),
         //! if true keep qloader quotes linked to yield ts, otherwise detach them
@@ -119,7 +122,7 @@ public:
     const Date& asofDate() const { return asofDate_; }
     const Currency& currency() const { return currency_; }
     // might be nullptr, if no info was produced for this curve
-    boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
+    QuantLib::ext::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
 
 private:
@@ -128,13 +131,13 @@ private:
     YieldCurveSpec curveSpec_;
     DayCounter zeroDayCounter_;
     bool extrapolation_;
-    boost::shared_ptr<YieldCurve> discountCurve_;
+    QuantLib::ext::shared_ptr<YieldCurve> discountCurve_;
 
     // TODO: const refs for now, only used during ctor
     const Loader& loader_;
     RelinkableHandle<YieldTermStructure> h_;
-    boost::shared_ptr<YieldTermStructure> p_;
-    boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo_;
+    QuantLib::ext::shared_ptr<YieldTermStructure> p_;
+    QuantLib::ext::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo_;
 
     void buildDiscountCurve();
     void buildZeroCurve();
@@ -154,52 +157,52 @@ private:
     void buildBondYieldShiftedCurve();
 
     //! Return the yield curve with the given \p id from the requiredYieldCurves_ map
-    boost::shared_ptr<YieldCurve> getYieldCurve(const std::string& ccy, const std::string& id) const;
+    QuantLib::ext::shared_ptr<YieldCurve> getYieldCurve(const std::string& ccy, const std::string& id) const;
 
-    boost::shared_ptr<YieldCurveConfig> curveConfig_;
-    vector<boost::shared_ptr<YieldCurveSegment>> curveSegments_;
+    QuantLib::ext::shared_ptr<YieldCurveConfig> curveConfig_;
+    vector<QuantLib::ext::shared_ptr<YieldCurveSegment>> curveSegments_;
     InterpolationVariable interpolationVariable_;
     InterpolationMethod interpolationMethod_;
     Size mixedInterpolationSize_ = 0;
-    map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
-    map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
+    map<string, QuantLib::ext::shared_ptr<YieldCurve>> requiredYieldCurves_;
+    map<string, QuantLib::ext::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     const FXTriangulation& fxTriangulation_;
-    const boost::shared_ptr<ReferenceDataManager> referenceData_;
+    const QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
     const bool preserveQuoteLinkage_;
     bool buildCalibrationInfo_;
     const Market* market_;
 
-    boost::shared_ptr<YieldTermStructure> piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments);
+    QuantLib::ext::shared_ptr<YieldTermStructure> piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instruments);
 
     /* Functions to build RateHelpers from yield curve segments */
-    void addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,
-                     vector<boost::shared_ptr<RateHelper>>& instruments);
-    void addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
-                    vector<boost::shared_ptr<RateHelper>>& instruments);
-    void addFras(const boost::shared_ptr<YieldCurveSegment>& segment,
-                 vector<boost::shared_ptr<RateHelper>>& instruments);
-    void addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
-                 vector<boost::shared_ptr<RateHelper>>& instruments);
-    void addSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
-                  vector<boost::shared_ptr<RateHelper>>& instruments);
-    void addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
-                        vector<boost::shared_ptr<RateHelper>>& instruments);
-    void addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
-                            vector<boost::shared_ptr<RateHelper>>& instruments);
-    void addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
-                               vector<boost::shared_ptr<RateHelper>>& instruments);
-    void addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
-                          vector<boost::shared_ptr<RateHelper>>& instruments);
-    void addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segment,
-                       vector<boost::shared_ptr<RateHelper>>& instruments);
-    void addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
-                               vector<boost::shared_ptr<RateHelper>>& instruments);
-    void addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
-                                  vector<boost::shared_ptr<RateHelper>>& instruments);
+    void addDeposits(const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
+                     vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+    void addFutures(const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
+                    vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+    void addFras(const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
+                 vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+    void addOISs(const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
+                 vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+    void addSwaps(const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
+                  vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+    void addAverageOISs(const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
+                        vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+    void addTenorBasisSwaps(const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
+                            vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+    void addTenorBasisTwoSwaps(const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
+                               vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+    void addBMABasisSwaps(const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
+                          vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+    void addFXForwards(const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
+                       vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+    void addCrossCcyBasisSwaps(const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
+                               vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
+    void addCrossCcyFixFloatSwaps(const QuantLib::ext::shared_ptr<YieldCurveSegment>& segment,
+                                  vector<QuantLib::ext::shared_ptr<RateHelper>>& instruments);
 
     // get the fx spot from the string provided
-    boost::shared_ptr<FXSpotQuote> getFxSpotQuote(string spotId);
+    QuantLib::ext::shared_ptr<FXSpotQuote> getFxSpotQuote(string spotId);
 };
 
 //! Helper function for parsing interpolation method
@@ -212,22 +215,22 @@ std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMetho
 
 //! Templated function to build a YieldTermStructure and apply interpolation methods to it
 template <template <class> class CurveType>
-boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates,
+QuantLib::ext::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates,
                                                       const DayCounter& dayCounter,
                                                       YieldCurve::InterpolationMethod interpolationMethod, Size n = 0);
 
 //! Create a Interpolated Zero Curve and apply interpolators
-boost::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
+QuantLib::ext::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
                                                 const DayCounter& dayCounter,
                                                 YieldCurve::InterpolationMethod interpolationMethod, Size n = 0);
 
 //! Create a Interpolated Discount Curve and apply interpolators
-boost::shared_ptr<YieldTermStructure> discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs,
+QuantLib::ext::shared_ptr<YieldTermStructure> discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs,
                                                     const DayCounter& dayCounter,
                                                     YieldCurve::InterpolationMethod interpolationMethod, Size n = 0);
 
 //! Create a Interpolated Forward Curve and apply interpolators
-boost::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
+QuantLib::ext::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
                                                    const DayCounter& dayCounter,
                                                    YieldCurve::InterpolationMethod interpolationMethod, Size n = 0);
 

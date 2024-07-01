@@ -31,8 +31,8 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20140203</StartDate>
-            <EndDate>20260203</EndDate>
+            <StartDate>20160201</StartDate>
+            <EndDate>20280201</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -62,7 +62,7 @@
         <ReferenceCurveId>EURBENCHMARK-EUR</ReferenceCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>
-        <IssueDate>20140203</IssueDate>
+        <IssueDate>20160201</IssueDate>
         <LegData>
           <LegType>Floating</LegType>
           <Payer>false</Payer>
@@ -82,8 +82,8 @@
           </FloatingLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20140203</StartDate>
-              <EndDate>20260203</EndDate>
+              <StartDate>20160201</StartDate>
+              <EndDate>20280201</EndDate>
               <Tenor>6M</Tenor>
               <Calendar>TARGET</Calendar>
               <Convention>F</Convention>
@@ -106,14 +106,14 @@
         <ScheduleData>
           <Dates>
             <Dates>
-              <Date>2016-08-03</Date>
-              <Date>2017-02-03</Date>
-              <Date>2017-08-03</Date>
-              <Date>2018-02-03</Date>
-              <Date>2018-08-03</Date>
-              <Date>2019-02-03</Date>
-              <Date>2019-08-03</Date>
-              <Date>2020-02-03</Date>
+              <Date>2018-08-01</Date>
+              <Date>2019-02-01</Date>
+              <Date>2019-08-01</Date>
+              <Date>2020-02-01</Date>
+              <Date>2020-08-01</Date>
+              <Date>2021-02-01</Date>
+              <Date>2021-08-01</Date>
+              <Date>2022-02-01</Date>
             </Dates>
           </Dates>
         </ScheduleData>
@@ -143,14 +143,14 @@
         <ScheduleData>
           <Dates>
             <Dates>
-              <Date>2016-08-03</Date>
-              <Date>2017-02-03</Date>
-              <Date>2017-08-03</Date>
-              <Date>2018-02-03</Date>
-              <Date>2018-08-03</Date>
-              <Date>2019-02-03</Date>
-              <Date>2019-08-03</Date>
-              <Date>2020-02-03</Date>
+              <Date>2018-08-01</Date>
+              <Date>2019-02-01</Date>
+              <Date>2019-08-01</Date>
+              <Date>2020-02-01</Date>
+              <Date>2020-08-01</Date>
+              <Date>2021-02-01</Date>
+              <Date>2021-08-01</Date>
+              <Date>2022-02-01</Date>
             </Dates>
           </Dates>
         </ScheduleData>

@@ -106,7 +106,7 @@ namespace data {
 
 // clang-format on
 
-void RainbowOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void RainbowOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -155,6 +155,10 @@ void RainbowOption::build(const boost::shared_ptr<EngineFactory>& factory) {
     // build trade
 
     ScriptedTrade::build(factory);
+}
+
+void RainbowOption::setIsdaTaxonomyFields() {
+    ScriptedTrade::setIsdaTaxonomyFields();
 
     // ISDA taxonomy
     // asset class set in the base class already
@@ -209,7 +213,7 @@ void RainbowOption::fromXML(XMLNode* node) {
     initIndices();
 }
 
-XMLNode* RainbowOption::toXML(XMLDocument& doc) {
+XMLNode* RainbowOption::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* dataNode = doc.allocNode(tradeType() + "Data");
     XMLUtils::appendNode(node, dataNode);

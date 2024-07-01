@@ -76,13 +76,13 @@ map<string, vector<Real>> expectedInterpCurveOffPillars = {
     {"curveconfig_cubic.xml", {1417.89988981896, 1422.67192914531, 1427.25983144911}},
     {"curveconfig_cubic_flat.xml", {1418.1, 1422.67192914531, 1424.131275}}};
 
-boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir,
+QuantLib::ext::shared_ptr<CommodityCurve> createCurve(const string& inputDir,
                                               const string& curveConfigFile = "curveconfig.xml") {
 
     // As of date
     Date asof(29, Jul, 2019);
 
-    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
+    QuantLib::ext::shared_ptr<Conventions> conventions = QuantLib::ext::make_shared<Conventions>();
     string filename = inputDir + "/conventions.xml";
     conventions->fromFile(TEST_INPUT_FILE(filename));
     InstrumentConventions::instance().setConventions(conventions);
@@ -97,32 +97,32 @@ boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir,
     CommodityCurveSpec curveSpec("USD", "PM:XAUUSD");
 
     // Check commodity curve construction works
-    boost::shared_ptr<CommodityCurve> curve;
-    BOOST_REQUIRE_NO_THROW(curve = boost::make_shared<CommodityCurve>(asof, curveSpec, loader, curveConfigs));
+    QuantLib::ext::shared_ptr<CommodityCurve> curve;
+    BOOST_REQUIRE_NO_THROW(curve = QuantLib::ext::make_shared<CommodityCurve>(asof, curveSpec, loader, curveConfigs));
 
     return curve;
 }
 
-boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir) {
+QuantLib::ext::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir) {
 
-    auto conventions = boost::make_shared<Conventions>();
+    auto conventions = QuantLib::ext::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
     InstrumentConventions::instance().setConventions(conventions);
 
-    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    auto curveConfigs = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/curveconfig.xml")));
 
-    auto todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
+    auto todaysMarketParameters = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParameters->fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
 
     string fixingsFile = inputDir + "/fixings_" + to_string(io::iso_date(asof)) + ".txt";
-    auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
+    auto loader = QuantLib::ext::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
                                                 TEST_INPUT_FILE(fixingsFile), false);
 
-    return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
+    return QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
 }
 
-void checkCurve(const boost::shared_ptr<PriceTermStructure>& priceCurve, const map<Date, Real>& expectedValues) {
+void checkCurve(const QuantLib::ext::shared_ptr<PriceTermStructure>& priceCurve, const map<Date, Real>& expectedValues) {
 
     for (const auto& kv : expectedValues) {
         Real price = priceCurve->price(kv.first);
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(testCommodityCurveTenorBasedOnTnPoints) {
 
     BOOST_TEST_MESSAGE("Testing commodity curve building with tenor based points quotes including ON and TN");
 
-    boost::shared_ptr<CommodityCurve> curve = createCurve("tenor_based_on_tn_points");
+    QuantLib::ext::shared_ptr<CommodityCurve> curve = createCurve("tenor_based_on_tn_points");
     checkCurve(curve->commodityPriceCurve(), expectedCurve);
 }
 
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(testCommodityCurveFixedDatePoints) {
 
     BOOST_TEST_MESSAGE("Testing commodity curve building with fixed date quotes");
 
-    boost::shared_ptr<CommodityCurve> curve = createCurve("fixed_date_points");
+    QuantLib::ext::shared_ptr<CommodityCurve> curve = createCurve("fixed_date_points");
     checkCurve(curve->commodityPriceCurve(), expectedCurve);
 }
 
@@ -157,7 +157,7 @@ BOOST_DATA_TEST_CASE(testCommodityInterpolations, bdata::make(curveConfigFiles),
 
     BOOST_TEST_MESSAGE("Testing with configuration file: " << curveConfigFile);
 
-    boost::shared_ptr<CommodityCurve> curve = createCurve("different_interpolations", curveConfigFile);
+    QuantLib::ext::shared_ptr<CommodityCurve> curve = createCurve("different_interpolations", curveConfigFile);
     checkCurve(curve->commodityPriceCurve(), expectedInterpCurvePillars);
 
     BOOST_REQUIRE(expectedInterpCurveOffPillars.count(curveConfigFile) == 1);
@@ -202,7 +202,7 @@ BOOST_DATA_TEST_CASE(testCommodityCurveBuilding, bdata::make(commodityCurveTestC
     BOOST_TEST_MESSAGE("Testing commodity curve building " << testCase << "...");
 
     Settings::instance().evaluationDate() = testCase.asof;
-    boost::shared_ptr<TodaysMarket> tm;
+    QuantLib::ext::shared_ptr<TodaysMarket> tm;
     BOOST_REQUIRE_NO_THROW(tm = createTodaysMarket(testCase.asof, testCase.name));
 
     auto pts = tm->commodityPriceCurve(testCase.curveName);

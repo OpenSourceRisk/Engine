@@ -134,6 +134,31 @@ CrifRecord::ProductClass parseProductClass(const string& pc) {
     QL_FAIL("Product class string " << pc << " does not correspond to a valid CrifRecord::ProductClass");
 }
 
+std::ostream& operator<<(std::ostream& out, const CrifRecord::CurvatureScenario& scenario){
+    switch(scenario){
+        case CrifRecord::CurvatureScenario::Down:
+            out << "CurvatureDown";
+            break;
+        case CrifRecord::CurvatureScenario::Up:
+            out << "CurvatureUp";
+            break;
+        default:
+            out << "";
+            break;
+    }
+    return out;
+}
+
+CrifRecord::CurvatureScenario parseFrtbCurvatureScenario(const std::string& scenario) {
+    if (scenario == "CurvatureDown") {
+        return CrifRecord::CurvatureScenario::Down;
+    } else if (scenario == "CurvatureUp") {
+        return CrifRecord::CurvatureScenario::Up;
+    } else {
+        return CrifRecord::CurvatureScenario::Empty;
+    }
+}
+
 std::vector<std::set<std::string>> CrifRecord::additionalHeaders = {};
     
 ostream& operator<<(ostream& out, const CrifRecord& cr) {

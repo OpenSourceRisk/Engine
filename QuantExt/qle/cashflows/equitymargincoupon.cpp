@@ -26,11 +26,11 @@ using namespace QuantLib;
 namespace QuantExt {
 
 EquityMarginCoupon::EquityMarginCoupon(const Date& paymentDate, Real nominal, Rate rate, Real marginFactor, const Date& startDate, const Date& endDate,
-                           Natural fixingDays, const boost::shared_ptr<EquityIndex2>& equityCurve,
+                           Natural fixingDays, const QuantLib::ext::shared_ptr<EquityIndex2>& equityCurve,
                            const DayCounter& dayCounter, bool isTotalReturn, Real dividendFactor, bool notionalReset,
                            Real initialPrice, Real quantity, const Date& fixingStartDate, const Date& fixingEndDate,
                            const Date& refPeriodStart, const Date& refPeriodEnd, const Date& exCouponDate, Real multiplier,
-                           const boost::shared_ptr<FxIndex>& fxIndex, const bool initialPriceIsInTargetCcy)
+                           const QuantLib::ext::shared_ptr<FxIndex>& fxIndex, const bool initialPriceIsInTargetCcy)
     : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
       fixingDays_(fixingDays), equityCurve_(equityCurve), dayCounter_(dayCounter), isTotalReturn_(isTotalReturn),
       dividendFactor_(dividendFactor), notionalReset_(notionalReset), initialPrice_(initialPrice),
@@ -61,7 +61,7 @@ EquityMarginCoupon::EquityMarginCoupon(const Date& paymentDate, Real nominal, Ra
       
 }
 
-void EquityMarginCoupon::setPricer(const boost::shared_ptr<EquityMarginCouponPricer>& pricer) {
+void EquityMarginCoupon::setPricer(const QuantLib::ext::shared_ptr<EquityMarginCouponPricer>& pricer) {
     if (pricer_)
         unregisterWith(pricer_);
     pricer_ = pricer;
@@ -123,8 +123,8 @@ Rate EquityMarginCoupon::rate() const {
     return pricer_->rate();
 }
 
-EquityMarginLeg::EquityMarginLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex2>& equityCurve,
-                     const boost::shared_ptr<FxIndex>& fxIndex)
+EquityMarginLeg::EquityMarginLeg(const Schedule& schedule, const QuantLib::ext::shared_ptr<EquityIndex2>& equityCurve,
+                     const QuantLib::ext::shared_ptr<FxIndex>& fxIndex)
     : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex) {}
 
 EquityMarginLeg& EquityMarginLeg::withCouponRates(Rate rate,
@@ -304,12 +304,12 @@ EquityMarginLeg::operator Leg() const {
             }
         }
 
-        boost::shared_ptr<EquityMarginCoupon> cashflow(
+        QuantLib::ext::shared_ptr<EquityMarginCoupon> cashflow(
             new EquityMarginCoupon(paymentDate, notional, rate, marginFactor_, startDate, endDate, fixingDays_, equityCurve_, paymentDayCounter_,
                              isTotalReturn_, dividendFactor_, notionalReset_, initialPrice, quantity, fixingStartDate,
                              fixingEndDate, Date(), Date(), Date(), multiplier_, fxIndex_, initialPriceIsInTargetCcy));
 
-        boost::shared_ptr<EquityMarginCouponPricer> pricer(new EquityMarginCouponPricer);
+        QuantLib::ext::shared_ptr<EquityMarginCouponPricer> pricer(new EquityMarginCouponPricer);
         cashflow->setPricer(pricer);
 
         cashflows.push_back(cashflow);

@@ -26,7 +26,7 @@
 
 #include <ql/errors.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace QuantExt {
 
@@ -38,7 +38,8 @@ void backwardDerivatives(const ComputationGraph& g, std::vector<T>& values, std:
                          const std::vector<std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>>&
                              fwdOpRequiresNodesForDerivatives = {},
                          const std::vector<bool>& fwdKeepNodes = {}, const std::size_t conditionalExpectationOpId = 0,
-                         const std::function<T(const std::vector<const T*>&)>& conditionalExpectation = {}) {
+                         const std::function<T(const std::vector<const T*>&)>& conditionalExpectation = {},
+                         std::function<void(T&)> preDeleter = {}) {
 
     if (g.size() == 0)
         return;
@@ -70,7 +71,7 @@ void backwardDerivatives(const ComputationGraph& g, std::vector<T>& values, std:
                 QL_REQUIRE(range.second != ComputationGraph::nan,
                            "backwardDerivatives(): red block " << g.redBlockId(node) << " was not closed.");
                 forwardEvaluation(g, values, fwdOps, deleter, true, fwdOpRequiresNodesForDerivatives, fwdKeepNodes,
-                                  range.first, range.second, true);
+                                  range.first, range.second, true, preDeleter);
             }
 
             // update the red block id

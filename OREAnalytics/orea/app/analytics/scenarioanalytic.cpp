@@ -23,41 +23,34 @@ using namespace ore::analytics;
 
 namespace ore {
 namespace analytics {
-	
-// ScenarioAnalytic
-ScenarioAnalytic::ScenarioAnalytic(const boost::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs), {"SCENARIO"}, inputs, true, false, false, false) {}
 
 void ScenarioAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->scenarioSimMarketParams();
 }
 
-void ScenarioAnalyticImpl::runAnalytic(const boost::shared_ptr<InMemoryLoader>& loader,
+void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
 
     if (!analytic()->match(runTypes))
         return;
 
     LOG("ScenarioAnalytic::runAnalytic called");
-        
-    auto scenarioAnalytic = static_cast<ScenarioAnalytic*>(analytic());
-    QL_REQUIRE(scenarioAnalytic, "Analytic must be of type ScenarioAnalytic");
 
     analytic()->buildMarket(loader);
 
     LOG("Building scenario simulation market for date " << io::iso_date(inputs_->asof()));
     // FIXME: *configurations_.todaysMarketParams uninitialized?
-    auto ssm = boost::make_shared<ScenarioSimMarket>(
-        analytic()->market(), scenarioAnalytic->configurations().simMarketParams, Market::defaultConfiguration,
-        *scenarioAnalytic->configurations().curveConfig, *scenarioAnalytic->configurations().todaysMarketParams, true,
-        false, false, false, *inputs_->iborFallbackConfig());
+    auto ssm = QuantLib::ext::make_shared<ScenarioSimMarket>(
+        analytic()->market(), analytic()->configurations().simMarketParams, Market::defaultConfiguration,
+        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, true,
+        useSpreadedTermStructures_, false, false, *inputs_->iborFallbackConfig());
 
     setScenarioSimMarket(ssm);
     auto scenario = ssm->baseScenario();
     setScenario(scenario);
 
-    boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>();
     auto sw = ScenarioWriter(nullptr, report);
     sw.writeScenario(scenario, true);
     analytic()->reports()[label()]["scenario"] = report;

@@ -34,14 +34,14 @@ using std::string;
 namespace ore {
 namespace analytics {
 
-ZeroToParCube::ZeroToParCube(const boost::shared_ptr<SensitivityCube>& zeroCube,
-                             const boost::shared_ptr<ParSensitivityConverter>& parConverter,
+ZeroToParCube::ZeroToParCube(const QuantLib::ext::shared_ptr<SensitivityCube>& zeroCube,
+                             const QuantLib::ext::shared_ptr<ParSensitivityConverter>& parConverter,
                              const set<RiskFactorKey::KeyType>& typesDisabled, const bool continueOnError)
-    : ZeroToParCube(std::vector<boost::shared_ptr<SensitivityCube>>{zeroCube}, parConverter, typesDisabled,
+    : ZeroToParCube(std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>{zeroCube}, parConverter, typesDisabled,
                     continueOnError) {}
 
-ZeroToParCube::ZeroToParCube(const std::vector<boost::shared_ptr<SensitivityCube>>& zeroCubes,
-                             const boost::shared_ptr<ParSensitivityConverter>& parConverter,
+ZeroToParCube::ZeroToParCube(const std::vector<QuantLib::ext::shared_ptr<SensitivityCube>>& zeroCubes,
+                             const QuantLib::ext::shared_ptr<ParSensitivityConverter>& parConverter,
                              const set<RiskFactorKey::KeyType>& typesDisabled, const bool continueOnError)
     : zeroCubes_(zeroCubes), parConverter_(parConverter), typesDisabled_(typesDisabled),
       continueOnError_(continueOnError) {
@@ -64,8 +64,8 @@ map<RiskFactorKey, Real> ZeroToParCube::parDeltas(QuantLib::Size cubeIdx, QuantL
     QL_REQUIRE(cubeIdx < zeroCubes_.size(),
                "ZeroToParCube::parDeltas(): cubeIdx (" << cubeIdx << ") out of range 0..." << (zeroCubes_.size() - 1));
 
-    const boost::shared_ptr<SensitivityCube>& zeroCube = zeroCubes_[cubeIdx];
-    const boost::shared_ptr<NPVSensiCube>& sensiCube = zeroCube->npvCube();
+    const QuantLib::ext::shared_ptr<SensitivityCube>& zeroCube = zeroCubes_[cubeIdx];
+    const QuantLib::ext::shared_ptr<NPVSensiCube>& sensiCube = zeroCube->npvCube();
 
     std::set<RiskFactorKey> rkeys;
     for (auto const& kv : sensiCube->getTradeNPVs(tradeIdx)) {

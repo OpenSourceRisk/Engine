@@ -33,13 +33,20 @@ using namespace ore::data;
 namespace ore {
 namespace data {
 
-void CBO::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void CBO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("CBO::build() called for trade " << id());
+
+    // ISDA taxonomy: not a derivative, but define the asset class at least
+    // so that we can determine a TRS asset class that has CBO underlyings
+    additionalData_["isdaAssetClass"] = string("Credit");
+    additionalData_["isdaBaseProduct"] = string("");
+    additionalData_["isdaSubProduct"] = string("");
+    additionalData_["isdaTransaction"] = string("");
 
     requiredFixings_.clear();
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CBO");
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CBO");
 
     populateFromCboReferenceData(engineFactory->referenceData());
     validateCbo();
@@ -101,12 +108,12 @@ void CBO::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                           << longestBondDate << " vs. Tranche " << schedule.endDate());
 
     // set QuantExt instrument
-    boost::shared_ptr<QuantExt::CBO> cbo =
-        boost::make_shared<QuantExt::CBO>(bondbasket_, schedule, parseReal(seniorFee_), parseDayCounter(feeDayCounter_),
+    QuantLib::ext::shared_ptr<QuantExt::CBO> cbo =
+        QuantLib::ext::make_shared<QuantExt::CBO>(bondbasket_, schedule, parseReal(seniorFee_), parseDayCounter(feeDayCounter_),
                                           tranches, parseReal(subordinatedFee_), parseReal(equityKicker_),
                                           parseCurrency(ccy_), investedTrancheName_);
     // set pricing engine...
-    boost::shared_ptr<CboMCEngineBuilder> cboBuilder = boost::dynamic_pointer_cast<CboMCEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<CboMCEngineBuilder> cboBuilder = QuantLib::ext::dynamic_pointer_cast<CboMCEngineBuilder>(builder);
     QL_REQUIRE(cboBuilder, "No Builder found for CBO: " << id());
     cbo->setPricingEngine(cboBuilder->engine(bondbasket_->pool()));
     setSensitivityTemplate(*cboBuilder);
@@ -131,26 +138,19 @@ void CBO::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             cbo->registerWith(c);
     }
 
-    std::map<string, boost::shared_ptr<QuantExt::FxIndex>> fxIndexMap = bondbasket_->fxIndexMap();
-    std::map<string, boost::shared_ptr<QuantExt::FxIndex>>::iterator it;
+    std::map<string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexMap = bondbasket_->fxIndexMap();
+    std::map<string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>::iterator it;
     for (it = fxIndexMap.begin(); it != fxIndexMap.end(); ++it)
         cbo->registerWith(it->second);
-
-    // ISDA taxonomy: not a derivative, but define the asset class at least
-    // so that we can determine a TRS asset class that has CBO underlyings
-    additionalData_["isdaAssetClass"] = string("Credit");
-    additionalData_["isdaBaseProduct"] = string("");
-    additionalData_["isdaSubProduct"] = string("");
-    additionalData_["isdaTransaction"] = string("");
 }
 
-void CBO::populateFromCboReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager){
+void CBO::populateFromCboReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager){
 
     QL_REQUIRE(!structureId_.empty(), "CBO::populateFromCboReferenceDat(): no structure id given");
     if (!referenceDataManager || !referenceDataManager->hasData(CboReferenceDatum::TYPE, structureId_)) {
         DLOG("Could not get CboReferenceDatum for Id " << structureId_ << " leave data in trade unchanged");
      } else {
-        auto cboRefData = boost::dynamic_pointer_cast<CboReferenceDatum>(
+        auto cboRefData = QuantLib::ext::dynamic_pointer_cast<CboReferenceDatum>(
             referenceDataManager->getData(CboReferenceDatum::TYPE, structureId_));
         QL_REQUIRE(cboRefData, "could not cast to CboReferenceDatum, this is unexpected");
         populateFromCboReferenceData(cboRefData);
@@ -198,7 +198,7 @@ void CBO::fromXML(XMLNode* node) {
         XMLNode* tranchesNode = XMLUtils::getChildNode(cboStructure, "CBOTranches");
         if(tranchesNode){
             for (XMLNode* child = XMLUtils::getChildNode(tranchesNode, "Tranche"); child; child = XMLUtils::getNextSibling(child)) {
-                auto data = boost::make_shared<ore::data::TrancheData>();
+                auto data = QuantLib::ext::make_shared<ore::data::TrancheData>();
                 data->fromXML(child);
                 trancheData_.push_back(data);
             }
@@ -207,7 +207,7 @@ void CBO::fromXML(XMLNode* node) {
 
 }
 
-XMLNode* CBO::toXML(ore::data::XMLDocument& doc) {
+XMLNode* CBO::toXML(ore::data::XMLDocument& doc) const {
 
     XMLNode* node = Trade::toXML(doc);
     XMLNode* cboData = doc.allocNode("CBOData");
@@ -243,29 +243,29 @@ XMLNode* CBO::toXML(ore::data::XMLDocument& doc) {
 }
 
 std::map<AssetClass, std::set<std::string>>
-CBO::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+CBO::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return bondbasketdata_.underlyingIndices(referenceDataManager);
 }
 
 void CBOTrsUnderlyingBuilder::build(
-    const std::string& parentId, const boost::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates,
+    const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying, const std::vector<Date>& valuationDates,
     const std::vector<Date>& paymentDates, const std::string& fundingCurrency,
-    const boost::shared_ptr<EngineFactory>& engineFactory, boost::shared_ptr<QuantLib::Index>& underlyingIndex,
+    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex,
     Real& underlyingMultiplier, std::map<std::string, double>& indexQuantities,
-    std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
+    std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices, Real& initialPrice,
     std::string& assetCurrency, std::string& creditRiskCurrency,
-    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
-    const std::function<boost::shared_ptr<QuantExt::FxIndex>(
-        const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-        const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+    std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, 
+    const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+        const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+        const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
         getFxIndex,
     const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const {
-    auto t = boost::dynamic_pointer_cast<ore::data::CBO>(underlying);
+    auto t = QuantLib::ext::dynamic_pointer_cast<ore::data::CBO>(underlying);
     QL_REQUIRE(t, "could not cast to ore::data::CBO, this is unexpected");
     string indexName = "GENERIC-" + t->investedTrancheName();
     IndexNameTranslator::instance().add(indexName, indexName);
     indexQuantities[indexName] = t->underlyingMultiplier();
-    underlyingIndex = boost::make_shared<QuantExt::GenericIndex>(indexName);
+    underlyingIndex = QuantLib::ext::make_shared<QuantExt::GenericIndex>(indexName);
     underlyingMultiplier = t->underlyingMultiplier();
     assetCurrency = t->npvCurrency();
     creditRiskCurrency = t->npvCurrency();
@@ -313,14 +313,14 @@ void CboReferenceDatum::CboStructure::fromXML(XMLNode* node) {
     XMLNode* tranchesNode = XMLUtils::getChildNode(node, "CBOTranches");
     QL_REQUIRE(tranchesNode, "No CBOTranches Node");
     for (XMLNode* child = XMLUtils::getChildNode(tranchesNode, "Tranche"); child; child = XMLUtils::getNextSibling(child)) {
-        auto data = boost::make_shared<ore::data::TrancheData>();
+        auto data = QuantLib::ext::make_shared<ore::data::TrancheData>();
         data->fromXML(child);
         trancheData.push_back(data);
     }
 
 }
 
-XMLNode* CboReferenceDatum::CboStructure::toXML(XMLDocument& doc) {
+XMLNode* CboReferenceDatum::CboStructure::toXML(XMLDocument& doc) const {
 
     XMLNode* node = doc.allocNode("CboStructure");
 
@@ -351,7 +351,7 @@ void CboReferenceDatum::fromXML(XMLNode* node) {
 
 }
 
-XMLNode* CboReferenceDatum::toXML(XMLDocument& doc) {
+XMLNode* CboReferenceDatum::toXML(XMLDocument& doc) const {
 
     XMLNode* node = ReferenceDatum::toXML(doc);
     XMLNode* dataNode = cboStructure_.toXML(doc);
@@ -362,7 +362,7 @@ XMLNode* CboReferenceDatum::toXML(XMLDocument& doc) {
 }
 
 
-void CBO::populateFromCboReferenceData(const boost::shared_ptr<CboReferenceDatum>& cboReferenceDatum){
+void CBO::populateFromCboReferenceData(const QuantLib::ext::shared_ptr<CboReferenceDatum>& cboReferenceDatum){
 
     DLOG("populating data cbo from reference data");
     QL_REQUIRE(cboReferenceDatum, "populateFromCboReferenceData(): empty cbo reference datum given");

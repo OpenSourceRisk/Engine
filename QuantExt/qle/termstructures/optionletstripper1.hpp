@@ -34,7 +34,7 @@ namespace QuantExt {
 using namespace QuantLib;
 using boost::optional;
 
-typedef std::vector<std::vector<boost::shared_ptr<QuantLib::CapFloor> > > CapFloorMatrix;
+typedef std::vector<std::vector<QuantLib::ext::shared_ptr<QuantLib::CapFloor> > > CapFloorMatrix;
 
 /*! Helper class to strip optionlet (i.e. caplet/floorlet) volatilities
     (a.k.a. forward-forward volatilities) from the (cap/floor) term
@@ -44,8 +44,8 @@ typedef std::vector<std::vector<boost::shared_ptr<QuantLib::CapFloor> > > CapFlo
 class OptionletStripper1 : public QuantExt::OptionletStripper {
 public:
     // If dontThrow is set to true than any vols that would throw are set to dontThrowMinVol (default is 0.0)
-    OptionletStripper1(const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>&,
-                       const boost::shared_ptr<IborIndex>& index, Rate switchStrikes = Null<Rate>(),
+    OptionletStripper1(const QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolSurface>&,
+                       const QuantLib::ext::shared_ptr<IborIndex>& index, Rate switchStrikes = Null<Rate>(),
                        Real accuracy = 1.0e-6, Natural maxIter = 100,
                        const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
                        const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0,
@@ -71,8 +71,8 @@ private:
     mutable Matrix optionletStDevs_, capletVols_;
 
     mutable CapFloorMatrix capFloors_;
-    mutable std::vector<std::vector<boost::shared_ptr<SimpleQuote> > > volQuotes_;
-    mutable std::vector<std::vector<boost::shared_ptr<PricingEngine> > > capFloorEngines_;
+    mutable std::vector<std::vector<QuantLib::ext::shared_ptr<SimpleQuote> > > volQuotes_;
+    mutable std::vector<std::vector<QuantLib::ext::shared_ptr<PricingEngine> > > capFloorEngines_;
     bool floatingSwitchStrike_;
     mutable bool capFlooMatrixNotInitialized_;
     mutable Rate switchStrike_;

@@ -1,4 +1,4 @@
-name: C/C++ MacOS
+name: C/C++ MacOS ARM64
 
 on:
   push:

@@ -24,7 +24,7 @@
 
 #include <qle/ad/computationgraph.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace QuantExt {
 
@@ -35,7 +35,8 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
                        const std::vector<std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>>&
                            opRequiresNodesForDerivatives = {},
                        const std::vector<bool>& keepNodes = {}, const std::size_t startNode = 0,
-                       const std::size_t endNode = ComputationGraph::nan, const bool redBlockReconstruction = false) {
+                       const std::size_t endNode = ComputationGraph::nan, const bool redBlockReconstruction = false,
+                       std::function<void(T&)> preDeleter = {}, const std::vector<bool>& opAllowsPredeletion = {}) {
 
     std::vector<bool> keepNodesDerivatives;
     if (deleter && keepValuesForDerivatives)
@@ -55,13 +56,8 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
             for (std::size_t arg = 0; arg < g.predecessors(node).size(); ++arg) {
                 args[arg] = &values[g.predecessors(node)[arg]];
             }
-            values[node] = ops[g.opId(node)](args);
 
-            QL_REQUIRE(values[node].initialised(), "forwardEvaluation(): value at active node "
-                                                       << node << " is not initialized, opId = " << g.opId(node));
-
-            // then check if we can delete the predecessors
-
+            std::set<std::size_t> nodesToDelete;
             if (deleter) {
                 for (std::size_t arg = 0; arg < g.predecessors(node).size(); ++arg) {
                     std::size_t p = g.predecessors(node)[arg];
@@ -89,12 +85,28 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
 
                     // apply the deleter
 
-                    deleter(values[p]);
+                    nodesToDelete.insert(p);
 
                 } // for arg over g.predecessors
-            }     // if deleter
-        }         // if !g.predecessors empty
-    }             // for node
+            }
+
+            if (preDeleter && !opAllowsPredeletion.empty() && opAllowsPredeletion[g.opId(node)]) {
+                for(auto n: nodesToDelete)
+                    preDeleter(values[n]);
+            }
+
+            values[node] = ops[g.opId(node)](args);
+
+            QL_REQUIRE(values[node].initialised(), "forwardEvaluation(): value at active node "
+                                                       << node << " is not initialized, opId = " << g.opId(node));
+
+            if(deleter) {
+                for(auto n: nodesToDelete)
+                    deleter(values[n]);
+            }
+
+        }     // if !g.predecessors empty
+    }         // for node
 }
 
 } // namespace QuantExt

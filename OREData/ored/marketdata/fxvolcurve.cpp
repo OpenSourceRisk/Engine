@@ -48,7 +48,7 @@ using namespace std;
 namespace {
 
 // utility to get a handle out of a Curve object
-template <class T, class K> Handle<T> getHandle(const string& spec, const map<string, boost::shared_ptr<K>>& m) {
+template <class T, class K> Handle<T> getHandle(const string& spec, const map<string, QuantLib::ext::shared_ptr<K>>& m) {
     auto it = m.find(spec);
     QL_REQUIRE(it != m.end(), "FXVolCurve: Can't find spec " << spec);
     return it->second->handle();
@@ -62,16 +62,16 @@ namespace data {
 // second ctor
 FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                        const CurveConfigurations& curveConfigs, const FXTriangulation& fxSpots,
-                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                       const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+                       const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                       const std::map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVols,
+                       const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves,
                        const bool buildCalibrationInfo) {
     init(asof, spec, loader, curveConfigs, fxSpots, yieldCurves, fxVols, correlationCurves, buildCalibrationInfo);
 }
 
 void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
-                                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+                                      QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
+                                      const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves) {
     vector<Period> unsortedExp;
 
     vector<std::pair<Real, string>> putDeltas, callDeltas;
@@ -114,7 +114,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     if (expiriesWildcard_) {
 
         // we save relevant delta quotes to avoid looping twice
-        std::vector<boost::shared_ptr<MarketDatum>> data;
+        std::vector<QuantLib::ext::shared_ptr<MarketDatum>> data;
         std::vector<std::string> expiriesStr;
         // get list of possible expiries
         std::ostringstream ss;
@@ -123,7 +123,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         Wildcard w(ss.str());
         for (const auto& md : loader.get(w, asof)) {
             QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
-            boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+            QuantLib::ext::shared_ptr<FXOptionQuote> q = QuantLib::ext::dynamic_pointer_cast<FXOptionQuote>(md);
             QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to FXOptionQuote");
             QL_REQUIRE(q->unitCcy() == spec.unitCcy(),
                 "FXOptionQuote unit ccy '" << q->unitCcy() << "' <> FXVolatilityCurveSpec unit ccy '" << spec.unitCcy() << "'");
@@ -155,14 +155,14 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
             string e = expiriesStr[idx];
             for (Size j = 0; j < deltaNames.size(); ++j) {
                 string qs = base + e + "/" + deltaNames[j];
-                boost::shared_ptr<MarketDatum> md;
+                QuantLib::ext::shared_ptr<MarketDatum> md;
                 for (auto& m : data) {
                     if (m->name() == qs) {
                         md = m;
                         break;
                     }
                 }
-                boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+                QuantLib::ext::shared_ptr<FXOptionQuote> q = QuantLib::ext::dynamic_pointer_cast<FXOptionQuote>(md);
                 if (!q) {
                     DLOG("missing " << qs << ", expiry " << e << " will be excluded");
                     break;
@@ -200,8 +200,8 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
             dates.push_back(cal.advance(asof, expiries_[i]));
             for (Size j = 0; j < deltaNames.size(); ++j) {
                 string qs = base + e + "/" + deltaNames[j];
-                boost::shared_ptr<MarketDatum> md = loader.get(qs, asof);
-                boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+                QuantLib::ext::shared_ptr<MarketDatum> md = loader.get(qs, asof);
+                QuantLib::ext::shared_ptr<FXOptionQuote> q = QuantLib::ext::dynamic_pointer_cast<FXOptionQuote>(md);
                 QL_REQUIRE(q, "quote not found, " << qs);
                 blackVolMatrix[i][j] = q->quote()->value();
             }
@@ -217,6 +217,19 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         QL_FAIL("Delta FX vol surface: invalid interpolation, expected Linear, Cubic");
     }
 
+    bool flatExtrapolation = true;
+    auto smileExtrapType = parseExtrapolation(config->smileExtrapolation());
+    if (smileExtrapType == Extrapolation::UseInterpolator) {
+        DLOG("Smile extrapolation switched to using interpolator.");
+        flatExtrapolation = false;
+    } else if (smileExtrapType == Extrapolation::None) {
+        DLOG("Smile extrapolation cannot be turned off on its own so defaulting to flat.");
+    } else if (smileExtrapType == Extrapolation::Flat) {
+        DLOG("Smile extrapolation has been set to flat.");
+    } else {
+        DLOG("Smile extrapolation " << smileExtrapType << " not expected so defaulting to flat.");
+    }
+
     // daycounter used for interpolation in time.
     // TODO: push into conventions or config
     DayCounter dc = config->dayCounter();
@@ -225,28 +238,29 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                    [](const std::pair<Real, string>& x) { return x.first; });
     std::transform(callDeltas.begin(), callDeltas.end(), std::back_inserter(callDeltasNum),
                    [](const std::pair<Real, string>& x) { return x.first; });
-    vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
+    vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
         asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot_, domYts_, forYts_,
-        deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_, boost::none, interp);
+        deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_, boost::none, interp,
+        flatExtrapolation);
 
     vol_->enableExtrapolation();
 }
 
 void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                                     boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
-                                     const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+                                     QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
+                                     const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves) {
 
     // collect relevant market data and populate expiries (as per regex or configured list)
 
     std::set<Period> expiriesTmp;
 
-    std::vector<boost::shared_ptr<FXOptionQuote>> data;
+    std::vector<QuantLib::ext::shared_ptr<FXOptionQuote>> data;
     std::ostringstream ss;
     ss << MarketDatum::InstrumentType::FX_OPTION << "/RATE_LNVOL/" << spec.unitCcy()<< "/"
         << spec.ccy()<< "/*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
-        boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+        QuantLib::ext::shared_ptr<FXOptionQuote> q = QuantLib::ext::dynamic_pointer_cast<FXOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to FXOptionQuote");
         QL_REQUIRE(q->unitCcy() == spec.unitCcy(),
             "FXOptionQuote unit ccy '" << q->unitCcy() << "' <> FXVolatilityCurveSpec unit ccy '" << spec.unitCcy() << "'");
@@ -368,7 +382,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     std::transform(smileDeltas.begin(), smileDeltas.end(), std::back_inserter(smileDeltasScaled),
                    [](Size d) { return static_cast<Real>(d) / 100.0; });
 
-    vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceBFRR>(
+    vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceBFRR>(
         asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, config->dayCounter(), config->calendar(),
         fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
         longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp);
@@ -377,9 +391,9 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
 }
 
 void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                                           boost::shared_ptr<FXVolatilityCurveConfig> config,
+                                           QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config,
                                            const FXTriangulation& fxSpots,
-                                           const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+                                           const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves) {
 
     bool isATM = config->dimension() == FXVolatilityCurveConfig::Dimension::ATM;
     Natural smileDelta = 0;
@@ -396,7 +410,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     // every time we find a matching expiry we remove it from the list
     // we replicate this for all 3 types of quotes were applicable.
     Size n = isATM ? 1 : 3; // [0] = ATM, [1] = RR, [2] = BF
-    vector<vector<boost::shared_ptr<FXOptionQuote>>> quotes(n);
+    vector<vector<QuantLib::ext::shared_ptr<FXOptionQuote>>> quotes(n);
 
     QL_REQUIRE(!expiriesWildcard_ || isATM, "wildcards only supported for ATM, Delta, BFRR FxVol Curves");
 
@@ -409,14 +423,14 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     }
 
     // Load the relevant quotes
-    std::vector<boost::shared_ptr<FXOptionQuote>> data;
+    std::vector<QuantLib::ext::shared_ptr<FXOptionQuote>> data;
     std::ostringstream ss;
     ss << MarketDatum::InstrumentType::FX_OPTION << "/RATE_LNVOL/" << spec.unitCcy()<< "/"
         << spec.ccy()<< "/*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
 
-        boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+        QuantLib::ext::shared_ptr<FXOptionQuote> q = QuantLib::ext::dynamic_pointer_cast<FXOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to FXOptionQuote");
         QL_REQUIRE(q->unitCcy() == spec.unitCcy(),
             "FXOptionQuote unit ccy '" << q->unitCcy() << "' <> FXVolatilityCurveSpec unit ccy '" << spec.unitCcy() << "'");
@@ -479,7 +493,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     // sort all quotes
     for (Size i = 0; i < n; i++) {
         std::sort(quotes[i].begin(), quotes[i].end(),
-                  [](const boost::shared_ptr<FXOptionQuote>& a, const boost::shared_ptr<FXOptionQuote>& b) -> bool {
+                  [](const QuantLib::ext::shared_ptr<FXOptionQuote>& a, const QuantLib::ext::shared_ptr<FXOptionQuote>& b) -> bool {
                       return a->expiry() < b->expiry();
                   });
     }
@@ -491,7 +505,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
 
     // build vol curve
     if (isATM && quotes[0].size() == 1) {
-        vol_ = boost::shared_ptr<BlackVolTermStructure>(
+        vol_ = QuantLib::ext::shared_ptr<BlackVolTermStructure>(
             new BlackConstantVol(asof, config->calendar(), quotes[0].front()->quote()->value(), dc));
         expiries_ = {quotes[0].front()->expiry()};
     } else {
@@ -514,7 +528,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
         if (isATM) {
             // ATM
             // Set forceMonotoneVariance to false - allowing decreasing variance
-            vol_ = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc, false));
+            vol_ = QuantLib::ext::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc, false));
         } else {
             // Smile
             bool vvFirstApprox = false; // default to VannaVolga second approximation
@@ -522,7 +536,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
                 vvFirstApprox = true;
             }
 
-            vol_ = boost::make_shared<QuantExt::FxBlackVannaVolgaVolatilitySurface>(
+            vol_ = QuantLib::ext::make_shared<QuantExt::FxBlackVannaVolgaVolatilitySurface>(
                 asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot_, domYts_, forYts_, false, vvFirstApprox,
                 atmType_, deltaType_, smileDelta / 100.0, switchTenor_, longTermAtmType_, longTermDeltaType_);
         }
@@ -531,18 +545,18 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
 }
 
 void FXVolCurve::buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                                         boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
-                                         const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+                                         QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
+                                         const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves) {
 
     // collect relevant market data and populate expiries (as per regex or configured list)
     std::set<Period> expiriesTmp;
 
-    std::vector<boost::shared_ptr<FXOptionQuote>> data;
+    std::vector<QuantLib::ext::shared_ptr<FXOptionQuote>> data;
     std::ostringstream ss;
     ss << MarketDatum::InstrumentType::FX_OPTION << "/RATE_LNVOL/" << spec.unitCcy() << "/" << spec.ccy() << "/*";
     Wildcard w(ss.str());
     for (const auto& md : loader.get(w, asof)) {
-        boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+        QuantLib::ext::shared_ptr<FXOptionQuote> q = QuantLib::ext::dynamic_pointer_cast<FXOptionQuote>(md);
         QL_REQUIRE(q, "Internal error: could not downcast MarketDatum '" << md->name() << "' to FXOptionQuote");
         QL_REQUIRE(q->unitCcy() == spec.unitCcy(), "FXOptionQuote unit ccy '" << q->unitCcy()
                                                                               << "' <> FXVolatilityCurveSpec unit ccy '"
@@ -639,7 +653,7 @@ void FXVolCurve::buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, 
     std::transform(expiries_.begin(), expiries_.end(), std::back_inserter(dates),
                    [&asof, &config](const Period& p) { return config->calendar().advance(asof, p); });
 
-    vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceAbsolute>(
+    vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceAbsolute>(
         asof, dates, strikes, strikeQuotes, config->dayCounter(), config->calendar(),
         fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
         longTermAtmType_, interp);
@@ -649,7 +663,7 @@ void FXVolCurve::buildSmileAbsoluteCurve(Date asof, FXVolatilityCurveSpec spec, 
 
 Handle<QuantExt::CorrelationTermStructure>
 getCorrelationCurve(const std::string& index1, const std::string& index2,
-                    const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
+                    const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves) {
     // straight pair
     auto tmpCorr = correlationCurves.find("Correlation/" + index1 + "&" + index2);
     if (tmpCorr != correlationCurves.end()) {
@@ -666,14 +680,14 @@ getCorrelationCurve(const std::string& index1, const std::string& index2,
         Handle<QuantExt::CorrelationTermStructure> h =
             Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
         return Handle<QuantExt::CorrelationTermStructure>(
-            boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
+            QuantLib::ext::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
     }
     tmpCorr = correlationCurves.find("Correlation/" + index2 + "&" + inverseFxIndex(index1));
     if (tmpCorr != correlationCurves.end()) {
         Handle<QuantExt::CorrelationTermStructure> h =
             Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
         return Handle<QuantExt::CorrelationTermStructure>(
-            boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
+            QuantLib::ext::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
     }
     // inverse fx index2
     tmpCorr = correlationCurves.find("Correlation/" + index1 + "&" + inverseFxIndex(index2));
@@ -681,14 +695,14 @@ getCorrelationCurve(const std::string& index1, const std::string& index2,
         Handle<QuantExt::CorrelationTermStructure> h =
             Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
         return Handle<QuantExt::CorrelationTermStructure>(
-            boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
+            QuantLib::ext::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
     }
     tmpCorr = correlationCurves.find("Correlation/" + inverseFxIndex(index2) + "&" + index1);
     if (tmpCorr != correlationCurves.end()) {
         Handle<QuantExt::CorrelationTermStructure> h =
             Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
         return Handle<QuantExt::CorrelationTermStructure>(
-            boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
+            QuantLib::ext::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
     }
     // both fx indices inverted
     tmpCorr = correlationCurves.find("Correlation/" + inverseFxIndex(index1) + "&" + inverseFxIndex(index2));
@@ -704,10 +718,10 @@ getCorrelationCurve(const std::string& index1, const std::string& index2,
 }
 
 void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
-                                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                                      const map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
+                                      QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
+                                      const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                                      const map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVols,
+                                      const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves) {
 
     DLOG("Triangulating FxVol curve " << config->curveID() << " from baseVols " << config->baseVolatility1() << ":"
                                       << config->baseVolatility2());
@@ -755,7 +769,7 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
     if (base1Inverted) {
         auto h = Handle<BlackVolTermStructure>(tmp->second->volTermStructure());
         if (!h.empty())
-            forBaseVol = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::BlackInvertedVolTermStructure>(h));
+            forBaseVol = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<QuantExt::BlackInvertedVolTermStructure>(h));
     } else {
         forBaseVol = Handle<BlackVolTermStructure>(tmp->second->volTermStructure());
     }
@@ -767,7 +781,7 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
     if (base2Inverted) {
         auto h = Handle<BlackVolTermStructure>(tmp->second->volTermStructure());
         if (!h.empty())
-            domBaseVol = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::BlackInvertedVolTermStructure>(h));
+            domBaseVol = Handle<BlackVolTermStructure>(QuantLib::ext::make_shared<QuantExt::BlackInvertedVolTermStructure>(h));
 
     } else {
         domBaseVol = Handle<BlackVolTermStructure>(tmp->second->volTermStructure());
@@ -779,20 +793,20 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
 
     Handle<QuantExt::CorrelationTermStructure> rho = getCorrelationCurve(forIndex, domIndex, correlationCurves);
 
-    vol_ = boost::make_shared<QuantExt::BlackTriangulationATMVolTermStructure>(forBaseVol, domBaseVol, rho);
+    vol_ = QuantLib::ext::make_shared<QuantExt::BlackTriangulationATMVolTermStructure>(forBaseVol, domBaseVol, rho);
     vol_->enableExtrapolation();
 }
 
 void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                       const CurveConfigurations& curveConfigs, const FXTriangulation& fxSpots,
-                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                      const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+                      const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
+                      const std::map<string, QuantLib::ext::shared_ptr<FXVolCurve>>& fxVols,
+                      const map<string, QuantLib::ext::shared_ptr<CorrelationCurve>>& correlationCurves,
                       const bool buildCalibrationInfo) {
     try {
 
-        const boost::shared_ptr<FXVolatilityCurveConfig>& config = curveConfigs.fxVolCurveConfig(spec.curveConfigID());
-        boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        const QuantLib::ext::shared_ptr<FXVolatilityCurveConfig>& config = curveConfigs.fxVolCurveConfig(spec.curveConfigID());
+        QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATM ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated ||
@@ -873,12 +887,12 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             WLOG("no fx option conventions given in fxvol curve config for " << spec.curveConfigID()
                                                                              << ", assuming defaults");
         } else {
-            auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conventions->get(config->conventionsID()));
+            auto fxOptConv = QuantLib::ext::dynamic_pointer_cast<FxOptionConvention>(conventions->get(config->conventionsID()));
             QL_REQUIRE(fxOptConv,
                        "unable to cast convention '" << config->conventionsID() << "' into FxOptionConvention");
-            boost::shared_ptr<FXConvention> fxConv;
+            QuantLib::ext::shared_ptr<FXConvention> fxConv;
             if (!fxOptConv->fxConventionID().empty()) {
-                fxConv = boost::dynamic_pointer_cast<FXConvention>(conventions->get(fxOptConv->fxConventionID()));
+                fxConv = QuantLib::ext::dynamic_pointer_cast<FXConvention>(conventions->get(fxOptConv->fxConventionID()));
                 QL_REQUIRE(fxConv, "unable to cast convention '" << fxOptConv->fxConventionID()
                                                                  << "', from FxOptionConvention '"
                                                                  << config->conventionsID() << "' into FxConvention");
@@ -896,7 +910,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             }
         }
 
-        auto spotSpec = boost::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(config->fxSpotID()));
+        auto spotSpec = QuantLib::ext::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(config->fxSpotID()));
         QL_REQUIRE(spotSpec != nullptr,
                    "could not parse '" << config->fxSpotID() << "' to FXSpotSpec, expected FX/CCY1/CCY2");
         fxSpot_ = fxSpots.getQuote(spotSpec->unitCcy() + spotSpec->ccy());
@@ -937,7 +951,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             std::vector<std::string> deltas = *rc.deltas();
             std::vector<Period> expiries = *rc.expiries();
 
-            calibrationInfo_ = boost::make_shared<FxEqCommVolCalibrationInfo>();
+            calibrationInfo_ = QuantLib::ext::make_shared<FxEqCommVolCalibrationInfo>();
 
             calibrationInfo_->dayCounter = config->dayCounter().empty() ? "na" : config->dayCounter().name();
             calibrationInfo_->calendar = config->calendar().empty() ? "na" : config->calendar().name();
@@ -1132,7 +1146,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             // the bfrr surface provides info on smiles with error, which we report here
 
             if (reportOnDeltaGrid || reportOnMoneynessGrid) {
-                if (auto bfrr = boost::dynamic_pointer_cast<QuantExt::BlackVolatilitySurfaceBFRR>(vol_)) {
+                if (auto bfrr = QuantLib::ext::dynamic_pointer_cast<QuantExt::BlackVolatilitySurfaceBFRR>(vol_)) {
                     if (bfrr->deltas().size() != bfrr->currentDeltas().size()) {
                         calibrationInfo_->messages.push_back(
                             "Warning: Used only " + std::to_string(bfrr->currentDeltas().size()) + " deltas of the " +

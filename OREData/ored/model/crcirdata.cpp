@@ -122,7 +122,7 @@ void CrCirData::fromXML(XMLNode* node) {
     LOG("CrCirData done");
 }
 
-XMLNode* CrCirData::toXML(XMLDocument& doc) {
+XMLNode* CrCirData::toXML(XMLDocument& doc) const {
 
     XMLNode* cirNode = doc.allocNode("CIR");
     XMLUtils::addAttribute(doc, cirNode, "name", name_);
@@ -143,9 +143,9 @@ XMLNode* CrCirData::toXML(XMLDocument& doc) {
 
     // swaption calibration
     XMLNode* calibrationSwaptionsNode = XMLUtils::addChild(doc, cirNode, "CalibrationCdsOptions");
-    XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Expiries", optionExpiries());
-    XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Terms", optionTerms());
-    XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Strikes", optionStrikes());
+    XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Expiries", optionExpiries_);
+    XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Terms", optionTerms_);
+    XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Strikes", optionStrikes_);
 
     return cirNode;
 }

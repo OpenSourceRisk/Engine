@@ -24,10 +24,10 @@
 
 namespace QuantExt {
 
-BondTRS::BondTRS(const boost::shared_ptr<QuantExt::BondIndex>& bondIndex, const Real bondNotional,
+BondTRS::BondTRS(const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex, const Real bondNotional,
                  const Real initialPrice, const std::vector<QuantLib::Leg>& fundingLeg, const bool payTotalReturnLeg,
                  const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
-                 const boost::shared_ptr<QuantExt::FxIndex>& fxIndex, bool payBondCashFlowsImmediately,
+                 const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, bool payBondCashFlowsImmediately,
                  const Currency& fundingCurrency, const Currency& bondCurrency)
     : bondIndex_(bondIndex), bondNotional_(bondNotional), initialPrice_(initialPrice), fundingLeg_(fundingLeg),
       payTotalReturnLeg_(payTotalReturnLeg), fxIndex_(fxIndex),

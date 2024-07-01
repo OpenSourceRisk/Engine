@@ -42,7 +42,38 @@ Listing \ref{lst:swaptionvol_configuration} shows an example of a Swaption volat
     <CurveDescription>EUR normal swaption volatilities</CurveDescription>
     <Dimension>ATM</Dimension>
     <VolatilityType>Normal</VolatilityType>
+    <Interpolation>Hagan2002NormalZeroBeta</Interpolation>
+    <ParametricSmileConfiguration>
+      <Parameters>
+        <Parameter>
+          <Name>alpha</Name>
+          <InitialValue>0.0050</InitialValue>
+          <IsFixed>false</IsFixed>
+        </Parameter>
+        <Parameter>
+          <Name>beta</Name>
+          <InitialValue>0.0</InitialValue>
+          <IsFixed>true</IsFixed>
+        </Parameter>
+        <Parameter>
+          <Name>nu</Name>
+          <InitialValue>0.30</InitialValue>
+          <IsFixed>false</IsFixed>
+        </Parameter>
+        <Parameter>
+          <Name>rho</Name>
+          <InitialValue>0.0</InitialValue>
+          <IsFixed>false</IsFixed>
+        </Parameter>
+      </Parameters>
+      <Calibration>
+        <MaxCalibrationAttempts>10</MaxCalibrationAttempts>
+        <ExitEarlyErrorThreshold>0.005</ExitEarlyErrorThreshold>
+        <MaxAcceptableError>0.05</MaxAcceptableError>
+      </Calibration>
+    </ParametricSmileConfiguration>
     <Extrapolation>Flat</Extrapolation>
+    <OutputVolatilityType>Normal</OutputVolatilityType>
     <DayCounter>Actual/365 (Fixed)</DayCounter>
     <Calendar>TARGET</Calendar>
     <BusinessDayConvention>Following</BusinessDayConvention>
@@ -74,7 +105,16 @@ The meaning of each of the elements in Listing \ref{lst:swaptionvol_configuratio
 \item VolatilityType: Specifies the type of market volatility inputs. \\ 
 Allowable values: {\tt Normal, Lognormal, ShiftedLognormal} \\
 In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap tenor) has to be provided in the market data input. 
-\item Extrapolation: Specifies the extrapolation behaviour in all dimensions. \\ Allowable values: {\tt Linear, Flat, None}
+\item Interpolation: Optional. Possible values: Linear, Hagan2002Lognormal, Hagan2002Normal, Hagan2002NormalZeroBeta,
+  Antonov2015FreeBoundaryNormal, KienitzLawsonSwaynePde, FlochKennedy. If not given, defaults to Linear.
+\item ParametricSmileConfiguration: Optional. Applies to SABR only. If not given, default values are used. Allows to
+  specify initial values for calibrated parameters, to exclude single parameters from calibration and to set calibration
+  parameters. See Example 60 for how to configure single value and termstructures of sabr parameters for swaption and cap curve configs.
+\item Extrapolation: Specifies the extrapolation behaviour in all dimensions. \\ Allowable values: {\tt Linear, Flat,
+  None}
+\item OutputVolatilityType: Optional, defaults to input volatility type and applies to SABR variants only. For
+  Interpolation = Linear it must be set to the input VolatilityType or (better) omitted. Possible values: Normal,
+  Lognormal (alias for ShiftedLognormal, shift is always implied from input data), ShiftedLognormal.
 \item DayCounter: The term structure's day counter used in date to time conversions
 \item Calendar: The term structure's calendar used in option tenor to date conversions
 \item BusinessDayConvention: The term structure's business day convention used in option tenor to date conversion
@@ -162,6 +202,7 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
     <DayCounter>A365</DayCounter>
     <Calendar>US,JP</Calendar>
     <Conventions>USD-JPY-FXOPTION</Conventions>
+    <SmileExtrapolation>UseInterpolator</SmileExtrapolation>
   </FXVolatility>
 \end{minted}
 \caption{FX option volatility configuration Smile / Delta}
@@ -273,6 +314,10 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
   data input. See \ref{sss:fx_option_conv} for more details.
 \item BaseVolatility1: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
 \item BaseVolatility2: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
+\item SmileExtrapolation [Optional]: Applicable only in case of SmileType Delta. Indicates the extrapolation in the 
+smile direction. The allowable values are None, UseInterpolator (or Linear) and Flat. Both Flat and None give flat 
+extrapolation. UseInterpolator indicates that the configured interpolation should be continued in the strike 
+direction in order to extrapolate. Default if not provided value is Flat.
 \end{itemize}
 
 \subsubsection{Equity Curve Structures}

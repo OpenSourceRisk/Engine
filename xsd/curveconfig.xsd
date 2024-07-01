@@ -116,8 +116,38 @@
       <xs:element type="xs:string" name="ProxyVolatilityCurve"/>
       <xs:element type="xs:string" name="FXVolatilityCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="CorrelationCurve" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="CDSVolatilityCurve" minOccurs="0" maxOccurs="1"/>
     </xs:all>
     <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
+  </xs:complexType>
+
+  <xs:complexType name="parametricSmileConfigParameter">
+    <xs:all>
+      <xs:element type="xs:string" name="Name"/>
+      <xs:element type="xs:string" name="InitialValue"/>
+      <xs:element type="xs:boolean" name="IsFixed"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="parametricSmileConfigParameters">
+    <xs:sequence>
+      <xs:element type="parametricSmileConfigParameter" name="Parameter" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="parametricSmileConfigCalibration">
+    <xs:all>
+      <xs:element type="xs:integer" name="MaxCalibrationAttempts"/>
+      <xs:element type="xs:float" name="ExitEarlyErrorThreshold"/>
+      <xs:element type="xs:float" name="MaxAcceptableError"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="parametricSmileConfig">
+    <xs:all>
+      <xs:element type="parametricSmileConfigParameters" name="Parameters"/>
+      <xs:element type="parametricSmileConfigCalibration" name="Calibration"/>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="fxSpots">
@@ -159,6 +189,7 @@
       <xs:element type="xs:string" name="BaseVolatility1" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BaseVolatility2" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+      <xs:element type="extrapolationType" name="SmileExtrapolation" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -245,7 +276,10 @@
       </xs:element>
       <xs:element type="dimensionType" name="Dimension" minOccurs="0"/>
       <xs:element type="volatilityType" name="VolatilityType" minOccurs="0"/>
-      <xs:element type="extrapolationType" name="Extrapolation" minOccurs="0"/>
+      <xs:element type="xs:string" name="Interpolation" minOccurs="0"/>
+      <xs:element type="parametricSmileConfig" name="ParametricSmileConfiguration" minOccurs="0"/>
+      <xs:element type="xs:string" name="Extrapolation" minOccurs="0"/>
+      <xs:element type="xs:string" name="OutputVolatilityType" minOccurs="0"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0"/>
@@ -313,6 +347,7 @@
         <xs:element type="constantVolatilityConfig" name="Constant"/>
         <xs:element type="volatilityCurveConfig" name="Curve"/>
         <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
+        <xs:element type="proxySurface" name="ProxySurface"/>
       </xs:choice>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
@@ -406,11 +441,17 @@
             <xs:enumeration value="Linear"/>
             <xs:enumeration value="LinearFlat"/>
             <xs:enumeration value="Cubic"/>
-            <xs:enumeration value="CubicFlat"/>
+            <xs:enumeration value="Hagan2002Lognormal"/>
+            <xs:enumeration value="Hagan2002Normal"/>
+            <xs:enumeration value="Hagan2002NormalZeroBeta"/>
+            <xs:enumeration value="Antonov2015FreeBoundaryNormal"/>
+            <xs:enumeration value="KienitzLawsonSwaynePde"/>
+            <xs:enumeration value="FlochKennedy"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-	  <xs:element name="InputType" minOccurs="0" maxOccurs="1">
+      <xs:element type="parametricSmileConfig" name="ParametricSmileConfiguration" minOccurs="0"/>
+      <xs:element name="InputType" minOccurs="0" maxOccurs="1">
         <xs:simpleType>
           <xs:restriction base="xs:string">
             <xs:enumeration value="TermVolatilities"/>
@@ -945,6 +986,9 @@
       <xs:element type="xs:string" name="PillarChoice" minOccurs="0"/>
       <xs:element type="xs:nonNegativeInteger" name="Priority" minOccurs="0"/>
       <xs:element type="xs:nonNegativeInteger" name="MinDistance" minOccurs="0"/>
+      <xs:element type="xs:string" name="ProjectionCurvePay" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ProjectionCurveReceive" minOccurs="0" maxOccurs="1"/>
+      <!-- deprecated fields -->
       <xs:element type="xs:string" name="ProjectionCurveLong" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="ProjectionCurveShort" minOccurs="0" maxOccurs="1"/>
     </xs:all>

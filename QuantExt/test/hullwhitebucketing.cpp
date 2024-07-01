@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(testHullWhiteBucketingQuantLib) {
     Real pd = 0.01;
 
     // L buckets of width 1
-    boost::shared_ptr<QuantLib::LossDist> bucketing = boost::make_shared<QuantLib::LossDistBucketing>(N+1, N+1);
+    QuantLib::ext::shared_ptr<QuantLib::LossDist> bucketing = QuantLib::ext::make_shared<QuantLib::LossDistBucketing>(N+1, N+1);
     
     std::vector<Real> pds(L, pd), losses(L, 1.0);
 

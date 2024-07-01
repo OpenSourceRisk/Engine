@@ -36,7 +36,7 @@ namespace QuantExt {
 SubPeriodsSwap::SubPeriodsSwap(const Date& effectiveDate, Real nominal, const Period& swapTenor, bool isPayer,
                                const Period& fixedTenor, Rate fixedRate, const Calendar& fixedCalendar,
                                const DayCounter& fixedDayCount, BusinessDayConvention fixedConvention,
-                               const Period& floatPayTenor, const boost::shared_ptr<IborIndex>& iborIndex,
+                               const Period& floatPayTenor, const QuantLib::ext::shared_ptr<IborIndex>& iborIndex,
                                const DayCounter& floatingDayCount, DateGeneration::Rule rule,
                                QuantExt::SubPeriodsCoupon1::Type type)
 
@@ -100,7 +100,7 @@ Real SubPeriodsSwap::fairRate() const {
 }
 
 
-MakeSubPeriodsSwap::MakeSubPeriodsSwap(const Period& swapTenor, const boost::shared_ptr<IborIndex>& index, Rate fixedRate, 
+MakeSubPeriodsSwap::MakeSubPeriodsSwap(const Period& swapTenor, const QuantLib::ext::shared_ptr<IborIndex>& index, Rate fixedRate, 
     const Period& floatPayTenor, const Period& forwardStart)
     : swapTenor_(swapTenor), index_(index), fixedRate_(fixedRate), floatPayTenor_(floatPayTenor), forwardStart_(forwardStart), 
     nominal_(1.0), isPayer_(true), settlementDays_(index->fixingDays()), fixedCalendar_(index->fixingCalendar()), 
@@ -108,11 +108,11 @@ MakeSubPeriodsSwap::MakeSubPeriodsSwap(const Period& swapTenor, const boost::sha
       subCouponsType_(QuantExt::SubPeriodsCoupon1::Compounding)  {}
 
 MakeSubPeriodsSwap::operator SubPeriodsSwap() const {
-    boost::shared_ptr<SubPeriodsSwap> swap = *this;
+    QuantLib::ext::shared_ptr<SubPeriodsSwap> swap = *this;
     return *swap;
 }
 
-MakeSubPeriodsSwap::operator boost::shared_ptr<SubPeriodsSwap>() const {
+MakeSubPeriodsSwap::operator QuantLib::ext::shared_ptr<SubPeriodsSwap>() const {
     
     Date startDate;
 
@@ -173,7 +173,7 @@ MakeSubPeriodsSwap::operator boost::shared_ptr<SubPeriodsSwap>() const {
             QL_FAIL("unknown fixed leg day counter for " << curr);
     }
 
-    boost::shared_ptr<SubPeriodsSwap> swap(new SubPeriodsSwap(startDate, nominal_, swapTenor_, isPayer_, 
+    QuantLib::ext::shared_ptr<SubPeriodsSwap> swap(new SubPeriodsSwap(startDate, nominal_, swapTenor_, isPayer_, 
         fixedTenor, fixedRate_, fixedCalendar_, fixedDayCount, fixedConvention_, floatPayTenor_, index_, 
         floatDayCounter_, fixedRule_, subCouponsType_));
 
@@ -236,11 +236,11 @@ MakeSubPeriodsSwap& MakeSubPeriodsSwap::withSubCouponsType(const QuantExt::SubPe
 
 MakeSubPeriodsSwap& MakeSubPeriodsSwap::withDiscountingTermStructure(const Handle<YieldTermStructure>& d) {
     bool includeSettlementDateFlows = false;
-    engine_ = boost::shared_ptr<PricingEngine>(new DiscountingSwapEngine(d, includeSettlementDateFlows));
+    engine_ = QuantLib::ext::shared_ptr<PricingEngine>(new DiscountingSwapEngine(d, includeSettlementDateFlows));
     return *this;
 }
 
-MakeSubPeriodsSwap& MakeSubPeriodsSwap::withPricingEngine(const boost::shared_ptr<PricingEngine>& engine) {
+MakeSubPeriodsSwap& MakeSubPeriodsSwap::withPricingEngine(const QuantLib::ext::shared_ptr<PricingEngine>& engine) {
     engine_ = engine;
     return *this;
 }

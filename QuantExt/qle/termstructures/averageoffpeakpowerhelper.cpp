@@ -33,11 +33,11 @@ using std::min;
 namespace QuantExt {
 
 AverageOffPeakPowerHelper::AverageOffPeakPowerHelper(const Handle<Quote>& price,
-    const boost::shared_ptr<CommodityIndex>& index,
+    const QuantLib::ext::shared_ptr<CommodityIndex>& index,
     const Date& start,
     const Date& end,
-    const boost::shared_ptr<FutureExpiryCalculator>& calc,
-    const boost::shared_ptr<CommodityIndex>& peakIndex,
+    const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& calc,
+    const QuantLib::ext::shared_ptr<CommodityIndex>& peakIndex,
     const Calendar& peakCalendar,
     Natural peakHoursPerDay)
     : PriceHelper(price) {
@@ -45,20 +45,20 @@ AverageOffPeakPowerHelper::AverageOffPeakPowerHelper(const Handle<Quote>& price,
 }
 
 AverageOffPeakPowerHelper::AverageOffPeakPowerHelper(Real price,
-    const boost::shared_ptr<CommodityIndex>& index,
+    const QuantLib::ext::shared_ptr<CommodityIndex>& index,
     const Date& start,
     const Date& end,
-    const boost::shared_ptr<FutureExpiryCalculator>& calc,
-    const boost::shared_ptr<CommodityIndex>& peakIndex,
+    const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& calc,
+    const QuantLib::ext::shared_ptr<CommodityIndex>& peakIndex,
     const Calendar& peakCalendar,
     Natural peakHoursPerDay)
     : PriceHelper(price) {
     init(index, start, end, calc, peakIndex, peakCalendar, peakHoursPerDay);
 }
 
-void AverageOffPeakPowerHelper::init(const boost::shared_ptr<CommodityIndex>& index,
-    const Date& start, const Date& end, const boost::shared_ptr<FutureExpiryCalculator>& calc,
-    const boost::shared_ptr<CommodityIndex>& peakIndex, const Calendar& peakCalendar,
+void AverageOffPeakPowerHelper::init(const QuantLib::ext::shared_ptr<CommodityIndex>& index,
+    const Date& start, const Date& end, const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& calc,
+    const QuantLib::ext::shared_ptr<CommodityIndex>& peakIndex, const Calendar& peakCalendar,
     Natural peakHoursPerDay) {
 
     QL_REQUIRE(peakHoursPerDay <= 24, "AverageOffPeakPowerHelper: peak hours per day should not be greater than 24.");
@@ -75,18 +75,18 @@ void AverageOffPeakPowerHelper::init(const boost::shared_ptr<CommodityIndex>& in
 
     // Create the business day off-peak portion of the cashflow.
     bool useBusinessDays = true;
-    businessOffPeak_ = boost::make_shared<CommodityIndexedAverageCashFlow>(1.0, start, end, end, indexClone,
+    businessOffPeak_ = QuantLib::ext::make_shared<CommodityIndexedAverageCashFlow>(1.0, start, end, end, indexClone,
         peakCalendar, 0.0, 1.0, true, 0, 0, calc, true, false, useBusinessDays);
     peakDays_ = businessOffPeak_->indices().size();
 
     // Create the holiday off-peak portion of the cashflow.
     useBusinessDays = false;
-    holidayOffPeak_ = boost::make_shared<CommodityIndexedAverageCashFlow>(ophpd / 24.0, start, end, end, indexClone,
+    holidayOffPeak_ = QuantLib::ext::make_shared<CommodityIndexedAverageCashFlow>(ophpd / 24.0, start, end, end, indexClone,
         peakCalendar, 0.0, 1.0, true, 0, 0, calc, true, false, useBusinessDays);
     nonPeakDays_ = holidayOffPeak_->indices().size();
 
     // Create the holiday peak portion of the cashflow.
-    holidayPeak_ = boost::make_shared<CommodityIndexedAverageCashFlow>(peakHoursPerDay / 24.0, start, end, end,
+    holidayPeak_ = QuantLib::ext::make_shared<CommodityIndexedAverageCashFlow>(peakHoursPerDay / 24.0, start, end, end,
         peakIndex, peakCalendar, 0.0, 1.0, true, 0, 0, calc, true, false, useBusinessDays);
 
     // Get the date index pairs involved in the averaging. The earliest date is the expiry date of the future contract 
@@ -108,7 +108,7 @@ Real AverageOffPeakPowerHelper::impliedQuote() const {
 }
 
 void AverageOffPeakPowerHelper::setTermStructure(PriceTermStructure* ts) {
-    boost::shared_ptr<PriceTermStructure> temp(ts, null_deleter());
+    QuantLib::ext::shared_ptr<PriceTermStructure> temp(ts, null_deleter());
     // Do not set the relinkable handle as an observer i.e. registerAsObserver is false here.
     termStructureHandle_.linkTo(temp, false);
     PriceHelper::setTermStructure(ts);

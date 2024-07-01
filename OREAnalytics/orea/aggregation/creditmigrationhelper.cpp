@@ -38,10 +38,10 @@ using namespace QuantExt;
 namespace ore {
 namespace analytics {
 
-CreditMigrationHelper::CreditMigrationHelper(const boost::shared_ptr<CreditSimulationParameters> parameters,
-                                             const boost::shared_ptr<NPVCube> cube,
-                                             const boost::shared_ptr<NPVCube> nettedCube,
-                                             const boost::shared_ptr<AggregationScenarioData> aggData,
+CreditMigrationHelper::CreditMigrationHelper(const QuantLib::ext::shared_ptr<CreditSimulationParameters> parameters,
+                                             const QuantLib::ext::shared_ptr<NPVCube> cube,
+                                             const QuantLib::ext::shared_ptr<NPVCube> nettedCube,
+                                             const QuantLib::ext::shared_ptr<AggregationScenarioData> aggData,
                                              const Size cubeIndexCashflows, const Size cubeIndexStateNpvs,
                                              const Real distributionLowerBound, const Real distributionUpperBound,
                                              const Size buckets, const Matrix& globalFactorCorrelation,
@@ -581,7 +581,7 @@ Array CreditMigrationHelper::pnlDistribution(const Size date) {
     return res;
 } // pnlDistribution
 
-void CreditMigrationHelper::build(const std::map<std::string, boost::shared_ptr<Trade>>& trades) {
+void CreditMigrationHelper::build(const std::map<std::string, QuantLib::ext::shared_ptr<Trade>>& trades) {
     LOG("CreditMigrationHelper: Build trade ID map");
     issuerTradeIds_.resize(parameters_->entities().size());
     cptyNettingSetIds_.resize(parameters_->entities().size());
@@ -597,14 +597,14 @@ void CreditMigrationHelper::build(const std::map<std::string, boost::shared_ptr<
                           t->envelope().nettingSetId()) != parameters_->nettingSetIds().end()) {
                 tmp2.insert(t->envelope().nettingSetId());
             }
-            boost::shared_ptr<Bond> bond = boost::dynamic_pointer_cast<Bond>(t);
+            QuantLib::ext::shared_ptr<Bond> bond = QuantLib::ext::dynamic_pointer_cast<Bond>(t);
             if (bond) {
                 tradeCreditCurves_[t->id()] = bond->bondData().creditCurveId();
                 // FIXME: We actually need the notional schedule here to determine future notionals
                 tradeNotionals_[t->id()] = bond->notional();
                 tradeCurrencies_[t->id()] = bond->bondData().currency();
             }
-            boost::shared_ptr<CreditDefaultSwap> cds = boost::dynamic_pointer_cast<CreditDefaultSwap>(t);
+            QuantLib::ext::shared_ptr<CreditDefaultSwap> cds = QuantLib::ext::dynamic_pointer_cast<CreditDefaultSwap>(t);
             if (cds) {
                 string cpty = cds->envelope().counterparty();
                 QL_REQUIRE(cpty != t->issuer(), "CDS has same CPTY and issuer " << cpty);

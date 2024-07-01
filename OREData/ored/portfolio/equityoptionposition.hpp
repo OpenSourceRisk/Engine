@@ -47,7 +47,7 @@ public:
     Real strike() const { return strike_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     EquityUnderlying underlying_;
@@ -66,7 +66,7 @@ public:
     const std::vector<EquityOptionUnderlyingData>& underlyings() const { return underlyings_; }
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
 
 private:
     Real quantity_ = QuantLib::Null<Real>();
@@ -81,16 +81,16 @@ public:
         : Trade("EquityOptionPosition", env), data_(data) {}
 
     // trade interface
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     // additional inspectors
     const EquityOptionPositionData& data() const { return data_; }
     /* the underlying option instruments */
-    const std::vector<boost::shared_ptr<QuantLib::VanillaOption>>& options() const { return options_; }
+    const std::vector<QuantLib::ext::shared_ptr<QuantLib::VanillaOption>>& options() const { return options_; }
     /* by convention, these are generic indices of the form
        GENERIC-MD/EQUITY_OPTION/PRICE/RIC:GOGO.OQ/USD/2020-03-20/2250/P
        holding historical price information on the underlying option, needed for GenericTRS trades on
@@ -98,7 +98,7 @@ public:
     /* the underlying equity option currencies (equal to the equity currencies) */
     const std::vector<Real>& positions() const { return positions_; }
     const std::vector<std::string>& currencies() const { return currencies_; }
-    const std::vector<boost::shared_ptr<QuantExt::GenericIndex>> historicalPriceIndices() { return indices_; }
+    const std::vector<QuantLib::ext::shared_ptr<QuantExt::GenericIndex>> historicalPriceIndices() { return indices_; }
     const std::vector<Real>& weights() const { return weights_; }
     bool isSingleCurrency() const { return isSingleCurrency_; }
 
@@ -109,8 +109,8 @@ public:
 private:
     EquityOptionPositionData data_;
     // populated during build()
-    std::vector<boost::shared_ptr<QuantLib::VanillaOption>> options_;
-    std::vector<boost::shared_ptr<QuantExt::GenericIndex>> indices_;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::VanillaOption>> options_;
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::GenericIndex>> indices_;
     std::vector<Real> positions_;
     std::vector<std::string> currencies_;
     std::vector<Real> weights_;
@@ -126,7 +126,7 @@ public:
     class engine;
 
     EquityOptionPositionInstrumentWrapper(const Real quantity,
-                                          const std::vector<boost::shared_ptr<QuantLib::VanillaOption>>& options,
+                                          const std::vector<QuantLib::ext::shared_ptr<QuantLib::VanillaOption>>& options,
                                           const std::vector<Real>& positions,
                                           const std::vector<Real>& weights,
                                           const std::vector<Handle<Quote>>& fxConversion = {});
@@ -142,7 +142,7 @@ public:
 
 private:
     Real quantity_;
-    std::vector<boost::shared_ptr<QuantLib::VanillaOption>> options_;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::VanillaOption>> options_;
     std::vector<Real> weights_;
     std::vector<Real> positions_;
     std::vector<Handle<Quote>> fxConversion_;
@@ -152,7 +152,7 @@ private:
 class EquityOptionPositionInstrumentWrapper::arguments : public virtual QuantLib::PricingEngine::arguments {
 public:
     Real quantity_;
-    std::vector<boost::shared_ptr<QuantLib::VanillaOption>> options_;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::VanillaOption>> options_;
     std::vector<Real> weights_;
     std::vector<Real> positions_;
     std::vector<Handle<Quote>> fxConversion_;

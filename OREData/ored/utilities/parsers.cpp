@@ -33,7 +33,6 @@
 #include <ql/indexes/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
-#include <ql/version.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/yearcounter.hpp>
 
@@ -116,6 +115,12 @@ Real parseReal(const string& s) {
     } catch (const std::exception& ex) {
         QL_FAIL("Failed to parseReal(\"" << s << "\") " << ex.what());
     }
+}
+
+Real parseRealOrNull(const string& s) {
+    if(s.empty())
+        return Null<Real>();
+    return parseReal(s);
 }
 
 bool tryParseReal(const string& s, QuantLib::Real& result) {
@@ -951,6 +956,10 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         resultType = "array";
         QuantLib::Array r = boost::any_cast<QuantLib::Array>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
+    } else if (anyType.type() == typeid(QuantLib::Currency)) {
+        resultType = "currency";
+        QuantLib::Currency r = boost::any_cast<QuantLib::Currency>(anyType);
+        oss << r;
     } else {
         ALOG("Unsupported Boost::Any type");
         resultType = "unsupported_type";
@@ -1444,6 +1453,61 @@ std::ostream& operator<<(std::ostream& out, MporCashFlowMode t) {
         QL_FAIL("Mpor cash flow mode not covered, expected one of 'Unspecified', 'NonePay', 'BothPay', 'WePay', "
                 "'TheyPay'.");
     return out;
+}
+
+SabrParametricVolatility::ModelVariant parseSabrParametricVolatilityModelVariant(const std::string& s) {
+    static map<string, SabrParametricVolatility::ModelVariant> m = {
+        {"Hagan2002Lognormal", SabrParametricVolatility::ModelVariant::Hagan2002Lognormal},
+        {"Hagan2002Normal", SabrParametricVolatility::ModelVariant::Hagan2002Normal},
+        {"Hagan2002NormalZeroBeta", SabrParametricVolatility::ModelVariant::Hagan2002NormalZeroBeta},
+        {"Antonov2015FreeBoundaryNormal", SabrParametricVolatility::ModelVariant::Antonov2015FreeBoundaryNormal},
+        {"KienitzLawsonSwaynePde", SabrParametricVolatility::ModelVariant::KienitzLawsonSwaynePde},
+        {"FlochKennedy", SabrParametricVolatility::ModelVariant::FlochKennedy}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL(
+            "SabrParametricVolatilityModelVariant '"
+            << s
+            << "' not recognized, expected one of 'Hagan2002Lognormal', 'Hagan2002Normal', 'Hagan2002NormalZeroBeta', "
+               "'Antonov2015FreeBoundaryNormal', 'KienitzLawsonSwaynePde', 'FlochKennedy'.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, SabrParametricVolatility::ModelVariant m) {
+    if (m == SabrParametricVolatility::ModelVariant::Hagan2002Lognormal) {
+        out << "Hagan2002Lognormal";
+    } else if (m == SabrParametricVolatility::ModelVariant::Hagan2002Normal) {
+        out << "Hagan2002Normal";
+    } else if (m == SabrParametricVolatility::ModelVariant::Hagan2002NormalZeroBeta) {
+        out << "Hagan200NormalZeroBeta";
+    } else if (m == SabrParametricVolatility::ModelVariant::Antonov2015FreeBoundaryNormal) {
+        out << "AntonovNormalZeroBeta";
+    } else if (m == SabrParametricVolatility::ModelVariant::KienitzLawsonSwaynePde) {
+        out << "KienitzLawsonSwaynePde";
+    } else if (m == SabrParametricVolatility::ModelVariant::FlochKennedy) {
+        out << "FlochKennedy";
+    } else {
+        QL_FAIL("SabrParametricVolatility::ModelVariant (" << static_cast<int>(m)
+                                                           << ") not recognized. This is an internal error.");
+    }
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& os, Exercise::Type type) {
+    if (type == Exercise::European) {
+        os << "European";
+    } else if (type == Exercise::Bermudan) {
+        os << "Bermudan";
+    } else if (type == Exercise::American) {
+        os << "American";
+    } else {
+        QL_FAIL("Exercise::Type (" << static_cast<int>(type)
+                                   << " not recognized. Expected 'European', 'Bermudan', or 'American'.");
+    }
+
+    return os;
 }
 
 } // namespace data

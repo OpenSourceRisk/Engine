@@ -96,6 +96,7 @@ std::size_t cg_var(ComputationGraph& g, const std::string& name,
                    ComputationGraph::VarDoesntExist = ComputationGraph::VarDoesntExist::Throw);
 std::size_t cg_add(ComputationGraph& g, const std::size_t a, const std::size_t b,
                    const std::string& label = std::string());
+std::size_t cg_add(ComputationGraph& g, const std::vector<std::size_t>& a, const std::string& label = std::string());
 std::size_t cg_subtract(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = std::string());
 std::size_t cg_negative(ComputationGraph& g, const std::size_t a, const std::string& label = std::string());
 std::size_t cg_mult(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label = std::string());

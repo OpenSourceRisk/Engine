@@ -31,12 +31,12 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
-boost::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::buildMcEngine(const boost::shared_ptr<LGM>& lgm,
+QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm,
                                                                         const Handle<YieldTermStructure>& discountCurve,
                                                                         const std::vector<Date>& simulationDates,
                                                                         const std::vector<Size>& externalModelIndices) {
 
-    return boost::make_shared<QuantExt::McLgmSwapEngine>(
+    return QuantLib::ext::make_shared<QuantExt::McLgmSwapEngine>(
         lgm, parseSequenceType(engineParameter("Training.Sequence")),
         parseSequenceType(engineParameter("Pricing.Sequence")), parseInteger(engineParameter("Training.Samples")),
         parseInteger(engineParameter("Pricing.Samples")), parseInteger(engineParameter("Training.Seed")),
@@ -45,10 +45,11 @@ boost::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::buildMcEngine(const bo
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurve, simulationDates,
         externalModelIndices, parseBool(engineParameter("MinObsDate")),
-        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")));
+        parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
 }
 
-boost::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(const Currency& ccy,
+QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(const Currency& ccy,
                                                                      const std::string& discountCurveName,
                                                                      const std::string& securitySpread) {
     DLOG("Building AMC Swap engine for ccy " << ccy << " (from externally given CAM)");

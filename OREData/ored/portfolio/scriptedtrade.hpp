@@ -48,7 +48,7 @@ public:
           convention_(convention) {}
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     Type type() const { return type_; }
     const std::string& name() const { return name_; }
@@ -84,7 +84,7 @@ public:
         : nodeName_(nodeName), isArray_(true), name_(name), values_(values) {}
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     bool isArray() const { return isArray_; }
     const std::string& name() const { return name_; }
@@ -108,7 +108,7 @@ public:
                         const std::vector<std::string>& sourceSchedules)
             : name_(name), operation_(operation), sourceSchedules_(sourceSchedules) {}
         virtual void fromXML(XMLNode* node) override;
-        virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+        virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
         const std::string& name() const { return name_; }
         const std::string& operation() const { return operation_; }
         const std::vector<std::string>& sourceSchedules() const { return sourceSchedules_; }
@@ -125,7 +125,7 @@ public:
         CalibrationData(const std::string& index, const std::vector<std::string>& strikes)
             : index_(index), strikes_(strikes) {}
         virtual void fromXML(XMLNode* node) override;
-        virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+        virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
         const std::string& index() const { return index_; }
         const std::vector<string>& strikes() const { return strikes_; }
 
@@ -151,7 +151,7 @@ public:
     }
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const std::string& code() const { return code_; }
     const std::string& npv() const { return npv_; }
@@ -186,7 +186,7 @@ public:
     ScriptLibraryData& operator=(ScriptLibraryData&& d);
 
     virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     bool has(const std::string& scriptName, const std::string& purpose, const bool fallBackOnEmptyPurpose = true) const;
 
@@ -228,19 +228,22 @@ public:
     void clear();
 
     // Trade interface
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     QuantLib::Real notional() const override;
     std::string notionalCurrency() const override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     // build and incorporate provided premium data
-    void build(const boost::shared_ptr<EngineFactory>& engineFactory, const PremiumData& premiumData,
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const PremiumData& premiumData,
                const Real premiumMultiplier);
 
     // underlying asset names
     std::map<ore::data::AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
+    // Add ISDA taxonomy classification to additional data
+    virtual void setIsdaTaxonomyFields();
 
     // Inspectors
     const std::vector<ScriptedTradeEventData>& events() const { return events_; }

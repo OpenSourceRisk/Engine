@@ -89,6 +89,7 @@
 Date & Author & Comment \\
 \hline
 19 June 2023 & Acadia & initial release\\
+15 April 2024 & Acadia & refactor context settings, add supportsDoublePrecision()\\
 \hline
 \end{supertabular}
 \end{flushleft}
@@ -222,7 +223,7 @@ The \verb+ComputeFramework+ interface requires the implementation of the followi
   Notice that the same device can appear under several frameworks, e.g. a GPU could be accessed both via an OpenCL
   driver or via a CUDA driver.
 \item \verb+getContext()+ should return a raw pointer to a \verb+ComputeContext+ implementation for a given device label
-  or throw an erro if the device label is not valid. See \ref{implComputeContext} for more details.
+  or throw an error if the device label is not valid. See \ref{implComputeContext} for more details.
 \item \verb+Destructor+ The destructor of \verb+ComputeFramework+ is virtual and has an empty default implementation. It
   can be override in implementations to free ressources. For example, the \verb+OpenClFramework+ implementation stores
   raw pointers for each compute contexts that need to be deleted on destruction of the \verb+OpenClFramework+ instance.
@@ -251,9 +252,19 @@ interface requires the implementation of the following methods:
     previous calculation. In this case only the input variables and random variates (see below) need to be set to
     retrieve the results of the calculation calling \verb+finalizeCalculation()+. If \verb+id+ is \verb+0+ on the other
     hand, a new calculation \verb+id+ will be generated and returned.
-  \item \verb+version+: The version of a calculation.
-  \item \verb+debug+: A flag indicating whether debug information on the number of performed operations and timings for
-    data copying, kernel building and calculations should be collected.
+  \item \verb+version+: The version of a calculation. This is a freely choosable integer, which is only used to identify
+    different versions. Usually the first version of a calculation will be $0$, then next $1$, etc.
+  \item \verb+Settings+: A struct summarizing settings for the compute environment:
+    \begin{itemize}
+      \item debug: a flag indicating whether debug information on the number of performed operations and timings for
+    data copying, kernel building and calculations should be collected. Defaults to false.
+      \item useDoublePrecision: a flag indicating whether double precision should be used for calculations. Defaults to
+        false.
+      \item rngSequenceType: the sequence type for random number generation. One of MersenneTwister,
+        MersenneTwisterAntithetic, Sobol, Burley2020Sobol, SobolBrownianBridge, Burley2020SobolBrownianBridge
+      \item seed: the seed for the random number generator
+      \item regressionOrder: the regression order to be used within regression models
+    \end{itemize}
   \end{itemize}
   The output parameter is a pair consisting of
   \begin{itemize}
@@ -268,8 +279,6 @@ interface requires the implementation of the following methods:
   \begin{itemize}
   \item \verb+dim+ the dimension (typically the number of assets in a MC simulation)
   \item \verb+steps+ the number of steps (typically the number of time steps in a MC simulation)
-  \item \verb+seed+ the seed of the random number generation, equal seeds must generate identical variates, different
-    seeds might or might not generate different variates
   \end{itemize}
   The output parameter is a vector of a vector of ids for the generated variates. The inner vector loops of the steps,
   the outer vector over the dimensions.
@@ -277,10 +286,12 @@ interface requires the implementation of the following methods:
   operations is described in \ref{randomVariableOpCodes}
 \item \verb+freeVariable()+: indicate that the variable with the given id will no longer be referenced in subsequent
   calculations. The variable id can be reused as a new variable.
-\item \verb+declareOutputVariable()+: declare a variable with given id as part of the output vector
+\item \verb+declareOutputVariable()+: declare a variable with given id as part of the output vector.
 \item \verb+finalizeCalculation()+: execute the calculation and populate the given vector of vector of floats with the
   result. The inner vector is given as a raw pointer and must have the size of the calculation. The outer vector matches
   the output variables in the order they were declared before.
+\item \verb+deviceInfo()+: provide key-value pairs that describes the device, only used for information purposes
+\item \verb+supportsDoublePreicions()+: should return true if doule precision is supported, otherwise false
 \item \verb+debugInfo()+: provide info on the number of elementary operations and timings on data copying, program build
   and calculations. This info is collected if a new calculation is started with flag debug set to true
 \end{itemize}
@@ -289,12 +300,17 @@ The following order of calls to a \verb+ComputeContext+ from top to bottom is gu
 
 \begin{enumerate}
 \item \verb+initiateCalculation()+: once
-\item \verb+createInputVariable()+: never, once, or several times
-\item \verb+createInputVariates()+: never, once, or several times
-\item \verb+applyOperation()+: only called if the current calculation is not replayed from a previous calculation, then can be called never, once, or several times
-\item \verb+freeVariable()+: only called if the current calculation is not replayed, then can be called never, once, or several times
-\item \verb+declareOutputVariable()+: only called if the current calculation is not replayed, then can be called never, once, or several times
-\item \verb+finalizeCalculation()+: never or once
+\item \verb+createInputVariable()+: never, once, or several times, if a calc is replayed, the same number and type of
+  input variables must be created (just with possibly different values)
+\item \verb+createInputVariates()+: called if the current calculation is not replayed from a previous calculation, then
+  can be called never, once or several times
+\item \verb+applyOperation()+: only called if the current calculation is not replayed from a previous calculation, then
+  can be called never, once, or several times
+\item \verb+freeVariable()+: only called if the current calculation is not replayed, then can be called never, once, or
+  several times
+\item \verb+declareOutputVariable()+: only called if the current calculation is not replayed, then can be called never,
+  once, or several times
+\item \verb+finalizeCalculation()+: once
 \end{enumerate}
 
 \subsection{Random Variable Op Codes}\label{randomVariableOpCodes}
@@ -373,7 +389,7 @@ Whenever a new computation i.e. the (re)pricing of a trade is requested a calcul
 \begin{minted}[fontsize=\footnotesize]{xml}
  std::tie(externalCalculationId_, newExternalCalc) =
    ComputeEnvironment::instance().context()
-       .initiateCalculation(model_->size(), externalCalculationId_, cgVersion_);
+       .initiateCalculation(model_->size(), externalCalculationId_, cgVersion_, settings);
 \end{minted}
 
 providing
@@ -384,6 +400,8 @@ providing
   to get a new id and for subsequent calculations of the same trade this id is reused
 \item \verb+cgVersion_+: a version number (initially zero). The version is incremented whenever a repricing requires a
   different sequence of operations to be performed, which is the case when the evaluation date changes
+\item \verb+settings+: the settings to be used, see \ref{implComputeFramework} for details. Notice that for a replayed
+  calculation the settings must match the ones from the initial calculation.
 \end{itemize}
 
 and retrieving the external calc id and a flag indicating whether the calculation requires a resubmission of an
@@ -417,16 +435,17 @@ external random variable.
 
 \subsection{Populating the input variates}
 
-The next step is the creating of random variates
+The next step is the creating of random variates (if this is a new calculation and not replayed):
 
 \begin{minted}[fontsize=\footnotesize]{xml}
-auto gen = ComputeEnvironment::instance().context()
-                                  .createInputVariates(rv.size(),
-                                                       rv.front().size(),
-                                                       42);
-for (Size k = 0; k < rv.size(); ++k) {
-  for (Size j = 0; j < rv.front().size(); ++j)
-      valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
+if (useExternalComputeFramework_ && newExternalCalc) {
+    auto gen =
+        ComputeEnvironment::instance().context().
+                   createInputVariates(rv.size(), rv.front().size());
+    for (Size k = 0; k < rv.size(); ++k) {
+        for (Size j = 0; j < rv.front().size(); ++j)
+            valuesExternal[rv[k][j]] = ExternalRandomVariable(gen[k][j]);
+    }
 }
 \end{minted}
 

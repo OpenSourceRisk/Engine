@@ -45,13 +45,13 @@ public:
         std::string equityKicker;
         std::string ccy;
         std::string reinvestmentEndDate;
-        std::vector<boost::shared_ptr<TrancheData>> trancheData;
+        std::vector<QuantLib::ext::shared_ptr<TrancheData>> trancheData;
         ScheduleData scheduleData;
         std::string daycounter;
         std::string paymentConvention;
 
         void fromXML(XMLNode* node) override;
-        XMLNode* toXML(ore::data::XMLDocument& doc) override;
+        XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     };
 
     CboReferenceDatum() { setType(TYPE); }
@@ -59,7 +59,7 @@ public:
     CboReferenceDatum(const string& id, const CboStructure& cboStructure) : ReferenceDatum(TYPE, id), cboStructure_(cboStructure) {}
 
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
     const CboStructure& cbostructure() const { return cboStructure_; }
     void setCboStructure(const CboStructure& cboStructure) { cboStructure_ = cboStructure; }
@@ -74,12 +74,12 @@ public:
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     // Trade interface
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
     void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    XMLNode* toXML(XMLDocument& doc) const override;
     QuantLib::Real notional() const override { return notional_; }
     std::string notionalCurrency() const override { return ccy_; }
 
@@ -92,11 +92,11 @@ protected:
 
 private:
 
-    void populateFromCboReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager);
-    void populateFromCboReferenceData(const boost::shared_ptr<CboReferenceDatum>& cboReferenceDatum);
+    void populateFromCboReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager);
+    void populateFromCboReferenceData(const QuantLib::ext::shared_ptr<CboReferenceDatum>& cboReferenceDatum);
     void validateCbo();
 
-    boost::shared_ptr<QuantExt::BondBasket> bondbasket_;
+    QuantLib::ext::shared_ptr<QuantExt::BondBasket> bondbasket_;
     BondBasket bondbasketdata_;
     std::string feeDayCounter_;
     std::string seniorFee_;
@@ -105,7 +105,7 @@ private:
     std::string ccy_;
     std::string reinvestmentEndDate_;
     std::string investedTrancheName_;
-    std::vector<boost::shared_ptr<TrancheData>> trancheData_;
+    std::vector<QuantLib::ext::shared_ptr<TrancheData>> trancheData_;
     ScheduleData scheduleData_;
     std::string daycounter_;
     std::string paymentConvention_;
@@ -117,16 +117,16 @@ private:
 
 struct CBOTrsUnderlyingBuilder : public TrsUnderlyingBuilder {
     void
-    build(const std::string& parentId, const boost::shared_ptr<Trade>& underlying,
+    build(const std::string& parentId, const QuantLib::ext::shared_ptr<Trade>& underlying,
           const std::vector<Date>& valuationDates, const std::vector<Date>& paymentDates,
-          const std::string& fundingCurrency, const boost::shared_ptr<EngineFactory>& engineFactory,
-          boost::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
-          std::map<std::string, double>& indexQuantities, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
+          const std::string& fundingCurrency, const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+          QuantLib::ext::shared_ptr<QuantLib::Index>& underlyingIndex, Real& underlyingMultiplier,
+          std::map<std::string, double>& indexQuantities, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices,
           Real& initialPrice, std::string& assetCurrency, std::string& creditRiskCurrency,
-          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping, Date& maturity,
-          const std::function<boost::shared_ptr<QuantExt::FxIndex>(
-              const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-              const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
+          std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping,
+          const std::function<QuantLib::ext::shared_ptr<QuantExt::FxIndex>(
+              const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+              const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices)>&
               getFxIndex,
           const std::string& underlyingDerivativeId, RequiredFixings& fixings, std::vector<Leg>& returnLegs) const override;
 };

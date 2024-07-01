@@ -1,0 +1,52 @@
+<SensitivityAnalysis>
+	<DiscountCurves>
+		<DiscountCurve ccy="EUR">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<!--
+			<ShiftTenors>1D, 1W,2W,3W,1M,2M,3M,4M,5M,6M,7M,8M,9M,10M,11M,1Y,15M,18M,21M,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,11Y,12Y,15Y,20Y,25Y,30Y</ShiftTenors>
+			-->
+			<ShiftTenors>1Y, 5Y</ShiftTenors>
+			<!--
+			<ParConversion>
+				<Instruments>DEP, OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="DEP">EUR-EONIA-CONVENTIONS</Convention>
+					<Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+				</Conventions>
+			</ParConversion>
+			-->
+		</DiscountCurve>
+		<DiscountCurve ccy="USD">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<!--
+			<ShiftTenors>3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,20Y,30Y,40Y,50Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>FXF,FXF,FXF,FXF,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
+				<SingleCurve>true</SingleCurve>
+				<Conventions>
+					<Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
+					<Convention id="FXF">EUR-USD-FX-CONVENTIONS</Convention>
+				</Conventions>
+			</ParConversion>
+			-->
+			<ShiftTenors>1Y, 5Y</ShiftTenors>
+		</DiscountCurve>
+	</DiscountCurves>
+	<IndexCurves>
+	</IndexCurves>
+	<YieldCurves/>
+	<FxSpots>
+	</FxSpots>
+	<CreditCurves>
+	</CreditCurves>
+	<CapFloorVolatilities>
+	</CapFloorVolatilities>
+	<ComputeGamma>false</ComputeGamma>
+	<UseSpreadedTermStructures>true</UseSpreadedTermStructures>
+</SensitivityAnalysis>
+

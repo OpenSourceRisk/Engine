@@ -34,7 +34,7 @@ namespace {
 // helper that converts a context value to a ql additional result (i.e. boost::any)
 
 struct anyGetter : public boost::static_visitor<boost::any> {
-    explicit anyGetter(const boost::shared_ptr<Model>& model) : model_(model) {}
+    explicit anyGetter(const QuantLib::ext::shared_ptr<Model>& model) : model_(model) {}
     boost::any operator()(const RandomVariable& x) const { return model_->extractT0Result(x); }
     boost::any operator()(const EventVec& x) const { return x.value; }
     boost::any operator()(const IndexVec& x) const { return x.value; }
@@ -43,10 +43,10 @@ struct anyGetter : public boost::static_visitor<boost::any> {
     boost::any operator()(const Filter& x) const {
         QL_FAIL("can not convert Filter to boost::any, unexpected call to anyGetter");
     }
-    boost::shared_ptr<Model> model_;
+    QuantLib::ext::shared_ptr<Model> model_;
 };
 
-boost::any valueToAny(const boost::shared_ptr<Model>& model, const ValueType& v) {
+boost::any valueToAny(const QuantLib::ext::shared_ptr<Model>& model, const ValueType& v) {
     return boost::apply_visitor(anyGetter(model), v);
 }
 
@@ -57,7 +57,7 @@ Real ScriptedInstrumentPricingEngine::addMcErrorEstimate(const std::string& labe
         return Null<Real>();
     if (v.which() != ValueTypeWhich::Number)
         return Null<Real>();
-    Real var = variance(boost::get<RandomVariable>(v)).at(0);
+    Real var = variance(QuantLib::ext::get<RandomVariable>(v)).at(0);
     Real errEst = std::sqrt(var / static_cast<double>(model_->size()));
     if(!label.empty())
         results_.additionalResults[label] = errEst;
@@ -71,13 +71,13 @@ void ScriptedInstrumentPricingEngine::calculate() const {
     // make sure we release the memory allocated by the model after the pricing
     struct MemoryReleaser {
         ~MemoryReleaser() { model->releaseMemory(); }
-        boost::shared_ptr<Model> model;
+        QuantLib::ext::shared_ptr<Model> model;
     };
     MemoryReleaser memoryReleaser{model_};
 
     // set up copy of initial context to run the script engine on
 
-    auto workingContext = boost::make_shared<Context>(*context_);
+    auto workingContext = QuantLib::ext::make_shared<Context>(*context_);
 
     // set TODAY in the context
 
@@ -93,12 +93,12 @@ void ScriptedInstrumentPricingEngine::calculate() const {
     // if the model uses a separate training phase for NPV(), run this
 
     if (model_->trainingSamples() != Null<Size>()) {
-        auto trainingContext = boost::make_shared<Context>(*workingContext);
+        auto trainingContext = QuantLib::ext::make_shared<Context>(*workingContext);
         trainingContext->resetSize(model_->trainingSamples());
         struct TrainingPathToggle {
-            TrainingPathToggle(boost::shared_ptr<Model> model) : model(model) { model->toggleTrainingPaths(); }
+            TrainingPathToggle(QuantLib::ext::shared_ptr<Model> model) : model(model) { model->toggleTrainingPaths(); }
             ~TrainingPathToggle() { model->toggleTrainingPaths(); }
-            boost::shared_ptr<Model> model;
+            QuantLib::ext::shared_ptr<Model> model;
         } toggle(model_);
         ScriptEngine trainingEngine(ast_, trainingContext, model_);
         trainingEngine.run(script_, interactive_);
@@ -108,9 +108,9 @@ void ScriptedInstrumentPricingEngine::calculate() const {
 
     ScriptEngine engine(ast_, workingContext, model_);
 
-    boost::shared_ptr<PayLog> paylog;
+    QuantLib::ext::shared_ptr<PayLog> paylog;
     if (generateAdditionalResults_)
-        paylog = boost::make_shared<PayLog>();
+        paylog = QuantLib::ext::make_shared<PayLog>();
 
     engine.run(script_, interactive_, paylog, includePastCashflows_);
 
@@ -121,7 +121,7 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                "did not find npv result variable '" << npv_ << "' as scalar in context");
     QL_REQUIRE(npv->second.which() == ValueTypeWhich::Number,
                "result variable '" << npv_ << "' must be of type NUMBER, got " << npv->second.which());
-    results_.value = model_->extractT0Result(boost::get<RandomVariable>(npv->second));
+    results_.value = model_->extractT0Result(QuantLib::ext::get<RandomVariable>(npv->second));
     DLOG("got NPV = " << results_.value << " " << model_->baseCcy());
 
     // set additional results, if this feature is enabled
@@ -206,6 +206,7 @@ void ScriptedInstrumentPricingEngine::calculate() const {
             cashFlowResults[i].currency = paylog->currencies().at(i);
             cashFlowResults[i].legNumber = paylog->legNos().at(i);
             cashFlowResults[i].type = paylog->cashflowTypes().at(i);
+            cashFlowResults[i].discountFactor = discount;
             DLOG("got cashflow " << QuantLib::io::iso_date(cashFlowResults[i].payDate) << " "
                                  << cashFlowResults[i].currency << cashFlowResults[i].amount << " "
                                  << cashFlowResults[i].currency << "-" << model_->baseCcy() << " " << fx << " discount("
@@ -230,7 +231,7 @@ void ScriptedInstrumentPricingEngine::calculate() const {
     if (amcEnabled_) {
         DLOG("add amc calculator to results");
         results_.additionalResults["amcCalculator"] =
-            boost::static_pointer_cast<AmcCalculator>(boost::make_shared<ScriptedInstrumentAmcCalculator>(
+            QuantLib::ext::static_pointer_cast<AmcCalculator>(QuantLib::ext::make_shared<ScriptedInstrumentAmcCalculator>(
                 npv_, model_, ast_, context_, script_, interactive_, amcStickyCloseOutStates_));
     }
 

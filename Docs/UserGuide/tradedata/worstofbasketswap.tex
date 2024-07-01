@@ -1,0 +1,445 @@
+\subsubsection{Worst Of Basket Swaps}
+
+The FxWorstOfBasketSwap, EquityWorstOfBasketSwap, and CommodityWorstOfBasketSwap trade types
+have trade data containers (respectively):
+\begin{itemize}
+  \item \lstinline!FxWorstOfBasketSwapData!
+  \item \lstinline!EquityWorstOfBasketSwapData!
+  \item \lstinline!CommodityWorstOfBasketSwapData!
+\end{itemize}
+Listing \ref{lst:eqworstofbasketswap_data} shows the structure of example trades for an Equity underlying.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\scriptsize]{xml}
+<Trade id="EQ_WorstOfBasketSwap">
+  <TradeType>EquityWorstOfBasketSwap</TradeType>
+  <Envelope>
+    ......
+  </Envelope>
+  <EquityWorstOfBasketSwapData>
+    <LongShort>Long</LongShort>
+    <Currency>EUR</Currency>
+    <Quantity>1955000</Quantity>
+    <Underlyings>
+      <Underlying>
+        .......
+      </Underlying>
+    </Underlyings>
+    <InitialPrices>
+      <InitialPrice>...</InitialPrice>
+    </InitialPrices>
+    <FloatingPeriodSchedule>
+      <Dates>
+        ...
+      </Dates>
+    </FloatingPeriodSchedule>
+    <FixedDeterminationSchedule>
+            ............
+    </FixedDeterminationSchedule>
+    <KnockOutDeterminationSchedule>
+             .............
+    </KnockOutDeterminationSchedule>
+    <FloatingPayDates>
+      <Dates>
+        ....
+      </Dates>
+    </FloatingPayDates>
+    <KnockInDeterminationSchedule>
+            ............
+    </KnockInDeterminationSchedule>
+    <FixedPayDates>
+      ............
+    </FixedPayDates>
+    <KnockOutLevels>
+      <KnockOutLevel>...</KnockOutLevel>
+    </KnockOutLevels>
+    <FixedTriggerLevels>
+      <FixedTriggerLevel>...</FixedTriggerLevel>
+    </FixedTriggerLevels>
+    <KnockInLevel>0.75</KnockInLevel>
+    <FixedRate>0.04</FixedRate>
+    <FixedAccrualSchedule>
+      <Rules>
+        ...
+      </Rules>
+    </FixedAccrualSchedule>
+    <FloatingIndex>EUR-EURIBOR-3M</FloatingIndex>
+    <FloatingDayCountFraction>Actual/360</FloatingDayCountFraction>
+    <FloatingFixingSchedule>
+          ............
+    </FloatingFixingSchedule>
+  </EquityWorstOfBasketSwapData>
+</Trade>
+\end{minted}
+\caption{EquityWorstOfBasketSwap data}
+\label{lst:eqworstofbasketswap_data}
+\end{listing}
+
+The net cashflows under a worst of basket swap from the long perspective are:
+\begin{enumerate}
+  \item Receive an initial fixed amount: \lstinline!InitialFixedRate! $*$ \lstinline!Quantity!,
+  \item At each determination date (if a knock-out has not occurred for any previous determination date): \begin{itemize}
+      \item Pay a floating amount: \lstinline!Quantity! $* floatingRate * accrualFraction$,
+      \item If a coupon trigger event occurs for this date, receive a fixed coupon amount (as well as any other fixed coupon amounts not previously received because a coupon trigger event had not occurred): \lstinline!Quantity! $*$ \lstinline!CouponRate!.
+
+      If \lstinline!AccumulatingFixedCoupons! is \emph{True}, the coupon amounts are guaranteed to be paid out,
+      with the amounts scaled relative to the fraction of days during the accrual period where a coupon trigger event occurs:
+      \lstinline!Quantity! $*$ \lstinline!CouponRate! $* triggerAccrualFraction$
+    \end{itemize}
+  \item On the final determination date, if $worstPerformance < \min(Strike, KnockInLevel)$, pay \lstinline!Quantity! $* ($\lstinline!Strike!$ - worstPerformance)$, where $worstPerformance$ is the performance, i.e.\ $S_T/S_0$, of the worst-performing asset as of the final determination date $T$.
+\end{enumerate}
+
+The meanings and allowable values of elements in the \lstinline!EquityWorstOfBasketSwapData! node follow below.
+
+\begin{itemize}
+  \item \lstinline!Currency!: The payout currency for all cashflows. For FX, this should
+  be \lstinline!CCY2! as defined (see Table \ref{tab:fxindex_data}) in the \lstinline!Name!
+  field in the \lstinline!Underlying! node. Note that for (non-quanto) FxWorstOfBasketSwaps,
+  this should be the domestic (\lstinline!CCY2!) currency, as defined in the Name field in the
+  \lstinline!Underlying! node. For non-quanto Equity- and CommodityWorstOfBasketSwaps, this
+  should be currency the equity or commodity is quoted in. Notice Section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+    Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+  \item \lstinline!LongShort!: Own party position. \\
+    Allowable values: \emph{Long}, \emph{Short}
+  \item \lstinline!Quantity!: The equity notional amount, or the quantity multiplier. \\
+    Allowable values: Any number.
+  \item \lstinline!InitialFixedRate! [Optional]: The coupon rate for the initial fixed
+  payment, to be paid to the \emph{Long} party. \\
+    Allowable values: Any number, as a percentage expressed in decimal form. If left blank
+    or omitted, defaults to zero.
+  \item \lstinline!InitialFixedPayDate! [Optional]: Settlement date for the initial fixed
+  payment. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. If left blank
+    or omitted, this defaults to the first date in the \lstinline!FloatingPayDates! schedule.
+  \item \lstinline!Underlyings!: The basket of underlyings. \\
+    Allowable values: For each underlying, see \ref{ss:underlying}.
+  \item \lstinline!InitialPrices!: The observed price of each underlying in \lstinline!Underlyings!. \\
+    Allowable values: For each underlying, an \lstinline!InitialPrice! sub-node with
+    any positive number.
+  \item \lstinline!BermudanKnockIn! [Optional]: Whether the knock-in event is observed
+  on a regular basis (\emph{True}), as defined by the \lstinline!KnockInDeterminationSchedule!,
+  or only at the final date in the \lstinline!FloatingPeriodSchedule! (\emph{False}). \\
+    Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0},
+    \emph{true}, \emph{false}, etc. The full set of allowable values is given in Table
+    \ref{tab:boolean_allowable}. If left blank or omitted, defaults to \emph{False}.
+  \item \lstinline!KnockInLevel!: The barrier level used to determine whether
+  a knock-in event has occurred for the given knock-in observation date/s, upon which the
+  equity amount is payable at the \lstinline!KnockInPayDate!, subject to no knock-out event
+  having occurred over the life of the contract. \\
+  Allowable values: Any number, as a percentage of the initial prices expressed in decimal
+  form.
+  \item \lstinline!FloatingPeriodSchedule!: Period dates used for calculating floating coupon
+  accrual fractions, and for observing underlying prices for calculating performances. \\
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
+    DerivedSchedule for scripted trades (see the Event data structure in the scripted trade documentation at ore/Docs/ScriptedTrade).
+  \item \lstinline!FloatingFixingSchedule! [Optional]: Fixing dates for floating coupons linked
+    to Ibor indices. The $d^\text{th}$ date in this schedule is the fixing date for the $(d+1)^\text{th}$
+    date in the \lstinline!FloatingPayDates!. For floating coupons linked to overnight indices
+    this scheulde is not relevant, the fixing dates are derived from the FloatingPeriodScheudle
+    and FloatingLookback. \\
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
+    DerivedSchedule for scripted trades (see the Event data structure in ore/Docs/ScriptedTrade).
+    If left blank or omitted, defaults to a \lstinline!DerivedSchedule! with the
+    \lstinline!FloatingPeriodSchedule! set as the base schedule.
+  \item \lstinline!FixedDeterminationSchedule! [Optional]: If \lstinline!AccruingFixedCoupons!
+  is \emph{False}, the observation dates on which a fixed trigger event is evaluated, upon
+  which a fixed coupon payout is made. Otherwise, there is no payout. If
+  \lstinline!AccruingFixedCoupons! is \emph{True}, these will be the dates on which fixed
+  coupon amounts are calculated. The coupon amount is scaled by the number of fixed trigger
+  days relative to the total number of days in the period. \\
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
+    DerivedSchedule for scripted trades (see the Event data structure in ore/Docs/ScriptedTrade).
+    If left blank or omitted, defaults to a \lstinline!DerivedSchedule! with the
+    \lstinline!FloatingPeriodSchedule! set as the base schedule.
+  \item \lstinline!KnockOutDeterminationSchedule! [Optional]: Dates on which a knock-out
+  event is evaluated, after which the instrument is considered to be terminated and no
+  payout is made. \\
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
+    DerivedSchedule for scripted trades (see the Event data structure in ore/Docs/ScriptedTrade).
+    If left blank or omitted, defaults to a \lstinline!DerivedSchedule! with the
+    \lstinline!FloatingPeriodSchedule! set as the base schedule.
+  \item \lstinline!KnockInDeterminationSchedule! [Optional]: Observation dates for
+  determining if a knock-in event has occurred. If \lstinline!BermudanKnockIn!
+  is \emph{True}, this node is required. \\
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
+    DerivedSchedule for scripted trades (see the Event data structure in ore/Docs/ScriptedTrade).
+  \item \lstinline!FixedAccrualSchedule! [Optional]: The fixed coupon paid out for each determination date
+  in the \lstinline!FixedDeterminationSchedule! is scaled according to the number of days
+  in the \lstinline!FixedAccrualSchedule! for which a fixed trigger event occurred, as a fraction of
+  the total number of days in the period (defined by the
+  \lstinline!FixedDeterminationSchedule!). If \lstinline!AccruingFixedCoupons! is
+  \emph{True}, this node is required. \\
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
+    DerivedSchedule for scripted trades (see the Event data structure in ore/Docs/ScriptedTrade).
+  \item \lstinline!FloatingPayDates!: Floating coupon payment dates. \\
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates, Rules, or
+    DerivedSchedule (see ore/Docs/ScriptedTrade).
+  \item \lstinline!FixedPayDates! [Optional]: Fixed coupon payment dates. \\
+    Allowable values: See section \ref{ss:schedule_data} Schedule Data and Dates/Rules, or
+    DerivedSchedule for scripted trades (see the Event data structure in ore/Docs/ScriptedTrade).
+    If left blank or omitted, defaults to the \lstinline!FloatingPayDates!.
+  \item \lstinline!KnockInPayDate! [Optional]: Settlement date for the knock-in
+  payment, subject to a knock-in event having been triggered. \\
+    Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. If left blank
+    or omitted, this defaults to the last date in the \lstinline!FloatingPayDates! schedule.
+  \item \lstinline!KnockOutLevels!: For each determination date in
+  \lstinline!KnockOutDeterminationSchedule! except for the first date, the barrier level used
+  to determine whether a knock-out trigger event has occurred, resulting in a knock-out (i.e.\
+  contract termination). \\
+    Allowable values: For each knock-out determination date, a \lstinline!KnockOutLevel!
+    sub-node with any positive number, as a percentage of the initial prices, expressed in
+    decimal form.
+  \item \lstinline!FixedTriggerLevels!: For each fixed trigger determination date, the
+  barrier level used to determine whether a coupon trigger event has occurred, upon which a
+  fixed coupon is paid out at the corresponding payment date. \\
+    Allowable values: For each fixed trigger evaluation date, a \lstinline!FixedTriggerLevel!
+    sub-node with any positive number, as a percentage of the initial prices expressed in
+    decimal form.
+  \item \lstinline!FixedRate!: Rate of the fixed coupon leg. \\
+    Allowable values: Any number, as a percentage expressed in decimal form.
+  \item \lstinline!AccumulatingFixedCoupons! [Optional]: Whether the fixed coupons are accumulating or not. \\
+    Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0},
+    \emph{true}, \emph{false}, etc. The full set of allowable values is given in Table
+    \ref{tab:boolean_allowable}. If left blank or omitted, defaults to \emph{False}.
+  \item \lstinline!AccruingFixedCoupons! [Optional]: Whether the fixed coupons are paid
+  out on an accrual basis (\emph{True}), or subject to a single fixed trigger event
+  (given by the \lstinline!FixedDeterminationSchedule!). \\
+    Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0},
+    \emph{true}, \emph{false}, etc. The full set of allowable values is given in Table
+    \ref{tab:boolean_allowable}. If left blank or omitted, defaults to \emph{False}.
+  \item \lstinline!FloatingIndex!: Underlying index of the floating leg. \\
+    Allowable values: See ore/Docs/ScriptedTrade (section Data Node / Index). This must
+    be an InterestRate underlying. Overnight indices are not supported.
+  \item \lstinline!FloatingSpread! [Optional]: Spread on the floating rate. \\
+    Allowable values: Any number. If left blank or omitted, defaults to zero.
+  \item \lstinline!FloatingDayCountFraction!: The day count fraction for the floating leg
+  accrual calculations. \\
+    Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item \lstinline!Strike! [Optional]: Strike price for for each underlying in the basket.
+  When calculating the equity amount, this is the price used to calculate the number of
+  shares (for Equity underlyings) owing of the worst-performing asset. \\
+    Allowable values: Any number, as a percentage of the initial prices, expressed in decimal
+    form. If left blank or omitted, defaults to one, i.e.\ the initial price of the
+    underlying.
+  \item \lstinline!FloatingLookback! [Optional]: Only applicable when the floating leg reference
+  rate is an overnight index. The shift applied to each value date in \lstinline!FloatingFixingSchedule!
+  to obtain the fixing reference date. \\
+    Allowable values: Any period definition in unit ``Days'' (e.g.\ \emph{2D}, \emph{30D}, but not \emph{1M}).
+    If omitted or left blank, defaults to \emph{0D}.
+  \item \lstinline!FloatingRateCutoff! [Optional]: Only applicable when the floating leg reference
+  rate is an overnight index. The number of fixing dates at the end of the fixing period for which
+  the fixing value is held constant and set to the previous value. \\
+    Allowable values: Any non-negative whole number. If left blank or omitted, defaults to zero.
+  \item \lstinline!IsAveraged! [Optional]: Only applicable when the floating leg
+  reference rate is an overnight index (where there are multiple fixings over a period). If \emph{True},
+  the average of the fixings is used to calculate the coupon. If \emph{False},
+  the coupon is calculated by compounding the fixings. \\
+    Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true},
+    \emph{false}, etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+    Defaults to \emph{false} If left blank or omiited.
+  \item \lstinline!IncludeSpread! [Optional]: Only applicable when the floating leg
+  reference rate is an overnight index and if IsAveraged is false, i.e.\ the coupon rate is compounded.
+  If \emph{true} the spread is included in the compounding, otherwise it is excluded. \\
+     Allowable values:  Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc.
+  The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+\end{itemize}
+
+Worst Of Basket Swaps can alternatively be represented as {\em scripted trades}, refer to ore/Docs/ScriptedTrade for an introduction.
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <TradeType>ScriptedTrade</TradeType>
+  <Envelope>
+     ....
+  </Envelope>
+  <WorstOfBasketSwapData>
+    <LongShort type="longShort">Long</LongShort>
+    <Quantity type="number">1955000</Quantity>
+    <InitialFixedRate type="number">0.015</InitialFixedRate>
+    <Underlyings type="index">
+      <Value>EQ-RIC:.STOXX50E</Value>
+      <Value>EQ-RIC:.SPX</Value>
+    </Underlyings>
+    <InitialPrices type="number">
+      <Value>3481.44</Value>
+      <Value>3714.24</Value>
+    </InitialPrices>
+    <DeterminationDates type="event">
+      <ScheduleData>
+          ....
+      </ScheduleData>
+    </DeterminationDates>
+    <SettlementDates type="event">
+      <ScheduleData>
+        <Dates>
+          ....
+        </Dates>
+      </ScheduleData>
+    </SettlementDates>
+    <KnockOutLevels type="number">
+      <Value>...</Value>
+    </KnockOutLevels>
+    <CouponTriggerLevels type="number">
+      <Value>...</Value>
+    </CouponTriggerLevels>
+    <KnockInLevel type="number">0.75</KnockInLevel>
+    <CouponRate type="number">0.04</CouponRate>
+    <AccumulatingCoupons type="bool">true</AccumulatingCoupons>
+    <FloatingIndex type="index">EUR-EURIBOR-3M</FloatingIndex>
+    <FloatingSpread type="number">0.002</FloatingSpread>
+    <FloatingDayCountFraction type="dayCounter">Actual/360</FloatingDayCountFraction>
+    <FixingSchedule type="event">
+      <DerivedSchedule>
+          ....
+      </DerivedSchedule>
+    </FixingSchedule>
+    <Strike type="number">1.0</Strike>
+    <PayCcy type="currency">EUR</PayCcy>
+  </WorstOfBasketSwapData>
+\end{minted}
+
+The WorstOfBasketSwap script referenced in the trade above is shown in Listing \ref{lst:worst_of_basket_swap}.
+
+\begin{listing}[hbt] 
+\begin{minted}[fontsize=\tiny]{Basic} 
+REQUIRE SIZE(Underlyings) == SIZE(InitialPrices);
+REQUIRE SIZE(SettlementDates) == SIZE(DeterminationDates);
+REQUIRE SIZE(KnockOutLevels) == SIZE(DeterminationDates) - 1;
+REQUIRE SIZE(CouponTriggerLevels) == SIZE(DeterminationDates) - 1;
+
+NUMBER alive, couponAccumulation, numOfKnockedAssets, fixing, n, accrualFraction, indexInitial;
+NUMBER numOfTriggeredAssets, indexFinal, performance, worstPerformance, d, payoff, u;
+
+Option = Option + LOGPAY(LongShort * Quantity * InitialFixedRate,
+                         SettlementDates[1], SettlementDates[1], PayCcy, 0, InitialFixedAmount);
+
+alive = 1;
+couponAccumulation = 1;
+n = SIZE(DeterminationDates);
+
+FOR d IN (2, n, 1) DO
+  fixing = FloatingIndex(FixingSchedule[d-1]) + FloatingSpread;
+  accrualFraction = dcf(FloatingDayCountFraction, DeterminationDates[d-1], DeterminationDates[d]);
+  Option = Option - LOGPAY(LongShort * Quantity * alive * fixing * accrualFraction,
+                           FixingSchedule[d-1], SettlementDates[d], PayCcy, 1, FloatingLeg);
+  
+  numOfTriggeredAssets = 0;
+  FOR u IN (1, SIZE(Underlyings), 1) DO
+    IF Underlyings[u](DeterminationDates[d]) >= CouponTriggerLevels[d-1] * InitialPrices[u] THEN
+      numOfTriggeredAssets = numOfTriggeredAssets + 1;
+    END;
+  END;
+  IF numOfTriggeredAssets == SIZE(Underlyings) THEN
+    Option = Option + LOGPAY(LongShort * Quantity * alive * CouponRate * couponAccumulation,
+                             SettlementDates[d], SettlementDates[d], PayCcy, 2, FixedCouponLeg);
+    couponAccumulation = 1;
+  ELSE
+    IF AccumulatingCoupons == 1 THEN
+      couponAccumulation = couponAccumulation + 1;
+    END;
+  END;
+
+  IF d == n THEN
+    FOR u IN (1, SIZE(Underlyings), 1) DO
+      indexInitial = InitialPrices[u];
+      indexFinal = Underlyings[u](DeterminationDates[n]);
+      performance = indexFinal / indexInitial;
+
+      IF {u == 1} OR {performance < worstPerformance} THEN
+        worstPerformance = performance;
+      END;
+    END;       
+
+    IF worstPerformance < min(Strike, KnockInLevel) THEN
+      payoff = worstPerformance - Strike;
+      Option = Option + LOGPAY(LongShort * Quantity * alive * payoff, DeterminationDates[n],
+                               SettlementDates[n], PayCcy, 3, EquityAmountPayoff);
+    END;
+  END;
+
+  IF d != n THEN
+    numOfKnockedAssets = 0;
+    FOR u IN (1, SIZE(Underlyings), 1) DO
+      IF Underlyings[u](DeterminationDates[d]) >= KnockOutLevels[d-1] * InitialPrices[u] THEN
+        numOfKnockedAssets = numOfKnockedAssets + 1;
+      END;
+    END;
+    IF numOfKnockedAssets == SIZE(Underlyings) THEN
+      alive = 0;
+    END;
+  END;
+END;
+\end{minted} 
+\caption{Payoff script for a Worst Of Basket Swap.} 
+\label{lst:worst_of_basket_swap}
+\end{listing} 
+ 
+The net cashflows under a (scripted) worst of basket swap from the long perspective are:
+\begin{enumerate}
+  \item Receive an initial fixed amount: \lstinline!InitialFixedRate! $*$ \lstinline!Quantity!,
+  \item At each determination date (if a knock-out has not occurred for any previous determination date): \begin{itemize}
+      \item Pay a floating amount: \lstinline!Quantity! $* floatingRate * accrualFraction$,
+      \item If a coupon trigger event occurs for this date, receive a fixed coupon amount (as well as any other fixed coupon amounts not previously received because a coupon trigger event had not occurred): \lstinline!Quantity! $*$ \lstinline!CouponRate!
+    \end{itemize}
+  \item On the final determination date, if $worstPerformance < \min(Strike, KnockInLevel)$, pay \lstinline!Quantity! $* ($\lstinline!Strike!$ - worstPerformance)$, where $worstPerformance$ is the performance, i.e.\ $S_T/S_0$, of the worst-performing asset as of the final determination date $T$.
+\end{enumerate}
+
+The meanings and allowable values of the elements in the \lstinline!WorstOfBasketSwap! node below.
+
+\begin{itemize}
+  \item{}[longShort] \lstinline!LongShort!: Own party position. \\
+  Allowable values: \emph{Long, Short}
+  \item{}[number] \lstinline!Quantity!: Quantity multiplier, or the equity notional amount. \\
+  Allowable values: Any number.
+  \item{}[number] \lstinline!InitialFixedRate!: Rate of the initial fixed payment. \\
+  Allowable values: Any number, as a percentage expressed in decimal form.
+  \item{}[index] \lstinline!Underlyings!: The basket of underlyings. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values.
+  \item{}[number] \lstinline!InitialPrices!: The agreed initial price for each underlying in the basket. \\
+  Allowable values: Any positive number. The number of \lstinline!Value! sub-nodes should match the number of underlyings.
+  This must have the same number of entries as \lstinline!Underlyings!.
+  \item{}[event] \lstinline!DeterminationDates!: Floating leg period dates, knock-out determination dates, and fixed trigger
+  determination dates. The first date is only used for calculating the floating leg accrual fraction, and corresponds
+  to the contract effective date. \\
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData, or DerivedSchedule (see ore/Docs/ScriptedTrade) if
+  derived from \lstinline!SettlementDates! or \lstinline!FixingSchedule!. The number of determination dates should
+  match the number of settlement and fixing dates.
+  \item{}[event] \lstinline!SettlementDates!: The set of settlement dates corresponding to each determination date. While the first
+  settlement date is unused in the calculations, this format simplifies the input, e.g.\ the settlement schedule can be
+  a derived schedule, with the \emph{DeterminationDates} as the base schedule. \\
+  Allowable values: See section \ref{ss:schedule_data} ScheduleData, or DerivedSchedule (see ore/Docs/ScriptedTrade) if
+  derived from \lstinline!DeterminationDates! or \lstinline!FixingSchedule!. The number of settlement dates should
+  match the number of determination and fixing dates.
+  \item{}[number] \lstinline!KnockOutLevels!: For each determination date, the barrier level used to determine whether a knock-out
+  trigger event has occurred, resulting in a knock-out (i.e.\ contract termination) at the corresponding settlement date. \\
+  Allowable values: Any number, as a percentage of the initial prices expressed in decimal form. This should have the same number
+  of entries as the number of dates in \lstinline!DeterminationDates! minus one.
+  \item{}[number] \lstinline!CouponTriggerLevels!: For each determination date, the barrier level used to determine whether a coupon
+  trigger event has occurred, upon which a fixed coupon is paid out at the corresponding settlement date. \\
+  Allowable values: Any number, as a percentage of the initial prices expressed in decimal form. This should have the same number
+  of entries as the number of dates in \lstinline!DeterminationDates! minus one.
+  \item{}[number] \lstinline!KnockInLevel!: For the final determination date, the barrier level used to determine whether
+  a knock-in event has occurred, upon which the equity amount is payable at the final settlement date, subject to no
+  knock-out event having occurred in the life of the contract. \\
+  Allowable values: Any number, as a percentage of the initial price expressed in decimal form.
+  \item{}[number] \lstinline!CouponRate!: Rate of the fixed coupon leg. \\
+  Allowable values: Any number, as a percentage expressed in decimal form.
+  \item{}[bool] \lstinline!AccumulatingCoupons!: Whether the fixed coupons are accumulating or not. \\
+  Allowable values: Boolean node, allowing \emph{Y}, \emph{N}, \emph{1}, \emph{0}, \emph{true}, \emph{false}, etc. The
+  full set of allowable values is given in Table \ref{tab:boolean_allowable}.
+  \item{}[index] \lstinline!FloatingIndex!: Underlying index of the floating leg. \\
+  Allowable values: See ore/Docs/ScriptedTrade's Index Section for allowable values. Overnight indices are not supported.
+  \item{}[number] \lstinline!FloatingSpread!: Spread on the floating rate. \\
+  Allowable values: Any number.
+  \item{}[dayCounter] \lstinline!FloatingDayCountFraction!: The day count fraction for the floating leg accrual
+  calculations. \\
+  Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+  \item{}[event] \lstinline!FixingSchedule!: The fixing schedule of the floating leg payments. \\
+  Allowable values: See Section \ref{ss:schedule_data} ScheduleData, or DerivedSchedule (see ore/Docs/ScriptedTrade) if
+  derived from \lstinline!DeterminationDates! or \lstinline!SettlementDates!. The number of fixing dates should
+  match the number of determination and settlement dates.
+  \item{}[number] \lstinline!Strike!: Strike price for each underlying in the basket. When calculating the equity amount,
+  this is the price used to calculate the number of shares owing of the worst-performing asset. \\
+  Allowable values: Any number, as a percentage of the initial prices, expressed in decimal form.
+  \item{}[currency] \lstinline!PayCcy!: Settlement currency. Notice section ``Payment Currency'' in ore/Docs/ScriptedTrade. \\
+  Allowable values: See Table \ref{tab:currency} \lstinline!Currency!.
+\end{itemize}

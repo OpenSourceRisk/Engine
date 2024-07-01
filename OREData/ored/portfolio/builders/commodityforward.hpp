@@ -46,8 +46,8 @@ protected:
         return ccy.code();
     }
 
-    virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const QuantLib::Currency& ccy) override {
-        return boost::make_shared<QuantExt::DiscountingCommodityForwardEngine>(
+    virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine> engineImpl(const QuantLib::Currency& ccy) override {
+        return QuantLib::ext::make_shared<QuantExt::DiscountingCommodityForwardEngine>(
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)));
     }
 };

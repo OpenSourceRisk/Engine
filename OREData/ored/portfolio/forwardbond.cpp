@@ -45,16 +45,27 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("ForwardBond::build() called for trade " << id());
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
+    // ISDA taxonomy
+    additionalData_["isdaAssetClass"] = string("Interest Rate");
+    additionalData_["isdaBaseProduct"] = string("Forward");
+    additionalData_["isdaSubProduct"] = string("Debt");
+    additionalData_["isdaTransaction"] = string("");
 
-    boost::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
-    boost::shared_ptr<EngineBuilder> builder_bd = engineFactory->builder("Bond");
+    additionalData_["currency"] = currency_;
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+
+    QuantLib::ext::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
+    QuantLib::ext::shared_ptr<EngineBuilder> builder_bd = engineFactory->builder("Bond");
 
     bondData_ = originalBondData_;
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
+
+    npvCurrency_ = currency_ = bondData_.coupons().front().currency();
+    notionalCurrency_ = currency_;
 
     QL_REQUIRE(!bondData_.referenceCurveId().empty(), "reference curve id required");
     QL_REQUIRE(!bondData_.settlementDays().empty(), "settlement days required");
@@ -103,10 +114,10 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                    << ") are not allowed. Notice that we will ensure that a positive compensation amount will be paid "
                       "by the party being long in the forward contract.");
 
-    boost::shared_ptr<Payoff> payoff;
+    QuantLib::ext::shared_ptr<Payoff> payoff;
     if (amount != Null<Real>()) {
-        payoff = longInForward ? boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, amount)
-                               : boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Short, amount);
+        payoff = longInForward ? QuantLib::ext::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, amount)
+                               : QuantLib::ext::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Short, amount);
     }
     compensationPayment = longInForward ? compensationPayment : -compensationPayment;
 
@@ -119,31 +130,28 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         separateLegs.push_back(leg);
     }
     Leg leg = joinLegs(separateLegs);
-    auto bond = boost::make_shared<QuantLib::Bond>(settlementDays, calendar, issueDate, leg);
-
-    npvCurrency_ = currency_ = bondData_.coupons().front().currency();
-    maturity_ = bond->cashflows().back()->date();
-    notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
-    notionalCurrency_ = currency_;
+    auto bond = QuantLib::ext::make_shared<QuantLib::Bond>(settlementDays, calendar, issueDate, leg);
 
     // cashflows will be generated as additional results in the pricing engine
     legs_ = {};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {firstLegIsPayer};
     Currency currency = parseCurrency(currency_);
+    maturity_ = bond->cashflows().back()->date();
+    notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
 
     // first ctor is for vanilla fwd bonds, second for tlocks with a lock rate specifying the payoff
-    boost::shared_ptr<QuantLib::Instrument> fwdBond =
-        payoff ? boost::make_shared<QuantExt::ForwardBond>(bond, payoff, fwdMaturityDate, fwdSettlementDate,
+    QuantLib::ext::shared_ptr<QuantLib::Instrument> fwdBond =
+        payoff ? QuantLib::ext::make_shared<QuantExt::ForwardBond>(bond, payoff, fwdMaturityDate, fwdSettlementDate,
                                                            isPhysicallySettled, settlementDirty, compensationPayment,
                                                            compensationPaymentDate, bondData_.bondNotional())
-               : boost::make_shared<QuantExt::ForwardBond>(bond, lockRate, lockRateDayCounter, longInForward,
+               : QuantLib::ext::make_shared<QuantExt::ForwardBond>(bond, lockRate, lockRateDayCounter, longInForward,
                                                            fwdMaturityDate, fwdSettlementDate, isPhysicallySettled,
                                                            settlementDirty, compensationPayment,
                                                            compensationPaymentDate, bondData_.bondNotional(), dv01);
 
-    boost::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
-        boost::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
+    QuantLib::ext::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
+        QuantLib::ext::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
 
     fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData_.creditCurveId(),
@@ -154,13 +162,6 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData_.bondNotional();
     additionalData_["originalNotional"] = originalNotional(bond->cashflows()) * bondData_.bondNotional();
-    additionalData_["currency"] = currency_;
-
-    // ISDA taxonomy
-    additionalData_["isdaAssetClass"] = string("Interest Rate");
-    additionalData_["isdaBaseProduct"] = string("Forward");
-    additionalData_["isdaSubProduct"] = string("Debt");
-    additionalData_["isdaTransaction"] = string("");
 }
 
 void ForwardBond::fromXML(XMLNode* node) {
@@ -194,7 +195,7 @@ void ForwardBond::fromXML(XMLNode* node) {
     longInForward_ = XMLUtils::getChildValue(fwdBondNode, "LongInForward", true);
 }
 
-XMLNode* ForwardBond::toXML(XMLDocument& doc) {
+XMLNode* ForwardBond::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fwdBondNode = doc.allocNode("ForwardBondData");
     XMLUtils::appendNode(node, fwdBondNode);
@@ -229,7 +230,7 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
 }
 
 std::map<AssetClass, std::set<std::string>>
-ForwardBond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+ForwardBond::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     result[AssetClass::BOND] = {bondData_.securityId()};
     return result;

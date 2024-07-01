@@ -53,8 +53,8 @@ public:
     CrossCcyBasisSwapHelper(
         const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
         const Calendar& settlementCalendar, const Period& swapTenor, BusinessDayConvention rollConvention,
-        const boost::shared_ptr<QuantLib::IborIndex>& flatIndex,
-        const boost::shared_ptr<QuantLib::IborIndex>& spreadIndex, const Handle<YieldTermStructure>& flatDiscountCurve,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& flatIndex,
+        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& spreadIndex, const Handle<YieldTermStructure>& flatDiscountCurve,
         const Handle<YieldTermStructure>& spreadDiscountCurve, bool eom = false, bool flatIsDomestic = true,
         boost::optional<QuantLib::Period> flatTenor = boost::none,
         boost::optional<QuantLib::Period> spreadTenor = boost::none, Real spreadOnFlatLeg = 0.0, Real flatGearing = 1.0,
@@ -75,7 +75,7 @@ public:
     //@}
     //! \name inspectors
     //@{
-    boost::shared_ptr<CrossCcyBasisSwap> swap() const { return swap_; }
+    QuantLib::ext::shared_ptr<CrossCcyBasisSwap> swap() const { return swap_; }
     //@}
     //! \name Visitability
     //@{
@@ -90,8 +90,8 @@ protected:
     Calendar settlementCalendar_;
     Period swapTenor_;
     BusinessDayConvention rollConvention_;
-    boost::shared_ptr<QuantLib::IborIndex> flatIndex_;
-    boost::shared_ptr<QuantLib::IborIndex> spreadIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> flatIndex_;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> spreadIndex_;
     Handle<YieldTermStructure> flatDiscountCurve_;
     Handle<YieldTermStructure> spreadDiscountCurve_;
     bool eom_;
@@ -122,7 +122,7 @@ protected:
 
     Currency flatLegCurrency_;
     Currency spreadLegCurrency_;
-    boost::shared_ptr<CrossCcyBasisSwap> swap_;
+    QuantLib::ext::shared_ptr<CrossCcyBasisSwap> swap_;
 
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     RelinkableHandle<YieldTermStructure> flatDiscountRLH_;

@@ -40,9 +40,9 @@ public:
     using engine = GenericEngine<BondTRS::arguments, BondTRS::results>;
     using results = BondTRS::results;
     //! Constructor
-    BondTRS(const boost::shared_ptr<QuantExt::BondIndex>& bondIndex, const Real bondNotional, const Real initialPrice,
+    BondTRS(const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex, const Real bondNotional, const Real initialPrice,
             const std::vector<Leg>& fundingLeg, const bool payTotalReturnLeg, const std::vector<Date>& valuationDates,
-            const std::vector<Date>& paymentDates, const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+            const std::vector<Date>& paymentDates, const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
             bool payBondCashFlowsImmediately = false, const Currency& fundingCurrency = Currency(),
             const Currency& bondCurrency = Currency());
 
@@ -54,8 +54,8 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<QuantExt::BondIndex>& bondIndex() const { return bondIndex_; }
-    const boost::shared_ptr<QuantExt::FxIndex>& fxIndex() const { return fxIndex_; }
+    const QuantLib::ext::shared_ptr<QuantExt::BondIndex>& bondIndex() const { return bondIndex_; }
+    const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex() const { return fxIndex_; }
     Real bondNotional() const { return bondNotional_; }
     const std::vector<Leg>& fundingLeg() const { return fundingLeg_; }
     Real initialPrice() const { return initialPrice_; }
@@ -67,12 +67,12 @@ public:
     //@}
 
 private:
-    boost::shared_ptr<QuantExt::BondIndex> bondIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::BondIndex> bondIndex_;
     Real bondNotional_;
     Real initialPrice_;
     std::vector<Leg> fundingLeg_;
     bool payTotalReturnLeg_;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex_;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex_;
     bool payBondCashFlowsImmediately_;
     Currency fundingCurrency_, bondCurrency_;
     std::vector<Date> valuationDates_;
@@ -84,8 +84,8 @@ private:
 //! \ingroup instruments
 class BondTRS::arguments : public virtual PricingEngine::arguments {
 public:
-    boost::shared_ptr<QuantExt::BondIndex> bondIndex;
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex;
+    QuantLib::ext::shared_ptr<QuantExt::BondIndex> bondIndex;
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
     Real bondNotional;
     std::vector<Leg> fundingLeg;
     Leg returnLeg;

@@ -125,6 +125,11 @@ struct CrifRecord {
     //! There are two entries for curvature risk in frtb, a up and down shift
     enum class CurvatureScenario { Empty, Up, Down };
 
+    // clang-format off
+    //                 trade ID                                                qualifier    bucket       label1       label2       collect regs post regs
+    typedef std::tuple<std::string, NettingSetDetails, ProductClass, RiskType, std::string, std::string, std::string, std::string, std::string, std::string> SimmAmountCcyKey;
+    // clang-format on
+
     // required data
     std::string tradeId;
     std::string portfolioId;
@@ -183,16 +188,6 @@ struct CrifRecord {
             additionalFields[key] = value;
         }
     }
-
-    CrifRecord(std::string tradeId, std::string tradeType, std::string portfolioId,
-               ProductClass productClass, RiskType riskType,
-               std::string qualifier, std::string bucket, std::string label1, std::string label2,
-               std::string amountCurrency, QuantLib::Real amount, QuantLib::Real amountUsd, std::string imModel = "",
-               std::string collectRegulations = "", std::string postRegulations = "", std::string endDate = "",
-               std::map<std::string, std::string> additionalFields = {})
-        : CrifRecord(tradeId, tradeType, NettingSetDetails(portfolioId), productClass, riskType, qualifier,
-                     bucket, label1, label2, amountCurrency, amount, amountUsd, imModel,
-                     collectRegulations, postRegulations, endDate, additionalFields) {}
 
     RecordType type() const;
 
@@ -286,6 +281,11 @@ struct CrifRecord {
         return value;
     }
 
+    const SimmAmountCcyKey getSimmAmountCcyKey() const {
+        return std::make_tuple(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
+                               collectRegulations, postRegulations);
+    }
+
     //! Define how CRIF records are compared
     bool operator<(const CrifRecord& cr) const {
         if (type() == RecordType::FRTB || cr.type() == RecordType::FRTB) {
@@ -366,10 +366,13 @@ std::ostream& operator<<(std::ostream& out, const CrifRecord::RiskType& rt);
 
 std::ostream& operator<<(std::ostream& out, const CrifRecord::ProductClass& pc);
 
+std::ostream& operator<<(std::ostream& out, const CrifRecord::CurvatureScenario& scenario);
+
 CrifRecord::RiskType parseRiskType(const std::string& rt);
 
 CrifRecord::ProductClass parseProductClass(const std::string& pc);
 
+CrifRecord::CurvatureScenario parseFrtbCurvatureScenario(const std::string& scenario);
 
 } // namespace analytics
 } // namespace ore

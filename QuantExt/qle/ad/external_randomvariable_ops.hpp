@@ -24,6 +24,8 @@
 
 #include <qle/math/randomvariable_ops.hpp>
 
+#include <ostream>
+
 namespace QuantExt {
 
 class ExternalRandomVariable {
@@ -34,14 +36,18 @@ public:
     ExternalRandomVariable(const std::size_t randomVariableOpCode,
                            const std::vector<const ExternalRandomVariable*>& args);
     void clear();
+    void free();
     bool initialised() const { return initialized_; }
+    bool freed() const { return freed_; }
     void declareAsOutput() const;
     std::size_t id() const;
 
+    static std::function<void(ExternalRandomVariable&)> preDeleter;
     static std::function<void(ExternalRandomVariable&)> deleter;
 
 private:
     bool initialized_ = false;
+    bool freed_ = false;
     double v_;
     std::size_t id_;
 };
@@ -61,5 +67,6 @@ using ExternalRandomVariableGrad = std::function<std::vector<ExternalRandomVaria
 
 std::vector<ExternalRandomVariableGrad> getExternalRandomVariableGradients();
 
+std::ostream& operator<<(std::ostream& out, const ExternalRandomVariable& a);
 
 } // namespace QuantExt
