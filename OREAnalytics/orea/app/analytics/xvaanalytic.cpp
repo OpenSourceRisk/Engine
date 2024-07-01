@@ -532,8 +532,9 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
         if (!scenarioData_.empty())
-            engine.aggregationScenarioData() = *scenarioData_;
-        engine.buildCube(amcCube_, offsetScenario_);
+            engine.setAggregationScenarioData(*scenarioData_);
+        engine.setOffsetScenario(offsetScenario_);
+        engine.setNpvOutputCube(amcCube_);
 
     } else {
 

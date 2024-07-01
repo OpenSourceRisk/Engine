@@ -118,19 +118,23 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
             }
         }
     }
+}
+
+void XvaEngineCG::run() {
 
     // Start Engine
 
     LOG("XvaEngineCG: started");
     boost::timer::cpu_timer timer;
 
-    // Build T0 market
+    // On the first run, build T0 market
 
+    if(initMarket_ == nullptr) {
     LOG("XvaEngineCG: build init market");
-
     initMarket_ = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
         asof_, todaysMarketParams_, loader_, curveConfigs_, continueOnError_, true, true, referenceData_, false,
         iborFallbackConfig_, false, true);
+    }
 
     boost::timer::nanosecond_type timing1 = timer.elapsed().wall;
 
@@ -186,7 +190,7 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
     // note: projectedStateProcessIndices can be removed from GaussianCamCG constructor most probably?
     model_ = QuantLib::ext::make_shared<GaussianCamCG>(
         camBuilder_->model(), scenarioGeneratorData_->samples(), currencies, curves, fxSpots, irIndices, infIndices,
-        indices, indexCurrencies, simulationDates, timeStepsPerYear, iborFallbackConfig, std::vector<Size>(),
+        indices, indexCurrencies, simulationDates, timeStepsPerYear, iborFallbackConfig_, std::vector<Size>(),
         std::vector<std::string>(), true);
     model_->calculate();
     boost::timer::nanosecond_type timing3 = timer.elapsed().wall;
@@ -501,7 +505,7 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
         sensiScenarioGenerator_ = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
             sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
             QuantLib::ext::make_shared<DeltaScenarioFactory>(simMarket_->baseScenario()), false, std::string(),
-            continueOnError, simMarket_->baseScenarioAbsolute());
+            continueOnError_, simMarket_->baseScenarioAbsolute());
 
         simMarket_->scenarioGenerator() = sensiScenarioGenerator_;
 
@@ -630,6 +634,20 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
     LOG("XvaEngineCG: all done.");
 }
 
+
+void XvaEngineCG::setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
+    offsetScenario_ = offsetScenario;
+}
+
+void XvaEngineCG::setAggregationScenarioData(
+    const QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData>& asd) {
+    asd_ = asd;
+}
+
+void XvaEngineCG::setNpvOutputCube(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& npvOutputCube) {
+    npvOutputCube_ = npvOutputCube;
+}
+
 void XvaEngineCG::populateRandomVariates(std::vector<RandomVariable>& values,
                                          std::vector<ExternalRandomVariable>& valuesExternal) const {
 
@@ -710,10 +728,6 @@ void XvaEngineCG::populateModelParameters(const std::vector<std::pair<std::size_
     }
 
     DLOG("XvaEngineCG: set " << modelParameters.size() << " model parameters.");
-}
-
-void XvaEngineCG::buildCube(QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& outputCube) const {
-    
 }
 
 } // namespace analytics
