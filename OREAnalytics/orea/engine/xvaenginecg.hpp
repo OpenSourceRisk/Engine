@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <orea/cube/sensicube.hpp>
 #include <orea/scenario/scenariogeneratordata.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
@@ -38,7 +39,9 @@
 
 #include <ored/marketdata/todaysmarket.hpp>
 
+#include <qle/ad/computationgraph.hpp>
 #include <qle/ad/external_randomvariable_ops.hpp>
+#include <qle/math/computeenvironment.hpp>
 
 #include <ql/types.hpp>
 
@@ -49,6 +52,7 @@ class XvaEngineCG : public ore::data::ProgressReporter {
 public:
     enum class Mode { Disabled, CubeGeneration, Full };
 
+    ~XvaEngineCG();
     XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                 const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
                 const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
@@ -86,6 +90,25 @@ public:
     QuantLib::ext::shared_ptr<InMemoryReport> sensiReport() const { return sensiReport_; }
 
 private:
+    void buildT0Market();
+    void buildSsm();
+    void buildCam();
+    void buildPortfolio();
+    void buildCgPartB();
+    void buildCgPartC();
+    void buildCgPP();
+    void getExternalContext();
+    void setupValueContainers();
+    void doForwardEvaluation();
+    void populateAsd();
+    void populateNpvOutputCube();
+    void generateXvaReports();
+    void calculateSensitivities();
+    void generateSensiReports();
+    void cleanUpAfterCalcs();
+    void outputGraphStats();
+    void outputTimings();
+
     void populateRandomVariates(std::vector<RandomVariable>& values,
                                 std::vector<ExternalRandomVariable>& valuesExternal) const;
     void populateConstants(std::vector<RandomVariable>& values,
@@ -95,11 +118,13 @@ private:
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
 
     // set via additional methods
+
     QuantLib::ext::shared_ptr<ore::analytics::AggregationScenarioData> asd_;
     QuantLib::ext::shared_ptr<ore::analytics::Scenario> offsetScenario_;
     QuantLib::ext::shared_ptr<ore::analytics::NPVCube> npvOutputCube_;
 
-    // input parameters
+    // input parameters from constructor
+
     Mode mode_;
     Date asof_;
     QuantLib::ext::shared_ptr<ore::data::Loader> loader_;
@@ -124,9 +149,12 @@ private:
     bool continueOnError_;
     std::string context_;
 
-    // artefacts produced during run
+    // artefacts produced during lifetime of engine instance
+
+    bool firstRun_ = true;
     QuantLib::ext::shared_ptr<ore::data::Market> initMarket_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket_;
+    QuantLib::ObservableValue<QuantLib::ext::shared_ptr<ore::data::Market>> simMarketObs_;
     QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> sensiScenarioGenerator_;
     QuantLib::ext::shared_ptr<CrossAssetModelBuilder> camBuilder_;
     QuantLib::ext::shared_ptr<GaussianCamCG> model_;
@@ -136,9 +164,26 @@ private:
     std::vector<RandomVariableGrad> grads_;
     std::vector<ExternalRandomVariableOp> opsExternal_;
     std::vector<ExternalRandomVariableGrad> gradsExternal_;
-    std::size_t externalCalculationId_;
+    std::size_t externalCalculationId_ = 0;
+    std::vector<std::vector<std::size_t>> amcNpvNodes_; // includes time zero npv
+    std::vector<std::size_t> pfExposureNodes_;
+    std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
+    QuantLib::ext::shared_ptr<DoublePrecisionSensiCube> sensiResultCube_;
+    std::set<Date> simulationDates_;
+    std::vector<bool> keepNodes_;
+    QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
+
+    boost::timer::nanosecond_type timing_t0_ = 0, timing_ssm_ = 0, timing_parta_ = 0, timing_pf_ = 0, timing_partb_ = 0,
+                                  timing_partc_ = 0, timing_partd_ = 0, timing_popparam_ = 0, timing_poprv_ = 0,
+                                  timing_fwd_ = 0, timing_bwd_ = 0, timing_sensi_ = 0, timing_total_ = 0;
+    std::size_t numberOfRedNodes_, rvMemMax_;
+
+    std::vector<RandomVariable> values_;
+    std::vector<RandomVariable> derivatives_;
+    std::vector<ExternalRandomVariable> valuesExternal_;
 
     // output reports
+
     QuantLib::ext::shared_ptr<InMemoryReport> epeReport_, sensiReport_;
 };
 
