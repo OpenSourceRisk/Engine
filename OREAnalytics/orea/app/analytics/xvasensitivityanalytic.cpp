@@ -95,7 +95,7 @@ void XvaSensitivityAnalyticImpl::runSensitivity(
         auto desc = scenarioGenerator->scenarioDescriptions()[i];
         const auto label = scenario->label();
         QuantLib::ext::shared_ptr<ore::data::InMemoryReport> descReport =
-            QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+            QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
 
         double shiftSize1 = 0.0;
         auto itShiftSize1 = scenarioGenerator->shiftSizes().find(desc.key1());
