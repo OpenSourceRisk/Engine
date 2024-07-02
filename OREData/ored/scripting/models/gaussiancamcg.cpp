@@ -387,16 +387,16 @@ void GaussianCamCG::performCalculations() const {
         // state -> state + drift * dt + diffusion * dz * sqrt(dt), dz = sqrtCorrelation * dw
 
         std::vector<std::size_t> dz(cam->brownians());
-        for (Size j = 0; j < cam->dimension(); ++j) {
+        for (Size j = 0; j < cam->brownians(); ++j) {
             dz[j] = cg_const(*g_, 0.0);
-            for (Size k = 0; j < cam->brownians(); ++k) {
+            for (Size k = 0; k < cam->brownians(); ++k) {
                 dz[j] = cg_add(*g_, dz[j],
                                cg_mult(*g_, cg_const(*g_, std::sqrt(timeGrid_[i + 1] - timeGrid_[i])),
                                        cg_mult(*g_, sqrtCorrelation[j][k], randomVariates_[k][i])));
             }
         }
         for (Size j = 0; j < cam->dimension(); ++j) {
-            for (Size k = 0; j < cam->brownians(); ++k) {
+            for (Size k = 0; k < cam->brownians(); ++k) {
                 state[j] = cg_add(*g_, state[j], cg_mult(*g_, diffusionOnCorrelatedBrownians[i][j][k], dz[k]));
             }
 
