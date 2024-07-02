@@ -203,7 +203,7 @@ EquityLeg& EquityLeg::withPaymentAdjustment(BusinessDayConvention convention) {
     return *this;
 }
 
-EquityLeg& EquityLeg::withPaymentLag(Natural paymentLag) {
+EquityLeg& EquityLeg::withPaymentLag(Integer paymentLag) {
     paymentLag_ = paymentLag;
     return *this;
 }
