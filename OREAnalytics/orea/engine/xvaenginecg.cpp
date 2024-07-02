@@ -125,19 +125,22 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
             }
         }
     }
+
+    LOG("XvaEngineCG: constructor finished.");
 }
 
 void XvaEngineCG::buildT0Market() {
-    LOG("XvaEngineCG: build init market");
+    DLOG("XvaEngineCG: build init market");
     boost::timer::cpu_timer timer;
     initMarket_ = QuantLib::ext::make_shared<ore::data::TodaysMarket>(
         asof_, todaysMarketParams_, loader_, curveConfigs_, continueOnError_, true, true, referenceData_, false,
         iborFallbackConfig_, false, true);
     timing_t0_ = timer.elapsed().wall;
+    DLOG("XvaEngineCG: build init market done");
 }
 
 void XvaEngineCG::buildSsm() {
-    LOG("XvaEngineCG: build sim market");
+    DLOG("XvaEngineCG: build sim market");
 
     boost::timer::cpu_timer timer;
 
@@ -149,10 +152,11 @@ void XvaEngineCG::buildSsm() {
     simMarketObs_ = static_pointer_cast<ore::data::Market>(simMarket_);
 
     timing_ssm_ = timer.elapsed().wall;
+    DLOG("XvaEngineCG: build sim market done");
 }
 
 void XvaEngineCG::buildCam() {
-    LOG("XvaEngineCG: build cam model builder");
+    DLOG("XvaEngineCG: build cam model builder");
 
     boost::timer::cpu_timer timer;
 
@@ -164,7 +168,7 @@ void XvaEngineCG::buildCam() {
 
     // Set up gaussian cam cg model
 
-    LOG("XvaEngineCG: build cam cg model");
+    DLOG("XvaEngineCG: build cam cg model");
 
     QL_REQUIRE(
         crossAssetModelData_->discretization() == CrossAssetModel::Discretization::Euler,
@@ -195,12 +199,15 @@ void XvaEngineCG::buildCam() {
         camBuilder_->model(), scenarioGeneratorData_->samples(), currencies, curves, fxSpots, irIndices, infIndices,
         indices, indexCurrencies, simulationDates_, timeStepsPerYear, iborFallbackConfig_, std::vector<Size>(),
         std::vector<std::string>(), true);
+    // this is actually necessary, FIXME why? There is a calculate() missing in the model impl. then?
+    model_->calculate();
 
     timing_parta_ = timer.elapsed().wall;
+    DLOG("XvaEngineCG: build cam cg model done - graph size is " << model_->computationGraph()->size());
 }
 
 void XvaEngineCG::buildPortfolio() {
-    LOG("XvaEngineCG: build trades (" << portfolio_->size() << ") against global cam cg model");
+    DLOG("XvaEngineCG: build trades (" << portfolio_->size() << ").");
 
     boost::timer::cpu_timer timer;
 
@@ -221,10 +228,11 @@ void XvaEngineCG::buildPortfolio() {
     portfolio_->build(factory, "xva engine cg", true);
 
     timing_pf_ = timer.elapsed().wall;
+    DLOG("XvaEngineCG: build trades (" << portfolio_->size() << ") done.");
 }
 
 void XvaEngineCG::buildCgPartB() {
-    LOG("XvaEngineCG: build computation graph for all trades");
+    DLOG("XvaEngineCG: build computation graph for all trades");
 
     // Build computation graph for all trades ("part B") and
     // - store npv, amc npv nodes
@@ -252,10 +260,12 @@ void XvaEngineCG::buildCgPartB() {
     }
 
     timing_partb_ = timer.elapsed().wall;
+    DLOG("XvaEngineCG: build computation graph for all trades done - graph size is "
+        << model_->computationGraph()->size());
 }
 
 void XvaEngineCG::buildCgPartC() {
-    LOG("XvaEngineCG: add exposure nodes to graph");
+    DLOG("XvaEngineCG: add exposure nodes to graph");
 
     // Add nodes that sum the exposure over trades, both pathwise and conditional expectations
     // This constitutes part C of the computation graph spanning "trade m range end ... lastExposureNode"
@@ -278,10 +288,11 @@ void XvaEngineCG::buildCgPartC() {
     }
 
     timing_partc_ = timer.elapsed().wall;
+    DLOG("XvaEngineCG: add exposure nodes to graph - graph size is " << g->size());
 }
 
 void XvaEngineCG::buildCgPP() {
-    LOG("XvaEngineCG: add cg post processor");
+    DLOG("XvaEngineCG: add cg post processor");
 
     boost::timer::cpu_timer timer;
     auto g = model_->computationGraph();
@@ -304,10 +315,11 @@ void XvaEngineCG::buildCgPP() {
     }
 
     timing_partd_ = timer.elapsed().wall;
+    DLOG("XvaEngineCG: add cg post processor done - graph size is " << g->size());
 }
 
 void XvaEngineCG::getExternalContext() {
-    LOG("XvaEngineCG: get external context");
+    DLOG("XvaEngineCG: get external context");
     if (useExternalComputeDevice_) {
         ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         externalComputeDeviceSettings_.debug = false;
@@ -325,7 +337,7 @@ void XvaEngineCG::getExternalContext() {
 }
 
 void XvaEngineCG::setupValueContainers() {
-    LOG("XvaEngineCG: setup value containers");
+    DLOG("XvaEngineCG: setup value containers");
     auto g = model_->computationGraph();
     values_ = std::vector<RandomVariable>(g->size(), RandomVariable(model_->size(), 0.0));
     derivatives_ = std::vector<RandomVariable>(g->size(), RandomVariable(model_->size(), 0.0));
@@ -335,7 +347,7 @@ void XvaEngineCG::setupValueContainers() {
 
 void XvaEngineCG::doForwardEvaluation() {
 
-    LOG("XvaEngineCG: do forward evaluation");
+    DLOG("XvaEngineCG: do forward evaluation");
 
     boost::timer::cpu_timer timer;
     auto g = model_->computationGraph();
@@ -437,20 +449,22 @@ void XvaEngineCG::doForwardEvaluation() {
 
     rvMemMax_ = std::max(rvMemMax_, numberOfStochasticRvs(values_) + numberOfStochasticRvs(derivatives_));
     timing_fwd_ = timer.elapsed().wall - timing_poprv_;
+
+    DLOG("XvaEngineCG: do forward evaluation done");
 }
 
 void XvaEngineCG::populateAsd() {
-    LOG("XvaEngineCG: populate asd.");
+    DLOG("XvaEngineCG: populate asd.");
     // todo
 }
 
 void XvaEngineCG::populateNpvOutputCube() {
-    LOG("XvaEngineCG: populate npv output cube.");
+    DLOG("XvaEngineCG: populate npv output cube.");
     // todo
 }
 
 void XvaEngineCG::generateXvaReports() {
-    LOG("XvaEngineCG: Write epe report.");
+    DLOG("XvaEngineCG: Write epe report.");
     epeReport_ = QuantLib::ext::make_shared<InMemoryReport>();
     epeReport_->addColumn("Date", Date()).addColumn("EPE", double(), 4).addColumn("ENE", double(), 4);
 
@@ -464,7 +478,7 @@ void XvaEngineCG::generateXvaReports() {
 }
 
 void XvaEngineCG::calculateSensitivities() {
-    LOG("XvaEngineCG: calculate sensitivities.");
+    DLOG("XvaEngineCG: calculate sensitivities.");
 
     QL_REQUIRE(cvaNode_ != ComputationGraph::nan,
                "XvaEngineCG::calculateSensitivities(): no cva node set, internal error.");
@@ -477,7 +491,7 @@ void XvaEngineCG::calculateSensitivities() {
 
     if (sensitivityData_) {
 
-        LOG("XvaEngineCG: Calculate sensitivities (bump = " << std::boolalpha << bumpCvaSensis_ << ")");
+        DLOG("XvaEngineCG: Calculate sensitivities (bump = " << std::boolalpha << bumpCvaSensis_ << ")");
 
         // Do backward derivatives run
 
@@ -485,7 +499,7 @@ void XvaEngineCG::calculateSensitivities() {
 
         if (!bumpCvaSensis_) {
 
-            LOG("XvaEngineCG: run backward derivatives");
+            DLOG("XvaEngineCG: run backward derivatives");
 
             derivatives_[cvaNode_] = RandomVariable(model_->size(), 1.0);
 
@@ -511,7 +525,7 @@ void XvaEngineCG::calculateSensitivities() {
 
             rvMemMax_ = std::max(rvMemMax_, numberOfStochasticRvs(values_) + numberOfStochasticRvs(derivatives_));
 
-            LOG("XvaEngineCG: got " << modelParamDerivatives.size()
+            DLOG("XvaEngineCG: got " << modelParamDerivatives.size()
                                     << " model parameter derivatives from run backward derivatives");
 
             timing_bwd_ = timer.elapsed().wall;
@@ -525,7 +539,7 @@ void XvaEngineCG::calculateSensitivities() {
 
         // generate sensitivity scenarios
 
-        LOG("XvaEngineCG: running sensi scenarios");
+        DLOG("XvaEngineCG: running sensi scenarios");
 
         sensiScenarioGenerator_ = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
             sensitivityData_, simMarket_->baseScenario(), simMarketData_, simMarket_,
@@ -612,13 +626,13 @@ void XvaEngineCG::calculateSensitivities() {
 
         timing_sensi_ = timer.elapsed().wall - timing_bwd_;
 
-        LOG("XvaEngineCG: finished running " << sensiResultCube_->samples() << " sensi scenarios, thereof "
+        DLOG("XvaEngineCG: finished running " << sensiResultCube_->samples() << " sensi scenarios, thereof "
                                              << activeScenarios << " active.");
     } // if sensi data is given
 }
 
 void XvaEngineCG::generateSensiReports() {
-    LOG("XvaEngineCG: write sensi report.");
+    DLOG("XvaEngineCG: write sensi report.");
     sensiReport_ = QuantLib::ext::make_shared<InMemoryReport>();
     auto sensiCube = QuantLib::ext::make_shared<SensitivityCube>(
         sensiResultCube_, sensiScenarioGenerator_->scenarioDescriptions(), sensiScenarioGenerator_->shiftSizes(),
@@ -720,6 +734,7 @@ void XvaEngineCG::run() {
     outputTimings();
 
     firstRun_ = false;
+    LOG("XvaEngineCG::run(): finished.");
 }
 
 void XvaEngineCG::setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
