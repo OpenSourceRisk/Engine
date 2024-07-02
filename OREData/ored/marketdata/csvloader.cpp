@@ -174,11 +174,9 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                 if (tokens.size() == 4)
                     payDate = parseDate(tokens[3]);
                 // process dividends
-                if (date <= today) {
-                    if (!dividends_.insert(QuantExt::Dividend(date, key, value, payDate)).second) {
-                        WLOG("Skipped Dividend " << key << "@" << QuantLib::io::iso_date(date)
-                                                 << " - this is already present.");
-                    }
+                if (!dividends_.insert(QuantExt::Dividend(date, key, value, payDate)).second) {
+                    WLOG("Skipped Dividend " << key << "@" << QuantLib::io::iso_date(date)
+                                                << " - this is already present.");
                 }
             } else {
                 QL_FAIL("unknown data type");

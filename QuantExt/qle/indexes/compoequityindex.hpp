@@ -45,7 +45,7 @@ public:
     const std::set<Dividend>& dividendFixings() const override;
     Real pastFixing(const Date& fixingDate) const override;
     QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
-                                         const Handle<YieldTermStructure>& dividend) const override;
+          const Handle<YieldTermStructure>& dividend, const Handle<EquityDiscreteDividendCurve>& discreteDividend) const override;
 
 private:
     void performCalculations() const override;

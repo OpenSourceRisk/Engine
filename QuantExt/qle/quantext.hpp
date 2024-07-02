@@ -494,6 +494,7 @@
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
+#include <qle/termstructures/equitydiscretedividendcurve.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/flatforwarddividendcurve.hpp>

@@ -22,17 +22,13 @@
 
 namespace QuantExt {
 
-DiscountingEquityForwardEngine::DiscountingEquityForwardEngine(
-    const Handle<YieldTermStructure>& equityInterestRateCurve, const Handle<YieldTermStructure>& dividendYieldCurve,
-    const Handle<Quote>& equitySpot, const Handle<YieldTermStructure>& discountCurve,
-    boost::optional<bool> includeSettlementDateFlows, const Date& settlementDate, const Date& npvDate)
-    : equityRefRateCurve_(equityInterestRateCurve), divYieldCurve_(dividendYieldCurve), equitySpot_(equitySpot),
-      discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),
+DiscountingEquityForwardEngine::DiscountingEquityForwardEngine(const Handle<EquityIndex2>& equityIndex,
+    const Handle<YieldTermStructure>& discountCurve, boost::optional<bool> includeSettlementDateFlows, 
+    const Date& settlementDate, const Date& npvDate)
+    : equityIndex_(equityIndex), discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),
       settlementDate_(settlementDate), npvDate_(npvDate) {
 
-    registerWith(equityRefRateCurve_);
-    registerWith(divYieldCurve_);
-    registerWith(equitySpot_);
+    registerWith(equityIndex_);
     registerWith(discountCurve_);
 }
 
@@ -40,7 +36,7 @@ void DiscountingEquityForwardEngine::calculate() const {
 
     Date npvDate = npvDate_;
     if (npvDate == Null<Date>()) {
-        npvDate = divYieldCurve_->referenceDate();
+        npvDate = equityIndex_->equityDividendCurve()->referenceDate();
     }
     Date settlementDate = settlementDate_;
     if (settlementDate == Null<Date>()) {
@@ -54,8 +50,7 @@ void DiscountingEquityForwardEngine::calculate() const {
         Real qty = arguments_.quantity;
         Date maturity = arguments_.maturityDate;
         Real strike = arguments_.strike;
-        Real forwardPrice =
-            equitySpot_->value() * divYieldCurve_->discount(maturity) / equityRefRateCurve_->discount(maturity);
+        Real forwardPrice = equityIndex_->fixing(maturity);
         DiscountFactor df = discountCurve_->discount(maturity);
         results_.value = (lsInd * qty) * (forwardPrice - strike) * df;
 

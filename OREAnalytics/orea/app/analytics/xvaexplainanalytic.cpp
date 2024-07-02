@@ -131,7 +131,7 @@ XvaExplainResults::XvaExplainResults(const QuantLib::ext::shared_ptr<InMemoryRep
                 auto rfKey = parseRiskFactorKey(scenario);
                 fullRevalScenarioCva_[rfKey][key] = cva;
                 keyTypes_.insert(rfKey.keytype);
-            } catch (const std::exception& e) {
+            } catch (const std::exception&) {
                 StructuredAnalyticsErrorMessage("XvaExplain", "Unexpected RiskFactor",
                                                 scenario + "is not a valid riskfactor, skip it in xva explain report");
             }

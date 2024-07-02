@@ -31,6 +31,7 @@
 #include <ql/currency.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/dividendmanager.hpp>
+#include <qle/termstructures/equitydiscretedividendcurve.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -47,7 +48,8 @@ public:
     EquityIndex2(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency,
                 const Handle<Quote> spotQuote = Handle<Quote>(),
                 const Handle<YieldTermStructure>& rate = Handle<YieldTermStructure>(),
-                const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>());
+                const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>(),
+                const Handle<EquityDiscreteDividendCurve>& discreteDividend = Handle<EquityDiscreteDividendCurve>());
     //! \name Index interface
     //@{
     std::string name() const override;
@@ -65,7 +67,7 @@ public:
     */
     virtual void addDividend(const Dividend& fixing, bool forceOverwrite = false);
     virtual const std::set<Dividend>& dividendFixings() const { return DividendManager::instance().getHistory(name()); }
-    Real dividendsBetweenDates(const Date& startDate, const Date& endDate) const;
+    Real dividendsBetweenDates(const Date& startDate, const Date& endDate, const bool historicalOnly = true) const;
     //@}
     //! \name Observer interface
     //@{
@@ -77,6 +79,7 @@ public:
     const Handle<Quote>& equitySpot() const { return spotQuote_; }
     const Handle<YieldTermStructure>& equityForecastCurve() const { return rate_; }
     const Handle<YieldTermStructure>& equityDividendCurve() const { return dividend_; }
+    const Handle<EquityDiscreteDividendCurve>& discreteDividendCurve() const { return discreteDividend_; }
     //@}
     //! \name Fixing calculations
     //@{
@@ -89,12 +92,13 @@ public:
     //! \name Additional methods
     //@{
     virtual QuantLib::ext::shared_ptr<EquityIndex2> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
-                                                 const Handle<YieldTermStructure>& dividend) const;
+          const Handle<YieldTermStructure>& dividend, const Handle<EquityDiscreteDividendCurve>& discreteDividend) const;
     // @}
 protected:
     std::string familyName_;
     Currency currency_;
     const Handle<YieldTermStructure> rate_, dividend_;
+    const Handle<EquityDiscreteDividendCurve> discreteDividend_;
     std::string name_;
     const Handle<Quote> spotQuote_;
 
