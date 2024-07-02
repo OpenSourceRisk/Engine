@@ -559,6 +559,8 @@ void XvaEngineCG::calculateSensitivities() {
         if (useExternalComputeDevice_) {
             externalOutput.resize(pfExposureNodes_.size() + 1, std::vector<double>(model_->size()));
             externalOutputPtr.resize(externalOutput.size());
+            std::transform(externalOutput.begin(), externalOutput.end(), externalOutputPtr.begin(),
+                           [](std::vector<double>& v) { return &v[0]; });
         }
 
         Size activeScenarios = 0;
