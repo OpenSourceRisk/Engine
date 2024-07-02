@@ -63,7 +63,7 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     CONSOLEW("StressTestAnalytic: Build Portfolio");
     analytic()->buildPortfolio();
     CONSOLE("OK");
-    QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     // This hook allows modifying the portfolio in derived classes before running the analytics below,
     // e.g. to apply SIMM exemptions.
     analytic()->modifyPortfolio();
