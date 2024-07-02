@@ -610,7 +610,10 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                                  fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable fixing = lgmVectorised_[indexCcyIdx].subPeriodsRate(sub->index(), sub->fixingDates(),
-                                                                               simTime, *states.at(0).at(0));
+                                                                               simTime, *states.at(0).at(0),
+                                                                               sub->accrualFractions(), sub->type(),
+                                                                               sub->includeSpread(), sub->spread(),
+                                                                               sub->gearing(), sub->accrualPeriod());
             RandomVariable fxFixing(n, 1.0);
             if (isFxLinked || isFxIndexed) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {

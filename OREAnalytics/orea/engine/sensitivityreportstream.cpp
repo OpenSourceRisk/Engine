@@ -72,8 +72,10 @@ SensitivityRecord SensitivityReportStream::processRecord(const vector<Report::Re
 
     sr.currency = QuantLib::ext::get<std::string>(entries[6]);
     sr.baseNpv = QuantLib::ext::get<Real>(entries[7]);
-    sr.delta = QuantLib::ext::get<Real>(entries[8]);
-    sr.gamma = QuantLib::ext::get<Real>(entries[9]);
+    Real delta = QuantLib::ext::get<Real>(entries[8]);
+    sr.delta = delta != Null<Real>() ? delta : 0;
+    Real gamma = QuantLib::ext::get<Real>(entries[9]);
+    sr.gamma = gamma != Null<Real>() ? gamma : 0;
 
     return sr;
 }

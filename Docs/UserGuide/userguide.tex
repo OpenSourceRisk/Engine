@@ -3791,6 +3791,17 @@ The example in folder {\\tt Examples/Example\_69} demonstrates the conversion of
 ORE applies the zero rate shifts to the zero curves and computes the resulting shifts in the implied fair rate of a given set of par instruments. 
 The zero rate shifts are defined as stresstests and the par instruments are defined in the usual sensitivity configuration.
 
+
+%--------------------------------------------------------------------
+\subsection{First Margin Period of Risk Collateral Adjustment}% Example 72
+\label{example:72}
+%--------------------------------------------------------------------
+
+The example in folder {\\tt Examples/Example\_72} demonstrates the use of the firstMporCollateralAdjustment flag.
+To have a conservative estimation of the expected positive exposure ORE applies the difference between the initial variational margin 
+collateral balance and the todays mtm on the simulated collateral during the first margin period of risk, if the difference would yield 
+a higher expected exposure (in case of over collateralisation in case of a negative mtm or under-collateralisation if the mtm is positive).
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
@@ -5992,6 +6003,36 @@ StickyStrike.
 
 \todo[inline]{Comment on cap/floor surface structure and reaction to time decay}
 
+The inital build of the scenario simulation market curves can be modified in a post-processing step by specifying a
+CurveAlgebra node as a subnode of Market. The following operations are supported:
+
+\begin{itemize}
+\item Spreaded: A curve given under Key can be defined to be a spreaded curve over another curve given under
+  Arguments. A shift in the base curve will propagate to the result curve. In the example in \ref{lst:curve_algebra} a
+  shift of the EUR-EONIA index curve will cause a shift in the EUR discount curve of the same size.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Market>
+  ...
+    <CurveAlgebra>
+      <Curve>
+        <Key>DiscountCurve/EUR</Key>
+        <Operation>
+          <Type>Spreaded</Type>
+          <Arguments>
+            <Argument>IndexCurve/EUR-EONIA</Argument>
+          </Arguments>
+        </Operation>
+      </Curve>
+    </CurveAlgebra>
+
+\end{minted}
+\caption{Curve Algebra specification}
+\label{lst:curve_algebra}
+\end{longlisting}
+
 %--------------------------------------------------------
 \subsection{Sensitivity Analysis: {\tt sensitivity.xml}}\label{sec:sensitivity}
 %--------------------------------------------------------
@@ -6482,6 +6523,7 @@ If a new calendar is added in this way and the schema is being used to validate 
 \input{tradedata/forwardrateagreement}
 \input{tradedata/swaption}
 \input{tradedata/callableswap}
+\input{tradedata/cashposition}
 \input{tradedata/fxforward}
 \input{tradedata/fxswap}
 \input{tradedata/fxoption}

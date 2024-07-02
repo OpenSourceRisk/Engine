@@ -39,6 +39,7 @@ public:
     QuantLib::Calendar addCalendar(const std::string baseName, std::string& newName);
     void reset();
     void resetAddedAndRemovedHolidays();
+    const std::map<std::string, QuantLib::Calendar> getCalendars() const { return calendars_; }
 
 private:
     mutable boost::shared_mutex mutex_;

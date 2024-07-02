@@ -2847,6 +2847,9 @@ ScenarioSimMarket::ScenarioSimMarket(
         addSwapIndexToSsm(it.first, continueOnError);
     }
 
+    // if specified, modify curves following the curve algebra specs
+    applyCurveAlgebra();
+
     if (offsetScenario_ != nullptr && offsetScenario_->isAbsolute() && !useSpreadedTermStructures_) {
         auto recastedScenario = recastScenario(offsetScenario_, offsetScenario_->coordinates(), coordinatesData_);
         QL_REQUIRE(recastedScenario != nullptr, "ScenarioSimMarke: Offset Scenario couldn't applied");
@@ -3248,6 +3251,48 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldS
 
     // If yield spec ID still has not been found, return empty Handle
     return Handle<YieldTermStructure>();
+}
+
+Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const std::string& key) const {
+    RiskFactorKey rf = parseRiskFactorKey(key + "/0");
+    switch (rf.keytype) {
+    case RiskFactorKey::KeyType::DiscountCurve:
+        return this->discountCurve(rf.name);
+    case RiskFactorKey::KeyType::YieldCurve:
+        return this->yieldCurve(rf.name);
+    case RiskFactorKey::KeyType::IndexCurve:
+        return this->iborIndex(rf.name)->forwardingTermStructure();
+    default:
+        QL_FAIL("ScenarioSimMarket::getYieldCurve(" << key << "): key type " << rf.keytype
+                                                    << " not suitable for yield curves. Internal error. Contact dev.");
+    }
+}
+
+void ScenarioSimMarket::applyCurveAlgebra() {
+    LOG("Applying " << parameters_->curveAlgebraData().data().size() << " curve algebra rules...");
+    for (auto const& a : parameters_->curveAlgebraData().data()) {
+        DLOG("Applying operation type " << a.operationType());
+        if (a.operationType() == "Spreaded") {
+            DLOG("curve " << a.key() << " is spreaded over " << a.argument(0));
+            applyCurveAlgebraSpreadedYieldCurve(getYieldCurve(a.key()), getYieldCurve(a.argument(0)));
+        } else
+        // add more operations here...
+        {
+            QL_FAIL("curve algebra rule type '" << a.operationType() << "' not recognized. Expected: 'Spreaded'.");
+        }
+    }
+}
+
+void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
+                                                           const Handle<YieldTermStructure>& base) {
+    if (auto c = boost::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
+        c->makeThisCurveSpreaded(base);
+    } else if (auto c = boost::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
+        c->makeThisCurveSpreaded(base);
+    } else {
+        QL_FAIL("ScenarioSimMarket::applyCurveAlgebraSpreadedRateCurve(): target curve could not be cast to one of the "
+                "supported curve types. Internal error, contact dev.");
+    }
 }
 
 } // namespace analytics
