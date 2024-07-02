@@ -1,6 +1,12 @@
 Example using experimental xva cg engine.
 
-Differences between AD and bump-and-revalue cva-sensis are driven by:
+1) ore_ad.xml     : XVA-CG engine with backward AD CVA Sensitivities
+2) ore_bump.xml   : same, but using bump and revalue
+3) ore_gpu.xml    : same, but using external device (basic cpu by default, replace by your gpu)
+4) ore_cgcube.xml : same, but using cube generation mode with legacy post processor
+5) ore_amc_legacy : AMC legacy engine with comparable setup as in 1) - 4) 
+
+Differences between 1) and 2) are driven by:
 
 - Indicator derivatives (from the calculation step EPE = max( E, 0 ) = 1_{E>0} x E) – I think these should be turned off in our context here, since we are interested in T0 – expectations (CVA) ultimately. The calculation of indicator derivatives (when necessary) is notoriously difficult.
 

@@ -3,7 +3,7 @@
   <Setup>
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output</Parameter>
+    <Parameter name="outputPath">Output/cgcube</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">market.txt</Parameter>
