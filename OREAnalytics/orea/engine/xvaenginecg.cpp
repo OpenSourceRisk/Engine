@@ -107,9 +107,13 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
       externalComputeDevice_(externalComputeDevice), continueOnCalibrationError_(continueOnCalibrationError),
       continueOnError_(continueOnError), context_(context) {
 
+    LOG("XvaEngineCG: constructor called.");
+
     // Just for performance testing, duplicate the trades in input portfolio as specified by env var N
 
     if (auto param_N = getenv("XVA_ENGINE_CG_N")) {
+        LOG("XvaEngineCG: copy trades in input portfolio "
+            << param_N << " times for performance testing (from env var XVA_ENGINE_CG_N)");
         portfolio_ = QuantLib::ext::make_shared<Portfolio>();
         std::string pfxml = portfolio->toXMLString();
         for (Size i = 0; i < atoi(param_N); ++i) {
@@ -321,6 +325,7 @@ void XvaEngineCG::getExternalContext() {
 }
 
 void XvaEngineCG::setupValueContainers() {
+    LOG("XvaEngineCG: setup value containers");
     auto g = model_->computationGraph();
     values_ = std::vector<RandomVariable>(g->size(), RandomVariable(model_->size(), 0.0));
     derivatives_ = std::vector<RandomVariable>(g->size(), RandomVariable(model_->size(), 0.0));
@@ -435,10 +440,12 @@ void XvaEngineCG::doForwardEvaluation() {
 }
 
 void XvaEngineCG::populateAsd() {
+    LOG("XvaEngineCG: populate asd.");
     // todo
 }
 
 void XvaEngineCG::populateNpvOutputCube() {
+    LOG("XvaEngineCG: populate npv output cube.");
     // todo
 }
 
@@ -711,6 +718,8 @@ void XvaEngineCG::run() {
     }
 
     outputTimings();
+
+    firstRun_ = false;
 }
 
 void XvaEngineCG::setOffsetScenario(const QuantLib::ext::shared_ptr<Scenario>& offsetScenario) {
