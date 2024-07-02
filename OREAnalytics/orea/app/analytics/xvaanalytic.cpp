@@ -713,6 +713,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), true, true);
 
+        engine.run();
+
         analytic()->reports()["XVA"]["xvacg-exposure"] = engine.exposureReport();
         if (inputs_->xvaCgSensiScenarioData())
             analytic()->reports()["XVA"]["xvacg-cva-sensi-scenario"] = engine.sensiReport();
