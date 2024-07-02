@@ -381,8 +381,7 @@ void BasicCpuContext::finalizeCalculation(std::vector<double*>& output) {
             v = &values_[id];
         else if (id < numberOfInputVars_[currentId_ - 1] + numberOfVariates_[currentId_ - 1]) {
             v = &variates_[id - numberOfInputVars_[currentId_ - 1]];
-        }
-        else
+        } else
             v = &values_[id - numberOfVariates_[currentId_ - 1]];
         for (Size j = 0; j < size_[currentId_ - 1]; ++j) {
             output[i][j] = v->operator[](j);
