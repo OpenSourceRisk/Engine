@@ -50,7 +50,7 @@ void ScenarioAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<InMemoryL
     auto scenario = ssm->baseScenario();
     setScenario(scenario);
 
-    QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     auto sw = ScenarioWriter(nullptr, report);
     sw.writeScenario(scenario, true);
     analytic()->reports()[label()]["scenario"] = report;

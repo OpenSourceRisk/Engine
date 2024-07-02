@@ -234,6 +234,7 @@ public:
     void setNettingSetManagerFromFile(const std::string& fileName);
     void setCollateralBalances(const std::string& xml); 
     void setCollateralBalancesFromFile(const std::string& fileName);
+    void setReportBufferSize(Size s) { reportBufferSize_ = s; }
     // TODO: load from XML
     // void setCounterpartyManager(const std::string& xml);
 
@@ -607,6 +608,7 @@ public:
     // const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
+    QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
 
     /*****************
      * Getters for xva
@@ -973,6 +975,7 @@ protected:
     QuantLib::ext::shared_ptr<NPVCube> cube_, nettingSetCube_, cptyCube_;
     QuantLib::ext::shared_ptr<AggregationScenarioData> mktCube_;
     Real simulationBootstrapTolerance_ = 0.0001;
+    Size reportBufferSize_ = 0;
 
     /**************
      * XVA analytic

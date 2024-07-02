@@ -96,8 +96,8 @@ void IMScheduleAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
                                             << fxSpotReport);
     }
 
-    QuantLib::ext::shared_ptr<InMemoryReport> imScheduleSummaryReport = QuantLib::ext::make_shared<InMemoryReport>();
-    QuantLib::ext::shared_ptr<InMemoryReport> imScheduleTradeReport = QuantLib::ext::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> imScheduleSummaryReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    QuantLib::ext::shared_ptr<InMemoryReport> imScheduleTradeReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
 
     // Populate the trade-level IM Schedule report
     LOG("Generating Schedule IM reports")

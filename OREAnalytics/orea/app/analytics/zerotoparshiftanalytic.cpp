@@ -80,7 +80,7 @@ void ZeroToParShiftAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     ZeroToParShiftConverter shiftConvert(instruments, simMarket);
 
-    QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     
     report->addColumn("ScenarioLabel", string());
     report->addColumn("ParKey", string());
