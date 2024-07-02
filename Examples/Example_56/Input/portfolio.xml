@@ -19,7 +19,7 @@
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
-            <Rate>0.02</Rate>
+            <Rate>0.03</Rate>
           </Rates>
         </FixedLegData>
         <ScheduleData>
