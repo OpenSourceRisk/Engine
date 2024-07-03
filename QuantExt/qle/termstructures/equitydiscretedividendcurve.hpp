@@ -31,14 +31,14 @@ namespace QuantExt {
 class EquityDiscreteDividendCurve : public QuantLib::TermStructure {
 
 public:
-    EquityDiscreteDividendCurve(const Date& referenceDate, const std::set<QuantExt::Dividend>& dividends,
+    EquityDiscreteDividendCurve(const QuantLib::Date& referenceDate, const std::set<QuantExt::Dividend>& dividends,
                                 const QuantLib::Calendar& cal = QuantLib::Calendar(),
                                 const QuantLib::DayCounter& dc = QuantLib::DayCounter())
         : QuantLib::TermStructure(referenceDate, cal, dc) {
         times_.push_back(0.0);
         accumlatedDivs_.push_back(0.0);
         for (auto& d : dividends) {
-            Time time = timeFromReference(d.exDate);
+            QuantLib::Time time = timeFromReference(d.exDate);
             times_.push_back(time);
             accumlatedDivs_.push_back(accumlatedDivs_.back() + d.rate);
         }
@@ -49,18 +49,18 @@ public:
     Date maxDate() const override { return Date::maxDate(); }
     //@}
 
-    Real accumulatedDividends(Time t) {
+    QuantLib::Real accumulatedDividends(Time t) {
         if (accumlatedDivs_.size() > 1) {
             std::vector<Time>::const_iterator it = std::upper_bound(times_.begin(), times_.end(), t);
-            Size i = std::min<Size>(it - times_.begin(), times_.size());
+            QuantLib::Size i = std::min<QuantLib::Size>(it - times_.begin(), times_.size());
             return accumlatedDivs_[i-1];
         } else
             return accumlatedDivs_[0];
     }
 
 private:
-    std::vector<Time> times_;
-    std::vector<Real> accumlatedDivs_;
+    std::vector<QuantLib::Time> times_;
+    std::vector<QuantLib::Real> accumlatedDivs_;
 };
 
 } // namespace QuantExt
