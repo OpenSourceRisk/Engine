@@ -962,13 +962,12 @@ McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
       baseCurrency_(baseCurrency) {}
 
 std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalculator::simulatePath(
-    const std::vector<QuantLib::Real>& pathTimes, std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+    const std::vector<QuantLib::Real>& pathTimes, const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
     const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) {
 
-        // check input path consistency
+    // check input path consistency
 
-        QL_REQUIRE(!paths.empty(),
-                   "MultiLegBaseAmcCalculator::simulatePath(): no future path times, this is not allowed.");
+    QL_REQUIRE(!paths.empty(), "MultiLegBaseAmcCalculator::simulatePath(): no future path times, this is not allowed.");
     QL_REQUIRE(pathTimes.size() == paths.size(),
                "MultiLegBaseAmcCalculator::simulatePath(): inconsistent pathTimes size ("
                    << pathTimes.size() << ") and paths size (" << paths.size() << ") - internal error.");
