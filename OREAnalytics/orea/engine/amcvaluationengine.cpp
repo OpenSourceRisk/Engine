@@ -864,24 +864,23 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
         return std::make_pair(market, *modelBuilder.model());
     };
 
-    // generate path data and populate asd using market and model for thread 0 below
+    // generate path data and populate asd
 
-    QuantLib::ext::shared_ptr<ore::data::Market> market0;
-    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model0;
-
-    std::tie(market0, model0) = marketModelBuilder(loaders[0]);
-
-    auto pathData = getPathData(model0, scenarioGeneratorData_, miniCubes_.front()->samples(), amcPathDataInput_,
-                                amcPathDataOutput_);
-    populateAsd(model0, market0, scenarioGeneratorData_, miniCubes_.front()->samples(), asd_, aggDataIndices_,
-                aggDataCurrencies_, aggDataNumberCreditStates_, pathData);
+    PathData pathData;
+    {
+        auto [market0, model0] = marketModelBuilder(loader_);
+        pathData = getPathData(model0, scenarioGeneratorData_, miniCubes_.front()->samples(), amcPathDataInput_,
+                               amcPathDataOutput_);
+        populateAsd(model0, market0, scenarioGeneratorData_, miniCubes_.front()->samples(), asd_, aggDataIndices_,
+                    aggDataCurrencies_, aggDataNumberCreditStates_, pathData);
+    }
 
     // run amc simulation on multiple threads
 
     for (Size i = 0; i < eff_nThreads; ++i) {
 
-        auto job = [this, obsMode, &portfoliosAsString, &loaders, &simDates, &progressIndicator, &pathData, market0,
-                    model0, &marketModelBuilder](int id) -> resultType {
+        auto job = [this, obsMode, &portfoliosAsString, &loaders, &simDates, &progressIndicator, &pathData,
+                    &marketModelBuilder](int id) -> resultType {
 
             // set thread local singletons
 
@@ -894,15 +893,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
             try {
 
-                QuantLib::ext::shared_ptr<ore::data::Market> market;
-                QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model;
-
-                if (id == 0) {
-                    market = market0;
-                    model = model0;
-                } else {
-                    std::tie(market, model) = marketModelBuilder(loaders[id]);
-                }
+                auto [market, model] = marketModelBuilder(loaders[id]);
 
                 // build portfolio against init market
 
