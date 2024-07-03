@@ -419,8 +419,8 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         DLOG(ore::data::to_string(d));
 
     for (Size i = 0; i < underlying_.size(); ++i) {
-        QL_REQUIRE(valuationDates[0] > underlying_[i]->issueDate(),
-                   "TRS start date should be > than the underlying bond issue date");
+        QL_REQUIRE(valuationDates[0] >= underlying_[i]->issueDate(),
+                   "TRS start date should be >= than the underlying bond issue date");
     }
 
     // build indices corresponding to underlying trades and populate necessary data
