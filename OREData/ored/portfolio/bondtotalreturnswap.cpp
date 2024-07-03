@@ -119,8 +119,8 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
         DLOG(ore::data::to_string(d));
 
     Date issueDate = parseDate(bondData_.issueDate());
-    QL_REQUIRE(valuationDates[0] > issueDate,
-                   "BondTRS start date should be > than the underlying bond issue date");
+    QL_REQUIRE(valuationDates[0] >= issueDate,
+                   "BondTRS start date should be >= than the underlying bond issue date");
 
     // build fx index for composite bond trs
 
