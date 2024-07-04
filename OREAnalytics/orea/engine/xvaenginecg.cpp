@@ -174,19 +174,36 @@ void XvaEngineCG::buildCam() {
         crossAssetModelData_->discretization() == CrossAssetModel::Discretization::Euler,
         "XvaEngineCG: cam is required to use discretization 'Euler', please update simulation parameters accordingly.");
 
-    std::vector<std::string> currencies;                                                         // from cam
-    std::vector<Handle<YieldTermStructure>> curves;                                              // from cam
-    std::vector<Handle<Quote>> fxSpots;                                                          // from cam
-    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices; // from trade building
-    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>
-        infIndices;                           // from trade building
-    std::vector<std::string> indices;         // from trade building
-    std::vector<std::string> indexCurrencies; // from trade building
+    std::vector<std::string> currencies(1, crossAssetModelData_->domesticCurrency());
+    std::vector<Handle<YieldTermStructure>> curves;
+    std::vector<Handle<Quote>> fxSpots;
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> irIndices;
+    std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>> infIndices;
+    std::vector<std::string> indices;
+    std::vector<std::string> indexCurrencies;
 
-    // note: for the PoC we populate the containers with hardcoded values ... temp hack ...
-    currencies.push_back("EUR");
-    curves.push_back(camBuilder_->model()->irModel(0)->termStructure());
-    irIndices.push_back(std::make_pair("EUR-EURIBOR-6M", *simMarket_->iborIndex("EUR-EURIBOR-6M")));
+    for (auto const& ccy : crossAssetModelData_->currencies()) {
+        if (ccy != crossAssetModelData_->domesticCurrency())
+            currencies.push_back(ccy);
+    }
+
+    QL_REQUIRE(!currencies.empty(),
+               "XvaEngineCG::buildCam(): check simulation setup, there has to be one currency at least.");
+
+    for (auto const& ccy : currencies) {
+        curves.push_back(simMarket_->discountCurve(ccy));
+    }
+
+    for (Size i = 1; i < currencies.size(); ++i) {
+        fxSpots.push_back(simMarket_->fxSpot(currencies[i] + currencies[0]));
+        // we provide them, although we probably do not really need to
+        indices.push_back("FX-GENERIC-" + currencies[i] + "-" + currencies[0]);
+        indexCurrencies.push_back(currencies[i]);
+    }
+
+    for (auto const& ind : simMarketData_->indices()) {
+        irIndices.push_back(std::make_pair(ind, *simMarket_->iborIndex(ind)));
+    }
 
     // note: these must be fine enough for Euler, e.g. weekly over the whole simulation period
     simulationDates_ = std::set<Date>(scenarioGeneratorData_->getGrid()->dates().begin(),
