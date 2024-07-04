@@ -139,7 +139,6 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     Currency currency = parseCurrency(currency_);
     maturity_ = bond->cashflows().back()->date();
     notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
-    issueDate_ = issueDate;
 
     // first ctor is for vanilla fwd bonds, second for tlocks with a lock rate specifying the payoff
     QuantLib::ext::shared_ptr<QuantLib::Instrument> fwdBond =
