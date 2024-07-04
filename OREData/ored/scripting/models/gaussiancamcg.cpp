@@ -471,7 +471,7 @@ std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date
     return lgmcg.discountBond(sd, t, irStates_.at(sd)[idx]);
 }
 
-std::size_t GaussianCamCG::getNumeraire(const Date& s) const {
+std::size_t GaussianCamCG::numeraire(const Date& s) const {
     auto cam(cam_);
     Size cpidx = currencyPositionInCam_[0];
     Date sd = getSloppyDate(s, sloppySimDates_, effectiveSimulationDates_);
