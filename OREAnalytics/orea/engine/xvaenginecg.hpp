@@ -97,6 +97,7 @@ private:
     void buildCgPartB();
     void buildCgPartC();
     void buildCgPP();
+    void buildAsdNodes();
     void getExternalContext();
     void setupValueContainers();
     void doForwardEvaluation();
@@ -152,12 +153,16 @@ private:
     // artefacts produced during lifetime of engine instance
 
     bool firstRun_ = true;
+
     QuantLib::ext::shared_ptr<ore::data::Market> initMarket_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarket> simMarket_;
     QuantLib::ObservableValue<QuantLib::ext::shared_ptr<ore::data::Market>> simMarketObs_;
     QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> sensiScenarioGenerator_;
     QuantLib::ext::shared_ptr<CrossAssetModelBuilder> camBuilder_;
     QuantLib::ext::shared_ptr<GaussianCamCG> model_;
+
+    std::set<Date> simulationDates_;
+
     std::vector<std::pair<std::size_t, double>> baseModelParams_;
     std::vector<RandomVariableOpNodeRequirements> opNodeRequirements_;
     std::vector<RandomVariableOp> ops_;
@@ -165,22 +170,24 @@ private:
     std::vector<ExternalRandomVariableOp> opsExternal_;
     std::vector<ExternalRandomVariableGrad> gradsExternal_;
     std::size_t externalCalculationId_ = 0;
+    QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
+
     std::vector<std::vector<std::size_t>> amcNpvNodes_; // includes time zero npv
     std::vector<std::size_t> pfExposureNodes_;
     std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
-    QuantLib::ext::shared_ptr<DoublePrecisionSensiCube> sensiResultCube_;
-    std::set<Date> simulationDates_;
+    std::vector<std::size_t> asdNumeraire_, asdFx_, asdIndex_;
     std::vector<bool> keepNodes_;
-    QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
+
+    std::vector<RandomVariable> values_;
+    std::vector<RandomVariable> derivatives_;
+    std::vector<ExternalRandomVariable> valuesExternal_;
+
+    QuantLib::ext::shared_ptr<DoublePrecisionSensiCube> sensiResultCube_;
 
     boost::timer::nanosecond_type timing_t0_ = 0, timing_ssm_ = 0, timing_parta_ = 0, timing_pf_ = 0, timing_partb_ = 0,
                                   timing_partc_ = 0, timing_partd_ = 0, timing_popparam_ = 0, timing_poprv_ = 0,
                                   timing_fwd_ = 0, timing_bwd_ = 0, timing_sensi_ = 0, timing_total_ = 0;
     std::size_t numberOfRedNodes_, rvMemMax_;
-
-    std::vector<RandomVariable> values_;
-    std::vector<RandomVariable> derivatives_;
-    std::vector<ExternalRandomVariable> valuesExternal_;
 
     // output reports
 

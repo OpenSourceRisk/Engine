@@ -261,7 +261,7 @@ void XvaEngineCG::buildCgPartB() {
 
     timing_partb_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build computation graph for all trades done - graph size is "
-        << model_->computationGraph()->size());
+         << model_->computationGraph()->size());
 }
 
 void XvaEngineCG::buildCgPartC() {
@@ -419,6 +419,15 @@ void XvaEngineCG::doForwardEvaluation() {
     if (cvaNode_ != ComputationGraph::nan)
         keepNodes_[cvaNode_] = true;
 
+    for (auto const& n : asdNumeraire_)
+        keepNodes_[n] = true;
+
+    for (auto const& n : asdFx_)
+        keepNodes_[n] = true;
+
+    for (auto const& n : asdIndex_)
+        keepNodes_[n] = true;
+
     std::vector<bool> rvOpAllowsPredeletion = QuantExt::getRandomVariableOpAllowsPredeletion();
 
     std::vector<std::vector<double>> externalOutput;
@@ -453,9 +462,74 @@ void XvaEngineCG::doForwardEvaluation() {
     DLOG("XvaEngineCG: do forward evaluation done");
 }
 
+void XvaEngineCG::buildAsdNodes() {
+    DLOG("XvaEngineCG: build asd nodes.");
+
+    if (asd_ == nullptr)
+        return;
+
+    for (Size k = 1; scenarioGeneratorData_->getGrid()->timeGrid().size(); ++k) {
+
+        // only write asd on valuation dates
+        if (!scenarioGeneratorData_->getGrid()->isValuationDate()[k - 1])
+            continue;
+
+        Date date = scenarioGeneratorData_->getGrid()->dates()[k - 1];
+
+        // numeraire
+        asdNumeraire_.push_back(model_->numeraire(date));
+
+        // fx spots
+        for (auto const& ccy : simMarketData_->additionalScenarioDataCcys()) {
+            asdFx_.push_back(model_->eval("FX-GENERIC-" + ccy + "-" + simMarketData_->baseCcy(), date, Null<Date>()));
+        }
+
+        // index fixings
+        for (auto const& ind : simMarketData_->additionalScenarioDataIndices()) {
+            asdIndex_.push_back(model_->eval(ind, date, Null<Date>()));
+        }
+
+        // set credit states: TODO not yet provided in model_
+        QL_REQUIRE(simMarketData_->additionalScenarioDataNumberOfCreditStates() == 0,
+                   "XvaEngineCG::buildAsdNodes(): credit states currently not provided by GaussianCamCG, we have "
+                   "implement this!");
+    }
+
+    DLOG("XvaEngineCG: building asd nodes done.");
+}
+
 void XvaEngineCG::populateAsd() {
     DLOG("XvaEngineCG: populate asd.");
-    // todo
+
+    if (asd_ == nullptr)
+        return;
+
+    for (Size k = 1; scenarioGeneratorData_->getGrid()->timeGrid().size(); ++k) {
+        // only write asd on valuation dates
+        if (!scenarioGeneratorData_->getGrid()->isValuationDate()[k - 1])
+            continue;
+
+        // set numeraire
+        for (std::size_t i = 0; i < model_->size(); ++i) {
+            asd_->set(k - 1, i, values_[asdNumeraire_[k - 1]][i], AggregationScenarioDataType::Numeraire);
+        }
+
+        // set fx spots
+        for (auto const& ccy : simMarketData_->additionalScenarioDataCcys()) {
+            for (std::size_t i = 0; i < model_->size(); ++i) {
+                asd_->set(k - 1, i, values_[asdFx_[k - 1]][i], AggregationScenarioDataType::FXSpot, ccy);
+            }
+        }
+
+        // set index fixings
+        for (auto const& ind : simMarketData_->additionalScenarioDataIndices()) {
+            for (std::size_t i = 0; i < model_->size(); ++i) {
+                asd_->set(k - 1, i, values_[asdIndex_[k - 1]][i], AggregationScenarioDataType::IndexFixing, ind);
+            }
+        }
+    }
+
+    DLOG("XvaEngineCG: populate asd done.");
 }
 
 void XvaEngineCG::populateNpvOutputCube() {
@@ -526,7 +600,7 @@ void XvaEngineCG::calculateSensitivities() {
             rvMemMax_ = std::max(rvMemMax_, numberOfStochasticRvs(values_) + numberOfStochasticRvs(derivatives_));
 
             DLOG("XvaEngineCG: got " << modelParamDerivatives.size()
-                                    << " model parameter derivatives from run backward derivatives");
+                                     << " model parameter derivatives from run backward derivatives");
 
             timing_bwd_ = timer.elapsed().wall;
 
@@ -629,7 +703,7 @@ void XvaEngineCG::calculateSensitivities() {
         timing_sensi_ = timer.elapsed().wall - timing_bwd_;
 
         DLOG("XvaEngineCG: finished running " << sensiResultCube_->samples() << " sensi scenarios, thereof "
-                                             << activeScenarios << " active.");
+                                              << activeScenarios << " active.");
     } // if sensi data is given
 }
 
@@ -713,6 +787,10 @@ void XvaEngineCG::run() {
 
     if (firstRun_ && mode_ == Mode::Full) {
         buildCgPP();
+    }
+
+    if (firstRun_) {
+        buildAsdNodes();
     }
 
     if (firstRun_) {
