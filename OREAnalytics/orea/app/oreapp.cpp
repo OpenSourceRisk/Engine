@@ -251,12 +251,17 @@ void OREApp::analytics() {
         // Run the requested analytics
         analyticsManager_->runAnalytics(mcr);
 
+        CONSOLEW("Writing reports...");
+
         // Write reports to files in the results path
         Analytic::analytic_reports reports = analyticsManager_->reports();
         analyticsManager_->toFile(reports,
                                   inputs_->resultsPath().string(), outputs_->fileNameMap(),
                                   inputs_->csvSeparator(), inputs_->csvCommentCharacter(),
                                   inputs_->csvQuoteChar(), inputs_->reportNaString());
+
+        CONSOLE("OK");
+        CONSOLEW("Writing cubes...");
 
         // Write npv cube(s)
         for (auto a : analyticsManager_->npvCubes()) {
@@ -296,6 +301,8 @@ void OREApp::analytics() {
                 b.second->toFile(fileName);
             }
         }
+
+        CONSOLE("OK");
 
     }
     catch (std::exception& e) {

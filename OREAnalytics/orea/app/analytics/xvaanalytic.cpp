@@ -509,9 +509,10 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
     std::string message = "XVA: Build AMC Cube " + std::to_string(amcPortfolio_->size()) + " x " +
                           std::to_string(grid_->valuationDates().size()) + " x " + std::to_string(samples_) + "... ";
+    CONSOLEW(message);
     auto progressBar = QuantLib::ext::make_shared<SimpleProgressBar>(message, ConsoleLog::instance().width(),
                                                                      ConsoleLog::instance().progressBarWidth());
-    auto progressLog = QuantLib::ext::make_shared<ProgressLog>("XVA: Building AMC Cube...", 100, oreSeverity::notice);
+    auto progressLog = QuantLib::ext::make_shared<ProgressLog>("XVA: Build AMC Cube...", 100, oreSeverity::notice);
 
     if (inputs_->amcCg() == XvaEngineCG::Mode::CubeGeneration) {
 
