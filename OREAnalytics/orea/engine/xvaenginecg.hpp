@@ -173,7 +173,9 @@ private:
     std::size_t externalCalculationId_ = 0;
     QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
 
-    std::vector<std::vector<std::size_t>> amcNpvNodes_; // includes time zero npv
+    bool generateTradeLevelExposure_ = false;
+    std::vector<std::vector<std::size_t>> amcNpvNodes_;        // includes time zero npv
+    std::vector<std::vector<std::size_t>> tradeExposureNodes_; // includes time zero npv
     std::vector<std::size_t> pfExposureNodes_;
     std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
     std::vector<std::size_t> asdNumeraire_, asdFx_, asdIndex_;

@@ -267,28 +267,39 @@ void XvaEngineCG::buildCgPartB() {
 void XvaEngineCG::buildCgPartC() {
     DLOG("XvaEngineCG: add exposure nodes to graph");
 
-    // Add nodes that sum the exposure over trades, both pathwise and conditional expectations
+    // Add nodes that sum the exposure over trades and add conditional expectations on pf level
+    // Optionally, add conditional expectations on trade level (if we have to populate a legacy npv cube)
     // This constitutes part C of the computation graph spanning "trade m range end ... lastExposureNode"
-    // - pfPathExposureNodes: path amc sim values, aggregated over trades
-    // - pfExposureNodes:     the corresponding conditional expectations
+    // - pfExposureNodes    :     the conditional expectations on pf level
+    // - tradeExposureNodes :     the conditional expectations on trade level
 
     boost::timer::cpu_timer timer;
     auto g = model_->computationGraph();
 
-    std::vector<std::size_t> pfPathExposureNodes;
     std::vector<std::size_t> tradeSum(portfolio_->trades().size());
     for (Size i = 0; i < simulationDates_.size() + 1; ++i) {
         for (Size j = 0; j < portfolio_->trades().size(); ++j) {
             tradeSum[j] = amcNpvNodes_[j][i];
         }
-        pfPathExposureNodes.push_back(cg_add(*g, tradeSum));
         pfExposureNodes_.push_back(model_->npv(
-            pfPathExposureNodes.back(), i == 0 ? model_->referenceDate() : *std::next(simulationDates_.begin(), i - 1),
+            cg_add(*g, tradeSum), i == 0 ? model_->referenceDate() : *std::next(simulationDates_.begin(), i - 1),
             cg_const(*g, 1.0), boost::none, ComputationGraph::nan, ComputationGraph::nan));
     }
 
+    if (generateTradeLevelExposure_) {
+        for (Size i = 0; i < simulationDates_.size() + 1; ++i) {
+            tradeExposureNodes_.push_back(std::vector<std::size_t>(portfolio_->trades().size()));
+            for (Size j = 0; j < portfolio_->trades().size(); ++j) {
+                tradeExposureNodes_.back()[j] = model_->npv(
+                    amcNpvNodes_[j][i], i == 0 ? model_->referenceDate() : *std::next(simulationDates_.begin(), i - 1),
+                    cg_const(*g, 1.0), boost::none, ComputationGraph::nan, ComputationGraph::nan);
+            }
+        }
+    }
+
     timing_partc_ = timer.elapsed().wall;
-    DLOG("XvaEngineCG: add exposure nodes to graph - graph size is " << g->size());
+    DLOG("XvaEngineCG: add exposure nodes to graph - graph size is "
+         << g->size() << ", generateTradeLevelExposure = " << std::boolalpha << generateTradeLevelExposure_);
 }
 
 void XvaEngineCG::buildCgPP() {
@@ -457,7 +468,7 @@ void XvaEngineCG::doForwardEvaluation() {
                 externalOutputNodes_.push_back(cvaNode_);
             }
 
-            for(auto const& n: externalOutputNodes_)
+            for (auto const& n : externalOutputNodes_)
                 valuesExternal_[n].declareAsOutput();
         }
         finalizeExternalCalculation();
@@ -543,7 +554,34 @@ void XvaEngineCG::populateAsd() {
 
 void XvaEngineCG::populateNpvOutputCube() {
     DLOG("XvaEngineCG: populate npv output cube.");
-    // todo
+
+    if (npvOutputCube_ == nullptr)
+        return;
+
+    QL_REQUIRE(npvOutputCube_->samples() == model_->size(),
+               "populateNpvOutputCube(): cube sample size ("
+                   << npvOutputCube_->samples() << ") does not match model size (" << model_->size() << ")");
+
+    std::size_t tradePos = 0;
+    for (const auto& [id, index] : portfolio_->trades()) {
+
+        auto cubeTradeIdx = npvOutputCube_->idsAndIndexes().find(id);
+        QL_REQUIRE(cubeTradeIdx != npvOutputCube_->idsAndIndexes().end(),
+                   "XvaEngineCG::populateNpvOutputCube(): trade id '"
+                       << id << "' from portfolio is not present in output cube - internal error.");
+
+        npvOutputCube_->setT0(values_[tradeExposureNodes_[tradePos][0]][0], cubeTradeIdx->second);
+
+        for (Size i = 0; i < simulationDates_.size(); ++i) {
+            for (Size j = 0; j < npvOutputCube_->samples(); ++j) {
+                npvOutputCube_->set(values_[tradeExposureNodes_[tradePos][i + 1]][j], cubeTradeIdx->second, i, 0);
+            }
+        }
+
+        ++tradePos;
+    }
+
+    DLOG("XvaEngineCG: populate npv output cube done.");
 }
 
 void XvaEngineCG::generateXvaReports() {
@@ -768,6 +806,8 @@ void XvaEngineCG::run() {
 
     LOG("XvaEngineCG::run(): firstRun is " << std::boolalpha << firstRun_);
     boost::timer::cpu_timer timer;
+
+    generateTradeLevelExposure_ = npvOutputCube_ != nullptr;
 
     if (firstRun_) {
         buildT0Market();
