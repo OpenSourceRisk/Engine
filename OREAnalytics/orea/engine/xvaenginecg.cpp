@@ -327,12 +327,14 @@ void XvaEngineCG::getExternalContext() {
         externalComputeDeviceSettings_.rngSequenceType = scenarioGeneratorData_->sequenceType();
         externalComputeDeviceSettings_.rngSeed = scenarioGeneratorData_->seed();
         externalComputeDeviceSettings_.regressionOrder = 4;
-        externalCalculationId_ =
-            ComputeEnvironment::instance()
-                .context()
-                .initiateCalculation(model_->size(), externalCalculationId_, 0, externalComputeDeviceSettings_)
-                .first;
-        DLOG("XvaEngineCG: initiated new external calculation id " << externalCalculationId_);
+        bool newCalc;
+        std::tie(externalCalculationId_, newCalc) = ComputeEnvironment::instance().context().initiateCalculation(
+            model_->size(), externalCalculationId_, 0, externalComputeDeviceSettings_);
+        DLOG("XvaEngineCG: initiated external calculation id " << externalCalculationId_ << ", newCalc = " << newCalc
+                                                               << ", firstRun = " << firstRun_);
+        QL_REQUIRE(newCalc == firstRun_, "XVaEngineCG::getExternalContext(): firstRun_ ("
+                                             << std::boolalpha << firstRun_ << ") and newCalc (" << newCalc
+                                             << ") are not consistent. Internal error.");
     }
 }
 
@@ -343,6 +345,18 @@ void XvaEngineCG::setupValueContainers() {
     derivatives_ = std::vector<RandomVariable>(g->size(), RandomVariable(model_->size(), 0.0));
     if (useExternalComputeDevice_)
         valuesExternal_ = std::vector<ExternalRandomVariable>(g->size());
+}
+
+void XvaEngineCG::finalizeExternalCalculation() {
+    std::vector<std::vector<double>> externalOutput(externalOutputNodes_.size(), std::vector<double>(model_->size()));
+    std::vector<double*> externalOutputPtr(externalOutputNodes_.size());
+    std::transform(externalOutput.begin(), externalOutput.end(), externalOutputPtr.begin(),
+                   [](std::vector<double>& v) { return &v[0]; });
+    ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr);
+    std::size_t i = 0;
+    for (auto const& n : externalOutputNodes_) {
+        values_[n] = RandomVariable(model_->size(), externalOutputPtr[i++]);
+    }
 }
 
 void XvaEngineCG::doForwardEvaluation() {
@@ -430,28 +444,23 @@ void XvaEngineCG::doForwardEvaluation() {
 
     std::vector<bool> rvOpAllowsPredeletion = QuantExt::getRandomVariableOpAllowsPredeletion();
 
-    std::vector<std::vector<double>> externalOutput;
-    std::vector<double*> externalOutputPtr;
     if (useExternalComputeDevice_) {
-        forwardEvaluation(*g, valuesExternal_, opsExternal_, ExternalRandomVariable::deleter, !bumpCvaSensis_,
-                          opNodeRequirements_, keepNodes_, 0, ComputationGraph::nan, false,
-                          ExternalRandomVariable::preDeleter, rvOpAllowsPredeletion);
-        for (Size i = 0; i < pfExposureNodes_.size(); ++i) {
-            valuesExternal_[pfExposureNodes_[i]].declareAsOutput();
+        if (firstRun_) {
+            forwardEvaluation(*g, valuesExternal_, opsExternal_, ExternalRandomVariable::deleter, !bumpCvaSensis_,
+                              opNodeRequirements_, keepNodes_, 0, ComputationGraph::nan, false,
+                              ExternalRandomVariable::preDeleter, rvOpAllowsPredeletion);
+            externalOutputNodes_.insert(externalOutputNodes_.end(), pfExposureNodes_.begin(), pfExposureNodes_.end());
+            externalOutputNodes_.insert(externalOutputNodes_.end(), asdNumeraire_.begin(), asdNumeraire_.end());
+            externalOutputNodes_.insert(externalOutputNodes_.end(), asdFx_.begin(), asdFx_.end());
+            externalOutputNodes_.insert(externalOutputNodes_.end(), asdIndex_.begin(), asdIndex_.end());
+            if (cvaNode_ != ComputationGraph::nan) {
+                externalOutputNodes_.push_back(cvaNode_);
+            }
+
+            for(auto const& n: externalOutputNodes_)
+                valuesExternal_[n].declareAsOutput();
         }
-        if (cvaNode_ != ComputationGraph::nan)
-            valuesExternal_[cvaNode_].declareAsOutput();
-        externalOutput.resize(pfExposureNodes_.size() + 1, std::vector<double>(model_->size()));
-        externalOutputPtr.resize(externalOutput.size());
-        std::transform(externalOutput.begin(), externalOutput.end(), externalOutputPtr.begin(),
-                       [](std::vector<double>& v) { return &v[0]; });
-        ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr);
-        // could skip this and use externalOutput directly below, but it's more convenient to copy the results to values
-        for (Size i = 0; i < pfExposureNodes_.size(); ++i) {
-            values_[pfExposureNodes_[i]] = RandomVariable(model_->size(), externalOutputPtr[i]);
-        }
-        if (cvaNode_ != ComputationGraph::nan)
-            values_[cvaNode_] = RandomVariable(model_->size(), externalOutputPtr.back());
+        finalizeExternalCalculation();
     } else {
         forwardEvaluation(*g, values_, ops_, RandomVariable::deleter, !bumpCvaSensis_, opNodeRequirements_, keepNodes_);
     }
@@ -628,15 +637,6 @@ void XvaEngineCG::calculateSensitivities() {
 
         model_->alwaysForwardNotifications();
 
-        std::vector<std::vector<double>> externalOutput;
-        std::vector<double*> externalOutputPtr;
-        if (useExternalComputeDevice_) {
-            externalOutput.resize(pfExposureNodes_.size() + 1, std::vector<double>(model_->size()));
-            externalOutputPtr.resize(externalOutput.size());
-            std::transform(externalOutput.begin(), externalOutput.end(), externalOutputPtr.begin(),
-                           [](std::vector<double>& v) { return &v[0]; });
-        }
-
         Size activeScenarios = 0;
         for (Size sample = 0; sample < sensiResultCube_->samples(); ++sample) {
 
@@ -684,8 +684,7 @@ void XvaEngineCG::calculateSensitivities() {
                             model_->size(), externalCalculationId_, 0, externalComputeDeviceSettings_);
                         populateConstants(values_, valuesExternal_);
                         populateModelParameters(model_->modelParameters(), values_, valuesExternal_);
-                        ComputeEnvironment::instance().context().finalizeCalculation(externalOutputPtr);
-                        values_[cvaNode_] = RandomVariable(model_->size(), externalOutputPtr.back());
+                        finalizeExternalCalculation();
                     } else {
                         populateModelParameters(model_->modelParameters(), values_, valuesExternal_);
                         forwardEvaluation(*g, values_, ops_, RandomVariable::deleter, true, opNodeRequirements_,
@@ -813,6 +812,7 @@ void XvaEngineCG::run() {
 
     outputTimings();
 
+    cleanUpAfterCalcs();
     firstRun_ = false;
     LOG("XvaEngineCG::run(): finished.");
 }

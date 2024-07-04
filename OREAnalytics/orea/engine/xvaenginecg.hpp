@@ -110,6 +110,7 @@ private:
     void outputGraphStats();
     void outputTimings();
 
+    void finalizeExternalCalculation();
     void populateRandomVariates(std::vector<RandomVariable>& values,
                                 std::vector<ExternalRandomVariable>& valuesExternal) const;
     void populateConstants(std::vector<RandomVariable>& values,
@@ -181,6 +182,8 @@ private:
     std::vector<RandomVariable> values_;
     std::vector<RandomVariable> derivatives_;
     std::vector<ExternalRandomVariable> valuesExternal_;
+
+    std::vector<std::size_t> externalOutputNodes_;
 
     QuantLib::ext::shared_ptr<DoublePrecisionSensiCube> sensiResultCube_;
 
