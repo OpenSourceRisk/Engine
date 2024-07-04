@@ -315,7 +315,7 @@ void XvaEngineCG::buildCgPartC() {
     }
 
     timing_partc_ = timer.elapsed().wall;
-    DLOG("XvaEngineCG: add exposure nodes to graph - graph size is "
+    DLOG("XvaEngineCG: add exposure nodes to graph done - graph size is "
          << g->size() << ", generateTradeLevelExposure = " << std::boolalpha << generateTradeLevelExposure_);
 }
 
@@ -481,6 +481,11 @@ void XvaEngineCG::doForwardEvaluation() {
             externalOutputNodes_.insert(externalOutputNodes_.end(), asdNumeraire_.begin(), asdNumeraire_.end());
             externalOutputNodes_.insert(externalOutputNodes_.end(), asdFx_.begin(), asdFx_.end());
             externalOutputNodes_.insert(externalOutputNodes_.end(), asdIndex_.begin(), asdIndex_.end());
+            if (generateTradeLevelExposure_) {
+                for (auto const& n : tradeExposureNodes_) {
+                    externalOutputNodes_.insert(externalOutputNodes_.end(), n.begin(), n.end());
+                }
+            }
             if (cvaNode_ != ComputationGraph::nan) {
                 externalOutputNodes_.push_back(cvaNode_);
             }
