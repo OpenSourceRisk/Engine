@@ -4,7 +4,8 @@ Example using experimental xva cg engine.
 2) ore_bump.xml   : same, but using bump and revalue
 3) ore_gpu.xml    : same, but using external device (basic cpu by default, replace by your gpu)
 4) ore_cgcube.xml : same, but using cube generation mode with legacy post processor
-5) ore_amc_legacy : AMC legacy engine with comparable setup as in 1) - 4) 
+5) ore_cgcube.xml : same, but using cube generation + external device (as in 3), with legacy post processor
+6) ore_amc_legacy : AMC legacy engine with comparable setup as in 1) - 4)
 
 Differences between 1) and 2) are driven by:
 
