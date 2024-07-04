@@ -3304,7 +3304,7 @@ struct IrFxEqModelTestData {
           usdEurSpotToday(QuantLib::ext::make_shared<SimpleQuote>(0.90)), eurEurSpotToday(QuantLib::ext::make_shared<SimpleQuote>(1.0)),
           spSpotToday(QuantLib::ext::make_shared<SimpleQuote>(2100)), lhSpotToday(QuantLib::ext::make_shared<SimpleQuote>(12.50)), 
           eqIndSp(QuantLib::ext::make_shared<EquityIndex2>("SP", UnitedStates(UnitedStates::Settlement), USDCurrency(), spSpotToday, usdYts, eqDivSp)),
-          eqIndLh(QuantLib::ext::make_shared<EquityIndex2>("LH", TARGET(), EURCurrency(), spSpotToday, usdYts, eqDivSp)) {
+          eqIndLh(QuantLib::ext::make_shared<EquityIndex2>("LH", TARGET(), EURCurrency(), lhSpotToday, eurYts, eqDivLh)) {
 
         SavedSettings backup;
 
