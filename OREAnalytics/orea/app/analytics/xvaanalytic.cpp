@@ -449,12 +449,6 @@ XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::Cros
 
 void XvaAnalyticImpl::buildAmcPortfolio() {
 
-    if (inputs_->amcCg() == XvaEngineCG::Mode::CubeGeneration) {
-        LOG("XVA: skip amc portfolio build, since we are using amc-cg cube generation and the engine itself will build "
-            "the portfolio at a later point.");
-        return;
-    }
-
     LOG("XVA: buildAmcPortfolio");
     const string msg = "XVA: Build AMC portfolio";
     CONSOLEW(msg);
@@ -478,7 +472,10 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
         if (inputs_->amcTradeTypes().find(trade->tradeType()) != inputs_->amcTradeTypes().end()) {
             try {
                 trade->reset();
-                trade->build(factory);
+                if(inputs_->amcCg() != XvaEngineCG::Mode::CubeGeneration) {
+                    // the amc-cg engine will build the trades itself
+                    trade->build(factory);
+                }
                 amcPortfolio_->add(trade);
                 DLOG("trade " << tradeId << " is added to amc portfolio");
             } catch (const std::exception& e) {
@@ -536,6 +533,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
             engine.setAggregationScenarioData(*scenarioData_);
         engine.setOffsetScenario(offsetScenario_);
         engine.setNpvOutputCube(amcCube_);
+        engine.run();
 
     } else {
 
@@ -594,7 +592,6 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
     }
 
     CONSOLE("OK");
-
     LOG("XVA: amcRun completed");
 }
 
