@@ -16,7 +16,8 @@ os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]=""
 oreex.run("Input/ore_ad.xml")
 oreex.run("Input/ore_bump.xml")
 oreex.run("Input/ore_gpu.xml")
-#oreex.run("Input/ore_amc_cgcube.xml")
+oreex.run("Input/ore_cgcube.xml")
+oreex.run("Input/ore_cgcube_gpu.xml")
 oreex.run("Input/ore_amc_legacy.xml")
 
 os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]=samples1
