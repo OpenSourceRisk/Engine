@@ -523,7 +523,10 @@ void XvaEngineCG::buildAsdNodes() {
 
         // fx spots
         for (auto const& ccy : simMarketData_->additionalScenarioDataCcys()) {
-            asdFx_.push_back(model_->eval("FX-GENERIC-" + ccy + "-" + simMarketData_->baseCcy(), date, Null<Date>()));
+            if (ccy != simMarketData_->baseCcy()) {
+                asdFx_.push_back(
+                    model_->eval("FX-GENERIC-" + ccy + "-" + simMarketData_->baseCcy(), date, Null<Date>()));
+            }
         }
 
         // index fixings
@@ -537,7 +540,10 @@ void XvaEngineCG::buildAsdNodes() {
                    "implement this!");
     }
 
-    DLOG("XvaEngineCG: building asd nodes done.");
+    DLOG("XvaEngineCG: building asd nodes done ("
+         << scenarioGeneratorData_->getGrid()->timeGrid().size() - 1 << " timesteps, "
+         << simMarketData_->additionalScenarioDataCcys().size() << " asd ccys, "
+         << simMarketData_->additionalScenarioDataIndices().size() << " asd indices)");
 }
 
 void XvaEngineCG::populateAsd() {
@@ -558,8 +564,10 @@ void XvaEngineCG::populateAsd() {
 
         // set fx spots
         for (auto const& ccy : simMarketData_->additionalScenarioDataCcys()) {
-            for (std::size_t i = 0; i < model_->size(); ++i) {
-                asd_->set(k - 1, i, values_[asdFx_[k - 1]][i], AggregationScenarioDataType::FXSpot, ccy);
+            if (ccy != simMarketData_->baseCcy()) {
+                for (std::size_t i = 0; i < model_->size(); ++i) {
+                    asd_->set(k - 1, i, values_[asdFx_[k - 1]][i], AggregationScenarioDataType::FXSpot, ccy);
+                }
             }
         }
 
