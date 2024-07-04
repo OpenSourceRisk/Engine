@@ -172,10 +172,11 @@ private:
                                   const Real resultValue, const Array& initialState, const Currency& baseCurrency);
 
         Currency npvCurrency() override { return baseCurrency_; }
-        std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
-                                                           std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-                                                           const std::vector<size_t>& relevantPathIndex,
-                                                           const std::vector<size_t>& relevantTimeIndex) override;
+        std::vector<QuantExt::RandomVariable>
+        simulatePath(const std::vector<QuantLib::Real>& pathTimes,
+                     const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+                     const std::vector<size_t>& relevantPathIndex,
+                     const std::vector<size_t>& relevantTimeIndex) override;
 
     private:
         std::vector<Size> externalModelIndices_;

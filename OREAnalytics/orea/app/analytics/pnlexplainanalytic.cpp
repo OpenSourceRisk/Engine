@@ -151,7 +151,7 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     LOG("Call PNL Explain calculation");
     CONSOLEW("Risk: PNL Explain Calculation");
     ext::shared_ptr<MarketRiskReport::Reports> reports = ext::make_shared<MarketRiskReport::Reports>();
-    QuantLib::ext::shared_ptr<InMemoryReport> pnlExplainOutput = QuantLib::ext::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> pnlExplainOutput = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     reports->add(pnlReport);
 
     pnlExplainReport->calculate(reports);

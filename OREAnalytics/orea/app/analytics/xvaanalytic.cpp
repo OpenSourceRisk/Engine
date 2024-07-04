@@ -192,7 +192,7 @@ void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationErr
     LOG("simulation grid back date " << io::iso_date(grid_->dates().back()));
 
     if (inputs_->writeScenarios()) {
-        auto report = QuantLib::ext::make_shared<InMemoryReport>();
+        auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         analytic()->reports()["XVA"]["scenario"] = report;
         scenarioGenerator_ = QuantLib::ext::make_shared<ScenarioWriter>(scenarioGenerator_, report);
     }
@@ -874,7 +874,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     // Generate cube reports to inspect
     if (inputs_->rawCubeOutput()) {
         map<string, string> nettingSetMap = analytic()->portfolio()->nettingSetMap();
-        auto report = QuantLib::ext::make_shared<InMemoryReport>();
+        auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeCube(*report, cube_, nettingSetMap);
         analytic()->reports()["XVA"]["rawcube"] = report;
     }
@@ -903,7 +903,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
         if (inputs_->exposureProfilesByTrade()) {
             for (const auto& [tradeId, tradeIdCubePos] : postProcess_->tradeIds()) {
-                auto report = QuantLib::ext::make_shared<InMemoryReport>();
+                auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 try {
                     ReportWriter(inputs_->reportNaString()).writeTradeExposures(*report, postProcess_, tradeId);
                     analytic()->reports()["XVA"]["exposure_trade_" + tradeId] = report;
@@ -917,7 +917,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
         if (inputs_->exposureProfiles()) {
             for (auto [nettingSet, nettingSetPosInCube] : postProcess_->nettingSetIds()) {
-                auto exposureReport = QuantLib::ext::make_shared<InMemoryReport>();
+                auto exposureReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 try {
                     ReportWriter(inputs_->reportNaString())
                         .writeNettingSetExposures(*exposureReport, postProcess_, nettingSet);
@@ -928,7 +928,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                         .log();
                 }
 
-                auto colvaReport = QuantLib::ext::make_shared<InMemoryReport>();
+                auto colvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 try {
                     ReportWriter(inputs_->reportNaString())
                         .writeNettingSetColva(*colvaReport, postProcess_, nettingSet);
@@ -939,7 +939,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                         .log();
                 }
 
-                auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>();
+                auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 try {
                     ReportWriter(inputs_->reportNaString())
                         .writeNettingSetCvaSensitivities(*cvaSensiReport, postProcess_, nettingSet);
@@ -952,27 +952,27 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             }
         }
 
-        auto xvaReport = QuantLib::ext::make_shared<InMemoryReport>();
+        auto xvaReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeXVA(*xvaReport, inputs_->exposureAllocationMethod(), analytic()->portfolio(), postProcess_);
         analytic()->reports()["XVA"]["xva"] = xvaReport;
 
         if (inputs_->netCubeOutput()) {
-            auto report = QuantLib::ext::make_shared<InMemoryReport>();
+            auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ReportWriter(inputs_->reportNaString()).writeCube(*report, postProcess_->netCube());
             analytic()->reports()["XVA"]["netcube"] = report;
         }
 
         if (inputs_->dimAnalytic() || inputs_->mvaAnalytic()) {
             // Generate DIM evolution report
-            auto dimEvolutionReport = QuantLib::ext::make_shared<InMemoryReport>();
+            auto dimEvolutionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             postProcess_->exportDimEvolution(*dimEvolutionReport);
             analytic()->reports()["XVA"]["dim_evolution"] = dimEvolutionReport;
 
             // Generate DIM regression reports
             vector<QuantLib::ext::shared_ptr<ore::data::Report>> dimRegReports;
             for (Size i = 0; i < inputs_->dimOutputGridPoints().size(); ++i) {
-                auto rep = QuantLib::ext::make_shared<InMemoryReport>();
+                auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 dimRegReports.push_back(rep);
                 analytic()->reports()["XVA"]["dim_regression_" + std::to_string(i)] = rep;
             }
@@ -987,7 +987,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
                     << postProcess_->creditMigrationPdf().size() << ") and input credit migration time steps ("
                     << inputs_->creditMigrationTimeSteps().size() << ")");
             for (Size i = 0; i < postProcess_->creditMigrationPdf().size(); ++i) {
-                auto rep = QuantLib::ext::make_shared<InMemoryReport>();
+                auto rep = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 analytic()
                     ->reports()["XVA"]["credit_migration_" + std::to_string(inputs_->creditMigrationTimeSteps()[i])] =
                     rep;

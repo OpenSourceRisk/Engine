@@ -244,7 +244,7 @@ void OREApp::analytics() {
 
         QuantLib::ext::shared_ptr<MarketCalibrationReportBase> mcr;
         if (inputs_->outputTodaysMarketCalibration()) {
-            auto marketCalibrationReport = QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+            auto marketCalibrationReport = QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
             mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
         }
 
@@ -496,7 +496,7 @@ void OREApp::run(const std::vector<std::string>& marketData,
 
         QuantLib::ext::shared_ptr<MarketCalibrationReportBase> mcr;
         if (inputs_->outputTodaysMarketCalibration()) {
-            auto marketCalibrationReport = QuantLib::ext::make_shared<ore::data::InMemoryReport>();
+            auto marketCalibrationReport = QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
             mcr = QuantLib::ext::make_shared<MarketCalibrationReport>(string(), marketCalibrationReport);
         }
 
@@ -739,6 +739,10 @@ void OREAppInputParameters::loadParameters() {
     } else {
         WLOG("Portfolio data not provided");
     }
+
+    tmp = params_->get("setup", "reportBufferSize", false);
+    if (tmp != "")
+        setReportBufferSize(parseInteger(tmp));
 
     if (params_->hasGroup("markets")) {
         setMarketConfigs(params_->markets());

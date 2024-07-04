@@ -210,8 +210,17 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         test.swaptionVolShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(swaptionVols, "SwaptionVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
-            string ccy = XMLUtils::getAttribute(child, "ccy");
-            LOG("Loading stress parameters for swaption vols " << ccy);
+
+            string key = XMLUtils::getAttribute(child, "key");
+            if (key.empty()) {
+                string ccyAttr = XMLUtils::getAttribute(child, "ccy");
+                if (!ccyAttr.empty()) {
+                    key = ccyAttr;
+                    WLOG("StressScenarioData: attribute 'ccy' for SwaptionVolatilities is deprecated, use 'key' "
+                         "instead.");
+                }
+            }
+            LOG("Loading stress parameters for swaption vols " << key);
             SwaptionVolShiftData data;
             data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
@@ -229,11 +238,11 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                     Period e = ore::data::parsePeriod(expiry);
                     Period t = ore::data::parsePeriod(term);
                     Real value = ore::data::parseReal(XMLUtils::getNodeValue(child2));
-                    pair<Period, Period> key(e, t);
-                    data.shifts[key] = value;
+                    pair<Period, Period> shiftKey(e, t);
+                    data.shifts[shiftKey] = value;
                 }
             }
-            test.swaptionVolShifts[ccy] = data;
+            test.swaptionVolShifts[key] = data;
         }
 
         LOG("Get cap/floor vol stress parameters");
@@ -371,7 +380,7 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
         const std::vector<std::string> swaptionAttributeNames = {"expiry", "term"};
         for (const auto& [key, data] : test.swaptionVolShifts) {
             XMLNode* swaptionVolNode = XMLUtils::addChild(doc, swaptionVolsNode, "SwaptionVolatility");
-            XMLUtils::addAttribute(doc, swaptionVolNode, "ccy", key);
+            XMLUtils::addAttribute(doc, swaptionVolNode, "key", key);
             XMLUtils::addChild(doc, swaptionVolNode, "ShiftType", ore::data::to_string(data.shiftType));
             
             XMLNode* shiftSizesNode = XMLUtils::addChild(doc, swaptionVolNode, "Shifts");

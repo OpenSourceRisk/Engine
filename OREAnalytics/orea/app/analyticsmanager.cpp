@@ -136,9 +136,9 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
             marketDataLoader_->populateLoader(tmps, marketDates);
         }
         
-        QuantLib::ext::shared_ptr<InMemoryReport> mdReport = QuantLib::ext::make_shared<InMemoryReport>();
-        QuantLib::ext::shared_ptr<InMemoryReport> fixingReport = QuantLib::ext::make_shared<InMemoryReport>();
-        QuantLib::ext::shared_ptr<InMemoryReport> dividendReport = QuantLib::ext::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> mdReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        QuantLib::ext::shared_ptr<InMemoryReport> fixingReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        QuantLib::ext::shared_ptr<InMemoryReport> dividendReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
 
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeMarketData(*mdReport, marketDataLoader_->loader(), inputs_->asof(),
@@ -165,7 +165,7 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
     }
 
     if (inputs_->portfolio()) {
-        auto pricingStatsReport = QuantLib::ext::make_shared<InMemoryReport>();
+        auto pricingStatsReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writePricingStats(*pricingStatsReport, inputs_->portfolio());
         reports_["STATS"]["pricingstats"] = pricingStatsReport;
