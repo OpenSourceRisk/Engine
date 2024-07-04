@@ -505,7 +505,7 @@ void XvaEngineCG::buildAsdNodes() {
     if (asd_ == nullptr)
         return;
 
-    for (Size k = 1; scenarioGeneratorData_->getGrid()->timeGrid().size(); ++k) {
+    for (Size k = 1; k < scenarioGeneratorData_->getGrid()->timeGrid().size(); ++k) {
 
         // only write asd on valuation dates
         if (!scenarioGeneratorData_->getGrid()->isValuationDate()[k - 1])
@@ -541,7 +541,7 @@ void XvaEngineCG::populateAsd() {
     if (asd_ == nullptr)
         return;
 
-    for (Size k = 1; scenarioGeneratorData_->getGrid()->timeGrid().size(); ++k) {
+    for (Size k = 1; k < scenarioGeneratorData_->getGrid()->timeGrid().size(); ++k) {
         // only write asd on valuation dates
         if (!scenarioGeneratorData_->getGrid()->isValuationDate()[k - 1])
             continue;
@@ -587,11 +587,11 @@ void XvaEngineCG::populateNpvOutputCube() {
                    "XvaEngineCG::populateNpvOutputCube(): trade id '"
                        << id << "' from portfolio is not present in output cube - internal error.");
 
-        npvOutputCube_->setT0(values_[tradeExposureNodes_[tradePos][0]][0], cubeTradeIdx->second);
+        npvOutputCube_->setT0(values_[tradeExposureNodes_[0][tradePos]][0], cubeTradeIdx->second);
 
         for (Size i = 0; i < simulationDates_.size(); ++i) {
             for (Size j = 0; j < npvOutputCube_->samples(); ++j) {
-                npvOutputCube_->set(values_[tradeExposureNodes_[tradePos][i + 1]][j], cubeTradeIdx->second, i, 0);
+                npvOutputCube_->set(values_[tradeExposureNodes_[i + 1][tradePos]][j], cubeTradeIdx->second, i, j);
             }
         }
 
@@ -824,6 +824,8 @@ void XvaEngineCG::run() {
     LOG("XvaEngineCG::run(): firstRun is " << std::boolalpha << firstRun_);
     boost::timer::cpu_timer timer;
 
+    updateProgress(0, 4);
+
     generateTradeLevelExposure_ = npvOutputCube_ != nullptr;
 
     if (firstRun_) {
@@ -855,17 +857,25 @@ void XvaEngineCG::run() {
 
     getExternalContext();
 
+    updateProgress(1, 4);
+
     setupValueContainers();
     doForwardEvaluation();
 
+    updateProgress(2, 4);
+
     populateAsd();
     populateNpvOutputCube();
+
+    updateProgress(3, 4);
 
     if (mode_ == Mode::Full) {
         generateXvaReports();
         calculateSensitivities();
         generateSensiReports();
     }
+
+    updateProgress(4, 4);
 
     outputTimings();
 
