@@ -155,24 +155,50 @@ makeMultiPathVariateGenerator(const SequenceType s, const Size dimension, const 
                               const SobolRsg::DirectionIntegers directionIntegers) {
     switch (s) {
     case MersenneTwister:
-        return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps, seed,
-                                                                                      false);
+        return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps,
+                                                                                              seed, false);
     case MersenneTwisterAntithetic:
-        return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps, seed, true);
+        return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps,
+                                                                                              seed, true);
     case Sobol:
-        return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorSobol>(dimension, timeSteps, seed,
-                                                                            directionIntegers);
+        try {
+            return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorSobol>(dimension, timeSteps, seed,
+                                                                                        directionIntegers);
+        } catch (...) {
+            // might throw, because of max dimension is exceeded
+        }
+        return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps,
+                                                                                              seed, false);
     case Burley2020Sobol:
-        return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorBurley2020Sobol>(dimension, timeSteps, seed,
-                                                                                      directionIntegers, seed + 1);
+        try {
+            return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorBurley2020Sobol>(
+                dimension, timeSteps, seed, directionIntegers, seed + 1);
+        } catch (...) {
+            // might throw, because of max dimension is exceeded
+        }
+        return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps,
+                                                                                              seed, false);
     case SobolBrownianBridge:
-        return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorSobolBrownianBridge>(
-            dimension, timeSteps, ordering, seed, directionIntegers);
+        try {
+            return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorSobolBrownianBridge>(
+                dimension, timeSteps, ordering, seed, directionIntegers);
+        } catch (...) {
+            // might throw, because of max dimension is exceeded
+        }
+        return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps,
+                                                                                              seed, false);
     case Burley2020SobolBrownianBridge:
-        return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorBurley2020SobolBrownianBridge>(
-            dimension, timeSteps, ordering, seed, directionIntegers, seed + 1);
-    default:
-        QL_FAIL("Unknown sequence type");
+        try {
+            return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorBurley2020SobolBrownianBridge>(
+                dimension, timeSteps, ordering, seed, directionIntegers, seed + 1);
+        } catch (...) {
+            // might throw, because of max dimension is exceeded
+        }
+        return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps,
+                                                                                              seed, false);
+    default: {
+        QL_FAIL("Unknown sequence type " << static_cast<int>(s));
+    }
     }
 }
 

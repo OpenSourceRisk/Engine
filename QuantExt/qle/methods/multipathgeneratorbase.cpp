@@ -195,19 +195,46 @@ makeMultiPathGenerator(const SequenceType s, const QuantLib::ext::shared_ptr<Sto
         return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, false);
     case MersenneTwisterAntithetic:
         return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, true);
-    case Sobol:
-        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorSobol>(process, timeGrid, seed, directionIntegers);
-    case Burley2020Sobol:
-        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorBurley2020Sobol>(
-            process, timeGrid, seed, directionIntegers, seed == 0 ? 0 : seed + 1);
-    case SobolBrownianBridge:
-        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorSobolBrownianBridge>(process, timeGrid, ordering, seed,
-                                                                                   directionIntegers);
-    case Burley2020SobolBrownianBridge:
-        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorBurley2020SobolBrownianBridge>(
-            process, timeGrid, ordering, seed, directionIntegers, seed == 0 ? 0 : seed + 1);
-    default:
-        QL_FAIL("Unknown sequence type");
+    case Sobol: {
+        try {
+            return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorSobol>(process, timeGrid, seed,
+                                                                                 directionIntegers);
+        } catch (...) {
+            // might throw, because of max dimension is exceeded
+        }
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, false);
+    }
+
+    case Burley2020Sobol: {
+        try {
+            return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorBurley2020Sobol>(
+                process, timeGrid, seed, directionIntegers, seed == 0 ? 0 : seed + 1);
+        } catch (...) {
+            // might throw, because of max dimension is exceeded
+        }
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, false);
+    }
+    case SobolBrownianBridge: {
+        try {
+            return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorSobolBrownianBridge>(
+                process, timeGrid, ordering, seed, directionIntegers);
+        } catch (...) {
+            // might throw, because of max dimension is exceeded
+        }
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, false);
+    }
+    case Burley2020SobolBrownianBridge: {
+        try {
+            return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorBurley2020SobolBrownianBridge>(
+                process, timeGrid, ordering, seed, directionIntegers, seed == 0 ? 0 : seed + 1);
+        } catch (...) {
+            // might throw, because of max dimension is exceeded
+        }
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, false);
+    }
+    default: {
+        QL_FAIL("makeMultiPathGenerator(): Unknown sequence type " << static_cast<int>(s));
+    }
     }
 }
 
