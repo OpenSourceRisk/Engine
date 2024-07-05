@@ -127,6 +127,9 @@ private:
     void buildCalibrationInfo(const Date& asof, const CurveConfigurations& curveConfigs,
                               const QuantLib::ext::shared_ptr<CapFloorVolatilityCurveConfig> config,
                               const QuantLib::ext::shared_ptr<IborIndex>& iborIndex);
+
+    //! Log SABR parameters if that model was used
+    void logSABRParameters() const;
 };
 
 } // namespace data

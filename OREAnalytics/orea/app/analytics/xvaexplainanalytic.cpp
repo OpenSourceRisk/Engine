@@ -202,11 +202,11 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     analytic()->reports()[label()]["xvaExplain_details"] = xvaReport;
     XvaExplainResults xvaData(xvaReport);
 
-    auto xvaExplainReport = QuantLib::ext::make_shared<InMemoryReport>();
+    auto xvaExplainReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString()).writeXvaExplainReport(*xvaExplainReport, xvaData);
     analytic()->reports()[label()]["xvaExplain"] = xvaExplainReport;
 
-    auto xvaExplainSummaryReport = QuantLib::ext::make_shared<InMemoryReport>();
+    auto xvaExplainSummaryReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString()).writeXvaExplainSummary(*xvaExplainSummaryReport, xvaData);
 
     analytic()->reports()[label()]["xvaExplain_summary"] = xvaExplainSummaryReport;

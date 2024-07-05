@@ -284,7 +284,6 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     notionalCurrency_ = bondData_.currency();
 
     issuer_ = bondData_.issuerId();
-    issueDate_ = parseDate(bondData_.issueDate());
 
     // Add legs (only 1)
     legs_ = {bond->cashflows()};
