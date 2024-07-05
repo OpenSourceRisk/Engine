@@ -253,7 +253,7 @@ std::ostream& operator<<(std::ostream& out, const SequenceType s) {
     case Burley2020SobolBrownianBridge:
         return out << "Burley2020SobolBrownianBridge";
     default:
-        return out << "Unknown sequence type";
+        return out << "Unknown sequence type " << static_cast<int>(s);
     }
 }
 
