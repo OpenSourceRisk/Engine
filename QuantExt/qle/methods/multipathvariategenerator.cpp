@@ -96,7 +96,8 @@ MultiPathVariateGeneratorBurley2020Sobol::MultiPathVariateGeneratorBurley2020Sob
 
 void MultiPathVariateGeneratorBurley2020Sobol::reset() {
     rsg_ = QuantLib::ext::make_shared<InverseCumulativeRsg<Burley2020SobolRsg, InverseCumulativeNormal>>(
-        Burley2020SobolRsg(dimension_ * timeSteps_, seed_, directionIntegers_, scrambleSeed_), InverseCumulativeNormal());
+        Burley2020SobolRsg(dimension_ * timeSteps_, seed_, directionIntegers_, scrambleSeed_),
+        InverseCumulativeNormal());
 }
 
 Sample<std::vector<Real>> MultiPathVariateGeneratorBurley2020Sobol::nextSequence() const {
@@ -133,7 +134,8 @@ MultiPathVariateGeneratorSobolBrownianBridge::MultiPathVariateGeneratorSobolBrow
 }
 
 void MultiPathVariateGeneratorSobolBrownianBridge::reset() {
-    gen_ = QuantLib::ext::make_shared<SobolBrownianGenerator>(dimension_, timeSteps_, ordering_, seed_, directionIntegers_);
+    gen_ = QuantLib::ext::make_shared<SobolBrownianGenerator>(dimension_, timeSteps_, ordering_, seed_,
+                                                              directionIntegers_);
 }
 
 MultiPathVariateGeneratorBurley2020SobolBrownianBridge::MultiPathVariateGeneratorBurley2020SobolBrownianBridge(
@@ -146,7 +148,7 @@ MultiPathVariateGeneratorBurley2020SobolBrownianBridge::MultiPathVariateGenerato
 
 void MultiPathVariateGeneratorBurley2020SobolBrownianBridge::reset() {
     gen_ = QuantLib::ext::make_shared<Burley2020SobolBrownianGenerator>(dimension_, timeSteps_, ordering_, seed_,
-                                                                directionIntegers_, scrambleSeed_);
+                                                                        directionIntegers_, scrambleSeed_);
 }
 
 QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>
@@ -160,7 +162,7 @@ makeMultiPathVariateGenerator(const SequenceType s, const Size dimension, const 
     case MersenneTwisterAntithetic:
         return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps,
                                                                                               seed, true);
-    case Sobol:
+    case Sobol: {
         try {
             return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorSobol>(dimension, timeSteps, seed,
                                                                                         directionIntegers);
@@ -169,7 +171,8 @@ makeMultiPathVariateGenerator(const SequenceType s, const Size dimension, const 
         }
         return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps,
                                                                                               seed, false);
-    case Burley2020Sobol:
+    }
+    case Burley2020Sobol: {
         try {
             return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorBurley2020Sobol>(
                 dimension, timeSteps, seed, directionIntegers, seed + 1);
@@ -178,7 +181,8 @@ makeMultiPathVariateGenerator(const SequenceType s, const Size dimension, const 
         }
         return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps,
                                                                                               seed, false);
-    case SobolBrownianBridge:
+    }
+    case SobolBrownianBridge: {
         try {
             return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorSobolBrownianBridge>(
                 dimension, timeSteps, ordering, seed, directionIntegers);
@@ -187,7 +191,8 @@ makeMultiPathVariateGenerator(const SequenceType s, const Size dimension, const 
         }
         return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps,
                                                                                               seed, false);
-    case Burley2020SobolBrownianBridge:
+    }
+    case Burley2020SobolBrownianBridge: {
         try {
             return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorBurley2020SobolBrownianBridge>(
                 dimension, timeSteps, ordering, seed, directionIntegers, seed + 1);
@@ -196,6 +201,7 @@ makeMultiPathVariateGenerator(const SequenceType s, const Size dimension, const 
         }
         return QuantLib::ext::make_shared<QuantExt::MultiPathVariateGeneratorMersenneTwister>(dimension, timeSteps,
                                                                                               seed, false);
+    }
     default: {
         QL_FAIL("Unknown sequence type " << static_cast<int>(s));
     }
