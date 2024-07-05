@@ -45,6 +45,7 @@ app/marketdatainmemoryloader.cpp
 app/marketdataloader.cpp
 app/oreapp.cpp
 app/parameters.cpp
+app/portfolioanalyser.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
 app/xvarunner.cpp
@@ -61,6 +62,7 @@ engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
 engine/cptycalculator.cpp
 engine/decomposedsensitivitystream.cpp
+engine/dependencymarket.cpp
 engine/filteredsensitivitystream.cpp
 engine/historicalpnlgenerator.cpp
 engine/historicalsensipnlcalculator.cpp
@@ -208,6 +210,7 @@ app/marketdatainmemoryloader.hpp
 app/marketdataloader.hpp
 app/oreapp.hpp
 app/parameters.hpp
+app/portfolioanalyser.hpp
 app/reportwriter.hpp
 app/sensitivityrunner.hpp
 app/structuredanalyticserror.hpp
@@ -232,6 +235,7 @@ engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cptycalculator.hpp
 engine/decomposedsensitivitystream.hpp
+engine/dependencymarket.hpp
 engine/filteredsensitivitystream.hpp
 engine/historicalpnlgenerator.hpp
 engine/historicalsensipnlcalculator.hpp
