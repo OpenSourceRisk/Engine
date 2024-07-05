@@ -105,29 +105,7 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
       externalDeviceCompatibilityMode_(externalDeviceCompatibilityMode),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation),
       externalComputeDevice_(externalComputeDevice), continueOnCalibrationError_(continueOnCalibrationError),
-      continueOnError_(continueOnError), context_(context) {
-
-    LOG("XvaEngineCG: constructor called.");
-
-    // Just for performance testing, duplicate the trades in input portfolio as specified by env var N
-
-    if (auto param_N = getenv("XVA_ENGINE_CG_N")) {
-        LOG("XvaEngineCG: copy trades in input portfolio "
-            << param_N << " times for performance testing (from env var XVA_ENGINE_CG_N)");
-        portfolio_ = QuantLib::ext::make_shared<Portfolio>();
-        std::string pfxml = portfolio->toXMLString();
-        for (Size i = 0; i < atoi(param_N); ++i) {
-            auto p = QuantLib::ext::make_shared<Portfolio>();
-            p->fromXMLString(pfxml);
-            for (auto const& [id, t] : p->trades()) {
-                t->id() += "_" + std::to_string(i + 1);
-                portfolio_->add(t);
-            }
-        }
-    }
-
-    LOG("XvaEngineCG: constructor finished.");
-}
+      continueOnError_(continueOnError), context_(context) {}
 
 void XvaEngineCG::buildT0Market() {
     DLOG("XvaEngineCG: build init market");
