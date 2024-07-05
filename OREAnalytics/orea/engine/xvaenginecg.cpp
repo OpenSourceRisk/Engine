@@ -436,6 +436,14 @@ void XvaEngineCG::doForwardEvaluation() {
         keepNodes_[n] = true;
     }
 
+    if (generateTradeLevelExposure_) {
+        for (auto const& n : tradeExposureNodes_) {
+            for (auto const& m : n) {
+                keepNodes_[m] = true;
+            }
+        }
+    }
+
     if (cvaNode_ != ComputationGraph::nan)
         keepNodes_[cvaNode_] = true;
 
@@ -570,22 +578,29 @@ void XvaEngineCG::populateNpvOutputCube() {
                "populateNpvOutputCube(): cube sample size ("
                    << npvOutputCube_->samples() << ") does not match model size (" << model_->size() << ")");
 
+    // if we don't generate the exposure on trade level, but are forced to populate the npv cube on trade
+    // level, we assign the same fraction of the portfolio amount to each trade
+
+    Real multiplier = generateTradeLevelExposure_ ? 1.0 : 1.0 / static_cast<Real>(portfolio_->trades().size());
+
     std::size_t tradePos = 0;
     for (const auto& [id, index] : portfolio_->trades()) {
+
+        auto getNode = [this, tradePos](std::size_t dateIndex) {
+            return generateTradeLevelExposure_ ? tradeExposureNodes_[dateIndex][tradePos] : pfExposureNodes_[dateIndex];
+        };
 
         auto cubeTradeIdx = npvOutputCube_->idsAndIndexes().find(id);
         QL_REQUIRE(cubeTradeIdx != npvOutputCube_->idsAndIndexes().end(),
                    "XvaEngineCG::populateNpvOutputCube(): trade id '"
                        << id << "' from portfolio is not present in output cube - internal error.");
 
-        npvOutputCube_->setT0(values_[tradeExposureNodes_[0][tradePos]][0], cubeTradeIdx->second);
-
+        npvOutputCube_->setT0(values_[getNode(0)][0] * multiplier, cubeTradeIdx->second);
         for (Size i = 0; i < simulationDates_.size(); ++i) {
             for (Size j = 0; j < npvOutputCube_->samples(); ++j) {
-                npvOutputCube_->set(values_[tradeExposureNodes_[i + 1][tradePos]][j], cubeTradeIdx->second, i, j);
+                npvOutputCube_->set(values_[getNode(i + 1)][j] * multiplier, cubeTradeIdx->second, i, j);
             }
         }
-
         ++tradePos;
     }
 
