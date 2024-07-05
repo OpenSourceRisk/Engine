@@ -1162,5 +1162,7 @@ private:
     std::string zeroToParShiftFile_;
 };
 
+void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);
+
 } // namespace analytics
 } // namespace ore

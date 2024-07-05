@@ -34,7 +34,6 @@
 namespace ore {
 namespace analytics {
 
-namespace {
 void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p) {
     if (auto param_N = getenv("PORTFOLIO_SCALE_UP")) {
         LOG("Scaling up portfolio using factor PORTFOLIO_SCALE_UP = " << param_N << " from environment variables.");
@@ -53,7 +52,6 @@ void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p) {
         }
     }
 }
-} // namespace
 
 vector<string> getFileNames(const string& fileString, const std::filesystem::path& path) {
     vector<string> fileNames;
