@@ -79,23 +79,6 @@ XvaEngineCG::XvaEngineCG(const Size nThreads, const Date& asof,
       externalComputeDevice_(externalComputeDevice), continueOnCalibrationError_(continueOnCalibrationError),
       continueOnError_(continueOnError), context_(context) {
 
-    // Just for performance testing, duplicate the trades in input portfolio as specified by env var N
-
-    if (auto param_N = getenv("XVA_ENGINE_CG_N")) {
-        portfolio_ = QuantLib::ext::make_shared<Portfolio>();
-        std::string pfxml = portfolio->toXMLString();
-        for (Size i = 0; i < atoi(param_N); ++i) {
-            auto p = QuantLib::ext::make_shared<Portfolio>();
-            p->fromXMLString(pfxml);
-            for (auto const& [id, t] : p->trades()) {
-                t->id() += "_" + std::to_string(i + 1);
-                portfolio_->add(t);
-            }
-        }
-    }
-
-    // Start Engine
-
     LOG("XvaEngineCG: started");
     boost::timer::cpu_timer timer;
 
