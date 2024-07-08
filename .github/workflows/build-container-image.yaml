@@ -2,6 +2,9 @@ name: Build container image
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - "Containerfile-work"
 
 jobs:
   build:
