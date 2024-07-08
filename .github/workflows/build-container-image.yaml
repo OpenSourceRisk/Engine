@@ -1,0 +1,165 @@
+name: Build container image
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    tags:
+        - 'v*'
+  release:
+    types: [published]
+  pull_request:
+    branches: [master]
+    types: [ready_for_review, opened, synchronize, reopened]
+    paths:
+      - .github/workflows/linux_build.yaml
+      - .github/workflows/build-container-image.yaml
+      - ./App/**
+      - ./OREAnalytics/**
+      - '!./OREAnalytics/doc/**'
+      - ./OREData/**
+      - '!./OREData/doc/**'
+      - ./ORETest/**
+      - ./QuantExt/**
+      - '!./QuantExt/doc/**'
+      - CMakeLists.txt
+      - Docker/Dockerfile.aio.*
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-24.04
+
+    strategy:
+      matrix:
+        platform: 
+          - linux/amd64
+        flavour: 
+          - name: debian11
+          - name: centos-stream9
+        # fully-defined example:
+        # - name: centos-stream9
+        #   dockerfile_suffix: centos-stream9
+        #   tag_prefix: centos-stream9  
+        #   build_args: |
+        #     builder_base_image=quay.io/centos/centos:stream9
+        #     release_base_image=quay.io/centos/centos:stream9-minimal
+        #     code_ready_builder_repo=crb
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log into registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      # use both GHA and registry caching to make this faster
+      # https://blacksmith.sh/blog/cache-is-king-a-guide-for-docker-layer-caching-in-github-actions
+
+      # Build the first stage, which we can use as the testing facility    
+      - name: Extract metadata (tags, labels) for the builder
+        id: builder-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder
+          flavor: |
+            latest=false
+            prefix=${{ matrix.flavour.tag_prefix || matrix.flavour.name }}-,onlatest=true
+          tags: |
+            type=sha,prefix=${{ matrix.flavour.tag_prefix || matrix.flavour.name }}-sha-
+            type=ref,event=branch
+            type=ref,event=tag
+      - name: Map builder tags to cache specs
+        uses: actions/github-script@v7
+        id: builder-tag-cache-mapper
+        env:
+          TAGS: ${{ steps.builder-meta.outputs.tags }}
+        with:
+          script: |
+            return {
+              cache_from: process.env.TAGS.split("\n").map(t=>'type=registry,ref='+ t).join("\n"),
+              cache_to: process.env.TAGS.split("\n").map(t=>'type=registry,ref='+ t + ',mode=max').join("\n")
+            }
+
+      - name: Build the "builder" container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          file: ./Docker/Dockerfile.aio.${{ matrix.flavour.dockerfile_suffix || matrix.flavour.name }}
+          build-args: ${{ matrix.flavour.build_args }}
+          platforms: ${{ matrix.platform }}
+          tags: ore-builder
+          target: builder-tested
+          cache-from: |
+            type=gha,scope=${{ matrix.flavour.name }}
+            type=registry,ref=ghcr.io/nickcmaynard/ore-engine-builder:${{ matrix.flavour.tag_prefix || matrix.flavour.name }}-latest
+            ${{ fromJSON(steps.builder-tag-cache-mapper.outputs.result).cache_from }}
+          cache-to: |
+            type=gha,mode=max,scope=${{ matrix.flavour.name }}
+            ${{ (github.event_name != 'pull_request') && fromJSON(steps.builder-tag-cache-mapper.outputs.result).cache_to || '' }}
+
+      # Register the test results
+      - name: Fetch test results from builder image
+        uses: shrink/actions-docker-extract@v3
+        with:
+          image: ore-builder
+          path: /ore/test-results/.
+          destination: test-results
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          check_name: Test results for ${{ matrix.flavour.name }}
+          files: test-results/**/*.xml
+
+      # Build the rest of the stages - the first stage should be cached
+      - name: Extract metadata (tags, labels) for Docker release
+        id: release-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=auto
+            prefix=${{ matrix.flavour.tag_prefix || matrix.flavour.name }}-,onlatest=true
+          tags: |
+            type=sha,prefix=${{ matrix.flavour.tag_prefix || matrix.flavour.name }}-sha-
+            type=ref,event=branch
+            type=ref,event=tag
+      - name: Map release tags to cache specs
+        uses: actions/github-script@v7
+        id: release-tag-cache-mapper
+        env:
+          TAGS: ${{ steps.builder-meta.outputs.tags }}
+        with:
+          script: |
+            return {
+              cache_from: process.env.TAGS.split("\n").map(t=>'type=registry,ref='+ t).join("\n"),
+              cache_to: process.env.TAGS.split("\n").map(t=>'type=registry,ref='+ t + ',mode=max').join("\n")
+            }
+            
+      - name: Build the "release" container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Docker/Dockerfile.aio.${{ matrix.flavour.dockerfile_suffix || matrix.flavour.name }}
+          build-args: ${{ matrix.flavour.build_args }}
+          platforms: ${{ matrix.platform }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.release-meta.outputs.tags }}
+          labels: ${{ steps.release-meta.outputs.labels }}
+          cache-from: |
+            type=gha,scope=${{ matrix.flavour.name }}
+            type=registry,ref=ghcr.io/nickcmaynard/ore-engine:${{ matrix.flavour.tag_prefix || matrix.flavour.name }}-latest
+            ${{ fromJSON(steps.release-tag-cache-mapper.outputs.result).cache_from }}
+          cache-to: ${{ (github.event_name != 'pull_request') && fromJSON(steps.release-tag-cache-mapper.outputs.result).cache_to || '' }}

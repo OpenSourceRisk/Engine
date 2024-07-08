@@ -1,0 +1,3 @@
+# When hacking the build process, we don't want to totally rebuild if we can help it
+.github
+test-results
