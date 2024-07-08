@@ -1,0 +1,21 @@
+name: Build container image
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    # Get the repository's code
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Build
+      id: build-image
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: fedora
+        containerfiles: |
+          ./Docker/Containerfile
+        platforms: linux/amd64
+        context: .
