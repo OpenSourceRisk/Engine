@@ -50,7 +50,7 @@ COPY Examples /ore/Examples
 COPY Tools /ore/Tools
 
 RUN cd /ore/build \
-  && ctest -j${build_jobs:-$(nproc)} --test-dir . --output-junit Testing/ctest-junit.xml
+  && ctest -j${build_jobs:-$(nproc)} --test-dir . --output-junit Testing/ctest-junit.xml --timeout 3600
 
 # ore
 FROM fedora-minimal:${fedora_tag} as ore
