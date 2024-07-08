@@ -60,7 +60,8 @@ COPY Examples /ore/Examples
 COPY Tools /ore/Tools
 
 RUN cd /ore/build \
-  && ctest -j${build_jobs:-$(nproc)} --test-dir . --output-junit Testing/ctest-junit.xml --timeout 3600
+  # NOSE_PROCESSES=$(nproc) NOSE_PROCESS_TIMEOUT=600 nosetests --process-restartworker --process-timeout=600 run_examples_testsuite.py 
+  && NOSE_PROCESSES=${build_jobs:-$(nproc)} NOSE_PROCESS_TIMEOUT=600 --test-dir . --output-junit Testing/ctest-junit.xml --timeout 3600
 
 # ore application image
 FROM registry.fedoraproject.org/fedora-minimal:${fedora_tag} as ore

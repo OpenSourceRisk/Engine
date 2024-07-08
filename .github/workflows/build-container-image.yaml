@@ -25,3 +25,4 @@ jobs:
           ./Docker/Containerfile
         platforms: linux/amd64
         context: .
+        layers: true
