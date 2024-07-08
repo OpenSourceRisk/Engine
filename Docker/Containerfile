@@ -44,7 +44,7 @@ RUN cd /ore/build \
 RUN ldconfig
 
 # tests
-RUN yum -q -y install python3.11 python3.11-pip && pip3 install matplotlib pandas pynose datacompy jsondiff lxml xmldiff
+RUN yum -q -y install python3.11 python3-pip && pip3 install matplotlib pandas pynose datacompy jsondiff lxml xmldiff
 
 COPY Examples /ore/Examples
 COPY Tools /ore/Tools
