@@ -911,6 +911,14 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             }
         }
 
+        if (!config->timeWeighting().empty() && conventions->has(config->timeWeighting())) {
+            auto tmp = QuantLib::ext::dynamic_pointer_cast<FxOptionTimeWeightingConvention>(
+                conventions->get(config->timeWeighting()));
+            QL_REQUIRE(tmp, "unable to cast convention '" << config->timeWeighting()
+                                                          << "' to FxOptionTimeWeightingConvention");
+            timeWeighting_ = *tmp;
+        }
+
         auto spotSpec = QuantLib::ext::dynamic_pointer_cast<FXSpotSpec>(parseCurveSpec(config->fxSpotID()));
         QL_REQUIRE(spotSpec != nullptr,
                    "could not parse '" << config->fxSpotID() << "' to FXSpotSpec, expected FX/CCY1/CCY2");

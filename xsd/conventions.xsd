@@ -480,7 +480,7 @@
   <xs:complexType name="fxOptionTimeWeighting">
     <xs:all>
       <xs:element type="xs:string" name="Id"/>
-      <xs:element name="WeekDayWeights">
+      <xs:element name="WeekdayWeights">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="xs:float" name="Monday"/>
