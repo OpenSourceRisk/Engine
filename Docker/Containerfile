@@ -1,5 +1,5 @@
 ARG fedora_tag=40
-FROM fedora:${fedora_tag} as orebuild
+FROM registry.fedoraproject.org/fedora:${fedora_tag} as orebuild
 
 MAINTAINER Quaternion Risk Management
 LABEL Description="Fedora-based multi-stage container definition for ORE"
@@ -23,6 +23,7 @@ RUN yum -q -y clean expire-cache && yum -q -y update && yum -q -y install \
     boost-devel \
     bzip2-devel \
     cmake \
+    # Example_43 requires this https://github.com/OpenSourceRisk/Engine/issues/142
     eigen3-devel \
     gcc \
     gcc-c++ \
@@ -44,7 +45,16 @@ RUN cd /ore/build \
 RUN ldconfig
 
 # tests
-RUN yum -q -y install python3.11 python3-pip && pip3 install matplotlib pandas pynose datacompy jsondiff lxml xmldiff
+RUN yum -q -y install python3-pip
+RUN pip3 install \
+    datacompy \
+    jsondiff \
+    lxml \
+    matplotlib \
+    pandas \
+    # replaces python-nose which has trouble with Python 3.12+
+    pynose \
+    xmldiff
 
 COPY Examples /ore/Examples
 COPY Tools /ore/Tools
@@ -52,16 +62,16 @@ COPY Tools /ore/Tools
 RUN cd /ore/build \
   && ctest -j${build_jobs:-$(nproc)} --test-dir . --output-junit Testing/ctest-junit.xml --timeout 3600
 
-# ore
-FROM fedora-minimal:${fedora_tag} as ore
+# ore application image
+FROM registry.fedoraproject.org/fedora-minimal:${fedora_tag} as ore
 
 # Ideally, we'd take a static binary from the first stage and just copy that in - this is arguably over-inclusive
 COPY --from=orebuild /usr/local/include /usr/local/include
 COPY --from=orebuild /usr/local/lib/ /usr/local/lib
 COPY --from=orebuild /usr/local/bin/ /usr/local/bin
-COPY --from=orebuild /ore/build /ore
+COPY --from=orebuild /ore/build /ore/build
 COPY --from=orebuild /usr/lib64 /usr/lib64
 
 RUN ldconfig
 
-CMD bash
+CMD /ore/build/App/ore
