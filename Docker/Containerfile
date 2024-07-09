@@ -45,23 +45,28 @@ RUN cd /ore/build \
 RUN ldconfig
 
 # tests
-RUN yum -q -y install python3-pip
+# Set up the Python 3.9 venv so nose works.  Migration from nose seems needed
+RUN yum -q -y install python3.9 python3-pip 
+ENV VIRTUAL_ENV=/opt/python3.9-venv
+RUN python3.9 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN pip3 install \
     datacompy \
     jsondiff \
     lxml \
     matplotlib \
     pandas \
-    # replaces python-nose which has trouble with Python 3.12+
-    pynose \
+    nose \
+    nose_xunitmp \
     xmldiff
 
 COPY Examples /ore/Examples
 COPY Tools /ore/Tools
 
+# NOSE_PROCESSES=$(nproc) NOSE_PROCESS_TIMEOUT=600 NOSE_WITH_XUNIT=true NOSE_XUNITMP_FILE=Testing/examples-xunit.xml nosetests --process-restartworker --process-timeout=600 run_examples_testsuite.py 
 RUN cd /ore/build \
-  # NOSE_PROCESSES=$(nproc) NOSE_PROCESS_TIMEOUT=600 nosetests --process-restartworker --process-timeout=600 run_examples_testsuite.py 
-  && NOSE_PROCESSES=${build_jobs:-$(nproc)} NOSE_PROCESS_TIMEOUT=600 --test-dir . --output-junit Testing/ctest-junit.xml --timeout 3600
+  && NOSE_PROCESSES=${build_jobs:-$(nproc)} NOSE_PROCESS_TIMEOUT=600 NOSE_WITH_XUNIT=true NOSE_XUNITMP_FILE=Testing/examples-xunit.xml \
+    ctest -j${build_jobs:-$(nproc)} --test-dir . --output-junit Testing/ctest-junit.xml --timeout 3600
 
 # ore application image
 FROM registry.fedoraproject.org/fedora-minimal:${fedora_tag} as ore
