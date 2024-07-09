@@ -27,6 +27,8 @@
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
 
+#include <map>
+
 namespace QuantExt {
 
 using namespace QuantLib;
