@@ -81,4 +81,7 @@ RUN ln -s /ore/lib/libQuantLib.so.1.31.1 /ore/lib/libQuantLib.so.1 && ln -s /ore
 
 # tell the linker where the libraries are, as the relative directories are no longer valid
 ENV LD_LIBRARY_PATH=/ore/lib
+# ensure ore is on the PATH so that if a interactive terminal is used, it's easily findable
+ENV PATH=/ore/bin:$PATH
+
 CMD /ore/bin/ore
