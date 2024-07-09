@@ -36,10 +36,12 @@ jobs:
     - name: Run a test
       run: /usr/bin/podman run hello-world
 
+    - name: Create test-results folder
+      run: mkdir -p test-results
+
     # Run the tests in the result of the first stage build, saving the results to our filesystem
     - name: Run the tests
-      run: mkdir -p test-results && \
-        /usr/bin/podman run \
+      run: /usr/bin/podman run \
           --workdir=/ore/build \
           --volume test-results:/ore/test-results \
           --env NOSE_PROCESSES=$(nproc) \
