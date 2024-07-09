@@ -24,7 +24,7 @@ jobs:
     - name: Build the "build" stage
       uses: redhat-actions/buildah-build@v2
       with:
-        image: orebuild:build
+        image: orebuild
         containerfiles: |
           ./Docker/Containerfile
         platforms: linux/amd64
@@ -46,7 +46,7 @@ jobs:
           --env NOSE_PROCESS_TIMEOUT=600 \
           --env NOSE_WITH_XUNITMP=true \
           --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml \
-        localhost/orebuild:build \
+        localhost/orebuild:latest \
         ctest \
           -j$(nproc) \
           --test-dir . \
