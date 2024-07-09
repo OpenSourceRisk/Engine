@@ -23,6 +23,9 @@
 #pragma once
 
 #include <ql/math/interpolation.hpp>
+#include <ql/time/calendar.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/daycounter.hpp>
 
 namespace QuantExt {
 
