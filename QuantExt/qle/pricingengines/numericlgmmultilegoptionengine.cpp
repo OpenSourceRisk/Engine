@@ -255,7 +255,8 @@ RandomVariable getRebatePv(const LgmVectorised& lgm, const Real t, const RandomV
     if (exercise->type() == Exercise::American) {
         return RandomVariable(x.size(), exercise->rebate(0)) *
                lgm.reducedDiscountBond(
-                   t, lgm.parametrization()->termStructure()->timeFromReference(exercise->rebatePaymentDate(d)), x);
+                   t, lgm.parametrization()->termStructure()->timeFromReference(exercise->rebatePaymentDate(d)), x,
+                   discountCurve);
     } else {
         auto f = std::find(exercise->dates().begin(), exercise->dates().end(), d);
         QL_REQUIRE(f != exercise->dates().end(), "NumericLgmMultiLegOptionEngine: internal error: exercise date "
@@ -263,7 +264,8 @@ RandomVariable getRebatePv(const LgmVectorised& lgm, const Real t, const RandomV
         Size index = std::distance(exercise->dates().begin(), f);
         return RandomVariable(x.size(), exercise->rebate(index)) *
                lgm.reducedDiscountBond(
-                   t, lgm.parametrization()->termStructure()->timeFromReference(exercise->rebatePaymentDate(index)), x);
+                   t, lgm.parametrization()->termStructure()->timeFromReference(exercise->rebatePaymentDate(index)), x,
+                   discountCurve);
     }
 }
 
