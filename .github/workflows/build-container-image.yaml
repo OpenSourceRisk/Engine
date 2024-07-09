@@ -16,7 +16,6 @@ jobs:
 
     # Get the repository's code
     - name: Checkout
-      desc:
       uses: actions/checkout@v2
       with:
         submodules: true
