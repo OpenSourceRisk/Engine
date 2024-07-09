@@ -4356,7 +4356,7 @@ The parameters have the following meaning:
 \item FXSource: specifies the FX index tag to be used to look up FX-Ibor or FX-CMS correlations
 \item Samples: number of MC samples to use
 \item Sobol: whether to use Sobol numbers for simulation
-\item SalvageCorrelationMatrix: whether to make the input correlation matrix positive definite
+\item SalvagingAlgorithm: whether to make the input correlation matrix positive definite. Compare \cite{corrSalv}.
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
@@ -4372,7 +4372,7 @@ The parameters have the following meaning:
         <Parameter name="Samples">10000</Parameter>
         <Parameter name="Seed">42</Parameter>
         <Parameter name="Sobol">Y</Parameter>
-        <Parameter name="SalvageCorrelationMatrix">Y</Parameter>
+        <Parameter name="SalvagingAlgorithm">Spectral</Parameter>
         <Parameter name="SensitivityTemplate">IR_MC</Parameter>
     </EngineParameters>
 </Product>

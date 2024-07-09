@@ -1510,5 +1510,41 @@ std::ostream& operator<<(std::ostream& os, Exercise::Type type) {
     return os;
 }
 
+SalvagingAlgorithm::Type parseSalvagingAlgorithmType(const std::string& s) {
+    static map<string, SalvagingAlgorithm::Type> m = {{"None", SalvagingAlgorithm::None},
+                                                      {"Spectral", SalvagingAlgorithm::Spectral},
+                                                      {"Hypersphere", SalvagingAlgorithm::Hypersphere},
+                                                      {"LowerDiagonal", SalvagingAlgorithm::LowerDiagonal},
+                                                      {"Higham", SalvagingAlgorithm::Higham}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("SalvagingAlgorithm type \"" << s << "\" not recognized");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type) {
+
+    if (type == SalvagingAlgorithm::None) {
+        os << "None";
+    } else if (type == SalvagingAlgorithm::Spectral) {
+        os << "Spectral";
+    } else if (type == SalvagingAlgorithm::Hypersphere) {
+        os << "Hypersphere";
+    } else if (type == SalvagingAlgorithm::LowerDiagonal) {
+        os << "LowerDiagonal";
+    } else if (type == SalvagingAlgorithm::Higham) {
+        os << "Higham";
+    } else {
+        QL_FAIL("SalvagingAlgorithm::Type ("
+                << static_cast<int>(type)
+                << " not recognized. Expected 'None', 'Spectral', 'Hypersphere', 'LowerDiagonal', or 'Higham'.");
+    }
+
+    return os;
+}
+
 } // namespace data
 } // namespace ore
