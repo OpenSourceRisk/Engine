@@ -165,7 +165,7 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     legPayers_ = {false, true};
 }
 
-bool FxForward::isExpired(const Date& date) {
+bool FxForward::isExpired(const Date& date) const {
     if (includeSettlementDateFlows_)
         return date > maturity_;
     else
