@@ -45,6 +45,8 @@ jobs:
         platforms: linux/amd64
         tags: ${{ env.TEST_TAG }}
         target: orebuild
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
     
     - name: Create test-results folder
       run: mkdir -p test-results
