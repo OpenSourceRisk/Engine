@@ -35,9 +35,20 @@ jobs:
     
     # Run the tests in the result of the first stage build, saving the results to our filesystem
     - name: Run the tests
-      run: mkdir -p test-results && podman run --workdir=/ore/Examples --volume /ore/test-results:test-results orebuild \
-        NOSE_PROCESSES=$(nproc) NOSE_PROCESS_TIMEOUT=600 NOSE_WITH_XUNITMP=true NOSE_XUNITMP_FILE=/ore/test-results/examples.xml \
-        ctest -j$(nproc) --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 5400
+      run: mkdir -p test-results && \
+        podman run \
+          --workdir=/ore/build \
+          --volume test-results:/ore/test-results \
+          --env NOSE_PROCESSES=$(nproc) \
+          --env NOSE_PROCESS_TIMEOUT=600 \
+          --env NOSE_WITH_XUNITMP=true \
+          --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml \
+        orebuild \
+        ctest \
+          -j$(nproc) \
+          --test-dir . \
+          --output-junit /ore/test-results/ctest.xml \
+          --timeout 5400
 
     # Register the xunit results
     - name: Publish Test Results
@@ -48,7 +59,7 @@ jobs:
           test-results/**/*.xml
 
     # Build the rest of the stages - the first stage should be cached
-    - name: Build the "build" stage
+    - name: Build the "release" stage
       uses: redhat-actions/buildah-build@v2
       with:
         image: ore
