@@ -33,24 +33,25 @@ jobs:
         extra-args: |
           --target=orebuild
     
-    - name: Run a test
-      run: /usr/bin/podman run hello-world
-
     - name: Create test-results folder
       run: mkdir -p test-results
 
     # Run the tests in the result of the first stage build, saving the results to our filesystem
+    - name: Get number of CPU cores
+      uses: SimenB/github-actions-cpu-cores@v2
+      id: cpu-cores
+
     - name: Run the tests
       run: /usr/bin/podman run \
           --workdir=/ore/build \
           --volume test-results:/ore/test-results \
-          --env NOSE_PROCESSES=$(nproc) \
+          --env NOSE_PROCESSES=${{ steps.cpu-cores.outputs.count }} \
           --env NOSE_PROCESS_TIMEOUT=600 \
           --env NOSE_WITH_XUNITMP=true \
           --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml \
         localhost/orebuild:latest \
         ctest \
-          -j$(nproc) \
+          -j${{ steps.cpu-cores.outputs.count }} \
           --test-dir . \
           --output-junit /ore/test-results/ctest.xml \
           --timeout 5400
