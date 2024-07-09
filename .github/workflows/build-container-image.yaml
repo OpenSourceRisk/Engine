@@ -25,6 +25,7 @@ jobs:
       uses: redhat-actions/buildah-build@v2
       with:
         image: orebuild
+        tags: build
         containerfiles: |
           ./Docker/Containerfile
         platforms: linux/amd64
@@ -49,7 +50,7 @@ jobs:
           --env NOSE_PROCESS_TIMEOUT=600 \
           --env NOSE_WITH_XUNITMP=true \
           --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml \
-        localhost@orebuild:latest \
+        localhost@orebuild:build \
         ctest \
           -j${{ steps.cpu-cores.outputs.count }} \
           --test-dir . \
