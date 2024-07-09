@@ -43,7 +43,12 @@ jobs:
       id: cpu-cores
 
     - name: Run the tests
-      run: /usr/bin/podman --log-level trace run --workdir=/ore/build --volume test-results:/ore/test-results --env NOSE_PROCESSES=${{ steps.cpu-cores.outputs.count }} --env NOSE_PROCESS_TIMEOUT=600 --env NOSE_WITH_XUNITMP=true --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml localhost/orebuild:build ctest -j${{ steps.cpu-cores.outputs.count }} --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 5400
+      run: >
+        /usr/bin/podman --log-level trace run 
+        --workdir=/ore/build --volume test-results:/ore/test-results 
+        --env NOSE_PROCESSES=${{ steps.cpu-cores.outputs.count }} --env NOSE_PROCESS_TIMEOUT=600 --env NOSE_WITH_XUNITMP=true --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml 
+        localhost/orebuild:build 
+        ctest -j${{ steps.cpu-cores.outputs.count }} --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 5400
 
     # Register the xunit results
     - name: Publish Test Results
