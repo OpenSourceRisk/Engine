@@ -44,7 +44,7 @@ RUN cd /ore/build \
 
 RUN ldconfig
 
-# tests
+# test facility
 # Set up the Python 3.9 venv so nose works.  Migration from nose seems needed
 RUN yum -q -y install python3.9 python3-pip 
 ENV VIRTUAL_ENV=/opt/python3.9-venv
@@ -63,24 +63,22 @@ RUN pip3 install \
 COPY Examples /ore/Examples
 COPY Tools /ore/Tools
 
-RUN mkdir -p /ore/test-results
-
-# NOSE_PROCESS_RESTARTWORKER=true
-# NOSE_PROCESSES=$(nproc) NOSE_PROCESS_TIMEOUT=600 NOSE_WITH_XUNITMP=true NOSE_XUNITMP_FILE=Testing/examples-xunit.xml nosetests run_examples_testsuite.py 
-#RUN cd /ore/build \
-#  && NOSE_PROCESSES=${build_jobs:-$(nproc)} NOSE_PROCESS_TIMEOUT=600 NOSE_WITH_XUNITMP=true NOSE_XUNITMP_FILE=/ore/test-results/examples.xml \
-#    ctest -j${build_jobs:-$(nproc)} --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 3600
-
+#
 # ore application image
+#
 FROM registry.fedoraproject.org/fedora-minimal:${fedora_tag} as ore
 
-# Ideally, we'd take a static binary from the first stage and just copy that in - this is arguably over-inclusive
-COPY --from=orebuild /usr/local/include /usr/local/include
-COPY --from=orebuild /usr/local/lib/ /usr/local/lib
-COPY --from=orebuild /usr/local/bin/ /usr/local/bin
-COPY --from=orebuild /ore/build /ore/build
-COPY --from=orebuild /usr/lib64 /usr/lib64
+# libs to run
+RUN microdnf install -y boost ocl-icd --nodocs && \
+    microdnf clean all -y
 
-RUN ldconfig
+# fetch built files from orebuild
+COPY --from=orebuild /ore/build/App/ore /ore/bin/ore
+COPY --from=orebuild /ore/build/OREAnalytics/*/*.so /ore/build/OREData/*/*.so /ore/build/QuantExt/*/*.so /ore/lib/
+# complex lib symlink structure
+COPY --from=orebuild /ore/build/QuantLib/*/*.so.1.31.1 /ore/lib/
+RUN ln -s /ore/lib/libQuantLib.so.1.31.1 /ore/lib/libQuantLib.so.1 && ln -s /ore/lib/libQuantLib.so.1 /ore/lib/libQuantLib.so
 
-CMD /ore/build/App/ore
+# tell the linker where the libraries are, as the relative directories are no longer valid
+ENV LD_LIBRARY_PATH=/ore/lib
+CMD /ore/bin/ore
