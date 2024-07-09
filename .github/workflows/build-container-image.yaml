@@ -14,6 +14,9 @@ jobs:
     - name: Setup Podman - needed for running tests
       run: sudo apt update && sudo apt-get -y install podman
 
+    - name: Hello world
+      run: /usr/bin/podman run hello-world
+
     # Get the repository's code
     - name: Checkout
       uses: actions/checkout@v2
