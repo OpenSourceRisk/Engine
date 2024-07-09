@@ -63,10 +63,13 @@ RUN pip3 install \
 COPY Examples /ore/Examples
 COPY Tools /ore/Tools
 
-# NOSE_PROCESSES=$(nproc) NOSE_PROCESS_TIMEOUT=600 NOSE_WITH_XUNIT=true NOSE_XUNITMP_FILE=Testing/examples-xunit.xml nosetests --process-restartworker --process-timeout=600 run_examples_testsuite.py 
+RUN mkdir -p /ore/test-results
+
+# NOSE_PROCESS_RESTARTWORKER=true
+# NOSE_PROCESSES=$(nproc) NOSE_PROCESS_TIMEOUT=600 NOSE_WITH_XUNITMP=true NOSE_XUNITMP_FILE=Testing/examples-xunit.xml nosetests run_examples_testsuite.py 
 RUN cd /ore/build \
-  && NOSE_PROCESSES=${build_jobs:-$(nproc)} NOSE_PROCESS_TIMEOUT=600 NOSE_WITH_XUNIT=true NOSE_XUNITMP_FILE=Testing/examples-xunit.xml \
-    ctest -j${build_jobs:-$(nproc)} --test-dir . --output-junit Testing/ctest-junit.xml --timeout 3600
+  && NOSE_PROCESSES=${build_jobs:-$(nproc)} NOSE_PROCESS_TIMEOUT=600 NOSE_WITH_XUNITMP=true NOSE_XUNITMP_FILE=/ore/test-results/examples.xml \
+    ctest -j${build_jobs:-$(nproc)} --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 3600
 
 # ore application image
 FROM registry.fedoraproject.org/fedora-minimal:${fedora_tag} as ore
