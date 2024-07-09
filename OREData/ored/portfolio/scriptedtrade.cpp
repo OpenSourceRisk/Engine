@@ -51,7 +51,10 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     setIsdaTaxonomyFields();
 
-    auto qleInstr = QuantLib::ext::make_shared<ScriptedInstrument>(builder->lastRelevantDate());
+    includePastCashflows_ = builder->includePastCashflows();
+
+    auto qleInstr =
+        QuantLib::ext::make_shared<ScriptedInstrument>(builder->lastRelevantDate(), includePastCashflows_);
     qleInstr->setPricingEngine(engine);
 
     npvCurrency_ = builder->npvCurrency();
@@ -183,6 +186,8 @@ void ScriptedTrade::clear() {
     scriptName_ = productTag_ = "";
     script_.clear();
 }
+
+bool ScriptedTrade::isExpired(const Date& d) const { return Trade::isExpired(d) && !includePastCashflows_; }
 
 namespace {
 
