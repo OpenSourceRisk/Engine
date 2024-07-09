@@ -24,7 +24,7 @@ jobs:
     - name: Build the "build" stage
       uses: redhat-actions/buildah-build@v2
       with:
-        image: orebuild
+        image: orebuild:build
         containerfiles: |
           ./Docker/Containerfile
         platforms: linux/amd64
@@ -33,6 +33,9 @@ jobs:
         extra-args: |
           --target=orebuild
     
+    - name: Run a test
+      run: /usr/bin/podman run hello-world
+
     # Run the tests in the result of the first stage build, saving the results to our filesystem
     - name: Run the tests
       run: mkdir -p test-results && \
@@ -43,7 +46,7 @@ jobs:
           --env NOSE_PROCESS_TIMEOUT=600 \
           --env NOSE_WITH_XUNITMP=true \
           --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml \
-        orebuild \
+        localhost/orebuild:build \
         ctest \
           -j$(nproc) \
           --test-dir . \
