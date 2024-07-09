@@ -49,7 +49,7 @@ jobs:
           --env NOSE_PROCESS_TIMEOUT=600 \
           --env NOSE_WITH_XUNITMP=true \
           --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml \
-        localhost/orebuild:latest \
+        orebuild:latest \
         ctest \
           -j${{ steps.cpu-cores.outputs.count }} \
           --test-dir . \
