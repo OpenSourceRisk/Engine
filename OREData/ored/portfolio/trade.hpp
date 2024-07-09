@@ -156,7 +156,7 @@ public:
 
     const Date& maturity() const { return maturity_; }
 
-    virtual bool isExpired(const Date& d) { return d >= maturity_; }
+    virtual bool isExpired(const Date& d) const { return d >= maturity_; }
 
     const string& issuer() const { return issuer_; }
 

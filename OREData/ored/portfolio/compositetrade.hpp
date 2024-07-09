@@ -97,7 +97,7 @@ public:
     std::map<std::string, RequiredFixings::FixingDates> fixings(const QuantLib::Date& settlementDate) const override;
     std::map<AssetClass, std::set<std::string>> underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const override;;
     const std::map<std::string,boost::any>& additionalData() const override;
-    bool isExpired(const Date& d) override;
+    bool isExpired(const Date& d) const override;
     //@}
 
 private:

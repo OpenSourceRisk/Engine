@@ -66,6 +66,8 @@ Real ScriptedInstrumentPricingEngine::addMcErrorEstimate(const std::string& labe
 
 void ScriptedInstrumentPricingEngine::calculate() const {
 
+    std::cout << "calculating" << std::endl;
+
     lastCalculationWasValid_ = false;
 
     // make sure we release the memory allocated by the model after the pricing
@@ -192,16 +194,19 @@ void ScriptedInstrumentPricingEngine::calculate() const {
         paylog->consolidateAndSort();
         std::vector<CashFlowResults> cashFlowResults(paylog->size());
         std::map<Size, Size> cashflowNumber;
+        std::cout << "generating cashflow results" << std::endl;
         for (Size i = 0; i < paylog->size(); ++i) {
+            std::cout << " got paylog entry " << i << std::endl;
             // cashflow is written as expectation of deflated base ccy amount at T0, converted to flow ccy
             // with the T0 FX Spot and compounded back to the pay date on T0 curves
             Real fx = 1.0;
-            Real discount = 1.0;
+            Real discount = 0.0;
+            cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i));
             if (paylog->dates().at(i) > model_->referenceDate()) {
                 fx = model_->fxSpotT0(paylog->currencies().at(i), model_->baseCcy());
                 discount = model_->discount(referenceDate, paylog->dates().at(i), paylog->currencies().at(i)).at(0);
+                cashFlowResults[i].amount /= fx * discount;
             }
-            cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i)) / fx / discount;
             cashFlowResults[i].payDate = paylog->dates().at(i);
             cashFlowResults[i].currency = paylog->currencies().at(i);
             cashFlowResults[i].legNumber = paylog->legNos().at(i);
@@ -236,6 +241,8 @@ void ScriptedInstrumentPricingEngine::calculate() const {
     }
 
     lastCalculationWasValid_ = true;
+
+    std::cout << "calculating done" << std::endl;
 }
 
 } // namespace data
