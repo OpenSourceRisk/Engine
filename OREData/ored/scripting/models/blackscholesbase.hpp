@@ -56,7 +56,8 @@ public:
         const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
         const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-        const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig);
+        const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
+        const QuantLib::SalvagingAlgorithm::Type& salvagingAlgorithm);
 
     // ctor for single underlying
     BlackScholesBase(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,
@@ -93,6 +94,7 @@ protected:
 
     // helper function that constructs the correlation matrix
     Matrix getCorrelation() const;
+    QuantLib::SalvagingAlgorithm::Type getSalvagingAlgorithm() const { return salvagingAlgorithm_; }
 
     // input parameters
     const std::vector<Handle<YieldTermStructure>> curves_;
@@ -101,6 +103,7 @@ protected:
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>> correlations_;
     const McParams mcParams_;
     const std::vector<Date> simulationDates_;
+    const QuantLib::SalvagingAlgorithm::Type salvagingAlgorithm_;
 
     // these all except underlyingPaths_ are initialised when the interface functions above are called
     mutable Date referenceDate_;                      // the model reference date

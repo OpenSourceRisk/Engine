@@ -505,6 +505,8 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     externalComputeDevice_ = engineParameter("ExternalComputeDevice", {}, false, "");
     externalDeviceCompatibilityMode_ = parseBool(engineParameter("ExternalDeviceCompatibilityMode", {}, false, "false"));
     includePastCashflows_ = parseBool(engineParameter("IncludePastCashflows", {resolvedProductTag_}, false, "false"));
+    salvagingAlgorithm_ =
+        parseSalvagingAlgorithmType(engineParameter("SalvagingAlgorithm", {resolvedProductTag_}, false, "Spectral"));
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
@@ -1248,12 +1250,14 @@ void ScriptedTradeEngineBuilder::buildLocalVol(const std::string& id, const Ibor
     else {
         QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
     }
-    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(modelCurves_, processes_, simulationDates_, addDates_,
-                                                            timeStepsPerYear_, lvType, calibrationMoneyness_,
-                                                            !calibrate_ || zeroVolatility_);
+
+    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
+        !calibrate_ || zeroVolatility_);
     model_ = QuantLib::ext::make_shared<LocalVol>(modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_,
-                                          modelInfIndices_, modelIndices_, modelIndicesCurrencies_, builder->model(),
-                                          correlations_, mcParams_, simulationDates_, iborFallbackConfig);
+                                                  modelInfIndices_, modelIndices_, modelIndicesCurrencies_,
+                                                  builder->model(), correlations_, mcParams_, simulationDates_,
+                                                  iborFallbackConfig, salvagingAlgorithm_);
     modelBuilders_.insert(std::make_pair(id, builder));
 }
 
@@ -1659,12 +1663,12 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     auto discretization = useCg_ ? CrossAssetModel::Discretization::Euler : CrossAssetModel::Discretization::Exact;
     auto camBuilder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         market_,
-        QuantLib::ext::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs,
-                                                comConfigs, 0, camCorrelations, bootstrapTolerance_, "LGM",
-                                                discretization),
+        QuantLib::ext::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs,
+                                                        crCirConfigs, comConfigs, 0, camCorrelations,
+                                                        bootstrapTolerance_, "LGM", discretization),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
-        SalvagingAlgorithm::Spectral, id);
+        salvagingAlgorithm_, id);
 
     // effective time steps per year: zero for exact evolution, otherwise the pricing engine parameter
     if (useCg_) {
@@ -1765,15 +1769,16 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
     auto camBuilder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         market_,
         QuantLib::ext::make_shared<CrossAssetModelData>(
-            std::vector<QuantLib::ext::shared_ptr<IrModelData>>{config}, std::vector<QuantLib::ext::shared_ptr<FxBsData>>{},
-            std::vector<QuantLib::ext::shared_ptr<EqBsData>>{}, std::vector<QuantLib::ext::shared_ptr<InflationModelData>>{},
+            std::vector<QuantLib::ext::shared_ptr<IrModelData>>{config},
+            std::vector<QuantLib::ext::shared_ptr<FxBsData>>{}, std::vector<QuantLib::ext::shared_ptr<EqBsData>>{},
+            std::vector<QuantLib::ext::shared_ptr<InflationModelData>>{},
             std::vector<QuantLib::ext::shared_ptr<CrLgmData>>{}, std::vector<QuantLib::ext::shared_ptr<CrCirData>>{},
             std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>{}, 0,
             std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>{}, bootstrapTolerance_, "LGM",
             CrossAssetModel::Discretization::Exact),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
-        SalvagingAlgorithm::Spectral, id);
+        salvagingAlgorithm_, id);
 
     model_ = QuantLib::ext::make_shared<FdGaussianCam>(camBuilder->model(), modelCcys_.front(), modelCurves_.front(),
                                                modelIrIndices_, simulationDates_, modelSize_, timeStepsPerYear_,

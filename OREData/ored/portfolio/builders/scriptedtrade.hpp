@@ -164,6 +164,7 @@ protected:
     bool externalDeviceCompatibilityMode_;
     std::string externalComputeDevice_;
     bool includePastCashflows_;
+    SalvagingAlgorithm::Type salvagingAlgorithm_;
 };
 
 } // namespace data

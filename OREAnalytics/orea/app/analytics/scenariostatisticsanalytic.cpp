@@ -87,13 +87,14 @@ void ScenarioStatisticsAnalyticImpl::buildScenarioGenerator(const bool continueO
 void ScenarioStatisticsAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError) {
     LOG("SCENARIO_STATISTICS: Build Simulation Model (continueOnCalibrationError = "
         << std::boolalpha << continueOnCalibrationError << ")");
+
     CrossAssetModelBuilder modelBuilder(
         analytic()->market(), analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
         inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
         inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
         inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "",
-        inputs_->salvageCorrelationMatrix() ? SalvagingAlgorithm::Spectral : SalvagingAlgorithm::None,
-        "xva cam building");
+        analytic()->configurations().crossAssetModelData->getSalvagingAlgorithm(), "xva cam building");
+
     model_ = *modelBuilder.model();
 }
 
