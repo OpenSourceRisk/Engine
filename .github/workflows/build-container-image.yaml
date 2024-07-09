@@ -8,14 +8,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       # Make adjustments to the environment
     - name: Setup Podman - needed for running tests
       run: sudo apt update && sudo apt-get -y install podman
-
-    - name: Hello world
-      run: /usr/bin/podman run hello-world
 
     # Get the repository's code
     - name: Checkout
