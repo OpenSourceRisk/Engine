@@ -43,7 +43,7 @@ jobs:
       id: cpu-cores
 
     - name: Run the tests
-      run: /usr/bin/podman run \
+      run: /usr/bin/podman --log-level trace run \
           --workdir=/ore/build \
           --volume test-results:/ore/test-results \
           --env NOSE_PROCESSES=${{ steps.cpu-cores.outputs.count }} \
