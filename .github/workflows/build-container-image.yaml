@@ -36,7 +36,7 @@ jobs:
     # Run the tests in the result of the first stage build, saving the results to our filesystem
     - name: Run the tests
       run: mkdir -p test-results && \
-        podman run \
+        /usr/bin/podman run \
           --workdir=/ore/build \
           --volume test-results:/ore/test-results \
           --env NOSE_PROCESSES=$(nproc) \
