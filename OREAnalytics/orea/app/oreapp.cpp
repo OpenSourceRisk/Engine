@@ -1108,9 +1108,9 @@ void OREAppInputParameters::loadParameters() {
     if (!tmp.empty() && parseBool(tmp)) {
         insertAnalytic("PARAMETRIC_VAR");
 
-        tmp = params_->get("parametricVar", "salvageCovarianceMatrix", false);
+        tmp = params_->get("parametricVar", "SalvagingAlgorithm", false);
         if (tmp != "")
-            setSalvageCovariance(parseBool(tmp));
+            setVarSalvagingAlgorithm(parseSalvagingAlgorithmType(tmp));
 
         tmp = params_->get("parametricVar", "quantiles", false);
         if (tmp != "")
@@ -1484,10 +1484,6 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("xvaExplain", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("XVA_EXPLAIN");
-
-    tmp = params_->get("simulation", "salvageCorrelationMatrix", false);
-    if (tmp != "")
-        setSalvageCorrelationMatrix(parseBool(tmp));
 
     tmp = params_->get("simulation", "amc", false);
     if (tmp != "")
