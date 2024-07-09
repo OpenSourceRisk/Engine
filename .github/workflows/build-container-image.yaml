@@ -10,17 +10,49 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Make adjustments to the environment
+    - name: Setup Podman - needed for running tests
+      run: sudo apt update && sudo apt-get -y install podman
+
     # Get the repository's code
     - name: Checkout
+      desc:
       uses: actions/checkout@v2
       with:
         submodules: true
 
-    - name: Build
-      id: build-image
+    # Build the first stage, which we can use as the testing facility
+    - name: Build the "build" stage
       uses: redhat-actions/buildah-build@v2
       with:
-        image: fedora
+        image: orebuild
+        containerfiles: |
+          ./Docker/Containerfile
+        platforms: linux/amd64
+        context: .
+        layers: true
+        extra-args: |
+          --target=orebuild
+    
+    # Run the tests in the result of the first stage build, saving the results to our filesystem
+    - name: Run the tests
+      run: mkdir -p test-results && podman run --workdir=/ore/Examples --volume /ore/test-results:test-results orebuild \
+        NOSE_PROCESSES=$(nproc) NOSE_PROCESS_TIMEOUT=600 NOSE_WITH_XUNITMP=true NOSE_XUNITMP_FILE=/ore/test-results/examples.xml \
+        ctest -j$(nproc) --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 5400
+
+    # Register the xunit results
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: |
+          test-results/**/*.xml
+
+    # Build the rest of the stages - the first stage should be cached
+    - name: Build the "build" stage
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: ore
         containerfiles: |
           ./Docker/Containerfile
         platforms: linux/amd64
