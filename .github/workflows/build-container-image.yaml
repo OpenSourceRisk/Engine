@@ -44,7 +44,7 @@ jobs:
 
     - name: Run the tests
       run: >
-        /usr/bin/podman --log-level trace run
+        /usr/bin/podman run
         --workdir=/ore/build --volume test-results:/ore/test-results
         --env NOSE_PROCESSES=${{ steps.cpu-cores.outputs.count }} --env NOSE_PROCESS_TIMEOUT=600 --env NOSE_WITH_XUNITMP=true --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml
         localhost/orebuild:build

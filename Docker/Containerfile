@@ -19,28 +19,28 @@ COPY ORETest /ore/ORETest
 COPY cmake /ore/cmake
 
 # Install dependencies
-# RUN yum -q -y clean expire-cache && yum -q -y update && yum -q -y install \
-#     boost-devel \
-#     bzip2-devel \
-#     cmake \
-#     # Example_43 requires this https://github.com/OpenSourceRisk/Engine/issues/142
-#     eigen3-devel \
-#     gcc \
-#     gcc-c++ \
-#     glibc-devel \
-#     ninja-build \
-#     ocl-icd-devel \
-#     opencl-headers \
-#     zlib-ng-compat-devel
+RUN yum -q -y clean expire-cache && yum -q -y update && yum -q -y install \
+    boost-devel \
+    bzip2-devel \
+    cmake \
+    # Example_43 requires this https://github.com/OpenSourceRisk/Engine/issues/142
+    eigen3-devel \
+    gcc \
+    gcc-c++ \
+    glibc-devel \
+    ninja-build \
+    ocl-icd-devel \
+    opencl-headers \
+    zlib-ng-compat-devel
 
 # set up the build
-# RUN cd / \
-#   && mkdir -p /ore/build && cd /ore/build \
-#   && cmake /ore -GNinja -DCMAKE_BUILD_TYPE=${cmake_build_type} -DORE_BUILD_DOC=OFF -DORE_USE_ZLIB=ON -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=ON -DORE_ENABLE_OPENCL=ON
+RUN cd / \
+  && mkdir -p /ore/build && cd /ore/build \
+  && cmake /ore -GNinja -DCMAKE_BUILD_TYPE=${cmake_build_type} -DORE_BUILD_DOC=OFF -DORE_USE_ZLIB=ON -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=ON -DORE_ENABLE_OPENCL=ON
 
 # build
-# RUN cd /ore/build \
-#   && cmake --build . -- -j${build_jobs:-$(nproc)} install
+RUN cd /ore/build \
+  && cmake --build . -- -j${build_jobs:-$(nproc)} install
 
 RUN ldconfig
 
@@ -50,15 +50,15 @@ RUN yum -q -y install python3.9 python3-pip
 ENV VIRTUAL_ENV=/opt/python3.9-venv
 RUN python3.9 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-# RUN pip3 install \
-#     datacompy \
-#     jsondiff \
-#     lxml \
-#     matplotlib \
-#     pandas \
-#     nose \
-#     nose_xunitmp \
-#     xmldiff
+RUN pip3 install \
+    datacompy \
+    jsondiff \
+    lxml \
+    matplotlib \
+    pandas \
+    nose \
+    nose_xunitmp \
+    xmldiff
 
 COPY Examples /ore/Examples
 COPY Tools /ore/Tools
