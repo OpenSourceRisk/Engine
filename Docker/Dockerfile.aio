@@ -72,12 +72,15 @@ FROM registry.fedoraproject.org/fedora-minimal:${fedora_tag} as ore
 RUN microdnf install -y boost ocl-icd --nodocs && \
     microdnf clean all -y
 
-# fetch built files from orebuild
-COPY --from=orebuild /ore/build/App/ore /ore/bin/ore
-COPY --from=orebuild /ore/build/OREAnalytics/*/*.so /ore/build/OREData/*/*.so /ore/build/QuantExt/*/*.so /ore/lib/
-# complex lib symlink structure
-COPY --from=orebuild /ore/build/QuantLib/*/*.so.1.31.1 /ore/lib/
-RUN ln -s /ore/lib/libQuantLib.so.1.31.1 /ore/lib/libQuantLib.so.1 && ln -s /ore/lib/libQuantLib.so.1 /ore/lib/libQuantLib.so
+# # fetch built files from orebuild
+# COPY --from=orebuild /ore/build/App/ore /ore/bin/ore
+# COPY --from=orebuild /ore/build/OREAnalytics/*/*.so /ore/build/OREData/*/*.so /ore/build/QuantExt/*/*.so /ore/lib/
+# # complex lib symlink structure
+# COPY --from=orebuild /ore/build/QuantLib/*/*.so.1.31.1 /ore/lib/
+# RUN ln -s /ore/lib/libQuantLib.so.1.31.1 /ore/lib/libQuantLib.so.1 && ln -s /ore/lib/libQuantLib.so.1 /ore/lib/libQuantLib.so
+
+RUN mkdir -p /ore/bin /ore/lib
+RUN --mount=type=bind,from=orebuild,source=/usr/local,target=/orebuild cp -a /orebuild/bin/ore /ore/bin && cp -a /orebuild/lib/lib*.so* /ore/lib
 
 # tell the linker where the libraries are, as the relative directories are no longer valid
 ENV LD_LIBRARY_PATH=/ore/lib
