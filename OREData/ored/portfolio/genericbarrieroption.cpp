@@ -304,6 +304,7 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     std::string transatlanticBarrierRebate = "0.0";
     std::string transatlanticBarrierRebateCurrency = payCurrency_;
     if (!transatlanticBarrier_[0].type().empty()) {
+    if (transatlanticBarrier_.size() > 0 && !transatlanticBarrier_[0].type().empty()) {
         transatlanticBarrierType.clear();
         for (auto const& n : transatlanticBarrier_) {
             if (n.type() == "DownAndIn")
