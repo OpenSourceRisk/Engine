@@ -3794,11 +3794,21 @@ ORE applies the zero rate shifts to the zero curves and computes the resulting s
 The zero rate shifts are defined as stresstests and the par instruments are defined in the usual sensitivity configuration.
 
 %--------------------------------------------------------------------
+\subsection{First Margin Period of Risk Collateral Adjustment}% Example 72
+\label{example:72}
+%--------------------------------------------------------------------
+
+The example in folder {\\tt Examples/Example\_72} demonstrates the use of the firstMporCollateralAdjustment flag.
+To have a conservative estimation of the expected positive exposure ORE applies the difference between the initial variational margin 
+collateral balance and the todays mtm on the simulated collateral during the first margin period of risk, if the difference would yield 
+a higher expected exposure (in case of over collateralisation in case of a negative mtm or under-collateralisation if the mtm is positive).
+
+%--------------------------------------------------------------------
 \subsection{Forward Bond Exposure with AMC and implied Bondspread}% Example 73
 \label{example:73}
 %--------------------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_70} demonstrates AMC exposure simulation and XVA for a forward and a plain vanilla bond.
+The example in folder {\tt Examples/Example\_73} demonstrates AMC exposure simulation and XVA for a forward and a plain vanilla bond.
 The results can be compared to a classical exposure simulation by switchting the parameter \emph{amc} in the main configuration
 file \emph{ore.xml}, section analytic type \emph{Simulation} to \emph{N}.
 
@@ -3808,16 +3818,6 @@ Both fields, PriceQuote and SpreadQuote, are mandatory. In the market data file,
 Otherwise the spread quote is used or none.
 
 In case of a forward bond, the convention for security specification requires the format \emph{securityId\_FWDEXP\_expiryDate}.
-
-%--------------------------------------------------------------------
-\subsection{First Margin Period of Risk Collateral Adjustment}% Example 72
-\label{example:72}
-%--------------------------------------------------------------------
-
-The example in folder {\\tt Examples/Example\_72} demonstrates the use of the firstMporCollateralAdjustment flag.
-To have a conservative estimation of the expected positive exposure ORE applies the difference between the initial variational margin 
-collateral balance and the todays mtm on the simulated collateral during the first margin period of risk, if the difference would yield 
-a higher expected exposure (in case of over collateralisation in case of a negative mtm or under-collateralisation if the mtm is positive).
 
 \clearpage
 %========================================================
