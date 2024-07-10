@@ -31,6 +31,9 @@
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/wildcard.hpp>
+
+#include <qle/termstructures/fxvoltimeweighting.hpp>
+
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
 namespace ore {
@@ -114,6 +117,7 @@ private:
                                  QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
                                  const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves);
 
+    QuantExt::FxVolatilityTimeWeighting buildTimeWeighting(const Date& asof, const DayCounter& dc) const;
 };
 } // namespace data
 } // namespace ore

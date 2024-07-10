@@ -70,6 +70,27 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
          market);
 }
 
+QuantExt::FxVolatilityTimeWeighting FXVolCurve::buildTimeWeighting(const Date& asof, const DayCounter& dc) const {
+    std::vector<double> weekdayWeights;
+    std::vector<std::pair<QuantLib::Calendar, double>> tradingCenters;
+    std::map<QuantLib::Date, double> events;
+
+    if (timeWeighting_) {
+
+        weekdayWeights = timeWeighting_->weekdayWeights();
+
+        for (auto const& t : timeWeighting_->tradingCenters()) {
+            tradingCenters.push_back(std::make_pair(parseCalendar(t.calendar), t.weight));
+        }
+
+        for (auto const& e : timeWeighting_->events()) {
+            events[e.date] = e.weight;
+        }
+    }
+
+    return QuantExt::FxVolatilityTimeWeighting(asof, dc, weekdayWeights, tradingCenters, events);
+}
+
 void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                                       QuantLib::ext::shared_ptr<FXVolatilityCurveConfig> config, const FXTriangulation& fxSpots,
                                       const map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves) {
@@ -386,7 +407,8 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceBFRR>(
         asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, config->dayCounter(), config->calendar(),
         fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
-        longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp);
+        longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp,
+        buildTimeWeighting(asof, config->dayCounter()));
 
     vol_->enableExtrapolation();
 }
