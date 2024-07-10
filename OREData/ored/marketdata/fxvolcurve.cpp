@@ -393,7 +393,16 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     else if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Cubic)
         interp = QuantExt::BlackVolatilitySurfaceBFRR::SmileInterpolation::Cubic;
     else {
-        QL_FAIL("BFRR FX vol surface: invalid interpolation, expected Linear, Cubic");
+        QL_FAIL("BFRR FX vol surface: invalid smile interpolation, expected Linear, Cubic");
+    }
+
+    QuantExt::BlackVolatilitySurfaceBFRR::TimeInterpolation interp2;
+    if (config->timeInterpolation() == FXVolatilityCurveConfig::TimeInterpolation::V)
+        interp2 = QuantExt::BlackVolatilitySurfaceBFRR::TimeInterpolation::V;
+    else if (config->timeInterpolation() == FXVolatilityCurveConfig::TimeInterpolation::V2T)
+        interp2 = QuantExt::BlackVolatilitySurfaceBFRR::TimeInterpolation::V2T;
+    else {
+        QL_FAIL("BFRR FX vol surface: invalid time interpolation, expected V, V2T");
     }
 
     std::vector<Date> dates;
@@ -407,7 +416,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     vol_ = QuantLib::ext::make_shared<QuantExt::BlackVolatilitySurfaceBFRR>(
         asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, config->dayCounter(), config->calendar(),
         fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
-        longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp,
+        longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp, interp2,
         buildTimeWeighting(asof, config->dayCounter()));
 
     vol_->enableExtrapolation();

@@ -43,6 +43,8 @@ class SimpleDeltaInterpolatedSmile;
 class BlackVolatilitySurfaceBFRR : public  BlackVolatilityTermStructure, public LazyObject {
 public:
     enum class SmileInterpolation { Linear, Cubic };
+    enum class TimeInterpolation { V, V2T };
+
     BlackVolatilitySurfaceBFRR(
         Date referenceDate, const std::vector<Date>& dates, const std::vector<Real>& deltas,
         const std::vector<std::vector<Real>>& bfQuotes, const std::vector<std::vector<Real>>& rrQuotes,
@@ -55,6 +57,7 @@ public:
         const DeltaVolQuote::AtmType ltat = DeltaVolQuote::AtmType::AtmDeltaNeutral,
         const Option::Type riskReversalInFavorOf = Option::Call, const bool butterflyIsBrokerStyle = true,
         const SmileInterpolation smileInterpolation = SmileInterpolation::Cubic,
+        const TimeInterpolation timeInterpolation = TimeInterpolation::V,
         const FxVolatilityTimeWeighting timeWeighting = FxVolatilityTimeWeighting());
 
     Date maxDate() const override { return Date::maxDate(); }
@@ -87,6 +90,7 @@ private:
     void update() override;
     void performCalculations() const override;
     void clearCaches() const;
+    double interpolateInTime(double t, double t1, double t2, double v1, double v2) const;
 
     std::vector<Date> dates_;
     std::vector<Real> deltas_;
@@ -106,6 +110,7 @@ private:
     Option::Type riskReversalInFavorOf_;
     bool butterflyIsBrokerStyle_;
     SmileInterpolation smileInterpolation_;
+    TimeInterpolation timeInterpolation_;
     FxVolatilityTimeWeighting timeWeighting_;
 
     mutable Real switchTime_, settlDomDisc_, settlForDisc_, settlLag_;
