@@ -1,5 +1,5 @@
 ARG fedora_tag=40
-FROM registry.fedoraproject.org/fedora:${fedora_tag} as orebuild
+FROM registry.fedoraproject.org/fedora:${fedora_tag} AS orebuild
 
 MAINTAINER Quaternion Risk Management
 LABEL Description="Fedora-based multi-stage container definition for ORE"
@@ -66,7 +66,7 @@ COPY Tools /ore/Tools
 #
 # ore application image
 #
-FROM registry.fedoraproject.org/fedora-minimal:${fedora_tag} as ore
+FROM registry.fedoraproject.org/fedora-minimal:${fedora_tag} AS ore
 
 # libs to run
 RUN microdnf install -y boost ocl-icd --nodocs && \
