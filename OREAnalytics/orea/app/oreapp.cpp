@@ -584,10 +584,9 @@ void OREAppInputParameters::loadParameters() {
     // Load calendar adjustments
     std::string tmp = params_->get("setup", "calendarAdjustment", false);
     if (tmp != "") {
-        CalendarAdjustmentConfig calendarAdjustments;
         filesystem::path calendarAdjustmentFile = inputPath / tmp;
         LOG("Loading calendar adjustments from file: " << calendarAdjustmentFile);
-        calendarAdjustments.fromFile(calendarAdjustmentFile.generic_string());
+        setCalendarAdjustmentFromFile(calendarAdjustmentFile.generic_string());
     } else {
         WLOG("Calendar adjustments not found, using defaults");
     }
@@ -595,10 +594,9 @@ void OREAppInputParameters::loadParameters() {
     // Load currency configs
     tmp = params_->get("setup", "currencyConfiguration", false);
     if (tmp != "") {
-        CurrencyConfig currencyConfig;
         filesystem::path currencyConfigFile = inputPath / tmp;
         LOG("Loading currency configurations from file: " << currencyConfigFile);
-        currencyConfig.fromFile(currencyConfigFile.generic_string());
+        setCurrencyConfigFromFile(currencyConfigFile.generic_string());
     } else {
         WLOG("Currency configurations not found, using defaults");
     }
