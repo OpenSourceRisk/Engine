@@ -50,7 +50,7 @@ private:
     std::vector<std::pair<Calendar, double>> tradingCenters_;
     std::map<Date, double> events_;
 
-    mutable Date maxDate_;
+    mutable Date maxDate_, lastDateInInterpolation_;
     mutable Real maxTime_ = -1.0;
     mutable Real lastSlope_ = -1.0;
 

@@ -55,6 +55,7 @@ fillemptymatrix.cpp
 formulabasedcoupon.cpp
 forwardbond.cpp
 fxvolsmile.cpp
+fxvoltimeweighting.cpp
 hullwhitebucketing.cpp
 index.cpp
 inflationcurve.cpp

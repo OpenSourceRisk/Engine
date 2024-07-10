@@ -28,8 +28,17 @@ FxVolatilityTimeWeighting::FxVolatilityTimeWeighting(const Date& asof, const Day
                                                      const std::map<Date, double>& events)
     : asof_(asof), dayCounter_(dayCounter), weekdayWeights_(weekdayWeights), tradingCenters_(tradingCenters),
       events_(events) {
-    x_.resize(1, -1.0);
-    y_.resize(1, 0.0);
+    QL_REQUIRE(asof_ >= Date::minDate() + 2, "FxVolatilityTimeWeighting: asof ("
+                                                 << asof_ << ") must be >= min allowed date " << Date::minDate()
+                                                 << " plus 2 calendar days. The asof date is probably wrong anyhow?");
+    x_.push_back(dayCounter_.yearFraction(asof, asof - 2));
+    x_.push_back(dayCounter_.yearFraction(asof, asof - 1));
+    y_.push_back(x_[0] - x_[1]);
+    y_.push_back(0.0);
+    lastSlope_ = 1.0;
+    lastDateInInterpolation_ = asof - 1;
+    w_ = std::make_unique<LinearInterpolation>(x_.begin(), x_.end(), y_.begin());
+    w_->enableExtrapolation();
 }
 
 void FxVolatilityTimeWeighting::update(const double t) const {
@@ -50,7 +59,7 @@ void FxVolatilityTimeWeighting::update(const double t) const {
 
             // prio 1: weekend
 
-            weight = weekdayWeights_[wd];
+            weight = weekdayWeights_[wd - 1];
 
         } else if (auto e = events_.find(maxDate_); e != events_.end()) {
 
@@ -77,11 +86,17 @@ void FxVolatilityTimeWeighting::update(const double t) const {
 
                 // prio 4: weekday
 
-                weight = weekdayWeights_[wd];
+                weight = weekdayWeights_[wd - 1];
             }
         }
 
         if (weight != lastSlope_) {
+            Date prevDate = maxDate_ - 1 * Days;
+            if (lastDateInInterpolation_ != prevDate) {
+                Real prevTime = dayCounter_.yearFraction(asof_, prevDate);
+                y_.push_back(((prevTime - x_.back()) * lastSlope_ + y_.back()));
+                x_.push_back(prevTime);
+            }
             y_.push_back(((maxTime_ - x_.back()) * weight + y_.back()));
             x_.push_back(maxTime_);
             lastSlope_ = weight;
@@ -90,15 +105,16 @@ void FxVolatilityTimeWeighting::update(const double t) const {
 
     } while (maxTime_ < t);
 
-    if(hasDataChanged)
+    if (hasDataChanged) {
         w_ = std::make_unique<LinearInterpolation>(x_.begin(), x_.end(), y_.begin());
-
+        w_->enableExtrapolation();
+    }
 }
 
 Real FxVolatilityTimeWeighting::operator()(const double t) const {
     if (t > maxTime_)
         update(t);
-    return w_ ? w_->operator()(t) : t;
+    return w_->operator()(t);
 }
 
 Real FxVolatilityTimeWeighting::operator()(const Date& d) const {
