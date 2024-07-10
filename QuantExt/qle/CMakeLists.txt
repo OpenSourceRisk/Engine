@@ -583,8 +583,8 @@ instruments/bondoption.hpp
 instruments/bondrepo.hpp
 instruments/bondtotalreturnswap.hpp
 instruments/brlcdiswap.hpp
-instruments/cashposition.hpp
 instruments/cashflowresults.hpp
+instruments/cashposition.hpp
 instruments/cashsettledeuropeanoption.hpp
 instruments/cbo.hpp
 instruments/cdsoption.hpp
