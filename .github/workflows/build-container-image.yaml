@@ -30,7 +30,12 @@ jobs:
         target: orebuild
         cache-from: type=gha
         cache-to: type=gha,mode=max
-    
+
+
+  test:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
     # Run the tests in the result of the first stage build, saving the results to our filesystem
     - name: Create test-results folder
       run: mkdir -p test-results
@@ -56,7 +61,7 @@ jobs:
 
 
   release:
-    needs: build
+    needs: test
     runs-on: ubuntu-24.04
     steps:
     # Build the rest of the stages - the first stage should be cached
