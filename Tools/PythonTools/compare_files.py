@@ -54,146 +54,6 @@ def create_df(file, col_types=None):
     if file_extension == '.csv' or file_extension == '.txt':
         logger.debug('Creating DataFrame from csv file %s.', file)
         return pd.read_csv(file, dtype=col_types, quotechar='"', quoting=2)
-    # elif file_extension == '.json':
-    #     if filename == 'simm.json':
-    #         with open(file, 'r') as json_file:
-    #             simm_json = json.load(json_file)
-    #             if 'simmReport' in simm_json:
-
-    #                 logger.debug('Creating DataFrame from simm json file %s.', file)
-    #                 simm_df = pd.DataFrame(simm_json['simmReport'])
-
-    #                 # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
-    #                 # response is an empty string. This empty string is then in the portfolio column in the DataFrame
-    #                 # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
-    #                 # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
-    #                 # portfolio column so that everything works downstream.
-    #                 simm_df['portfolio'].replace('', np.nan, inplace=True)
-
-    #                 return simm_df
-
-    #             else:
-    #                 logger.warning('Expected simm json file %s to contain the field simmReport.', file)
-    #                 return None
-    #     if filename == 'npv.json':
-    #         with open(file, 'r') as json_file:
-    #             npv_json = json.load(json_file)
-    #             if 'npv' in npv_json:
-
-    #                 logger.debug('Creating DataFrame from npv json file %s.', file)
-    #                 npv_df = pd.DataFrame(npv_json['npv'])
-
-    #                 # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
-    #                 # response is an empty string. This empty string is then in the portfolio column in the DataFrame
-    #                 # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
-    #                 # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
-    #                 # portfolio column so that everything works downstream.
-    #                 npv_df['nettingSetId'].replace('', np.nan, inplace=True)
-
-    #                 return npv_df
-
-    #             else:
-    #                 logger.warning('Expected npv json file %s to contain the field npv.', file)
-    #                 return None
-    #     if filename == 'flownpv.json':
-    #         with open(file, 'r') as json_file:
-    #             flownpv_json = json.load(json_file)
-    #             if 'cashflowNpv' in flownpv_json:
-    #                 logger.debug('Creating DataFrame from flownpv json file %s.', file)
-    #                 flownpv_df = pd.DataFrame(flownpv_json['cashflowNpv'])
-    #                 flownpv_df.rename(columns={"baseCurrency" : "BaseCurrency", "horizon" : "Horizon", "presentValue" : "PresentValue", "tradeId" : "TradeId"}, inplace=True)
-    #                 flownpv_df.drop(columns='jobId', inplace=True)
-    #                 return flownpv_df
-
-    #             else:
-    #                 logger.warning('Expected flownpv json file %s to contain the field cashflowNpv.', file)
-    #                 return None
-    #     if filename == 'saccr.json':
-    #         with open(file, 'r') as json_file:
-    #             saccr_json = json.load(json_file)
-    #             if 'saccr' in saccr_json:
-    #                 logger.debug('Creating DataFrame from saccr json file %s.', file)
-    #                 saccr_df = pd.DataFrame(saccr_json['saccr'])
-
-    #                 saccr_cols = {
-    #                     'assetClass': 'AssetClass',
-    #                     'hedgingSet': 'HedgingSet',
-    #                     'nettingSetId': 'NettingSet',
-    #                     'addOn': 'AddOn',
-    #                     'cC': 'CC',
-    #                     'eAD': 'EAD',
-    #                     'multiplier': 'Multiplier',
-    #                     'npv': 'NPV',
-    #                     'pfe': 'PFE',
-    #                     'rC': 'RC',
-    #                     'rW': 'RW'
-    #                 }
-
-    #                 for col in ['addOn', 'cC', 'eAD', 'multiplier', 'npv', 'pfe', 'rC', 'assetClass', 'hedgingSet', 'nettingSetId']:
-    #                     saccr_df[col].replace('', np.nan, inplace=True)
-
-    #                 for col in ['rW']:
-    #                     saccr_df[col].replace(0.0, np.nan, inplace=True)
-
-    #                 saccr_df.rename(columns=saccr_cols, inplace=True)
-    #                 return saccr_df
-    #             else:
-    #                 logger.warning('Expected saccr json file %s to contain the field saccr', file)
-    #                 return None
-    #     if filename == 'frtb.json':
-    #         with open(file, 'r') as json_file:
-    #             frtb_json = json.load(json_file)
-    #             if 'frtb' in frtb_json:
-    #                 logger.debug('Creating DataFrame from frtb json file %s.', file)
-    #                 frtb_df = pd.DataFrame(frtb_json['frtb'])
-
-    #                 # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
-    #                 # response is an empty string. This empty string is then in the portfolio column in the DataFrame
-    #                 # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
-    #                 # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
-    #                 # portfolio column so that everything works downstream.
-    #                 # npv_df['nettingSetId'].replace('', np.nan, inplace=True)
-
-    #                 frtb_cols = {
-    #                     'bucket': 'Bucket',
-    #                     'capitalRequirement': 'CapitalRequirement',
-    #                     'correlationScenario': 'CorrelationScenario',
-    #                     'frtbCharge': 'FrtbCharge',
-    #                     'risk_class': 'RiskClass'
-    #                 }
-    #                 for col in frtb_cols.keys():
-    #                     frtb_df[col].replace('', np.nan, inplace=True)
-    #                 frtb_df.rename(columns=frtb_cols, inplace=True)
-    #                 frtb_df.drop(columns='jobId', inplace=True)
-    #                 return frtb_df
-    #             else:
-    #                 logger.warning('Expected frtb json file %s to contain the field frtb', file)
-    #                 return None
-    #     if filename == 'bacva.json':
-    #         with open(file, 'r') as json_file:
-    #             bacva_json = json.load(json_file)
-    #             if 'bacva' in bacva_json:
-    #                 logger.debug('Creating DataFrame from bacva json file %s.', file)
-    #                 bacva_df = pd.DataFrame(bacva_json['bacva'])
-
-    #                 bacva_cols = {
-    #                     'analytic': 'Analytic',
-    #                     'counterparty': 'Counterparty',
-    #                     'nettingSetId': 'NettingSet',
-    #                     'value': 'Value',
-    #                 }
-
-    #                 for col in ['analytic', 'counterparty', 'nettingSetId']:
-    #                     bacva_df[col].replace('', np.nan, inplace=True)
-
-    #                 for col in ['value']:
-    #                     bacva_df[col].replace(0.0, np.nan, inplace=True)
-
-    #                 bacva_df.rename(columns=bacva_cols, inplace=True)
-    #                 return bacva_df
-    #             else:
-    #                 logger.warning('Expected bacva json file %s to contain the field bacva', file)
-    #                 # return None   
     else:
         logger.warning('File %s is neither a csv nor a json file so cannot create DataFrame.', file)
         return None
@@ -253,10 +113,10 @@ def compare_files(file_1, file_2, name, config: dict = None) -> bool:
     _, ext_2 = os.path.splitext(file_2)
 
     if comp_config is None:
-        if ext_1 == '.csv':
-            raise ValueError('File, ' + file_1 + ', requires a comparison configuration but none given.')
-        if ext_2 == '.csv':
-            raise ValueError('File, ' + file_2 + ', requires a comparison configuration but none given.')
+        #if ext_1 == '.csv':
+        #    raise ValueError('File, ' + file_1 + ', requires a comparison configuration but none given.')
+        #if ext_2 == '.csv':
+        #    raise ValueError('File, ' + file_2 + ', requires a comparison configuration but none given.')
         if ext_1 == '.xml' and ext_2 == '.xml':
             result = compare_files_xml(name, file_1, file_2)
         else:
