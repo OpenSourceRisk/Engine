@@ -116,7 +116,7 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
         } else if(cr.requiresAmountUsd()) {
             // ProductClassMultiplier and AddOnNotionalFactor  don't have a currency and dont need to be converted,
             // we use the amount
-            const Real fxSpot = market_->fxRate(newCrifRecord.amountCurrency + resultCcy_)->value();
+            const Real fxSpot = fxRate(newCrifRecord.amountCurrency + resultCcy_);
             newCrifRecord.amountResultCcy = fxSpot * newCrifRecord.amount;
         }
         newCrifRecord.resultCurrency = resultCcy_;
@@ -500,7 +500,7 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
         // Divide by the concentration risk threshold
         Real concThreshold = simmConfiguration_->concentrationThreshold(RiskType::IRCurve, qualifier);
         if (resultCcy_ != "USD")
-            concThreshold *= market_->fxRate("USD" + resultCcy_)->value();
+            concThreshold *= fxRate("USD" + resultCcy_);
         concentrationRisk[qualifier] /= concThreshold;
         // Final concentration risk amount
         concentrationRisk[qualifier] = std::max(1.0, std::sqrt(std::abs(concentrationRisk[qualifier])));
@@ -655,7 +655,7 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
         // Divide by the concentration risk threshold
         Real concThreshold = simmConfiguration_->concentrationThreshold(RiskType::IRVol, qualifier);
         if (resultCcy_ != "USD")
-            concThreshold *= market_->fxRate("USD" + resultCcy_)->value();
+            concThreshold *= fxRate("USD" + resultCcy_);
         concentrationRisk[qualifier] /= concThreshold;
 
         // Final concentration risk amount
@@ -958,7 +958,7 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
             // Divide by the concentration risk threshold
             Real concThreshold = simmConfiguration_->concentrationThreshold(rt, qualifier);
             if (resultCcy_ != "USD")
-                concThreshold *= market_->fxRate("USD" + resultCcy_)->value();
+                concThreshold *= fxRate("USD" + resultCcy_);
             concentrationRisk[qualifier] /= concThreshold;
             // Final concentration risk amount
             concentrationRisk[qualifier] = std::max(1.0, std::sqrt(std::abs(concentrationRisk[qualifier])));
@@ -1678,6 +1678,10 @@ std::set<std::string> SimmCalculator::getQualifiers(const Crif& crif,
     return qualifiers;
 }
 
+Real SimmCalculator::fxRate(const string& ccyPair) const {
+    QL_REQUIRE(market_, "SimmCalculator::fxRate(): Market is required but is null.");
+    return market_->fxRate(ccyPair)->value();
+}
 
 } // namespace analytics
 } // namespace ore
