@@ -54,8 +54,9 @@ jobs:
         files: |
           test-results/**/*.xml
 
-          
+
   release:
+    needs: build
     runs-on: ubuntu-24.04
     steps:
     # Build the rest of the stages - the first stage should be cached
