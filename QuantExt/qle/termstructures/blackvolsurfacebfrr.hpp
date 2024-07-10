@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <qle/termstructures/fxvoltimeweighting.hpp>
+
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/option.hpp>
@@ -41,6 +43,8 @@ class SimpleDeltaInterpolatedSmile;
 class BlackVolatilitySurfaceBFRR : public  BlackVolatilityTermStructure, public LazyObject {
 public:
     enum class SmileInterpolation { Linear, Cubic };
+    enum class TimeInterpolation { V, V2T };
+
     BlackVolatilitySurfaceBFRR(
         Date referenceDate, const std::vector<Date>& dates, const std::vector<Real>& deltas,
         const std::vector<std::vector<Real>>& bfQuotes, const std::vector<std::vector<Real>>& rrQuotes,
@@ -52,7 +56,9 @@ public:
         const Period& switchTenor = 2 * Years, const DeltaVolQuote::DeltaType ltdt = DeltaVolQuote::DeltaType::Fwd,
         const DeltaVolQuote::AtmType ltat = DeltaVolQuote::AtmType::AtmDeltaNeutral,
         const Option::Type riskReversalInFavorOf = Option::Call, const bool butterflyIsBrokerStyle = true,
-        const SmileInterpolation smileInterpolation = SmileInterpolation::Cubic);
+        const SmileInterpolation smileInterpolation = SmileInterpolation::Cubic,
+        const TimeInterpolation timeInterpolation = TimeInterpolation::V,
+        const FxVolatilityTimeWeighting timeWeighting = FxVolatilityTimeWeighting());
 
     Date maxDate() const override { return Date::maxDate(); }
     Real minStrike() const override { return 0; }
@@ -84,6 +90,7 @@ private:
     void update() override;
     void performCalculations() const override;
     void clearCaches() const;
+    double interpolateInTime(double t, double t1, double t2, double v1, double v2) const;
 
     std::vector<Date> dates_;
     std::vector<Real> deltas_;
@@ -103,6 +110,8 @@ private:
     Option::Type riskReversalInFavorOf_;
     bool butterflyIsBrokerStyle_;
     SmileInterpolation smileInterpolation_;
+    TimeInterpolation timeInterpolation_;
+    FxVolatilityTimeWeighting timeWeighting_;
 
     mutable Real switchTime_, settlDomDisc_, settlForDisc_, settlLag_;
     mutable std::vector<Real> expiryTimes_;
