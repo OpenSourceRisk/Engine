@@ -55,11 +55,6 @@ private:
                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                             const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration);
-
-    static Date checkForwardBond(const std::string& securityId);
-    static void modifyToForwardBond(const QuantLib::Date& expiry, ore::data::BondBuilder::Result& bondstructure,
-                                    const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData);
 };
 
 } // namespace data

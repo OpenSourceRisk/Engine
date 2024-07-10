@@ -173,12 +173,7 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
     // checks, build bond from reference data
     QL_REQUIRE(referenceDataManager, "no reference data manager given");
 
-    Date expiry = checkForwardBond(securityId);
-
     auto b = BondFactory::instance().build(engineFactory, referenceDataManager, securityId);
-
-    if(expiry != Date())
-        modifyToForwardBond(expiry, b, engineFactory, referenceDataManager);
 
     Real adj = b.priceQuoteMethod == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
                    ? 1.0 / b.priceQuoteBaseValue
@@ -218,61 +213,6 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
 
     DLOG("theoretical pricing     = " << b.bond->cleanPrice() / 100.0);
     return s;
-}
-
-Date BondSpreadImply::checkForwardBond(const std::string& securityId) {
-
-    // forward bonds shall have a security id of type isin_FWDEXP_expiry
-    vector<string> tokens;
-    boost::split(tokens, securityId, boost::is_any_of("_"));
-
-    // string id = tokens[0];
-    Date expiry = Date();
-    if (tokens.size() == 3){
-        if(tokens[1] == "FWDEXP"){
-            DLOG("BondSpreadImply::checkForwardBond : Forward Bond identified " << securityId);
-            expiry = parseDate(tokens[2]);
-        }
-    }
-    return expiry;
-}
-
-void BondSpreadImply::modifyToForwardBond(const Date& expiry, BondBuilder::Result& bondstructure,
-                                          const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
-                                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) {
-
-    DLOG("BondSpreadImply::modifyToForwardBond called for " << bondstructure.securityId);
-    auto originalBond = bondstructure.bond;
-
-    // truncate legs akin to fwd bond method...
-    Leg modifiedLeg;
-    for (auto& cf : originalBond->cashflows()) {
-        if (!cf->hasOccurred(expiry))
-            modifiedLeg.push_back(cf);
-    }
-
-    // uses old CTOR, so we can pass the notional flow deduces above, otherwise we get the notional flows twice
-    QuantLib::ext::shared_ptr<QuantLib::Bond> modifiedBond = QuantLib::ext::make_shared<QuantLib::Bond>(
-        originalBond->settlementDays(), originalBond->calendar(), 1.0, originalBond->maturityDate(),
-        originalBond->issueDate(), modifiedLeg);
-
-    // get reference curve id...
-    auto bondRefData = QuantLib::ext::dynamic_pointer_cast<BondReferenceDatum>(
-        referenceData->getData(BondReferenceDatum::TYPE, bondstructure.securityId));
-    QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
-    string referenceCurveID = bondRefData->bondData().referenceCurveId;
-
-    // Set pricing engine
-    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
-    Currency ccy = parseCurrency(bondstructure.currency);
-    QuantLib::ext::shared_ptr<BondEngineBuilder> bondBuilder =
-        QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
-    QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << bondstructure.securityId);
-    modifiedBond->setPricingEngine(bondBuilder->engine(ccy, bondstructure.creditCurveId, bondstructure.hasCreditRisk,
-                                                       bondstructure.securityId, referenceCurveID));
-
-    // store modified bond
-    bondstructure.bond = modifiedBond;
 }
 
 } // namespace data
