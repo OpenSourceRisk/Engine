@@ -501,6 +501,7 @@
 #include <qle/termstructures/fxblackvolsurface.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
+#include <qle/termstructures/fxvoltimeweighting.hpp>
 #include <qle/termstructures/generatordefaulttermstructure.hpp>
 #include <qle/termstructures/hazardspreadeddefaulttermstructure.hpp>
 #include <qle/termstructures/iborfallbackcurve.hpp>
