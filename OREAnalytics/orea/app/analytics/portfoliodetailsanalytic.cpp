@@ -46,9 +46,9 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
     // swap indices report
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> siReport =
         QuantLib::ext::make_shared<ore::data::InMemoryReport>();
-    siReport->addColumn("SwapIndices", string()).next();
+    siReport->addColumn("SwapIndices", string());
     for (const auto& si : portfolioAnalyser_->swapindices())
-        siReport->add(si);
+        siReport->next().add(si);
     siReport->end();
     analytic()->reports()[label_]["swap_indices"] = siReport;
 
