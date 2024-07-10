@@ -31,11 +31,13 @@ FxVolatilityTimeWeighting::FxVolatilityTimeWeighting(const Date& asof, const Day
                                                      const std::map<Date, double>& events)
     : asof_(asof), dayCounter_(dayCounter), weekdayWeights_(weekdayWeights), tradingCenters_(tradingCenters),
       events_(events) {
+    QL_REQUIRE(weekdayWeights_.empty() || asof_ != Date(),
+               "FxVolatilityTimeWeighting: asof is required if weekdayWeights are given.");
     QL_REQUIRE(weekdayWeights_.empty() || weekdayWeights_.size() == 7,
                "FxVolatilityTimeWeighting: weekdayWeights (" << weekdayWeights_.size() << ") should have size 7");
-    QL_REQUIRE(asof_ >= Date::minDate() + 2, "FxVolatilityTimeWeighting: asof ("
-                                                 << asof_ << ") must be >= min allowed date " << Date::minDate()
-                                                 << " plus 2 calendar days. The asof date is probably wrong anyhow?");
+    QL_REQUIRE(asof_ == Date() || asof_ >= Date::minDate() + 2,
+               "FxVolatilityTimeWeighting: asof (" << asof_ << ") must be >= min allowed date " << Date::minDate()
+                                                   << " plus 2 calendar days. The asof date is probably wrong anyhow?");
     x_.push_back(dayCounter_.yearFraction(asof, asof - 2));
     x_.push_back(dayCounter_.yearFraction(asof, asof - 1));
     y_.push_back(x_[0] - x_[1]);
@@ -125,6 +127,8 @@ Real FxVolatilityTimeWeighting::operator()(const double t) const {
 }
 
 Real FxVolatilityTimeWeighting::operator()(const Date& d) const {
+    QL_REQUIRE(asof_ != Date(),
+               "FxVolatilityTimeWeighting::operator()(" << d << "): no asof given for date to time conversion.");
     QL_REQUIRE(!dayCounter_.empty(),
                "FxVolatilityTimeWeighting::operator()(" << d << "): no day counter given for date to time conversion.");
     return operator()(dayCounter_.yearFraction(asof_, d));
