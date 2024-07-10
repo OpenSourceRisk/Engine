@@ -38,14 +38,16 @@ FxVolatilityTimeWeighting::FxVolatilityTimeWeighting(const Date& asof, const Day
     QL_REQUIRE(asof_ == Date() || asof_ >= Date::minDate() + 2,
                "FxVolatilityTimeWeighting: asof (" << asof_ << ") must be >= min allowed date " << Date::minDate()
                                                    << " plus 2 calendar days. The asof date is probably wrong anyhow?");
-    x_.push_back(dayCounter_.yearFraction(asof, asof - 2));
-    x_.push_back(dayCounter_.yearFraction(asof, asof - 1));
-    y_.push_back(x_[0] - x_[1]);
-    y_.push_back(0.0);
-    lastSlope_ = 1.0;
-    lastDateInInterpolation_ = asof - 1;
-    w_ = std::make_unique<LinearInterpolation>(x_.begin(), x_.end(), y_.begin());
-    w_->enableExtrapolation();
+    if (!weekdayWeights_.empty()) {
+        x_.push_back(dayCounter_.yearFraction(asof, asof - 2));
+        x_.push_back(dayCounter_.yearFraction(asof, asof - 1));
+        y_.push_back(x_[0] - x_[1]);
+        y_.push_back(0.0);
+        lastSlope_ = 1.0;
+        lastDateInInterpolation_ = asof - 1;
+        w_ = std::make_unique<LinearInterpolation>(x_.begin(), x_.end(), y_.begin());
+        w_->enableExtrapolation();
+    }
 }
 
 void FxVolatilityTimeWeighting::update(const double t) const {
