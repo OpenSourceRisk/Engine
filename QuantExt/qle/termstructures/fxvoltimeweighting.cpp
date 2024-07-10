@@ -22,12 +22,17 @@
 
 namespace QuantExt {
 
+FxVolatilityTimeWeighting::FxVolatilityTimeWeighting(const FxVolatilityTimeWeighting& w)
+    : FxVolatilityTimeWeighting(w.asof(), w.dayCounter(), w.weekdayWeights(), w.tradingCenters(), w.events()) {}
+
 FxVolatilityTimeWeighting::FxVolatilityTimeWeighting(const Date& asof, const DayCounter& dayCounter,
                                                      const std::vector<double>& weekdayWeights,
                                                      const std::vector<std::pair<Calendar, double>>& tradingCenters,
                                                      const std::map<Date, double>& events)
     : asof_(asof), dayCounter_(dayCounter), weekdayWeights_(weekdayWeights), tradingCenters_(tradingCenters),
       events_(events) {
+    QL_REQUIRE(weekdayWeights_.empty() || weekdayWeights_.size() == 7,
+               "FxVolatilityTimeWeighting: weekdayWeights (" << weekdayWeights_.size() << ") should have size 7");
     QL_REQUIRE(asof_ >= Date::minDate() + 2, "FxVolatilityTimeWeighting: asof ("
                                                  << asof_ << ") must be >= min allowed date " << Date::minDate()
                                                  << " plus 2 calendar days. The asof date is probably wrong anyhow?");
@@ -112,12 +117,16 @@ void FxVolatilityTimeWeighting::update(const double t) const {
 }
 
 Real FxVolatilityTimeWeighting::operator()(const double t) const {
+    if (weekdayWeights_.empty())
+        return t;
     if (t > maxTime_)
         update(t);
     return w_->operator()(t);
 }
 
 Real FxVolatilityTimeWeighting::operator()(const Date& d) const {
+    QL_REQUIRE(!dayCounter_.empty(),
+               "FxVolatilityTimeWeighting::operator()(" << d << "): no day counter given for date to time conversion.");
     return operator()(dayCounter_.yearFraction(asof_, d));
 }
 

@@ -35,11 +35,21 @@ using namespace QuantLib;
 
 class FxVolatilityTimeWeighting {
 public:
-    FxVolatilityTimeWeighting(const Date& asof, const DayCounter& dayCounter, const std::vector<double>& weekdayWeights,
-                              const std::vector<std::pair<Calendar, double>>& tradingCenters,
-                              const std::map<Date, double>& events);
+    FxVolatilityTimeWeighting() {}
+    FxVolatilityTimeWeighting(const FxVolatilityTimeWeighting& w);
+    FxVolatilityTimeWeighting(const Date& asof, const DayCounter& dayCounter,
+                              const std::vector<double>& weekdayWeights = {},
+                              const std::vector<std::pair<Calendar, double>>& tradingCenters = {},
+                              const std::map<Date, double>& events = {});
+
     Real operator()(const double t) const;
     Real operator()(const Date& d) const;
+
+    const Date& asof() const { return asof_; }
+    const DayCounter& dayCounter() const { return dayCounter_; }
+    const std::vector<double>& weekdayWeights() const { return weekdayWeights_; }
+    const std::vector<std::pair<Calendar, double>>& tradingCenters() const { return tradingCenters_; }
+    const std::map<Date, double>& events() const { return events_; }
 
 private:
     void update(const double t) const;

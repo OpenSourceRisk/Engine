@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <qle/termstructures/fxvoltimeweighting.hpp>
+
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/option.hpp>
@@ -52,7 +54,8 @@ public:
         const Period& switchTenor = 2 * Years, const DeltaVolQuote::DeltaType ltdt = DeltaVolQuote::DeltaType::Fwd,
         const DeltaVolQuote::AtmType ltat = DeltaVolQuote::AtmType::AtmDeltaNeutral,
         const Option::Type riskReversalInFavorOf = Option::Call, const bool butterflyIsBrokerStyle = true,
-        const SmileInterpolation smileInterpolation = SmileInterpolation::Cubic);
+        const SmileInterpolation smileInterpolation = SmileInterpolation::Cubic,
+        const FxVolatilityTimeWeighting timeWeighting = FxVolatilityTimeWeighting());
 
     Date maxDate() const override { return Date::maxDate(); }
     Real minStrike() const override { return 0; }
@@ -103,6 +106,7 @@ private:
     Option::Type riskReversalInFavorOf_;
     bool butterflyIsBrokerStyle_;
     SmileInterpolation smileInterpolation_;
+    FxVolatilityTimeWeighting timeWeighting_;
 
     mutable Real switchTime_, settlDomDisc_, settlForDisc_, settlLag_;
     mutable std::vector<Real> expiryTimes_;

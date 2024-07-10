@@ -395,12 +395,14 @@ BlackVolatilitySurfaceBFRR::BlackVolatilitySurfaceBFRR(
     const Handle<YieldTermStructure>& domesticTS, const Handle<YieldTermStructure>& foreignTS,
     const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at, const Period& switchTenor,
     const DeltaVolQuote::DeltaType ltdt, const DeltaVolQuote::AtmType ltat, const Option::Type riskReversalInFavorOf,
-    const bool butterflyIsBrokerStyle, const SmileInterpolation smileInterpolation)
+    const bool butterflyIsBrokerStyle, const SmileInterpolation smileInterpolation,
+    const FxVolatilityTimeWeighting timeWeighting)
     : BlackVolatilityTermStructure(referenceDate, calendar, Following, dayCounter), dates_(dates), deltas_(deltas),
       bfQuotes_(bfQuotes), rrQuotes_(rrQuotes), atmQuotes_(atmQuotes), spot_(spot), spotDays_(spotDays),
       spotCalendar_(spotCalendar), domesticTS_(domesticTS), foreignTS_(foreignTS), dt_(dt), at_(at),
       switchTenor_(switchTenor), ltdt_(ltdt), ltat_(ltat), riskReversalInFavorOf_(riskReversalInFavorOf),
-      butterflyIsBrokerStyle_(butterflyIsBrokerStyle), smileInterpolation_(smileInterpolation) {
+      butterflyIsBrokerStyle_(butterflyIsBrokerStyle), smileInterpolation_(smileInterpolation),
+      timeWeighting_(timeWeighting) {
 
     // checks
 
@@ -674,7 +676,8 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
         }
     } else {
         // interpolate between two expiries
-        Real a = (t - expiryTimes_[index_m]) / (expiryTimes_[index_p] - expiryTimes_[index_m]);
+        Real a = (timeWeighting_(t) - timeWeighting_(expiryTimes_[index_m])) /
+                 (timeWeighting_(expiryTimes_[index_p]) - timeWeighting_(expiryTimes_[index_m]));
         atmVol_i = (1.0 - a) * atmVol_m + a * atmVol_p;
         QL_REQUIRE(atmVol_i > 0.0, "BlackVolatilitySurfaceBFRR: negative atm vol "
                                        << atmVol_i << " = " << (1.0 - a) << " * " << atmVol_m << " + " << a << " * "
