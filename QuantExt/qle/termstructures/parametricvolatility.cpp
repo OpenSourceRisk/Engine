@@ -47,8 +47,10 @@ Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType 
 
     // check if there is nothing to convert
 
-    if (inputMarketQuoteType == outputMarketQuoteType && close_enough(inputLognormalShift, outputLognormalShift) &&
-        inputOptionType == outputOptionType) {
+    if (inputMarketQuoteType == outputMarketQuoteType &&
+        (inputMarketQuoteType == MarketQuoteType::NormalVolatility ||
+         close_enough(inputLognormalShift, outputLognormalShift)) &&
+        (inputMarketQuoteType != MarketQuoteType::Price || inputOptionType == outputOptionType)) {
         return inputQuote;
     }
 
@@ -86,7 +88,9 @@ Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType 
         if (outputMarketQuoteType == MarketQuoteType::Price) {
             return forwardPremium * (discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry));
         } else if (outputMarketQuoteType == MarketQuoteType::NormalVolatility) {
-            return exactBachelierImpliedVolatility(outputOptionType, strike, forward, timeToExpiry, forwardPremium);
+            Real tmp = exactBachelierImpliedVolatility(outputOptionType, strike, forward, timeToExpiry, forwardPremium);
+            std::cout << "convert permium " << forwardPremium << " for strike " << strike << " forward " << forward << " to normal vol -> " << tmp << std::endl;
+            return tmp;
         } else if (outputMarketQuoteType == MarketQuoteType::ShiftedLognormalVolatility) {
             if (strike > -outputLognormalShift)
                 return blackFormulaImpliedStdDev(outputOptionType, strike, forward, forwardPremium, 1.0,

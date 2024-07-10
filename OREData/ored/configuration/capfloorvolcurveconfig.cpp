@@ -239,6 +239,22 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 
         // Populate required curve ids
         populateRequiredCurveIds();
+
+        // Output vol type
+        string outVolType = XMLUtils::getChildValue(node, "OutputVolatilityType", false);
+        if (outVolType.empty())
+            outputVolatilityType_ = VolatilityType::Normal; // for bwds compatibility before release 1.83.0
+        else if (outVolType == "Normal") {
+            outputVolatilityType_ = VolatilityType::Normal;
+        } else if (outVolType == "Lognormal") {
+            outputVolatilityType_ = VolatilityType::Lognormal;
+        } else if (outVolType == "ShiftedLognormal") {
+            outputVolatilityType_ = VolatilityType::ShiftedLognormal;
+        } else {
+            QL_FAIL("OutputVolatilityType '"
+                    << outVolType << "' not recognized. Expected one of 'Normal', 'Lognormal', 'ShiftedLognormal'.");
+        }
+
     }
 
     // Optional report config

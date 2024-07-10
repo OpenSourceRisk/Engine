@@ -82,6 +82,7 @@ public:
     //! \name Inspectors
     //@{
     const VolatilityType& volatilityType() const { return volatilityType_; }
+    const VolatilityType& outputVolatilityType() const { return outputVolatilityType_; }
     MarketDatum::QuoteType quoteType() const;
     bool extrapolate() const { return extrapolate_; }
     bool flatExtrapolation() const { return flatExtrapolation_; }
@@ -126,6 +127,7 @@ public:
 
 private:
     VolatilityType volatilityType_ = VolatilityType::Normal;
+    VolatilityType outputVolatilityType_ = VolatilityType::Normal;
     bool extrapolate_ = true;
     bool flatExtrapolation_ = true;
     bool includeAtm_ = false;
