@@ -10,32 +10,15 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      # Make adjustments to the environment
-    # - name: Setup Podman - needed for running tests
-    #   run: sudo apt update && sudo apt-get -y install podman
-
     # Get the repository's code
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         submodules: true
 
+    # Build the first stage, which we can use as the testing facility
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-
-    # Build the first stage, which we can use as the testing facility
-    # - name: Build the "build" stage
-    #   uses: redhat-actions/buildah-build@v2
-    #   with:
-    #     image: orebuild
-    #     tags: build
-    #     containerfiles: |
-    #       ./Docker/Containerfile
-    #     platforms: linux/amd64
-    #     context: .
-    #     layers: true
-    #     extra-args: |
-    #       --target=orebuild
     - name: Build the "build" stage
       uses: docker/build-push-action@v6
       with:
@@ -48,10 +31,9 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
     
+    # Run the tests in the result of the first stage build, saving the results to our filesystem
     - name: Create test-results folder
       run: mkdir -p test-results
-
-    # Run the tests in the result of the first stage build, saving the results to our filesystem
     - name: Get number of CPU cores
       uses: SimenB/github-actions-cpu-cores@v2
       id: cpu-cores
@@ -72,16 +54,11 @@ jobs:
         files: |
           test-results/**/*.xml
 
+          
+  release:
+    runs-on: ubuntu-24.04
+    steps:
     # Build the rest of the stages - the first stage should be cached
-    # - name: Build the "release" stage
-    #   uses: redhat-actions/buildah-build@v2
-    #   with:
-    #     image: ore
-    #     containerfiles: |
-    #       ./Docker/Containerfile
-    #     platforms: linux/amd64
-    #     context: .
-    #     layers: true
     - name: Build the "release" stage
       uses: docker/build-push-action@v6
       with:
