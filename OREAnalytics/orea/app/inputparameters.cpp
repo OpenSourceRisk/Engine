@@ -34,6 +34,25 @@
 namespace ore {
 namespace analytics {
 
+void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p) {
+    if (auto param_N = getenv("PORTFOLIO_SCALE_UP")) {
+        LOG("Scaling up portfolio using factor PORTFOLIO_SCALE_UP = " << param_N << " from environment variables.");
+        std::cerr << "\n\n*** Scaling up portfolio using factor PORTFOLIO_SCALE_UP = " << param_N
+                  << " from environment variables.\n\n"
+                  << std::endl;
+        std::string pfxml = p->toXMLString();
+        p = QuantLib::ext::make_shared<Portfolio>();
+        for (Size i = 0; i < atoi(param_N); ++i) {
+            auto tmp = QuantLib::ext::make_shared<Portfolio>();
+            tmp->fromXMLString(pfxml);
+            for (auto const& [id, t] : tmp->trades()) {
+                t->id() += "_" + std::to_string(i + 1);
+                p->add(t);
+            }
+        }
+    }
+}
+
 vector<string> getFileNames(const string& fileString, const std::filesystem::path& path) {
     vector<string> fileNames;
     boost::split(fileNames, fileString, boost::is_any_of(",;"), boost::token_compress_on);
@@ -99,10 +118,10 @@ void InputParameters::setCurveConfigs(const std::string& xml) {
     curveConfigs_.add(curveConfig);
 }
 
-void InputParameters::setCurveConfigsFromFile(const std::string& fileName) {
+void InputParameters::setCurveConfigsFromFile(const std::string& fileName, std::string id) {
     auto curveConfig = QuantLib::ext::make_shared<CurveConfigurations>();
     curveConfig->fromFile(fileName);
-    curveConfigs_.add(curveConfig);
+    curveConfigs_.add(curveConfig, id);
 }
 
 void InputParameters::setIborFallbackConfig(const std::string& xml) {
@@ -138,6 +157,7 @@ void InputParameters::setTodaysMarketParamsFromFile(const std::string& fileName)
 void InputParameters::setPortfolio(const std::string& xml) {
     portfolio_ = QuantLib::ext::make_shared<Portfolio>(buildFailedTrades_);
     portfolio_->fromXMLString(xml);
+    scaleUpPortfolio(portfolio_);
 }
 
 void InputParameters::setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath) {
@@ -147,6 +167,23 @@ void InputParameters::setPortfolioFromFile(const std::string& fileNameString, co
         LOG("Loading portfolio from file: " << file);
         portfolio_->fromFile(file);
     }
+    scaleUpPortfolio(portfolio_);
+}
+
+void InputParameters::setMporPortfolio(const std::string& xml) {
+    mporPortfolio_ = QuantLib::ext::make_shared<Portfolio>(buildFailedTrades_);
+    mporPortfolio_->fromXMLString(xml);
+    scaleUpPortfolio(mporPortfolio_);
+}
+
+void InputParameters::setMporPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath) {
+    vector<string> files = getFileNames(fileNameString, inputPath);
+    mporPortfolio_ = QuantLib::ext::make_shared<Portfolio>(buildFailedTrades_);
+    for (auto file : files) {
+        LOG("Loading mpor portfolio from file: " << file);
+        mporPortfolio_->fromFile(file);
+    }
+    scaleUpPortfolio(mporPortfolio_);
 }
 
 void InputParameters::setMarketConfigs(const std::map<std::string, std::string>& m) {
@@ -357,6 +394,28 @@ void InputParameters::setXvaSensiPricingEngineFromFile(const std::string& fileNa
     xvaSensiPricingEngine_->fromFile(fileName);
 }
 
+// XVA Explain
+
+void InputParameters::setXvaExplainSimMarketParams(const std::string& xml) {
+    xvaExplainSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    xvaExplainSimMarketParams_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaExplainSimMarketParamsFromFile(const std::string& fileName) {
+    xvaExplainSimMarketParams_ = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
+    xvaExplainSimMarketParams_->fromFile(fileName);
+}
+
+void InputParameters::setXvaExplainSensitivityScenarioData(const std::string& xml) {
+    xvaExplainSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaExplainSensitivityScenarioData_->fromXMLString(xml);
+}
+
+void InputParameters::setXvaExplainSensitivityScenarioDataFromFile(const std::string& fileName) {
+    xvaExplainSensitivityScenarioData_ = boost::make_shared<SensitivityScenarioData>();
+    xvaExplainSensitivityScenarioData_->fromFile(fileName);
+}
+
 void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
     amcPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     amcPricingEngine_->fromFile(fileName);
@@ -466,7 +525,11 @@ void InputParameters::setAmcTradeTypes(const std::string& s) {
     auto v = parseListOfValues(s);
     amcTradeTypes_ = std::set<std::string>(v.begin(), v.end());
 }
-    
+
+void InputParameters::setAmcPathDataInput(const std::string& s) { amcPathDataInput_ = s; }
+
+void InputParameters::setAmcPathDataOutput(const std::string& s) { amcPathDataOutput_ = s; }
+
 void InputParameters::setCvaSensiGrid(const std::string& s) {
     // parse to vector<Period>
     cvaSensiGrid_ = parseListOfValues<Period>(s, &parsePeriod);
@@ -814,7 +877,6 @@ QuantLib::ext::shared_ptr<SimmConfiguration> InputParameters::getSimmConfigurati
                "Internal error, load simm bucket mapper before retrieving simmconfiguration");
     return buildSimmConfiguration(simmVersion(), simmBucketMapper(), simmCalibrationData(), mporDays());
 }
-
 
 } // namespace analytics
 } // namespace ore

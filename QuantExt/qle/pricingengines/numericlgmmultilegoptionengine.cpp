@@ -209,7 +209,9 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
             info.maxEstimationTime_ = ts->timeFromReference(sub->fixingDates().front());
             info.calculator_ = [sub, T, payrec](const LgmVectorised& lgm, const Real t, const RandomVariable& x,
                                                 const Handle<YieldTermStructure>& discountCurve) {
-                return lgm.subPeriodsRate(sub->index(), sub->fixingDates(), t, x) *
+                return lgm.subPeriodsRate(sub->index(), sub->fixingDates(), t, x,
+                                          sub->accrualFractions(), sub->type(), sub->includeSpread(),
+                                          sub->spread(), sub->gearing(), sub->accrualPeriod()) *
                        RandomVariable(x.size(), sub->accrualPeriod() * sub->nominal() * payrec) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             };
@@ -253,7 +255,8 @@ RandomVariable getRebatePv(const LgmVectorised& lgm, const Real t, const RandomV
     if (exercise->type() == Exercise::American) {
         return RandomVariable(x.size(), exercise->rebate(0)) *
                lgm.reducedDiscountBond(
-                   t, lgm.parametrization()->termStructure()->timeFromReference(exercise->rebatePaymentDate(d)), x);
+                   t, lgm.parametrization()->termStructure()->timeFromReference(exercise->rebatePaymentDate(d)), x,
+                   discountCurve);
     } else {
         auto f = std::find(exercise->dates().begin(), exercise->dates().end(), d);
         QL_REQUIRE(f != exercise->dates().end(), "NumericLgmMultiLegOptionEngine: internal error: exercise date "
@@ -261,7 +264,8 @@ RandomVariable getRebatePv(const LgmVectorised& lgm, const Real t, const RandomV
         Size index = std::distance(exercise->dates().begin(), f);
         return RandomVariable(x.size(), exercise->rebate(index)) *
                lgm.reducedDiscountBond(
-                   t, lgm.parametrization()->termStructure()->timeFromReference(exercise->rebatePaymentDate(index)), x);
+                   t, lgm.parametrization()->termStructure()->timeFromReference(exercise->rebatePaymentDate(index)), x,
+                   discountCurve);
     }
 }
 

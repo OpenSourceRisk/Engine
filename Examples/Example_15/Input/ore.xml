@@ -97,7 +97,6 @@
       <Parameter name="active">N</Parameter>
       <Parameter name="sensitivityInputFile">../Output/sensitivity.csv</Parameter>
       <Parameter name="covarianceInputFile">covariance.csv</Parameter>
-      <Parameter name="salvageCovarianceMatrix">N</Parameter>
       <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
       <!-- Breakdown of risk classes and types -->
       <Parameter name="breakdown">Y</Parameter>

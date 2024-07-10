@@ -353,7 +353,7 @@
       <Parameter name="Samples">10000</Parameter>
       <Parameter name="Seed">42</Parameter>
       <Parameter name="Sobol">Y</Parameter>
-      <Parameter name="SalvageCorrelationMatrix">Y</Parameter>
+      <Parameter name="SalvagingAlgorithm">Spectral</Parameter>
     </EngineParameters>
   </Product>
   

@@ -353,7 +353,7 @@ SimmConfigurationCalibration::SimmConfigurationCalibration(const QuantLib::ext::
 is the historical volatility ratio for the interest-rate risk class (see page 8 section 11(d)
 of the ISDA-SIMM-v2.6 documentation).
 */
-QuantLib::Real SimmConfigurationCalibration::curvatureMarginScaling() const { return pow(hvr_ir_, -2.0); }
+QuantLib::Real SimmConfigurationCalibration::curvatureMarginScaling() const { return std::pow(hvr_ir_, -2.0); }
 
 void SimmConfigurationCalibration::addLabels2(const RiskType& rt, const string& label_2) {
     // Call the shared implementation

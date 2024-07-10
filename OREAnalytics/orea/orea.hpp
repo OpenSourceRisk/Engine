@@ -25,6 +25,7 @@
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
+#include <orea/app/analytics/parscenarioanalytic.hpp>
 #include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/pnlexplainanalytic.hpp>
@@ -35,6 +36,7 @@
 #include <orea/app/analytics/stresstestanalytic.hpp>
 #include <orea/app/analytics/varanalytic.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/xvaexplainanalytic.hpp>
 #include <orea/app/analytics/xvasensitivityanalytic.hpp>
 #include <orea/app/analytics/xvastressanalytic.hpp>
 #include <orea/app/analytics/zerotoparshiftanalytic.hpp>
@@ -48,6 +50,7 @@
 #include <orea/app/marketdataloader.hpp>
 #include <orea/app/oreapp.hpp>
 #include <orea/app/parameters.hpp>
+#include <orea/app/portfolioanalyser.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
@@ -71,6 +74,7 @@
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
+#include <orea/engine/dependencymarket.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>
@@ -138,6 +142,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
+#include <orea/scenario/zerotoparscenariogenerator.hpp>
 #include <orea/simm/crif.hpp>
 #include <orea/simm/crifconfiguration.hpp>
 #include <orea/simm/crifloader.hpp>

@@ -115,10 +115,11 @@ CapFloorVolCurve::CapFloorVolCurve(
             capletVol_->enableExtrapolation(config->extrapolate());
         }
 
-        // Build calibration info
         if (buildCalibrationInfo) {
             this->buildCalibrationInfo(asof, curveConfigs, config, iborIndex);
         }
+
+        logSABRParameters();
 
     } catch (exception& e) {
         QL_FAIL("cap/floor vol curve building failed :" << e.what());
@@ -509,8 +510,8 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
                     optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<BackwardFlat, Linear>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
                 }
-                capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<Linear>>(
-                    asof, transform(*optionletStripper), sabrModelVariant, Linear(), boost::none,
+                capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<BackwardFlat>>(
+                    asof, transform(*optionletStripper), sabrModelVariant, BackwardFlat(), boost::none,
                     initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
             } else {
                 QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
@@ -1658,6 +1659,10 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
         }
         TLOG("Strike Spread cube arbitrage analysis completed.");
     }
+    DLOG("Building calibration info cap floor vols completed.");
+}
+
+void CapFloorVolCurve::logSABRParameters() const {
 
     // output SABR calibration to log, if SABR was used
 
@@ -1692,8 +1697,6 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
         DLOG("isInterpolated (1 means calibration failed and point is interpolated):");
         DLOGGERSTREAM(p->isInterpolated());
     }
-
-    DLOG("Building calibration info cap floor vols completed.");
 }
 
 } // namespace data

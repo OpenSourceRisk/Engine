@@ -72,6 +72,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -1826,16 +1827,11 @@ void YieldCurve::addFutures(const QuantLib::ext::shared_ptr<YieldCurveSegment>& 
 
                 // Create a Overnight index future helper
                 Date startDate, endDate;
-                if (futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM) {
-                    Date refEnd = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
-                    Date refStart = refEnd - futureQuote->tenor();
-                    startDate = IMM::nextDate(refStart, false);
-                    endDate = IMM::nextDate(refEnd, false);
-                } else if (futureConvention->dateGenerationRule() ==
-                           FutureConvention::DateGenerationRule::FirstDayOfMonth) {
-                    endDate = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear()) + 1 * Months;
-                    startDate = endDate - futureQuote->tenor();
-                }
+                std::pair<Date, Date> startEndDate;
+                startEndDate = getOiFutureStartEndDate(futureQuote->expiryMonth(), futureQuote->expiryYear(),
+                                                    futureQuote->tenor(), futureConvention->dateGenerationRule());
+                startDate = startEndDate.first;
+                endDate = startEndDate.second;
 
                 if (endDate <= asofDate_) {
                     DLOG("Skipping the " << io::ordinal(i + 1) << " overnight index future instrument because its "
@@ -1865,8 +1861,7 @@ void YieldCurve::addFutures(const QuantLib::ext::shared_ptr<YieldCurveSegment>& 
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM,
                     "For MM Futures only 'IMM' is allowed as the date generation rule, check the future convention '"
                         << segment->conventionsID() << "'");
-                Date refDate(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
-                Date immDate = IMM::nextDate(refDate, false);
+                Date immDate = getMmFutureExpiryDate(futureQuote->expiryMonth(), futureQuote->expiryYear());
 
                 if (immDate < asofDate_) {
                     DLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its "

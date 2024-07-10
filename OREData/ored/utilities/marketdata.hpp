@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/market.hpp>
 #include <string>
 
@@ -95,6 +96,12 @@ QuantLib::ext::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex,
                                                   bool useXbsCurves = false);
 
 std::tuple<Natural, Calendar, BusinessDayConvention> getFxIndexConventions(const string& index);
+
+std::pair<Date, Date> getOiFutureStartEndDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear,
+                                              QuantLib::Period tenor,
+                                              FutureConvention::DateGenerationRule rule);
+
+Date getMmFutureExpiryDate(QuantLib::Month expiryMonth, QuantLib::Natural expiryYear);
 
 } // namespace data
 } // namespace ore

@@ -20,6 +20,7 @@ app/analytic.cpp
 app/analytics/analyticfactory.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
+app/analytics/parscenarioanalytic.cpp
 app/analytics/parstressconversionanalytic.cpp
 app/analytics/pnlanalytic.cpp
 app/analytics/pnlexplainanalytic.cpp
@@ -30,6 +31,7 @@ app/analytics/simmanalytic.cpp
 app/analytics/stresstestanalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
+app/analytics/xvaexplainanalytic.cpp
 app/analytics/xvasensitivityanalytic.cpp
 app/analytics/xvastressanalytic.cpp
 app/analytics/zerotoparshiftanalytic.cpp
@@ -43,6 +45,7 @@ app/marketdatainmemoryloader.cpp
 app/marketdataloader.cpp
 app/oreapp.cpp
 app/parameters.cpp
+app/portfolioanalyser.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
 app/xvarunner.cpp
@@ -59,6 +62,7 @@ engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
 engine/cptycalculator.cpp
 engine/decomposedsensitivitystream.cpp
+engine/dependencymarket.cpp
 engine/filteredsensitivitystream.cpp
 engine/historicalpnlgenerator.cpp
 engine/historicalsensipnlcalculator.cpp
@@ -118,6 +122,7 @@ scenario/shiftscenariogenerator.cpp
 scenario/simplescenario.cpp
 scenario/stressscenariodata.cpp
 scenario/stressscenariogenerator.cpp
+scenario/zerotoparscenariogenerator.cpp
 simm/crif.cpp
 simm/crifconfiguration.cpp
 simm/crifloader.cpp
@@ -181,6 +186,7 @@ app/analytic.hpp
 app/analytics/analyticfactory.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
+app/analytics/parscenarioanalytic.hpp
 app/analytics/parstressconversionanalytic.hpp
 app/analytics/pnlanalytic.hpp
 app/analytics/pnlexplainanalytic.hpp
@@ -191,6 +197,7 @@ app/analytics/simmanalytic.hpp
 app/analytics/stresstestanalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp
+app/analytics/xvaexplainanalytic.hpp
 app/analytics/xvasensitivityanalytic.hpp
 app/analytics/xvastressanalytic.hpp
 app/analytics/zerotoparshiftanalytic.hpp
@@ -204,6 +211,7 @@ app/marketdatainmemoryloader.hpp
 app/marketdataloader.hpp
 app/oreapp.hpp
 app/parameters.hpp
+app/portfolioanalyser.hpp
 app/reportwriter.hpp
 app/sensitivityrunner.hpp
 app/structuredanalyticserror.hpp
@@ -228,6 +236,7 @@ engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cptycalculator.hpp
 engine/decomposedsensitivitystream.hpp
+engine/dependencymarket.hpp
 engine/filteredsensitivitystream.hpp
 engine/historicalpnlgenerator.hpp
 engine/historicalsensipnlcalculator.hpp
@@ -295,6 +304,7 @@ scenario/simplescenario.hpp
 scenario/simplescenariofactory.hpp
 scenario/stressscenariodata.hpp
 scenario/stressscenariogenerator.hpp
+scenario/zerotoparscenariogenerator.hpp
 simm/crif.hpp
 simm/crifconfiguration.hpp
 simm/crifloader.hpp

@@ -300,5 +300,15 @@ void CompositeTrade::getTradesFromReferenceData(
 
 }
 
+bool CompositeTrade::isExpired(const Date& d) const {
+    for (auto const& t : trades_) {
+        // if any trade is not expired, the composite is not expired
+        if (!t->isExpired(d))
+            return false;
+    }
+    // if we get here all the trades are expired and so is the composite
+    return true;
+}
+
 } // namespace data
 } // namespace oreplus

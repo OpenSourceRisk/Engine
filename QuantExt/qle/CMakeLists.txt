@@ -367,6 +367,7 @@ termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
 termstructures/inflation/constantcpivolatility.cpp
 termstructures/inflation/cpivolatilitystructure.cpp
+termstructures/interpolateddiscountcurve2.cpp
 termstructures/oiccbasisswaphelper.cpp
 termstructures/oiscapfloorhelper.cpp
 termstructures/oisratehelper.cpp
@@ -583,6 +584,7 @@ instruments/bondoption.hpp
 instruments/bondrepo.hpp
 instruments/bondtotalreturnswap.hpp
 instruments/brlcdiswap.hpp
+instruments/cashposition.hpp
 instruments/cashflowresults.hpp
 instruments/cashsettledeuropeanoption.hpp
 instruments/cbo.hpp
@@ -786,6 +788,7 @@ pricingengines/blackcdsoptionengine.hpp
 pricingengines/blackindexcdsoptionengine.hpp
 pricingengines/blackmultilegoptionengine.hpp
 pricingengines/blackswaptionenginedeltagamma.hpp
+pricingengines/cashpositionengine.hpp
 pricingengines/cboengine.hpp
 pricingengines/cbomcengine.hpp
 pricingengines/commodityapoengine.hpp

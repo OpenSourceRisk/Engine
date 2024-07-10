@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2024 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -285,11 +286,12 @@ QuantLib::ext::shared_ptr<IborIndex> FraConvention::index() const { return parse
 OisConvention::OisConvention(const string& id, const string& spotLag, const string& index,
                              const string& fixedDayCounter, const string& fixedCalendar, const string& paymentLag,
                              const string& eom, const string& fixedFrequency, const string& fixedConvention,
-                             const string& fixedPaymentConvention, const string& rule, const string& paymentCal)
+                             const string& fixedPaymentConvention, const string& rule, const string& paymentCal,
+                             const string& rateCutoff)
     : Convention(id, Type::OIS), strSpotLag_(spotLag), strIndex_(index), strFixedDayCounter_(fixedDayCounter),
       strFixedCalendar_(fixedCalendar), strPaymentLag_(paymentLag), strEom_(eom), strFixedFrequency_(fixedFrequency),
       strFixedConvention_(fixedConvention), strFixedPaymentConvention_(fixedPaymentConvention), strRule_(rule),
-      strPaymentCal_(paymentCal) {
+      strPaymentCal_(paymentCal), strRateCutoff_(rateCutoff) {
     build();
 }
 
@@ -306,6 +308,8 @@ void OisConvention::build() {
         strFixedPaymentConvention_.empty() ? Following : parseBusinessDayConvention(strFixedPaymentConvention_);
     rule_ = strRule_.empty() ? DateGeneration::Backward : parseDateGenerationRule(strRule_);
     paymentCal_ = strPaymentCal_.empty() ? Calendar() : parseCalendar(strPaymentCal_);
+    rateCutoff_ = strRateCutoff_.empty() ? 0 : lexical_cast<Natural>(strRateCutoff_);
+
 }
 
 void OisConvention::fromXML(XMLNode* node) {
@@ -327,6 +331,7 @@ void OisConvention::fromXML(XMLNode* node) {
     strFixedPaymentConvention_ = XMLUtils::getChildValue(node, "FixedPaymentConvention", false);
     strRule_ = XMLUtils::getChildValue(node, "Rule", false);
     strPaymentCal_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
+    strRateCutoff_ = XMLUtils::getChildValue(node, "RateCutoff", false);
 
     build();
 }
@@ -354,6 +359,8 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "Rule", strRule_);
     if (!strPaymentCal_.empty())
         XMLUtils::addChild(doc, node, "PaymentCalendar", strPaymentCal_);
+    if (!strRateCutoff_.empty())
+        XMLUtils::addChild(doc, node, "RateCutoff", strRateCutoff_);
 
     return node;
 }

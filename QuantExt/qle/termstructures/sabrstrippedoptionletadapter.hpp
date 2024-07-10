@@ -99,6 +99,7 @@ public:
     //@{
     QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase() const;
     QuantLib::ext::shared_ptr<QuantExt::ParametricVolatility> parametricVolatility() const {
+        calculate();
         return parametricVolatility_;
     }
     //@}

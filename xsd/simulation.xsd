@@ -67,6 +67,16 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="salvagingAlgoType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="None"/>
+      <xs:enumeration value="Spectral"/>
+      <xs:enumeration value="Hypersphere"/>
+      <xs:enumeration value="LowerDiagonal"/>
+      <xs:enumeration value="Higham"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="sequenceType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="MersenneTwister"/>
@@ -119,6 +129,7 @@
       <xs:element type="xs:float" name="BootstrapTolerance" maxOccurs="1" />
       <xs:element type="measureType" name="Measure" minOccurs="0" maxOccurs="1" />
       <xs:element type="discretizationType" name="Discretization" minOccurs="0"/>
+      <xs:element type="salvagingAlgoType" name="SalvagingAlgorithm" minOccurs="0"/>
       <xs:element name="InterestRateModels" maxOccurs="1" >
         <xs:complexType>
           <xs:choice>
@@ -1463,6 +1474,33 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element type="xs:string" name="NumberOfFactors"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="curveAlgebra" name="CurveAlgebra" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="curveAlgebra">
+    <xs:sequence>
+      <xs:element type="curveAlgebraCurve" name="Curve" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="curveAlgebraCurve">
+    <xs:all>
+      <xs:element type="xs:string" name="Key"/>
+      <xs:element type="curveAlgebraCurveOperation" name="Operation"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="curveAlgebraCurveOperation">
+    <xs:all>
+      <xs:element type="xs:string" name="Type"/>
+      <xs:element name="Arguments" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="Argument" minOccurs="0" maxOccurs="unbounded"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
