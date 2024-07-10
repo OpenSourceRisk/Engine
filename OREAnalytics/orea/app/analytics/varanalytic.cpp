@@ -42,6 +42,7 @@ void VarAnalyticImpl::setUpConfigurations() {
 
 void VarAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                               const std::set<std::string>& runTypes) {
+    
     MEM_LOG;
     LOG("Running parametric VaR");
 

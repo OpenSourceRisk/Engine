@@ -26,6 +26,7 @@
 #include <ored/marketdata/inmemoryloader.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/utilities/timer.hpp>
 
 #include <orea/aggregation/collateralaccount.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
@@ -146,6 +147,13 @@ public:
     std::set<QuantLib::Date> marketDates() const;
 
     std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
+    
+    const Timer& getTimer();
+    void startTimer(const std::string& key) { timer_.start(key); }
+    boost::optional<boost::timer::cpu_timer> stopTimer(const std::string& key, const bool returnTimer = false) {
+        return timer_.stop(key, returnTimer);
+    }
+    void addTimer(const std::string& key, const Timer& timer) { timer_.addTimer(key, timer); }
 
 protected:
     std::unique_ptr<Impl> impl_;
@@ -169,6 +177,8 @@ protected:
     //! This would typically be used when the analytic is being called by another analytic
     //! and that parent/calling analytic will be writing its own set of intermediate reports
     bool writeIntermediateReports_ = true;
+
+    Timer timer_;
 };
 
 class Analytic::Impl {
