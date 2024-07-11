@@ -128,7 +128,7 @@ public:
     void setOutputTodaysMarketCalibration(bool b) { outputTodaysMarketCalibration_ = b; }
     void setCurvesMarketConfig(const std::string& s) { curvesMarketConfig_ = s; }
     void setCurvesGrid(const std::string& s) { curvesGrid_ = s; }
-    void setCalendarAdjusment(const std::string& xml);
+    void setCalendarAdjustment(const std::string& xml);
     void setCalendarAdjustmentFromFile(const std::string& fileName);
     void setCurrencyConfig(const std::string& xml);
     void setCurrencyConfigFromFile(const std::string& fileName);
