@@ -113,11 +113,10 @@ def compare_files(file_1, file_2, name, config: dict = None) -> bool:
     _, ext_2 = os.path.splitext(file_2)
 
     if comp_config is None:
-        #if ext_1 == '.csv':
-        #    raise ValueError('File, ' + file_1 + ', requires a comparison configuration but none given.')
-        #if ext_2 == '.csv':
-        #    raise ValueError('File, ' + file_2 + ', requires a comparison configuration but none given.')
-        if ext_1 == '.xml' and ext_2 == '.xml':
+        if ext_1 == '.csv' and ext_2 == '.csv':
+            # compare csv without a comparison config
+            result = compare_files_df(name, file_1, file_2)
+        elif ext_1 == '.xml' and ext_2 == '.xml':
             result = compare_files_xml(name, file_1, file_2)
         else:
             # If there was no configuration then fall back to a straight file comparison.
@@ -135,7 +134,7 @@ def compare_files(file_1, file_2, name, config: dict = None) -> bool:
     return result
 
 
-def compare_files_df(name, file_1, file_2, config):
+def compare_files_df(name, file_1, file_2, config=None):
     # Compare files using dataframes and a configuration.
 
     logger = logging.getLogger(__name__)
@@ -144,8 +143,10 @@ def compare_files_df(name, file_1, file_2, config):
 
     # We can force the type of specific columns here.
     col_types = None
-    if 'col_types' in config:
+    if config is not None and 'col_types' in config:
         col_types = config['col_types']
+    else:
+        col_types
 
     # Read the files in to dataframes
     df_1 = create_df(file_1, col_types)
@@ -167,13 +168,13 @@ def compare_files_df(name, file_1, file_2, config):
             df.rename(columns={first_col_name: first_col_name[1:]}, inplace=True)
 
     # If we are asked to rename columns, try to do it here.
-    if 'rename_cols' in config:
+    if config is not None and 'rename_cols' in config:
         logger.debug('Applying column renaming, %s, to both DataFrames', str(config['rename_cols']))
         for idx, df in enumerate([df_1, df_2]):
             df.rename(columns=config['rename_cols'], inplace=True)
 
     # Possibly drop some rows where specified column values are not above the threshold.
-    if 'drop_rows' in config:
+    if config is not None and 'drop_rows' in config:
 
         criteria_cols = config['drop_rows']['cols']
         threshold = config['drop_rows']['threshold']
@@ -188,12 +189,12 @@ def compare_files_df(name, file_1, file_2, config):
         df_2 = df_2[pd.DataFrame(abs(df_2[criteria_cols]) > threshold).all(axis=1)]
 
     # We must know the key(s) on which the comparison is to be performed.
-    if 'keys' not in config:
+    if config is not None and 'keys' not in config:
         logger.warning('The comparison configuration must contain a keys field.')
         return False
 
     # Get the keys and do some checks.
-    keys = config['keys']
+    keys = config['keys'] if config is not None else list(set(list(df_1.columns) + list(df_2.columns)))
 
     # Check keys are not empty
     if not keys or any([elem == '' for elem in keys]):
@@ -215,7 +216,7 @@ def compare_files_df(name, file_1, file_2, config):
 
     # We check for columns that would be used as keys but are not always necessary, 
     # e.g. netting set details, collect_regulations, post_regulations
-    if 'optional_keys' in config:
+    if config is not None and 'optional_keys' in config:
         optional_keys = config['optional_keys']
 
         # Check that optional keys are non-empty strings
@@ -246,7 +247,7 @@ def compare_files_df(name, file_1, file_2, config):
 
     # If we are told to use only certain columns, drop the others in each DataFrame. We first check that both
     # DataFrames have all of the explicitly listed columns to use.
-    if 'use_cols' in config:
+    if config is not None and 'use_cols' in config:
 
         use_cols = copy.deepcopy(config['use_cols'])
         logger.debug('We will only use the columns, %s, in the comparison.', str(use_cols))
@@ -299,7 +300,7 @@ def compare_files_df(name, file_1, file_2, config):
 
     # Certain groups of columns may need special tolerances for their comparison. Deal with them first.
     cols_compared = set()
-    if 'column_settings' in config:
+    if config is not None and 'column_settings' in config:
 
         for col_group_config in config['column_settings']:
 

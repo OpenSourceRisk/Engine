@@ -847,7 +847,7 @@ protected:
     bool csvCommentCharacter_ = true;
     char csvEolChar_ = '\n';
     char csvSeparator_ = ',';
-    char csvQuoteChar_ = '\0';
+    char csvQuoteChar_ = '"';
     char csvEscapeChar_ = '\\';
     std::string reportNaString_ = "#N/A";
     bool dryRun_ = false;

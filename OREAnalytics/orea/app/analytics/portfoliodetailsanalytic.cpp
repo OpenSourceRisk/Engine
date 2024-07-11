@@ -86,7 +86,7 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
     for (const auto& ui : underlyingIndices) {
         string indices;
         for (const auto& s : ui.second)
-            indices += indices.empty() ? s : "," + s;
+            indices += indices.empty() ? s : "|" + s;
         uiReport->next().add(to_string(ui.first)).add(indices);
     }
     uiReport->end();
