@@ -81,6 +81,7 @@ public:
         CommodityForward,
         CommodityFuture,
         FxOption,
+        FxOptionTimeWeighting,
 	BondYield
     };
 
@@ -1745,6 +1746,51 @@ private:
     string strLongTermDeltaType_;
     string strRiskReversalInFavorOf_;
     string strButterflyStyle_;
+};
+
+//! Container for storing FX Option Time Weighting scheme
+/*! Defines a time weighting scheme for fx vol interpolation
+\ingroup marketdata
+*/
+class FxOptionTimeWeightingConvention : public Convention {
+public:
+    struct TradingCenter {
+        std::string name;
+        std::string calendar;
+        double weight;
+    };
+    struct Event {
+        std::string description;
+        QuantLib::Date date;
+        double weight;
+    };
+
+    //! \name Constructors
+    //@{
+    FxOptionTimeWeightingConvention() {}
+    FxOptionTimeWeightingConvention(const string& id, const std::vector<double>& weekdayWeights,
+                                    const std::vector<TradingCenter>& tradingCenters = {},
+                                    const std::vector<Event>& events = {});
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const std::vector<double>& weekdayWeights() const { return weekdayWeights_; }
+    const std::vector<TradingCenter>& tradingCenters() const { return tradingCenters_; }
+    const std::vector<Event>& events() const { return events_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    virtual void build() override;
+    //@}
+
+private:
+    std::vector<double> weekdayWeights_;
+    std::vector<TradingCenter> tradingCenters_;
+    std::vector<Event> events_;
 };
 
 /*! Container for storing zero inflation index conventions
