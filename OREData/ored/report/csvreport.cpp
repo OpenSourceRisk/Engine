@@ -78,9 +78,13 @@ private:
     // Shared implementation to include the quote character.
     void fprintString(const string& s) const {
         bool quoted = s.size() > 1 && s[0] == quoteChar_ && s[s.size() - 1] == quoteChar_;
+        string sc = s;
+        boost::replace_all(sc, "\n", "\\n");
+        boost::replace_all(sc, "\t", "\\t");
+        boost::replace_all(sc, "\"", "\\\"");
         if (!quoted && quoteChar_ != '\0')
             fputc(quoteChar_, fp_);
-        fprintf(fp_, "%s", s.c_str());
+        fprintf(fp_, "%s", sc.c_str());
         if (!quoted && quoteChar_ != '\0')
             fputc(quoteChar_, fp_);
     }
@@ -93,7 +97,7 @@ private:
 
 CSVFileReport::CSVFileReport(const string& filename, const char sep, const bool commentCharacter, char quoteChar,
                              const string& nullString, bool lowerHeader, QuantLib::Size rolloverSize)
-    : filename_(filename), sep_(sep), commentCharacter_(commentCharacter), quoteChar_(quoteChar),
+    : filename_(filename), sep_(sep), commentCharacter_(commentCharacter),
       nullString_(nullString), lowerHeader_(lowerHeader), rolloverSize_(rolloverSize), i_(0), fp_(NULL) {
     baseFilename_ = filename_;
     open();

@@ -53,7 +53,7 @@ def create_df(file, col_types=None):
 
     if file_extension == '.csv' or file_extension == '.txt':
         logger.debug('Creating DataFrame from csv file %s.', file)
-        return pd.read_csv(file, dtype=col_types, quotechar='"', quoting=2)
+        return pd.read_csv(file, dtype=col_types, quotechar='"', quoting=2, escapechar='\\')
     else:
         logger.warning('File %s is neither a csv nor a json file so cannot create DataFrame.', file)
         return None
