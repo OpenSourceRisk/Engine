@@ -7,7 +7,9 @@ LABEL Description="Fedora-based multi-stage container definition for ORE"
 ARG build_jobs=
 ARG cmake_build_type=Release
 
+#
 # orebuild
+#
 COPY CMakeLists.txt /ore/CMakeLists.txt
 COPY QuantLib /ore/QuantLib
 COPY QuantExt /ore/QuantExt
@@ -72,13 +74,7 @@ FROM registry.fedoraproject.org/fedora-minimal:${fedora_tag} AS ore
 RUN microdnf install -y boost ocl-icd --nodocs && \
     microdnf clean all -y
 
-# # fetch built files from orebuild
-# COPY --from=orebuild /ore/build/App/ore /ore/bin/ore
-# COPY --from=orebuild /ore/build/OREAnalytics/*/*.so /ore/build/OREData/*/*.so /ore/build/QuantExt/*/*.so /ore/lib/
-# # complex lib symlink structure
-# COPY --from=orebuild /ore/build/QuantLib/*/*.so.1.31.1 /ore/lib/
-# RUN ln -s /ore/lib/libQuantLib.so.1.31.1 /ore/lib/libQuantLib.so.1 && ln -s /ore/lib/libQuantLib.so.1 /ore/lib/libQuantLib.so
-
+# fetch built files from orebuild - we use a bind mount to allow us to copy library symlinks
 RUN mkdir -p /ore/bin /ore/lib
 RUN --mount=type=bind,from=orebuild,source=/usr/local,target=/orebuild cp -a /orebuild/bin/ore /ore/bin && cp -a /orebuild/lib/lib*.so* /ore/lib
 

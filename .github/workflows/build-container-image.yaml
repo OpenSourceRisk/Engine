@@ -7,7 +7,7 @@ on:
       - "Containerfile-work"
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-24.04
     steps:
     # Get the repository's code
@@ -31,11 +31,6 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-
-  test:
-    needs: build
-    runs-on: ubuntu-24.04
-    steps:
     # Run the tests in the result of the first stage build, saving the results to our filesystem
     - name: Create test-results folder
       run: mkdir -p test-results
@@ -59,11 +54,6 @@ jobs:
         files: |
           test-results/**/*.xml
 
-
-  release:
-    needs: test
-    runs-on: ubuntu-24.04
-    steps:
     # Build the rest of the stages - the first stage should be cached
     - name: Build the "release" stage
       uses: docker/build-push-action@v6
