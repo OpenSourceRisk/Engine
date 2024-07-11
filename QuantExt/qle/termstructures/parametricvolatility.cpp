@@ -88,9 +88,7 @@ Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType 
         if (outputMarketQuoteType == MarketQuoteType::Price) {
             return forwardPremium * (discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry));
         } else if (outputMarketQuoteType == MarketQuoteType::NormalVolatility) {
-            Real tmp = exactBachelierImpliedVolatility(outputOptionType, strike, forward, timeToExpiry, forwardPremium);
-            std::cout << "convert permium " << forwardPremium << " for strike " << strike << " forward " << forward << " to normal vol -> " << tmp << std::endl;
-            return tmp;
+            return exactBachelierImpliedVolatility(outputOptionType, strike, forward, timeToExpiry, forwardPremium);
         } else if (outputMarketQuoteType == MarketQuoteType::ShiftedLognormalVolatility) {
             if (strike > -outputLognormalShift)
                 return blackFormulaImpliedStdDev(outputOptionType, strike, forward, forwardPremium, 1.0,
