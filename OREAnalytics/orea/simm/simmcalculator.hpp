@@ -234,6 +234,7 @@ private:
                                         const CrifRecord::ProductClass& pc,
                                         const std::vector<CrifRecord::RiskType>& riskTypes) const;
 
+    QuantLib::Real fxRate(const std::string& ccyPair) const;
 };
 
 } // namespace analytics

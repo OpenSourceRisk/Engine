@@ -60,6 +60,9 @@ public:
     void run(const std::vector<std::string>& marketData,
              const std::vector<std::string>& fixingData);
     
+    //! Run taking a MarketDataLoader
+    void run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader);
+
     QuantLib::ext::shared_ptr<InputParameters> getInputs() { return inputs_; }
 
     std::set<std::string> getAnalyticTypes();
