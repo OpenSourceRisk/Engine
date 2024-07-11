@@ -303,7 +303,6 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     std::vector<std::string> transatlanticBarrierLevel(underlyings_.size(), "0");
     std::string transatlanticBarrierRebate = "0.0";
     std::string transatlanticBarrierRebateCurrency = payCurrency_;
-    if (!transatlanticBarrier_[0].type().empty()) {
     if (transatlanticBarrier_.size() > 0 && !transatlanticBarrier_[0].type().empty()) {
         transatlanticBarrierType.clear();
         for (auto const& n : transatlanticBarrier_) {
@@ -639,7 +638,7 @@ XMLNode* GenericBarrierOption::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, barriers, "KikoType", kikoType_);
     XMLUtils::appendNode(dataNode, barriers);
 
-    if (!transatlanticBarrier_[0].type().empty()) {
+    if (transatlanticBarrier_.size() > 0 && !transatlanticBarrier_[0].type().empty()) {
         XMLNode* transatlanticBarrierNode = doc.allocNode("TransatlanticBarrier");
         for (auto& n : transatlanticBarrier_) {
             XMLUtils::appendNode(transatlanticBarrierNode, n.toXML(doc));
