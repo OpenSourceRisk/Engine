@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2024 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -285,11 +286,12 @@ QuantLib::ext::shared_ptr<IborIndex> FraConvention::index() const { return parse
 OisConvention::OisConvention(const string& id, const string& spotLag, const string& index,
                              const string& fixedDayCounter, const string& fixedCalendar, const string& paymentLag,
                              const string& eom, const string& fixedFrequency, const string& fixedConvention,
-                             const string& fixedPaymentConvention, const string& rule, const string& paymentCal)
+                             const string& fixedPaymentConvention, const string& rule, const string& paymentCal,
+                             const string& rateCutoff)
     : Convention(id, Type::OIS), strSpotLag_(spotLag), strIndex_(index), strFixedDayCounter_(fixedDayCounter),
       strFixedCalendar_(fixedCalendar), strPaymentLag_(paymentLag), strEom_(eom), strFixedFrequency_(fixedFrequency),
       strFixedConvention_(fixedConvention), strFixedPaymentConvention_(fixedPaymentConvention), strRule_(rule),
-      strPaymentCal_(paymentCal) {
+      strPaymentCal_(paymentCal), strRateCutoff_(rateCutoff) {
     build();
 }
 
@@ -306,6 +308,8 @@ void OisConvention::build() {
         strFixedPaymentConvention_.empty() ? Following : parseBusinessDayConvention(strFixedPaymentConvention_);
     rule_ = strRule_.empty() ? DateGeneration::Backward : parseDateGenerationRule(strRule_);
     paymentCal_ = strPaymentCal_.empty() ? Calendar() : parseCalendar(strPaymentCal_);
+    rateCutoff_ = strRateCutoff_.empty() ? 0 : lexical_cast<Natural>(strRateCutoff_);
+
 }
 
 void OisConvention::fromXML(XMLNode* node) {
@@ -327,6 +331,7 @@ void OisConvention::fromXML(XMLNode* node) {
     strFixedPaymentConvention_ = XMLUtils::getChildValue(node, "FixedPaymentConvention", false);
     strRule_ = XMLUtils::getChildValue(node, "Rule", false);
     strPaymentCal_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
+    strRateCutoff_ = XMLUtils::getChildValue(node, "RateCutoff", false);
 
     build();
 }
@@ -354,6 +359,8 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "Rule", strRule_);
     if (!strPaymentCal_.empty())
         XMLUtils::addChild(doc, node, "PaymentCalendar", strPaymentCal_);
+    if (!strRateCutoff_.empty())
+        XMLUtils::addChild(doc, node, "RateCutoff", strRateCutoff_);
 
     return node;
 }
@@ -474,11 +481,20 @@ IRSwapConvention::IRSwapConvention(const string& id, const string& fixedCalendar
 }
 
 void IRSwapConvention::build() {
-    fixedCalendar_ = parseCalendar(strFixedCalendar_);
     fixedFrequency_ = parseFrequency(strFixedFrequency_);
-    fixedConvention_ = parseBusinessDayConvention(strFixedConvention_);
     fixedDayCounter_ = parseDayCounter(strFixedDayCounter_);
-    parseIborIndex(strIndex_);
+    auto ind = parseIborIndex(strIndex_);
+
+    if (strFixedCalendar_.empty())
+        fixedCalendar_ = ind->fixingCalendar();
+    else
+        fixedCalendar_ = parseCalendar(strFixedCalendar_);
+
+    if (strFixedConvention_.empty())
+        fixedConvention_ = ind->businessDayConvention();
+    else
+        fixedConvention_ = parseBusinessDayConvention(strFixedConvention_);
+
     if (hasSubPeriod_) {
         floatFrequency_ = parseFrequency(strFloatFrequency_);
         subPeriodsCouponType_ = parseSubPeriodsCouponType(strSubPeriodsCouponType_);
@@ -495,13 +511,13 @@ void IRSwapConvention::fromXML(XMLNode* node) {
     id_ = XMLUtils::getChildValue(node, "Id", true);
 
     // Get string values from xml
-    strFixedCalendar_ = XMLUtils::getChildValue(node, "FixedCalendar", true);
     strFixedFrequency_ = XMLUtils::getChildValue(node, "FixedFrequency", true);
-    strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", true);
     strFixedDayCounter_ = XMLUtils::getChildValue(node, "FixedDayCounter", true);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
 
     // optional
+    strFixedCalendar_ = XMLUtils::getChildValue(node, "FixedCalendar", false);
+    strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", false);
     strFloatFrequency_ = XMLUtils::getChildValue(node, "FloatFrequency", false);
     strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
     hasSubPeriod_ = (strFloatFrequency_ != "");
@@ -2359,6 +2375,91 @@ XMLNode* FxOptionConvention::toXML(XMLDocument& doc) const {
     return node;
 }
 
+FxOptionTimeWeightingConvention::FxOptionTimeWeightingConvention(const string& id,
+                                                                 const std::vector<double>& weekdayWeights,
+                                                                 const std::vector<TradingCenter>& tradingCenters,
+                                                                 const std::vector<Event>& events)
+    : Convention(id, Type::FxOptionTimeWeighting), weekdayWeights_(weekdayWeights), tradingCenters_(tradingCenters),
+      events_(events) {
+    build();
+}
+
+void FxOptionTimeWeightingConvention::build() {}
+
+void FxOptionTimeWeightingConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "FxOptionTimeWeighting");
+    type_ = Type::FxOptionTimeWeighting;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    weekdayWeights_.resize(7);
+    auto w = XMLUtils::getChildNode(node, "WeekdayWeights");
+    QL_REQUIRE(w, "FxOptionTimeWeightingConventions::fromXML(): 'WeekDayWeights' node not found.");
+    weekdayWeights_[QuantLib::Weekday::Monday - 1] = parseReal(XMLUtils::getChildValue(w, "Monday"));
+    weekdayWeights_[QuantLib::Weekday::Tuesday - 1] = parseReal(XMLUtils::getChildValue(w, "Tuesday"));
+    weekdayWeights_[QuantLib::Weekday::Wednesday - 1] = parseReal(XMLUtils::getChildValue(w, "Wednesday"));
+    weekdayWeights_[QuantLib::Weekday::Thursday - 1] = parseReal(XMLUtils::getChildValue(w, "Thursday"));
+    weekdayWeights_[QuantLib::Weekday::Friday - 1] = parseReal(XMLUtils::getChildValue(w, "Friday"));
+    weekdayWeights_[QuantLib::Weekday::Saturday - 1] = parseReal(XMLUtils::getChildValue(w, "Saturday"));
+    weekdayWeights_[QuantLib::Weekday::Sunday - 1] = parseReal(XMLUtils::getChildValue(w, "Sunday"));
+
+    tradingCenters_.clear();
+    if (auto t = XMLUtils::getChildNode(node, "TradingCenters")) {
+        for (XMLNode* child = XMLUtils::getChildNode(t, "TradingCenter"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            tradingCenters_.push_back(TradingCenter());
+            tradingCenters_.back().name = XMLUtils::getChildValue(child, "Name");
+            tradingCenters_.back().calendar = XMLUtils::getChildValue(child, "Calendar");
+            tradingCenters_.back().weight = parseReal(XMLUtils::getChildValue(child, "Weight"));
+        }
+    }
+
+    events_.clear();
+    if (auto t = XMLUtils::getChildNode(node, "Events")) {
+        for (XMLNode* child = XMLUtils::getChildNode(t, "Event"); child; child = XMLUtils::getNextSibling(child)) {
+            events_.push_back(Event());
+            events_.back().description = XMLUtils::getChildValue(child, "Description");
+            events_.back().date = parseDate(XMLUtils::getChildValue(child, "Date"));
+            events_.back().weight = parseReal(XMLUtils::getChildValue(child, "Weight"));
+        }
+    }
+
+    build();
+}
+
+XMLNode* FxOptionTimeWeightingConvention::toXML(XMLDocument& doc) const {
+
+    XMLNode* node = doc.allocNode("FxOptionTimeWeighting");
+    XMLUtils::addChild(doc, node, "Id", id_);
+
+    auto w = XMLUtils::addChild(doc, node, "WeekDayWeights");
+    XMLUtils::addChild(doc, w, "Monday", weekdayWeights_[QuantLib::Weekday::Monday - 1]);
+    XMLUtils::addChild(doc, w, "Tuesday", weekdayWeights_[QuantLib::Weekday::Tuesday - 1]);
+    XMLUtils::addChild(doc, w, "Wednesday", weekdayWeights_[QuantLib::Weekday::Wednesday - 1]);
+    XMLUtils::addChild(doc, w, "Thursday", weekdayWeights_[QuantLib::Weekday::Thursday - 1]);
+    XMLUtils::addChild(doc, w, "Friday", weekdayWeights_[QuantLib::Weekday::Friday - 1]);
+    XMLUtils::addChild(doc, w, "Saturday", weekdayWeights_[QuantLib::Weekday::Saturday - 1]);
+    XMLUtils::addChild(doc, w, "Sunday", weekdayWeights_[QuantLib::Weekday::Sunday - 1]);
+
+    auto t = XMLUtils::addChild(doc, node, "TradingCenters");
+    for (auto const& d : tradingCenters_) {
+        auto tmp = XMLUtils::addChild(doc, t, "TradingCenter");
+        XMLUtils::addChild(doc, tmp, "Name", d.name);
+        XMLUtils::addChild(doc, tmp, "Calendar", d.calendar);
+        XMLUtils::addChild(doc, tmp, "Weight", d.weight);
+    }
+
+    auto e = XMLUtils::addChild(doc, node, "Events");
+    for (auto const& d : events_) {
+        auto tmp = XMLUtils::addChild(doc, e, "Event");
+        XMLUtils::addChild(doc, tmp, "Description", d.description);
+        XMLUtils::addChild(doc, tmp, "Date", ore::data::to_string(d.date));
+        XMLUtils::addChild(doc, tmp, "Weight", d.weight);
+    }
+
+    return node;
+}
+
 BondYieldConvention::BondYieldConvention()
   : compounding_(Compounded), compoundingName_("Compounded"),
     frequency_(Annual), frequencyName_("Annual"),
@@ -2642,6 +2743,8 @@ QuantLib::ext::shared_ptr<Convention> Conventions::get(const string& id) const {
         convention = QuantLib::ext::make_shared<CommodityFutureConvention>();
     } else if (type == "FxOption") {
         convention = QuantLib::ext::make_shared<FxOptionConvention>();
+    } else if (type == "FxOptionTimeWeighting") {
+        convention = QuantLib::ext::make_shared<FxOptionTimeWeightingConvention>();
     } else if (type == "ZeroInflationIndex") {
         convention = QuantLib::ext::make_shared<ZeroInflationIndexConvention>();
     } else if (type == "BondYield") {
@@ -2786,6 +2889,8 @@ std::ostream& operator<<(std::ostream& out, Convention::Type type) {
         return out << "CommodityFuture";
     case Convention::Type::FxOption:
         return out << "FxOption";
+    case Convention::Type::FxOptionTimeWeighting:
+        return out << "FxOptionTimeWeighting";        
     case Convention::Type::BondYield:
         return out << "BondYield";
     default:

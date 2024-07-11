@@ -235,8 +235,8 @@ std::set<string> CurveConfigurations::quotes(const QuantLib::ext::shared_ptr<Tod
             if (spec->baseType() == CurveSpec::CurveType::FX) {
                 QuantLib::ext::shared_ptr<FXSpotSpec> fxss = QuantLib::ext::dynamic_pointer_cast<FXSpotSpec>(spec);
                 QL_REQUIRE(fxss, "Expected an FXSpotSpec but did not get one");
-                string strQuote = "FX/RATE/" + fxss->unitCcy() + "/" + fxss->ccy();
-                quotes.insert(strQuote);
+                quotes.insert("FX/RATE/" + fxss->unitCcy() + "/" + fxss->ccy());
+                quotes.insert("FX/RATE/" + fxss->ccy() + "/" + fxss->unitCcy());
             }
         }
     }

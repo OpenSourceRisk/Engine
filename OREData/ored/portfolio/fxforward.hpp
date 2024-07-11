@@ -45,7 +45,7 @@ public:
           boughtAmount_(boughtAmount), soldCurrency_(soldCurrency), soldAmount_(soldAmount), settlement_(settlement),
           fxIndex_(fxIndex), payDate_(payDate) {}
 
-    bool isExpired(const Date& d) override;
+    bool isExpired(const Date& d) const override;
     
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
@@ -61,6 +61,7 @@ public:
     double soldAmount() const { return soldAmount_; }
     //! Settlement Type can be set to "Cash" for NDF. Default value is "Physical"
     const string& settlement() const { return settlement_; }
+    const string& fxIndex() const { return fxIndex_; }
     const string& paymentDate() const { return payDate_; }
     //@}
 

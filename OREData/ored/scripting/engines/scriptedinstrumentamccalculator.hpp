@@ -47,9 +47,9 @@ public:
     QuantLib::Currency npvCurrency() override;
 
     std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
-                                                       std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-                                                       const std::vector<bool>& isRelevantTime,
-                                                       const bool stickyCloseOutRun) override;
+                                                       const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+                                                       const std::vector<size_t>& relevantPathIndex,
+                                                       const std::vector<size_t>& relevantTimeIndex) override;
 
 private:
     const std::string npv_;

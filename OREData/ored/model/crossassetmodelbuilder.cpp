@@ -28,7 +28,7 @@
 #include <ored/model/inflation/infjydata.hpp>
 #include <ored/model/irhwmodeldata.hpp>
 #include <ored/model/lgmbuilder.hpp>
-#include <ored/model/structuredmodelerror.hpp>
+#include <ored/model/structuredmodelwarning.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
@@ -485,6 +485,8 @@ void CrossAssetModelBuilder::buildModel() const {
         }
         auto builder = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModelBuilder>(
             subBuilders_[CrossAssetModel::AssetType::COM][i]);
+        if (dontCalibrate_)
+            builder->freeze();
         csBuilder.push_back(builder);
         QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzParametrization> parametrization = builder->parametrization();
         comOptionBaskets_[i] = builder->optionBasket();
@@ -632,7 +634,7 @@ void CrossAssetModelBuilder::buildModel() const {
                                                    std::to_string(fxOptionCalibrationErrors_[i]) +
                                                    " exceeds tolerance " +
                                                    std::to_string(config_->bootstrapTolerance());
-                    StructuredModelErrorMessage("Failed to calibrate FX BS Model", exceptionMessage, id_).log();
+                    StructuredModelWarningMessage("Failed to calibrate FX BS Model", exceptionMessage, id_).log();
                     WLOGGERSTREAM("Calibration details:");
                     WLOGGERSTREAM(
                         getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]));
@@ -706,7 +708,7 @@ void CrossAssetModelBuilder::buildModel() const {
                                                    std::to_string(eqOptionCalibrationErrors_[i]) +
                                                    " exceeds tolerance " +
                                                    std::to_string(config_->bootstrapTolerance());
-                    StructuredModelErrorMessage("Failed to calibrate EQ BS Model", exceptionMessage, id_).log();
+                    StructuredModelWarningMessage("Failed to calibrate EQ BS Model", exceptionMessage, id_).log();
                     WLOGGERSTREAM("Calibration details:");
                     WLOGGERSTREAM(
                         getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]));
@@ -846,7 +848,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
             string exceptionMessage = "INF (DK) " + std::to_string(modelIdx) + " calibration error " +
                                       std::to_string(inflationCalibrationErrors_[modelIdx]) + " exceeds tolerance " +
                                       std::to_string(config_->bootstrapTolerance());
-            StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage, id_).log();
+            StructuredModelWarningMessage("Failed to calibrate INF DK Model", exceptionMessage, id_).log();
             WLOGGERSTREAM("Calibration details:");
             WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
             WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
@@ -870,6 +872,12 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     if ((!rrVol.calibrate() && !rrRev.calibrate() && !idxVol.calibrate()) ||
         (data.calibrationType() == CalibrationType::None)) {
         LOG("Calibration of JY inflation model for inflation index " << data.index() << " not requested.");
+        LOG("Real    rate vol times   : " << inflationParam->parameterTimes(0));
+        LOG("Real    rate vol values  : " << inflationParam->parameterValues(0));
+        LOG("Real    rate rev times   : " << inflationParam->parameterTimes(1));
+        LOG("Real    rate rev values  : " << inflationParam->parameterValues(1));
+        LOG("R/N conversion   times   : " << inflationParam->parameterTimes(2));
+        LOG("R/N conversion   values  : " << inflationParam->parameterValues(2));
         return;
     }
 
@@ -897,8 +905,9 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     // if we link the real rate params to the nominal rate params, we copy them over now (ir calibration is done at this point)
     if(data.linkRealRateParamsToNominalRateParams()) {
         Size irIdx = model_->ccyIndex(model_->infjy(modelIdx)->currency());
+        // the multiplier is applied to the raw model value which is squared to get the actual vol value
         copyModelParams(CrossAssetModel::AssetType::IR, 0, irIdx, Null<Size>(), CrossAssetModel::AssetType::INF, 0,
-                        modelIdx, Null<Size>(), data.linkedRealRateVolatilityScaling());
+                        modelIdx, Null<Size>(), std::sqrt(data.linkedRealRateVolatilityScaling()));
         copyModelParams(CrossAssetModel::AssetType::IR, 1, irIdx, Null<Size>(), CrossAssetModel::AssetType::INF, 1,
                         modelIdx, Null<Size>(), 1.0);
     }
@@ -979,7 +988,9 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
             resetModelParams(CrossAssetModel::AssetType::INF, 2, modelIdx, Null<Size>());
             resetModelParams(CrossAssetModel::AssetType::INF, rrIdx, modelIdx, Null<Size>());
 
-            while (inflationCalibrationErrors_[modelIdx] > cc.rmseTolerance() && numIts < cc.maxIterations()) {
+            while (inflationCalibrationErrors_[modelIdx] >
+                       std::min(cc.rmseTolerance(), config_->bootstrapTolerance()) &&
+                   numIts < cc.maxIterations()) {
                 model_->calibrateInfJyIterative(modelIdx, 2, idxBasket, *optimizationMethod_, endCriteria_);
                 model_->calibrateInfJyIterative(modelIdx, rrIdx, rrBasket, *optimizationMethod_, endCriteria_);
                 numIts++;
@@ -1008,16 +1019,16 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     DLOG("INF (JY) " << data.index() << " calibration errors:");
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(allHelpers);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
-        if (fabs(inflationCalibrationErrors_[modelIdx]) < cc.rmseTolerance()) {
+        if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
             TLOGGERSTREAM("Calibration details:");
             TLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
             TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             std::stringstream ss;
             ss << "INF (JY) " << modelIdx << " calibration error " << std::scientific
-               << inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << cc.rmseTolerance();
+               << inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << config_->bootstrapTolerance();
             string exceptionMessage = ss.str();
-            StructuredModelErrorMessage("Failed to calibrate INF JY Model", exceptionMessage, id_).log();
+            StructuredModelWarningMessage("Failed to calibrate INF JY Model", exceptionMessage, id_).log();
             WLOGGERSTREAM("Calibration details:");
             WLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
             WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);

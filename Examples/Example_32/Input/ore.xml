@@ -1,6 +1,6 @@
 <ORE>
   <Setup>
-    <Parameter name="asofDate">2020-10-05</Parameter>
+    <Parameter name="asofDate">2020-11-02</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>

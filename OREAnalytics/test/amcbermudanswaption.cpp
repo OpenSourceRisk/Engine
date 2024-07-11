@@ -445,7 +445,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
     sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     QuantLib::ext::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, market);
 
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(market, simMarketConfig);
@@ -655,7 +655,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
         void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override {}
     };
     AMCValuationEngine amcValEngine(model, sgd, QuantLib::ext::shared_ptr<Market>(), std::vector<string>(),
-                                    std::vector<string>(), 0);
+                                    std::vector<string>(), 0, std::string(), std::string());
     auto trade = QuantLib::ext::make_shared<TestTrade>("BermudanSwaption", testCase.inBaseCcy ? "EUR" : "USD",
                                                QuantLib::ext::make_shared<VanillaInstrument>(swaption));
     trade->id() = "DummyTradeId";

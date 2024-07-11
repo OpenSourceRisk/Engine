@@ -109,14 +109,12 @@ void EquitySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
         legData_[irLegIndex_].indexingFromAssetLeg() = false;
     }
 
+    // just underlying security; notionals and currencies are covered by the Swap class already
+    additionalData_["underlyingSecurityId"] = eqLegData->eqName();
+
     // 2 now build the swap using the updated leg data
 
     Swap::build(engineFactory);
-
-    notionalCurrency_ = legCurrencies_[equityLegIndex_];
-
-    // just underlying security, notionals and currencies are covered by the Swap class already
-    additionalData_["underlyingSecurityId"] = eqLegData->eqName();
 }
 
 void EquitySwap::setIsdaTaxonomyFields() {
@@ -132,14 +130,24 @@ void EquitySwap::setIsdaTaxonomyFields() {
 
 QuantLib::Real EquitySwap::notional() const {
     Date asof = Settings::instance().evaluationDate();
-    for (auto const& c : legs_[equityLegIndex_]) {
-        if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(c)) {
-            if (c->date() > asof)
-                return cpn->nominal();
+    if (legs_.size() > equityLegIndex_) {
+        for (auto const& c : legs_[equityLegIndex_]) {
+            if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::EquityCoupon>(c)) {
+                if (c->date() > asof)
+                    return cpn->nominal();
+            }
         }
     }
     ALOG("Error retrieving current notional for equity swap " << id() << " as of " << io::iso_date(asof));
     return Null<Real>();
+}
+
+std::string EquitySwap::notionalCurrency() const {
+    // try to get the notional ccy from the additional results of the instrument
+    if (legCurrencies_.size() > equityLegIndex_)
+        return legCurrencies_[equityLegIndex_];
+    else
+        return Swap::notionalCurrency();
 }
 
 } // namespace data

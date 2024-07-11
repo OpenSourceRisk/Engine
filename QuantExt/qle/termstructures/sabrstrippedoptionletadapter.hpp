@@ -50,7 +50,7 @@ public:
                                  const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
                                  const TimeInterpolator& ti = TimeInterpolator(),
                                  const boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none,
-                                 const std::vector<std::pair<Real, bool>>& initialModelParameters = {},
+                                 const std::vector<std::vector<std::pair<Real, bool>>>& initialModelParameters = {},
                                  const QuantLib::Size maxCalibrationAttempts = 10,
                                  const QuantLib::Real exitEarlyErrorThreshold = 0.005,
                                  const QuantLib::Real maxAcceptableError = 0.05);
@@ -62,7 +62,7 @@ public:
                                  const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
                                  const TimeInterpolator& ti = TimeInterpolator(),
                                  const boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none,
-                                 const std::vector<std::pair<Real, bool>>& initialModelParameters = {},
+                                 const std::vector<std::vector<std::pair<Real, bool>>>& initialModelParameters = {},
                                  const QuantLib::Size maxCalibrationAttempts = 10,
                                  const QuantLib::Real exitEarlyErrorThreshold = 0.005,
                                  const QuantLib::Real maxAcceptableError = 0.05);
@@ -99,6 +99,7 @@ public:
     //@{
     QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase> optionletBase() const;
     QuantLib::ext::shared_ptr<QuantExt::ParametricVolatility> parametricVolatility() const {
+        calculate();
         return parametricVolatility_;
     }
     //@}
@@ -120,7 +121,7 @@ private:
     //! SABR specific inputs
     QuantExt::SabrParametricVolatility::ModelVariant modelVariant_;
     boost::optional<QuantLib::VolatilityType> outputVolatilityType_;
-    std::vector<std::pair<Real, bool>> initialModelParameters_;
+    std::vector<std::vector<std::pair<Real, bool>>> initialModelParameters_;
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;
     QuantLib::Real maxAcceptableError_;
@@ -136,8 +137,9 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant, const TimeInterpolator& ti,
     const boost::optional<QuantLib::VolatilityType> outputVolatilityType,
-    const std::vector<std::pair<Real, bool>>& initialModelParameters, const QuantLib::Size maxCalibrationAttempts,
-    const QuantLib::Real exitEarlyErrorThreshold, const QuantLib::Real maxAcceptableError)
+    const std::vector<std::vector<std::pair<Real, bool>>>& initialModelParameters,
+    const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
+    const QuantLib::Real maxAcceptableError)
     : OptionletVolatilityStructure(sob->settlementDays(), sob->calendar(), sob->businessDayConvention(),
                                    sob->dayCounter()),
       optionletBase_(sob), ti_(ti), modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
@@ -151,8 +153,9 @@ SabrStrippedOptionletAdapter<TimeInterpolator>::SabrStrippedOptionletAdapter(
     const QuantLib::Date& referenceDate, const QuantLib::ext::shared_ptr<QuantLib::StrippedOptionletBase>& sob,
     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant, const TimeInterpolator& ti,
     const boost::optional<QuantLib::VolatilityType> outputVolatilityType,
-    const std::vector<std::pair<Real, bool>>& initialModelParameters, const QuantLib::Size maxCalibrationAttempts,
-    const QuantLib::Real exitEarlyErrorThreshold, const QuantLib::Real maxAcceptableError)
+    const std::vector<std::vector<std::pair<Real, bool>>>& initialModelParameters,
+    const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
+    const QuantLib::Real maxAcceptableError)
     : OptionletVolatilityStructure(referenceDate, sob->calendar(), sob->businessDayConvention(), sob->dayCounter()),
       optionletBase_(sob), ti_(ti), modelVariant_(modelVariant), outputVolatilityType_(outputVolatilityType),
       initialModelParameters_(initialModelParameters), maxCalibrationAttempts_(maxCalibrationAttempts),
@@ -203,6 +206,12 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
 
     std::vector<ParametricVolatility::MarketSmile> marketSmiles;
     std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters;
+    QL_REQUIRE(initialModelParameters_.empty() || initialModelParameters_.size() == 1 ||
+                   initialModelParameters_.size() == this->optionletBase()->optionletFixingTimes().size(),
+               "SabrStrippedOptionletAdapter: initial model parameters must be empty or their size ("
+                   << initialModelParameters_.size()
+                   << ") must be 1 or it must match the number of optionlet fixing times ("
+                   << this->optionletBase()->optionletFixingTimes().size() << ")");
     for (Size i = 0; i < this->optionletBase()->optionletFixingTimes().size(); ++i) {
         Real forward = atmInterpolation_->operator()(this->optionletBase()->optionletFixingTimes()[i]);
         marketSmiles.push_back(ParametricVolatility::MarketSmile{this->optionletBase()->optionletFixingTimes()[i],
@@ -212,9 +221,10 @@ inline void SabrStrippedOptionletAdapter<TimeInterpolator>::performCalculations(
                                                                  {},
                                                                  this->optionletBase()->optionletStrikes(i),
                                                                  this->optionletBase()->optionletVolatilities(i)});
-        if (!initialModelParameters_.empty())
+        if (!initialModelParameters_.empty()) {
             modelParameters[std::make_pair(this->optionletBase()->optionletFixingTimes()[i], Null<Real>())] =
-                initialModelParameters_;
+                initialModelParameters_.size() == 1 ? initialModelParameters_.front() : initialModelParameters_[i];
+        }
     }
 
     parametricVolatility_ = QuantLib::ext::make_shared<SabrParametricVolatility>(

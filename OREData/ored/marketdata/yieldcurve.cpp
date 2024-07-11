@@ -34,7 +34,6 @@
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/imm.hpp>
-#include <ql/version.hpp>
 
 #include <ql/indexes/ibor/all.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
@@ -73,18 +72,11 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
-
-// Temporary workaround to silence warnings on g++ until QL 1.17 is released with the
-// pull request: https://github.com/lballabio/QuantLib/pull/679
-#ifdef BOOST_MSVC
-#define ATTR_UNUSED
-#else
-#define ATTR_UNUSED __attribute__((unused))
-#endif
 
 namespace {
 /* Helper function to return the key required to look up the map in the YieldCurve ctor */
@@ -203,6 +195,12 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::Quadratic;
     else if (s == "LogQuadratic")
         return YieldCurve::InterpolationMethod::LogQuadratic;
+    else if (s == "LogNaturalCubic")
+        return YieldCurve::InterpolationMethod::LogNaturalCubic;
+    else if (s == "LogFinancialCubic")
+        return YieldCurve::InterpolationMethod::LogFinancialCubic;
+    else if (s == "LogCubicSpline")
+        return YieldCurve::InterpolationMethod::LogCubicSpline;
     else if (s == "Hermite")
         return YieldCurve::InterpolationMethod::Hermite;
     else if (s == "CubicSpline")
@@ -251,6 +249,12 @@ std::ostream& operator<<(std::ostream& out, const YieldCurve::InterpolationMetho
         return out << "Quadratic";
     else if (m == YieldCurve::InterpolationMethod::LogQuadratic)
         return out << "LogQuadratic";
+    else if (m == YieldCurve::InterpolationMethod::LogNaturalCubic)
+        return out << "LogNaturalCubic";
+    else if (m == YieldCurve::InterpolationMethod::LogFinancialCubic)
+        return out << "LogFinancialCubic";
+    else if (m == YieldCurve::InterpolationMethod::LogCubicSpline)
+        return out << "LogCubicSpline";
     else if (m == YieldCurve::InterpolationMethod::Hermite)
         return out << "Hermite";
     else if (m == YieldCurve::InterpolationMethod::CubicSpline)
@@ -399,121 +403,132 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
     Real minFactor = curveConfig_->bootstrapConfig().minFactor();
     Size dontThrowSteps = curveConfig_->bootstrapConfig().dontThrowSteps();
 
-    // See comment here: https://github.com/lballabio/QuantLib/pull/679#issuecomment-525208897
-    // to explain all the typedefs below. Waiting on a pull request from QuantLib here.
     QuantLib::ext::shared_ptr<YieldTermStructure> yieldts;
     switch (interpolationVariable_) {
     case InterpolationVariable::Zero:
         switch (interpolationMethod_) {
         case InterpolationMethod::Linear: {
             typedef PiecewiseYieldCurve<ZeroYield, Linear, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_, Linear(),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::LogLinear: {
             typedef PiecewiseYieldCurve<ZeroYield, LogLinear, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_, LogLinear(),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::NaturalCubic: {
             typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_, Cubic(CubicInterpolation::Kruger, true),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::FinancialCubic: {
             typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_,
                 Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
                       CubicInterpolation::FirstDerivative),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::ConvexMonotone: {
             typedef PiecewiseYieldCurve<ZeroYield, ConvexMonotone, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_, ConvexMonotone(),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::Hermite: {
              typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, Cubic(CubicInterpolation::Parabolic),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::CubicSpline: {
              typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_,
-                 Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative, 0.0),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
-                                                        minFactor, dontThrowSteps));
+                 Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
          } break;
          case InterpolationMethod::Quadratic: {
              typedef PiecewiseYieldCurve<ZeroYield, QuantExt::Quadratic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts =
                  QuantLib::ext::make_shared<my_curve>(
  					asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0, 1),
- 					QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+ 					my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
  														   minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::LogQuadratic: {
              typedef PiecewiseYieldCurve<ZeroYield, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0, 1),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogNaturalCubic: {
+             typedef PiecewiseYieldCurve<ZeroYield, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, LogCubic(CubicInterpolation::Kruger, true),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogFinancialCubic: {
+             typedef PiecewiseYieldCurve<ZeroYield, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::FirstDerivative),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogCubicSpline: {
+             typedef PiecewiseYieldCurve<ZeroYield, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                          CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
          } break;
          case InterpolationMethod::DefaultLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<ZeroYield, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, DefaultLogMixedLinearCubic(mixedInterpolationSize_),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::MonotonicLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<ZeroYield, MonotonicLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, MonotonicLogMixedLinearCubic(mixedInterpolationSize_),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::KrugerLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<ZeroYield, KrugerLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, KrugerLogMixedLinearCubic(mixedInterpolationSize_),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::LogMixedLinearCubicNaturalSpline: {
              typedef PiecewiseYieldCurve<ZeroYield, LogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_,
                  LogMixedLinearCubic(mixedInterpolationSize_, MixedInterpolation::ShareRanges,
                                      CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
                                      CubicInterpolation::SecondDerivative, 0.0),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
         default:
@@ -524,113 +539,125 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
         switch (interpolationMethod_) {
         case InterpolationMethod::Linear: {
             typedef PiecewiseYieldCurve<Discount, Linear, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_, Linear(),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::LogLinear: {
             typedef PiecewiseYieldCurve<Discount, LogLinear, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_, LogLinear(),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::NaturalCubic: {
             typedef PiecewiseYieldCurve<Discount, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_, Cubic(CubicInterpolation::Kruger, true),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::FinancialCubic: {
             typedef PiecewiseYieldCurve<Discount, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_,
                 Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
                       CubicInterpolation::FirstDerivative),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::ConvexMonotone: {
             typedef PiecewiseYieldCurve<Discount, ConvexMonotone, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_, ConvexMonotone(),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::Hermite: {
              typedef PiecewiseYieldCurve<Discount, Cubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, Cubic(CubicInterpolation::Parabolic),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::CubicSpline: {
              typedef PiecewiseYieldCurve<Discount, Cubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_,
                  Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
                        CubicInterpolation::SecondDerivative, 0.0),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::Quadratic: {
              typedef PiecewiseYieldCurve<Discount, QuantExt::Quadratic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0, 1),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::LogQuadratic: {
              typedef PiecewiseYieldCurve<Discount, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0, 1),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogNaturalCubic: {
+             typedef PiecewiseYieldCurve<Discount, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, LogCubic(CubicInterpolation::Kruger, true),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogFinancialCubic: {
+             typedef PiecewiseYieldCurve<Discount, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 QuantLib::LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                                 CubicInterpolation::FirstDerivative),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogCubicSpline: {
+             typedef PiecewiseYieldCurve<Discount,LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
          } break;
          case InterpolationMethod::DefaultLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<Discount, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, DefaultLogMixedLinearCubic(mixedInterpolationSize_),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::MonotonicLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<Discount, MonotonicLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, MonotonicLogMixedLinearCubic(mixedInterpolationSize_),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::KrugerLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<Discount, KrugerLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, KrugerLogMixedLinearCubic(mixedInterpolationSize_),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::LogMixedLinearCubicNaturalSpline: {
              typedef PiecewiseYieldCurve<Discount, LogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_,
                  LogMixedLinearCubic(mixedInterpolationSize_, MixedInterpolation::ShareRanges,
                                      CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
                                      CubicInterpolation::SecondDerivative, 0.0),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
         default:
@@ -641,113 +668,125 @@ YieldCurve::piecewisecurve(vector<QuantLib::ext::shared_ptr<RateHelper>> instrum
         switch (interpolationMethod_) {
         case InterpolationMethod::Linear: {
             typedef PiecewiseYieldCurve<ForwardRate, Linear, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_, Linear(),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::LogLinear: {
             typedef PiecewiseYieldCurve<ForwardRate, LogLinear, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_, LogLinear(),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::NaturalCubic: {
             typedef PiecewiseYieldCurve<ForwardRate, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_, Cubic(CubicInterpolation::Kruger, true),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::FinancialCubic: {
             typedef PiecewiseYieldCurve<ForwardRate, Cubic, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_,
                 Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
                       CubicInterpolation::FirstDerivative),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::ConvexMonotone: {
             typedef PiecewiseYieldCurve<ForwardRate, ConvexMonotone, QuantExt::IterativeBootstrap> my_curve;
-            ATTR_UNUSED typedef my_curve::traits_type dummy;
             yieldts = QuantLib::ext::make_shared<my_curve>(
                 asofDate_, instruments, zeroDayCounter_, ConvexMonotone(),
-                QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
         case InterpolationMethod::Hermite: {
              typedef PiecewiseYieldCurve<ForwardRate, Cubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, Cubic(CubicInterpolation::Parabolic),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::CubicSpline: {
              typedef PiecewiseYieldCurve<ForwardRate, Cubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_,
                  Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
                        CubicInterpolation::SecondDerivative, 0.0),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::Quadratic: {
              typedef PiecewiseYieldCurve<ForwardRate, QuantExt::Quadratic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0, 1),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::LogQuadratic: {
              typedef PiecewiseYieldCurve<ForwardRate, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0, 1),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogNaturalCubic: {
+             typedef PiecewiseYieldCurve<ForwardRate, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, LogCubic(CubicInterpolation::Kruger, true),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogFinancialCubic: {
+             typedef PiecewiseYieldCurve<ForwardRate, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::FirstDerivative),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogCubicSpline: {
+             typedef PiecewiseYieldCurve<ForwardRate, LogCubic, QuantExt::IterativeBootstrap> my_curve;
+             yieldts = QuantLib::ext::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0),
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor,
+                                          dontThrowSteps));
          } break;
          case InterpolationMethod::DefaultLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<ForwardRate, DefaultLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, DefaultLogMixedLinearCubic(mixedInterpolationSize_),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::MonotonicLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<ForwardRate, MonotonicLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, MonotonicLogMixedLinearCubic(mixedInterpolationSize_),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::KrugerLogMixedLinearCubic: {
              typedef PiecewiseYieldCurve<ForwardRate, KrugerLogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_, KrugerLogMixedLinearCubic(mixedInterpolationSize_),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
          case InterpolationMethod::LogMixedLinearCubicNaturalSpline: {
              typedef PiecewiseYieldCurve<ForwardRate, LogMixedLinearCubic, QuantExt::IterativeBootstrap> my_curve;
-             ATTR_UNUSED typedef my_curve::traits_type dummy;
              yieldts = QuantLib::ext::make_shared<my_curve>(
                  asofDate_, instruments, zeroDayCounter_,
                  LogMixedLinearCubic(mixedInterpolationSize_, MixedInterpolation::ShareRanges,
                                      CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
                                      CubicInterpolation::SecondDerivative, 0.0),
-                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                 my_curve::bootstrap_type(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                         minFactor, dontThrowSteps));
          } break;
         default:
@@ -1455,9 +1494,6 @@ void YieldCurve::buildFittedBondCurve() {
     }
 
     QuantLib::ext::shared_ptr<FittedBondDiscountCurve::FittingMethod> method;
-
-#if QL_HEX_VERSION >= 0x01190000 || defined(QL_ORE_PATCH)
-    // will work in QL 1.19
     switch (interpolationMethod_) {
     case InterpolationMethod::ExponentialSplines:
         method = QuantLib::ext::make_shared<ExponentialSplinesFitting>(true, Array(), ext::shared_ptr<OptimizationMethod>(),
@@ -1477,26 +1513,6 @@ void YieldCurve::buildFittedBondCurve() {
     default:
         QL_FAIL("unknown fitting method");
     }
-#else
-#pragma message("yieldcurve.cpp uses fitting method constructors without min/max cutoff time parameters")
-    switch (interpolationMethod_) {
-    case InterpolationMethod::ExponentialSplines:
-        method = QuantLib::ext::make_shared<ExponentialSplinesFitting>(true, Array(), ext::shared_ptr<OptimizationMethod>(),
-                                                               Array());
-        calInfo->fittingMethod = "ExponentialSplines";
-        break;
-    case InterpolationMethod::NelsonSiegel:
-        method = QuantLib::ext::make_shared<NelsonSiegelFitting>(Array(), ext::shared_ptr<OptimizationMethod>(), Array());
-        calInfo->fittingMethod = "NelsonSiegel";
-        break;
-    case InterpolationMethod::Svensson:
-        method = QuantLib::ext::make_shared<SvenssonFitting>(Array(), ext::shared_ptr<OptimizationMethod>(), Array());
-        calInfo->fittingMethod = "Svensson";
-        break;
-    default:
-        QL_FAIL("unknown fitting method");
-    }
-#endif
 
     QuantLib::ext::shared_ptr<FittedBondDiscountCurve> tmp, current;
     Real minError = QL_MAX_REAL;
@@ -1811,16 +1827,11 @@ void YieldCurve::addFutures(const QuantLib::ext::shared_ptr<YieldCurveSegment>& 
 
                 // Create a Overnight index future helper
                 Date startDate, endDate;
-                if (futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM) {
-                    Date refEnd = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
-                    Date refStart = refEnd - futureQuote->tenor();
-                    startDate = IMM::nextDate(refStart, false);
-                    endDate = IMM::nextDate(refEnd, false);
-                } else if (futureConvention->dateGenerationRule() ==
-                           FutureConvention::DateGenerationRule::FirstDayOfMonth) {
-                    endDate = Date(1, futureQuote->expiryMonth(), futureQuote->expiryYear()) + 1 * Months;
-                    startDate = endDate - futureQuote->tenor();
-                }
+                std::pair<Date, Date> startEndDate;
+                startEndDate = getOiFutureStartEndDate(futureQuote->expiryMonth(), futureQuote->expiryYear(),
+                                                    futureQuote->tenor(), futureConvention->dateGenerationRule());
+                startDate = startEndDate.first;
+                endDate = startEndDate.second;
 
                 if (endDate <= asofDate_) {
                     DLOG("Skipping the " << io::ordinal(i + 1) << " overnight index future instrument because its "
@@ -1850,8 +1861,7 @@ void YieldCurve::addFutures(const QuantLib::ext::shared_ptr<YieldCurveSegment>& 
                     futureConvention->dateGenerationRule() == FutureConvention::DateGenerationRule::IMM,
                     "For MM Futures only 'IMM' is allowed as the date generation rule, check the future convention '"
                         << segment->conventionsID() << "'");
-                Date refDate(1, futureQuote->expiryMonth(), futureQuote->expiryYear());
-                Date immDate = IMM::nextDate(refDate, false);
+                Date immDate = getMmFutureExpiryDate(futureQuote->expiryMonth(), futureQuote->expiryYear());
 
                 if (immDate < asofDate_) {
                     DLOG("Skipping the " << io::ordinal(i + 1) << " money market future instrument because its "

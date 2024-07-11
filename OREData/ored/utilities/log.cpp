@@ -491,6 +491,7 @@ LoggerStream::~LoggerStream() {
 void JSONMessage::log() const {
     if (!ore::data::Log::instance().checkExcludeFilters(msg()))
         emitLog();
+    logged_ = true;
 }
 
 string JSONMessage::jsonify(const boost::any& obj) {
@@ -617,6 +618,11 @@ void StructuredMessage::addSubFields(const map<string, string>& subFields) {
         }
 
     }
+}
+
+StructuredMessage::~StructuredMessage() {
+    if (!logged_)
+        log();
 }
 
 void EventMessage::emitLog() const {

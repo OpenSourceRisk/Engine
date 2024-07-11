@@ -28,6 +28,7 @@
 #include <ql/errors.hpp>
 #include <ql/tuple.hpp>
 #include <vector>
+#include <map>
 
 namespace ore {
 namespace data {
@@ -40,7 +41,8 @@ using std::vector;
  */
 class InMemoryReport : public Report {
 public:
-    InMemoryReport() : i_(0) {}
+    explicit InMemoryReport(Size bufferSize=0) : i_(0), bufferSize_(bufferSize) {}
+    ~InMemoryReport() override;
 
     Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override;
     Report& next() override;
@@ -50,7 +52,7 @@ public:
 
     // InMemoryInterface
     Size columns() const { return headers_.size(); }
-    Size rows() const { return columns() == 0 ? 0 : data_[0].size(); }
+    Size rows() const { return columns() == 0 ? 0 : files_.size() * bufferSize_ + data_[0].size(); }
     const string& header(Size i) const { return headers_[i]; }
     bool hasHeader(string h) const { return std::find(headers_.begin(), headers_.end(), h) != headers_.end(); }
     ReportType columnType(Size i) const { return columnTypes_[i]; }
@@ -59,13 +61,23 @@ public:
     const vector<ReportType>& data(Size i) const;
     void toFile(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
                 const string& nullString = "#N/A", bool lowerHeader = false);
-
+    void jumpToColumn(Size i) { i_ = i; }
+    
+    //! Return the position of a column, throws an exception if columnName not in report
+    size_t columnPosition(const std::string& columnName) {
+        auto it = headersMap_.find(columnName);
+        QL_REQUIRE(it != headersMap_.end(), "Invalid column name " << columnName);
+        return it->second;
+    }  
 private:
     Size i_;
+    Size bufferSize_;
     vector<string> headers_;
     vector<ReportType> columnTypes_;
     vector<Size> columnPrecision_;
     vector<vector<ReportType>> data_;
+    vector<string> files_;
+    std::map<std::string, size_t> headersMap_;
 };
 
 //! InMemoryReport with access to plain types instead of boost::variant<>, to facilitate language bindings

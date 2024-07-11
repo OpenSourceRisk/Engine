@@ -84,10 +84,11 @@ void XvaRunner::buildCamModel(const QuantLib::ext::shared_ptr<ore::data::Market>
     LOG("XvaRunner::buildCamModel() called");
 
     Settings::instance().evaluationDate() = asof_;
-    CrossAssetModelBuilder modelBuilder(
-        market, crossAssetModelData_, Market::defaultConfiguration, Market::defaultConfiguration,
-        Market::defaultConfiguration, Market::defaultConfiguration, Market::defaultConfiguration,
-        Market::defaultConfiguration, false, continueOnErr, "", SalvagingAlgorithm::None, "xva cam building");
+    CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
+                                        Market::defaultConfiguration, Market::defaultConfiguration,
+                                        Market::defaultConfiguration, Market::defaultConfiguration,
+                                        Market::defaultConfiguration, false, continueOnErr, "",
+                                        crossAssetModelData_->getSalvagingAlgorithm(), "xva cam building");
     model_ = *modelBuilder.model();
 }
 
@@ -133,7 +134,7 @@ void XvaRunner::buildSimMarket(const QuantLib::ext::shared_ptr<ore::data::Market
         projectedSsmData = simMarketData_;
     }
 
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
     QuantLib::ext::shared_ptr<ScenarioGenerator> sg =
         getProjectedScenarioGenerator(currencyFilter, market, projectedSsmData, sf, continueOnErr);
     simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(market, projectedSsmData, Market::defaultConfiguration,

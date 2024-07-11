@@ -75,7 +75,7 @@ public:
     // AMCModel interface implementation
     void injectPaths(const std::vector<QuantLib::Real>* pathTimes,
                      const std::vector<std::vector<QuantExt::RandomVariable>>* paths,
-                     const std::vector<bool>* isRelevantTime, const bool stickyCloseOutRun) override;
+                     const std::vector<size_t>* pathIndexes, const std::vector<size_t>* timeIndexes) override;
 
 private:
     // ModelImpl interface implementation
@@ -130,6 +130,7 @@ private:
     mutable std::vector<Size> infIndexPositionInCam_;     // maps inf index no to inf idx in cam
     mutable std::vector<Size> currencyPositionInCam_;     // maps currency no to position in cam parametrizations
     mutable std::vector<Size> eqIndexInCam_;      // maps index no to eq position in cam (or null, if not an eq index)
+    mutable std::vector<Size> comIndexInCam_;     // maps index no to com position in cam (or null, if not a com index)
     mutable bool conditionalExpectationUseIr_;    // derived from input conditionalExpectationModelState
     mutable bool conditionalExpectationUseInf_;   // derived from input conditionalExpectationModelState
     mutable bool conditionalExpectationUseAsset_; // derived from input conditionalExpectationModelState
@@ -140,8 +141,8 @@ private:
     // data when paths are injected via the AMCModel interface
     const std::vector<QuantLib::Real>* injectedPathTimes_ = nullptr;
     const std::vector<std::vector<QuantExt::RandomVariable>>* injectedPaths_ = nullptr;
-    const std::vector<bool>* injectedPathIsRelevantTime_;
-    bool injectedPathStickyCloseOutRun_;
+    const std::vector<size_t>* injectedPathRelevantPathIndexes_;
+    const std::vector<size_t>* injectedPathRelevantTimeIndexes_;
     Size overwriteModelSize_ = Null<Size>();
 
     // stored regression coefficients, state size (before possible transform) and (optional) coordinate transform

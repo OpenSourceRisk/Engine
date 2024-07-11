@@ -55,18 +55,18 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     check();
 
-    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
-    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CommoditySwap");
-    QuantLib::ext::shared_ptr<CommoditySwapEngineBuilder> engineBuilder =
-        QuantLib::ext::dynamic_pointer_cast<CommoditySwapEngineBuilder>(builder);
-    const string& configuration = builder->configuration(MarketContext::pricing);
-
     // Arbitrarily choose NPV currency from 1st leg. Already checked that both leg currencies equal.
     npvCurrency_ = legData_[0].currency();
 
     // Set notional to N/A for now, but reset this for a commodity fixed respectively floating leg below.
     notional_ = Null<Real>();
     notionalCurrency_ = legData_[0].currency();
+
+    const QuantLib::ext::shared_ptr<Market> market = engineFactory->market();
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("CommoditySwap");
+    QuantLib::ext::shared_ptr<CommoditySwapEngineBuilder> engineBuilder =
+        QuantLib::ext::dynamic_pointer_cast<CommoditySwapEngineBuilder>(builder);
+    const string& configuration = builder->configuration(MarketContext::pricing);
 
     // Build the commodity swap legs
     
@@ -76,7 +76,9 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // the map entry gets overwritten and the fixed leg with empty tag matches a random floating leg with empty tag. 
     // This is by design i.e. use tags if you want to link specific legs.
     map<string, Leg> floatingLegs;
-    for (const auto& legDatum : legData_) {
+    vector<Size> legsIdx;
+    for (Size t = 0; t < legData_.size(); t++) {
+        const auto& legDatum = legData_.at(t);
 
         const string& type = legDatum.legType();
         if (type == "CommodityFixed")
@@ -84,6 +86,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
         // Build the leg and add it to legs_
         buildLeg(engineFactory, legDatum, configuration);
+        legsIdx.push_back(t);
 
         // Only add to map if CommodityFloatingLegData
         if (auto cfld = QuantLib::ext::dynamic_pointer_cast<CommodityFloatingLegData>(legDatum.concreteLegData())) {
@@ -92,7 +95,8 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     }
 
     // Build any fixed legs skipped above.
-    for (const auto& legDatum : legData_) {
+    for (Size t = 0; t < legData_.size();  t++) {
+        const auto& legDatum = legData_.at(t);
 
         // take a copy, since we might modify the leg datum below
         auto effLegDatum = legDatum;
@@ -144,8 +148,21 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
         // Build the leg and add it to legs_
         buildLeg(engineFactory, effLegDatum, configuration);
+        legsIdx.push_back(t);
     }
 
+    // Reposition the leg-based data to match the original order according to legData_
+    vector<Leg> legsTmp;
+    vector<bool> legPayersTmp;
+    vector<string> legCurrenciesTmp;
+    for (const Size idx : legsIdx) {
+        legsTmp.push_back(legs_.at(idx));
+        legPayersTmp.push_back(legPayers_.at(idx));
+        legCurrenciesTmp.push_back(legCurrencies_.at(idx));
+    }
+    legs_ = legsTmp;
+    legPayers_ = legPayersTmp;
+    legCurrencies_ = legCurrenciesTmp;
 
     // Create the QuantLib swap instrument and assign pricing engine
     auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
@@ -180,6 +197,7 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                     additionalData_["quantity[" + label + "]"] = indexedFlow->quantity();
                     additionalData_["periodQuantity[" + label + "]"] = indexedFlow->periodQuantity();
                     additionalData_["gearing[" + label + "]"] = indexedFlow->gearing();
+                    additionalData_["spread[" + label + "]"] = indexedFlow->spread();
                     if (indexedFlow->isAveragingFrontMonthCashflow(asof)) {
                         std::vector<Real> priceVec;
                         std::vector<std::string> indexVec;
@@ -225,6 +243,7 @@ const std::map<std::string,boost::any>& CommoditySwap::additionalData() const {
                     additionalData_["quantity[" + label + "]"] = indexedAvgFlow->quantity();
                     additionalData_["periodQuantity[" + label + "]"] = indexedAvgFlow->periodQuantity();
                     additionalData_["gearing[" + label + "]"] = indexedAvgFlow->gearing();
+                    additionalData_["spread[" + label + "]"] = indexedAvgFlow->spread();
                     std::vector<Real> priceVec;
                     std::vector<std::string> indexVec;
                     std::vector<Date> indexExpiryVec, pricingDateVec;
@@ -275,7 +294,7 @@ QuantLib::Real CommoditySwap::notional() const {
     Real currentAmount = Null<Real>();
     // Get maximum current cash flow amount (quantity * strike, quantity * spot/forward price) across legs
     // include gearings and spreads; note that the swap is in a single currency.
-    for (Size i = 0; i < legData_.size(); ++i) {
+    for (Size i = 0; i < legs_.size(); ++i) {
         for (Size j = 0; j < legs_[i].size(); ++j) {
             QuantLib::ext::shared_ptr<CashFlow> flow = legs_[i][j];
             // pick flow with earliest payment date on this leg

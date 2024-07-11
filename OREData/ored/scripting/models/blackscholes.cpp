@@ -50,7 +50,7 @@ BlackScholes::BlackScholes(
     const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
     const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes)
     : BlackScholesBase(paths, currencies, curves, fxSpots, irIndices, infIndices, indices, indexCurrencies, model,
-                       correlations, mcParams, simulationDates, iborFallbackConfig),
+                       correlations, mcParams, simulationDates, iborFallbackConfig, SalvagingAlgorithm::None),
       calibration_(calibration), calibrationStrikes_(calibrationStrikes) {}
 
 void BlackScholes::performCalculations() const {

@@ -109,7 +109,7 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
   Antonov2015FreeBoundaryNormal, KienitzLawsonSwaynePde, FlochKennedy. If not given, defaults to Linear.
 \item ParametricSmileConfiguration: Optional. Applies to SABR only. If not given, default values are used. Allows to
   specify initial values for calibrated parameters, to exclude single parameters from calibration and to set calibration
-  parameters.
+  parameters. See Example 60 for how to configure single value and termstructures of sabr parameters for swaption and cap curve configs.
 \item Extrapolation: Specifies the extrapolation behaviour in all dimensions. \\ Allowable values: {\tt Linear, Flat,
   None}
 \item OutputVolatilityType: Optional, defaults to input volatility type and applies to SABR variants only. For
@@ -202,6 +202,7 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
     <DayCounter>A365</DayCounter>
     <Calendar>US,JP</Calendar>
     <Conventions>USD-JPY-FXOPTION</Conventions>
+    <SmileExtrapolation>UseInterpolator</SmileExtrapolation>
   </FXVolatility>
 \end{minted}
 \caption{FX option volatility configuration Smile / Delta}
@@ -216,6 +217,8 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
     <Dimension>Smile</Dimension> 
     <SmileType>BFRR</SmileType> 
     <SmileInterpolation>Cubic</SmileInterpolation>
+    <TimeInterpolation>V2T</TimeInterpolation>
+    <TimeWeighting>USD-JPY-FXOPTION-TIMEWEIGHTING</TimeWeighting>
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <SmileDelta>10,25</SmileDelta>
     <FXSpotID>FX/USD/JPY</FXSpotID>
@@ -289,6 +292,10 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
 \item {\tt Linear} or {\tt Cubic} in case of SmileType {\tt Delta} or {\tt BFRR} with default {\tt Linear} for SmileType
   Delta and {\tt Cubic} for SmileType BFRR and Absolute if left blank
 \end{itemize}
+\item TimeInterpolation [Optional]: specifies whether time interpolation is done in volatility ({\tt V}, default) or
+  variance ({\tt V2T})
+\item TimeWeighting [Optional]: if given, a time weighting scheme is applied for time interpolation, see the
+  documentation of FxOptionTimeWeighting convention for more details
 \item Expiries: Option expiries in period form. A wildcard may also be used. In the wildcard case, it will look for any
   matching quotes provided in the loader, and construct the curve from these. This is currently only supported for {\tt
     ATM} or {\tt Delta} or {\tt BFRR} or {\tt Absolute} curves.
@@ -313,6 +320,11 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
   data input. See \ref{sss:fx_option_conv} for more details.
 \item BaseVolatility1: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
 \item BaseVolatility2: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
+\item SmileExtrapolation [Optional]: Applicable only in case of SmileType Delta. Indicates the extrapolation in the 
+smile direction. The allowable values are None, UseInterpolator (or Linear) and Flat. Both Flat and None give flat 
+extrapolation. UseInterpolator indicates that the configured interpolation should be continued in the strike 
+direction in order to extrapolate. Default if not provided value is Flat.
+
 \end{itemize}
 
 \subsubsection{Equity Curve Structures}

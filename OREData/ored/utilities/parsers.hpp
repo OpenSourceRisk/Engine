@@ -611,5 +611,20 @@ QuantExt::SabrParametricVolatility::ModelVariant parseSabrParametricVolatilityMo
 */
 std::ostream& operator<<(std::ostream& out, QuantExt::SabrParametricVolatility::ModelVariant m);
 
+//! Write QuantLib::Exercise::Type
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, QuantLib::Exercise::Type type);
+
+//! Convert text to SalvagingAlgorithm type
+SalvagingAlgorithm::Type parseSalvagingAlgorithmType(const std::string& s);
+
+//! Write SalvagingAlgorithm type
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type);
+
 } // namespace data
 } // namespace ore

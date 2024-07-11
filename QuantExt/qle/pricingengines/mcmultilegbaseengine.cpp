@@ -610,7 +610,10 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                                  fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
             RandomVariable fixing = lgmVectorised_[indexCcyIdx].subPeriodsRate(sub->index(), sub->fixingDates(),
-                                                                               simTime, *states.at(0).at(0));
+                                                                               simTime, *states.at(0).at(0),
+                                                                               sub->accrualFractions(), sub->type(),
+                                                                               sub->includeSpread(), sub->spread(),
+                                                                               sub->gearing(), sub->accrualPeriod());
             RandomVariable fxFixing(n, 1.0);
             if (isFxLinked || isFxIndexed) {
                 if (fxLinkedFixedFxRate != Null<Real>()) {
@@ -888,11 +891,11 @@ void McMultiLegBaseEngine::calculate() const {
                 regressorModel_, regressionVarianceCutoff_);
             regModelContinuationValue[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef,
                                                      simulationTimes,
-                                                     exerciseValue > RandomVariable(calibrationSamples_, 0));
+                                                     exerciseValue > RandomVariable(calibrationSamples_, 0.0));
             auto continuationValue = regModelContinuationValue[counter].apply(model_->stateProcess()->initialValues(),
                                                                               pathValuesRef, simulationTimes);
             pathValueOption = conditionalResult(exerciseValue > continuationValue &&
-                                                    exerciseValue > RandomVariable(calibrationSamples_, 0),
+                                                    exerciseValue > RandomVariable(calibrationSamples_, 0.0),
                                                 pathValueUndExInto, pathValueOption);
             regModelOption[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
@@ -959,8 +962,8 @@ McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
       baseCurrency_(baseCurrency) {}
 
 std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalculator::simulatePath(
-    const std::vector<QuantLib::Real>& pathTimes, std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-    const std::vector<bool>& isRelevantTime, const bool stickyCloseOutRun) {
+    const std::vector<QuantLib::Real>& pathTimes, const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+    const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) {
 
     // check input path consistency
 
@@ -968,21 +971,31 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
     QL_REQUIRE(pathTimes.size() == paths.size(),
                "MultiLegBaseAmcCalculator::simulatePath(): inconsistent pathTimes size ("
                    << pathTimes.size() << ") and paths size (" << paths.size() << ") - internal error.");
+    QL_REQUIRE(relevantPathIndex.size() == xvaTimes_.size(),
+               "MultiLegBaseAmcCalculator::simulatePath() inconsistent relevant path indexes ("
+                   << relevantPathIndex.size() << ") and xvaTimes (" << xvaTimes_.size() << ") - internal error.");
+
+    bool stickyCloseOutRun = false;
+
+    for (size_t i = 0; i < relevantPathIndex.size(); ++i) {
+        if (relevantPathIndex[i] != relevantTimeIndex[i]) {
+            stickyCloseOutRun = true;
+            break;
+        }
+    }
 
     /* put together the relevant simulation times on the input paths and check for consistency with xva times,
        also put together the effective paths by filtering on relevant simulation times and model indices */
-
     std::vector<std::vector<const RandomVariable*>> effPaths(
         xvaTimes_.size(), std::vector<const RandomVariable*>(externalModelIndices_.size()));
 
     Size timeIndex = 0;
-    for (Size i = 0; i < pathTimes.size(); ++i) {
-        if (isRelevantTime[i]) {
-            for (Size j = 0; j < externalModelIndices_.size(); ++j) {
-                effPaths[timeIndex][j] = &paths[i][externalModelIndices_[j]];
-            }
-            ++timeIndex;
+    for (Size i = 0; i < relevantPathIndex.size(); ++i) {
+        size_t pathIdx = relevantPathIndex[i];
+        for (Size j = 0; j < externalModelIndices_.size(); ++j) {
+            effPaths[timeIndex][j] = &paths[pathIdx][externalModelIndices_[j]];
         }
+        ++timeIndex;
     }
 
     // init result vector
@@ -1245,6 +1258,7 @@ McMultiLegBaseEngine::RegressionModel::apply(const Array& initialState,
 
             if (t2 == pathTimes.end()) {
                 regressor[i] = paths[pathTimes.size() - 1][modelIdx];
+                ++i;
                 continue;
             }
 

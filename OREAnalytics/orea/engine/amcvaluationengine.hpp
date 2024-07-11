@@ -44,8 +44,10 @@ public:
     //! Constructor for single-threaded runs
     AMCValuationEngine(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& model,
                        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
-                       const QuantLib::ext::shared_ptr<ore::data::Market>& market, const std::vector<string>& aggDataIndices,
-                       const std::vector<string>& aggDataCurrencies, const Size aggDataNumberCreditStates);
+                       const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                       const std::vector<string>& aggDataIndices, const std::vector<string>& aggDataCurrencies,
+                       const Size aggDataNumberCreditStates, const std::string& amcPathDataInput,
+                       const std::string& amcPathDataOutput);
 
     //! Constructor for multi threaded runs
     AMCValuationEngine(
@@ -60,12 +62,15 @@ public:
         const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
         const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
         const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
+        const std::string& amcPathDataInput, const std::string& amcPathDataOutput,
         const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
         const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
         const bool handlePseudoCurrenciesTodaysMarket = true,
         const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
             const QuantLib::Date&, const std::set<std::string>&, const std::vector<QuantLib::Date>&,
-            const QuantLib::Size)>& cubeFactory = {});
+            const QuantLib::Size)>& cubeFactory = {},
+        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+        const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams = nullptr);
 
     //! build cube in single threaded run
     void buildCube(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
@@ -94,6 +99,7 @@ private:
     const std::vector<string> aggDataIndices_, aggDataCurrencies_;
     const Size aggDataNumberCreditStates_;
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
+    std::string amcPathDataInput_, amcPathDataOutput_;
 
     // inputs for single-threaded run
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;
@@ -120,7 +126,8 @@ private:
     std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                              const std::vector<QuantLib::Date>&, const QuantLib::Size)>
         cubeFactory_;
-
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
+    QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketParams_;
     // result cubes for multi-threaded run
     std::vector<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>> miniCubes_;
 };

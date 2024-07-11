@@ -147,6 +147,11 @@ void PNLCalculator::populatePNLs(const std::vector<Real>& allPnls,
     foPnls_.shrink_to_fit();
 }
 
+void PNLCalculator::populateTradePNLs(const TradePnLStore& allPnls, const TradePnLStore& foPnls) {
+    tradePnls_ = allPnls;
+    foTradePnls_ = foPnls;
+}
+
  const bool PNLCalculator::isInTimePeriod(Date startDate, Date endDate) {
     return pnlPeriod_.contains(startDate) && pnlPeriod_.contains(endDate);
 }
@@ -156,6 +161,7 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(QuantLib::ext::shared_ptr
 
     hisScenGen_->reset();
     QuantLib::ext::shared_ptr<Scenario> baseScenario = hisScenGen_->baseScenario();
+    bool isPar = baseScenario->isPar();
 
     set<string> keyNames;
     std::map<std::string, RiskFactorKey> keyNameMapping;
@@ -175,7 +181,7 @@ void HistoricalSensiPnlCalculator::populateSensiShifts(QuantLib::ext::shared_ptr
         Size j = 0;
         for (const auto& [_, key] : keyNameMapping) {
             try {
-                Real shift = shiftCalculator->shift(key, *baseScenario, *scenario);
+                Real shift = shiftCalculator->shift(key, *baseScenario, *scenario, isPar);
                 cube->set(shift, j, 0, i);
             } catch (const std::exception& e) {
                 StructuredAnalyticsErrorMessage(

@@ -28,7 +28,6 @@
 #include <ored/utilities/vectorutils.hpp>
 #include <ql/errors.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
-#include <ql/version.hpp>
 
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
@@ -53,26 +52,31 @@ using namespace boost::accumulators;
 namespace ore {
 namespace analytics {
 
-PostProcess::PostProcess(
-    const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
-    const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
-    const QuantLib::ext::shared_ptr<Market>& market, const std::string& configuration, const QuantLib::ext::shared_ptr<NPVCube>& cube,
-    const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData, const map<string, bool>& analytics,
-    const string& baseCurrency, const string& allocMethod, Real marginalAllocationLimit, Real quantile,
-    const string& calculationType, const string& dvaName, const string& fvaBorrowingCurve,
-    const string& fvaLendingCurve, const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
-    const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation, bool fullInitialCollateralisation,
-    vector<Period> cvaSensiGrid, Real cvaSensiShiftSize, Real kvaCapitalDiscountRate, Real kvaAlpha,
-    Real kvaRegAdjustment, Real kvaCapitalHurdle, Real kvaOurPdFloor, Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight,
-    Real kvaTheirCvaRiskWeight, const QuantLib::ext::shared_ptr<NPVCube>& cptyCube, const string& flipViewBorrowingCurvePostfix,
-    const string& flipViewLendingCurvePostfix,
-    const QuantLib::ext::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
-    const std::vector<Real>& creditMigrationDistributionGrid, const std::vector<Size>& creditMigrationTimeSteps,
-    const Matrix& creditStateCorrelationMatrix, bool withMporStickyDate, MporCashFlowMode mporCashFlowMode)
-: portfolio_(portfolio), nettingSetManager_(nettingSetManager), collateralBalances_(collateralBalances),
-      market_(market), configuration_(configuration),
-      cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency),
-      quantile_(quantile), calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
+PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                         const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
+                         const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
+                         const QuantLib::ext::shared_ptr<Market>& market, const std::string& configuration,
+                         const QuantLib::ext::shared_ptr<NPVCube>& cube,
+                         const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
+                         const map<string, bool>& analytics, const string& baseCurrency, const string& allocMethod,
+                         Real marginalAllocationLimit, Real quantile, const string& calculationType,
+                         const string& dvaName, const string& fvaBorrowingCurve, const string& fvaLendingCurve,
+                         const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
+                         const QuantLib::ext::shared_ptr<CubeInterpretation>& cubeInterpretation,
+                         bool fullInitialCollateralisation, vector<Period> cvaSensiGrid, Real cvaSensiShiftSize,
+                         Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle,
+                         Real kvaOurPdFloor, Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight,
+                         const QuantLib::ext::shared_ptr<NPVCube>& cptyCube,
+                         const string& flipViewBorrowingCurvePostfix, const string& flipViewLendingCurvePostfix,
+                         const QuantLib::ext::shared_ptr<CreditSimulationParameters>& creditSimulationParameters,
+                         const std::vector<Real>& creditMigrationDistributionGrid,
+                         const std::vector<Size>& creditMigrationTimeSteps, const Matrix& creditStateCorrelationMatrix,
+                         bool withMporStickyDate, MporCashFlowMode mporCashFlowMode,
+                         const bool firstMporCollateralAdjustment)
+    : portfolio_(portfolio), nettingSetManager_(nettingSetManager), collateralBalances_(collateralBalances),
+      market_(market), configuration_(configuration), cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData),
+      analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
+      calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
       fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimCalculator_(dimCalculator),
       cubeInterpretation_(cubeInterpretation), fullInitialCollateralisation_(fullInitialCollateralisation),
       cvaSpreadSensiGrid_(cvaSensiGrid), cvaSpreadSensiShiftSize_(cvaSensiShiftSize),
@@ -82,7 +86,8 @@ PostProcess::PostProcess(
       creditSimulationParameters_(creditSimulationParameters),
       creditMigrationDistributionGrid_(creditMigrationDistributionGrid),
       creditMigrationTimeSteps_(creditMigrationTimeSteps), creditStateCorrelationMatrix_(creditStateCorrelationMatrix),
-      withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode) {
+      withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode),
+      firstMporCollateralAdjustment_(firstMporCollateralAdjustment) {
 
     QL_REQUIRE(cubeInterpretation_ != nullptr, "PostProcess: cubeInterpretation is not given.");
 
@@ -201,7 +206,7 @@ PostProcess::PostProcess(
         dimCalculator_, fullInitialCollateralisation_,
         allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,
         exposureCalculator_->exposureCube(), ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
-        analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_);
+        analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_, firstMporCollateralAdjustment_);
     nettedExposureCalculator_->build();
 
     /********************************************************

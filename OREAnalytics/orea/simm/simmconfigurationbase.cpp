@@ -436,7 +436,7 @@ Real SimmConfigurationBase::sigmaMultiplier() const {
     /* We write sqrt(365.0 / (1.4 * mporDays_)) so that this function is
        sqrt(365.0 / 14) for MPOR = 10 as expected and sqrt(365.0 / 1.4) for MPOR = 1.
        This is described in SIMM:Technical Paper (Version 10), Section I.2 */
-    return sqrt(365.0 / (1.4 * mporDays_)) / boost::math::quantile(boost::math::normal(), 0.99);
+    return std::sqrt(365.0 / (1.4 * mporDays_)) / boost::math::quantile(boost::math::normal(), 0.99);
 }
 
 QuantLib::Real SimmConfigurationBase::correlationRiskClasses(const RiskClass& rc_1, const RiskClass& rc_2) const {

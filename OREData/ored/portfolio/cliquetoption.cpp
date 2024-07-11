@@ -113,7 +113,6 @@ void CliquetOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     }
 
     additionalData_["notional"] = cliquetNotional_;
-    additionalData_["currency"] = currency_;
 }
 
 void CliquetOption::fromXML(XMLNode* node) {

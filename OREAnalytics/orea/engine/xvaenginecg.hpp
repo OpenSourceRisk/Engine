@@ -37,6 +37,8 @@
 
 #include <ored/marketdata/todaysmarket.hpp>
 
+#include <qle/ad/external_randomvariable_ops.hpp>
+
 #include <ql/types.hpp>
 
 namespace ore {
@@ -60,14 +62,23 @@ public:
                 const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData = nullptr,
                 const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                 const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                const bool continueOnCalibrationError = true, const bool continueOnError = true,
-                const std::string& context = "xva engine cg");
+                const bool bumpCvaSensis = false, const bool useExternalComputeDevice = false,
+                const bool externalDeviceCompatibilityMode = false,
+                const bool useDoublePrecisionForExternalCalculation = false,
+                const std::string& externalComputeDevice = std::string(), const bool continueOnCalibrationError = true,
+                const bool continueOnError = true, const std::string& context = "xva engine cg");
+
+    QuantLib::ext::shared_ptr<InMemoryReport> exposureReport() { return epeReport_; }
+    QuantLib::ext::shared_ptr<InMemoryReport> sensiReport() { return sensiReport_; }
 
 private:
-    void populateRandomVariates(std::vector<RandomVariable>& values) const;
-    void populateConstants(std::vector<RandomVariable>& values) const;
-    void populateModelParameters(std::vector<RandomVariable>& values,
-                                 const std::vector<std::pair<std::size_t, double>>& modelParameters) const;
+    void populateRandomVariates(std::vector<RandomVariable>& values,
+                                std::vector<ExternalRandomVariable>& valuesExternal) const;
+    void populateConstants(std::vector<RandomVariable>& values,
+                           std::vector<ExternalRandomVariable>& valuesExternal) const;
+    void populateModelParameters(const std::vector<std::pair<std::size_t, double>>& modelParameters,
+                                 std::vector<RandomVariable>& values,
+                                 std::vector<ExternalRandomVariable>& valuesExternal) const;
 
     // input parameters
     Date asof_;
@@ -84,14 +95,14 @@ private:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensitivityData_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
+    bool bumpCvaSensis_;
+    bool useExternalComputeDevice_;
+    bool externalDeviceCompatibilityMode_;
+    bool useDoublePrecisionForExternalCalculation_;
+    std::string externalComputeDevice_;
     bool continueOnCalibrationError_;
     bool continueOnError_;
     std::string context_;
-
-    std::vector<bool> nodesA_;
-    std::vector<bool> nodesB_;
-    std::vector<bool> nodesC_;
-    std::vector<bool> nodesD_;
 
     // artefacts produced during run
     QuantLib::ext::shared_ptr<ore::data::Market> initMarket_;
@@ -103,6 +114,12 @@ private:
     std::vector<RandomVariableOpNodeRequirements> opNodeRequirements_;
     std::vector<RandomVariableOp> ops_;
     std::vector<RandomVariableGrad> grads_;
+    std::vector<ExternalRandomVariableOp> opsExternal_;
+    std::vector<ExternalRandomVariableGrad> gradsExternal_;
+    std::size_t externalCalculationId_;
+
+    // output reports
+    QuantLib::ext::shared_ptr<InMemoryReport> epeReport_, sensiReport_;
 };
 
 } // namespace analytics

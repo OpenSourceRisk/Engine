@@ -42,7 +42,7 @@ using namespace QuantLib;
 
 std::string to_string(const Date& date) {
     if (date == Date())
-        return "1900-01-01";
+        return "1901-01-01";
 
     char buf[11];
     int y = date.year();

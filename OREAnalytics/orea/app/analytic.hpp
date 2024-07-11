@@ -56,6 +56,9 @@ public:
     typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<AggregationScenarioData>>>
         analytic_mktcubes;
 
+    typedef std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<StressTestScenarioData>>>
+        analytic_stresstests;
+
     struct Configurations { 
         //! Booleans to determine if these configs are needed
         bool simulationConfigRequired = false;
@@ -128,6 +131,8 @@ public:
     analytic_reports& reports() { return reports_; };
     analytic_npvcubes& npvCubes() { return npvCubes_; };
     analytic_mktcubes& mktCubes() { return mktCubes_; };
+    analytic_stresstests& stressTests() { return stressTests_;}
+    
     const bool getWriteIntermediateReports() const { return writeIntermediateReports_; }
     void setWriteIntermediateReports(const bool flag) { writeIntermediateReports_ = flag; }
 
@@ -138,14 +143,9 @@ public:
         return impl_;
     }
 
-    bool hasDependentAnalytic(const std::string& key) {  return dependentAnalytics_.find(key) != dependentAnalytics_.end(); }
-    template <class T> QuantLib::ext::shared_ptr<T> dependentAnalytic(const std::string& key) const;
-    const std::map<std::string, QuantLib::ext::shared_ptr<Analytic>>& dependentAnalytics() const {
-        return dependentAnalytics_;
-    }
-    std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
+    std::set<QuantLib::Date> marketDates() const;
 
-    virtual std::set<QuantLib::Date> marketDates() const { return {inputs_->asof()}; }
+    std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
 
 protected:
     std::unique_ptr<Impl> impl_;
@@ -163,13 +163,12 @@ protected:
     analytic_reports reports_;
     analytic_npvcubes npvCubes_;
     analytic_mktcubes mktCubes_;
+    analytic_stresstests stressTests_;
 
     //! Whether to write intermediate reports or not.
     //! This would typically be used when the analytic is being called by another analytic
     //! and that parent/calling analytic will be writing its own set of intermediate reports
     bool writeIntermediateReports_ = true;
-
-    std::map<std::string, QuantLib::ext::shared_ptr<Analytic>> dependentAnalytics_;
 };
 
 class Analytic::Impl {
@@ -199,11 +198,27 @@ public:
         generateAdditionalResults_ = generateAdditionalResults;
     }
 
+    bool hasDependentAnalytic(const std::string& key) {
+        return dependentAnalytics_.find(key) != dependentAnalytics_.end();
+    }
+    template <class T> QuantLib::ext::shared_ptr<T> dependentAnalytic(const std::string& key) const;
+    QuantLib::ext::shared_ptr<Analytic> dependentAnalytic(const std::string& key) const;
+    const std::map<std::string, QuantLib::ext::shared_ptr<Analytic>>& dependentAnalytics() const {
+        return dependentAnalytics_;
+    }
+    void addDependentAnalytic(const std::string& key, const QuantLib::ext::shared_ptr<Analytic>& analytic) {
+        dependentAnalytics_[key] = analytic;
+    }
+    std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
+    virtual std::vector<QuantLib::Date> additionalMarketDates() const { return {}; }
+
 protected:
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
 
     //! label for logging purposes primarily
     std::string label_;
+
+    std::map<std::string, QuantLib::ext::shared_ptr<Analytic>> dependentAnalytics_;
 
 private:
     Analytic* analytic_;
@@ -233,7 +248,7 @@ public:
         : Analytic(std::make_unique<MarketDataAnalyticImpl>(inputs), {"MARKETDATA"}, inputs) {}
 };
 
-template <class T> inline QuantLib::ext::shared_ptr<T> Analytic::dependentAnalytic(const std::string& key) const {
+template <class T> inline QuantLib::ext::shared_ptr<T> Analytic::Impl::dependentAnalytic(const std::string& key) const {
     auto it = dependentAnalytics_.find(key);
     QL_REQUIRE(it != dependentAnalytics_.end(), "Could not find dependent Analytic " << key);
     QuantLib::ext::shared_ptr<T> analytic = QuantLib::ext::dynamic_pointer_cast<T>(it->second);

@@ -22,7 +22,6 @@
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/types.hpp>
-#include <ql/version.hpp>
 #include <qle/math/stabilisedglls.hpp>
 
 using namespace boost::unit_test_framework;
@@ -39,7 +38,7 @@ BOOST_AUTO_TEST_CASE(testBigInputNumbers) {
 
     std::vector<Real> x, y;
 
-    std::vector<boost::function1<Real, Real> > v;
+    std::vector<ext::function<Real(Real)> > v;
     v.push_back([](Real x) { return 1.0; });
     v.push_back([](Real x) { return x; });
     v.push_back([](Real x) { return x * x; });
@@ -1126,13 +1125,8 @@ BOOST_AUTO_TEST_CASE(test2DRegression) {
         y.push_back(yt);
     }
 
-#if QL_HEX_VERSION > 0x01150000
     std::vector<ext::function<Real(Array)> > basis =
         LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
-#else // QL 1.14 and below
-    std::vector<boost::function1<Real, Array> > basis =
-        LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
-#endif
 
     StabilisedGLLS m(x, y, basis, StabilisedGLLS::MaxAbs);
     StabilisedGLLS mb(x, y, basis, StabilisedGLLS::MeanStdDev);

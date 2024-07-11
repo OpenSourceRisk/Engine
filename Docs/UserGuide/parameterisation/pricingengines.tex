@@ -355,6 +355,8 @@ The parameters have the following meaning:
 \item VolatilityType: Hagan, HullWhite
 \item ShiftHorizon: Shift horizon for LGM model as fraction of deal maturity
 \item Tolerance: Error tolerance for calibration
+\item FloatSpreadMapping: mapping of float spreads in analytic swaption pricing for model calibration: proRata,
+  nextCoupon, simple, optional, defaults to proRata.
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
 \item SensitivityTemplate [optional]: the sensitivity template to use 
@@ -374,6 +376,7 @@ The parameters have the following meaning:
         <Parameter name="VolatilityType">Hagan</Parameter>
         <Parameter name="ShiftHorizon">0.5</Parameter>
         <Parameter name="Tolerance">0.20</Parameter>
+        <Parameter name="FloatSpreadMapping">proRata</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
     <EngineParameters>
@@ -4353,7 +4356,7 @@ The parameters have the following meaning:
 \item FXSource: specifies the FX index tag to be used to look up FX-Ibor or FX-CMS correlations
 \item Samples: number of MC samples to use
 \item Sobol: whether to use Sobol numbers for simulation
-\item SalvageCorrelationMatrix: whether to make the input correlation matrix positive definite
+\item SalvagingAlgorithm: whether to make the input correlation matrix positive definite. Compare \cite{corrSalv}.
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
@@ -4369,7 +4372,7 @@ The parameters have the following meaning:
         <Parameter name="Samples">10000</Parameter>
         <Parameter name="Seed">42</Parameter>
         <Parameter name="Sobol">Y</Parameter>
-        <Parameter name="SalvageCorrelationMatrix">Y</Parameter>
+        <Parameter name="SalvagingAlgorithm">Spectral</Parameter>
         <Parameter name="SensitivityTemplate">IR_MC</Parameter>
     </EngineParameters>
 </Product>

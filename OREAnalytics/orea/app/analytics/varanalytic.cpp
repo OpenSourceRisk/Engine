@@ -63,7 +63,7 @@ void VarAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     LOG("Call VaR calculation");
     CONSOLEW("Risk: VaR Calculation");
     ext::shared_ptr<MarketRiskReport::Reports> reports = ext::make_shared<MarketRiskReport::Reports>();
-    QuantLib::ext::shared_ptr<InMemoryReport> varReport = QuantLib::ext::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> varReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     reports->add(varReport);
 
     varReport_->calculate(reports);
@@ -97,8 +97,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
 
         varReport_ = ext::make_shared<ParametricVarReport>(
             inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(),
-            varParams,
-            inputs_->salvageCovariance(), boost::none, std::move(sensiArgs), inputs_->varBreakDown());
+            varParams, inputs_->getVarSalvagingAlgorithm(), boost::none, std::move(sensiArgs), inputs_->varBreakDown());
     } else {
         TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
                                       inputs_->mporDays(), inputs_->mporCalendar());
@@ -133,7 +132,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         varReport_ = ext::make_shared<ParametricVarReport>(
             inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), scenarios,
             inputs_->varQuantiles(), varParams,
-            inputs_->salvageCovariance(), benchmarkVarPeriod, std::move(sensiArgs), inputs_->varBreakDown());
+            inputs_->getVarSalvagingAlgorithm(), benchmarkVarPeriod, std::move(sensiArgs), inputs_->varBreakDown());
     }
 }
 
@@ -171,7 +170,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
     scenarios->baseScenario() = simMarket->baseScenario();
 
     std::unique_ptr<MarketRiskReport::FullRevalArgs> fullRevalArgs = std::make_unique<MarketRiskReport::FullRevalArgs>(
-        analytic()->portfolio(), simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+        simMarket, inputs_->pricingEngine(), inputs_->refDataManager(), *inputs_->iborFallbackConfig());
 
     varReport_ = ext::make_shared<HistoricalSimulationVarReport>(
         inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), 

@@ -24,6 +24,7 @@
 
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/referencedata.hpp>
 #include <ostream>
 
 namespace ore {
@@ -70,6 +71,8 @@ public:
     //! \name Inspectors
     //@{
     const string& currency() const { return currency_; }
+    const string& portfolioId() const { return portfolioId_; }
+    const bool& portfolioBasket() const { return portfolioBasket_; }
     const string& notionalCalculation() const { return notionalCalculation_; }
     const vector<QuantLib::ext::shared_ptr<Trade>>& trades() const { return trades_; }
     //@}
@@ -94,14 +97,21 @@ public:
     std::map<std::string, RequiredFixings::FixingDates> fixings(const QuantLib::Date& settlementDate) const override;
     std::map<AssetClass, std::set<std::string>> underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const override;;
     const std::map<std::string,boost::any>& additionalData() const override;
+    bool isExpired(const Date& d) const override;
     //@}
 
 private:
+
+    void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager);
+    void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum);
+
     string currency_;
     Real notionalOverride_;
     string notionalCalculation_;
     vector<QuantLib::ext::shared_ptr<Trade>> trades_;
     vector<Handle<Quote>> fxRates_, fxRatesNotional_;
+    string portfolioId_;
+    bool portfolioBasket_;
 };
 
 } // namespace data

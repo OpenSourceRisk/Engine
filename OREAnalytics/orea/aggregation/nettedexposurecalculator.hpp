@@ -44,23 +44,31 @@ using namespace std;
 */
 class NettedExposureCalculator {
 public:
-    NettedExposureCalculator(
-        const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<Market>& market,
-        const QuantLib::ext::shared_ptr<NPVCube>& cube, const string& baseCurrency, const string& configuration,
-        const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
-        const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
-        const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
-        const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
-        const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
-        const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow,
-        const map<string, vector<vector<Real>>>& nettingSetMporNegativeFlow,
-        const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
-        const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation, const bool applyInitialMargin,
-        const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator, const bool fullInitialCollateralisation,
-        // Marginal Allocation
-        const bool marginalAllocation, const Real marginalAllocationLimit,
-        const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex, const Size allocatedEneIndex,
-        const bool flipViewXVA, const bool withMporStickyDate, const MporCashFlowMode mporCashFlowMode);
+    NettedExposureCalculator(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+                             const QuantLib::ext::shared_ptr<Market>& market,
+                             const QuantLib::ext::shared_ptr<NPVCube>& cube, const string& baseCurrency,
+                             const string& configuration, const Real quantile,
+                             const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
+                             const QuantLib::ext::shared_ptr<NettingSetManager>& nettingSetManager,
+                             const QuantLib::ext::shared_ptr<CollateralBalances>& collateralBalances,
+                             const map<string, vector<vector<Real>>>& nettingSetDefaultValue,
+                             const map<string, vector<vector<Real>>>& nettingSetCloseOutValue,
+                             const map<string, vector<vector<Real>>>& nettingSetMporPositiveFlow,
+                             const map<string, vector<vector<Real>>>& nettingSetMporNegativeFlow,
+                             const QuantLib::ext::shared_ptr<AggregationScenarioData>& scenarioData,
+                             const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation,
+                             const bool applyInitialMargin,
+                             const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator>& dimCalculator,
+                             const bool fullInitialCollateralisation,
+                             // Marginal Allocation
+                             const bool marginalAllocation, const Real marginalAllocationLimit,
+                             const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex,
+                             const Size allocatedEneIndex, const bool flipViewXVA, const bool withMporStickyDate,
+                             const MporCashFlowMode mporCashFlowMode,
+                             //  in case of a positive mtm keep the undercollateralization (difference between initial
+                             //  vm margin and mtm)  constant during first mpor period,
+                             //  analog for overcollaterializations in case of negative mtm.
+                             const bool firstMporCollateralAdjustment);
 
     virtual ~NettedExposureCalculator() {}
     const QuantLib::ext::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
@@ -145,6 +153,7 @@ protected:
 
     bool withMporStickyDate_;
     MporCashFlowMode mporCashFlowMode_;
+    bool firstMporCollateralAdjustment_ = false;
 };
 
 } // namespace analytics

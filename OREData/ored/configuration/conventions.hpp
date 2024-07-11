@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2024 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -80,6 +81,7 @@ public:
         CommodityForward,
         CommodityFuture,
         FxOption,
+        FxOptionTimeWeighting,
 	BondYield
     };
 
@@ -381,7 +383,8 @@ public:
                   const string& fixedCalendar, const string& paymentLag = "", const string& eom = "",
                   const string& fixedFrequency = "", const string& fixedConvention = "",
                   const string& fixedPaymentConvention = "", const string& rule = "",
-                  const std::string& paymentCalendar = "");
+                  const std::string& paymentCalendar = "",
+                  const std::string& rateCutoff = "");
     //@}
 
     //! \name Inspectors
@@ -399,6 +402,7 @@ public:
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
     DateGeneration::Rule rule() const { return rule_; }
     QuantLib::Calendar paymentCalendar() const { return paymentCal_; }
+    Natural rateCutoff() const { return rateCutoff_; }
     //@}
 
     //! \name Serialisation
@@ -419,6 +423,7 @@ private:
     BusinessDayConvention fixedPaymentConvention_;
     DateGeneration::Rule rule_;
     QuantLib::Calendar paymentCal_;
+    Natural rateCutoff_;
 
     // Strings to store the inputs
     string strSpotLag_;
@@ -432,6 +437,7 @@ private:
     string strFixedPaymentConvention_;
     string strRule_;
     std::string strPaymentCal_;
+    string strRateCutoff_;
 };
 
 //! Container for storing Ibor Index conventions
@@ -1740,6 +1746,51 @@ private:
     string strLongTermDeltaType_;
     string strRiskReversalInFavorOf_;
     string strButterflyStyle_;
+};
+
+//! Container for storing FX Option Time Weighting scheme
+/*! Defines a time weighting scheme for fx vol interpolation
+\ingroup marketdata
+*/
+class FxOptionTimeWeightingConvention : public Convention {
+public:
+    struct TradingCenter {
+        std::string name;
+        std::string calendar;
+        double weight;
+    };
+    struct Event {
+        std::string description;
+        QuantLib::Date date;
+        double weight;
+    };
+
+    //! \name Constructors
+    //@{
+    FxOptionTimeWeightingConvention() {}
+    FxOptionTimeWeightingConvention(const string& id, const std::vector<double>& weekdayWeights,
+                                    const std::vector<TradingCenter>& tradingCenters = {},
+                                    const std::vector<Event>& events = {});
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const std::vector<double>& weekdayWeights() const { return weekdayWeights_; }
+    const std::vector<TradingCenter>& tradingCenters() const { return tradingCenters_; }
+    const std::vector<Event>& events() const { return events_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    virtual void build() override;
+    //@}
+
+private:
+    std::vector<double> weekdayWeights_;
+    std::vector<TradingCenter> tradingCenters_;
+    std::vector<Event> events_;
 };
 
 /*! Container for storing zero inflation index conventions

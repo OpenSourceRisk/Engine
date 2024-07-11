@@ -106,24 +106,7 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     notionals_ = Notionals();
     notionals_.full = ntls.front();
     notionalCurrency_ = legData.currency();
-
-    // Populate the constituents and determine the various notional amounts.
-    constituents_.clear();
-    if (swap_.basket().constituents().size() > 1) {
-        fromBasket(asof, constituents_);
-    } else {
-        fromReferenceData(asof, constituents_, engineFactory->referenceData());
-    }
-
-    // Transfer to vectors for ctors below
-    vector<string> constituentIds;
-    constituentIds.reserve(constituents_.size());
-    vector<Real> constituentNtls;
-    constituentNtls.reserve(constituents_.size());
-    for (const auto& kv : constituents_) {
-        constituentIds.push_back(kv.first);
-        constituentNtls.push_back(kv.second);
-    }
+    npvCurrency_ = legData.currency();
 
     // Need fixed leg data with one rate. This should be the standard running coupon on the index CDS e.g.
     // 100bp for CDX IG and 500bp for CDX HY.
@@ -132,45 +115,6 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     QL_REQUIRE(fixedLegData->rates().size() == 1, "Index CDS option " << id() << " requires single fixed rate.");
     auto runningCoupon = fixedLegData->rates().front();
     Real upfrontFee = swap_.upfrontFee();
-
-    // Payer (Receiver) swaption if the leg is paying (receiving).
-    auto side = legData.isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
-
-    // Day counter. In general for CDS and CDS index trades, the standard day counter is Actual/360 and the final
-    // period coupon accrual includes the maturity date.
-    DayCounter dc = parseDayCounter(legData.dayCounter());
-    Actual360 standardDayCounter;
-    DayCounter lastPeriodDayCounter = dc == standardDayCounter ? Actual360(true) : dc;
-
-    // Checks on the option data
-    QL_REQUIRE(option_.style() == "European", "IndexCreditDefaultSwapOption option style must"
-                                                  << " be European but got " << option_.style() << ".");
-    QL_REQUIRE(option_.exerciseFees().empty(), "IndexCreditDefaultSwapOption cannot handle exercise fees.");
-
-    // Exercise must be European
-    const auto& exerciseDates = option_.exerciseDates();
-    QL_REQUIRE(exerciseDates.size() == 1, "IndexCreditDefaultSwapOption expects one exercise date"
-                                              << " but got " << exerciseDates.size() << " exercise dates.");
-    Date exerciseDate = parseDate(exerciseDates.front());
-    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
-
-    QL_REQUIRE(parseDate(legData.schedule().rules().front().endDate()) > exerciseDate, 
-        "IndexCreditDefaultSwapOption: ExerciseDate must be before EndDate");
-
-    // We apply an automatic correction to a common mistake in the input data, where the full index underlying
-    // is provided and not only the part of the underlying into which we exercise.
-    if (legData.schedule().rules().size() == 1 && legData.schedule().dates().empty()) {
-        // The start date should be >= exercise date, this will produce correct coupons for both
-        // - post big bang rules CDS, CDS2015 (full first coupon) and
-        // - pre big bang rules (short first coupon)
-        if (parseDate(legData.schedule().rules().front().startDate()) < exerciseDate) {
-            legData.schedule().modifyRules().front().modifyStartDate() = ore::data::to_string(exerciseDate);
-        }
-    }
-
-    // Schedule
-    Schedule schedule = makeSchedule(legData.schedule());
-    BusinessDayConvention payConvention = parseBusinessDayConvention(legData.paymentConvention());
 
     // Usually, we expect a Strike and StrikeType. However, for backwards compatibility we also allow for
     // empty values and populate Strike, StrikeType from the underlying upfront and coupon.
@@ -233,6 +177,63 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     }
     DLOG("Will use strike = " << effectiveStrike_ << ", strikeType = " << effectiveStrikeType_);
 
+    // Payer (Receiver) swaption if the leg is paying (receiving).
+    auto side = legData.isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
+
+    // Populate the constituents and determine the various notional amounts.
+    constituents_.clear();
+    if (swap_.basket().constituents().size() > 1) {
+        fromBasket(asof, constituents_);
+    } else {
+        fromReferenceData(asof, constituents_, engineFactory->referenceData());
+    }
+
+    // Transfer to vectors for ctors below
+    vector<string> constituentIds;
+    constituentIds.reserve(constituents_.size());
+    vector<Real> constituentNtls;
+    constituentNtls.reserve(constituents_.size());
+    for (const auto& kv : constituents_) {
+        constituentIds.push_back(kv.first);
+        constituentNtls.push_back(kv.second);
+    }
+
+    // Day counter. In general for CDS and CDS index trades, the standard day counter is Actual/360 and the final
+    // period coupon accrual includes the maturity date.
+    DayCounter dc = parseDayCounter(legData.dayCounter());
+    Actual360 standardDayCounter;
+    DayCounter lastPeriodDayCounter = dc == standardDayCounter ? Actual360(true) : dc;
+
+    // Checks on the option data
+    QL_REQUIRE(option_.style() == "European", "IndexCreditDefaultSwapOption option style must"
+                                                  << " be European but got " << option_.style() << ".");
+    QL_REQUIRE(option_.exerciseFees().empty(), "IndexCreditDefaultSwapOption cannot handle exercise fees.");
+
+    // Exercise must be European
+    const auto& exerciseDates = option_.exerciseDates();
+    QL_REQUIRE(exerciseDates.size() == 1, "IndexCreditDefaultSwapOption expects one exercise date"
+                                              << " but got " << exerciseDates.size() << " exercise dates.");
+    Date exerciseDate = parseDate(exerciseDates.front());
+    QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(exerciseDate);
+
+    QL_REQUIRE(parseDate(legData.schedule().rules().front().endDate()) > exerciseDate, 
+        "IndexCreditDefaultSwapOption: ExerciseDate must be before EndDate");
+
+    // We apply an automatic correction to a common mistake in the input data, where the full index underlying
+    // is provided and not only the part of the underlying into which we exercise.
+    if (legData.schedule().rules().size() == 1 && legData.schedule().dates().empty()) {
+        // The start date should be >= exercise date, this will produce correct coupons for both
+        // - post big bang rules CDS, CDS2015 (full first coupon) and
+        // - pre big bang rules (short first coupon)
+        if (parseDate(legData.schedule().rules().front().startDate()) < exerciseDate) {
+            legData.schedule().modifyRules().front().modifyStartDate() = ore::data::to_string(exerciseDate);
+        }
+    }
+
+    // Schedule
+    Schedule schedule = makeSchedule(legData.schedule());
+    BusinessDayConvention payConvention = parseBusinessDayConvention(legData.paymentConvention());
+
     // Populate trade date and protection start date of underlying swap
     QL_REQUIRE(!schedule.dates().empty(),
                "IndexCreditDefaultSwapOption: underlying swap schedule does not contain any dates");
@@ -271,7 +272,6 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
         lastPeriodDayCounter, true, underlyingTradeDate, swap_.cashSettlementDays());
 
     // Set engine on the underlying CDS.
-    npvCurrency_ = legData.currency();
     auto ccy = parseCurrency(npvCurrency_);
     std::string overrideCurve = iCdsOptionEngineBuilder->engineParameter("Curve", {}, false, "Underlying");
 
@@ -426,6 +426,13 @@ const OptionData& IndexCreditDefaultSwapOption::option() const { return option_;
 const std::string& IndexCreditDefaultSwapOption::indexTerm() const { return indexTerm_; }
 
 Real IndexCreditDefaultSwapOption::strike() const { return strike_; }
+
+QuantLib::Option::Type IndexCreditDefaultSwapOption::callPut() const {
+    if (swap().leg().isPayer())
+        return QuantLib::Option::Type::Call;
+    else
+        return QuantLib::Option::Type::Put;
+}
 
 const string& IndexCreditDefaultSwapOption::strikeType() const { return strikeType_; }
 

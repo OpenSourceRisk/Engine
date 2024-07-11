@@ -39,6 +39,9 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
     additionalData_["isdaSubProduct"] = string("Digital");  
     additionalData_["isdaTransaction"] = string("");  
 
+    additionalData_["payoffAmount"] = payoffAmount_;
+    additionalData_["payoffCurrency"] = payoffCurrency_;
+
     // Only European Vanilla supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
@@ -71,9 +74,14 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
     // Set up the CashOrNothing
     QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, strike, payoffAmount_));
 
+    npvCurrency_ = domCcy.code(); // don't use domesticCurrency_ as it might be flipped
+    notional_ = payoffAmount_;
+    notionalCurrency_ = payoffCurrency_ != "" ? payoffCurrency_ : domesticCurrency_; // see logic above
+
     // Exercise
     Date expiryDate = parseDate(option_.exerciseDates().front());
     QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
+    maturity_ = std::max(option_.premiumData().latestPremiumDate(), expiryDate);
 
     // QL does not have an FXDigitalOption, so we add a vanilla one here and wrap
     // it in a composite.
@@ -93,21 +101,11 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-
-    Date lastPremiumDate =
-        addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, domCcy,
-                    engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+    addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, domCcy,
+                engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
-
-    npvCurrency_ = domCcy.code(); // don't use domesticCurrency_ as it might be flipped
-    notional_ = payoffAmount_;
-    notionalCurrency_ = payoffCurrency_ != "" ? payoffCurrency_ : domesticCurrency_; // see logic above
-    maturity_ = std::max(lastPremiumDate, expiryDate);
-
-    additionalData_["payoffAmount"] = payoffAmount_;
-    additionalData_["payoffCurrency"] = payoffCurrency_;
 }
 
 void FxDigitalOption::fromXML(XMLNode* node) {

@@ -1,0 +1,23 @@
+\subsubsection{Cash Position}
+
+The \lstinline!CashPositionData!  node is the trade data container for the \emph{CashPosition} trade type.  The structure -
+including example values - of the \lstinline!CashPositionData!  node is shown in Listing \ref{lst:cashposition_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <CashPositionData>
+            <Currency>EUR</Currency>
+            <Amount>1000000</Amount>
+        </CashPositionData>
+\end{minted}
+\caption{Cash Position data}
+\label{lst:cashposition_data}
+\end{listing}
+
+The meanings and allowable values of the various elements in the \lstinline!CashPositionData!  node follow below.
+
+\begin{itemize}
+\item Currency: The currency of cash position.  \\ Allowable values:  See Table \ref{tab:currency}  \lstinline!Currency!.
+\item Amount: The amount of cash position.  \\ Allowable values:  Any real number.
+\end{itemize}

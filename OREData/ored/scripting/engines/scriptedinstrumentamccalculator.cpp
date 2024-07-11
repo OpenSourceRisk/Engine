@@ -30,16 +30,26 @@ namespace data {
 
 QuantLib::Currency ScriptedInstrumentAmcCalculator::npvCurrency() { return parseCurrency(model_->baseCcy()); }
 
-std::vector<QuantExt::RandomVariable>
-ScriptedInstrumentAmcCalculator::simulatePath(const std::vector<QuantLib::Real>& pathTimes,
-                                              std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-                                              const std::vector<bool>& isRelevantTime, const bool stickyCloseOutRun) {
+std::vector<QuantExt::RandomVariable> ScriptedInstrumentAmcCalculator::simulatePath(
+    const std::vector<QuantLib::Real>& pathTimes, const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+    const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) {
 
+    QL_REQUIRE(relevantPathIndex.size() == relevantTimeIndex.size(),
+               "ScriptedInstrumentAmcCalculator::simulatePath: Mismatch between relevantPathIndex size and "
+               "relevantTimeIndex size, internal error");
+
+    bool stickyCloseOutRun = false;
+    for (size_t i = 0; i < relevantPathIndex.size(); ++i) {
+        if (relevantPathIndex[i] != relevantTimeIndex[i]) {
+            stickyCloseOutRun = true;
+            break;
+        }
+    }
     // inject the global paths into our local model, notice that this will change the size of the model
 
     auto amcModel = QuantLib::ext::dynamic_pointer_cast<AmcModel>(model_);
     QL_REQUIRE(amcModel, "expected an AmcModel");
-    amcModel->injectPaths(&pathTimes, &paths, &isRelevantTime, stickyCloseOutRun);
+    amcModel->injectPaths(&pathTimes, &paths, &relevantPathIndex, &relevantTimeIndex);
 
     // the rest is similar to what is done in the ScriptedInstrumentPricingEngine:
 
@@ -53,7 +63,7 @@ ScriptedInstrumentAmcCalculator::simulatePath(const std::vector<QuantLib::Real>&
     // make sure we reset the injected path data after the calculation
     struct InjectedPathReleaser {
         ~InjectedPathReleaser() {
-            QuantLib::ext::dynamic_pointer_cast<AmcModel>(model)->injectPaths(nullptr, nullptr, nullptr, false);
+            QuantLib::ext::dynamic_pointer_cast<AmcModel>(model)->injectPaths(nullptr, nullptr, nullptr, nullptr);
         }
         QuantLib::ext::shared_ptr<Model> model;
     };
@@ -90,7 +100,7 @@ ScriptedInstrumentAmcCalculator::simulatePath(const std::vector<QuantLib::Real>&
 
     // extract AMC Exposure result and return them
 
-    Size resultSize = std::count(isRelevantTime.begin(), isRelevantTime.end(), true);
+    Size resultSize = relevantTimeIndex.size();
     std::vector<QuantExt::RandomVariable> result(resultSize + 1);
 
     // the T0 npv is the first component of the result

@@ -46,9 +46,9 @@ namespace {
 Rate atmStrike(const Date& optionD, const Period& swapTenor, const QuantLib::ext::shared_ptr<SwapIndex> swapIndexBase,
                const QuantLib::ext::shared_ptr<SwapIndex> shortSwapIndexBase) {
     if (swapTenor > shortSwapIndexBase->tenor()) {
-        return swapIndexBase->clone(swapTenor)->fixing(optionD);
+        return swapIndexBase->clone(swapTenor)->fixing(swapIndexBase->fixingCalendar().adjust(optionD));
     } else {
-        return shortSwapIndexBase->clone(swapTenor)->fixing(optionD);
+        return shortSwapIndexBase->clone(swapTenor)->fixing(shortSwapIndexBase->fixingCalendar().adjust(optionD));
     }
 }
 } // namespace
@@ -359,7 +359,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat);
                     cube->enableExtrapolation();
                 } else {
-                    std::vector<std::pair<Real,bool>> initialModelParameters;
+                    std::map<std::pair<QuantLib::Period, QuantLib::Period>, std::vector<std::pair<Real, bool>>>
+                        initialModelParameters;
                     Size maxCalibrationAttempts = 10;
                     Real exitEarlyErrorThreshold = 0.005;
                     Real maxAcceptableError = 0.05;
@@ -368,10 +369,30 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         auto beta = config->parametricSmileConfiguration()->parameter("beta");
                         auto nu = config->parametricSmileConfiguration()->parameter("nu");
                         auto rho = config->parametricSmileConfiguration()->parameter("rho");
-                        initialModelParameters.push_back(std::make_pair(alpha.initialValue, alpha.isFixed));
-                        initialModelParameters.push_back(std::make_pair(beta.initialValue, beta.isFixed));
-                        initialModelParameters.push_back(std::make_pair(nu.initialValue, nu.isFixed));
-                        initialModelParameters.push_back(std::make_pair(rho.initialValue, rho.isFixed));
+                        QL_REQUIRE(alpha.initialValue.size() == beta.initialValue.size() &&
+                                       alpha.initialValue.size() == nu.initialValue.size() &&
+                                       alpha.initialValue.size() == rho.initialValue.size(),
+                                   "GenericYieldVolCurve: parametric smile config: alpha size ("
+                                       << alpha.initialValue.size() << ") beta size (" << beta.initialValue.size()
+                                       << ") nu size (" << nu.initialValue.size() << ") rho size ("
+                                       << rho.initialValue.size() << ") must match");
+                        QL_REQUIRE(alpha.initialValue.size() == 1 ||
+                                       alpha.initialValue.size() == optionTenors.size() * underlyingTenors.size(),
+                                   "GenericYieldVolCurve: parametric smile config: alpha, beta, nu, rho size ("
+                                       << alpha.initialValue.size() << ") must match product of option tenors ("
+                                       << optionTenors.size() << ") and swap tenors (" << underlyingTenors.size()
+                                       << ") = " << optionTenors.size() * underlyingTenors.size() << ")");
+                        for (Size i = 0; i < optionTenors.size(); ++i) {
+                            for (Size j = 0; j < underlyingTenors.size(); ++j) {
+                                std::vector<std::pair<Real, bool>> tmp;
+                                Size idx = alpha.initialValue.size() == 1 ? 0 : i * underlyingTenors.size() + j;
+                                tmp.push_back(std::make_pair(alpha.initialValue[idx], alpha.isFixed));
+                                tmp.push_back(std::make_pair(beta.initialValue[idx], beta.isFixed));
+                                tmp.push_back(std::make_pair(nu.initialValue[idx], nu.isFixed));
+                                tmp.push_back(std::make_pair(rho.initialValue[idx], rho.isFixed));
+                                initialModelParameters[std::make_pair(optionTenors[i], underlyingTenors[j])] = tmp;
+                            }
+                        }
                         maxCalibrationAttempts =
                             config->parametricSmileConfiguration()->calibration().maxCalibrationAttempts;
                         exitEarlyErrorThreshold =
@@ -604,22 +625,25 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::SabrParametricVolatility>(
                             sabr->parametricVolatility())) {
                         DLOG("SABR parameters:");
-                        DLOG("alpha:");
-                        DLOGGERSTREAM(p->alpha());
-                        DLOG("beta:");
-                        DLOGGERSTREAM(p->beta());
-                        DLOG("nu:");
-                        DLOGGERSTREAM(p->nu());
-                        DLOG("rho:");
-                        DLOGGERSTREAM(p->rho());
-                        DLOG("lognormal shift:");
-                        DLOGGERSTREAM(p->lognormalShift());
-                        DLOG("calibration attempts:");
-                        DLOGGERSTREAM(p->numberOfCalibrationAttempts());
-                        DLOG("calibration error:");
-                        DLOGGERSTREAM(p->calibrationError());
-                        DLOG("isInterpolated:");
-                        DLOGGERSTREAM(p->isInterpolated());
+                        DLOG("alpha (rows = option tenors, cols = underlying lengths):");
+                        DLOGGERSTREAM(transpose(p->alpha()));
+                        DLOG("beta (rows = option tenors, cols = underlying lengths):");
+                        DLOGGERSTREAM(transpose(p->beta()));
+                        DLOG("nu (rows = option tenors, cols = underlying lengths):");
+                        DLOGGERSTREAM(transpose(p->nu()));
+                        DLOG("rho (rows = option tenors, cols = underlying lengths):");
+                        DLOGGERSTREAM(transpose(p->rho()));
+                        DLOG("lognormal shift (rows = option tenors, cols = underlying lengths):");
+                        DLOGGERSTREAM(transpose(p->lognormalShift()));
+                        DLOG("calibration attempts (rows = option tenors, cols = underlying lengths):");
+                        DLOGGERSTREAM(transpose(p->numberOfCalibrationAttempts()));
+                        DLOG("calibration error (rows = option tenors, cols = underlying lengths, rmse of relative "
+                             "errors w.r.t. max of sabr variant's preferred quotation type, i.e. nvol, slnvol, "
+                             "premium:");
+                        DLOGGERSTREAM(transpose(p->calibrationError()));
+                        DLOG("isInterpolated (rows = option tenors, cols = underlying lengths, 1 means calibration "
+                             "failed and point is interpolated):");
+                        DLOGGERSTREAM(transpose(p->isInterpolated()));
                     }
                 }
             }

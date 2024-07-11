@@ -918,7 +918,7 @@ public:
         std::string und = QuantLib::ext::get<IndexVec>(underlying).value;
         // if observation date is in the future, the answer is always zero
         if (obs > model_->referenceDate())
-            value.push(RandomVariable(model_->size(), 0));
+            value.push(RandomVariable(model_->size(), 0.0));
         else {
             // otherwise check whether a fixing is present in the historical time series
             TimeSeries<Real> series = IndexManager::instance().getHistory(IndexInfo(und).index()->name());

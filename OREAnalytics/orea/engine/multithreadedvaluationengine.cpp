@@ -60,7 +60,7 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
     const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(const QuantLib::Date&, const std::set<std::string>&,
                                                                    const std::vector<QuantLib::Date>&,
                                                                    const QuantLib::Size)>& cptyCubeFactory,
-    const std::string& context)
+    const std::string& context, const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& offSetScenario)
     : nThreads_(nThreads), today_(today), dateGrid_(dateGrid), nSamples_(nSamples), loader_(loader),
       scenarioGenerator_(scenarioGenerator), engineData_(engineData), curveConfigs_(curveConfigs),
       todaysMarketParams_(todaysMarketParams), configuration_(configuration), simMarketData_(simMarketData),
@@ -69,7 +69,7 @@ MultiThreadedValuationEngine::MultiThreadedValuationEngine(
       handlePseudoCurrenciesTodaysMarket_(handlePseudoCurrenciesTodaysMarket),
       handlePseudoCurrenciesSimMarket_(handlePseudoCurrenciesSimMarket), recalibrateModels_(recalibrateModels),
       cubeFactory_(cubeFactory), nettingSetCubeFactory_(nettingSetCubeFactory), cptyCubeFactory_(cptyCubeFactory),
-      context_(context) {
+      context_(context), offsetScenario_(offSetScenario){
 
     QL_REQUIRE(nThreads_ != 0, "MultiThreadedValuationEngine: nThreads must be > 0");
 
@@ -229,10 +229,10 @@ void MultiThreadedValuationEngine::buildCube(
     miniNettingSetCubes_.clear();
     miniCptyCubes_.clear();
     for (Size i = 0; i < eff_nThreads; ++i) {
-        miniCubes_.push_back(cubeFactory_(today_, portfolios[i]->ids(), dateGrid_->dates(), nSamples_));
-        miniNettingSetCubes_.push_back(nettingSetCubeFactory_(today_, dateGrid_->dates(), nSamples_));
+        miniCubes_.push_back(cubeFactory_(today_, portfolios[i]->ids(), dateGrid_->valuationDates(), nSamples_));
+        miniNettingSetCubes_.push_back(nettingSetCubeFactory_(today_, dateGrid_->valuationDates(), nSamples_));
         miniCptyCubes_.push_back(
-            cptyCubeFactory_(today_, portfolios[i]->counterparties(), dateGrid_->dates(), nSamples_));
+            cptyCubeFactory_(today_, portfolios[i]->counterparties(), dateGrid_->valuationDates(), nSamples_));
     }
 
     // build progress indicator consolidating the results from the threads
@@ -286,7 +286,7 @@ void MultiThreadedValuationEngine::buildCube(
                     QuantLib::ext::make_shared<ore::analytics::ScenarioSimMarket>(
                         initMarket, simMarketData_, configuration_, *curveConfigs_, *todaysMarketParams_, true,
                         useSpreadedTermStructures_, cacheSimData_, false, iborFallbackConfig_,
-                        handlePseudoCurrenciesSimMarket_);
+                        handlePseudoCurrenciesSimMarket_, offsetScenario_);
 
                 // set aggregation scenario data, but only in one of the sim markets, that's sufficient to populate it
 

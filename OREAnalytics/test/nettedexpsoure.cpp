@@ -316,7 +316,7 @@ QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> buildScenarioSimMarket(Q
         QuantLib::ext::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dateGrid->timeGrid(), seed, antithetic);
 
     // build scenario generator
-    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
+    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>();
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator = QuantLib::ext::make_shared<CrossAssetModelScenarioGenerator>(model, 
                                                                                                                   pathGen, 
                                                                                                                   scenarioFactory, 
@@ -663,7 +663,7 @@ BOOST_AUTO_TEST_CASE(NettedExposureCalculatorTest) {
                     portfolio, initMarket, cube, "EUR", "Market", 0.99, calcType, false, nettingSetManager, collateralBalances,
                     nettingSetDefaultValue, nettingSetCloseOutValue, nettingSetMporPositiveFlow,
                     nettingSetMporNegativeFlow, *asd, cubeInterpreter, false, dimCalculator, false, false, 0.1,
-                    exposureCalculator->exposureCube(), 0, 0, false, mporStickyDate, MporCashFlowMode::Unspecified);
+                    exposureCalculator->exposureCube(), 0, 0, false, mporStickyDate, MporCashFlowMode::Unspecified, false);
             nettedExposureCalculator->build();
             nettingSetValue = (calcType == CollateralExposureHelper::CalculationType::NoLag
                                 ? nettedExposureCalculator->nettingSetCloseOutValue()
