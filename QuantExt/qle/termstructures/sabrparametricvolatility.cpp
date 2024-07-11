@@ -407,8 +407,23 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
             break;
     }
 
+    // store the calibration results
+    CalibrationResult result;
+    result.timeToExpiry = t.timeToExpiry_;
+    result.underlyingLength = marketSmile.underlyingLength;
+    result.forward = t.forward_;
+    result.strikes = t.strikes_;
+    result.marketInput = marketSmile.marketQuotes;
+    result.calibrationTarget = t.marketQuotes_;
+    result.calibrationResult = evaluateSabr(bestResult, t.forward_, t.timeToExpiry_, t.lognormalShift_, t.strikes_);
+    result.error = bestError;
+    result.accepted = bestError < maxAcceptableError_;
+    calibrationResults_.push_back(result);
+
+    // check if if have at least one valid calibration
     QL_REQUIRE(bestError < QL_MAX_REAL, "internal: all calibrations failed");
 
+    // return the best calibration result
     return std::make_tuple(bestResult, bestError, ++attempt);
 }
 
