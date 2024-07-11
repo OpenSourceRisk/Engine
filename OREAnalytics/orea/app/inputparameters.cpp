@@ -124,7 +124,7 @@ void InputParameters::setCurveConfigsFromFile(const std::string& fileName, std::
     curveConfigs_.add(curveConfig, id);
 }
 
-void InputParameters::setCalendarAdjusment(const std::string& xml) {
+void InputParameters::setCalendarAdjustment(const std::string& xml) {
     calendarAdjustment_ = QuantLib::ext::make_shared<CalendarAdjustmentConfig>();
     calendarAdjustment_->fromXMLString(xml);
 }
