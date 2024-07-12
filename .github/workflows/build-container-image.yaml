@@ -10,7 +10,7 @@ jobs:
   build-and-release:
     strategy:
       matrix:
-        dockerfile_postfix: [fedora40, centos-stream9]
+        dockerfile_postfix: [debian11, centos-stream9, fedora40]
     runs-on: ubuntu-24.04
     steps:
     # Get the repository's code
