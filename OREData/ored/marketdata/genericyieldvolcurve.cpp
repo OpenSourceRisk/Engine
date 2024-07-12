@@ -406,7 +406,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                             ? QuantLib::Normal
                             : QuantLib::ShiftedLognormal,
-                        initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                        initialModelParameters, config->outputShift(), config->modelShift(), maxCalibrationAttempts,
+                        exitEarlyErrorThreshold, maxAcceptableError);
                 }
 
                 // Wrap it in a SwaptionVolCubeWithATM
