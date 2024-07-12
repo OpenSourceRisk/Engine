@@ -225,11 +225,10 @@ QuantLib::ext::shared_ptr<FxIndex> parseFxIndex(const string& s, const Handle<Qu
 }
 
 QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> parseEquityIndex(const string& s) {
-    std::vector<string> tokens;
-    split(tokens, s, boost::is_any_of("-"));
-    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
-    QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
-    auto index = QuantLib::ext::make_shared<QuantExt::EquityIndex2>(tokens[1], NullCalendar(), Currency());
+    QL_REQUIRE(boost::starts_with(s, "EQ-"), "equity index expected to be of the form EQ-*");
+    string eqi = s;
+    eqi.erase(0, 3);
+    auto index = QuantLib::ext::make_shared<QuantExt::EquityIndex2>(eqi, NullCalendar(), Currency());
     IndexNameTranslator::instance().add(index->name(), s);
     return index;
 }
