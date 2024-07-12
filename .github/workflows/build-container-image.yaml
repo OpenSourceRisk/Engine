@@ -13,58 +13,62 @@ jobs:
         dockerfile_postfix: [debian11, centos-stream9, fedora40]
     runs-on: ubuntu-24.04
     steps:
-    # Get the repository's code
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        submodules: true
+    
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
 
-    # Build the first stage, which we can use as the testing facility
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    - name: Build the "build" stage
-      uses: docker/build-push-action@v6
-      with:
-        context: .
-        file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
-        load: true
-        platforms: linux/amd64
-        tags: orebuild:build
-        target: orebuild
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      # TODO sort out registry caching to make this faster
+      # https://blacksmith.sh/blog/cache-is-king-a-guide-for-docker-layer-caching-in-github-actions
 
-    # Run the tests in the result of the first stage build, saving the results to our filesystem
-    - name: Create test-results folder
-      run: mkdir -p test-results
-    - name: Get number of CPU cores
-      uses: SimenB/github-actions-cpu-cores@v2
-      id: cpu-cores
+      # Build the first stage, which we can use as the testing facility    
+      - name: Build the "build" stage
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
+          load: true
+          platforms: linux/amd64
+          tags: orebuild:build
+          target: orebuild
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-    - name: Run the tests
-      run: >
-        /usr/bin/docker run
-        --workdir=/ore/build --volume $GITHUB_WORKSPACE/test-results:/ore/test-results
-        --env NOSE_PROCESSES=${{ steps.cpu-cores.outputs.count }} --env NOSE_PROCESS_TIMEOUT=600 --env NOSE_WITH_XUNITMP=true --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml
-        orebuild:build
-        ctest -j${{ steps.cpu-cores.outputs.count }} --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 5400
+      # Run the tests in the result of the first stage build, saving the results to our filesystem
+      - name: Create test-results folder
+        run: mkdir -p test-results
+      - name: Get number of CPU cores
+        uses: SimenB/github-actions-cpu-cores@v2
+        id: cpu-cores
 
-    # Register the xunit results
-    - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
-      with:
-        files: |
-          test-results/**/*.xml
+      - name: Run the tests
+        run: >
+          /usr/bin/docker run
+          --workdir=/ore/build --volume $GITHUB_WORKSPACE/test-results:/ore/test-results
+          --env NOSE_PROCESSES=${{ steps.cpu-cores.outputs.count }} --env NOSE_PROCESS_TIMEOUT=600 --env NOSE_WITH_XUNITMP=true --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml
+          orebuild:build
+          ctest -j${{ steps.cpu-cores.outputs.count }} --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 5400
 
-    # Build the rest of the stages - the first stage should be cached
-    - name: Build the "release" stage
-      uses: docker/build-push-action@v6
-      with:
-        context: .
-        file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
-        load: true
-        platforms: linux/amd64
-        tags: ore-app:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+      # Register the xunit results
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            test-results/**/*.xml
+
+      # Build the rest of the stages - the first stage should be cached
+      - name: Build the "release" stage
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
+          load: true
+          platforms: linux/amd64
+          tags: ore-app:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
