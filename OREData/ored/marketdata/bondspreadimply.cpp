@@ -26,6 +26,7 @@
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondutils.hpp>
+#include <ored/portfolio/builders/bond.hpp>
 
 #include <ql/instruments/bond.hpp>
 #include <ql/pricingengines/bond/bondfunctions.hpp>
@@ -170,10 +171,10 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
                                   const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration) {
 
     // checks, build bond from reference data
-
     QL_REQUIRE(referenceDataManager, "no reference data manager given");
 
     auto b = BondFactory::instance().build(engineFactory, referenceDataManager, securityId);
+
     Real adj = b.priceQuoteMethod == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
                    ? 1.0 / b.priceQuoteBaseValue
                    : 1.0;
