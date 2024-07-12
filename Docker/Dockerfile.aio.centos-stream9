@@ -1,4 +1,4 @@
-FROM centos/centos:stream9 AS orebuild
+FROM quay.io/centos/centos:stream9 AS orebuild
 
 MAINTAINER Quaternion Risk Management
 LABEL Description="Multi-stage container definition for ORE on CentOS Stream 9"
@@ -69,7 +69,7 @@ COPY Tools /ore/Tools
 #
 # ore application image
 #
-FROM centos/centos:stream9-minimal AS ore
+FROM quay.io/centos/centos:stream9-minimal AS ore
 
 # libs to run
 RUN microdnf install -y boost ocl-icd --nodocs && \
