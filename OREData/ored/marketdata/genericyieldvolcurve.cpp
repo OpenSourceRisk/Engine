@@ -406,7 +406,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                             ? QuantLib::Normal
                             : QuantLib::ShiftedLognormal,
-                        initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                        initialModelParameters, config->outputShift(), config->modelShift(), maxCalibrationAttempts,
+                        exitEarlyErrorThreshold, maxAcceptableError);
                 }
 
                 // Wrap it in a SwaptionVolCubeWithATM
@@ -644,6 +645,19 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         DLOG("isInterpolated (rows = option tenors, cols = underlying lengths, 1 means calibration "
                              "failed and point is interpolated):");
                         DLOGGERSTREAM(transpose(p->isInterpolated()));
+                        DLOG("SABR calibration results for individual strikes:");
+                        DLOG("timeToExpiry,underlyingLength,forward,strike,marketInput,caibrationTarget,"
+                             "calibrationResult,error,"
+                             "accepted");
+                        for (auto const& c : p->calibrationResults()) {
+                            for (std::size_t i = 0; i < c.strikes.size(); ++i) {
+                                DLOG(c.timeToExpiry
+                                     << "," << (c.underlyingLength == Null<Real>() ? 0.0 : c.underlyingLength) << ","
+                                     << c.forward << "," << c.strikes[i] << "," << c.marketInput[i] << ","
+                                     << c.calibrationTarget[i] << "," << c.calibrationResult[i] << "," << c.error << ","
+                                     << std::boolalpha << c.accepted);
+                            }
+                        }
                     }
                 }
             }
