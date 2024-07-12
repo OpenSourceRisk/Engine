@@ -1146,6 +1146,8 @@ Example & Description \\
 \hline
 69 &  Convert Zero Rate Shifts into Par Rate Shifts \\
 \hline
+70 &  Forward Bond Exposure with AMC and implied Bondspread \\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -3761,8 +3763,8 @@ current and past CPRs or expert judgement.
 \label{example:67}
 %--------------------------------------------------------------------
 
-The example in folder {\\tt Examples/Example\_67} demonstrates the XVA stresstesting with the classical and AMC XVA engine.
-The new analytic type \\emph{XVA\_STRESS} utilizes the existing stresstest framework and supports stresstests in both zero and par domain. 
+The example in folder {\tt Examples/Example\_67} demonstrates the XVA stresstesting with the classical and AMC XVA engine.
+The new analytic type \emph{XVA\_STRESS} utilizes the existing stresstest framework and supports stresstests in both zero and par domain. 
 The Stresstest scenarios are given in the same input format as for the regular stresstest. 
 
 To analyse the impact of market rate shifts (Swap rates, CDS spreads, flat vols), one had to
@@ -3775,7 +3777,7 @@ The generated outputs are the xva and exposure reports under each scenario.
 \label{example:68}
 %--------------------------------------------------------------------
 
-The example in folder {\\tt Examples/Example\_68} demonstrates the XVA sensitivity analysis with the AMC XVA engine.
+The example in folder {\tt Examples/Example\_68} demonstrates the XVA sensitivity analysis with the AMC XVA engine.
 The new analytic type \emph{XVA\_SENSITIVITY} applies zero shifts as specified in the sensitivity.xml and 
 computes the xva and exposure measures under each shifted market condition.
 
@@ -3787,10 +3789,9 @@ zero-to-par conversion analytic (see \ref{example:50}).
 \label{example:69}
 %--------------------------------------------------------------------
 
-The example in folder {\\tt Examples/Example\_69} demonstrates the conversion of zero shifts to par rate shifts.
+The example in folder {\tt Examples/Example\_69} demonstrates the conversion of zero shifts to par rate shifts.
 ORE applies the zero rate shifts to the zero curves and computes the resulting shifts in the implied fair rate of a given set of par instruments. 
 The zero rate shifts are defined as stresstests and the par instruments are defined in the usual sensitivity configuration.
-
 
 %--------------------------------------------------------------------
 \subsection{First Margin Period of Risk Collateral Adjustment}% Example 72
@@ -3801,6 +3802,22 @@ The example in folder {\\tt Examples/Example\_72} demonstrates the use of the fi
 To have a conservative estimation of the expected positive exposure ORE applies the difference between the initial variational margin 
 collateral balance and the todays mtm on the simulated collateral during the first margin period of risk, if the difference would yield 
 a higher expected exposure (in case of over collateralisation in case of a negative mtm or under-collateralisation if the mtm is positive).
+
+%--------------------------------------------------------------------
+\subsection{Forward Bond Exposure with AMC and implied Bondspread}% Example 73
+\label{example:73}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_73} demonstrates AMC exposure simulation and XVA for a forward and a plain vanilla bond.
+The results can be compared to a classical exposure simulation by switchting the parameter \emph{amc} in the main configuration
+file \emph{ore.xml}, section analytic type \emph{Simulation} to \emph{N}.
+
+For both cases, forward and plain vanilla bond, the security spread is implied from given bond prices.
+This requires a proper security specification in the curve configuration. Compare \emph{Securities} node within \emph{curveconfig.xml}.
+Both fields, PriceQuote and SpreadQuote, are mandatory. In the market data file, if the price quote is given in the absence of a spread quote, the spread is implied.
+Otherwise the spread quote is used or none.
+
+In case of a forward bond, the convention for security specification requires the format \emph{securityId\_FWDEXP\_expiryDate}.
 
 \clearpage
 %========================================================

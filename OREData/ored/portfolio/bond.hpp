@@ -199,6 +199,11 @@ struct BondBuilder {
     virtual Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const std::string& securityId) const = 0;
+    virtual void modifyToForwardBond(const Date& expiry, boost::shared_ptr<QuantLib::Bond>& bond,
+                                     const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                     const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                                     const std::string& securityId) const = 0;
+    Date checkForwardBond(const std::string& securityId) const;
 };
 
 class BondFactory : public QuantLib::Singleton<BondFactory, std::integral_constant<bool, true>> {
@@ -217,6 +222,11 @@ struct VanillaBondBuilder : public BondBuilder {
     virtual Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                          const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                          const std::string& securityId) const override;
+
+    void modifyToForwardBond(const Date& expiry, boost::shared_ptr<QuantLib::Bond>& bond,
+                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                             const std::string& securityId) const override;
 };
 
 } // namespace data
