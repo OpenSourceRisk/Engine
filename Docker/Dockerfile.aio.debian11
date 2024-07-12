@@ -1,5 +1,5 @@
 ARG debian_tag=11
-FROM debian:${debian_tag} AS orebuild
+FROM debian:${debian_tag} AS builder
 
 MAINTAINER Quaternion Risk Management
 LABEL Description="Fedora-based multi-stage container definition for ORE"
@@ -77,7 +77,7 @@ COPY Tools /ore/Tools
 #
 # ore application image
 #
-FROM debian:${debian_tag}-slim AS ore
+FROM debian:${debian_tag}-slim AS ore-engine
 
 ARG boostver="1.74.0"
 
