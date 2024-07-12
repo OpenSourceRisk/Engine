@@ -25,6 +25,7 @@
 #include <orea/simm/crif.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmresults.hpp>
+#include <ored/utilities/timer.hpp>
 #include <ored/marketdata/market.hpp>
 
 #include <map>
@@ -107,6 +108,8 @@ public:
     */
     void populateFinalResults(const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::string>>& winningRegulations);
 
+    const ore::data::Timer& timer() const { return timer_; }
+
 private:
     //! All the net sensitivities passed in for the calculation
     ore::analytics::Crif crif_;
@@ -161,6 +164,10 @@ private:
     std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, set<string>>>> tradeIds_;
 
     std::map<SimmSide, set<string>> finalTradeIds_;
+
+    std::map<string, set<string>> regulationCache_;
+
+    mutable ore::data::Timer timer_;
 
     //! Calculate the Interest Rate delta margin component for the given portfolio and product class
     std::pair<std::map<std::string, QuantLib::Real>, bool>
@@ -225,7 +232,7 @@ private:
              const bool overwrite = true);
 
     //! Add CRIF record to the CRIF records container that correspondsd to the given regulation/s and portfolio ID
-    void splitCrifByRegulationsAndPortfolios(const Crif& crif, const bool enforceIMRegulations);
+    void splitCrifByRegulationsAndPortfolios(const bool enforceIMRegulations);
 
     //! Give the \f$\lambda\f$ used in the curvature margin calculation
     QuantLib::Real lambda(QuantLib::Real theta) const;
