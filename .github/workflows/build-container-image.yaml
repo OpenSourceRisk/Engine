@@ -35,8 +35,8 @@ jobs:
           platforms: linux/amd64
           tags: orebuild:build
           target: orebuild
-          cache-from: type=registry,ref=${{ GITHUB_REPOSITORY }}:buildcache
-          cache-to: type=registry,ref=${{ GITHUB_REPOSITORY }}:buildcache,mode=max
+          cache-from: type=registry,ref=${{ GITHUB_REPOSITORY_OWNER }}/ore-engine:buildcache-${{ matrix.dockerfile_postfix }}-build
+          cache-to: type=registry,ref=${{ GITHUB_REPOSITORY_OWNER }}/ore-engine:buildcache-${{ matrix.dockerfile_postfix }}-build,mode=max
 
       # Run the tests in the result of the first stage build, saving the results to our filesystem
       - name: Create test-results folder
@@ -70,5 +70,5 @@ jobs:
           load: true
           platforms: linux/amd64
           tags: ore-app:${{ matrix.dockerfile_postfix }}-latest
-          cache-from: type=registry,ref=${{ GITHUB_REPOSITORY }}:buildcache
-          cache-to: type=registry,ref=${{ GITHUB_REPOSITORY }}:buildcache,mode=max
+          cache-from: type=registry,ref=${{ GITHUB_REPOSITORY_OWNER }}/ore-engine:buildcache-${{ matrix.dockerfile_postfix }}
+          cache-to: type=registry,ref=${{ GITHUB_REPOSITORY_OWNER }}/ore-engine:buildcache-${{ matrix.dockerfile_postfix }},mode=max
