@@ -114,9 +114,8 @@ QuantLib::ext::shared_ptr<QuantExt::BondIndex> BondIndexBuilder::bondIndex() con
 void BondIndexBuilder::addRequiredFixings(RequiredFixings& requiredFixings, Leg leg) {
     requiredFixings.addData(fixings_.filteredFixingDates());
     if (dirty_) {
-        if (leg.size() == 0)
+        if (leg.empty())
             return;
-        //QL_REQUIRE(leg.size() > 0, "BondIndexBuild: Leg is required if dirty flag set to true");
         RequiredFixings legFixings;
         auto fixingGetter = QuantLib::ext::make_shared<FixingDateGetter>(legFixings);
         fixingGetter->setRequireFixingStartDates(true);
