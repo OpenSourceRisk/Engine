@@ -218,6 +218,9 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
                     << outVolType << "' not recognized. Expected one of 'Normal', 'Lognormal', 'ShiftedLognormal'.");
         }
 
+        modelShift_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "ModelShift", false);
+        outputShift_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "OutputShift", false);
+
         string interp = XMLUtils::getChildValue(node, "Interpolation", false, "Linear");
         if (interp == "Linear") {
             interpolation_ = Interpolation::Linear;
@@ -335,6 +338,20 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) const {
             XMLUtils::addChild(doc, node, "OutputVolatilityType", "ShiftedLognormal");
         } else {
             QL_FAIL("Unknown OutputVolatilityType in GenericYieldVolatilityCurveConfig::toXML()");
+        }
+
+        if (!modelShift_.empty()) {
+            vector<string> tmp;
+            std::transform(modelShift_.begin(), modelShift_.end(), std::back_inserter(tmp),
+                           [](Real x) { return XMLUtils::convertToString(x); });
+            XMLUtils::addChild(doc,node,"ModelShift", boost::join(tmp, ","));
+        }
+
+        if (!outputShift_.empty()) {
+            vector<string> tmp;
+            std::transform(outputShift_.begin(), outputShift_.end(), std::back_inserter(tmp),
+                           [](Real x) { return XMLUtils::convertToString(x); });
+            XMLUtils::addChild(doc, node, "OutputShift", boost::join(tmp, ","));
         }
 
         std::string extr_string;

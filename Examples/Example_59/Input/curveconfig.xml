@@ -31,6 +31,15 @@
            FlochKennedy -->
       <!-- <StrikeInterpolation>LinearFlat</StrikeInterpolation> -->
       <StrikeInterpolation>Hagan2002NormalZeroBeta</StrikeInterpolation>
+      <!-- model shift (if applicable to SABR flavor), if not given, it is set to input shift -->
+      <ModelShift>0.0</ModelShift>
+      <!-- Optional, defaults to input volatility type for SABR and Normal for non-SABR strike interpolation (bwds compatibility)
+           - Normal
+           - Lognormal (alias for ShiftedLognormal)
+           - ShiftedLognormal -->
+      <OutputVolatilityType>Normal</OutputVolatilityType>
+      <!-- Optional, if not given defaults to input vol shift. -->
+      <OutputShift>0.0</OutputShift>
       <!-- SABR configuration -->
       <ParametricSmileConfiguration>
         <Parameters>
@@ -113,6 +122,8 @@
            KienitzLawsonSwaynePde,
            FlochKennedy -->
       <Interpolation>Hagan2002NormalZeroBeta</Interpolation>
+      <!-- model shift per swap tenor (if applicable to SABR flavor), if not given, it is set to input shift -->
+      <ModelShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</ModelShift>
       <!-- <Interpolation>Antonov2015FreeBoundaryNormal</Interpolation> -->
       <!-- <Interpolation>KienitzLawsonSwaynePde</Interpolation> -->
       <!-- SABR configuration -->
@@ -253,12 +264,14 @@
            Flat,
            Linear -->
       <Extrapolation>Flat</Extrapolation>
-      <!-- Optional, defaults to input volatility type, applies to SABR variants only, for Linear it
-           must be set to the input VolatilityType or (better) omitted.
+      <!-- Optional, defaults to input volatility type, applies to SABR only, should be omitted otherwise.
            - Normal
            - Lognormal (alias for ShiftedLognormal, shift is always implied from input data)
            - ShiftedLognormal-->
       <OutputVolatilityType>Normal</OutputVolatilityType>
+      <!-- Optional, if not given defaults to input vol shift. Applies to SABR only, should be omitted otherwise.
+           If given, it must be a list of the same length as SwapTenors -->
+      <OutputShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</OutputShift>
       <DayCounter>Actual/365 (Fixed)</DayCounter>
       <Calendar>JoinHolidays(US settlement, UK settlement)</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>

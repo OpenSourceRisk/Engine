@@ -23,16 +23,18 @@ namespace QuantExt {
 ParametricVolatilitySmileSection::ParametricVolatilitySmileSection(
     const Real optionTime, const Real swapLength, const Real atmLevel,
     const boost::shared_ptr<ParametricVolatility> parametricVolatility,
-    const ParametricVolatility::MarketQuoteType outputMarketQuoteType)
+    const ParametricVolatility::MarketQuoteType outputMarketQuoteType, const Real outputLognormalShift)
     : optionTime_(optionTime), swapLength_(swapLength), atmLevel_(atmLevel),
-      parametricVolatility_(parametricVolatility), outputMarketQuoteType_(outputMarketQuoteType) {}
+      parametricVolatility_(parametricVolatility), outputMarketQuoteType_(outputMarketQuoteType),
+      outputLognormalShift_(outputLognormalShift) {}
 
 Real ParametricVolatilitySmileSection::atmLevel() const { return atmLevel_; }
 
 Real ParametricVolatilitySmileSection::volatilityImpl(Rate strike) const {
     if (auto v = cache_.find(strike); v != cache_.end())
         return v->second;
-    Real tmp = parametricVolatility_->evaluate(optionTime_, swapLength_, strike, atmLevel_, outputMarketQuoteType_);
+    Real tmp = parametricVolatility_->evaluate(optionTime_, swapLength_, strike, atmLevel_, outputMarketQuoteType_,
+                                               outputLognormalShift_);
     cache_[strike] = tmp;
     return tmp;
 }
