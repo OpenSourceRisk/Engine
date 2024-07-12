@@ -26,7 +26,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ./Docker/Dockerfile.aio.${{ dockerfile_postfix }}
+        file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
         load: true
         platforms: linux/amd64
         tags: orebuild:build
@@ -62,7 +62,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ./Docker/Dockerfile.aio.${{ dockerfile_postfix }}
+        file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
         load: true
         platforms: linux/amd64
         tags: ore-app:latest
