@@ -97,7 +97,7 @@ private:
 
 CSVFileReport::CSVFileReport(const string& filename, const char sep, const bool commentCharacter, char quoteChar,
                              const string& nullString, bool lowerHeader, QuantLib::Size rolloverSize)
-    : filename_(filename), sep_(sep), commentCharacter_(commentCharacter),
+    : filename_(filename), sep_(sep), commentCharacter_(commentCharacter), quoteChar_(quoteChar),
       nullString_(nullString), lowerHeader_(lowerHeader), rolloverSize_(rolloverSize), i_(0), fp_(NULL) {
     baseFilename_ = filename_;
     open();
