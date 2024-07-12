@@ -10,7 +10,7 @@ jobs:
   build-and-release:
     strategy:
       matrix:
-        dockerfile-postfix: [fedora40, centos-stream9]
+        dockerfile_postfix: [fedora40, centos-stream9]
     runs-on: ubuntu-24.04
     steps:
     # Get the repository's code
@@ -26,7 +26,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ./Docker/Dockerfile.aio.${{ dockerfile-postfix }}
+        file: ./Docker/Dockerfile.aio.${{ dockerfile_postfix }}
         load: true
         platforms: linux/amd64
         tags: orebuild:build
@@ -62,7 +62,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ./Docker/Dockerfile.aio.${{ dockerfile-postfix }}
+        file: ./Docker/Dockerfile.aio.${{ dockerfile_postfix }}
         load: true
         platforms: linux/amd64
         tags: ore-app:latest
