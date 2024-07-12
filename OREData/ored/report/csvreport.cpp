@@ -78,14 +78,14 @@ private:
     // Shared implementation to include the quote character.
     void fprintString(const string& s) const {
         bool quoted = s.size() > 1 && s[0] == quoteChar_ && s[s.size() - 1] == quoteChar_;
-        string sc = s;
+        string sc = quoted ? s.substr(1, s.size() - 2) : s;
         boost::replace_all(sc, "\n", "\\n");
         boost::replace_all(sc, "\t", "\\t");
         boost::replace_all(sc, "\"", "\\\"");
-        if (!quoted && quoteChar_ != '\0')
+        if (quoteChar_ != '\0')
             fputc(quoteChar_, fp_);
         fprintf(fp_, "%s", sc.c_str());
-        if (!quoted && quoteChar_ != '\0')
+        if (quoteChar_ != '\0')
             fputc(quoteChar_, fp_);
     }
 
