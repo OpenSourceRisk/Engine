@@ -28,6 +28,7 @@
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/bond.hpp>
 
 namespace ore {
 namespace data {

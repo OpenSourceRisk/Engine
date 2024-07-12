@@ -293,6 +293,8 @@ pricingengines/lgmconvolutionsolver.cpp
 pricingengines/mccamcurrencyswapengine.cpp
 pricingengines/mccamfxforwardengine.cpp
 pricingengines/mccamfxoptionengine.cpp
+pricingengines/mclgmbondengine.cpp
+pricingengines/mclgmfwdbondengine.cpp
 pricingengines/mclgmswapengine.cpp
 pricingengines/mclgmswaptionengine.cpp
 pricingengines/mcmultilegbaseengine.cpp
@@ -824,6 +826,8 @@ pricingengines/lgmconvolutionsolver.hpp
 pricingengines/mccamcurrencyswapengine.hpp
 pricingengines/mccamfxforwardengine.hpp
 pricingengines/mccamfxoptionengine.hpp
+pricingengines/mclgmbondengine.hpp
+pricingengines/mclgmfwdbondengine.hpp
 pricingengines/mclgmswapengine.hpp
 pricingengines/mclgmswaptionengine.hpp
 pricingengines/mcmultilegbaseengine.hpp
