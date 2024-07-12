@@ -1492,6 +1492,35 @@ void ReportWriter::writePricingStats(ore::data::Report& report, const QuantLib::
     LOG("Pricing stats report written");
 }
 
+void ReportWriter::writeRunTimes(ore::data::Report& report, const Timer& timer) {
+
+    LOG("Writing runtimes report");
+
+    report.addColumn("Key", string())
+        .addColumn("Total", Size())
+        .addColumn("Count", Size())
+        .addColumn("Max", Size())
+        .addColumn("Min", Size())
+        .addColumn("Average", double(), 2);
+    for (const auto& [key, stats] : timer.getTimes()) {
+        Size totalTime = stats.totalTime / 1000;
+        Size maxTime = stats.maxTime / 1000;
+        Size minTime = stats.minTime / 1000;
+        Size count = stats.count;
+        Real averageTime = stats.avgTime() / 1000;
+        report.next()
+            .add(boost::algorithm::join(key, "|"))
+            .add(totalTime)
+            .add(count)
+            .add(maxTime)
+            .add(minTime)
+            .add(averageTime);
+    }
+
+    report.end();
+    LOG("Finished writing runtimes report")
+}
+
 void ReportWriter::writeCube(ore::data::Report& report, const QuantLib::ext::shared_ptr<NPVCube>& cube,
                              const std::map<std::string, std::string>& nettingSetMap) {
     LOG("Writing cube report");

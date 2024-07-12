@@ -36,8 +36,6 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     if (!analytic()->match(runTypes))
         return;
 
-    LOG("SimmAnalytic::runAnalytic called");
-
     analytic()->buildMarket(loader, false);
 
     auto simmAnalytic = static_cast<SimmAnalytic*>(analytic());
@@ -79,6 +77,8 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
                                                    analytic()->market(),
                                                    simmAnalytic->determineWinningRegulations(),
                                                    inputs_->enforceIMRegulations());
+    
+    analytic()->addTimer("SimmCalculator", simm->timer());
 
     Real fxSpot = 1.0;
     if (!inputs_->simmReportingCurrency().empty()) {
@@ -105,7 +105,6 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
     analytic()->reports()[LABEL]["simm"] = simmReport;
     LOG("SIMM report generated");
     MEM_LOG;
-
 }
 
 void SimmAnalytic::loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {

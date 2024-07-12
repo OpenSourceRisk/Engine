@@ -167,6 +167,9 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
                 }
             }
             writeCubes(label, newAnalytic);
+            // FIXME: If the XVA analytic above is a dependent analytic, then we do not have to add this timer,
+            // otherwise we have to manually add the XvaAnalytic::timer
+            analytic()->addTimer("XVA analytic", newAnalytic->getTimer());
         } catch (const std::exception& e) {
             StructuredAnalyticsErrorMessage("XvaStress", "XVACalc",
                                             "Error during XVA calc under scenario " + label + ", got " + e.what() +

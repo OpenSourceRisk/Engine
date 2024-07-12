@@ -85,6 +85,7 @@ void IMScheduleAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         true, inputs_->enforceIMRegulations(), false, imAnalytic->hasSEC(),
         imAnalytic->hasCFTC());
     imAnalytic->setImSchedule(imSchedule);
+    analytic()->addTimer("IMScheduleCalculator", imSchedule->timer());
 
     Real fxSpotReport = 1.0;
     if (!inputs_->simmReportingCurrency().empty()) {
