@@ -6,6 +6,10 @@ on:
     branches:
       - "Containerfile-work"
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   build-and-release:
     strategy:
@@ -21,6 +25,14 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       
       # TODO sort out registry caching to make this faster
       # https://blacksmith.sh/blog/cache-is-king-a-guide-for-docker-layer-caching-in-github-actions
@@ -33,10 +45,10 @@ jobs:
           file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
           load: true
           platforms: linux/amd64
-          tags: ore-engine:${{ matrix.dockerfile_postfix }}-builder
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder
           target: builder
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder,mode=max
 
       # Run the tests in the result of the first stage build, saving the results to our filesystem
       - name: Create test-results folder
@@ -50,7 +62,7 @@ jobs:
           /usr/bin/docker run
           --workdir=/ore/build --volume $GITHUB_WORKSPACE/test-results:/ore/test-results
           --env NOSE_PROCESSES=${{ steps.cpu-cores.outputs.count }} --env NOSE_PROCESS_TIMEOUT=600 --env NOSE_WITH_XUNITMP=true --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml
-          ore-engine:${{ matrix.dockerfile_postfix }}-builder
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder
           ctest -j${{ steps.cpu-cores.outputs.count }} --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 5400
 
       # Register the xunit results
@@ -69,6 +81,6 @@ jobs:
           file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
           load: true
           platforms: linux/amd64
-          tags: ore-engine:latest-${{ matrix.dockerfile_postfix }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }},mode=max
