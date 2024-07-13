@@ -64,7 +64,7 @@ public:
     
     //! Simm methods
     //! Give back the set of portfolio IDs that have been loaded
-    const std::set<std::string>& portfolioIds() const;
+    std::set<std::string> portfolioIds() const;
     const std::set<ore::data::NettingSetDetails>& nettingSetDetails() const;
 
     //! check if the Crif contains simmParameters
