@@ -76,7 +76,7 @@ RUN microdnf install -y boost ocl-icd --nodocs && \
 
 # fetch built files from orebuild - we use a bind mount to allow us to copy library symlinks
 RUN mkdir -p /ore/bin /ore/lib
-RUN --mount=type=bind,from=orebuild,source=/usr/local,target=/orebuild cp -a /orebuild/bin/ore /ore/bin && cp -a /orebuild/lib/lib*.so* /ore/lib
+RUN --mount=type=bind,from=builder,source=/usr/local,target=/orebuild cp -a /orebuild/bin/ore /ore/bin && cp -a /orebuild/lib/lib*.so* /ore/lib
 
 # tell the linker where the libraries are, as the relative directories are no longer valid
 ENV LD_LIBRARY_PATH=/ore/lib
