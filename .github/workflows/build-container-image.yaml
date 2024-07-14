@@ -45,7 +45,7 @@ jobs:
           file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
           load: true
           platforms: linux/amd64
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder-$GITHUB_SHA
           target: builder
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder,mode=max
@@ -62,7 +62,7 @@ jobs:
           /usr/bin/docker run
           --workdir=/ore/build --volume $GITHUB_WORKSPACE/test-results:/ore/test-results
           --env NOSE_PROCESSES=${{ steps.cpu-cores.outputs.count }} --env NOSE_PROCESS_TIMEOUT=600 --env NOSE_WITH_XUNITMP=true --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder-$GITHUB_SHA
           ctest -j${{ steps.cpu-cores.outputs.count }} --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 5400
 
       # Register the xunit results
