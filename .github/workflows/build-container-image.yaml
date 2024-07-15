@@ -68,7 +68,8 @@ jobs:
       # Register the xunit results
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
+        # only if the tests ran - there are other results for skipped, etc.
+        if: success() || failure()
         with:
           files: |
             test-results/**/*.xml
