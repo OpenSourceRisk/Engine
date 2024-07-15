@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         dockerfile_postfix: [debian11, centos-stream9, fedora40]
+        platform: [amd64, arm64]
     runs-on: ubuntu-24.04
     steps:
     
@@ -22,6 +23,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -44,7 +48,7 @@ jobs:
           context: .
           file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
           load: true
-          platforms: linux/amd64
+          platforms: ${{ matrix.platform }}
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder-${{ github.sha }}
           target: builder
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder
