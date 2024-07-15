@@ -2,7 +2,7 @@ ARG debian_tag=11
 FROM debian:${debian_tag} AS builder
 
 MAINTAINER Quaternion Risk Management
-LABEL Description="Fedora-based multi-stage container definition for ORE"
+LABEL Description='Multi-stage container definition for ORE on Debian 11 ("bullseye")'
 
 ARG build_jobs=
 ARG cmake_build_type=Release
