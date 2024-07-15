@@ -1286,8 +1286,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         writeSimData(simDataTmp, absoluteSimDataTmp, param.first, name, {});
                         simDataWritten = true;
-                        recoveryRates_.insert(
-                            make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, param.first, simDataWritten);
                     }
