@@ -15,7 +15,6 @@ jobs:
     strategy:
       matrix:
         dockerfile_postfix: [debian11, centos-stream9, fedora40]
-        platform: [amd64, arm64]
     runs-on: ubuntu-24.04
     steps:
     
