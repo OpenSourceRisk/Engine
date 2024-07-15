@@ -27,6 +27,11 @@
 #include <ored/utilities/to_string.hpp>
 #include <string>
 #include <variant>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index_container.hpp>
 
 namespace ore {
 namespace analytics {
@@ -184,16 +189,6 @@ struct CrifRecord {
         }
     }
 
-    CrifRecord(std::string tradeId, std::string tradeType, std::string portfolioId,
-               ProductClass productClass, RiskType riskType,
-               std::string qualifier, std::string bucket, std::string label1, std::string label2,
-               std::string amountCurrency, QuantLib::Real amount, QuantLib::Real amountUsd, std::string imModel = "",
-               std::string collectRegulations = "", std::string postRegulations = "", std::string endDate = "",
-               std::map<std::string, std::string> additionalFields = {})
-        : CrifRecord(tradeId, tradeType, NettingSetDetails(portfolioId), productClass, riskType, qualifier,
-                     bucket, label1, label2, amountCurrency, amount, amountUsd, imModel,
-                     collectRegulations, postRegulations, endDate, additionalFields) {}
-
     RecordType type() const;
 
     bool hasAmountCcy() const { return !amountCurrency.empty(); }
@@ -322,6 +317,22 @@ struct CrifRecord {
         }
     }
 
+    static bool amountCcyRegsLTCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
+        if (cr1.type() == RecordType::FRTB || cr2.type() == RecordType::FRTB) {
+            return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
+                            cr1.bucket, cr1.label1, cr1.label2, cr1.label3, cr1.endDate, cr1.creditQuality,
+                            cr1.longShortInd, cr1.coveredBondInd, cr1.trancheThickness, cr1.bb_rw) <
+                   std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass, cr2.riskType, cr2.qualifier,
+                            cr2.bucket, cr2.label1, cr2.label2, cr2.label3, cr2.endDate, cr2.creditQuality,
+                            cr2.longShortInd, cr2.coveredBondInd, cr2.trancheThickness, cr2.bb_rw);
+        } else {
+            return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
+                            cr1.bucket, cr1.label1, cr1.label2) <
+                   std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass, cr2.riskType,
+                            cr2.qualifier, cr2.bucket, cr2.label1, cr2.label2);
+        }
+    }
+
     bool operator==(const CrifRecord& cr) const {
         if (type() == RecordType::FRTB || cr.type() == RecordType::FRTB) {
             return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
@@ -374,5 +385,17 @@ CrifRecord::ProductClass parseProductClass(const std::string& pc);
 
 CrifRecord::CurvatureScenario parseFrtbCurvatureScenario(const std::string& scenario);
 
+/*! A structure that we can use to aggregate CrifRecords across trades in a portfolio
+    to provide the net sensitivities that we need to perform a downstream SIMM calculation.
+*/
+// clang-format off
+typedef boost::multi_index_container<CrifRecord,
+    boost::multi_index::indexed_by<
+        // The CRIF record itself and its '<' operator define a unique index
+        boost::multi_index::ordered_unique<boost::multi_index::identity<CrifRecord>>
+    >
+>
+    CrifRecordContainer;
+// clang-format on
 } // namespace analytics
 } // namespace ore

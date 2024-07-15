@@ -1,105 +1,119 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0"?>
 <Portfolio>
-  <Trade id="XCCY_Swap_EUR_USD">
+  <Trade id="Swaption_USD_SOFR">
+    <TradeType>Swaption</TradeType>
+    <Envelope>
+      <NettingSetId>DUMMY_NS</NettingSetId>
+      <CounterParty>DUMMY_CP</CounterParty>
+      <AdditionalFields/>
+    </Envelope>
+    <SwaptionData>
+      <LegData>
+        <Payer>true</Payer>
+        <LegType>Floating</LegType>
+        <Currency>USD</Currency>
+        <PaymentConvention>MF</PaymentConvention>
+        <DayCounter>A360</DayCounter>
+        <Notionals>
+          <Notional>100000000</Notional>
+        </Notionals>
+        <FloatingLegData>
+          <Index>USD-SOFR</Index>
+          <Spreads>
+            <Spread>0.00</Spread>
+          </Spreads>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <Convention>MF</Convention>
+            <StartDate>2026-01-12</StartDate>
+            <EndDate>2046-01-12</EndDate>
+            <TermConvention>MF</TermConvention>
+            <Tenor>1Y</Tenor>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <Payer>false</Payer>
+        <LegType>Fixed</LegType>
+        <Currency>USD</Currency>
+        <PaymentConvention>MF</PaymentConvention>
+        <DayCounter>A360</DayCounter>
+        <Notionals>
+          <Notional>100000000</Notional>
+        </Notionals>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.01537</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <Convention>MF</Convention>
+            <StartDate>2026-01-12</StartDate>
+            <EndDate>2046-01-12</EndDate>
+            <TermConvention>MF</TermConvention>
+            <Tenor>1Y</Tenor>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <Style>European</Style>
+        <Settlement>Physical</Settlement>
+        <ExerciseDates>
+          <ExerciseDate>2026-01-08</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+    </SwaptionData>
+  </Trade>
+  <Trade id="Cap_USD_SOFR">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>PricerStaticDate</NettingSetId>
-      <PortfolioIds>
-        <PortfolioId>PF1</PortfolioId>
-      </PortfolioIds>
+      <NettingSetId>DUMMY_NS</NettingSetId>
+      <CounterParty>DUMMY_CP</CounterParty>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
       <LegData>
         <LegType>Floating</LegType>
-        <Payer>true</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>30000000</Notional>
-          <Exchanges>
-            <NotionalInitialExchange>true</NotionalInitialExchange>
-            <NotionalFinalExchange>true</NotionalFinalExchange>
-          </Exchanges>
-        </Notionals>
-        <DayCounter>A360</DayCounter>
-        <PaymentConvention>ModifiedFollowing</PaymentConvention>
-        <FloatingLegData>
-          <Index>EUR-EURIBOR-6M</Index>
-          <FixingDays>0</FixingDays>
-          <Spreads>
-            <Spread>0.0</Spread>
-          </Spreads>
-        </FloatingLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2012-09-05</StartDate>
-            <EndDate>2025-09-05</EndDate>
-            <Tenor>6M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-      <LegData>
-        <LegType>Floating</LegType>
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>33900000</Notional>
-          <Exchanges>
-            <NotionalInitialExchange>true</NotionalInitialExchange>
-            <NotionalFinalExchange>true</NotionalFinalExchange>
-          </Exchanges>
+          <Notional>100000000</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
-        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>USD-LIBOR-3M</Index>
+          <Index>USD-SOFR</Index>
           <FixingDays>0</FixingDays>
+          <Lookback>0D</Lookback>
+          <RateCutoff>2</RateCutoff>
+          <IncludeSpread>false</IncludeSpread>
           <Spreads>
             <Spread>0.0</Spread>
           </Spreads>
+          <Floors>
+            <Floor>0.0</Floor>
+          </Floors>
+          <NakedOption>true</NakedOption>
+          <LocalCapFloor>false</LocalCapFloor>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>2012-09-05</StartDate>
-            <EndDate>2025-09-05</EndDate>
+            <StartDate>20240321</StartDate>
+            <EndDate>20250321</EndDate>
             <Tenor>3M</Tenor>
-            <Calendar>UK</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
+            <Calendar>US</Calendar>
+            <Convention>MF</Convention>
+            <Rule>Backward</Rule>
+            <EndOfMonth>false</EndOfMonth>
             <FirstDate/>
             <LastDate/>
           </Rules>
         </ScheduleData>
       </LegData>
     </SwapData>
-  </Trade>
-  <Trade id="FXFWD_EURUSD_10Y">
-    <TradeType>FxForward</TradeType>
-    <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>PricerStaticDate</NettingSetId>
-      <PortfolioIds>
-        <PortfolioId>PF1</PortfolioId>
-      </PortfolioIds>
-      <AdditionalFields/>
-    </Envelope>
-    <FxForwardData>
-      <ValueDate>2029-03-01</ValueDate>
-      <BoughtCurrency>EUR</BoughtCurrency>
-      <BoughtAmount>1000000</BoughtAmount>
-      <SoldCurrency>USD</SoldCurrency>
-      <SoldAmount>1100000</SoldAmount>
-      <Settlement>Cash</Settlement>
-    </FxForwardData>
   </Trade>
 </Portfolio>

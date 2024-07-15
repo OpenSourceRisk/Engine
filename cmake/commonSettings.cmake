@@ -69,30 +69,6 @@ if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY
         "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<BOOL:${MSVC_LINK_DYNAMIC_RUNTIME}>:DLL>")
 
-    # link against static boost libraries
-    if(NOT DEFINED Boost_USE_STATIC_LIBS)
-        if(BUILD_SHARED_LIBS)
-            set(Boost_USE_STATIC_LIBS 0)
-        else()
-            set(Boost_USE_STATIC_LIBS 1)
-        endif()
-    endif()
-
-    # Boost static runtime ON for MSVC
-    if(NOT DEFINED Boost_USE_STATIC_RUNTIME)
-        if(BUILD_SHARED_LIBS OR(MSVC AND MSVC_LINK_DYNAMIC_RUNTIME))
-            set(Boost_USE_STATIC_RUNTIME 0)
-        else()
-            set(Boost_USE_STATIC_RUNTIME 1)
-        endif()
-    endif()
-
-
-
-    IF(NOT Boost_USE_STATIC_LIBS)
-        add_definitions(-DBOOST_ALL_DYN_LINK)
-        add_definitions(-DBOOST_TEST_DYN_LINK)
-    endif()
     add_compile_options(/external:env:BOOST)
     add_compile_options(/external:W0)
     add_compile_definitions(_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
@@ -104,16 +80,16 @@ if(MSVC)
     add_compile_options(/W3)
     #add_compile_options(/we4265) #no-virtual-destructor
     #add_compile_options(/we4388) # 'equality-operator' : signed/unsigned mismatch
-    add_compile_options(/we5038) # reorder 
+    add_compile_options(/we5038) # reorder
     # add_compile_options(/we4101) # unreferenced local variable (too strict)
     add_compile_options(/we4189) # 'identifier' : local variable is initialized but not referenced
     add_compile_options(/we4700) # uninitialized local variable 'name' used
-    add_compile_options(/we5233) # unused lambda 
+    add_compile_options(/we5233) # unused lambda
     add_compile_options(/we4508) # 'function' : function should return a value; 'void' return type assumed
     add_compile_options(/wd4834)
     add_compile_options(/we26815) # dangling references/pointer
     # add_compiler_flag("/we4389" signed_compare_mscv)
-    
+
     add_link_options(/LARGEADDRESSAWARE)
 
     add_compile_options("$<$<CONFIG:Release>:/GF>")
@@ -137,9 +113,8 @@ else()
         set(BUILD_SHARED_LIBS ON)
     endif()
 
-    # link against dynamic boost libraries
-    add_definitions(-DBOOST_ALL_DYN_LINK)
-    add_definitions(-DBOOST_TEST_DYN_LINK)
+    # Issue with Boost CMake finder introduced in version 1.70
+    set(Boost_NO_BOOST_CMAKE         ON)
 
     # avoid a crash in valgrind that sometimes occurs if this flag is not defined
     add_definitions(-DBOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS)
@@ -196,8 +171,33 @@ else()
     # if QuantLib is build separately
     include_directories("${CMAKE_CURRENT_LIST_DIR}/../QuantLib/build")
 
-   
 endif()
+
+# Boost #
+# link against static boost libraries
+if(NOT DEFINED Boost_USE_STATIC_LIBS)
+    if(BUILD_SHARED_LIBS)
+        set(Boost_USE_STATIC_LIBS OFF)
+    else()
+        set(Boost_USE_STATIC_LIBS ON)
+    endif()
+endif()
+
+# Boost static runtime. ON for MSVC
+if(NOT DEFINED Boost_USE_STATIC_RUNTIME)
+    if(BUILD_SHARED_LIBS OR(MSVC AND MSVC_LINK_DYNAMIC_RUNTIME))
+        set(Boost_USE_STATIC_RUNTIME OFF)
+    else()
+        set(Boost_USE_STATIC_RUNTIME ON)
+    endif()
+endif()
+
+if(NOT Boost_USE_STATIC_LIBS)
+    # link against dynamic boost libraries
+    add_definitions(-DBOOST_ALL_DYN_LINK)
+    add_definitions(-DBOOST_TEST_DYN_LINK)
+endif()
+# Boost end #
 
 # workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111
 add_definitions(-DBOOST_PHOENIX_STL_TUPLE_H_)
@@ -244,7 +244,7 @@ macro(get_library_name LIB_NAME OUTPUT_NAME)
         else()
             set(CMAKE_DEBUG_POSTFIX "-gd")
         endif()
-    
+
 
         set(${OUTPUT_NAME} "${LIB_NAME}${LIB_PLATFORM}${LIB_THREAD_OPT}${LIB_RT_OPT}")
     else()

@@ -17,25 +17,53 @@
 */
 
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/utilities/serializationdate.hpp>
+#include <ored/utilities/serializationperiod.hpp>
 
 #include <boost/algorithm/string/join.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/variant.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/filesystem.hpp>
+
+#include <fstream>
 
 namespace ore {
 namespace data {
+
+InMemoryReport::~InMemoryReport() {
+    for (const auto &f : files_)
+        std::remove(f.c_str());
+}
 
 Report& InMemoryReport::addColumn(const string& name, const ReportType& rt, Size precision) {
     headers_.push_back(name);
     columnTypes_.push_back(rt);
     columnPrecision_.push_back(precision);
-    data_.push_back(vector<ReportType>()); // Initialise vector for
+    data_.push_back(vector<ReportType>()); // Initialise vector for column
+    headersMap_[name] = i_;
     i_++;
     return *this;
 }
 
 Report& InMemoryReport::next() {
-    QL_REQUIRE(i_ == headers_.size(), "Cannot go to next line, only " << i_ << " entires filled, report headers are: "
+    QL_REQUIRE(i_ == headers_.size(), "Cannot go to next line, only " << i_ << " entries filled, report headers are: "
                                                                       << boost::join(headers_, ","));
     i_ = 0;
+    if (bufferSize_ && data_[0].size() == bufferSize_ && !headers_.empty()) {
+        boost::filesystem::path p = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        std::string s = p.string();
+        std::ofstream os(s.c_str(), std::ios::binary);
+        boost::archive::binary_oarchive oa(os, boost::archive::no_header);
+        for (Size i = 0; i < headers_.size(); i++) {
+            oa << data_[i];
+            data_[i].clear();
+        }
+        os.close();
+        files_.push_back(s);
+    }
     return *this;
 }
 
@@ -85,6 +113,8 @@ void InMemoryReport::end() {
 }
 
 const vector<Report::ReportType>& InMemoryReport::data(Size i) const {
+    QL_REQUIRE(files_.empty(), "Member function InMemoryReport::data() is not supported "
+        "when buffering is active");
     QL_REQUIRE(data_[i].size() == rows(), "internal error: report column "
                                               << i << " (" << header(i) << ") contains " << data_[i].size()
                                               << " rows, expected are " << rows()
@@ -103,6 +133,24 @@ void InMemoryReport::toFile(const string& filename, const char sep, const bool c
 
     auto numColumns = columns();
     if (numColumns > 0) {
+
+        for (auto &f : files_) {
+            vector<vector<ReportType>> data(numColumns);
+            std::ifstream is(f.c_str(), std::ios::binary);
+            boost::archive::binary_iarchive ia(is, boost::archive::no_header);
+            for (Size i = 0; i < numColumns; i++) {
+                ia >> data[i];
+            }
+            is.close();
+
+            for (Size i = 0; i < data[0].size(); i++) {
+                cReport.next();
+                for (Size j = 0; j < numColumns; j++) {
+                    cReport.add(data[j][i]);
+                }
+            }
+        }
+
         auto numRows = data_[0].size();
 
         for (Size i = 0; i < numRows; i++) {

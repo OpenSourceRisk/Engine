@@ -66,6 +66,7 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
     QuantLib::DayCounter dayCounter = QuantLib::ActualActual(QuantLib::ActualActual::ISDA);
 
     // Collect Schedule CRIF records
+    timer_.start("Cleaning up CRIF input");
     Crif tmp;
     for (const CrifRecord& cr : crif_) {
         const bool isSchedule = cr.imModel == "Schedule";
@@ -96,14 +97,17 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
         tmp.addRecord(cr);
     }
     crif_ = tmp;
-
+    timer_.stop("Cleaning up CRIF input");
 
     // Separate out CRIF records by regulations and collect per-trade data
     LOG("IMScheduleCalculator: Collecting CRIF trade data");
+    timer_.start("Collecting trade data");
     for (const auto& crifRecord : crif_)
         collectTradeData(crifRecord, enforceIMRegulations);
+    timer_.stop("Collecting trade data");
 
     // Remove (or modify) trades with incomplete data
+    timer_.start("Cleaning up incomplete trade data");
     for (auto& sv : nettingSetRegTradeData_) {
         const SimmSide& side = sv.first;
 
@@ -165,8 +169,10 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
             }
         }
     }
+    timer_.stop("Cleaning up incomplete trade data");
 
     // Some additional processing depending on the regulations applicable to each netting set
+    timer_.start("Processing CRIF regulations");
     for (auto& sv : nettingSetRegTradeData_) {
         const SimmSide& side = sv.first;
     
@@ -205,6 +211,7 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
                 s.second.erase("Unspecified");
         }
     }
+    timer_.stop("Processing CRIF regulations");
 
     // Calculate the higher level margins
     LOG("IMScheduleCalculator: Populating higher level results")
@@ -479,8 +486,8 @@ void IMScheduleCalculator::populateResults(const NettingSetDetails& nettingSetDe
         // Sum up trade details to obtain netting set level values:
         // - Gross margin, gross RC, net RC, PVs
         grossMarginCalc += tradeData.grossMarginCalc;
-        grossRCCalc +=
-            side == SimmSide::Call ? max(0.0, tradeData.presentValueCalc) : min(0.0, tradeData.presentValueCalc);
+        grossRCCalc += side == SimmSide::Call ? std::max(0.0, tradeData.presentValueCalc)
+                                              : std::min(0.0, tradeData.presentValueCalc);
 
         presentValueCalc += tradeData.presentValueCalc;
     }
@@ -488,7 +495,7 @@ void IMScheduleCalculator::populateResults(const NettingSetDetails& nettingSetDe
     // Calculate other amounts at the nettingSet-regulator level
 
     // Net replacement cost
-    Real netRCCalc = side == SimmSide::Call ? max(0.0, presentValueCalc) : min(0.0, presentValueCalc);
+    Real netRCCalc = side == SimmSide::Call ? std::max(0.0, presentValueCalc) : std::min(0.0, presentValueCalc);
 
     // Net-to-gross ratio
     Real netToGrossCalc = close_enough(grossRCCalc, 0.0) ? 1.0 : netRCCalc / grossRCCalc;

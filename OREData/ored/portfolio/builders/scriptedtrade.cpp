@@ -265,6 +265,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     DLOG("useAd                = " << std::boolalpha << useAd_);
     DLOG("useExternalDevice    = " << std::boolalpha << useExternalComputeDevice_);
     DLOG("useDblPrecExtCalc    = " << std::boolalpha << useDoublePrecisionForExternalCalculation_);
+    DLOG("extDeviceCompatMode  = " << std::boolalpha << externalDeviceCompatibilityMode_);
     DLOG("externalDevice       = " << (useExternalComputeDevice_ ? externalComputeDevice_ : "na"));
     DLOG("calibration          = " << calibration_);
     DLOG("base ccy             = " << baseCcy_);
@@ -324,8 +325,19 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
             generateAdditionalResults, includePastCashflows_);
     } else if (modelCG_) {
         auto rt = globalParameters_.find("RunType");
-        bool useCachedSensis = useAd_ && (rt != globalParameters_.end() && rt->second == "SensitivityDelta");
+        std::string runType = rt != globalParameters_.end() ? rt->second : "<<no run type set>>";
+        bool useCachedSensis = useAd_ && (runType == "SensitivityDelta");
         bool useExternalDev = useExternalComputeDevice_ && !generateAdditionalResults && !useCachedSensis;
+        if (useAd_ && !useCachedSensis) {
+            WLOG("Will not apply AD although useAD is configured, because runType ("
+                 << runType << ") does not match SensitivitiyDelta");
+        }
+        if (useExternalComputeDevice_ && !useExternalDev) {
+            WLOG("Will not use exxternal compute deivce although useExternalComputeDevice is configured, because we "
+                 "are either applying AD ("
+                 << std::boolalpha << useCachedSensis << ") or we are generating add results ("
+                 << generateAdditionalResults << "), both of which do not support external devices at the moment.");
+        }
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngineCG>(
             script.npv(), script.results(), modelCG_, ast_, context, mcParams_, script.code(), interactive_,
             generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev,
@@ -362,6 +374,8 @@ void ScriptedTradeEngineBuilder::clear() {
     simulationDates_.clear();
     addDates_.clear();
     calibrationStrikes_.clear();
+    model_ = nullptr;
+    modelCG_ = nullptr;
 }
 
 void ScriptedTradeEngineBuilder::extractIndices(
@@ -489,7 +503,10 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     useDoublePrecisionForExternalCalculation_ =
         parseBool(engineParameter("UseDoublePrecisionForExternalCalculation", {resolvedProductTag_}, false, "false"));
     externalComputeDevice_ = engineParameter("ExternalComputeDevice", {}, false, "");
+    externalDeviceCompatibilityMode_ = parseBool(engineParameter("ExternalDeviceCompatibilityMode", {}, false, "false"));
     includePastCashflows_ = parseBool(engineParameter("IncludePastCashflows", {resolvedProductTag_}, false, "false"));
+    salvagingAlgorithm_ =
+        parseSalvagingAlgorithmType(engineParameter("SalvagingAlgorithm", {resolvedProductTag_}, false, "Spectral"));
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
@@ -543,6 +560,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
         }
         mcParams_.regressionVarianceCutoff =
             parseRealOrNull(engineParameter("RegressionVarianceCutoff", {resolvedProductTag_}, false, std::string()));
+        mcParams_.externalDeviceCompatibilityMode = externalDeviceCompatibilityMode_;
     } else if (engineParam_ == "FD") {
         modelSize_ = parseInteger(engineParameter("StateGridPoints", {resolvedProductTag_}));
         mesherEpsilon_ = parseReal(engineParameter("MesherEpsilon", {resolvedProductTag_}, false, "1.0E-4"));
@@ -956,7 +974,9 @@ void ScriptedTradeEngineBuilder::setupBlackScholesProcesses() {
             auto spot = Handle<Quote>(QuantLib::ext::make_shared<DerivedPriceQuote>(
                 market_->commodityPriceCurve(name, configuration(MarketContext::pricing))));
             auto priceCurve = market_->commodityPriceCurve(name, configuration(MarketContext::pricing));
-            auto fc = market_->discountCurve(modelIndicesCurrencies_[i], configuration(MarketContext::pricing));
+            auto fc = modelIndicesCurrencies_[i] == baseCcy_
+                          ? modelCurves_.front()
+                          : market_->discountCurve(modelIndicesCurrencies_[i], configuration(MarketContext::pricing));
             auto div = Handle<YieldTermStructure>(QuantLib::ext::make_shared<PriceTermStructureAdapter>(*priceCurve, *fc));
             div->enableExtrapolation();
             if (!zeroVolatility_)
@@ -967,8 +987,10 @@ void ScriptedTradeEngineBuilder::setupBlackScholesProcesses() {
             std::string targetCcy = ind.fx()->targetCurrency().code();
             std::string sourceCcy = ind.fx()->sourceCurrency().code();
             auto spot = market_->fxSpot(sourceCcy + targetCcy, configuration(MarketContext::pricing));
-            auto div = market_->discountCurve(sourceCcy, configuration(MarketContext::pricing));
-            auto fc = market_->discountCurve(targetCcy, configuration(MarketContext::pricing));
+            auto div = sourceCcy == baseCcy_ ? modelCurves_.front()
+                                             : market_->discountCurve(sourceCcy, configuration(MarketContext::pricing));
+            auto fc = targetCcy == baseCcy_ ? modelCurves_.front()
+                                            : market_->discountCurve(targetCcy, configuration(MarketContext::pricing));
             if (!zeroVolatility_)
                 vol = market_->fxVol(sourceCcy + targetCcy, configuration(MarketContext::pricing));
             processes_.push_back(QuantLib::ext::make_shared<GeneralizedBlackScholesProcess>(spot, div, fc, vol));
@@ -1228,12 +1250,14 @@ void ScriptedTradeEngineBuilder::buildLocalVol(const std::string& id, const Ibor
     else {
         QL_FAIL("local vol model type " << modelParam_ << " not recognised.");
     }
-    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(modelCurves_, processes_, simulationDates_, addDates_,
-                                                            timeStepsPerYear_, lvType, calibrationMoneyness_,
-                                                            !calibrate_ || zeroVolatility_);
+
+    auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
+        modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
+        !calibrate_ || zeroVolatility_);
     model_ = QuantLib::ext::make_shared<LocalVol>(modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_,
-                                          modelInfIndices_, modelIndices_, modelIndicesCurrencies_, builder->model(),
-                                          correlations_, mcParams_, simulationDates_, iborFallbackConfig);
+                                                  modelInfIndices_, modelIndices_, modelIndicesCurrencies_,
+                                                  builder->model(), correlations_, mcParams_, simulationDates_,
+                                                  iborFallbackConfig, salvagingAlgorithm_);
     modelBuilders_.insert(std::make_pair(id, builder));
 }
 
@@ -1287,8 +1311,8 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
 
     map<CorrelationKey, Handle<Quote>> camCorrelations;
     for (auto const& c : tmpCorrelations) {
-        CorrelationFactor f_1 = parseCorrelationFactor(c.first.first);
-        CorrelationFactor f_2 = parseCorrelationFactor(c.first.second);
+        CorrelationFactor f_1 = parseCorrelationFactor(c.first.first, '#');
+        CorrelationFactor f_2 = parseCorrelationFactor(c.first.second, '#');
         // update index for JY from 0 to 1 (i.e. to the factor driving the inf index ("fx") process)
         // in all other cases the index 0 is fine, since there is only one driving factor always
         if (infModelType_ == "JY") {
@@ -1307,11 +1331,11 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     std::set<CorrelationFactor> allCorrRiskFactors;
 
     for (auto const& m : modelIndices_)
-        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m).first));
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m).first, '#'));
     for (auto const& m : modelIrIndices_)
-        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first));
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first, '#'));
     for (auto const& m : modelInfIndices_)
-        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first));
+        allCorrRiskFactors.insert(parseCorrelationFactor(convertIndexToCamCorrelationEntry(m.first).first, '#'));
     for (auto const& ccy : modelCcys_)
         allCorrRiskFactors.insert({CrossAssetModel::AssetType::IR, ccy, 0});
 
@@ -1364,7 +1388,6 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     std::vector<QuantLib::ext::shared_ptr<FxBsData>> fxConfigs;
     std::vector<QuantLib::ext::shared_ptr<EqBsData>> eqConfigs;
     std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>> comConfigs;
-    // TODO: populate comConfigs
 
     // calibration expiries and terms for IR, INF, FX, EQ parametrisations (this will only work for a fixed reference
     // date, due to the way the cam builder and nested builders work, see ticket #940)
@@ -1392,7 +1415,9 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
         auto config = QuantLib::ext::make_shared<IrLgmData>();
         config->qualifier() = getFirstIrIndexOrCcy(modelCcys_[i], irIndices_);
         config->reversionType() = LgmData::ReversionType::HullWhite;
-        config->volatilityType() = LgmData::VolatilityType::Hagan;
+        config->volatilityType() = parseVolatilityType(modelParameter(
+            "IrVolatilityType", {resolvedProductTag_ + "_" + modelCcys_[i], modelCcys_[i], resolvedProductTag_}, false,
+            "Hagan"));
         config->calibrateH() = false;
         config->hParamType() = ParamType::Constant;
         config->hTimes() = std::vector<Real>();
@@ -1463,23 +1488,54 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
             std::vector<CalibrationBasket> calBaskets(1, CalibrationBasket(calInstr));
             if (infModelType_ == "DK") {
                 // build DK config
+                std::string infName = IndexInfo(modelInfIndices_[i].first).infName();
+                Real vol = parseReal(modelParameter("InfDkVolatility",
+                                                    {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_},
+                                                    false, "0.0050"));
                 config = QuantLib::ext::make_shared<InfDkData>(
                     CalibrationType::Bootstrap, calBaskets, modelInfIndices_[i].second->currency().code(),
                     IndexInfo(modelInfIndices_[i].first).infName(),
                     ReversionParameter(LgmData::ReversionType::Hagan, true, ParamType::Piecewise, {}, {0.60}),
-                    VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise, {}, {0.0050}),
+                    VolatilityParameter(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise, {}, {vol}),
                     LgmReversionTransformation(),
                     // ignore duplicate expiry times among calibration instruments
                     true);
             } else if (infModelType_ == "JY") {
                 // build JY config
-                // we calibrate the index ("fx") process to CPI cap/floors and set the real rate process reversion equal to
-                // the nominal process reversion. The real rate vol is set to a fixed multiple of nominal rate vol, the
-                // multiplier is taken from the pe config model parameter "InfJyRealToNominalVolRatio"
                 std::string infName = IndexInfo(modelInfIndices_[i].first).infName();
                 Size ccyIndex =
                     std::distance(modelCcys_.begin(), std::find(modelCcys_.begin(), modelCcys_.end(),
                                                                 modelInfIndices_[i].second->currency().code()));
+                // check if vol / reversion is overwritten by pricing engine config parameters
+                if (auto tmp = modelParameter("InfJyTimes",
+                                              {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_},
+                                              false, std::string());
+                    !tmp.empty()) {
+                    auto tmp2 = modelParameter(
+                        "InfJyRealRateVol", {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_}, true);
+                    auto tmp3 = modelParameter(
+                        "InfJyIndexVol", {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_}, true);
+                    auto tmp4 =
+                        modelParameter("InfJyRealRateReversion",
+                                       {resolvedProductTag_ + "_" + infName, infName, resolvedProductTag_}, true);
+                    auto irVolType = *QuantLib::ext::static_pointer_cast<LgmData>(irConfigs[ccyIndex])
+                                          ->volatilityParameter()
+                                          .volatilityType();
+                    VolatilityParameter realRateVol(irVolType, false, ParamType::Piecewise,
+                                                    parseListOfValues<double>(tmp, parseReal),
+                                                    parseListOfValues<double>(tmp2, parseReal));
+                    VolatilityParameter indexVol(false, ParamType::Piecewise, parseListOfValues<double>(tmp, parseReal),
+                                                 parseListOfValues<double>(tmp3, parseReal));
+                    ReversionParameter realRateRev(LgmData::ReversionType::HullWhite, false, ParamType::Piecewise, {},
+                                                   {parseReal(tmp4)});
+                    config = QuantLib::ext::make_shared<InfJyData>(
+                        CalibrationType::None, std::vector<CalibrationBasket>{},
+                        modelInfIndices_[i].second->currency().code(), infName, realRateRev, realRateVol, indexVol,
+                        LgmReversionTransformation(), CalibrationConfiguration(), true, false);
+                } else {
+                // we calibrate the index ("fx") process to CPI cap/floors and set the real rate process reversion equal
+                // to the nominal process reversion. The real rate vol is set to a fixed multiple of nominal rate vol,
+                // the multiplier is taken from the pe config model parameter "InfJyRealToNominalVolRatio"
                 ReversionParameter realRateRev = QuantLib::ext::static_pointer_cast<LgmData>(irConfigs[ccyIndex])->reversionParameter();
                 VolatilityParameter realRateVol = QuantLib::ext::static_pointer_cast<LgmData>(irConfigs[ccyIndex])->volatilityParameter();
                 realRateRev.setCalibrate(false);
@@ -1505,6 +1561,7 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
                     true,
                     // real rate to nominal rate ratio
                     realRateToNominalRateRatio);
+                }
             } else {
                 QL_FAIL("invalid infModelType '" << infModelType_ << "', expected DK or JY");
             }
@@ -1579,20 +1636,39 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     std::vector<QuantLib::ext::shared_ptr<CrLgmData>> crLgmConfigs;
     std::vector<QuantLib::ext::shared_ptr<CrCirData>> crCirConfigs;
 
-    // COMM configs, not supported at this point
-    QL_REQUIRE(commIndices_.empty(), "GaussianCam model does not support commodity underlyings currently");
+    // COMM configs
+    for (auto const& comm : commIndices_) {
+        auto config = QuantLib::ext::make_shared<CommoditySchwartzData>();
+        config->currency() = getCommCcy(comm);
+        config->name() = comm.commName();
+        if (calibrationExpiries.empty() || zeroVolatility_) {
+            config->calibrationType() = CalibrationType::None;
+            config->calibrateSigma() = false;
+            config->sigmaParamType() = ParamType::Constant;
+            config->sigmaValue() = 0.0;
+        } else {
+            config->calibrationType() = CalibrationType::BestFit;
+            config->calibrateSigma() = true;
+            config->sigmaParamType() = ParamType::Constant;
+            config->sigmaValue() = 0.10; // start value for optimizer
+            config->optionExpiries() = calibrationExpiries;
+            config->optionStrikes() =
+                std::vector<std::string>(calibrationExpiries.size(), "ATMF"); // hardcoded ATMF calibration strike
+        }
+        comConfigs.push_back(config);
+    }
 
     std::string configurationInCcy = configuration(MarketContext::irCalibration);
     std::string configurationXois = configuration(MarketContext::pricing);
     auto discretization = useCg_ ? CrossAssetModel::Discretization::Euler : CrossAssetModel::Discretization::Exact;
     auto camBuilder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         market_,
-        QuantLib::ext::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs,
-                                                comConfigs, 0, camCorrelations, bootstrapTolerance_, "LGM",
-                                                discretization),
+        QuantLib::ext::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs,
+                                                        crCirConfigs, comConfigs, 0, camCorrelations,
+                                                        bootstrapTolerance_, "LGM", discretization),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
-        SalvagingAlgorithm::Spectral, id);
+        salvagingAlgorithm_, id);
 
     // effective time steps per year: zero for exact evolution, otherwise the pricing engine parameter
     if (useCg_) {
@@ -1693,15 +1769,16 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
     auto camBuilder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         market_,
         QuantLib::ext::make_shared<CrossAssetModelData>(
-            std::vector<QuantLib::ext::shared_ptr<IrModelData>>{config}, std::vector<QuantLib::ext::shared_ptr<FxBsData>>{},
-            std::vector<QuantLib::ext::shared_ptr<EqBsData>>{}, std::vector<QuantLib::ext::shared_ptr<InflationModelData>>{},
+            std::vector<QuantLib::ext::shared_ptr<IrModelData>>{config},
+            std::vector<QuantLib::ext::shared_ptr<FxBsData>>{}, std::vector<QuantLib::ext::shared_ptr<EqBsData>>{},
+            std::vector<QuantLib::ext::shared_ptr<InflationModelData>>{},
             std::vector<QuantLib::ext::shared_ptr<CrLgmData>>{}, std::vector<QuantLib::ext::shared_ptr<CrCirData>>{},
             std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>{}, 0,
             std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>{}, bootstrapTolerance_, "LGM",
             CrossAssetModel::Discretization::Exact),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
-        SalvagingAlgorithm::Spectral, id);
+        salvagingAlgorithm_, id);
 
     model_ = QuantLib::ext::make_shared<FdGaussianCam>(camBuilder->model(), modelCcys_.front(), modelCurves_.front(),
                                                modelIrIndices_, simulationDates_, modelSize_, timeStepsPerYear_,

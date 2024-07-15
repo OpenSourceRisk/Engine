@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/engine/parsensitivityanalysis.hpp>
 
 namespace ore {
 namespace analytics {
@@ -39,13 +40,20 @@ public:
         const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
+    const QuantLib::ext::shared_ptr<SensitivityAnalysis>& sensiAnalysis() { return sensiAnalysis_; }
+    const QuantLib::ext::shared_ptr<ParSensitivityAnalysis>& parAnalysis() { return parAnalysis_; }
+
+private:
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis_;
+    QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis_;
 };
+
+static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};
 
 class PricingAnalytic : public Analytic {
 public:
     PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs),
-            {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"},
+        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics,
                    inputs) {}
 };
  

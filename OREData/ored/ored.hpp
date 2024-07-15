@@ -13,6 +13,7 @@
 #include <ored/configuration/commodityvolcurveconfig.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/correlationcurveconfig.hpp>
+#include <ored/configuration/currencyconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
@@ -112,6 +113,7 @@
 #include <ored/model/modeldata.hpp>
 #include <ored/model/modelparameter.hpp>
 #include <ored/model/structuredmodelerror.hpp>
+#include <ored/model/structuredmodelwarning.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/portfolio/accumulator.hpp>
 #include <ored/portfolio/ascot.hpp>
@@ -207,6 +209,7 @@
 #include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/callableswap.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/cashposition.hpp>
 #include <ored/portfolio/cbo.hpp>
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
@@ -336,6 +339,7 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/report/report.hpp>
+#include <ored/report/utilities.hpp>
 #include <ored/scripting/ast.hpp>
 #include <ored/scripting/astprinter.hpp>
 #include <ored/scripting/astresetter.hpp>
@@ -384,9 +388,9 @@
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/csvfilereader.hpp>
-#include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/currencyhedgedequityindexdecomposition.hpp>
 #include <ored/utilities/currencyparser.hpp>
+#include <ored/utilities/databuilders.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/fileio.hpp>
 #include <ored/utilities/flowanalysis.hpp>
@@ -394,7 +398,6 @@
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/inflationstartdate.hpp>
-#include <ored/utilities/initbuilders.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/osutils.hpp>
@@ -405,6 +408,7 @@
 #include <ored/utilities/serializationperiod.hpp>
 #include <ored/utilities/strike.hpp>
 #include <ored/utilities/timeperiod.hpp>
+#include <ored/utilities/timer.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/vectorutils.hpp>
 #include <ored/utilities/wildcard.hpp>

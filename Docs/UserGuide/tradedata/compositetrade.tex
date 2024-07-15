@@ -23,6 +23,19 @@ Listing \ref{lst:compositetrade_data}.
 	\label{lst:compositetrade_data}
 \end{listing}
 
+\begin{listing}[H]
+	%\hrule\medskip
+	\begin{minted}[fontsize=\footnotesize]{xml}
+		<CompositeTradeData>
+		  <Currency>USD</Currency>
+		  <NotionalCalculation>Sum</NotionalCalculation>
+		  <PortfolioBasket>true</PortfolioBasket>
+		  <BasketName>NAME</BasketName>
+		</CompositeTradeData>
+	\end{minted}
+	\caption{Composite trade data with Reference Data}
+\end{listing}
+
 The meanings and allowable values of the elements in the \lstinline!CompositeTradeData!  node follow below.
 
 \begin{itemize}
@@ -43,4 +56,8 @@ The meanings and allowable values of the elements in the \lstinline!CompositeTra
       Allowable values: Any non-negative real number.
 	\item Components: The portfolio of trades that make up the composite trade. \\
       Allowable values: These trades should be valid xmls that could otherwise be entered into the portfolio, with the exception that they can have empty ids.
+    \item PortfolioBasket [Optional]: Indicate if the Component represent a portfolio basket. \\
+    Allowable values: Boolean true or false.
+    \item BasketName [Optional]: The portfolio Id. \\
+    Allowable values: Any string. Note that if PortfolioBasket is True then there must be a BasketName. We look up the Basket within the reference data.
 \end{itemize}

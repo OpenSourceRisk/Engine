@@ -101,6 +101,9 @@ public:
     //! Return the map of down risk factors to its factor data
     const std::map<RiskFactorKey, SensitivityCube::FactorData>& downFactors() const { return downFactors_; };
 
+    //! Return the factor data for an up shift of a rf key, if that does not exist for a down shift of the same rf key
+    SensitivityCube::FactorData upThenDownFactorData(const RiskFactorKey& rfkey);
+
     //! Returns the set of pairs of risk factor keys for which a cross gamma is available
     const std::map<crossPair, std::tuple<SensitivityCube::FactorData, SensitivityCube::FactorData, QuantLib::Size>>&
     crossFactors() const;

@@ -73,6 +73,8 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
       calculationCcyPost_(calculationCcyPost), resultCcy_(resultCcy.empty() ? calculationCcyCall_ : resultCcy),
       market_(market), quiet_(quiet), hasSEC_(hasSEC), hasCFTC_(hasCFTC) {
 
+    timer_.start("Total");
+
     QL_REQUIRE(checkCurrency(calculationCcyCall_), "SIMM Calculator: The Call side calculation currency ("
                                                    << calculationCcyCall_ << ") must be a valid ISO currency code");
     QL_REQUIRE(checkCurrency(calculationCcyPost_), "SIMM Calculator: The Post side calculation currency ("
@@ -80,6 +82,7 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
     QL_REQUIRE(checkCurrency(resultCcy_),
                "SIMM Calculator: The result currency (" << resultCcy_ << ") must be a valid ISO currency code");
 
+    timer_.start("Cleaning up CRIF input");
     for (const CrifRecord& cr : crif) {
         // Remove empty
         if (cr.riskType == CrifRecord::RiskType::Empty) {
@@ -94,18 +97,18 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
             continue;
         }
 
-
-
         // Check for each netting set whether post/collect regs are populated at all
+        bool collectRegsIsEmpty = cr.collectRegulations.empty();
         if (collectRegsIsEmpty_.find(cr.nettingSetDetails) == collectRegsIsEmpty_.end()) {
-            collectRegsIsEmpty_[cr.nettingSetDetails] = cr.collectRegulations.empty();
-        } else if (collectRegsIsEmpty_.at(cr.nettingSetDetails) && !cr.collectRegulations.empty()) {
-            collectRegsIsEmpty_.at(cr.nettingSetDetails) = false;
+            collectRegsIsEmpty_[cr.nettingSetDetails] = collectRegsIsEmpty;
+        } else if (collectRegsIsEmpty_[cr.nettingSetDetails] && !collectRegsIsEmpty) {
+            collectRegsIsEmpty_[cr.nettingSetDetails] = false;
         }
+        bool postRegsIsEmpty = cr.postRegulations.empty();
         if (postRegsIsEmpty_.find(cr.nettingSetDetails) == postRegsIsEmpty_.end()) {
-            postRegsIsEmpty_[cr.nettingSetDetails] = cr.postRegulations.empty();
-        } else if (postRegsIsEmpty_.at(cr.nettingSetDetails) && !cr.postRegulations.empty()) {
-            postRegsIsEmpty_.at(cr.nettingSetDetails) = false;
+            postRegsIsEmpty_[cr.nettingSetDetails] = postRegsIsEmpty;
+        } else if (postRegsIsEmpty_[cr.nettingSetDetails] && !cr.postRegulations.empty()) {
+            postRegsIsEmpty_[cr.nettingSetDetails] = false;
         }
 
         // Make sure we have CRIF amount denominated in the result ccy
@@ -116,13 +119,14 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
         } else if(cr.requiresAmountUsd()) {
             // ProductClassMultiplier and AddOnNotionalFactor  don't have a currency and dont need to be converted,
             // we use the amount
-            const Real fxSpot = market_->fxRate(newCrifRecord.amountCurrency + resultCcy_)->value();
+            const Real fxSpot = fxRate(newCrifRecord.amountCurrency + resultCcy_);
             newCrifRecord.amountResultCcy = fxSpot * newCrifRecord.amount;
         }
         newCrifRecord.resultCurrency = resultCcy_;
 
         crif_.addRecord(newCrifRecord);
     }
+    timer_.stop("Cleaning up CRIF input");
 
     // If there are no CRIF records to process
     if (crif_.empty())
@@ -133,11 +137,12 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
         LOG("SimmCalculator: Splitting up original CRIF records into their respective collect/post regulations");
     }
     
-    splitCrifByRegulationsAndPortfolios(crif_, enforceIMRegulations);
+    splitCrifByRegulationsAndPortfolios(enforceIMRegulations);
 
     // Some additional processing depending on the regulations applicable to each netting set
     for (auto& [side, nettingsSetCrifMap] : regSensitivities_) {
         for (auto& [nettingDetails, regulationCrifMap] : nettingsSetCrifMap) {
+            timer_.start("Processing CRIF regulations");
             // Where there is SEC and CFTC in the portfolio, we add the CFTC trades to SEC,
             // but still continue with CFTC calculations
             const bool hasCFTCGlobal = hasCFTC_[side].find(nettingDetails) != hasCFTC_[side].end();
@@ -156,8 +161,8 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
                 
                 if (hasCFTCLocal) {
                     // At this point, we expect to have both SEC and CFTC sensitivities for the netting set
-                    const auto& crifCFTC = regulationCrifMap["CFTC"];
-                    const auto& crifSEC = regulationCrifMap["SEC"];
+                    const Crif& crifCFTC = regulationCrifMap["CFTC"];
+                    Crif& crifSEC = regulationCrifMap["SEC"];
                     for (const auto& cr :crifCFTC) {
                         // Only add CFTC records to SEC if the record was not already in SEC,
                         // i.e. we skip over CRIF records with regulations specified as e.g. "..., CFTC, SEC, ..."
@@ -166,7 +171,7 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
                                 DLOG("SimmCalculator: Inserting CRIF record with CFTC "
                                      << nettingDetails << " regulation into SEC CRIF records: " << cr);
                             }
-                            regulationCrifMap["SEC"].addRecord(cr);
+                            crifSEC.addRecord(cr, true, true);
                         }
                     }
                 }
@@ -174,7 +179,7 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
             }
             // Aggreggate now all Crif Records
             for (auto& [regulation, crif] : regulationCrifMap) {
-                crif = crif.aggregate();
+                crif = crif.aggregate(true);
             }
 
             // If netting set has "Unspecified" plus other regulations, the "Unspecified" sensis are to be excluded.
@@ -182,6 +187,7 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
             // included.
             if (regulationCrifMap.count("Unspecified") > 0 && regulationCrifMap.size() > 1)
                 regulationCrifMap.erase("Unspecified");
+            timer_.stop("Processing CRIF regulations");
         }
     }
 
@@ -197,14 +203,16 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
                         break;
                     }
                 }
-                if (crif.hasCrifRecords() || hasFixedAddOn)
+                if (crif.hasCrifRecords() || hasFixedAddOn) {
                     calculateRegulationSimm(crif, nsd, regulation, side);
+                }
             }
         }
     }
 
     // Determine winning call and post regulations
     if (determineWinningRegulations) {
+        timer_.start("Determining winning regulations");
         if (!quiet_) {
             LOG("SimmCalculator: Determining winning regulations");
         }
@@ -245,12 +253,17 @@ SimmCalculator::SimmCalculator(const ore::analytics::Crif& crif,
         }
 
         populateFinalResults();
+        timer_.stop("Determining winning regulations");
     }
+    timer_.stop("Total");
 }
 
 const void SimmCalculator::calculateRegulationSimm(const Crif& crif,
                                                    const NettingSetDetails& nettingSetDetails, const string& regulation,
                                                    const SimmSide& side) {
+
+    const string regTimerKey = "calculate " + ore::data::to_string(side) + " SIMM (" + regulation + ")";
+    timer_.start(regTimerKey);
 
     if (!quiet_) {
         LOG("SimmCalculator: Calculating SIMM " << side << " for portfolio [" << nettingSetDetails << "], regulation "
@@ -374,6 +387,8 @@ const void SimmCalculator::calculateRegulationSimm(const Crif& crif,
 
     // For each portfolio, calculate the additional margin
     calcAddMargin(side, nettingSetDetails, regulation, crif);
+
+    timer_.stop(regTimerKey);
 }
 
 const string& SimmCalculator::winningRegulations(const SimmSide& side, const NettingSetDetails& nettingSetDetails) const {
@@ -444,6 +459,8 @@ const map<SimmSide, map<NettingSetDetails, pair<string, SimmResults>>>& SimmCalc
 pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDetails& nettingSetDetails,
                                                             const ProductClass& pc, const Crif& crif,
                                                             const SimmSide& side) const {
+    timer_.start("irDeltaMargin()");
+
     const string& calcCcy = side == SimmSide::Call ? calculationCcyCall_ : calculationCcyPost_;
 
     // "Bucket" here referse to exposures under the CRIF qualifiers
@@ -456,6 +473,7 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
     // If there are no qualifiers, return early and set bool to false to indicate margin does not apply
     if (qualifiers.empty()) {
         bucketMargins["All"] = 0.0;
+        timer_.stop("irDeltaMargin()");
         return make_pair(bucketMargins, false);
     }
 
@@ -500,10 +518,10 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
         // Divide by the concentration risk threshold
         Real concThreshold = simmConfiguration_->concentrationThreshold(RiskType::IRCurve, qualifier);
         if (resultCcy_ != "USD")
-            concThreshold *= market_->fxRate("USD" + resultCcy_)->value();
+            concThreshold *= fxRate("USD" + resultCcy_);
         concentrationRisk[qualifier] /= concThreshold;
         // Final concentration risk amount
-        concentrationRisk[qualifier] = max(1.0, sqrt(std::abs(concentrationRisk[qualifier])));
+        concentrationRisk[qualifier] = std::max(1.0, std::sqrt(std::abs(concentrationRisk[qualifier])));
 
         // Calculate the delta margin piece for this qualifier i.e. $K_b$ from SIMM docs
         for (auto itOuter = pIrQualifier.begin(); itOuter != pIrQualifier.end(); ++itOuter) {
@@ -584,7 +602,7 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
         }
 
         // Finally have the value of $K_b$
-        deltaMargin[qualifier] = sqrt(max(deltaMargin[qualifier], 0.0));
+        deltaMargin[qualifier] = std::sqrt(std::max(deltaMargin[qualifier], 0.0));
     }
 
     // Now calculate final IR delta margin by aggregating across currencies
@@ -593,21 +611,23 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
         // Diagonal term
         margin += deltaMargin.at(*itOuter) * deltaMargin.at(*itOuter);
         // Cross terms
-        Real sOuter = max(min(sumWeightedSensis.at(*itOuter), deltaMargin.at(*itOuter)), -deltaMargin.at(*itOuter));
+        Real sOuter = std::max(std::min(sumWeightedSensis.at(*itOuter), deltaMargin.at(*itOuter)), -deltaMargin.at(*itOuter));
         for (auto itInner = qualifiers.begin(); itInner != itOuter; ++itInner) {
-            Real sInner = max(min(sumWeightedSensis.at(*itInner), deltaMargin.at(*itInner)), -deltaMargin.at(*itInner));
-            Real g = min(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner)) /
-                     max(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner));
+            Real sInner = std::max(std::min(sumWeightedSensis.at(*itInner), deltaMargin.at(*itInner)), -deltaMargin.at(*itInner));
+            Real g = std::min(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner)) /
+                     std::max(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner));
             Real corr = simmConfiguration_->correlation(RiskType::IRCurve, *itOuter, "", "", RiskType::IRCurve,
                                                         *itInner, "", "");
             margin += 2.0 * sOuter * sInner * corr * g;
         }
     }
-    margin = sqrt(max(margin, 0.0));
+    margin = std::sqrt(std::max(margin, 0.0));
 
     for (const auto& m : deltaMargin)
         bucketMargins[m.first] = m.second;
     bucketMargins["All"] = margin;
+
+    timer_.stop("irDeltaMargin()");
 
     return make_pair(bucketMargins, true);
 }
@@ -615,6 +635,8 @@ pair<map<string, Real>, bool> SimmCalculator::irDeltaMargin(const NettingSetDeta
 pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetails& nettingSetDetails,
                                                            const CrifRecord::ProductClass& pc, const Crif& crif,
                                                            const SimmSide& side) const {
+
+    timer_.start("irVegaMargin()");
 
     const string& calcCcy = side == SimmSide::Call ? calculationCcyCall_ : calculationCcyPost_;
 
@@ -627,6 +649,7 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
     // If there are no qualifiers, return early and set bool to false to indicate margin does not apply
     if (qualifiers.empty()) {
         bucketMargins["All"] = 0.0;
+        timer_.stop("irVegaMargin()");
         return make_pair(bucketMargins, false);
     }
 
@@ -655,11 +678,11 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
         // Divide by the concentration risk threshold
         Real concThreshold = simmConfiguration_->concentrationThreshold(RiskType::IRVol, qualifier);
         if (resultCcy_ != "USD")
-            concThreshold *= market_->fxRate("USD" + resultCcy_)->value();
+            concThreshold *= fxRate("USD" + resultCcy_);
         concentrationRisk[qualifier] /= concThreshold;
 
         // Final concentration risk amount
-        concentrationRisk[qualifier] = max(1.0, sqrt(std::abs(concentrationRisk[qualifier])));
+        concentrationRisk[qualifier] = std::max(1.0, std::sqrt(std::abs(concentrationRisk[qualifier])));
 
         // Calculate the margin piece for this qualifier i.e. $K_b$ from SIMM docs
         // Start with IRVol vs. IRVol components
@@ -720,7 +743,7 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
         }
 
         // Finally have the value of $K_b$
-        vegaMargin[qualifier] = sqrt(max(vegaMargin[qualifier], 0.0));
+        vegaMargin[qualifier] = std::sqrt(std::max(vegaMargin[qualifier], 0.0));
     }
 
     // Now calculate final vega margin by aggregating across currencies
@@ -729,21 +752,25 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
         // Diagonal term
         margin += vegaMargin.at(*itOuter) * vegaMargin.at(*itOuter);
         // Cross terms
-        Real sOuter = max(min(sumWeightedSensis.at(*itOuter), vegaMargin.at(*itOuter)), -vegaMargin.at(*itOuter));
+        Real sOuter =
+            std::max(std::min(sumWeightedSensis.at(*itOuter), vegaMargin.at(*itOuter)), -vegaMargin.at(*itOuter));
         for (auto itInner = qualifiers.begin(); itInner != itOuter; ++itInner) {
-            Real sInner = max(min(sumWeightedSensis.at(*itInner), vegaMargin.at(*itInner)), -vegaMargin.at(*itInner));
-            Real g = min(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner)) /
-                     max(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner));
+            Real sInner =
+                std::max(std::min(sumWeightedSensis.at(*itInner), vegaMargin.at(*itInner)), -vegaMargin.at(*itInner));
+            Real g = std::min(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner)) /
+                     std::max(concentrationRisk.at(*itOuter), concentrationRisk.at(*itInner));
             Real corr = simmConfiguration_->correlation(RiskType::IRVol, *itOuter, "", "", RiskType::IRVol, *itInner,
                                                         "", "", calcCcy);
             margin += 2.0 * sOuter * sInner * corr * g;
         }
     }
-    margin = sqrt(max(margin, 0.0));
+    margin = std::sqrt(std::max(margin, 0.0));
 
     for (const auto& m : vegaMargin)
         bucketMargins[m.first] = m.second;
     bucketMargins["All"] = margin;
+
+    timer_.stop("irVegaMargin()");
 
     return make_pair(bucketMargins, true);
 }
@@ -751,6 +778,7 @@ pair<map<string, Real>, bool> SimmCalculator::irVegaMargin(const NettingSetDetai
 pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSetDetails& nettingSetDetails,
                                                                 const CrifRecord::ProductClass& pc,
                                                                 const SimmSide& side, const Crif& crif) const {
+    timer_.start("irCurvatureMargin()");
 
     // "Bucket" here refers to exposures under the CRIF qualifiers
     map<string, Real> bucketMargins;
@@ -764,6 +792,7 @@ pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSet
     // If there are no qualifiers, return early and set bool to false to indicate margin does not apply
     if (qualifiers.empty()) {
         bucketMargins["All"] = 0.0;
+        timer_.stop("irCurvatureMargin()");
         return make_pair(bucketMargins, false);
     }
 
@@ -843,48 +872,52 @@ pair<map<string, Real>, bool> SimmCalculator::irCurvatureMargin(const NettingSet
         }
 
         // Finally have the value of $K_b$
-        curvatureMargin[qualifier] = sqrt(max(curvatureMargin[qualifier], 0.0));
+        curvatureMargin[qualifier] = std::sqrt(std::max(curvatureMargin[qualifier], 0.0));
     }
 
     // If sum of absolute value of all individual curvature risks is zero, we can return 0.0
     if (close_enough(sumAbsWs, 0.0)) {
         bucketMargins["All"] = 0.0;
+        timer_.stop("irCurvatureMargin()");
         return make_pair(bucketMargins, true);
     }
 
     // Now calculate final curvature margin by aggregating across currencies
-    Real theta = min(sumWs / sumAbsWs, 0.0);
+    Real theta = std::min(sumWs / sumAbsWs, 0.0);
 
     Real margin = 0.0;
     for (auto itOuter = qualifiers.begin(); itOuter != qualifiers.end(); ++itOuter) {
         // Diagonal term
         margin += curvatureMargin.at(*itOuter) * curvatureMargin.at(*itOuter);
         // Cross terms
-        Real sOuter =
-            max(min(sumWeightedSensis.at(*itOuter), curvatureMargin.at(*itOuter)), -curvatureMargin.at(*itOuter));
+        Real sOuter = std::max(std::min(sumWeightedSensis.at(*itOuter), curvatureMargin.at(*itOuter)),
+                               -curvatureMargin.at(*itOuter));
         for (auto itInner = qualifiers.begin(); itInner != itOuter; ++itInner) {
-            Real sInner =
-                max(min(sumWeightedSensis.at(*itInner), curvatureMargin.at(*itInner)), -curvatureMargin.at(*itInner));
+            Real sInner = std::max(std::min(sumWeightedSensis.at(*itInner), curvatureMargin.at(*itInner)),
+                                   -curvatureMargin.at(*itInner));
             Real corr =
                 simmConfiguration_->correlation(RiskType::IRVol, *itOuter, "", "", RiskType::IRVol, *itInner, "", "");
             margin += 2.0 * sOuter * sInner * corr * corr;
         }
     }
-    margin = sumWs + lambda(theta) * sqrt(max(margin, 0.0));
+    margin = sumWs + lambda(theta) * std::sqrt(std::max(margin, 0.0));
 
     for (const auto& m : curvatureMargin)
         bucketMargins[m.first] = m.second;
 
     Real scaling = simmConfiguration_->curvatureMarginScaling();
-    Real totalCurvatureMargin = scaling * max(margin, 0.0);
+    Real totalCurvatureMargin = scaling * std::max(margin, 0.0);
     // TODO: Review, should we return the pre-scaled value instead?
     bucketMargins["All"] = totalCurvatureMargin;
+
+    timer_.stop("irCurvatureMargin()");
 
     return make_pair(bucketMargins, true);
 }
 
 pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& nettingSetDetails, const ProductClass& pc,
                                                      const RiskType& rt, const Crif& crif, const SimmSide& side) const {
+    timer_.start("margin()");
 
     const string& calcCcy = side == SimmSide::Call ? calculationCcyCall_ : calculationCcyPost_;
     
@@ -912,6 +945,7 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
     // If there are no buckets, return early and set bool to false to indicate margin does not apply
     if (buckets.empty()) {
         bucketMargins["All"] = 0.0;
+        timer_.stop("margin()");
         return make_pair(bucketMargins, false);
     }
 
@@ -956,10 +990,10 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
             // Divide by the concentration risk threshold
             Real concThreshold = simmConfiguration_->concentrationThreshold(rt, qualifier);
             if (resultCcy_ != "USD")
-                concThreshold *= market_->fxRate("USD" + resultCcy_)->value();
+                concThreshold *= fxRate("USD" + resultCcy_);
             concentrationRisk[qualifier] /= concThreshold;
             // Final concentration risk amount
-            concentrationRisk[qualifier] = max(1.0, sqrt(std::abs(concentrationRisk[qualifier])));
+            concentrationRisk[qualifier] = std::max(1.0, std::sqrt(std::abs(concentrationRisk[qualifier])));
         }
 
 
@@ -1005,8 +1039,8 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
                     simmConfiguration_->correlation(rt, itOuter->qualifier, itOuter->label1, itOuter->label2, rt,
                                                     itInner->qualifier, itInner->label1, itInner->label2, calcCcy);
                 // $f_{k,l}$ from the SIMM docs
-                Real f = min(outerConcentrationRisk, concentrationRisk.at(itInner->qualifier)) /
-                         max(outerConcentrationRisk, concentrationRisk.at(itInner->qualifier));
+                Real f = std::min(outerConcentrationRisk, concentrationRisk.at(itInner->qualifier)) /
+                         std::max(outerConcentrationRisk, concentrationRisk.at(itInner->qualifier));
                 // Add cross element to delta margin
                 Real sigmaInner = simmConfiguration_->sigma(rt, itInner->qualifier, itInner->label1, calcCcy);
                 Real rwInner = simmConfiguration_->weight(rt, itInner->qualifier, itInner->label1, calcCcy);
@@ -1020,7 +1054,7 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
         }
 
         // Finally have the value of $K_b$
-        bucketMargin[bucket] = sqrt(max(bucketMargin[bucket], 0.0));
+        bucketMargin[bucket] = std::sqrt(std::max(bucketMargin[bucket], 0.0));
     }
 
     // If there is a "Residual" bucket entry store it separately
@@ -1039,11 +1073,11 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
         margin += itOuter->second * itOuter->second;
         // Cross terms
         // $S_b$ from SIMM docs
-        Real sOuter = max(min(sumWeightedSensis.at(outerBucket), itOuter->second), -itOuter->second);
+        Real sOuter = std::max(std::min(sumWeightedSensis.at(outerBucket), itOuter->second), -itOuter->second);
         for (auto itInner = bucketMargin.begin(); itInner != itOuter; ++itInner) {
             string innerBucket = itInner->first;
             // $S_c$ from SIMM docs
-            Real sInner = max(min(sumWeightedSensis.at(innerBucket), itInner->second), -itInner->second);
+            Real sInner = std::max(std::min(sumWeightedSensis.at(innerBucket), itInner->second), -itInner->second);
             // $\gamma_{b,c}$ from SIMM docs
             // Interface to SimmConfiguration is on qualifiers => take any qualifier from each
             // of the respective (different) buckets to get the inter-bucket correlation
@@ -1053,7 +1087,7 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
             margin += 2.0 * sOuter * sInner * corr;
         }
     }
-    margin = sqrt(max(margin, 0.0));
+    margin = std::sqrt(std::max(margin, 0.0));
 
     // Now add the residual component back in
     margin += residualMargin;
@@ -1069,12 +1103,15 @@ pair<map<string, Real>, bool> SimmCalculator::margin(const NettingSetDetails& ne
             m.second = std::abs(m.second);
 
     bucketMargins["All"] = margin;
+    timer_.stop("margin()");
     return make_pair(bucketMargins, true);
 }
 
 pair<map<string, Real>, bool>
 SimmCalculator::curvatureMargin(const NettingSetDetails& nettingSetDetails, const ProductClass& pc, const RiskType& rt,
                                 const SimmSide& side, const Crif& crif, bool rfLabels) const {
+
+    timer_.start("curvatureMargin()");
 
     const string& calcCcy = side == SimmSide::Call ? calculationCcyCall_ : calculationCcyPost_;
 
@@ -1098,6 +1135,7 @@ SimmCalculator::curvatureMargin(const NettingSetDetails& nettingSetDetails, cons
     // If there are no buckets, return early and set bool to false to indicate margin does not apply
     if (buckets.empty()) {
         bucketMargins["All"] = 0.0;
+        timer_.stop("curvatureMargin()");
         return make_pair(bucketMargins, false);
     }
 
@@ -1157,7 +1195,7 @@ SimmCalculator::curvatureMargin(const NettingSetDetails& nettingSetDetails, cons
         }
 
         // Finally have the value of $K_b$
-        Real bucketCurvatureMargin = sqrt(max(curvatureMargin[bucket], 0.0));
+        Real bucketCurvatureMargin = std::sqrt(std::max(curvatureMargin[bucket], 0.0));
         curvatureMargin[bucket] = bucketCurvatureMargin;
 
         // Bucket level absolute sensitivity
@@ -1190,18 +1228,18 @@ SimmCalculator::curvatureMargin(const NettingSetDetails& nettingSetDetails, cons
     Real sumAbsSensis = accumulate(sumAbsWeightedSensis.begin(), sumAbsWeightedSensis.end(), 0.0, acc);
 
     if (!close_enough(sumAbsSensis, 0.0)) {
-        Real theta = min(sumSensis / sumAbsSensis, 0.0);
+        Real theta = std::min(sumSensis / sumAbsSensis, 0.0);
         for (auto itOuter = curvatureMargin.begin(); itOuter != curvatureMargin.end(); ++itOuter) {
             string outerBucket = itOuter->first;
             // Diagonal term
             margin += itOuter->second * itOuter->second;
             // Cross terms
             // $S_b$ from SIMM docs
-            Real sOuter = max(min(sumWeightedSensis.at(outerBucket), itOuter->second), -itOuter->second);
+            Real sOuter = std::max(std::min(sumWeightedSensis.at(outerBucket), itOuter->second), -itOuter->second);
             for (auto itInner = curvatureMargin.begin(); itInner != itOuter; ++itInner) {
                 string innerBucket = itInner->first;
                 // $S_c$ from SIMM docs
-                Real sInner = max(min(sumWeightedSensis.at(innerBucket), itInner->second), -itInner->second);
+                Real sInner = std::max(std::min(sumWeightedSensis.at(innerBucket), itInner->second), -itInner->second);
                 // $\gamma_{b,c}$ from SIMM docs
                 // Interface to SimmConfiguration is on qualifiers => take any qualifier from each
                 // of the respective (different) buckets to get the inter-bucket correlation
@@ -1211,13 +1249,13 @@ SimmCalculator::curvatureMargin(const NettingSetDetails& nettingSetDetails, cons
                 margin += 2.0 * sOuter * sInner * corr * corr;
             }
         }
-        margin = max(sumSensis + lambda(theta) * sqrt(max(margin, 0.0)), 0.0);
+        margin = std::max(sumSensis + lambda(theta) * std::sqrt(std::max(margin, 0.0)), 0.0);
     }
 
     // Second, the residual bucket if necessary, and add "Residual" bucket back in to be added to the SIMM results
     if (!close_enough(residualAbsSum, 0.0)) {
-        Real theta = min(residualSum / residualAbsSum, 0.0);
-        curvatureMargin["Residual"] = max(residualSum + lambda(theta) * residualMargin, 0.0);
+        Real theta = std::min(residualSum / residualAbsSum, 0.0);
+        curvatureMargin["Residual"] = std::max(residualSum + lambda(theta) * residualMargin, 0.0);
         margin += curvatureMargin["Residual"];
     }
 
@@ -1230,11 +1268,14 @@ SimmCalculator::curvatureMargin(const NettingSetDetails& nettingSetDetails, cons
             m.second = std::abs(m.second);
 
     bucketMargins["All"] = margin;
+    timer_.stop("curvatureMargin()");
     return make_pair(bucketMargins, true);
 }
 
 void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails& nettingSetDetails,
                                    const string& regulation, const Crif& crif) {
+
+    timer_.start("calcAddMargin()");
 
     // Reference to SIMM results for this portfolio
     auto& results = simmResults_[side][nettingSetDetails][regulation];
@@ -1272,6 +1313,12 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
             // Add to aggregation at portfolio level
             add(nettingSetDetails, regulation, ProductClass::All, RiskClass::All, MarginType::All, "All", pcmMargin, side,
                 overwrite);
+            CrifRecord spRecord = it;
+            if (side == SimmSide::Call)
+                spRecord.collectRegulations = regulation;
+            else
+                spRecord.postRegulations = regulation;
+            simmParameters_.addRecord(spRecord);
         }
     }
 
@@ -1292,6 +1339,12 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
         // Add to aggregation at portfolio level
         add(nettingSetDetails, regulation, ProductClass::All, RiskClass::All, MarginType::All, "All", fixedMargin, side,
             overwrite);
+        CrifRecord spRecord = it;
+        if (side == SimmSide::Call)
+            spRecord.collectRegulations = regulation;
+        else
+            spRecord.postRegulations = regulation;
+        simmParameters_.addRecord(spRecord);
     }
 
     // Third, add percentage of notional amounts IM, using "AddOnNotionalFactor"
@@ -1326,8 +1379,15 @@ void SimmCalculator::calcAddMargin(const SimmSide& side, const NettingSetDetails
             add(nettingSetDetails, regulation, ProductClass::All, RiskClass::All, MarginType::All, "All",
                 notionalFactorMargin,
                 side, overwrite);
+            CrifRecord spRecord = it;
+            if (side == SimmSide::Call)
+                spRecord.collectRegulations = regulation;
+            else
+                spRecord.postRegulations = regulation;
+            simmParameters_.addRecord(spRecord);
         }
     }
+    timer_.stop("calcAddMargin()");
 }
 
 void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetails& nettingSetDetails,
@@ -1401,7 +1461,7 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
 
         // Add the margin to the results if it was calculated
         if (hasProductClass) {
-            productClassMargin = sqrt(max(productClassMargin, 0.0));
+            productClassMargin = std::sqrt(std::max(productClassMargin, 0.0));
             add(nettingSetDetails, regulation, pc, RiskClass::All, MarginType::All, "All", productClassMargin, side);
         }
     }
@@ -1451,7 +1511,7 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
 
             // Add the margin to the results if it was calculated
             if (hasPcMt) {
-                margin = sqrt(max(margin, 0.0));
+                margin = std::sqrt(std::max(margin, 0.0));
                 add(nettingSetDetails, regulation, pc, RiskClass::All, mt, "All", margin, side);
             }
         }
@@ -1533,6 +1593,8 @@ void SimmCalculator::populateResults(const SimmSide& side, const NettingSetDetai
 
 void SimmCalculator::populateFinalResults(const map<SimmSide, map<NettingSetDetails, string>>& winningRegs) {
 
+    timer_.start("populateFinalResults()");
+
     if (!quiet_) {
         LOG("SimmCalculator: Populating final winning regulators' IM");
     }
@@ -1572,6 +1634,7 @@ void SimmCalculator::populateFinalResults(const map<SimmSide, map<NettingSetDeta
             finalSimmResults_[side][nsd] = make_pair(reg, simmResults);
         }
     }
+    timer_.stop("populateFinalResults()");
 }
 
 void SimmCalculator::populateFinalResults() {
@@ -1599,8 +1662,9 @@ void SimmCalculator::add(const NettingSetDetails& nettingSetDetails, const strin
         add(nettingSetDetails, regulation, pc, rc, mt, kv.first, kv.second, side, overwrite);
 }
 
-void SimmCalculator::splitCrifByRegulationsAndPortfolios(const Crif& crif, const bool enforceIMRegulations) {
-    for (const auto& crifRecord : crif) {
+void SimmCalculator::splitCrifByRegulationsAndPortfolios(const bool enforceIMRegulations) {
+    timer_.start("Splitting CRIF by regs");
+    for (const auto& crifRecord : crif_) {
         for (const auto& side : {SimmSide::Call, SimmSide::Post}) {
             const NettingSetDetails& nettingSetDetails = crifRecord.nettingSetDetails;
 
@@ -1614,7 +1678,13 @@ void SimmCalculator::splitCrifByRegulationsAndPortfolios(const Crif& crif, const
             string regsString;
             if (enforceIMRegulations)
                 regsString = side == SimmSide::Call ? crifRecord.collectRegulations : crifRecord.postRegulations;
-            set<string> regs = parseRegulationString(regsString);
+            set<string> regs;
+            if (regulationCache_.find(regsString) != regulationCache_.end()) {
+                regs = regulationCache_[regsString];
+            } else {
+                regs = parseRegulationString(regsString);
+                regulationCache_[regsString] = regs;
+            }
 
             auto newCrifRecord = crifRecord;
             newCrifRecord.collectRegulations.clear();
@@ -1630,12 +1700,12 @@ void SimmCalculator::splitCrifByRegulationsAndPortfolios(const Crif& crif, const
                     // We make sure to ignore amountCcy when aggregating the records, since we will only be using
                     // amountResultCcy, and we may have CRIF records that are equal everywhere except for the amountCcy,
                     // and this will fail in the case of Risk_XCcyBasis and Risk_Inflation.
-                    const bool onDiffAmountCcy = true;
-                    regSensitivities_[side][nettingSetDetails][r].addRecord(newCrifRecord, onDiffAmountCcy);
+                    regSensitivities_[side][nettingSetDetails][r].addRecord(newCrifRecord, true, true);
                 }
             }
         }
     }
+    timer_.stop("Splitting CRIF by regs");
 }
 
 Real SimmCalculator::lambda(Real theta) const {
@@ -1658,6 +1728,10 @@ std::set<std::string> SimmCalculator::getQualifiers(const Crif& crif,
     return qualifiers;
 }
 
+Real SimmCalculator::fxRate(const string& ccyPair) const {
+    QL_REQUIRE(market_, "SimmCalculator::fxRate(): Market is required but is null.");
+    return market_->fxRate(ccyPair)->value();
+}
 
 } // namespace analytics
 } // namespace ore

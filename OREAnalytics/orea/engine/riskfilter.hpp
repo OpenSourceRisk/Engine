@@ -34,9 +34,9 @@
 namespace ore {
 namespace analytics {
 
-class VarConfiguration {
+class MarketRiskConfiguration {
 public:
-    virtual ~VarConfiguration() {}
+    virtual ~MarketRiskConfiguration() {}
 
     /*! Risk class types in VaR plus an All type for convenience
 
@@ -45,7 +45,7 @@ public:
 
         \warning Internal methods rely on the first element being 'All'
     */
-    enum class RiskClass { All, InterestRate, Inflation, Credit, Equity, FX};
+    enum class RiskClass { All, InterestRate, Inflation, Credit, Equity, FX, Commodity};
 
     /*! Risk Type types in VaR plus an All type for convenience
         \warning Internal methods rely on the first element being 'All'
@@ -59,11 +59,11 @@ public:
     static std::set<RiskType> riskTypes(bool includeAll = false);
 };
 
-std::ostream& operator<<(std::ostream& out, const VarConfiguration::RiskClass& rc);
-std::ostream& operator<<(std::ostream& out, const VarConfiguration::RiskType& rt);
+std::ostream& operator<<(std::ostream& out, const MarketRiskConfiguration::RiskClass& rc);
+std::ostream& operator<<(std::ostream& out, const MarketRiskConfiguration::RiskType& rt);
 
-VarConfiguration::RiskClass parseVarRiskClass(const std::string& rc);
-VarConfiguration::RiskType parseVarRiskType(const std::string& rt);
+MarketRiskConfiguration::RiskClass parseVarRiskClass(const std::string& rc);
+MarketRiskConfiguration::RiskType parseVarRiskType(const std::string& rt);
 
 //! Risk Filter
 /*! The risk filter class groups risk factor keys w.r.t. a risk class (IR, FX, EQ...) and a risk type (delta-gamma,
@@ -71,7 +71,7 @@ VarConfiguration::RiskType parseVarRiskType(const std::string& rt);
  */
 class RiskFilter : public ScenarioFilter {
 public:
-    RiskFilter(const VarConfiguration::RiskClass& riskClass, const VarConfiguration::RiskType& riskType);
+    RiskFilter(const MarketRiskConfiguration::RiskClass& riskClass, const MarketRiskConfiguration::RiskType& riskType);
     bool allow(const RiskFactorKey& t) const override;
 
 private:

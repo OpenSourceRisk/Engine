@@ -64,6 +64,11 @@ double externalAverage(const std::vector<double>& v) {
 
 } // namespace
 
+ScriptedInstrumentPricingEngineCG::~ScriptedInstrumentPricingEngineCG() {
+    if (externalCalculationId_)
+        ComputeEnvironment::instance().context().disposeCalculation(externalCalculationId_);
+}
+
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
     const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
@@ -239,14 +244,30 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                     }
                 }
             } else {
-                auto gen =
-                    makeMultiPathVariateGenerator(mcParams_.sequenceType, rv.size(), rv.front().size(), mcParams_.seed,
-                                                  mcParams_.sobolOrdering, mcParams_.sobolDirectionIntegers);
-                for (Size path = 0; path < model_->size(); ++path) {
-                    auto p = gen->next();
+                if (mcParams_.sequenceType == QuantExt::SequenceType::MersenneTwister &&
+                    mcParams_.externalDeviceCompatibilityMode) {
+                    // use same order for rng generation as it is (usually) done on external devices
+                    // this is mainly done to be able to reconcile results produced on external devices
+                    auto rng = std::make_unique<MersenneTwisterUniformRng>(mcParams_.seed);
+                    QuantLib::InverseCumulativeNormal icn;
                     for (Size j = 0; j < rv.front().size(); ++j) {
-                        for (Size k = 0; k < rv.size(); ++k) {
-                            values[rv[k][j]].set(path, p.value[j][k]);
+                        for (Size i = 0; i < rv.size(); ++i) {
+                            for (Size path = 0; path < model_->size(); ++path) {
+                                values[rv[i][j]].set(path, icn(rng->nextReal()));
+                            }
+                        }
+                    }
+                } else {
+                    // use the 'usual' path generation that we also use elsewhere
+                    auto gen = makeMultiPathVariateGenerator(mcParams_.sequenceType, rv.size(), rv.front().size(),
+                                                             mcParams_.seed, mcParams_.sobolOrdering,
+                                                             mcParams_.sobolDirectionIntegers);
+                    for (Size path = 0; path < model_->size(); ++path) {
+                        auto p = gen->next();
+                        for (Size j = 0; j < rv.front().size(); ++j) {
+                            for (Size k = 0; k < rv.size(); ++k) {
+                                values[rv[k][j]].set(path, p.value[j][k]);
+                            }
                         }
                     }
                 }
@@ -395,12 +416,13 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                 // cashflow is written as expectation of deflated base ccy amount at T0, converted to flow ccy
                 // with the T0 FX Spot and compounded back to the pay date on T0 curves
                 Real fx = 1.0;
-                Real discount = 1.0;
+                Real discount = 0.0;
+                cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i));
                 if (paylog->dates().at(i) > model_->referenceDate()) {
                     fx = model_->getDirectFxSpotT0(paylog->currencies().at(i), model_->baseCcy());
                     discount = model_->getDirectDiscountT0(paylog->dates().at(i), paylog->currencies().at(i));
+                    cashFlowResults[i].amount /= fx * discount;
                 }
-                cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i)) / fx / discount;
                 cashFlowResults[i].payDate = paylog->dates().at(i);
                 cashFlowResults[i].currency = paylog->currencies().at(i);
                 cashFlowResults[i].legNumber = paylog->legNos().at(i);

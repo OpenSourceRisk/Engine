@@ -33,7 +33,6 @@
 #include <ql/indexes/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
-#include <ql/version.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/yearcounter.hpp>
 
@@ -957,6 +956,10 @@ pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
         resultType = "array";
         QuantLib::Array r = boost::any_cast<QuantLib::Array>(anyType);
         oss << std::fixed << std::setprecision(precision) << r;
+    } else if (anyType.type() == typeid(QuantLib::Currency)) {
+        resultType = "currency";
+        QuantLib::Currency r = boost::any_cast<QuantLib::Currency>(anyType);
+        oss << r;
     } else {
         ALOG("Unsupported Boost::Any type");
         resultType = "unsupported_type";
@@ -1502,6 +1505,42 @@ std::ostream& operator<<(std::ostream& os, Exercise::Type type) {
     } else {
         QL_FAIL("Exercise::Type (" << static_cast<int>(type)
                                    << " not recognized. Expected 'European', 'Bermudan', or 'American'.");
+    }
+
+    return os;
+}
+
+SalvagingAlgorithm::Type parseSalvagingAlgorithmType(const std::string& s) {
+    static map<string, SalvagingAlgorithm::Type> m = {{"None", SalvagingAlgorithm::None},
+                                                      {"Spectral", SalvagingAlgorithm::Spectral},
+                                                      {"Hypersphere", SalvagingAlgorithm::Hypersphere},
+                                                      {"LowerDiagonal", SalvagingAlgorithm::LowerDiagonal},
+                                                      {"Higham", SalvagingAlgorithm::Higham}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("SalvagingAlgorithm type \"" << s << "\" not recognized");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type) {
+
+    if (type == SalvagingAlgorithm::None) {
+        os << "None";
+    } else if (type == SalvagingAlgorithm::Spectral) {
+        os << "Spectral";
+    } else if (type == SalvagingAlgorithm::Hypersphere) {
+        os << "Hypersphere";
+    } else if (type == SalvagingAlgorithm::LowerDiagonal) {
+        os << "LowerDiagonal";
+    } else if (type == SalvagingAlgorithm::Higham) {
+        os << "Higham";
+    } else {
+        QL_FAIL("SalvagingAlgorithm::Type ("
+                << static_cast<int>(type)
+                << " not recognized. Expected 'None', 'Spectral', 'Hypersphere', 'LowerDiagonal', or 'Higham'.");
     }
 
     return os;

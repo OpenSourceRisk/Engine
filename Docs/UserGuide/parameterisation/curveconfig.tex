@@ -74,6 +74,8 @@ Listing \ref{lst:swaptionvol_configuration} shows an example of a Swaption volat
     </ParametricSmileConfiguration>
     <Extrapolation>Flat</Extrapolation>
     <OutputVolatilityType>Normal</OutputVolatilityType>
+    <OutputShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</OutputShift>
+    <ModelShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</ModelShift>
     <DayCounter>Actual/365 (Fixed)</DayCounter>
     <Calendar>TARGET</Calendar>
     <BusinessDayConvention>Following</BusinessDayConvention>
@@ -109,12 +111,14 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
   Antonov2015FreeBoundaryNormal, KienitzLawsonSwaynePde, FlochKennedy. If not given, defaults to Linear.
 \item ParametricSmileConfiguration: Optional. Applies to SABR only. If not given, default values are used. Allows to
   specify initial values for calibrated parameters, to exclude single parameters from calibration and to set calibration
-  parameters.
+  parameters. See Example 60 for how to configure single value and termstructures of sabr parameters for swaption and cap curve configs.
 \item Extrapolation: Specifies the extrapolation behaviour in all dimensions. \\ Allowable values: {\tt Linear, Flat,
   None}
 \item OutputVolatilityType: Optional, defaults to input volatility type and applies to SABR variants only. For
   Interpolation = Linear it must be set to the input VolatilityType or (better) omitted. Possible values: Normal,
   Lognormal (alias for ShiftedLognormal, shift is always implied from input data), ShiftedLognormal.
+\item OutputShift: Optional, defaults to input market data shift. Specifies the shift if OutputVolatilityType is Lognormal / ShiftedLognormal
+\item ModelShift: Optional, defaults to input market data shift. Specifies the shift used for SABR model if applicable
 \item DayCounter: The term structure's day counter used in date to time conversions
 \item Calendar: The term structure's calendar used in option tenor to date conversions
 \item BusinessDayConvention: The term structure's business day convention used in option tenor to date conversion
@@ -202,6 +206,7 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
     <DayCounter>A365</DayCounter>
     <Calendar>US,JP</Calendar>
     <Conventions>USD-JPY-FXOPTION</Conventions>
+    <SmileExtrapolation>UseInterpolator</SmileExtrapolation>
   </FXVolatility>
 \end{minted}
 \caption{FX option volatility configuration Smile / Delta}
@@ -216,6 +221,8 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
     <Dimension>Smile</Dimension> 
     <SmileType>BFRR</SmileType> 
     <SmileInterpolation>Cubic</SmileInterpolation>
+    <TimeInterpolation>V2T</TimeInterpolation>
+    <TimeWeighting>USD-JPY-FXOPTION-TIMEWEIGHTING</TimeWeighting>
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <SmileDelta>10,25</SmileDelta>
     <FXSpotID>FX/USD/JPY</FXSpotID>
@@ -289,6 +296,10 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
 \item {\tt Linear} or {\tt Cubic} in case of SmileType {\tt Delta} or {\tt BFRR} with default {\tt Linear} for SmileType
   Delta and {\tt Cubic} for SmileType BFRR and Absolute if left blank
 \end{itemize}
+\item TimeInterpolation [Optional]: specifies whether time interpolation is done in volatility ({\tt V}, default) or
+  variance ({\tt V2T})
+\item TimeWeighting [Optional]: if given, a time weighting scheme is applied for time interpolation, see the
+  documentation of FxOptionTimeWeighting convention for more details
 \item Expiries: Option expiries in period form. A wildcard may also be used. In the wildcard case, it will look for any
   matching quotes provided in the loader, and construct the curve from these. This is currently only supported for {\tt
     ATM} or {\tt Delta} or {\tt BFRR} or {\tt Absolute} curves.
@@ -313,6 +324,11 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
   data input. See \ref{sss:fx_option_conv} for more details.
 \item BaseVolatility1: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
 \item BaseVolatility2: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
+\item SmileExtrapolation [Optional]: Applicable only in case of SmileType Delta. Indicates the extrapolation in the 
+smile direction. The allowable values are None, UseInterpolator (or Linear) and Flat. Both Flat and None give flat 
+extrapolation. UseInterpolator indicates that the configured interpolation should be continued in the strike 
+direction in order to extrapolate. Default if not provided value is Flat.
+
 \end{itemize}
 
 \subsubsection{Equity Curve Structures}
@@ -1005,11 +1021,16 @@ Listing \ref{lst:security_configuration} shows the configuration of the Securiti
 \item an optional RecoveryRateQuote. Usually a pricer will fall back on the recovery rate associated to the credit curve
   involved in the pricing if no security specific recovery rate is given. If no credit curve is given either, a zero
   recovery rate will be assumed.
+\item an optional PriceQuote. If the bond spread imply analytics is available, this is used to imply a SpreadQuote to
+  match a given bond price. Notice that if a SpreadQuote is given explicitly in the market data, this will override an
+  implied spread. Also see \ref{example:70}.
 \end{itemize}
 
 If no configuration is given for a security, in general a pricer will assume as zero spread and recovery rate. Notice
 that in this case the spread and recovery will not be simulated and therefore also be excluded from the sensitivity and
 stress analysis.
+
+Note: in case of a forward bond, the convention for security specification requires the format \emph{securityId\_FWDEXP\_expiryDate}.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -1020,6 +1041,7 @@ stress analysis.
     <CurveDescription>Security</CurveDescription>
     <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
     <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
+    <PriceQuote>BOND/PRICE/SECURITY_1</PriceQuote>
   </Security>
 </Securities>
 \end{minted}

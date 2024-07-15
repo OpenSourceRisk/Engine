@@ -239,6 +239,25 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 
         // Populate required curve ids
         populateRequiredCurveIds();
+
+        // Output vol type
+        string outVolType = XMLUtils::getChildValue(node, "OutputVolatilityType", false);
+        if (outVolType.empty())
+            outputVolatilityType_ = VolatilityType::Normal; // for bwds compatibility before release 1.83.0
+        else if (outVolType == "Normal") {
+            outputVolatilityType_ = VolatilityType::Normal;
+        } else if (outVolType == "Lognormal") {
+            outputVolatilityType_ = VolatilityType::Lognormal;
+        } else if (outVolType == "ShiftedLognormal") {
+            outputVolatilityType_ = VolatilityType::ShiftedLognormal;
+        } else {
+            QL_FAIL("OutputVolatilityType '"
+                    << outVolType << "' not recognized. Expected one of 'Normal', 'Lognormal', 'ShiftedLognormal'.");
+        }
+
+        // Model and Output shift
+        outputShift_ = XMLUtils::getChildValueAsDouble(node, "ModelShift", false, Null<Real>());
+        modelShift_ = XMLUtils::getChildValueAsDouble(node, "OutputShift", false, Null<Real>());
     }
 
     // Optional report config
@@ -292,7 +311,11 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "StrikeInterpolation", strikeInterpolation_);
         XMLUtils::addChild(doc, node, "QuoteIncludesIndexName", quoteIncludesIndexName_);
         XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
-		XMLUtils::addChild(doc, node, "InputType", inputType_);
+        XMLUtils::addChild(doc, node, "InputType", inputType_);
+        if (modelShift_ != Null<Real>())
+            XMLUtils::addChild(doc, node, "ModelShift", modelShift_);
+        if (outputShift_ != Null<Real>())
+            XMLUtils::addChild(doc, node, "OutputShift", outputShift_);
     }
 
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));

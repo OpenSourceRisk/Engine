@@ -26,6 +26,7 @@
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondutils.hpp>
+#include <ored/portfolio/builders/bond.hpp>
 
 #include <ql/instruments/bond.hpp>
 #include <ql/pricingengines/bond/bondfunctions.hpp>
@@ -170,10 +171,10 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
                                   const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration) {
 
     // checks, build bond from reference data
-
     QL_REQUIRE(referenceDataManager, "no reference data manager given");
 
     auto b = BondFactory::instance().build(engineFactory, referenceDataManager, securityId);
+
     Real adj = b.priceQuoteMethod == QuantExt::BondIndex::PriceQuoteMethod::CurrencyPerUnit
                    ? 1.0 / b.priceQuoteBaseValue
                    : 1.0;
@@ -196,6 +197,14 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
         TLOG("--> spread imply: trying s = " << s << " yields clean price " << c);
         return c - cleanPrice * inflationFactor * adj;
     };
+
+    // edge case: bond has a zero settlement value -> skip spread imply
+
+    if (QuantLib::close_enough(b.bond->cleanPrice(), 0.0)) {
+        DLOG("bond has a theoretical clean price of zero (no outstanding flows as of settlement date) -> skip spread "
+             "imply and continue with zero security spread.");
+        return 0.0;
+    }
 
     // solve for spread and return result
 

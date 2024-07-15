@@ -47,7 +47,8 @@ void StressScenarioGenerator::generateScenarios() {
     for (Size i = 0; i < stressData_->data().size(); ++i) {
         StressTestScenarioData::StressTestData data = stressData_->data().at(i);
         DLOG("Generate stress scenario #" << i << " '" << data.label << "'");
-        QuantLib::ext::shared_ptr<Scenario> scenario = stressScenarioFactory_->buildScenario(asof, data.label);
+        QuantLib::ext::shared_ptr<Scenario> scenario =
+            stressScenarioFactory_->buildScenario(asof, !stressData_->useSpreadedTermStructures(), false, data.label);
 
         if (simMarketData_->simulateFxSpots())
             addFxShifts(data, scenario);
@@ -109,7 +110,8 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
         RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
         Real rate = scenario->get(key);
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
-        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::FXSpot, ccypair), newRate);
+        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::FXSpot, ccypair),
+                      stressData_->useSpreadedTermStructures() ? newRate / rate : newRate);
     }
     DLOG("FX scenarios done");
 }
@@ -128,7 +130,8 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
         Real rate = baseScenarioAbsolute_->get(key);
 
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
-        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::EquitySpot, equity), newRate);
+        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::EquitySpot, equity),
+                      stressData_->useSpreadedTermStructures() ? newRate / rate : newRate);
     }
     DLOG("Equity scenarios done");
 }
@@ -181,9 +184,9 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
             RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, k);
-            Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+            Real shiftedDiscount = std::exp(-shiftedZeros[k] * times[k]);
             if (stressData_->useSpreadedTermStructures()) {
-                Real discount = exp(-zeros[k] * times[k]);
+                Real discount = std::exp(-zeros[k] * times[k]);
                 scenario->add(key, shiftedDiscount / discount);
             } else {
                 scenario->add(key, shiftedDiscount);
@@ -241,9 +244,9 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
             RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, k);
-            Real shiftedSurvivalProbability = exp(-shiftedZeros[k] * times[k]);
+            Real shiftedSurvivalProbability = std::exp(-shiftedZeros[k] * times[k]);
             if (stressData_->useSpreadedTermStructures()) {
-                Real survivalProbability = exp(-zeros[k] * times[k]);
+                Real survivalProbability = std::exp(-zeros[k] * times[k]);
                 scenario->add(key, shiftedSurvivalProbability / survivalProbability);
             } else {
                 scenario->add(key, shiftedSurvivalProbability);
@@ -302,9 +305,9 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
         // store shifted discount curve for this index in the scenario
         for (Size k = 0; k < n_ten; ++k) {
             RiskFactorKey key(RiskFactorKey::KeyType::IndexCurve, indexName, k);
-            Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+            Real shiftedDiscount = std::exp(-shiftedZeros[k] * times[k]);
             if (stressData_->useSpreadedTermStructures()) {
-                Real discount = exp(-zeros[k] * times[k]);
+                Real discount = std::exp(-zeros[k] * times[k]);
                 scenario->add(key, shiftedDiscount / discount);
             } else {
                 scenario->add(key, shiftedDiscount);
@@ -367,9 +370,9 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
             RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, name, k);
-            Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+            Real shiftedDiscount = std::exp(-shiftedZeros[k] * times[k]);
             if (stressData_->useSpreadedTermStructures()) {
-                Real discount = exp(-zeros[k] * times[k]);
+                Real discount = std::exp(-zeros[k] * times[k]);
                 scenario->add(key, shiftedDiscount / discount);
             } else {
                 scenario->add(key, shiftedDiscount);
@@ -615,10 +618,22 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
         StressTestScenarioData::CapFloorVolShiftData data = d.second;
 
         ShiftType shiftType = data.shiftType;
-        vector<Real> shifts = data.shifts;
+        
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
+        vector<Real> shiftStrikes = data.shiftStrikes.empty() ? volStrikes : data.shiftStrikes;
+        
+        vector<vector<Real>> shifts;
+        for (size_t i = 0; i < data.shiftExpiries.size(); ++i) {
+            const auto tenor = data.shiftExpiries[i];
+            if (data.shiftStrikes.empty()){
+                const double shift = data.shifts[tenor].front();
+                shifts.push_back(std::vector<Real>(volStrikes.size(), shift));
+            } else{
+                shifts.push_back(data.shifts[tenor]);
+            }
+        }
 
-        //DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDayCounter(key));
+        // DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDayCounter(key));
         DayCounter dc;
         if (auto s = simMarket_.lock()) {
             dc = s->capFloorVol(key)->dayCounter();
@@ -644,11 +659,13 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
             shiftExpiryTimes[j] = dc.yearFraction(asof, asof + data.shiftExpiries[j]);
 
         // loop over shift expiries, apply same shifts across all strikes
-        vector<Real> shiftStrikes = volStrikes;
-        for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
-            for (Size k = 0; k < shiftStrikes.size(); ++k)
-                applyShift(j, k, shifts[j], true, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
+        
+        for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
+            for (Size k = 0; k < shiftStrikes.size(); ++k) {
+                applyShift(j, k, shifts[j][k], true, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
                            volData, shiftedVolData, j == 0 && k == 0);
+            }
+        }
 
         // add shifted vol data to the scenario
         for (Size jj = 0; jj < n_cfvol_exp; ++jj) {
@@ -680,7 +697,8 @@ void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::St
         Real base_spread = baseScenarioAbsolute_->get(key);
 
         Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
-        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SecuritySpread, bond), newSpread);
+        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SecuritySpread, bond),
+                      stressData_->useSpreadedTermStructures() ? newSpread - base_spread : newSpread);
     }
     DLOG("Security spread scenarios done");
 }
@@ -698,7 +716,9 @@ void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::Stre
         RiskFactorKey key(RiskFactorKey::KeyType::RecoveryRate, isin);
         Real base_recoveryRate = baseScenarioAbsolute_->get(key);
         Real new_recoveryRate = relShift ? base_recoveryRate * (1.0 + size) : (base_recoveryRate + size);
-        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::RecoveryRate, isin), new_recoveryRate);
+        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::RecoveryRate, isin),
+                      stressData_->useSpreadedTermStructures() ? new_recoveryRate - base_recoveryRate
+                                                               : new_recoveryRate);
     }
     DLOG("Recovery rate scenarios done");
 }

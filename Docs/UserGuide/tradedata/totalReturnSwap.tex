@@ -49,7 +49,7 @@ indices.
 \item The {\tt UnderlyingData} block specifies on or more underlyings, which can be a trades of one of the following
   types. See the trade type specific sections for details on the setup of these underlyings.
   \begin{itemize}
-  \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node.
+  \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node for a single Bond.
   \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node.
   \item CBO: See \ref{ss:CBOData}, the trade data is given in a CBOData sub node.
   \item CommodityPosition: See \ref{ss:commodity_position}, the trade data is given in a CommodityPositionData sub node.
@@ -62,13 +62,18 @@ indices.
     node. Notice that the equities given in the basket must be available as quoted market data.
   \item EquityOptionPosition: See \ref{ss:equity_option_position}, the trade data is given in a EquityOptionPositionData
     sub node.
-  \item BondPosition: See \ref{ss:bond_position}, the trade data is given in a BondBasketData sub node.
+  \item BondPosition: See \ref{ss:bond_position}, the trade data is given in a BondBasketData sub node for multiple underlying Bonds.
   \item Derivative: An arbitrary underlying derivative trade (of any type covered by ORE), allowing the set up of a so called Portfolio Swap with multiple underlying derivatives. The derivative subnode has
     exactly two subnodes
     \begin{itemize}
-      \item Id: A unqiue identifier for the derivative position. Historical prices must be given under the fixing name
+      \item Id: A unique identifier for the derivative position. Historical prices must be given under the fixing name
         ``GENERIC-$<Id>$''.
       \item Trade: The root node of a derivative trade.
+    \end{itemize}
+  \item PortfolioIndexTradeData: A collection of {\tt Trade} subnodes that must be part of the referencedata.
+    \begin{itemize}
+      \item BasketName: A unique identifier for the portfolioIndex. Historical prices must be given under the fixing name
+        ``GENERIC-$<BasketName>$''.
     \end{itemize}
 
   \end{itemize}

@@ -48,8 +48,7 @@ public:
     Size numberOfAnalytics() { return analytics_.size(); }
     const QuantLib::ext::shared_ptr<InputParameters>& inputs() { return inputs_; }
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
-    void runAnalytics(const std::set<std::string>& analyticTypes,
-                      const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport = nullptr);
+    void runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport = nullptr);
     void addAnalytic(const std::string& label, const QuantLib::ext::shared_ptr<Analytic>& analytic);
 
     // returns a vector of all analytics, including dependent analytics
@@ -59,7 +58,8 @@ public:
     Analytic::analytic_reports const reports();
     Analytic::analytic_npvcubes const npvCubes();
     Analytic::analytic_mktcubes const mktCubes();
-
+    Analytic::analytic_stresstests const stressTests();
+    
     // Write all reports to files, reportNames map can be used to replace standard report names
     // with custom names
     void toFile(const Analytic::analytic_reports& reports, const std::string& outputPath,
@@ -73,7 +73,6 @@ private:
     QuantLib::ext::shared_ptr<MarketDataLoader> marketDataLoader_;
     Analytic::analytic_reports reports_;
     std::set<std::string> validAnalytics_;
-    std::set<std::string> requestedAnalytics_;
 };
 
 QuantLib::ext::shared_ptr<AnalyticsManager> parseAnalytics(const std::string& s,

@@ -395,12 +395,14 @@ BlackVolatilitySurfaceBFRR::BlackVolatilitySurfaceBFRR(
     const Handle<YieldTermStructure>& domesticTS, const Handle<YieldTermStructure>& foreignTS,
     const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at, const Period& switchTenor,
     const DeltaVolQuote::DeltaType ltdt, const DeltaVolQuote::AtmType ltat, const Option::Type riskReversalInFavorOf,
-    const bool butterflyIsBrokerStyle, const SmileInterpolation smileInterpolation)
+    const bool butterflyIsBrokerStyle, const SmileInterpolation smileInterpolation,
+    const TimeInterpolation timeInterpolation, const FxVolatilityTimeWeighting timeWeighting)
     : BlackVolatilityTermStructure(referenceDate, calendar, Following, dayCounter), dates_(dates), deltas_(deltas),
       bfQuotes_(bfQuotes), rrQuotes_(rrQuotes), atmQuotes_(atmQuotes), spot_(spot), spotDays_(spotDays),
       spotCalendar_(spotCalendar), domesticTS_(domesticTS), foreignTS_(foreignTS), dt_(dt), at_(at),
       switchTenor_(switchTenor), ltdt_(ltdt), ltat_(ltat), riskReversalInFavorOf_(riskReversalInFavorOf),
-      butterflyIsBrokerStyle_(butterflyIsBrokerStyle), smileInterpolation_(smileInterpolation) {
+      butterflyIsBrokerStyle_(butterflyIsBrokerStyle), smileInterpolation_(smileInterpolation),
+      timeInterpolation_(timeInterpolation), timeWeighting_(timeWeighting) {
 
     // checks
 
@@ -446,6 +448,18 @@ const std::vector<bool>& BlackVolatilitySurfaceBFRR::smileHasError() const {
 const std::vector<std::string>& BlackVolatilitySurfaceBFRR::smileErrorMessage() const {
     calculate();
     return smileErrorMessage_;
+}
+
+double BlackVolatilitySurfaceBFRR::interpolateInTime(double t, double t1, double t2, double v1, double v2) const {
+    Real a = (timeWeighting_(t) - timeWeighting_(t1)) / (timeWeighting_(t2) - timeWeighting_(t1));
+    if (timeInterpolation_ == TimeInterpolation::V) {
+        return (1.0 - a) * v1 + a * v2;
+    } else if (timeInterpolation_ == TimeInterpolation::V2T) {
+        return std::sqrt(((1.0 - a) * v1 * v1 * t1 + a * v2 * v2 * t2) / t);
+    } else {
+        QL_FAIL("BlackVolatilitySurfaceBFRR::interpolationInTime(): internal error: timeInterpolation ("
+                << static_cast<int>(timeInterpolation_) << ") not recognized.");
+    }
 }
 
 void BlackVolatilitySurfaceBFRR::performCalculations() const {
@@ -674,22 +688,21 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
         }
     } else {
         // interpolate between two expiries
-        Real a = (t - expiryTimes_[index_m]) / (expiryTimes_[index_p] - expiryTimes_[index_m]);
-        atmVol_i = (1.0 - a) * atmVol_m + a * atmVol_p;
-        QL_REQUIRE(atmVol_i > 0.0, "BlackVolatilitySurfaceBFRR: negative atm vol "
-                                       << atmVol_i << " = " << (1.0 - a) << " * " << atmVol_m << " + " << a << " * "
-                                       << atmVol_p);
+        atmVol_i = interpolateInTime(t, expiryTimes_[index_m], expiryTimes_[index_p], atmVol_m, atmVol_p);
+        QL_REQUIRE(atmVol_i > 0.0, "BlackVolatilitySurfaceBFRR: negative atm vol = "
+                                       << atmVol_i << ", atmVol_m = " << atmVol_m << ", atmVol_p = " << atmVol_p);
         for (Size i = 0; i < currentDeltas_.size(); ++i) {
-            putVols_i.push_back((1.0 - a) * putVols_m[i] + a * putVols_p[i]);
-            callVols_i.push_back((1.0 - a) * callVols_m[i] + a * callVols_p[i]);
+            putVols_i.push_back(
+                interpolateInTime(t, expiryTimes_[index_m], expiryTimes_[index_p], putVols_m[i], putVols_p[i]));
+            callVols_i.push_back(
+                interpolateInTime(t, expiryTimes_[index_m], expiryTimes_[index_p], callVols_m[i], callVols_p[i]));
             QL_REQUIRE(putVols_i.back() > 0.0, "BlackVolatilitySurfaceBFRR: negative put vol for delta="
-                                                   << currentDeltas_[i] << ", " << putVols_i.back() << " = "
-                                                   << (1.0 - a) << " * " << putVols_m[i] << " + " << a << " * "
-                                                   << putVols_p[i]);
+                                                   << currentDeltas_[i] << ", " << putVols_i.back() << ", putVols_m = "
+                                                   << putVols_m[i] << ", putVols_p = " << putVols_p[i]);
             QL_REQUIRE(callVols_i.back() > 0.0, "BlackVolatilitySurfaceBFRR: negative call vol for delta="
-                                                    << currentDeltas_[i] << ", " << callVols_i.back() << " = "
-                                                    << (1.0 - a) << " * " << callVols_m[i] << " + " << a << " * "
-                                                    << callVols_p[i]);
+                                                    << currentDeltas_[i] << ", " << callVols_i.back()
+                                                    << ", callVols_m = " << callVols_m[i]
+                                                    << ", callVols_p = " << callVols_p[i]);
         }
     }
 

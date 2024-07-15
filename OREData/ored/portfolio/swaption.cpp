@@ -299,11 +299,13 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     }
 
     // 9.2 determine strikes for calibration basket (simple approach, a la summit)
+    // TODO: Capture ExerciseFee in calibration
 
     std::vector<Real> strikes(exerciseBuilder_->noticeDates().size(), Null<Real>());
     for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
         Real firstFixedRate = Null<Real>(), lastFixedRate = Null<Real>();
         Real firstFloatSpread = Null<Real>(), lastFloatSpread = Null<Real>();
+        Real firstGearing = Null<Real>(), lastGearing = Null<Real>();
         for (auto const& l : underlying_->legs()) {
             for (auto const& c : l) {
                 if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c)) {
@@ -312,9 +314,12 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                     lastFixedRate = cpn->rate();
                 } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                     if (cpn->accrualStartDate() >= exerciseBuilder_->noticeDates()[i] &&
-                        firstFloatSpread == Null<Real>())
+                        firstFloatSpread == Null<Real>()) {
                         firstFloatSpread = cpn->spread();
+                        firstGearing = cpn->gearing();
+                    }
                     lastFloatSpread = cpn->spread();
+                    lastGearing = cpn->gearing();
                     if (index == nullptr) {
                         if (auto tmp = QuantLib::ext::dynamic_pointer_cast<IborIndex>(cpn->index())) {
                             DLOG("found ibor / ois index '" << tmp->name() << "'");
@@ -336,6 +341,9 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             firstFixedRate = lastFixedRate;
         if(firstFloatSpread == Null<Real>())
             firstFloatSpread = lastFloatSpread;
+        // if no first gearing was found, fall back on the last value
+        if(firstGearing == Null<Real>())
+            firstGearing = lastGearing;
         // construct calibration strike
         if (firstFixedRate != Null<Real>()) {
             strikes[i] = firstFixedRate;
@@ -343,11 +351,14 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                 strikes[i] -= firstFloatSpread;
             }
         }
+        if (firstGearing != Null<Real>())
+            strikes[i] /= firstGearing;
         DLOG("calibration strike for ex date "
              << QuantLib::io::iso_date(exerciseBuilder_->noticeDates()[i]) << " is "
              << (strikes[i] == Null<Real>() ? "ATMF" : std::to_string(strikes[i])) << " (fixed rate "
              << (firstFixedRate == Null<Real>() ? "NA" : std::to_string(firstFixedRate)) << ", spread "
-             << (firstFloatSpread == Null<Real>() ? "NA" : std::to_string(firstFloatSpread)) << ")");
+             << (firstFloatSpread == Null<Real>() ? "NA" : std::to_string(firstFloatSpread)) << ", gearing "
+             << (firstGearing == Null<Real>() ? "NA" : std::to_string(firstGearing)) << ")");
     }
 
     // 9.3 get engine and set it

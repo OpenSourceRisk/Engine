@@ -8,6 +8,7 @@ configuration/commoditycurveconfig.cpp
 configuration/commodityvolcurveconfig.cpp
 configuration/conventions.cpp
 configuration/correlationcurveconfig.cpp
+configuration/currencyconfig.cpp
 configuration/curveconfig.cpp
 configuration/curveconfigurations.cpp
 configuration/defaultcurveconfig.cpp
@@ -191,6 +192,7 @@ portfolio/builders/varianceswap.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/callableswap.cpp
 portfolio/capfloor.cpp
+portfolio/cashposition.cpp
 portfolio/cbo.cpp
 portfolio/cdo.cpp
 portfolio/cliquetoption.cpp
@@ -311,6 +313,7 @@ portfolio/windowbarrieroption.cpp
 portfolio/worstofbasketswap.cpp
 report/csvreport.cpp
 report/inmemoryreport.cpp
+report/utilities.cpp
 scripting/ast.cpp
 scripting/astprinter.cpp
 scripting/astresetter.cpp
@@ -355,9 +358,9 @@ utilities/calendarparser.cpp
 utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
-utilities/currencyconfig.cpp
 utilities/currencyhedgedequityindexdecomposition.cpp
 utilities/currencyparser.cpp
+utilities/databuilders.cpp
 utilities/dategrid.cpp
 utilities/fileio.cpp
 utilities/flowanalysis.cpp
@@ -365,7 +368,6 @@ utilities/formulaparser.cpp
 utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
 utilities/inflationstartdate.cpp
-utilities/initbuilders.cpp
 utilities/log.cpp
 utilities/marketdata.cpp
 utilities/osutils.cpp
@@ -373,6 +375,7 @@ utilities/parsers.cpp
 utilities/progressbar.cpp
 utilities/strike.cpp
 utilities/timeperiod.cpp
+utilities/timer.cpp
 utilities/to_string.cpp
 utilities/wildcard.cpp
 utilities/xmlutils.cpp)
@@ -388,6 +391,7 @@ configuration/commoditycurveconfig.hpp
 configuration/commodityvolcurveconfig.hpp
 configuration/conventions.hpp
 configuration/correlationcurveconfig.hpp
+configuration/currencyconfig.hpp
 configuration/curveconfig.hpp
 configuration/curveconfigurations.hpp
 configuration/defaultcurveconfig.hpp
@@ -487,6 +491,7 @@ model/localvolmodelbuilder.hpp
 model/modeldata.hpp
 model/modelparameter.hpp
 model/structuredmodelerror.hpp
+model/structuredmodelwarning.hpp
 model/utilities.hpp
 portfolio/accumulator.hpp
 portfolio/ascot.hpp
@@ -582,6 +587,7 @@ portfolio/builders/varianceswap.hpp
 portfolio/builders/yoycapfloor.hpp
 portfolio/callableswap.hpp
 portfolio/capfloor.hpp
+portfolio/cashposition.hpp
 portfolio/cbo.hpp
 portfolio/cdo.hpp
 portfolio/cliquetoption.hpp
@@ -711,6 +717,7 @@ portfolio/worstofbasketswap.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
+report/utilities.hpp
 scripting/ast.hpp
 scripting/astprinter.hpp
 scripting/astresetter.hpp
@@ -759,9 +766,9 @@ utilities/calendarparser.hpp
 utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
-utilities/currencyconfig.hpp
 utilities/currencyhedgedequityindexdecomposition.hpp
 utilities/currencyparser.hpp
+utilities/databuilders.hpp
 utilities/dategrid.hpp
 utilities/fileio.hpp
 utilities/flowanalysis.hpp
@@ -769,7 +776,6 @@ utilities/formulaparser.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp
 utilities/inflationstartdate.hpp
-utilities/initbuilders.hpp
 utilities/log.hpp
 utilities/marketdata.hpp
 utilities/osutils.hpp
@@ -780,6 +786,7 @@ utilities/serializationdaycounter.hpp
 utilities/serializationperiod.hpp
 utilities/strike.hpp
 utilities/timeperiod.hpp
+utilities/timer.hpp
 utilities/to_string.hpp
 utilities/vectorutils.hpp
 utilities/wildcard.hpp

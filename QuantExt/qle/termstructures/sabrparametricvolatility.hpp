@@ -39,14 +39,18 @@ public:
         FlochKennedy = 5
     };
 
-    /*! modelParameters are given by (tte, underlyingLen) as a vector of parameter values and
-        whether the values are fixed */
+    /*! - modelParameters are given by (tte, underlyingLen) as a vector of parameter values and whether the values are
+         fixed
+        - modelShift is optional and defines the lognormal shift used within the model (if applicable), if not given, it
+          is set to the input market smiles shift
+    */
     SabrParametricVolatility(
         const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles,
         const MarketModelType marketModelType, const MarketQuoteType inputMarketQuoteType,
         const QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve,
         const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters =
             {},
+        const std::map<QuantLib::Real, QuantLib::Real>& modelShift = {},
         const QuantLib::Size maxCalibrationAttempts = 10, const QuantLib::Real exitEarlyErrorThreshold = 0.005,
         const QuantLib::Real maxAcceptableError = 0.05);
 
@@ -71,9 +75,25 @@ public:
     // indicator whether smile params were interpolated (1) or calibrated (0)
     const QuantLib::Matrix& isInterpolated() const { return isInterpolated_; }
 
+    struct CalibrationResult {
+        QuantLib::Real timeToExpiry;
+        QuantLib::Real underlyingLength;
+        QuantLib::Real forward;
+        std::vector<Real> strikes;           // strikes
+        std::vector<Real> marketInput;       // the market input data
+        std::vector<Real> calibrationTarget; // the converted data against which the model is calibrated
+        std::vector<Real> calibrationResult; // the best model fit
+        QuantLib::Real error;                // the calibration error
+        bool accepted;                       // true if isInterpolated = false
+    };
+
+    const std::vector<CalibrationResult>& calibrationResults() const { return calibrationResults_; }
+
 private:
     static constexpr double eps1 = .0000001;
     static constexpr double eps2 = .9999;
+    static constexpr double max_nvol_equiv = 0.02;
+    static constexpr double max_nu = 2.0;
 
     void calculate();
 
@@ -85,11 +105,12 @@ private:
     std::vector<Real> inverse(const std::vector<Real>& y, const Real forward, const Real lognormalShift) const;
     std::vector<Real> evaluateSabr(const std::vector<Real>& params, const Real forward, const Real timeToExpiry,
                                    const Real lognormalShift, const std::vector<Real>& strikes) const;
-    std::tuple<std::vector<Real>, Real, QuantLib::Size>
+    std::tuple<std::vector<Real>, Real, Real, QuantLib::Size>
     calibrateModelParameters(const MarketSmile& marketSmile, const std::vector<std::pair<Real, bool>>& params) const;
 
     ModelVariant modelVariant_;
     std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters_;
+    std::map<QuantLib::Real, QuantLib::Real> modelShifts_;
     QuantLib::Size maxCalibrationAttempts_;
     QuantLib::Real exitEarlyErrorThreshold_;
     QuantLib::Real maxAcceptableError_;
@@ -105,6 +126,7 @@ private:
         numberOfCalibrationAttempts_;
     mutable QuantLib::Interpolation2D alphaInterpolation_, betaInterpolation_, nuInterpolation_, rhoInterpolation_,
         lognormalShiftInterpolation_;
+    mutable std::vector<CalibrationResult> calibrationResults_;
 };
 
 } // namespace QuantExt

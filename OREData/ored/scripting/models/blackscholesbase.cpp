@@ -42,7 +42,7 @@ BlackScholesBase::BlackScholesBase(const Size paths, const std::string& currency
                                    const Model::McParams& mcParams, const std::set<Date>& simulationDates,
                                    const IborFallbackConfig& iborFallbackConfig)
     : BlackScholesBase(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, mcParams,
-                       simulationDates, iborFallbackConfig) {}
+                       simulationDates, iborFallbackConfig, SalvagingAlgorithm::None) {}
 
 BlackScholesBase::BlackScholesBase(
     const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
@@ -53,10 +53,11 @@ BlackScholesBase::BlackScholesBase(
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
     const Model::McParams& mcParams, const std::set<Date>& simulationDates,
-    const IborFallbackConfig& iborFallbackConfig)
+    const IborFallbackConfig& iborFallbackConfig, const QuantLib::SalvagingAlgorithm::Type& salvagingAlgorithm)
     : ModelImpl(curves.at(0)->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
                 simulationDates, iborFallbackConfig),
-      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations), mcParams_(mcParams) {
+      curves_(curves), fxSpots_(fxSpots), model_(model), correlations_(correlations), mcParams_(mcParams),
+      salvagingAlgorithm_(salvagingAlgorithm) {
 
     // check inputs
 

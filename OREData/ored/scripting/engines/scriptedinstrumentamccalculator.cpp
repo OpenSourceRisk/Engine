@@ -31,7 +31,7 @@ namespace data {
 QuantLib::Currency ScriptedInstrumentAmcCalculator::npvCurrency() { return parseCurrency(model_->baseCcy()); }
 
 std::vector<QuantExt::RandomVariable> ScriptedInstrumentAmcCalculator::simulatePath(
-    const std::vector<QuantLib::Real>& pathTimes, std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+    const std::vector<QuantLib::Real>& pathTimes, const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
     const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) {
 
     QL_REQUIRE(relevantPathIndex.size() == relevantTimeIndex.size(),

@@ -25,6 +25,7 @@
 #include <orea/simm/crif.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmresults.hpp>
+#include <ored/utilities/timer.hpp>
 #include <ored/marketdata/market.hpp>
 
 #include <map>
@@ -92,6 +93,8 @@ public:
 
     const std::map<SimmSide, std::set<std::string>>& finalTradeIds() const { return finalTradeIds_; }
 
+    const Crif& simmParameters() const { return simmParameters_; }
+
     //! Return the calculator's calculation currency
     const std::string& calculationCurrency(const SimmSide& side) const {
         return side == SimmSide::Call ? calculationCcyCall_ : calculationCcyPost_;
@@ -105,12 +108,17 @@ public:
     */
     void populateFinalResults(const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::string>>& winningRegulations);
 
+    const ore::data::Timer& timer() const { return timer_; }
+
 private:
     //! All the net sensitivities passed in for the calculation
     ore::analytics::Crif crif_;
 
     //! Net sentivities at the regulation level within each netting set
     std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, Crif>>> regSensitivities_;
+
+    //! Record of SIMM parameters that were used in the calculation
+    ore::analytics::Crif simmParameters_;
 
     //! The SIMM configuration governing the calculation
     QuantLib::ext::shared_ptr<SimmConfiguration> simmConfiguration_;
@@ -156,6 +164,10 @@ private:
     std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, set<string>>>> tradeIds_;
 
     std::map<SimmSide, set<string>> finalTradeIds_;
+
+    std::map<string, set<string>> regulationCache_;
+
+    mutable ore::data::Timer timer_;
 
     //! Calculate the Interest Rate delta margin component for the given portfolio and product class
     std::pair<std::map<std::string, QuantLib::Real>, bool>
@@ -220,7 +232,7 @@ private:
              const bool overwrite = true);
 
     //! Add CRIF record to the CRIF records container that correspondsd to the given regulation/s and portfolio ID
-    void splitCrifByRegulationsAndPortfolios(const Crif& crif, const bool enforceIMRegulations);
+    void splitCrifByRegulationsAndPortfolios(const bool enforceIMRegulations);
 
     //! Give the \f$\lambda\f$ used in the curvature margin calculation
     QuantLib::Real lambda(QuantLib::Real theta) const;
@@ -229,6 +241,7 @@ private:
                                         const CrifRecord::ProductClass& pc,
                                         const std::vector<CrifRecord::RiskType>& riskTypes) const;
 
+    QuantLib::Real fxRate(const std::string& ccyPair) const;
 };
 
 } // namespace analytics

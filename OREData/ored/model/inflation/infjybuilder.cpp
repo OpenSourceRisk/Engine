@@ -334,16 +334,28 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
                                             strikeValue, zeroInflationIndex_, obsLag, observationInterpolation);
         inst->setPricingEngine(engine);
 
+        auto fixingDate = inst->fixingDate();
+        auto t = inflationTime(fixingDate, *zts, false);
+
         // Build the helper using the NPV as the premium.
-        auto premium = dontCalibrate_ ? 0.01 : inst->NPV();
+        Real premium;
+        if(dontCalibrate_)
+            premium = 0.01;
+        else if(t <= 0.0)
+            premium = 0.0;
+        else
+            premium = inst->NPV();
+
         auto helper = QuantLib::ext::make_shared<CpiCapFloorHelper>(capfloor, baseCpi, maturity, calendar, bdc, calendar, bdc,
                                                             strikeValue, inflationIndex, obsLag, premium,
                                                             observationInterpolation);
 
+        // if time is not positive or market prem is zero deactivate helper
+        if (t < 0.0 || QuantLib::close_enough(t, 0.0) || QuantLib::close_enough(premium, 0.0)) {
+            active[i] = false;
+            continue;
+        }
 
-        // Add the helper's time to expiry.
-        auto fixingDate = helper->instrument()->fixingDate();
-        auto t = inflationTime(fixingDate, *zts, false);
         auto p = expiryTimes.insert(t);
         QL_REQUIRE(data_->ignoreDuplicateCalibrationExpiryTimes() || p.second,
                    "InfJyBuilder: a CPI cap floor calibration "
@@ -459,6 +471,13 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb, vector
         // Add the helper's time to expiry.
         auto fixingDate = helperInst->lastYoYInflationCoupon()->fixingDate();
         auto t = inflationTime(fixingDate, *yoyTs, yoyInflationIndex_->interpolated());
+
+        // if time is not positive deactivate helper
+        if (t < 0.0 || QuantLib::close_enough(t, 0.0)) {
+            active[i] = false;
+            continue;
+        }
+
         auto p = expiryTimes.insert(t);
         QL_REQUIRE(data_->ignoreDuplicateCalibrationExpiryTimes() || p.second,
                    "InfJyBuilder: a YoY cap floor calibration "
@@ -575,7 +594,7 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
             t = inflationTime(denFixingDate, *yoyTs, yoyInflationIndex_->interpolated());
         }
 
-        if (t <= 0) {
+        if (t < 0 || close_enough(t, 0.0)) {
             DLOG("The year on year swap with maturity tenor, " << yoySwap->tenor() << ", and date, " << maturity <<
                 ", has a non-positive parameter time, " << t << ", so skipping this as a calibration instrument.");
             continue;

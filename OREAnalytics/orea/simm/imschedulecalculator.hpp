@@ -154,6 +154,8 @@ public:
 
     // Populate the finalImScheduleResults_ container using the provided map of winning call/post regulations
     void populateFinalResults(const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::string>>& winningRegulations);
+    
+    const ore::data::Timer& timer() const { return timer_; }
 
 private:
     //! The net sensitivities used in the calculation
@@ -216,6 +218,8 @@ private:
         {IMScheduleLabel::Other,        0.15},
         // clang-format on
     });
+
+    mutable ore::data::Timer timer_;
 
     QuantLib::Real multiplier(const IMScheduleLabel& label) { return multiplierMap_[label]; }
 
