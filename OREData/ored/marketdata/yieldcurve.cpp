@@ -364,6 +364,7 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                 ReportConfig rc = curveConfigs.reportConfigYieldCurves();
                 std::vector<Date> pillarDates = *rc.pillarDates();
                 if (!pillarDates.empty()) {
+                    calibrationInfo_->pillarDates.clear();
                     for (auto const& pd : pillarDates)
                         calibrationInfo_->pillarDates.push_back(pd);
                 }
