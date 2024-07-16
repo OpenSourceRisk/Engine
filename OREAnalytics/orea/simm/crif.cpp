@@ -298,7 +298,7 @@ void Crif::setCrifRecords(const Crif& crif) {
 }
 
 //! Give back the set of portfolio IDs that have been loaded
-const set<string>& Crif::portfolioIds() const {
+set<string> Crif::portfolioIds() const {
     return boost::copy_range<set<string>>(records_ | boost::adaptors::transformed([](const CrifRecord& r) {
                                               return r.nettingSetDetails.nettingSetId();
                                           }));
