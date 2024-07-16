@@ -81,11 +81,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
-            latest=true
+            latest=auto
             prefix=${{ matrix.dockerfile_postfix }}-,onlatest=true
           tags: |
-            type=sha
+            type=sha,prefix=${{ matrix.dockerfile_postfix }}-sha-
             type=ref,event=branch
+            type=ref,event=tag
 
       - name: Build the "release" stage
         uses: docker/build-push-action@v6
