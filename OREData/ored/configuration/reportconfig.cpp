@@ -82,6 +82,12 @@ void ReportConfig::fromXML(XMLNode* node) {
         expiries_ = boost::none;
     }
 
+    if (auto tmp = XMLUtils::getChildNode(node, "PillarDates")) {
+        pillarDates_ = parseListOfValues<Date>(XMLUtils::getNodeValue(tmp), &parseDate);
+    } else {
+        pillarDates_ = boost::none;
+    }
+
     if (auto tmp = XMLUtils::getChildNode(node, "UnderlyingTenors")) {
         underlyingTenors_ = parseListOfValues<Period>(XMLUtils::getNodeValue(tmp), &parsePeriod);
     } else {
@@ -101,6 +107,8 @@ XMLNode* ReportConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addGenericChildAsList(doc, node, "Moneyness", *moneyness_);
     if (expiries_)
         XMLUtils::addGenericChildAsList(doc, node, "Expiries", *expiries_);
+    if (pillarDates_)
+        XMLUtils::addGenericChildAsList(doc, node, "Pillar Dates", *pillarDates_);
     if (underlyingTenors_)
         XMLUtils::addGenericChildAsList(doc, node, "UnderlyingTenors", *underlyingTenors_);
     return node;
@@ -116,6 +124,7 @@ ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const Repor
     std::vector<Real> strikes;
     std::vector<Real> strikeSpreads;
     std::vector<Period> expiries;
+    std::vector<Date> pillarDates;
     std::vector<Period> underlyingTenors;
 
     if (localConfig.reportOnDeltaGrid())
@@ -163,13 +172,18 @@ ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const Repor
     else if (globalConfig.expiries())
         expiries = *globalConfig.expiries();
 
+    if (localConfig.pillarDates())
+        pillarDates = *localConfig.pillarDates();
+    else if (globalConfig.pillarDates())
+        pillarDates = *localConfig.pillarDates();
+
     if (localConfig.underlyingTenors())
         underlyingTenors = *localConfig.underlyingTenors();
     else if (globalConfig.underlyingTenors())
         underlyingTenors = *globalConfig.underlyingTenors();
 
     return ReportConfig(reportOnDeltaGrid, reportOnMoneynessGrid, reportOnStrikeGrid, reportOnStrikeSpreadGrid, deltas,
-                        moneyness, strikes, strikeSpreads, expiries, underlyingTenors);
+                        moneyness, strikes, strikeSpreads, expiries, pillarDates, underlyingTenors);
 }
 
 } // namespace data
