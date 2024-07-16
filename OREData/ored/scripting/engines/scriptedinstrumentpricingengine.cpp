@@ -66,8 +66,6 @@ Real ScriptedInstrumentPricingEngine::addMcErrorEstimate(const std::string& labe
 
 void ScriptedInstrumentPricingEngine::calculate() const {
 
-    std::cout << "calculating" << std::endl;
-
     lastCalculationWasValid_ = false;
 
     // make sure we release the memory allocated by the model after the pricing
@@ -194,9 +192,7 @@ void ScriptedInstrumentPricingEngine::calculate() const {
         paylog->consolidateAndSort();
         std::vector<CashFlowResults> cashFlowResults(paylog->size());
         std::map<Size, Size> cashflowNumber;
-        std::cout << "generating cashflow results" << std::endl;
         for (Size i = 0; i < paylog->size(); ++i) {
-            std::cout << " got paylog entry " << i << std::endl;
             // cashflow is written as expectation of deflated base ccy amount at T0, converted to flow ccy
             // with the T0 FX Spot and compounded back to the pay date on T0 curves
             Real fx = 1.0;
@@ -241,8 +237,6 @@ void ScriptedInstrumentPricingEngine::calculate() const {
     }
 
     lastCalculationWasValid_ = true;
-
-    std::cout << "calculating done" << std::endl;
 }
 
 } // namespace data
