@@ -43,7 +43,6 @@ jobs:
         with:
           context: .
           file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
-          load: true
           platforms: ${{ matrix.platform }}
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder-${{ github.sha }}
           target: builder
@@ -80,7 +79,6 @@ jobs:
         with:
           context: .
           file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
-          load: true
           platforms: linux/amd64
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}
