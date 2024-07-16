@@ -63,7 +63,7 @@ jobs:
           target: builder
           cache-from: |
             type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder:${{ matrix.dockerfile_postfix }}-${{ env.GITHUB_REF_NAME }}
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder:${{ matrix.dockerfile_postfix }}-master
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder:${{ matrix.dockerfile_postfix }}-${{ github.event.repository.default_branch }}
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder:${{ matrix.dockerfile_postfix }}-${{ env.GITHUB_REF_NAME }},mode=max
 
       # Run the tests in the result of the first stage build, saving the results to our filesystem
