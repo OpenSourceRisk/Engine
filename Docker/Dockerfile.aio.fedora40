@@ -4,6 +4,7 @@ FROM registry.fedoraproject.org/fedora:${fedora_tag} AS builder
 LABEL org.opencontainers.image.authors="Quaternion Risk Management"
 LABEL Description="Multi-stage container definition for ORE on Fedora"
 
+# Set to override number of build jobs. Will default to number of cores available.
 ARG build_jobs=
 ARG cmake_build_type=Release
 
