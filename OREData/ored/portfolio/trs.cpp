@@ -740,13 +740,21 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     auto wrapper = QuantLib::ext::make_shared<TRSWrapper>(
-        underlying_, underlyingIndex, underlyingMultiplier, includeUnderlyingCashflowsInReturn, initialPrice, portfolioInitialPrice, portfolioId_,
-        parseCurrencyWithMinors(initialPriceCurrency), parsedAssetCurrencies, parseCurrency(returnData_.currency()),
-        valuationDates, paymentDates, fundingLegs, fundingNotionalTypes, parseCurrency(fundingCurrency),
-        fundingData_.fundingResetGracePeriod(), returnData_.payer(), fundingLegPayer, additionalCashflowLeg,
-        additionalCashflowLegPayer, parseCurrency(additionalCashflowLegCurrency), fxIndexAsset, fxIndexReturn,
-        fxIndexAdditionalCashflows, fxIndices);
-    wrapper->setPricingEngine(QuantLib::ext::make_shared<TRSWrapperAccrualEngine>());
+        underlying_, underlyingIndex, underlyingMultiplier, includeUnderlyingCashflowsInReturn, initialPrice,
+        portfolioInitialPrice, portfolioId_, parseCurrencyWithMinors(initialPriceCurrency), parsedAssetCurrencies,
+        parseCurrency(returnData_.currency()), valuationDates, paymentDates, fundingLegs, fundingNotionalTypes,
+        parseCurrency(fundingCurrency), fundingData_.fundingResetGracePeriod(), returnData_.payer(), fundingLegPayer,
+        additionalCashflowLeg, additionalCashflowLegPayer, parseCurrency(additionalCashflowLegCurrency), fxIndexAsset,
+        fxIndexReturn, fxIndexAdditionalCashflows, fxIndices);
+
+    Handle<YieldTermStructure> additionalCashflowCurrencyDiscountCurve;
+    if (!additionalCashflowLeg.empty()) {
+        additionalCashflowCurrencyDiscountCurve = engineFactory->market()->discountCurve(
+            additionalCashflowLegCurrency, engineFactory->configuration(MarketContext::pricing));
+    }
+
+    wrapper->setPricingEngine(
+        QuantLib::ext::make_shared<TRSWrapperAccrualEngine>(additionalCashflowCurrencyDiscountCurve));
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(wrapper);
 
     // if the first valuation date is > today, we potentially need fixings for fx conversion as of "today"
