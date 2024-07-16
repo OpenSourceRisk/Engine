@@ -133,10 +133,6 @@ public:
     virtual void writeCube(ore::data::Report& report, const QuantLib::ext::shared_ptr<NPVCube>& cube,
                            const std::map<std::string, std::string>& nettingSetMap = std::map<std::string, std::string>());
 
-    virtual void writeForwardRatesReport(ore::data::Report& report, const std::string& configuration,
-                                         const DateGrid& grid, const TodaysMarketParameters& marketConfig,
-                                         const boost::shared_ptr<Market>& market, const bool continueOnError);
-
     const std::string& nullString() const { return nullString_; }
 
     /*! Write out the SIMM results contained in the \p resultsMap and \p additionalMargin.
