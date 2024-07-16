@@ -82,10 +82,10 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        flavor: |
-          latest=true
-          prefix=${{ matrix.dockerfile_postfix }},onlatest=true
-        tags: |
+          flavor: |
+            latest=true
+            prefix=${{ matrix.dockerfile_postfix }},onlatest=true
+          tags: |
           type=sha
           type=ref,event=branch
 
