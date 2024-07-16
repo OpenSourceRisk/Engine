@@ -34,6 +34,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
+
+
       # TODO sort out registry caching to make this faster
       # https://blacksmith.sh/blog/cache-is-king-a-guide-for-docker-layer-caching-in-github-actions
 
@@ -42,6 +44,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          load: true
           file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
           platforms: ${{ matrix.platform }}
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder-${{ github.sha }}
@@ -74,13 +77,25 @@ jobs:
             test-results/**/*.xml
 
       # Build the rest of the stages - the first stage should be cached
+      - name: Extract metadata (tags, labels) for Docker release
+        id: release-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        flavor: |
+          latest=true
+          prefix=${{ matrix.dockerfile_postfix }},onlatest=true
+        tags: |
+          type=sha
+          type=ref,event=branch
+
       - name: Build the "release" stage
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
           platforms: linux/amd64
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.release-meta.outputs.tags }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }},mode=max
