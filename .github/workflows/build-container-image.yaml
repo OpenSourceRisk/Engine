@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         dockerfile_postfix: [debian11, centos-stream9, fedora40]
+        platform: [linux/amd64]
     runs-on: ubuntu-24.04
     steps:
     
@@ -38,6 +39,19 @@ jobs:
       # https://blacksmith.sh/blog/cache-is-king-a-guide-for-docker-layer-caching-in-github-actions
 
       # Build the first stage, which we can use as the testing facility    
+      # - name: Extract metadata (tags, labels) for the builder stage
+      #   id: builder-meta
+      #   uses: docker/metadata-action@v5
+      #   with:
+      #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder
+      #     flavor: |
+      #       latest=auto
+      #       prefix=${{ matrix.dockerfile_postfix }}-,onlatest=true
+      #     tags: |
+      #       type=sha,prefix=${{ matrix.dockerfile_postfix }}-sha-
+      #       type=ref,event=branch
+      #       type=ref,event=tag
+
       - name: Build the "build" stage
         uses: docker/build-push-action@v6
         with:
@@ -45,10 +59,10 @@ jobs:
           load: true
           file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
           platforms: ${{ matrix.platform }}
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder-${{ github.sha }}
+          tags: ore-builder
           target: builder
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder,mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder:${{ matrix.dockerfile_postfix }}
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder:${{ matrix.dockerfile_postfix }},mode=max
 
       # Run the tests in the result of the first stage build, saving the results to our filesystem
       - name: Create test-results folder
@@ -62,7 +76,7 @@ jobs:
           /usr/bin/docker run
           --workdir=/ore/build --volume $GITHUB_WORKSPACE/test-results:/ore/test-results
           --env NOSE_PROCESSES=${{ steps.cpu-cores.outputs.count }} --env NOSE_PROCESS_TIMEOUT=600 --env NOSE_WITH_XUNITMP=true --env NOSE_XUNITMP_FILE=/ore/test-results/examples.xml
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.dockerfile_postfix }}-builder-${{ github.sha }}
+          ore-builder
           ctest -j${{ steps.cpu-cores.outputs.count }} --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 5400
 
       # Register the xunit results
@@ -93,7 +107,7 @@ jobs:
         with:
           context: .
           file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
-          platforms: linux/amd64
+          platforms: ${{ matrix.platform }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.release-meta.outputs.tags }}
           labels: ${{ steps.release-meta.outputs.labels }}
