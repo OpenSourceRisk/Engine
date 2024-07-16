@@ -86,8 +86,8 @@ jobs:
             latest=true
             prefix=${{ matrix.dockerfile_postfix }},onlatest=true
           tags: |
-          type=sha
-          type=ref,event=branch
+            type=sha
+            type=ref,event=branch
 
       - name: Build the "release" stage
         uses: docker/build-push-action@v6
