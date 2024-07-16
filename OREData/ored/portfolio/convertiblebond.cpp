@@ -62,6 +62,16 @@ ConvertibleBond2::ExchangeableData buildExchangeableData(const ConvertibleBondDa
     return result;
 }
 
+std::pair<Size, Size> parseTriggerPeriod(const std::string& s) {
+    auto pos = s.find("-of-");
+    try {
+        QL_REQUIRE(pos != std::string::npos, "'-of-' not found");
+        return std::make_pair(parseInteger(s.substr(0, pos)), parseInteger(s.substr(pos + 4)));
+    } catch (const std::exception& e) {
+        QL_FAIL("parseTriggerPeriod(" << s << "): period is expected to be of form '20-of-30': " << e.what());
+    }
+}
+
 std::vector<ConvertibleBond2::CallabilityData>
 buildCallabilityData(const ConvertibleBondData::CallabilityData& callData, const Date& openEndDateReplacement) {
     std::vector<ConvertibleBond2::CallabilityData> result;
@@ -83,6 +93,13 @@ buildCallabilityData(const ConvertibleBondData::CallabilityData& callData, const
             callData.triggerRatios(), callData.triggerRatioDates(), callDatesPlusInf, 0.0, true);
         auto nOfMTriggers = buildScheduledVectorNormalised<std::string>(
             callData.nOfMTriggers(), callData.nOfMTriggerDates(), callDatesPlusInf, "0-of-0", true);
+
+        std::vector<Real> triggerPeriods(nOfMTriggers.size());
+        std::transform(nOfMTriggers.begin(), nOfMTriggers.end(), triggerPeriods.begin(),
+                       [](const std::string& s) { return static_cast<double>(parseTriggerPeriod(s).first) / 365.25; });
+
+        for (auto const& d : triggerPeriods)
+            std::cout << "got trigger period " << d << std::endl;
 
         for (Size i = 0; i < callDatesPlusInf.size() - 1; ++i) {
             ConvertibleBond2::CallabilityData::ExerciseType exerciseType;
@@ -108,7 +125,8 @@ buildCallabilityData(const ConvertibleBondData::CallabilityData& callData, const
                 QL_FAIL("invalid price type '" << priceTypes[i] << "', expected Clean, Dirty");
             }
             result.push_back(ConvertibleBond2::CallabilityData{callDatesPlusInf[i], exerciseType, prices[i], priceType,
-                                                               includeAccrual[i], isSoft[i], triggerRatios[i]});
+                                                               includeAccrual[i], isSoft[i], triggerRatios[i],
+                                                               triggerPeriods[i]});
         }
     }
     return result;

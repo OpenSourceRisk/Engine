@@ -18,7 +18,6 @@
 
 #include <qle/instruments/convertiblebond2.hpp>
 #include <qle/methods/fdmdefaultableequityjumpdiffusionop.hpp>
-#include <qle/pricingengines/fdconvertiblebondevents.hpp>
 #include <qle/pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp>
 
 #include <ql/cashflows/coupon.hpp>
@@ -83,6 +82,20 @@ FdDefaultableEquityJumpDiffusionConvertibleBondEngine::FdDefaultableEquityJumpDi
     registerWith(creditCurve_);
     registerWith(recoveryRate_);
     registerWith(fxConversion_);
+}
+
+Real FdDefaultableEquityJumpDiffusionConvertibleBondEngine::softCallBarrier(const FdConvertibleBondEvents& events,
+                                                                            const Size i, const Real t, const Real n,
+                                                                            const Real cr) const {
+    Real r = events.getCallData(i).softTriggerRatio;
+    if (auto D = events.getCallData(i).softTriggerPeriod; D != 0.0) {
+        // From: Jasper Anderluh and Hans van der Weide: Parisian Options – The Implied Barrier Concept
+        // M. Bubak et al. (Eds.): ICCS 2004, LNCS 3039, pp. 851–858, 2004. Springer-Verlag Berlin Heidelberg 2004.
+        Real sigma = std::sqrt(model_->variance(t) / t);
+        Real m = (model_->int_r_q(t) / t - 0.5 * sigma * sigma) / sigma;
+        r *= std::exp(sigma * std::sqrt(D * M_PI_2) * std::exp(-m * m * D / 2.0));
+    }
+    return r * n / cr;
 }
 
 void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
@@ -509,7 +522,7 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
                     if (!conversionExercised[plane][j]) {
                         // check soft call trigger if applicable
                         if (!events.getCallData(i).isSoft ||
-                            S[j] > events.getCallData(i).softTriggerRatio * notionals.front() / cr0) {
+                            S[j] > softCallBarrier(events, i, t_from, notionals.front(), cr0)) {
                             // apply mw cr increase if applicable
                             Real cr = cr0;
                             if (events.getCallData(i).mwCr)

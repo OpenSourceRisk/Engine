@@ -55,6 +55,7 @@ public:
         bool includeAccrual;
         bool isSoft;
         Real softTriggerRatio;
+        Real softTriggerPeriod;
     };
 
     struct MakeWholeData {
