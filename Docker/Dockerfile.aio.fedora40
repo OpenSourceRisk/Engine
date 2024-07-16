@@ -1,8 +1,8 @@
 ARG fedora_tag=40
 FROM registry.fedoraproject.org/fedora:${fedora_tag} AS builder
 
-MAINTAINER Quaternion Risk Management
-LABEL Description="Multi-stage container definition for ORE on Fedora 40"
+LABEL org.opencontainers.image.authors="Quaternion Risk Management"
+LABEL Description="Multi-stage container definition for ORE on Fedora"
 
 ARG build_jobs=
 ARG cmake_build_type=Release

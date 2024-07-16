@@ -1,7 +1,7 @@
 ARG debian_tag=11
 FROM debian:${debian_tag} AS builder
 
-MAINTAINER Quaternion Risk Management
+LABEL org.opencontainers.image.authors="Quaternion Risk Management"
 LABEL Description='Multi-stage container definition for ORE on Debian 11 ("bullseye")'
 
 ARG build_jobs=

@@ -1,7 +1,7 @@
 ARG centos_tag=stream9
 FROM quay.io/centos/centos:${centos_tag} AS builder
 
-MAINTAINER Quaternion Risk Management
+LABEL org.opencontainers.image.authors="Quaternion Risk Management"
 LABEL Description="Multi-stage container definition for ORE on CentOS Stream 9"
 
 # Set to override number of build jobs. Will default to number of cores available.
