@@ -360,16 +360,21 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
             if (calibrationInfo_ == nullptr)
                 calibrationInfo_ = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
 
-            ReportConfig rc = curveConfigs.reportConfigYieldCurves();
+            try {
+                ReportConfig rc = curveConfigs.reportConfigYieldCurves();
+                std::vector<Date> pillarDates = *rc.pillarDates();
+                if (!pillarDates.empty()) {
+                    for (auto const& pd : pillarDates)
+                        calibrationInfo_->pillarDates.push_back(pd);
+                }
+            } catch (...) {
+                // ...
+            }
 
             calibrationInfo_->dayCounter = zeroDayCounter_.name();
             calibrationInfo_->currency = currency_.code();
-            std::vector<Date> pillarDates = *rc.pillarDates();
-            if (!pillarDates.empty()) {
-                for (auto const& pd : pillarDates)
-                    calibrationInfo_->pillarDates.push_back(pd);
-            }
-            else if (calibrationInfo_->pillarDates.empty()) {
+
+            if (calibrationInfo_->pillarDates.empty()) {
                 for (auto const& p : YieldCurveCalibrationInfo::defaultPeriods)
                     calibrationInfo_->pillarDates.push_back(asofDate_ + p);
             }
