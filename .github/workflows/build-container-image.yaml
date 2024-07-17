@@ -37,20 +37,28 @@ jobs:
 
       # TODO sort out registry caching to make this faster
       # https://blacksmith.sh/blog/cache-is-king-a-guide-for-docker-layer-caching-in-github-actions
-
       # Build the first stage, which we can use as the testing facility    
-      # - name: Extract metadata (tags, labels) for the builder stage
-      #   id: builder-meta
-      #   uses: docker/metadata-action@v5
-      #   with:
-      #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder
-      #     flavor: |
-      #       latest=auto
-      #       prefix=${{ matrix.dockerfile_postfix }}-,onlatest=true
-      #     tags: |
-      #       type=sha,prefix=${{ matrix.dockerfile_postfix }}-sha-
-      #       type=ref,event=branch
-      #       type=ref,event=tag
+      - name: Extract metadata (tags, labels) for the builder
+        id: builder-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder
+          flavor: |
+            latest=false
+            prefix=${{ matrix.dockerfile_postfix }}-,onlatest=true
+          tags: |
+            type=sha,prefix=${{ matrix.dockerfile_postfix }}-sha-
+            type=ref,event=branch
+            type=ref,event=tag
+
+      - name: Map tags for cache
+        uses: amochkin/action-javascript@v1
+        id: tag-mapper
+        with:
+          input: ${{ toJSON(steps.builder-meta.outputs.tags) }}
+          js: |
+            output(JSON.stringify(map(JSON.parse(input("input")),t=>'type=registry,ref='+ t)), "output_from")
+            output(JSON.stringify(map(JSON.parse(input("input")),t=>'type=registry,ref='+ t + ',mode=max')), "output_to")
 
       - name: Build the "build" stage
         uses: docker/build-push-action@v6
@@ -61,10 +69,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           tags: ore-builder
           target: builder
-          cache-from: |
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder:${{ matrix.dockerfile_postfix }}-${{ env.GITHUB_REF_NAME }}
-            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder:${{ matrix.dockerfile_postfix }}-${{ github.event.repository.default_branch }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder:${{ matrix.dockerfile_postfix }}-${{ env.GITHUB_REF_NAME }},mode=max
+          cache-from: ${{ fromJSON(steps.tag-mapper.outputs.output_from) }}
+          cache-to: ${{ fromJSON(steps.tag-mapper.outputs.output_to) }}
 
       # Run the tests in the result of the first stage build, saving the results to our filesystem
       - name: Create test-results folder
