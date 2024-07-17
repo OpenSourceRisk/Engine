@@ -14,7 +14,7 @@ jobs:
   build-and-release:
     strategy:
       matrix:
-        dockerfile_postfix: [debian11, centos-stream9, fedora40]
+        dockerfile_suffix: [debian11, centos-stream9, fedora40]
         platform: [linux/amd64]
     runs-on: ubuntu-24.04
     steps:
@@ -44,9 +44,9 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder
           flavor: |
             latest=false
-            prefix=${{ matrix.dockerfile_postfix }}-,onlatest=true
+            prefix=${{ matrix.dockerfile_suffix }}-,onlatest=true
           tags: |
-            type=sha,prefix=${{ matrix.dockerfile_postfix }}-sha-
+            type=sha,prefix=${{ matrix.dockerfile_suffix }}-sha-
             type=ref,event=branch
             type=ref,event=tag
       - name: Map builder tags to cache specs
@@ -63,7 +63,7 @@ jobs:
         with:
           context: .
           load: true
-          file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
+          file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_suffix }}
           platforms: ${{ matrix.platform }}
           tags: ore-builder
           target: builder
@@ -101,9 +101,9 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
             latest=auto
-            prefix=${{ matrix.dockerfile_postfix }}-,onlatest=true
+            prefix=${{ matrix.dockerfile_suffix }}-,onlatest=true
           tags: |
-            type=sha,prefix=${{ matrix.dockerfile_postfix }}-sha-
+            type=sha,prefix=${{ matrix.dockerfile_suffix }}-sha-
             type=ref,event=branch
             type=ref,event=tag
       - name: Map release tags to cache specs
@@ -119,7 +119,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_postfix }}
+          file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_suffix }}
           platforms: ${{ matrix.platform }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.release-meta.outputs.tags }}
