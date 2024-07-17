@@ -154,7 +154,7 @@ buildCallabilityData(const ConvertibleBondData::CallabilityData& callData, Requi
         Date earliestCallDate = callDatesPlusInf.empty() ? Date::maxDate() : callDatesPlusInf.front();
         Size m = nOfMTriggers.empty() ? 1 : parseTriggerPeriod(nOfMTriggers.front()).second;
         auto fixingCalendar = getEqFxFixingCalendar(equity, fx);
-        for (Date d = std::max(today, earliestCallDate) - (m - 1); d <= today; d = d + 1 * Days) {
+        for (Date d = std::max(today, earliestCallDate) - (m - 1); d < today; d = d + 1 * Days) {
             requiredFixings.addFixingDate(fixingCalendar.adjust(d, Preceding), "EQ-" + equity->name(), d);
         }
     }
