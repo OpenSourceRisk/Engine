@@ -58,7 +58,7 @@ jobs:
             output(input("tags").split("\n").map(t=>'type=registry,ref='+ t).join("\n"), "cache_from")
             output(input("tags").split("\n").map(t=>'type=registry,ref='+ t + ',mode=max').join("\n"), "cache_to")
 
-      - name: Build the "build" stage
+      - name: Build the "builder" container
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -115,7 +115,7 @@ jobs:
             output(input("tags").split("\n").map(t=>'type=registry,ref='+ t).join("\n"), "cache_from")
             output(input("tags").split("\n").map(t=>'type=registry,ref='+ t + ',mode=max').join("\n"), "cache_to")
             
-      - name: Build the "release"
+      - name: Build the "release" container
         uses: docker/build-push-action@v6
         with:
           context: .
