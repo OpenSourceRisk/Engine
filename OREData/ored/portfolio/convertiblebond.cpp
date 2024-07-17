@@ -98,9 +98,6 @@ buildCallabilityData(const ConvertibleBondData::CallabilityData& callData, const
         std::transform(nOfMTriggers.begin(), nOfMTriggers.end(), triggerPeriods.begin(),
                        [](const std::string& s) { return static_cast<double>(parseTriggerPeriod(s).first) / 365.25; });
 
-        for (auto const& d : triggerPeriods)
-            std::cout << "got trigger period " << d << std::endl;
-
         for (Size i = 0; i < callDatesPlusInf.size() - 1; ++i) {
             ConvertibleBond2::CallabilityData::ExerciseType exerciseType;
             ConvertibleBond2::CallabilityData::PriceType priceType;
