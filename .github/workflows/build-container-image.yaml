@@ -51,14 +51,14 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
 
-      - name: Map tags for cache
+      - name: Map tags to cache specs
         uses: amochkin/action-javascript@v1
         id: tag-mapper
         with:
-          input_1: ${{ steps.builder-meta.outputs.tags }}
+          tags: ${{ steps.builder-meta.outputs.tags }}
           js: |
-            output(input("input_1").split("\n").map(t=>'type=registry,ref='+ t).join("\n"), "output_1")
-            output(input("input_1").split("\n").map(t=>'type=registry,ref='+ t + ',mode=max').join("\n"), "output_2")
+            output(input("tags").split("\n").map(t=>'type=registry,ref='+ t).join("\n"), "cache_from")
+            output(input("tags").split("\n").map(t=>'type=registry,ref='+ t + ',mode=max').join("\n"), "cache_to")
 
       - name: Build the "build" stage
         uses: docker/build-push-action@v6
@@ -69,8 +69,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           tags: ore-builder
           target: builder
-          cache-from: ${{ steps.tag-mapper.outputs.output_1 }}
-          cache-to: ${{ steps.tag-mapper.outputs.output_2 }}
+          cache-from: ${{ steps.tag-mapper.outputs.cache_from }}
+          cache-to: ${{ steps.tag-mapper.outputs.cache_to }}
 
       # Run the tests in the result of the first stage build, saving the results to our filesystem
       - name: Create test-results folder
