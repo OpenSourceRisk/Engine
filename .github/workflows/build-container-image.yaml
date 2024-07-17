@@ -55,10 +55,10 @@ jobs:
         uses: amochkin/action-javascript@v1
         id: tag-mapper
         with:
-          input: ${{ toJSON(steps.builder-meta.outputs.tags) }}
+          input_1: ${{ toJSON(steps.builder-meta.outputs.tags) }}
           js: |
-            output(JSON.stringify(map(JSON.parse(input("input")),t=>'type=registry,ref='+ t)), "output_from")
-            output(JSON.stringify(map(JSON.parse(input("input")),t=>'type=registry,ref='+ t + ',mode=max')), "output_to")
+            output(JSON.stringify(map(JSON.parse(input("input")),t=>'type=registry,ref='+ t)), "output_1")
+            output(JSON.stringify(map(JSON.parse(input("input")),t=>'type=registry,ref='+ t + ',mode=max')), "output_2")
 
       - name: Build the "build" stage
         uses: docker/build-push-action@v6
@@ -69,8 +69,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           tags: ore-builder
           target: builder
-          cache-from: ${{ fromJSON(steps.tag-mapper.outputs.output_from) }}
-          cache-to: ${{ fromJSON(steps.tag-mapper.outputs.output_to) }}
+          cache-from: ${{ fromJSON(steps.tag-mapper.outputs.output_1) }}
+          cache-to: ${{ fromJSON(steps.tag-mapper.outputs.output_2) }}
 
       # Run the tests in the result of the first stage build, saving the results to our filesystem
       - name: Create test-results folder
