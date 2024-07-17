@@ -57,8 +57,8 @@ jobs:
         with:
           input_1: ${{ toJSON(steps.builder-meta.outputs.tags) }}
           js: |
-            output(JSON.stringify(map(JSON.parse(input("input_1")),t=>'type=registry,ref='+ t)), "output_1")
-            output(JSON.stringify(map(JSON.parse(input("input_1")),t=>'type=registry,ref='+ t + ',mode=max')), "output_2")
+            output(JSON.stringify(input("input_1").split("\n").map(t=>'type=registry,ref='+ t))), "output_1")
+            output(JSON.stringify(input("input_1").split("\n").map(t=>'type=registry,ref='+ t + ',mode=max'))), "output_2")
 
       - name: Build the "build" stage
         uses: docker/build-push-action@v6
