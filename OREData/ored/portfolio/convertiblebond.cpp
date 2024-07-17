@@ -94,9 +94,11 @@ buildCallabilityData(const ConvertibleBondData::CallabilityData& callData, const
         auto nOfMTriggers = buildScheduledVectorNormalised<std::string>(
             callData.nOfMTriggers(), callData.nOfMTriggerDates(), callDatesPlusInf, "0-of-0", true);
 
-        std::vector<Real> triggerPeriods(nOfMTriggers.size());
-        std::transform(nOfMTriggers.begin(), nOfMTriggers.end(), triggerPeriods.begin(),
-                       [](const std::string& s) { return static_cast<double>(parseTriggerPeriod(s).first) / 365.25; });
+        std::vector<std::pair<Real, Real>> triggerNofM(nOfMTriggers.size());
+        std::transform(nOfMTriggers.begin(), nOfMTriggers.end(), triggerNofM.begin(), [](const std::string& s) {
+            auto [N, M] = parseTriggerPeriod(s);
+            return std::make_pair(static_cast<double>(N) / 365.25, static_cast<double>(M) / 365.25);
+        });
 
         for (Size i = 0; i < callDatesPlusInf.size() - 1; ++i) {
             ConvertibleBond2::CallabilityData::ExerciseType exerciseType;
@@ -123,7 +125,7 @@ buildCallabilityData(const ConvertibleBondData::CallabilityData& callData, const
             }
             result.push_back(ConvertibleBond2::CallabilityData{callDatesPlusInf[i], exerciseType, prices[i], priceType,
                                                                includeAccrual[i], isSoft[i], triggerRatios[i],
-                                                               triggerPeriods[i]});
+                                                               triggerNofM[i].first, triggerNofM[i].second});
         }
     }
     return result;

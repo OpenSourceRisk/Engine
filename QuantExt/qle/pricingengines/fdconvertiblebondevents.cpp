@@ -174,7 +174,8 @@ void FdConvertibleBondEvents::processExerciseData(const std::vector<ConvertibleB
                                      c.includeAccrual,
                                      c.isSoft,
                                      c.softTriggerRatio,
-                                     c.softTriggerPeriod,
+                                     c.softTriggerM,
+                                     c.softTriggerN,
                                      std::function<Real(Real, Real)>()};
         }
     }

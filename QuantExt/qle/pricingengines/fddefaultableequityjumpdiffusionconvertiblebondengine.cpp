@@ -87,8 +87,31 @@ FdDefaultableEquityJumpDiffusionConvertibleBondEngine::FdDefaultableEquityJumpDi
 Real FdDefaultableEquityJumpDiffusionConvertibleBondEngine::softCallBarrier(const FdConvertibleBondEvents& events,
                                                                             const Size i, const Real t, const Real n,
                                                                             const Real cr) const {
-    Real r = events.getCallData(i).softTriggerRatio;
-    if (auto D = events.getCallData(i).softTriggerPeriod; D != 0.0) {
+    Date today = Settings::instance().evaluationDate();
+    auto const& cd = events.getCallData(i);
+    Real r = cd.softTriggerRatio;
+    Real N = cd.softTriggerN;
+    Real M = cd.softTriggerM;
+    Real D;
+    if (t > M || QuantLib::close_enough(t, M)) {
+        // lookback does not reach into the past
+        D = N;
+    } else {
+        // lookback overlaps with past, correct D by past trigger hits
+        Date d = today - 1;
+        Real triggerPastHit = 0.0;
+        for (Real pastDt = static_cast<double>(today - d) / 365.25;
+             pastDt > M - t || QuantLib::close_enough(pastDt, M - t); d = d - 1 * Days) {
+            if (model_->equity()->fixing(model_->equity()->fixingCalendar().adjust(d, Preceding)) > r * n / cr)
+                triggerPastHit += 1.0 / 365.25;
+        }
+        D = std::max(0.0, N - triggerPastHit);
+    }
+    if (D > t && !QuantLib::close_enough(D, t)) {
+        // we can not meet the trigger condition at t
+        return QL_MAX_REAL;
+    }
+    if (D > 0.0) {
         // From: Jasper Anderluh and Hans van der Weide: Parisian Options – The Implied Barrier Concept
         // M. Bubak et al. (Eds.): ICCS 2004, LNCS 3039, pp. 851–858, 2004. Springer-Verlag Berlin Heidelberg 2004.
         Real sigma = std::sqrt(model_->variance(t) / t);
@@ -518,11 +541,11 @@ void FdDefaultableEquityJumpDiffusionConvertibleBondEngine::calculate() const {
             if (events.hasCall(i)) {
                 Real c = getCallPriceAmount(events.getCallData(i), notional(t_from), accrual(t_from));
                 Real cr0 = value.size() > 1 ? stochasticConversionRatios[plane] : events.getCurrentConversionRatio(i);
+                Real effectiveSoftBarrier = softCallBarrier(events, i, t_from, notionals.front(), cr0);
                 for (Size j = 0; j < n; ++j) {
                     if (!conversionExercised[plane][j]) {
                         // check soft call trigger if applicable
-                        if (!events.getCallData(i).isSoft ||
-                            S[j] > softCallBarrier(events, i, t_from, notionals.front(), cr0)) {
+                        if (!events.getCallData(i).isSoft || S[j] > effectiveSoftBarrier) {
                             // apply mw cr increase if applicable
                             Real cr = cr0;
                             if (events.getCallData(i).mwCr)
