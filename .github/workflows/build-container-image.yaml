@@ -124,5 +124,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.release-meta.outputs.tags }}
           labels: ${{ steps.release-meta.outputs.labels }}
-          cache-from: ${{ steps.builder-tag-cache-mapper.outputs.cache_from }}
-          cache-to: ${{ steps.builder-tag-cache-mapper.outputs.cache_to }}
+          cache-from: ${{ steps.release-tag-cache-mapper.outputs.cache_from }}
+          cache-to: ${{ steps.release-tag-cache-mapper.outputs.cache_to }}
