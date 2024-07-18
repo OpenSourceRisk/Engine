@@ -1,16 +1,18 @@
-ARG centos_tag=stream9
-FROM quay.io/centos/centos:${centos_tag} AS builder
+ARG builder_base_image=quay.io/centos/centos:stream9
+ARG release_base_image=quay.io/centos/centos:stream9-minimal
 
-LABEL org.opencontainers.image.authors="Quaternion Risk Management"
-LABEL Description="Multi-stage container definition for ORE on CentOS Stream 9"
+#
+# builder image
+#
+FROM ${builder_base_image} AS builder
+
+# the name of the Code Ready Builder repository (contains eigen3)
+ARG code_ready_builder_repo=crb
 
 # Set to override number of build jobs. Will default to number of cores available.
 ARG build_jobs=
 ARG cmake_build_type=Release
 
-#
-# orebuild
-#
 COPY CMakeLists.txt /ore/CMakeLists.txt
 COPY QuantLib /ore/QuantLib
 COPY QuantExt /ore/QuantExt
@@ -22,7 +24,7 @@ COPY ORETest /ore/ORETest
 COPY cmake /ore/cmake
 
 # Install dependencies
-RUN yum -q -y clean expire-cache && yum -q -y update && yum -q -y --enablerepo=crb install \
+RUN yum -q -y clean expire-cache && yum -q -y update && yum -q -y --enablerepo=${{ code_ready_builder_repo }} install \
     boost-devel \
     bzip2-devel \
     cmake \
@@ -34,7 +36,6 @@ RUN yum -q -y clean expire-cache && yum -q -y update && yum -q -y --enablerepo=c
     ninja-build \
     ocl-icd-devel \
     opencl-headers \
-    # zlib-ng-compat-devel
     zlib-devel
 
 # set up the build
@@ -68,9 +69,12 @@ COPY Examples /ore/Examples
 COPY Tools /ore/Tools
 
 #
-# ore application image
+# release image
 #
-FROM quay.io/centos/centos:${centos_tag}-minimal AS ore-engine
+FROM ${release_base_image} AS release
+
+LABEL org.opencontainers.image.authors="Quaternion Risk Management"
+LABEL org.opencontainers.image.description="Open Source Risk Engine"
 
 # libs to run
 RUN microdnf install -y boost ocl-icd --nodocs && \

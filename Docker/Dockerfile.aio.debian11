@@ -1,16 +1,14 @@
 ARG debian_tag=11
-FROM debian:${debian_tag} AS builder
 
-LABEL org.opencontainers.image.authors="Quaternion Risk Management"
-LABEL Description='Multi-stage container definition for ORE on Debian 11 ("bullseye")'
+#
+# builder image
+#
+FROM debian:${debian_tag} AS builder
 
 # Set to override number of build jobs. Will default to number of cores available.
 ARG build_jobs=
 ARG cmake_build_type=Release
 
-#
-# orebuild
-#
 COPY CMakeLists.txt /ore/CMakeLists.txt
 COPY QuantLib /ore/QuantLib
 COPY QuantExt /ore/QuantExt
@@ -76,9 +74,12 @@ COPY Examples /ore/Examples
 COPY Tools /ore/Tools
 
 #
-# ore application image
+# release image
 #
-FROM debian:${debian_tag}-slim AS ore-engine
+FROM debian:${debian_tag}-slim AS release
+
+LABEL org.opencontainers.image.authors="Quaternion Risk Management"
+LABEL org.opencontainers.image.description="Open Source Risk Engine"
 
 ARG boostver="1.74.0"
 
