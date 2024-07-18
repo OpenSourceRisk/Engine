@@ -24,7 +24,7 @@ COPY ORETest /ore/ORETest
 COPY cmake /ore/cmake
 
 # Install dependencies
-RUN yum -q -y clean expire-cache && yum -q -y update && yum -q -y --enablerepo=${{ code_ready_builder_repo }} install \
+RUN yum -q -y clean expire-cache && yum -q -y update && yum -q -y --enablerepo=${code_ready_builder_repo} install \
     boost-devel \
     bzip2-devel \
     cmake \
