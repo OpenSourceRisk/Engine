@@ -38,7 +38,7 @@ jobs:
         id: config
         uses: cloudposse/github-action-yaml-config-query@main      
         with:
-          query: .${{ matrix.flavour }}
+          query: '["${{ matrix.flavour }}"]'
           config: |-
             debian11:
               dockerfile_suffix: debian11
