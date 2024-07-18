@@ -31,6 +31,8 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      
+      # This looks overworked but it gives us limited flexibility to add new flavours without having to overduplicate Dockerfiles
       - name: Config
         id: config
         uses: cloudposse/github-action-yaml-config-query@main      
@@ -40,6 +42,7 @@ jobs:
             debian11:
               dockerfile_suffix: debian11
               tag_prefix: debian11
+          # Over-specified to show how a downstream distribution could reuse the centos-stream9 definition
             centos_stream9:
               dockerfile_suffix: centos-stream9
               tag_prefix: centos-stream9
