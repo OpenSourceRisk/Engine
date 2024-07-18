@@ -26,20 +26,19 @@ COPY cmake /ore/cmake
 # Install dependencies
 RUN yum -q -y clean expire-cache \
   && yum -q -y update \
-  && yum -q -y install \
+  && yum -q -y --enablerepo=${code_ready_builder_repo} install \
     boost-devel \
     bzip2-devel \
     cmake \
+    # Example_43 requires this https://github.com/OpenSourceRisk/Engine/issues/142
+    eigen3-devel \
     gcc \
     gcc-c++ \
     glibc-devel \
     ninja-build \
     ocl-icd-devel \
     opencl-headers \
-    zlib-devel \
-  && yum -q -y --enablerepo=${code_ready_builder_repo} install \
-    # Example_43 requires this https://github.com/OpenSourceRisk/Engine/issues/142
-    eigen3-devel
+    zlib-devel
 
 # set up the build
 RUN cd / \
