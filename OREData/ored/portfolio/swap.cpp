@@ -269,7 +269,7 @@ QuantLib::Real Swap::notional() const {
     try {
         return instrument_->qlInstrument(true)->result<Real>("currentNotional");
     } catch (const std::exception& e) {
-        WLOG("swap engine does not provide current notional: " << e.what() << ", using fallback");
+        DLOG("swap engine does not provide current notional: " << e.what() << ", using fallback");
         // Try getting current notional from coupons
         if (notionalTakenFromLeg_ < legs_.size()) {
             Real n = currentNotional(legs_[notionalTakenFromLeg_]);
@@ -278,7 +278,7 @@ QuantLib::Real Swap::notional() const {
             }
         }
         // else return the face value
-        WLOG("swap does not provide coupon notionals, using face value");
+        DLOG("swap does not provide coupon notionals, using face value");
         return notional_;
     }
 }
@@ -289,7 +289,7 @@ std::string Swap::notionalCurrency() const {
         return instrument_->qlInstrument(true)->result<std::string>("notionalCurrency");
     } catch (const std::exception& e) {
         if (strcmp(e.what(), "notionalCurrency not provided"))
-            WLOG("swap engine does not provide notional ccy: " << e.what() << ", using fallback");
+            DLOG("swap engine does not provide notional ccy: " << e.what() << ", using fallback");
         return notionalCurrency_;
     }
 }

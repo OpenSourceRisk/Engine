@@ -675,7 +675,7 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     if (strPayIndex_.empty()) {
         XMLNode* longIndex = XMLUtils::getChildNode(node, "LongIndex");
         if (longIndex) {
-            ALOG("TenorBasisSwapConvention: LongIndex is deprecated, fill empty PayIndex");
+            DLOG("TenorBasisSwapConvention: LongIndex is deprecated, fill empty PayIndex");
             strPayIndex_ = XMLUtils::getNodeValue(longIndex);
         } else
             QL_FAIL("TenorBasisSwapConvention : PayIndex field missing.");
@@ -684,7 +684,7 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     if (strReceiveIndex_.empty()) {
         XMLNode* shortIndex = XMLUtils::getChildNode(node, "ShortIndex");
         if (shortIndex) {
-            ALOG("TenorBasisSwapConvention: ShortIndex is deprecated, fill empty ReceiveIndex");
+            DLOG("TenorBasisSwapConvention: ShortIndex is deprecated, fill empty ReceiveIndex");
             strReceiveIndex_ = XMLUtils::getNodeValue(shortIndex);
         } else
             QL_FAIL("TenorBasisSwapConvention : ReceiveIndex field missing.");
@@ -692,21 +692,21 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
 
     XMLNode* longPayTenor = XMLUtils::getChildNode(node, "LongPayTenor");
     if (longPayTenor) {
-        ALOG("TenorBasisSwapConvention: LongPayTenor is deprecated, fill empty PayFrequency");
+        DLOG("TenorBasisSwapConvention: LongPayTenor is deprecated, fill empty PayFrequency");
         if (strPayFrequency_.empty())
             strPayFrequency_ = XMLUtils::getNodeValue(longPayTenor);
     }
 
     XMLNode* shortPayTenor = XMLUtils::getChildNode(node, "ShortPayTenor");
     if (shortPayTenor) {
-        ALOG("TenorBasisSwapConvention: ShortPayTenor is deprecated, fill empty ReceiveFrequency");
+        DLOG("TenorBasisSwapConvention: ShortPayTenor is deprecated, fill empty ReceiveFrequency");
         if (strReceiveFrequency_.empty())
             strReceiveFrequency_ = XMLUtils::getNodeValue(shortPayTenor);
     }
 
     XMLNode* spreadOnShort = XMLUtils::getChildNode(node, "SpreadOnShort");
     if (spreadOnShort) {
-        ALOG("TenorBasisSwapConvention: SpreadOnShort is deprecated, fill empty SpreadOnRec");
+        DLOG("TenorBasisSwapConvention: SpreadOnShort is deprecated, fill empty SpreadOnRec");
         if (strSpreadOnRec_.empty())
             strSpreadOnRec_ = XMLUtils::getNodeValue(spreadOnShort);
     }
