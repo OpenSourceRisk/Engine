@@ -58,6 +58,7 @@ jobs:
             output(input("tags").split("\n").map(t=>'type=registry,ref='+ t).join("\n"), "cache_from")
             output(input("tags").split("\n").map(t=>'type=registry,ref='+ t + ',mode=max').join("\n"), "cache_to")
       - uses: actions/github-script@v7
+        id: builder-tag-cache-mapper-new
         env:
           TAGS: ${{ steps.builder-meta.outputs.tags }}
         with:
@@ -76,8 +77,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           tags: ore-builder
           target: builder
-          cache-from: ${{ steps.builder-tag-cache-mapper.outputs.cache_from }}
-          cache-to: ${{ (github.event_name != 'pull_request') && steps.builder-tag-cache-mapper.outputs.cache_to }}
+          cache-from: ${{ fromJSON(steps.builder-tag-cache-mapper-new.outputs.result).cache_from }}
+          cache-to: ${{ (github.event_name != 'pull_request') && fromJSON(steps.builder-tag-cache-mapper-new.outputs.result).cache_to }}
 
       # Run the tests inside the container we just build, saving the results to our workspace
       - name: Create test-results folder
