@@ -57,6 +57,15 @@ jobs:
           js: |
             output(input("tags").split("\n").map(t=>'type=registry,ref='+ t).join("\n"), "cache_from")
             output(input("tags").split("\n").map(t=>'type=registry,ref='+ t + ',mode=max').join("\n"), "cache_to")
+      - uses: actions/github-script@v7
+        env:
+          TAGS: ${{ steps.builder-meta.outputs.tags }}
+        with:
+          script: |
+            return {
+              cache_from: process.env.TAGS.split("\n").map(t=>'type=registry,ref='+ t).join("\n"),
+              cache_to: process.env.TAGS.split("\n").map(t=>'type=registry,ref='+ t + ',mode=max').join("\n")
+            }
 
       - name: Build the "builder" container
         uses: docker/build-push-action@v6
