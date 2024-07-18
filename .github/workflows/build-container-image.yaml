@@ -40,7 +40,7 @@ jobs:
             debian11:
               dockerfile_suffix: debian11
               tag_prefix: debian11
-            centos-stream9:
+            'centos-stream9':
               dockerfile_suffix: centos-stream9
               tag_prefix: centos-stream9
               build_args: |
