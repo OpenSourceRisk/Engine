@@ -14,11 +14,10 @@ jobs:
   build-and-release:
     strategy:
       matrix:
-        dockerfile_suffix: [debian11, centos-stream9]
+        flavour: [debian11, centos_stream9]
         platform: [linux/amd64]
     runs-on: ubuntu-24.04
     steps:
-    
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -32,6 +31,21 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Config
+        id: config
+        uses: cloudposse/github-action-yaml-config-query@main      
+        with:
+          query: .${{ matrix.flavour }}
+          config: |-
+            debian11:
+              dockerfile_suffix: debian11
+              tag_prefix: debian11
+            centos_stream9:
+              dockerfile_suffix: centos-stream9
+              tag_prefix: centos-stream9
+              build-args: |
+                builder_base_image=quay.io/centos/centos:stream9
+                release_base_image=quay.io/centos/centos:stream9-minimal
 
       # use registry caching to make this faster
       # https://blacksmith.sh/blog/cache-is-king-a-guide-for-docker-layer-caching-in-github-actions
@@ -44,9 +58,9 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder
           flavor: |
             latest=false
-            prefix=${{ matrix.dockerfile_suffix }}-,onlatest=true
+            prefix=${{ steps.config.outputs.tag_prefix }}-,onlatest=true
           tags: |
-            type=sha,prefix=${{ matrix.dockerfile_suffix }}-sha-
+            type=sha,prefix=${{ steps.config.outputs.tag_prefix }}-sha-
             type=ref,event=branch
             type=ref,event=tag
       - name: Map builder tags to cache specs
@@ -66,7 +80,8 @@ jobs:
         with:
           context: .
           load: true
-          file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_suffix }}
+          file: ./Docker/Dockerfile.aio.${{ steps.config.outputs.dockerfile_suffix }}
+          build-args: ${{ steps.config.outputs.build_args }}
           platforms: ${{ matrix.platform }}
           tags: ore-builder
           target: builder
@@ -104,9 +119,9 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
             latest=auto
-            prefix=${{ matrix.dockerfile_suffix }}-,onlatest=true
+            prefix=${{ steps.config.outputs.tag_prefix }}-,onlatest=true
           tags: |
-            type=sha,prefix=${{ matrix.dockerfile_suffix }}-sha-
+            type=sha,prefix=${{ steps.config.outputs.tag_prefix }}-sha-
             type=ref,event=branch
             type=ref,event=tag
       - name: Map release tags to cache specs
@@ -125,7 +140,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Docker/Dockerfile.aio.${{ matrix.dockerfile_suffix }}
+          file: ./Docker/Dockerfile.aio.${{ steps.config.outputs.dockerfile_suffix }}
+          build-args: ${{ steps.config.outputs.build_args }}
           platforms: ${{ matrix.platform }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.release-meta.outputs.tags }}
