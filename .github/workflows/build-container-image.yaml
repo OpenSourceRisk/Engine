@@ -50,15 +50,8 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
       - name: Map builder tags to cache specs
-        uses: amochkin/action-javascript@v1
+        uses: actions/github-script@v7
         id: builder-tag-cache-mapper
-        with:
-          tags: ${{ steps.builder-meta.outputs.tags }}
-          js: |
-            output(input("tags").split("\n").map(t=>'type=registry,ref='+ t).join("\n"), "cache_from")
-            output(input("tags").split("\n").map(t=>'type=registry,ref='+ t + ',mode=max').join("\n"), "cache_to")
-      - uses: actions/github-script@v7
-        id: builder-tag-cache-mapper-new
         env:
           TAGS: ${{ steps.builder-meta.outputs.tags }}
         with:
@@ -77,8 +70,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           tags: ore-builder
           target: builder
-          cache-from: ${{ fromJSON(steps.builder-tag-cache-mapper-new.outputs.result).cache_from }}
-          cache-to: ${{ (github.event_name != 'pull_request') && fromJSON(steps.builder-tag-cache-mapper-new.outputs.result).cache_to }}
+          cache-from: ${{ fromJSON(steps.builder-tag-cache-mapper.outputs.result).cache_from }}
+          cache-to: ${{ (github.event_name != 'pull_request') && fromJSON(steps.builder-tag-cache-mapper.outputs.result).cache_to }}
 
       # Run the tests inside the container we just build, saving the results to our workspace
       - name: Create test-results folder
@@ -117,13 +110,16 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
       - name: Map release tags to cache specs
-        uses: amochkin/action-javascript@v1
+        uses: actions/github-script@v7
         id: release-tag-cache-mapper
+        env:
+          TAGS: ${{ steps.builder-meta.outputs.tags }}
         with:
-          tags: ${{ steps.release-meta.outputs.tags }}
-          js: |
-            output(input("tags").split("\n").map(t=>'type=registry,ref='+ t).join("\n"), "cache_from")
-            output(input("tags").split("\n").map(t=>'type=registry,ref='+ t + ',mode=max').join("\n"), "cache_to")
+          script: |
+            return {
+              cache_from: process.env.TAGS.split("\n").map(t=>'type=registry,ref='+ t).join("\n"),
+              cache_to: process.env.TAGS.split("\n").map(t=>'type=registry,ref='+ t + ',mode=max').join("\n")
+            }
             
       - name: Build the "release" container
         uses: docker/build-push-action@v6
@@ -134,5 +130,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.release-meta.outputs.tags }}
           labels: ${{ steps.release-meta.outputs.labels }}
-          cache-from: ${{ steps.release-tag-cache-mapper.outputs.cache_from }}
-          cache-to: ${{ (github.event_name != 'pull_request') && steps.release-tag-cache-mapper.outputs.cache_to }}
+          cache-from: ${{ fromJSON(steps.release-tag-cache-mapper.outputs.result).cache_from }}
+          cache-to: ${{ (github.event_name != 'pull_request') && fromJSON(steps.release-tag-cache-mapper.outputs.result).cache_to }}
