@@ -14,7 +14,7 @@ jobs:
   build-and-release:
     strategy:
       matrix:
-        flavour: [debian11, centos_stream9]
+        flavour: [debian11, centos-stream9]
         platform: [linux/amd64]
     runs-on: ubuntu-24.04
     steps:
@@ -40,7 +40,7 @@ jobs:
             debian11:
               dockerfile_suffix: debian11
               tag_prefix: debian11
-            centos_stream9:
+            centos-stream9:
               dockerfile_suffix: centos-stream9
               tag_prefix: centos-stream9
               build_args: |
