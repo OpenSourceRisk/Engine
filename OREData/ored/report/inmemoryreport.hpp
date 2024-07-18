@@ -40,7 +40,7 @@ using std::vector;
  */
 class InMemoryReport : public Report {
 public:
-    explicit InMemoryReport(Size bufferSize=100000) : i_(0), bufferSize_(bufferSize) {}
+    explicit InMemoryReport(Size bufferSize = 0) : i_(0), bufferSize_(bufferSize) {}
 
     Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override;
     Report& next() override;
