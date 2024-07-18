@@ -43,7 +43,7 @@ jobs:
             centos_stream9:
               dockerfile_suffix: centos-stream9
               tag_prefix: centos-stream9
-              build-args: |
+              build_args: |
                 builder_base_image=quay.io/centos/centos:stream9
                 release_base_image=quay.io/centos/centos:stream9-minimal
 
