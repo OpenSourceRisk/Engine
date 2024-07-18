@@ -33,9 +33,10 @@ namespace analytics {
 Real getDifferenceScenario(const RiskFactorKey::KeyType keyType, const Real v1, const Real v2);
 
 QuantLib::ext::shared_ptr<Scenario> getDifferenceScenario(const QuantLib::ext::shared_ptr<Scenario>& s1,
-                                                            const QuantLib::ext::shared_ptr<Scenario>& s2,
-                                                            const Date& targetScenarioAsOf = Date(),
-                                                            const Real targetScenarioNumeraire = 0.0);
+                                                          const QuantLib::ext::shared_ptr<Scenario>& s2,
+                                                          const Date& targetScenarioAsOf = Date(),
+                                                          const Real targetScenarioNumeraire = 0.0,
+                                                          const bool allowAdditionalKeysInS2 = false);
 
 Real addDifferenceToScenario(const RiskFactorKey::KeyType keyType, const Real v, const Real d);
 
