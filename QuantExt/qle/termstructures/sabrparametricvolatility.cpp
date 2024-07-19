@@ -29,6 +29,8 @@
 #include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/termstructures/volatility/sabr.hpp>
 
+#include <boost/algorithm/string/join.hpp>
+
 namespace QuantExt {
 
 using namespace QuantLib;
@@ -440,12 +442,22 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
 
 namespace {
 void laplaceInterpolationWithErrorHandling(Matrix& m, const std::vector<Real>& x, const std::vector<Real>& y) {
-    try {
-        laplaceInterpolation(m, x, y, 1E-6, 100);
-    } catch (const std::exception& e) {
-        QL_FAIL("Error during laplaceInterpolation() in SabrParametricVolatility: "
-                << e.what() << ", this might be related to the numerical parameters relTol, maxIterMult. Contact dev.");
+    std::vector<std::pair<double, Size>> tolerances = {{1E-6, 100}, {1E-5, 100}, {1E-4, 100}, {1E-4, 1000}};
+    std::vector<std::string> errorText;
+    bool success = false;
+    for (auto const& [acc, iter] : tolerances) {
+        try {
+            laplaceInterpolation(m, x, y, acc, iter);
+            success = true;
+            break;
+        } catch (const std::exception& e) {
+            errorText.push_back(e.what());
+        }
     }
+    QL_REQUIRE(success,
+               "Error during laplaceInterpolation() in SabrParametricVolatility ("
+                   << boost::join(errorText, ",")
+                   << "), this might be related to the numerical parameters relTol, maxIterMult. Contact dev.");
 }
 } // namespace
 
