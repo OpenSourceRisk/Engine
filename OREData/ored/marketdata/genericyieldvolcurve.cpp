@@ -618,45 +618,43 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             }
 
             DLOG("Building calibration info generic yield vols completed.");
+        }
 
-            // output SABR calibration to log, if SABR was used
-
-            if (auto sw = QuantLib::ext::dynamic_pointer_cast<QuantExt::SwaptionVolCubeWithATM>(vol_)) {
-                if (auto sabr = QuantLib::ext::dynamic_pointer_cast<QuantExt::SwaptionSabrCube>(sw->cube())) {
-                    if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::SabrParametricVolatility>(
-                            sabr->parametricVolatility())) {
-                        DLOG("SABR parameters:");
-                        DLOG("alpha (rows = option tenors, cols = underlying lengths):");
-                        DLOGGERSTREAM(transpose(p->alpha()));
-                        DLOG("beta (rows = option tenors, cols = underlying lengths):");
-                        DLOGGERSTREAM(transpose(p->beta()));
-                        DLOG("nu (rows = option tenors, cols = underlying lengths):");
-                        DLOGGERSTREAM(transpose(p->nu()));
-                        DLOG("rho (rows = option tenors, cols = underlying lengths):");
-                        DLOGGERSTREAM(transpose(p->rho()));
-                        DLOG("lognormal shift (rows = option tenors, cols = underlying lengths):");
-                        DLOGGERSTREAM(transpose(p->lognormalShift()));
-                        DLOG("calibration attempts (rows = option tenors, cols = underlying lengths):");
-                        DLOGGERSTREAM(transpose(p->numberOfCalibrationAttempts()));
-                        DLOG("calibration error (rows = option tenors, cols = underlying lengths, rmse of relative "
-                             "errors w.r.t. max of sabr variant's preferred quotation type, i.e. nvol, slnvol, "
-                             "premium:");
-                        DLOGGERSTREAM(transpose(p->calibrationError()));
-                        DLOG("isInterpolated (rows = option tenors, cols = underlying lengths, 1 means calibration "
-                             "failed and point is interpolated):");
-                        DLOGGERSTREAM(transpose(p->isInterpolated()));
-                        DLOG("SABR calibration results for individual strikes:");
-                        DLOG("timeToExpiry,underlyingLength,forward,strike,marketInput,caibrationTarget,"
-                             "calibrationResult,error,"
-                             "accepted");
-                        for (auto const& c : p->calibrationResults()) {
-                            for (std::size_t i = 0; i < c.strikes.size(); ++i) {
-                                DLOG(c.timeToExpiry
-                                     << "," << (c.underlyingLength == Null<Real>() ? 0.0 : c.underlyingLength) << ","
-                                     << c.forward << "," << c.strikes[i] << "," << c.marketInput[i] << ","
-                                     << c.calibrationTarget[i] << "," << c.calibrationResult[i] << "," << c.error << ","
-                                     << std::boolalpha << c.accepted);
-                            }
+        if (auto sw = QuantLib::ext::dynamic_pointer_cast<QuantExt::SwaptionVolCubeWithATM>(vol_)) {
+            if (auto sabr = QuantLib::ext::dynamic_pointer_cast<QuantExt::SwaptionSabrCube>(sw->cube())) {
+                if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::SabrParametricVolatility>(
+                        sabr->parametricVolatility())) {
+                    DLOG("SABR parameters:");
+                    DLOG("alpha (rows = option tenors, cols = underlying lengths):");
+                    DLOGGERSTREAM(transpose(p->alpha()));
+                    DLOG("beta (rows = option tenors, cols = underlying lengths):");
+                    DLOGGERSTREAM(transpose(p->beta()));
+                    DLOG("nu (rows = option tenors, cols = underlying lengths):");
+                    DLOGGERSTREAM(transpose(p->nu()));
+                    DLOG("rho (rows = option tenors, cols = underlying lengths):");
+                    DLOGGERSTREAM(transpose(p->rho()));
+                    DLOG("lognormal shift (rows = option tenors, cols = underlying lengths):");
+                    DLOGGERSTREAM(transpose(p->lognormalShift()));
+                    DLOG("calibration attempts (rows = option tenors, cols = underlying lengths):");
+                    DLOGGERSTREAM(transpose(p->numberOfCalibrationAttempts()));
+                    DLOG("calibration error (rows = option tenors, cols = underlying lengths, rmse of relative "
+                         "errors w.r.t. max of sabr variant's preferred quotation type, i.e. nvol, slnvol, "
+                         "premium:");
+                    DLOGGERSTREAM(transpose(p->calibrationError()));
+                    DLOG("isInterpolated (rows = option tenors, cols = underlying lengths, 1 means calibration "
+                         "failed and point is interpolated):");
+                    DLOGGERSTREAM(transpose(p->isInterpolated()));
+                    DLOG("SABR calibration results for individual strikes:");
+                    DLOG("timeToExpiry,underlyingLength,forward,strike,marketInput,caibrationTarget,"
+                         "calibrationResult,error,"
+                         "accepted");
+                    for (auto const& c : p->calibrationResults()) {
+                        for (std::size_t i = 0; i < c.strikes.size(); ++i) {
+                            DLOG(c.timeToExpiry
+                                 << "," << (c.underlyingLength == Null<Real>() ? 0.0 : c.underlyingLength) << ","
+                                 << c.forward << "," << c.strikes[i] << "," << c.marketInput[i] << ","
+                                 << c.calibrationTarget[i] << "," << c.calibrationResult[i] << "," << c.error << ","
+                                 << std::boolalpha << c.accepted);
                         }
                     }
                 }
