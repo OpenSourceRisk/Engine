@@ -262,7 +262,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                         ? QuantLib::Normal
                         : QuantLib::ShiftedLognormal,
-                    !shifts.empty() ? shifts[0][0] : 0.0));
+                    isSln ? shifts[0][0] : 0.0));
             }
 
             if (config->dimension() == GenericYieldVolatilityCurveConfig::Dimension::ATM) {
