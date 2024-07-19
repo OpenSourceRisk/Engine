@@ -34,6 +34,14 @@ namespace QuantExt {
 using namespace QuantLib;
 using std::vector;
 
+//! less bloated version of swaption vol converter below
+Real convertSwaptionVolatility(const Date& asof, const Period& optionTenor, const Period& swapTenor,
+                               const boost::shared_ptr<SwapIndex>& swapIndexBase,
+                               const boost::shared_ptr<SwapIndex>& shortSwapIndexBase, const DayCounter volDayCounter,
+                               const Real strikeSpread, const Real inputVol, const QuantLib::VolatilityType inputType,
+                               const Real inputShift, const QuantLib::VolatilityType outputType,
+                               const Real outputShift);
+
 //! Container for holding swap conventions needed by the SwaptionVolatilityConverter
 //! \ingroup termstructures
 class SwapConventions {

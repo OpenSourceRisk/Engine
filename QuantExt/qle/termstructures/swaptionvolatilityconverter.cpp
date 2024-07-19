@@ -19,6 +19,7 @@
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
+#include <qle/models/exactbachelierimpliedvolatility.hpp>
 
 #include <ql/exercise.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
@@ -30,6 +31,68 @@
 #include <boost/make_shared.hpp>
 
 namespace QuantExt {
+
+Real convertSwaptionVolatility(const Date& asof, const Period& optionTenor, const Period& swapTenor,
+                               const boost::shared_ptr<SwapIndex>& swapIndexBase,
+                               const boost::shared_ptr<SwapIndex>& shortSwapIndexBase, const DayCounter volDayCounter,
+                               const Real strikeSpread, const Real inputVol, const QuantLib::VolatilityType inputType,
+                               const Real inputShift, const QuantLib::VolatilityType outputType,
+                               const Real outputShift) {
+
+    // do we need a conversion at all?
+
+    if (inputType == outputType &&
+        (inputType == QuantLib::VolatilityType::Normal || QuantLib::close_enough(inputShift, outputShift))) {
+        return inputVol;
+    }
+
+    // check we have the swap index bases
+
+    QL_REQUIRE(swapIndexBase != nullptr, "convertSwaptionVolatility(): swapIndexBase is null");
+    QL_REQUIRE(shortSwapIndexBase != nullptr, "convertSwaptionVolatility(): swapIndexBase is null");
+
+    // determine the option date and time to expiry
+
+    Date optionDate = swapIndexBase->fixingCalendar().advance(asof, optionTenor, Following);
+    Real timeToExpiry = volDayCounter.yearFraction(asof, optionDate);
+
+    // determine the ATM strike
+
+    Real atmStrike = swapTenor <= shortSwapIndexBase->tenor() ? shortSwapIndexBase->clone(swapTenor)->fixing(optionDate)
+                                                              : swapIndexBase->clone(swapTenor)->fixing(optionDate);
+
+    // convert input vol to premium
+
+    Option::Type otmOptionType = strikeSpread < 0.0 ? Option::Put : Option::Call;
+
+    Real forwardPremium;
+    if (inputType == QuantLib::VolatilityType::Normal) {
+        forwardPremium = bachelierBlackFormula(otmOptionType, atmStrike + strikeSpread, atmStrike,
+                                               inputVol * std::sqrt(timeToExpiry));
+    } else {
+        if (atmStrike + strikeSpread < -inputShift)
+            forwardPremium = 0.0;
+        else
+            forwardPremium = blackFormula(otmOptionType, atmStrike + strikeSpread, atmStrike,
+                                          inputVol * std::sqrt(timeToExpiry), 1.0, inputShift);
+    }
+
+    // convert permium back to vol
+
+    Real outputVol;
+    if (outputType == QuantLib::VolatilityType::Normal) {
+        outputVol = exactBachelierImpliedVolatility(otmOptionType, atmStrike + strikeSpread, atmStrike, timeToExpiry,
+                                                    forwardPremium);
+    } else {
+        outputVol = blackFormulaImpliedStdDev(otmOptionType, atmStrike + strikeSpread, atmStrike, forwardPremium, 1.0,
+                                              outputShift) /
+                    std::sqrt(timeToExpiry);
+    }
+
+    // return the result
+
+    return outputVol;
+}
 
 const Volatility SwaptionVolatilityConverter::minVol_ = 1.0e-7;
 const Volatility SwaptionVolatilityConverter::maxVol_ = 10.0;
