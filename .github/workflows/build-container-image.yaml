@@ -3,8 +3,25 @@ name: Build container image
 on:
   workflow_dispatch:
   push:
-    branches:
-      - "Containerfile-work"
+    branches: [master]
+    tags:
+        - 'v*'
+  release:
+    types: [published]
+  pull_request:
+    branches: [master]
+    types: [ready_for_review, opened, synchronize, reopened]
+    paths:
+      - .github/workflows/linux_build.yaml
+      - ./App/**
+      - ./OREAnalytics/**
+      - '!./OREAnalytics/doc/**'
+      - ./OREData/**
+      - '!./OREData/doc/**'
+      - ./ORETest/**
+      - ./QuantExt/**
+      - '!./QuantExt/doc/**'
+      - CMakeLists.txt
 
 env:
   REGISTRY: ghcr.io
