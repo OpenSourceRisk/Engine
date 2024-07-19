@@ -264,9 +264,9 @@
            Flat,
            Linear -->
       <Extrapolation>Flat</Extrapolation>
-      <!-- Optional, defaults to input volatility type, applies to SABR only, should be omitted otherwise.
+      <!-- Optional, defaults to input volatility type. Market quotes will be converted to this volatility type:
            - Normal
-           - Lognormal (alias for ShiftedLognormal, shift is always implied from input data)
+           - Lognormal (alias for ShiftedLognormal, shift is taken from OutputShift if given or input market data)
            - ShiftedLognormal-->
       <OutputVolatilityType>Normal</OutputVolatilityType>
       <!-- Optional, if not given defaults to input vol shift. Applies to SABR only, should be omitted otherwise.
