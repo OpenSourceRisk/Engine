@@ -175,7 +175,7 @@ ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const Repor
     if (localConfig.pillarDates())
         pillarDates = *localConfig.pillarDates();
     else if (globalConfig.pillarDates())
-        pillarDates = *localConfig.pillarDates();
+        pillarDates = *globalConfig.pillarDates();
 
     if (localConfig.underlyingTenors())
         underlyingTenors = *localConfig.underlyingTenors();

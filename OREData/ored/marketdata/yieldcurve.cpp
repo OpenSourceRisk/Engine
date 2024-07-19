@@ -361,7 +361,8 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                 calibrationInfo_ = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
 
             try {
-                ReportConfig rc = curveConfigs.reportConfigYieldCurves();
+                ReportConfig rc =
+                    effectiveReportConfig(curveConfigs.reportConfigYieldCurves(), curveConfig_->reportConfig());
                 std::vector<Date> pillarDates = *rc.pillarDates();
                 if (!pillarDates.empty()) {
                     calibrationInfo_->pillarDates.clear();

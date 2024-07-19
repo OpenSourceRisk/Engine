@@ -336,6 +336,11 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
                             bootstrapConfig_.maxFactor(), bootstrapConfig_.minFactor());
     }
 
+    // Option report configuration of pillar dates
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        reportConfig_.fromXML(tmp);
+    }
+
     populateRequiredCurveIds();
 }
 
@@ -364,6 +369,7 @@ XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Tolerance", bootstrapConfig_.accuracy());
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
     XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     return node;
 }

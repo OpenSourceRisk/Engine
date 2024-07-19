@@ -26,6 +26,7 @@
 
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 #include <ql/patterns/visitor.hpp>
@@ -690,6 +691,7 @@ public:
     bool& extrapolation() { return extrapolation_; }
     void setBootstrapConfig(const BootstrapConfig& bootstrapConfig) { bootstrapConfig_ = bootstrapConfig; }
     //@}
+    const ReportConfig& reportConfig() const { return reportConfig_; }
 
     const vector<string>& quotes() override;
 
@@ -708,6 +710,7 @@ private:
     bool extrapolation_;
     BootstrapConfig bootstrapConfig_;
     Size mixedInterpolationCutoff_;
+    ReportConfig reportConfig_;
 };
 
 // Map form curveID to YieldCurveConfig
