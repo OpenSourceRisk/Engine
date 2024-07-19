@@ -52,6 +52,8 @@
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/utilities/calendaradjustmentconfig.hpp>
+#include <ored/configuration/currencyconfig.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <boost/filesystem/path.hpp>
 #include <filesystem>
@@ -126,6 +128,10 @@ public:
     void setOutputTodaysMarketCalibration(bool b) { outputTodaysMarketCalibration_ = b; }
     void setCurvesMarketConfig(const std::string& s) { curvesMarketConfig_ = s; }
     void setCurvesGrid(const std::string& s) { curvesGrid_ = s; }
+    void setCalendarAdjustment(const std::string& xml);
+    void setCalendarAdjustmentFromFile(const std::string& fileName);
+    void setCurrencyConfig(const std::string& xml);
+    void setCurrencyConfigFromFile(const std::string& fileName);
 
     // Setters for sensi analytics
     void setXbsParConversion(bool b) { xbsParConversion_ = b; }
@@ -173,7 +179,7 @@ public:
     void setStressUpperBoundRatesDiscountFactor(const double value) { stressUpperBoundRatesDiscountFactor_ = value; }
     void setStressAccurary(const double value) { stressAccurary_ = value; };
     // Setters for VaR
-    void setSalvageCovariance(bool b) { salvageCovariance_ = b; }
+    void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
     void setVarBreakDown(bool b) { varBreakDown_ = b; }
     void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
@@ -192,7 +198,6 @@ public:
     void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
 
     // Setters for exposure simulation
-    void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
     void setAmc(bool b) { amc_ = b; }
     void setAmcCg(bool b) { amcCg_ = b; }
     void setXvaCgBumpSensis(bool b) { xvaCgBumpSensis_ = b; }
@@ -559,7 +564,7 @@ public:
     /*****************
      * Getters for VaR
      *****************/
-    bool salvageCovariance() const { return salvageCovariance_; }
+    SalvagingAlgorithm::Type  getVarSalvagingAlgorithm() const { return varSalvagingAlgorithm_; }
     const std::vector<Real>& varQuantiles() const { return varQuantiles_; }
     bool varBreakDown() const { return varBreakDown_; }
     const std::string& portfolioFilter() const { return portfolioFilter_; }
@@ -576,7 +581,6 @@ public:
     /*********************************
      * Getters for exposure simulation 
      *********************************/
-    bool salvageCorrelationMatrix() const { return salvageCorrelationMatrix_; }
     bool amc() const { return amc_; }
     bool amcCg() const { return amcCg_; }
     bool xvaCgBumpSensis() const { return xvaCgBumpSensis_; }
@@ -835,6 +839,8 @@ protected:
     QuantLib::ext::shared_ptr<ore::data::Conventions> conventions_;
     QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     CurveConfigurationsManager curveConfigs_;
+    QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig> calendarAdjustment_;
+    QuantLib::ext::shared_ptr<ore::data::CurrencyConfig> currencyConfig_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> pricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_, useCounterpartyOriginalPortfolio_, mporPortfolio_;
@@ -918,7 +924,7 @@ protected:
     /*****************
      * VAR analytics
      *****************/
-    bool salvageCovariance_ = false;
+    SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::None;
     std::vector<Real> varQuantiles_;
     bool varBreakDown_ = false;
     std::string portfolioFilter_;
@@ -937,7 +943,6 @@ protected:
     /*******************
      * EXPOSURE analytic
      *******************/
-    bool salvageCorrelationMatrix_ = false;
     bool amc_ = false;
     bool amcCg_ = false;
     bool xvaCgBumpSensis_ = false;

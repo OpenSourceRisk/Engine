@@ -300,7 +300,7 @@ void CompositeTrade::getTradesFromReferenceData(
 
 }
 
-bool CompositeTrade::isExpired(const Date& d) {
+bool CompositeTrade::isExpired(const Date& d) const {
     for (auto const& t : trades_) {
         // if any trade is not expired, the composite is not expired
         if (!t->isExpired(d))

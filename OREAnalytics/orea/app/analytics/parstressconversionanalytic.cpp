@@ -40,7 +40,7 @@ void ParStressConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_pt
                                          const std::set<std::string>& runTypes) {
     if (!analytic()->match(runTypes))
         return;
-
+    
     LOG("ParStressConversionAnalytic::runAnalytic called");
 
     Settings::instance().evaluationDate() = inputs_->asof();

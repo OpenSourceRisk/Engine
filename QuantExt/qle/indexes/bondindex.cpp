@@ -141,7 +141,8 @@ Real BondIndex::pastFixing(const Date& fixingDate) const {
         return price;
     if (dirty_) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for dirty prices");
-        price += bond_->accruedAmount(fd) / 100.0;
+        if (fixingDate >= issueDate_)
+            price += bond_->accruedAmount(fd) / 100.0;
     }
 
     if (isInflationLinked_) {

@@ -128,6 +128,8 @@ public:
 
     virtual void writePricingStats(ore::data::Report& report, const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
 
+    virtual void writeRunTimes(ore::data::Report& report, const Timer& timer);
+
     virtual void writeCube(ore::data::Report& report, const QuantLib::ext::shared_ptr<NPVCube>& cube,
                            const std::map<std::string, std::string>& nettingSetMap = std::map<std::string, std::string>());
 

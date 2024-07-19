@@ -415,7 +415,7 @@ void OREApp::run() {
         initFromParams();
     else {
         ALOG("both inputs are empty");
-	return;
+        return;
     }
 
     runTimer_.start();
@@ -439,8 +439,14 @@ void OREApp::run() {
     LOG("ORE done.");
 }
 
-void OREApp::run(const std::vector<std::string>& marketData,
-                 const std::vector<std::string>& fixingData) {
+void OREApp::run(const std::vector<std::string>& marketData, const std::vector<std::string>& fixingData) {
+    QL_REQUIRE(inputs_, "No InputParameters set");
+    // Create a market data loader that takes input from the provided vectors
+    auto loader = QuantLib::ext::make_shared<MarketDataInMemoryLoader>(inputs_, marketData, fixingData);
+    run(loader);
+}
+
+void OREApp::run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader) {
 
     // Only one thread at a time should call run
     static std::mutex _s_mutex;
@@ -460,7 +466,7 @@ void OREApp::run(const std::vector<std::string>& marketData,
         initFromParams();
     else {
         ALOG("both inputs are empty");
-	return;
+	    return;
     }
 
     runTimer_.start();
@@ -482,9 +488,6 @@ void OREApp::run(const std::vector<std::string>& marketData,
         // Initialize the global conventions 
         QL_REQUIRE(inputs_->conventions(), "conventions not set");
         InstrumentConventions::instance().setConventions(inputs_->conventions());
-
-        // Create a market data loader that takes input from the provided vectors
-        auto loader = QuantLib::ext::make_shared<MarketDataInMemoryLoader>(inputs_, marketData, fixingData);
 
         // Create the analytics manager
         analyticsManager_ = QuantLib::ext::make_shared<AnalyticsManager>(inputs_, loader);
@@ -581,10 +584,9 @@ void OREAppInputParameters::loadParameters() {
     // Load calendar adjustments
     std::string tmp = params_->get("setup", "calendarAdjustment", false);
     if (tmp != "") {
-        CalendarAdjustmentConfig calendarAdjustments;
         filesystem::path calendarAdjustmentFile = inputPath / tmp;
         LOG("Loading calendar adjustments from file: " << calendarAdjustmentFile);
-        calendarAdjustments.fromFile(calendarAdjustmentFile.generic_string());
+        setCalendarAdjustmentFromFile(calendarAdjustmentFile.generic_string());
     } else {
         WLOG("Calendar adjustments not found, using defaults");
     }
@@ -592,10 +594,9 @@ void OREAppInputParameters::loadParameters() {
     // Load currency configs
     tmp = params_->get("setup", "currencyConfiguration", false);
     if (tmp != "") {
-        CurrencyConfig currencyConfig;
         filesystem::path currencyConfigFile = inputPath / tmp;
         LOG("Loading currency configurations from file: " << currencyConfigFile);
-        currencyConfig.fromFile(currencyConfigFile.generic_string());
+        setCurrencyConfigFromFile(currencyConfigFile.generic_string());
     } else {
         WLOG("Currency configurations not found, using defaults");
     }
@@ -1108,9 +1109,9 @@ void OREAppInputParameters::loadParameters() {
     if (!tmp.empty() && parseBool(tmp)) {
         insertAnalytic("PARAMETRIC_VAR");
 
-        tmp = params_->get("parametricVar", "salvageCovarianceMatrix", false);
+        tmp = params_->get("parametricVar", "SalvagingAlgorithm", false);
         if (tmp != "")
-            setSalvageCovariance(parseBool(tmp));
+            setVarSalvagingAlgorithm(parseSalvagingAlgorithmType(tmp));
 
         tmp = params_->get("parametricVar", "quantiles", false);
         if (tmp != "")
@@ -1484,10 +1485,6 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("xvaExplain", "active", false);
     if (!tmp.empty() && parseBool(tmp))
         insertAnalytic("XVA_EXPLAIN");
-
-    tmp = params_->get("simulation", "salvageCorrelationMatrix", false);
-    if (tmp != "")
-        setSalvageCorrelationMatrix(parseBool(tmp));
 
     tmp = params_->get("simulation", "amc", false);
     if (tmp != "")

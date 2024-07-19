@@ -203,13 +203,14 @@ void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError
                                                                      << ")");
     ext::shared_ptr<Market> market = offsetScenario_ != nullptr ? simMarketCalibration_ : analytic()->market();
     QL_REQUIRE(market != nullptr, "Internal error, buildCrossAssetModel needs to be called after the market is built.");
+
     CrossAssetModelBuilder modelBuilder(
         market, analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
         inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
         inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
         inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "",
-        inputs_->salvageCorrelationMatrix() ? SalvagingAlgorithm::Spectral : SalvagingAlgorithm::None,
-        "xva cam building");
+        analytic()->configurations().crossAssetModelData->getSalvagingAlgorithm(), "xva cam building");
+
     model_ = *modelBuilder.model();
 }
 
@@ -661,7 +662,7 @@ void XvaAnalyticImpl::runPostProcessor() {
 
 void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                   const std::set<std::string>& runTypes) {
-
+    
     if (inputs_->amcCg()) {
         LOG("XVA analytic is running with amc cg engine (experimental).");
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config in sim market

@@ -375,6 +375,7 @@ utilities/parsers.cpp
 utilities/progressbar.cpp
 utilities/strike.cpp
 utilities/timeperiod.cpp
+utilities/timer.cpp
 utilities/to_string.cpp
 utilities/wildcard.cpp
 utilities/xmlutils.cpp)
@@ -586,10 +587,10 @@ portfolio/builders/varianceswap.hpp
 portfolio/builders/yoycapfloor.hpp
 portfolio/callableswap.hpp
 portfolio/capfloor.hpp
+portfolio/cashposition.hpp
 portfolio/cbo.hpp
 portfolio/cdo.hpp
 portfolio/cliquetoption.hpp
-portfolio/cashposition.hpp
 portfolio/collateralbalance.hpp
 portfolio/commodityapo.hpp
 portfolio/commoditydigitalapo.hpp
@@ -785,6 +786,7 @@ utilities/serializationdaycounter.hpp
 utilities/serializationperiod.hpp
 utilities/strike.hpp
 utilities/timeperiod.hpp
+utilities/timer.hpp
 utilities/to_string.hpp
 utilities/vectorutils.hpp
 utilities/wildcard.hpp

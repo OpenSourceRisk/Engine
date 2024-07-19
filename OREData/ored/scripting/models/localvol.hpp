@@ -47,7 +47,8 @@ public:
         const Handle<BlackScholesModelWrapper>& model,
         const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
         const McParams& mcparams, const std::set<Date>& simulationDates,
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        const QuantLib::SalvagingAlgorithm::Type& salvagingAlgorithm = SalvagingAlgorithm::Spectral);
 
     // ctor for a single underlying
     LocalVol(const Size paths, const std::string& currency, const Handle<YieldTermStructure>& curve,

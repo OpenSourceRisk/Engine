@@ -47,8 +47,10 @@ Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType 
 
     // check if there is nothing to convert
 
-    if (inputMarketQuoteType == outputMarketQuoteType && close_enough(inputLognormalShift, outputLognormalShift) &&
-        inputOptionType == outputOptionType) {
+    if (inputMarketQuoteType == outputMarketQuoteType &&
+        (inputMarketQuoteType == MarketQuoteType::NormalVolatility ||
+         close_enough(inputLognormalShift, outputLognormalShift)) &&
+        (inputMarketQuoteType != MarketQuoteType::Price || inputOptionType == outputOptionType)) {
         return inputQuote;
     }
 

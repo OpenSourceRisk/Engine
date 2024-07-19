@@ -23,6 +23,7 @@
       <Currency>JPY</Currency>
     </Currencies>
     <BootstrapTolerance>0.0001</BootstrapTolerance>
+    <SalvagingAlgorithm>Spectral</SalvagingAlgorithm>
     <InterestRateModels>
       <LGM ccy="default">
         <CalibrationType>Bootstrap</CalibrationType>

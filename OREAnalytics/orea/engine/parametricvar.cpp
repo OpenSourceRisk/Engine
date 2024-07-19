@@ -139,12 +139,12 @@ ParametricVarReport::ParametricVarReport(const std::string& baseCurrency, const 
                                          const string& portfolioFilter,
                                          const vector<Real>& p,
                                          const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
-                                         const bool salvageCovarianceMatrix,
+                                         const SalvagingAlgorithm::Type varSalvagingAlgorithm,
                                          boost::optional<ore::data::TimePeriod> period,
                                          std::unique_ptr<SensiRunArgs> sensiArgs,
                                          const bool breakdown)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, nullptr, std::move(sensiArgs), nullptr, breakdown),
-      parametricVarParams_(parametricVarParams), salvageCovarianceMatrix_(salvageCovarianceMatrix) {
+      parametricVarParams_(parametricVarParams), varSalvagingAlgorithm_(varSalvagingAlgorithm) {
     sensiBased_ = true;
 }
 
@@ -155,12 +155,12 @@ ParametricVarReport::ParametricVarReport(
     const ext::shared_ptr<HistoricalScenarioGenerator>& hisScenGen,
     const vector<Real>& p,
     const ParametricVarCalculator::ParametricVarParams& parametricVarParams,
-    const bool salvageCovarianceMatrix,
+    const SalvagingAlgorithm::Type varSalvagingAlgorithm,
     boost::optional<ore::data::TimePeriod> period,
     std::unique_ptr<SensiRunArgs> sensiArgs,
     const bool breakdown)
     : VarReport(baseCurrency, portfolio, portfolioFilter, p, period, hisScenGen, std::move(sensiArgs), nullptr, breakdown),
-      parametricVarParams_(parametricVarParams), salvageCovarianceMatrix_(salvageCovarianceMatrix) {
+      parametricVarParams_(parametricVarParams), varSalvagingAlgorithm_(varSalvagingAlgorithm) {
     sensiBased_ = true;
 }
 
