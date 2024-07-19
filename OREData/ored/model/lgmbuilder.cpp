@@ -20,6 +20,7 @@
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/pricingengines/swaption/blackswaptionengine.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
@@ -189,23 +190,47 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
     requiresCalibration_ =
         (data_->calibrateA() || data_->calibrateH()) && data_->calibrationType() != CalibrationType::None;
 
+    // try to get market objects, if sth fails, we fall back to a default and log a structured error
+
+    Handle<YieldTermStructure> dummyYts(
+        QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
+
     try {
         shortSwapIndex_ =
             market_->swapIndex(market_->shortSwapIndexBase(data_->qualifier(), configuration_), configuration_);
-        swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->qualifier(), configuration_), configuration_);
-        svts_ = market_->swaptionVol(data_->qualifier(), configuration_);
-        // see the comment for dinscountCurve() in the interface
-        modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*swapIndex_->discountingTermStructure());
-        calibrationDiscountCurve_ = Handle<YieldTermStructure>(*swapIndex_->discountingTermStructure());
     } catch (const std::exception& e) {
-        StructuredModelErrorMessage(
-            "Error when retrieving swap index base for qualifier '" + data_->qualifier() +
-                "'. Use market discount curve instead of swap index discount curve as a fallback.",
-            e.what(), id_)
-            .log();
-        modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*market_->discountCurve(currency_, configuration_));
-        calibrationDiscountCurve_ = Handle<YieldTermStructure>(*market_->discountCurve(currency_, configuration_));
+        processException("short swap index", e);
+        shortSwapIndex_ = Handle<SwapIndex>(QuantLib::ext::make_shared<SwapIndex>(
+            "dummy", 30 * Years, 0, ccy, NullCalendar(), 1 * Years, Unadjusted, Actual365Fixed(),
+            QuantLib::ext::make_shared<IborIndex>("dummy", 1 * Years, 0, ccy, NullCalendar(), Unadjusted, false,
+                                                  Actual365Fixed(), dummyYts),
+            dummyYts));
     }
+
+    try {
+        swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->qualifier(), configuration_), configuration_);
+    } catch (const std::exception& e) {
+        processException("swap index", e);
+        swapIndex_ = Handle<SwapIndex>(QuantLib::ext::make_shared<SwapIndex>(
+            "dummy", 30 * Years, 0, ccy, NullCalendar(), 1 * Years, Unadjusted, Actual365Fixed(),
+            QuantLib::ext::make_shared<IborIndex>("dummy", 1 * Years, 0, ccy, NullCalendar(), Unadjusted, false,
+                                                  Actual365Fixed(), dummyYts),
+            dummyYts));
+    }
+
+    try {
+        svts_ = market_->swaptionVol(data_->qualifier(), configuration_);
+    } catch (const std::exception& e) {
+        processException("swaption vol surface", e);
+        svts_ = Handle<SwaptionVolatilityStructure>(QuantLib::ext::make_shared<ConstantSwaptionVolatility>(
+            0, NullCalendar(), Unadjusted, 0.0010, Actual365Fixed(), Normal, 0.0));
+    }
+
+    // see the comment for dinscountCurve() in the interface
+    modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*swapIndex_->discountingTermStructure());
+    calibrationDiscountCurve_ = Handle<YieldTermStructure>(*swapIndex_->discountingTermStructure());
+
+    // check if weed calibration
 
     if (requiresCalibration_) {
         registerWith(svts_);
@@ -295,6 +320,13 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
 
     model_ = QuantLib::ext::make_shared<QuantExt::LGM>(parametrization_);
     params_ = model_->params();
+}
+
+void LgmBuilder::processException(const std::string& s, const std::exception& e) {
+    StructuredModelErrorMessage("Error while building LGM model for qualifier '" + data_->qualifier() + "', context '" +
+                                    s + "'. Using a fallback, results depending on this object will be invalid.",
+                                e.what(), id_)
+        .log();
 }
 
 Real LgmBuilder::error() const {
