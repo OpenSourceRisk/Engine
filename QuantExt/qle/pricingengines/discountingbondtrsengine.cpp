@@ -43,8 +43,9 @@ std::string ccyStr(const Currency& c) {
 }
 } // namespace
 
-DiscountingBondTRSEngine::DiscountingBondTRSEngine(const Handle<YieldTermStructure>& discountCurve)
-    : discountCurve_(discountCurve) {
+DiscountingBondTRSEngine::DiscountingBondTRSEngine(const Handle<YieldTermStructure>& discountCurve,
+                                                   const bool treatSecuritySpreadAsCreditSpread)
+    : discountCurve_(discountCurve), treatSecuritySpreadAsCreditSpread_(treatSecuritySpreadAsCreditSpread) {
     registerWith(discountCurve_);
 }
 
@@ -209,12 +210,15 @@ void DiscountingBondTRSEngine::calculate() const {
         if (arguments_.fxIndex)
             fxFixingDate = arguments_.fxIndex->fixingCalendar().adjust(fxFixingDate, Preceding);
         Real fx = arguments_.fxIndex ? arguments_.fxIndex->fixing(fxFixingDate) : 1.0;
+        Real spreadFactor = treatSecuritySpreadAsCreditSpread_
+                                ? exp(-bondSpread->value() * discountCurve_->timeFromReference(bondFlowPayDate))
+                                : 1.0;
 
         // 5e set bond cashflow and additional results
 
         cfResults.emplace_back();
         cfResults.back().amount = mult * bd->cashflows()[i]->amount() * fx * arguments_.bondNotional;
-        cfResults.back().discountFactor = discountCurve_->discount(bondFlowPayDate) * S;
+        cfResults.back().discountFactor = discountCurve_->discount(bondFlowPayDate) * S * spreadFactor;
         cfResults.back().payDate = bondFlowPayDate;
         cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
         cfResults.back().legNumber = 1;
@@ -241,9 +245,8 @@ void DiscountingBondTRSEngine::calculate() const {
 
         // 5f bond cashflow npv contribution
 
-        // Real spreadFactor = exp(- bondSpread->value() * discountCurve_->timeFromReference(bondFlowPayDate));
         bondPayments +=
-            bd->cashflows()[i]->amount() * S * discountCurve_->discount(bondFlowPayDate) * fx; // * spreadFactor;
+            bd->cashflows()[i]->amount() * S * discountCurve_->discount(bondFlowPayDate) * fx * spreadFactor;
 
         // 5g bond cashflow recovery contribution
 

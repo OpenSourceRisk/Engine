@@ -20,5 +20,15 @@
 
 namespace ore {
 namespace data {
+
+BondTRSEngineBuilder::BondTRSEngineBuilder(const std::string& model, const std::string& engine)
+    : CachingEngineBuilder(model, engine, {"BondTRS"}) {}
+
+QuantLib::ext::shared_ptr<PricingEngine> DiscountingBondTRSEngineBuilder::engineImpl(const string& ccy) {
+    return QuantLib::ext::make_shared<QuantExt::DiscountingBondTRSEngine>(
+        market_->discountCurve(ccy, configuration(MarketContext::pricing)),
+        parseBool(modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false")));
+}
+
 } // namespace data
 } // namespace ore
