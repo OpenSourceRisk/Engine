@@ -1013,6 +1013,8 @@ DiscountedCashflows/DiscountingBondTRSEngine builds a DisountingBondTRSEngine. A
 The parameters have the following meaning:
 
 \begin{itemize}
+\item TreatSecuritySpreadAsCreditSpread [optional]: defaults to false. If true, the security spread is included in the
+  discounting of intermediate bond cashflows.
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
@@ -1020,7 +1022,9 @@ The parameters have the following meaning:
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Product type="BondTRS">
     <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
+    <ModelParameters>
+        <Parameter name="TreatSecuritySpreadAsCreditSpread">true</Parameter>
+    </ModelParameters>
     <Engine>DiscountingBondTRSEngine</Engine>
     <EngineParameters>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
