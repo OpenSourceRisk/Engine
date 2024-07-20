@@ -79,7 +79,6 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
 
     npvCurrency_ = fixingDate_ == Date() ? currency_ : payCcy_;
 
-    // notional_ = strike_ * quantity_;
     notional_ = strike_ * quantity_;
     notionalCurrency_ = currency_;
 
@@ -170,7 +169,17 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(commodityForward);
 }
 
-Real CommodityForward::notional() const { return notional_; }
+Real CommodityForward::currentNotional() const {
+    // try to get the notional from the additional results of the instrument
+    try {
+        return instrument_->qlInstrument(true)->result<Real>("currentNotional");
+    } catch (const std::exception& e) {
+        if (strcmp(e.what(), "currentNotional not provided"))
+            ALOG("error when retrieving notional: " << e.what());
+    }
+    // if not provided, return null
+    return Null<Real>();
+}
 
 std::map<AssetClass, std::set<std::string>>
 CommodityForward::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
