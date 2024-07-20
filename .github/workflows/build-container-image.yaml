@@ -111,7 +111,7 @@ jobs:
           tags: ore-builder
           target: builder
           cache-from: ${{ fromJSON(steps.builder-tag-cache-mapper.outputs.result).cache_from }}
-          cache-to: ${{ (github.event_name != 'pull_request') && fromJSON(steps.builder-tag-cache-mapper.outputs.result).cache_to }}
+          cache-to: ${{ (github.event_name != 'pull_request') && fromJSON(steps.builder-tag-cache-mapper.outputs.result).cache_to || '' }}
 
       # Run the tests inside the container we just build, saving the results to our workspace
       - name: Create test-results folder
@@ -172,4 +172,4 @@ jobs:
           tags: ${{ steps.release-meta.outputs.tags }}
           labels: ${{ steps.release-meta.outputs.labels }}
           cache-from: ${{ fromJSON(steps.release-tag-cache-mapper.outputs.result).cache_from }}
-          cache-to: ${{ (github.event_name != 'pull_request') && fromJSON(steps.release-tag-cache-mapper.outputs.result).cache_to }}
+          cache-to: ${{ (github.event_name != 'pull_request') && fromJSON(steps.release-tag-cache-mapper.outputs.result).cache_to || '' }}
