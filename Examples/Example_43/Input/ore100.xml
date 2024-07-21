@@ -54,7 +54,6 @@
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
       <Parameter name="storeFlows">Y</Parameter>
       <Parameter name="storeCreditStateNPVs">8</Parameter>
-      <Parameter name="salvageCorrelationMatrix">true</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>

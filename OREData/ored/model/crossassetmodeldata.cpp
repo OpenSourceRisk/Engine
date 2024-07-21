@@ -284,6 +284,9 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
 
     discretization_ = parseDiscretization(discString);
 
+    std::string salvString = XMLUtils::getChildValue(modelNode, "SalvagingAlgorithm", false, "None");
+    salvagingAlgorithm_ = parseSalvagingAlgorithmType(salvString);
+
     domesticCurrency_ = XMLUtils::getChildValue(modelNode, "DomesticCcy", true); // mandatory
     LOG("CrossAssetModelData: domesticCcy " << domesticCurrency_);
 

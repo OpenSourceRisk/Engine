@@ -425,22 +425,18 @@ QuantLib::DoubleBarrier::Type parseDoubleBarrierType(const string& s);
     \ingroup utilities
 */
 template <class T> bool tryParse(const std::string& str, T& obj, std::function<T(const std::string&)> parser) {
-    DLOG("tryParse: attempting to parse " << str);
     try {
         obj = parser(str);
     } catch (...) {
-        TLOG("String " << str << " could not be parsed");
         return false;
     }
     return true;
 }
 
 inline bool tryParseCurrency(const std::string& str, Currency& obj) {
-    DLOG("tryParse: attempting to parse currency from " << str);
     try {
         obj = parseCurrency(str);
     } catch (...) {
-        TLOG("String " << str << " could not be parsed");
         return false;
     }
     return true;
@@ -616,6 +612,15 @@ std::ostream& operator<<(std::ostream& out, QuantExt::SabrParametricVolatility::
 \ingroup utilities
 */
 std::ostream& operator<<(std::ostream& os, QuantLib::Exercise::Type type);
+
+//! Convert text to SalvagingAlgorithm type
+SalvagingAlgorithm::Type parseSalvagingAlgorithmType(const std::string& s);
+
+//! Write SalvagingAlgorithm type
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type);
 
 } // namespace data
 } // namespace ore

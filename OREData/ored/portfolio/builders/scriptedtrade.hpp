@@ -60,6 +60,7 @@ public:
     // these are guaranteed to be set only after engine() was called
     const std::string& npvCurrency() const { return model_ ? model_->baseCcy() : modelCG_->baseCcy(); }
     const QuantLib::Date& lastRelevantDate() const { return lastRelevantDate_; }
+    bool includePastCashflows() const { return includePastCashflows_; }
     const std::string& simmProductClass() const { return simmProductClass_; }
     const std::string& scheduleProductClass() const { return scheduleProductClass_; }
     const std::string& sensitivityTemplate() const { return sensitivityTemplate_; }
@@ -164,6 +165,7 @@ protected:
     bool externalDeviceCompatibilityMode_;
     std::string externalComputeDevice_;
     bool includePastCashflows_;
+    SalvagingAlgorithm::Type salvagingAlgorithm_;
 };
 
 } // namespace data

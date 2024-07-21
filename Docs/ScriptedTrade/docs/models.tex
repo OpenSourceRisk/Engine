@@ -51,6 +51,7 @@ An example pricing engine configuration looks as follows.
       <Parameter name="BootstrapTolerance">0.1</Parameter>
       <Parameter name="IncludePastCashflows">true</Parameter>
       <Parameter name="RegressionVarianceCutoff">1E-5</Parameter>
+      <Parameter name="SalvagingAlgorithm">Spectral</Parameter>
       <!-- product specific parameters -->
       <Parameter name="RegressionOrder_SingleAssetOption(EQ)">6</Parameter>
       <Parameter name="RegressionOrder_SingleAssetOption(FX)">6</Parameter>
@@ -158,6 +159,9 @@ The engine parameters have the following meaning:
   for external calculations, i.e. if enabled, the MersenneTwister random number generation is done in
   step-dimension-path order. If disabled, the ``classic'' order path-step-dimension is used.
 \item ExternalComputeDevice: The external compute device to use if UseExternalComputingDevice is effective.
+\item SalvagingAlgorithm: If the correlation matrix is not positive semi definite, an approximation of the pseudo square root using asalvaging algorithm can be used.
+ The SalvagingAlgorithm tag chooses this algorithm with the following allowable values: None, Spectral, Hypersphere, LowerDiagonal or Highham.
+
 \end{itemize}
 
 \subsection{Product Tags und pricing engine configuration}\label{producttags_engineconfig}

@@ -156,11 +156,9 @@ public:
 
     const Date& maturity() const { return maturity_; }
 
-    virtual bool isExpired(const Date& d) { return d >= maturity_; }
+    virtual bool isExpired(const Date& d) const { return d >= maturity_; }
 
     const string& issuer() const { return issuer_; }
-
-    const Date& issueDate() const { return issueDate_; }
 
     //! returns any additional datum.
     template <typename T> T additionalDatum(const std::string& tag) const;
@@ -205,7 +203,6 @@ protected:
     string notionalCurrency_;
     Date maturity_;
     string issuer_;
-    Date issueDate_;
     string sensitivityTemplate_;
     bool sensitivityTemplateSet_ = false;
 

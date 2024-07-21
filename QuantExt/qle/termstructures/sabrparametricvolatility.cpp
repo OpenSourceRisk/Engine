@@ -29,6 +29,8 @@
 #include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/termstructures/volatility/sabr.hpp>
 
+#include <boost/algorithm/string/join.hpp>
+
 namespace QuantExt {
 
 using namespace QuantLib;
@@ -37,9 +39,10 @@ SabrParametricVolatility::SabrParametricVolatility(
     const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
     const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters,
-    const Size maxCalibrationAttempts, const Real exitEarlyErrorThreshold, const Real maxAcceptableError)
+    const std::map<QuantLib::Real, QuantLib::Real>& modelShifts, const Size maxCalibrationAttempts,
+    const Real exitEarlyErrorThreshold, const Real maxAcceptableError)
     : ParametricVolatility(marketSmiles, marketModelType, inputMarketQuoteType, discountCurve),
-      modelVariant_(modelVariant), modelParameters_(std::move(modelParameters)),
+      modelVariant_(modelVariant), modelParameters_(std::move(modelParameters)), modelShifts_(modelShifts),
       maxCalibrationAttempts_(maxCalibrationAttempts), exitEarlyErrorThreshold_(exitEarlyErrorThreshold),
       maxAcceptableError_(maxAcceptableError) {
     calculate();
@@ -249,7 +252,7 @@ std::vector<Real> SabrParametricVolatility::evaluateSabr(const std::vector<Real>
     return result;
 }
 
-std::tuple<std::vector<Real>, Real, Size>
+std::tuple<std::vector<Real>, Real, Real, Size>
 SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmile,
                                                    const std::vector<std::pair<Real, bool>>& params) const {
 
@@ -260,13 +263,27 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
         if (!p.second)
             ++noFreeParams;
 
+    // determine the shift for the model (if applicable)
+
+    Real modelLognormalShift;
+    if (modelShifts_.empty()) {
+        modelLognormalShift = marketSmile.lognormalShift;
+    } else {
+        auto it = modelShifts_.find(marketSmile.underlyingLength);
+        QL_REQUIRE(
+            it != modelShifts_.end(),
+            "SabrParametricVolatility::calibrateModelParameters(): model shifts are specified but underlying length "
+                << marketSmile.underlyingLength << " is missing in this specification.");
+        modelLognormalShift = it->second;
+    }
+
     // if there are no free parameters, we just pass back the fixed parameters as the result
 
     if (noFreeParams == 0) {
         std::vector<Real> resultParams;
         for (auto const& p : params)
             resultParams.push_back(p.first);
-        return std::make_tuple(resultParams, 0.0, 0);
+        return std::make_tuple(resultParams, 0.0, modelLognormalShift, 0);
     }
 
     // if we have less data points than free parameters -> exit early
@@ -320,7 +337,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
 
     t.forward_ = marketSmile.forward;
     t.timeToExpiry_ = marketSmile.timeToExpiry;
-    t.lognormalShift_ = marketSmile.lognormalShift;
+    t.lognormalShift_ = modelLognormalShift;
 
     t.evalSabr_ = [this](const std::vector<Real>& params, const Real forward, const Real timeToExpiry,
                          const Real lognormalShift, const std::vector<Real>& strikes) {
@@ -332,12 +349,8 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
         t.invParams_.push_back(params[i].first);
     t.invParams_ = inverse(t.invParams_, marketSmile.forward, marketSmile.lognormalShift);
 
-    t.inverse_ = [this, &marketSmile](const std::vector<Real>& y) {
-        return inverse(y, marketSmile.forward, marketSmile.lognormalShift);
-    };
-    t.direct_ = [this, &marketSmile](const std::vector<Real>& x) {
-        return direct(x, marketSmile.forward, marketSmile.lognormalShift);
-    };
+    t.inverse_ = [this, f = t.forward_, s = t.lognormalShift_](const std::vector<Real>& y) { return inverse(y, f, s); };
+    t.direct_ = [this, f = t.forward_, s = t.lognormalShift_](const std::vector<Real>& x) { return direct(x, f, s); };
 
     t.strikes_ = marketSmile.strikes;
     for (Size i = 0; i < marketSmile.marketQuotes.size(); ++i) {
@@ -345,7 +358,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
             marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift,
             marketSmile.optionTypes.empty() ? boost::none : boost::optional<Option::Type>(marketSmile.optionTypes[i]),
             marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward, preferredOutputQuoteType(),
-            marketSmile.lognormalShift, boost::none));
+            t.lognormalShift_, boost::none));
     }
     // we use relative errors w.r.t. the max market quote, because far otm quotes are close to zero
     t.refQuote_ = *std::max_element(t.marketQuotes_.begin(), t.marketQuotes_.end());
@@ -407,19 +420,44 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
             break;
     }
 
+    // store the calibration results
+    CalibrationResult result;
+    result.timeToExpiry = t.timeToExpiry_;
+    result.underlyingLength = marketSmile.underlyingLength;
+    result.forward = t.forward_;
+    result.strikes = t.strikes_;
+    result.marketInput = marketSmile.marketQuotes;
+    result.calibrationTarget = t.marketQuotes_;
+    result.calibrationResult = evaluateSabr(bestResult, t.forward_, t.timeToExpiry_, t.lognormalShift_, t.strikes_);
+    result.error = bestError;
+    result.accepted = bestError < maxAcceptableError_;
+    calibrationResults_.push_back(result);
+
+    // check if if have at least one valid calibration
     QL_REQUIRE(bestError < QL_MAX_REAL, "internal: all calibrations failed");
 
-    return std::make_tuple(bestResult, bestError, ++attempt);
+    // return the best calibration result
+    return std::make_tuple(bestResult, bestError, t.lognormalShift_, ++attempt);
 }
 
 namespace {
 void laplaceInterpolationWithErrorHandling(Matrix& m, const std::vector<Real>& x, const std::vector<Real>& y) {
-    try {
-        laplaceInterpolation(m, x, y, 1E-6, 100);
-    } catch (const std::exception& e) {
-        QL_FAIL("Error during laplaceInterpolation() in SabrParametricVolatility: "
-                << e.what() << ", this might be related to the numerical parameters relTol, maxIterMult. Contact dev.");
+    std::vector<std::pair<double, Size>> tolerances = {{1E-6, 100}, {1E-5, 100}, {1E-4, 100}, {1E-4, 1000}};
+    std::vector<std::string> errorText;
+    bool success = false;
+    for (auto const& [acc, iter] : tolerances) {
+        try {
+            laplaceInterpolation(m, x, y, acc, iter);
+            success = true;
+            break;
+        } catch (const std::exception& e) {
+            errorText.push_back(e.what());
+        }
     }
+    QL_REQUIRE(success,
+               "Error during laplaceInterpolation() in SabrParametricVolatility ("
+                   << boost::join(errorText, ",")
+                   << "), this might be related to the numerical parameters relTol, maxIterMult. Contact dev.");
 }
 } // namespace
 
@@ -450,15 +488,15 @@ void SabrParametricVolatility::calculate() {
                        << "). All (timeToExpiry, underlyingLength) pairs that are given as market points must be "
                           "covered by the given model parameters.");
         try {
-            auto [params, error, noOfAttempts] = calibrateModelParameters(s, param->second);
+            auto [params, error, shift, noOfAttempts] = calibrateModelParameters(s, param->second);
             if (error < maxAcceptableError_)
                 calibratedSabrParams_[key] = params;
             calibrationErrors_[key] = error;
+            lognormalShifts_[key] = shift;
             noOfAttempts_[key] = noOfAttempts;
         } catch (const std::exception& e) {
             // all calibration failed -> do not populate params, but interpolate them below
         }
-        lognormalShifts_[key] = s.lognormalShift;
     }
 
     // build the timeToExpiry, underlyingLength vectors

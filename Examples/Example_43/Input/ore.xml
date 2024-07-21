@@ -56,7 +56,6 @@
       <!-- credit risk configuration -->
       <Parameter name="storeCreditStateNPVs">8</Parameter>
       <!-- end of credit risk configuration -->
-      <Parameter name="salvageCorrelationMatrix">true</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>

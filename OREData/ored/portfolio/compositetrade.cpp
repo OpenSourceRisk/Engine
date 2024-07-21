@@ -40,9 +40,12 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
     legs_.clear();
 
     populateFromReferenceData(engineFactory->referenceData());
-
     
-    for (const QuantLib::ext::shared_ptr<Trade>& trade : trades_) {
+    fxRates_.resize(trades_.size(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)));
+    fxRatesNotional_.resize(trades_.size(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)));
+
+    for (Size i = 0; i < trades_.size(); i++) {
+        const auto& trade = trades_[i];
 
 	    trade->reset();
 	    trade->build(engineFactory);
@@ -51,12 +54,9 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
         if (sensitivityTemplate_.empty())
             setSensitivityTemplate(trade->sensitivityTemplate());
 
-        Handle<Quote> fx = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 	    if (trade->npvCurrency() != npvCurrency_)
-	        fx = engineFactory->market()->fxRate(trade->npvCurrency() + npvCurrency_);
-	    fxRates_.push_back(fx);
+            fxRates_[i] = engineFactory->market()->fxRate(trade->npvCurrency() + npvCurrency_);
 
-        Handle<Quote> fxNotional = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
         if (trade->notionalCurrency().empty()) {
             // trade is not guaranteed to provide a non-null notional, but if it does we require a notional currency
             if (trade->notional() != Null<Real>()) {
@@ -67,8 +67,7 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
                     .log();
             }
         } else if (trade->notionalCurrency() != npvCurrency_)
-            fxNotional = engineFactory->market()->fxRate(trade->notionalCurrency() + npvCurrency_);
-        fxRatesNotional_.push_back(fxNotional);
+            fxRatesNotional_[i] = engineFactory->market()->fxRate(trade->notionalCurrency() + npvCurrency_);
 
         QuantLib::ext::shared_ptr<InstrumentWrapper> instrumentWrapper = trade->instrument();
         Real effectiveMultiplier = instrumentWrapper->multiplier();
@@ -76,7 +75,7 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
 	        effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
 	    }
 
-	    compositeInstrument->add(instrumentWrapper->qlInstrument(), effectiveMultiplier, fx);
+	    compositeInstrument->add(instrumentWrapper->qlInstrument(), effectiveMultiplier, fxRates_[i]);
 	    for (Size i = 0; i < instrumentWrapper->additionalInstruments().size(); ++i) {
 	        compositeInstrument->add(instrumentWrapper->additionalInstruments()[i],
 				         instrumentWrapper->additionalMultipliers()[i]);
@@ -107,12 +106,12 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
 
 QuantLib::Real CompositeTrade::notional() const {
     vector<Real> notionals;
-    vector<Handle<Quote>> fxRates;
     // trade is not guaranteed to provide a non-null notional
     for (const QuantLib::ext::shared_ptr<Trade>& trade : trades_)
         notionals.push_back(trade->notional() != Null<Real>() ? trade->notional() : 0.0);
 
     // need to convert the component notionals to the composite currency.
+    QL_REQUIRE(notionals.size() == fxRates_.size(), "Size mismatch between notionals and fxRates");
     auto notionalConverter = [](const Real ntnl, const Handle<Quote>& fx) { return (ntnl * fx->value()); };
     std::transform(begin(notionals), end(notionals), begin(fxRates_), begin(notionals), notionalConverter);
     return calculateNotional(notionals);
@@ -300,7 +299,7 @@ void CompositeTrade::getTradesFromReferenceData(
 
 }
 
-bool CompositeTrade::isExpired(const Date& d) {
+bool CompositeTrade::isExpired(const Date& d) const {
     for (auto const& t : trades_) {
         // if any trade is not expired, the composite is not expired
         if (!t->isExpired(d))

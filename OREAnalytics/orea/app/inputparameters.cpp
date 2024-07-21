@@ -126,6 +126,26 @@ void InputParameters::setCurveConfigsFromFile(const std::string& fileName, std::
     curveConfigs_.add(curveConfig, id);
 }
 
+void InputParameters::setCalendarAdjustment(const std::string& xml) {
+    calendarAdjustment_ = QuantLib::ext::make_shared<CalendarAdjustmentConfig>();
+    calendarAdjustment_->fromXMLString(xml);
+}
+
+void InputParameters::setCalendarAdjustmentFromFile(const std::string& fileName) {
+    calendarAdjustment_ = QuantLib::ext::make_shared<CalendarAdjustmentConfig>();
+    calendarAdjustment_->fromFile(fileName);
+}
+
+void InputParameters::setCurrencyConfig(const std::string& xml) {
+    currencyConfig_ = QuantLib::ext::make_shared<CurrencyConfig>();
+    currencyConfig_->fromXMLString(xml);
+}
+
+void InputParameters::setCurrencyConfigFromFile(const std::string& fileName) {
+    currencyConfig_ = QuantLib::ext::make_shared<CurrencyConfig>();
+    currencyConfig_->fromFile(fileName);
+}
+
 void InputParameters::setIborFallbackConfig(const std::string& xml) {
     iborFallbackConfig_= QuantLib::ext::make_shared<IborFallbackConfig>();
     iborFallbackConfig_->fromXMLString(xml);

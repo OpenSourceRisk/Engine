@@ -157,7 +157,9 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
     // run requested analytics
     for (auto a : analytics_) {
         LOG("run analytic with label '" << a.first << "'");
+        a.second->startTimer("Run " + a.second->label() + "Analytic");
         a.second->runAnalytic(marketDataLoader_->loader(), inputs_->analytics());
+        a.second->stopTimer("Run " + a.second->label() + "Analytic");
         LOG("run analytic with label '" << a.first << "' finished.");
         // then populate the market calibration report if required
         if (marketCalibrationReport)
@@ -169,6 +171,19 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
         ReportWriter(inputs_->reportNaString())
             .writePricingStats(*pricingStatsReport, inputs_->portfolio());
         reports_["STATS"]["pricingstats"] = pricingStatsReport;
+    }
+
+    Timer timer;
+    for (auto a : analytics_) {
+        Timer analyticTimer = a.second->getTimer();
+        if (!analyticTimer.empty()) {
+            timer.addTimer(a.first, a.second->getTimer());
+        }
+    }
+    if (!timer.empty()) {
+        auto runTimesReport = QuantLib::ext::make_shared<InMemoryReport>();
+        ReportWriter(inputs_->reportNaString()).writeRunTimes(*runTimesReport, timer);
+        reports_["STATS"]["runtimes"] = runTimesReport;
     }
 
     if (marketCalibrationReport) {
