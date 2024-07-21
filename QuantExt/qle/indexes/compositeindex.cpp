@@ -40,6 +40,10 @@ CompositeIndex::CompositeIndex(const std::string& name, const std::vector<QuantL
         registerWith(f);
     }
 
+    for (auto const& i : indices) {
+        registerWith(i);
+    }
+
     std::vector<Calendar> cals;
     std::transform(indices.begin(), indices.end(), std::back_inserter(cals),
                    [](const auto& i) { return i->fixingCalendar(); });
