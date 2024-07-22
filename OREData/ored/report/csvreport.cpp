@@ -81,9 +81,11 @@ private:
         string sc = quoted ? s.substr(1, s.size() - 2) : s;
         boost::replace_all(sc, "\n", "\\n");
         boost::replace_all(sc, "\t", "\\t");
-        boost::replace_all(sc, "\"", "\\\"");
-        if (quoteChar_ != '\0')
+        if (quoteChar_ != '\0') {
+            if (quoteChar_ == '"')
+                boost::replace_all(sc, "\"", "\\\"");
             fputc(quoteChar_, fp_);
+        }
         fprintf(fp_, "%s", sc.c_str());
         if (quoteChar_ != '\0')
             fputc(quoteChar_, fp_);

@@ -520,11 +520,13 @@ void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
 }
 
 void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) {
-    sensitivityStream_ = QuantLib::ext::make_shared<SensitivityFileStream>(fileName);
+    sensitivityStream_ = QuantLib::ext::make_shared<SensitivityFileStream>(
+        fileName, csvSeparator_, csvCommentCharacter_, csvQuoteChar_, csvEscapeChar_);
 }
 
 void InputParameters::setSensitivityStreamFromBuffer(const std::string& buffer) {
-    sensitivityStream_ = QuantLib::ext::make_shared<SensitivityBufferStream>(buffer);
+    sensitivityStream_ = QuantLib::ext::make_shared<SensitivityBufferStream>(
+        buffer, csvSeparator_, csvCommentCharacter_, csvQuoteChar_, csvEscapeChar_);
 }
 
 void InputParameters::setBenchmarkVarPeriod(const std::string& period) { 

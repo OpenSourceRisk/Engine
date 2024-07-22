@@ -852,10 +852,10 @@ protected:
     bool eomInflationFixings_ = true;
     bool useMarketDataFixings_ = true;
     bool iborFallbackOverride_ = false;
-    bool csvCommentCharacter_ = true;
+    char csvCommentCharacter_ = '#';
     char csvEolChar_ = '\n';
     char csvSeparator_ = ',';
-    char csvQuoteChar_ = '"';
+    char csvQuoteChar_ = '\0';
     char csvEscapeChar_ = '\\';
     std::string reportNaString_ = "#N/A";
     bool dryRun_ = false;
