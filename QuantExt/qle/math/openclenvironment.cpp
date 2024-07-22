@@ -1520,6 +1520,9 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             std::vector<SSA::ssa_entry> ssa;
 
             if (initFromValues) {
+
+                // we need to init the v_i that appear on the rhs of the current ssa
+
                 for (auto const i : currentSsa_.rhs_local_id[part]) {
                     ssa.push_back({std::string("v") + std::to_string(i),
                                    i,
@@ -1532,13 +1535,22 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             ssa.insert(ssa.end(), currentSsa_.ssa[part].begin(), currentSsa_.ssa[part].end());
 
             if (cacheToValues) {
+
+                /* we need to cache the v_i that are used in a later ssa part (tmp) _and_ are calculated in
+                   this ssa part (tmp2) */
+
                 std::set<std::size_t> tmp;
                 for (std::size_t p = part + 1; p < currentSsa_.ssa.size(); ++p)
                     tmp.insert(currentSsa_.rhs_local_id[p].begin(), currentSsa_.rhs_local_id[p].end());
+
                 std::set<std::size_t> tmp2;
                 std::set_intersection(tmp.begin(), tmp.end(), currentSsa_.lhs_local_id[part].begin(),
                                       currentSsa_.lhs_local_id[part].end(), std::inserter(tmp2, tmp2.end()));
+
+                // plus we need to cache the args that are used for conditional expectations in this ssa part
+
                 tmp2.insert(currentSsa_.cond_exp_local_id[part].begin(), currentSsa_.cond_exp_local_id[part].end());
+
                 for (auto const i : tmp2) {
                     ssa.push_back(
                         {"values[" + std::to_string(valuesBufferMap.at(i) * size_[currentId_ - 1]) + "UL + i]",
