@@ -214,14 +214,17 @@ private:
         };
         void init();
         void startNewPart();
-        // populate lhs_local_id, rhs_local_id, cond_exp_local_id;
-        void finalize();
         // for each part we have a vector of ssa entries
         std::vector<std::vector<ssa_entry>> ssa;
-        // for each part the union of correpsonding members in the ssa entries
-        std::vector<std::set<std::size_t>> lhs_local_id;
-        std::vector<std::set<std::size_t>> rhs_local_id;
-        std::vector<std::set<std::size_t>> cond_exp_local_id;
+        // populate result variables that can be retrieved frin the following members
+        void finalize();
+        // is this instance finalized?
+        bool finalized = false;
+        // for each part the local vars to load, cache
+        std::vector<std::set<std::size_t>> local_ids_to_load;
+        std::vector<std::set<std::size_t>> local_ids_to_cache;
+        // all local ids that appear in at least on load / cache set
+        std::set<std::size_t> all_ids_load_cache;
     };
 
     // generates new result id v_i, first reuse freed variables, if not possible create new variable
@@ -267,8 +270,6 @@ private:
     std::vector<std::vector<std::vector<std::vector<std::size_t>>>> conditionalExpectationVarIds_;
     std::vector<std::size_t> inputBufferSize_;
     std::vector<std::size_t> nOutputVars_;
-    // for each calc id and each ssa part the value of nVarsTmp (input variables and variates)
-    std::vector<std::vector<std::size_t>> nVars_;
     // for each calc id the value of nVariates
     std::vector<std::size_t> nVariates_;
 
@@ -287,9 +288,7 @@ private:
     std::size_t currentId_ = 0;
     ComputeState currentState_ = ComputeState::idle;
     // counts input variables, input variates, result ids
-    std::size_t nVarsTmp_;
-    // counts input variates
-    std::size_t nVariatesTmp_;
+    std::size_t nVars_;
     Settings settings_;
     // the set of conditional expectation results in the current ssa part
     std::set<std::string> currentConditionalExpectationArgs_;
@@ -616,7 +615,6 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         conditionalExpectationVarIds_.push_back(std::vector<std::vector<std::vector<std::size_t>>>(1));
         inputBufferSize_.push_back(0);
         nOutputVars_.push_back(0);
-        nVars_.push_back(std::vector<std::size_t>());
         nVariates_.push_back(0);
 
         currentId_ = hasKernel_.size();
@@ -637,7 +635,6 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         if (version != version_[id - 1]) {
             hasKernel_[id - 1] = false;
             version_[id - 1] = version;
-            nVars_[id - 1].clear();
             nVariates_[id - 1] = 0;
             releaseKernel(kernel_[id - 1],
                           "kernel id " + std::to_string(id) + " (during initiateCalculation, old version: " +
@@ -654,8 +651,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
 
     // reset variable info
 
-    nVarsTmp_ = 0;
-    nVariatesTmp_ = 0;
+    nVars_ = 0;
 
     inputVarOffset_.clear();
     inputVarIsScalar_.clear();
@@ -680,25 +676,70 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
 
 void OpenClContext::SSA::init() {
     ssa = std::vector<std::vector<ssa_entry>>(1);
-    lhs_local_id.clear();
-    rhs_local_id.clear();
-    cond_exp_local_id.clear();
+    local_ids_to_load.clear();
+    local_ids_to_cache.clear();
+    all_ids_load_cache.clear();
+    finalized = false;
 }
 
 void OpenClContext::SSA::startNewPart() { ssa.push_back(std::vector<ssa_entry>()); }
 
 void OpenClContext::SSA::finalize() {
-    for (auto const& p : ssa) {
-        lhs_local_id.push_back(std::set<std::size_t>());
-        rhs_local_id.push_back(std::set<std::size_t>());
-        cond_exp_local_id.push_back(std::set<std::size_t>());
-        for (auto const& l : p) {
+    QL_REQUIRE(!finalized, "OpenClContext::SSA::finalize(): called twice, this is unexpected.");
+    local_ids_to_load.resize(ssa.size());
+    local_ids_to_cache.resize(ssa.size());
+
+    /* local ids to load in a part > 0: all v's that appear on the rhs in that part without previously
+       been set on the lhs in that same part */
+
+    for (std::size_t part = 1; part < ssa.size(); ++part) {
+        std::set<std::size_t> set_on_lhs;
+        for (auto const& l : ssa[part]) {
+            for (auto const& r : l.rhs_local_id) {
+                if (set_on_lhs.find(r) == set_on_lhs.end())
+                    local_ids_to_load[part].insert(r);
+            }
             if (l.lhs_local_id)
-                lhs_local_id.back().insert(*l.lhs_local_id);
-            rhs_local_id.back().insert(l.rhs_local_id.begin(), l.rhs_local_id.end());
-            cond_exp_local_id.back().insert(l.cond_exp_local_id.begin(), l.cond_exp_local_id.end());
+                set_on_lhs.insert(*l.lhs_local_id);
         }
     }
+
+    /* local ids to cache in a part p ... */
+
+    std::set<std::size_t> loaded_p2;
+    std::set<std::size_t> cached_p1;
+
+    for (int part = static_cast<int>(ssa.size()) - 2; part >= 0; --part) {
+
+        // ... all ids that are loaded in a part m > p, but not cached in a part q, p < m < q
+
+        std::set<std::size_t> cached;
+        std::set<std::size_t> loaded;
+        for (std::size_t m = part + 1; m < ssa.size(); ++m) {
+            std::set<std::size_t> tmp;
+            std::set_difference(local_ids_to_load[m].begin(), local_ids_to_load[m].end(), cached.begin(), cached.end(),
+                                std::inserter(tmp, tmp.end()));
+            local_ids_to_cache[part].insert(tmp.begin(), tmp.end());
+            cached.insert(local_ids_to_cache[m].begin(), local_ids_to_cache[m].end());
+        }
+
+        // ... all ids from conditional expectations in p */
+
+        for (auto const& l : ssa[part]) {
+            local_ids_to_cache[part].insert(l.cond_exp_local_id.begin(), l.cond_exp_local_id.end());
+        }
+    }
+
+    // update all ids set
+
+    for (std::size_t part = 0; part < ssa.size(); ++part) {
+        all_ids_load_cache.insert(local_ids_to_load[part].begin(), local_ids_to_load[part].end());
+        all_ids_load_cache.insert(local_ids_to_cache[part].begin(), local_ids_to_cache[part].end());
+    }
+
+    // mark this instance as finalized
+
+    finalized = true;
 }
 
 std::size_t OpenClContext::createInputVariable(double v) {
@@ -718,7 +759,7 @@ std::size_t OpenClContext::createInputVariable(double v) {
         inputVarValues32_.push_back((float)std::max(std::min(v, (double)std::numeric_limits<float>::max()),
                                                     -(double)std::numeric_limits<float>::max()));
     }
-    return nVarsTmp_++;
+    return nVars_++;
 }
 
 std::size_t OpenClContext::createInputVariable(double* v) {
@@ -739,11 +780,12 @@ std::size_t OpenClContext::createInputVariable(double* v) {
                                                         -(double)std::numeric_limits<float>::max()));
         }
     }
-    return nVarsTmp_++;
+    return nVars_++;
 }
 
 void OpenClContext::updateVariatesPool() {
-    QL_REQUIRE(nVariatesTmp_ > 0, "OpenClContext::updateVariatesPool(): internal error, got nVariatesTmp_ == 0.");
+    QL_REQUIRE(nVariates_[currentId_ - 1] > 0,
+               "OpenClContext::updateVariatesPool(): internal error, got nVariates_[currentId_ -1] == 0.");
 
     constexpr std::size_t size_one = 1; // constant 1
     constexpr std::size_t mt_N = 624;   // mersenne twister N
@@ -863,7 +905,7 @@ void OpenClContext::updateVariatesPool() {
 
         std::string programSource = sourceInvCumN + kernelSourceSeedInit + kernelSourceTwist + kernelSourceGenerate;
 
-        // std::cerr << "generated variates program:\n" + programSource << std::endl;
+        //std::cerr << "generated variates program:\n" + programSource << std::endl;
 
         const char* programSourcePtr = programSource.c_str();
         cl_int err;
@@ -908,7 +950,7 @@ void OpenClContext::updateVariatesPool() {
 
     // if the variates pool is big enough, we exit early
 
-    if (variatesPoolSize_ >= nVariatesTmp_ * size_[currentId_ - 1]) {
+    if (variatesPoolSize_ >= nVariates_[currentId_ - 1] * size_[currentId_ - 1]) {
         if (variatesPoolSize_ == 0)
             clWaitForEvents(1, &initEvent);
         return;
@@ -916,8 +958,8 @@ void OpenClContext::updateVariatesPool() {
 
     // create new buffer to hold the variates and copy the current buffer contents to the new buffer
 
-    Size alignedSize = 624 * (nVariatesTmp_ * size_[currentId_ - 1] / 624 +
-                              (nVariatesTmp_ * size_[currentId_ - 1] % 624 == 0 ? 0 : 1));
+    Size alignedSize = 624 * (nVariates_[currentId_ - 1] * size_[currentId_ - 1] / 624 +
+                              (nVariates_[currentId_ - 1] * size_[currentId_ - 1] % 624 == 0 ? 0 : 1));
 
     cl_int err;
 
@@ -950,7 +992,7 @@ void OpenClContext::updateVariatesPool() {
     std::size_t currentPoolSize;
     cl_event generateEvent;
     bool haveGenerated = false;
-    for (currentPoolSize = variatesPoolSize_; currentPoolSize < nVariatesTmp_ * size_[currentId_ - 1];
+    for (currentPoolSize = variatesPoolSize_; currentPoolSize < nVariates_[currentId_ - 1] * size_[currentId_ - 1];
          currentPoolSize += mt_N) {
         err = clSetKernelArg(variatesKernelTwist_, 0, sizeof(cl_mem), &variatesMtStateBuffer_);
         QL_REQUIRE(err == CL_SUCCESS,
@@ -1004,10 +1046,10 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
     std::vector<std::vector<std::size_t>> resultIds(dim, std::vector<std::size_t>(steps));
     for (std::size_t j = 0; j < steps; ++j) {
         for (std::size_t i = 0; i < dim; ++i) {
-            resultIds[i][j] = nVarsTmp_++;
+            resultIds[i][j] = nVars_++;
         }
     }
-    nVariatesTmp_ += dim * steps;
+    nVariates_[currentId_ - 1] += dim * steps;
     updateVariatesPool();
     return resultIds;
 }
@@ -1018,7 +1060,7 @@ std::size_t OpenClContext::generateResultId() {
         resultId = freedVariables_.back();
         freedVariables_.pop_back();
     } else {
-        resultId = nVarsTmp_++;
+        resultId = nVars_++;
     }
     return resultId;
 }
@@ -1031,7 +1073,7 @@ OpenClContext::getArgString(const std::vector<std::size_t>& args) const {
         if (args[i] < inputVarOffset_.size()) {
             argStr[i] = "input[" + std::to_string(inputVarOffset_[args[i]]) + "UL" +
                         (inputVarIsScalar_[args[i]] ? "]" : " + i]");
-        } else if (args[i] < inputVarOffset_.size() + nVariatesTmp_) {
+        } else if (args[i] < inputVarOffset_.size() + nVariates_[currentId_ - 1]) {
             argStr[i] = "rn[" + std::to_string((args[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) + "UL + i]";
         } else {
             argStr[i] = "v" + std::to_string(args[i]);
@@ -1044,7 +1086,6 @@ OpenClContext::getArgString(const std::vector<std::size_t>& args) const {
 void OpenClContext::startNewSsaPart() {
     currentSsa_.startNewPart();
     conditionalExpectationVarIds_[currentId_ - 1].push_back(std::vector<std::vector<std::size_t>>());
-    nVars_[currentId_ - 1].push_back(nVarsTmp_);
 }
 
 std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode,
@@ -1244,7 +1285,7 @@ void OpenClContext::freeVariable(const std::size_t id) {
 
     // we do not free input variables or variates,  we only free variables that were added during the calc
 
-    if (id < inputVarOffset_.size() + nVariatesTmp_)
+    if (id < inputVarOffset_.size() + nVariates_[currentId_ - 1])
         return;
 
     freedVariables_.push_back(id);
@@ -1287,16 +1328,20 @@ std::string OpenClContext::generateSsaCode(const std::vector<SSA::ssa_entry>& ss
 
     std::string result;
     std::set<std::size_t> hasDeclaration;
+    std::size_t skipped = 0;
 
     for (auto const& s : ssa) {
 
         if (s.lhs_local_id) {
 
             /* if we calculate a local variable v_i that is not appearing on the rhs of any
-               entry in the current ssa part, we skip this line */
+               entry in the current ssa part, we skip this line, note that even a local variable
+               that is only cached for usage in a later part will appear as values[...] = v_i */
 
-            if (localVars.find(*s.lhs_local_id) == localVars.end())
+            if (localVars.find(*s.lhs_local_id) == localVars.end()) {
+                skipped++;
                 continue;
+            }
 
             /* if we already have a declaration for v_i, we don't need to generate a type str */
 
@@ -1310,6 +1355,10 @@ std::string OpenClContext::generateSsaCode(const std::vector<SSA::ssa_entry>& ss
 
         result += s.lhs_str + "=" + s.rhs_str + ";\n";
     }
+
+    // std::cerr << "generate ssa (one part): unique lhs local vars: " << hasDeclaration.size()
+    //           << ", skipped lhs local vars (unused): " << skipped << std::endl;
+
     return result;
 }
 
@@ -1338,72 +1387,41 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                "OpenClContext::finalizeCalculation(): double precision is configured for this calculation, but not "
                "supported by the device. Switch to single precision or use an appropriate device.");
 
-    // update nVars_, nVariates_ for this calculation if it was a new calculation
 
-    if (nVars_[currentId_ - 1].size() < currentSsa_.ssa.size())
-        nVars_[currentId_ - 1].push_back(nVarsTmp_);
+    if (!hasKernel_[currentId_ - 1]) {
 
-    if (nVariates_[currentId_ - 1] == 0)
-        nVariates_[currentId_ - 1] = nVariatesTmp_;
+        // add code to populate the output array
 
-    // add code to populate the output array
-
-    for (std::size_t i = 0; i < nOutputVars_[currentId_ - 1]; ++i) {
-        std::size_t offset = i * size_[currentId_ - 1];
-        std::string output;
-        std::set<std::size_t> rhsLocalIds;
-        if (outputVariables_[i] < inputVarOffset_.size()) {
-            output = "input[" + std::to_string(inputVarOffset_[outputVariables_[i]]) + "UL" +
-                     (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
-        } else if (outputVariables_[i] < inputVarOffset_.size() + nVariates_[currentId_ - 1]) {
-            output = "rn[" + std::to_string((outputVariables_[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) +
-                     "UL + i]";
-        } else {
-            output = "v" + std::to_string(outputVariables_[i]);
-            rhsLocalIds.insert(outputVariables_[i]);
+        for (std::size_t i = 0; i < nOutputVars_[currentId_ - 1]; ++i) {
+            std::size_t offset = i * size_[currentId_ - 1];
+            std::string output;
+            std::set<std::size_t> rhsLocalIds;
+            if (outputVariables_[i] < inputVarOffset_.size()) {
+                output = "input[" + std::to_string(inputVarOffset_[outputVariables_[i]]) + "UL" +
+                         (inputVarIsScalar_[outputVariables_[i]] ? "]" : " + i] ");
+            } else if (outputVariables_[i] < inputVarOffset_.size() + nVariates_[currentId_ - 1]) {
+                output = "rn[" +
+                         std::to_string((outputVariables_[i] - inputVarOffset_.size()) * size_[currentId_ - 1]) +
+                         "UL + i]";
+            } else {
+                output = "v" + std::to_string(outputVariables_[i]);
+                rhsLocalIds.insert(outputVariables_[i]);
+            }
+            currentSsa_.ssa.back().push_back(
+                {"output[" + std::to_string(offset) + "UL + i]", std::nullopt, output, rhsLocalIds, {}});
         }
-        currentSsa_.ssa.back().push_back(
-            {"output[" + std::to_string(offset) + "UL + i]", std::nullopt, output, rhsLocalIds, {}});
+
+        // finalize the ssa
+
+        currentSsa_.finalize();
     }
-
-    // finalize the ssa
-
-    currentSsa_.finalize();
 
     // generate mapping local var id -> offset in the values buffer for multipart ssa
 
     std::map<std::size_t, std::size_t> valuesBufferMap;
     if (currentSsa_.ssa.size() > 1) {
-
-        // collect all v_i that participate in caching to or from values buffer, i.e. those v_i that
-
-        std::set<std::size_t> allIds;
-
-        for (std::size_t part = 0; part < currentSsa_.ssa.size(); ++part) {
-
-           // ... appear on the rhs in part 2, .., n (need to populate from values at start of these ssa parts)
-
-            if (part > 0) {
-                allIds.insert(currentSsa_.rhs_local_id[part].begin(), currentSsa_.rhs_local_id[part].end());
-            }
-
-            if (part < currentSsa_.ssa.size() - 1) {
-
-                // ... or are used in conditional expectations in part 1, ..., n-1 (need to cache to values)
-
-                allIds.insert(currentSsa_.cond_exp_local_id[part].begin(), currentSsa_.cond_exp_local_id[part].end());
-
-                // ... or are calculated in part 1, ..., n-1 and used in a later ssa part (need to cache to values)
-
-                for (std::size_t p = part + 1; p < currentSsa_.ssa.size(); ++p)
-                    allIds.insert(currentSsa_.rhs_local_id[p].begin(), currentSsa_.rhs_local_id[p].end());
-            }
-        }
-
-        // now that we have the v_i we can set up the mapping
-
         std::size_t counter = 0;
-        for (auto const id : allIds)
+        for (auto const id : currentSsa_.all_ids_load_cache)
             valuesBufferMap[id] = counter++;
     }
 
@@ -1520,10 +1538,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             std::vector<SSA::ssa_entry> ssa;
 
             if (initFromValues) {
-
-                // we need to init the v_i that appear on the rhs of the current ssa
-
-                for (auto const i : currentSsa_.rhs_local_id[part]) {
+                for (auto const i : currentSsa_.local_ids_to_load[part]) {
                     ssa.push_back({std::string("v") + std::to_string(i),
                                    i,
                                    std::string("values[") +
@@ -1535,23 +1550,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             ssa.insert(ssa.end(), currentSsa_.ssa[part].begin(), currentSsa_.ssa[part].end());
 
             if (cacheToValues) {
-
-                /* we need to cache the v_i that are used in a later ssa part (tmp) _and_ are calculated in
-                   this ssa part (tmp2) */
-
-                std::set<std::size_t> tmp;
-                for (std::size_t p = part + 1; p < currentSsa_.ssa.size(); ++p)
-                    tmp.insert(currentSsa_.rhs_local_id[p].begin(), currentSsa_.rhs_local_id[p].end());
-
-                std::set<std::size_t> tmp2;
-                std::set_intersection(tmp.begin(), tmp.end(), currentSsa_.lhs_local_id[part].begin(),
-                                      currentSsa_.lhs_local_id[part].end(), std::inserter(tmp2, tmp2.end()));
-
-                // plus we need to cache the args that are used for conditional expectations in this ssa part
-
-                tmp2.insert(currentSsa_.cond_exp_local_id[part].begin(), currentSsa_.cond_exp_local_id[part].end());
-
-                for (auto const i : tmp2) {
+                for (auto const i : currentSsa_.local_ids_to_cache[part]) {
                     ssa.push_back(
                         {"values[" + std::to_string(valuesBufferMap.at(i) * size_[currentId_ - 1]) + "UL + i]",
                          std::nullopt,
@@ -1559,6 +1558,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                          {i}});
                 }
             }
+
+            // std::cerr << "generate ssa code part " << (part + 1) << " of " << currentSsa_.ssa.size() << std::endl;
 
             kernelSource += generateSsaCode(ssa);
             kernelSource += "}}\n";
@@ -1571,6 +1572,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         if (settings_.debug) {
             timerBase = timer.elapsed().wall;
         }
+
+        // std::cerr << "building program (all parts)" << std::endl;
 
         cl_int err;
         const char* kernelSourcePtr = kernelSource.c_str();
@@ -1588,6 +1591,9 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         }
 
         for (std::size_t part = 0; part < currentSsa_.ssa.size(); ++part) {
+
+            // std::cerr << "creating kernel (part " << part + 1 << " of " << currentSsa_.ssa.size() << std::endl;
+
             std::string kernelName = kernelNameStem + std::to_string(part);
             kernel_[currentId_ - 1].push_back(clCreateKernel(program_[currentId_ - 1], kernelName.c_str(), &err));
             QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): error during clCreateKernel(), part #"
@@ -1601,6 +1607,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             debugInfo_.nanoSecondsProgramBuild += timer.elapsed().wall - timerBase;
         }
     } else {
+        // case hasKernel[currentId_ - 1] == true
         QL_REQUIRE(inputBufferSize == inputBufferSize_[currentId_ - 1],
                    "OpenClContext::finalizeCalculation(): input buffer size ("
                        << inputBufferSize << ") inconsistent to kernel input buffer size ("
