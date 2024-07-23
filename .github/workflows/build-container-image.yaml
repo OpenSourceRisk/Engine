@@ -113,7 +113,7 @@ jobs:
           cache-from: ${{ fromJSON(steps.builder-tag-cache-mapper.outputs.result).cache_from }}
           cache-to: ${{ (github.event_name != 'pull_request') && fromJSON(steps.builder-tag-cache-mapper.outputs.result).cache_to || '' }}
 
-      # Run the tests inside the container we just build, saving the results to our workspace
+      # Run the tests inside the container we just built, saving the results to our workspace
       - name: Create test-results folder
         run: mkdir -p test-results
       - name: Get number of CPU cores
