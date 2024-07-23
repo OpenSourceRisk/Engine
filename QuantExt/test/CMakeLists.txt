@@ -85,7 +85,6 @@ stoplightbounds.cpp
 strippedoptionletadapter.cpp
 strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
-swaptionvolatilityconverter.cpp
 swaptionvolconstantspread.cpp
 testsuite.cpp
 transitionmatrix.cpp)

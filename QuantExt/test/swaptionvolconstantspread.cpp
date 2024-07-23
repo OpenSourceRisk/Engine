@@ -19,14 +19,16 @@
 #include "swaptionmarketdata.hpp"
 #include "toplevelfixture.hpp"
 #include "yieldcurvemarketdata.hpp"
-#include <boost/test/unit_test.hpp>
+
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
 
 #include <ql/indexes/swap/euriborswap.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/test/unit_test.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -48,11 +50,6 @@ struct CommonVars {
             conventions.swapIndex->clone(yieldCurves.forward6M, yieldCurves.forward6M);
         QuantLib::ext::shared_ptr<SwapIndex> shortSwapIndex =
             conventions.shortSwapIndex->clone(yieldCurves.forward6M, yieldCurves.forward6M);
-
-        // Create underlying swap conventions
-        swapConventions = QuantLib::ext::make_shared<SwapConventions>(conventions.settlementDays, conventions.fixedTenor,
-                                                              conventions.fixedCalendar, conventions.fixedConvention,
-                                                              conventions.fixedDayCounter, iborIndex);
 
         // Set up the various swaption matrices
         Matrix shiftedAtmVols = atmVols.nVols;
@@ -105,7 +102,6 @@ struct CommonVars {
     SwaptionConventionsEUR conventions;
     SwaptionVolatilityEUR atmVols;
     YieldCurveEUR yieldCurves;
-    QuantLib::ext::shared_ptr<SwapConventions> swapConventions;
     QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmNormalVolMatrix;
     QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmLogNormalVolMatrix;
     QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atmShiftedLogNormalVolMatrix_1;
