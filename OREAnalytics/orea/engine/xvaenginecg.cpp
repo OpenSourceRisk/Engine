@@ -400,7 +400,8 @@ void XvaEngineCG::doForwardEvaluation() {
         opsExternal_ = getExternalRandomVariableOps();
         gradsExternal_ = getExternalRandomVariableGradients();
     } else {
-        ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, bumpCvaSensis_ ? eps : 0.0,
+        ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial,
+                                    (sensitivityData_ && bumpCvaSensis_) ? eps : 0.0,
                                     Null<Real>()); // todo set regression variance cutoff
         grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, eps);
     }
@@ -460,9 +461,9 @@ void XvaEngineCG::doForwardEvaluation() {
 
     if (useExternalComputeDevice_) {
         if (firstRun_) {
-            forwardEvaluation(*g, valuesExternal_, opsExternal_, ExternalRandomVariable::deleter, !bumpCvaSensis_,
-                              opNodeRequirements_, keepNodes_, 0, ComputationGraph::nan, false,
-                              ExternalRandomVariable::preDeleter, rvOpAllowsPredeletion);
+            forwardEvaluation(*g, valuesExternal_, opsExternal_, ExternalRandomVariable::deleter,
+                              !bumpCvaSensis_ && sensitivityData_, opNodeRequirements_, keepNodes_, 0,
+                              ComputationGraph::nan, false, ExternalRandomVariable::preDeleter, rvOpAllowsPredeletion);
             externalOutputNodes_.insert(externalOutputNodes_.end(), pfExposureNodes_.begin(), pfExposureNodes_.end());
             externalOutputNodes_.insert(externalOutputNodes_.end(), asdNumeraire_.begin(), asdNumeraire_.end());
             externalOutputNodes_.insert(externalOutputNodes_.end(), asdFx_.begin(), asdFx_.end());
@@ -481,7 +482,8 @@ void XvaEngineCG::doForwardEvaluation() {
         }
         finalizeExternalCalculation();
     } else {
-        forwardEvaluation(*g, values_, ops_, RandomVariable::deleter, !bumpCvaSensis_, opNodeRequirements_, keepNodes_);
+        forwardEvaluation(*g, values_, ops_, RandomVariable::deleter, !bumpCvaSensis_ && sensitivityData_,
+                          opNodeRequirements_, keepNodes_);
     }
 
     rvMemMax_ = std::max(rvMemMax_, numberOfStochasticRvs(values_) + numberOfStochasticRvs(derivatives_));
