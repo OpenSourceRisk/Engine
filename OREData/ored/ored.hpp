@@ -209,6 +209,7 @@
 #include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/callableswap.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/cashposition.hpp>
 #include <ored/portfolio/cbo.hpp>
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/cliquetoption.hpp>
@@ -407,6 +408,7 @@
 #include <ored/utilities/serializationperiod.hpp>
 #include <ored/utilities/strike.hpp>
 #include <ored/utilities/timeperiod.hpp>
+#include <ored/utilities/timer.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/vectorutils.hpp>
 #include <ored/utilities/wildcard.hpp>

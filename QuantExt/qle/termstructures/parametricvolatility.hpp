@@ -43,7 +43,6 @@ public:
         // not mandatory, used e.g. for swaptions, but not cap / floors
         QuantLib::Real underlyingLength = Null<Real>();
         QuantLib::Real forward;
-        // this is also used as output lognormal shift for lnvol - type model variants
         QuantLib::Real lognormalShift = 0.0;
         // if empty, otm strikes are used
         std::vector<QuantLib::Option::Type> optionTypes;
@@ -65,8 +64,8 @@ public:
 
     /* - if outputOptionType is none, otm strike is used
        - the outputMarketQuoteType must always be given and can be different from input market quote type
-       - if outputLognormalShift is null, the input data = model's lognormal shift is used (only for
-         outputMarketQuoteType = ShiftedLognormalVolatility) */
+       - if outputLognormalShift is null, the model lognormal shift is used (only for
+         outputMarketQuoteType == ShiftedLognormalVolatility) */
     virtual QuantLib::Real
     evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
              const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,

@@ -342,14 +342,14 @@ void BondPositionTrsUnderlyingBuilder::build(
         DLOG("underlying bond position is multi-currency, set assetCurrency to fundingCurrency = " << assetCurrency);
     }
 
-    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxConversion(t->data().underlyings().size());
+    std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxConversion(t->bonds().size());
     std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>> indices;
     bool hasCreditRisk = false;
     for (Size i = 0; i < t->bonds().size(); ++i) {
         // relative index, because weights are supposed to include any amortization factors
 
-        BondIndexBuilder bondIndexBuilder(t->data().underlyings()[i].name(), true, false, 
-            NullCalendar(), true, engineFactory, t->data().underlyings()[i].bidAskAdjustment(), true);
+        BondIndexBuilder bondIndexBuilder(t->bonds()[i].securityId, true, false, 
+            NullCalendar(), true, engineFactory, t->bidAskAdjustments()[i], true);
 
         auto assetCurr = bondIndexBuilder.bond().bondData().currency();
         auto fxIndex = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
@@ -371,12 +371,12 @@ void BondPositionTrsUnderlyingBuilder::build(
             SimmCreditQualifierMapping(t->bonds()[i].securityId, t->bonds()[i].creditGroup);
         hasCreditRisk = hasCreditRisk || t->bonds()[i].hasCreditRisk;
     }
-    for (Size i = 0; i < t->data().underlyings().size(); ++i) {
+    for (Size i = 0; i < t->bonds().size(); ++i) {
         fxConversion[i] = getFxIndex(engineFactory->market(), engineFactory->configuration(MarketContext::pricing),
                                      assetCurrency, t->bonds()[i].currency, fxIndices);
     }
     std::vector<Real> w;
-    for (Size i = 0; i < t->weights().size(); ++i) {
+    for (Size i = 0; i < t->bonds().size(); ++i) {
         w.push_back(t->weights()[i]);
     }
     underlyingIndex =

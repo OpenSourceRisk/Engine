@@ -196,18 +196,19 @@ makeMultiPathGenerator(const SequenceType s, const QuantLib::ext::shared_ptr<Sto
     case MersenneTwisterAntithetic:
         return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, true);
     case Sobol:
-        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorSobol>(process, timeGrid, seed, directionIntegers);
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorSobol>(process, timeGrid, seed,
+                                                                             directionIntegers);
     case Burley2020Sobol:
         return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorBurley2020Sobol>(
             process, timeGrid, seed, directionIntegers, seed == 0 ? 0 : seed + 1);
     case SobolBrownianBridge:
-        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorSobolBrownianBridge>(process, timeGrid, ordering, seed,
-                                                                                   directionIntegers);
+        return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorSobolBrownianBridge>(process, timeGrid, ordering,
+                                                                                           seed, directionIntegers);
     case Burley2020SobolBrownianBridge:
         return QuantLib::ext::make_shared<QuantExt::MultiPathGeneratorBurley2020SobolBrownianBridge>(
             process, timeGrid, ordering, seed, directionIntegers, seed == 0 ? 0 : seed + 1);
     default:
-        QL_FAIL("Unknown sequence type");
+        QL_FAIL("makeMultiPathGenerator(): Unknown sequence type " << static_cast<int>(s));
     }
 }
 
@@ -226,7 +227,7 @@ std::ostream& operator<<(std::ostream& out, const SequenceType s) {
     case Burley2020SobolBrownianBridge:
         return out << "Burley2020SobolBrownianBridge";
     default:
-        return out << "Unknown sequence type";
+        return out << "Unknown sequence type " << static_cast<int>(s);
     }
 }
 

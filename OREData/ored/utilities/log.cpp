@@ -449,7 +449,7 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
 void Log::log(unsigned m) {
     string msg = ls_.str();
     map<string, QuantLib::ext::shared_ptr<Logger>>::iterator it;
-    if (sameSourceLocationSince_ <= sameSourceLocationCutoff_) {
+    if (m >= ORE_DEBUG || sameSourceLocationSince_ <= sameSourceLocationCutoff_) {
         for (auto& l : loggers_) {
             l.second->log(m, msg);
         }
@@ -491,6 +491,7 @@ LoggerStream::~LoggerStream() {
 void JSONMessage::log() const {
     if (!ore::data::Log::instance().checkExcludeFilters(msg()))
         emitLog();
+    logged_ = true;
 }
 
 string JSONMessage::jsonify(const boost::any& obj) {
@@ -617,6 +618,11 @@ void StructuredMessage::addSubFields(const map<string, string>& subFields) {
         }
 
     }
+}
+
+StructuredMessage::~StructuredMessage() {
+    if (!logged_)
+        log();
 }
 
 void EventMessage::emitLog() const {

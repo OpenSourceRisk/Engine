@@ -190,6 +190,8 @@
       <xs:element type="xs:string" name="BaseVolatility2" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
       <xs:element type="extrapolationType" name="SmileExtrapolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="TimeInterpolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="TimeWeighting" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -280,6 +282,8 @@
       <xs:element type="parametricSmileConfig" name="ParametricSmileConfiguration" minOccurs="0"/>
       <xs:element type="xs:string" name="Extrapolation" minOccurs="0"/>
       <xs:element type="xs:string" name="OutputVolatilityType" minOccurs="0"/>
+      <xs:element type="xs:string" name="ModelShift" minOccurs="0"/>
+      <xs:element type="xs:string" name="OutputShift" minOccurs="0"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0"/>
@@ -393,6 +397,9 @@
     </xs:complexType>
       </xs:element>
       <xs:element type="volatilityType" name="VolatilityType" minOccurs="0"/>
+      <xs:element type="volatilityType" name="OutputVolatilityType" minOccurs="0"/>
+      <xs:element type="xs:float" name="ModelShift" minOccurs="0"/>
+      <xs:element type="xs:float" name="OutputShift" minOccurs="0"/>
       <xs:element type="extrapolationType" name="Extrapolation" minOccurs="0"/>
       <xs:element name="InterpolationMethod" minOccurs="0">
         <xs:simpleType>

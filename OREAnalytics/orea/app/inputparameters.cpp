@@ -34,6 +34,25 @@
 namespace ore {
 namespace analytics {
 
+void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p) {
+    if (auto param_N = getenv("PORTFOLIO_SCALE_UP")) {
+        LOG("Scaling up portfolio using factor PORTFOLIO_SCALE_UP = " << param_N << " from environment variables.");
+        std::cerr << "\n\n*** Scaling up portfolio using factor PORTFOLIO_SCALE_UP = " << param_N
+                  << " from environment variables.\n\n"
+                  << std::endl;
+        std::string pfxml = p->toXMLString();
+        p = QuantLib::ext::make_shared<Portfolio>();
+        for (Size i = 0; i < atoi(param_N); ++i) {
+            auto tmp = QuantLib::ext::make_shared<Portfolio>();
+            tmp->fromXMLString(pfxml);
+            for (auto const& [id, t] : tmp->trades()) {
+                t->id() += "_" + std::to_string(i + 1);
+                p->add(t);
+            }
+        }
+    }
+}
+
 vector<string> getFileNames(const string& fileString, const std::filesystem::path& path) {
     vector<string> fileNames;
     boost::split(fileNames, fileString, boost::is_any_of(",;"), boost::token_compress_on);
@@ -105,6 +124,26 @@ void InputParameters::setCurveConfigsFromFile(const std::string& fileName, std::
     curveConfigs_.add(curveConfig, id);
 }
 
+void InputParameters::setCalendarAdjustment(const std::string& xml) {
+    calendarAdjustment_ = QuantLib::ext::make_shared<CalendarAdjustmentConfig>();
+    calendarAdjustment_->fromXMLString(xml);
+}
+
+void InputParameters::setCalendarAdjustmentFromFile(const std::string& fileName) {
+    calendarAdjustment_ = QuantLib::ext::make_shared<CalendarAdjustmentConfig>();
+    calendarAdjustment_->fromFile(fileName);
+}
+
+void InputParameters::setCurrencyConfig(const std::string& xml) {
+    currencyConfig_ = QuantLib::ext::make_shared<CurrencyConfig>();
+    currencyConfig_->fromXMLString(xml);
+}
+
+void InputParameters::setCurrencyConfigFromFile(const std::string& fileName) {
+    currencyConfig_ = QuantLib::ext::make_shared<CurrencyConfig>();
+    currencyConfig_->fromFile(fileName);
+}
+
 void InputParameters::setIborFallbackConfig(const std::string& xml) {
     iborFallbackConfig_= QuantLib::ext::make_shared<IborFallbackConfig>();
     iborFallbackConfig_->fromXMLString(xml);
@@ -138,6 +177,7 @@ void InputParameters::setTodaysMarketParamsFromFile(const std::string& fileName)
 void InputParameters::setPortfolio(const std::string& xml) {
     portfolio_ = QuantLib::ext::make_shared<Portfolio>(buildFailedTrades_);
     portfolio_->fromXMLString(xml);
+    scaleUpPortfolio(portfolio_);
 }
 
 void InputParameters::setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath) {
@@ -147,11 +187,13 @@ void InputParameters::setPortfolioFromFile(const std::string& fileNameString, co
         LOG("Loading portfolio from file: " << file);
         portfolio_->fromFile(file);
     }
+    scaleUpPortfolio(portfolio_);
 }
 
 void InputParameters::setMporPortfolio(const std::string& xml) {
     mporPortfolio_ = QuantLib::ext::make_shared<Portfolio>(buildFailedTrades_);
     mporPortfolio_->fromXMLString(xml);
+    scaleUpPortfolio(mporPortfolio_);
 }
 
 void InputParameters::setMporPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath) {
@@ -161,6 +203,7 @@ void InputParameters::setMporPortfolioFromFile(const std::string& fileNameString
         LOG("Loading mpor portfolio from file: " << file);
         mporPortfolio_->fromFile(file);
     }
+    scaleUpPortfolio(mporPortfolio_);
 }
 
 void InputParameters::setMarketConfigs(const std::map<std::string, std::string>& m) {
@@ -854,7 +897,6 @@ QuantLib::ext::shared_ptr<SimmConfiguration> InputParameters::getSimmConfigurati
                "Internal error, load simm bucket mapper before retrieving simmconfiguration");
     return buildSimmConfiguration(simmVersion(), simmBucketMapper(), simmCalibrationData(), mporDays());
 }
-
 
 } // namespace analytics
 } // namespace ore

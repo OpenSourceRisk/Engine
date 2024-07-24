@@ -168,12 +168,13 @@
       <xs:element type="lapseHedgeSwapData" name="LapseHedgeSwapData"/>
       <xs:element type="knockOutSwapData" name="KnockOutSwapData"/>
       <xs:element type="LPISwapData" name="LPISwapData"/>
+      <xs:element type="cashPositionData" name="CashPositionData"/>
     </xs:choice>
   </xs:group>
 
   <xs:complexType name="envelope">
     <xs:all>
-      <xs:element type="xs:string" name="CounterParty"/>
+      <xs:element type="xs:string" name="CounterParty" minOccurs="0"/>
       <xs:element ref="nettingSetGroup" minOccurs="0"/>
       <xs:element name="PortfolioIds" minOccurs="0">
         <xs:complexType>
@@ -1278,6 +1279,7 @@
       <xs:enumeration value="EquityRainbowOption"/>
       <xs:enumeration value="CommodityRainbowOption"/>
       <xs:enumeration value="KnockOutSwap"/>
+      <xs:enumeration value="CashPosition"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -2170,33 +2172,40 @@
   <xs:complexType name="trsUnderlyingData">
     <xs:sequence>
       <xs:choice maxOccurs="unbounded">
-    <xs:element name="Derivative">
-          <xs:complexType>
-            <xs:sequence>
-          <xs:element type="xs:string" name="Id"/>
-          <xs:element name="Trade">
-        <xs:complexType>
+        <xs:element name="Derivative">
+         <xs:complexType>
           <xs:sequence>
+           <xs:element type="xs:string" name="Id"/>
+           <xs:element name="Trade">
+            <xs:complexType>
+             <xs:sequence>
+              <xs:element type="oreTradeType" name="TradeType"/>
+              <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+              <xs:group ref="oreTradeData"/>
+             </xs:sequence>
+             <xs:attribute type="xs:string" name="id"/>
+            </xs:complexType>
+           </xs:element>
+          </xs:sequence>
+         </xs:complexType>
+        </xs:element>
+        <xs:element name="Trade">
+         <xs:complexType>
+           <xs:sequence>
             <xs:element type="oreTradeType" name="TradeType"/>
             <xs:element type="envelope" name="Envelope" minOccurs="0"/>
             <xs:group ref="oreTradeData"/>
-          </xs:sequence>
+            </xs:sequence>
           <xs:attribute type="xs:string" name="id"/>
-        </xs:complexType>
-          </xs:element>
-        </xs:sequence>
-      </xs:complexType>
-    </xs:element>
-    <xs:element name="Trade">
-      <xs:complexType>
-        <xs:sequence>
-          <xs:element type="oreTradeType" name="TradeType"/>
-          <xs:element type="envelope" name="Envelope" minOccurs="0"/>
-          <xs:group ref="oreTradeData"/>
-        </xs:sequence>
-      <xs:attribute type="xs:string" name="id"/>
-      </xs:complexType>
-    </xs:element>
+         </xs:complexType>
+        </xs:element>
+        <xs:element name="PortfolioIndexTradeData" minOccurs="0">
+         <xs:complexType>
+           <xs:sequence>
+            <xs:element type="xs:string" name="BasketName" minOccurs="1"/>
+           </xs:sequence>
+         </xs:complexType>
+        </xs:element>
       </xs:choice>
     </xs:sequence>
   </xs:complexType>
@@ -4665,6 +4674,13 @@
       <xs:element type="stFreeStyleNumber" name="Floor"/>
       <xs:element type="stFreeStyleNumber" name="Cap"/>
       <xs:element type="stFreeStyleEventSchedule" name="FixingSchedule"/>
+    </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="cashPositionData">
+    <xs:all>
+      <xs:element type="extendedCurrencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Amount"/>
     </xs:all>
   </xs:complexType>
 

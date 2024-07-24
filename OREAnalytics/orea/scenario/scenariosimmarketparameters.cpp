@@ -1540,6 +1540,10 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     DLOG("Loading AggregationScenarioDataSurvivalWeights");
     additionalScenarioDataSurvivalWeights_ = XMLUtils::getChildrenValues(node, "AggregationScenarioDataSurvivalWeights", "Name");
 
+    DLOG("Loading Curve Algebra Data");
+    if (auto tmp = XMLUtils::getChildNode(node, "CurveAlgebra")) {
+        curveAlgebraData_.fromXML(tmp);
+    }
 
     DLOG("Loaded ScenarioSimMarketParameters");
 }
@@ -1991,5 +1995,49 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) const {
 
     return simulationNode;
 }
+
+const std::string& ScenarioSimMarketParameters::CurveAlgebraData::Curve::argument(const std::size_t i) const {
+    QL_REQUIRE(arguments_.size() > i, "CurveAlgebraData::Curve::argument("
+                                          << i << "): no argument for given position. Key is '" << key()
+                                          << ", operationType is " << operationType() << ", number of arguments is "
+                                          << arguments().size());
+    return arguments_[i];
+}
+
+void ScenarioSimMarketParameters::CurveAlgebraData::Curve::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "Curve");
+    key_ = XMLUtils::getChildValue(node, "Key", true);
+    auto op = XMLUtils::getChildNode(node, "Operation");
+    QL_REQUIRE(op, "CurveAlgebraData::Curve::fromXML(): no Operation node for key '" << key_ << "'");
+    operationType_ = XMLUtils::getChildValue(op, "Type", true);
+    arguments_ = XMLUtils::getChildrenValues(op, "Arguments", "Argument", false);
+}
+
+XMLNode* ScenarioSimMarketParameters::CurveAlgebraData::Curve::toXML(ore::data::XMLDocument& doc) const {
+    auto node = doc.allocNode("Curve");
+    XMLUtils::addChild(doc, node, "Key", key_);
+    auto op = doc.allocNode("Operation");
+    XMLUtils::appendNode(node, op);
+    XMLUtils::addChildren(doc, op, "Arguments", "Argument", arguments_);
+    return node;
+}
+
+void ScenarioSimMarketParameters::CurveAlgebraData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "CurveAlgebra");
+    data_.clear();
+    for (auto child = XMLUtils::getChildNode(node); child; child = XMLUtils::getNextSibling(child)) {
+        data_.push_back(Curve());
+        data_.back().fromXML(child);
+    }
+}
+
+XMLNode* ScenarioSimMarketParameters::CurveAlgebraData::toXML(ore::data::XMLDocument& doc) const {
+    auto node = doc.allocNode("CurveAlgebra");
+    for (auto const& d : data_) {
+        XMLUtils::appendNode(node, d.toXML(doc));
+    }
+    return node;
+}
+
 } // namespace analytics
 } // namespace ore

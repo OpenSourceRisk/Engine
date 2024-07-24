@@ -369,6 +369,10 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
                "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
                "(either the instrument wrapper or the ql instrument is null)");
 
+    Date expiry = checkForwardBond(securityId);
+    if (expiry != Date())
+        modifyToForwardBond(expiry, qlBond, engineFactory, referenceData, securityId);
+
     Result res;
     res.bond = qlBond;
 
@@ -383,6 +387,57 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
     res.priceQuoteMethod = data.priceQuoteMethod();
     res.priceQuoteBaseValue = data.priceQuoteBaseValue();
     return res;
+}
+
+Date BondBuilder::checkForwardBond(const std::string& securityId) const {
+
+    // forward bonds shall have a security id of type isin_FWDEXP_expiry
+    vector<string> tokens;
+    boost::split(tokens, securityId, boost::is_any_of("_"));
+
+    // string id = tokens[0];
+    Date expiry = Date();
+    if (tokens.size() == 3) {
+        if (tokens[1] == "FWDEXP") {
+            DLOG("BondBuilder::checkForwardBond : Forward Bond identified " << securityId);
+            expiry = parseDate(tokens[2]);
+        }
+    }
+    return expiry;
+}
+
+void VanillaBondBuilder::modifyToForwardBond(const Date& expiry, boost::shared_ptr<QuantLib::Bond>& bond,
+                                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                                             const std::string& securityId) const {
+
+    DLOG("VanillaBondBuilder::modifyToForwardBond called for " << securityId);
+
+    // truncate legs akin to fwd bond method...
+    Leg modifiedLeg;
+    for (auto& cf : bond->cashflows()) {
+        if (!cf->hasOccurred(expiry))
+            modifiedLeg.push_back(cf);
+    }
+
+    // uses old CTOR, so we can pass the notional flow deduces above, otherwise we get the notional flows twice
+    QuantLib::ext::shared_ptr<QuantLib::Bond> modifiedBond = QuantLib::ext::make_shared<QuantLib::Bond>(
+        bond->settlementDays(), bond->calendar(), 1.0, bond->maturityDate(), bond->issueDate(), modifiedLeg);
+
+    // retrieve additional required information
+    BondData data(securityId, 1.0);
+    data.populateFromBondReferenceData(referenceData);
+
+    // Set pricing engine
+    QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
+    QuantLib::ext::shared_ptr<BondEngineBuilder> bondBuilder =
+        QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
+    QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << securityId);
+    modifiedBond->setPricingEngine(bondBuilder->engine(parseCurrency(data.currency()), data.creditCurveId(),
+                                                       data.hasCreditRisk(), securityId, data.referenceCurveId()));
+
+    // store modified bond
+    bond = modifiedBond;
 }
 
 } // namespace data
