@@ -40,7 +40,7 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
     legs_.clear();
 
     populateFromReferenceData(engineFactory->referenceData());
-    
+
     fxRates_.resize(trades_.size(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)));
     fxRatesNotional_.resize(trades_.size(), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0)));
 
