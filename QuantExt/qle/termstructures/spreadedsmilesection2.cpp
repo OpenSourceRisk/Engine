@@ -70,9 +70,9 @@ Volatility SpreadedSmileSection2::volatilityImpl(Rate strike) const {
     else if (strikesRelativeToAtm_) {
         Real f = atmLevel();
         QL_REQUIRE(f != Null<Real>(), "SpreadedSmileSection2: atm level required");
-        return base_->volatility(effStrike) + volSpreadInterpolation_(strike - f);
+        return std::max(1E-8, base_->volatility(effStrike) + volSpreadInterpolation_(strike - f));
     } else {
-        return base_->volatility(effStrike) + volSpreadInterpolation_(effStrike);
+        return std::max(1E-8, base_->volatility(effStrike) + volSpreadInterpolation_(effStrike));
     }
 }
 
