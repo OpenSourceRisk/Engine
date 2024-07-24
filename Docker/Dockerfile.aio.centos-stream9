@@ -93,4 +93,4 @@ ENV PATH=/ore/bin:$PATH
 # Adjust the locale so 1,000 comma separators are suppressed
 ENV LC_NUMERIC=C
 
-CMD /ore/bin/ore
+ENTRYPOINT ["/ore/bin/ore"]
