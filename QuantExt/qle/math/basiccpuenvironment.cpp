@@ -304,8 +304,6 @@ std::size_t BasicCpuContext::applyOperation(const std::size_t randomVariableOpCo
 }
 
 void BasicCpuContext::freeVariable(const std::size_t id) {
-    QL_REQUIRE(currentState_ == ComputeState::calc,
-               "BasicCpuContext::free(): not in state calc (" << static_cast<int>(currentState_) << ")");
     QL_REQUIRE(currentId_ > 0, "BasicCpuContext::freeVariable(): current id is not set");
     QL_REQUIRE(newCalc_, "BasicCpuContext::freeVariable(): id (" << currentId_ << ") in version "
                                                                  << version_[currentId_ - 1] << " is replayed.");
