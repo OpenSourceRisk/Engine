@@ -1025,6 +1025,7 @@ if (ORE_ENABLE_CUDA)
 	target_link_libraries(${QLE_LIB_NAME} CUDA::cudart)
 	target_link_libraries(${QLE_LIB_NAME} CUDA::nvrtc)
         target_link_libraries(${QLE_LIB_NAME} CUDA::curand)
+	target_link_libraries(${QLE_LIB_NAME} CUDA::cusolver)
 endif()
 
 if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)
