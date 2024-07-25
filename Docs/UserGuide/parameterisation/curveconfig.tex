@@ -74,6 +74,8 @@ Listing \ref{lst:swaptionvol_configuration} shows an example of a Swaption volat
     </ParametricSmileConfiguration>
     <Extrapolation>Flat</Extrapolation>
     <OutputVolatilityType>Normal</OutputVolatilityType>
+    <OutputShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</OutputShift>
+    <ModelShift>0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0</ModelShift>
     <DayCounter>Actual/365 (Fixed)</DayCounter>
     <Calendar>TARGET</Calendar>
     <BusinessDayConvention>Following</BusinessDayConvention>
@@ -112,9 +114,12 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
   parameters. See Example 60 for how to configure single value and termstructures of sabr parameters for swaption and cap curve configs.
 \item Extrapolation: Specifies the extrapolation behaviour in all dimensions. \\ Allowable values: {\tt Linear, Flat,
   None}
-\item OutputVolatilityType: Optional, defaults to input volatility type and applies to SABR variants only. For
-  Interpolation = Linear it must be set to the input VolatilityType or (better) omitted. Possible values: Normal,
-  Lognormal (alias for ShiftedLognormal, shift is always implied from input data), ShiftedLognormal.
+\item OutputVolatilityType: Optional, defaults to input volatility type. Possible values: Normal, Lognormal (alias for
+  ShiftedLognormal, shift is taken from OutputShift if given, or input market data shift. Input market quotes will be
+  converted to output volatility type and shift before building the vol surfaces.
+\item OutputShift: Optional, defaults to input market data shift. Specifies the shift if OutputVolatilityType is
+  Lognormal / ShiftedLognormal
+\item ModelShift: Optional, defaults to input market data shift. Specifies the shift used for SABR model if applicable
 \item DayCounter: The term structure's day counter used in date to time conversions
 \item Calendar: The term structure's calendar used in option tenor to date conversions
 \item BusinessDayConvention: The term structure's business day convention used in option tenor to date conversion

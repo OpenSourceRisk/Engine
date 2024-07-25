@@ -46,7 +46,8 @@ QuantLib::ext::shared_ptr<FloatingRateCouponPricer> FormulaBasedCouponPricerBuil
     auto samples = parseInteger(engineParameters_.at("Samples"));
     auto seed = parseInteger(engineParameters_.at("Seed"));
     auto useSobol = parseBool(engineParameters_.at("Sobol"));
-    SalvagingAlgorithm::Type salvaging = parseSalvagingAlgorithmType(engineParameters_.at("SalvagingAlgorithm"));
+    SalvagingAlgorithm::Type salvaging =
+        parseSalvagingAlgorithmType(engineParameter("SalvagingAlgorithm", {}, false, "Spectral"));
 
     // build fx vol map
     std::map<std::string, Handle<BlackVolTermStructure>> fxVols;
