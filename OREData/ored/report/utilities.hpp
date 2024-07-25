@@ -42,7 +42,7 @@ addColumnsToExisitingReport(const QuantLib::ext::shared_ptr<InMemoryReport>& new
 QuantLib::ext::shared_ptr<InMemoryReport>
 concatenateReports(const std::vector<QuantLib::ext::shared_ptr<InMemoryReport>>& reports);
 
-// flips the rows and columns of a report, using the indexColumn as the new headers - or first column in empty
+// flips the rows and columns of a report, using the indexColumn as the new headers - or first column if empty
 QuantLib::ext::shared_ptr<InMemoryReport> flipReport(const QuantLib::ext::shared_ptr<InMemoryReport>& report,
                                                      const std::string& indexColumn = std::string(),
                                                      const Report::ReportType& rt = string(), Size precision = 0);
