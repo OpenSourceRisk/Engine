@@ -113,12 +113,12 @@ QuantLib::ext::shared_ptr<InMemoryReport> flipReport(const QuantLib::ext::shared
             QL_FAIL("Must be of type string");
     }
 
-    r->next();
     for (Size j = 0; j < report->columns(); j++) {
         if (j == i)
             continue;
 
         auto data = report->data(j);
+        r->next();
         for (const auto& d : data)
             r->add(d);
     }
