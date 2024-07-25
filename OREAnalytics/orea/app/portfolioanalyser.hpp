@@ -71,6 +71,10 @@ public:
     //! Populate a report with the type and name of each risk factor in the portfolio
     //! Report has headers 'RiskFactorType', 'RiskFactorName'
     void riskFactorReport(ore::data::Report& reportOut) const;
+
+    //! Populate a report with the type and name of each market object in the portfolio
+    //! Report has headers 'MarketObjectType', 'MarketObjectName'
+    void marketObjectReport(ore::data::Report& reportOut) const;
     
     //! Return a set of all counterparties 
     std::set<std::string> counterparties() { return counterparties_; }

@@ -64,7 +64,7 @@ public:
 
 class MarketDataLoader {
 public:
-    MarketDataLoader(const QuantLib::ext::shared_ptr<InputParameters>& inputs, QuantLib::ext::shared_ptr<MarketDataLoaderImpl> impl)
+    MarketDataLoader(const QuantLib::ext::shared_ptr<InputParameters>& inputs, QuantLib::ext::shared_ptr<MarketDataLoaderImpl> impl = nullptr)
         : inputs_(inputs), impl_(impl) {
         loader_ = QuantLib::ext::make_shared<ore::data::InMemoryLoader>();
     }

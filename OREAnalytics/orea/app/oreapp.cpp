@@ -2148,6 +2148,11 @@ void OREAppInputParameters::loadParameters() {
             setWriteScenarios(true);
     }
 
+    tmp = params_->get("portfolioDetails", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("PORTFOLIO_DETAILS");               
+    }
+
     if (analytics().size() == 0) {
         insertAnalytic("MARKETDATA");
         setOutputTodaysMarketCalibration(true);
