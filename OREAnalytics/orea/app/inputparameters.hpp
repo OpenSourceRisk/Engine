@@ -852,7 +852,7 @@ protected:
     bool eomInflationFixings_ = true;
     bool useMarketDataFixings_ = true;
     bool iborFallbackOverride_ = false;
-    bool csvCommentCharacter_ = true;
+    char csvCommentCharacter_ = '#';
     char csvEolChar_ = '\n';
     char csvSeparator_ = ',';
     char csvQuoteChar_ = '\0';
@@ -1163,7 +1163,9 @@ private:
     std::string parConversionJacobiInverseFileName_;
     std::string pnlOutputFileName_;
     std::string parStressTestConversionFile_;
-    std::string pnlExplainOutputFileName_;
+    std::string pnlExplainOutputFileName_;    
+    std::string riskFactorsOutputFileName_;
+    std::string marketObjectsOutputFileName_;
     std::string zeroToParShiftFile_;
 };
 
