@@ -44,8 +44,10 @@ std::string ccyStr(const Currency& c) {
 } // namespace
 
 DiscountingBondTRSEngine::DiscountingBondTRSEngine(const Handle<YieldTermStructure>& discountCurve,
-                                                   const bool treatSecuritySpreadAsCreditSpread)
-    : discountCurve_(discountCurve), treatSecuritySpreadAsCreditSpread_(treatSecuritySpreadAsCreditSpread) {
+                                                   const bool treatSecuritySpreadAsCreditSpread,
+                                                   const bool survivalWeightedFundingReturnCashflows)
+    : discountCurve_(discountCurve), treatSecuritySpreadAsCreditSpread_(treatSecuritySpreadAsCreditSpread),
+      survivalWeightedFundingReturnCashflows_(survivalWeightedFundingReturnCashflows) {
     registerWith(discountCurve_);
 }
 
@@ -94,11 +96,14 @@ void DiscountingBondTRSEngine::calculate() const {
 
             // the funding leg payments terminate when the underlying bond defaults
 
-            Real S =
-                (treatSecuritySpreadAsCreditSpread_
-                     ? exp(-bondSpread->value() / (1.0 - recoveryVal) * discountCurve_->timeFromReference(c->date()))
-                     : 1.0) *
-                bondDefaultCurve->survivalProbability(c->date());
+            Real S = 1.0;
+
+            if (survivalWeightedFundingReturnCashflows_) {
+                S = (treatSecuritySpreadAsCreditSpread_ ? exp(-bondSpread->value() / (1.0 - recoveryVal) *
+                                                              discountCurve_->timeFromReference(c->date()))
+                                                        : 1.0) *
+                    bondDefaultCurve->survivalProbability(c->date());
+            }
 
             fundingLeg += c->amount() * discountCurve_->discount(c->date()) * S;
 
@@ -135,10 +140,15 @@ void DiscountingBondTRSEngine::calculate() const {
 
         // the return leg payments terminate when the underlying bond defaults
 
-        Real S = (treatSecuritySpreadAsCreditSpread_
-                      ? exp(-bondSpread->value() / (1.0 - recoveryVal) * discountCurve_->timeFromReference(c->date()))
-                      : 1.0) *
-                 bondDefaultCurve->survivalProbability(c->date());
+        Real S = 1.0;
+
+        if (survivalWeightedFundingReturnCashflows_) {
+            // the bond index itself is not conditional on survival, so here we just take the security spread
+            // into account
+            S = treatSecuritySpreadAsCreditSpread_
+                    ? exp(-bondSpread->value() / (1.0 - recoveryVal) * discountCurve_->timeFromReference(c->date()))
+                    : 1.0;
+        }
 
         returnLeg += c->amount() * discountCurve_->discount(c->date()) * S;
 
