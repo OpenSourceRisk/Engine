@@ -29,6 +29,7 @@
 #include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/pnlexplainanalytic.hpp>
+#include <orea/app/analytics/portfoliodetailsanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/scenariostatisticsanalytic.hpp>
