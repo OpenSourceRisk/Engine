@@ -370,7 +370,7 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                         calibrationInfo_->pillarDates.push_back(pd);
                 }
             } catch (...) {
-                // ...
+                DLOG("Report configuration for yield curves not set - using predefined/default pillar dates.");
             }
 
             calibrationInfo_->dayCounter = zeroDayCounter_.name();
