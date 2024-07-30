@@ -41,9 +41,11 @@ public:
                          const Rounding& rounding, const std::string& formatString, 
                          const std::set<std::string>& minorUnitCodes, Type currencyType = Type::Major);
     Type currencyType() const { return currencyType_; }
+    std::string currencyName() const { return currencyName_; }
 
 private:
     ConfigurableCurrency::Type currencyType_;
+    std::string currencyName_;
 };
 
 std::ostream& operator<<(std::ostream& os, QuantExt::ConfigurableCurrency::Type ccytype);

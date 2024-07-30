@@ -184,5 +184,36 @@ XMLNode* CalendarAdjustmentConfig::toXML(XMLDocument& doc) const {
     return node;
 }
 
+
+const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>&
+InstrumentCalendarAdjustments::calendarAdjustments(QuantLib::Date d) const {
+    QL_REQUIRE(!calendarAdjustments_.empty(), "InstrumentCalendarAdjustments: No calendar adjustments provided.");
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
+    auto it = calendarAdjustments_.lower_bound(dt);
+    if (it != calendarAdjustments_.end() && it->first == dt)
+        return it->second;
+    QL_REQUIRE(it != calendarAdjustments_.begin(),
+               "InstrumentCalendarAdjustments: Could not find calendar adjustments for " << dt);
+    --it;
+    constexpr std::size_t max_num_warnings = 10;
+    if (numberOfEmittedWarnings_ < max_num_warnings) {
+        ++numberOfEmittedWarnings_;
+        WLOG("InstrumentCalendarAdjustments: Could not find calendar adjustments for "
+             << dt << ", using calendar adjustments from " << it->first
+             << (numberOfEmittedWarnings_ == max_num_warnings ? " (no more warnings of this type will be emitted)"
+                                                              : ""));
+    }
+    return it->second;
+}
+
+void InstrumentCalendarAdjustments::setCalendarAdjustments(
+    const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustments,
+                                           QuantLib::Date d) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    calendarAdjustments_[d] = calendarAdjustments;
+}
+
+
 } // namespace data
 } // namespace ore

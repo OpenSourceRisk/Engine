@@ -20,8 +20,10 @@
 #include <orea/engine/observationmode.hpp>
 
 #include <ored/portfolio/scriptedtrade.hpp>
+#include <ored/configuration/currencyconfig.hpp>
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/currencyparser.hpp>
+#include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 
@@ -43,6 +45,8 @@ CleanUpThreadLocalSingletons::~CleanUpThreadLocalSingletons() {
 
 CleanUpThreadGlobalSingletons::~CleanUpThreadGlobalSingletons() {
     ore::data::InstrumentConventions::instance().clear();
+    ore::data::InstrumentCalendarAdjustments::instance().clear();
+    ore::data::InstrumentCurrencyConfigs::instance().clear();
     ore::data::IndexNameTranslator::instance().clear();
     ore::data::CalendarParser::instance().reset();
     ore::data::CurrencyParser::instance().reset();
