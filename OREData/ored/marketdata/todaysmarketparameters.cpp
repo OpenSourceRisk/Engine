@@ -81,6 +81,14 @@ std::ostream& operator<<(std::ostream& out, const MarketObject& o) {
     return out << "Unknown";
 }
 
+MarketObject parseMarketObject(const std::string& mo) {
+    for (Size i = 0; i < marketObjectData.size(); i++) {
+        if (marketObjectData[i].name == mo)
+            return marketObjectData[i].obj;
+    }
+    QL_FAIL("Failed to parse market object " << mo);
+}
+
 std::set<MarketObject> getMarketObjectTypes() {
     thread_local static std::set<MarketObject> result;
     if (result.empty()) {
@@ -179,7 +187,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                         auto mp =
                             XMLUtils::getChildrenAttributesAndValues(n, marketObjectData[i].xmlSingleName.first,
                                                                      marketObjectData[i].xmlSingleName.second, false);
-			// deprecated attribute currency for capfloor vols and swaption vols
+                        // deprecated attribute currency for capfloor vols and swaption vols
                         if (marketObjectData[i].obj == MarketObject::CapFloorVol ||
                             marketObjectData[i].obj == MarketObject::SwaptionVol) {
                             auto mp2 = XMLUtils::getChildrenAttributesAndValues(
@@ -343,7 +351,7 @@ map<string, string>& TodaysMarketParameters::mappingReference(const MarketObject
         if (it2 != it->second.end()) {
             return it2->second;
         } else {
-	    return it->second[marketObjectId(o, configuration)];
+	        return it->second[marketObjectId(o, configuration)];
         }
     } else {
         return marketObjects_[o][marketObjectId(o, configuration)];
