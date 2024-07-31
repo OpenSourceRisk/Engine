@@ -1,0 +1,92 @@
+/*
+ Copyright (C) 2024 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+/*! \file qle/math/gpucodegenerator.hpp
+    \brief gpu code generator utilities
+*/
+
+#pragma once
+
+namespace QuantExt {
+
+class GpuCodeGenerator {
+public:
+    enum class VarType { input, rn, local };
+    GpuCodeGenerator(const std::size_t nInputVars, const std::vector<bool> inputVarIsScalar,
+                     const std::size_t nVariates, const std::size_t modelSize, const bool doublePrecision);
+
+    std::size_t applyOperation(const std::size_t randomVariableOpCode, const std::vector<std::size_t>& args);
+    void freeVariable(const std::size_t id);
+
+    void finalize();
+
+    const std::string& sourceCode() const { return sourceCode_; }
+    const std::vector<std::string>& kernelNames() const { return kernelNames_; }
+    const std::vector<std::vector<std::vector<std::size_t>>>& conditionalExpectationVars() const {
+        return conditionalExpectationVars_;
+    }
+
+    std::size_t nInputVars() const { return nInputVars_; }
+    const std::vector<bool>& inputVarIsScalar() const { return inputVarIsScalar_; }
+    std::size_t nVariates() const { return nVariates_; }
+    std::size_t nLocalVars() const { return nLocalVars_; }
+
+private:
+    struct Operation {
+        std::pair<VarType, std::size_t> lhs;
+        std::vector<std::pair<VarType, std::size_t>> rhs;
+        std::size_t randomVariableOpCode;
+    };
+
+    std::pair<VarType, std::size_t> getVar(const std::size_t id) const;
+    std::string getVarStr(const std::pair<VarType, const std::size_t>& var) const;
+    std::size_t getId(const std::pair<VarType, const std::size_t>& var) const;
+    std::size_t generateResultId();
+
+    void generateBoilerplateCode();
+    void determineKernelBreakLines();
+    void generateKernelStartCode();
+    void generateKernelEndCode();
+    void generateOperationCode(const Operation& op);
+
+    // inputs
+    std::size_t nInputVars_;
+    std::vector<bool> inputVarIsScalar_;
+    std::size_t nVariates_;
+    std::size_t modelSize_;
+    bool doublePrecision_;
+
+    // global state
+    std::string fpTypeStr_;
+    std::string fpEpsStr_;
+    std::string fpSuffix_;
+
+    // state during op application
+    std::size_t nLocalVars_ = 0;
+    std::vector<Operation> ops_;
+    std::vector<std::size_t> freedVariables_;
+
+    // state / result of finalize()
+    std::size_t currentKernelNo_;
+    std::vector<std::size_t> kernelBreakLines_;
+    std::string sourceCode_;
+    std::vector<std::string> kernelNames_;
+    std::vector<std::vector<std::vector<std::size_t>>> conditionalExpectationVars_;
+};
+
+} // namespace QuantExt
