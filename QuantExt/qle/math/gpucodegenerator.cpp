@@ -23,13 +23,37 @@
 
 namespace QuantExt {
 
-GpuCodeGenerator::GpuCodeGenerator(const std::size_t nInputVars, const std::vector<bool> inputVarIsScalar,
-                                   const std::size_t nVariates, const std::size_t modelSize, const bool doublePrecision)
-    : nInputVars_(nInputVars), inputVarIsScalar_(inputVarIsScalar), nVariates_(nVariates), modelSize_(modelSize),
-      doublePrecision_(doublePrecision) {
+void GpuCodeGenerator::initialize(const std::size_t nInputVars, const std::vector<bool> inputVarIsScalar,
+                                  const std::size_t nVariates, const std::size_t modelSize,
+                                  const bool doublePrecision) {
+
+    nInputVars_ = nInputVars;
+    inputVarIsScalar_ = inputVarIsScalar;
+    nVariates_ = nVariates;
+    modelSize_ = modelSize;
+    doublePrecision_ = doublePrecision;
+
     fpTypeStr_ = doublePrecision_ ? "double" : "float";
     fpEpsStr_ = doublePrecision_ ? "0x1.0p-52" : "0x1.0p-23f";
     fpSuffix_ = doublePrecision_ ? std::string() : "f";
+
+    nLocalVars_ = 0;
+    ops_.clear();
+    freedVariables_.clear();
+    currentKernelNo_ = 0;
+    kernelBreakLines_.clear();
+    kernelBreakLines_.push_back(0);
+    conditionalExpectationVars_.clear();
+    conditionalExpectationVars_.push_back({});
+    sourceCode_.clear();
+    kernelNames_.clear();
+
+    inputVarOffset_.clear();
+    std::size_t offset = 0;
+    for (std::size_t i = 0; i < nInputVars_; ++i) {
+        inputVarOffset_.push_back(offset);
+        offset += inputVarIsScalar_[i] ? 1 : modelSize_;
+    }
 }
 
 std::size_t GpuCodeGenerator::generateResultId() {
@@ -54,7 +78,7 @@ std::pair<GpuCodeGenerator::VarType, std::size_t> GpuCodeGenerator::getVar(const
 
 std::string GpuCodeGenerator::getVarStr(const std::pair<VarType, const std::size_t>& var) const {
     if (var.first == VarType::input)
-        return "input[" + std::to_string(var.second * modelSize_) + "UL + i]";
+        return "input[" + std::to_string(inputVarOffset_[var.second]) + "UL + i]";
     else if (var.first == VarType::rn)
         return "rn[" + std::to_string(var.second * modelSize_) + "UL + i]";
     else if (var.first == VarType::local)
@@ -127,14 +151,6 @@ void GpuCodeGenerator::generateBoilerplateCode() {
 }
 
 void GpuCodeGenerator::determineKernelBreakLines() {
-
-    // init state of this function
-
-    kernelBreakLines_.clear();
-    conditionalExpectationVars_.clear();
-
-    kernelBreakLines_.push_back(0);
-    conditionalExpectationVars_.push_back({});
 
     /* process conditional expectations and
        - generate resulting break lines

@@ -27,9 +27,9 @@ namespace QuantExt {
 class GpuCodeGenerator {
 public:
     enum class VarType { input, rn, local };
-    GpuCodeGenerator(const std::size_t nInputVars, const std::vector<bool> inputVarIsScalar,
-                     const std::size_t nVariates, const std::size_t modelSize, const bool doublePrecision);
 
+    void initialize(const std::size_t nInputVars, const std::vector<bool> inputVarIsScalar, const std::size_t nVariates,
+                    const std::size_t modelSize, const bool doublePrecision);
     std::size_t applyOperation(const std::size_t randomVariableOpCode, const std::vector<std::size_t>& args);
     void freeVariable(const std::size_t id);
 
@@ -46,6 +46,8 @@ public:
     std::size_t nVariates() const { return nVariates_; }
     std::size_t nLocalVars() const { return nLocalVars_; }
 
+    std::pair<VarType, std::size_t> getVar(const std::size_t id) const;
+
 private:
     struct Operation {
         std::pair<VarType, std::size_t> lhs;
@@ -53,7 +55,6 @@ private:
         std::size_t randomVariableOpCode;
     };
 
-    std::pair<VarType, std::size_t> getVar(const std::size_t id) const;
     std::string getVarStr(const std::pair<VarType, const std::size_t>& var) const;
     std::size_t getId(const std::pair<VarType, const std::size_t>& var) const;
     std::size_t generateResultId();
@@ -75,9 +76,10 @@ private:
     std::string fpTypeStr_;
     std::string fpEpsStr_;
     std::string fpSuffix_;
+    std::vector<std::size_t> inputVarOffset_;
 
     // state during op application
-    std::size_t nLocalVars_ = 0;
+    std::size_t nLocalVars_;
     std::vector<Operation> ops_;
     std::vector<std::size_t> freedVariables_;
 
