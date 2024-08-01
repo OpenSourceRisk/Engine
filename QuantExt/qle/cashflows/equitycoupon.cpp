@@ -295,7 +295,7 @@ EquityLeg::operator Leg() const {
             // a) Compute quantity from notional and initial price
             // b) If initial price is missing, leave quantity undefined here:
             //    The coupon will compute it from legInitialNotional=notional and legFixingDate
-            QL_REQUIRE(!notionals_.empty(), "EquityLeg: can not compute qunantity, since no notional is given");
+            QL_REQUIRE(!notionals_.empty(), "EquityLeg: can not compute quantity, since no notional is given");
             QL_REQUIRE(fxIndex_ == nullptr || initialPriceIsInTargetCcy_,
                            "EquityLeg: can not compute quantity from nominal when fx conversion is required");
             notional = notionals_.front();

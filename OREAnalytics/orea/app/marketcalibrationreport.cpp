@@ -85,8 +85,14 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
         if (todaysMarketParams->hasMarketObject(MarketObject::IndexCurve)) {
             for (auto it : todaysMarketParams->mapping(MarketObject::IndexCurve, Market::defaultConfiguration)) {
                 auto yts = calibrationInfo->yieldCurveCalibrationInfo.find(it.second);
-                if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
-                    addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label);
+                try {
+                    auto index = market->iborIndex(it.first);
+                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
+                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label, index);
+                } catch (...) {
+                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
+                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label);
+                }
             }
         }
     }
@@ -171,7 +177,8 @@ const bool MarketCalibrationReport::checkCalibrations(string label, string type,
 
 void MarketCalibrationReport::addYieldCurve(const QuantLib::Date& refdate,
                                             QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> info,
-                                            const std::string& id, bool isDiscount, const std::string& label) {
+                                            const std::string& id, bool isDiscount, const std::string& label,
+                                            QuantLib::Handle<QuantLib::IborIndex> iborIndex) {
     if (info == nullptr)
         return;
 
@@ -179,7 +186,7 @@ void MarketCalibrationReport::addYieldCurve(const QuantLib::Date& refdate,
 
     // check if we have already processed this curve
     if (checkCalibrations(label, yieldStr, id)) {
-        DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
+        LOG("Skipping curve " << id << " for label " << label << " as it has already been added");
         return;
     }
 
@@ -192,6 +199,9 @@ void MarketCalibrationReport::addYieldCurve(const QuantLib::Date& refdate,
         addRowReport(yieldStr, id, "time", key1, "", "", info->times.at(i));
         addRowReport(yieldStr, id, "zeroRate", key1, "", "", info->zeroRates.at(i));
         addRowReport(yieldStr, id, "discountFactor", key1, "", "", info->discountFactors.at(i));
+        if (!iborIndex.empty())
+            addRowReport(yieldStr, id, "forwardRate", key1, "", "",
+                         iborIndex->fixing(iborIndex->fixingCalendar().adjust(info->pillarDates[i], Preceding)));
     }
 
     // fitted bond curve results
