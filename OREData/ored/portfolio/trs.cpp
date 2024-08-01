@@ -151,6 +151,12 @@ XMLNode* TRS::AdditionalCashflowData::toXML(XMLDocument& doc) const {
 std::map<AssetClass, std::set<std::string>>
 TRS::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
+    if (!portfolioId_.empty()) {
+        std::cout << portfolioId_ << std::endl;
+        AssetClass test;
+        test = parseAssetClass("PORTFOLIO_DETAILS");
+        result[test].insert(portfolioId_);
+    }
     for (Size i = 0; i < underlying_.size(); ++i) {
         QL_REQUIRE(underlying_[i], "TRS::underlyingIndices(): underlying trade is null");
         // a builder might update the underlying (e.g. promote it from bond to convertible bond)
