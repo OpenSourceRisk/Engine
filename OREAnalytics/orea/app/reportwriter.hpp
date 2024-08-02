@@ -143,14 +143,14 @@ public:
     */
     virtual void
     writeSIMMReport(const std::map<SimmConfiguration::SimmSide,
-                                   std::map<NettingSetDetails, std::pair<std::string, SimmResults>>>& simmResultsMap,
+                       std::map<NettingSetDetails, std::pair<CrifRecord::Regulation, SimmResults>>>& simmResultsMap,
                     const QuantLib::ext::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
                     const std::string& simmResultCcy = "", const std::string& simmCalcCcyCall = "",
                     const std::string& simmCalcCcyPost = "", const std::string& reportCcy = "",
                     QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
     virtual void
     writeSIMMReport(const std::map<SimmConfiguration::SimmSide,
-                                   std::map<NettingSetDetails, std::map<std::string, SimmResults>>>& simmResultsMap,
+                       std::map<NettingSetDetails, std::map<CrifRecord::Regulation, SimmResults>>>& simmResultsMap,
                     const QuantLib::ext::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
                     const std::string& simmResultCcy = "", const std::string& simmCalcCcyCall = "",
                     const std::string& simmCalcCcyPost = "", const std::string& reportCcy = "",
@@ -196,7 +196,7 @@ public:
 
     virtual void writeIMScheduleSummaryReport(
         const std::map<SimmConfiguration::SimmSide,
-                       std::map<NettingSetDetails, std::pair<std::string, IMScheduleResults>>>& finalResultsMap,
+                       std::map<NettingSetDetails, std::pair<CrifRecord::Regulation, IMScheduleResults>>>& finalResultsMap,
         const QuantLib::ext::shared_ptr<Report> report, const bool hasNettingSetDetails = false,
         const std::string& simmResultCcy = "", const std::string& reportCcy = "", QuantLib::Real fxSpot = 1.0,
         QuantLib::Real outputThreshold = 0.005);

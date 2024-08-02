@@ -21,6 +21,7 @@
 */
 
 #pragma once
+#include <boost/multi_index/detail/hash_index_iterator.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <ored/report/report.hpp>
 #include <ored/marketdata/market.hpp>
@@ -124,13 +125,11 @@ private:
     void addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
                            bool sortFxVolQualifer = true, bool aggregateOnRegulations = true);
     void addSimmParameterRecord(const CrifRecord& record);
-    void updateAmountExistingRecord(CrifRecordContainer::iterator& it, const CrifRecord& record);
-    //void updateAmountExistingRecord(std::map<CrifRecord::SimmAmountCcyKey, const CrifRecord*>::iterator& it, const CrifRecord& record);
+    void updateAmountExistingRecord(CrifRecordContainer::nth_index_iterator<0>::type it, const CrifRecord& record);
 
 
     CrifType type_ = CrifType::Empty;
     CrifRecordContainer records_;
-    //std::map<CrifRecord::SimmAmountCcyKey, const CrifRecord*> diffAmountCurrenciesIndex_;
 
     //SIMM members
     //! Set of portfolio IDs that have been loaded

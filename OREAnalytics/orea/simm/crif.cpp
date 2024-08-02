@@ -112,7 +112,7 @@ void Crif::addSimmParameterRecord(const CrifRecord& record) {
     }
 }
 
-void Crif::updateAmountExistingRecord(CrifRecordContainer::iterator& it, const CrifRecord& record) {
+void Crif::updateAmountExistingRecord(CrifRecordContainer::nth_index_iterator<0>::type it, const CrifRecord& record) {
     bool updated = false;
     if (record.hasAmountUsd()) {
         it->amountUsd += record.amountUsd;

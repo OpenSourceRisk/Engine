@@ -28,8 +28,7 @@
 #include <string>
 #include <variant>
 #include <boost/multi_index/identity.hpp>
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
 
@@ -127,6 +126,40 @@ struct CrifRecord {
         All
     };
 
+    enum class IMModel {
+        Schedule,
+        SIMM,
+        SIMM_R, // Equivalent to SIMM
+        SIMM_P  // Equivalent to SIMM
+    };
+
+    //! SIMM regulators
+    enum class Regulation {
+        APRA,
+        CFTC,
+        ESA,
+        FINMA,
+        KFSC,
+        HKMA,
+        JFSA,
+        MAS,
+        OSFI,
+        RBI,
+        SEC,
+        SEC_unseg,
+        USPR,
+        NONREG,
+        BACEN,
+        SANT,
+        SFC,
+        UK,
+        AMFQ,
+        Included,
+        Unspecified,
+        Excluded,
+        Invalid
+    };
+
     //! There are two entries for curvature risk in frtb, a up and down shift
     enum class CurvatureScenario { Empty, Up, Down };
 
@@ -155,8 +188,8 @@ struct CrifRecord {
     std::string legalEntityId;
     NettingSetDetails nettingSetDetails; // consists of the above: agreementType ... legalEntityId
     mutable std::string imModel;
-    mutable std::string collectRegulations;
-    mutable std::string postRegulations;
+    mutable std::set<Regulation> collectRegulations;
+    mutable std::set<Regulation> postRegulations;
     std::string endDate;
 
     // frtb fields
@@ -177,16 +210,14 @@ struct CrifRecord {
                ProductClass productClass, RiskType riskType,
                std::string qualifier, std::string bucket, std::string label1, std::string label2,
                std::string amountCurrency, QuantLib::Real amount, QuantLib::Real amountUsd, std::string imModel = "",
-               std::string collectRegulations = "", std::string postRegulations = "", std::string endDate = "",
+               std::set<Regulation> collectRegulations = {}, std::set<Regulation> postRegulations = {}, std::string endDate = "",
                std::map<std::string, std::string> extraFields = {})
         : tradeId(tradeId), portfolioId(nettingSetDetails.nettingSetId()),
           productClass(productClass), riskType(riskType), qualifier(qualifier),
           bucket(bucket), label1(label1), label2(label2), amountCurrency(amountCurrency), amount(amount),
           amountUsd(amountUsd), tradeType(tradeType), nettingSetDetails(nettingSetDetails), imModel(imModel),
           collectRegulations(collectRegulations), postRegulations(postRegulations), endDate(endDate) {
-        for (const auto& [key, value] : extraFields) {
-            additionalFields[key] = value;
-        }
+        additionalFields.insert(extraFields.begin(), extraFields.end());
     }
 
     RecordType type() const;
@@ -299,7 +330,7 @@ struct CrifRecord {
         }
     }
 
-    static bool amountCcyLTCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
+    inline static bool amountCcyLTCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
         if (cr1.type() == RecordType::FRTB || cr2.type() == RecordType::FRTB) {
             return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
                             cr1.bucket, cr1.label1, cr1.label2, cr1.label3, cr1.endDate, cr1.creditQuality,
@@ -317,7 +348,7 @@ struct CrifRecord {
         }
     }
 
-    static bool amountCcyRegsLTCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
+    inline static bool amountCcyRegsLTCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
         if (cr1.type() == RecordType::FRTB || cr2.type() == RecordType::FRTB) {
             return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
                             cr1.bucket, cr1.label1, cr1.label2, cr1.label3, cr1.endDate, cr1.creditQuality,
@@ -349,7 +380,7 @@ struct CrifRecord {
                             cr.label1, cr.label2, cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
         }
     }
-    static bool amountCcyEQCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
+    inline static bool amountCcyEQCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
         if (cr1.type() == RecordType::FRTB || cr2.type() == RecordType::FRTB) {
             return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
                             cr1.bucket, cr1.label1, cr1.label2, cr1.label3, cr1.endDate, cr1.creditQuality,
@@ -377,6 +408,12 @@ std::ostream& operator<<(std::ostream& out, const CrifRecord::RiskType& rt);
 
 std::ostream& operator<<(std::ostream& out, const CrifRecord::ProductClass& pc);
 
+std::ostream& operator<<(std::ostream& out, const CrifRecord::IMModel& model);
+
+std::ostream& operator<<(std::ostream& out, const CrifRecord::Regulation& regulation);
+
+std::ostream& operator<<(std::ostream& out, const std::set<CrifRecord::Regulation>& regulation);
+
 std::ostream& operator<<(std::ostream& out, const CrifRecord::CurvatureScenario& scenario);
 
 CrifRecord::RiskType parseRiskType(const std::string& rt);
@@ -385,6 +422,34 @@ CrifRecord::ProductClass parseProductClass(const std::string& pc);
 
 CrifRecord::CurvatureScenario parseFrtbCurvatureScenario(const std::string& scenario);
 
+CrifRecord::IMModel parseIMModel(const std::string& pc);
+
+CrifRecord::Regulation parseRegulation(const std::string& regulation);
+
+std::string combineRegulations(const std::string&, const std::string&);
+
+//! Reads a string containing regulations applicable for a given CRIF record
+std::set<CrifRecord::Regulation> parseRegulationString(const std::string& regsString,
+                                                       const std::set<CrifRecord::Regulation>& valueIfEmpty = {});
+
+//! Cleans a string defining regulations so that different permutations of the same set will
+//! be seen as the same string, e.g. "APRA,SEC,ESA" and "SEC,ESA,APRA" should be equivalent.
+//std::string sortRegulationString(const std::string& regsString);
+
+//! Removes a given vector of regulations from a string of regulations and returns a string with the regulations removed
+std::set<CrifRecord::Regulation> removeRegulations(const std::set<CrifRecord::Regulation>& regs,
+                                                   const std::set<CrifRecord::Regulation>& regsToRemove);
+
+//! Filters a string of regulations on a given vector of regulations and returns a string containing only those filtered
+//! regulations
+std::set<CrifRecord::Regulation> filterRegulations(const std::set<CrifRecord::Regulation>& regs,
+                                                   const std::set<CrifRecord::Regulation>& regsToFilter);
+
+//! From a vector of regulations, determine the winning regulation based on order of priority
+CrifRecord::Regulation getWinningRegulation(const std::set<CrifRecord::Regulation>& winningRegulations);
+
+std::string regulationsToString(const std::set<CrifRecord::Regulation>& regs);
+
 /*! A structure that we can use to aggregate CrifRecords across trades in a portfolio
     to provide the net sensitivities that we need to perform a downstream SIMM calculation.
 */
@@ -392,7 +457,7 @@ CrifRecord::CurvatureScenario parseFrtbCurvatureScenario(const std::string& scen
 typedef boost::multi_index_container<CrifRecord,
     boost::multi_index::indexed_by<
         // The CRIF record itself and its '<' operator define a unique index
-        boost::multi_index::ordered_unique<boost::multi_index::identity<CrifRecord>>
+        boost::multi_index::ordered_non_unique<boost::multi_index::identity<CrifRecord>>
     >
 >
     CrifRecordContainer;

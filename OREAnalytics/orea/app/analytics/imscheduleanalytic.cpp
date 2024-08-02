@@ -35,25 +35,16 @@ void IMScheduleAnalytic::loadCrifRecords(const QuantLib::ext::shared_ptr<ore::da
     hasNettingSetDetails_ = crif_.hasNettingSetDetails();
 
     // Keep record of which netting sets have SEC and CFTC
-    map<string, bool> hasSECCache, hasCFTCCache;
     for (const CrifRecord& cr : crif_) {
         const NettingSetDetails& nsd = cr.nettingSetDetails;
 
         for (const SimmConfiguration::SimmSide& side : {SimmConfiguration::SimmSide::Call, SimmConfiguration::SimmSide::Post}) {
-            const string& crifRegs = side == SimmConfiguration::SimmSide::Call ? cr.collectRegulations : cr.postRegulations;
-            for (const string& reg : {"SEC", "CFTC"}) {
-                map<string, bool>& regCache = reg == "SEC" ? hasSECCache : hasCFTCCache;
-                auto& hasRegMap = reg == "SEC" ? hasSEC_ : hasCFTC_;
+            const set<CrifRecord::Regulation>& crifRegs = side == SimmConfiguration::SimmSide::Call ? cr.collectRegulations : cr.postRegulations;
+            for (const auto& reg : {CrifRecord::Regulation::SEC, CrifRecord::Regulation::CFTC}) {
+                auto& hasRegMap = reg == CrifRecord::Regulation::SEC ? hasSEC_ : hasCFTC_;
 
                 if (hasRegMap[side].find(nsd) == hasRegMap[side].end()) {
-                    bool hasReg = false;
-                    if (regCache.find(crifRegs) != regCache.end()) {
-                        hasReg = regCache.at(crifRegs);
-                    } else {
-                        set<string> regs = parseRegulationString(crifRegs);
-                        hasReg = regs.find(reg) != regs.end();
-                        regCache[crifRegs] = hasReg;
-                    }
+                    bool hasReg = crifRegs.find(reg) != crifRegs.end();
                     if (hasReg)
                         hasRegMap[side].insert(nsd);
                 }

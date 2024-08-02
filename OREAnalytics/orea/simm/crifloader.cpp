@@ -436,8 +436,8 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
         cr.legalEntityId = loadOptionalString(14);
         cr.nettingSetDetails = NettingSetDetails(cr.portfolioId, cr. agreementType, cr.callType, cr.initialMarginType,
                                                  cr.legalEntityId);
-        cr.postRegulations = loadOptionalString(17);
-        cr.collectRegulations = loadOptionalString(18);
+        cr.postRegulations = parseRegulationString(loadOptionalString(17));
+        cr.collectRegulations = parseRegulationString(loadOptionalString(18));
         cr.endDate = loadOptionalString(19);
         cr.label3 = loadOptionalString(20);
         cr.creditQuality = loadOptionalString(21);

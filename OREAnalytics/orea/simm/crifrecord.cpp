@@ -26,6 +26,7 @@ namespace analytics {
 
 using std::ostream;
 using std::string;
+using std::vector;
 
 // Following bimaps ease the conversion from enum to string and back
 // It also puts in one place a mapping from string to enum value
@@ -100,6 +101,23 @@ const bm<CrifRecord::ProductClass> productClassMap = boost::assign::list_of<bm<C
     CrifRecord::ProductClass::All, "All")(CrifRecord::ProductClass::AddOnNotionalFactor, "AddOnNotionalFactor")(
     CrifRecord::ProductClass::AddOnFixedAmount, "AddOnFixedAmount");
 
+const bm<CrifRecord::IMModel> imModelMap = boost::assign::list_of<bm<CrifRecord::IMModel>::value_type>(
+    CrifRecord::IMModel::Schedule, "Schedule")(CrifRecord::IMModel::SIMM, "SIMM")(
+    CrifRecord::IMModel::SIMM_P, "SIMM-P")(CrifRecord::IMModel::SIMM_R, "SIMM-R");
+
+const bm<CrifRecord::Regulation> regulationsMap = boost::assign::list_of<bm<CrifRecord::Regulation>::value_type>(
+    CrifRecord::Regulation::APRA, "APRA")(CrifRecord::Regulation::CFTC, "CFTC")(
+    CrifRecord::Regulation::ESA, "ESA")(CrifRecord::Regulation::FINMA, "FINMA")(
+    CrifRecord::Regulation::KFSC, "KFSC")(CrifRecord::Regulation::HKMA, "HKMA")(
+    CrifRecord::Regulation::JFSA, "JFSA")(CrifRecord::Regulation::MAS, "MAS")(
+    CrifRecord::Regulation::OSFI, "OSFI")(CrifRecord::Regulation::RBI, "RBI")(
+    CrifRecord::Regulation::SEC, "SEC")(CrifRecord::Regulation::SEC_unseg, "SEC-unseg")(
+    CrifRecord::Regulation::USPR, "USPR")(CrifRecord::Regulation::NONREG, "NONREG")(
+    CrifRecord::Regulation::BACEN, "BACEN")(CrifRecord::Regulation::SANT, "SANT")(
+    CrifRecord::Regulation::SFC, "SFC")(CrifRecord::Regulation::UK, "UK")(
+    CrifRecord::Regulation::AMFQ, "AMFQ")(CrifRecord::Regulation::Included, "Included")(
+    CrifRecord::Regulation::Unspecified, "Unspecified")(CrifRecord::Regulation::Excluded, "Excluded")(
+    CrifRecord::Regulation::Invalid, "Invalid");
 
 ostream& operator<<(ostream& out, const CrifRecord::RiskType& rt) {
     QL_REQUIRE(riskTypeMap.left.count(rt) > 0,
@@ -113,6 +131,109 @@ ostream& operator<<(ostream& out, const CrifRecord::ProductClass& pc) {
     return out << productClassMap.left.at(pc);
 }
 
+ostream& operator<<(ostream& out, const CrifRecord::IMModel& model) {
+    QL_REQUIRE(imModelMap.left.count(model) > 0, "Product class not a valid CrifRecord::IMModel");
+    if (model == CrifRecord::IMModel::SIMM_P || model == CrifRecord::IMModel::SIMM_R)
+        return out << "SIMM";
+    else
+        return out << imModelMap.left.at(model);
+}
+
+ostream& operator<<(ostream& out, const CrifRecord::Regulation& regulation) {
+    QL_REQUIRE(regulationsMap.left.count(regulation) > 0, "Product class not a valid CrifRecord::Regulation");
+    return out << regulationsMap.left.at(regulation);
+}
+
+CrifRecord::IMModel parseIMModel(const string& model) {
+    for (auto it = imModelMap.right.begin(); it != imModelMap.right.end(); it++) {
+        if (boost::to_lower_copy(model) == boost::to_lower_copy(it->first))
+            return it->second;
+    }
+
+    // If we reach this point, then the IM modelprovided was not found
+    QL_FAIL("IM model string " << model << " does not correspond to a valid CrifRecord::IMModel");
+}
+
+CrifRecord::Regulation parseRegulation(const string& regulation) {
+    if (regulationsMap.right.count(regulation) == 0) {
+        return CrifRecord::Regulation::Invalid;
+    } else {
+        return regulationsMap.right.at(regulation);
+    }
+}
+
+string combineRegulations(const string& regs1, const string& regs2) {
+    if (regs1.empty())
+        return regs2;
+    if (regs2.empty())
+        return regs1;
+
+    return regs1 + ',' + regs2;
+}
+
+set<CrifRecord::Regulation> parseRegulationString(const string& regsString,
+                                                  const set<CrifRecord::Regulation>& valueIfEmpty) {
+    set<CrifRecord::Regulation> regs;
+
+    // "," is a delimiter; "[" and "]" are possible characters, but are not needed in processing
+    set<string> regNamesStr;
+    boost::split(regNamesStr, regsString, boost::is_any_of(",[] "));
+
+    // Remove any resultant blank strings
+    for (auto it = regNamesStr.begin(); it != regNamesStr.end();) {
+        if (it->empty())
+            it = regNamesStr.erase(it);
+        else
+            it++;
+    }
+
+    // Trim whitepsaces then parse into CrifRecord::Regulation
+    std::transform(regNamesStr.begin(), regNamesStr.end(), std::inserter(regs, regs.end()),
+                   [](const string& reg) { return parseRegulation(boost::trim_copy(reg)); });
+
+    // If no (valid) regulations provided, we fall back to the default regulation
+    if (regs.empty())
+        return valueIfEmpty;
+    else
+        return regs;
+}
+
+set<CrifRecord::Regulation> removeRegulations(const set<CrifRecord::Regulation>& regs,
+                                              const set<CrifRecord::Regulation>& regsToRemove) {
+
+    set<CrifRecord::Regulation> newRegs;
+
+    std::copy_if(regs.begin(), regs.end(), std::inserter(newRegs, newRegs.end()),
+                 [&regsToRemove](const CrifRecord::Regulation& reg) { return regsToRemove.find(reg) == regsToRemove.end(); });
+
+    return newRegs;
+}
+
+set<CrifRecord::Regulation> filterRegulations(const set<CrifRecord::Regulation>& regs,
+                                              const set<CrifRecord::Regulation>& regsToFilter) {
+    set<CrifRecord::Regulation> newRegs;
+
+    std::copy_if(regs.begin(), regs.end(), std::inserter(newRegs, newRegs.end()),
+                 [&regsToFilter](const CrifRecord::Regulation& reg) { return regsToFilter.find(reg) != regsToFilter.end(); });
+
+    return newRegs;
+}
+
+string regulationsToString(const set<CrifRecord::Regulation>& regs) {
+    set<string> regsStrSet;
+
+    // Transforming into a set first lets us maintain lexicographical ordering in our regulation lists,
+    // instead of the default ordering defined by the CrifRecord::Regulation enum
+    std::transform(regs.begin(), regs.end(), std::inserter(regsStrSet, regsStrSet.end()),
+                   [](const CrifRecord::Regulation& reg) { return ore::data::to_string(reg); });
+
+    return boost::algorithm::join(regsStrSet, ",");
+}
+
+CrifRecord::Regulation getWinningRegulation(const set<CrifRecord::Regulation>& winningRegulations) {
+    QL_REQUIRE(!winningRegulations.empty(), "getWinningRegulation(): Input set is empty.");
+    return *winningRegulations.begin();
+}
 
 CrifRecord::RiskType parseRiskType(const string& rt) {
     for (auto it = riskTypeMap.right.begin(); it != riskTypeMap.right.end(); it++) {
@@ -159,8 +280,8 @@ CrifRecord::CurvatureScenario parseFrtbCurvatureScenario(const std::string& scen
     }
 }
 
-std::vector<std::set<std::string>> CrifRecord::additionalHeaders = {};
-    
+vector<std::set<std::string>> CrifRecord::additionalHeaders = {};
+
 ostream& operator<<(ostream& out, const CrifRecord& cr) {
     const NettingSetDetails& n = cr.nettingSetDetails;
     if (n.empty()) {
@@ -182,6 +303,8 @@ ostream& operator<<(ostream& out, const CrifRecord& cr) {
 
     return out;
 }
+
+ostream& operator<<(ostream& out, const set<CrifRecord::Regulation>& regs) { return out << regulationsToString(regs); }
 
 CrifRecord::RecordType CrifRecord::type() const {
     switch (riskType) {
