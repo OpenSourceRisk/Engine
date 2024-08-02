@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/math/gpucodegenerator.hpp>
 #include <qle/math/openclenvironment.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
@@ -199,43 +200,6 @@ public:
     const DebugInfo& debugInfo() const override final;
 
 private:
-    struct SSA {
-
-        struct ssa_entry {
-            enum class var_type { input, rn, local_var, output, value };
-            using var = std::pair<var_type, std::size_t>;
-            // the lhs of the assignment
-            var lhs;
-            // the rhs of the assignment "v1 op1 v2 op2 v3"
-            std::vector<var> rhs;
-            std::string op;
-            bool infix;
-            // the local vars used for conditional expectation
-            std::set<std::size_t> cond_exp_local_id;
-        };
-        void init();
-        void startNewPart();
-        // for each part we have a vector of ssa entries
-        std::vector<std::vector<ssa_entry>> ssa;
-        // populate result variables that can be retrieved frin the following members
-        void finalize();
-        // is this instance finalized?
-        bool finalized = false;
-        // for each part the local vars to load, cache
-        std::vector<std::set<std::size_t>> local_ids_to_load;
-        std::vector<std::set<std::size_t>> local_ids_to_cache;
-        // all local ids that appear in at least on load / cache set
-        std::set<std::size_t> all_ids_load_cache;
-    };
-
-    // generates new result id v_i, first reuse freed variables, if not possible create new variable
-    std::size_t generateResultId();
-
-    std::vector<OpenClContext::SSA::ssa_entry::var> getArgVars(const std::vector<std::size_t>& args) const;
-    std::string getVarString(const OpenClContext::SSA::ssa_entry::var v) const;
-    void startNewSsaPart();
-    std::string generateSsaCode(const std::vector<SSA::ssa_entry>& ssa) const;
-
     void updateVariatesPool();
 
     void runHealthChecks();
@@ -268,12 +232,7 @@ private:
     std::vector<std::size_t> version_;
     std::vector<cl_program> program_;
     std::vector<std::vector<cl_kernel>> kernel_;
-    // for each calc id and each ssa part and each cond exp calc the vector of cond exp arguments
-    std::vector<std::vector<std::vector<std::vector<SSA::ssa_entry::var>>>> conditionalExpectationVarIds_;
-    std::vector<std::size_t> inputBufferSize_;
-    std::vector<std::size_t> nOutputVars_;
-    // for each calc id the value of nVariates
-    std::vector<std::size_t> nVariates_;
+    std::vector<GpuCodeGenerator> gpuCodeGenerator_;
 
     // 1b variates (shared pool of mersenne twister based normal variates)
 
@@ -289,24 +248,15 @@ private:
 
     std::size_t currentId_ = 0;
     ComputeState currentState_ = ComputeState::idle;
-    // counts input variables, input variates, result ids
+    std::size_t nVariates_;
     std::size_t nVars_;
     Settings settings_;
-    // the set of conditional expectation results in the current ssa part
-    std::set<SSA::ssa_entry::var> currentConditionalExpectationArgs_;
 
     // 2a indexed by var id
     std::vector<std::size_t> inputVarOffset_;
     std::vector<bool> inputVarIsScalar_;
     std::vector<float> inputVarValues32_;
     std::vector<double> inputVarValues64_;
-
-    // 2b collection of variable ids
-    std::vector<std::size_t> freedVariables_;
-    std::vector<std::size_t> outputVariables_;
-
-    // 2d kernel ssa
-    SSA currentSsa_;
 };
 
 bool OpenClFramework::initialized_ = false;
@@ -614,10 +564,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         version_.push_back(version);
         program_.push_back(cl_program());
         kernel_.push_back(std::vector<cl_kernel>());
-        conditionalExpectationVarIds_.push_back(std::vector<std::vector<std::vector<SSA::ssa_entry::var>>>(1));
-        inputBufferSize_.push_back(0);
-        nOutputVars_.push_back(0);
-        nVariates_.push_back(0);
+        gpuCodeGenerator_.push_back({});
 
         currentId_ = hasKernel_.size();
         newCalc = true;
@@ -637,11 +584,9 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         if (version != version_[id - 1]) {
             hasKernel_[id - 1] = false;
             version_[id - 1] = version;
-            nVariates_[id - 1] = 0;
             releaseKernel(kernel_[id - 1],
                           "kernel id " + std::to_string(id) + " (during initiateCalculation, old version: " +
                               std::to_string(version_[id - 1]) + ", new version:" + std::to_string(version) + ")");
-            conditionalExpectationVarIds_[id - 1] = std::vector<std::vector<std::vector<SSA::ssa_entry::var>>>(1);
             releaseProgram(program_[id - 1],
                            "program id " + std::to_string(id) + " (during initiateCalculation, old version: " +
                                std::to_string(version_[id - 1]) + ", new version:" + std::to_string(version) + ")");
@@ -654,18 +599,12 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
     // reset variable info
 
     nVars_ = 0;
+    nVariates_ = 0;
 
     inputVarOffset_.clear();
     inputVarIsScalar_.clear();
     inputVarValues32_.clear();
     inputVarValues64_.clear();
-
-    if (newCalc) {
-        freedVariables_.clear();
-        outputVariables_.clear();
-        currentSsa_.init();
-        currentConditionalExpectationArgs_.clear();
-    }
 
     // set state
 
@@ -674,82 +613,6 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
     // return calc id
 
     return std::make_pair(currentId_, newCalc);
-}
-
-void OpenClContext::SSA::init() {
-    ssa = std::vector<std::vector<ssa_entry>>(1);
-    local_ids_to_load.clear();
-    local_ids_to_cache.clear();
-    all_ids_load_cache.clear();
-    finalized = false;
-}
-
-void OpenClContext::SSA::startNewPart() { ssa.push_back(std::vector<ssa_entry>()); }
-
-void OpenClContext::SSA::finalize() {
-    QL_REQUIRE(!finalized, "OpenClContext::SSA::finalize(): called twice, this is unexpected.");
-
-    local_ids_to_load.resize(ssa.size());
-    local_ids_to_cache.resize(ssa.size());
-
-    /* local ids to load in a part > 0: all v's that appear on the rhs in that part without previously
-       been set on the lhs in that same part */
-
-    for (std::size_t part = 1; part < ssa.size(); ++part) {
-        std::set<std::size_t> set_on_lhs;
-        for (auto const& l : ssa[part]) {
-            for (auto const& [t, id] : l.rhs) {
-                if (t == ssa_entry::var_type::local_var && set_on_lhs.find(id) == set_on_lhs.end())
-                    local_ids_to_load[part].insert(id);
-            }
-            if (l.lhs.first == ssa_entry::var_type::local_var)
-                set_on_lhs.insert(l.lhs.second);
-        }
-        std::cerr << "part" << part << " added " << local_ids_to_load[part].size()
-                  << " variables to load because not previously set" << std::endl;
-    }
-
-    /* local ids to cache in a part p ... */
-
-    std::set<std::size_t> loaded_p2;
-    std::set<std::size_t> cached_p1;
-
-    for (int part = static_cast<int>(ssa.size()) - 2; part >= 0; --part) {
-
-        // ... all ids that are loaded in a part m > p, but not cached in a part q, p < m < q
-
-        std::set<std::size_t> cached;
-        std::set<std::size_t> loaded;
-        for (std::size_t m = part + 1; m < ssa.size(); ++m) {
-            std::set<std::size_t> tmp;
-            std::set_difference(local_ids_to_load[m].begin(), local_ids_to_load[m].end(), cached.begin(), cached.end(),
-                                std::inserter(tmp, tmp.end()));
-            local_ids_to_cache[part].insert(tmp.begin(), tmp.end());
-            cached.insert(local_ids_to_cache[m].begin(), local_ids_to_cache[m].end());
-        }
-
-        std::cerr << "part " << part << " added " << local_ids_to_cache[part].size()
-                  << " variables to cache because they are loaded later" << std::endl;
-
-        // ... all ids from conditional expectations in p */
-
-        for (auto const& l : ssa[part]) {
-            local_ids_to_cache[part].insert(l.cond_exp_local_id.begin(), l.cond_exp_local_id.end());
-        }
-
-        std::cerr << "part " << part << " after adding cond exp: " << local_ids_to_cache[part].size() << std::endl;
-    }
-
-    // update all ids set
-
-    for (std::size_t part = 0; part < ssa.size(); ++part) {
-        all_ids_load_cache.insert(local_ids_to_load[part].begin(), local_ids_to_load[part].end());
-        all_ids_load_cache.insert(local_ids_to_cache[part].begin(), local_ids_to_cache[part].end());
-    }
-
-    // mark this instance as finalized
-
-    finalized = true;
 }
 
 std::size_t OpenClContext::createInputVariable(double v) {
@@ -794,8 +657,7 @@ std::size_t OpenClContext::createInputVariable(double* v) {
 }
 
 void OpenClContext::updateVariatesPool() {
-    QL_REQUIRE(nVariates_[currentId_ - 1] > 0,
-               "OpenClContext::updateVariatesPool(): internal error, got nVariates_[currentId_ -1] == 0.");
+    QL_REQUIRE(nVariates_ > 0, "OpenClContext::updateVariatesPool(): internal error, got nVariates_ == 0.");
 
     constexpr std::size_t size_one = 1; // constant 1
     constexpr std::size_t mt_N = 624;   // mersenne twister N
@@ -960,7 +822,7 @@ void OpenClContext::updateVariatesPool() {
 
     // if the variates pool is big enough, we exit early
 
-    if (variatesPoolSize_ >= nVariates_[currentId_ - 1] * size_[currentId_ - 1]) {
+    if (variatesPoolSize_ >= nVariates_ * size_[currentId_ - 1]) {
         if (variatesPoolSize_ == 0)
             clWaitForEvents(1, &initEvent);
         return;
@@ -968,8 +830,8 @@ void OpenClContext::updateVariatesPool() {
 
     // create new buffer to hold the variates and copy the current buffer contents to the new buffer
 
-    Size alignedSize = 624 * (nVariates_[currentId_ - 1] * size_[currentId_ - 1] / 624 +
-                              (nVariates_[currentId_ - 1] * size_[currentId_ - 1] % 624 == 0 ? 0 : 1));
+    Size alignedSize =
+        624 * (nVariates_ * size_[currentId_ - 1] / 624 + (nVariates_ * size_[currentId_ - 1] % 624 == 0 ? 0 : 1));
 
     cl_int err;
 
@@ -1002,7 +864,7 @@ void OpenClContext::updateVariatesPool() {
     std::size_t currentPoolSize;
     cl_event generateEvent;
     bool haveGenerated = false;
-    for (currentPoolSize = variatesPoolSize_; currentPoolSize < nVariates_[currentId_ - 1] * size_[currentId_ - 1];
+    for (currentPoolSize = variatesPoolSize_; currentPoolSize < nVariates_ * size_[currentId_ - 1];
          currentPoolSize += mt_N) {
         err = clSetKernelArg(variatesKernelTwist_, 0, sizeof(cl_mem), &variatesMtStateBuffer_);
         QL_REQUIRE(err == CL_SUCCESS,
@@ -1059,56 +921,9 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
             resultIds[i][j] = nVars_++;
         }
     }
-    nVariates_[currentId_ - 1] += dim * steps;
+    nVariates_ += dim * steps;
     updateVariatesPool();
     return resultIds;
-}
-
-std::size_t OpenClContext::generateResultId() {
-    std::size_t resultId;
-    if (!freedVariables_.empty()) {
-        resultId = freedVariables_.back();
-        freedVariables_.pop_back();
-    } else {
-        resultId = nVars_++;
-    }
-    return resultId;
-}
-
-std::vector<OpenClContext::SSA::ssa_entry::var> OpenClContext::getArgVars(const std::vector<std::size_t>& args) const {
-    std::vector<SSA::ssa_entry::var> argVars(args.size());
-    for (std::size_t i = 0; i < args.size(); ++i) {
-        if (args[i] < inputVarOffset_.size()) {
-            argVars[i] = {SSA::ssa_entry::var_type::input, args[i]};
-        } else if (args[i] < inputVarOffset_.size() + nVariates_[currentId_ - 1]) {
-            argVars[i] = {SSA::ssa_entry::var_type::rn, args[i] - inputVarOffset_.size()};
-        } else {
-            argVars[i] = {SSA::ssa_entry::var_type::local_var, args[i]};
-        }
-    }
-    return argVars;
-}
-
-std::string OpenClContext::getVarString(const OpenClContext::SSA::ssa_entry::var v) const {
-    if (v.first == SSA::ssa_entry::var_type::input) {
-        return "input[" + std::to_string(inputVarOffset_[v.second]) + "UL" +
-               (inputVarIsScalar_[v.second] ? "]" : " + i]");
-    } else if (v.first == SSA::ssa_entry::var_type::output) {
-        return "output[" + std::to_string(v.second * size_[currentId_ - 1]) + "UL +i]";
-    } else if (v.first == SSA::ssa_entry::var_type::rn) {
-        return "rn[" + std::to_string((v.second - inputVarOffset_.size()) * size_[currentId_ - 1]) + "UL + i]";
-    } else if (v.first == SSA::ssa_entry::var_type::local_var) {
-        return "v" + std::to_string(v.second);
-    } else if (v.first == SSA::ssa_entry::var_type::value) {
-        return "local[" + std::to_string(v.second * size_[currentId_ - 1]) + "UL + i]";
-    } else {
-        QL_FAIL("OpenClContext::getVarString(): var type (" << static_cast<int>(v.first) << ") not handled.");
-    }
-}
-
-void OpenClContext::startNewSsaPart() {
-    currentSsa_.startNewPart();
-    conditionalExpectationVarIds_[currentId_ - 1].push_back(std::vector<std::vector<SSA::ssa_entry::var>>());
 }
 
 std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode,
@@ -1122,146 +937,12 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
     QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::applyOperation(): id (" << currentId_ << ") in version "
                                                                                     << version_[currentId_ - 1]
                                                                                     << " has a kernel already.");
-    std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
 
-    auto argVars = getArgVars(args);
+    if (!gpuCodeGenerator_[currentId_ - 1].initialized())
+        gpuCodeGenerator_[currentId_ - 1].initialize(inputVarIsScalar_.size(), inputVarIsScalar_, nVariates_,
+                                                     size_[currentId_ - 1], settings_.useDoublePrecision);
 
-    /* if the result of the op depends on a conditional expectation which is calculated in the current ssa part
-       we have to start a new ssa part to make sure that conditional expectation is actually calculated */
-
-    if (std::find_if(argVars.begin(), argVars.end(), [this](const SSA::ssa_entry::var& v) {
-            return currentConditionalExpectationArgs_.find(v) != currentConditionalExpectationArgs_.end();
-        }) != argVars.end()) {
-        startNewSsaPart();
-        currentConditionalExpectationArgs_.clear();
-    }
-
-    if (randomVariableOpCode == RandomVariableOpCode::ConditionalExpectation) {
-
-        /* we have
-
-           condExp( value, filter, regressor1, regressor2, ..., regressorn )
-
-           from which we generate
-
-           v_i       = 0;         // placeholder for result
-           v_{i+1}   = filter;
-           v_{i+2}   = regressor1;
-           ...
-           v_{i+1+n} = regressorn;
-        */
-
-        std::vector<SSA::ssa_entry::var> argIds;
-        std::set<std::size_t> condExpLocalIds;
-        for (std::size_t i = 0; i < argVars.size() + 1; ++i) {
-            argIds.push_back({SSA::ssa_entry::var_type::local_var, generateResultId()});
-            condExpLocalIds.insert(argIds.back().second);
-        }
-
-        currentSsa_.ssa.back().push_back({argIds[0], {}, std::string(), false, condExpLocalIds});
-
-        for (std::size_t i = 0; i < argIds.size() + 1; ++i) {
-            currentSsa_.ssa.back().push_back({argIds[i], {argVars[i]}, std::string(), false, condExpLocalIds});
-        }
-
-        // add v_i, this is used above to start a new ssa part
-        currentConditionalExpectationArgs_.insert(argIds[0]);
-        // add v_i, ..., v_{i+1+n} which is used in finalizeCalculation() to update v_i between ssa parts
-        conditionalExpectationVarIds_[currentId_ - 1].back().push_back(argIds);
-
-        return argIds[0].second;
-
-    } else {
-
-        // op code is everythig but conditional expectation (i.e. a pathwise operation)
-
-        SSA::ssa_entry::var result{SSA::ssa_entry::var_type::local_var, generateResultId()};
-
-        switch (randomVariableOpCode) {
-        case RandomVariableOpCode::None: {
-            break;
-        }
-        case RandomVariableOpCode::Add: {
-            currentSsa_.ssa.back().push_back({result, argVars, "+", true, {}});
-            break;
-        }
-        case RandomVariableOpCode::Subtract: {
-            currentSsa_.ssa.back().push_back({result, argVars, "-", true, {}});
-            break;
-        }
-        case RandomVariableOpCode::Negative: {
-            currentSsa_.ssa.back().push_back({result, argVars, "-", false, {}});
-            break;
-        }
-        case RandomVariableOpCode::Mult: {
-            currentSsa_.ssa.back().push_back({result, argVars, "*", true, {}});
-            break;
-        }
-        case RandomVariableOpCode::Div: {
-            currentSsa_.ssa.back().push_back({result, argVars, "/", false, {}});
-            break;
-        }
-        case RandomVariableOpCode::IndicatorEq: {
-            currentSsa_.ssa.back().push_back({result, argVars, "ore_indicatorEq", false, {}});
-            break;
-        }
-        case RandomVariableOpCode::IndicatorGt: {
-            currentSsa_.ssa.back().push_back({result, argVars, "ore_indicatorGt", false, {}});
-            break;
-        }
-        case RandomVariableOpCode::IndicatorGeq: {
-            currentSsa_.ssa.back().push_back({result, argVars, "ore_indicatorGeq", false, {}});
-            break;
-        }
-        case RandomVariableOpCode::Min: {
-            currentSsa_.ssa.back().push_back({result, argVars, "fmin", false, {}});
-            break;
-        }
-        case RandomVariableOpCode::Max: {
-            currentSsa_.ssa.back().push_back({result, argVars, "fmax", false, {}});
-            break;
-        }
-        case RandomVariableOpCode::Abs: {
-            currentSsa_.ssa.back().push_back({result, argVars, "fabs", false, {}});
-            break;
-        }
-        case RandomVariableOpCode::Exp: {
-            currentSsa_.ssa.back().push_back({result, argVars, "exp", false, {}});
-            break;
-        }
-        case RandomVariableOpCode::Sqrt: {
-            currentSsa_.ssa.back().push_back({result, argVars, "sqrt", false, {}});
-            break;
-        }
-        case RandomVariableOpCode::Log: {
-            currentSsa_.ssa.back().push_back({result, argVars, "log", false, {}});
-            break;
-        }
-        case RandomVariableOpCode::Pow: {
-            currentSsa_.ssa.back().push_back({result, argVars, "pow", false, {}});
-            break;
-        }
-        // TODO add this in the kernel code below first before activating it here
-        case RandomVariableOpCode::NormalCdf: {
-            currentSsa_.ssa.back().push_back({result, argVars, "ore_normalCdf", false, {}});
-            break;
-        }
-        case RandomVariableOpCode::NormalPdf: {
-            currentSsa_.ssa.back().push_back({result, argVars, "ore_normalPdf", false, {}});
-            break;
-        }
-        default: {
-            QL_FAIL("OpenClContext::executeKernel(): no implementation for op code "
-                    << randomVariableOpCode << " (" << getRandomVariableOpLabels()[randomVariableOpCode]
-                    << ") provided.");
-        }
-        } // switch random var op code
-
-        if (settings_.debug)
-            debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
-
-        return result.second;
-    }
+    return gpuCodeGenerator_[currentId_ - 1].applyOperation(randomVariableOpCode, args);
 }
 
 void OpenClContext::freeVariable(const std::size_t id) {
@@ -1269,13 +950,7 @@ void OpenClContext::freeVariable(const std::size_t id) {
     QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::freeVariable(): id ("
                                                 << currentId_ << ") in version " << version_[currentId_ - 1]
                                                 << " has a kernel already, variables can not be freed.");
-
-    // we do not free input variables or variates,  we only free variables that were added during the calc
-
-    if (id < inputVarOffset_.size() + nVariates_[currentId_ - 1])
-        return;
-
-    freedVariables_.push_back(id);
+    gpuCodeGenerator_[currentId_ - 1].freeVariable(id);
 }
 
 void OpenClContext::declareOutputVariable(const std::size_t id) {
@@ -1285,95 +960,7 @@ void OpenClContext::declareOutputVariable(const std::size_t id) {
                                                 << currentId_ << ") in version " << version_[currentId_ - 1]
                                                 << " has a kernel already, output variables can not be declared.");
     currentState_ = ComputeState::declareOutput;
-    outputVariables_.push_back(id);
-    nOutputVars_[currentId_ - 1]++;
-
-    /* if we declare a conditional expectation in the current ssa part as output, we need to create a new ssa part
-       to make sure that this conditional expectation can be calculated before written to output */
-    if (currentConditionalExpectationArgs_.find({SSA::ssa_entry::var_type::local_var, id}) !=
-        currentConditionalExpectationArgs_.end()) {
-        startNewSsaPart();
-        currentConditionalExpectationArgs_.clear();
-    }
-}
-
-std::string OpenClContext::generateSsaCode(const std::vector<SSA::ssa_entry>& ssa) const {
-
-    // generate ssa code for one part of the ssa
-
-    // collect all local vars appearing on the rhs of an entry in the ssa part we are processing here
-
-    std::set<std::size_t> localVars;
-    for (auto const& s : ssa) {
-        for (auto const& [t, id] : s.rhs) {
-            if (t == SSA::ssa_entry::var_type::local_var)
-                localVars.insert(id);
-        }
-    }
-
-    // the type str to use
-
-    std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
-
-    // loop over the entries of the ssa part we are processing
-
-    std::string result;
-    std::set<std::size_t> hasDeclaration;
-    std::size_t skipped = 0;
-
-    for (auto const& s : ssa) {
-
-        if (s.lhs.first == SSA::ssa_entry::var_type::local_var) {
-
-            /* if we calculate a local variable v_i that is not appearing on the rhs of any
-               entry in the current ssa part, we skip this line, note that even a local variable
-               that is only cached for usage in a later part will appear as values[...] = v_i */
-
-            if (localVars.find(s.lhs.second) == localVars.end()) {
-                skipped++;
-                continue;
-            }
-
-            /* if we already have a declaration for v_i, we don't need to generate a type str */
-
-            if (hasDeclaration.find(s.lhs.second) == hasDeclaration.end()) {
-                result += fpTypeStr + " ";
-                hasDeclaration.insert(s.lhs.second);
-            }
-        }
-
-        // generate the basic assignment lhs = rhs
-
-        std::string rhsString = "0.0";
-        if (!s.rhs.empty()) {
-            std::vector<std::string> rhsVarStrings;
-            std::transform(s.rhs.begin(), s.rhs.end(), std::back_inserter(rhsVarStrings),
-                           [this](const SSA::ssa_entry::var& v) { return getVarString(v); });
-            if (s.op.empty()) {
-                QL_REQUIRE(rhsVarStrings.size() == 1, "OpenClContext::generateSsaCode(): got no operator with "
-                                                          << rhsVarStrings.size()
-                                                          << " arguments, expected 1. Internal error.");
-                rhsString = rhsVarStrings[0];
-            } else if (s.infix) {
-                QL_REQUIRE(rhsVarStrings.size() == 2, "OpenClContext::generateSsaCode(): got infix operator ("
-                                                          << s.op << ") with " << rhsVarStrings.size()
-                                                          << " arguments, expected 2. Internal error.");
-                rhsString = rhsVarStrings[0] + s.op + rhsVarStrings[1];
-            } else {
-                rhsString = s.op + "(" + boost::join(rhsVarStrings, ",") + ")";
-            }
-        }
-
-        result += getVarString(s.lhs) + "=" + rhsString + ";\n";
-        std::cout << "generated result " << getVarString(s.lhs) + "=" + rhsString + ";\n" << std::endl;
-    }
-
-    std::cerr << "generate (part of) ssa:" << std::endl;
-    std::cerr << "  unique lhs local vars            : " << hasDeclaration.size() << std::endl;
-    std::cerr << "  skipped lhs local vars (unused)  : " << skipped << std::endl;
-    std::cerr << "  size                             : " << result.size() / 1024.0 / 1024.0 << " MB" << std::endl;
-
-    return result;
+    gpuCodeGenerator_[currentId_ - 1].declareOutputVariable(id);
 }
 
 void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
@@ -1393,50 +980,23 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
     guard.currentState = &currentState_;
 
+    // finalize the code generator if this is a new calc id
+
+    if (!gpuCodeGenerator_[currentId_ - 1].finalized())
+        gpuCodeGenerator_[currentId_ - 1].finalize();
+
+    // perform some checks
+
     QL_REQUIRE(currentId_ > 0, "OpenClContext::finalizeCalculation(): current id is not set");
-    QL_REQUIRE(output.size() == nOutputVars_[currentId_ - 1],
+    QL_REQUIRE(output.size() == gpuCodeGenerator_[currentId_ - 1].outputVars().size(),
                "OpenClContext::finalizeCalculation(): output size ("
-                   << output.size() << ") inconsistent to kernel output size (" << nOutputVars_[currentId_ - 1] << ")");
+                   << output.size() << ") inconsistent to kernel output size ("
+                   << gpuCodeGenerator_[currentId_ - 1].outputVars().size() << ")");
     QL_REQUIRE(!settings_.useDoublePrecision || supportsDoublePrecision(),
                "OpenClContext::finalizeCalculation(): double precision is configured for this calculation, but not "
                "supported by the device. Switch to single precision or use an appropriate device.");
 
-    if (!hasKernel_[currentId_ - 1]) {
-
-        // add code to populate the output array
-
-        std::cerr << "adding code to populate " << nOutputVars_[currentId_ - 1] << " output variables." << std::endl;
-
-        for (std::size_t i = 0; i < nOutputVars_[currentId_ - 1]; ++i) {
-            SSA::ssa_entry::var output;
-            if (outputVariables_[i] < inputVarOffset_.size()) {
-                output = {SSA::ssa_entry::var_type::input, outputVariables_[i]};
-            } else if (outputVariables_[i] < inputVarOffset_.size() + nVariates_[currentId_ - 1]) {
-                output = {SSA::ssa_entry::var_type::rn, outputVariables_[i]};
-            } else {
-                output = {SSA::ssa_entry::var_type::local_var, outputVariables_[i]};
-            }
-            currentSsa_.ssa.back().push_back(
-                {{SSA::ssa_entry::var_type::output, i}, {output}, std::string(), false, {}});
-        }
-
-        // finalize the ssa
-
-        currentSsa_.finalize();
-    }
-
-    // generate mapping local var id -> offset in the values buffer for multipart ssa
-
-    std::map<std::size_t, std::size_t> valuesBufferMap;
-    if (currentSsa_.ssa.size() > 1) {
-        std::size_t counter = 0;
-        for (auto const id : currentSsa_.all_ids_load_cache)
-            valuesBufferMap[id] = counter++;
-    }
-
-    std::cerr << "values buffer map has " << valuesBufferMap.size() << " entries." << std::endl;
-
-    // create input, values and output buffers
+    // create input and values buffers on the device
 
     boost::timer::cpu_timer timer;
     boost::timer::nanosecond_type timerBase;
@@ -1447,9 +1007,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         timerBase = timer.elapsed().wall;
     }
 
-    std::size_t inputBufferSize = 0;
-    if (!inputVarOffset_.empty())
-        inputBufferSize = inputVarOffset_.back() + (inputVarIsScalar_.back() ? 1 : size_[currentId_ - 1]);
+    std::size_t inputBufferSize = gpuCodeGenerator_[currentId_ - 1].inputBufferSize();
     cl_int err;
     cl_mem inputBuffer;
     if (inputBufferSize > 0) {
@@ -1460,137 +1018,25 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     }
 
     cl_mem valuesBuffer;
-    if (!valuesBufferMap.empty()) {
-        valuesBuffer = clCreateBuffer(*context_, CL_MEM_READ_WRITE,
-                                      fpSize * valuesBufferMap.size() * size_[currentId_ - 1], NULL, &err);
+    if (gpuCodeGenerator_[currentId_ - 1].nLocalVars() > 0) {
+        valuesBuffer =
+            clCreateBuffer(*context_, CL_MEM_READ_WRITE,
+                           fpSize * gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1], NULL, &err);
         guard.mem.push_back(valuesBuffer);
         QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): creating values buffer of size "
-                                          << valuesBufferMap.size() * size_[currentId_ - 1]
+                                          << gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1]
                                           << " fails: " << errorText(err));
-    }
-
-    std::size_t outputBufferSize = nOutputVars_[currentId_ - 1] * size_[currentId_ - 1];
-    cl_mem outputBuffer;
-    if (outputBufferSize > 0) {
-        outputBuffer = clCreateBuffer(*context_, CL_MEM_READ_WRITE, fpSize * outputBufferSize, NULL, &err);
-        guard.mem.push_back(outputBuffer);
-        QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): creating output buffer of size "
-                                          << outputBufferSize << " fails: " << errorText(err));
     }
 
     if (settings_.debug) {
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
     }
 
-    // build kernel if necessary
+    // build kernel if this is a new calc id
 
     if (!hasKernel_[currentId_ - 1]) {
-        std::string fpTypeStr = settings_.useDoublePrecision ? "double" : "float";
-        std::string fpEpsStr = settings_.useDoublePrecision ? "0x1.0p-52" : "0x1.0p-23f";
-        std::string fpSuffix = settings_.useDoublePrecision ? std::string() : "f";
-
-        // TODO ore_normalCdf
-
-        // clang-format off
-         std::string kernelSource =
-            "bool ore_closeEnough(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n"
-            "bool ore_closeEnough(const " + fpTypeStr + " x, const " + fpTypeStr + " y) {\n"
-            "    const " + fpTypeStr + " tol = 42.0" + fpSuffix + " * " + fpEpsStr + ";\n"
-            "    " + fpTypeStr + " diff = fabs(x - y);\n"
-            "    if (x == 0.0" + fpSuffix + " || y == 0.0" + fpSuffix + ")\n"
-            "        return diff < tol * tol;\n"
-            "    return diff <= tol * fabs(x) || diff <= tol * fabs(y);\n"
-            "}\n" +
-            fpTypeStr + " ore_indicatorEq(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n" +
-            fpTypeStr + " ore_indicatorEq(const " + fpTypeStr + " x, const " + fpTypeStr + " y) "
-                                                "{ return ore_closeEnough(x, y) ? 1.0" + fpSuffix + " : 0.0" + fpSuffix +"; }\n\n" +
-            fpTypeStr + " ore_indicatorGt(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n" +
-            fpTypeStr + " ore_indicatorGt(const " + fpTypeStr + " x, const " + fpTypeStr + " y) " +
-                                                "{ return x > y && !ore_closeEnough(x, y); }\n\n" +
-            fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y);\n" +
-            fpTypeStr + " ore_indicatorGeq(const " + fpTypeStr + " x, const " + fpTypeStr + " y) { return x > y || ore_closeEnough(x, y); }\n\n" +
-            fpTypeStr + " ore_normalCdf(const " + fpTypeStr + " x);\n" +
-            fpTypeStr + " ore_normalCdf(const " + fpTypeStr + " x) {\n return 0.0" + fpSuffix + ";}\n" + 
-            fpTypeStr + " ore_normalPdf(const " + fpTypeStr + " x);\n" +
-            fpTypeStr + " ore_normalPdf(const " + fpTypeStr + " x) {\n" +
-            "    " + fpTypeStr + " exponent = -(x*x)/2.0" + fpSuffix + ";\n" +
-            "    return exponent <= -690.0" + fpSuffix + " ? 0.0 : exp(exponent) * 0.3989422804014327" + fpSuffix + ";\n"
-            "}\n";
-
-        // clang-format on
-
-        std::string kernelNameStem =
-            "ore_kernel_" + std::to_string(currentId_) + "_" + std::to_string(version_[currentId_ - 1]) + "_";
-
-        for (std::size_t part = 0; part < currentSsa_.ssa.size(); ++part) {
-
-            bool initFromValues = part > 0;
-            bool cacheToValues = currentSsa_.ssa.size() > 1 && part < currentSsa_.ssa.size() - 1;
-            bool generateOutputValues = part == currentSsa_.ssa.size() - 1;
-
-            std::string kernelName = kernelNameStem + std::to_string(part);
-
-            std::vector<std::string> inputArgs;
-            if (inputBufferSize > 0)
-                inputArgs.push_back("__global " + fpTypeStr + "* input");
-            if (nVariates_[currentId_ - 1] > 0)
-                inputArgs.push_back("__global " + fpTypeStr + "* rn");
-            if (!valuesBufferMap.empty() && (initFromValues || cacheToValues))
-                inputArgs.push_back("__global " + fpTypeStr + "* values");
-            if (outputBufferSize > 0 && generateOutputValues)
-                inputArgs.push_back("__global " + fpTypeStr + "* output");
-
-            kernelSource += "__kernel void " + kernelName + "(" + boost::join(inputArgs, ",") +
-                            ") {\n"
-                            "unsigned long i = get_global_id(0);\n"
-                            "if(i < " +
-                            std::to_string(size_[currentId_ - 1]) + "UL) {\n";
-
-            std::vector<SSA::ssa_entry> ssa;
-
-            if (initFromValues) {
-                std::cerr << "part " << part << ": adding code to init " << currentSsa_.local_ids_to_load[part].size()
-                          << " local variables from values buffer" << std::endl;
-                for (auto const i : currentSsa_.local_ids_to_load[part]) {
-                    ssa.push_back({{SSA::ssa_entry::var_type::local_var, i},
-                                   {{SSA::ssa_entry::var_type::value, valuesBufferMap.at(i)}},
-                                   std::string(),
-                                   false,
-                                   {}});
-                }
-            }
-
-            ssa.insert(ssa.end(), currentSsa_.ssa[part].begin(), currentSsa_.ssa[part].end());
-
-            if (cacheToValues) {
-                std::cerr << "part " << part << ": adding code to cache " << currentSsa_.local_ids_to_cache[part].size()
-                          << " local variables to values buffer" << std::endl;
-                for (auto const i : currentSsa_.local_ids_to_cache[part]) {
-                    ssa.push_back({{SSA::ssa_entry::var_type::value, valuesBufferMap.at(i)},
-                                   {{SSA::ssa_entry::var_type::local_var, i}},
-                                   std::string(),
-                                   false,
-                                   {}});
-                }
-            }
-
-            std::cout << "generate kernel ssa part " << part << std::endl;
-            kernelSource += generateSsaCode(ssa);
-            std::cout << "generate kernel ssa done" << std::endl;
-            kernelSource += "}}\n";
-
-        } // for part
-
-        std::cerr << "finished generating source code, size: " << kernelSource.size() / 1024.0 / 1024.0 << " MB"
-                  << std::endl;
-        std::cerr << "generated source: \n" + kernelSource + "\n";
-
-        if (settings_.debug) {
-            timerBase = timer.elapsed().wall;
-        }
-
         cl_int err;
-        const char* kernelSourcePtr = kernelSource.c_str();
+        const char* kernelSourcePtr = gpuCodeGenerator_[currentId_ - 1].sourceCode().c_str();
         program_[currentId_ - 1] = clCreateProgramWithSource(*context_, 1, &kernelSourcePtr, NULL, &err);
         QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): error during clCreateProgramWithSource(): "
                                           << errorText(err));
@@ -1599,35 +1045,23 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             char buffer[ORE_OPENCL_MAX_BUILD_LOG];
             clGetProgramBuildInfo(program_[currentId_ - 1], *device_, CL_PROGRAM_BUILD_LOG,
                                   ORE_OPENCL_MAX_BUILD_LOG * sizeof(char), buffer, NULL);
-            QL_FAIL("OpenClContext::finalizeCalculation(): error during program build for kernel '"
-                    << kernelNameStem << "*': " << errorText(err) << ": "
-                    << std::string(buffer).substr(0, ORE_OPENCL_MAX_BUILD_LOG_LOGFILE));
+            QL_FAIL("OpenClContext::finalizeCalculation(): error during program build for kernels '"
+                    << boost::join(gpuCodeGenerator_[currentId_ - 1].kernelNames(), ",") << "': " << errorText(err)
+                    << ": " << std::string(buffer).substr(0, ORE_OPENCL_MAX_BUILD_LOG_LOGFILE));
         }
 
-        std::cerr << "program build finished." << std::endl;
-
-        for (std::size_t part = 0; part < currentSsa_.ssa.size(); ++part) {
-
-            std::cerr << "creating kernel (part " << part + 1 << " of " << currentSsa_.ssa.size() << ")" << std::endl;
-
-            std::string kernelName = kernelNameStem + std::to_string(part);
+        for (auto const& kernelName : gpuCodeGenerator_[currentId_ - 1].kernelNames()) {
+            std::cerr << "creating kernel '" << kernelName << "'" << std::endl;
             kernel_[currentId_ - 1].push_back(clCreateKernel(program_[currentId_ - 1], kernelName.c_str(), &err));
-            QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): error during clCreateKernel(), part #"
-                                              << part << ": " << errorText(err));
+            QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): error during clCreateKernel() ("
+                                              << kernelName << "): " << errorText(err));
         }
 
         hasKernel_[currentId_ - 1] = true;
-        inputBufferSize_[currentId_ - 1] = inputBufferSize;
 
         if (settings_.debug) {
             debugInfo_.nanoSecondsProgramBuild += timer.elapsed().wall - timerBase;
         }
-    } else {
-        // case hasKernel[currentId_ - 1] == true
-        QL_REQUIRE(inputBufferSize == inputBufferSize_[currentId_ - 1],
-                   "OpenClContext::finalizeCalculation(): input buffer size ("
-                       << inputBufferSize << ") inconsistent to kernel input buffer size ("
-                       << inputBufferSize_[currentId_ - 1] << ")");
     }
 
     // write input data to input buffer (asynchronously)
@@ -1652,20 +1086,19 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
     }
 
+    // create the value buffer on the host
+
     std::vector<cl_event> runWaitEvents;
     if (inputBufferSize > 0)
         runWaitEvents.push_back(inputBufferEvent);
 
-    std::vector<double> values(valuesBufferMap.size() * size_[currentId_ - 1]);
+    std::vector<double> values(gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1]);
     std::vector<float> valuesFloat;
     if (!settings_.useDoublePrecision) {
         valuesFloat.resize(values.size());
     }
 
-    for (std::size_t part = 0; part < kernel_[currentId_ - 1].size(); ++part) {
-        bool initFromValues = part > 0;
-        bool cacheToValues = currentSsa_.ssa.size() > 1 && part < currentSsa_.ssa.size() - 1;
-        bool generateOutputValues = part == currentSsa_.ssa.size() - 1;
+    for (std::size_t part = 0; part < gpuCodeGenerator_[currentId_ - 1].kernelNames().size(); ++part) {
 
         // set kernel args
 
@@ -1674,14 +1107,11 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         if (inputBufferSize > 0) {
             err |= clSetKernelArg(kernel_[currentId_ - 1][part], kidx++, sizeof(cl_mem), &inputBuffer);
         }
-        if (nVariates_[currentId_ - 1] > 0) {
+        if (gpuCodeGenerator_[currentId_ - 1].nVariates() > 0) {
             err |= clSetKernelArg(kernel_[currentId_ - 1][part], kidx++, sizeof(cl_mem), &variatesPool_);
         }
-        if (!valuesBufferMap.empty() && (initFromValues || cacheToValues)) {
+        if (gpuCodeGenerator_[currentId_ - 1].nLocalVars() > 0) {
             err |= clSetKernelArg(kernel_[currentId_ - 1][part], kidx++, sizeof(cl_mem), &valuesBuffer);
-        }
-        if (outputBufferSize > 0 && generateOutputValues) {
-            err |= clSetKernelArg(kernel_[currentId_ - 1][part], kidx++, sizeof(cl_mem), &outputBuffer);
         }
         QL_REQUIRE(err == CL_SUCCESS,
                    "OpenClContext::finalizeCalculation(): set kernel args fails: " << errorText(err));
@@ -1701,19 +1131,18 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): enqueue kernel fails: " << errorText(err));
         runWaitEvents.push_back(runEvent);
 
-        /* calculate conditional expectations, this is the variant where we do this on the host
-           conditional expectations in last part are useless, since they are not used in a subsequent part
-           nor used in the output (otherwise there would be another ssa part for the output generation */
+        /* calculate conditional expectations, this is the variant where we do this on the host */
 
-        if (!conditionalExpectationVarIds_[currentId_ - 1][part].empty() && part < kernel_[currentId_ - 1].size() - 1) {
+        if (!gpuCodeGenerator_[currentId_ - 1].conditionalExpectationVars()[part].empty()) {
 
             // copy values from device to host
 
             cl_event readEvent;
-            err = clEnqueueReadBuffer(
-                queue_, valuesBuffer, CL_FALSE, 0, fpSize * valuesBufferMap.size() * size_[currentId_ - 1],
-                settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0], runWaitEvents.size(),
-                runWaitEvents.empty() ? NULL : &runWaitEvents[0], &readEvent);
+            err =
+                clEnqueueReadBuffer(queue_, valuesBuffer, CL_FALSE, 0,
+                                    fpSize * gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1],
+                                    settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0],
+                                    runWaitEvents.size(), runWaitEvents.empty() ? NULL : &runWaitEvents[0], &readEvent);
             QL_REQUIRE(err == CL_SUCCESS,
                        "OpenClContext::finalizeCalculation(): enqueue read values buffer fails: " << errorText(err));
 
@@ -1727,7 +1156,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                 std::copy(valuesFloat.begin(), valuesFloat.end(), values.begin());
             }
 
-            for (auto const& v : conditionalExpectationVarIds_[currentId_ - 1][part]) {
+            for (auto const& v : gpuCodeGenerator_[currentId_ - 1].conditionalExpectationVars()[part]) {
 
                 // calculate conditional expectation value
 
@@ -1737,20 +1166,18 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                                << v.size());
 
                 RandomVariable ce;
-                RandomVariable regressand(size_[currentId_ - 1],
-                                          &values[valuesBufferMap.at(v[1].second) * size_[currentId_ - 1]]);
+                RandomVariable regressand(size_[currentId_ - 1], &values[v[1].second * size_[currentId_ - 1]]);
                 if (v.size() < 4) {
                     // no regressor given -> take plain expectation
                     ce = expectation(regressand);
                 } else {
-                    Filter filter =
-                        close_enough(RandomVariable(size_[currentId_ - 1],
-                                                    &values[valuesBufferMap.at(v[2].second) * size_[currentId_ - 1]]),
-                                     RandomVariable(size_[currentId_ - 1], 1.0));
+                    Filter filter = close_enough(
+                        RandomVariable(size_[currentId_ - 1], &values[v[2].second * size_[currentId_ - 1]]),
+                        RandomVariable(size_[currentId_ - 1], 1.0));
                     std::vector<RandomVariable> regressor(v.size() - 3);
                     for (std::size_t i = 3; i < v.size(); ++i) {
-                        regressor[i - 3] = RandomVariable(
-                            size_[currentId_ - 1], &values[valuesBufferMap.at(v[i].second) * size_[currentId_ - 1]]);
+                        regressor[i - 3] =
+                            RandomVariable(size_[currentId_ - 1], &values[v[i].second * size_[currentId_ - 1]]);
                     }
 
                     ce = conditionalExpectation(regressand, vec2vecptr(regressor),
@@ -1763,25 +1190,28 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                 // overwrite the value
 
                 ce.expand();
-                std::copy(ce.data(), ce.data() + ce.size(),
-                          &values[valuesBufferMap.at(v[0].second) * size_[currentId_ - 1]]);
+                std::copy(ce.data(), ce.data() + ce.size(), &values[v[0].second * size_[currentId_ - 1]]);
             }
 
             if (!settings_.useDoublePrecision) {
                 std::copy(values.begin(), values.end(), valuesFloat.begin());
             }
 
-            // copy values from host to device
+            // copy values from host to device (except this is the last kernel part)
 
-            runWaitEvents.push_back(cl_event());
-            err = clEnqueueWriteBuffer(queue_, valuesBuffer, CL_FALSE, 0,
-                                       fpSize * valuesBufferMap.size() * size_[currentId_ - 1],
-                                       settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0], 0,
-                                       NULL, &runWaitEvents.back());
-            QL_REQUIRE(err == CL_SUCCESS,
-                       "OpenClContext::finalizeCalculation(): write values buffer fails: " << errorText(err));
+            if (part < gpuCodeGenerator_[currentId_ - 1].kernelNames().size() - 1) {
 
-        } // if part > 0 (to update conditional expectation values)
+                runWaitEvents.push_back(cl_event());
+                err = clEnqueueWriteBuffer(queue_, valuesBuffer, CL_FALSE, 0,
+                                           fpSize * gpuCodeGenerator_[currentId_ - 1].nLocalVars() *
+                                               size_[currentId_ - 1],
+                                           settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0], 0,
+                                           NULL, &runWaitEvents.back());
+                QL_REQUIRE(err == CL_SUCCESS,
+                           "OpenClContext::finalizeCalculation(): write values buffer fails: " << errorText(err));
+            }
+
+        } // if conditional expectation to be calculated
 
         if (settings_.debug) {
             err = clFinish(queue_);
@@ -1798,7 +1228,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     // copy the results (asynchronously)
 
     std::vector<cl_event> outputBufferEvents;
-    if (outputBufferSize > 0) {
+    if (!output.empty()) {
         std::vector<std::vector<float>> outputFloat;
         if (!settings_.useDoublePrecision) {
             outputFloat.resize(output.size(), std::vector<float>(size_[currentId_ - 1]));
@@ -1806,7 +1236,9 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         for (std::size_t i = 0; i < output.size(); ++i) {
             outputBufferEvents.push_back(cl_event());
             err = clEnqueueReadBuffer(
-                queue_, outputBuffer, CL_FALSE, fpSize * i * size_[currentId_ - 1], fpSize * size_[currentId_ - 1],
+                queue_, valuesBuffer, CL_FALSE,
+                fpSize * gpuCodeGenerator_[currentId_ - 1].outputVars()[i].second * size_[currentId_ - 1],
+                fpSize * size_[currentId_ - 1],
                 settings_.useDoublePrecision ? (void*)&output[i][0] : (void*)&outputFloat[i][0], runWaitEvents.size(),
                 runWaitEvents.empty() ? NULL : &runWaitEvents[0], &outputBufferEvents.back());
             QL_REQUIRE(err == CL_SUCCESS,

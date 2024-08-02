@@ -45,6 +45,7 @@ void GpuCodeGenerator::initialize(const std::size_t nInputVars, const std::vecto
     kernelBreakLines_.push_back(0);
     conditionalExpectationVars_.clear();
     conditionalExpectationVars_.push_back({});
+    outputVars_.clear();
     sourceCode_.clear();
     kernelNames_.clear();
 
@@ -54,6 +55,8 @@ void GpuCodeGenerator::initialize(const std::size_t nInputVars, const std::vecto
         inputVarOffset_.push_back(offset);
         offset += inputVarIsScalar_[i] ? 1 : modelSize_;
     }
+
+    initialized_ = true;
 }
 
 std::size_t GpuCodeGenerator::generateResultId() {
@@ -121,6 +124,8 @@ void GpuCodeGenerator::freeVariable(const std::size_t id) {
     freedVariables_.push_back(id);
 }
 
+void GpuCodeGenerator::declareOutputVariable(const std::size_t id) { outputVars_.push_back(getVar(id)); }
+
 void GpuCodeGenerator::generateBoilerplateCode() {
     // clang-format off
     sourceCode_ += std::string(  
@@ -176,9 +181,9 @@ void GpuCodeGenerator::determineKernelBreakLines() {
 
         if (ops_[i].randomVariableOpCode == RandomVariableOpCode::ConditionalExpectation) {
             conditionalExpectationVars_.back().push_back({});
-            conditionalExpectationVars_.back().back().push_back(getId(ops_[i].lhs));
+            conditionalExpectationVars_.back().back().push_back(ops_[i].lhs);
             for (auto const& r : ops_[i].rhs)
-                conditionalExpectationVars_.back().back().push_back(getId(r));
+                conditionalExpectationVars_.back().back().push_back(r);
             currentCondExpVars.insert(ops_[i].lhs);
         }
     }
@@ -223,76 +228,82 @@ void GpuCodeGenerator::generateOperationCode(const Operation& op) {
         break;
     }
     case RandomVariableOpCode::Add: {
-        code = resultStr + "=" + boost::join(argStr, "+");
+        code = resultStr + "=" + boost::join(argStr, "+") + ";\n";
         break;
     }
     case RandomVariableOpCode::Subtract: {
-        code = resultStr + "=" + argStr[0] + "-" + argStr[1];
+        code = resultStr + "=" + argStr[0] + "-" + argStr[1] + ";\n";
         break;
     }
     case RandomVariableOpCode::Negative: {
-        code = resultStr + "=-" + argStr[0];
+        code = resultStr + "=-" + argStr[0] + ";\n";
         break;
     }
     case RandomVariableOpCode::Mult: {
-        code = resultStr + "=" + argStr[0] + "*" + argStr[1];
+        code = resultStr + "=" + argStr[0] + "*" + argStr[1] + ";\n";
         break;
     }
     case RandomVariableOpCode::Div: {
-        code = resultStr + "=" + argStr[0] + "/" + argStr[1];
+        code = resultStr + "=" + argStr[0] + "/" + argStr[1] + ";\n";
         break;
     }
     case RandomVariableOpCode::ConditionalExpectation: {
-        // no code needed, this is computed on the host
+        /* this is computed on the host - we need to ensure that all args are 
+           available as local vars though */
+        for (auto const& r : op.rhs) {
+            if (r.first == VarType::local)
+                continue;
+            code = getVarStr(getVar(generateResultId())) + "=" + getVarStr(r) + ";\n";
+        }
         break;
     }
     case RandomVariableOpCode::IndicatorEq: {
-        code = resultStr + "=ore_indicatorEq(" + argStr[0] + "," + argStr[1] + ")";
+        code = resultStr + "=ore_indicatorEq(" + argStr[0] + "," + argStr[1] + ");\n";
         break;
     }
     case RandomVariableOpCode::IndicatorGt: {
-        code = resultStr + "=ore_indicatorGt(" + argStr[0] + "," + argStr[1] + ")";
+        code = resultStr + "=ore_indicatorGt(" + argStr[0] + "," + argStr[1] + ");\n";
         break;
     }
     case RandomVariableOpCode::IndicatorGeq: {
-        code = resultStr + "=ore_indicatorGeq(" + argStr[0] + "," + argStr[1] + ")";
+        code = resultStr + "=ore_indicatorGeq(" + argStr[0] + "," + argStr[1] + ");\n";
         break;
     }
     case RandomVariableOpCode::Min: {
-        code = resultStr + "=fmin(" + argStr[0] + "," + argStr[1] + ")";
+        code = resultStr + "=fmin(" + argStr[0] + "," + argStr[1] + ");\n";
         break;
     }
     case RandomVariableOpCode::Max: {
-        code = resultStr + "=fmax(" + argStr[0] + "," + argStr[1] + ")";
+        code = resultStr + "=fmax(" + argStr[0] + "," + argStr[1] + ");\n";
         break;
     }
     case RandomVariableOpCode::Abs: {
-        code = resultStr + "=fabs(" + argStr[0] + ")";
+        code = resultStr + "=fabs(" + argStr[0] + ");\n";
         break;
     }
     case RandomVariableOpCode::Exp: {
-        code = resultStr + "=exp(" + argStr[0] + ")";
+        code = resultStr + "=exp(" + argStr[0] + ");\n";
         break;
     }
     case RandomVariableOpCode::Sqrt: {
-        code = resultStr + "=sqrt(" + argStr[0] + ")";
+        code = resultStr + "=sqrt(" + argStr[0] + ");\n";
         break;
     }
     case RandomVariableOpCode::Log: {
-        code = resultStr + "=log(" + argStr[0] + ")";
+        code = resultStr + "=log(" + argStr[0] + ");\n";
         break;
     }
     case RandomVariableOpCode::Pow: {
-        code = resultStr + "=pow(" + argStr[0] + "," + argStr[1] + ")";
+        code = resultStr + "=pow(" + argStr[0] + "," + argStr[1] + ");\n";
         break;
     }
     // TODO add this in the kernel boilerplate code before activating it here
     // case RandomVariableOpCode::NormalCdf: {
-    //     code = resultStr + "=ore_normalCdf(" + argStr[0] + ")";
+    //     code = resultStr + "=ore_normalCdf(" + argStr[0] + ");\n";
     //     break;
     // }
     case RandomVariableOpCode::NormalPdf: {
-        code = resultStr + "=ore_normalPdf(" + argStr[0] + ")";
+        code = resultStr + "=ore_normalPdf(" + argStr[0] + ");\n";
         break;
     }
     default: {
@@ -302,7 +313,15 @@ void GpuCodeGenerator::generateOperationCode(const Operation& op) {
     }
     } // switch random var op code
 
-    sourceCode_ += code + ";\n";
+    sourceCode_ += code;
+}
+
+void GpuCodeGenerator::generateOutputVarAssignments() {
+    for (auto const& o : outputVars_) {
+        if (o.first == VarType::local)
+            continue;
+        sourceCode_ += getVarStr(getVar(generateResultId())) + "=" + getVarStr(o) + "\n";
+    }
 }
 
 void GpuCodeGenerator::finalize() {
@@ -323,8 +342,12 @@ void GpuCodeGenerator::finalize() {
         // generate kernel end / start code if needed and increment kernel no
 
         if (i == kernelBreakLines_[currentKernelNo_]) {
-            if (currentKernelNo_ > 0)
+            if (currentKernelNo_ > 0) {
+                if (i == ops_.size() - 1) {
+                    generateOutputVarAssignments();
+                }
                 generateKernelEndCode();
+            }
             if (i < ops_.size() - 1) {
                 kernelNames_.push_back("ore_" + std::to_string(currentKernelNo_));
                 generateKernelStartCode();
@@ -334,6 +357,8 @@ void GpuCodeGenerator::finalize() {
 
         generateOperationCode(ops_[i]);
     }
+
+    finalized_ = true;
 }
 
 } // namespace QuantExt

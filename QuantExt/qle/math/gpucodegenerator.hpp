@@ -32,21 +32,25 @@ public:
                     const std::size_t modelSize, const bool doublePrecision);
     std::size_t applyOperation(const std::size_t randomVariableOpCode, const std::vector<std::size_t>& args);
     void freeVariable(const std::size_t id);
-
+    void declareOutputVariable(const std::size_t id);
     void finalize();
+
+    bool initialized() const { return initialized_; }
+    bool finalized() const { return finalized_; }
 
     const std::string& sourceCode() const { return sourceCode_; }
     const std::vector<std::string>& kernelNames() const { return kernelNames_; }
-    const std::vector<std::vector<std::vector<std::size_t>>>& conditionalExpectationVars() const {
-        return conditionalExpectationVars_;
-    }
-
     std::size_t nInputVars() const { return nInputVars_; }
     const std::vector<bool>& inputVarIsScalar() const { return inputVarIsScalar_; }
+    std::size_t inputBufferSize() const { return inputVarOffset_.back() + (inputVarIsScalar_.back() ? 1 : modelSize_); }
     std::size_t nVariates() const { return nVariates_; }
     std::size_t nLocalVars() const { return nLocalVars_; }
 
-    std::pair<VarType, std::size_t> getVar(const std::size_t id) const;
+    // the conditional expectation vars and output vars are both guaranteed to be local vars
+    const std::vector<std::vector<std::vector<std::pair<VarType, std::size_t>>>>& conditionalExpectationVars() const {
+        return conditionalExpectationVars_;
+    }
+    const std::vector<std::pair<VarType, std::size_t>>& outputVars() const { return outputVars_; }
 
 private:
     struct Operation {
@@ -55,6 +59,7 @@ private:
         std::size_t randomVariableOpCode;
     };
 
+    std::pair<VarType, std::size_t> getVar(const std::size_t id) const;
     std::string getVarStr(const std::pair<VarType, const std::size_t>& var) const;
     std::size_t getId(const std::pair<VarType, const std::size_t>& var) const;
     std::size_t generateResultId();
@@ -63,7 +68,11 @@ private:
     void determineKernelBreakLines();
     void generateKernelStartCode();
     void generateKernelEndCode();
+    void generateOutputVarAssignments();
     void generateOperationCode(const Operation& op);
+
+    bool initialized_ = false;
+    bool finalized_ = false;
 
     // inputs
     std::size_t nInputVars_;
@@ -88,7 +97,8 @@ private:
     std::vector<std::size_t> kernelBreakLines_;
     std::string sourceCode_;
     std::vector<std::string> kernelNames_;
-    std::vector<std::vector<std::vector<std::size_t>>> conditionalExpectationVars_;
+    std::vector<std::vector<std::vector<std::pair<VarType, std::size_t>>>> conditionalExpectationVars_;
+    std::vector<std::pair<VarType, std::size_t>> outputVars_;
 };
 
 } // namespace QuantExt
