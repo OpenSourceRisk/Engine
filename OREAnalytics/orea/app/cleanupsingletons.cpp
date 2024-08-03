@@ -45,8 +45,6 @@ CleanUpThreadLocalSingletons::~CleanUpThreadLocalSingletons() {
 
 CleanUpThreadGlobalSingletons::~CleanUpThreadGlobalSingletons() {
     ore::data::InstrumentConventions::instance().clear();
-    ore::data::InstrumentCalendarAdjustments::instance().clear();
-    ore::data::InstrumentCurrencyConfigs::instance().clear();
     ore::data::IndexNameTranslator::instance().clear();
     ore::data::CalendarParser::instance().reset();
     ore::data::CurrencyParser::instance().reset();

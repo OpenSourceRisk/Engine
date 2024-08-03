@@ -63,22 +63,17 @@ private:
 
 //! Singleton to hold conventions
 //
-class InstrumentCurrencyConfigs
-    : public QuantLib::Singleton<InstrumentCurrencyConfigs, std::integral_constant<bool, true>> {
-    friend class QuantLib::Singleton<InstrumentCurrencyConfigs, std::integral_constant<bool, true>>;
+class CurrencyConfigsSingleton
+    : public QuantLib::Singleton<CurrencyConfigsSingleton, std::integral_constant<bool, true>> {
+    friend class QuantLib::Singleton<CurrencyConfigsSingleton, std::integral_constant<bool, true>>;
 
 private:
-    InstrumentCurrencyConfigs() { currencyConfigs_[QuantLib::Date()] = QuantLib::ext::make_shared<ore::data::CurrencyConfig>(); }
-
-    mutable std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>> currencyConfigs_;
+    mutable QuantLib::ext::shared_ptr<ore::data::CurrencyConfig> currencyConfigs_;
     mutable boost::shared_mutex mutex_;
-    mutable std::size_t numberOfEmittedWarnings_ = 0;
 
 public:
-    const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs(QuantLib::Date d = QuantLib::Date()) const;
-    void setCurrencyConfigs(const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs,
-                        QuantLib::Date d = QuantLib::Date());
-    void clear() { currencyConfigs_.clear(); }
+    const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& getCurrencyConfigs() const;
+    void setCurrencyConfigs(const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs);
 };
 
 } // namespace data

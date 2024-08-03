@@ -81,25 +81,17 @@ private:
 
 //! Singleton to hold calendar adjustments
 //
-class InstrumentCalendarAdjustments
-    : public QuantLib::Singleton<InstrumentCalendarAdjustments, std::integral_constant<bool, true>> {
-    friend class QuantLib::Singleton<InstrumentCalendarAdjustments, std::integral_constant<bool, true>>;
+class CalendarAdjustmentsSingleton
+    : public QuantLib::Singleton<CalendarAdjustmentsSingleton, std::integral_constant<bool, true>> {
+    friend class QuantLib::Singleton<CalendarAdjustmentsSingleton, std::integral_constant<bool, true>>;
 
 private:
-    InstrumentCalendarAdjustments() {
-        calendarAdjustments_[Date()] = QuantLib::ext::make_shared<ore::data::CalendarAdjustmentConfig>();
-    }
-
-    mutable std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>> calendarAdjustments_;
+    mutable QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig> calendarAdjustments_;
     mutable boost::shared_mutex mutex_;
-    mutable std::size_t numberOfEmittedWarnings_ = 0;
 
 public:
-    const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>&
-    calendarAdjustments(QuantLib::Date d = QuantLib::Date()) const;
-    void setCalendarAdjustments(const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustments,
-                        QuantLib::Date d = QuantLib::Date());
-    void clear() { calendarAdjustments_.clear(); }
+    const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& getCalendarAdjustments() const;
+    void setCalendarAdjustments(const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustments);
 };
 
 

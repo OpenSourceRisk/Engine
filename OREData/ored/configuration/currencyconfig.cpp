@@ -29,30 +29,14 @@ namespace data {
 
 CurrencyConfig::CurrencyConfig() {}
 
-const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& InstrumentCurrencyConfigs::currencyConfigs(QuantLib::Date d) const {
-    QL_REQUIRE(!currencyConfigs_.empty(), "InstrumentCurrencyConfigs: No conventions provided.");
+const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& CurrencyConfigsSingleton::getCurrencyConfigs() const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    Date dt = d == Date() ? Settings::instance().evaluationDate() : d;
-    auto it = currencyConfigs_.lower_bound(dt);
-    if (it != currencyConfigs_.end() && it->first == dt)
-        return it->second;
-    QL_REQUIRE(it != currencyConfigs_.begin(), "InstrumentCurrencyConfigs: Could not find conventions for " << dt);
-    --it;
-    constexpr std::size_t max_num_warnings = 10;
-    if (numberOfEmittedWarnings_ < max_num_warnings) {
-        ++numberOfEmittedWarnings_;
-        WLOG("InstrumentCurrencyConfigs: Could not find currency configs for "
-             << dt << ", using currency configs from " << it->first
-             << (numberOfEmittedWarnings_ == max_num_warnings ? " (no more warnings of this type will be emitted)"
-                                                              : ""));
-    }
-    return it->second;
+    return currencyConfigs_;
 }
 
-void InstrumentCurrencyConfigs::setCurrencyConfigs(const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs,
-                                           QuantLib::Date d) {
+void CurrencyConfigsSingleton::setCurrencyConfigs(const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    currencyConfigs_[d] = currencyConfigs;
+    currencyConfigs_ = currencyConfigs;
 }
 
 
