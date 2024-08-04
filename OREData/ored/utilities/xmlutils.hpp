@@ -25,6 +25,7 @@
 
 #include <ql/errors.hpp>
 #include <ql/time/period.hpp>
+#include <ql/time/date.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/businessdayconvention.hpp>
 #include <ql/types.hpp>
@@ -50,6 +51,7 @@ template <class Ch> class xml_document;
 namespace ore {
 namespace data {
 using QuantLib::Period;
+using QuantLib::Date;
 using QuantLib::Real;
 using QuantLib::Size;
 using std::map;

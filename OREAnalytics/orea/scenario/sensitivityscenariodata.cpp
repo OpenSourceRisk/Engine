@@ -270,15 +270,15 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* swaptionVols = XMLUtils::getChildNode(node, "SwaptionVolatilities");
     if (swaptionVols) {
         for (XMLNode* child = XMLUtils::getChildNode(swaptionVols, "SwaptionVolatility"); child;
-             child = XMLUtils::getNextSibling(child)) {
+            child = XMLUtils::getNextSibling(child)) {
             string key = XMLUtils::getAttribute(child, "key");
-	    if(key.empty()) {
-		string ccyAttr = XMLUtils::getAttribute(child, "ccy");
-		if(!ccyAttr.empty()) {
-		    key = ccyAttr;
+	        if(key.empty()) {
+                string ccyAttr = XMLUtils::getAttribute(child, "ccy");
+                if(!ccyAttr.empty()) {
+                    key = ccyAttr;
                     WLOG("SensitivityData: attribute 'ccy' for SwaptionVolatilities is deprecated, use 'key' instead.");
                 }
-	    }
+            }
             GenericYieldVolShiftData data;
             volShiftDataFromXML(child, data);
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
@@ -711,7 +711,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
         XMLNode* parent = XMLUtils::addChild(doc, root, "SwaptionVolatilities");
         for (const auto& kv : swaptionVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "SwaptionVolatility");
-            XMLUtils::addAttribute(doc, node, "ccy", kv.first);
+            XMLUtils::addAttribute(doc, node, "key", kv.first);
             volShiftDataToXML(doc, node, kv.second);
             XMLUtils::addGenericChildAsList(doc, node, "ShiftTerms", kv.second.shiftTerms);
         }
