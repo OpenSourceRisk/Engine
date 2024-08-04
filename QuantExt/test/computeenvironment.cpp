@@ -174,6 +174,7 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
     std::vector<double> results;
     for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
         BOOST_TEST_MESSAGE("testing large calc on device '" << d << "'.");
+        try {
         ComputeEnvironment::instance().selectContext(d);
         auto& c = ComputeEnvironment::instance().context();
         std::vector<std::size_t> values(m);
@@ -190,8 +191,9 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
         for (std::size_t i = 0; i < m; ++i) {
             std::size_t val2 = c.applyOperation(RandomVariableOpCode::Add, {val, values[0]});
             std::size_t val3 = c.applyOperation(RandomVariableOpCode::Mult, {val2, values[0]});
-            // c.freeVariable(val);
-            // c.freeVariable(val2);
+            if(val != values[0])
+                c.freeVariable(val);
+            c.freeVariable(val2);
             val = val3;
         }
         c.declareOutputVariable(val);
@@ -208,6 +210,9 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
         results.push_back(output.front()[0]);
 
         outputTimings(c);
+        } catch (const std::exception& e) {
+            BOOST_TEST_ERROR("Error: " << e.what());
+        }
     }
 
     std::vector<RandomVariable> values(m);
@@ -373,13 +378,15 @@ BOOST_AUTO_TEST_CASE(testConditionalExpectation) {
         auto one = c.createInputVariable(1.0);
         auto vs = c.createInputVariates(1, 2);
         auto ce = c.applyOperation(RandomVariableOpCode::ConditionalExpectation, {vs[0][0], one, vs[0][1]});
+        // create dependency on conditional expectation to enforce multi-part kernel
+        auto ce2 = c.applyOperation(RandomVariableOpCode::None, {ce});
 
         for (auto const& d : vs) {
             for (auto const& r : d) {
                 c.declareOutputVariable(r);
             }
         }
-        c.declareOutputVariable(ce);
+        c.declareOutputVariable(ce2);
 
         std::vector<std::vector<double>> output(3, std::vector<double>(n));
         c.finalizeCalculation(output);
