@@ -42,7 +42,7 @@ public:
     const std::vector<std::string>& kernelNames() const { return kernelNames_; }
     std::size_t nInputVars() const { return nInputVars_; }
     const std::vector<bool>& inputVarIsScalar() const { return inputVarIsScalar_; }
-    std::size_t inputBufferSize() const { return inputVarOffset_.back() + (inputVarIsScalar_.back() ? 1 : modelSize_); }
+    std::size_t inputBufferSize() const;
     std::size_t nVariates() const { return nVariates_; }
     std::size_t nLocalVars() const { return nLocalVars_; }
 
@@ -95,6 +95,7 @@ private:
     // state / result of finalize()
     std::size_t currentKernelNo_;
     std::vector<std::size_t> kernelBreakLines_;
+    std::string outputVarAssignments_;
     std::string sourceCode_;
     std::vector<std::string> kernelNames_;
     std::vector<std::vector<std::vector<std::pair<VarType, std::size_t>>>> conditionalExpectationVars_;

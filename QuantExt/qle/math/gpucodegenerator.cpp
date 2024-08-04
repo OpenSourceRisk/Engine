@@ -42,10 +42,10 @@ void GpuCodeGenerator::initialize(const std::size_t nInputVars, const std::vecto
     freedVariables_.clear();
     currentKernelNo_ = 0;
     kernelBreakLines_.clear();
-    kernelBreakLines_.push_back(0);
     conditionalExpectationVars_.clear();
     conditionalExpectationVars_.push_back({});
     outputVars_.clear();
+    outputVarAssignments_.clear();
     sourceCode_.clear();
     kernelNames_.clear();
 
@@ -57,6 +57,12 @@ void GpuCodeGenerator::initialize(const std::size_t nInputVars, const std::vecto
     }
 
     initialized_ = true;
+}
+
+std::size_t GpuCodeGenerator::inputBufferSize() const {
+    if (inputVarOffset_.empty())
+        return 0;
+    return inputVarOffset_.back() + (inputVarIsScalar_.back() ? 1 : modelSize_);
 }
 
 std::size_t GpuCodeGenerator::generateResultId() {
@@ -110,6 +116,18 @@ std::size_t GpuCodeGenerator::applyOperation(const std::size_t randomVariableOpC
     std::vector<std::pair<VarType, std::size_t>> rhs;
     std::transform(args.begin(), args.end(), std::back_inserter(rhs),
                    [this](const std::size_t id) { return getVar(id); });
+
+    if (randomVariableOpCode == RandomVariableOpCode::ConditionalExpectation) {
+        for (auto& r : rhs) {
+            if (r.first == VarType::local)
+                continue;
+            /* generate assignment v_i = rhs-arg to ensure that all conditional expectation
+               vars are local variables */
+            applyOperation(RandomVariableOpCode::None, {getId(r)});
+            r = ops_.back().lhs;
+        }
+    }
+
     Operation op;
     op.lhs = getVar(resultId);
     op.rhs = rhs;
@@ -188,10 +206,6 @@ void GpuCodeGenerator::determineKernelBreakLines() {
             currentCondExpVars.insert(ops_[i].lhs);
         }
     }
-
-    // add last line as break line
-
-    kernelBreakLines_.push_back(ops_.size());
 }
 
 void GpuCodeGenerator::generateKernelStartCode() {
@@ -226,6 +240,7 @@ void GpuCodeGenerator::generateOperationCode(const Operation& op) {
 
     switch (op.randomVariableOpCode) {
     case RandomVariableOpCode::None: {
+        code = resultStr + "=" + argStr[0] + ";\n";
         break;
     }
     case RandomVariableOpCode::Add: {
@@ -249,13 +264,7 @@ void GpuCodeGenerator::generateOperationCode(const Operation& op) {
         break;
     }
     case RandomVariableOpCode::ConditionalExpectation: {
-        /* this is computed on the host - we need to ensure that all args are
-           available as local vars though */
-        for (auto const& r : op.rhs) {
-            if (r.first == VarType::local)
-                continue;
-            code = getVarStr(getVar(generateResultId())) + "=" + getVarStr(r) + ";\n";
-        }
+        // no code needed, calc is done by a special kernel or on the host
         break;
     }
     case RandomVariableOpCode::IndicatorEq: {
@@ -318,10 +327,13 @@ void GpuCodeGenerator::generateOperationCode(const Operation& op) {
 }
 
 void GpuCodeGenerator::generateOutputVarAssignments() {
-    for (auto const& o : outputVars_) {
+    for (auto& o : outputVars_) {
         if (o.first == VarType::local)
             continue;
-        sourceCode_ += getVarStr(getVar(generateResultId())) + "=" + getVarStr(o) + "\n";
+        /* generate assignment v_i = o and replace output var o to ensure all output vars
+           are local variables */
+        applyOperation(RandomVariableOpCode::None, {getId(o)});
+        o = ops_.back().lhs;
     }
 }
 
@@ -335,26 +347,25 @@ void GpuCodeGenerator::finalize() {
 
     generateBoilerplateCode();
     determineKernelBreakLines();
+    generateOutputVarAssignments();
+
+    // add last line as break line, this is what the loop below expects
+
+    kernelBreakLines_.push_back(ops_.size());
 
     // loop over ops and generate kernel code
 
+    generateKernelStartCode();
+
     for (std::size_t i = 0; i < ops_.size() + 1; ++i) {
-
-        // generate kernel end / start code if needed and increment kernel no
-
         if (i == kernelBreakLines_[currentKernelNo_]) {
-            if (currentKernelNo_ > 0) {
-                if (i == ops_.size()) {
-                    generateOutputVarAssignments();
-                }
-                generateKernelEndCode();
-            }
-            if (i < ops_.size() - 1) {
-                generateKernelStartCode();
-            }
+            if (i == ops_.size())
+                sourceCode_ += outputVarAssignments_;
+            generateKernelEndCode();
             ++currentKernelNo_;
+            if (i < ops_.size())
+                generateKernelStartCode();
         }
-
         if (i < ops_.size())
             generateOperationCode(ops_[i]);
     }
