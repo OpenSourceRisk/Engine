@@ -201,6 +201,8 @@ public:
 
 private:
     void updateVariatesPool();
+    void initGpuCodeGenerator();
+    void finalizeGpuCodeGenerator();
 
     void runHealthChecks();
     std::string runHealthCheckProgram(const std::string& source, const std::string& kernelName);
@@ -926,6 +928,17 @@ std::vector<std::vector<std::size_t>> OpenClContext::createInputVariates(const s
     return resultIds;
 }
 
+void OpenClContext::initGpuCodeGenerator() {
+    if (!gpuCodeGenerator_[currentId_ - 1].initialized())
+        gpuCodeGenerator_[currentId_ - 1].initialize(inputVarIsScalar_.size(), inputVarIsScalar_, nVariates_,
+                                                     size_[currentId_ - 1], settings_.useDoublePrecision);
+}
+
+void OpenClContext::finalizeGpuCodeGenerator() {
+    if (!gpuCodeGenerator_[currentId_ - 1].finalized())
+        gpuCodeGenerator_[currentId_ - 1].finalize();
+}
+
 std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode,
                                           const std::vector<std::size_t>& args) {
     QL_REQUIRE(currentState_ == ComputeState::createInput || currentState_ == ComputeState::createVariates ||
@@ -937,11 +950,7 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
     QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::applyOperation(): id (" << currentId_ << ") in version "
                                                                                     << version_[currentId_ - 1]
                                                                                     << " has a kernel already.");
-
-    if (!gpuCodeGenerator_[currentId_ - 1].initialized())
-        gpuCodeGenerator_[currentId_ - 1].initialize(inputVarIsScalar_.size(), inputVarIsScalar_, nVariates_,
-                                                     size_[currentId_ - 1], settings_.useDoublePrecision);
-
+    initGpuCodeGenerator();
     return gpuCodeGenerator_[currentId_ - 1].applyOperation(randomVariableOpCode, args);
 }
 
@@ -950,6 +959,7 @@ void OpenClContext::freeVariable(const std::size_t id) {
     QL_REQUIRE(!hasKernel_[currentId_ - 1], "OpenClContext::freeVariable(): id ("
                                                 << currentId_ << ") in version " << version_[currentId_ - 1]
                                                 << " has a kernel already, variables can not be freed.");
+    initGpuCodeGenerator();
     gpuCodeGenerator_[currentId_ - 1].freeVariable(id);
 }
 
@@ -960,6 +970,7 @@ void OpenClContext::declareOutputVariable(const std::size_t id) {
                                                 << currentId_ << ") in version " << version_[currentId_ - 1]
                                                 << " has a kernel already, output variables can not be declared.");
     currentState_ = ComputeState::declareOutput;
+    initGpuCodeGenerator();
     gpuCodeGenerator_[currentId_ - 1].declareOutputVariable(id);
 }
 
@@ -980,10 +991,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
     guard.currentState = &currentState_;
 
-    // finalize the code generator if this is a new calc id
-
-    if (!gpuCodeGenerator_[currentId_ - 1].finalized())
-        gpuCodeGenerator_[currentId_ - 1].finalize();
+    initGpuCodeGenerator();
+    finalizeGpuCodeGenerator();
 
     // perform some checks
 
@@ -1019,6 +1028,9 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
     cl_mem valuesBuffer;
     if (gpuCodeGenerator_[currentId_ - 1].nLocalVars() > 0) {
+        // std::cerr << "creating values buffer "
+        //           << gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1] * fpSize / 1024.0 / 1024.0
+        //           << " MB" << std::endl;
         valuesBuffer =
             clCreateBuffer(*context_, CL_MEM_READ_WRITE,
                            fpSize * gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1], NULL, &err);
@@ -1035,6 +1047,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     // build kernel if this is a new calc id
 
     if (!hasKernel_[currentId_ - 1]) {
+        // std::cerr << "generated kernel code: " << gpuCodeGenerator_[currentId_ - 1].sourceCode() << std::endl;
         cl_int err;
         const char* kernelSourcePtr = gpuCodeGenerator_[currentId_ - 1].sourceCode().c_str();
         program_[currentId_ - 1] = clCreateProgramWithSource(*context_, 1, &kernelSourcePtr, NULL, &err);
@@ -1051,7 +1064,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         }
 
         for (auto const& kernelName : gpuCodeGenerator_[currentId_ - 1].kernelNames()) {
-            std::cerr << "creating kernel '" << kernelName << "'" << std::endl;
             kernel_[currentId_ - 1].push_back(clCreateKernel(program_[currentId_ - 1], kernelName.c_str(), &err));
             QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): error during clCreateKernel() ("
                                               << kernelName << "): " << errorText(err));
@@ -1098,6 +1110,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         valuesFloat.resize(values.size());
     }
 
+    bool valuesBufferHasFinalResults = false;
+
     for (std::size_t part = 0; part < gpuCodeGenerator_[currentId_ - 1].kernelNames().size(); ++part) {
 
         // set kernel args
@@ -1122,8 +1136,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             err = clFinish(queue_);
             timerBase = timer.elapsed().wall;
         }
-
-        std::cerr << "running kernel " << part << " of " << kernel_[currentId_ - 1].size() << std::endl;
 
         cl_event runEvent;
         err = clEnqueueNDRangeKernel(queue_, kernel_[currentId_ - 1][part], 1, NULL, &size_[currentId_ - 1], NULL,
@@ -1193,13 +1205,13 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                 std::copy(ce.data(), ce.data() + ce.size(), &values[v[0].second * size_[currentId_ - 1]]);
             }
 
-            if (!settings_.useDoublePrecision) {
-                std::copy(values.begin(), values.end(), valuesFloat.begin());
-            }
-
-            // copy values from host to device (except this is the last kernel part)
-
             if (part < gpuCodeGenerator_[currentId_ - 1].kernelNames().size() - 1) {
+
+                // copy values from host to device for processing in further parts
+
+                if (!settings_.useDoublePrecision) {
+                    std::copy(values.begin(), values.end(), valuesFloat.begin());
+                }
 
                 runWaitEvents.push_back(cl_event());
                 err = clEnqueueWriteBuffer(queue_, valuesBuffer, CL_FALSE, 0,
@@ -1209,6 +1221,11 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                                            NULL, &runWaitEvents.back());
                 QL_REQUIRE(err == CL_SUCCESS,
                            "OpenClContext::finalizeCalculation(): write values buffer fails: " << errorText(err));
+            } else {
+
+                // the values on the host contain the final result, we don't need to copy below
+
+                valuesBufferHasFinalResults = true;
             }
 
         } // if conditional expectation to be calculated
@@ -1225,33 +1242,37 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         timerBase = timer.elapsed().wall;
     }
 
-    // copy the results (asynchronously)
+    // populate the output
 
-    std::vector<cl_event> outputBufferEvents;
     if (!output.empty()) {
-        std::vector<std::vector<float>> outputFloat;
-        if (!settings_.useDoublePrecision) {
-            outputFloat.resize(output.size(), std::vector<float>(size_[currentId_ - 1]));
-        }
-        for (std::size_t i = 0; i < output.size(); ++i) {
-            outputBufferEvents.push_back(cl_event());
-            err = clEnqueueReadBuffer(
-                queue_, valuesBuffer, CL_FALSE,
-                fpSize * gpuCodeGenerator_[currentId_ - 1].outputVars()[i].second * size_[currentId_ - 1],
-                fpSize * size_[currentId_ - 1],
-                settings_.useDoublePrecision ? (void*)&output[i][0] : (void*)&outputFloat[i][0], runWaitEvents.size(),
-                runWaitEvents.empty() ? NULL : &runWaitEvents[0], &outputBufferEvents.back());
+
+        if (!valuesBufferHasFinalResults) {
+
+            // read values buffer
+
+            cl_event readEvent;
+            err =
+                clEnqueueReadBuffer(queue_, valuesBuffer, CL_FALSE, 0,
+                                    fpSize * gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1],
+                                    settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0],
+                                    runWaitEvents.size(), runWaitEvents.empty() ? NULL : &runWaitEvents[0], &readEvent);
             QL_REQUIRE(err == CL_SUCCESS,
-                       "OpenClContext::finalizeCalculation(): writing to output buffer fails: " << errorText(err));
-        }
-        err = clWaitForEvents(outputBufferEvents.size(), outputBufferEvents.empty() ? nullptr : &outputBufferEvents[0]);
-        QL_REQUIRE(
-            err == CL_SUCCESS,
-            "OpenClContext::finalizeCalculation(): wait for output buffer events to finish fails: " << errorText(err));
-        if (!settings_.useDoublePrecision) {
-            for (std::size_t i = 0; i < output.size(); ++i) {
-                std::copy(outputFloat[i].begin(), outputFloat[i].end(), output[i]);
+                       "OpenClContext::finalizeCalculation(): enqueue read values buffer 2 fails: " << errorText(err));
+
+            err = clWaitForEvents(1, &readEvent);
+
+            QL_REQUIRE(
+                err == CL_SUCCESS,
+                "OpenClContext::finalizeCalculation(): wait for read values buffer event 2 fails: " << errorText(err));
+
+            if (!settings_.useDoublePrecision) {
+                std::copy(valuesFloat.begin(), valuesFloat.end(), values.begin());
             }
+        }
+
+        for (std::size_t i = 0; i < output.size(); ++i) {
+            std::size_t offset = gpuCodeGenerator_[currentId_ - 1].outputVars()[i].second * size_[currentId_ - 1];
+            std::copy(&values[offset], &values[offset + size_[currentId_ - 1]], output[i]);
         }
     }
 
@@ -1260,8 +1281,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::clFinish(): error in debug mode: " << errorText(err));
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
     }
-
-    std::cerr << "open cl finished calculation" << std::endl;
 }
 
 const ComputeContext::DebugInfo& OpenClContext::debugInfo() const { return debugInfo_; }
