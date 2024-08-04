@@ -81,11 +81,12 @@ std::pair<GpuCodeGenerator::VarType, std::size_t> GpuCodeGenerator::getVar(const
 
 std::string GpuCodeGenerator::getVarStr(const std::pair<VarType, const std::size_t>& var) const {
     if (var.first == VarType::input)
-        return "input[" + std::to_string(inputVarOffset_[var.second]) + "UL + i]";
+        return "input[" + std::to_string(inputVarOffset_[var.second]) + "UL" +
+               (inputVarIsScalar_[var.second] ? "" : "+i") + "]";
     else if (var.first == VarType::rn)
-        return "rn[" + std::to_string(var.second * modelSize_) + "UL + i]";
+        return "rn[" + std::to_string(var.second * modelSize_) + "UL+i]";
     else if (var.first == VarType::local)
-        return "values[" + std::to_string(var.second * modelSize_) + "UL + i]";
+        return "values[" + std::to_string(var.second * modelSize_) + "UL+i]";
     else {
         QL_FAIL("GpuCodeGenerator::getId(): var type not handled, internal error.");
     }
@@ -139,12 +140,12 @@ void GpuCodeGenerator::generateBoilerplateCode() {
             "}\n" +
             fpTypeStr_ + " ore_indicatorEq(const " + fpTypeStr_ + " x, const " + fpTypeStr_ + " y);\n" +
             fpTypeStr_ + " ore_indicatorEq(const " + fpTypeStr_ + " x, const " + fpTypeStr_ + " y) "
-                                                "{ return ore_closeEnough(x, y) ? 1.0" + fpSuffix_ + " : 0.0" + fpSuffix_ +"; }\n\n" +
+                                                "{ return ore_closeEnough(x, y) ? 1.0" + fpSuffix_ + " : 0.0" + fpSuffix_ +"; }\n" +
             fpTypeStr_ + " ore_indicatorGt(const " + fpTypeStr_ + " x, const " + fpTypeStr_ + " y);\n" +
             fpTypeStr_ + " ore_indicatorGt(const " + fpTypeStr_ + " x, const " + fpTypeStr_ + " y) " +
-                                                "{ return x > y && !ore_closeEnough(x, y); }\n\n" +
+                                                "{ return x > y && !ore_closeEnough(x, y); }\n" +
             fpTypeStr_ + " ore_indicatorGeq(const " + fpTypeStr_ + " x, const " + fpTypeStr_ + " y);\n" +
-            fpTypeStr_ + " ore_indicatorGeq(const " + fpTypeStr_ + " x, const " + fpTypeStr_ + " y) { return x > y || ore_closeEnough(x, y); }\n\n" +
+            fpTypeStr_ + " ore_indicatorGeq(const " + fpTypeStr_ + " x, const " + fpTypeStr_ + " y) { return x > y || ore_closeEnough(x, y); }\n" +
             fpTypeStr_ + " ore_normalCdf(const " + fpTypeStr_ + " x);\n" +
             fpTypeStr_ + " ore_normalCdf(const " + fpTypeStr_ + " x) {\n return 0.0" + fpSuffix_ + ";}\n" + 
             fpTypeStr_ + " ore_normalPdf(const " + fpTypeStr_ + " x);\n" +
@@ -190,7 +191,7 @@ void GpuCodeGenerator::determineKernelBreakLines() {
 
     // add last line as break line
 
-    kernelBreakLines_.push_back(ops_.size() - 1);
+    kernelBreakLines_.push_back(ops_.size());
 }
 
 void GpuCodeGenerator::generateKernelStartCode() {
@@ -248,7 +249,7 @@ void GpuCodeGenerator::generateOperationCode(const Operation& op) {
         break;
     }
     case RandomVariableOpCode::ConditionalExpectation: {
-        /* this is computed on the host - we need to ensure that all args are 
+        /* this is computed on the host - we need to ensure that all args are
            available as local vars though */
         for (auto const& r : op.rhs) {
             if (r.first == VarType::local)
@@ -337,25 +338,25 @@ void GpuCodeGenerator::finalize() {
 
     // loop over ops and generate kernel code
 
-    for (std::size_t i = 0; i < ops_.size(); ++i) {
+    for (std::size_t i = 0; i < ops_.size() + 1; ++i) {
 
         // generate kernel end / start code if needed and increment kernel no
 
         if (i == kernelBreakLines_[currentKernelNo_]) {
             if (currentKernelNo_ > 0) {
-                if (i == ops_.size() - 1) {
+                if (i == ops_.size()) {
                     generateOutputVarAssignments();
                 }
                 generateKernelEndCode();
             }
             if (i < ops_.size() - 1) {
-                kernelNames_.push_back("ore_" + std::to_string(currentKernelNo_));
                 generateKernelStartCode();
             }
             ++currentKernelNo_;
         }
 
-        generateOperationCode(ops_[i]);
+        if (i < ops_.size())
+            generateOperationCode(ops_[i]);
     }
 
     finalized_ = true;
