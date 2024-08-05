@@ -27,7 +27,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository_owner }}/ore-engine
 
 jobs:
   build-and-release:
@@ -104,7 +104,7 @@ jobs:
           target: builder-tested
           cache-from: |
             type=gha,scope=${{ matrix.flavour.name }}
-            type=registry,ref=ghcr.io/nickcmaynard/ore-engine-builder:${{ matrix.flavour.tag_prefix || matrix.flavour.name }}-latest
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-builder:${{ matrix.flavour.tag_prefix || matrix.flavour.name }}-latest
             ${{ fromJSON(steps.builder-tag-cache-mapper.outputs.result).cache_from }}
           cache-to: |
             type=gha,mode=max,scope=${{ matrix.flavour.name }}
@@ -160,6 +160,6 @@ jobs:
           labels: ${{ steps.release-meta.outputs.labels }}
           cache-from: |
             type=gha,scope=${{ matrix.flavour.name }}
-            type=registry,ref=ghcr.io/nickcmaynard/ore-engine:${{ matrix.flavour.tag_prefix || matrix.flavour.name }}-latest
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.flavour.tag_prefix || matrix.flavour.name }}-latest
             ${{ fromJSON(steps.release-tag-cache-mapper.outputs.result).cache_from }}
           cache-to: ${{ (github.event_name != 'pull_request') && fromJSON(steps.release-tag-cache-mapper.outputs.result).cache_to || '' }}
