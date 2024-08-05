@@ -19,6 +19,8 @@
 #include <qle/math/gpucodegenerator.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
 
+#include <ql/errors.hpp>
+
 #include <boost/algorithm/string/join.hpp>
 
 namespace QuantExt {
