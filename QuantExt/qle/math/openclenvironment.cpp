@@ -21,8 +21,6 @@
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_opcodes.hpp>
 
-#include <qle/math/randomvariable_io.hpp> // just for debugging!
-
 #include <ql/errors.hpp>
 
 #include <boost/algorithm/string/join.hpp>
@@ -235,6 +233,7 @@ private:
     std::vector<cl_program> program_;
     std::vector<std::vector<cl_kernel>> kernel_;
     std::vector<GpuCodeGenerator> gpuCodeGenerator_;
+    std::vector<std::size_t> numberOfOperations_;
 
     // 1b variates (shared pool of mersenne twister based normal variates)
 
@@ -567,6 +566,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         program_.push_back(cl_program());
         kernel_.push_back(std::vector<cl_kernel>());
         gpuCodeGenerator_.push_back({});
+        numberOfOperations_.push_back(0);
 
         currentId_ = hasKernel_.size();
         newCalc = true;
@@ -951,6 +951,10 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
                                                                                     << version_[currentId_ - 1]
                                                                                     << " has a kernel already.");
     initGpuCodeGenerator();
+
+    if (settings_.debug)
+        numberOfOperations_[currentId_ - 1]++;
+
     return gpuCodeGenerator_[currentId_ - 1].applyOperation(randomVariableOpCode, args);
 }
 
@@ -1234,6 +1238,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             err = clFinish(queue_);
             QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::clFinish(): error in debug mode: " << errorText(err));
             debugInfo_.nanoSecondsCalculation += timer.elapsed().wall - timerBase;
+            debugInfo_.numberOfOperations += numberOfOperations_[currentId_ - 1];
         }
 
     } // for part (execute kernel part)
