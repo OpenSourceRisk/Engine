@@ -99,6 +99,7 @@ private:
     std::vector<std::size_t> numberOfVariates_;
     std::vector<std::size_t> numberOfVars_;
     std::vector<std::vector<std::size_t>> outputVars_;
+    std::vector<std::size_t> numberOfOperations_;
 
     // 2 curent calc
 
@@ -169,6 +170,7 @@ std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::siz
         numberOfVariates_.push_back(0);
         numberOfVars_.push_back(0);
         outputVars_.push_back({});
+        numberOfOperations_.push_back(0);
 
         currentId_ = size_.size();
         newCalc_ = true;
@@ -192,6 +194,7 @@ std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::siz
             numberOfVariates_[id - 1] = 0;
             numberOfVars_[id - 1] = 0;
             outputVars_[id - 1].clear();
+            numberOfOperations_[id - 1] = 0;
             newCalc_ = true;
         }
 
@@ -296,7 +299,7 @@ std::size_t BasicCpuContext::applyOperation(const std::size_t randomVariableOpCo
     // update num of ops in debug info
 
     if (settings_.debug)
-        debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
+        numberOfOperations_[currentId_ - 1] += size_[currentId_ - 1];
 
     // return result id
 
@@ -385,6 +388,11 @@ void BasicCpuContext::finalizeCalculation(std::vector<double*>& output) {
             output[i][j] = v->operator[](j);
         }
     }
+
+    // update debug info
+
+    if(settings_.debug)
+        debugInfo_.numberOfOperations += numberOfOperations_[currentId_ - 1];
 }
 
 const ComputeContext::DebugInfo& BasicCpuContext::debugInfo() const { return debugInfo_; }

@@ -592,6 +592,7 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
             releaseProgram(program_[id - 1],
                            "program id " + std::to_string(id) + " (during initiateCalculation, old version: " +
                                std::to_string(version_[id - 1]) + ", new version:" + std::to_string(version) + ")");
+            numberOfOperations_[id - 1] = 0;
             newCalc = true;
         }
 
@@ -953,7 +954,7 @@ std::size_t OpenClContext::applyOperation(const std::size_t randomVariableOpCode
     initGpuCodeGenerator();
 
     if (settings_.debug)
-        numberOfOperations_[currentId_ - 1]++;
+        numberOfOperations_[currentId_ - 1] += size_[currentId_ - 1];
 
     return gpuCodeGenerator_[currentId_ - 1].applyOperation(randomVariableOpCode, args);
 }
@@ -1238,10 +1239,13 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
             err = clFinish(queue_);
             QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::clFinish(): error in debug mode: " << errorText(err));
             debugInfo_.nanoSecondsCalculation += timer.elapsed().wall - timerBase;
-            debugInfo_.numberOfOperations += numberOfOperations_[currentId_ - 1];
         }
 
     } // for part (execute kernel part)
+
+    if (settings_.debug) {
+        debugInfo_.numberOfOperations += numberOfOperations_[currentId_ - 1];
+    }
 
     if (settings_.debug) {
         timerBase = timer.elapsed().wall;
