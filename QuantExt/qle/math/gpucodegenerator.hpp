@@ -24,6 +24,8 @@
 
 #include <cstddef>
 #include <vector>
+#include <string>
+#include <utility>
 
 namespace QuantExt {
 
