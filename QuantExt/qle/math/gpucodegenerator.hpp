@@ -22,6 +22,9 @@
 
 #pragma once
 
+#include <cstddef>
+#include <vector>
+
 namespace QuantExt {
 
 class GpuCodeGenerator {
