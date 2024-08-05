@@ -50,6 +50,10 @@ struct ComputeEnvironmentFixture {
 
 namespace {
 void outputTimings(const ComputeContext& c) {
+    BOOST_TEST_MESSAGE("  " << c.debugInfo().numberOfOperations << " ops");
+    BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().nanoSecondsCalculation / 1.0E3 << " mus (calc)");
+    BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().nanoSecondsDataCopy / 1.0E3 << " mus (data copy)");
+    BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().nanoSecondsProgramBuild / 1.0E3 << " mus (build)");
     BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().numberOfOperations / c.debugInfo().nanoSecondsCalculation * 1.0E3
                             << " MFLOPS (raw)");
     BOOST_TEST_MESSAGE("  " << (double)c.debugInfo().numberOfOperations /
@@ -169,7 +173,7 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
     ComputeEnvironmentFixture fixture;
 
     const std::size_t n = 65536;
-    const std::size_t m = 1024;
+    const std::size_t m = 8192;
 
     std::vector<double> results;
     for (auto const& d : ComputeEnvironment::instance().getAvailableDevices()) {
@@ -197,16 +201,20 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
             val = val3;
         }
         c.declareOutputVariable(val);
+        boost::timer::cpu_timer t1;
         c.finalizeCalculation(output);
-        BOOST_TEST_MESSAGE("  first calculation result = " << output.front()[0]);
+        BOOST_TEST_MESSAGE("  first calculation result = " << output.front()[0]
+                                                           << " timing = " << t1.elapsed().wall / 1E3 << " mus");
         results.push_back(output.front()[0]);
 
         // second calculation
 
         c.initiateCalculation(n, id, 0);
         values[0] = c.createInputVariable(&data[0]);
+        boost::timer::cpu_timer t2;
         c.finalizeCalculation(output);
-        BOOST_TEST_MESSAGE("  second calculation result = " << output.front()[0]);
+        BOOST_TEST_MESSAGE("  second calculation result = " << output.front()[0]
+                                                            << " timing = " << t2.elapsed().wall / 1E3 << " mus");
         results.push_back(output.front()[0]);
 
         outputTimings(c);
@@ -230,7 +238,8 @@ BOOST_AUTO_TEST_CASE(testLargeCalc) {
     t1 = timer.elapsed().wall;
     BOOST_TEST_MESSAGE("  testing large calc locally (benchmark)");
     BOOST_TEST_MESSAGE("  result = " << res.at(0));
-    BOOST_TEST_MESSAGE("  " << 2.0 * (double)m * (double)n / (double)(t1) * 1.0E3 << " MFlops");
+    BOOST_TEST_MESSAGE("  " << 2.0 * (double)m * (double)n / (double)(t1)*1.0E3 << " MFlops, timing = " << t1 / 1E3
+                            << "mus");
 
     for (auto const& r : results) {
         BOOST_CHECK_CLOSE(res.at(0), r, 1E-3);
