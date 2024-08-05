@@ -180,18 +180,24 @@ void GpuCodeGenerator::generateBoilerplateCode() {
 
 void GpuCodeGenerator::determineKernelBreakLines() {
 
+    constexpr std::size_t max_kernel_lines = 4096;
+
     /* process conditional expectations and
        - generate resulting break lines
        - populate the conditionalExpectationVars_ container */
 
     std::set<std::pair<VarType, std::size_t>> currentCondExpVars;
 
+    std::cout << "determine kernel break lines: have " << ops_.size() << " lines" << std::endl;
+
     for (std::size_t i = 0; i < ops_.size(); ++i) {
 
-        /* a new part is started as soon as the rhs of an op depends on a conditional expectation
-           result var in the current kernel */
+        /* a new part is started when
+           - we exceed the max number of lines per kernel or
+           - as soon as the rhs of an op depends on a conditional expectation result var in the current kernel */
 
-        if (std::find_if(ops_[i].rhs.begin(), ops_[i].rhs.end(),
+        if ((i + 1) % max_kernel_lines == 0 ||
+            std::find_if(ops_[i].rhs.begin(), ops_[i].rhs.end(),
                          [&currentCondExpVars](const std::pair<VarType, std::size_t>& v) {
                              return currentCondExpVars.find(v) != currentCondExpVars.end();
                          }) != ops_[i].rhs.end()) {
