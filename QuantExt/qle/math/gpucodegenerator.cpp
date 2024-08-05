@@ -23,6 +23,8 @@
 
 #include <boost/algorithm/string/join.hpp>
 
+#include <set>
+
 namespace QuantExt {
 
 void GpuCodeGenerator::initialize(const std::size_t nInputVars, const std::vector<bool> inputVarIsScalar,
