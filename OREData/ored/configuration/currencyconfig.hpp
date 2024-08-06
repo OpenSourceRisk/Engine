@@ -53,6 +53,7 @@ public:
 
     //! check out any configured currencies
     const vector<ConfigurableCurrency>& getCurrencies() const { return currencies_; }
+    void addCurrencies();
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;

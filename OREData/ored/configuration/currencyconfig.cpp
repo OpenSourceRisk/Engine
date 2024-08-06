@@ -39,6 +39,22 @@ void CurrencyConfigsSingleton::setCurrencyConfigs(const QuantLib::ext::shared_pt
     currencyConfigs_ = currencyConfigs;
 }
 
+void CurrencyConfig::addCurrencies() {
+    for (auto curr : currencies_) {
+        switch (curr.currencyType()) {
+        case QuantExt::ConfigurableCurrency::Type::Crypto:
+            CurrencyParser::instance().addCrypto(curr.code(), curr);
+            break;
+        case QuantExt::ConfigurableCurrency::Type::Metal:
+            CurrencyParser::instance().addMetal(curr.code(), curr);
+            break;
+        default:
+            CurrencyParser::instance().addCurrency(curr.code(), curr);
+            break;
+        }
+    }
+}
+
 
 void CurrencyConfig::fromXML(XMLNode* baseNode) {
     currencies_.clear();
@@ -66,18 +82,9 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
                                              rounding, format, minorUnitCodes, currencyType);
             DLOG("loading configuration for currency code " << isoCode);
 
-            switch (currencyType) { 
-                case QuantExt::ConfigurableCurrency::Type::Crypto:
-                    CurrencyParser::instance().addCrypto(c.code(), c);
-                    break;
-                case QuantExt::ConfigurableCurrency::Type::Metal:
-                    CurrencyParser::instance().addMetal(c.code(), c);
-                    break;
-                default:
-                    CurrencyParser::instance().addCurrency(c.code(), c);
-                    break;
-            }
             currencies_.push_back(c);
+
+            addCurrencies();
 
         } catch (std::exception&) {
             ALOG("error loading currency config for name " << name << " iso code " << isoCode);

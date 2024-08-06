@@ -94,6 +94,13 @@ void CalendarAdjustmentConfig::append(const CalendarAdjustmentConfig& c) {
     }
 };
 
+void CalendarAdjustmentConfig::addCalendars() {
+    for (auto cal : baseCalendars_) {
+        string calname = cal.first;
+        CalendarParser::instance().addCalendar(cal.second, calname);
+    }
+}
+
 void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CalendarAdjustments");
 

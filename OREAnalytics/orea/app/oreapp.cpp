@@ -229,8 +229,6 @@ void OREApp::analytics() {
 
         // Initialize the global conventions 
         InstrumentConventions::instance().setConventions(inputs_->conventions());
-        CalendarAdjustmentsSingleton::instance().setCalendarAdjustments(inputs_->calendarAdjustmentConfigs());
-        CurrencyConfigsSingleton::instance().setCurrencyConfigs(inputs_->currencyConfigs());
 
         // Create a market data loader that reads market data, fixings, dividends from csv files
         auto csvLoader = buildCsvLoader(params_);
@@ -382,8 +380,12 @@ void OREApp::initFromInputs() {
     // Initialise Singletons
     Settings::instance().evaluationDate() = inputs_->asof();
     InstrumentConventions::instance().setConventions(inputs_->conventions());
-    CalendarAdjustmentsSingleton::instance().setCalendarAdjustments(inputs_->calendarAdjustmentConfigs());
     CurrencyConfigsSingleton::instance().setCurrencyConfigs(inputs_->currencyConfigs());
+    CurrencyConfigsSingleton::instance().getCurrencyConfigs()->addCurrencies();
+
+    CalendarAdjustmentsSingleton::instance().setCalendarAdjustments(inputs_->calendarAdjustmentConfigs());
+    CalendarAdjustmentsSingleton::instance().getCalendarAdjustments()->addCalendars();
+
     if (console_) {
         ConsoleLog::instance().switchOn();
     }
@@ -492,9 +494,6 @@ void OREApp::run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader) {
         // Initialize the global conventions 
         QL_REQUIRE(inputs_->conventions(), "conventions not set");
         InstrumentConventions::instance().setConventions(inputs_->conventions());
-
-        CalendarAdjustmentsSingleton::instance().setCalendarAdjustments(inputs_->calendarAdjustmentConfigs());
-        CurrencyConfigsSingleton::instance().setCurrencyConfigs(inputs_->currencyConfigs());
 
         // Create the analytics manager
         analyticsManager_ = QuantLib::ext::make_shared<AnalyticsManager>(inputs_, loader);
