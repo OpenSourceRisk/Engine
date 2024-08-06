@@ -188,8 +188,6 @@ void GpuCodeGenerator::determineKernelBreakLines() {
 
     std::set<std::pair<VarType, std::size_t>> currentCondExpVars;
 
-    std::cout << "determine kernel break lines: have " << ops_.size() << " lines" << std::endl;
-
     for (std::size_t i = 0; i < ops_.size(); ++i) {
 
         /* a new part is started when
