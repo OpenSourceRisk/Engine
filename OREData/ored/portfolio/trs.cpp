@@ -152,7 +152,6 @@ std::map<AssetClass, std::set<std::string>>
 TRS::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     if (!portfolioId_.empty()) {
-        std::cout << portfolioId_ << std::endl;
         AssetClass test;
         test = parseAssetClass("PORTFOLIO_DETAILS");
         result[test].insert(portfolioId_);
