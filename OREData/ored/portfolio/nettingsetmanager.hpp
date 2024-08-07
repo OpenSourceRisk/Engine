@@ -79,7 +79,7 @@ public:
     /*!
       adds a new NettingSetDefinition object to manager
     */
-    void add(const QuantLib::ext::shared_ptr<NettingSetDefinition>& nettingSet);
+    void add(const QuantLib::ext::shared_ptr<NettingSetDefinition>& nettingSet) const;
 
     /*!
       extracts a pointer to a NettingSetDefinition from manager
@@ -97,8 +97,9 @@ public:
     const std::map<NettingSetDetails, const QuantLib::ext::shared_ptr<NettingSetDefinition>>& nettingSetDefinitions() { return data_; }
 
 private:
-    map<NettingSetDetails, const QuantLib::ext::shared_ptr<NettingSetDefinition>> data_;
-    vector<NettingSetDetails> uniqueKeys_;
+    mutable map<NettingSetDetails, const QuantLib::ext::shared_ptr<NettingSetDefinition>> data_;
+    mutable map<NettingSetDetails, string> unparsed_;
+    mutable vector<NettingSetDetails> uniqueKeys_;
 };
 } // namespace data
 } // namespace ore
