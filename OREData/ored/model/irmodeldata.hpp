@@ -109,6 +109,7 @@ public:
     //! \name Setters/Getters
     //@{
     const std::string& name() { return name_; }
+    const std::string& qualifier() const { return qualifier_; }
     std::string& qualifier() { return qualifier_; }
     CalibrationType& calibrationType() { return calibrationType_; }
 
