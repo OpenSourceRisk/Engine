@@ -146,7 +146,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     // Defaults for simulate atm only
     setSimulateFxVolATMOnly(false);
     setSimulateEquityVolATMOnly(false);
-    simulateSwapVolATMOnly() = false;
+    setSimulateSwapVolATMOnly(false);
     setSimulateCdsVolsATMOnly(false);
     // Default interpolation for yield curves
     interpolation_ = "LogLinear";
