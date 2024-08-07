@@ -201,6 +201,10 @@ private:
     void updateVariatesPool();
     void initGpuCodeGenerator();
     void finalizeGpuCodeGenerator();
+    void copyLocalValuesToHost(std::vector<cl_event>& runWaitEvents, cl_mem valuesBuffer, double* values,
+                               const std::vector<std::pair<GpuCodeGenerator::VarType, std::size_t>>& vars) const;
+    void copyLocalValuesToDevice(std::vector<cl_event>& runWaitEvents, cl_mem valuesBuffer, double* values,
+                                 const std::vector<std::pair<GpuCodeGenerator::VarType, std::size_t>>& vars) const;
 
     void runHealthChecks();
     std::string runHealthCheckProgram(const std::string& source, const std::string& kernelName);
@@ -1110,12 +1114,6 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         runWaitEvents.push_back(inputBufferEvent);
 
     std::vector<double> values(gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1]);
-    std::vector<float> valuesFloat;
-    if (!settings_.useDoublePrecision) {
-        valuesFloat.resize(values.size());
-    }
-
-    bool valuesBufferHasFinalResults = false;
 
     for (std::size_t part = 0; part < gpuCodeGenerator_[currentId_ - 1].kernelNames().size(); ++part) {
 
@@ -1152,27 +1150,12 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
         if (!gpuCodeGenerator_[currentId_ - 1].conditionalExpectationVars()[part].empty()) {
 
-            // copy values from device to host
+            std::vector<std::pair<GpuCodeGenerator::VarType, std::size_t>> tmp;
+            for (auto const& l : gpuCodeGenerator_[currentId_ - 1].conditionalExpectationVars()[part])
+                tmp.insert(tmp.end(), l.begin(), l.end());
+            copyLocalValuesToHost(runWaitEvents, valuesBuffer, &values[0], tmp);
 
-            cl_event readEvent;
-            err =
-                clEnqueueReadBuffer(queue_, valuesBuffer, CL_FALSE, 0,
-                                    fpSize * gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1],
-                                    settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0],
-                                    runWaitEvents.size(), runWaitEvents.empty() ? NULL : &runWaitEvents[0], &readEvent);
-            QL_REQUIRE(err == CL_SUCCESS,
-                       "OpenClContext::finalizeCalculation(): enqueue read values buffer fails: " << errorText(err));
-
-            err = clWaitForEvents(1, &readEvent);
-
-            QL_REQUIRE(
-                err == CL_SUCCESS,
-                "OpenClContext::finalizeCalculation(): wait for read values buffer event fails: " << errorText(err));
-
-            if (!settings_.useDoublePrecision) {
-                std::copy(valuesFloat.begin(), valuesFloat.end(), values.begin());
-            }
-
+            std::vector<std::pair<GpuCodeGenerator::VarType, std::size_t>> updatedVars;
             for (auto const& v : gpuCodeGenerator_[currentId_ - 1].conditionalExpectationVars()[part]) {
 
                 // calculate conditional expectation value
@@ -1208,29 +1191,12 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
                 ce.expand();
                 std::copy(ce.data(), ce.data() + ce.size(), &values[v[0].second * size_[currentId_ - 1]]);
+
+                updatedVars.push_back(v[0]);
             }
 
             if (part < gpuCodeGenerator_[currentId_ - 1].kernelNames().size() - 1) {
-
-                // copy values from host to device for processing in further parts
-
-                if (!settings_.useDoublePrecision) {
-                    std::copy(values.begin(), values.end(), valuesFloat.begin());
-                }
-
-                runWaitEvents.push_back(cl_event());
-                err = clEnqueueWriteBuffer(queue_, valuesBuffer, CL_FALSE, 0,
-                                           fpSize * gpuCodeGenerator_[currentId_ - 1].nLocalVars() *
-                                               size_[currentId_ - 1],
-                                           settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0], 0,
-                                           NULL, &runWaitEvents.back());
-                QL_REQUIRE(err == CL_SUCCESS,
-                           "OpenClContext::finalizeCalculation(): write values buffer fails: " << errorText(err));
-            } else {
-
-                // the values on the host contain the final result, we don't need to copy below
-
-                valuesBufferHasFinalResults = true;
+                copyLocalValuesToDevice(runWaitEvents, valuesBuffer, &values[0], updatedVars);
             }
 
         } // if conditional expectation to be calculated
@@ -1255,29 +1221,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
     if (!output.empty()) {
 
-        if (!valuesBufferHasFinalResults) {
-
-            // read values buffer
-
-            cl_event readEvent;
-            err =
-                clEnqueueReadBuffer(queue_, valuesBuffer, CL_FALSE, 0,
-                                    fpSize * gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1],
-                                    settings_.useDoublePrecision ? (void*)&values[0] : (void*)&valuesFloat[0],
-                                    runWaitEvents.size(), runWaitEvents.empty() ? NULL : &runWaitEvents[0], &readEvent);
-            QL_REQUIRE(err == CL_SUCCESS,
-                       "OpenClContext::finalizeCalculation(): enqueue read values buffer 2 fails: " << errorText(err));
-
-            err = clWaitForEvents(1, &readEvent);
-
-            QL_REQUIRE(
-                err == CL_SUCCESS,
-                "OpenClContext::finalizeCalculation(): wait for read values buffer event 2 fails: " << errorText(err));
-
-            if (!settings_.useDoublePrecision) {
-                std::copy(valuesFloat.begin(), valuesFloat.end(), values.begin());
-            }
-        }
+        copyLocalValuesToHost(runWaitEvents, valuesBuffer, &values[0], gpuCodeGenerator_[currentId_ - 1].outputVars());
 
         for (std::size_t i = 0; i < output.size(); ++i) {
             std::size_t offset = gpuCodeGenerator_[currentId_ - 1].outputVars()[i].second * size_[currentId_ - 1];
@@ -1289,6 +1233,82 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         err = clFinish(queue_);
         QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::clFinish(): error in debug mode: " << errorText(err));
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
+    }
+}
+
+void OpenClContext::copyLocalValuesToHost(
+    std::vector<cl_event>& runWaitEvents, cl_mem valuesBuffer, double* values,
+    const std::vector<std::pair<GpuCodeGenerator::VarType, std::size_t>>& vars) const {
+
+    if (vars.empty())
+        return;
+
+    std::vector<cl_event> readEvents;
+    std::size_t fpSize = settings_.useDoublePrecision ? sizeof(double) : sizeof(float);
+
+    std::vector<float> valuesFloat;
+    if (!settings_.useDoublePrecision) {
+        valuesFloat.resize(vars.size() * size_[currentId_ - 1]);
+    }
+
+    std::size_t counter = 0;
+    for (auto const& v : vars) {
+        readEvents.push_back(cl_event());
+        cl_int err = clEnqueueReadBuffer(
+            queue_, valuesBuffer, CL_FALSE, fpSize * v.second * size_[currentId_ - 1], fpSize * size_[currentId_ - 1],
+            settings_.useDoublePrecision ? (void*)&values[v.second * size_[currentId_ - 1]]
+                                         : (void*)&valuesFloat[counter * size_[currentId_ - 1]],
+            runWaitEvents.size(), runWaitEvents.empty() ? NULL : &runWaitEvents[0], &readEvents.back());
+        QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::copyLocalValuesToHost() fails: " << errorText(err));
+        ++counter;
+    }
+
+    cl_int err = clWaitForEvents(readEvents.size(), &readEvents[0]);
+    QL_REQUIRE(
+        err == CL_SUCCESS,
+        "OpenClContext::copyLocalValuesToHost() fails: wait for read values buffer event fails: " << errorText(err));
+
+    if (!settings_.useDoublePrecision) {
+        std::size_t counter = 0;
+        for (auto const& v : vars) {
+            std::copy(&valuesFloat[counter * size_[currentId_ - 1]],
+                      &valuesFloat[(counter + 1) * size_[currentId_ - 1]], &values[v.second * size_[currentId_ - 1]]);
+            ++counter;
+        }
+    }
+}
+
+void OpenClContext::copyLocalValuesToDevice(
+    std::vector<cl_event>& runWaitEvents, cl_mem valuesBuffer, double* values,
+    const std::vector<std::pair<GpuCodeGenerator::VarType, std::size_t>>& vars) const {
+
+    if (vars.empty())
+        return;
+
+    std::size_t fpSize = settings_.useDoublePrecision ? sizeof(double) : sizeof(float);
+
+    std::vector<float> valuesFloat;
+    if (!settings_.useDoublePrecision) {
+        valuesFloat.resize(vars.size() * size_[currentId_ - 1]);
+        std::size_t counter = 0;
+        for (auto const& v : vars) {
+            std::copy(&values[v.second * size_[currentId_ - 1]], &values[(v.second + 1) * size_[currentId_ - 1]],
+                      &valuesFloat[counter * size_[currentId_ - 1]]);
+        }
+        ++counter;
+    }
+
+    std::size_t counter = 0;
+    for (auto const& v : vars) {
+        runWaitEvents.push_back(cl_event());
+        cl_int err = clEnqueueWriteBuffer(
+            queue_, valuesBuffer, CL_FALSE, fpSize * v.second * size_[currentId_ - 1], fpSize * size_[currentId_ - 1],
+            settings_.useDoublePrecision ? (void*)&values[v.second * size_[currentId_ - 1]]
+                                         : (void*)&valuesFloat[counter * size_[currentId_ - 1]],
+            0, NULL, &runWaitEvents.back());
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::copyLocalValuesToDevice(): write values buffer fails: " << errorText(err));
+        ++counter;
     }
 }
 
