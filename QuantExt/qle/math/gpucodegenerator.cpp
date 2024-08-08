@@ -52,6 +52,7 @@ void GpuCodeGenerator::initialize(const std::size_t nInputVars, const std::vecto
     outputVarAssignments_.clear();
     sourceCode_.clear();
     kernelNames_.clear();
+    localVarReplacements_.clear();
 
     inputVarOffset_.clear();
     std::size_t offset = 0;
@@ -216,6 +217,68 @@ void GpuCodeGenerator::determineKernelBreakLines() {
     }
 }
 
+void GpuCodeGenerator::determineLocalVarReplacements() {
+
+    // determine the vars that we want to replace with local vars for each part
+
+    constexpr std::size_t max_local_vars = 16;
+
+    std::size_t kernelNo = 0;
+    std::vector<std::size_t> freq(nLocalVars_, 0);
+
+    for (std::size_t i = 0; i < ops_.size(); ++i) {
+
+        if (kernelBreakLines_[kernelNo] == i) {
+            std::vector<std::size_t> index(nLocalVars_);
+            std::iota(index.begin(), index.end(), 0);
+            std::sort(index.begin(), index.end(), [&freq](std::size_t a, std::size_t b) { return freq[a] > freq[b]; });
+            localVarReplacements_.push_back({});
+            for (std::size_t j = 0; j < std::min(max_local_vars, nLocalVars_); ++j) {
+                localVarReplacements_.back().insert(index[j]);
+            }
+            std::fill(freq.begin(), freq.end(), 0);
+            ++kernelNo;
+        }
+
+        if (ops_[i].lhs.first == VarType::local) {
+            freq[ops_[i].lhs.second]++;
+        }
+
+        for (auto const& v : ops_[i].rhs) {
+            if (v.first == VarType::local) {
+                freq[v.second]++;
+            }
+        }
+    }
+
+    // determine the first usage on lhs and rhs for each replacement variable
+
+    kernelNo = 0;
+
+    for (std::size_t i = 0; i < ops_.size(); ++i) {
+
+        if (kernelBreakLines_[kernelNo] == i) {
+            ++kernelNo;
+        }
+
+        if (ops_[i].lhs.first == VarType::local) {
+            if (std::set<LocalVarReplacement>::iterator f = localVarReplacements_[kernelNo].find(ops_[i].lhs.second);
+                f != localVarReplacements_[kernelNo].end() && f->firstLhsUse() == std::nullopt) {
+                f->setFirstLhsUse(i);
+            }
+        }
+
+        for (auto const& r : ops_[i].rhs) {
+            if (r.first == VarType::local) {
+                if (std::set<LocalVarReplacement>::iterator f = localVarReplacements_[kernelNo].find(r.second);
+                    f != localVarReplacements_[kernelNo].end() && f->firstRhsUse() == std::nullopt) {
+                    f->setFirstRhsUse(i);
+                }
+            }
+        }
+    }
+}
+
 void GpuCodeGenerator::generateKernelStartCode() {
 
     kernelNames_.push_back("ore_kernel_" + std::to_string(currentKernelNo_));
@@ -361,6 +424,10 @@ void GpuCodeGenerator::finalize() {
 
     kernelBreakLines_.push_back(ops_.size());
 
+    // optimization: local var replacements
+
+    determineLocalVarReplacements();
+
     // loop over ops and generate kernel code
 
     generateKernelStartCode();
@@ -379,6 +446,10 @@ void GpuCodeGenerator::finalize() {
     }
 
     finalized_ = true;
+}
+
+bool operator<(const GpuCodeGenerator::LocalVarReplacement a, const GpuCodeGenerator::LocalVarReplacement b) {
+    return a.id() < b.id();
 }
 
 } // namespace QuantExt

@@ -23,9 +23,9 @@
 #pragma once
 
 #include <cstddef>
-#include <vector>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace QuantExt {
 
@@ -64,6 +64,23 @@ private:
         std::size_t randomVariableOpCode;
     };
 
+    class LocalVarReplacement {
+    public:
+        LocalVarReplacement(std::size_t id) : id_(id) {}
+        void setFirstLhsUse(std::size_t u) const { firstLhsUse_ = u; }
+        void setFirstRhsUse(std::size_t u) const { firstRhsUse_ = u; }
+        std::size_t id() const { return id_; }
+        std::optional<std::size_t> firstLhsUse() const { return firstLhsUse_; }
+        std::optional<std::size_t> firstRhsUse() const { return firstRhsUse_; }
+
+    private:
+        std::size_t id_;
+        mutable std::optional<std::size_t> firstLhsUse_;
+        mutable std::optional<std::size_t> firstRhsUse_;
+    };
+
+    friend bool operator<(const LocalVarReplacement, const LocalVarReplacement);
+
     std::pair<VarType, std::size_t> getVar(const std::size_t id) const;
     std::string getVarStr(const std::pair<VarType, const std::size_t>& var) const;
     std::size_t getId(const std::pair<VarType, const std::size_t>& var) const;
@@ -71,6 +88,7 @@ private:
 
     void generateBoilerplateCode();
     void determineKernelBreakLines();
+    void determineLocalVarReplacements();
     void generateKernelStartCode();
     void generateKernelEndCode();
     void generateOutputVarAssignments();
@@ -105,6 +123,10 @@ private:
     std::vector<std::string> kernelNames_;
     std::vector<std::vector<std::vector<std::pair<VarType, std::size_t>>>> conditionalExpectationVars_;
     std::vector<std::pair<VarType, std::size_t>> outputVars_;
+
+    std::vector<std::set<LocalVarReplacement>> localVarReplacements_;
 };
+
+bool operator<(const GpuCodeGenerator::LocalVarReplacement a, const GpuCodeGenerator::LocalVarReplacement b);
 
 } // namespace QuantExt
