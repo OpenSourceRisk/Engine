@@ -192,17 +192,5 @@ XMLNode* CalendarAdjustmentConfig::toXML(XMLDocument& doc) const {
 }
 
 
-const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>&
-CalendarAdjustmentsSingleton::getCalendarAdjustments() const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    return calendarAdjustments_;
-}
-
-void CalendarAdjustmentsSingleton::setCalendarAdjustments(const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustments) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    calendarAdjustments_ = calendarAdjustments;
-}
-
-
 } // namespace data
 } // namespace ore

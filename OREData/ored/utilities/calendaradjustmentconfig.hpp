@@ -80,21 +80,5 @@ private:
     string normalisedName(const string&) const;
 };
 
-//! Singleton to hold calendar adjustments
-//
-class CalendarAdjustmentsSingleton
-    : public QuantLib::Singleton<CalendarAdjustmentsSingleton, std::integral_constant<bool, true>> {
-    friend class QuantLib::Singleton<CalendarAdjustmentsSingleton, std::integral_constant<bool, true>>;
-
-private:
-    mutable QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig> calendarAdjustments_;
-    mutable boost::shared_mutex mutex_;
-
-public:
-    const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& getCalendarAdjustments() const;
-    void setCalendarAdjustments(const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustments);
-};
-
-
 } // namespace data
 } // namespace ore

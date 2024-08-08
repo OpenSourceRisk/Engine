@@ -62,20 +62,5 @@ private:
     vector<ConfigurableCurrency> currencies_;
 };
 
-//! Singleton to hold conventions
-//
-class CurrencyConfigsSingleton
-    : public QuantLib::Singleton<CurrencyConfigsSingleton, std::integral_constant<bool, true>> {
-    friend class QuantLib::Singleton<CurrencyConfigsSingleton, std::integral_constant<bool, true>>;
-
-private:
-    mutable QuantLib::ext::shared_ptr<ore::data::CurrencyConfig> currencyConfigs_;
-    mutable boost::shared_mutex mutex_;
-
-public:
-    const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& getCurrencyConfigs() const;
-    void setCurrencyConfigs(const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs);
-};
-
 } // namespace data
 } // namespace ore

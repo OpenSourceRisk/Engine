@@ -380,11 +380,8 @@ void OREApp::initFromInputs() {
     // Initialise Singletons
     Settings::instance().evaluationDate() = inputs_->asof();
     InstrumentConventions::instance().setConventions(inputs_->conventions());
-    CurrencyConfigsSingleton::instance().setCurrencyConfigs(inputs_->currencyConfigs());
-    CurrencyConfigsSingleton::instance().getCurrencyConfigs()->addCurrencies();
-
-    CalendarAdjustmentsSingleton::instance().setCalendarAdjustments(inputs_->calendarAdjustmentConfigs());
-    CalendarAdjustmentsSingleton::instance().getCalendarAdjustments()->addCalendars();
+    inputs_->currencyConfigs()->addCurrencies();
+    inputs_->calendarAdjustmentConfigs()->addCalendars();
 
     if (console_) {
         ConsoleLog::instance().switchOn();

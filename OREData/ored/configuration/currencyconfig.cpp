@@ -29,16 +29,6 @@ namespace data {
 
 CurrencyConfig::CurrencyConfig() {}
 
-const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& CurrencyConfigsSingleton::getCurrencyConfigs() const {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    return currencyConfigs_;
-}
-
-void CurrencyConfigsSingleton::setCurrencyConfigs(const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    currencyConfigs_ = currencyConfigs;
-}
-
 void CurrencyConfig::addCurrencies() {
     for (auto curr : currencies_) {
         switch (curr.currencyType()) {
