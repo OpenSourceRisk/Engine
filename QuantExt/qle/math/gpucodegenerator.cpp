@@ -277,6 +277,67 @@ void GpuCodeGenerator::determineLocalVarReplacements() {
             }
         }
     }
+
+    /* mark replacement variables that needs to be written to values buffer because
+       - it is not used on lhs before rhs in a later part
+       - it is an output and not on lhs in a later part */
+
+    std::set<std::size_t> criticalLocalVars;
+
+    for (std::size_t part = kernelBreakLines_.size() - 1; part > 0; --part) {
+
+        if (part > 0) {
+            std::set<std::size_t> varsOnLhs;
+            for (std::size_t i = kernelBreakLines_[part - 1]; i < kernelBreakLines_[part]; ++i) {
+                for (auto const& r : ops_[i].rhs) {
+                    if (r.first == VarType::local && varsOnLhs.find(r.second) == varsOnLhs.end()) {
+                        criticalLocalVars.insert(r.second);
+                    }
+                }
+                if (part == kernelBreakLines_.size() - 1) {
+                    for (auto const& o : outputVars_) {
+                        if (varsOnLhs.find(o.second) == varsOnLhs.end()) {
+                            criticalLocalVars.insert(o.second);
+                        }
+                    }
+                }
+                if (ops_[i].lhs.first == VarType::local)
+                    varsOnLhs.insert(ops_[i].lhs.second);
+            }
+        }
+
+        auto c = criticalLocalVars.begin();
+        auto v = localVarReplacements_[part - 1].begin();
+
+        while (c != criticalLocalVars.end() && v != localVarReplacements_[part - 1].end()) {
+            if (*c == v->id()) {
+                v->setToBeCached(true);
+                ++c;
+                ++v;
+            } else if (*c < v->id()) {
+                ++c;
+            } else {
+                ++v;
+            }
+        }
+    }
+
+    /* markt replacement variables in last part that are also output as to be written to values buffer */
+
+    auto o = outputVars_.begin();
+    auto v = localVarReplacements_[kernelBreakLines_.size() - 1].begin();
+
+    while (o != outputVars_.end() && v != localVarReplacements_[kernelBreakLines_.size() - 1].end()) {
+        if (o->second == v->id()) {
+            v->setToBeCached(true);
+            ++o;
+            ++v;
+        } else if (o->second < v->id()) {
+            ++o;
+        } else {
+            ++v;
+        }
+    }
 }
 
 void GpuCodeGenerator::generateKernelStartCode() {

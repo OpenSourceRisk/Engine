@@ -71,14 +71,17 @@ private:
         LocalVarReplacement(std::size_t id) : id_(id) {}
         void setFirstLhsUse(std::size_t u) const { firstLhsUse_ = u; }
         void setFirstRhsUse(std::size_t u) const { firstRhsUse_ = u; }
+        void setToBeCached(bool b) const { toBeCached_ = b; }
         std::size_t id() const { return id_; }
         std::optional<std::size_t> firstLhsUse() const { return firstLhsUse_; }
         std::optional<std::size_t> firstRhsUse() const { return firstRhsUse_; }
+        bool toBeCached() const { return toBeCached_; }
 
     private:
         std::size_t id_;
         mutable std::optional<std::size_t> firstLhsUse_;
         mutable std::optional<std::size_t> firstRhsUse_;
+        mutable bool toBeCached_ = false;
     };
 
     friend bool operator<(const LocalVarReplacement, const LocalVarReplacement);
