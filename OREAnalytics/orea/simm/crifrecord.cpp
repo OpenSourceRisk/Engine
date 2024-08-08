@@ -21,8 +21,12 @@
 #include <boost/bimap.hpp>
 #include <orea/simm/crifrecord.hpp>
 
+
 namespace ore {
 namespace analytics {
+
+typedef CrifRecord::Regulation Regulation;
+typedef CrifRecord::RiskType RiskType;
 
 using std::ostream;
 using std::string;
@@ -42,56 +46,56 @@ struct string_cmp {
 template <typename T> using bm = boost::bimap<T, boost::bimaps::set_of<std::string, string_cmp>>;
 
 // Initialise the bimaps
-const bm<CrifRecord::RiskType> riskTypeMap = boost::assign::list_of<bm<CrifRecord::RiskType>::value_type>(
-    CrifRecord::RiskType::Commodity, "Risk_Commodity")
-    (CrifRecord::RiskType::CommodityVol, "Risk_CommodityVol")
-    (CrifRecord::RiskType::CreditNonQ, "Risk_CreditNonQ")
-    (CrifRecord::RiskType::CreditQ, "Risk_CreditQ")
-    (CrifRecord::RiskType::CreditVol, "Risk_CreditVol")
-    (CrifRecord::RiskType::CreditVolNonQ, "Risk_CreditVolNonQ")
-    (CrifRecord::RiskType::Equity, "Risk_Equity")
-    (CrifRecord::RiskType::EquityVol, "Risk_EquityVol")
-    (CrifRecord::RiskType::FX, "Risk_FX")
-    (CrifRecord::RiskType::FXVol, "Risk_FXVol")
-    (CrifRecord::RiskType::Inflation, "Risk_Inflation")
-    (CrifRecord::RiskType::IRCurve, "Risk_IRCurve")
-    (CrifRecord::RiskType::IRVol, "Risk_IRVol")
-    (CrifRecord::RiskType::InflationVol, "Risk_InflationVol")
-    (CrifRecord::RiskType::BaseCorr, "Risk_BaseCorr")
-    (CrifRecord::RiskType::XCcyBasis, "Risk_XCcyBasis")
-    (CrifRecord::RiskType::ProductClassMultiplier, "Param_ProductClassMultiplier")
-    (CrifRecord::RiskType::AddOnNotionalFactor, "Param_AddOnNotionalFactor")
-    (CrifRecord::RiskType::Notional, "Notional")
-    (CrifRecord::RiskType::AddOnFixedAmount, "Param_AddOnFixedAmount")
-    (CrifRecord::RiskType::PV,"PV") // IM Schedule
-    (CrifRecord::RiskType::GIRR_DELTA, "GIRR_DELTA")
-    (CrifRecord::RiskType::GIRR_VEGA, "GIRR_VEGA")
-    (CrifRecord::RiskType::GIRR_CURV, "GIRR_CURV")
-    (CrifRecord::RiskType::CSR_NS_DELTA, "CSR_NS_DELTA")
-    (CrifRecord::RiskType::CSR_NS_VEGA, "CSR_NS_VEGA")
-    (CrifRecord::RiskType::CSR_NS_CURV, "CSR_NS_CURV")
-    (CrifRecord::RiskType::CSR_SNC_DELTA, "CSR_SNC_DELTA")
-    (CrifRecord::RiskType::CSR_SNC_VEGA, "CSR_SNC_VEGA")
-    (CrifRecord::RiskType::CSR_SNC_CURV, "CSR_SNC_CURV")
-    (CrifRecord::RiskType::CSR_SC_DELTA, "CSR_SC_DELTA")
-    (CrifRecord::RiskType::CSR_SC_VEGA, "CSR_SC_VEGA")
-    (CrifRecord::RiskType::CSR_SC_CURV, "CSR_SC_CURV")
-    (CrifRecord::RiskType::EQ_DELTA, "EQ_DELTA")
-    (CrifRecord::RiskType::EQ_VEGA, "EQ_VEGA")
-    (CrifRecord::RiskType::EQ_CURV, "EQ_CURV")
-    (CrifRecord::RiskType::COMM_DELTA, "COMM_DELTA")
-    (CrifRecord::RiskType::COMM_VEGA, "COMM_VEGA")
-    (CrifRecord::RiskType::COMM_CURV, "COMM_CURV")
-    (CrifRecord::RiskType::FX_DELTA, "FX_DELTA")
-    (CrifRecord::RiskType::FX_VEGA, "FX_VEGA")
-    (CrifRecord::RiskType::FX_CURV, "FX_CURV")
-    (CrifRecord::RiskType::DRC_NS, "DRC_NS")
-    (CrifRecord::RiskType::DRC_SNC, "DRC_SNC")
-    (CrifRecord::RiskType::DRC_SC, "DRC_SC")
-    (CrifRecord::RiskType::RRAO_1_PERCENT, "RRAO_1_PERCENT")
-    (CrifRecord::RiskType::RRAO_01_PERCENT, "RRAO_01_PERCENT")
-    (CrifRecord::RiskType::Empty, "")
-    (CrifRecord::RiskType::All, "All");
+const bm<RiskType> riskTypeMap = boost::assign::list_of<bm<RiskType>::value_type>(
+    RiskType::Commodity, "Risk_Commodity")
+    (RiskType::CommodityVol, "Risk_CommodityVol")
+    (RiskType::CreditNonQ, "Risk_CreditNonQ")
+    (RiskType::CreditQ, "Risk_CreditQ")
+    (RiskType::CreditVol, "Risk_CreditVol")
+    (RiskType::CreditVolNonQ, "Risk_CreditVolNonQ")
+    (RiskType::Equity, "Risk_Equity")
+    (RiskType::EquityVol, "Risk_EquityVol")
+    (RiskType::FX, "Risk_FX")
+    (RiskType::FXVol, "Risk_FXVol")
+    (RiskType::Inflation, "Risk_Inflation")
+    (RiskType::IRCurve, "Risk_IRCurve")
+    (RiskType::IRVol, "Risk_IRVol")
+    (RiskType::InflationVol, "Risk_InflationVol")
+    (RiskType::BaseCorr, "Risk_BaseCorr")
+    (RiskType::XCcyBasis, "Risk_XCcyBasis")
+    (RiskType::ProductClassMultiplier, "Param_ProductClassMultiplier")
+    (RiskType::AddOnNotionalFactor, "Param_AddOnNotionalFactor")
+    (RiskType::Notional, "Notional")
+    (RiskType::AddOnFixedAmount, "Param_AddOnFixedAmount")
+    (RiskType::PV,"PV") // IM Schedule
+    (RiskType::GIRR_DELTA, "GIRR_DELTA")
+    (RiskType::GIRR_VEGA, "GIRR_VEGA")
+    (RiskType::GIRR_CURV, "GIRR_CURV")
+    (RiskType::CSR_NS_DELTA, "CSR_NS_DELTA")
+    (RiskType::CSR_NS_VEGA, "CSR_NS_VEGA")
+    (RiskType::CSR_NS_CURV, "CSR_NS_CURV")
+    (RiskType::CSR_SNC_DELTA, "CSR_SNC_DELTA")
+    (RiskType::CSR_SNC_VEGA, "CSR_SNC_VEGA")
+    (RiskType::CSR_SNC_CURV, "CSR_SNC_CURV")
+    (RiskType::CSR_SC_DELTA, "CSR_SC_DELTA")
+    (RiskType::CSR_SC_VEGA, "CSR_SC_VEGA")
+    (RiskType::CSR_SC_CURV, "CSR_SC_CURV")
+    (RiskType::EQ_DELTA, "EQ_DELTA")
+    (RiskType::EQ_VEGA, "EQ_VEGA")
+    (RiskType::EQ_CURV, "EQ_CURV")
+    (RiskType::COMM_DELTA, "COMM_DELTA")
+    (RiskType::COMM_VEGA, "COMM_VEGA")
+    (RiskType::COMM_CURV, "COMM_CURV")
+    (RiskType::FX_DELTA, "FX_DELTA")
+    (RiskType::FX_VEGA, "FX_VEGA")
+    (RiskType::FX_CURV, "FX_CURV")
+    (RiskType::DRC_NS, "DRC_NS")
+    (RiskType::DRC_SNC, "DRC_SNC")
+    (RiskType::DRC_SC, "DRC_SC")
+    (RiskType::RRAO_1_PERCENT, "RRAO_1_PERCENT")
+    (RiskType::RRAO_01_PERCENT, "RRAO_01_PERCENT")
+    (RiskType::Empty, "")
+    (RiskType::All, "All");
 
 const bm<CrifRecord::ProductClass> productClassMap = boost::assign::list_of<bm<CrifRecord::ProductClass>::value_type>(
     CrifRecord::ProductClass::RatesFX, "RatesFX")(CrifRecord::ProductClass::Rates, "Rates")(
@@ -105,21 +109,21 @@ const bm<CrifRecord::IMModel> imModelMap = boost::assign::list_of<bm<CrifRecord:
     CrifRecord::IMModel::Schedule, "Schedule")(CrifRecord::IMModel::SIMM, "SIMM")(
     CrifRecord::IMModel::SIMM_P, "SIMM-P")(CrifRecord::IMModel::SIMM_R, "SIMM-R");
 
-const bm<CrifRecord::Regulation> regulationsMap = boost::assign::list_of<bm<CrifRecord::Regulation>::value_type>(
-    CrifRecord::Regulation::APRA, "APRA")(CrifRecord::Regulation::CFTC, "CFTC")(
-    CrifRecord::Regulation::ESA, "ESA")(CrifRecord::Regulation::FINMA, "FINMA")(
-    CrifRecord::Regulation::KFSC, "KFSC")(CrifRecord::Regulation::HKMA, "HKMA")(
-    CrifRecord::Regulation::JFSA, "JFSA")(CrifRecord::Regulation::MAS, "MAS")(
-    CrifRecord::Regulation::OSFI, "OSFI")(CrifRecord::Regulation::RBI, "RBI")(
-    CrifRecord::Regulation::SEC, "SEC")(CrifRecord::Regulation::SEC_unseg, "SEC-unseg")(
-    CrifRecord::Regulation::USPR, "USPR")(CrifRecord::Regulation::NONREG, "NONREG")(
-    CrifRecord::Regulation::BACEN, "BACEN")(CrifRecord::Regulation::SANT, "SANT")(
-    CrifRecord::Regulation::SFC, "SFC")(CrifRecord::Regulation::UK, "UK")(
-    CrifRecord::Regulation::AMFQ, "AMFQ")(CrifRecord::Regulation::Included, "Included")(
-    CrifRecord::Regulation::Unspecified, "Unspecified")(CrifRecord::Regulation::Excluded, "Excluded")(
-    CrifRecord::Regulation::Invalid, "Invalid");
+const bm<Regulation> regulationsMap = boost::assign::list_of<bm<Regulation>::value_type>(
+    Regulation::APRA, "APRA")(Regulation::CFTC, "CFTC")(
+    Regulation::ESA, "ESA")(Regulation::FINMA, "FINMA")(
+    Regulation::KFSC, "KFSC")(Regulation::HKMA, "HKMA")(
+    Regulation::JFSA, "JFSA")(Regulation::MAS, "MAS")(
+    Regulation::OSFI, "OSFI")(Regulation::RBI, "RBI")(
+    Regulation::SEC, "SEC")(Regulation::SEC_unseg, "SEC-unseg")(
+    Regulation::USPR, "USPR")(Regulation::NONREG, "NONREG")(
+    Regulation::BACEN, "BACEN")(Regulation::SANT, "SANT")(
+    Regulation::SFC, "SFC")(Regulation::UK, "UK")(
+    Regulation::AMFQ, "AMFQ")(Regulation::Included, "Included")(
+    Regulation::Unspecified, "Unspecified")(Regulation::Excluded, "Excluded")(
+    Regulation::Invalid, "Invalid");
 
-ostream& operator<<(ostream& out, const CrifRecord::RiskType& rt) {
+ostream& operator<<(ostream& out, const RiskType& rt) {
     QL_REQUIRE(riskTypeMap.left.count(rt) > 0,
                "Risk type (" << static_cast<int>(rt) << ") not a valid CrifRecord::RiskType");
     return out << riskTypeMap.left.at(rt);
@@ -139,8 +143,8 @@ ostream& operator<<(ostream& out, const CrifRecord::IMModel& model) {
         return out << imModelMap.left.at(model);
 }
 
-ostream& operator<<(ostream& out, const CrifRecord::Regulation& regulation) {
-    QL_REQUIRE(regulationsMap.left.count(regulation) > 0, "Product class not a valid CrifRecord::Regulation");
+ostream& operator<<(ostream& out, const Regulation& regulation) {
+    QL_REQUIRE(regulationsMap.left.count(regulation) > 0, "Product class not a valid Regulation");
     return out << regulationsMap.left.at(regulation);
 }
 
@@ -154,26 +158,17 @@ CrifRecord::IMModel parseIMModel(const string& model) {
     QL_FAIL("IM model string " << model << " does not correspond to a valid CrifRecord::IMModel");
 }
 
-CrifRecord::Regulation parseRegulation(const string& regulation) {
+Regulation parseRegulation(const string& regulation) {
     if (regulationsMap.right.count(regulation) == 0) {
-        return CrifRecord::Regulation::Invalid;
+        return Regulation::Invalid;
     } else {
         return regulationsMap.right.at(regulation);
     }
 }
 
-string combineRegulations(const string& regs1, const string& regs2) {
-    if (regs1.empty())
-        return regs2;
-    if (regs2.empty())
-        return regs1;
-
-    return regs1 + ',' + regs2;
-}
-
-set<CrifRecord::Regulation> parseRegulationString(const string& regsString,
-                                                  const set<CrifRecord::Regulation>& valueIfEmpty) {
-    set<CrifRecord::Regulation> regs;
+set<Regulation> parseRegulationString(const string& regsString,
+                                                  const set<Regulation>& valueIfEmpty) {
+    set<Regulation> regs;
 
     // "," is a delimiter; "[" and "]" are possible characters, but are not needed in processing
     set<string> regNamesStr;
@@ -187,7 +182,7 @@ set<CrifRecord::Regulation> parseRegulationString(const string& regsString,
             it++;
     }
 
-    // Trim whitepsaces then parse into CrifRecord::Regulation
+    // Trim whitepsaces then parse into Regulation
     std::transform(regNamesStr.begin(), regNamesStr.end(), std::inserter(regs, regs.end()),
                    [](const string& reg) { return parseRegulation(boost::trim_copy(reg)); });
 
@@ -198,44 +193,44 @@ set<CrifRecord::Regulation> parseRegulationString(const string& regsString,
         return regs;
 }
 
-set<CrifRecord::Regulation> removeRegulations(const set<CrifRecord::Regulation>& regs,
-                                              const set<CrifRecord::Regulation>& regsToRemove) {
+set<Regulation> removeRegulations(const set<Regulation>& regs,
+                                              const set<Regulation>& regsToRemove) {
 
-    set<CrifRecord::Regulation> newRegs;
+    set<Regulation> newRegs;
 
     std::copy_if(regs.begin(), regs.end(), std::inserter(newRegs, newRegs.end()),
-                 [&regsToRemove](const CrifRecord::Regulation& reg) { return regsToRemove.find(reg) == regsToRemove.end(); });
+                 [&regsToRemove](const Regulation& reg) { return regsToRemove.find(reg) == regsToRemove.end(); });
 
     return newRegs;
 }
 
-set<CrifRecord::Regulation> filterRegulations(const set<CrifRecord::Regulation>& regs,
-                                              const set<CrifRecord::Regulation>& regsToFilter) {
-    set<CrifRecord::Regulation> newRegs;
+set<Regulation> filterRegulations(const set<Regulation>& regs,
+                                              const set<Regulation>& regsToFilter) {
+    set<Regulation> newRegs;
 
     std::copy_if(regs.begin(), regs.end(), std::inserter(newRegs, newRegs.end()),
-                 [&regsToFilter](const CrifRecord::Regulation& reg) { return regsToFilter.find(reg) != regsToFilter.end(); });
+                 [&regsToFilter](const Regulation& reg) { return regsToFilter.find(reg) != regsToFilter.end(); });
 
     return newRegs;
 }
 
-string regulationsToString(const set<CrifRecord::Regulation>& regs) {
+string regulationsToString(const set<Regulation>& regs) {
     set<string> regsStrSet;
 
     // Transforming into a set first lets us maintain lexicographical ordering in our regulation lists,
-    // instead of the default ordering defined by the CrifRecord::Regulation enum
+    // instead of the default ordering defined by the Regulation enum
     std::transform(regs.begin(), regs.end(), std::inserter(regsStrSet, regsStrSet.end()),
-                   [](const CrifRecord::Regulation& reg) { return ore::data::to_string(reg); });
+                   [](const Regulation& reg) { return ore::data::to_string(reg); });
 
     return boost::algorithm::join(regsStrSet, ",");
 }
 
-CrifRecord::Regulation getWinningRegulation(const set<CrifRecord::Regulation>& winningRegulations) {
+Regulation getWinningRegulation(const set<Regulation>& winningRegulations) {
     QL_REQUIRE(!winningRegulations.empty(), "getWinningRegulation(): Input set is empty.");
     return *winningRegulations.begin();
 }
 
-CrifRecord::RiskType parseRiskType(const string& rt) {
+RiskType parseRiskType(const string& rt) {
     for (auto it = riskTypeMap.right.begin(); it != riskTypeMap.right.end(); it++) {
         if (boost::to_lower_copy(rt) == boost::to_lower_copy(it->first))
             return it->second;
@@ -304,7 +299,7 @@ ostream& operator<<(ostream& out, const CrifRecord& cr) {
     return out;
 }
 
-ostream& operator<<(ostream& out, const set<CrifRecord::Regulation>& regs) { return out << regulationsToString(regs); }
+ostream& operator<<(ostream& out, const set<Regulation>& regs) { return out << regulationsToString(regs); }
 
 CrifRecord::RecordType CrifRecord::type() const {
     switch (riskType) {
@@ -361,8 +356,16 @@ CrifRecord::RecordType CrifRecord::type() const {
     case RiskType::Empty:
         return RecordType::Generic;
     default:
-        QL_FAIL("Unexpected RiskType " << riskType);
+        QL_FAIL("CrifRecord::Type(): Unexpected CrifRecord::RiskType " << riskType);
     }
+}
+
+vector<Regulation> standardRegulations() {
+    return vector<Regulation>({Regulation::APRA,       Regulation::CFTC,   Regulation::ESA,   Regulation::FINMA,
+                               Regulation::KFSC,       Regulation::HKMA,   Regulation::JFSA,  Regulation::MAS,
+                               Regulation::OSFI,       Regulation::RBI,    Regulation::SEC,   Regulation::SEC_unseg,
+                               Regulation::USPR,       Regulation::NONREG, Regulation::BACEN, Regulation::SANT,
+                               Regulation::SFC,        Regulation::UK,     Regulation::AMFQ});
 }
 
 } // namespace analytics

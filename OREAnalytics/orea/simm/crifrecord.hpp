@@ -36,6 +36,7 @@ namespace ore {
 namespace analytics {
 
 using ore::data::NettingSetDetails;
+
 /*! A container for holding single CRIF records or aggregated CRIF records.
     A CRIF record is a row of the CRIF file outlined in the document:
     <em>ISDA SIMM Methodology, Risk Data Standards. Version 1.36: 1 February 2017.</em>
@@ -177,7 +178,7 @@ struct CrifRecord {
     mutable QuantLib::Real amountUsd = QuantLib::Null<QuantLib::Real>();
     
     // additional fields used exclusively by the SIMM calculator for handling amounts converted in a given result ccy
-    std::string resultCurrency;
+    mutable std::string resultCurrency;
     mutable QuantLib::Real amountResultCcy = QuantLib::Null<QuantLib::Real>();
 
     // optional data
@@ -450,6 +451,8 @@ CrifRecord::Regulation getWinningRegulation(const std::set<CrifRecord::Regulatio
 
 std::string regulationsToString(const std::set<CrifRecord::Regulation>& regs);
 
+std::vector<CrifRecord::Regulation> standardRegulations();
+
 /*! A structure that we can use to aggregate CrifRecords across trades in a portfolio
     to provide the net sensitivities that we need to perform a downstream SIMM calculation.
 */
@@ -457,7 +460,7 @@ std::string regulationsToString(const std::set<CrifRecord::Regulation>& regs);
 typedef boost::multi_index_container<CrifRecord,
     boost::multi_index::indexed_by<
         // The CRIF record itself and its '<' operator define a unique index
-        boost::multi_index::ordered_non_unique<boost::multi_index::identity<CrifRecord>>
+        boost::multi_index::ordered_unique<boost::multi_index::identity<CrifRecord>>
     >
 >
     CrifRecordContainer;

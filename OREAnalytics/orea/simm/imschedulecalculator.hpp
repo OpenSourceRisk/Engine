@@ -114,8 +114,6 @@ public:
                          const bool determineWinningRegulations = true, const bool enforceIMRegulations = false,
                          const bool quiet = false,
                          const std::map<SimmSide, std::set<NettingSetDetails>>& hasSEC =
-                             std::map<SimmSide, std::set<NettingSetDetails>>(),
-                         const std::map<SimmSide, std::set<NettingSetDetails>>& hasCFTC =
                              std::map<SimmSide, std::set<NettingSetDetails>>());
 
     //! Give back the set of portfolio IDs and trade IDs for which we have IM results
@@ -160,9 +158,6 @@ public:
     const ore::data::Timer& timer() const { return timer_; }
 
 private:
-    //! The net sensitivities used in the calculation
-    ore::analytics::Crif crif_;
-
     //! The SIMM calculation currency i.e. the currency of the SIMM results
     std::string calculationCcy_;
 
@@ -172,7 +167,7 @@ private:
     //! If true, no logging is written out
     bool quiet_;
 
-    std::map<SimmSide, std::set<NettingSetDetails>> hasSEC_, hasCFTC_;
+    std::map<SimmSide, std::set<NettingSetDetails>> hasSEC_;
 
     //! For each netting set, whether all CRIF records' collect regulations are empty
     std::map<ore::data::NettingSetDetails, bool> collectRegsIsEmpty_;

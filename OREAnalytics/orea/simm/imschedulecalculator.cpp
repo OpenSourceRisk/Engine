@@ -54,10 +54,8 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
                                            const QuantLib::ext::shared_ptr<ore::data::Market> market,
                                            const bool determineWinningRegulations, const bool enforceIMRegulations,
                                            const bool quiet,
-                                           const map<SimmSide, set<NettingSetDetails>>& hasSEC,
-                                           const map<SimmSide, set<NettingSetDetails>>& hasCFTC)
-    : crif_(crif), calculationCcy_(calculationCcy), market_(market), quiet_(quiet),
-      hasSEC_(hasSEC), hasCFTC_(hasCFTC) {
+                                           const map<SimmSide, set<NettingSetDetails>>& hasSEC)
+    : calculationCcy_(calculationCcy), market_(market), quiet_(quiet), hasSEC_(hasSEC) {
 
     QL_REQUIRE(checkCurrency(calculationCcy_),
                "The calculation currency (" << calculationCcy_ << ") must be a valid ISO currency code");
@@ -67,8 +65,7 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
 
     // Collect Schedule CRIF records
     timer_.start("Cleaning up CRIF input");
-    Crif tmp;
-    for (const CrifRecord& cr : crif_) {
+    for (const CrifRecord& cr : crif) {
         const bool isSchedule = cr.imModel == "Schedule";
 
         if (!isSchedule) {
@@ -93,17 +90,16 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
         } else if (postRegsIsEmpty_.at(cr.nettingSetDetails) && !cr.postRegulations.empty()) {
             postRegsIsEmpty_.at(cr.nettingSetDetails) = false;
         }
-
-        tmp.addRecord(cr);
     }
-    crif_ = tmp;
     timer_.stop("Cleaning up CRIF input");
 
     // Separate out CRIF records by regulations and collect per-trade data
     LOG("IMScheduleCalculator: Collecting CRIF trade data");
     timer_.start("Collecting trade data");
-    for (const auto& crifRecord : crif_)
-        collectTradeData(crifRecord, enforceIMRegulations);
+    for (const auto& crifRecord : crif) {
+        if (crifRecord.imModel == "Schedule")
+            collectTradeData(crifRecord, enforceIMRegulations);
+    }
     timer_.stop("Collecting trade data");
 
     // Remove (or modify) trades with incomplete data
@@ -162,9 +158,9 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
                     tradeData.presentValueCalc = tradeData.presentValueUsd / usdSpot;
                     tradeData.grossMarginCalc = tradeData.grossMarginUsd / usdSpot;
                     if (side == SimmSide::Call)
-                        tradeData.collectRegulations.insert(regulation);
-                    if (side == SimmSide::Post)
-                        tradeData.postRegulations.insert(regulation);
+                        tradeData.collectRegulations = {regulation};
+                    else
+                        tradeData.postRegulations = {regulation};
                 }
             }
         }
@@ -181,12 +177,11 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
 
             // Where there is SEC and CFTC in the portfolio, we add the CFTC trades to SEC,
             // but still continue with CFTC calculations
-            const bool hasCFTCGlobal = hasCFTC_.at(side).find(nettingDetails) != hasCFTC_.at(side).end();
             const bool hasSECGlobal = hasSEC_.at(side).find(nettingDetails) != hasSEC_.at(side).end();
             const bool hasCFTCLocal = s.second.count(CrifRecord::Regulation::CFTC) > 0;
             const bool hasSECLocal = s.second.count(CrifRecord::Regulation::SEC) > 0;
 
-            if ((hasSECLocal && hasCFTCLocal) || (hasCFTCGlobal && hasSECGlobal)) {
+            if ((hasSECLocal && hasCFTCLocal) || hasSECGlobal) {
                 if (!hasSECLocal && !hasCFTCLocal)
                     continue;
 
@@ -449,8 +444,16 @@ void IMScheduleCalculator::collectTradeData(const CrifRecord& cr, const bool enf
                         tradeData.notionalCcy = cr.amountCurrency;
                     }
                 } else {
-                    const auto& collectRegs = side == SimmSide::Call ? cr.collectRegulations : set<CrifRecord::Regulation>();
-                    const auto& postRegs = side == SimmSide::Post ? cr.postRegulations : set<CrifRecord::Regulation>();
+                    set<CrifRecord::Regulation> collectRegs, postRegs;
+                    if (enforceIMRegulations) {
+                        if (side == SimmSide::Call)
+                            collectRegs = cr.collectRegulations;
+                        if (side == SimmSide::Post)
+                            postRegs = cr.postRegulations;
+                    } else {
+                        collectRegs.insert(Regulation::Unspecified);
+                        postRegs.insert(Regulation::Unspecified);
+                    }
                     tradeDataMap.insert(
                         {cr.tradeId, IMScheduleTradeData(cr.tradeId, cr.nettingSetDetails, cr.riskType, cr.productClass,
                                                          cr.amount, cr.amountCurrency, cr.amountUsd,

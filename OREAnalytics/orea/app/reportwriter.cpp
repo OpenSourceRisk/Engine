@@ -1605,12 +1605,12 @@ void ReportWriter::writeSIMMReport(
 
 
     // Transform final SIMM results
-    map<SimmSide, map<NettingSetDetails, map<CrifRecord::Regulation, SimmResults>>> finalSimmResults;
+    map<SimmSide, map<NettingSetDetails, map<set<CrifRecord::Regulation>, SimmResults>>> finalSimmResults;
     for (const auto& sv : finalSimmResultsMap) {
         const SimmSide& side = sv.first;
         for (const auto& nv : sv.second) {
             const NettingSetDetails& nettingSetDetails = nv.first;
-            const CrifRecord::Regulation& regulation = nv.second.first;
+            set<CrifRecord::Regulation> regulation({nv.second.first});
             const SimmResults& simmResults = nv.second.second;
 
             finalSimmResults[side][nettingSetDetails][regulation] = simmResults;
@@ -1622,7 +1622,7 @@ void ReportWriter::writeSIMMReport(
 }
 
 void ReportWriter::writeSIMMReport(
-    const map<SimmSide, map<NettingSetDetails, map<CrifRecord::Regulation, SimmResults>>>& simmResultsMap,
+    const map<SimmSide, map<NettingSetDetails, map<set<CrifRecord::Regulation>, SimmResults>>>& simmResultsMap,
     const QuantLib::ext::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
     const string& simmCalcCcyCall, const string& simmCalcCcyPost, const string& reportCcy, const bool isFinalSimm, Real fxSpot,
     Real outputThreshold) {
@@ -1676,11 +1676,11 @@ void ReportWriter::writeSIMMReport(
                                "Final SIMM results should only have one (winning) regulation per netting set.");
 
                 for (const auto& rv : simmResultsMap) {
-                    const CrifRecord::Regulation& regulation = rv.first;
+                    const set<CrifRecord::Regulation>& regulations = rv.first;
                     const SimmResults& results = rv.second;
 
                     if (isFinalSimm)
-                        winningRegs.insert(regulation);
+                        winningRegs.insert(regulations.begin(), regulations.end());
 
                     QL_REQUIRE(results.resultCurrency() == simmResultCcy,
                                "writeSIMMReport(): SIMM results ("
@@ -1711,7 +1711,7 @@ void ReportWriter::writeSIMMReport(
                                 .add(ore::data::to_string(mt))
                                 .add(b)
                                 .add(sideString)
-                                .add(ore::data::to_string(regulation))
+                                .add(regulationsToString(regulations))
                                 .add(result.second)
                                 .add(results.resultCurrency())
                                 .add(results.calculationCurrency());

@@ -48,6 +48,10 @@ public:
 
     void clear() { records_.clear(); }
 
+    CrifRecordContainer::iterator begin() { return records_.begin(); }
+    CrifRecordContainer::iterator end() { return records_.end(); }
+    CrifRecordContainer::iterator find(const CrifRecord& r) { return records_.find(r); }
+
     CrifRecordContainer::const_iterator begin() const { return records_.begin(); }
     CrifRecordContainer::const_iterator end() const { return records_.end(); }
     CrifRecordContainer::const_iterator find(const CrifRecord& r) const { return records_.find(r); }
@@ -92,6 +96,7 @@ public:
 
     //! Aggregate all existing records
     Crif aggregate(bool aggregateDifferentAmountCurrencies = false, bool aggregateOnRegulations = true) const;
+    void setAggregate(bool flag) { aggregate_ = flag; }
 
     size_t countMatching(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
                    const std::string& qualifier) const;
@@ -131,10 +136,11 @@ private:
     CrifType type_ = CrifType::Empty;
     CrifRecordContainer records_;
 
-    //SIMM members
+    // SIMM members
     //! Set of portfolio IDs that have been loaded
     std::set<std::string> portfolioIds_;
     std::set<ore::data::NettingSetDetails> nettingSetDetails_;
+    mutable bool aggregate_ = false;
 };
 
 

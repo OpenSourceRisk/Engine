@@ -39,15 +39,11 @@ void IMScheduleAnalytic::loadCrifRecords(const QuantLib::ext::shared_ptr<ore::da
         const NettingSetDetails& nsd = cr.nettingSetDetails;
 
         for (const SimmConfiguration::SimmSide& side : {SimmConfiguration::SimmSide::Call, SimmConfiguration::SimmSide::Post}) {
-            const set<CrifRecord::Regulation>& crifRegs = side == SimmConfiguration::SimmSide::Call ? cr.collectRegulations : cr.postRegulations;
-            for (const auto& reg : {CrifRecord::Regulation::SEC, CrifRecord::Regulation::CFTC}) {
-                auto& hasRegMap = reg == CrifRecord::Regulation::SEC ? hasSEC_ : hasCFTC_;
-
-                if (hasRegMap[side].find(nsd) == hasRegMap[side].end()) {
-                    bool hasReg = crifRegs.find(reg) != crifRegs.end();
-                    if (hasReg)
-                        hasRegMap[side].insert(nsd);
-                }
+            const set<CrifRecord::Regulation>& crifRegs =
+                side == SimmConfiguration::SimmSide::Call ? cr.collectRegulations : cr.postRegulations;
+            if (hasSEC_[side].find(nsd) == hasSEC_[side].end()) {
+                if (crifRegs.find(CrifRecord::Regulation::SEC) != crifRegs.end())
+                    hasSEC_[side].insert(nsd);
             }
         }
     }
@@ -73,8 +69,7 @@ void IMScheduleAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     LOG("Calculating Schedule IM")
     auto imSchedule = QuantLib::ext::make_shared<IMScheduleCalculator>(
         imAnalytic->crif(), inputs_->simmResultCurrency(), analytic()->market(),
-        true, inputs_->enforceIMRegulations(), false, imAnalytic->hasSEC(),
-        imAnalytic->hasCFTC());
+        true, inputs_->enforceIMRegulations(), false, imAnalytic->hasSEC());
     imAnalytic->setImSchedule(imSchedule);
     analytic()->addTimer("IMScheduleCalculator", imSchedule->timer());
 
