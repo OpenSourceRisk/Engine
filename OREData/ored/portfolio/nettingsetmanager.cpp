@@ -57,24 +57,6 @@ const bool NettingSetManager::empty() const {
     return data_.empty();
 }
 
-const bool NettingSetManager::calculateIMAmount() const { 
-    for (const auto& nsd : data_) {
-        if (nsd.second->activeCsaFlag() && nsd.second->csaDetails()->calculateIMAmount())
-            return true;
-    }
-    return false;
-}
-
-const set<NettingSetDetails> NettingSetManager::calculateIMNettingSets() const {
-    set<NettingSetDetails> calculateIMNettingSets = set<NettingSetDetails>();
-    for (const auto& nsd : data_) {
-        if (nsd.second->activeCsaFlag() && nsd.second->csaDetails()->calculateIMAmount()) {
-            calculateIMNettingSets.insert(nsd.first);
-        }
-    }
-    return calculateIMNettingSets;
-}
-
 QuantLib::ext::shared_ptr<NettingSetDefinition> NettingSetManager::get(const NettingSetDetails& nettingSetDetails) const {
     const auto it = data_.find(nettingSetDetails);
     if (it != data_.end())
@@ -110,7 +92,7 @@ void NettingSetManager::fromXML(XMLNode* node) {
     for (unsigned i = 0; i < nettingSetNodes.size(); i++) {
         XMLNode* child = nettingSetNodes[i];
         try {
-            NettingSetDetails nsd = getNettingSetDetails(node);
+            NettingSetDetails nsd = getNettingSetDetails(child);
             unparsed_[nsd] = XMLUtils::toString(child);
         } catch (std::exception& ex) {
             StructuredConfigurationWarningMessage("Netting set manager", "", "Failed to parse netting set definition",
