@@ -1598,19 +1598,19 @@ typedef SimmConfiguration::MarginType MarginType;
 typedef SimmConfiguration::SimmSide SimmSide;
 
 void ReportWriter::writeSIMMReport(
-    const map<SimmSide, map<NettingSetDetails, pair<string, SimmResults>>>& finalSimmResultsMap,
+    const map<SimmSide, map<NettingSetDetails, pair<CrifRecord::Regulation, SimmResults>>>& finalSimmResultsMap,
     const QuantLib::ext::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
     const string& simmCalcCcyCall, const string& simmCalcCcyPost, const string& reportCcy, Real fxSpot,
     Real outputThreshold) {
 
 
     // Transform final SIMM results
-    map<SimmSide, map<NettingSetDetails, map<string, SimmResults>>> finalSimmResults;
+    map<SimmSide, map<NettingSetDetails, map<set<CrifRecord::Regulation>, SimmResults>>> finalSimmResults;
     for (const auto& sv : finalSimmResultsMap) {
         const SimmSide& side = sv.first;
         for (const auto& nv : sv.second) {
             const NettingSetDetails& nettingSetDetails = nv.first;
-            const string& regulation = nv.second.first;
+            set<CrifRecord::Regulation> regulation({nv.second.first});
             const SimmResults& simmResults = nv.second.second;
 
             finalSimmResults[side][nettingSetDetails][regulation] = simmResults;
@@ -1622,7 +1622,7 @@ void ReportWriter::writeSIMMReport(
 }
 
 void ReportWriter::writeSIMMReport(
-    const map<SimmSide, map<NettingSetDetails, map<string, SimmResults>>>& simmResultsMap,
+    const map<SimmSide, map<NettingSetDetails, map<set<CrifRecord::Regulation>, SimmResults>>>& simmResultsMap,
     const QuantLib::ext::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
     const string& simmCalcCcyCall, const string& simmCalcCcyPost, const string& reportCcy, const bool isFinalSimm, Real fxSpot,
     Real outputThreshold) {
@@ -1665,7 +1665,7 @@ void ReportWriter::writeSIMMReport(
         Real sumSidePortfolios = 0.0;
         Real sumSidePortfoliosReporting = 0.0;
 
-        set<string> winningRegs;
+        set<CrifRecord::Regulation> winningRegs;
         if (simmResultsMap.find(side) != simmResultsMap.end()) {
             for (const auto& nv : simmResultsMap.at(side)) {
                 const NettingSetDetails& portfolioId = nv.first;
@@ -1676,11 +1676,11 @@ void ReportWriter::writeSIMMReport(
                                "Final SIMM results should only have one (winning) regulation per netting set.");
 
                 for (const auto& rv : simmResultsMap) {
-                    const string& regulation = rv.first;
+                    const set<CrifRecord::Regulation>& regulations = rv.first;
                     const SimmResults& results = rv.second;
 
                     if (isFinalSimm)
-                        winningRegs.insert(regulation);
+                        winningRegs.insert(regulations.begin(), regulations.end());
 
                     QL_REQUIRE(results.resultCurrency() == simmResultCcy,
                                "writeSIMMReport(): SIMM results ("
@@ -1711,7 +1711,7 @@ void ReportWriter::writeSIMMReport(
                                 .add(ore::data::to_string(mt))
                                 .add(b)
                                 .add(sideString)
-                                .add(regulation)
+                                .add(regulationsToString(regulations))
                                 .add(result.second)
                                 .add(results.resultCurrency())
                                 .add(results.calculationCurrency());
@@ -1735,7 +1735,8 @@ void ReportWriter::writeSIMMReport(
         // Write out a row for the aggregate IM over all portfolios
         // We only write out this row if either reporting ccy was provided or if currency of all the results is the same
         if (isFinalSimm) {
-            string finalWinningReg = winningRegs.size() == 1 ? *(winningRegs.begin()) : "";
+            string finalWinningReg =
+                winningRegs.size() > 1 || winningRegs.empty() ? "" : ore::data::to_string(*winningRegs.begin());
 
             // Write out common columns
             report->next();
@@ -1829,12 +1830,8 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
             .add(cr.imModel);
 
         if (hasRegulations) {
-            string collectRegString = cr.collectRegulations.find(',') == string::npos
-                                        ? cr.collectRegulations
-                                        : '\"' + cr.collectRegulations + '\"';
-            string postRegString = cr.postRegulations.find(',') == string::npos
-                                        ? cr.postRegulations
-                                        : '\"' + cr.postRegulations + '\"';
+            string collectRegString = escapeCommaSeparatedList(regulationsToString(cr.collectRegulations), '\0');
+            string postRegString = escapeCommaSeparatedList(regulationsToString(cr.postRegulations), '\0');
 
             dataReport->add(collectRegString)
                 .add(postRegString);
@@ -1878,7 +1875,7 @@ void ReportWriter::writeCrifReport(const QuantLib::ext::shared_ptr<Report>& repo
         // Check if there are Schedule trades
         if (!hasScheduleTrades) {
             try {
-                hasScheduleTrades = parseIMModel(cr.imModel) == SimmConfiguration::IMModel::Schedule;
+                hasScheduleTrades = parseIMModel(cr.imModel) == CrifRecord::IMModel::Schedule;
             } catch (std::exception&) {
             }
         }
@@ -1965,12 +1962,12 @@ void ReportWriter::writeCrifReport(const QuantLib::ext::shared_ptr<Report>& repo
         }
 
         if (hasCollectRegulations) {
-            string regString = escapeCommaSeparatedList(cr.collectRegulations, '\0');
+            string regString = escapeCommaSeparatedList(regulationsToString(cr.collectRegulations), '\0');
             report->add(regString);
         }
 
         if (hasPostRegulations) {
-            string regString = escapeCommaSeparatedList(cr.postRegulations, '\0');
+            string regString = escapeCommaSeparatedList(regulationsToString(cr.postRegulations), '\0');
             report->add(regString);
         }
 
@@ -2239,7 +2236,7 @@ typedef SimmConfiguration::SimmSide SimmSide;
 typedef IMScheduleCalculator::IMScheduleTradeData IMScheduleTradeData;
 
 void ReportWriter::writeIMScheduleSummaryReport(
-    const map<SimmSide, map<NettingSetDetails, pair<string, IMScheduleResults>>>& finalResultsMap,
+    const map<SimmSide, map<NettingSetDetails, pair<CrifRecord::Regulation, IMScheduleResults>>>& finalResultsMap,
     const QuantLib::ext::shared_ptr<Report> report, const bool hasNettingSetDetails, const string& simmResultCcy,
     const string& reportCcy, Real fxSpot, Real outputThreshold) {
 
@@ -2273,11 +2270,11 @@ void ReportWriter::writeIMScheduleSummaryReport(
         Real sumSideScheduleIM = 0.0;
         Real sumSideScheduleIMReporting = 0.0;
 
-        std::set<std::string> winningRegs;
+        std::set<CrifRecord::Regulation> winningRegs;
         if (finalResultsMap.find(side) != finalResultsMap.end()) {
             for (const auto& nv : finalResultsMap.at(side)) {
                 const NettingSetDetails& portfolioId = nv.first;
-                const string& regulation = nv.second.first;
+                const CrifRecord::Regulation& regulation = nv.second.first;
                 const IMScheduleResults& results = nv.second.second;
 
                 winningRegs.insert(regulation);
@@ -2305,7 +2302,7 @@ void ReportWriter::writeIMScheduleSummaryReport(
                         .add(result.netRC)
                         .add(result.NGR)
                         .add(sideString)
-                        .add(regulation)
+                        .add(ore::data::to_string(regulation))
                         .add(im)
                         .add(results.currency());
 
@@ -2325,7 +2322,8 @@ void ReportWriter::writeIMScheduleSummaryReport(
 
         // Write out a row for the aggregate IM over all portfolios
         // We only write out this row if either reporting ccy was provided or if currency of all the results is the same
-        string finalWinningReg = winningRegs.size() == 1 ? *(winningRegs.begin()) : "";
+        string finalWinningReg =
+            winningRegs.size() > 1 || winningRegs.empty() ? "" : ore::data::to_string(*winningRegs.begin());
 
         // Write out common columns
         report->next();
@@ -2398,12 +2396,9 @@ void ReportWriter::writeIMScheduleTradeReport(const map<string, vector<IMSchedul
             for (const string& field : NettingSetDetails::fieldNames(hasNettingSetDetails)) {
                 report->add(nettingSetMap.at(field));
             }
-            const string collectRegsString = tradeData.collectRegulations.find(',') == string::npos
-                                                 ? tradeData.collectRegulations
-                                                 : '\"' + tradeData.collectRegulations + '\"';
-            const string postRegsString = tradeData.postRegulations.find(',') == string::npos
-                                              ? tradeData.postRegulations
-                                              : '\"' + tradeData.postRegulations + '\"';
+            string collectRegsString = escapeCommaSeparatedList(regulationsToString(tradeData.collectRegulations), '\0');
+            string postRegsString = escapeCommaSeparatedList(regulationsToString(tradeData.postRegulations), '\0');
+            
             report->add(to_string(tradeData.productClass))
                 .add(to_string(tradeData.endDate))
                 .add(tradeData.maturity)

@@ -60,14 +60,10 @@ public:
     const std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>>& hasSEC() const {
         return hasSEC_;
     }
-    const std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>>& hasCFTC() const {
-        return hasCFTC_;
-    }
  private:
     Crif crif_;
     bool hasNettingSetDetails_ = false;
     std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>> hasSEC_;
-    std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>> hasCFTC_;
     QuantLib::ext::shared_ptr<IMScheduleCalculator> imSchedule_;
 };
 
