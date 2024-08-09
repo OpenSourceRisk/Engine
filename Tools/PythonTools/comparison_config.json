@@ -732,13 +732,15 @@
         },
         "use_cols": [
           "InitialMargin",
-          "Regulation",
           "Currency",
           "CalculationCurrency"
         ],
         "optional_cols": [
           "InitialMargin(Report)",
           "ReportCurrency"
+        ],
+        "optional_keys": [
+          "Regulation"
         ],
         "column_settings": [
           {
@@ -751,7 +753,6 @@
           },
           {
             "names": [
-              "Regulation",
               "Currency",
               "CalculationCurrency",
               "ReportCurrency"
