@@ -380,6 +380,9 @@ void OREApp::initFromInputs() {
     // Initialise Singletons
     Settings::instance().evaluationDate() = inputs_->asof();
     InstrumentConventions::instance().setConventions(inputs_->conventions());
+    inputs_->currencyConfigs()->addCurrencies();
+    inputs_->calendarAdjustmentConfigs()->addCalendars();
+
     if (console_) {
         ConsoleLog::instance().switchOn();
     }
@@ -428,7 +431,7 @@ void OREApp::run() {
         CONSOLE("Error: " << e.what());
         return;
     }
-
+  
     runTimer_.stop();
 
     // cache the error messages because we reset the loggers 
