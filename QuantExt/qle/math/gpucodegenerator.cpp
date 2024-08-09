@@ -23,6 +23,7 @@
 
 #include <boost/algorithm/string/join.hpp>
 
+#include <numeric>
 #include <set>
 
 namespace QuantExt {
