@@ -130,6 +130,7 @@ private:
     std::vector<std::pair<VarType, std::size_t>> outputVars_;
 
     std::vector<std::set<LocalVarReplacement>> localVarReplacements_;
+    std::map<std::size_t, std::size_t> localVarMap_;
 };
 
 bool operator<(const GpuCodeGenerator::LocalVarReplacement a, const GpuCodeGenerator::LocalVarReplacement b);
