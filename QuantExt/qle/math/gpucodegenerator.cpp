@@ -72,6 +72,14 @@ std::size_t GpuCodeGenerator::inputBufferSize() const {
     return inputVarOffset_.back() + (inputVarIsScalar_.back() ? 1 : modelSize_);
 }
 
+std::size_t GpuCodeGenerator::localVarMap(const std::size_t id) const {
+    if (localVarMap_.empty())
+        return id;
+    if (auto f = localVarMap_.find(id); f != localVarMap_.end())
+        return f->second;
+    QL_FAIL("GpuCodeGenerator::localVarMap(): no mapping for local var id " << id);
+}
+
 std::size_t GpuCodeGenerator::generateResultId() {
     std::size_t resultId;
     if (!freedVariables_.empty()) {
@@ -541,7 +549,7 @@ void GpuCodeGenerator::finalize() {
 
     kernelBreakLines_.push_back(ops_.size());
 
-    // optimization: local var replacements
+    // optimization: local var replacements (optional step)
 
     determineLocalVarReplacements();
 

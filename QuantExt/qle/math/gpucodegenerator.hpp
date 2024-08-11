@@ -52,6 +52,7 @@ public:
     std::size_t inputBufferSize() const;
     std::size_t nVariates() const { return nVariates_; }
     std::size_t nLocalVars() const { return nLocalVars_; }
+    std::size_t localVarMap(const std::size_t id) const;
 
     // the conditional expectation vars and output vars are both guaranteed to be local vars
     const std::vector<std::vector<std::vector<std::pair<VarType, std::size_t>>>>& conditionalExpectationVars() const {
