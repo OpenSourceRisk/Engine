@@ -52,7 +52,8 @@ public:
     std::size_t inputBufferSize() const;
     std::size_t nVariates() const { return nVariates_; }
     std::size_t nLocalVars() const { return nLocalVars_; }
-    std::size_t localVarMap(const std::size_t id) const;
+    std::size_t nBufferedLocalVars() const;
+    std::size_t bufferedLocalVarMap(const std::size_t id) const;
 
     // the conditional expectation vars and output vars are both guaranteed to be local vars
     const std::vector<std::vector<std::vector<std::pair<VarType, std::size_t>>>>& conditionalExpectationVars() const {
@@ -88,7 +89,7 @@ private:
     friend bool operator<(const LocalVarReplacement, const LocalVarReplacement);
 
     std::pair<VarType, std::size_t> getVar(const std::size_t id) const;
-    std::string getVarStr(const std::pair<VarType, const std::size_t>& var) const;
+    std::string getVarStr(const std::pair<VarType, const std::size_t>& var, const bool useLocalVarName) const;
     std::size_t getId(const std::pair<VarType, const std::size_t>& var) const;
     std::size_t generateResultId();
 
@@ -98,7 +99,7 @@ private:
     void generateKernelStartCode();
     void generateKernelEndCode();
     void generateOutputVarAssignments();
-    void generateOperationCode(const Operation& op);
+    void generateOperationCode(const std::size_t line);
 
     bool initialized_ = false;
     bool finalized_ = false;
@@ -131,7 +132,7 @@ private:
     std::vector<std::pair<VarType, std::size_t>> outputVars_;
 
     std::vector<std::set<LocalVarReplacement>> localVarReplacements_;
-    std::map<std::size_t, std::size_t> localVarMap_;
+    std::map<std::size_t, std::size_t> bufferedLocalVarMap_;
 };
 
 bool operator<(const GpuCodeGenerator::LocalVarReplacement a, const GpuCodeGenerator::LocalVarReplacement b);

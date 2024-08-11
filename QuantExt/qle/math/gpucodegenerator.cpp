@@ -54,7 +54,7 @@ void GpuCodeGenerator::initialize(const std::size_t nInputVars, const std::vecto
     sourceCode_.clear();
     kernelNames_.clear();
     localVarReplacements_.clear();
-    localVarMap_.clear();
+    bufferedLocalVarMap_.clear();
 
     inputVarOffset_.clear();
     std::size_t offset = 0;
@@ -72,12 +72,19 @@ std::size_t GpuCodeGenerator::inputBufferSize() const {
     return inputVarOffset_.back() + (inputVarIsScalar_.back() ? 1 : modelSize_);
 }
 
-std::size_t GpuCodeGenerator::localVarMap(const std::size_t id) const {
-    if (localVarMap_.empty())
+std::size_t GpuCodeGenerator::nBufferedLocalVars() const {
+    if (bufferedLocalVarMap_.empty())
+        return nLocalVars();
+    else
+        return bufferedLocalVarMap_.size();
+}
+
+std::size_t GpuCodeGenerator::bufferedLocalVarMap(const std::size_t id) const {
+    if (bufferedLocalVarMap_.empty())
         return id;
-    if (auto f = localVarMap_.find(id); f != localVarMap_.end())
+    if (auto f = bufferedLocalVarMap_.find(id); f != bufferedLocalVarMap_.end())
         return f->second;
-    QL_FAIL("GpuCodeGenerator::localVarMap(): no mapping for local var id " << id);
+    QL_FAIL("GpuCodeGenerator::bufferedLocalVarMap(): no mapping for local var id " << id);
 }
 
 std::size_t GpuCodeGenerator::generateResultId() {
@@ -100,15 +107,27 @@ std::pair<GpuCodeGenerator::VarType, std::size_t> GpuCodeGenerator::getVar(const
         return std::make_pair(VarType::local, id - nInputVars_ - nVariates_);
 }
 
-std::string GpuCodeGenerator::getVarStr(const std::pair<VarType, const std::size_t>& var) const {
+std::string GpuCodeGenerator::getVarStr(const std::pair<VarType, const std::size_t>& var,
+                                        const bool useLocalVarName) const {
     if (var.first == VarType::input)
         return "input[" + std::to_string(inputVarOffset_[var.second]) + "UL" +
                (inputVarIsScalar_[var.second] ? "" : "+i") + "]";
     else if (var.first == VarType::rn)
         return "rn[" + std::to_string(var.second * modelSize_) + "UL+i]";
-    else if (var.first == VarType::local)
-        return "values[" + std::to_string(var.second * modelSize_) + "UL+i]";
-    else {
+    else if (var.first == VarType::local) {
+        if (useLocalVarName) {
+            return "v" + std::to_string(var.second);
+        } else {
+            std::size_t id = var.second;
+            if (!bufferedLocalVarMap_.empty()) {
+                auto b = bufferedLocalVarMap_.find(var.second);
+                QL_REQUIRE(b != bufferedLocalVarMap_.end(),
+                           "GpuCodeGenerator::getVarStr(): no mapping for local var id " << var.second);
+                id = b->second;
+            }
+            return "values[" + std::to_string(id * modelSize_) + "UL+i]";
+        }
+    } else {
         QL_FAIL("GpuCodeGenerator::getId(): var type not handled, internal error.");
     }
 }
@@ -236,7 +255,7 @@ void GpuCodeGenerator::determineLocalVarReplacements() {
     std::size_t kernelNo = 0;
     std::vector<std::size_t> freq(nLocalVars_, 0);
 
-    for (std::size_t i = 0; i < ops_.size(); ++i) {
+    for (std::size_t i = 0; i < ops_.size() + 1; ++i) {
 
         if (kernelBreakLines_[kernelNo] == i) {
             std::vector<std::size_t> index(nLocalVars_);
@@ -249,6 +268,9 @@ void GpuCodeGenerator::determineLocalVarReplacements() {
             std::fill(freq.begin(), freq.end(), 0);
             ++kernelNo;
         }
+
+        if (i >= ops_.size())
+            continue;
 
         if (ops_[i].lhs.first == VarType::local) {
             freq[ops_[i].lhs.second]++;
@@ -400,7 +422,7 @@ void GpuCodeGenerator::determineLocalVarReplacements() {
             ++s;
             continue;
         }
-        localVarMap_[i] = counter++;
+        bufferedLocalVarMap_[i] = counter++;
     }
 }
 
@@ -423,18 +445,56 @@ void GpuCodeGenerator::generateKernelStartCode() {
                    std::to_string(modelSize_) + "UL) {\n";
 }
 
-void GpuCodeGenerator::generateKernelEndCode() { sourceCode_ += "}}\n"; }
+void GpuCodeGenerator::generateKernelEndCode() {
 
-void GpuCodeGenerator::generateOperationCode(const Operation& op) {
+    for (auto const& v : localVarReplacements_[currentKernelNo_]) {
+        if (v.toBeCached()) {
+            sourceCode_ += getVarStr(std::make_pair(VarType::local, v.id()), false) + "=" +
+                           getVarStr(std::make_pair(VarType::local, v.id()), true) + ";\n";
+        }
+    }
 
-    std::string resultStr = getVarStr(op.lhs);
+    sourceCode_ += "}}\n";
+}
+
+void GpuCodeGenerator::generateOperationCode(const std::size_t i) {
+
+    constexpr std::size_t max_size = std::numeric_limits<std::size_t>::max();
+
+    auto lhsReplacement = ops_[i].lhs.first == VarType::local
+                              ? localVarReplacements_[currentKernelNo_].find(ops_[i].lhs.second)
+                              : localVarReplacements_[currentKernelNo_].end();
+    bool lhsNeedsDeclaration =
+        lhsReplacement != localVarReplacements_[currentKernelNo_].end() &&
+        lhsReplacement->firstLhsUse().value_or(max_size) == i &&
+        lhsReplacement->firstLhsUse().value_or(max_size) <= lhsReplacement->firstRhsUse().value_or(max_size);
+
+    std::string resultStr = (lhsNeedsDeclaration ? fpTypeStr_ : std::string()) +
+                            getVarStr(ops_[i].lhs, lhsReplacement != localVarReplacements_[currentKernelNo_].end());
+
     std::vector<std::string> argStr;
-    std::transform(op.rhs.begin(), op.rhs.end(), std::back_inserter(argStr),
-                   [this](const std::pair<VarType, std::size_t>& v) { return getVarStr(v); });
+    std::transform(ops_[i].rhs.begin(), ops_[i].rhs.end(), std::back_inserter(argStr),
+                   [this](const std::pair<VarType, std::size_t>& v) {
+                       auto rhsReplacement = v.first == VarType::local
+                                                 ? localVarReplacements_[currentKernelNo_].find(v.second)
+                                                 : localVarReplacements_[currentKernelNo_].end();
+                       return getVarStr(v, rhsReplacement != localVarReplacements_[currentKernelNo_].end());
+                   });
+
+    std::string initCode;
+
+    for (auto const& r : ops_[i].rhs) {
+        auto rhsReplacement = r.first == VarType::local ? localVarReplacements_[currentKernelNo_].find(r.second)
+                                                        : localVarReplacements_[currentKernelNo_].end();
+        if (rhsReplacement != localVarReplacements_[currentKernelNo_].end() &&
+            rhsReplacement->firstLhsUse().value_or(max_size) >= rhsReplacement->firstRhsUse().value_or(max_size)) {
+            initCode += getVarStr(r, true) + "=" + getVarStr(r, false) + ";\n";
+        }
+    }
 
     std::string code;
 
-    switch (op.randomVariableOpCode) {
+    switch (ops_[i].randomVariableOpCode) {
     case RandomVariableOpCode::None: {
         code = resultStr + "=" + argStr[0] + ";\n";
         break;
@@ -514,11 +574,12 @@ void GpuCodeGenerator::generateOperationCode(const Operation& op) {
     }
     default: {
         QL_FAIL("GpuCodeGenerator::generateOpCode(): no implementation for op code "
-                << op.randomVariableOpCode << " (" << getRandomVariableOpLabels()[op.randomVariableOpCode]
+                << ops_[i].randomVariableOpCode << " (" << getRandomVariableOpLabels()[ops_[i].randomVariableOpCode]
                 << ") provided.");
     }
     } // switch random var op code
 
+    sourceCode_ += initCode;
     sourceCode_ += code;
 }
 
@@ -567,7 +628,7 @@ void GpuCodeGenerator::finalize() {
                 generateKernelStartCode();
         }
         if (i < ops_.size())
-            generateOperationCode(ops_[i]);
+            generateOperationCode(i);
     }
 
     finalized_ = true;
