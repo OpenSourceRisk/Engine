@@ -250,7 +250,8 @@ void GpuCodeGenerator::determineLocalVarReplacements() {
 
     // determine the vars that we want to replace with local vars for each part
 
-    constexpr std::size_t max_local_vars = 16;
+    constexpr std::size_t max_local_vars = 256;
+    constexpr std::size_t min_usage_threshold = 2;
 
     std::size_t kernelNo = 0;
     std::vector<std::size_t> freq(nLocalVars_, 0);
@@ -262,8 +263,9 @@ void GpuCodeGenerator::determineLocalVarReplacements() {
             std::iota(index.begin(), index.end(), 0);
             std::sort(index.begin(), index.end(), [&freq](std::size_t a, std::size_t b) { return freq[a] > freq[b]; });
             localVarReplacements_.push_back({});
-            for (std::size_t j = 0; j < std::min(max_local_vars, nLocalVars_); ++j) {
-                localVarReplacements_.back().insert(index[j]);
+            for (std::size_t j = 0; j < nLocalVars_ && localVarReplacements_.back().size() < max_local_vars; ++j) {
+                if (freq[index[j]] >= min_usage_threshold)
+                    localVarReplacements_.back().insert(index[j]);
             }
             std::fill(freq.begin(), freq.end(), 0);
             ++kernelNo;
@@ -424,6 +426,9 @@ void GpuCodeGenerator::determineLocalVarReplacements() {
         }
         bufferedLocalVarMap_[i] = counter++;
     }
+
+    // std::cerr << "GpuCodeGenerator::determineLocalVarReplacements(): buffered values size "
+    //           << bufferedLocalVarMap_.size() << ", original size was " << nLocalVars_ << std::endl;
 }
 
 void GpuCodeGenerator::generateKernelStartCode() {
@@ -431,11 +436,11 @@ void GpuCodeGenerator::generateKernelStartCode() {
     kernelNames_.push_back("ore_kernel_" + std::to_string(currentKernelNo_));
 
     std::vector<std::string> inputArgs;
-    if (nInputVars_ > 0)
+    if (nInputVars() > 0)
         inputArgs.push_back("__global " + fpTypeStr_ + "* input");
-    if (nVariates_ > 0)
+    if (nVariates() > 0)
         inputArgs.push_back("__global " + fpTypeStr_ + "* rn");
-    if (nLocalVars_ > 0)
+    if (nBufferedLocalVars() > 0)
         inputArgs.push_back("__global " + fpTypeStr_ + "* values");
 
     sourceCode_ += "__kernel void " + kernelNames_.back() + "(" + boost::join(inputArgs, ",") +
@@ -469,7 +474,7 @@ void GpuCodeGenerator::generateOperationCode(const std::size_t i) {
         lhsReplacement->firstLhsUse().value_or(max_size) == i &&
         lhsReplacement->firstLhsUse().value_or(max_size) <= lhsReplacement->firstRhsUse().value_or(max_size);
 
-    std::string resultStr = (lhsNeedsDeclaration ? fpTypeStr_ : std::string()) +
+    std::string resultStr = (lhsNeedsDeclaration ? fpTypeStr_ + " " : std::string()) +
                             getVarStr(ops_[i].lhs, lhsReplacement != localVarReplacements_[currentKernelNo_].end());
 
     std::vector<std::string> argStr;
@@ -487,8 +492,10 @@ void GpuCodeGenerator::generateOperationCode(const std::size_t i) {
         auto rhsReplacement = r.first == VarType::local ? localVarReplacements_[currentKernelNo_].find(r.second)
                                                         : localVarReplacements_[currentKernelNo_].end();
         if (rhsReplacement != localVarReplacements_[currentKernelNo_].end() &&
-            rhsReplacement->firstLhsUse().value_or(max_size) >= rhsReplacement->firstRhsUse().value_or(max_size)) {
-            initCode += getVarStr(r, true) + "=" + getVarStr(r, false) + ";\n";
+            bufferedLocalVarMap_.find(r.second) != bufferedLocalVarMap_.end() &&
+            rhsReplacement->firstLhsUse().value_or(max_size) >= rhsReplacement->firstRhsUse().value_or(max_size) &&
+            rhsReplacement->firstRhsUse().value_or(max_size) == i) {
+            initCode += fpTypeStr_ + " " + getVarStr(r, true) + "=" + getVarStr(r, false) + ";\n";
         }
     }
 

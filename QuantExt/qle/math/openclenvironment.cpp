@@ -1036,17 +1036,19 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     }
 
     cl_mem valuesBuffer;
-    if (gpuCodeGenerator_[currentId_ - 1].nLocalVars() > 0) {
+    if (gpuCodeGenerator_[currentId_ - 1].nBufferedLocalVars() > 0) {
         // std::cerr << "creating values buffer "
-        //           << gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1] * fpSize / 1024.0 / 1024.0
+        //           << gpuCodeGenerator_[currentId_ - 1].nBufferedLocalVars() * size_[currentId_ - 1] * fpSize / 1024.0 /
+        //                  1024.0
         //           << " MB" << std::endl;
-        valuesBuffer =
-            clCreateBuffer(*context_, CL_MEM_READ_WRITE,
-                           fpSize * gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1], NULL, &err);
+        valuesBuffer = clCreateBuffer(
+            *context_, CL_MEM_READ_WRITE,
+            fpSize * gpuCodeGenerator_[currentId_ - 1].nBufferedLocalVars() * size_[currentId_ - 1], NULL, &err);
         guard.mem.push_back(valuesBuffer);
-        QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): creating values buffer of size "
-                                          << gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1]
-                                          << " fails: " << errorText(err));
+        QL_REQUIRE(err == CL_SUCCESS,
+                   "OpenClContext::finalizeCalculation(): creating values buffer of size "
+                       << gpuCodeGenerator_[currentId_ - 1].nBufferedLocalVars() * size_[currentId_ - 1]
+                       << " fails: " << errorText(err));
     }
 
     if (settings_.debug) {
@@ -1056,7 +1058,10 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     // build kernel if this is a new calc id
 
     if (!hasKernel_[currentId_ - 1]) {
-        // std::cerr << "generated kernel code: " << gpuCodeGenerator_[currentId_ - 1].sourceCode() << std::endl;
+        // std::cout << "generated kernel code: " << gpuCodeGenerator_[currentId_ - 1].sourceCode() << std::endl;
+        // std::cerr << "generated kernel code: "
+        //           << gpuCodeGenerator_[currentId_ - 1].sourceCode().size() / 1024.0 / 1024.0 << "MB, "
+        //           << gpuCodeGenerator_[currentId_ - 1].kernelNames().size() << " parts" << std::endl;
         cl_int err;
         const char* kernelSourcePtr = gpuCodeGenerator_[currentId_ - 1].sourceCode().c_str();
         program_[currentId_ - 1] = clCreateProgramWithSource(*context_, 1, &kernelSourcePtr, NULL, &err);
@@ -1113,7 +1118,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     if (inputBufferSize > 0)
         runWaitEvents.push_back(inputBufferEvent);
 
-    std::vector<double> values(gpuCodeGenerator_[currentId_ - 1].nLocalVars() * size_[currentId_ - 1]);
+    std::vector<double> values(gpuCodeGenerator_[currentId_ - 1].nBufferedLocalVars() * size_[currentId_ - 1]);
 
     for (std::size_t part = 0; part < gpuCodeGenerator_[currentId_ - 1].kernelNames().size(); ++part) {
 
@@ -1127,7 +1132,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         if (gpuCodeGenerator_[currentId_ - 1].nVariates() > 0) {
             err |= clSetKernelArg(kernel_[currentId_ - 1][part], kidx++, sizeof(cl_mem), &variatesPool_);
         }
-        if (gpuCodeGenerator_[currentId_ - 1].nLocalVars() > 0) {
+        if (gpuCodeGenerator_[currentId_ - 1].nBufferedLocalVars() > 0) {
             err |= clSetKernelArg(kernel_[currentId_ - 1][part], kidx++, sizeof(cl_mem), &valuesBuffer);
         }
         QL_REQUIRE(err == CL_SUCCESS,
@@ -1166,18 +1171,24 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                                << v.size());
 
                 RandomVariable ce;
-                RandomVariable regressand(size_[currentId_ - 1], &values[v[1].second * size_[currentId_ - 1]]);
+                RandomVariable regressand(size_[currentId_ - 1],
+                                          &values[gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v[1].second) *
+                                                  size_[currentId_ - 1]]);
                 if (v.size() < 4) {
                     // no regressor given -> take plain expectation
                     ce = expectation(regressand);
                 } else {
                     Filter filter = close_enough(
-                        RandomVariable(size_[currentId_ - 1], &values[v[2].second * size_[currentId_ - 1]]),
+                        RandomVariable(size_[currentId_ - 1],
+                                       &values[gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v[2].second) *
+                                               size_[currentId_ - 1]]),
                         RandomVariable(size_[currentId_ - 1], 1.0));
                     std::vector<RandomVariable> regressor(v.size() - 3);
                     for (std::size_t i = 3; i < v.size(); ++i) {
                         regressor[i - 3] =
-                            RandomVariable(size_[currentId_ - 1], &values[v[i].second * size_[currentId_ - 1]]);
+                            RandomVariable(size_[currentId_ - 1],
+                                           &values[gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v[i].second) *
+                                                   size_[currentId_ - 1]]);
                     }
 
                     ce = conditionalExpectation(regressand, vec2vecptr(regressor),
@@ -1190,7 +1201,9 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                 // overwrite the value
 
                 ce.expand();
-                std::copy(ce.data(), ce.data() + ce.size(), &values[v[0].second * size_[currentId_ - 1]]);
+                std::copy(ce.data(), ce.data() + ce.size(),
+                          &values[gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v[0].second) *
+                                  size_[currentId_ - 1]]);
 
                 updatedVars.push_back(v[0]);
             }
@@ -1224,7 +1237,9 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         copyLocalValuesToHost(runWaitEvents, valuesBuffer, &values[0], gpuCodeGenerator_[currentId_ - 1].outputVars());
 
         for (std::size_t i = 0; i < output.size(); ++i) {
-            std::size_t offset = gpuCodeGenerator_[currentId_ - 1].outputVars()[i].second * size_[currentId_ - 1];
+            std::size_t offset = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(
+                                     gpuCodeGenerator_[currentId_ - 1].outputVars()[i].second) *
+                                 size_[currentId_ - 1];
             std::copy(&values[offset], &values[offset + size_[currentId_ - 1]], output[i]);
         }
     }
@@ -1254,9 +1269,10 @@ void OpenClContext::copyLocalValuesToHost(
     std::size_t counter = 0;
     for (auto const& v : vars) {
         readEvents.push_back(cl_event());
+        std::size_t bid = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v.second);
         cl_int err = clEnqueueReadBuffer(
-            queue_, valuesBuffer, CL_FALSE, fpSize * v.second * size_[currentId_ - 1], fpSize * size_[currentId_ - 1],
-            settings_.useDoublePrecision ? (void*)&values[v.second * size_[currentId_ - 1]]
+            queue_, valuesBuffer, CL_FALSE, fpSize * bid * size_[currentId_ - 1], fpSize * size_[currentId_ - 1],
+            settings_.useDoublePrecision ? (void*)&values[bid * size_[currentId_ - 1]]
                                          : (void*)&valuesFloat[counter * size_[currentId_ - 1]],
             runWaitEvents.size(), runWaitEvents.empty() ? NULL : &runWaitEvents[0], &readEvents.back());
         QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::copyLocalValuesToHost() fails: " << errorText(err));
@@ -1271,8 +1287,9 @@ void OpenClContext::copyLocalValuesToHost(
     if (!settings_.useDoublePrecision) {
         std::size_t counter = 0;
         for (auto const& v : vars) {
+            std::size_t bid = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v.second);
             std::copy(&valuesFloat[counter * size_[currentId_ - 1]],
-                      &valuesFloat[(counter + 1) * size_[currentId_ - 1]], &values[v.second * size_[currentId_ - 1]]);
+                      &valuesFloat[(counter + 1) * size_[currentId_ - 1]], &values[bid * size_[currentId_ - 1]]);
             ++counter;
         }
     }
@@ -1292,7 +1309,8 @@ void OpenClContext::copyLocalValuesToDevice(
         valuesFloat.resize(vars.size() * size_[currentId_ - 1]);
         std::size_t counter = 0;
         for (auto const& v : vars) {
-            std::copy(&values[v.second * size_[currentId_ - 1]], &values[(v.second + 1) * size_[currentId_ - 1]],
+            std::size_t bid = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v.second);
+            std::copy(&values[bid * size_[currentId_ - 1]], &values[(bid + 1) * size_[currentId_ - 1]],
                       &valuesFloat[counter * size_[currentId_ - 1]]);
         }
         ++counter;
@@ -1300,10 +1318,11 @@ void OpenClContext::copyLocalValuesToDevice(
 
     std::size_t counter = 0;
     for (auto const& v : vars) {
+        std::size_t bid = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v.second);
         runWaitEvents.push_back(cl_event());
         cl_int err = clEnqueueWriteBuffer(
-            queue_, valuesBuffer, CL_FALSE, fpSize * v.second * size_[currentId_ - 1], fpSize * size_[currentId_ - 1],
-            settings_.useDoublePrecision ? (void*)&values[v.second * size_[currentId_ - 1]]
+            queue_, valuesBuffer, CL_FALSE, fpSize * bid * size_[currentId_ - 1], fpSize * size_[currentId_ - 1],
+            settings_.useDoublePrecision ? (void*)&values[bid * size_[currentId_ - 1]]
                                          : (void*)&valuesFloat[counter * size_[currentId_ - 1]],
             0, NULL, &runWaitEvents.back());
         QL_REQUIRE(err == CL_SUCCESS,
