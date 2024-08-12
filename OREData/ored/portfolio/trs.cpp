@@ -151,14 +151,16 @@ XMLNode* TRS::AdditionalCashflowData::toXML(XMLDocument& doc) const {
 std::map<AssetClass, std::set<std::string>>
 TRS::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
-    if (!portfolioId_.empty()) {
-        AssetClass test;
-        test = parseAssetClass("PORTFOLIO_DETAILS");
-        result[test].insert(portfolioId_);
+    if (!portfolioId_.empty() && underlying_.size() == 0) {
+        if (underlying_.size() == 0 && referenceDataManager->hasData("PortfolioBasket", portfolioId_)) {
+            populateFromReferenceData(referenceDataManager);
+        } else if(underlying_.size() == 0) {
+            AssetClass test;
+            test = parseAssetClass("PORTFOLIO_DETAILS");
+            result[test].insert(portfolioId_);
+        }      
     }
-    if (underlying_.size() == 0 && referenceDataManager->hasData("PortfolioBasket", portfolioId_)) {
-        populateFromReferenceData(referenceDataManager);
-    }
+    
     for (Size i = 0; i < underlying_.size(); ++i) {
         QL_REQUIRE(underlying_[i], "TRS::underlyingIndices(): underlying trade is null");
         // a builder might update the underlying (e.g. promote it from bond to convertible bond)
@@ -304,7 +306,7 @@ TRS::getFxIndex(const QuantLib::ext::shared_ptr<Market> market, const std::strin
 void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("TRS::build() called for id = " << id());
-
+    std::cout << id() << std::endl;
     // clear trade members
 
     reset();
@@ -851,8 +853,8 @@ void TRS::getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBa
 
     auto refData = ptfReferenceDatum->getTrades();
     underlying_.clear();
-    for (Size i = 0; i < refData.size(); i++) {   
-        underlyingDerivativeId_.push_back(std::to_string(i));
+    for (Size i = 0; i < refData.size(); i++) {
+        underlyingDerivativeId_.push_back(refData[i]->id());
         QL_REQUIRE(refData[i] != nullptr, "expected 'Trade' node under 'Derivative' node");
         underlying_.push_back(refData[i]);
     }
