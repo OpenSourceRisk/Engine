@@ -183,7 +183,7 @@ void simulation(string dateGridString, bool checkFixings) {
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
     parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
     parameters->setSwapVolKeys(ccys);
-    parameters->swapVolDecayMode() = "ForwardVariance";
+    parameters->setSwapVolDecayMode("ForwardVariance");
     parameters->setSimulateSwapVols(false);
 
     parameters->setFxVolExpiries("",

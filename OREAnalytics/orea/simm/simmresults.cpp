@@ -32,6 +32,14 @@ using std::string;
 namespace ore {
 namespace analytics {
 
+SimmResults::SimmResults(const SimmResults& simmResults)
+    : resultCcy_(simmResults.resultCurrency()), calcCcy_(simmResults.calculationCurrency()) {
+    if (!simmResults.empty()) {
+        map<SimmResults::Key, QuantLib::Real> results(simmResults.data());
+        data_ = results;
+    }
+};
+
 void SimmResults::add(const CrifRecord::ProductClass& pc, const SimmConfiguration::RiskClass& rc,
                       const SimmConfiguration::MarginType& mt, const string& b, Real im, const string& resultCurrency,
                       const string& calculationCurrency, const bool overwrite) {

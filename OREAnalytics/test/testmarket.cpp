@@ -1266,11 +1266,11 @@ TestConfigurationObjects::setupSimMarketData(bool hasSwapVolCube, bool hasYYCapV
                                       {2 * Weeks, 1 * Months, 3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                        5 * Years, 10 * Years, 13 * Years, 15 * Years, 20 * Years, 30 * Years});
     simMarketData->setSwapVolKeys({"EUR", "GBP", "USD", "CHF", "JPY"});
-    simMarketData->swapVolDecayMode() = "ForwardVariance";
+    simMarketData->setSwapVolDecayMode("ForwardVariance");
     simMarketData->setSimulateSwapVols(true); // false;
     if (hasSwapVolCube) {
         simMarketData->setSwapVolIsCube("", true);
-        simMarketData->simulateSwapVolATMOnly() = false;
+        simMarketData->setSimulateSwapVolATMOnly(false);
         simMarketData->setSwapVolStrikeSpreads("", {-0.02, -0.005, 0.0, 0.005, 0.02});
     }
 
@@ -1767,7 +1767,7 @@ QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfi
     simMarketData->setSwapVolExpiries(
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolKeys({"EUR", "GBP"});
-    simMarketData->swapVolDecayMode() = "ForwardVariance";
+    simMarketData->setSwapVolDecayMode("ForwardVariance");
     simMarketData->setSimulateSwapVols(true);
 
     simMarketData->setFxVolExpiries("",
@@ -1805,7 +1805,7 @@ QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfi
     simMarketData->setSwapVolExpiries(
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolKeys({"EUR", "GBP", "USD", "CHF", "JPY"});
-    simMarketData->swapVolDecayMode() = "ForwardVariance";
+    simMarketData->setSwapVolDecayMode("ForwardVariance");
     simMarketData->setSimulateSwapVols(true); // false;
 
     simMarketData->setFxVolExpiries("",
