@@ -1208,9 +1208,11 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                 updatedVars.push_back(v[0]);
             }
 
-            if (part < gpuCodeGenerator_[currentId_ - 1].kernelNames().size() - 1) {
+            // if we are in the last part we can skip copying values to device, but need to remove
+            // the updated vars from the copying below when populating the output vars
+            // if (part < gpuCodeGenerator_[currentId_ - 1].kernelNames().size() - 1) {
                 copyLocalValuesToDevice(runWaitEvents, valuesBuffer, &values[0], updatedVars);
-            }
+            // }
 
         } // if conditional expectation to be calculated
 
@@ -1312,8 +1314,8 @@ void OpenClContext::copyLocalValuesToDevice(
             std::size_t bid = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(v.second);
             std::copy(&values[bid * size_[currentId_ - 1]], &values[(bid + 1) * size_[currentId_ - 1]],
                       &valuesFloat[counter * size_[currentId_ - 1]]);
+            ++counter;
         }
-        ++counter;
     }
 
     std::size_t counter = 0;
