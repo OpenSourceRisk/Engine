@@ -89,13 +89,13 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
         additionalData_["fxIndex"] = fxIndex;
     }
 
-    Date fixingDate = parseDate(maturityDate_);
+    Date maturity_ = parseDate(maturityDate_);
     auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
     bool isFutureAccordingToConventions =
         InstrumentConventions::instance().conventions()->has(commodityName_, Convention::Type::CommodityFuture);
 
     // adjust the maturity date if not a valid fixing date for the index
-    fixingDate = index->fixingCalendar().adjust(fixingDate, Preceding);
+    maturity_ = index->fixingCalendar().adjust(maturity_, Preceding);
 
     if ((isFuturePrice_ && *isFuturePrice_) || isFutureAccordingToConventions) {
 
@@ -103,12 +103,12 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
         index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
 
         // May have been given an explicit future expiry date or an offset and calendar or neither.
-        Date expiryDate = fixingDate;
+        Date expiryDate = maturity_;
         if (futureExpiryDate_ != Date()) {
             expiryDate = futureExpiryDate_;
         } else if (futureExpiryOffset_ != Period()) {
             Calendar cal = offsetCalendar_.empty() ? NullCalendar() : offsetCalendar_;
-            expiryDate = cal.advance(fixingDate, futureExpiryOffset_);
+            expiryDate = cal.advance(maturity_, futureExpiryOffset_);
         }
 
         // Clone the index with the relevant expiry date.
@@ -121,12 +121,12 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
         // If cash settled and given a payment date that is not greater than the maturity date, set it equal to the
         // maturity date and log a warning to continue processing.
         physicallySettled = false;
-        if (paymentDate_ != Date() && paymentDate_ < fixingDate) {
+        if (paymentDate_ != Date() && paymentDate_ < maturity_) {
             WLOG("Commodity forward " << id() << " has payment date (" << io::iso_date(paymentDate_)
-                                      << ") before the maturity date (" << io::iso_date(fixingDate)
+                                      << ") before the maturity date (" << io::iso_date(maturity_)
                                       << "). Setting payment date"
                                       << " equal to the maturity date.");
-            paymentDate = fixingDate;
+            paymentDate = maturity_;
         }
     } else {
         // If physically settled and given a payment date, log a warning that it is ignored.
@@ -139,7 +139,7 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
 
     // add required commodity fixing
     DLOG("commodity forward " << id() << " paymentDate is " << paymentDate);
-    requiredFixings_.addFixingDate(fixingDate, index->name(), paymentDate == Date() ? fixingDate : paymentDate);
+    requiredFixings_.addFixingDate(maturity_, index->name(), paymentDate == Date() ? maturity_ : paymentDate);
 
     // Create the commodity forward instrument
     Currency currency = parseCurrency(currency_);
@@ -153,10 +153,10 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
         npvCurrency_ = payCcy_;
     }
     QuantLib::ext::shared_ptr<Instrument> commodityForward = QuantLib::ext::make_shared<QuantExt::CommodityForward>(
-        index, currency, position, quantity_, fixingDate, strike_, physicallySettled, paymentDate, payCcy, fixingDate_,
+        index, currency, position, quantity_, maturity_, strike_, physicallySettled, paymentDate, payCcy, fixingDate_,
         fxIndex);
 
-    maturity_ = std::max(fixingDate, paymentDate_);
+    maturity_ = std::max(maturity_, paymentDate_);
 
     // Pricing engine
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
