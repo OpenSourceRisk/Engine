@@ -21,7 +21,7 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
-#include <orea/scenario/historicalscenariofilereader.hpp>
+#include <orea/scenario/scenariofilereader.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
@@ -531,12 +531,12 @@ void InputParameters::setBenchmarkVarPeriod(const std::string& period) {
     benchmarkVarPeriod_ = period;
 }
 
-void InputParameters::setHistoricalScenarioReader(const std::string& fileName) {
+void InputParameters::setScenarioReader(const std::string& fileName) {
     boost::filesystem::path baseScenarioPath(fileName);
     QL_REQUIRE(exists(baseScenarioPath), "The provided base scenario file, " << baseScenarioPath << ", does not exist");
     QL_REQUIRE(is_regular_file(baseScenarioPath),
                "The provided base scenario file, " << baseScenarioPath << ", is not a file");
-    historicalScenarioReader_ = QuantLib::ext::make_shared<HistoricalScenarioFileReader>(
+    scenarioReader_ = QuantLib::ext::make_shared<ScenarioFileReader>(
         fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
 }
 
@@ -708,6 +708,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     pnlOutputFileName_ = params->get("pnl", "outputFileName", false);
     parStressTestConversionFile_ = params->get("parStressConversion", "stressZeroScenarioDataFile", false);
     pnlExplainOutputFileName_ = params->get("pnlExplain", "outputFileName", false);
+    scenarioNpvOutputFileName_ = params->get("scenarioNpv", "outputFileName", false);
 
     zeroToParShiftFile_ = params->get("zeroToParShift", "parShiftsFile", false);
     // map internal report name to output file name
@@ -735,6 +736,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["pnl"] = pnlOutputFileName_;
     fileNameMap_["parStress_ZeroStressData"] = parStressTestConversionFile_;
     fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;
+    fileNameMap_["scenario_npv"] = scenarioNpvOutputFileName_;
     
     fileNameMap_["parshifts"] = zeroToParShiftFile_;
     vector<Size> dimOutputGridPoints;

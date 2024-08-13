@@ -135,9 +135,9 @@ void ScenarioStatisticsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr
                                                             analytic()->configurations().simMarketParams)
         : scenarioGenerator_;
 
-        auto statsReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    auto statsReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     scenarioGenerator->reset();
-        ReportWriter().writeScenarioStatistics(scenarioGenerator, keys, samples_, grid_->valuationDates(),
+    ReportWriter().writeScenarioStatistics(scenarioGenerator, keys, samples_, grid_->valuationDates(),
                                                *statsReport);
     analytic()->reports()["SCENARIO_STATISTICS"]["scenario_statistics"] = statsReport;
 

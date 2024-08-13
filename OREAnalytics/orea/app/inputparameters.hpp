@@ -29,7 +29,7 @@
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
-#include <orea/scenario/historicalscenarioreader.hpp>
+#include <orea/scenario/scenarioreader.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
@@ -191,7 +191,7 @@ public:
     void setCovarianceDataFromBuffer(const std::string& xml);
     void setSensitivityStreamFromFile(const std::string& fileName);
     void setBenchmarkVarPeriod(const std::string& period);
-    void setHistoricalScenarioReader(const std::string& fileName);
+    void setScenarioReader(const std::string& fileName);
     void setSensitivityStreamFromBuffer(const std::string& buffer);
     void setHistVarSimMarketParams(const std::string& xml);
     void setHistVarSimMarketParamsFromFile(const std::string& fileName);
@@ -574,7 +574,7 @@ public:
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& covarianceData() const { return covarianceData_; }
     const QuantLib::ext::shared_ptr<SensitivityStream>& sensitivityStream() const { return sensitivityStream_; }
     std::string benchmarkVarPeriod() const { return benchmarkVarPeriod_; }
-    QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader() const { return historicalScenarioReader_;};
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader() const { return scenarioReader_;};
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() const { return histVarSimMarketParams_; }
     bool outputHistoricalScenarios() const { return outputHistoricalScenarios_; }
     
@@ -935,7 +935,7 @@ protected:
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarianceData_;
     QuantLib::ext::shared_ptr<SensitivityStream> sensitivityStream_;
     std::string benchmarkVarPeriod_;
-    QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader_;
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> histVarSimMarketParams_;
     std::string baseScenarioLoc_;
     bool outputHistoricalScenarios_ = false;
@@ -1165,6 +1165,7 @@ private:
     std::string parStressTestConversionFile_;
     std::string pnlExplainOutputFileName_;
     std::string zeroToParShiftFile_;
+    std::string scenarioNpvOutputFileName_;
 };
 
 void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);

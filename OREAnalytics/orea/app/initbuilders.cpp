@@ -28,6 +28,7 @@
 #include <orea/app/analytics/pnlexplainanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
+#include <orea/app/analytics/scenarionpvanalytic.hpp>
 #include <orea/app/analytics/scenariostatisticsanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/stresstestanalytic.hpp>
@@ -64,6 +65,7 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("PNL_EXPLAIN", {}, PnlExplainAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("PRICING", pricingAnalyticSubAnalytics, PricingAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("SCENARIO", {}, ScenarioAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("SCENARIO_NPV", {}, ScenarioNPVAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("SCENARIO_STATISTICS", {}, ScenarioStatisticsAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("SIMM", {}, SimmAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("XVA", xvaAnalyticSubAnalytics, XvaAnalytic, false);

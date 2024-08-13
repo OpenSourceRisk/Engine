@@ -2157,7 +2157,7 @@ void ReportWriter::writeStockSplitReport(const QuantLib::ext::shared_ptr<Scenari
 
                 Real price = Null<Real>();
                 if (std::find(hsdates.begin(), hsdates.end(), d) != hsdates.end()) {
-                    auto scen = hsloader->getHistoricalScenario(d);
+                    auto scen = hsloader->getScenario(d);
                     RiskFactorKey rf(RiskFactorKey::KeyType::EquitySpot, name);
                     if (scen->has(rf))
                         price = scen->get(rf);
@@ -2221,12 +2221,12 @@ void ReportWriter::writeHistoricalScenarios(const QuantLib::ext::shared_ptr<Hist
     // each scenario might have a different set of keys, so we collect the union of all keys
     // and write them out (missing keys will be written as NA to the report)
     std::set<RiskFactorKey> allKeys;
-    for (const auto& s : hsloader->historicalScenarios())
-        allKeys.insert(s->keys().begin(), s->keys().end());
+    for (const auto& s : hsloader->scenarios()[0])
+        allKeys.insert(s.second->keys().begin(), s.second-> keys().end());
     ScenarioWriter sw(nullptr, report, std::vector<RiskFactorKey>(allKeys.begin(), allKeys.end()));
     bool writeHeader = true;
-    for (const auto& s : hsloader->historicalScenarios()) {
-        sw.writeScenario(s, writeHeader);
+    for (const auto& s : hsloader->scenarios()[0]) {
+        sw.writeScenario(s.second, writeHeader);
         writeHeader = false;
     }
 }

@@ -1165,7 +1165,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("historicalSimulationVar", "historicalScenarioFile", false);
         QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
         std::string scenarioFile = (inputPath / tmp).generic_string();
-        setHistoricalScenarioReader(scenarioFile);
+        setScenarioReader(scenarioFile);
 
         tmp = params_->get("historicalSimulationVar", "simulationConfigFile", false);
         QL_REQUIRE(tmp != "", "simulationConfigFile not provided");
@@ -1272,7 +1272,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("pnlExplain", "historicalScenarioFile", false);
         if (tmp != "") {
             std::string scenarioFile = (inputPath / tmp).generic_string();
-            setHistoricalScenarioReader(scenarioFile);
+            setScenarioReader(scenarioFile);
         }
 
         tmp = params_->get("pnlExplain", "simulationConfigFile", false);
@@ -2146,6 +2146,26 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("scenarioStatistics", "scenariodump", false);
         if (tmp != "")
             setWriteScenarios(true);
+    }
+
+    tmp = params_->get("scenarioNpv", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("SCENARIO_NPV");
+
+        tmp = params_->get("scenarioNpv", "simulationConfigFile", false);
+        if (tmp != "") {
+            string simulationConfigFile = (inputPath / tmp).generic_string();
+            LOG("Loading simulation config from file" << simulationConfigFile);
+            setExposureSimMarketParamsFromFile(simulationConfigFile);
+            setScenarioGeneratorDataFromFile(simulationConfigFile);
+        } else {
+            ALOG("Simulation market data not loaded");
+        }
+                
+        tmp = params_->get("scenarioNpv", "scenarioFile", false);
+        QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
+        std::string scenarioFile = (inputPath / tmp).generic_string();
+        setScenarioReader(scenarioFile);
     }
 
     if (analytics().size() == 0) {
