@@ -220,7 +220,7 @@ void GpuCodeGenerator::generateBoilerplateCode() {
 
 void GpuCodeGenerator::determineKernelBreakLines() {
 
-    constexpr std::size_t max_kernel_lines = 16384;
+    constexpr std::size_t max_kernel_lines = 4096;
 
     /* process conditional expectations and
        - generate resulting break lines
