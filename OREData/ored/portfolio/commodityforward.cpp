@@ -89,7 +89,7 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
         additionalData_["fxIndex"] = fxIndex;
     }
 
-    Date maturity_ = parseDate(maturityDate_);
+    maturity_ = parseDate(maturityDate_);
     auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
     bool isFutureAccordingToConventions =
         InstrumentConventions::instance().conventions()->has(commodityName_, Convention::Type::CommodityFuture);
@@ -156,7 +156,8 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
         index, currency, position, quantity_, maturity_, strike_, physicallySettled, paymentDate, payCcy, fixingDate_,
         fxIndex);
 
-    maturity_ = std::max(maturity_, paymentDate_);
+    if (paymentDate != Date())
+        maturity_ = std::max(maturity_, paymentDate);
 
     // Pricing engine
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
