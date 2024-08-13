@@ -771,6 +771,8 @@ void XvaEngineCG::calculateSensitivities() {
 
 void XvaEngineCG::generateSensiReports() {
     DLOG("XvaEngineCG: write sensi report.");
+    if (!sensitivityData_) {
+        return;
     sensiReport_ = QuantLib::ext::make_shared<InMemoryReport>();
     auto sensiCube = QuantLib::ext::make_shared<SensitivityCube>(
         sensiResultCube_, sensiScenarioGenerator_->scenarioDescriptions(), sensiScenarioGenerator_->shiftSizes(),
