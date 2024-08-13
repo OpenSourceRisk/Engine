@@ -1119,6 +1119,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
         runWaitEvents.push_back(inputBufferEvent);
 
     std::vector<double> values(gpuCodeGenerator_[currentId_ - 1].nBufferedLocalVars() * size_[currentId_ - 1]);
+    std::set<std::pair<GpuCodeGenerator::VarType, std::size_t>> varsAlreadyOnHost;
 
     for (std::size_t part = 0; part < gpuCodeGenerator_[currentId_ - 1].kernelNames().size(); ++part) {
 
@@ -1208,11 +1209,11 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
                 updatedVars.push_back(v[0]);
             }
 
-            // if we are in the last part we can skip copying values to device, but need to remove
-            // the updated vars from the copying below when populating the output vars
-            // if (part < gpuCodeGenerator_[currentId_ - 1].kernelNames().size() - 1) {
+            if (part < gpuCodeGenerator_[currentId_ - 1].kernelNames().size() - 1) {
                 copyLocalValuesToDevice(runWaitEvents, valuesBuffer, &values[0], updatedVars);
-            // }
+            } else {
+                varsAlreadyOnHost.insert(updatedVars.begin(), updatedVars.end());
+            }
 
         } // if conditional expectation to be calculated
 
@@ -1236,7 +1237,13 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
     if (!output.empty()) {
 
-        copyLocalValuesToHost(runWaitEvents, valuesBuffer, &values[0], gpuCodeGenerator_[currentId_ - 1].outputVars());
+        std::vector<std::pair<GpuCodeGenerator::VarType, std::size_t>> outputVarsMinusVarsAlreadyOnHost;
+        for (auto const& o : gpuCodeGenerator_[currentId_ - 1].outputVars()) {
+            if (varsAlreadyOnHost.find(o) != varsAlreadyOnHost.end())
+                outputVarsMinusVarsAlreadyOnHost.push_back(o);
+        }
+
+        copyLocalValuesToHost(runWaitEvents, valuesBuffer, &values[0], outputVarsMinusVarsAlreadyOnHost);
 
         for (std::size_t i = 0; i < output.size(); ++i) {
             std::size_t offset = gpuCodeGenerator_[currentId_ - 1].bufferedLocalVarMap(
