@@ -122,6 +122,7 @@ private:
     std::size_t nLocalVars_;
     std::vector<Operation> ops_;
     std::vector<std::size_t> freedVariables_;
+    std::set<std::size_t> conditionalExpectationVarIds_;
 
     // state / result of finalize()
     std::size_t currentKernelNo_;

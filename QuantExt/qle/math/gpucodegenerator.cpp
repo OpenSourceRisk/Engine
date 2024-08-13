@@ -45,6 +45,7 @@ void GpuCodeGenerator::initialize(const std::size_t nInputVars, const std::vecto
     nLocalVars_ = 0;
     ops_.clear();
     freedVariables_.clear();
+    conditionalExpectationVarIds_.clear();
     currentKernelNo_ = 0;
     kernelBreakLines_.clear();
     conditionalExpectationVars_.clear();
@@ -147,17 +148,22 @@ std::size_t GpuCodeGenerator::getId(const std::pair<VarType, const std::size_t>&
 std::size_t GpuCodeGenerator::applyOperation(const std::size_t randomVariableOpCode,
                                              const std::vector<std::size_t>& args) {
     std::size_t resultId = generateResultId();
+    conditionalExpectationVarIds_.insert(resultId);
     std::vector<std::pair<VarType, std::size_t>> rhs;
     std::transform(args.begin(), args.end(), std::back_inserter(rhs),
                    [this](const std::size_t id) { return getVar(id); });
 
     if (randomVariableOpCode == RandomVariableOpCode::ConditionalExpectation) {
         for (auto& r : rhs) {
-            if (r.first == VarType::local)
+            if (r.first == VarType::local) {
+                conditionalExpectationVarIds_.insert(getId(r));
                 continue;
+            }
             /* generate assignment v_i = rhs-arg to ensure that all conditional expectation
                vars are local variables */
-            applyOperation(RandomVariableOpCode::None, {getId(r)});
+            std::size_t rhsid = getId(r);
+            applyOperation(RandomVariableOpCode::None, {rhsid});
+            conditionalExpectationVarIds_.insert(rhsid);
             r = ops_.back().lhs;
         }
     }
@@ -173,6 +179,10 @@ std::size_t GpuCodeGenerator::applyOperation(const std::size_t randomVariableOpC
 void GpuCodeGenerator::freeVariable(const std::size_t id) {
     // we do not free input variables or variates,  we only free variables that were added during the calc
     if (id < nInputVars_ + nVariates_)
+        return;
+    /* we do not free arguments or the result of conditional expectations, since this op is possibly
+       evaluated with delay */
+    if (conditionalExpectationVarIds_.find(id) != conditionalExpectationVarIds_.end())
         return;
     freedVariables_.push_back(id);
 }
