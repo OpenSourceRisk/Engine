@@ -148,12 +148,12 @@ std::size_t GpuCodeGenerator::getId(const std::pair<VarType, const std::size_t>&
 std::size_t GpuCodeGenerator::applyOperation(const std::size_t randomVariableOpCode,
                                              const std::vector<std::size_t>& args) {
     std::size_t resultId = generateResultId();
-    conditionalExpectationVarIds_.insert(resultId);
     std::vector<std::pair<VarType, std::size_t>> rhs;
     std::transform(args.begin(), args.end(), std::back_inserter(rhs),
                    [this](const std::size_t id) { return getVar(id); });
 
     if (randomVariableOpCode == RandomVariableOpCode::ConditionalExpectation) {
+        conditionalExpectationVarIds_.insert(resultId);
         for (auto& r : rhs) {
             if (r.first == VarType::local) {
                 conditionalExpectationVarIds_.insert(getId(r));
