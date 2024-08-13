@@ -1239,7 +1239,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
         std::vector<std::pair<GpuCodeGenerator::VarType, std::size_t>> outputVarsMinusVarsAlreadyOnHost;
         for (auto const& o : gpuCodeGenerator_[currentId_ - 1].outputVars()) {
-            if (varsAlreadyOnHost.find(o) != varsAlreadyOnHost.end())
+            if (varsAlreadyOnHost.find(o) == varsAlreadyOnHost.end())
                 outputVarsMinusVarsAlreadyOnHost.push_back(o);
         }
 
