@@ -261,7 +261,7 @@ void GpuCodeGenerator::determineLocalVarReplacements() {
     // determine the vars that we want to replace with local vars for each part
 
     constexpr std::size_t max_local_vars = 1024;
-    constexpr std::size_t min_usage_threshold = 2;
+    constexpr std::size_t min_usage_threshold = 4;
 
     std::size_t kernelNo = 0;
     std::vector<std::size_t> freq(nLocalVars_, 0);
