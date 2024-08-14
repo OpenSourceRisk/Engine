@@ -436,9 +436,6 @@ void GpuCodeGenerator::determineLocalVarReplacements() {
         }
         bufferedLocalVarMap_[i] = counter++;
     }
-
-    // std::cerr << "GpuCodeGenerator::determineLocalVarReplacements(): buffered values size "
-    //           << bufferedLocalVarMap_.size() << ", original size was " << nLocalVars_ << std::endl;
 }
 
 void GpuCodeGenerator::generateKernelStartCode() {
@@ -649,6 +646,9 @@ void GpuCodeGenerator::finalize() {
     }
 
     finalized_ = true;
+
+    // std::cerr << "GpuCodeGenerator::finalize(): ops=" << ops_.size() << ", nLocalVars=" << nLocalVars()
+    //           << ", nBufferedLocalVars=" << nBufferedLocalVars() << ", parts=" << kernelNames().size() << std::endl;
 }
 
 bool operator<(const GpuCodeGenerator::LocalVarReplacement a, const GpuCodeGenerator::LocalVarReplacement b) {
