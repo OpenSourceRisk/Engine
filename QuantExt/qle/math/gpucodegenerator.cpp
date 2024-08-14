@@ -278,6 +278,8 @@ void GpuCodeGenerator::determineLocalVarReplacements() {
                     localVarReplacements_.back().insert(index[j]);
             }
             std::fill(freq.begin(), freq.end(), 0);
+            // std::cerr << "GpuCodeGenerator::determineLocalVarReplacements(): part " << kernelNo << " has "
+            //           << localVarReplacements_.back().size() << " local var replacements." << std::endl;
             ++kernelNo;
         }
 
