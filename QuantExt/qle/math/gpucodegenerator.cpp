@@ -80,6 +80,11 @@ std::size_t GpuCodeGenerator::nBufferedLocalVars() const {
         return bufferedLocalVarMap_.size();
 }
 
+std::size_t GpuCodeGenerator::sourceCodeSize() const {
+    return std::accumulate(sourceCode_.begin(), sourceCode_.end(), 0,
+                           [](std::size_t a, const std::string& s) { return a + s.size(); });
+}
+
 std::size_t GpuCodeGenerator::bufferedLocalVarMap(const std::size_t id) const {
     if (bufferedLocalVarMap_.empty())
         return id;
@@ -111,10 +116,10 @@ std::pair<GpuCodeGenerator::VarType, std::size_t> GpuCodeGenerator::getVar(const
 std::string GpuCodeGenerator::getVarStr(const std::pair<VarType, const std::size_t>& var,
                                         const bool useLocalVarName) const {
     if (var.first == VarType::input)
-        return "input[" + std::to_string(inputVarOffset_[var.second]) + "UL" +
+        return "x[" + std::to_string(inputVarOffset_[var.second]) + "UL" +
                (inputVarIsScalar_[var.second] ? "" : "+i") + "]";
     else if (var.first == VarType::rn)
-        return "rn[" + std::to_string(var.second * modelSize_) + "UL+i]";
+        return "r[" + std::to_string(var.second * modelSize_) + "UL+i]";
     else if (var.first == VarType::local) {
         if (useLocalVarName) {
             return "v" + std::to_string(var.second);
@@ -126,7 +131,7 @@ std::string GpuCodeGenerator::getVarStr(const std::pair<VarType, const std::size
                            "GpuCodeGenerator::getVarStr(): no mapping for local var id " << var.second);
                 id = b->second;
             }
-            return "values[" + std::to_string(id * modelSize_) + "UL+i]";
+            return "b[" + std::to_string(id * modelSize_) + "UL+i]";
         }
     } else {
         QL_FAIL("GpuCodeGenerator::getId(): var type not handled, internal error.");
@@ -191,7 +196,7 @@ void GpuCodeGenerator::declareOutputVariable(const std::size_t id) { outputVars_
 
 void GpuCodeGenerator::generateBoilerplateCode() {
     // clang-format off
-    sourceCode_ += std::string(  
+    sourceCode_.back() += std::string(
             "bool ore_closeEnough(const " + fpTypeStr_ + " x, const " + fpTypeStr_ + " y);\n"
             "bool ore_closeEnough(const " + fpTypeStr_ + " x, const " + fpTypeStr_ + " y) {\n"
             "    const " + fpTypeStr_ + " tol = 42.0" + fpSuffix_ + " * " + fpEpsStr_ + ";\n"
@@ -220,7 +225,7 @@ void GpuCodeGenerator::generateBoilerplateCode() {
 
 void GpuCodeGenerator::determineKernelBreakLines() {
 
-    constexpr std::size_t max_kernel_lines = 4096;
+    constexpr std::size_t max_kernel_args = 16384;
 
     /* process conditional expectations and
        - generate resulting break lines
@@ -228,13 +233,15 @@ void GpuCodeGenerator::determineKernelBreakLines() {
 
     std::set<std::pair<VarType, std::size_t>> currentCondExpVars;
 
+    std::size_t currentArgs = 0;
+
     for (std::size_t i = 0; i < ops_.size(); ++i) {
 
         /* a new part is started when
-           - we exceed the max number of lines per kernel or
+           - we exceed the max number of args per kernel or
            - as soon as the rhs of an op depends on a conditional expectation result var in the current kernel */
 
-        if ((i + 1) % max_kernel_lines == 0 ||
+        if (currentArgs > max_kernel_args ||
             std::find_if(ops_[i].rhs.begin(), ops_[i].rhs.end(),
                          [&currentCondExpVars](const std::pair<VarType, std::size_t>& v) {
                              return currentCondExpVars.find(v) != currentCondExpVars.end();
@@ -242,7 +249,10 @@ void GpuCodeGenerator::determineKernelBreakLines() {
             kernelBreakLines_.push_back(i);
             conditionalExpectationVars_.push_back({});
             currentCondExpVars.clear();
+            currentArgs = 0;
         }
+
+        currentArgs += 1 + ops_[i].rhs.size();
 
         /* if op is a cond exp, update conditionalExpectationVars_ container and current cond exp results */
 
@@ -446,32 +456,34 @@ void GpuCodeGenerator::generateKernelStartCode() {
 
     std::vector<std::string> inputArgs;
     if (nInputVars() > 0)
-        inputArgs.push_back("__global " + fpTypeStr_ + "* input");
+        inputArgs.push_back("__global " + fpTypeStr_ + "* x");
     if (nVariates() > 0)
-        inputArgs.push_back("__global " + fpTypeStr_ + "* rn");
+        inputArgs.push_back("__global " + fpTypeStr_ + "* r");
     if (nBufferedLocalVars() > 0)
-        inputArgs.push_back("__global " + fpTypeStr_ + "* values");
+        inputArgs.push_back("__global " + fpTypeStr_ + "* b");
 
-    sourceCode_ += "__kernel void " + kernelNames_.back() + "(" + boost::join(inputArgs, ",") +
-                   ") {\n"
-                   "unsigned long i = get_global_id(0);\n"
-                   "if(i < " +
-                   std::to_string(modelSize_) + "UL) {\n";
+    sourceCode_.back() += "__kernel void " + kernelNames_.back() + "(" + boost::join(inputArgs, ",") +
+                          ") {\n"
+                          "unsigned long i = get_global_id(0);\n"
+                          "if(i < " +
+                          std::to_string(modelSize_) + "UL) {\n";
 }
 
 void GpuCodeGenerator::generateKernelEndCode() {
 
     for (auto const& v : localVarReplacements_[currentKernelNo_]) {
         if (v.toBeCached()) {
-            sourceCode_ += getVarStr(std::make_pair(VarType::local, v.id()), false) + "=" +
-                           getVarStr(std::make_pair(VarType::local, v.id()), true) + ";\n";
+            sourceCode_.back() += getVarStr(std::make_pair(VarType::local, v.id()), false) + "=" +
+                                  getVarStr(std::make_pair(VarType::local, v.id()), true) + ";\n";
         }
     }
 
-    sourceCode_ += "}}\n";
+    sourceCode_.back() += "}}\n";
 }
 
 void GpuCodeGenerator::generateOperationCode(const std::size_t i) {
+
+    constexpr std::size_t max_sum_args = 128;
 
     constexpr std::size_t max_size = std::numeric_limits<std::size_t>::max();
 
@@ -516,7 +528,13 @@ void GpuCodeGenerator::generateOperationCode(const std::size_t i) {
         break;
     }
     case RandomVariableOpCode::Add: {
-        code = resultStr + "=" + boost::join(argStr, "+") + ";\n";
+        std::size_t c = 0;
+        while(c < argStr.size()) {
+            std::vector<std::string> tmp(std::next(argStr.begin(), c),
+                                         std::next(argStr.begin(), std::min(c + max_sum_args, argStr.size())));
+            code += resultStr + (c == 0 ? "=" : "+=") + boost::join(tmp, "+") + ";\n";
+            c += max_sum_args;
+        }
         break;
     }
     case RandomVariableOpCode::Subtract: {
@@ -595,8 +613,8 @@ void GpuCodeGenerator::generateOperationCode(const std::size_t i) {
     }
     } // switch random var op code
 
-    sourceCode_ += initCode;
-    sourceCode_ += code;
+    sourceCode_.back() += initCode;
+    sourceCode_.back() += code;
 }
 
 void GpuCodeGenerator::generateOutputVarAssignments() {
@@ -618,7 +636,6 @@ void GpuCodeGenerator::finalize() {
 
     // preparations
 
-    generateBoilerplateCode();
     determineKernelBreakLines();
     generateOutputVarAssignments();
 
@@ -632,16 +649,21 @@ void GpuCodeGenerator::finalize() {
 
     // loop over ops and generate kernel code
 
+    sourceCode_.push_back({});
+    generateBoilerplateCode();
     generateKernelStartCode();
 
     for (std::size_t i = 0; i < ops_.size() + 1; ++i) {
         if (i == kernelBreakLines_[currentKernelNo_]) {
             if (i == ops_.size())
-                sourceCode_ += outputVarAssignments_;
+                sourceCode_.back() += outputVarAssignments_;
             generateKernelEndCode();
             ++currentKernelNo_;
-            if (i < ops_.size())
+            if (i < ops_.size()) {
+                sourceCode_.push_back({});
+                generateBoilerplateCode();
                 generateKernelStartCode();
+            }
         }
         if (i < ops_.size())
             generateOperationCode(i);

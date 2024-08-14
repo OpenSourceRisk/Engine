@@ -46,7 +46,8 @@ public:
     bool initialized() const { return initialized_; }
     bool finalized() const { return finalized_; }
 
-    const std::string& sourceCode() const { return sourceCode_; }
+    const std::vector<std::string>& sourceCode() const { return sourceCode_; }
+    std::size_t sourceCodeSize() const;
     const std::vector<std::string>& kernelNames() const { return kernelNames_; }
     std::size_t nInputVars() const { return nInputVars_; }
     const std::vector<bool>& inputVarIsScalar() const { return inputVarIsScalar_; }
@@ -128,7 +129,7 @@ private:
     std::size_t currentKernelNo_;
     std::vector<std::size_t> kernelBreakLines_;
     std::string outputVarAssignments_;
-    std::string sourceCode_;
+    std::vector<std::string> sourceCode_;
     std::vector<std::string> kernelNames_;
     std::vector<std::vector<std::vector<std::pair<VarType, std::size_t>>>> conditionalExpectationVars_;
     std::vector<std::pair<VarType, std::size_t>> outputVars_;
