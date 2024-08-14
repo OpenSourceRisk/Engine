@@ -482,7 +482,7 @@ void GpuCodeGenerator::generateOperationCode(const std::size_t i) {
     bool lhsNeedsDeclaration =
         lhsReplacement != localVarReplacements_[currentKernelNo_].end() &&
         lhsReplacement->firstLhsUse().value_or(max_size) == i &&
-        lhsReplacement->firstLhsUse().value_or(max_size) <= lhsReplacement->firstRhsUse().value_or(max_size);
+        lhsReplacement->firstLhsUse().value_or(max_size) < lhsReplacement->firstRhsUse().value_or(max_size);
 
     std::string resultStr = (lhsNeedsDeclaration ? fpTypeStr_ + " " : std::string()) +
                             getVarStr(ops_[i].lhs, lhsReplacement != localVarReplacements_[currentKernelNo_].end());
