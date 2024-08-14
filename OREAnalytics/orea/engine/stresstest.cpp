@@ -119,9 +119,9 @@ void StressTest::writeReport(const QuantLib::ext::shared_ptr<ore::data::Report>&
 
     report->addColumn("TradeId", string());
     report->addColumn("ScenarioLabel", string());
-    report->addColumn("Base NPV", double(), 8);
-    report->addColumn("Scenario NPV", double(), 8);
-    report->addColumn("Sensitivity", double(), 8);
+    report->addColumn("Base NPV", double(), 2);
+    report->addColumn("Scenario NPV", double(), 2);
+    report->addColumn("Sensitivity", double(), 6);
 
     for (auto const& [id, npv] : shiftedNPV_) {
         string tradeId = id.first;
