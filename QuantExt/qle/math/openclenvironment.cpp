@@ -213,6 +213,7 @@ private:
     static void releaseKernel(cl_kernel& k, const std::string& desc);
     static void releaseKernel(std::vector<cl_kernel>& ks, const std::string& desc);
     static void releaseProgram(cl_program& p, const std::string& desc);
+    static void releaseProgram(std::vector<cl_program>& p, const std::string& desc);
 
     enum class ComputeState { idle, createInput, createVariates, calc, declareOutput };
 
@@ -234,7 +235,7 @@ private:
     std::vector<bool> disposed_;
     std::vector<bool> hasKernel_;
     std::vector<std::size_t> version_;
-    std::vector<cl_program> program_;
+    std::vector<std::vector<cl_program>> program_;
     std::vector<std::vector<cl_kernel>> kernel_;
     std::vector<GpuCodeGenerator> gpuCodeGenerator_;
     std::vector<std::size_t> numberOfOperations_;
@@ -431,6 +432,11 @@ void OpenClContext::releaseProgram(cl_program& p, const std::string& description
     }
 }
 
+void OpenClContext::releaseProgram(std::vector<cl_program>& ps, const std::string& description) {
+    for (auto& p : ps)
+        releaseProgram(p, description);
+}
+
 std::string OpenClContext::runHealthCheckProgram(const std::string& source, const std::string& kernelName) {
 
     struct CleanUp {
@@ -567,8 +573,8 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
         disposed_.push_back(false);
         hasKernel_.push_back(false);
         version_.push_back(version);
-        program_.push_back(cl_program());
-        kernel_.push_back(std::vector<cl_kernel>());
+        program_.push_back({});
+        kernel_.push_back({});
         gpuCodeGenerator_.push_back({});
         numberOfOperations_.push_back(0);
 
@@ -593,9 +599,12 @@ std::pair<std::size_t, bool> OpenClContext::initiateCalculation(const std::size_
             releaseKernel(kernel_[id - 1],
                           "kernel id " + std::to_string(id) + " (during initiateCalculation, old version: " +
                               std::to_string(version_[id - 1]) + ", new version:" + std::to_string(version) + ")");
+            kernel_[id - 1].clear();
             releaseProgram(program_[id - 1],
                            "program id " + std::to_string(id) + " (during initiateCalculation, old version: " +
                                std::to_string(version_[id - 1]) + ", new version:" + std::to_string(version) + ")");
+            program_[id - 1].clear();
+            gpuCodeGenerator_[id - 1] = GpuCodeGenerator();
             numberOfOperations_[id - 1] = 0;
             newCalc = true;
         }
@@ -1038,7 +1047,8 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
     cl_mem valuesBuffer;
     if (gpuCodeGenerator_[currentId_ - 1].nBufferedLocalVars() > 0) {
         // std::cerr << "creating values buffer "
-        //           << gpuCodeGenerator_[currentId_ - 1].nBufferedLocalVars() * size_[currentId_ - 1] * fpSize / 1024.0 /
+        //           << gpuCodeGenerator_[currentId_ - 1].nBufferedLocalVars() * size_[currentId_ - 1] * fpSize / 1024.0
+        //           /
         //                  1024.0
         //           << " MB" << std::endl;
         valuesBuffer = clCreateBuffer(
@@ -1059,28 +1069,35 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
     if (!hasKernel_[currentId_ - 1]) {
         // std::cout << "generated kernel code: " << gpuCodeGenerator_[currentId_ - 1].sourceCode() << std::endl;
-        // std::cerr << "generated kernel code: "
-        //           << gpuCodeGenerator_[currentId_ - 1].sourceCode().size() / 1024.0 / 1024.0 << "MB, "
-        //           << gpuCodeGenerator_[currentId_ - 1].kernelNames().size() << " parts" << std::endl;
+        // std::cerr << "generated kernel code: " << gpuCodeGenerator_[currentId_ - 1].sourceCodeSize() / 1024.0 / 1024.0
+        //           << "MB, " << gpuCodeGenerator_[currentId_ - 1].kernelNames().size() << " parts" << std::endl;
+
         cl_int err;
-        const char* kernelSourcePtr = gpuCodeGenerator_[currentId_ - 1].sourceCode().c_str();
-        program_[currentId_ - 1] = clCreateProgramWithSource(*context_, 1, &kernelSourcePtr, NULL, &err);
-        QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): error during clCreateProgramWithSource(): "
-                                          << errorText(err));
-        err = clBuildProgram(program_[currentId_ - 1], 1, device_, NULL, NULL, NULL);
-        if (err != CL_SUCCESS) {
-            char buffer[ORE_OPENCL_MAX_BUILD_LOG];
-            clGetProgramBuildInfo(program_[currentId_ - 1], *device_, CL_PROGRAM_BUILD_LOG,
-                                  ORE_OPENCL_MAX_BUILD_LOG * sizeof(char), buffer, NULL);
-            QL_FAIL("OpenClContext::finalizeCalculation(): error during program build for kernels '"
-                    << boost::join(gpuCodeGenerator_[currentId_ - 1].kernelNames(), ",") << "': " << errorText(err)
-                    << ": " << std::string(buffer).substr(0, ORE_OPENCL_MAX_BUILD_LOG_LOGFILE));
+        std::size_t part = 0;
+        for (auto const& s : gpuCodeGenerator_[currentId_ - 1].sourceCode()) {
+            const char* kernelSourcePtr = s.c_str();
+            program_[currentId_ - 1].push_back(clCreateProgramWithSource(*context_, 1, &kernelSourcePtr, NULL, &err));
+            QL_REQUIRE(err == CL_SUCCESS,
+                       "OpenClContext::finalizeCalculation(): error during clCreateProgramWithSource() for part "
+                           << part << ": " << errorText(err));
+            err = clBuildProgram(program_[currentId_ - 1][part], 1, device_, NULL, NULL, NULL);
+            if (err != CL_SUCCESS) {
+                char buffer[ORE_OPENCL_MAX_BUILD_LOG];
+                clGetProgramBuildInfo(program_[currentId_ - 1][part], *device_, CL_PROGRAM_BUILD_LOG,
+                                      ORE_OPENCL_MAX_BUILD_LOG * sizeof(char), buffer, NULL);
+                QL_FAIL("OpenClContext::finalizeCalculation(): error during program build for kernel '"
+                        << gpuCodeGenerator_[currentId_ - 1].kernelNames()[part] << "': " << errorText(err) << ": "
+                        << std::string(buffer).substr(0, ORE_OPENCL_MAX_BUILD_LOG_LOGFILE));
+            }
+            ++part;
         }
 
+        part = 0;
         for (auto const& kernelName : gpuCodeGenerator_[currentId_ - 1].kernelNames()) {
-            kernel_[currentId_ - 1].push_back(clCreateKernel(program_[currentId_ - 1], kernelName.c_str(), &err));
+            kernel_[currentId_ - 1].push_back(clCreateKernel(program_[currentId_ - 1][part], kernelName.c_str(), &err));
             QL_REQUIRE(err == CL_SUCCESS, "OpenClContext::finalizeCalculation(): error during clCreateKernel() ("
                                               << kernelName << "): " << errorText(err));
+            ++part;
         }
 
         hasKernel_[currentId_ - 1] = true;
