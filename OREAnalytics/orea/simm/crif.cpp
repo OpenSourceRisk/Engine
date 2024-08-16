@@ -79,16 +79,20 @@ void Crif::addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAm
 void Crif::insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies,
                             bool aggregateRegulations) {
 
+    CrifRecord newRecord = record;
+    if (aggregate_ && newRecord.imModel != "Schedule")
+        newRecord.tradeId = "";
+
     auto it = aggregateDifferentAmountCurrencies
-                  ? (aggregateRegulations ? records_.find(record, CrifRecord::amountCcyRegsLTCompare)
-                                            : records_.find(record, CrifRecord::amountCcyLTCompare))
-                  : records_.find(record);
+                  ? (aggregateRegulations ? records_.find(newRecord, CrifRecord::amountCcyRegsLTCompare)
+                                          : records_.find(newRecord, CrifRecord::amountCcyLTCompare))
+                  : records_.find(newRecord);
 
     if (it == records_.end()) {
-        records_.insert(record);
-        nettingSetDetails_.insert(record.nettingSetDetails);
+        records_.insert(newRecord);
+        nettingSetDetails_.insert(newRecord.nettingSetDetails);
     } else {
-        updateAmountExistingRecord(it, record);
+        updateAmountExistingRecord(it, newRecord);
     }
 }
 
@@ -112,7 +116,7 @@ void Crif::addSimmParameterRecord(const CrifRecord& record) {
     }
 }
 
-void Crif::updateAmountExistingRecord(CrifRecordContainer::iterator& it, const CrifRecord& record) {
+void Crif::updateAmountExistingRecord(CrifRecordContainer::nth_index_iterator<0>::type it, const CrifRecord& record) {
     bool updated = false;
     if (record.hasAmountUsd()) {
         it->amountUsd += record.amountUsd;
@@ -138,6 +142,7 @@ void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies,
 }
 
 Crif Crif::aggregate(bool aggregateDifferentAmountCurrencies, bool aggregateRegulations) const {
+    aggregate_ = true;
     Crif result;
     for (auto cr : records_) {
         // We set the trade ID to an empty string because we are netting at portfolio level
@@ -338,28 +343,24 @@ void Crif::fillAmountUsd(const QuantLib::ext::shared_ptr<ore::data::Market> mark
         WLOG("CrifLoader::fillAmountUsd() was called, but market object is empty.")
         return;
     }
-    CrifRecordContainer results;
 
-    for (const CrifRecord& r : records_) {
-        CrifRecord cr = r;
+    for (auto it = records_.begin(); it != records_.end(); it++) {
         // Fill in amount USD if it is missing and if CRIF record requires it (i.e. if it has amount and amount
         // currency, and risk type is neither AddOnNotionalFactor or ProductClassMultiplier)
-        if (cr.requiresAmountUsd() && !cr.hasAmountUsd()) {
-            if (!cr.hasAmount() || !cr.hasAmountCcy()) {
+        if (it->requiresAmountUsd() && !it->hasAmountUsd()) {
+            if (!it->hasAmount() || !it->hasAmountCcy()) {
                 ore::data::StructuredTradeWarningMessage(
-                    cr.tradeId, cr.tradeType, "Populating CRIF amount USD",
+                    it->tradeId, it->tradeType, "Populating CRIF amount USD",
                     "CRIF record is missing one of Amount and AmountCurrency, and there is no amountUsd value to "
                     "fall back to: " +
-                        ore::data::to_string(cr))
+                        ore::data::to_string(*it))
                     .log();
             } else {
-                double usdSpot = market->fxRate(cr.amountCurrency + "USD")->value();
-                cr.amountUsd = cr.amount * usdSpot;
+                double usdSpot = market->fxRate(it->amountCurrency + "USD")->value();
+                it->amountUsd = it->amount * usdSpot;
             }
         }
-        results.insert(cr);
     }
-    records_ = results;
 }
 
 } // namespace analytics

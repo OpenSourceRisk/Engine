@@ -388,12 +388,19 @@ void OREApp::initFromInputs() {
     // Initialise Singletons
     Settings::instance().evaluationDate() = inputs_->asof();
     InstrumentConventions::instance().setConventions(inputs_->conventions());
+
+    if (inputs_->currencyConfigs() != nullptr)
+        inputs_->currencyConfigs()->addCurrencies();
+    if (inputs_->calendarAdjustmentConfigs() != nullptr)
+        inputs_->calendarAdjustmentConfigs()->addCalendars();
+
     if (console_) {
         ConsoleLog::instance().switchOn();
     }
 
     outputPath_ = inputs_->resultsPath().string();
-    setupLog(outputPath_, logFile_, logMask_, logRootPath_, progressLogFile_, progressLogRotationSize_, progressLogToConsole_,
+    if (clearLog_)
+        setupLog(outputPath_, logFile_, logMask_, logRootPath_, progressLogFile_, progressLogRotationSize_, progressLogToConsole_,
              structuredLogFile_, structuredLogRotationSize_);
     LOG("initFromInputs done, requested analytics:" << to_string(inputs_->analytics()));
 }
@@ -413,7 +420,7 @@ void OREApp::run() {
     {
       CleanUpThreadLocalSingletons cleanupThreadLocalSingletons;
       CleanUpThreadGlobalSingletons cleanupThreadGloablSingletons;
-      CleanUpLogSingleton cleanupLogSingleton(true, true);
+      CleanUpLogSingleton cleanupLogSingleton(clearLog_, true);
     }
 
     // Use inputs when available, otherwise try params
@@ -436,7 +443,7 @@ void OREApp::run() {
         CONSOLE("Error: " << e.what());
         return;
     }
-
+  
     runTimer_.stop();
 
     // cache the error messages because we reset the loggers 
@@ -464,7 +471,7 @@ void OREApp::run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader) {
     {
       CleanUpThreadLocalSingletons cleanupThreadLocalSingletons;
       CleanUpThreadGlobalSingletons cleanupThreadGloablSingletons;
-      CleanUpLogSingleton cleanupLogSingleton(true, true);
+      CleanUpLogSingleton cleanupLogSingleton(clearLog_, true);
     }
 
     // Use inputs when available, otherwise try params

@@ -473,6 +473,8 @@ public:
         return useCounterpartyOriginalPortfolio_;
     }
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& mporPortfolio() const { return mporPortfolio_; }
+    const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs() { return currencyConfig_; }
+    const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustmentConfigs() { return calendarAdjustment_; }
 
     QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return nThreads_; }
