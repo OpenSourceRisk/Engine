@@ -3,9 +3,9 @@
   <Setup>
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output/xva</Parameter>
+    <Parameter name="outputPath">Output/cgcube_gpu</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">31</Parameter>
+    <Parameter name="logMask">63</Parameter>
     <Parameter name="marketDataFile">market.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -44,18 +44,24 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
-      <Parameter name="amcTradeTypes">Swap,ScriptedTrade</Parameter>
-      <Parameter name="simulationConfigFile">simulation_xva.xml</Parameter>
+      <!-- Disabled (legacy AMC), CubeGeneration (AMC-CG, classic PP), Full (AMC-CG, cg PP) -->
+      <Parameter name="amcCg">CubeGeneration</Parameter>
+      <!-- external device config -->
+      <Parameter name="xvaCgUseExternalComputeDevice">true</Parameter>
+      <Parameter name="xvaCgExternalDeviceCompatibilityMode">Y</Parameter>
+      <Parameter name="xvaCgUseDoublePrecisionForExternalCalculation">N</Parameter>
+      <Parameter name="xvaCgExternalComputeDevice">BasicCpu/Default/Default</Parameter>
+      <!-- <Parameter name="xvaCgExternalComputeDevice">OpenCL/Apple/Apple M2 Max</Parameter> -->
+      <Parameter name="amcTradeTypes">Swap</Parameter>
+      <Parameter name="simulationConfigFile">simulation_gpu.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-      <Parameter name="amcPricingEnginesFile">pricingengine.xml</Parameter>
+      <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
+      <Parameter name="amcCgPricingEnginesFile">pricingengine_amccg.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="storeScenarios">N</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
-      <Parameter name="cubeFile">cube.csv.gz</Parameter>
-      <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="exposureProfilesByTrade">Y</Parameter>
@@ -65,4 +71,3 @@
     </Analytic>
   </Analytics>
 </ORE>
-

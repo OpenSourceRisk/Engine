@@ -317,7 +317,7 @@ void NettedExposureCalculator::build() {
                 nettedCube_->set(exposure, nettingSetCount, j, k);
                 
                 Real epeIncrement = std::max(exposure - dim_epe, 0.0) / cube_->samples();
-                DLOG("sample " << k << " date " << j << fixed << showpos << setprecision(2)
+                TLOG("sample " << k << " date " << j << fixed << showpos << setprecision(2)
                      << ": MporFLow " << setw(15) << mporCashFlow
                      << ": Dim " << setw(15) << dim
                      << ": Exposure " << setw(15) <<exposure

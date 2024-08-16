@@ -33,6 +33,7 @@
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/xvaenginecg.hpp>
 
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
@@ -250,12 +251,17 @@ void OREApp::analytics() {
         // Run the requested analytics
         analyticsManager_->runAnalytics(mcr);
 
+        CONSOLEW("Writing reports...");
+
         // Write reports to files in the results path
         Analytic::analytic_reports reports = analyticsManager_->reports();
         analyticsManager_->toFile(reports,
                                   inputs_->resultsPath().string(), outputs_->fileNameMap(),
                                   inputs_->csvSeparator(), inputs_->csvCommentCharacter(),
                                   inputs_->csvQuoteChar(), inputs_->reportNaString());
+
+        CONSOLE("OK");
+        CONSOLEW("Writing cubes...");
 
         // Write npv cube(s)
         for (auto a : analyticsManager_->npvCubes()) {
@@ -295,6 +301,8 @@ void OREApp::analytics() {
                 b.second->toFile(fileName);
             }
         }
+
+        CONSOLE("OK");
 
     }
     catch (std::exception& e) {
@@ -1498,8 +1506,7 @@ void OREAppInputParameters::loadParameters() {
         setAmc(parseBool(tmp));
 
     tmp = params_->get("simulation", "amcCg", false);
-    if (tmp != "")
-        setAmcCg(parseBool(tmp));
+    setAmcCg(tmp.empty() ? XvaEngineCG::Mode::Disabled : parseXvaEngineCgMode(tmp));
 
     tmp = params_->get("simulation", "xvaCgSensitivityConfigFile", false);
     if (tmp != "") {
@@ -1559,6 +1566,13 @@ void OREAppInputParameters::loadParameters() {
         } else {
             WLOG("AMC pricing engine data not found, using standard pricing engines");
             setAmcPricingEngine(pricingEngine());
+        }
+
+        tmp = params_->get("simulation", "amcCgPricingEnginesFile", false);
+        if (tmp != "") {
+            string pricingEnginesFile = (inputPath / tmp).generic_string();            ;
+            LOG("Load amccg pricing engine data from file: " << pricingEnginesFile);
+            setAmcCgPricingEngineFromFile(pricingEnginesFile);
         }
 
         setExposureBaseCurrency(baseCurrency());

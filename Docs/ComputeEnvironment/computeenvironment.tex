@@ -75,7 +75,7 @@
 
 \title{ORE Compute Framework Interface}
 \author{Acadia}
-\date{19 June 2023}
+\date{22 July 2024}
 \maketitle
 
 \newpage
@@ -88,8 +88,9 @@
 \hline
 Date & Author & Comment \\
 \hline
-19 June 2023 & Acadia & initial release\\
-15 April 2024 & Acadia & refactor context settings, add supportsDoublePrecision()\\
+19 June 2023 & Peter Caspers & initial release\\
+15 April 2024 & Peter Caspers & refactor context settings, add supportsDoublePrecision()\\
+22 July 2024 & Peter Caspers & add documentation of OpenCL framework, update doc of unit tests\\
 \hline
 \end{supertabular}
 \end{flushleft}
@@ -356,9 +357,12 @@ There are some unit tests testing all available external frameworks. The tests a
 \begin{itemize}
   \item \verb+testEnvironmentInit+: test to initialize each framework
   \item \verb+testSimpleCalc+: test a simple calculation
+  \item \verb+testSimpleCalcWithDoublePrecision+: test a simple calculation using double precision
   \item \verb+testLargeCalc+: test a larger scale calculation
   \item \verb+testRngGeneration+: test random variate generation
-  \item \verb+test_ScriptedTrade_FX_TaRF_XAUUSD_sensi_ops+: test a (simulated) sensi calculation for an FX TaRF
+  \item \verb+testReplayFlowError+: test replay of calculation with invalid calls into ComputeContext interface
+  \item \verb+testRngGenerationMt19937+: test MersenneTwister random number generation
+  \item \verb+testConditionalExpectation+: test conditional expectation calculation
 \end{itemize}
 
 The unit test also provide examples how an external calculation is orchestrated.
@@ -550,6 +554,116 @@ baseNpv_ = results_.value = externalAverage(externalOutput_[0]);
 \end{minted}
 
 Here, \verb+externalAverage()+ computes the average of the retrieved output vector.
+
+
+\section{OpenCL Framework}
+
+This section documents the OpenCL framework.
+
+\subsection{Overview}
+
+The OpenCL framework provides contexts for all OpenCL devices.
+
+This framework creates one context per device, i.e. within a single ORE process there will be only once
+context \footnote{Note that ``context'' refers to the OpenCL term here, not the implementation of of the ORE interface
+ComputeContext by OpenClContext. The latter will be instantiated per thread as per ORE design of the thread-local
+ComputeEnvironment singleton as usual.} per device that is shared between threads. The reason for this design choice is
+the observation that running several contexts in paralell can lead to high GPU memory usage and ultimately ressource
+allocation errors on the GPU.
+
+\subsection{Random Number Generation}
+
+We support MersenneTwister repcliating the code from QuantLib. 
+
+When new variates are required in \verb+createInputVariates()+ the function \verb+updateVariatesPool()+ will be
+called. We maintain a pool of random variates, the size of this pool, i.e. the number of standard normal variables
+available in the pool, is stored in \verb+variatesPoolSize_+\footnote{The underlying assumption is that the seed for the
+rng is the same across all computations that are run against the OpenClContext.}.
+
+When \verb+updateVariatesPool()+ is called first we build the necessary programs on the GPU side:
+
+\begin{itemize}
+\item \verb+oreInvCumN()+: function that replicates QuantLib's \verb+InverseCumulativeNormal+, but with a 32bit unsigned
+  integer input that is converted to a $(0,1)$ double or float within the function.
+\item \verb+ore_seedInitialization()+: kernel that repcliates the seed initilization of QuantLib's
+  \verb+MersenneTwisterUniformRng+. Input is a seed $s$. The kernel populates the mt state which has size $624$. The
+  kernel is not parallelized, i.e. its global work size is $1$.
+\item \verb+ore_twist(__global ulong* mt)+: kernel that recpliates the state twist of QuantLib's
+  \verb+MersenneTwisterUniformRng+. The kernel is not parallelized, i.e. its global work size is $1$.
+\item \verb+ore_generate()+: kernel that recpliates the random number generation of QuantLib's
+  \verb+MersenneTwisterUniformRng+ combined with a call to \verb+oreInvCumN()+ to convert the result to a normal
+  variate. The kernel has global work size $624$ (size of mt state).
+\end{itemize}
+
+Then the new variates are generated following these steps:
+
+\begin{itemize}
+\item a new variates pool buffer is allocated on the device. The size is aligned with a multiple of $624$.
+\item the old variates pool buffer is copied to the new buffer.
+\item the new variates are generated in the new variates buffer using the kernel \verb+ore_generate()+.
+\end{itemize}
+
+\subsection{Variable management}
+
+Input variables, input variates and intermediate result variables $v_i$ are numbered as $i= 0, 1, 2, 3, \ldots$. They occur
+as contingent blocks in this sequence, first the input variables, then the variates and then the intermediate
+results.
+
+Output variables are declared by \verb+declareOutputVariable()+ and can be an input variable, input variate or
+intermediate result. They are not new variables, rather input variables, variates or intermediate results are marked as
+being an output to retrieve from the calculation.
+
+Intermediate result variables are generated within \verb+applyOperation()+. There is a distinction between pathwise
+operations and conditional expectation.
+
+\begin{itemize}
+\item for pathwise operations, a single intermediate result variable is generated
+\item for conditional expectation, intermediate result variables for all arguments (filter, regressor1, ..., regressorn)
+  and the actual result of the operation (the conditional expectation) are generated. This allows us to easily pass the
+  arguments and result values from device to host and bock if the calculation of the conditional expectation is
+  performed on the host.
+\end{itemize}
+
+The result variable ids are generated by \verb+generateResultId()+. This function will reuse variable ids that were
+freed by \verb+freeVariable()+, provided that the freed variable is not an input variable or input variate.
+
+The different variable types are represented as follows, \verb+w+ denoting the global work id.
+
+\begin{itemize}
+\item input variables: {\tt input[offset + w]}, with input a buffer in the global address space
+\item input variates: {\tt rn[offset + w]}, with rn a buffer in the global address space
+\item intermediate variables: \verb+v_i+, i.e. a local variable in the generated kernel code
+\item output variables: {\tt output[offset + w]}, with output a buffer in the global address space
+\end{itemize}
+
+There is an additional buffer \verb+values+ that is used to load local variables from and cache local variables to
+in multipart kernels. A kernel can be split into multiple parts for several reasons:
+
+\begin{itemize}
+\item conditional expectations require a kernel to be stopped, so that the non-pathwise operation can be performed by
+  another kernel or on the host side. A new kernel part will be started whenever a conditional expectation result
+  appears as an argument on the rhs of an operation.
+\item a number of local variables was generated for a single kernel that exceed the maximum allowed threshold for local
+  variables to be used in a single kernel\footnote{todo, I suspect this is the source of ressource errors that I see for
+  exposure calcs sometimes}
+\end{itemize}
+
+The following local variables are loaded from the \verb+values+ buffer at the start of a kernel part. This happens
+starting with the second kernel part in a multi-part kernel:
+
+\begin{itemize}
+  \item every variable that appears on the rhs in the current ssa and
+  \item does not appear on the lhs in the current ssa before its usage on the rhs
+\end{itemize}
+
+The following local variables are cached to the \verb+values+ buffer at the end of a kernel part $p$. This happens for
+all kernels but the last in a multi-part kernel:
+
+\begin{itemize}
+  \item Every variable that is loaded in a later part $m > p$, but not cached in a later part $q$, $m > q > p$ (in case
+    such a $q$ exists)
+  \item Every variable from the sets that are used for conditional expectations in the current part $p$
+\end{itemize}
 
 %% \begin{thebibliography}{*}
 %% \end{thebibliography}

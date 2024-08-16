@@ -103,6 +103,9 @@ public:
                              const bool returnMissingFixingAsNull = false,
                              const bool ignoreTodaysFixing = false) const = 0;
 
+    /* get numeraire N(s) for s >= referenceDate */
+    virtual std::size_t numeraire(const Date& s) const = 0;
+
     // forward looking daily comp/avg, obsdate <= start < end required, result must be as of max(refdate, obsdate)
     virtual std::size_t fwdCompAvg(const bool isAvg, const std::string& index, const Date& obsdate, const Date& start,
                                    const Date& end, const Real spread, const Real gearing, const Integer lookback,
