@@ -116,8 +116,8 @@ std::pair<GpuCodeGenerator::VarType, std::size_t> GpuCodeGenerator::getVar(const
 std::string GpuCodeGenerator::getVarStr(const std::pair<VarType, const std::size_t>& var,
                                         const bool useLocalVarName) const {
     if (var.first == VarType::input)
-        return "x[" + std::to_string(inputVarOffset_[var.second]) + "UL" +
-               (inputVarIsScalar_[var.second] ? "" : "+i") + "]";
+        return "x[" + std::to_string(inputVarOffset_[var.second]) + "UL" + (inputVarIsScalar_[var.second] ? "" : "+i") +
+               "]";
     else if (var.first == VarType::rn)
         return "r[" + std::to_string(var.second * modelSize_) + "UL+i]";
     else if (var.first == VarType::local) {
@@ -421,32 +421,40 @@ void GpuCodeGenerator::determineLocalVarReplacements() {
         }
     }
 
-    /* if a variable is replaced in all parts and is not marked as to be cached, we can remove
+    /* if a variable is replaced in all parts and is not marked as to be cached in any part, we can remove
        it from the set of local values buffer */
 
-    std::set<LocalVarReplacement> tmp(localVarReplacements_.front());
-
-    for (std::size_t part = 1; part < kernelBreakLines_.size(); ++part) {
-        std::set<LocalVarReplacement> tmp2;
-        std::set_intersection(tmp.begin(), tmp.end(), localVarReplacements_[part].begin(),
-                              localVarReplacements_[part].end(), std::inserter(tmp2, tmp2.end()));
-        tmp.swap(tmp2);
+    std::vector<std::set<LocalVarReplacement>> nonCachedLocalVars;
+    for (auto const& l : localVarReplacements_) {
+        nonCachedLocalVars.push_back({});
+        std::copy_if(l.begin(), l.end(), std::inserter(nonCachedLocalVars.back(), nonCachedLocalVars.back().end()),
+                     [](const LocalVarReplacement& r) { return !r.toBeCached(); });
     }
 
-    std::set<LocalVarReplacement> superfluousLocalVars;
-    std::copy_if(tmp.begin(), tmp.end(), std::inserter(superfluousLocalVars, superfluousLocalVars.end()),
-                 [](const LocalVarReplacement r) { return !r.toBeCached(); });
-
-    /* build local var id map */
-
-    auto s = superfluousLocalVars.begin();
-    std::size_t counter = 0;
-    for (std::size_t i = 0; i < nLocalVars_; ++i) {
-        if (s != superfluousLocalVars.end() && s->id() == i) {
-            ++s;
-            continue;
+    if (!nonCachedLocalVars.empty()) {
+        std::set<LocalVarReplacement> tmp(nonCachedLocalVars.front());
+        for (std::size_t part = 1; part < kernelBreakLines_.size(); ++part) {
+            std::set<LocalVarReplacement> tmp2;
+            std::set_intersection(tmp.begin(), tmp.end(), nonCachedLocalVars[part].begin(),
+                                  nonCachedLocalVars[part].end(), std::inserter(tmp2, tmp2.end()));
+            tmp.swap(tmp2);
         }
-        bufferedLocalVarMap_[i] = counter++;
+
+        std::set<LocalVarReplacement> superfluousLocalVars;
+        std::copy_if(tmp.begin(), tmp.end(), std::inserter(superfluousLocalVars, superfluousLocalVars.end()),
+                     [](const LocalVarReplacement r) { return !r.toBeCached(); });
+
+        /* build local var id map */
+
+        auto s = superfluousLocalVars.begin();
+        std::size_t counter = 0;
+        for (std::size_t i = 0; i < nLocalVars_; ++i) {
+            if (s != superfluousLocalVars.end() && s->id() == i) {
+                ++s;
+                continue;
+            }
+            bufferedLocalVarMap_[i] = counter++;
+        }
     }
 }
 
@@ -529,7 +537,7 @@ void GpuCodeGenerator::generateOperationCode(const std::size_t i) {
     }
     case RandomVariableOpCode::Add: {
         std::size_t c = 0;
-        while(c < argStr.size()) {
+        while (c < argStr.size()) {
             std::vector<std::string> tmp(std::next(argStr.begin(), c),
                                          std::next(argStr.begin(), std::min(c + max_sum_args, argStr.size())));
             code += resultStr + (c == 0 ? "=" : "+=") + boost::join(tmp, "+") + ";\n";
