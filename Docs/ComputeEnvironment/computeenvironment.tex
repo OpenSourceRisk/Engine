@@ -679,7 +679,9 @@ performance. This optimization follows the steps:
   result variables on the lhs or rhs of operations.
 \item We select the \verb+max_local_vars+ most frequently used variables that are also used at least
   \verb+min_usage_threshold+ times as variables to be replaced by stack variables.
-\item We determine the first usage on the lhs and rhs of each such variable within each kernel part
+\item We determine the first usage on the lhs and rhs of each such variable within each kernel part. This information is
+  used to determine whether the lhs replacement by a stack variable requires a declaration and whether rhs replacements
+  by stack variables need an initialisation from the values buffer before their usage.
 \item We mark certain replaced variables as to be cached to the values buffer when they meet one of the following
   criteria. This is done per kernel part:
 \begin{itemize}
