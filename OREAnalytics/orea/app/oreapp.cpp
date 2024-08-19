@@ -169,7 +169,19 @@ Real OREApp::getRunTime() {
     boost::chrono::duration<double> seconds = boost::chrono::nanoseconds(runTimer_.elapsed().wall);
     return seconds.count();
 }
-    
+
+QuantLib::ext::shared_ptr<BufferLogger> OREApp::getLogger(const std::string& name) {
+    QuantLib::ext::shared_ptr<Logger> log = Log::instance().logger(name);
+    QuantLib::ext::shared_ptr<BufferLogger> bufferLog = QuantLib::ext::dynamic_pointer_cast<BufferLogger>(log);
+    if (bufferLog)
+        return bufferLog;
+}
+
+std::vector<std::string>& OREApp::getProgressLog() {
+    QuantLib::ext::shared_ptr<IndependentLogger> log = Log::instance().independentLogger("ProgressLogger");
+    return log->messages();
+}
+
 QuantLib::ext::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const QuantLib::ext::shared_ptr<Parameters>& params) {
     bool implyTodaysFixings = false;
     vector<string> marketFiles = {};
@@ -367,8 +379,9 @@ void OREApp::initFromParams() {
         }
     }
     
-    setupLog(outputPath_, logFile_, logMask_, logRootPath_, progressLogFile_, progressLogRotationSize_, progressLogToConsole_,
-             structuredLogFile_, structuredLogRotationSize_);
+    setupLog(logMask_, outputPath_, logFile_, logRootPath_, progressLogFile_, progressLogRotationSize_,
+             progressLogToConsole_, structuredLogFile_, structuredLogRotationSize_);
+
 
     // Log the input parameters
     params_->log();
@@ -400,8 +413,8 @@ void OREApp::initFromInputs() {
 
     outputPath_ = inputs_->resultsPath().string();
     if (clearLog_)
-        setupLog(outputPath_, logFile_, logMask_, logRootPath_, progressLogFile_, progressLogRotationSize_, progressLogToConsole_,
-             structuredLogFile_, structuredLogRotationSize_);
+        setupLog(logMask_, outputPath_, logFile_, logRootPath_, progressLogFile_, progressLogRotationSize_,
+                 progressLogToConsole_, structuredLogFile_, structuredLogRotationSize_);
     LOG("initFromInputs done, requested analytics:" << to_string(inputs_->analytics()));
 }
 
@@ -436,7 +449,8 @@ void OREApp::run() {
     runTimer_.start();
     
     try {
-        structuredLogger_->clear();
+        if (structuredLogger_ != nullptr) 
+            structuredLogger_->clear();
         analytics();
     } catch (std::exception& e) {
         StructuredAnalyticsWarningMessage("OREApp::run()", "Error", e.what()).log();
@@ -538,11 +552,21 @@ void OREApp::run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader) {
     LOG("ORE analytics done");
 }
 
-void OREApp::setupLog(const std::string& path, const std::string& file, Size mask,
+void OREApp::setupLog(Size mask, const std::string& path, const std::string& file,
                       const boost::filesystem::path& logRootPath, const std::string& progressLogFile,
                       Size progressLogRotationSize, bool progressLogToConsole, const std::string& structuredLogFile,
                       Size structuredLogRotationSize) {
     closeLog();
+
+    if (file == "" && path == "") {
+        Log::instance().registerLogger(QuantLib::ext::make_shared<BufferLogger>(mask));
+        Log::instance().switchOn();
+        auto progressLogger = QuantLib::ext::make_shared<ProgressLogger>(progressLogToConsole);
+        Log::instance().registerIndependentLogger(progressLogger);
+
+        return;
+    }
+        
     
     boost::filesystem::path p{path};
     if (!boost::filesystem::exists(p)) {
