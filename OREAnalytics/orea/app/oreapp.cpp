@@ -175,6 +175,8 @@ QuantLib::ext::shared_ptr<BufferLogger> OREApp::getLogger(const std::string& nam
     QuantLib::ext::shared_ptr<BufferLogger> bufferLog = QuantLib::ext::dynamic_pointer_cast<BufferLogger>(log);
     if (bufferLog)
         return bufferLog;
+    else
+        QL_FAIL("No Buffer Logger found.");
 }
 
 std::vector<std::string>& OREApp::getProgressLog() {
