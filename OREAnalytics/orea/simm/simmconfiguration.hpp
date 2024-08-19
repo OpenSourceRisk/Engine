@@ -27,9 +27,8 @@
 #include <vector>
 
 #include <boost/optional.hpp>
-
+#include <orea/simm/crifconfiguration.hpp>
 #include <orea/simm/crifrecord.hpp>
-#include <orea/simm/simmbucketmapper.hpp>
 #include <ql/indexes/interestrateindex.hpp>
 #include <ql/types.hpp>
 
@@ -37,7 +36,7 @@ namespace ore {
 namespace analytics {
 
 //! Abstract base class defining the interface for a SIMM configuration
-class SimmConfiguration {
+class SimmConfiguration : public CrifConfiguration {
 public:
     virtual ~SimmConfiguration() {}
 
@@ -58,39 +57,6 @@ public:
     //! Margin types in SIMM plus an All type for convenience
     //! Internal methods rely on the last element being 'All'
     enum class MarginType { Delta, Vega, Curvature, BaseCorr, AdditionalIM, All }; 
-
-    enum class IMModel {
-        Schedule,
-        SIMM,
-        SIMM_R, // Equivalent to SIMM
-        SIMM_P  // Equivalent to SIMM
-    };
-
-    //! SIMM regulators
-    enum Regulation {
-        APRA,
-        CFTC,
-        ESA,
-        FINMA,
-        KFSC,
-        HKMA,
-        JFSA,
-        MAS,
-        OSFI,
-        RBI,
-        SEC,
-        SEC_unseg,
-        USPR,
-        NONREG,
-        BACEN,
-        SANT,
-        SFC,
-        UK,
-        AMFQ,
-        Included,
-        Unspecified,
-        Invalid
-    };
 
     //! Give back a set containing the RiskClass values optionally excluding 'All'
     static std::set<RiskClass> riskClasses(bool includeAll = false);
@@ -127,15 +93,6 @@ public:
         return (less_than(pc1, pc2) ? pc2 : pc1);
     }
 
-    //! Returns the SIMM configuration name
-    virtual const std::string& name() const = 0;
-
-    //! Returns the SIMM configuration version
-    virtual const std::string& version() const = 0;
-
-    //! Returns the SIMM bucket mapper used by the configuration
-    virtual const boost::shared_ptr<SimmBucketMapper>& bucketMapper() const = 0;
-
     //! Return the SIMM <em>bucket</em> names for the given risk type \p rt
     //! An empty vector is returned if the risk type has no buckets
     virtual std::vector<std::string> buckets(const CrifRecord::RiskType& rt) const = 0;
@@ -143,12 +100,11 @@ public:
     //! Return true if the SIMM risk type \p rt has buckets
     virtual bool hasBuckets(const CrifRecord::RiskType& rt) const = 0;
 
-    /*! Return the SIMM <em>bucket</em> name for the given risk type \p rt
-        and \p qualifier
+    //! Return true if the SIMM risk type \p rt has buckets
+    bool hasBucketMapping(const CrifRecord::RiskType& rt, const std::string& qualifier) const override {
+        return bucketMapper()->has(rt, qualifier);
+    }
 
-        \warning Throws an error if there are no buckets for the risk type \p rt
-    */
-    virtual std::string bucket(const CrifRecord::RiskType& rt, const std::string& qualifier) const = 0;
 
     //! Return the list of SIMM <em>Label1</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label1</em>
@@ -157,17 +113,6 @@ public:
     //! Return the list of SIMM <em>Label2</em> values for risk type \p rt
     //! An empty vector is returned if the risk type does not use <em>Label2</em>
     virtual std::vector<std::string> labels2(const CrifRecord::RiskType& rt) const = 0;
-
-    /*! Return the SIMM <em>Label2</em> value for the given interest rate index
-        \p irIndex. For interest rate indices, this is the SIMM sub curve name
-        e.g. 'Libor1m', 'Libor3m' etc.
-    */
-    virtual std::string labels2(const boost::shared_ptr<QuantLib::InterestRateIndex>& irIndex) const = 0;
-
-    /*! Return the SIMM <em>Label2</em> value for the given Libor tenor
-        \p p. This is the SIMM sub curve name, e.g. 'Libor1m', 'Libor3m' etc.
-    */
-    virtual std::string labels2(const QuantLib::Period& p) const = 0;
 
     /*! Add SIMM <em>Label2</em> values under certain circumstances.
 
@@ -257,8 +202,6 @@ protected:
     static const QuantLib::Size numberOfRiskClasses;
     //! Number of margin types including MarginType::All
     static const QuantLib::Size numberOfMarginTypes;
-    //! Number of regulations
-    static const QuantLib::Size numberOfRegulations;
 };
 
 std::ostream& operator<<(std::ostream& out, const SimmConfiguration::SimmSide& side);
@@ -267,39 +210,11 @@ std::ostream& operator<<(std::ostream& out, const SimmConfiguration::RiskClass& 
 
 std::ostream& operator<<(std::ostream& out, const SimmConfiguration::MarginType& mt);
 
-std::ostream& operator<<(std::ostream& out, const SimmConfiguration::IMModel& model);
-
-std::ostream& operator<<(std::ostream& out, const SimmConfiguration::Regulation& regulation);
-
 SimmConfiguration::SimmSide parseSimmSide(const std::string& side);
 
 SimmConfiguration::RiskClass parseSimmRiskClass(const std::string& rc);
 
 SimmConfiguration::MarginType parseSimmMarginType(const std::string& mt);
-
-SimmConfiguration::IMModel parseIMModel(const std::string& pc);
-
-SimmConfiguration::Regulation parseRegulation(const std::string& regulation);
-
-std::string combineRegulations(const std::string&, const std::string&);
-
-//! Reads a string containing regulations applicable for a given CRIF record
-std::set<std::string> parseRegulationString(const std::string& regsString,
-                                            const std::set<std::string>& valueIfEmpty = {"Unspecified"});
-
-//! Cleans a string defining regulations so that different permutations of the same set will
-//! be seen as the same string, e.g. "APRA,SEC,ESA" and "SEC,ESA,APRA" should be equivalent.
-std::string sortRegulationString(const std::string& regsString);
-
-//! Removes a given vector of regulations from a string of regulations and returns a string with the regulations removed
-std::string removeRegulations(const std::string& regsString, const std::vector<std::string>& regsToRemove);
-
-//! Filters a string of regulations on a given vector of regulations and returns a string containing only those filtered
-//! regulations
-std::string filterRegulations(const std::string& regsString, const std::vector<std::string>& regsToFilter);
-
-//! From a vector of regulations, determine the winning regulation based on order of priority
-SimmConfiguration::Regulation getWinningRegulation(const std::vector<std::string>& winningRegulations);
 
 } // namespace analytics
 } // namespace ore

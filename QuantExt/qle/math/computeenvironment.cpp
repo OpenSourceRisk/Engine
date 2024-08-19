@@ -19,6 +19,7 @@
 #include <qle/math/computeenvironment.hpp>
 
 #include <boost/algorithm/string/join.hpp>
+#include <boost/thread/locks.hpp>
 
 #include <ql/errors.hpp>
 
@@ -54,8 +55,10 @@ std::set<std::string> ComputeEnvironment::getAvailableDevices() const {
 bool ComputeEnvironment::hasContext() const { return currentContext_ != nullptr; }
 
 void ComputeEnvironment::selectContext(const std::string& deviceName) {
-    if (currentContextDeviceName_ == deviceName)
+    QL_REQUIRE(!deviceName.empty(), "ComputeEnvironment::selectContext(): device name is empty");
+    if (currentContextDeviceName_ == deviceName) {
         return;
+    }
     for (auto& f : frameworks_) {
         if (auto tmp = f->getAvailableDevices(); tmp.find(deviceName) != tmp.end()) {
             currentContext_ = f->getContext(deviceName);
@@ -70,11 +73,11 @@ void ComputeEnvironment::selectContext(const std::string& deviceName) {
 
 ComputeContext& ComputeEnvironment::context() { return *currentContext_; }
 
-void ComputeContext::finalizeCalculation(std::vector<std::vector<double>>& output, const Settings& settings) {
+void ComputeContext::finalizeCalculation(std::vector<std::vector<double>>& output) {
     std::vector<double*> outputPtr(output.size());
     std::transform(output.begin(), output.end(), outputPtr.begin(),
                    [](std::vector<double>& v) -> double* { return &v[0]; });
-    finalizeCalculation(outputPtr, settings);
+    finalizeCalculation(outputPtr);
 }
 
 void ComputeFrameworkRegistry::add(const std::string& name, std::function<ComputeFramework*(void)> creator,

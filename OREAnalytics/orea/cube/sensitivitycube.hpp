@@ -33,7 +33,7 @@
 #include <vector>
 
 #include <boost/bimap.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 namespace ore {
 namespace analytics {
@@ -55,21 +55,21 @@ public:
     };
 
     //! Constructor using a vector of scenario descriptions
-    SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
+    SensitivityCube(const QuantLib::ext::shared_ptr<NPVSensiCube>& cube,
                     const std::vector<ShiftScenarioDescription>& scenarioDescriptions,
                     const std::map<RiskFactorKey, QuantLib::Real>& targetShiftSizes,
                     const std::map<RiskFactorKey, QuantLib::Real>& actualShiftSizes,
                     const std::map<RiskFactorKey, ShiftScheme>& shiftSchemes);
 
     //! Constructor using a vector of scenario description strings
-    SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube, const std::vector<std::string>& scenarioDescriptions,
+    SensitivityCube(const QuantLib::ext::shared_ptr<NPVSensiCube>& cube, const std::vector<std::string>& scenarioDescriptions,
                     const std::map<RiskFactorKey, QuantLib::Real>& targetShiftSizes,
                     const std::map<RiskFactorKey, QuantLib::Real>& actualshiftSizes,
                     const std::map<RiskFactorKey, ShiftScheme>& shiftSchemes);
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<NPVSensiCube>& npvCube() const { return cube_; }
+    const QuantLib::ext::shared_ptr<NPVSensiCube>& npvCube() const { return cube_; }
     const std::vector<ShiftScenarioDescription>& scenarioDescriptions() const { return scenarioDescriptions_; }
     //@}
 
@@ -100,6 +100,9 @@ public:
 
     //! Return the map of down risk factors to its factor data
     const std::map<RiskFactorKey, SensitivityCube::FactorData>& downFactors() const { return downFactors_; };
+
+    //! Return the factor data for an up shift of a rf key, if that does not exist for a down shift of the same rf key
+    SensitivityCube::FactorData upThenDownFactorData(const RiskFactorKey& rfkey);
 
     //! Returns the set of pairs of risk factor keys for which a cross gamma is available
     const std::map<crossPair, std::tuple<SensitivityCube::FactorData, SensitivityCube::FactorData, QuantLib::Size>>&
@@ -151,7 +154,7 @@ private:
     //! Initialise method used by the constructors
     void initialise();
 
-    boost::shared_ptr<NPVSensiCube> cube_;
+    QuantLib::ext::shared_ptr<NPVSensiCube> cube_;
     std::vector<ShiftScenarioDescription> scenarioDescriptions_;
     std::map<RiskFactorKey, QuantLib::Real> targetShiftSizes_;
     std::map<RiskFactorKey, QuantLib::Real> actualShiftSizes_;

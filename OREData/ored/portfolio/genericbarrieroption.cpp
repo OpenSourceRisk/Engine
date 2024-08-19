@@ -269,7 +269,7 @@ namespace data {
 
 // clang-format on
 
-void GenericBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory) {
+void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
     // set script parameters
 
@@ -303,7 +303,7 @@ void GenericBarrierOption::build(const boost::shared_ptr<EngineFactory>& factory
     std::vector<std::string> transatlanticBarrierLevel(underlyings_.size(), "0");
     std::string transatlanticBarrierRebate = "0.0";
     std::string transatlanticBarrierRebateCurrency = payCurrency_;
-    if (!transatlanticBarrier_[0].type().empty()) {
+    if (transatlanticBarrier_.size() > 0 && !transatlanticBarrier_[0].type().empty()) {
         transatlanticBarrierType.clear();
         for (auto const& n : transatlanticBarrier_) {
             if (n.type() == "DownAndIn")
@@ -527,7 +527,7 @@ void GenericBarrierOption::initIndices() {
     indices_.emplace_back("Index", "Underlyings", underlyings);
 }
 
-QuantLib::Calendar GenericBarrierOption::getUnderlyingCalendar(const boost::shared_ptr<EngineFactory>& factory) const {
+QuantLib::Calendar GenericBarrierOption::getUnderlyingCalendar(const QuantLib::ext::shared_ptr<EngineFactory>& factory) const {
     Calendar calendar = NullCalendar();
     QL_REQUIRE(underlyings_.size() > 0, "No underlyings provided.");
     IndexInfo ind(scriptedIndexName(underlyings_.front()));
@@ -638,7 +638,7 @@ XMLNode* GenericBarrierOption::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, barriers, "KikoType", kikoType_);
     XMLUtils::appendNode(dataNode, barriers);
 
-    if (!transatlanticBarrier_[0].type().empty()) {
+    if (transatlanticBarrier_.size() > 0 && !transatlanticBarrier_[0].type().empty()) {
         XMLNode* transatlanticBarrierNode = doc.allocNode("TransatlanticBarrier");
         for (auto& n : transatlanticBarrier_) {
             XMLUtils::appendNode(transatlanticBarrierNode, n.toXML(doc));

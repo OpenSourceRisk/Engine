@@ -24,7 +24,7 @@
 
 namespace QuantExt {
 
-SpreadedSmileSection2::SpreadedSmileSection2(const boost::shared_ptr<SmileSection>& base,
+SpreadedSmileSection2::SpreadedSmileSection2(const QuantLib::ext::shared_ptr<SmileSection>& base,
                                              const std::vector<Real>& volSpreads, const std::vector<Real>& strikes,
                                              const bool strikesRelativeToAtm, const Real baseAtmLevel,
                                              const Real simulatedAtmLevel, const bool stickyAbsMoney)
@@ -70,9 +70,9 @@ Volatility SpreadedSmileSection2::volatilityImpl(Rate strike) const {
     else if (strikesRelativeToAtm_) {
         Real f = atmLevel();
         QL_REQUIRE(f != Null<Real>(), "SpreadedSmileSection2: atm level required");
-        return base_->volatility(effStrike) + volSpreadInterpolation_(strike - f);
+        return std::max(1E-8, base_->volatility(effStrike) + volSpreadInterpolation_(strike - f));
     } else {
-        return base_->volatility(effStrike) + volSpreadInterpolation_(effStrike);
+        return std::max(1E-8, base_->volatility(effStrike) + volSpreadInterpolation_(effStrike));
     }
 }
 

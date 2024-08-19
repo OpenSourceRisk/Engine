@@ -25,17 +25,17 @@ namespace QuantExt {
 using namespace QuantLib;
 
 ProxySwaptionVolatility::ProxySwaptionVolatility(const QuantLib::Handle<SwaptionVolatilityStructure>& baseVol,
-                                                 boost::shared_ptr<SwapIndex> baseSwapIndexBase,
-                                                 boost::shared_ptr<SwapIndex> baseShortSwapIndexBase,
-                                                 boost::shared_ptr<SwapIndex> targetSwapIndexBase,
-                                                 boost::shared_ptr<SwapIndex> targetShortSwapIndexBase)
+                                                 QuantLib::ext::shared_ptr<SwapIndex> baseSwapIndexBase,
+                                                 QuantLib::ext::shared_ptr<SwapIndex> baseShortSwapIndexBase,
+                                                 QuantLib::ext::shared_ptr<SwapIndex> targetSwapIndexBase,
+                                                 QuantLib::ext::shared_ptr<SwapIndex> targetShortSwapIndexBase)
     : SwaptionVolatilityStructure(baseVol->businessDayConvention(), baseVol->dayCounter()), baseVol_(baseVol),
       baseSwapIndexBase_(baseSwapIndexBase), baseShortSwapIndexBase_(baseShortSwapIndexBase),
       targetSwapIndexBase_(targetSwapIndexBase), targetShortSwapIndexBase_(targetShortSwapIndexBase) {
     enableExtrapolation(baseVol->allowsExtrapolation());
 }
 
-boost::shared_ptr<SmileSection> ProxySwaptionVolatility::smileSectionImpl(Time optionTime, Time swapLength) const {
+QuantLib::ext::shared_ptr<SmileSection> ProxySwaptionVolatility::smileSectionImpl(Time optionTime, Time swapLength) const {
     // imply option date from option time
     Date optionDate = lowerDate(optionTime, referenceDate(), dayCounter());
     // imply swap tenor from swap length
@@ -43,7 +43,7 @@ boost::shared_ptr<SmileSection> ProxySwaptionVolatility::smileSectionImpl(Time o
     return smileSectionImpl(optionDate, swapTenor);
 }
 
-boost::shared_ptr<SmileSection> ProxySwaptionVolatility::smileSectionImpl(const Date& optionDate,
+QuantLib::ext::shared_ptr<SmileSection> ProxySwaptionVolatility::smileSectionImpl(const Date& optionDate,
                                                                           const Period& swapTenor) const {
     Real baseAtmLevel =
         swapTenor > baseShortSwapIndexBase_->tenor()
@@ -55,7 +55,7 @@ boost::shared_ptr<SmileSection> ProxySwaptionVolatility::smileSectionImpl(const 
             ? targetSwapIndexBase_->clone(swapTenor)->fixing(targetSwapIndexBase_->fixingCalendar().adjust(optionDate))
             : targetShortSwapIndexBase_->clone(swapTenor)->fixing(
                   targetShortSwapIndexBase_->fixingCalendar().adjust(optionDate));
-    return boost::make_shared<AtmAdjustedSmileSection>(baseVol_->smileSection(optionDate, swapTenor, true),
+    return QuantLib::ext::make_shared<AtmAdjustedSmileSection>(baseVol_->smileSection(optionDate, swapTenor, true),
                                                        baseAtmLevel, targetAtmLevel);
 }
 

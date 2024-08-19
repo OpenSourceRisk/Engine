@@ -27,20 +27,20 @@
 
 namespace QuantExt {
 
-FallbackOvernightIndex::FallbackOvernightIndex(const boost::shared_ptr<OvernightIndex> originalIndex,
-					       const boost::shared_ptr<OvernightIndex> rfrIndex, const Real spread,
+FallbackOvernightIndex::FallbackOvernightIndex(const QuantLib::ext::shared_ptr<OvernightIndex> originalIndex,
+					       const QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex, const Real spread,
 					       const Date& switchDate, const bool useRfrCurve)
     : FallbackOvernightIndex(originalIndex,
                         useRfrCurve ? rfrIndex
-                                    : boost::dynamic_pointer_cast<OvernightIndex>(
+                                    : QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(
                                           rfrIndex->clone(originalIndex->forwardingTermStructure())),
                         spread, switchDate,
-                        useRfrCurve ? Handle<YieldTermStructure>(boost::make_shared<OvernightFallbackCurve>(
+                        useRfrCurve ? Handle<YieldTermStructure>(QuantLib::ext::make_shared<OvernightFallbackCurve>(
                                           originalIndex, rfrIndex, spread, switchDate))
                                     : originalIndex->forwardingTermStructure()) {}
 
-FallbackOvernightIndex::FallbackOvernightIndex(const boost::shared_ptr<OvernightIndex> originalIndex,
-					       const boost::shared_ptr<OvernightIndex> rfrIndex, const Real spread,
+FallbackOvernightIndex::FallbackOvernightIndex(const QuantLib::ext::shared_ptr<OvernightIndex> originalIndex,
+					       const QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex, const Real spread,
 					       const Date& switchDate, const Handle<YieldTermStructure>& forwardingCurve)
     : OvernightIndex(originalIndex->familyName(), originalIndex->fixingDays(),
 		     originalIndex->currency(), originalIndex->fixingCalendar(), 
@@ -82,8 +82,8 @@ Rate FallbackOvernightIndex::pastFixing(const Date& fixingDate) const {
     return fixing(fixingDate);
 }
 
-boost::shared_ptr<IborIndex> FallbackOvernightIndex::clone(const Handle<YieldTermStructure>& forwarding) const {
-    return boost::make_shared<FallbackOvernightIndex>(originalIndex_, rfrIndex_, spread_, switchDate_, forwarding);
+QuantLib::ext::shared_ptr<IborIndex> FallbackOvernightIndex::clone(const Handle<YieldTermStructure>& forwarding) const {
+    return QuantLib::ext::make_shared<FallbackOvernightIndex>(originalIndex_, rfrIndex_, spread_, switchDate_, forwarding);
 }
 
 Rate FallbackOvernightIndex::forecastFixing(const Date& valueDate, const Date& endDate, Time t) const {
@@ -97,9 +97,9 @@ Rate FallbackOvernightIndex::forecastFixing(const Date& valueDate, const Date& e
     return (disc1 / disc2 - 1.0) / t;
 }
 
-boost::shared_ptr<OvernightIndex> FallbackOvernightIndex::originalIndex() const { return originalIndex_; }
+QuantLib::ext::shared_ptr<OvernightIndex> FallbackOvernightIndex::originalIndex() const { return originalIndex_; }
 
-boost::shared_ptr<OvernightIndex> FallbackOvernightIndex::rfrIndex() const { return rfrIndex_; }
+QuantLib::ext::shared_ptr<OvernightIndex> FallbackOvernightIndex::rfrIndex() const { return rfrIndex_; }
 
 Real FallbackOvernightIndex::spread() const { return spread_; }
 

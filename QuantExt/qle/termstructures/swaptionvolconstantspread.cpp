@@ -29,9 +29,9 @@ Volatility ConstantSpreadSmileSection::volatilityImpl(Rate strike) const {
     return v + s;
 }
 
-boost::shared_ptr<SmileSection> SwaptionVolatilityConstantSpread::smileSectionImpl(Time optionTime,
+QuantLib::ext::shared_ptr<SmileSection> SwaptionVolatilityConstantSpread::smileSectionImpl(Time optionTime,
                                                                                    Time swapLength) const {
-    return boost::make_shared<ConstantSpreadSmileSection>(atm_, cube_, optionTime, swapLength);
+    return QuantLib::ext::make_shared<ConstantSpreadSmileSection>(atm_, cube_, optionTime, swapLength);
 }
 
 Volatility SwaptionVolatilityConstantSpread::volatilityImpl(Time optionTime, Time swapLength, Rate strike) const {

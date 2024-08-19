@@ -34,9 +34,9 @@ SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& r
         registerWith(quotes_[i]);
     }
     if (interpolation_ == Interpolation::logLinear) {
-        dataInterpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+        dataInterpolation_ = QuantLib::ext::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
     } else {
-        dataInterpolation_ = boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+        dataInterpolation_ = QuantLib::ext::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
     }
     dataInterpolation_->enableExtrapolation();
     registerWith(referenceCurve_);
@@ -59,6 +59,9 @@ void SpreadedDiscountCurve::performCalculations() const {
     for (Size i = 0; i < times_.size(); ++i) {
         QL_REQUIRE(!quotes_[i].empty(), "SpreadedDiscountCurve: quote at index " << i << " is empty");
         data_[i] = quotes_[i]->value();
+        if (!base_.empty()) {
+            data_[i] *= base_->discount(times_[i]) / baseOffset_[i];
+        }
         QL_REQUIRE(data_[i] > 0, "SpreadedDiscountCurve: invalid value " << data_[i] << " at index " << i);
     }
     if (interpolation_ == Interpolation::linearZero) {
@@ -87,6 +90,20 @@ DiscountFactor SpreadedDiscountCurve::discountImpl(Time t) const {
     } else {
         return referenceCurve_->discount(t) * std::pow(dMax, t / tMax);
     }
+}
+
+void SpreadedDiscountCurve::makeThisCurveSpreaded(const Handle<YieldTermStructure>& base) {
+    base_ = base;
+    baseOffset_.resize(times_.size());
+    if (base_.empty()) {
+        std::fill(baseOffset_.begin(), baseOffset_.end(), 1.0);
+    } else {
+        registerWith(base_);
+        for (Size i = 0; i < times_.size(); ++i) {
+            baseOffset_[i] = base_->discount(times_[i]);
+        }
+    }
+    update();
 }
 
 } // namespace QuantExt

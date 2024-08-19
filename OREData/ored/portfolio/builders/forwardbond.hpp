@@ -66,7 +66,7 @@ public:
         : fwdBondEngineBuilder("DiscountedCashflows", "DiscountingForwardBondEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& id, const Currency& ccy,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const Currency& ccy,
                                                         const string& creditCurveId, const bool hasCreditRisk,
                                                         const string& securityId, const string& referenceCurveId,
                                                         const string& incomeCurveId) override {
@@ -108,9 +108,33 @@ protected:
             dpts = Handle<DefaultProbabilityTermStructure>();
         }
 
-        return boost::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, incomeTS, yts, bondSpread, dpts,
+        return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, incomeTS, yts, bondSpread, dpts,
                                                                           recovery, tsperiod);
     }
+};
+
+class CamAmcFwdBondEngineBuilder : public fwdBondEngineBuilder {
+public:
+    CamAmcFwdBondEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                               const std::vector<Date>& simulationDates)
+        : fwdBondEngineBuilder("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
+
+protected:
+    // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
+    virtual QuantLib::ext::shared_ptr<PricingEngine>
+    engineImpl(const string& id, const Currency& ccy, const string& creditCurveId, const bool hasCreditRisk,
+               const string& securityId, const string& referenceCurveId, const string& incomeCurveId) override;
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::ext::shared_ptr<QuantExt::LGM>& lgm,
+                                                           const Handle<YieldTermStructure>& discountCurve,
+                                                           const std::vector<Date>& simulationDates,
+                                                           const std::vector<Size>& externalModelIndices,
+                                                           const Handle<YieldTermStructure>& incomeCurve,
+                                                           const Handle<YieldTermStructure>& discountContractCurve,
+                                                           const Handle<YieldTermStructure>& referenceCurve);
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
 };
 
 } // namespace data

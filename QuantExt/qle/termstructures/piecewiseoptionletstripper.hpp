@@ -39,8 +39,8 @@ class PiecewiseOptionletStripper : public QuantExt::OptionletStripper {
 public:
     typedef typename PiecewiseOptionletCurve<Interpolator, Bootstrap>::this_curve optionlet_curve;
 
-    PiecewiseOptionletStripper(const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
-                               const boost::shared_ptr<QuantLib::IborIndex>& index,
+    PiecewiseOptionletStripper(const QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
+                               const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index,
                                const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
                                bool flatFirstPeriod = true,
                                const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
@@ -84,20 +84,20 @@ private:
     Bootstrap<optionlet_curve> bootstrap_;
 
     //! A one-dimensional optionlet curve for each strike in the underlying cap floor matrix
-    mutable std::vector<boost::shared_ptr<optionlet_curve> > strikeCurves_;
+    mutable std::vector<QuantLib::ext::shared_ptr<optionlet_curve> > strikeCurves_;
 
     //! Store the vector of helpers for each strike column. The first dimension is strike and second is option tenor.
     typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
-    std::vector<std::vector<boost::shared_ptr<helper> > > helpers_;
+    std::vector<std::vector<QuantLib::ext::shared_ptr<helper> > > helpers_;
 
     //! Store the cap floor surface quotes. The first dimension is option tenor and second is strike.
-    std::vector<std::vector<boost::shared_ptr<QuantLib::SimpleQuote> > > quotes_;
+    std::vector<std::vector<QuantLib::ext::shared_ptr<QuantLib::SimpleQuote> > > quotes_;
 };
 
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
-    const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
-    const boost::shared_ptr<QuantLib::IborIndex>& index, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
+    const QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
+    const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& index, const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
     bool flatFirstPeriod, const QuantLib::VolatilityType capFloorVolType, const QuantLib::Real capFloorVolDisplacement,
     const boost::optional<VolatilityType> optionletVolType,
     const boost::optional<QuantLib::Real> optionletVolDisplacement, bool interpOnOptionlets, const Interpolator& i,
@@ -120,7 +120,7 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
 
     vector<Rate> strikes = termVolSurface_->strikes();
 
-    bool isOis = boost::dynamic_pointer_cast<OvernightIndex>(index) != nullptr;
+    bool isOis = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index) != nullptr;
 
     // If we interpolate on term volatility surface first and then bootstrap, we have a cap floor helper for every
     // optionlet maturity.
@@ -130,16 +130,16 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     // Initialise the quotes and helpers
     for (Size j = 0; j < strikes.size(); j++) {
         for (Size i = 0; i < tenors.size(); i++) {
-            quotes_[i].push_back(boost::make_shared<SimpleQuote>(termVolSurface_->volatility(tenors[i], strikes[j])));
+            quotes_[i].push_back(QuantLib::ext::make_shared<SimpleQuote>(termVolSurface_->volatility(tenors[i], strikes[j])));
 	    if(isOis) {
                 Date effDate = index_->fixingCalendar().advance(
                     index_->fixingCalendar().adjust(capFloorSurface->referenceDate()), onCapSettlementDays_ * Days);
-                helpers_[j].push_back(boost::make_shared<OISCapFloorHelper>(
+                helpers_[j].push_back(QuantLib::ext::make_shared<OISCapFloorHelper>(
                     CapFloorHelper::Automatic, tenors[i], rateComputationPeriod_, strikes[j],
-                    Handle<Quote>(quotes_[i].back()), boost::dynamic_pointer_cast<OvernightIndex>(index_), discount_,
+                    Handle<Quote>(quotes_[i].back()), QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index_), discount_,
                     false, effDate, CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_));
             } else {
-                helpers_[j].push_back(boost::make_shared<CapFloorHelper>(
+                helpers_[j].push_back(QuantLib::ext::make_shared<CapFloorHelper>(
                     CapFloorHelper::Automatic, tenors[i], strikes[j], Handle<Quote>(quotes_[i].back()), index_,
                     discount_, true, Date(), CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_));
             }
@@ -172,7 +172,7 @@ inline void PiecewiseOptionletStripper<Interpolator, Bootstrap>::performCalculat
 
     // Populate the strike curves
     for (Size j = 0; j < strikes.size(); j++) {
-        strikeCurves_[j] = boost::make_shared<optionlet_curve>(
+        strikeCurves_[j] = QuantLib::ext::make_shared<optionlet_curve>(
             termVolSurface_->referenceDate(), helpers_[j], termVolSurface_->calendar(),
             termVolSurface_->businessDayConvention(), termVolSurface_->dayCounter(), volatilityType_, displacement_,
             flatFirstPeriod_, interpolator_, bootstrap_);

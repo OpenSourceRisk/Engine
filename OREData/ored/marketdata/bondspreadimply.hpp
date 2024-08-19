@@ -28,6 +28,7 @@
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/bond.hpp>
 
 namespace ore {
 namespace data {
@@ -36,24 +37,24 @@ class BondSpreadImply {
 public:
     /*! Determine the securities that require a spread imply and return a map securityID => security containing them.
         If excludeRegex is non-empty security ids that match excludeRegex are excluded from the returned list. */
-    static std::map<std::string, boost::shared_ptr<Security>>
-    requiredSecurities(const Date& asof, const boost::shared_ptr<TodaysMarketParameters>& params,
-                       const boost::shared_ptr<CurveConfigurations>& curveConfigs, const Loader& loader,
+    static std::map<std::string, QuantLib::ext::shared_ptr<Security>>
+    requiredSecurities(const Date& asof, const QuantLib::ext::shared_ptr<TodaysMarketParameters>& params,
+                       const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs, const Loader& loader,
                        const bool continueOnError = false, const std::string& excludeRegex = std::string());
 
     /*! Imply bond spreads and add them to the loader. */
-    static boost::shared_ptr<Loader>
-    implyBondSpreads(const std::map<std::string, boost::shared_ptr<Security>>& securities,
-                     const boost::shared_ptr<ReferenceDataManager>& referenceDataManager,
-                     const boost::shared_ptr<Market>& market, const boost::shared_ptr<EngineData>& engineData,
+    static QuantLib::ext::shared_ptr<Loader>
+    implyBondSpreads(const std::map<std::string, QuantLib::ext::shared_ptr<Security>>& securities,
+                     const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
+                     const QuantLib::ext::shared_ptr<Market>& market, const QuantLib::ext::shared_ptr<EngineData>& engineData,
                      const std::string& configuration, const IborFallbackConfig& iborFallbackConfig);
 
 private:
     //! helper function that computes a single implied spread for a bond
     static Real implySpread(const std::string& securityId, const Real cleanPrice,
-                            const boost::shared_ptr<ReferenceDataManager>& referenceDataManager,
-                            const boost::shared_ptr<EngineFactory>& engineFactory,
-                            const boost::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration);
+                            const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager,
+                            const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                            const QuantLib::ext::shared_ptr<SimpleQuote>& spreadQuote, const std::string& configuration);
 };
 
 } // namespace data

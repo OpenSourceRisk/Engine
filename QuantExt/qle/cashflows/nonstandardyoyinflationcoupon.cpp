@@ -78,7 +78,7 @@ Date NonStandardYoYInflationCoupon::fixingDateNumerator() const { return fixingD
 Date NonStandardYoYInflationCoupon::fixingDateDenumerator() const { return fixingDateDenumerator_; }
 
 Rate NonStandardYoYInflationCoupon::indexFixing() const {
-    auto zii = boost::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(index_);
+    auto zii = QuantLib::ext::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(index_);
     Real I_t = CPI::laggedFixing(zii, fixingDateNumerator() + observationLag_, observationLag_, interpolationType_);
     Real I_s = CPI::laggedFixing(zii, fixingDateDenumerator() + observationLag_, observationLag_, interpolationType_);
     return I_t / I_s - 1.0;

@@ -1,0 +1,27 @@
+<Simulation>
+	<Market>
+		<BaseCurrency>EUR</BaseCurrency>
+		<Currencies>
+			<Currency>EUR</Currency>
+		</Currencies>
+		<YieldCurves>
+			<Configuration curve="">
+				<Tenors>1D, 1W, 1M, 1Y, 10Y</Tenors>
+				<Interpolation>LogLinear</Interpolation>
+				<Extrapolation>FlatZero</Extrapolation>
+			</Configuration>
+		</YieldCurves>
+		<FxRates>
+		</FxRates>
+		<Indices>
+			<Index>EUR-ESTER</Index>
+		</Indices>
+		<CreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</CreditStates>
+		<AggregationScenarioDataCreditStates>
+			<NumberOfFactors>0</NumberOfFactors>
+		</AggregationScenarioDataCreditStates>
+	</Market>
+</Simulation>
+

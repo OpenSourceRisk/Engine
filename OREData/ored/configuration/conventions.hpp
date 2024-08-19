@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2024 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -80,7 +81,8 @@ public:
         CommodityForward,
         CommodityFuture,
         FxOption,
-	BondYield
+        FxOptionTimeWeighting,
+        BondYield
     };
 
     //! Default destructor
@@ -116,20 +118,20 @@ public:
     Conventions() {}
 
     /*! Returns the convention if found and throws if not */
-    boost::shared_ptr<Convention> get(const string& id) const;
+    QuantLib::ext::shared_ptr<Convention> get(const string& id) const;
 
     /*! Get a convention with the given \p id and \p type. If no convention of the given \p type with the given \p id
         is found, the first element of the returned pair is \c false and the second element is a \c nullptr. If a
         convention is found, the first element of the returned pair is \c true and the second element holds the
         convention.
     */
-    std::pair<bool, boost::shared_ptr<Convention>> get(const std::string& id, const Convention::Type& type) const;
+    std::pair<bool, QuantLib::ext::shared_ptr<Convention>> get(const std::string& id, const Convention::Type& type) const;
 
     /*! Get all conventions of a given type */
-    std::set<boost::shared_ptr<Convention>> get(const Convention::Type& type) const;
+    std::set<QuantLib::ext::shared_ptr<Convention>> get(const Convention::Type& type) const;
     
     /*! Find a convention for an FX pair */
-    boost::shared_ptr<Convention> getFxConvention(const string& ccy1, const string& ccy2) const;
+    QuantLib::ext::shared_ptr<Convention> getFxConvention(const string& ccy1, const string& ccy2) const;
 
     //! Checks if we have a convention with the given \p id
     bool has(const std::string& id) const;
@@ -142,7 +144,7 @@ public:
 
     /*! Add a convention. This will overwrite an existing convention
         with the same id */
-    void add(const boost::shared_ptr<Convention>& convention) const;
+    void add(const QuantLib::ext::shared_ptr<Convention>& convention) const;
 
     //! \name Serialisation
     //@{0
@@ -151,7 +153,7 @@ public:
     //@}
 
 private:
-    mutable map<string, boost::shared_ptr<Convention>> data_;
+    mutable map<string, QuantLib::ext::shared_ptr<Convention>> data_;
     mutable map<string, std::pair<string, string>> unparsed_;
     mutable std::set<string> used_;
     mutable boost::shared_mutex mutex_;
@@ -163,15 +165,15 @@ class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions, 
     friend class QuantLib::Singleton<InstrumentConventions, std::integral_constant<bool, true>>;
 
 private:
-    InstrumentConventions() { conventions_[Date()] = boost::make_shared<ore::data::Conventions>(); }
+    InstrumentConventions() { conventions_[Date()] = QuantLib::ext::make_shared<ore::data::Conventions>(); }
 
-    mutable std::map<QuantLib::Date, boost::shared_ptr<ore::data::Conventions>> conventions_;
+    mutable std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ore::data::Conventions>> conventions_;
     mutable boost::shared_mutex mutex_;
     mutable std::size_t numberOfEmittedWarnings_ = 0;
 
 public:
-    const boost::shared_ptr<ore::data::Conventions>& conventions(QuantLib::Date d = QuantLib::Date()) const;
-    void setConventions(const boost::shared_ptr<ore::data::Conventions>& conventions,
+    const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions(QuantLib::Date d = QuantLib::Date()) const;
+    void setConventions(const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions,
                         QuantLib::Date d = QuantLib::Date());
     void clear() { conventions_.clear(); }
 };
@@ -317,7 +319,7 @@ public:
     //@}
     //! \name Inspectors
     //@{
-    boost::shared_ptr<IborIndex> index() const;
+    QuantLib::ext::shared_ptr<IborIndex> index() const;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType() const { return overnightIndexFutureNettingType_; }
     DateGenerationRule dateGenerationRule() const { return dateGenerationRule_; }
     //@}
@@ -351,7 +353,7 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<IborIndex> index() const;
+    QuantLib::ext::shared_ptr<IborIndex> index() const;
     const string& indexName() const { return strIndex_; }
     //@}
 
@@ -381,14 +383,15 @@ public:
                   const string& fixedCalendar, const string& paymentLag = "", const string& eom = "",
                   const string& fixedFrequency = "", const string& fixedConvention = "",
                   const string& fixedPaymentConvention = "", const string& rule = "",
-                  const std::string& paymentCalendar = "");
+                  const std::string& paymentCalendar = "",
+                  const std::string& rateCutoff = "");
     //@}
 
     //! \name Inspectors
     //@{
     Natural spotLag() const { return spotLag_; }
     const string& indexName() const { return strIndex_; }
-    boost::shared_ptr<OvernightIndex> index() const;
+    QuantLib::ext::shared_ptr<OvernightIndex> index() const;
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     // might be empty to retain bwd compatibility
     const Calendar& fixedCalendar() const { return fixedCalendar_; }
@@ -399,6 +402,7 @@ public:
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
     DateGeneration::Rule rule() const { return rule_; }
     QuantLib::Calendar paymentCalendar() const { return paymentCal_; }
+    Natural rateCutoff() const { return rateCutoff_; }
     //@}
 
     //! \name Serialisation
@@ -419,6 +423,7 @@ private:
     BusinessDayConvention fixedPaymentConvention_;
     DateGeneration::Rule rule_;
     QuantLib::Calendar paymentCal_;
+    Natural rateCutoff_;
 
     // Strings to store the inputs
     string strSpotLag_;
@@ -432,6 +437,7 @@ private:
     string strFixedPaymentConvention_;
     string strRule_;
     std::string strPaymentCal_;
+    string strRateCutoff_;
 };
 
 //! Container for storing Ibor Index conventions
@@ -532,7 +538,7 @@ public:
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     const string& indexName() const { return strIndex_; }
-    boost::shared_ptr<IborIndex> index() const;
+    QuantLib::ext::shared_ptr<IborIndex> index() const;
     // For sub period
     bool hasSubPeriod() const { return hasSubPeriod_; }
     Frequency floatFrequency() const { return floatFrequency_; } // returns NoFrequency for normal swaps
@@ -592,7 +598,7 @@ public:
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
     Frequency fixedFrequency() const { return fixedFrequency_; }
     const string& indexName() const { return strIndex_; }
-    boost::shared_ptr<OvernightIndex> index() const;
+    QuantLib::ext::shared_ptr<OvernightIndex> index() const;
     const Period& onTenor() const { return onTenor_; }
     Natural rateCutoff() const { return rateCutoff_; }
     //@}
@@ -646,8 +652,8 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<IborIndex> payIndex() const;
-    boost::shared_ptr<IborIndex> receiveIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> payIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> receiveIndex() const;
     const string& payIndexName() const { return strPayIndex_; }
     const string& receiveIndexName() const { return strReceiveIndex_; }
     const Period& receiveFrequency() const { return receiveFrequency_; }
@@ -705,11 +711,11 @@ public:
     Frequency longFixedFrequency() const { return longFixedFrequency_; }
     BusinessDayConvention longFixedConvention() const { return longFixedConvention_; }
     const DayCounter& longFixedDayCounter() const { return longFixedDayCounter_; }
-    boost::shared_ptr<IborIndex> longIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> longIndex() const;
     Frequency shortFixedFrequency() const { return shortFixedFrequency_; }
     BusinessDayConvention shortFixedConvention() const { return shortFixedConvention_; }
     const DayCounter& shortFixedDayCounter() const { return shortFixedDayCounter_; }
-    boost::shared_ptr<IborIndex> shortIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> shortIndex() const;
     bool longMinusShort() const { return longMinusShort_; }
     //@}
 
@@ -759,8 +765,8 @@ public:
 
     //! \name Inspectors
     //@{
-    boost::shared_ptr<IborIndex> liborIndex() const;
-    boost::shared_ptr<QuantExt::BMAIndexWrapper> bmaIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> liborIndex() const;
+    QuantLib::ext::shared_ptr<QuantExt::BMAIndexWrapper> bmaIndex() const;
     const string& liborIndexName() const { return strLiborIndex_; }
     const string& bmaIndexName() const { return strBmaIndex_; }
     //@}
@@ -863,8 +869,8 @@ public:
     Natural settlementDays() const { return settlementDays_; }
     const Calendar& settlementCalendar() const { return settlementCalendar_; }
     BusinessDayConvention rollConvention() const { return rollConvention_; }
-    boost::shared_ptr<IborIndex> flatIndex() const;
-    boost::shared_ptr<IborIndex> spreadIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> flatIndex() const;
+    QuantLib::ext::shared_ptr<IborIndex> spreadIndex() const;
     const string& flatIndexName() const { return strFlatIndex_; }
     const string& spreadIndexName() const { return strSpreadIndex_; }
 
@@ -973,7 +979,7 @@ public:
     QuantLib::Frequency fixedFrequency() const { return fixedFrequency_; }
     QuantLib::BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     const QuantLib::DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
-    boost::shared_ptr<QuantLib::IborIndex> index() const;
+    QuantLib::ext::shared_ptr<QuantLib::IborIndex> index() const;
     bool eom() const { return eom_; }
     bool isResettable() const { return isResettable_; }
     bool floatIndexIsResettable() const { return floatIndexIsResettable_; }
@@ -1096,12 +1102,12 @@ public:
                             const string& strObservationLag, const string& strAdjustInfObsDates,
                             const string& strInfCalendar, const string& strInfConvention,
                             PublicationRoll publicationRoll = PublicationRoll::None,
-                            const boost::shared_ptr<ScheduleData>& publicationScheduleData = nullptr);
+                            const QuantLib::ext::shared_ptr<ScheduleData>& publicationScheduleData = nullptr);
 
     const Calendar& fixCalendar() const { return fixCalendar_; }
     BusinessDayConvention fixConvention() const { return fixConvention_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
-    boost::shared_ptr<ZeroInflationIndex> index() const;
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> index() const;
     const string& indexName() const { return strIndex_; }
     bool interpolated() const { return interpolated_; }
     Period observationLag() const { return observationLag_; }
@@ -1119,7 +1125,7 @@ private:
     Calendar fixCalendar_;
     BusinessDayConvention fixConvention_;
     DayCounter dayCounter_;
-    boost::shared_ptr<ZeroInflationIndex> index_;
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> index_;
     bool interpolated_;
     Period observationLag_;
     bool adjustInfObsDates_;
@@ -1138,7 +1144,7 @@ private:
     string strInfCalendar_;
     string strInfConvention_;
     PublicationRoll publicationRoll_;
-    boost::shared_ptr<ScheduleData> publicationScheduleData_;
+    QuantLib::ext::shared_ptr<ScheduleData> publicationScheduleData_;
 };
 
 //! Container for storing Bond Spread Rate conventions
@@ -1740,6 +1746,51 @@ private:
     string strLongTermDeltaType_;
     string strRiskReversalInFavorOf_;
     string strButterflyStyle_;
+};
+
+//! Container for storing FX Option Time Weighting scheme
+/*! Defines a time weighting scheme for fx vol interpolation
+\ingroup marketdata
+*/
+class FxOptionTimeWeightingConvention : public Convention {
+public:
+    struct TradingCenter {
+        std::string name;
+        std::string calendar;
+        double weight;
+    };
+    struct Event {
+        std::string description;
+        QuantLib::Date date;
+        double weight;
+    };
+
+    //! \name Constructors
+    //@{
+    FxOptionTimeWeightingConvention() {}
+    FxOptionTimeWeightingConvention(const string& id, const std::vector<double>& weekdayWeights,
+                                    const std::vector<TradingCenter>& tradingCenters = {},
+                                    const std::vector<Event>& events = {});
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const std::vector<double>& weekdayWeights() const { return weekdayWeights_; }
+    const std::vector<TradingCenter>& tradingCenters() const { return tradingCenters_; }
+    const std::vector<Event>& events() const { return events_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) const override;
+    virtual void build() override;
+    //@}
+
+private:
+    std::vector<double> weekdayWeights_;
+    std::vector<TradingCenter> tradingCenters_;
+    std::vector<Event> events_;
 };
 
 /*! Container for storing zero inflation index conventions

@@ -57,7 +57,7 @@ public:
     //! \name Additional interface
     //@{
     Currency currency() const { return currency_; }
-    const boost::shared_ptr<SimpleCashFlow>& cashFlow() const { return cashflow_; }
+    const QuantLib::ext::shared_ptr<SimpleCashFlow>& cashFlow() const { return cashflow_; }
     //@}
 
 private:
@@ -66,13 +66,13 @@ private:
     void setupExpired() const override;
     //@}
     Currency currency_;
-    boost::shared_ptr<SimpleCashFlow> cashflow_;
+    QuantLib::ext::shared_ptr<SimpleCashFlow> cashflow_;
 };
 
 class Payment::arguments : public virtual PricingEngine::arguments {
 public:
     Currency currency;
-    boost::shared_ptr<SimpleCashFlow> cashflow;
+    QuantLib::ext::shared_ptr<SimpleCashFlow> cashflow;
     void validate() const override;
 };
 

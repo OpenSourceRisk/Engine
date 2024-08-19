@@ -33,7 +33,7 @@
 
 #include <ql/pricingengine.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <ql/shared_ptr.hpp>
 
 #include <map>
 #include <set>
@@ -66,7 +66,7 @@ enum class MarketContext { irCalibration, fxCalibration, eqCalibration, pricing 
  *
  *  Each builder should implement a method with a signature
  *  @code
- *  boost::shared_ptr<PricingEngine> engine (...);
+ *  QuantLib::ext::shared_ptr<PricingEngine> engine (...);
  *  @endcode
  *  The exact parameters of each method can vary depending on the type of engine.
  *
@@ -76,7 +76,7 @@ enum class MarketContext { irCalibration, fxCalibration, eqCalibration, pricing 
  *
  *  For example a swap engine builder can have the interface
  *  @code
- *  boost::shared_ptr<PricingEngine> engine (const Currency&);
+ *  QuantLib::ext::shared_ptr<PricingEngine> engine (const Currency&);
  *  @endcode
  *  and so returns the same (cached) engine every time it is asked for a particular
  *  currency.
@@ -128,7 +128,7 @@ public:
     /*! This method should not be called directly, it is called by the EngineFactory
      *  before it is returned.
      */
-    void init(const boost::shared_ptr<Market> market, const map<MarketContext, string>& configurations,
+    void init(const QuantLib::ext::shared_ptr<Market> market, const map<MarketContext, string>& configurations,
               const map<string, string>& modelParameters, const map<string, string>& engineParameters,
               const std::map<std::string, std::string>& globalParameters = {}) {
         market_ = market;
@@ -139,7 +139,7 @@ public:
     }
 
     //! return model builders
-    const set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
+    const set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
 
     /*! retrieve engine parameter p, first look for p_qualifier, if this does not exist fall back to p */
     std::string engineParameter(const std::string& p, const std::vector<std::string>& qualifiers = {},
@@ -152,12 +152,12 @@ protected:
     string model_;
     string engine_;
     set<string> tradeTypes_;
-    boost::shared_ptr<Market> market_;
+    QuantLib::ext::shared_ptr<Market> market_;
     map<MarketContext, string> configurations_;
     map<string, string> modelParameters_;
     map<string, string> engineParameters_;
     std::map<std::string, std::string> globalParameters_;
-    set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
+    set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
 };
 
 //! Delegating Engine Builder
@@ -165,45 +165,45 @@ protected:
 class DelegatingEngineBuilder : public EngineBuilder {
 public:
     using EngineBuilder::EngineBuilder;
-    virtual boost::shared_ptr<ore::data::Trade> build(const ore::data::Trade*,
-                                                      const boost::shared_ptr<EngineFactory>& engineFactory) = 0;
+    virtual QuantLib::ext::shared_ptr<ore::data::Trade> build(const ore::data::Trade*,
+                                                      const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) = 0;
     virtual std::string effectiveTradeType() const = 0;
 };
 
 //! Engine/ Leg Builder Factory - notice that both engine and leg builders are allowed to maintain a state
 class EngineBuilderFactory : public QuantLib::Singleton<EngineBuilderFactory, std::integral_constant<bool, true>> {
-    std::vector<std::function<boost::shared_ptr<EngineBuilder>()>> engineBuilderBuilders_;
-    std::vector<std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+    std::vector<std::function<QuantLib::ext::shared_ptr<EngineBuilder>()>> engineBuilderBuilders_;
+    std::vector<std::function<QuantLib::ext::shared_ptr<EngineBuilder>(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                                                const std::vector<Date>& grid)>>
         amcEngineBuilderBuilders_;
-    std::vector<std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<ore::data::ModelCG>& model,
+    std::vector<std::function<QuantLib::ext::shared_ptr<EngineBuilder>(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model,
                                                                const std::vector<Date>& grid)>>
         amcCgEngineBuilderBuilders_;
-    std::vector<std::function<boost::shared_ptr<LegBuilder>()>> legBuilderBuilders_;
+    std::vector<std::function<QuantLib::ext::shared_ptr<LegBuilder>()>> legBuilderBuilders_;
     mutable boost::shared_mutex mutex_;
 
 public:
-    void addEngineBuilder(const std::function<boost::shared_ptr<EngineBuilder>()>& builder,
+    void addEngineBuilder(const std::function<QuantLib::ext::shared_ptr<EngineBuilder>()>& builder,
                           const bool allowOverwrite = false);
     void addAmcEngineBuilder(
-        const std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+        const std::function<QuantLib::ext::shared_ptr<EngineBuilder>(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                                              const std::vector<Date>& grid)>& builder,
         const bool allowOverwrite = false);
     void addAmcCgEngineBuilder(
-        const std::function<boost::shared_ptr<EngineBuilder>(const boost::shared_ptr<ore::data::ModelCG>& model,
+        const std::function<QuantLib::ext::shared_ptr<EngineBuilder>(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model,
                                                              const std::vector<Date>& grid)>& builder,
         const bool allowOverwrite = false);
-    void addLegBuilder(const std::function<boost::shared_ptr<LegBuilder>()>& builder,
+    void addLegBuilder(const std::function<QuantLib::ext::shared_ptr<LegBuilder>()>& builder,
                        const bool allowOverwrite = false);
 
-    std::vector<boost::shared_ptr<EngineBuilder>> generateEngineBuilders() const;
-    std::vector<boost::shared_ptr<EngineBuilder>>
-    generateAmcEngineBuilders(const boost::shared_ptr<QuantExt::CrossAssetModel>& cam,
+    std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> generateEngineBuilders() const;
+    std::vector<QuantLib::ext::shared_ptr<EngineBuilder>>
+    generateAmcEngineBuilders(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
                               const std::vector<Date>& grid) const;
-    std::vector<boost::shared_ptr<EngineBuilder>>
-    generateAmcCgEngineBuilders(const boost::shared_ptr<ore::data::ModelCG>& model,
+    std::vector<QuantLib::ext::shared_ptr<EngineBuilder>>
+    generateAmcCgEngineBuilders(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model,
                                 const std::vector<Date>& grid) const;
-    std::vector<boost::shared_ptr<LegBuilder>> generateLegBuilders() const;
+    std::vector<QuantLib::ext::shared_ptr<LegBuilder>> generateLegBuilders() const;
 };
 
 //! Pricing Engine Factory class
@@ -225,22 +225,22 @@ class EngineFactory {
 public:
     //! Create an engine factory
     EngineFactory( //! Configuration data
-        const boost::shared_ptr<EngineData>& data,
+        const QuantLib::ext::shared_ptr<EngineData>& data,
         //! The market that is passed to each builder
-        const boost::shared_ptr<Market>& market,
+        const QuantLib::ext::shared_ptr<Market>& market,
         //! The market configurations that are passed to each builder
         const map<MarketContext, string>& configurations = std::map<MarketContext, string>(),
         //! reference data
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! ibor fallback config
         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
         //! additional engine builders
-        const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
+        const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
         //! additional engine builders may overwrite existing builders with same key
         const bool allowOverwrite = false);
 
     //! Return the market used by this EngineFactory
-    const boost::shared_ptr<Market>& market() const { return market_; };
+    const QuantLib::ext::shared_ptr<Market>& market() const { return market_; };
     //! Return the market configurations used by this EngineFactory
     const map<MarketContext, string>& configurations() const { return configurations_; };
     //! Return a configuration (or the default one if key not found)
@@ -252,11 +252,11 @@ public:
         }
     }
     //! Return the EngineData parameters
-    const boost::shared_ptr<EngineData> engineData() const { return engineData_; };
+    const QuantLib::ext::shared_ptr<EngineData> engineData() const { return engineData_; };
     //! Register a builder with the factory
-    void registerBuilder(const boost::shared_ptr<EngineBuilder>& builder, const bool allowOverwrite = false);
+    void registerBuilder(const QuantLib::ext::shared_ptr<EngineBuilder>& builder, const bool allowOverwrite = false);
     //! Return the reference data used by this EngineFactory
-    const boost::shared_ptr<ReferenceDataManager>& referenceData() const { return referenceData_; };
+    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData() const { return referenceData_; };
     //! Return the ibor fallback config
     const IborFallbackConfig& iborFallbackConfig() const { return iborFallbackConfig_; }
 
@@ -266,19 +266,19 @@ public:
 
         The factory will call EngineBuilder::init() before returning it.
      */
-    boost::shared_ptr<EngineBuilder> builder(const string& tradeType);
+    QuantLib::ext::shared_ptr<EngineBuilder> builder(const string& tradeType);
 
     //! Register a leg builder with the factory
-    void registerLegBuilder(const boost::shared_ptr<LegBuilder>& legBuilder, const bool allowOverwrite = false);
+    void registerLegBuilder(const QuantLib::ext::shared_ptr<LegBuilder>& legBuilder, const bool allowOverwrite = false);
 
     //! Get a leg builder by leg type
-    boost::shared_ptr<LegBuilder> legBuilder(const string& legType);
+    QuantLib::ext::shared_ptr<LegBuilder> legBuilder(const string& legType);
 
     //! Add a set of default engine and leg builders
     void addDefaultBuilders();
     //! Add a set of default engine and leg builders, overwrite existing builders with same key if specified
-    void addExtraBuilders(const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
-                          const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders,
+    void addExtraBuilders(const std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> extraEngineBuilders,
+                          const std::vector<QuantLib::ext::shared_ptr<LegBuilder>> extraLegBuilders,
                           const bool allowOverwrite = false);
 
     //! Clear all builders
@@ -288,15 +288,15 @@ public:
     }
 
     //! return model builders
-    set<std::pair<string, boost::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders() const;
+    set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders() const;
 
 private:
-    boost::shared_ptr<Market> market_;
-    boost::shared_ptr<EngineData> engineData_;
+    QuantLib::ext::shared_ptr<Market> market_;
+    QuantLib::ext::shared_ptr<EngineData> engineData_;
     map<MarketContext, string> configurations_;
-    map<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> builders_;
-    map<string, boost::shared_ptr<LegBuilder>> legBuilders_;
-    boost::shared_ptr<ReferenceDataManager> referenceData_;
+    map<tuple<string, string, set<string>>, QuantLib::ext::shared_ptr<EngineBuilder>> builders_;
+    map<string, QuantLib::ext::shared_ptr<LegBuilder>> legBuilders_;
+    QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
 };
 
@@ -306,7 +306,7 @@ class LegBuilder {
 public:
     LegBuilder(const string& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
-    virtual Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
+    virtual Leg buildLeg(const LegData& data, const QuantLib::ext::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
                          const string& configuration, const QuantLib::Date& openEndDateReplacement = Null<Date>(),
                          const bool useXbsCurves = false) const = 0;
     const string& legType() const { return legType_; }

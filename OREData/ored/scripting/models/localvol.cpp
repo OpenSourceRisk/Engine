@@ -36,19 +36,20 @@ LocalVol::LocalVol(const Size paths, const std::string& currency, const Handle<Y
                    const Handle<BlackScholesModelWrapper>& model, const McParams& mcParams,
                    const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
     : LocalVol(paths, {currency}, {curve}, {}, {}, {}, {index}, {indexCurrency}, model, {}, mcParams, simulationDates,
-               iborFallbackConfig) {}
+               iborFallbackConfig, SalvagingAlgorithm::None) {}
 
 LocalVol::LocalVol(
     const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
     const std::vector<Handle<Quote>>& fxSpots,
-    const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-    const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
-    const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig)
+    const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
+    const QuantLib::SalvagingAlgorithm::Type& salvagingAlgorithm)
     : BlackScholesBase(paths, currencies, curves, fxSpots, irIndices, infIndices, indices, indexCurrencies, model,
-                       correlations, mcParams, simulationDates, iborFallbackConfig) {}
+                       correlations, mcParams, simulationDates, iborFallbackConfig, salvagingAlgorithm) {}
 
 void LocalVol::performCalculations() const {
 
@@ -86,7 +87,7 @@ void LocalVol::performCalculations() const {
 
     // compute the sqrt correlation
 
-    Matrix sqrtCorr = pseudoSqrt(correlation, SalvagingAlgorithm::Spectral);
+    Matrix sqrtCorr = pseudoSqrt(correlation, getSalvagingAlgorithm());
 
     // precompute the deterministic part of the drift on each time step
 
@@ -148,7 +149,7 @@ void LocalVol::performCalculations() const {
 } // initPaths()
 
 void LocalVol::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
-                                  const boost::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                                  const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                                   const Matrix& correlation, const Matrix& sqrtCorr,
                                   const std::vector<Array>& deterministicDrift, const std::vector<Size>& eqComIdx,
                                   const std::vector<Real>& t, const std::vector<Real>& dt,

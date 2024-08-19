@@ -40,9 +40,9 @@ class DynamicCreditXvaCalculator : public ValueAdjustmentCalculator {
 public:
     DynamicCreditXvaCalculator(
         //! Driving portfolio consistent with the cube below
-        const boost::shared_ptr<Portfolio> portfolio,
+        const QuantLib::ext::shared_ptr<Portfolio> portfolio,
 	//! Today's market
-	const boost::shared_ptr<Market> market,
+	const QuantLib::ext::shared_ptr<Market> market,
         //! Market configuration to be used
 	const string& configuration,
         //! Base currency amounts will be converted to
@@ -56,13 +56,13 @@ public:
         //! Deactivate initial margin calculation even if active at netting set level
 	const bool applyDynamicInitialMargin,
         //! Dynamic Initial Margin calculator
-	const boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator,
+	const QuantLib::ext::shared_ptr<DynamicInitialMarginCalculator> dimCalculator,
 	//! Storage ofdefault NPVs, close-out NPVs, cash flows at trade level
-        const boost::shared_ptr<NPVCube> tradeExposureCube,
+        const QuantLib::ext::shared_ptr<NPVCube> tradeExposureCube,
 	//! Storage of sensitivity vectors at netting set level
-        const boost::shared_ptr<NPVCube> nettingSetExposureCube,
+        const QuantLib::ext::shared_ptr<NPVCube> nettingSetExposureCube,
 	//! Storage for counterparty survival probabilities
-        const boost::shared_ptr<NPVCube>& cptyCube,
+        const QuantLib::ext::shared_ptr<NPVCube>& cptyCube,
 	//! Index of the trade EPE storage in the internal exposure cube	
         const Size tradeEpeIndex = 0,
 	//! Index of the trade ENE storage in the internal exposure cube
@@ -100,7 +100,7 @@ public:
                                                        const Date& d0, const Date& d1, const Real& dcf) override;
 
 protected:
-    const boost::shared_ptr<NPVCube>& cptyCube_;
+    const QuantLib::ext::shared_ptr<NPVCube>& cptyCube_;
     Size cptySpIndex_;
 };
 

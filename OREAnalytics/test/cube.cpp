@@ -53,6 +53,8 @@
 #include <ql/time/daycounters/actualactual.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <test/oreatoplevelfixture.hpp>
+#include <ored/report/inmemoryreport.hpp>
+#include <orea/app/reportwriter.hpp>
 
 #include "testmarket.hpp"
 
@@ -113,7 +115,7 @@ void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance) {
 }
 
 template <class T>
-void testCubeFileIO(boost::shared_ptr<NPVCube> cube, const std::string& cubeName, Real tolerance,
+void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& cubeName, Real tolerance,
                     bool doublePrecision) {
 
     initCube(*cube);
@@ -163,7 +165,7 @@ void testCubeGetSetbyDateID(NPVCube& cube, Real tolerance) {
     }
 }
 
-void initCube(NPVCube& cube, boost::shared_ptr<Portfolio>& portfolio, boost::shared_ptr<DateGrid>& dg) {
+void initCube(NPVCube& cube, QuantLib::ext::shared_ptr<Portfolio>& portfolio, QuantLib::ext::shared_ptr<DateGrid>& dg) {
     // Set every (i,j,k,d) node to be i*1000000 + j + (k/1000000) + d*3
     for (const auto& [id, i]: cube.idsAndIndexes()) {
         Size dateLen = 0;
@@ -181,8 +183,8 @@ void initCube(NPVCube& cube, boost::shared_ptr<Portfolio>& portfolio, boost::sha
     }
 }
 
-void checkCube(NPVCube& cube, Real tolerance, boost::shared_ptr<Portfolio>& portfolio,
-               boost::shared_ptr<DateGrid>& dg) {
+void checkCube(NPVCube& cube, Real tolerance, QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+               QuantLib::ext::shared_ptr<DateGrid>& dg) {
     // Now check each value
     for (const auto& [id, i] : cube.idsAndIndexes()) {
         Size dateLen = 0;
@@ -202,8 +204,8 @@ void checkCube(NPVCube& cube, Real tolerance, boost::shared_ptr<Portfolio>& port
     }
 }
 
-void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance, boost::shared_ptr<Portfolio>& portfolio,
-              boost::shared_ptr<DateGrid>& d) {
+void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance, QuantLib::ext::shared_ptr<Portfolio>& portfolio,
+              QuantLib::ext::shared_ptr<DateGrid>& d) {
     BOOST_TEST_MESSAGE("Testing cube " << cubeName);
     initCube(cube, portfolio, d);
     // Check we can't set anything out of bounds
@@ -220,8 +222,8 @@ void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance, boost:
 }
 
 template <class T>
-void testCubeFileIO(boost::shared_ptr<NPVCube> cube, const std::string& cubeName, Real tolerance,
-                    boost::shared_ptr<Portfolio>& portfolio, boost::shared_ptr<DateGrid>& d, bool doublePrecision) {
+void testCubeFileIO(QuantLib::ext::shared_ptr<NPVCube> cube, const std::string& cubeName, Real tolerance,
+                    QuantLib::ext::shared_ptr<Portfolio>& portfolio, QuantLib::ext::shared_ptr<DateGrid>& d, bool doublePrecision) {
 
     initCube(*cube, portfolio, d);
 
@@ -231,7 +233,7 @@ void testCubeFileIO(boost::shared_ptr<NPVCube> cube, const std::string& cubeName
     saveCube(filename, NPVCubeWithMetaData{cube, nullptr, boost::none, boost::none}, doublePrecision);
 
     // Create a new Cube and load it
-    auto cube2 = boost::make_shared<T>();
+    auto cube2 = QuantLib::ext::make_shared<T>();
     BOOST_TEST_MESSAGE("Loading from file " << filename);
     cube2 = loadCube(filename, doublePrecision).cube;
     BOOST_TEST_MESSAGE("Cube " << cubeName << " loaded from file.");
@@ -261,9 +263,9 @@ inline const string& randString(MersenneTwisterUniformRng& rng, const vector<str
 }
 inline bool randBoolean(MersenneTwisterUniformRng& rng) { return randInt(rng, 0, 1) == 1; }
 
-boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_ptr<EngineFactory>& factory) {
+QuantLib::ext::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, QuantLib::ext::shared_ptr<EngineFactory>& factory) {
 
-    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    QuantLib::ext::shared_ptr<Portfolio> portfolio(new Portfolio());
 
     vector<string> ccys = {"EUR", "USD", "GBP", "JPY", "CHF"};
 
@@ -331,15 +333,15 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
         bool isPayer = randBoolean(rng);
 
         // fixed Leg - with dummy rate
-        LegData fixedLeg(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy, fixedSchedule,
+        LegData fixedLeg(QuantLib::ext::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy, fixedSchedule,
                          fixDC, notional);
 
         // float Leg
         vector<double> spreads(1, 0);
-        LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spread), !isPayer, ccy,
+        LegData floatingLeg(QuantLib::ext::make_shared<FloatingLegData>(index, days, false, spread), !isPayer, ccy,
                             floatSchedule, floatDC, notional);
 
-        boost::shared_ptr<Trade> swap(new ore::data::Swap(env, floatingLeg, fixedLeg));
+        QuantLib::ext::shared_ptr<Trade> swap(new ore::data::Swap(env, floatingLeg, fixedLeg));
 
         // id
         oss.clear();
@@ -365,7 +367,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
         maturity += dc.yearFraction(today, trade->maturity());
 
         // fixed Freq
-        boost::shared_ptr<ore::data::Swap> swap = boost::dynamic_pointer_cast<ore::data::Swap>(trade);
+        QuantLib::ext::shared_ptr<ore::data::Swap> swap = QuantLib::ext::dynamic_pointer_cast<ore::data::Swap>(trade);
         string floatFreq = swap->legData()[0].schedule().rules().front().tenor();
         string fixFreq = swap->legData()[1].schedule().rules().front().tenor();
         QL_REQUIRE(swap->legData()[0].legType() == "Floating" && swap->legData()[1].legType() == "Fixed", "Leg mixup");
@@ -445,7 +447,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileIO) {
     Date d(1, QuantLib::Jan, 2016);        // need a real date here
     vector<Date> dates(100, d);
     Size samples = 1000;
-    auto c = boost::make_shared<DoublePrecisionInMemoryCube>(d, ids, dates, samples);
+    auto c = QuantLib::ext::make_shared<DoublePrecisionInMemoryCube>(d, ids, dates, samples);
     testCubeFileIO<DoublePrecisionInMemoryCube>(c, "DoublePrecisionInMemoryCube", 1e-14, true);
 }
 
@@ -455,7 +457,7 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionInMemoryCubeFileNIO) {
     vector<Date> dates(50, d);
     Size samples = 200;
     Size depth = 6;
-    auto c = boost::make_shared<DoublePrecisionInMemoryCubeN>(d, ids, dates, samples, depth);
+    auto c = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(d, ids, dates, samples, depth);
     testCubeFileIO<DoublePrecisionInMemoryCubeN>(c, "DoublePrecisionInMemoryCubeN", 1e-14, true);
 }
 
@@ -479,12 +481,12 @@ BOOST_AUTO_TEST_CASE(testSinglePrecisionJaggedCube) {
     Date today = Date(15, December, 2016);
     Settings::instance().evaluationDate() = today;
     string dateGridStr = "270,2W";
-    boost::shared_ptr<DateGrid> d = boost::make_shared<DateGrid>(dateGridStr);
+    QuantLib::ext::shared_ptr<DateGrid> d = QuantLib::ext::make_shared<DateGrid>(dateGridStr);
 
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
 
     // Init Market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<testsuite::TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<testsuite::TestMarket>(today);
 
     data->model("EuropeanSwaption") = "BlackBachelier";
     data->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
@@ -493,9 +495,9 @@ BOOST_AUTO_TEST_CASE(testSinglePrecisionJaggedCube) {
     data->model("FxOption") = "GarmanKohlhagen";
     data->engine("FxOption") = "AnalyticEuropeanEngine";
 
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, initMarket);
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(data, initMarket);
 
-    boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize, factory);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize, factory);
 
     Size samples = 10;
     JaggedCube<float> jaggedCube(today, portfolio, d->dates(), samples, depth);
@@ -513,12 +515,12 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionJaggedCube) {
     Date today = Date(15, December, 2016);
     Settings::instance().evaluationDate() = today;
     string dateGridStr = "270,2W";
-    boost::shared_ptr<DateGrid> d = boost::make_shared<DateGrid>(dateGridStr);
+    QuantLib::ext::shared_ptr<DateGrid> d = QuantLib::ext::make_shared<DateGrid>(dateGridStr);
 
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    QuantLib::ext::shared_ptr<EngineData> data = QuantLib::ext::make_shared<EngineData>();
 
     // Init Market
-    boost::shared_ptr<Market> initMarket = boost::make_shared<testsuite::TestMarket>(today);
+    QuantLib::ext::shared_ptr<Market> initMarket = QuantLib::ext::make_shared<testsuite::TestMarket>(today);
 
     data->model("EuropeanSwaption") = "BlackBachelier";
     data->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
@@ -527,14 +529,57 @@ BOOST_AUTO_TEST_CASE(testDoublePrecisionJaggedCube) {
     data->model("FxOption") = "GarmanKohlhagen";
     data->engine("FxOption") = "AnalyticEuropeanEngine";
 
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, initMarket);
+    QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(data, initMarket);
 
-    boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize, factory);
+    QuantLib::ext::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize, factory);
 
     Size samples = 10;
     JaggedCube<double> jaggedCube(today, portfolio, d->dates(), samples, depth);
     testCube(jaggedCube, "DoublePrecisionJaggedCube", 1e-5, portfolio, d);
     IndexManager::instance().clearHistories();
+}
+
+string writeCube(const QuantLib::ext::shared_ptr<NPVCube>& cube, Size bufferSize) {
+    auto report = QuantLib::ext::make_shared<InMemoryReport>(bufferSize);
+    ReportWriter().writeCube(*report, cube);
+    string fileName = boost::filesystem::unique_path().string();
+    report->toFile(fileName);
+    return fileName;
+}
+
+void diffFiles(string filename1, string filename2) {
+    std::ifstream ifs1(filename1);
+    std::ifstream ifs2(filename2);
+
+    std::istream_iterator<char> b1(ifs1), e1;
+    std::istream_iterator<char> b2(ifs2), e2;
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(b1, e1, b2, e2);
+}
+
+// Test the functionality of class InMemoryReport to cache data on disk
+BOOST_AUTO_TEST_CASE(testInMemoryReportBuffer) {
+
+    // Generate a cube
+    std::set<string> ids{string("id")}; // the overlap doesn't matter
+    vector<Date> dates(50, Date());
+    Size samples = 200;
+    Size depth = 6;
+    auto c = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(Date(), ids, dates, samples, depth);
+
+    // From the cube, generate multiple copies of the report, each of which which will have ~60K rows.
+    // Specify different values for the buffer size in InMemoryReport:
+    string filename_0 = writeCube(c, 0);            // no buffering
+    string filename_100 = writeCube(c, 100);
+    string filename_1000 = writeCube(c, 1000);
+    string filename_10000 = writeCube(c, 10000);
+    string filename_100000 = writeCube(c, 100000);  // buffer size > report size, resulting in no buffering
+
+    // Verify that buffering generates the same output as no buffering
+    diffFiles(filename_0, filename_100);
+    diffFiles(filename_0, filename_1000);
+    diffFiles(filename_0, filename_10000);
+    diffFiles(filename_0, filename_100000);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

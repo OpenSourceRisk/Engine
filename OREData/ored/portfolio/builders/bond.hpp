@@ -67,7 +67,7 @@ public:
     BondDiscountingEngineBuilder() : BondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
                                                         const bool hasCreditRisk, const string& securityId,
                                                         const string& referenceCurveId) override {
 
@@ -102,7 +102,7 @@ protected:
             dpts = Handle<DefaultProbabilityTermStructure>();
         }
 
-        return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod);
+        return QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod);
     }
 };
 
@@ -117,7 +117,7 @@ public:
         : BondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngineMultiState") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
                                                         const bool hasCreditRisk, const string& securityId,
                                                         const string& referenceCurveId) override {
         string tsperiodStr = engineParameter("TimestepPeriod");
@@ -185,9 +185,28 @@ protected:
         QL_REQUIRE(mainResultState != Null<Size>(),
                    "BondMultiStateEngineBuilder: No main state found for " << securityId << " / " << creditCurveId);
         // return engine
-        return boost::make_shared<QuantExt::DiscountingRiskyBondEngineMultiState>(yts, dpts, recovery, mainResultState,
+        return QuantLib::ext::make_shared<QuantExt::DiscountingRiskyBondEngineMultiState>(yts, dpts, recovery, mainResultState,
                                                                                   spread, tsperiod);
     }
+};
+
+class CamAmcBondEngineBuilder : public BondEngineBuilder {
+public:
+    CamAmcBondEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                            const std::vector<Date>& simulationDates)
+        : BondEngineBuilder("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
+
+protected:
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId, const bool hasCreditRisk,
+                           const string& securityId, const string& referenceCurveId) override;
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::ext::shared_ptr<QuantExt::LGM>& lgm,
+                                                   const Handle<YieldTermStructure>& discountCurve,
+                                                   const std::vector<Date>& simulationDates,
+                                                   const std::vector<Size>& externalModelIndices);
+    const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
 };
 
 } // namespace data

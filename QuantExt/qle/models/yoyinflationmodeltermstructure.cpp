@@ -26,7 +26,7 @@ using QuantLib::Time;
 
 namespace QuantExt {
 
-YoYInflationModelTermStructure::YoYInflationModelTermStructure(const boost::shared_ptr<CrossAssetModel>& model,
+YoYInflationModelTermStructure::YoYInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
                                                                Size index, bool indexIsInterpolated)
     : YoYInflationTermStructure(
           inflationTermStructure(model, index)->dayCounter(), inflationTermStructure(model, index)->baseRate(),

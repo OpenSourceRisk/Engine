@@ -19,9 +19,7 @@
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/observationmode.hpp>
-#include <orea/engine/parsensitivityanalysis.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
-#include <orea/engine/stresstest.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 
 using namespace ore::data;
@@ -49,7 +47,7 @@ void PricingAnalyticImpl::setUpConfigurations() {
 }
 
 void PricingAnalyticImpl::runAnalytic( 
-    const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
     const std::set<std::string>& runTypes) {
 
     Settings::instance().evaluationDate() = inputs_->asof();
@@ -78,7 +76,7 @@ void PricingAnalyticImpl::runAnalytic(
     analytic()->modifyPortfolio();
 
     for (const auto& type : analytic()->analyticTypes()) {
-        boost::shared_ptr<InMemoryReport> report = boost::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         InMemoryReport tmpReport;
         // skip analytics not requested
         if (runTypes.find(type) == runTypes.end())
@@ -86,26 +84,27 @@ void PricingAnalyticImpl::runAnalytic(
 
         std::string effectiveResultCurrency =
             inputs_->resultCurrency().empty() ? inputs_->baseCurrency() : inputs_->resultCurrency();
+        auto marketConfig = inputs_->marketConfig("pricing");
         if (type == "NPV") {
             CONSOLEW("Pricing: NPV Report");
             ReportWriter(inputs_->reportNaString())
-                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), inputs_->marketConfig("pricing"),
+                .writeNpv(*report, effectiveResultCurrency, analytic()->market(), marketConfig,
                           analytic()->portfolio());
             analytic()->reports()[type]["npv"] = report;
             CONSOLE("OK");
             if (inputs_->outputAdditionalResults()) {
                 CONSOLEW("Pricing: Additional Results");
-                boost::shared_ptr<InMemoryReport> addReport = boost::make_shared<InMemoryReport>();;
+                QuantLib::ext::shared_ptr<InMemoryReport> addReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());;
                 ReportWriter(inputs_->reportNaString())
                     .writeAdditionalResultsReport(*addReport, analytic()->portfolio(), analytic()->market(),
-                                                  effectiveResultCurrency);
+                                                  marketConfig, effectiveResultCurrency, inputs_->additionalResultsReportPrecision());
                 analytic()->reports()[type]["additional_results"] = addReport;
                 CONSOLE("OK");
             }
             if (inputs_->outputCurves()) {
                 CONSOLEW("Pricing: Curves Report");
                 LOG("Write curves report");
-                boost::shared_ptr<InMemoryReport> curvesReport = boost::make_shared<InMemoryReport>();
+                QuantLib::ext::shared_ptr<InMemoryReport> curvesReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 DateGrid grid(inputs_->curvesGrid());
                 std::string config = inputs_->curvesMarketConfig();
                 ReportWriter(inputs_->reportNaString())
@@ -117,7 +116,6 @@ void PricingAnalyticImpl::runAnalytic(
         }
         else if (type == "CASHFLOW") {
             CONSOLEW("Pricing: Cashflow Report");
-            string marketConfig = inputs_->marketConfig("pricing");
             ReportWriter(inputs_->reportNaString())
                 .writeCashflow(*report, effectiveResultCurrency, analytic()->portfolio(),
                                analytic()->market(),
@@ -127,7 +125,6 @@ void PricingAnalyticImpl::runAnalytic(
         }
         else if (type == "CASHFLOWNPV") {
             CONSOLEW("Pricing: Cashflow NPV report");
-            string marketConfig = inputs_->marketConfig("pricing");
             ReportWriter(inputs_->reportNaString())
                 .writeCashflow(tmpReport, effectiveResultCurrency, analytic()->portfolio(),
                                analytic()->market(),
@@ -138,35 +135,15 @@ void PricingAnalyticImpl::runAnalytic(
             analytic()->reports()[type]["cashflownpv"] = report;
             CONSOLE("OK");
         }
-        else if (type == "STRESS") {
-            CONSOLEW("Risk: Stress Test Report");
-            LOG("Stress Test Analysis called");
-            Settings::instance().evaluationDate() = inputs_->asof();
-            std::string marketConfig = inputs_->marketConfig("pricing");
-            std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
-            std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
-            boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
-                analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
-                inputs_->stressSimMarketParams(), inputs_->stressScenarioData(),
-                *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams, nullptr,
-                inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-                inputs_->continueOnError());
-            stressTest->writeReport(report, inputs_->stressThreshold());
-            analytic()->reports()[type]["stress"] = report;
-            CONSOLE("OK");
-        }
         else if (type == "SENSITIVITY") {
             CONSOLEW("Risk: Sensitivity Report");
             LOG("Sensi Analysis - Initialise");
             bool ccyConv = false;
             std::string configuration = inputs_->marketConfig("pricing");
-            boost::shared_ptr<SensitivityAnalysis> sensiAnalysis;
             if (inputs_->nThreads() == 1) {
                 LOG("Single-threaded sensi analysis");
-                std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders;
-                std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders;
-                sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
-                    analytic()->portfolio(), analytic()->market(), configuration, inputs_->pricingEngine(),
+                sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
+                    analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
                     inputs_->sensiRecalibrateModels(), analytic()->configurations().curveConfig,
                     analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
@@ -175,13 +152,8 @@ void PricingAnalyticImpl::runAnalytic(
             }
             else {
                 LOG("Multi-threaded sensi analysis");
-                std::function<std::map<std::string, boost::shared_ptr<ore::data::AbstractTradeBuilder>>(
-                    const boost::shared_ptr<ReferenceDataManager>&, const boost::shared_ptr<TradeFactory>&)>
-                    extraTradeBuilders = {};
-                std::function<std::vector<boost::shared_ptr<ore::data::EngineBuilder>>()> extraEngineBuilders = {};
-                std::function<std::vector<boost::shared_ptr<ore::data::LegBuilder>>()> extraLegBuilders = {};
-                sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
-                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), configuration,
+                sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
+                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), marketConfig,
                     inputs_->pricingEngine(), analytic()->configurations().simMarketParams,
                     analytic()->configurations().sensiScenarioData, inputs_->sensiRecalibrateModels(),
                     analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
@@ -190,45 +162,45 @@ void PricingAnalyticImpl::runAnalytic(
             }
             // FIXME: Why are these disabled?
             set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
-            boost::shared_ptr<ParSensitivityAnalysis> parAnalysis = nullptr;
             if (inputs_->parSensi() || inputs_->alignPillars()) {
-                parAnalysis= boost::make_shared<ParSensitivityAnalysis>(
+                parAnalysis_= QuantLib::ext::make_shared<ParSensitivityAnalysis>(
                     inputs_->asof(), analytic()->configurations().simMarketParams,
-                    *analytic()->configurations().sensiScenarioData, Market::defaultConfiguration,
+                    *analytic()->configurations().sensiScenarioData, "",
                     true, typesDisabled);
                 if (inputs_->alignPillars()) {
                     LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
-                    parAnalysis->alignPillars();
-                    sensiAnalysis->overrideTenors(true);
+                    parAnalysis_->alignPillars();
+                    sensiAnalysis_->overrideTenors(true);
                 } else {
                     LOG("Sensi analysis - skip aligning pillars");
                 }
             }
 
             LOG("Sensi analysis - generate");
-            sensiAnalysis->registerProgressIndicator(boost::make_shared<ProgressLog>("sensitivities", 100, oreSeverity::notice));
-            sensiAnalysis->generateSensitivities();
+            sensiAnalysis_->registerProgressIndicator(
+                QuantLib::ext::make_shared<ProgressLog>("sensitivities", 100, oreSeverity::notice));
+            sensiAnalysis_->generateSensitivities();
 
             LOG("Sensi analysis - write sensitivity report in memory");
-            auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
-            auto ss = boost::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCubes(), baseCurrency);
+            auto baseCurrency = sensiAnalysis_->simMarketData()->baseCcy();
+            auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(sensiAnalysis_->sensiCubes(), baseCurrency);
             ReportWriter(inputs_->reportNaString())
                 .writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
             analytic()->reports()[type]["sensitivity"] = report;
 
             LOG("Sensi analysis - write sensitivity scenario report in memory");
-            boost::shared_ptr<InMemoryReport> scenarioReport = boost::make_shared<InMemoryReport>();
+            QuantLib::ext::shared_ptr<InMemoryReport> scenarioReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ReportWriter(inputs_->reportNaString())
-                .writeScenarioReport(*scenarioReport, sensiAnalysis->sensiCubes(),
+                .writeScenarioReport(*scenarioReport, sensiAnalysis_->sensiCubes(),
                                      inputs_->sensiThreshold());
             analytic()->reports()[type]["sensitivity_scenario"] = scenarioReport;
 
-            auto simmSensitivityConfigReport = boost::make_shared<InMemoryReport>();
+            auto simmSensitivityConfigReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             ReportWriter(inputs_->reportNaString())
                 .writeSensitivityConfigReport(*simmSensitivityConfigReport,
-                                              sensiAnalysis->scenarioGenerator()->shiftSizes(),
-                                              sensiAnalysis->scenarioGenerator()->baseValues(),
-                                              sensiAnalysis->scenarioGenerator()->keyToFactor());
+                                              sensiAnalysis_->scenarioGenerator()->shiftSizes(),
+                                              sensiAnalysis_->scenarioGenerator()->baseValues(),
+                                              sensiAnalysis_->scenarioGenerator()->keyToFactor());
             analytic()->reports()[type]["sensitivity_config"] = simmSensitivityConfigReport;
 
             if (inputs_->parSensi()) {
@@ -237,34 +209,36 @@ void PricingAnalyticImpl::runAnalytic(
                 if (inputs_->optimiseRiskFactors()){
                     std::set<RiskFactorKey> collectRiskFactors;
                     // collect risk factors of all cubes ...
-                    for(auto const& c : sensiAnalysis->sensiCubes()){
+                    for (auto const& c : sensiAnalysis_->sensiCubes()) {
                         auto currentRF = c->relevantRiskFactors();
                         // ... and combine for the par analysis
                         collectRiskFactors.insert(currentRF.begin(), currentRF.end());
                     }
-                    parAnalysis->relevantRiskFactors() = collectRiskFactors;
+                    parAnalysis_->relevantRiskFactors() = collectRiskFactors;
                     LOG("optimiseRiskFactors active : parSensi risk factors set to zeroSensi risk factors");
                 }
-                parAnalysis->computeParInstrumentSensitivities(sensiAnalysis->simMarket());
-                boost::shared_ptr<ParSensitivityConverter> parConverter =
-                    boost::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
-                auto parCube = boost::make_shared<ZeroToParCube>(sensiAnalysis->sensiCubes(), parConverter, typesDisabled, true);
+                parAnalysis_->computeParInstrumentSensitivities(sensiAnalysis_->simMarket());
+                QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
+                    QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis_->parSensitivities(),
+                                                                        parAnalysis_->shiftSizes());
+                auto parCube = QuantLib::ext::make_shared<ZeroToParCube>(sensiAnalysis_->sensiCubes(), parConverter,
+                                                                         typesDisabled, true);
                 LOG("Sensi analysis - write par sensitivity report in memory");
-                boost::shared_ptr<ParSensitivityCubeStream> pss =
-                    boost::make_shared<ParSensitivityCubeStream>(parCube, baseCurrency);
+                QuantLib::ext::shared_ptr<ParSensitivityCubeStream> pss =
+                    QuantLib::ext::make_shared<ParSensitivityCubeStream>(parCube, baseCurrency);
                 // If the stream is going to be reused - wrap it into a buffered stream to gain some
                 // performance. The cost for this is the memory footpring of the buffer.
-                boost::shared_ptr<InMemoryReport> parSensiReport = boost::make_shared<InMemoryReport>();
+                QuantLib::ext::shared_ptr<InMemoryReport> parSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                 ReportWriter(inputs_->reportNaString())
                     .writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold());
                 analytic()->reports()[type]["par_sensitivity"] = parSensiReport;
 
                 if (inputs_->outputJacobi()) {
-                    boost::shared_ptr<InMemoryReport> jacobiReport = boost::make_shared<InMemoryReport>();
-                    writeParConversionMatrix(parAnalysis->parSensitivities(), *jacobiReport);
+                    QuantLib::ext::shared_ptr<InMemoryReport> jacobiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+                    writeParConversionMatrix(parAnalysis_->parSensitivities(), *jacobiReport);
                     analytic()->reports()[type]["jacobi"] = jacobiReport;
                     
-                    boost::shared_ptr<InMemoryReport> jacobiInverseReport = boost::make_shared<InMemoryReport>();
+                    QuantLib::ext::shared_ptr<InMemoryReport> jacobiInverseReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
                     parConverter->writeConversionMatrix(*jacobiInverseReport);
                     analytic()->reports()[type]["jacobi_inverse"] = jacobiInverseReport;
                 }

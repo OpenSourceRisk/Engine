@@ -1,6 +1,7 @@
 /*
  Copyright (C) 2016-2022 Quaternion Risk Management Ltd
  Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
+ Copyright (C) 2023 Oleg Kulkov
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -26,26 +27,29 @@ using namespace std;
 namespace ore {
 namespace data {
 
-std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> TradeFactory::getBuilders() const {
+std::map<std::string, QuantLib::ext::shared_ptr<AbstractTradeBuilder>> TradeFactory::getBuilders() const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return builders_;
 }
 
-boost::shared_ptr<AbstractTradeBuilder> TradeFactory::getBuilder(const std::string& className) const {
+QuantLib::ext::shared_ptr<AbstractTradeBuilder> TradeFactory::getBuilder(const std::string& className) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto b = builders_.find(className);
     QL_REQUIRE(b != builders_.end(), "TradeFactory::getBuilder(" << className << "): no builder found");
     return b->second;
 }
 
-void TradeFactory::addBuilder(const std::string& className, const boost::shared_ptr<AbstractTradeBuilder>& builder,
+void TradeFactory::addBuilder(const std::string& className, const QuantLib::ext::shared_ptr<AbstractTradeBuilder>& builder,
                               const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    QL_REQUIRE(builders_.insert(std::make_pair(className, builder)).second || allowOverwrite,
-               "TradeFactory: duplicate builder for className '" << className << "'.");
+    {
+        auto [it, ins] = builders_.try_emplace(className, builder);
+        if (!ins) QL_REQUIRE(allowOverwrite && (it->second = builder),
+                       "TradeFactory: duplicate builder for className '" << className << "'.");
+    }
 }
 
-boost::shared_ptr<Trade> TradeFactory::build(const string& className) const { return getBuilder(className)->build(); }
+QuantLib::ext::shared_ptr<Trade> TradeFactory::build(const string& className) const { return getBuilder(className)->build(); }
 
 } // namespace data
 } // namespace ore

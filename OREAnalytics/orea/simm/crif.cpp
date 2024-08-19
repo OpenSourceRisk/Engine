@@ -20,6 +20,7 @@
     \brief Struct for holding CRIF records
 */
 
+#include <algorithm>
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm_ext.hpp>
@@ -38,18 +39,19 @@ namespace analytics {
 auto isSimmParameter = [](const ore::analytics::CrifRecord& x) { return x.isSimmParameter(); };
 auto isNotSimmParameter = std::not_fn(isSimmParameter);
 
-void Crif::addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies, bool sortFxVolQualifer) {
+void Crif::addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies, bool sortFxVolQualifer,
+                     bool aggregateRegulations) {
     if (record.type() == CrifRecord::RecordType::FRTB) {
-        addFrtbCrifRecord(record, aggregateDifferentAmountCurrencies, sortFxVolQualifer);
+        addFrtbCrifRecord(record, aggregateDifferentAmountCurrencies, sortFxVolQualifer, aggregateRegulations);
     } else if (record.type() == CrifRecord::RecordType::SIMM && !record.isSimmParameter()) {
-        addSimmCrifRecord(record, aggregateDifferentAmountCurrencies, sortFxVolQualifer);
+        addSimmCrifRecord(record, aggregateDifferentAmountCurrencies, sortFxVolQualifer, aggregateRegulations);
     } else {
         addSimmParameterRecord(record);
     }
 }
 
-void Crif::addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies,
-                             bool sortFxVolQualifer) {
+void Crif::addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies, bool sortFxVolQualifer,
+                             bool aggregateRegulations) {
     QL_REQUIRE(type_ == CrifType::Empty || type_ == CrifType::Frtb, "Can not add a FRTB crif record to a SIMM Crif");
     if (type_ == CrifType::Empty) {
         type_ = CrifType::Frtb;
@@ -57,8 +59,8 @@ void Crif::addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAm
     insertCrifRecord(record, aggregateDifferentAmountCurrencies);
 }
 
-void Crif::addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies,
-                             bool sortFxVolQualifer) {
+void Crif::addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies, bool sortFxVolQualifer,
+                             bool aggregateRegulations) {
     QL_REQUIRE(type_ == CrifType::Empty || type_ == CrifType::Simm, "Can not add a Simm crif record to a Frtb Crif");
     if (type_ == CrifType::Empty) {
         type_ = CrifType::Simm;
@@ -71,32 +73,37 @@ void Crif::addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAm
             ccy_1.swap(ccy_2);
         recordToAdd.qualifier = ccy_1 + ccy_2;
     }
-    insertCrifRecord(recordToAdd, aggregateDifferentAmountCurrencies);
+    insertCrifRecord(recordToAdd, aggregateDifferentAmountCurrencies, aggregateRegulations);
 }
 
-void Crif::insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies) {
+void Crif::insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies,
+                            bool aggregateRegulations) {
 
-    auto it = records_.find(record);
-    if (aggregateDifferentAmountCurrencies) {
-        it = std::find_if(records_.begin(), records_.end(),
-                          [&record](const auto& x) { return CrifRecord::amountCcyEQCompare(x, record); });
-    }
+    CrifRecord newRecord = record;
+    if (aggregate_ && newRecord.imModel != "Schedule")
+        newRecord.tradeId = "";
+
+    auto it = aggregateDifferentAmountCurrencies
+                  ? (aggregateRegulations ? records_.find(newRecord, CrifRecord::amountCcyRegsLTCompare)
+                                          : records_.find(newRecord, CrifRecord::amountCcyLTCompare))
+                  : records_.find(newRecord);
+
     if (it == records_.end()) {
-        records_.insert(record);
-        portfolioIds_.insert(record.portfolioId);
-        nettingSetDetails_.insert(record.nettingSetDetails);
+        records_.insert(newRecord);
+        nettingSetDetails_.insert(newRecord.nettingSetDetails);
     } else {
-        updateAmountExistingRecord(it, record);
+        updateAmountExistingRecord(it, newRecord);
     }
 }
 
 void Crif::addSimmParameterRecord(const CrifRecord& record) {
     auto it = records_.find(record);
     if (it == records_.end()) {
-        records_.insert(record);
+        CrifRecord newRecord = record;
+        records_.insert(newRecord);
     } else if (it->riskType == CrifRecord::RiskType::AddOnFixedAmount) {
         updateAmountExistingRecord(it, record);
-    } else if (it->riskType == CrifRecord::RiskType::AddOnNotionalFactor &&
+    } else if (it->riskType == CrifRecord::RiskType::AddOnNotionalFactor ||
                it->riskType == CrifRecord::RiskType::ProductClassMultiplier) {
         // Only log warning if the values are not the same. If they are, then there is no material discrepancy.
         if (record.amount != it->amount) {
@@ -109,7 +116,7 @@ void Crif::addSimmParameterRecord(const CrifRecord& record) {
     }
 }
 
-void Crif::updateAmountExistingRecord(std::set<CrifRecord>::iterator& it, const CrifRecord& record) {
+void Crif::updateAmountExistingRecord(CrifRecordContainer::nth_index_iterator<0>::type it, const CrifRecord& record) {
     bool updated = false;
     if (record.hasAmountUsd()) {
         it->amountUsd += record.amountUsd;
@@ -127,13 +134,15 @@ void Crif::updateAmountExistingRecord(std::set<CrifRecord>::iterator& it, const 
         DLOG("Updated net CRIF records: " << *it)
 }
 
-void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies, bool sortFxVolQualifer) {
+void Crif::addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies, bool sortFxVolQualifer,
+                      bool aggregateRegulations) {
     for (const auto& r : crif.records_) {
-        addRecord(r, aggregateDifferentAmountCurrencies, sortFxVolQualifer);
+        addRecord(r, aggregateDifferentAmountCurrencies, sortFxVolQualifer, aggregateRegulations);
     }
 }
 
-Crif Crif::aggregate() const {
+Crif Crif::aggregate(bool aggregateDifferentAmountCurrencies, bool aggregateRegulations) const {
+    aggregate_ = true;
     Crif result;
     for (auto cr : records_) {
         // We set the trade ID to an empty string because we are netting at portfolio level
@@ -142,7 +151,7 @@ Crif Crif::aggregate() const {
         if (cr.imModel != "Schedule") {
             cr.tradeId = "";
         }
-        result.addRecord(cr);
+        result.addRecord(cr, aggregateDifferentAmountCurrencies, aggregateRegulations);
     }
     return result;
 }
@@ -169,8 +178,8 @@ Crif Crif::simmParameters() const {
     return results;
 }
 //! Find first element
-std::set<CrifRecord>::const_iterator Crif::findBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc,
-                                                  const CrifRecord::RiskType rt, const std::string& qualifier) const {
+CrifRecordContainer::const_iterator Crif::findBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc,
+                                                 const CrifRecord::RiskType rt, const std::string& qualifier) const {
     return std::find_if(records_.begin(), records_.end(), [&nsd, &pc, &rt, &qualifier](const CrifRecord& record) {
         return record.nettingSetDetails == nsd && record.productClass == pc && record.riskType == rt &&
                record.qualifier == qualifier;
@@ -294,7 +303,12 @@ void Crif::setCrifRecords(const Crif& crif) {
 }
 
 //! Give back the set of portfolio IDs that have been loaded
-const std::set<std::string>& Crif::portfolioIds() const { return portfolioIds_; }
+set<string> Crif::portfolioIds() const {
+    return boost::copy_range<set<string>>(records_ | boost::adaptors::transformed([](const CrifRecord& r) {
+                                              return r.nettingSetDetails.nettingSetId();
+                                          }));
+}
+
 const std::set<NettingSetDetails>& Crif::nettingSetDetails() const { return nettingSetDetails_; }
 
 std::set<CrifRecord::ProductClass> Crif::ProductClassesByNettingSetDetails(const NettingSetDetails nsd) const {
@@ -324,33 +338,29 @@ bool Crif::hasNettingSetDetails() const {
     return hasNettingSetDetails;
 }
 
-void Crif::fillAmountUsd(const boost::shared_ptr<ore::data::Market> market) {
+void Crif::fillAmountUsd(const QuantLib::ext::shared_ptr<ore::data::Market> market) {
     if (!market) {
         WLOG("CrifLoader::fillAmountUsd() was called, but market object is empty.")
         return;
     }
-    std::set<CrifRecord> results;
 
-    for (const CrifRecord& r : records_) {
-        auto cr = r;
+    for (auto it = records_.begin(); it != records_.end(); it++) {
         // Fill in amount USD if it is missing and if CRIF record requires it (i.e. if it has amount and amount
         // currency, and risk type is neither AddOnNotionalFactor or ProductClassMultiplier)
-        if (cr.requiresAmountUsd() && !cr.hasAmountUsd()) {
-            if (!cr.hasAmount() || !cr.hasAmountCcy()) {
+        if (it->requiresAmountUsd() && !it->hasAmountUsd()) {
+            if (!it->hasAmount() || !it->hasAmountCcy()) {
                 ore::data::StructuredTradeWarningMessage(
-                    cr.tradeId, cr.tradeType, "Populating CRIF amount USD",
+                    it->tradeId, it->tradeType, "Populating CRIF amount USD",
                     "CRIF record is missing one of Amount and AmountCurrency, and there is no amountUsd value to "
                     "fall back to: " +
-                        ore::data::to_string(cr))
+                        ore::data::to_string(*it))
                     .log();
             } else {
-                double usdSpot = market->fxRate(cr.amountCurrency + "USD")->value();
-                cr.amountUsd = cr.amount * usdSpot;
+                double usdSpot = market->fxRate(it->amountCurrency + "USD")->value();
+                it->amountUsd = it->amount * usdSpot;
             }
         }
-        results.insert(cr);
     }
-    records_ = results;
 }
 
 } // namespace analytics

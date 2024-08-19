@@ -120,17 +120,17 @@ Real CommodityIndex::forecastFixing(const Date& fixingDate) const {
         return curve_->price(fixingDate);
 }
 
-boost::shared_ptr<CommodityIndex> CommoditySpotIndex::clone(const Date& expiryDate,
+QuantLib::ext::shared_ptr<CommodityIndex> CommoditySpotIndex::clone(const Date& expiryDate,
                                                             const boost::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
-    return boost::make_shared<CommoditySpotIndex>(underlyingName(), fixingCalendar(), pts);
+    return QuantLib::ext::make_shared<CommoditySpotIndex>(underlyingName(), fixingCalendar(), pts);
 }
 
-boost::shared_ptr<CommodityIndex> CommodityFuturesIndex::clone(const Date& expiry,
+QuantLib::ext::shared_ptr<CommodityIndex> CommodityFuturesIndex::clone(const Date& expiry,
                                                                const boost::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
-    return boost::make_shared<CommodityFuturesIndex>(underlyingName(), ed, fixingCalendar(), keepDays(), pts);
+    return QuantLib::ext::make_shared<CommodityFuturesIndex>(underlyingName(), ed, fixingCalendar(), keepDays(), pts);
 }
 
 } // namespace QuantExt

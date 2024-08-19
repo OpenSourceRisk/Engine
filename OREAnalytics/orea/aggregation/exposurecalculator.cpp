@@ -31,9 +31,9 @@ namespace ore {
 namespace analytics {
 
 ExposureCalculator::ExposureCalculator(
-    const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<NPVCube>& cube,
-    const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
-    const boost::shared_ptr<Market>& market,
+    const QuantLib::ext::shared_ptr<Portfolio>& portfolio, const QuantLib::ext::shared_ptr<NPVCube>& cube,
+    const QuantLib::ext::shared_ptr<CubeInterpretation> cubeInterpretation,
+    const QuantLib::ext::shared_ptr<Market>& market,
     bool exerciseNextBreak, const string& baseCurrency, const string& configuration,
     const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
     const bool flipViewXVA)
@@ -47,11 +47,11 @@ ExposureCalculator::ExposureCalculator(
     QL_REQUIRE(portfolio_, "portfolio is null");
 
     if (multiPath) {
-        exposureCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(
+        exposureCube_ = QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(
             market->asofDate(), portfolio_->ids(), dates_,
             cube_->samples(), EXPOSURE_CUBE_DEPTH);// EPE, ENE, allocatedEPE, allocatedENE
     } else {
-        exposureCube_ = boost::make_shared<DoublePrecisionInMemoryCubeN>(
+        exposureCube_ = QuantLib::ext::make_shared<DoublePrecisionInMemoryCubeN>(
             market->asofDate(), portfolio_->ids(), dates_,
             1, EXPOSURE_CUBE_DEPTH);// EPE, ENE, allocatedEPE, allocatedENE
     }
@@ -154,16 +154,16 @@ void ExposureCalculator::build() {
                 Real negativeCashFlow = cubeInterpretation_->getMporNegativeFlows(cube_, i, j, k);
                 //for single trade exposures, always default value is relevant
                 Real npv = defaultValue;
-                epe[j + 1] += max(npv, 0.0) / cube_->samples();
-                ene[j + 1] += max(-npv, 0.0) / cube_->samples();
+                epe[j + 1] += std::max(npv, 0.0) / cube_->samples();
+                ene[j + 1] += std::max(-npv, 0.0) / cube_->samples();
                 nettingSetDefaultValue_[nettingSetId][j][k] += defaultValue;
                 nettingSetCloseOutValue_[nettingSetId][j][k] += closeOutValue;
                 nettingSetMporPositiveFlow_[nettingSetId][j][k] += positiveCashFlow;
                 nettingSetMporNegativeFlow_[nettingSetId][j][k] += negativeCashFlow;
                 distribution[k] = npv;
                 if (multiPath_) {
-                    exposureCube_->set(max(npv, 0.0), tradeId, d, k, ExposureIndex::EPE);
-                    exposureCube_->set(max(-npv, 0.0), tradeId, d, k, ExposureIndex::ENE);
+                    exposureCube_->set(std::max(npv, 0.0), tradeId, d, k, ExposureIndex::EPE);
+                    exposureCube_->set(std::max(-npv, 0.0), tradeId, d, k, ExposureIndex::ENE);
                 }
             }
             if (!multiPath_) {

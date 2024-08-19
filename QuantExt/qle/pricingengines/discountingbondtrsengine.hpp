@@ -39,7 +39,9 @@ namespace QuantExt {
 */
 class DiscountingBondTRSEngine : public QuantExt::BondTRS::engine {
 public:
-    DiscountingBondTRSEngine(const Handle<YieldTermStructure>& discountCurve);
+    DiscountingBondTRSEngine(const Handle<YieldTermStructure>& discountCurve,
+                             const bool treatSecuritySpreadAsCreditSpread,
+                             const bool survivalWeightedFundingReturnCashflows);
 
     void calculate() const override;
 
@@ -50,5 +52,7 @@ private:
                           const Handle<YieldTermStructure>& discountCurve) const;
 
     const Handle<YieldTermStructure> discountCurve_;
+    bool treatSecuritySpreadAsCreditSpread_;
+    bool survivalWeightedFundingReturnCashflows_;
 };
 } // namespace QuantExt

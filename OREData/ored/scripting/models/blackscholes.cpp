@@ -42,15 +42,15 @@ BlackScholes::BlackScholes(const Size paths, const std::string& currency, const 
 BlackScholes::BlackScholes(
     const Size paths, const std::vector<std::string>& currencies, const std::vector<Handle<YieldTermStructure>>& curves,
     const std::vector<Handle<Quote>>& fxSpots,
-    const std::vector<std::pair<std::string, boost::shared_ptr<InterestRateIndex>>>& irIndices,
-    const std::vector<std::pair<std::string, boost::shared_ptr<ZeroInflationIndex>>>& infIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>>& irIndices,
+    const std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<ZeroInflationIndex>>>& infIndices,
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const Handle<BlackScholesModelWrapper>& model,
     const std::map<std::pair<std::string, std::string>, Handle<QuantExt::CorrelationTermStructure>>& correlations,
     const McParams& mcParams, const std::set<Date>& simulationDates, const IborFallbackConfig& iborFallbackConfig,
     const std::string& calibration, const std::map<std::string, std::vector<Real>>& calibrationStrikes)
     : BlackScholesBase(paths, currencies, curves, fxSpots, irIndices, infIndices, indices, indexCurrencies, model,
-                       correlations, mcParams, simulationDates, iborFallbackConfig),
+                       correlations, mcParams, simulationDates, iborFallbackConfig, SalvagingAlgorithm::None),
       calibration_(calibration), calibrationStrikes_(calibrationStrikes) {}
 
 void BlackScholes::performCalculations() const {
@@ -245,7 +245,7 @@ void BlackScholes::performCalculations() const {
 }
 
 void BlackScholes::populatePathValues(const Size nSamples, std::map<Date, std::vector<RandomVariable>>& paths,
-                                      const boost::shared_ptr<MultiPathVariateGeneratorBase>& gen,
+                                      const QuantLib::ext::shared_ptr<MultiPathVariateGeneratorBase>& gen,
                                       const std::vector<Array>& drift, const std::vector<Matrix>& sqrtCov) const {
 
     std::vector<std::vector<RandomVariable*>> rvs(indices_.size(),
@@ -282,7 +282,7 @@ void BlackScholes::populatePathValues(const Size nSamples, std::map<Date, std::v
 namespace {
 struct comp {
     comp(const std::string& indexInput) : indexInput_(indexInput) {}
-    template <typename T> bool operator()(const std::pair<IndexInfo, boost::shared_ptr<T>>& p) const {
+    template <typename T> bool operator()(const std::pair<IndexInfo, QuantLib::ext::shared_ptr<T>>& p) const {
         return p.first.name() == indexInput_;
     }
     const std::string indexInput_;

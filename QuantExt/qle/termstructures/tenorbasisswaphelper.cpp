@@ -25,8 +25,8 @@
 namespace QuantExt {
 
 TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor,
-                                           const boost::shared_ptr<IborIndex> payIndex,
-                                           const boost::shared_ptr<IborIndex> receiveIndex,
+                                           const QuantLib::ext::shared_ptr<IborIndex> payIndex,
+                                           const QuantLib::ext::shared_ptr<IborIndex> receiveIndex,
                                            const Handle<YieldTermStructure>& discountingCurve, bool spreadOnRec,
                                            bool includeSpread, const Period& payFrequency, const Period& recFrequency,
                                            const bool telescopicValueDates, QuantExt::SubPeriodsCoupon1::Type type)
@@ -62,14 +62,17 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
 
         */
 
-       setDiscountRelinkableHandle_ = false;
+       automaticDiscountRelinkableHandle_ = false;
 
        bool payGiven = !payIndex_->forwardingTermStructure().empty();
        bool recGiven = !receiveIndex_->forwardingTermStructure().empty();
        bool discountGiven = !discountHandle_.empty();
 
-       boost::shared_ptr<OvernightIndex> payIndexON = boost::dynamic_pointer_cast<OvernightIndex>(payIndex_);
-       boost::shared_ptr<OvernightIndex> recIndexON = boost::dynamic_pointer_cast<OvernightIndex>(receiveIndex_);
+       QuantLib::ext::shared_ptr<OvernightIndex> payIndexON = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(payIndex_);
+       QuantLib::ext::shared_ptr<OvernightIndex> recIndexON = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(receiveIndex_);
+
+       if(discountGiven)
+           discountRelinkableHandle_.linkTo(*discountHandle_);
 
        if (!payGiven && !recGiven && !discountGiven) {
            // case 0
@@ -79,31 +82,33 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
            QL_FAIL("no index curve given");
        } else if (!payGiven && recGiven && !discountGiven) {
            // case 2
-           payIndex_ = boost::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
+           payIndex_ = QuantLib::ext::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
            payIndex_->unregisterWith(termStructureHandle_);
-           if (!payIndexON && recIndexON)
+           if (!payIndexON && recIndexON) {
                discountRelinkableHandle_.linkTo(*receiveIndex_->forwardingTermStructure());
-           else
-               setDiscountRelinkableHandle_ = true;
+           } else {
+               automaticDiscountRelinkableHandle_ = true;
+           }
        } else if (!payGiven && recGiven && discountGiven) {
            // case 3
-           payIndex_ = boost::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
+           payIndex_ = QuantLib::ext::static_pointer_cast<IborIndex>(payIndex_->clone(termStructureHandle_));
            payIndex_->unregisterWith(termStructureHandle_);
        } else if (payGiven && !recGiven && !discountGiven) {
            // case 4
-           receiveIndex_ = boost::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
+           receiveIndex_ = QuantLib::ext::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
            receiveIndex_->unregisterWith(termStructureHandle_);
-           if (payIndexON && !recIndexON)
+           if (payIndexON && !recIndexON) {
                discountRelinkableHandle_.linkTo(*payIndex_->forwardingTermStructure());
-           else
-               setDiscountRelinkableHandle_ = true;
+           } else {
+               automaticDiscountRelinkableHandle_ = true;
+           }
        } else if (payGiven && !recGiven && discountGiven) {
            // case 5
-           receiveIndex_ = boost::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
+           receiveIndex_ = QuantLib::ext::static_pointer_cast<IborIndex>(receiveIndex_->clone(termStructureHandle_));
            receiveIndex_->unregisterWith(termStructureHandle_);
        } else if (payGiven && recGiven && !discountGiven) {
            // case 6
-           setDiscountRelinkableHandle_ = true;
+           automaticDiscountRelinkableHandle_ = true;
        } else if (payGiven && recGiven && discountGiven) {
            // case 7
            QL_FAIL("Both Index and the Discount curves are all given");
@@ -120,8 +125,7 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
 
 void TenorBasisSwapHelper::initializeDates() {
 
-    //CHECK : should the spot shift be based on pay ore receive, here we have the pay leg...
-    boost::shared_ptr<Libor> payIndexAsLibor = boost::dynamic_pointer_cast<Libor>(payIndex_);
+    QuantLib::ext::shared_ptr<Libor> payIndexAsLibor = QuantLib::ext::dynamic_pointer_cast<Libor>(payIndex_);
     Calendar spotCalendar = payIndexAsLibor != NULL ? payIndexAsLibor->jointCalendar() : payIndex_->fixingCalendar();
     Natural spotDays = payIndex_->fixingDays();
 
@@ -132,22 +136,22 @@ void TenorBasisSwapHelper::initializeDates() {
 
     Date effectiveDate = spotCalendar.advance(valuationDate, spotDays * Days);
 
-    swap_ = boost::shared_ptr<TenorBasisSwap>(new TenorBasisSwap(
-        effectiveDate, 1.0, swapTenor_, payIndex_, 0.0, payFrequency_, receiveIndex_, 0.0, recFrequency_,
-        DateGeneration::Backward, includeSpread_, spreadOnRec_, type_, telescopicValueDates_));
+    swap_ = QuantLib::ext::make_shared<TenorBasisSwap>(effectiveDate, 1.0, swapTenor_, payIndex_, 0.0, payFrequency_,
+                                                       receiveIndex_, 0.0, recFrequency_, DateGeneration::Backward,
+                                                       includeSpread_, spreadOnRec_, type_, telescopicValueDates_);
 
-    boost::shared_ptr<PricingEngine> engine(new DiscountingSwapEngine(discountRelinkableHandle_));
+    auto engine = QuantLib::ext::make_shared<DiscountingSwapEngine>(discountRelinkableHandle_);
     swap_->setPricingEngine(engine);
 
     earliestDate_ = swap_->startDate();
     latestDate_ = swap_->maturityDate();
 
-    boost::shared_ptr<FloatingRateCoupon> lastFloating = boost::dynamic_pointer_cast<FloatingRateCoupon>(
+    QuantLib::ext::shared_ptr<FloatingRateCoupon> lastFloating = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(
         termStructureHandle_ == receiveIndex_->forwardingTermStructure() ? swap_->recLeg().back()
                                                                        : swap_->payLeg().back());
     if (IborCoupon::Settings::instance().usingAtParCoupons()) {
         /* Subperiods coupons do not have a par approximation either... */
-        if (boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastFloating)) {
+        if (QuantLib::ext::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastFloating)) {
             Date fixingValueDate = receiveIndex_->valueDate(lastFloating->fixingDate());
             Date endValueDate = receiveIndex_->maturityDate(fixingValueDate);
             latestDate_ = std::max(latestDate_, endValueDate);
@@ -165,13 +169,11 @@ void TenorBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
 
     bool observer = false;
 
-    boost::shared_ptr<YieldTermStructure> temp(t, null_deleter());
+    QuantLib::ext::shared_ptr<YieldTermStructure> temp(t, null_deleter());
     termStructureHandle_.linkTo(temp, observer);
 
-    if (setDiscountRelinkableHandle_)
+    if (automaticDiscountRelinkableHandle_)
         discountRelinkableHandle_.linkTo(temp, observer);
-    else
-        discountRelinkableHandle_.linkTo(*discountHandle_, observer);
 
     RelativeDateRateHelper::setTermStructure(t);
 }

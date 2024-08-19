@@ -258,6 +258,7 @@ node is shown in Listing \ref{lst:ois_conventions}.
   <FixedPaymentConvention> </FixedPaymentConvention>
   <Rule> </Rule>
   <PaymentCalendar> </PaymentCalendar>
+  <RateCutoff> </RateCutoff>
 </OIS>
 \end{minted}
 \caption{OIS conventions}
@@ -285,6 +286,11 @@ defaults to \emph{Following}.
 not provided, this defaults to \emph{Backward}.
 \item PaymentCalendar [Optional]: The business day calendar used for determining coupon payment dates.
 If not specified, this defaults to the fixing calendar defined on the overnight index.
+\item RateCutoff: The rate cut-off on the overnight leg. Generally, the overnight fixing
+is only observed up to a certain number of days before the end of the interest period date.
+The last observed rate is applied for the remaining days in the period.
+This rate cut-off gives the number of days e.g.\ 1 for ESTR or SOFR.
+If not specified, this defaults to 0 days.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -474,6 +480,8 @@ structure of this node is shown in Listing \ref{lst:fx_conventions}.
   <PointsFactor> </PointsFactor>
   <AdvanceCalendar> </AdvanceCalendar>
   <SpotRelative> </SpotRelative>
+  <EOM> </EOM>
+  <Convention> </Convention>
 </FX>
 \end{minted}
 \caption{FX conventions}
@@ -494,6 +502,8 @@ not provided, it defaults to a calendar with no holidays.
 \item SpotRelative [Optional]: \emph{True} if the forward tenor is to be interpreted as being relative to the spot date.
 \emph{False} if the forward tenor is to be interpreted as being relative to the valuation date. If not provided, it
 defaults to \emph{True}.
+\item EOM [Optional]: A flag indicating whether the end of month roll convention is to be used for FX forward quotes. If not provided, it defaults to \emph{False}.
+\item Convention [Optional]: The business day convention used when advancing dates. If not provided, it defaults to \emph{Following}.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -855,6 +865,67 @@ AtmDeltaNeutral, AtmVegaMax, AtmGammaMax, AtmPutCall50}).
 \item RiskReversalInFavorOf [Optional]: Call (default), Put. Only relevant for BF, RR market data input.
 \item ButterflyStyle [Optional]: Broker (default), Smile. Only relevant for BF, RR market data input.
 \end{itemize} 
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{FX Option Time Weighting Scheme}\label{sss:fx_option_timeweighting}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \emph{FxOption} is used to store conventions for FX option quotes for a given currency pair. The
+structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<FxOptionTimeWeighting>
+  <Id>USD-JPY-FXOPTION-TIMEWEIGHTING</Id>
+  <!-- Priorities:
+             1 Weekend (Saturday, Sunday)
+             2 Event
+             3 Trading Center (product of weights if several apply)
+             4 Weekday (Monday to Friday) -->
+  <WeekDayWeights>
+    <Monday>1.0</Monday>
+    <Tuesday>1.0</Tuesday>
+    <Wednesday>1.0</Wednesday>
+    <Thursday>1.0</Thursday>
+    <Friday>1.0</Friday>
+    <Saturday>0.3</Saturday>
+    <Sunday>0.3</Sunday>
+  </WeekDayWeights>
+  <TradingCenters>
+    <TradingCenter>
+      <Name>JP,US</Name>
+      <Calendar>NY,JPY</Calendar>
+      <Weight>0.5</Weight>
+    </TradingCenter>
+  </TradingCenters>
+  <Events>
+    <Event>
+      <Description>US Election</Description>
+      <Date>2024-11-06</Date>
+      <Weight>8.0</Weight>
+    </Event>
+  </Events>
+</FxOptionTimeWeighting>
+\end{minted}
+\caption{FX option time weighting scheme}
+\label{lst:fx_option_timeweighting}
+\end{listing}
+
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item WeekDayWeights: Specifies weights to be applied to weekdays
+\item TradingCenters: Zero, one or more trading centers specified by a calendar and a weight per trading center
+\item Events: Zero, one or more dates, on which special weights apply
+\end{itemize}
+
+To determine a weight for a given day exactly one of the following rules is applied, with priority from top to bottom:
+
+\begin{itemize}
+\item If a day falls on a weekend, the weight for Saturday, Sunday from WeekDayWeights is applied to the day.
+\item If a day is in the event list, the weight for that date is applied.
+\item If a day is a holiday in one or more trading centers, the product of the weights of these trading centers is applied.
+\item Otherwise, the weight for the weekday (Monday to Friday) is applied.
+\end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{Commodity Forward Conventions}

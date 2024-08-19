@@ -17,8 +17,10 @@
 */
 
 #include <orea/scenario/historicalscenariogenerator.hpp>
+#include <orea/scenario/scenarioutilities.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/scenario/zerotoparscenariogenerator.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -164,16 +166,18 @@ void ReturnConfiguration::check(const RiskFactorKey& key) const {
 }
 
 HistoricalScenarioGenerator::HistoricalScenarioGenerator(
-    const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
-    const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const QuantLib::Calendar& cal,
-    const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const Size mporDays,
-    const bool overlapping, const ReturnConfiguration& returnConfiguration,
-    const std::string& labelPrefix)
+    const QuantLib::ext::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
+    const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory, const QuantLib::Calendar& cal,
+    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const Size mporDays,
+    const bool overlapping, const ReturnConfiguration& returnConfiguration, const std::string& labelPrefix,
+    const bool generateDifferenceScenarios)
     : i_(0), historicalScenarioLoader_(historicalScenarioLoader), scenarioFactory_(scenarioFactory), 
       cal_(cal), mporDays_(mporDays), adjFactors_(adjFactors), overlapping_(overlapping),
-      returnConfiguration_(returnConfiguration), labelPrefix_(labelPrefix) {
+      returnConfiguration_(returnConfiguration), labelPrefix_(labelPrefix), generateDifferenceScenarios_(generateDifferenceScenarios) {
 
     QL_REQUIRE(mporDays > 0, "Invalid mpor days of 0");
+    QL_REQUIRE(historicalScenarioLoader_->numScenarios() > 1,
+               "HistoricalScenarioGenerator: require more than 1 scenario from historicalScenarioLoader_");
 
     // check they are in order and all before the base scenario
     // we do not make any assumptions here about the length
@@ -209,13 +213,35 @@ void HistoricalScenarioGenerator::setDates() {
     }
 }
 
-std::pair<boost::shared_ptr<Scenario>, boost::shared_ptr<Scenario>> HistoricalScenarioGenerator::scenarioPair() {
+HistoricalScenarioGenerator::HistoricalScenarioGenerator(
+    const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
+    const boost::shared_ptr<ScenarioFactory>& scenarioFactory,
+    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors,
+    const ReturnConfiguration& returnConfiguration,
+    const std::string& labelPrefix, const bool generateDifferenceScenarios)
+    : i_(0), historicalScenarioLoader_(historicalScenarioLoader), scenarioFactory_(scenarioFactory),
+      adjFactors_(adjFactors), returnConfiguration_(returnConfiguration),
+      labelPrefix_(labelPrefix), generateDifferenceScenarios_(generateDifferenceScenarios) {
+
+    QL_REQUIRE(historicalScenarioLoader_->numScenarios() > 1,
+               "HistoricalScenarioGenerator: require more than 1 scenario from historicalScenarioLoader_");
+
+    // check they are in order and all before the base scenario and add the dates
+    for (Size i = 1; i < historicalScenarioLoader_->numScenarios(); ++i) {
+        QL_REQUIRE(historicalScenarioLoader_->dates()[i] > historicalScenarioLoader_->dates()[i - 1],
+                   "historical scenarios are not ordered");
+        startDates_.push_back(historicalScenarioLoader_->dates()[i - 1]);
+        endDates_.push_back(historicalScenarioLoader_->dates()[i]);
+    }
+}
+
+std::pair<QuantLib::ext::shared_ptr<Scenario>, QuantLib::ext::shared_ptr<Scenario>> HistoricalScenarioGenerator::scenarioPair() {
     // Get the two historicals we are using
     QL_REQUIRE(i_ < numScenarios(),
                "Cannot generate any more scenarios (i=" << i_ << " numScenarios=" << numScenarios() << ")");
-    boost::shared_ptr<Scenario> s1 = historicalScenarioLoader_->getHistoricalScenario(startDates_[i_]);
-    boost::shared_ptr<Scenario> s2 = historicalScenarioLoader_->getHistoricalScenario(endDates_[i_]);
-    return std::pair<boost::shared_ptr<Scenario>, boost::shared_ptr<Scenario>>(s1, s2);
+    QuantLib::ext::shared_ptr<Scenario> s1 = historicalScenarioLoader_->getHistoricalScenario(startDates_[i_]);
+    QuantLib::ext::shared_ptr<Scenario> s2 = historicalScenarioLoader_->getHistoricalScenario(endDates_[i_]);
+    return std::pair<QuantLib::ext::shared_ptr<Scenario>, QuantLib::ext::shared_ptr<Scenario>>(s1, s2);
 }
 
 Real HistoricalScenarioGenerator::adjustedPrice(RiskFactorKey key, Date d, Real price) {
@@ -228,60 +254,72 @@ Real HistoricalScenarioGenerator::adjustedPrice(RiskFactorKey key, Date d, Real 
     return price;
 }
 
-boost::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
+QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGenerator::next(const Date& d) {
 
     QL_REQUIRE(baseScenario_ != nullptr, "HistoricalScenarioGenerator: base scenario not set");
 
-    std::pair<boost::shared_ptr<Scenario>, boost::shared_ptr<Scenario>> scens = scenarioPair();
-    boost::shared_ptr<Scenario> s1 = scens.first;
-    boost::shared_ptr<Scenario> s2 = scens.second;
+    std::pair<QuantLib::ext::shared_ptr<Scenario>, QuantLib::ext::shared_ptr<Scenario>> scens = scenarioPair();
+    QuantLib::ext::shared_ptr<Scenario> s1 = scens.first;
+    QuantLib::ext::shared_ptr<Scenario> s2 = scens.second;
 
     // build the scenarios
     QL_REQUIRE(d >= baseScenario_->asof(), "Cannot generate a scenario in the past");
-    boost::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, "", 1.0);
+    QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, !generateDifferenceScenarios_, false, std::string(), 1.0);
 
     // loop over all keys
     calculationDetails_.resize(baseScenario_->keys().size());
     Size calcDetailsCounter = 0;
     for (auto const& key : baseScenario_->keys()) {
-        Real base = baseScenario_->get(key);
-        Real v1 = 1.0, v2 = 1.0;
-        if (!s1->has(key) || !s2->has(key)) {
+
+        if (!s1->has(key) || !s2->has(key))
             DLOG("Missing key in historical scenario (" << io::iso_date(s1->asof()) << "," << io::iso_date(s2->asof())
                                                         << "): " << key << " => no move in this factor");
-        } else {
-            v1 = adjustedPrice(key, s1->asof(), s1->get(key));
-            v2 = adjustedPrice(key, s2->asof(), s2->get(key));
-        }
-        Real value = 0.0;
 
-        // Calculate the returned value
-        Real returnVal = returnConfiguration_.returnValue(key, v1, v2, s1->asof(), s2->asof());
-        // Adjust return for any scaling
-        Real scaling = this->scaling(key, returnVal);
-        returnVal = returnVal * scaling;
-        // Calculate the shifted value
-        value = returnConfiguration_.applyReturn(key, base, returnVal);
-        if (std::isinf(value)) {
-            ALOG("Value is inf for " << key << " from date " << s1->asof() << " to " << s2->asof());
+        if (generateDifferenceScenarios_)
+            scen = getDifferenceScenario(s1, s2, d, 1.0); 
+        else {
+            Real base = baseScenario_->get(key);
+            Real v1 = 1.0, v2 = 1.0;
+            if (!s1->has(key) || !s2->has(key)) {
+                DLOG("Missing key in historical scenario (" << io::iso_date(s1->asof()) << ","
+                                                            << io::iso_date(s2->asof()) << "): " << key
+                                                            << " => no move in this factor");
+            } else {
+                v1 = adjustedPrice(key, s1->asof(), s1->get(key));
+                v2 = adjustedPrice(key, s2->asof(), s2->get(key));
+            }
+            Real value = 0.0;
+
+            // Calculate the returned value
+            Real returnVal = returnConfiguration_.returnValue(key, v1, v2, s1->asof(), s2->asof());
+            // Adjust return for any scaling
+            Real scaling = this->scaling(key, returnVal);
+            returnVal = returnVal * scaling;
+            // Calculate the shifted value
+            value = returnConfiguration_.applyReturn(key, base, returnVal);
+            if (std::isinf(value)) {
+                ALOG("Value is inf for " << key << " from date " << s1->asof() << " to " << s2->asof());
+            }
+            // Add it
+            scen->add(key, value);
+
+            // Populate calculation details
+            calculationDetails_[calcDetailsCounter].baseValue = base;
+            calculationDetails_[calcDetailsCounter].scenarioValue1 = v1;
+            calculationDetails_[calcDetailsCounter].scenarioValue2 = v2;
+            calculationDetails_[calcDetailsCounter].returnType = returnConfiguration_.returnTypes().at(key.keytype);
+            calculationDetails_[calcDetailsCounter].scaling = scaling;
+            calculationDetails_[calcDetailsCounter].returnValue = returnVal;
+            calculationDetails_[calcDetailsCounter].scenarioValue = value;
+            calculationDetails_[calcDetailsCounter].adjustmentFactor1 =
+                adjFactors_ ? adjFactors_->getFactor(key.name, s1->asof()) : 1.0;
+            calculationDetails_[calcDetailsCounter].adjustmentFactor2 =
+                adjFactors_ ? adjFactors_->getFactor(key.name, s2->asof()) : 1.0;
         }
-        // Add it
-        scen->add(key, value);
         // Populate calculation details
         calculationDetails_[calcDetailsCounter].scenarioDate1 = s1->asof();
         calculationDetails_[calcDetailsCounter].scenarioDate2 = s2->asof();
         calculationDetails_[calcDetailsCounter].key = key;
-        calculationDetails_[calcDetailsCounter].baseValue = base;
-        calculationDetails_[calcDetailsCounter].adjustmentFactor1 =
-            adjFactors_ ? adjFactors_->getFactor(key.name, s1->asof()) : 1.0;
-        calculationDetails_[calcDetailsCounter].adjustmentFactor2 =
-            adjFactors_ ? adjFactors_->getFactor(key.name, s2->asof()) : 1.0;
-        calculationDetails_[calcDetailsCounter].scenarioValue1 = v1;
-        calculationDetails_[calcDetailsCounter].scenarioValue2 = v2;
-        calculationDetails_[calcDetailsCounter].returnType = returnConfiguration_.returnTypes().at(key.keytype);
-        calculationDetails_[calcDetailsCounter].scaling = scaling;
-        calculationDetails_[calcDetailsCounter].returnValue = returnVal;
-        calculationDetails_[calcDetailsCounter].scenarioValue = value;
         ++calcDetailsCounter;
     }
 
@@ -315,14 +353,14 @@ std::vector<std::pair<Date, Date>> HistoricalScenarioGenerator::filteredScenario
     return result;
 }
 
-boost::shared_ptr<Scenario> HistoricalScenarioGeneratorRandom::next(const Date& d) {
+QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorRandom::next(const Date& d) {
 
     QL_REQUIRE(baseScenario() != nullptr, "HistoricalScenarioGeneratorRandom: base scenario not set");
 
     // build the scenarios
     QL_REQUIRE(d >= baseScenario()->asof(),
                "HistoricalScenarioGeneratorRandom: Cannot generate a scenario in the past");
-    boost::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, "", 1.0);
+    QuantLib::ext::shared_ptr<Scenario> scen = scenarioFactory_->buildScenario(d, true, false, std::string(), 1.0);
 
     // loop over all keys
     for (auto key : baseScenario()->keys()) {
@@ -371,11 +409,11 @@ boost::shared_ptr<Scenario> HistoricalScenarioGeneratorRandom::next(const Date& 
 
 void HistoricalScenarioGeneratorRandom::reset() {
     HistoricalScenarioGenerator::reset();
-    normalrng_ = boost::make_shared<QuantLib::PseudoRandom::rng_type>(MersenneTwisterUniformRng(42));
+    normalrng_ = QuantLib::ext::make_shared<QuantLib::PseudoRandom::rng_type>(MersenneTwisterUniformRng(42));
 }
 
-boost::shared_ptr<Scenario> HistoricalScenarioGeneratorTransform::next(const Date& d) {
-    boost::shared_ptr<Scenario> scenario = HistoricalScenarioGenerator::next(d)->clone();
+QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorTransform::next(const Date& d) {
+    QuantLib::ext::shared_ptr<Scenario> scenario = HistoricalScenarioGenerator::next(d)->clone();
     const vector<RiskFactorKey>& keys = baseScenario()->keys();
     Date asof = baseScenario()->asof();
     vector<Period> tenors;
@@ -422,14 +460,16 @@ boost::shared_ptr<Scenario> HistoricalScenarioGeneratorTransform::next(const Dat
 }
 
 HistoricalScenarioGeneratorWithFilteredDates::HistoricalScenarioGeneratorWithFilteredDates(
-    const std::vector<TimePeriod>& filter, const boost::shared_ptr<HistoricalScenarioGenerator>& gen)
-    : HistoricalScenarioGenerator(gen->scenarioLoader(), gen->scenarioFactory(), gen->cal(), gen->adjFactors(),
-                                  gen->mporDays(), gen->overlapping(), gen->returnConfiguration(), gen->labelPrefix()),
+    const std::vector<TimePeriod>& filter, const QuantLib::ext::shared_ptr<HistoricalScenarioGenerator>& gen)
+    : HistoricalScenarioGenerator(*gen),
       gen_(gen), i_orig_(0) {
 
-    // set base scenario
-
-    baseScenario_ = gen->baseScenario();
+    // set base scenario    
+    auto zpScen = QuantLib::ext::dynamic_pointer_cast<ZeroToParScenarioGenerator>(gen);
+    if (zpScen)
+        baseScenario_ = zpScen->baseScenario();
+    else
+        baseScenario_ = gen->baseScenario();
 
     for (auto const& f : filter) {
         // Check that backtest and benchmark periods are covered by the historical scenario generator
@@ -490,14 +530,33 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
 
     hsr->load(simParams, marketParams);
 
-    auto scenarioFactory = boost::make_shared<SimpleScenarioFactory>();
+    auto scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
 
-    boost::shared_ptr<HistoricalScenarioLoader> scenarioLoader = boost::make_shared<HistoricalScenarioLoader>(
+    QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader = QuantLib::ext::make_shared<HistoricalScenarioLoader>(
         hsr, period.startDates().front(), period.endDates().front(), calendar);
 
     // Create the historical scenario generator
-    return boost::make_shared<HistoricalScenarioGenerator>(scenarioLoader, scenarioFactory, calendar, adjFactors,
+    return QuantLib::ext::make_shared<HistoricalScenarioGenerator>(scenarioLoader, scenarioFactory, calendar, adjFactors,
                                                            mporDays, overlapping, ReturnConfiguration(), "hs_");
+}
+
+QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
+    const QuantLib::ext::shared_ptr<HistoricalScenarioReader>& hsr,
+    const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const std::set<QuantLib::Date>& dates,
+    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
+    const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParams) {
+
+    hsr->load(simParams, marketParams);
+
+    auto scenarioFactory = QuantLib::ext::make_shared<SimpleScenarioFactory>();
+
+    QuantLib::ext::shared_ptr<HistoricalScenarioLoader> scenarioLoader =
+        QuantLib::ext::make_shared<HistoricalScenarioLoader>(
+        hsr, dates);
+
+    // Create the historical scenario generator
+    return QuantLib::ext::make_shared<HistoricalScenarioGenerator>(scenarioLoader, scenarioFactory, 
+        adjFactors, ReturnConfiguration(), "hs_");
 }
 
 } // namespace analytics

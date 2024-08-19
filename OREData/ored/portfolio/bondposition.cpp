@@ -44,13 +44,13 @@ XMLNode* BondPositionData::toXML(XMLDocument& doc) const {
     return n;
 }
 
-void BondPositionData::populateFromBondBasketReferenceData(const boost::shared_ptr<ReferenceDataManager>& ref) {
+void BondPositionData::populateFromBondBasketReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& ref) {
     QL_REQUIRE(!identifier_.empty(), "BondPositionData::populateFromBondBasketReferenceData(): no identifier given");
     if (!ref || !ref->hasData(BondBasketReferenceDatum::TYPE, identifier_)) {
         DLOG("could not get BondBasketReferenceDatum for '" << identifier_ << "' leave data in trade unchanged");
     } else {
         DLOG("got BondBasketReferenceDatum for '" << identifier_ << "':");
-        auto r = boost::dynamic_pointer_cast<BondBasketReferenceDatum>(
+        auto r = QuantLib::ext::dynamic_pointer_cast<BondBasketReferenceDatum>(
             ref->getData(BondBasketReferenceDatum::TYPE, identifier_));
         QL_REQUIRE(r, "BondPositionData::populateFromBondBasketReferenceData(): internal error, could not cast "
                       "reference datum to expected type.");
@@ -59,7 +59,7 @@ void BondPositionData::populateFromBondBasketReferenceData(const boost::shared_p
     }
 }
 
-void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
+void BondPosition::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     DLOG("BondPosition::build() called for " << id());
 
     // ISDA taxonomy: not a derivative, but define the asset class at least
@@ -81,6 +81,8 @@ void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
 
     maturity_ = Date::minDate();
     for (auto const& u : data_.underlyings()) {
+        if (close_enough(u.weight(), 0.0))
+            continue;
         try {
             bonds_.push_back(BondFactory::instance().build(engineFactory, engineFactory->referenceData(), u.name()));
         } catch (const std::exception& e) {
@@ -103,10 +105,10 @@ void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
     }
 
     // set instrument
-    std::vector<boost::shared_ptr<QuantLib::Bond>> qlbonds;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::Bond>> qlbonds;
     std::transform(bonds_.begin(), bonds_.end(), std::back_inserter(qlbonds),
                    [](const BondBuilder::Result& d) { return d.bond; });
-    instrument_ = boost::make_shared<BondPositionInstrumentWrapper>(data_.quantity(), qlbonds, weights_,
+    instrument_ = QuantLib::ext::make_shared<BondPositionInstrumentWrapper>(data_.quantity(), qlbonds, weights_,
                                                                     bidAskAdjustments_, fxConversion_);
 
     // leave legs empty, leave notional empty for the time being
@@ -118,7 +120,7 @@ void BondPosition::build(const boost::shared_ptr<ore::data::EngineFactory>& engi
 
 void BondPosition::setNpvCurrencyConversion(const std::string& ccy, const Handle<Quote>& conversion) {
     npvCurrency_ = ccy;
-    boost::static_pointer_cast<BondPositionInstrumentWrapper>(instrument_)->setNpvCurrencyConversion(conversion);
+    QuantLib::ext::static_pointer_cast<BondPositionInstrumentWrapper>(instrument_)->setNpvCurrencyConversion(conversion);
 }
 
 void BondPosition::fromXML(XMLNode* node) {
@@ -134,7 +136,7 @@ XMLNode* BondPosition::toXML(XMLDocument& doc) const {
 }
 
 std::map<AssetClass, std::set<std::string>>
-BondPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+BondPosition::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     for (auto const& u : data_.underlyings()) {
         result[AssetClass::BOND].insert(u.name());
@@ -144,7 +146,7 @@ BondPosition::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& r
 }
 
 BondPositionInstrumentWrapper::BondPositionInstrumentWrapper(
-    const Real quantity, const std::vector<boost::shared_ptr<QuantLib::Bond>>& bonds, const std::vector<Real>& weights,
+    const Real quantity, const std::vector<QuantLib::ext::shared_ptr<QuantLib::Bond>>& bonds, const std::vector<Real>& weights,
     const std::vector<Real>& bidAskAdjustments, const std::vector<Handle<Quote>>& fxConversion)
     : quantity_(quantity), bonds_(bonds), weights_(weights), bidAskAdjustments_(bidAskAdjustments),
       fxConversion_(fxConversion) {

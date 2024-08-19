@@ -34,14 +34,14 @@ class HwModel : public IrModel {
 public:
     enum class Discretization { Euler, Exact };
 
-    HwModel(const boost::shared_ptr<IrHwParametrization>& parametrization, const Measure measure = Measure::BA,
+    HwModel(const QuantLib::ext::shared_ptr<IrHwParametrization>& parametrization, const Measure measure = Measure::BA,
             const Discretization discretization = Discretization::Euler, const bool evaluateBankAccount = true);
 
     // IrModel interface
 
     Measure measure() const override { return measure_; }
 
-    const boost::shared_ptr<Parametrization> parametrizationBase() const override { return parametrization_; }
+    const QuantLib::ext::shared_ptr<Parametrization> parametrizationBase() const override { return parametrization_; }
 
     Handle<YieldTermStructure> termStructure() const override { return parametrization_->termStructure(); }
 
@@ -50,7 +50,7 @@ public:
     Size n_aux() const override;
     Size m_aux() const override;
 
-    boost::shared_ptr<StochasticProcess> stateProcess() const override { return stateProcess_; }
+    QuantLib::ext::shared_ptr<StochasticProcess> stateProcess() const override { return stateProcess_; }
 
     QuantLib::Real discountBond(const QuantLib::Time t, const QuantLib::Time T, const QuantLib::Array& x,
                                 const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
@@ -67,17 +67,17 @@ public:
 
     // HwModel specific methods
 
-    const boost::shared_ptr<IrHwParametrization> parametrization() const { return parametrization_; }
+    const QuantLib::ext::shared_ptr<IrHwParametrization> parametrization() const { return parametrization_; }
 
     /*! observer and linked calibrated model interface */
     void update() override;
     void generateArguments() override;
 
 private:
-    boost::shared_ptr<IrHwParametrization> parametrization_;
+    QuantLib::ext::shared_ptr<IrHwParametrization> parametrization_;
     Measure measure_;
     Discretization discretization_;
-    boost::shared_ptr<StochasticProcess> stateProcess_;
+    QuantLib::ext::shared_ptr<StochasticProcess> stateProcess_;
     bool evaluateBankAccount_;
 };
 

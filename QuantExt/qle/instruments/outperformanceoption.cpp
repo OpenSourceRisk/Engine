@@ -31,8 +31,8 @@
 
 namespace QuantExt {
 
-    OutperformanceOption::OutperformanceOption( const boost::shared_ptr<Exercise>& exercise, const Option::Type optionType, 
-        const Real strikeReturn, const Real initialValue1, const Real initialValue2, const Real notional, const Real knockInPrice, const Real knockOutPrice, boost::shared_ptr<QuantExt::FxIndex> fxIndex1, boost::shared_ptr<QuantExt::FxIndex> fxIndex2 )
+    OutperformanceOption::OutperformanceOption( const QuantLib::ext::shared_ptr<Exercise>& exercise, const Option::Type optionType, 
+        const Real strikeReturn, const Real initialValue1, const Real initialValue2, const Real notional, const Real knockInPrice, const Real knockOutPrice, QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex1, QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex2 )
     : exercise_(exercise), optionType_(optionType), strikeReturn_(strikeReturn), initialValue1_(initialValue1), initialValue2_(initialValue2), notional_(notional),
         knockInPrice_(knockInPrice), knockOutPrice_(knockOutPrice), fxIndex1_(fxIndex1), fxIndex2_(fxIndex2) {}
 

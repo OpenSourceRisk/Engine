@@ -38,14 +38,14 @@ namespace ore {
 namespace data {
 
 CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
-                         const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<CommoditySchwartzData>& data,
+                         const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<CommoditySchwartzData>& data,
                          const QuantLib::Currency& baseCcy, const std::string& configuration,
                          const std::string& referenceCalibrationGrid)
     : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid),
       baseCcy_(baseCcy) {
 
     optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
-    marketObserver_ = boost::make_shared<MarketObserver>();
+    marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     QuantLib::Currency ccy = ore::data::parseCurrency(data->currency());
     string name = data->name();
 
@@ -72,14 +72,14 @@ CommoditySchwartzModelBuilder::CommoditySchwartzModelBuilder(
     if (data->calibrateSigma() || data->calibrateKappa())
         buildOptionBasket();
 
-    parametrization_ = boost::make_shared<QuantExt::CommoditySchwartzParametrization>(ccy, name, curve_, fxSpot_,
+    parametrization_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzParametrization>(ccy, name, curve_, fxSpot_,
                                                                                       data->sigmaValue(), data->kappaValue(),
                                                                                       data->driftFreeState());
-    model_ = boost::make_shared<QuantExt::CommoditySchwartzModel>(parametrization_);
+    model_ = QuantLib::ext::make_shared<QuantExt::CommoditySchwartzModel>(parametrization_);
     params_ = model_->params();
 }
 
-boost::shared_ptr<QuantExt::CommoditySchwartzModel> CommoditySchwartzModelBuilder::model() const {
+QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzModel> CommoditySchwartzModelBuilder::model() const {
     calculate();
     return model_;
 }
@@ -89,11 +89,11 @@ Real CommoditySchwartzModelBuilder::error() const {
     return error_;
 }
 
-boost::shared_ptr<QuantExt::CommoditySchwartzParametrization> CommoditySchwartzModelBuilder::parametrization() const {
+QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzParametrization> CommoditySchwartzModelBuilder::parametrization() const {
     calculate();
     return parametrization_;
 }
-std::vector<boost::shared_ptr<BlackCalibrationHelper>> CommoditySchwartzModelBuilder::optionBasket() const {
+std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> CommoditySchwartzModelBuilder::optionBasket() const {
     calculate();
     return optionBasket_;
 }
@@ -115,8 +115,8 @@ void CommoditySchwartzModelBuilder::performCalculations() const {
         volSurfaceChanged(true);
 
         // attach pricing engine to helpers
-        boost::shared_ptr<QuantExt::CommoditySchwartzFutureOptionEngine> engine =
-            boost::make_shared<QuantExt::CommoditySchwartzFutureOptionEngine>(model_);
+        QuantLib::ext::shared_ptr<QuantExt::CommoditySchwartzFutureOptionEngine> engine =
+            QuantLib::ext::make_shared<QuantExt::CommoditySchwartzFutureOptionEngine>(model_);
         for (Size j = 0; j < optionBasket_.size(); j++)
             optionBasket_[j]->setPricingEngine(engine);
 
@@ -148,12 +148,12 @@ void CommoditySchwartzModelBuilder::performCalculations() const {
             return;
         }
 
+        // use identical start values for each calibration to ensure identical results for identical baskets
+        model_->setParams(params_);
+
         LOG("CommoditySchwartzModel for name " << data_->name() << " before calibration:"
             << " sigma=" << parametrization_->sigmaParameter()
             << " kappa=" << parametrization_->kappaParameter());
-
-        // use identical start values for each calibration to ensure identical results for identical baskets
-        model_->setParams(params_);
 
         model_->calibrate(optionBasket_, *data_->optimizationMethod(), data_->endCriteria(), data_->constraint(), weights, fix);
 
@@ -242,8 +242,8 @@ void CommoditySchwartzModelBuilder::buildOptionBasket() const {
         if (refCalDate == referenceCalibrationDates.end() || *refCalDate > lastRefCalDate) {
             optionActive_[j] = true;
             Real strikeValue = optionStrike(j);
-            Handle<Quote> volQuote(boost::make_shared<SimpleQuote>(vol_->blackVol(expiryDate, strikeValue)));
-            boost::shared_ptr<QuantExt::FutureOptionHelper> helper = boost::make_shared<QuantExt::FutureOptionHelper>(
+            Handle<Quote> volQuote(QuantLib::ext::make_shared<SimpleQuote>(vol_->blackVol(expiryDate, strikeValue)));
+            QuantLib::ext::shared_ptr<QuantExt::FutureOptionHelper> helper = QuantLib::ext::make_shared<QuantExt::FutureOptionHelper>(
                 expiryDate, strikeValue, curve_, volQuote, data_->calibrationErrorType());
             optionBasket_.push_back(helper);
             helper->performCalculations();

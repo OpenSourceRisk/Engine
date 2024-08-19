@@ -32,43 +32,39 @@ class IMScheduleAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "IM_SCHEDULE";
 
-    IMScheduleAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    IMScheduleAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
         setLabel(LABEL);
     }
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override {}
 };
 
 class IMScheduleAnalytic : public Analytic {
 public:
-    IMScheduleAnalytic(const boost::shared_ptr<InputParameters>& inputs,
+    IMScheduleAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                        const Crif& crif = Crif(),
                        const bool hasNettingSetDetails = false)
         : Analytic(std::make_unique<IMScheduleAnalyticImpl>(inputs), {"IM_SCHEDULE"}, inputs,
                    false, false, false, false),
           crif_(crif), hasNettingSetDetails_(hasNettingSetDetails) {}
 
-    const boost::shared_ptr<IMScheduleCalculator>& imSchedule() const { return imSchedule_; }
-    void setImSchedule(const boost::shared_ptr<IMScheduleCalculator>& imSchedule) { imSchedule_ = imSchedule; }
+    const QuantLib::ext::shared_ptr<IMScheduleCalculator>& imSchedule() const { return imSchedule_; }
+    void setImSchedule(const QuantLib::ext::shared_ptr<IMScheduleCalculator>& imSchedule) { imSchedule_ = imSchedule; }
 
     //! Load CRIF from external source, override to generate CRIF from the input portfolio
-    virtual void loadCrifRecords(const boost::shared_ptr<ore::data::InMemoryLoader>& loader);
+    virtual void loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
 
     const Crif& crif() const { return crif_; }
     bool hasNettingSetDetails() const { return hasNettingSetDetails_; }
     const std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>>& hasSEC() const {
         return hasSEC_;
     }
-    const std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>>& hasCFTC() const {
-        return hasCFTC_;
-    }
  private:
     Crif crif_;
     bool hasNettingSetDetails_ = false;
     std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>> hasSEC_;
-    std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>> hasCFTC_;
-    boost::shared_ptr<IMScheduleCalculator> imSchedule_;
+    QuantLib::ext::shared_ptr<IMScheduleCalculator> imSchedule_;
 };
 
 } // namespace analytics

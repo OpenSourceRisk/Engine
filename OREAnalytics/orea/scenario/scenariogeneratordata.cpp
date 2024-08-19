@@ -41,7 +41,7 @@ void ScenarioGeneratorData::clear() {
         grid_->truncate(0);
 }
 
-void ScenarioGeneratorData::setGrid(boost::shared_ptr<DateGrid> grid) { 
+void ScenarioGeneratorData::setGrid(QuantLib::ext::shared_ptr<DateGrid> grid) { 
     grid_ = grid;
     
     std::ostringstream oss;
@@ -72,10 +72,10 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     std::vector<std::string> tokens;
     boost::split(tokens, gridString_, boost::is_any_of(","));
     if (tokens.size() <= 2) {
-        grid_ = boost::make_shared<DateGrid>(gridString_, cal, dc);
+        grid_ = QuantLib::ext::make_shared<DateGrid>(gridString_, cal, dc);
     } else {
         std::vector<Period> gridTenors = XMLUtils::getChildrenValuesAsPeriods(node, "Grid", true);
-        grid_ = boost::make_shared<DateGrid>(gridTenors, cal, dc);
+        grid_ = QuantLib::ext::make_shared<DateGrid>(gridTenors, cal, dc);
     }
     LOG("ScenarioGeneratorData grid points size = " << grid_->size());
 
@@ -93,7 +93,7 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     if (auto c = getenv("OVERWRITE_SCENARIOGENERATOR_SAMPLES")) {
         try {
             samples_ = std::stol(c);
-        } catch (const std::exception& e) {
+        } catch (const std::exception&) {
             WLOG("enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES is set ("
                  << c << ") but can not be parsed to a number - ignoring.");
         }

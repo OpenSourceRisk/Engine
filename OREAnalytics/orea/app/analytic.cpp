@@ -29,6 +29,7 @@
 #include <orea/engine/valuationengine.hpp>
 #include <orea/aggregation/dimregressioncalculator.hpp>
 
+#include <ored/marketdata/compositeloader.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/bondspreadimply.hpp>
 #include <ored/portfolio/builders/currencyswap.hpp>
@@ -36,8 +37,6 @@
 #include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
-
-#include <boost/timer/timer.hpp>
 
 #include <iostream>
 
@@ -51,7 +50,7 @@ namespace analytics {
 
 Analytic::Analytic(std::unique_ptr<Impl> impl,
          const std::set<std::string>& analyticTypes,
-         const boost::shared_ptr<InputParameters>& inputs,
+         const QuantLib::ext::shared_ptr<InputParameters>& inputs,
          bool simulationConfig,
          bool sensitivityConfig,
          bool scenarioGeneratorConfig,
@@ -79,7 +78,7 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
     setUpConfigurations();
 }
 
-void Analytic::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                            const std::set<std::string>& runTypes) {
     MEM_LOG_USING_LEVEL(ORE_WARNING)
     if (impl_) {
@@ -93,7 +92,7 @@ void Analytic::setUpConfigurations() {
         impl_->setUpConfigurations();
 }
 
-std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::allDependentAnalytics() const {
+std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::Impl::allDependentAnalytics() const {
     std::vector<QuantLib::ext::shared_ptr<Analytic>> analytics;
     for (const auto& [_, a] : dependentAnalytics_) {
         analytics.push_back(a);
@@ -101,6 +100,12 @@ std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::allDependentAnalytics
         analytics.insert(end(analytics), begin(das), end(das));
     }
     return analytics;
+}
+
+QuantLib::ext::shared_ptr<Analytic> Analytic::Impl::dependentAnalytic(const std::string& key) const {
+    auto it = dependentAnalytics_.find(key);
+    QL_REQUIRE(it != dependentAnalytics_.end(), "Could not find dependent Analytic " << key);
+    return it->second;
 }
 
 const std::string Analytic::label() const { 
@@ -121,13 +126,38 @@ bool Analytic::match(const std::set<std::string>& runTypes) {
     return false;
 }
 
-std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::todaysMarketParams() {
+std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::allDependentAnalytics() const {
+    return impl_->allDependentAnalytics();
+}
+
+const Timer& Analytic::getTimer() {
+
+    // Make sure all dependent analytics' timers have been added to this analytic's timer
+    for (const auto& [analyticLabel, analytic] : impl_->dependentAnalytics())
+        timer_.addTimer(analyticLabel, analytic->getTimer());
+
+    return timer_;
+}
+
+std::set<QuantLib::Date> Analytic::marketDates() const {
+    std::set<QuantLib::Date> mds = {inputs_->asof()};
+    auto addDates = impl_->additionalMarketDates();
+    mds.insert(addDates.begin(), addDates.end());
+
+    for (const auto& a : impl_->dependentAnalytics()) {
+        addDates = a.second->impl()->additionalMarketDates();
+        mds.insert(addDates.begin(), addDates.end());
+    }
+    return mds;
+}
+
+std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::todaysMarketParams() {
     buildConfigurations();
-    std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
+    std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
     if (configurations().todaysMarketParams)
         tmps.push_back(configurations().todaysMarketParams);
 
-    for (const auto& a : dependentAnalytics_) {
+    for (const auto& a : impl_->dependentAnalytics()) {
         auto ctmps = a.second->todaysMarketParams();
         tmps.insert(end(tmps), begin(ctmps), end(ctmps));
     }
@@ -135,11 +165,11 @@ std::vector<boost::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::toda
     return tmps;
 }
 
-boost::shared_ptr<EngineFactory> Analytic::Impl::engineFactory() {
+QuantLib::ext::shared_ptr<EngineFactory> Analytic::Impl::engineFactory() {
     LOG("Analytic::engineFactory() called");
     // Note: Calling the constructor here with empty extry builders
     // Override this function in case you have got extra ones
-    boost::shared_ptr<EngineData> edCopy = boost::make_shared<EngineData>(*inputs_->pricingEngine());
+    QuantLib::ext::shared_ptr<EngineData> edCopy = QuantLib::ext::make_shared<EngineData>(*inputs_->pricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = to_string(generateAdditionalResults());
     edCopy->globalParameters()["RunType"] = "NPV";
     map<MarketContext, string> configurations;
@@ -147,15 +177,15 @@ boost::shared_ptr<EngineFactory> Analytic::Impl::engineFactory() {
     configurations[MarketContext::fxCalibration] = inputs_->marketConfig("fxcalibration");
     configurations[MarketContext::pricing] = inputs_->marketConfig("pricing");
     LOG("MarketContext::pricing = " << inputs_->marketConfig("pricing"));
-    return boost::make_shared<EngineFactory>(edCopy, analytic()->market(), configurations,
+    return QuantLib::ext::make_shared<EngineFactory>(edCopy, analytic()->market(), configurations,
                                              inputs_->refDataManager(),
                                              *inputs_->iborFallbackConfig());
 }
 
-void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                            const bool marketRequired) {
-    LOG("Analytic::buildMarket called");    
-    cpu_timer mtimer;
+    LOG("Analytic::buildMarket called");
+    startTimer("buildMarket()");
 
     QL_REQUIRE(loader, "market data loader not set");
     QL_REQUIRE(configurations().curveConfig, "curve configurations not set");
@@ -163,40 +193,49 @@ void Analytic::buildMarket(const boost::shared_ptr<ore::data::InMemoryLoader>& l
     // first build the market if we have a todaysMarketParams
     if (configurations().todaysMarketParams) {
         try {
-            // Note: we usually update the loader with implied data, but we simply use the provided loader here
-             loader_ = loader;
+            // imply bond spreads (no exclusion of securities in ore, just in ore+) and add results to loader
+            auto bondSpreads = implyBondSpreads(configurations().asofDate, inputs_, configurations_.todaysMarketParams,
+                                                loader, configurations_.curveConfig, std::string());
+
+            // Join the loaders
+            loader_ = QuantLib::ext::make_shared<CompositeLoader>(loader, bondSpreads);
+
             // Check that the loader has quotes
-            QL_REQUIRE( loader_->hasQuotes(inputs()->asof()),
-                       "There are no quotes available for date " << inputs()->asof());
+            QL_REQUIRE(loader_->hasQuotes(configurations().asofDate),
+                       "There are no quotes available for date " << configurations().asofDate);
             // Build the market
-            market_ = boost::make_shared<TodaysMarket>(inputs()->asof(), configurations().todaysMarketParams, loader_,
-                                                       configurations().curveConfig, inputs()->continueOnError(),
-                                                       true, inputs()->lazyMarketBuilding(), inputs()->refDataManager(),
-                                                       false, *inputs()->iborFallbackConfig());
-            // Note: we usually wrap the market into a PC market, but skip this step here
+            market_ = QuantLib::ext::make_shared<TodaysMarket>(
+                configurations().asofDate, configurations().todaysMarketParams, loader_, configurations().curveConfig,
+                inputs()->continueOnError(), true, inputs()->lazyMarketBuilding(), inputs()->refDataManager(), false,
+                *inputs()->iborFallbackConfig());
         } catch (const std::exception& e) {
-            if (marketRequired)
+            if (marketRequired) {
+                stopTimer("buildMarket()");
                 QL_FAIL("Failed to build market: " << e.what());
+            }
             else
                 WLOG("Failed to build market: " << e.what());
         }
     } else {
         ALOG("Skip building the market due to missing today's market parameters in configurations"); 
     }
-    mtimer.stop();
-    LOG("Market Build time " << setprecision(2) << mtimer.format(default_places, "%w") << " sec");
+    const bool returnTimer = true;
+    boost::optional<cpu_timer> mTimer = stopTimer("buildMarket()", returnTimer);
+    if (mTimer)
+        LOG("Market Build time " << setprecision(2) << mTimer->format(default_places, "%w") << " sec");
 }
 
-void Analytic::marketCalibration(const boost::shared_ptr<MarketCalibrationReportBase>& mcr) {
+void Analytic::marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& mcr) {
     if (mcr)
         mcr->populateReport(market_, configurations().todaysMarketParams);
 }
 
 void Analytic::buildPortfolio() {
+    startTimer("buildPortfolio()");
     QuantLib::ext::shared_ptr<Portfolio> tmp = portfolio_ ? portfolio_ : inputs()->portfolio();
         
     // create a new empty portfolio
-    portfolio_ = boost::make_shared<Portfolio>(inputs()->buildFailedTrades());
+    portfolio_ = QuantLib::ext::make_shared<Portfolio>(inputs()->buildFailedTrades());
 
     tmp->reset();
     // populate with trades
@@ -208,7 +247,7 @@ void Analytic::buildPortfolio() {
         replaceTrades();
 
         LOG("Build the portfolio");
-        boost::shared_ptr<EngineFactory> factory = impl()->engineFactory();
+        QuantLib::ext::shared_ptr<EngineFactory> factory = impl()->engineFactory();
         portfolio()->build(factory, "analytic/" + label());
 
         // remove dates that will have matured
@@ -221,6 +260,7 @@ void Analytic::buildPortfolio() {
     } else {
         ALOG("Skip building the portfolio, because market not set");
     }
+    stopTimer("buildPortfolio()");
 }
 
 /*******************************************************************
@@ -232,7 +272,7 @@ void MarketDataAnalyticImpl::setUpConfigurations() {
 }
 
 void MarketDataAnalyticImpl::runAnalytic( 
-    const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
     const std::set<std::string>& runTypes) {
 
     Settings::instance().evaluationDate() = inputs_->asof();
@@ -243,11 +283,11 @@ void MarketDataAnalyticImpl::runAnalytic(
     CONSOLE("OK");
 }
 
-boost::shared_ptr<Loader> implyBondSpreads(const Date& asof,
-                                           const boost::shared_ptr<ore::analytics::InputParameters>& params,
-                                           const boost::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
-                                           const boost::shared_ptr<Loader>& loader,
-                                           const boost::shared_ptr<CurveConfigurations>& curveConfigs,
+QuantLib::ext::shared_ptr<Loader> implyBondSpreads(const Date& asof,
+                                           const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& params,
+                                           const QuantLib::ext::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
+                                           const QuantLib::ext::shared_ptr<Loader>& loader,
+                                           const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
                                            const std::string& excludeRegex) {
 
     auto securities = BondSpreadImply::requiredSecurities(asof, todaysMarketParams, curveConfigs, *loader,
@@ -255,14 +295,14 @@ boost::shared_ptr<Loader> implyBondSpreads(const Date& asof,
 
     if (!securities.empty()) {
         // always continue on error and always use lazy market building
-        boost::shared_ptr<Market> market =
-            boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, true, true, true,
+        QuantLib::ext::shared_ptr<Market> market =
+            QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, true, true, true,
                                              params->refDataManager(), false, *params->iborFallbackConfig());
         return BondSpreadImply::implyBondSpreads(securities, params->refDataManager(), market, params->pricingEngine(),
                                                  Market::defaultConfiguration, *params->iborFallbackConfig());
     } else {
         // no bonds that require a spread imply => return null ptr
-        return boost::shared_ptr<Loader>();
+        return QuantLib::ext::shared_ptr<Loader>();
     }
 }
 

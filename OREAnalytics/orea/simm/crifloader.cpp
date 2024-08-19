@@ -194,7 +194,7 @@ void CrifLoader::updateMapping(const CrifRecord& cr) const {
     }
 }
 
-StringStreamCrifLoader::StringStreamCrifLoader(const boost::shared_ptr<SimmConfiguration>& configuration,
+StringStreamCrifLoader::StringStreamCrifLoader(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
     const std::vector<std::set<std::string>>& additionalHeaders, bool updateMapper,
     bool aggregateTrades, char eol, char delim, char quoteChar, char escapeChar, const std::string& nullString)
     : CrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades), eol_(eol), delim_(delim),
@@ -436,8 +436,8 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
         cr.legalEntityId = loadOptionalString(14);
         cr.nettingSetDetails = NettingSetDetails(cr.portfolioId, cr. agreementType, cr.callType, cr.initialMarginType,
                                                  cr.legalEntityId);
-        cr.postRegulations = loadOptionalString(17);
-        cr.collectRegulations = loadOptionalString(18);
+        cr.postRegulations = parseRegulationString(loadOptionalString(17));
+        cr.collectRegulations = parseRegulationString(loadOptionalString(18));
         cr.endDate = loadOptionalString(19);
         cr.label3 = loadOptionalString(20);
         cr.creditQuality = loadOptionalString(21);

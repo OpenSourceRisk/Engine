@@ -31,26 +31,31 @@
 #include <ored/scripting/models/modelcg.hpp>
 #include <ored/scripting/paylog.hpp>
 #include <ored/scripting/scriptedinstrument.hpp>
+#include <ored/scripting/engines/amccgpricingengine.hpp>
 
 #include <ored/configuration/conventions.hpp>
 
 namespace ore {
 namespace data {
 
-class ScriptedInstrumentPricingEngineCG : public QuantExt::ScriptedInstrument::engine {
+class ScriptedInstrumentPricingEngineCG : public QuantExt::ScriptedInstrument::engine,
+                                          public AmcCgPricingEngine {
 public:
     ScriptedInstrumentPricingEngineCG(const std::string& npv,
                                       const std::vector<std::pair<std::string, std::string>>& additionalResults,
-                                      const boost::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
-                                      const boost::shared_ptr<Context>& context, const Model::McParams& mcParams,
-                                      const std::string& script = "", const bool interactive = false,
-                                      const bool generateAdditionalResults = false, const bool useCachedSensis = false,
-                                      const bool useExternalComputeFramework = false);
+                                      const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
+                                      const QuantLib::ext::shared_ptr<Context>& context,
+                                      const Model::McParams& mcParams, const std::string& script = "",
+                                      const bool interactive = false, const bool generateAdditionalResults = false,
+                                      const bool includePastCashflows = false, const bool useCachedSensis = false,
+                                      const bool useExternalComputeFramework = false,
+                                      const bool useDoublePrecisionForExternalCalculation = false);
+    ~ScriptedInstrumentPricingEngineCG();
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
-    const std::string& npvName() const { return npv_; }
+    std::string npvName() const override { return npv_; }
 
-    void buildComputationGraph() const;
+    void buildComputationGraph() const override;
 
 private:
     void calculate() const override;
@@ -73,7 +78,7 @@ private:
 
     mutable std::vector<ComputationGraphBuilder::PayLogEntry> payLogEntries_;
     mutable std::set<std::size_t> keepNodes_;
-    mutable boost::shared_ptr<Context> workingContext_;
+    mutable QuantLib::ext::shared_ptr<Context> workingContext_;
 
     // computation graph associated ops
 
@@ -99,15 +104,17 @@ private:
 
     const std::string npv_;
     const std::vector<std::pair<std::string, std::string>> additionalResults_;
-    const boost::shared_ptr<ModelCG> model_;
+    const QuantLib::ext::shared_ptr<ModelCG> model_;
     const ASTNodePtr ast_;
-    const boost::shared_ptr<Context> context_;
+    const QuantLib::ext::shared_ptr<Context> context_;
     const Model::McParams mcParams_;
     const std::string script_;
     const bool interactive_;
     const bool generateAdditionalResults_;
+    const bool includePastCashflows_;
     const bool useCachedSensis_;
     const bool useExternalComputeFramework_;
+    const bool useDoublePrecisionForExternalCalculation_;
 };
 
 } // namespace data

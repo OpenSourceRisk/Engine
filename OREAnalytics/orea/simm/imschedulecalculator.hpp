@@ -37,7 +37,7 @@ class IMScheduleCalculator {
 public:
     typedef CrifRecord::ProductClass ProductClass;
     typedef CrifRecord::RiskType RiskType;
-    typedef SimmConfiguration::Regulation Regulation;
+    typedef CrifRecord::Regulation Regulation;
     typedef SimmConfiguration::SimmSide SimmSide;
 
     // Container to hold trade-level data (and results)
@@ -47,7 +47,8 @@ public:
                             const CrifRecord::ProductClass& pc, const QuantLib::Real& amount,
                             const std::string& amountCcy, const QuantLib::Real& amountUsd,
                             const QuantLib::Date& endDate, const std::string& calculationCcy,
-                            const std::string& collectRegulations, const std::string& postRegulations)
+                            const std::set<CrifRecord::Regulation>& collectRegulations,
+                            const std::set<CrifRecord::Regulation>& postRegulations)
             : tradeId(tradeId), nettingSetDetails(nettingSetDetails), productClass(pc), endDate(endDate),
               calculationCcy(calculationCcy), collectRegulations(collectRegulations), postRegulations(postRegulations) {
 
@@ -98,12 +99,13 @@ public:
         QuantLib::Real grossMarginUsd;
         QuantLib::Real grossMarginCalc;
         std::string calculationCcy;
-        std::string collectRegulations;
-        std::string postRegulations;
+        std::set<CrifRecord::Regulation> collectRegulations;
+        std::set<CrifRecord::Regulation> postRegulations;
 
         IMScheduleTradeData()
             : tradeId(""), nettingSetDetails(ore::data::NettingSetDetails()), productClass(ProductClass::Empty),
-              endDate(QuantLib::Date()), calculationCcy(""), collectRegulations(""), postRegulations("") {}
+              endDate(QuantLib::Date()), calculationCcy(""), collectRegulations(std::set<CrifRecord::Regulation>()),
+              postRegulations(std::set<CrifRecord::Regulation>()) {}
     };
 
     //! Construct the IMScheduleCalculator from a container of netted CRIF records.
@@ -112,8 +114,6 @@ public:
                          const bool determineWinningRegulations = true, const bool enforceIMRegulations = false,
                          const bool quiet = false,
                          const std::map<SimmSide, std::set<NettingSetDetails>>& hasSEC =
-                             std::map<SimmSide, std::set<NettingSetDetails>>(),
-                         const std::map<SimmSide, std::set<NettingSetDetails>>& hasCFTC =
                              std::map<SimmSide, std::set<NettingSetDetails>>());
 
     //! Give back the set of portfolio IDs and trade IDs for which we have IM results
@@ -122,19 +122,19 @@ public:
 
 
     //! Return the winning regulation for each portfolioId
-    const std::string& winningRegulations(const SimmSide& side,
-                                          const ore::data::NettingSetDetails& nettingSetDetails) const;
-    const std::map<ore::data::NettingSetDetails, string>& winningRegulations(const SimmSide& side) const;
-    const std::map<SimmSide, std::map<ore::data::NettingSetDetails, string>>& winningRegulations() const;
+    const CrifRecord::Regulation& winningRegulations(const SimmSide& side,
+                                                     const ore::data::NettingSetDetails& nettingSetDetails) const;
+    const std::map<ore::data::NettingSetDetails, CrifRecord::Regulation>& winningRegulations(const SimmSide& side) const;
+    const std::map<SimmSide, std::map<ore::data::NettingSetDetails, CrifRecord::Regulation>>& winningRegulations() const;
 
     //! Give back the IM Schedule results container for the given portfolioId and IM side
-    const std::map<std::string, IMScheduleResults>& imScheduleSummaryResults(const SimmSide& side, const ore::data::NettingSetDetails& nsd) const;
-    const std::map<ore::data::NettingSetDetails, std::map<std::string, IMScheduleResults>>& imScheduleSummaryResults(const SimmSide& side) const;
-    const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, IMScheduleResults>>>& imScheduleSummaryResults() const;
+    const std::map<CrifRecord::Regulation, IMScheduleResults>& imScheduleSummaryResults(const SimmSide& side, const ore::data::NettingSetDetails& nsd) const;
+    const std::map<ore::data::NettingSetDetails, std::map<CrifRecord::Regulation, IMScheduleResults>>& imScheduleSummaryResults(const SimmSide& side) const;
+    const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<CrifRecord::Regulation, IMScheduleResults>>>& imScheduleSummaryResults() const;
 
-    const std::pair<std::string, IMScheduleResults>& finalImScheduleSummaryResults(const SimmSide& side, const ore::data::NettingSetDetails& nsd) const;
-    const std::map<ore::data::NettingSetDetails, std::pair<std::string, IMScheduleResults>>& finalImScheduleSummaryResults(const SimmSide& side) const;
-    const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::pair<std::string, IMScheduleResults>>>&
+    const std::pair<CrifRecord::Regulation, IMScheduleResults>& finalImScheduleSummaryResults(const SimmSide& side, const ore::data::NettingSetDetails& nsd) const;
+    const std::map<ore::data::NettingSetDetails, std::pair<CrifRecord::Regulation, IMScheduleResults>>& finalImScheduleSummaryResults(const SimmSide& side) const;
+    const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::pair<CrifRecord::Regulation, IMScheduleResults>>>&
     finalImScheduleSummaryResults() const {
         return finalImScheduleResults_;
     };
@@ -153,22 +153,21 @@ public:
     static const std::string labelString(const IMScheduleLabel& label);
 
     // Populate the finalImScheduleResults_ container using the provided map of winning call/post regulations
-    void populateFinalResults(const std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::string>>& winningRegulations);
+    void populateFinalResults(const std::map<SimmSide, std::map<ore::data::NettingSetDetails, CrifRecord::Regulation>>& winningRegulations);
+    
+    const ore::data::Timer& timer() const { return timer_; }
 
 private:
-    //! The net sensitivities used in the calculation
-    ore::analytics::Crif crif_;
-
     //! The SIMM calculation currency i.e. the currency of the SIMM results
     std::string calculationCcy_;
 
     //! Market data for FX rates to use for converting amounts to USD
-    boost::shared_ptr<ore::data::Market> market_;
+    QuantLib::ext::shared_ptr<ore::data::Market> market_;
 
     //! If true, no logging is written out
     bool quiet_;
 
-    std::map<SimmSide, std::set<NettingSetDetails>> hasSEC_, hasCFTC_;
+    std::map<SimmSide, std::set<NettingSetDetails>> hasSEC_;
 
     //! For each netting set, whether all CRIF records' collect regulations are empty
     std::map<ore::data::NettingSetDetails, bool> collectRegsIsEmpty_;
@@ -178,21 +177,21 @@ private:
 
     //! Containers, one for call and post, with an IMScheduleResults object for each regulation under each portfolio ID
     //       side,              netting set details,                   regulation
-    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, IMScheduleResults>>> imScheduleResults_;
+    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<CrifRecord::Regulation, IMScheduleResults>>> imScheduleResults_;
 
     //! Containers, one for call and post, with an IMScheduleResults object for each portfolio ID
     //       side,              netting set details,                   regulation
-    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::pair<std::string, IMScheduleResults>>> finalImScheduleResults_;
+    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::pair<CrifRecord::Regulation, IMScheduleResults>>> finalImScheduleResults_;
 
     //! Container for keeping track of what trade IDs belong to each regulation
     //       side,              netting set details,                   regulation
-    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, set<string>>>> tradeIds_;
+    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<CrifRecord::Regulation, set<string>>>> tradeIds_;
 
     std::map<SimmSide, set<string>> finalTradeIds_;
 
     //! Regulation with highest IM for each given netting set
     //       side,              netting set details,          regulation
-    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::string>> winningRegulations_;
+    std::map<SimmSide, std::map<ore::data::NettingSetDetails, CrifRecord::Regulation>> winningRegulations_;
 
     //! Container for trade data collected from CRIF report
     //!      trade ID     trade data
@@ -200,7 +199,7 @@ private:
 
     //! Container for trade data, taking into account regulations applicable to each netting set
     //       side,              netting set details,                   regulation,           trade ID
-    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<std::string, std::map<std::string, IMScheduleTradeData>>>> nettingSetRegTradeData_;
+    std::map<SimmSide, std::map<ore::data::NettingSetDetails, std::map<CrifRecord::Regulation, std::map<std::string, IMScheduleTradeData>>>> nettingSetRegTradeData_;
 
     std::map<IMScheduleLabel, QuantLib::Real> multiplierMap_ = std::map<IMScheduleLabel, QuantLib::Real>({
         // clang-format off
@@ -217,6 +216,8 @@ private:
         // clang-format on
     });
 
+    mutable ore::data::Timer timer_;
+
     QuantLib::Real multiplier(const IMScheduleLabel& label) { return multiplierMap_[label]; }
 
     //! Collect trade data as defined by the CRIF records
@@ -225,7 +226,7 @@ private:
     /*! Populate the results structure with the higher level results after the IMs have been
         calculated at the (product class, maturity) level for each portfolio
     */
-    void populateResults(const ore::data::NettingSetDetails& nsd, const string& regulation, const SimmSide& side);
+    void populateResults(const ore::data::NettingSetDetails& nsd, const CrifRecord::Regulation& regulation, const SimmSide& side);
 
     /*! Populate final (i.e. winning regulators') using own list of winning regulators, which were determined
         solely by the IMSchedule results (i.e. not including any external SIMM results)
@@ -233,7 +234,7 @@ private:
     void populateFinalResults();
 
     //! Add a margin result to either call or post results container depending on the SimmSide parameter
-    void add(const SimmSide& side, const ore::data::NettingSetDetails& nsd, const std::string& regulation,
+    void add(const SimmSide& side, const ore::data::NettingSetDetails& nsd, const CrifRecord::Regulation& regulation,
              const CrifRecord::ProductClass& pc, const std::string& ccy, const QuantLib::Real& grossIM,
              const QuantLib::Real& grossRC = QuantLib::Null<QuantLib::Real>(),
              const QuantLib::Real& netRC = QuantLib::Null<QuantLib::Real>(),

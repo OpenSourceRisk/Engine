@@ -41,12 +41,12 @@ class ApoFutureSurface : public QuantLib::LazyObject, public QuantLib::BlackVola
 
 public:
     ApoFutureSurface(const QuantLib::Date& referenceDate, const std::vector<QuantLib::Real>& moneynessLevels,
-                     const boost::shared_ptr<CommodityIndex>& index,
+                     const QuantLib::ext::shared_ptr<CommodityIndex>& index,
                      const QuantLib::Handle<PriceTermStructure>& pts,
                      const QuantLib::Handle<QuantLib::YieldTermStructure>& yts,
-                     const boost::shared_ptr<FutureExpiryCalculator>& expCalc,
+                     const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& expCalc,
                      const QuantLib::Handle<QuantLib::BlackVolTermStructure>& baseVts,
-                     const boost::shared_ptr<FutureExpiryCalculator>& baseExpCalc, QuantLib::Real beta = 0.0,
+                     const QuantLib::ext::shared_ptr<FutureExpiryCalculator>& baseExpCalc, QuantLib::Real beta = 0.0,
                      bool flatStrikeExtrapolation = true,
                      const boost::optional<QuantLib::Period>& maxTenor = boost::none);
 
@@ -77,7 +77,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<BlackVarianceSurfaceMoneyness>& vts() const;
+    const QuantLib::ext::shared_ptr<BlackVarianceSurfaceMoneyness>& vts() const;
     //@}
 
 protected:
@@ -87,20 +87,20 @@ protected:
     //@}
 
 private:
-    boost::shared_ptr<CommodityIndex> index_;
-    boost::shared_ptr<FutureExpiryCalculator> baseExpCalc_;
+    QuantLib::ext::shared_ptr<CommodityIndex> index_;
+    QuantLib::ext::shared_ptr<FutureExpiryCalculator> baseExpCalc_;
 
     //! The APO schedule dates.
     std::vector<QuantLib::Date> apoDates_;
 
     //! This will keep a handle on the APO vol quotes that are calculated.
-    std::vector<std::vector<boost::shared_ptr<QuantLib::SimpleQuote> > > vols_;
+    std::vector<std::vector<QuantLib::ext::shared_ptr<QuantLib::SimpleQuote> > > vols_;
 
     //! The surface that is created to do the work.
-    boost::shared_ptr<BlackVarianceSurfaceMoneyness> vts_;
+    QuantLib::ext::shared_ptr<BlackVarianceSurfaceMoneyness> vts_;
 
     //! The engine for valuing the APOs
-    boost::shared_ptr<CommodityAveragePriceOptionBaseEngine> apoEngine_;
+    QuantLib::ext::shared_ptr<CommodityAveragePriceOptionBaseEngine> apoEngine_;
 };
 
 } // namespace QuantExt

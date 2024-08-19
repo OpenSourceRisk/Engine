@@ -54,6 +54,30 @@ public:
         setDefaults();
     }
 
+    //! Sub-Container for Curve Algebra Data
+    class CurveAlgebraData : public XMLSerializable {
+    public:
+        class Curve : public XMLSerializable {
+        public:
+            const std::string& key() const { return key_; }
+            const std::string& operationType() const { return operationType_; }
+            const std::vector<std::string>& arguments() const { return arguments_; }
+            const std::string& argument(const std::size_t i) const;
+            void fromXML(XMLNode* node) override;
+            XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+        private:
+            std::string key_, operationType_;
+            std::vector<std::string> arguments_;
+        };
+        const std::vector<Curve>& data() const { return data_; }
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+
+    private:
+        std::vector<Curve> data_;
+    };
+
     //! \name Inspectors
     //@{
     const string& baseCcy() const { return baseCcy_; }
@@ -231,6 +255,8 @@ public:
 
     Size numberOfCreditStates() const { return numberOfCreditStates_; }
 
+    const CurveAlgebraData& curveAlgebraData() const { return curveAlgebraData_; }
+
     // Get the parameters
     const std::map<RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>>& parameters() const {
         return params_;
@@ -244,9 +270,11 @@ public:
     void setDiscountCurveNames(vector<string> names);
     void setYieldCurveNames(vector<string> names);
     map<string, string>& yieldCurveCurrencies() { return yieldCurveCurrencies_; }
+    void setYieldCurveCurrency(const string& key, const string& ccy) { yieldCurveCurrencies_[key] = ccy;}
     void setYieldCurveTenors(const string& key, const vector<Period>& p);
     void setIndices(vector<string> names);
     map<string, string>& swapIndices() { return swapIndices_; }
+    void setSwapIndex(const std::string& key, const std::string& ind) { swapIndices_[key] = ind; }
     string& interpolation() { return interpolation_; }
     string& extrapolation() { return extrapolation_; }
 
@@ -255,12 +283,12 @@ public:
 
     void setSimulateSwapVols(bool simulate);
     void setSwapVolIsCube(const string& key, bool isCube);
-    bool& simulateSwapVolATMOnly() { return swapVolSimulateATMOnly_; }
+    void setSimulateSwapVolATMOnly(const bool b) { swapVolSimulateATMOnly_ = b; }
     void setSwapVolTerms(const string& key, const vector<Period>& p);
     void setSwapVolKeys(vector<string> names);
     void setSwapVolExpiries(const string& key, const vector<Period>& p);
     void setSwapVolStrikeSpreads(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
-    string& swapVolDecayMode() { return swapVolDecayMode_; }
+    void setSwapVolDecayMode(const std::string& s) { swapVolDecayMode_ = s; }
     void setSwapVolSmileDynamics(const string& key, const string& smileDynamics);
   
     void setSimulateYieldVols(bool simulate);
@@ -345,6 +373,7 @@ public:
     void setAdditionalScenarioDataIndices(const vector<string>& asdi) { additionalScenarioDataIndices_ = asdi; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
     void setAdditionalScenarioDataCcys(const vector<string>& ccys) { additionalScenarioDataCcys_ = ccys; }
+    void setAdditionalScenarioDataNumberOfCreditStates(QuantLib::Size n) {additionalScenarioDataNumberOfCreditStates_ = n; }
     void setSecuritySpreadsSimulate(bool simulate);
     void setSecurities(vector<string> names);
     void setRecoveryRates(vector<string> names);
@@ -503,6 +532,8 @@ private:
     vector<Period> correlationExpiries_;
     vector<Real> correlationStrikes_;
     Size numberOfCreditStates_ = 0;
+
+    CurveAlgebraData curveAlgebraData_;
 
     // Store sim market params as a map from RiskFactorKey::KeyType to a pair,
     // boolean of whether to simulate and a set of curve names

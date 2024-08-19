@@ -35,19 +35,20 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 TRSWrapper::TRSWrapper(
-    const std::vector<boost::shared_ptr<ore::data::Trade>>& underlying,
-    const std::vector<boost::shared_ptr<Index>>& underlyingIndex, const std::vector<Real> underlyingMultiplier,
-    const bool includeUnderlyingCashflowsInReturn, const Real initialPrice, const Currency& initialPriceCurrency,
+    const std::vector<QuantLib::ext::shared_ptr<ore::data::Trade>>& underlying,
+    const std::vector<QuantLib::ext::shared_ptr<Index>>& underlyingIndex, const std::vector<Real> underlyingMultiplier,
+    const bool includeUnderlyingCashflowsInReturn, const Real initialPrice, const Real portfolioInitialPrice, const std::string portfolioId, const Currency& initialPriceCurrency,
     const std::vector<Currency>& assetCurrency, const Currency& returnCurrency,
     const std::vector<Date>& valuationSchedule, const std::vector<Date>& paymentSchedule,
     const std::vector<Leg>& fundingLegs, const std::vector<TRS::FundingData::NotionalType>& fundingNotionalTypes,
     const Currency& fundingCurrency, const Size fundingResetGracePeriod, const bool paysAsset, const bool paysFunding,
     const Leg& additionalCashflowLeg, const bool additionalCashflowLegPayer, const Currency& additionalCashflowCurrency,
-    const std::vector<boost::shared_ptr<FxIndex>>& fxIndexAsset, const boost::shared_ptr<FxIndex>& fxIndexReturn,
-    const boost::shared_ptr<FxIndex>& fxIndexAdditionalCashflows,
-    const std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& addFxIndices)
+    const std::vector<QuantLib::ext::shared_ptr<FxIndex>>& fxIndexAsset, const QuantLib::ext::shared_ptr<FxIndex>& fxIndexReturn,
+    const QuantLib::ext::shared_ptr<FxIndex>& fxIndexAdditionalCashflows,
+    const std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& addFxIndices)
     : underlying_(underlying), underlyingIndex_(underlyingIndex), underlyingMultiplier_(underlyingMultiplier),
       includeUnderlyingCashflowsInReturn_(includeUnderlyingCashflowsInReturn), initialPrice_(initialPrice),
+      portfolioInitialPrice_(portfolioInitialPrice), portfolioId_(portfolioId),
       initialPriceCurrency_(initialPriceCurrency), assetCurrency_(assetCurrency), returnCurrency_(returnCurrency),
       valuationSchedule_(valuationSchedule), paymentSchedule_(paymentSchedule), fundingLegs_(fundingLegs),
       fundingNotionalTypes_(fundingNotionalTypes), fundingCurrency_(fundingCurrency),
@@ -141,6 +142,8 @@ void TRSWrapper::setupArguments(PricingEngine::arguments* args) const {
     a->underlyingMultiplier_ = underlyingMultiplier_;
     a->includeUnderlyingCashflowsInReturn_ = includeUnderlyingCashflowsInReturn_;
     a->initialPrice_ = initialPrice_;
+    a->portfolioInitialPrice_ = portfolioInitialPrice_;
+    a->portfolioId_ = portfolioId_;
     a->initialPriceCurrency_ = initialPriceCurrency_;
     a->assetCurrency_ = assetCurrency_;
     a->returnCurrency_ = returnCurrency_;
@@ -195,6 +198,9 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
     usingInitialPrice = false;
 
     for (Size i = 0; i < arguments_.underlying_.size(); ++i) {
+        if (arguments_.initialPrice_ == Null<Real>() && !arguments_.portfolioId_.empty()) {
+            arguments_.initialPrice_ = arguments_.portfolioInitialPrice_;
+        }      
         if (payIdx < arguments_.paymentSchedule_.size()) {
             if (v0 > today) {
                 // The start valuation date is > today: we return null, except an initial price is given, in which case
@@ -276,7 +282,7 @@ bool TRSWrapperAccrualEngine::computeStartValue(std::vector<Real>& underlyingSta
 }
 
 namespace {
-Real getFxIndexFixing(const boost::shared_ptr<FxIndex>& fx, const Currency& source, const Date& d,
+Real getFxIndexFixing(const QuantLib::ext::shared_ptr<FxIndex>& fx, const Currency& source, const Date& d,
                       const bool enforceProjection) {
     bool invert = fx->targetCurrency() == source;
     Real res;
@@ -289,6 +295,10 @@ Real getFxIndexFixing(const boost::shared_ptr<FxIndex>& fx, const Currency& sour
     return invert ? 1.0 / res : res;
 }
 } // namespace
+
+TRSWrapperAccrualEngine::TRSWrapperAccrualEngine(
+    const Handle<YieldTermStructure>& additionalCashflowCurrencyDiscountCurve)
+    : additionalCashflowCurrencyDiscountCurve_(additionalCashflowCurrencyDiscountCurve) {}
 
 Real TRSWrapperAccrualEngine::getFxConversionRate(const Date& date, const Currency& source, const Currency& target,
                                                   const bool enforceProjection) const {
@@ -486,10 +496,10 @@ void TRSWrapperAccrualEngine::calculate() const {
                     }
                     // account for dividends
                     Real dividends = 0.0;
-                    if (auto e = boost::dynamic_pointer_cast<EquityIndex2>(arguments_.underlyingIndex_[i])) {
+                    if (auto e = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(arguments_.underlyingIndex_[i])) {
                         dividends +=
                             e->dividendsBetweenDates(startDate + 1, today) * arguments_.underlyingMultiplier_[i];
-                    } else if (auto e = boost::dynamic_pointer_cast<CompositeIndex>(arguments_.underlyingIndex_[i])) {
+                    } else if (auto e = QuantLib::ext::dynamic_pointer_cast<CompositeIndex>(arguments_.underlyingIndex_[i])) {
                         dividends +=
                             e->dividendsBetweenDates(startDate + 1, today) * arguments_.underlyingMultiplier_[i];
                     }
@@ -534,7 +544,7 @@ void TRSWrapperAccrualEngine::calculate() const {
 
             Real localFundingLegNpv = 0.0; // local per funding coupon
 
-            auto cpn = boost::dynamic_pointer_cast<QuantLib::Coupon>(arguments_.fundingLegs_[i][cpnNo]);
+            auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantLib::Coupon>(arguments_.fundingLegs_[i][cpnNo]);
             if (cpn == nullptr || cpn->date() <= today || cpn->accrualStartDate() >= today)
                 continue;
 
@@ -565,7 +575,7 @@ void TRSWrapperAccrualEngine::calculate() const {
             } catch (...) {
             }
 
-            bool isOvernightCoupon = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn) != nullptr;
+            bool isOvernightCoupon = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn) != nullptr;
 
             for (Size j = 0; j < arguments_.underlying_.size(); ++j) {
 
@@ -605,8 +615,8 @@ void TRSWrapperAccrualEngine::calculate() const {
                     results_.additionalResults["fundingLegFxRate" + resultSuffix + resultSuffix2] = localFxFactor;
 
                 } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset &&
-                           (boost::dynamic_pointer_cast<FixedRateCoupon>(cpn) ||
-                            boost::dynamic_pointer_cast<IborCoupon>(cpn))) {
+                           (QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(cpn) ||
+                            QuantLib::ext::dynamic_pointer_cast<IborCoupon>(cpn))) {
 
                     Real dcfTotal =
                         cpn->dayCounter().yearFraction(cpn->accrualStartDate(), std::min(cpn->accrualEndDate(), today));
@@ -626,7 +636,7 @@ void TRSWrapperAccrualEngine::calculate() const {
                     }
                 } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset &&
                            isOvernightCoupon) {
-                    auto overnightCpn = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn);
+                    auto overnightCpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cpn);
                     auto valueDates = overnightCpn->valueDates();
                     auto fixingValues = overnightCpn->indexFixings();
                     auto dts = overnightCpn->dt();
@@ -667,8 +677,8 @@ void TRSWrapperAccrualEngine::calculate() const {
                     }
                     fundingLegNotionalFactor = (gearing * accruedInterest + accruedSpreadInterest) / localFundingLegNpv;
                 } else if (arguments_.fundingNotionalTypes_[i] == TRS::FundingData::NotionalType::DailyReset &&
-                           boost::dynamic_pointer_cast<AverageONIndexedCoupon>(cpn) != nullptr) {
-                    auto overnightCpn = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(cpn);
+                           QuantLib::ext::dynamic_pointer_cast<AverageONIndexedCoupon>(cpn) != nullptr) {
+                    auto overnightCpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(cpn);
                     auto valueDates = overnightCpn->valueDates();
                     auto fixingValues = overnightCpn->indexFixings();
                     auto dts = overnightCpn->dt();
@@ -749,11 +759,16 @@ void TRSWrapperAccrualEngine::calculate() const {
     Real additionalCashflowLegNpv = 0.0;
     for (auto const& cf : arguments_.additionalCashflowLeg_) {
         if (cf->date() > today) {
+            QL_REQUIRE(!additionalCashflowCurrencyDiscountCurve_.empty(),
+                       "TRSWrapperAccrualEngine::calculate(): additionalCashflowCurrencyDiscountCurve is empty, but "
+                       "additional cashflows are present.");
             Real tmp = cf->amount() * (arguments_.additionalCashflowLegPayer_ ? -1.0 : 1.0);
-            additionalCashflowLegNpv += tmp;
+            Real discountFactor = additionalCashflowCurrencyDiscountCurve_->discount(cf->date());
+            additionalCashflowLegNpv += tmp * discountFactor;
             // add additional cashflows to additional results
             cfResults.emplace_back();
             cfResults.back().amount = tmp;
+            cfResults.back().discountFactor = discountFactor;
             cfResults.back().payDate = cf->date();
             cfResults.back().currency = arguments_.additionalCashflowCurrency_.code();
             cfResults.back().legNumber = 0;

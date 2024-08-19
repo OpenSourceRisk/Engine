@@ -66,22 +66,22 @@ class AnalyticLgmSwaptionEngine : public GenericEngine<Swaption::arguments, Swap
 public:
     /*! nextCoupon is Mapping A, proRata is Mapping B
         in Lichters, Stamm, Gallagher (2015), 11.2.2 */
-    enum FloatSpreadMapping { nextCoupon, proRata };
+    enum FloatSpreadMapping { nextCoupon, proRata, simple };
 
     /*! Lgm model based constructor */
-    AnalyticLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+    AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                               const FloatSpreadMapping floatSpreadMapping = proRata);
 
     /*! CrossAsset model based constructor */
-    AnalyticLgmSwaptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size ccy,
+    AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const Size ccy,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                               const FloatSpreadMapping floatSpreadMapping = proRata);
 
     /*! parametrization based constructor, note that updates in the
         parametrization are not observed by the engine, you would
         have to call update() on the engine explicitly */
-    AnalyticLgmSwaptionEngine(const boost::shared_ptr<IrLgm1fParametrization> irlgm1f,
+    AnalyticLgmSwaptionEngine(const QuantLib::ext::shared_ptr<IrLgm1fParametrization> irlgm1f,
                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                               const FloatSpreadMapping floatSpreadMapping = proRata);
 
@@ -95,16 +95,17 @@ public:
     void clearCache();
 
 private:
+    Real flatAmount(const Size k) const;
     Real yStarHelper(const Real y) const;
-    const boost::shared_ptr<IrLgm1fParametrization> p_;
-    const Handle<YieldTermStructure> c_;
-    const FloatSpreadMapping floatSpreadMapping_;
+    QuantLib::ext::shared_ptr<IrLgm1fParametrization> p_;
+    Handle<YieldTermStructure> c_;
+    mutable FloatSpreadMapping floatSpreadMapping_;
     bool caching_, lgm_H_constant_, lgm_alpha_constant_;
     mutable Real H0_, D0_, zetaex_, S_m1, u_, w_;
     mutable std::vector<Real> S_, Hj_, Dj_;
     mutable Size j1_, k1_;
-    mutable std::vector<boost::shared_ptr<FixedRateCoupon>> fixedLeg_;
-    mutable std::vector<boost::shared_ptr<FloatingRateCoupon>> floatingLeg_;
+    mutable std::vector<QuantLib::ext::shared_ptr<FixedRateCoupon>> fixedLeg_;
+    mutable std::vector<QuantLib::ext::shared_ptr<FloatingRateCoupon>> floatingLeg_;
     mutable Real nominal_;
 };
 

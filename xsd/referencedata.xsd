@@ -29,6 +29,7 @@
       <xs:element type="bondBasketData" name="BondBasketData"/>
       <xs:element type="referenceDatum" name="CreditReferenceData"/>
       <xs:element type="referenceDatum" name="EquityReferenceData"/>
+      <xs:element type="portfolioBasketReferenceDatum" name="PortfolioBasketReferenceData"/>
     </xs:choice>
   </xs:group>
 
@@ -154,6 +155,26 @@
     </xs:element>
     </xs:sequence>
   </xs:complexType>
-
+  
+  <xs:complexType name="portfolioBasketReferenceDatum">
+    <xs:sequence>
+      <xs:element name="Components">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Trade" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="oreTradeType" name="TradeType"/>
+                  <xs:element type="envelope" name="Envelope" minOccurs="0"/>
+                  <xs:group ref="oreTradeData"/>
+                </xs:sequence>
+                <xs:attribute type="xs:string" name="id"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
 
 </xs:schema>

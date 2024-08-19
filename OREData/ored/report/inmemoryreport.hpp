@@ -26,7 +26,9 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/report/report.hpp>
 #include <ql/errors.hpp>
+#include <ql/tuple.hpp>
 #include <vector>
+#include <map>
 
 namespace ore {
 namespace data {
@@ -39,7 +41,8 @@ using std::vector;
  */
 class InMemoryReport : public Report {
 public:
-    InMemoryReport() : i_(0) {}
+    explicit InMemoryReport(Size bufferSize=0) : i_(0), bufferSize_(bufferSize), cacheIndex_(0) {}
+    ~InMemoryReport() override;
 
     Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override;
     Report& next() override;
@@ -49,28 +52,42 @@ public:
 
     // InMemoryInterface
     Size columns() const { return headers_.size(); }
-    Size rows() const { return columns() == 0 ? 0 : data_[0].size(); }
+    Size rows() const { return columns() == 0 ? 0 : files_.size() * bufferSize_ + data_[0].size(); }
     const string& header(Size i) const { return headers_[i]; }
     bool hasHeader(string h) const { return std::find(headers_.begin(), headers_.end(), h) != headers_.end(); }
     ReportType columnType(Size i) const { return columnTypes_[i]; }
     Size columnPrecision(Size i) const { return columnPrecision_[i]; }
     //! Returns the data
-    const vector<ReportType>& data(Size i) const;
+    const ReportType& data(Size i, Size j) const;
     void toFile(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
                 const string& nullString = "#N/A", bool lowerHeader = false);
-
+    void jumpToColumn(Size i) { i_ = i; }
+    
+    //! Return the position of a column, throws an exception if columnName not in report
+    size_t columnPosition(const std::string& columnName) {
+        auto it = headersMap_.find(columnName);
+        QL_REQUIRE(it != headersMap_.end(), "Invalid column name " << columnName);
+        return it->second;
+    }  
 private:
     Size i_;
+    Size bufferSize_;
     vector<string> headers_;
     vector<ReportType> columnTypes_;
     vector<Size> columnPrecision_;
     vector<vector<ReportType>> data_;
+    vector<string> files_;
+    std::map<std::string, size_t> headersMap_;
+    mutable vector<vector<ReportType>> cache_;
+    mutable Size cacheIndex_;
+    const vector<vector<ReportType>>& cache(Size cacheIndex) const;
+    const Report::ReportType& dataImpl(const vector<vector<ReportType>>& data, Size i, Size j, Size expectedSize) const;
 };
 
 //! InMemoryReport with access to plain types instead of boost::variant<>, to facilitate language bindings
 class PlainInMemoryReport {
 public:
-    PlainInMemoryReport(const boost::shared_ptr<InMemoryReport>& imReport)
+    PlainInMemoryReport(const QuantLib::ext::shared_ptr<InMemoryReport>& imReport)
         : imReport_(imReport) {}
     ~PlainInMemoryReport() {}
     Size columns() const { return imReport_->columns(); }
@@ -82,13 +99,13 @@ public:
     vector<string> dataAsString(Size i) const { return data_T<string>(i, 2); }
     vector<Date> dataAsDate(Size i) const { return data_T<Date>(i, 3); }
     vector<Period> dataAsPeriod(Size i) const { return data_T<Period>(i, 4); }
+    Size rows() const { return columns() == 0 ? 0 : imReport_->rows(); }
     // for convenience, access by row j and column i
-    Size rows() const { return columns() == 0 ? 0 : imReport_->data(0).size(); }
-    int dataAsSize(Size j, Size i) const { return int(boost::get<Size>(imReport_->data(i).at(j))); }
-    Real dataAsReal(Size j, Size i) const { return boost::get<Real>(imReport_->data(i).at(j)); }
-    string dataAsString(Size j, Size i) const { return boost::get<string>(imReport_->data(i).at(j)); }
-    Date dataAsDate(Size j, Size i) const { return boost::get<Date>(imReport_->data(i).at(j)); }
-    Period dataAsPeriod(Size j, Size i) const { return boost::get<Period>(imReport_->data(i).at(j)); }
+    int dataAsSize(Size j, Size i) const { return int(boost::get<Size>(imReport_->data(i, j))); }
+    Real dataAsReal(Size j, Size i) const { return boost::get<Real>(imReport_->data(i, j)); }
+    string dataAsString(Size j, Size i) const { return boost::get<string>(imReport_->data(i, j)); }
+    Date dataAsDate(Size j, Size i) const { return boost::get<Date>(imReport_->data(i, j)); }
+    Period dataAsPeriod(Size j, Size i) const { return boost::get<Period>(imReport_->data(i, j)); }
 
 private:
     template <typename T> vector<T> data_T(Size i, Size w) const {
@@ -96,8 +113,8 @@ private:
                    "PlainTypeInMemoryReport::data_T(column=" << i << ",expectedType=" << w
                    << "): Type mismatch, have " << columnType(i));
         vector<T> tmp;
-        for(auto const& d: imReport_->data(i))
-            tmp.push_back(boost::get<T>(d));
+        for (Size j=0; j<imReport_->rows(); j++)
+            tmp.push_back(boost::get<T>(imReport_->data(i, j)));
         return tmp;
     }
     vector<int> sizeToInt(const vector<Size>& v) const {
@@ -106,7 +123,7 @@ private:
             vi.push_back(int(s));
         return vi;
     }
-    boost::shared_ptr<InMemoryReport> imReport_;
+    QuantLib::ext::shared_ptr<InMemoryReport> imReport_;
 };
 
 } // namespace data

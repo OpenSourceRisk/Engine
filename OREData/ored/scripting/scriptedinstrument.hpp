@@ -30,7 +30,7 @@ class ScriptedInstrumentPricingEngine;
 
 class ScriptedInstrument : public QuantLib::Instrument {
 public:
-    explicit ScriptedInstrument(const QuantLib::Date& lastRelevantDate);
+    explicit ScriptedInstrument(const QuantLib::Date& lastRelevantDate, const bool includePastCashflows_ = false);
     class arguments : public QuantLib::PricingEngine::arguments {
         void validate() const override {}
     };
@@ -39,10 +39,11 @@ public:
     bool isExpired() const override;
     void setupArguments(QuantLib::PricingEngine::arguments*) const override {}
     bool lastCalculationWasValid() const;
-    boost::shared_ptr<PricingEngine> pricingEngine() const { return engine_; }
+    QuantLib::ext::shared_ptr<PricingEngine> pricingEngine() const { return engine_; }
 
 private:
     const QuantLib::Date lastRelevantDate_;
+    const bool includePastCashflows_ = false;
 };
 
 } // namespace QuantExt

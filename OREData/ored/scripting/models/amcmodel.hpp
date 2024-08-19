@@ -33,7 +33,7 @@ public:
     virtual ~AmcModel() {}
     virtual void injectPaths(const std::vector<QuantLib::Real>* pathTimes,
                              const std::vector<std::vector<QuantExt::RandomVariable>>* variates,
-                             const std::vector<bool>* isRelevantTime, const bool stickyCloseOutRun) = 0;
+                             const std::vector<size_t>* pathIndexes, const std::vector<size_t>* timeIndexes) = 0;
 };
 
 } // namespace data

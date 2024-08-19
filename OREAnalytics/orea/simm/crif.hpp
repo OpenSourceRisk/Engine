@@ -21,9 +21,11 @@
 */
 
 #pragma once
+#include <boost/multi_index/detail/hash_index_iterator.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <ored/report/report.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/utilities/timer.hpp>
 
 namespace ore {
 namespace analytics {
@@ -39,18 +41,24 @@ public:
 
     CrifType type() const { return type_; }
 
-    void addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false, bool sortFxVolQualifer = true);
-    void addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies = false, bool sortFxVolQualfier = true);
+    void addRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
+                   bool sortFxVolQualifer = true, bool aggregateOnRegulations = true);
+    void addRecords(const Crif& crif, bool aggregateDifferentAmountCurrencies = false, bool sortFxVolQualfier = true,
+                    bool aggregateOnRegulations = true);
 
     void clear() { records_.clear(); }
 
-    std::set<CrifRecord>::const_iterator begin() const { return records_.cbegin(); }
-    std::set<CrifRecord>::const_iterator end() const { return records_.cend(); }
-    std::set<CrifRecord>::const_iterator find(const CrifRecord& r) const { return records_.find(r); }
+    CrifRecordContainer::iterator begin() { return records_.begin(); }
+    CrifRecordContainer::iterator end() { return records_.end(); }
+    CrifRecordContainer::iterator find(const CrifRecord& r) { return records_.find(r); }
+
+    CrifRecordContainer::const_iterator begin() const { return records_.begin(); }
+    CrifRecordContainer::const_iterator end() const { return records_.end(); }
+    CrifRecordContainer::const_iterator find(const CrifRecord& r) const { return records_.find(r); }
     
     //! Find first element
-    std::set<CrifRecord>::const_iterator findBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc,
-                                                const CrifRecord::RiskType rt, const std::string& qualifier) const;
+    CrifRecordContainer::const_iterator findBy(const NettingSetDetails nsd, CrifRecord::ProductClass pc,
+                                               const CrifRecord::RiskType rt, const std::string& qualifier) const;
    
     bool empty() const { return records_.empty(); }
 
@@ -61,7 +69,7 @@ public:
     
     //! Simm methods
     //! Give back the set of portfolio IDs that have been loaded
-    const std::set<std::string>& portfolioIds() const;
+    std::set<std::string> portfolioIds() const;
     const std::set<ore::data::NettingSetDetails>& nettingSetDetails() const;
 
     //! check if the Crif contains simmParameters
@@ -81,13 +89,14 @@ public:
 
     //! For each CRIF record checks if amountCurrency and amount are 
     //! defined and uses these to populate the record's amountUsd
-    void fillAmountUsd(const boost::shared_ptr<ore::data::Market> market);
+    void fillAmountUsd(const QuantLib::ext::shared_ptr<ore::data::Market> market);
     
     //! Check if netting set details are used anywhere, instead of just the netting set ID
     bool hasNettingSetDetails() const;
 
     //! Aggregate all existing records
-    Crif aggregate() const;
+    Crif aggregate(bool aggregateDifferentAmountCurrencies = false, bool aggregateOnRegulations = true) const;
+    void setAggregate(bool flag) { aggregate_ = flag; }
 
     size_t countMatching(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
                    const std::string& qualifier) const;
@@ -114,21 +123,24 @@ public:
     std::set<std::string> tradeIds() const;
 
 private:
-    void insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false);
-    void addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false, bool sortFxVolQualifer =true);
-    void addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false, bool sortFxVolQualifer =true);
+    void insertCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
+                          bool aggregateOnRegulations = true);
+    void addFrtbCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
+                           bool sortFxVolQualifer = true, bool aggregateOnRegulations = true);
+    void addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
+                           bool sortFxVolQualifer = true, bool aggregateOnRegulations = true);
     void addSimmParameterRecord(const CrifRecord& record);
-    void updateAmountExistingRecord(std::set<CrifRecord>::iterator& it, const CrifRecord& record);
+    void updateAmountExistingRecord(CrifRecordContainer::nth_index_iterator<0>::type it, const CrifRecord& record);
 
 
     CrifType type_ = CrifType::Empty;
-    std::set<CrifRecord> records_;
+    CrifRecordContainer records_;
 
-    //SIMM members
+    // SIMM members
     //! Set of portfolio IDs that have been loaded
     std::set<std::string> portfolioIds_;
     std::set<ore::data::NettingSetDetails> nettingSetDetails_;
-    
+    mutable bool aggregate_ = false;
 };
 
 

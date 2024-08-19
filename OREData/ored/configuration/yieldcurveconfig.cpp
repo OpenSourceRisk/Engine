@@ -214,7 +214,7 @@ void SegmentIDGetter::visit(IborFallbackCurveSegment& s) {
 // YieldCurveConfig
 YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                    const string& discountCurveID,
-                                   const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments,
+                                   const vector<QuantLib::ext::shared_ptr<YieldCurveSegment>>& curveSegments,
                                    const string& interpolationVariable, const string& interpolationMethod,
                                    const string& zeroDayCounter, bool extrapolation,
                                    const BootstrapConfig& bootstrapConfig, const Size mixedInterpolationCutoff)
@@ -234,9 +234,16 @@ const vector<string>& YieldCurveConfig::quotes() {
 
             // Check if the segment is a CrossCcyYieldCurveSegment and add the FX spot rate to the
             // set of quotes needed for the YieldCurveConfig if it has not already been added.
-            if (auto xccySegment = boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(c)) {
-                if (!addedFxSpot)
+            if (auto xccySegment = QuantLib::ext::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(c)) {
+                if (!addedFxSpot) {
                     quotes_.push_back(xccySegment->spotRateID());
+                    // we add the inverted pair as well, because the original pair might get removed from the market
+                    // data loader if both are present in the input market data
+                    if (auto md = boost::dynamic_pointer_cast<FXSpotQuote>(
+                            parseMarketDatum(Date(), xccySegment->spotRateID(), 1.0))) {
+                        quotes_.push_back("FX/RATE/" + md->ccy() + "/" + md->unitCcy());
+                    }
+                }
             }
         }
     }
@@ -258,7 +265,7 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
     if (segmentsNode) {
         for (XMLNode* child = XMLUtils::getChildNode(segmentsNode); child; child = XMLUtils::getNextSibling(child)) {
 
-            boost::shared_ptr<YieldCurveSegment> segment;
+            QuantLib::ext::shared_ptr<YieldCurveSegment> segment;
             string childName = XMLUtils::getNodeName(child);
 
             if (childName == "Direct") {
@@ -329,6 +336,11 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
                             bootstrapConfig_.maxFactor(), bootstrapConfig_.minFactor());
     }
 
+    // Option report configuration of pillar dates
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        reportConfig_.fromXML(tmp);
+    }
+
     populateRequiredCurveIds();
 }
 
@@ -357,6 +369,7 @@ XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "Tolerance", bootstrapConfig_.accuracy());
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
     XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     return node;
 }
@@ -573,14 +586,14 @@ void TenorBasisYieldCurveSegment::fromXML(XMLNode* node) {
     // handle deprecated fields...
     XMLNode* projectionCurveShort = XMLUtils::getChildNode(node, "ProjectionCurveShort");
     if (projectionCurveShort) {
-        ALOG("TenorBasisYieldCurveSegment: ProjectionCurveShort is deprecated, fill empty receiveProjectionCurveID");
+        DLOG("TenorBasisYieldCurveSegment: ProjectionCurveShort is deprecated, fill empty receiveProjectionCurveID");
         if (receiveProjectionCurveID_.empty())
             receiveProjectionCurveID_ = XMLUtils::getNodeValue(projectionCurveShort);
     }
 
     XMLNode* projectionCurveLong = XMLUtils::getChildNode(node, "ProjectionCurveLong");
     if (projectionCurveLong) {
-        ALOG("TenorBasisYieldCurveSegment: projectionCurveLong is deprecated, fill empty payProjectionCurveID");
+        DLOG("TenorBasisYieldCurveSegment: projectionCurveLong is deprecated, fill empty payProjectionCurveID");
         if (payProjectionCurveID_.empty())
             payProjectionCurveID_ = XMLUtils::getNodeValue(projectionCurveLong);
     }

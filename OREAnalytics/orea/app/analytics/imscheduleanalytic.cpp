@@ -26,7 +26,7 @@ using namespace boost::filesystem;
 namespace ore {
 namespace analytics {
 
-void IMScheduleAnalytic::loadCrifRecords(const boost::shared_ptr<ore::data::InMemoryLoader>& loader) {
+void IMScheduleAnalytic::loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     QL_REQUIRE(inputs_, "Inputs not set");
     QL_REQUIRE(!inputs_->crif().empty(), "CRIF loader does not contain any records");
         
@@ -35,34 +35,21 @@ void IMScheduleAnalytic::loadCrifRecords(const boost::shared_ptr<ore::data::InMe
     hasNettingSetDetails_ = crif_.hasNettingSetDetails();
 
     // Keep record of which netting sets have SEC and CFTC
-    map<string, bool> hasSECCache, hasCFTCCache;
     for (const CrifRecord& cr : crif_) {
         const NettingSetDetails& nsd = cr.nettingSetDetails;
 
         for (const SimmConfiguration::SimmSide& side : {SimmConfiguration::SimmSide::Call, SimmConfiguration::SimmSide::Post}) {
-            const string& crifRegs = side == SimmConfiguration::SimmSide::Call ? cr.collectRegulations : cr.postRegulations;
-            for (const string& reg : {"SEC", "CFTC"}) {
-                map<string, bool>& regCache = reg == "SEC" ? hasSECCache : hasCFTCCache;
-                auto& hasRegMap = reg == "SEC" ? hasSEC_ : hasCFTC_;
-
-                if (hasRegMap[side].find(nsd) == hasRegMap[side].end()) {
-                    bool hasReg = false;
-                    if (regCache.find(crifRegs) != regCache.end()) {
-                        hasReg = regCache.at(crifRegs);
-                    } else {
-                        set<string> regs = parseRegulationString(crifRegs);
-                        hasReg = regs.find(reg) != regs.end();
-                        regCache[crifRegs] = hasReg;
-                    }
-                    if (hasReg)
-                        hasRegMap[side].insert(nsd);
-                }
+            const set<CrifRecord::Regulation>& crifRegs =
+                side == SimmConfiguration::SimmSide::Call ? cr.collectRegulations : cr.postRegulations;
+            if (hasSEC_[side].find(nsd) == hasSEC_[side].end()) {
+                if (crifRegs.find(CrifRecord::Regulation::SEC) != crifRegs.end())
+                    hasSEC_[side].insert(nsd);
             }
         }
     }
 }
 
-void IMScheduleAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+void IMScheduleAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                          const std::set<std::string>& runTypes) {
 
     if (!analytic()->match(runTypes))
@@ -80,11 +67,11 @@ void IMScheduleAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
 
     // Calculate IMSchedule
     LOG("Calculating Schedule IM")
-    auto imSchedule = boost::make_shared<IMScheduleCalculator>(
+    auto imSchedule = QuantLib::ext::make_shared<IMScheduleCalculator>(
         imAnalytic->crif(), inputs_->simmResultCurrency(), analytic()->market(),
-        true, inputs_->enforceIMRegulations(), false, imAnalytic->hasSEC(),
-        imAnalytic->hasCFTC());
+        true, inputs_->enforceIMRegulations(), false, imAnalytic->hasSEC());
     imAnalytic->setImSchedule(imSchedule);
+    analytic()->addTimer("IMScheduleCalculator", imSchedule->timer());
 
     Real fxSpotReport = 1.0;
     if (!inputs_->simmReportingCurrency().empty()) {
@@ -96,8 +83,8 @@ void IMScheduleAnalyticImpl::runAnalytic(const boost::shared_ptr<ore::data::InMe
                                             << fxSpotReport);
     }
 
-    boost::shared_ptr<InMemoryReport> imScheduleSummaryReport = boost::make_shared<InMemoryReport>();
-    boost::shared_ptr<InMemoryReport> imScheduleTradeReport = boost::make_shared<InMemoryReport>();
+    QuantLib::ext::shared_ptr<InMemoryReport> imScheduleSummaryReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    QuantLib::ext::shared_ptr<InMemoryReport> imScheduleTradeReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
 
     // Populate the trade-level IM Schedule report
     LOG("Generating Schedule IM reports")

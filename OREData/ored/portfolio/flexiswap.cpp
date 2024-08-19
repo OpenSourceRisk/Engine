@@ -33,7 +33,7 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void FlexiSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     LOG("FlexiSwap::build() for id \"" << id() << "\" called.");
 
@@ -60,16 +60,16 @@ void FlexiSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_FAIL("Invalid leg types " << swap_[0].legType() << " + " << swap_[1].legType());
     }
 
-    boost::shared_ptr<FixedLegData> fixedLegData =
-        boost::dynamic_pointer_cast<FixedLegData>(swap_[fixedLegIndex].concreteLegData());
-    boost::shared_ptr<FloatingLegData> floatingLegData =
-        boost::dynamic_pointer_cast<FloatingLegData>(swap_[floatingLegIndex].concreteLegData());
+    QuantLib::ext::shared_ptr<FixedLegData> fixedLegData =
+        QuantLib::ext::dynamic_pointer_cast<FixedLegData>(swap_[fixedLegIndex].concreteLegData());
+    QuantLib::ext::shared_ptr<FloatingLegData> floatingLegData =
+        QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(swap_[floatingLegIndex].concreteLegData());
 
     QL_REQUIRE(fixedLegData != nullptr, "expected fixed leg data");
     QL_REQUIRE(floatingLegData != nullptr, "expected floating leg data");
 
-    boost::shared_ptr<EngineBuilder> tmp = engineFactory->builder("FlexiSwap");
-    auto builder = boost::dynamic_pointer_cast<FlexiSwapBGSEngineBuilderBase>(tmp);
+    QuantLib::ext::shared_ptr<EngineBuilder> tmp = engineFactory->builder("FlexiSwap");
+    auto builder = QuantLib::ext::dynamic_pointer_cast<FlexiSwapBGSEngineBuilderBase>(tmp);
     QL_REQUIRE(builder, "No Flexi-Swap Builder found for \"" << id() << "\"");
 
     Schedule fixedSchedule = makeSchedule(swap_[fixedLegIndex].schedule());
@@ -178,7 +178,7 @@ void FlexiSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Position::Type optionLongShort = parsePositionType(optionLongShort_);
 
-    auto flexiSwap = boost::make_shared<QuantExt::FlexiSwap>(
+    auto flexiSwap = QuantLib::ext::make_shared<QuantExt::FlexiSwap>(
         type, fixedNominal, floatNominal, fixedSchedule, fixedRate, fixedDayCounter, floatingSchedule, *index, gearings,
         spreads, caps, floors, floatingDayCounter, lowerNotionalBounds, optionLongShort, notionalCanBeDecreased,
         paymentConvention);
@@ -198,12 +198,12 @@ void FlexiSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             hasCapsFloors = true;
     }
     if (hasCapsFloors) {
-        boost::shared_ptr<EngineBuilder> cfBuilder = engineFactory->builder("CapFlooredIborLeg");
+        QuantLib::ext::shared_ptr<EngineBuilder> cfBuilder = engineFactory->builder("CapFlooredIborLeg");
         QL_REQUIRE(cfBuilder, "No builder found for CapFlooredIborLeg");
-        boost::shared_ptr<CapFlooredIborLegEngineBuilder> cappedFlooredIborBuilder =
-            boost::dynamic_pointer_cast<CapFlooredIborLegEngineBuilder>(cfBuilder);
+        QuantLib::ext::shared_ptr<CapFlooredIborLegEngineBuilder> cappedFlooredIborBuilder =
+            QuantLib::ext::dynamic_pointer_cast<CapFlooredIborLegEngineBuilder>(cfBuilder);
         QL_REQUIRE(cappedFlooredIborBuilder != nullptr, "expected CapFlooredIborLegEngineBuilder");
-        boost::shared_ptr<FloatingRateCouponPricer> couponPricer =
+        QuantLib::ext::shared_ptr<FloatingRateCouponPricer> couponPricer =
             cappedFlooredIborBuilder->engine(IndexNameTranslator::instance().oreName(index->name()));
         QuantLib::setCouponPricer(fltLeg, couponPricer);
     }
@@ -214,10 +214,10 @@ void FlexiSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Date today = Settings::instance().evaluationDate();
     Size legRatio = fltLeg.size() / fixLeg.size(); // no remainder by construction of a flexi swap
     for (Size i = 0; i < fltLeg.size(); ++i) {
-        auto fltcpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(fltLeg[i]);
+        auto fltcpn = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(fltLeg[i]);
         if (fltcpn != nullptr && fltcpn->fixingDate() > today && i % legRatio == 0) {
             expiryDates.push_back(fltcpn->fixingDate());
-            auto fixcpn = boost::dynamic_pointer_cast<FixedRateCoupon>(fixLeg[i / legRatio]);
+            auto fixcpn = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(fixLeg[i / legRatio]);
             QL_REQUIRE(fixcpn != nullptr, "FlexiSwap Builder: expected fixed rate coupon");
             strikes.push_back(fixcpn->rate() - fltcpn->spread());
         }
@@ -231,7 +231,7 @@ void FlexiSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     setSensitivityTemplate(*builder);
 
     // FIXME this won't work for exposure, currently not supported
-    instrument_ = boost::make_shared<VanillaInstrument>(flexiSwap);
+    instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(flexiSwap);
 
     npvCurrency_ = ccy_str;
     notional_ = std::max(currentNotional(fixLeg), currentNotional(fltLeg));
@@ -240,7 +240,7 @@ void FlexiSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legs_ = {fixLeg, fltLeg};
     legPayers_ = {swap_[fixedLegIndex].isPayer(), swap_[floatingLegIndex].isPayer()};
     maturity_ = flexiSwap->maturityDate();
-    addToRequiredFixings(fltLeg, boost::make_shared<FixingDateGetter>(requiredFixings_));
+    addToRequiredFixings(fltLeg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_));
 }
 
 void FlexiSwap::fromXML(XMLNode* node) {

@@ -42,7 +42,7 @@ public:
         : Trade("CallableSwap", env), swap_(swap), swaption_(swaption) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>&) override;
 
     //! \name Inspectors
     //@{

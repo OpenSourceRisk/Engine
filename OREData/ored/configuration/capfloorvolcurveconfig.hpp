@@ -25,6 +25,7 @@
 
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/parametricsmileconfiguration.hpp>
 #include <ored/configuration/reportconfig.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/time/calendar.hpp>
@@ -62,7 +63,8 @@ public:
         const std::string& interpolationMethod = "BicubicSpline", const std::string& interpolateOn = "TermVolatilities",
         const std::string& timeInterpolation = "LinearFlat", const std::string& strikeInterpolation = "LinearFlat",
         const std::vector<std::string>& atmTenors = {}, const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
-        const string& inputType = "TermVolatilities");
+        const string& inputType = "TermVolatilities",
+        const boost::optional<ParametricSmileConfiguration>& parametricSmileConfiguration = boost::none);
 
     //! Detailled constructor for proxy config
     CapFloorVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
@@ -80,6 +82,9 @@ public:
     //! \name Inspectors
     //@{
     const VolatilityType& volatilityType() const { return volatilityType_; }
+    const VolatilityType& outputVolatilityType() const { return outputVolatilityType_; }
+    QuantLib::Real modelShift() const { return modelShift_; }
+    QuantLib::Real outputShift() const { return outputShift_; }
     MarketDatum::QuoteType quoteType() const;
     bool extrapolate() const { return extrapolate_; }
     bool flatExtrapolation() const { return flatExtrapolation_; }
@@ -112,6 +117,10 @@ public:
     const QuantLib::Period& proxySourceRateComputationPeriod() const { return proxySourceRateComputationPeriod_; }
     const QuantLib::Period& proxyTargetRateComputationPeriod() const { return proxyTargetRateComputationPeriod_; }
     //
+    const boost::optional<ParametricSmileConfiguration> parametricSmileConfiguration() const {
+        return parametricSmileConfiguration_;
+    }
+    //
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
@@ -120,6 +129,9 @@ public:
 
 private:
     VolatilityType volatilityType_ = VolatilityType::Normal;
+    VolatilityType outputVolatilityType_ = VolatilityType::Normal;
+    QuantLib::Real modelShift_ = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real outputShift_ = QuantLib::Null<QuantLib::Real>();
     bool extrapolate_ = true;
     bool flatExtrapolation_ = true;
     bool includeAtm_ = false;
@@ -150,6 +162,8 @@ private:
     std::string proxyTargetIndex_;
     QuantLib::Period proxySourceRateComputationPeriod_;
     QuantLib::Period proxyTargetRateComputationPeriod_;
+    //
+    boost::optional<ParametricSmileConfiguration> parametricSmileConfiguration_;
     //
     ReportConfig reportConfig_;
 

@@ -39,8 +39,11 @@ void AnalyticEuropeanEngine::calculate() const {
         auto resToInvert = vector<string>({"spot", "forward", "strike"});
         for (const string& res : resToInvert) {
             auto it = results_.additionalResults.find(res);
-            if (it != results_.additionalResults.end())
-                it->second = 1. / boost::any_cast<Real>(it->second);
+            if (it != results_.additionalResults.end()) {
+                string resPricing = res + "_pricing";
+                results_.additionalResults[resPricing] = it->second;
+                it->second = 1. / boost::any_cast<Real>(it->second);           
+            }
         }
 
         // Swap riskFreeDiscount and dividendDiscount, discountFactor stays what it is

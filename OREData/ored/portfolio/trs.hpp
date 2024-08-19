@@ -26,6 +26,7 @@
 
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/referencedata.hpp>
 
 #include <boost/optional.hpp>
 
@@ -65,6 +66,8 @@ public:
         const std::string& initialPriceCurrency() const { return initialPriceCurrency_; }
         const std::vector<std::string>& fxTerms() const { return fxTerms_; }
         boost::optional<bool> payUnderlyingCashFlowsImmediately() const { return payUnderlyingCashFlowsImmediately_; }
+        const std::string& portfolioId() const { return portfolioId_; }
+        void setPortfolioId(std::string portfolioId) { portfolioId_ = portfolioId; }
 
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(XMLDocument& doc) const override;
@@ -77,6 +80,7 @@ public:
             paymentCalendar_;
         std::vector<std::string> paymentDates_;
         Real initialPrice_;
+        std::string portfolioId_;
         std::string initialPriceCurrency_;
         std::vector<std::string> fxTerms_; // FX index strings
 	boost::optional<bool> payUnderlyingCashFlowsImmediately_;
@@ -123,7 +127,7 @@ public:
 
     TRS() : Trade("TotalReturnSwap") {}
 
-    TRS(const Envelope& env, const std::vector<boost::shared_ptr<Trade>>& underlying,
+    TRS(const Envelope& env, const std::vector<QuantLib::ext::shared_ptr<Trade>>& underlying,
         const std::vector<std::string>& underlyingDerivativeId, const ReturnData& returnData,
         const FundingData& fundingData, const AdditionalCashflowData& additionalCashflowData)
         : Trade("TotalReturnSwap", env), underlying_(underlying), underlyingDerivativeId_(underlyingDerivativeId),
@@ -133,15 +137,16 @@ public:
                                             << underlyingDerivativeId_.size() << ")");
     }
 
-    void build(const boost::shared_ptr<EngineFactory>&) override;
+    void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
     //! Inspectors
     //@{
-    const std::vector<boost::shared_ptr<Trade>>& underlying() const { return underlying_; }
+    const std::vector<QuantLib::ext::shared_ptr<Trade>>& underlying() const { return underlying_; }
     const ReturnData& returnData() const { return returnData_; }
     const FundingData& fundingData() const { return fundingData_; }
     const AdditionalCashflowData& additionalCashflowData() const { return additionalCashflowData_; }
     const std::string& creditRiskCurrency() const { return creditRiskCurrency_; }
+    const string& portfolioId() const { return portfolioId_; }
     const std::map<std::string, SimmCreditQualifierMapping>& creditQualifierMapping() const {
         return creditQualifierMapping_;
     }
@@ -150,27 +155,29 @@ public:
     //! Interface
     //@{
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
     QuantLib::Real notional() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
     //@}
 
 protected:
-    boost::shared_ptr<QuantExt::FxIndex>
-    getFxIndex(const boost::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
-               const std::string& foreign, std::map<std::string, boost::shared_ptr<QuantExt::FxIndex>>& fxIndices,
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex>
+    getFxIndex(const QuantLib::ext::shared_ptr<Market> market, const std::string& configuration, const std::string& domestic,
+               const std::string& foreign, std::map<std::string, QuantLib::ext::shared_ptr<QuantExt::FxIndex>>& fxIndices,
                std::set<std::string>& missingFxIndexPairs) const;
 
-    mutable std::vector<boost::shared_ptr<Trade>> underlying_;
+    mutable std::vector<QuantLib::ext::shared_ptr<Trade>> underlying_;
     // empty if underlying is not from a Derivative subnode of UnderlyingData
     mutable std::vector<std::string> underlyingDerivativeId_;
     ReturnData returnData_;
     FundingData fundingData_;
     AdditionalCashflowData additionalCashflowData_;
-
     std::string creditRiskCurrency_;
     std::map<std::string, SimmCreditQualifierMapping> creditQualifierMapping_;
+    void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager);
+    void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum);
+    std::string portfolioId_;
 };
 
 TRS::FundingData::NotionalType parseTrsFundingNotionalType(const std::string& s);
@@ -180,7 +187,7 @@ std::ostream& operator<<(std::ostream& os, const TRS::FundingData::NotionalType 
 class CFD : public TRS {
 public:
     CFD() : TRS() { tradeType_ = "ContractForDifference"; }
-    CFD(const Envelope& env, const std::vector<boost::shared_ptr<Trade>>& underlying,
+    CFD(const Envelope& env, const std::vector<QuantLib::ext::shared_ptr<Trade>>& underlying,
         const std::vector<std::string>& underlyingDerivativeId, const ReturnData& returnData,
         const FundingData& fundingData, const AdditionalCashflowData& additionalCashflowData)
         : TRS(env, underlying, underlyingDerivativeId, returnData, fundingData, additionalCashflowData) {

@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2024 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -33,11 +34,11 @@ FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const st
                                                  const string& fxForeignCurveID, const string& fxDomesticCurveID,
                                                  const DayCounter& dayCounter, const Calendar& calendar,
                                                  const SmileInterpolation& interp, const string& conventionsID,
-                                                 const std::vector<Size>& smileDelta)
+                                                 const std::vector<Size>& smileDelta, const string& smileExtrapolation)
     : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries), dayCounter_(dayCounter),
       calendar_(calendar), fxSpotID_(fxSpotID), fxForeignYieldCurveID_(fxForeignCurveID),
       fxDomesticYieldCurveID_(fxDomesticCurveID), conventionsID_(conventionsID), smileDelta_(smileDelta),
-      smileInterpolation_(interp) {
+      smileInterpolation_(interp), smileExtrapolation_(smileExtrapolation) {
     populateRequiredCurveIds();
 }
 
@@ -134,7 +135,7 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
                     smileDelta_ = parseListOfValues<Size>(sDelta, &parseInteger);
             } else if (smileType == "Delta") {
                 dimension_ = Dimension::SmileDelta;
-                // only read smile interpolation method if dimension is smile.
+                // only read smile interpolation and extrapolation method if dimension is smile.
                 if (smileInterp == "" || smileInterp == "Linear") {
                     smileInterpolation_ = SmileInterpolation::Linear;
                 } else if (smileInterp == "Cubic") {
@@ -142,6 +143,9 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
                 } else {
                     QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
                 }
+
+                smileExtrapolation_ = XMLUtils::getChildValue(node, "SmileExtrapolation", false, "Flat");
+
                 deltas_ = XMLUtils::getChildrenValuesAsStrings(node, "Deltas", true);
 
                 // check that these are valid deltas
@@ -189,6 +193,10 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", curvesRequired);
     }
 
+    timeInterpolation_ =
+        parseFxVolatilityTimeInterpolation(XMLUtils::getChildValue(node, "TimeInterpolation", false, "V"));
+    timeWeighting_ = XMLUtils::getChildValue(node, "TimeWeighting", false);
+
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
     }
@@ -235,6 +243,8 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         } else {
             QL_FAIL("Unknown SmileInterpolation in FXVolatilityCurveConfig::toXML()");
         }
+        if (!smileExtrapolation_.empty())
+            XMLUtils::addChild(doc, node, "SmileExtrapolation", smileExtrapolation_);
         XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
         XMLUtils::addGenericChildAsList(doc, node, "Deltas", deltas_);
     } else if (dimension_ == Dimension::SmileBFRR) {
@@ -271,6 +281,8 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "FXDomesticCurveID", fxDomesticYieldCurveID_);
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    XMLUtils::addChild(doc, node, "TimeInterpolation", to_string(timeInterpolation_));
+    XMLUtils::addChild(doc, node, "TimeWeighting", timeWeighting_);
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     
     return node;
@@ -348,5 +360,27 @@ void FXVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(domIndexInverse + "&" + forIndexInverse);
     }
 }
+
+FXVolatilityCurveConfig::TimeInterpolation parseFxVolatilityTimeInterpolation(const std::string& s) {
+    if (s == "V") {
+        return FXVolatilityCurveConfig::TimeInterpolation::V;
+    } else if (s == "V2T") {
+        return FXVolatilityCurveConfig::TimeInterpolation::V2T;
+    } else {
+        QL_FAIL("FxVolatilityCurveConfig::TimeInterpolation(): '" << s << "' not recognized, expected 'V' or 'V2T'");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, FXVolatilityCurveConfig::TimeInterpolation t) {
+    if (t == FXVolatilityCurveConfig::TimeInterpolation::V)
+        return out << "V";
+    else if (t == FXVolatilityCurveConfig::TimeInterpolation::V2T)
+        return out << "V2T";
+    else {
+        QL_FAIL("operator<<(FXVolatilityCurveConfig::TimeInterpolation): enum "
+                << static_cast<int>(t) << " not recognized. Internal error, contact dev.");
+    }
+}
+
 } // namespace data
 } // namespace ore

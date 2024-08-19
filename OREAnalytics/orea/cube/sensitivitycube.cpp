@@ -56,7 +56,7 @@ std::ostream& operator<<(std::ostream& out, const SensitivityCube::crossPair& cp
     return out << cp.first << "-" << cp.second;
 }
 
-SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
+SensitivityCube::SensitivityCube(const QuantLib::ext::shared_ptr<NPVSensiCube>& cube,
                                  const vector<ShiftScenarioDescription>& scenarioDescriptions,
                                  const map<RiskFactorKey, QuantLib::Real>& targetShiftSizes,
                                  const map<RiskFactorKey, QuantLib::Real>& actualShiftSizes,
@@ -66,7 +66,7 @@ SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
     initialise();
 }
 
-SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
+SensitivityCube::SensitivityCube(const QuantLib::ext::shared_ptr<NPVSensiCube>& cube,
                                  const vector<string>& scenarioDescriptions,
                                  const map<RiskFactorKey, QuantLib::Real>& targetShiftSizes,
                                  const map<RiskFactorKey, QuantLib::Real>& actualShiftSizes,
@@ -153,6 +153,16 @@ RiskFactorKey SensitivityCube::upDownFactor(const Size index) const {
         return k->second;
     } else {
         return RiskFactorKey();
+    }
+}
+
+SensitivityCube::FactorData SensitivityCube::upThenDownFactorData(const RiskFactorKey& rfkey) {
+    if (auto f = upFactors_.find(rfkey); f != upFactors_.end())
+        return f->second;
+    else if (auto f = downFactors_.find(rfkey); f != downFactors_.end())
+        return f->second;
+    else {
+        QL_FAIL("SensitivityCube::upThenDownFactorData(): no up or down factor data found for " << rfkey);
     }
 }
 

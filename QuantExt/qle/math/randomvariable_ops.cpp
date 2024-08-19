@@ -26,14 +26,22 @@ namespace QuantExt {
 
 std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size regressionOrder,
                                                    QuantLib::LsmBasisSystem::PolynomialType polynomType,
-                                                   const double eps) {
+                                                   const double eps, QuantLib::Real regressionVarianceCutoff) {
     std::vector<RandomVariableOp> ops;
 
     // None = 0
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return RandomVariable(); });
+    ops.push_back([](const std::vector<const RandomVariable*>& args) {
+        if (args.size() == 1)
+            return *args[0];
+        else
+            return RandomVariable();
+    });
 
     // Add = 1
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] + (*args[1]); });
+    ops.push_back([](const std::vector<const RandomVariable*>& args) {
+        return std::accumulate(args.begin(), args.end(), RandomVariable(args.front()->size(), 0.0),
+                               [](const RandomVariable x, const RandomVariable* y) { return x + *y; });
+    });
 
     // Subtract = 2
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] - (*args[1]); });
@@ -48,11 +56,19 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
     ops.push_back([](const std::vector<const RandomVariable*>& args) { return *args[0] / (*args[1]); });
 
     // ConditionalExpectation = 6
-    ops.push_back([size, regressionOrder, polynomType](const std::vector<const RandomVariable*>& args) {
+    ops.push_back([size, regressionOrder, polynomType,
+                   regressionVarianceCutoff](const std::vector<const RandomVariable*>& args) {
         std::vector<const RandomVariable*> regressor;
         for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
             if ((*r)->initialised() && !(*r)->deterministic())
                 regressor.push_back(*r);
+        }
+        std::vector<RandomVariable> transformedRegressor;
+        Matrix coordinateTransform;
+        if (regressionVarianceCutoff != Null<Real>()) {
+            coordinateTransform = pcaCoordinateTransform(regressor, regressionVarianceCutoff);
+            transformedRegressor = applyCoordinateTransform(regressor, coordinateTransform);
+            regressor = vec2vecptr(transformedRegressor);
         }
         if (regressor.empty())
             return expectation(*args[0]);
@@ -77,8 +93,7 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
 
     // Min = 10
     if (eps == 0.0) {
-        ops.push_back(
-            [](const std::vector<const RandomVariable*>& args) { return QuantExt::min(*args[0], *args[1]); });
+        ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::min(*args[0], *args[1]); });
     } else {
         ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
             return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps) * (*args[1] - *args[0]) + *args[0];
@@ -87,8 +102,7 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
 
     // Max = 11
     if (eps == 0.0) {
-        ops.push_back(
-            [](const std::vector<const RandomVariable*>& args) { return QuantExt::max(*args[0], *args[1]); });
+        ops.push_back([](const std::vector<const RandomVariable*>& args) { return QuantExt::max(*args[0], *args[1]); });
     } else {
         ops.push_back([eps](const std::vector<const RandomVariable*>& args) {
             return indicatorGt(*args[0], *args[1], 1.0, 0.0, eps) * (*args[0] - *args[1]) + *args[1];
@@ -121,7 +135,7 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
 
 std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, const Size regressionOrder,
                                                            const QuantLib::LsmBasisSystem::PolynomialType polynomType,
-                                                           const double eps) {
+                                                           const double eps, const Real regressionVarianceCutoff) {
 
     std::vector<RandomVariableGrad> grads;
 
@@ -132,7 +146,7 @@ std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, cons
     // Add = 1
     grads.push_back(
         [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {RandomVariable(size, 1.0), RandomVariable(size, 1.0)};
+            return std::vector<RandomVariable>(args.size(), RandomVariable(size, 1.0));
         });
 
     // Subtract = 2
@@ -299,6 +313,12 @@ std::vector<RandomVariableOpNodeRequirements> getRandomVariableOpNodeRequirement
     res.push_back([](const std::size_t nArgs) { return std::make_pair(std::vector<bool>(nArgs, true), true); });
 
     return res;
+}
+
+std::vector<bool> getRandomVariableOpAllowsPredeletion() {
+    std::vector<bool> result(19, true);
+    result[6] = false; // conditional expectation
+    return result;
 }
 
 } // namespace QuantExt

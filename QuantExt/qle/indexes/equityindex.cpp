@@ -134,9 +134,9 @@ Real EquityIndex2::dividendsBetweenDates(const Date& startDate, const Date& endD
     return dividends;
 }
 
-boost::shared_ptr<EquityIndex2> EquityIndex2::clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
+QuantLib::ext::shared_ptr<EquityIndex2> EquityIndex2::clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
                                                   const Handle<YieldTermStructure>& dividend) const {
-    return boost::make_shared<EquityIndex2>(familyName(), fixingCalendar(), currency(), spotQuote, rate, dividend);
+    return QuantLib::ext::make_shared<EquityIndex2>(familyName(), fixingCalendar(), currency(), spotQuote, rate, dividend);
 }
 
 } // namespace QuantExt

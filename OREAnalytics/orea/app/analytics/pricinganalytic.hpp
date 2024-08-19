@@ -16,13 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytic.hpp
-    \brief ORE Analytics Manager
+/*! \file orea/app/pricinganalytic.hpp
+    \brief Pricing Analytic
 */
 
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/engine/parsensitivityanalysis.hpp>
 
 namespace ore {
 namespace analytics {
@@ -34,18 +35,25 @@ class PricingAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PRICING";
 
-    PricingAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    PricingAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) { setLabel(LABEL); }
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
         const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
+    const QuantLib::ext::shared_ptr<SensitivityAnalysis>& sensiAnalysis() { return sensiAnalysis_; }
+    const QuantLib::ext::shared_ptr<ParSensitivityAnalysis>& parAnalysis() { return parAnalysis_; }
+
+private:
+    QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis_;
+    QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis_;
 };
+
+static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY"};
 
 class PricingAnalytic : public Analytic {
 public:
-    PricingAnalytic(const boost::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs),
-            {"NPV", "CASHFLOW", "CASHFLOWNPV", "SENSITIVITY", "STRESS"},
+    PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics,
                    inputs) {}
 };
  
