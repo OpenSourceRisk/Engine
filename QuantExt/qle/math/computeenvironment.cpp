@@ -55,8 +55,10 @@ std::set<std::string> ComputeEnvironment::getAvailableDevices() const {
 bool ComputeEnvironment::hasContext() const { return currentContext_ != nullptr; }
 
 void ComputeEnvironment::selectContext(const std::string& deviceName) {
-    if (currentContextDeviceName_ == deviceName)
+    QL_REQUIRE(!deviceName.empty(), "ComputeEnvironment::selectContext(): device name is empty");
+    if (currentContextDeviceName_ == deviceName) {
         return;
+    }
     for (auto& f : frameworks_) {
         if (auto tmp = f->getAvailableDevices(); tmp.find(deviceName) != tmp.end()) {
             currentContext_ = f->getContext(deviceName);

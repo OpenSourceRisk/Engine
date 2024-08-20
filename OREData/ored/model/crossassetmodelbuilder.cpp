@@ -76,12 +76,12 @@ namespace ore {
 namespace data {
 
 CrossAssetModelBuilder::CrossAssetModelBuilder(
-    const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<CrossAssetModelData>& config,
-    const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
-    const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
-    const std::string& configurationCrCalibration, const std::string& configurationFinalModel, const bool dontCalibrate,
-    const bool continueOnError, const std::string& referenceCalibrationGrid, const SalvagingAlgorithm::Type salvaging,
-    const std::string& id)
+    const QuantLib::ObservableValue<QuantLib::ext::shared_ptr<Market>>& market,
+    const QuantLib::ext::shared_ptr<CrossAssetModelData>& config, const std::string& configurationLgmCalibration,
+    const std::string& configurationFxCalibration, const std::string& configurationEqCalibration,
+    const std::string& configurationInfCalibration, const std::string& configurationCrCalibration,
+    const std::string& configurationFinalModel, const bool dontCalibrate, const bool continueOnError,
+    const std::string& referenceCalibrationGrid, const SalvagingAlgorithm::Type salvaging, const std::string& id)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
@@ -93,10 +93,15 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
     buildModel();
     // register with sub builders
-    for (auto okv : subBuilders_)
+    for (auto okv : subBuilders_) {
         for (auto ikv : okv.second) {
             registerWith(ikv.second);
         }
+    }
+    // register with market handle (will be notified when handle is relinked)
+    marketHandleObserver_ = QuantLib::ext::make_shared<MarketObserver>();
+    marketHandleObserver_->addObservable(market_);
+    registerWith(marketHandleObserver_);
     // register market observer with correlations
     marketObserver_ = QuantLib::ext::make_shared<MarketObserver>();
     for (auto const& c : config->correlations())
@@ -138,8 +143,7 @@ bool CrossAssetModelBuilder::requiresRecalibration() const {
         for (auto ikv : okv.second)
             if (ikv.second->requiresRecalibration())
                 return true;
-
-    return marketObserver_->hasUpdated(false);
+    return marketHandleObserver_->hasUpdated(true) || marketObserver_->hasUpdated(true);
 }
 
 void CrossAssetModelBuilder::performCalculations() const {
@@ -195,7 +199,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
     LOG("Start building CrossAssetModel");
 
-    QL_REQUIRE(market_ != NULL, "CrossAssetModelBuilder: no market given");
+    QL_REQUIRE(market_.value() != NULL, "CrossAssetModelBuilder: no market given");
 
     DLOG("configurations: LgmCalibration "
          << configurationLgmCalibration_ << ", FxCalibration " << configurationFxCalibration_ << ", EqCalibration "
@@ -270,7 +274,7 @@ void CrossAssetModelBuilder::buildModel() const {
         if (auto ir = QuantLib::ext::dynamic_pointer_cast<IrLgmData>(irConfig)) {
             if (!buildersAreInitialized) {
                 subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<LgmBuilder>(
-                    market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
+                    market_.value(), ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
                     referenceCalibrationGrid_, false, id_);
             }
             auto builder = QuantLib::ext::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
@@ -297,7 +301,7 @@ void CrossAssetModelBuilder::buildModel() const {
             HwModel::Discretization discr = HwModel::Discretization::Euler;
             if (!buildersAreInitialized) {
                 subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<HwBuilder>(
-                    market_, ir, measure, discr, evaluateBankAccount, configurationLgmCalibration_,
+                    market_.value(), ir, measure, discr, evaluateBankAccount, configurationLgmCalibration_,
                     config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, setCalibrationInfo);
             }
             auto builder = QuantLib::ext::dynamic_pointer_cast<HwBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
@@ -343,7 +347,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
         if (!buildersAreInitialized) {
             subBuilders_[CrossAssetModel::AssetType::FX][i] =
-                QuantLib::ext::make_shared<FxBsBuilder>(market_, fx, configurationFxCalibration_, referenceCalibrationGrid_);
+                QuantLib::ext::make_shared<FxBsBuilder>(market_.value(), fx, configurationFxCalibration_, referenceCalibrationGrid_);
         }
         auto builder = QuantLib::ext::dynamic_pointer_cast<FxBsBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);
         fxBuilder.push_back(builder);
@@ -368,7 +372,7 @@ void CrossAssetModelBuilder::buildModel() const {
                    "Currency (" << eqCcy << ") for equity " << eqName << " not covered by CrossAssetModelData");
         if (!buildersAreInitialized) {
             subBuilders_[CrossAssetModel::AssetType::EQ][i] = QuantLib::ext::make_shared<EqBsBuilder>(
-                market_, eq, domesticCcy, configurationEqCalibration_, referenceCalibrationGrid_);
+                market_.value(), eq, domesticCcy, configurationEqCalibration_, referenceCalibrationGrid_);
         }
         QuantLib::ext::shared_ptr<EqBsBuilder> builder =
             QuantLib::ext::dynamic_pointer_cast<EqBsBuilder>(subBuilders_[CrossAssetModel::AssetType::EQ][i]);
@@ -390,7 +394,7 @@ void CrossAssetModelBuilder::buildModel() const {
         if (auto dkData = QuantLib::ext::dynamic_pointer_cast<InfDkData>(imData)) {
             if (!buildersAreInitialized) {
                 subBuilders_[CrossAssetModel::AssetType::INF][i] = QuantLib::ext::make_shared<InfDkBuilder>(
-                    market_, dkData, configurationInfCalibration_, referenceCalibrationGrid_, dontCalibrate_);
+                    market_.value(), dkData, configurationInfCalibration_, referenceCalibrationGrid_, dontCalibrate_);
             }
             QuantLib::ext::shared_ptr<InfDkBuilder> builder =
                 QuantLib::ext::dynamic_pointer_cast<InfDkBuilder>(subBuilders_[CrossAssetModel::AssetType::INF][i]);
@@ -420,7 +424,7 @@ void CrossAssetModelBuilder::buildModel() const {
                     jyData->setRealRateVolatility(rrVol);
                 }
                 subBuilders_[CrossAssetModel::AssetType::INF][i] = QuantLib::ext::make_shared<InfJyBuilder>(
-                    market_, jyData, configurationInfCalibration_, referenceCalibrationGrid_, dontCalibrate_);
+                    market_.value(), jyData, configurationInfCalibration_, referenceCalibrationGrid_, dontCalibrate_);
             }
             auto builder = QuantLib::ext::dynamic_pointer_cast<InfJyBuilder>(subBuilders_[CrossAssetModel::AssetType::INF][i]);
             infParameterizations.push_back(builder->parameterization());
@@ -442,7 +446,7 @@ void CrossAssetModelBuilder::buildModel() const {
         string crName = cr->name();
         if (!buildersAreInitialized) {
             subBuilders_[CrossAssetModel::AssetType::CR][i] =
-                QuantLib::ext::make_shared<CrLgmBuilder>(market_, cr, configurationCrCalibration_);
+                QuantLib::ext::make_shared<CrLgmBuilder>(market_.value(), cr, configurationCrCalibration_);
         }
         auto builder = QuantLib::ext::dynamic_pointer_cast<CrLgmBuilder>(subBuilders_[CrossAssetModel::AssetType::CR][i]);
         QuantLib::ext::shared_ptr<QuantExt::CrLgm1fParametrization> parametrization = builder->parametrization();
@@ -459,7 +463,7 @@ void CrossAssetModelBuilder::buildModel() const {
         string crName = cr->name();
         if (!buildersAreInitialized) {
             subBuilders_[CrossAssetModel::AssetType::CR][i] =
-                QuantLib::ext::make_shared<CrCirBuilder>(market_, cr, configurationCrCalibration_);
+                QuantLib::ext::make_shared<CrCirBuilder>(market_.value(), cr, configurationCrCalibration_);
         }
         auto builder = QuantLib::ext::dynamic_pointer_cast<CrCirBuilder>(subBuilders_[CrossAssetModel::AssetType::CR][i]);
         QuantLib::ext::shared_ptr<QuantExt::CrCirppParametrization> parametrization = builder->parametrization();
@@ -481,7 +485,7 @@ void CrossAssetModelBuilder::buildModel() const {
                    "Currency (" << comCcy << ") for commodity " << comName << " not covered by CrossAssetModelData");
         if (!buildersAreInitialized) {
             subBuilders_[CrossAssetModel::AssetType::COM][i] = QuantLib::ext::make_shared<CommoditySchwartzModelBuilder>(
-                market_, com, domesticCcy, configurationComCalibration_, referenceCalibrationGrid_);
+                market_.value(), com, domesticCcy, configurationComCalibration_, referenceCalibrationGrid_);
         }
         auto builder = QuantLib::ext::dynamic_pointer_cast<CommoditySchwartzModelBuilder>(
             subBuilders_[CrossAssetModel::AssetType::COM][i]);
@@ -574,7 +578,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
     for (Size i = 0; i < irParametrizations.size(); i++) {
         auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_->discountCurve(p->currency().code(), configurationFxCalibration_));
+        irDiscountCurves[i].linkTo(*market_.value()->discountCurve(p->currency().code(), configurationFxCalibration_));
         DLOG("Relinked discounting curve for " << p->currency().code() << " for FX calibration");
     }
 
@@ -653,7 +657,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
     for (Size i = 0; i < irParametrizations.size(); i++) {
         auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_->discountCurve(p->currency().code(), configurationEqCalibration_));
+        irDiscountCurves[i].linkTo(*market_.value()->discountCurve(p->currency().code(), configurationEqCalibration_));
         DLOG("Relinked discounting curve for " << p->currency().code() << " for EQ calibration");
     }
 
@@ -736,7 +740,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
     for (Size i = 0; i < irParametrizations.size(); i++) {
         auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_->discountCurve(p->currency().code(), configurationInfCalibration_));
+        irDiscountCurves[i].linkTo(*market_.value()->discountCurve(p->currency().code(), configurationInfCalibration_));
         DLOG("Relinked discounting curve for " << p->currency().code() << " for INF calibration");
     }
 
@@ -782,7 +786,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
     for (Size i = 0; i < irParametrizations.size(); i++) {
         auto p = irParametrizations[i];
-        irDiscountCurves[i].linkTo(*market_->discountCurve(p->currency().code(), configurationFinalModel_));
+        irDiscountCurves[i].linkTo(*market_.value()->discountCurve(p->currency().code(), configurationFinalModel_));
         DLOG("Relinked discounting curve for " << p->currency().code() << " as final model curves");
     }
 
@@ -808,7 +812,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
     }
 
     Handle<ZeroInflationIndex> zInfIndex =
-        market_->zeroInflationIndex(model_->infdk(modelIdx)->name(), configurationInfCalibration_);
+        market_.value()->zeroInflationIndex(model_->infdk(modelIdx)->name(), configurationInfCalibration_);
     Real baseCPI = dontCalibrate_ ? 100. : zInfIndex->fixing(zInfIndex->zeroInflationTermStructure()->baseDate());
     auto engine = QuantLib::ext::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(*model_, modelIdx, baseCPI);
     for (Size j = 0; j < cb.size(); j++)
@@ -882,7 +886,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     }
 
     Handle<ZeroInflationIndex> zInfIndex =
-        market_->zeroInflationIndex(model_->infjy(modelIdx)->name(), configurationInfCalibration_);
+        market_.value()->zeroInflationIndex(model_->infjy(modelIdx)->name(), configurationInfCalibration_);
 
     // We will need the 2 baskets of helpers
     auto rrBasket = jyBuilder->realRateBasket();
