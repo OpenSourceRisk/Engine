@@ -726,7 +726,7 @@ public:
      * Getters for SIMM
      ******************/
     const std::string& simmVersion() const { return simmVersion_; }
-    const ore::analytics::Crif& crif() const { return crif_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif() const { return crif_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() const { return simmNameMapper_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() const { return simmBucketMapper_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SimmCalibrationData>& simmCalibrationData() const { return simmCalibrationData_; }
@@ -1058,7 +1058,7 @@ protected:
      * SIMM analytic
      ***************/
     std::string simmVersion_;
-    ore::analytics::Crif crif_;
+    QuantLib::ext::shared_ptr<ore::analytics::Crif> crif_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
@@ -1069,6 +1069,7 @@ protected:
     bool enforceIMRegulations_ = false;
     bool useSimmParameters_ = true;
     bool writeSimmIntermediateReports_ = true;
+    bool loadCrifAdditionalFields_ = true;
 
     /***************
      * Zero to Par Conversion analytic

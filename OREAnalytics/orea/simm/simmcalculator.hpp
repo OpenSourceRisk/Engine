@@ -47,7 +47,7 @@ public:
         give the FX spot rate between USD and the \p calculationCcy. This spot rate is
         interpreted as the number of USD per unit of \p calculationCcy.
     */
-    SimmCalculator(const ore::analytics::Crif& crif,
+    SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif,
                    const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration,
                    const std::string& calculationCcyCall = "USD",
                    const std::string& calculationCcyPost = "USD",
@@ -92,7 +92,7 @@ public:
 
     const std::map<SimmSide, std::set<std::string>>& finalTradeIds() const { return finalTradeIds_; }
 
-    const ore::analytics::Crif& simmParameters() const { return simmParameters_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::Crif>& simmParameters() const { return simmParameters_; }
 
     //! Return the calculator's calculation currency
     const std::string& calculationCurrency(const SimmSide& side) const {
@@ -112,11 +112,11 @@ public:
 private:
     //! Net sentivities at the regulation level within each netting set
     std::map<SimmSide, std::map<ore::data::NettingSetDetails,
-                                std::map<std::set<CrifRecord::Regulation>, ore::analytics::Crif>>>
+                                std::map<std::set<CrifRecord::Regulation>, QuantLib::ext::shared_ptr<ore::analytics::Crif>>>>
         regSensitivities_;
 
     //! Record of SIMM parameters that were used in the calculation
-    ore::analytics::Crif simmParameters_;
+    QuantLib::ext::shared_ptr<ore::analytics::Crif> simmParameters_;
 
     //! The SIMM configuration governing the calculation
     QuantLib::ext::shared_ptr<SimmConfiguration> simmConfiguration_;
@@ -229,7 +229,8 @@ private:
              const bool overwrite = true);
 
     //! Add CRIF record to the CRIF records container that correspondsd to the given regulation/s and portfolio ID
-    void splitCrifByRegulationsAndPortfolios(const bool enforceIMRegulations, const Crif& crif);
+    void splitCrifByRegulationsAndPortfolios(const bool enforceIMRegulations,
+                                             const QuantLib::ext::shared_ptr<Crif>& crif);
 
     //! Split up CRIF records so that all records under each regulation are combined into one CRIF
     void cleanDuplicateRegulations();

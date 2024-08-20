@@ -91,8 +91,9 @@ map<Size, set<string>> CrifLoader::optionalHeaders = {
 // Ease syntax
 using RiskType = CrifRecord::RiskType;
 using ProductClass = CrifRecord::ProductClass;
+using IMModel = CrifRecord::IMModel;
 
-void CrifLoader::addRecordToCrif(Crif& crif, CrifRecord&& recordToAdd) const {
+void CrifLoader::addRecordToCrif(const QuantLib::ext::shared_ptr<Crif>& crif, CrifRecord&& recordToAdd) const {
     bool add = recordToAdd.type() != CrifRecord::RecordType::Generic;
     if (recordToAdd.type() == CrifRecord::RecordType::SIMM) {
         validateSimmRecord(recordToAdd);
@@ -100,10 +101,10 @@ void CrifLoader::addRecordToCrif(Crif& crif, CrifRecord&& recordToAdd) const {
         add = configuration_->isValidRiskType(recordToAdd.riskType);
     }
     if (aggregateTrades_) {
-        recordToAdd.tradeId = "";
+        recordToAdd.tradeId.clear();
     }
     if (add) {
-        crif.addRecord(recordToAdd);
+        crif->addRecord(recordToAdd);
     } else {
         QL_FAIL("Risk type string " << recordToAdd.riskType << " does not correspond to a valid SimmConfiguration::RiskType");
     }
@@ -133,7 +134,7 @@ void CrifLoader::validateSimmRecord(const CrifRecord& cr) const {
     }
     case RiskType::Notional:
     case RiskType::PV:
-        if (cr.imModel == "Schedule")
+        if (cr.imModel == IMModel::Schedule)
             QL_REQUIRE(!cr.endDate.empty(),
                        "Expected end date for risk type " << cr.riskType << " and im_model=\'Schedule\'");
         break;
@@ -230,7 +231,8 @@ std::stringstream CsvBufferCrifLoader::stream() const {
     return csvStream;
 }
 
-Crif StringStreamCrifLoader::loadFromStream(std::stringstream&& stream) {
+QuantLib::ext::shared_ptr<Crif> StringStreamCrifLoader::loadFromStream(std::stringstream&& stream) {
+    LOG("Starting StringStreamCrifLoader::loadFromStream()");
     string line;
     vector<string> entries;
     bool headerProcessed = false;
@@ -239,7 +241,7 @@ Crif StringStreamCrifLoader::loadFromStream(std::stringstream&& stream) {
     Size invalidLines = 0;
     Size maxIndex = 0;
     Size currentLine = 0;
-    Crif result;
+    auto result = QuantLib::ext::make_shared<Crif>();
     while (getline(stream, line, eol_)) {
 
         // Keep track of current line number for messages
@@ -333,7 +335,7 @@ void StringStreamCrifLoader::processHeader(const vector<string>& headers) {
     }
 }
 
-bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxIndex, Size currentLine, Crif& result) {
+bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxIndex, Size currentLine, const QuantLib::ext::shared_ptr<Crif>& result) {
     CrifRecord cr;
     // Return early if there are not enough entries in the line
     if (entries.size() <= maxIndex) {
@@ -366,8 +368,16 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
 
         cr.tradeId = tradeId;
         cr.tradeType = tradeType;
-        cr.imModel = imModel;
-        cr.portfolioId = columnIndex_.count(1) == 0 ? "DummyPortfolio" : entries[columnIndex_.at(1)];
+        cr.imModel = parseIMModel(imModel);
+
+        // Populate netting set details
+        string portfolioId = columnIndex_.count(1) == 0 ? "DummyPortfolio" : entries[columnIndex_.at(1)];
+        string agreementType = loadOptionalString(11);
+        string callType = loadOptionalString(12);
+        string initialMarginType = loadOptionalString(13);
+        string legalEntityId = loadOptionalString(14);
+        cr.nettingSetDetails =
+            NettingSetDetails(portfolioId, agreementType, callType, initialMarginType, legalEntityId);
         cr.productClass = parseProductClass(loadOptionalString(2));
         cr.riskType = parseRiskType(entries[columnIndex_.at(3)]);
         
@@ -428,14 +438,6 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
 
         cr.amount = loadOptionalReal(9);
         cr.amountUsd = loadOptionalReal(10);
-
-        // Populate netting set details
-        cr.agreementType = loadOptionalString(11);
-        cr.callType = loadOptionalString(12);
-        cr.initialMarginType = loadOptionalString(13);
-        cr.legalEntityId = loadOptionalString(14);
-        cr.nettingSetDetails = NettingSetDetails(cr.portfolioId, cr. agreementType, cr.callType, cr.initialMarginType,
-                                                 cr.legalEntityId);
         cr.postRegulations = parseRegulationString(loadOptionalString(17));
         cr.collectRegulations = parseRegulationString(loadOptionalString(18));
         cr.endDate = loadOptionalString(19);
@@ -445,14 +447,6 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
         cr.coveredBondInd = loadOptionalString(23);
         cr.trancheThickness = loadOptionalString(24);
         cr.bb_rw = loadOptionalString(25);
-
-        // Check the IM model
-        try {
-            cr.imModel = to_string(parseIMModel(cr.imModel));
-        } catch (...) {
-            // If we cannot convert to a valid im_model, then it was either provided blank
-            // or is simply not a valid value
-        }
 
         // Store additional data that matches the defined additional headers in the additional fields map
         for (auto& additionalField : additionalHeadersIndexMap_) {
