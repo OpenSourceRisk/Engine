@@ -154,9 +154,10 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
         QuantLib::ext::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
 
-    fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData_.creditCurveId(),
-                                                     bondData_.hasCreditRisk(), bondData_.securityId(),
-                                                     bondData_.referenceCurveId(), bondData_.incomeCurveId()));
+    fwdBond->setPricingEngine(fwdBondBuilder->engine(
+        id(), currency, envelope().additionalField("discount_curve", false, std::string()), bondData_.creditCurveId(),
+        bondData_.hasCreditRisk(), bondData_.securityId(), bondData_.referenceCurveId(), bondData_.incomeCurveId()));
+
     setSensitivityTemplate(*fwdBondBuilder);
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
 
