@@ -33,6 +33,7 @@ ConfigurableCurrency::ConfigurableCurrency(const std::string& name, const std::s
       currencyType_(currencyType) {
     data_ = QuantLib::ext::make_shared<Currency::Data>(name, code, numericCode, symbol, fractionSymbol, fractionsPerUnit,
                                                rounding, formatString, Currency(), minorUnitCodes);
+    currencyName_ = name;
 }
 
 std::ostream& operator<<(std::ostream& os, ConfigurableCurrency::Type ccytype) {

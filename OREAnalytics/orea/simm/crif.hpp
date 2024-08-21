@@ -21,6 +21,7 @@
 */
 
 #pragma once
+#include <boost/multi_index/detail/hash_index_iterator.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <ored/report/report.hpp>
 #include <ored/marketdata/market.hpp>
@@ -46,6 +47,10 @@ public:
                     bool aggregateOnRegulations = true);
 
     void clear() { records_.clear(); }
+
+    CrifRecordContainer::iterator begin() { return records_.begin(); }
+    CrifRecordContainer::iterator end() { return records_.end(); }
+    CrifRecordContainer::iterator find(const CrifRecord& r) { return records_.find(r); }
 
     CrifRecordContainer::const_iterator begin() const { return records_.begin(); }
     CrifRecordContainer::const_iterator end() const { return records_.end(); }
@@ -91,6 +96,7 @@ public:
 
     //! Aggregate all existing records
     Crif aggregate(bool aggregateDifferentAmountCurrencies = false, bool aggregateOnRegulations = true) const;
+    void setAggregate(bool flag) { aggregate_ = flag; }
 
     size_t countMatching(const NettingSetDetails& nsd, const CrifRecord::ProductClass pc, const CrifRecord::RiskType rt,
                    const std::string& qualifier) const;
@@ -124,18 +130,17 @@ private:
     void addSimmCrifRecord(const CrifRecord& record, bool aggregateDifferentAmountCurrencies = false,
                            bool sortFxVolQualifer = true, bool aggregateOnRegulations = true);
     void addSimmParameterRecord(const CrifRecord& record);
-    void updateAmountExistingRecord(CrifRecordContainer::iterator& it, const CrifRecord& record);
-    //void updateAmountExistingRecord(std::map<CrifRecord::SimmAmountCcyKey, const CrifRecord*>::iterator& it, const CrifRecord& record);
+    void updateAmountExistingRecord(CrifRecordContainer::nth_index_iterator<0>::type it, const CrifRecord& record);
 
 
     CrifType type_ = CrifType::Empty;
     CrifRecordContainer records_;
-    //std::map<CrifRecord::SimmAmountCcyKey, const CrifRecord*> diffAmountCurrenciesIndex_;
 
-    //SIMM members
+    // SIMM members
     //! Set of portfolio IDs that have been loaded
     std::set<std::string> portfolioIds_;
     std::set<ore::data::NettingSetDetails> nettingSetDetails_;
+    mutable bool aggregate_ = false;
 };
 
 

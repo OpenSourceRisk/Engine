@@ -31,13 +31,15 @@
 #include <ored/scripting/models/modelcg.hpp>
 #include <ored/scripting/paylog.hpp>
 #include <ored/scripting/scriptedinstrument.hpp>
+#include <ored/scripting/engines/amccgpricingengine.hpp>
 
 #include <ored/configuration/conventions.hpp>
 
 namespace ore {
 namespace data {
 
-class ScriptedInstrumentPricingEngineCG : public QuantExt::ScriptedInstrument::engine {
+class ScriptedInstrumentPricingEngineCG : public QuantExt::ScriptedInstrument::engine,
+                                          public AmcCgPricingEngine {
 public:
     ScriptedInstrumentPricingEngineCG(const std::string& npv,
                                       const std::vector<std::pair<std::string, std::string>>& additionalResults,
@@ -51,9 +53,9 @@ public:
     ~ScriptedInstrumentPricingEngineCG();
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
-    const std::string& npvName() const { return npv_; }
+    std::string npvName() const override { return npv_; }
 
-    void buildComputationGraph() const;
+    void buildComputationGraph() const override;
 
 private:
     void calculate() const override;

@@ -320,6 +320,8 @@ scripting/astresetter.cpp
 scripting/asttoscriptconverter.cpp
 scripting/computationgraphbuilder.cpp
 scripting/context.cpp
+scripting/engines/amccgbaseengine.cpp
+scripting/engines/amccgswapengine.cpp
 scripting/engines/analyticblackriskparticipationagreementengine.cpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.cpp
 scripting/engines/cliquetoptionmcscriptengine.cpp
@@ -338,7 +340,6 @@ scripting/models/fdblackscholesbase.cpp
 scripting/models/fdgaussiancam.cpp
 scripting/models/gaussiancam.cpp
 scripting/models/gaussiancamcg.cpp
-scripting/models/hwcg.cpp
 scripting/models/lgmcg.cpp
 scripting/models/localvol.cpp
 scripting/models/modelcg.cpp
@@ -724,6 +725,9 @@ scripting/astresetter.hpp
 scripting/asttoscriptconverter.hpp
 scripting/computationgraphbuilder.hpp
 scripting/context.hpp
+scripting/engines/amccgbaseengine.hpp
+scripting/engines/amccgpricingengine.hpp
+scripting/engines/amccgswapengine.hpp
 scripting/engines/analyticblackriskparticipationagreementengine.hpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp
 scripting/engines/cliquetoptionmcscriptengine.hpp
@@ -744,7 +748,6 @@ scripting/models/fdblackscholesbase.hpp
 scripting/models/fdgaussiancam.hpp
 scripting/models/gaussiancam.hpp
 scripting/models/gaussiancamcg.hpp
-scripting/models/hwcg.hpp
 scripting/models/lgmcg.hpp
 scripting/models/localvol.hpp
 scripting/models/model.hpp

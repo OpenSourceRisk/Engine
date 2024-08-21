@@ -918,10 +918,6 @@ void McMultiLegBaseEngine::calculate() const {
             pathValueOption = conditionalResult(exerciseValue > continuationValue &&
                                                     exerciseValue > RandomVariable(calibrationSamples_, 0.0),
                                                 pathValueUndExInto + pvRebate, pathValueOption);
-            regModelOption[counter] = RegressionModel(
-                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                regressorModel_, regressionVarianceCutoff_);
-            regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
         }
 
         if (isXvaTime) {

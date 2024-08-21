@@ -1193,16 +1193,6 @@ Array regressionCoefficients(
             a.copyToMatrixCol(A, j);
     }
 
-    if (!debugLabel.empty()) {
-        for (Size i = 0; i < r.size(); ++i) {
-            std::cout << debugLabel << "," << r[i] << ",";
-            for (Size j = 0; j < regressor.size(); ++j) {
-                std::cout << regressor[j]->operator[](i) << (j == regressor.size() - 1 ? "\n" : ",");
-            }
-        }
-        std::cout << std::flush;
-    }
-
     if (filter.size() > 0) {
         r = applyFilter(r, filter);
     }
@@ -1233,6 +1223,19 @@ Array regressionCoefficients(
         res = qrSolve(A, b);
     } else {
         QL_FAIL("regressionCoefficients(): unknown regression method, expected SVD or QR");
+    }
+
+    if (!debugLabel.empty()) {
+        RandomVariable y(r.size(), 0.0);
+        for (Size i = 0; i < res.size(); ++i)
+            y += RandomVariable(r.size(), res[i]) * basisFn[i](regressor);
+        for (Size i = 0; i < r.size(); ++i) {
+            std::cout << debugLabel << "," << r[i] << "," << y[i] << ",";
+            for (Size j = 0; j < regressor.size(); ++j) {
+                std::cout << regressor[j]->operator[](i) << (j == regressor.size() - 1 ? "\n" : ",");
+            }
+        }
+        std::cout << std::flush;
     }
 
     // rough estimate, SVD is O(mn min(m,n))

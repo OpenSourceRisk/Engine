@@ -70,7 +70,7 @@ public:
     // Add yield curve data to array
     virtual void addYieldCurve(const QuantLib::Date& refdate,
                        QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> yts, const std::string& name,
-                       bool isDiscount, const std::string& label) = 0;
+                       bool isDiscount, const std::string& label, QuantLib::Handle<QuantLib::IborIndex> iborIndex = QuantLib::Handle<QuantLib::IborIndex>()) = 0;
 
     // Add inflation curve data to array
     virtual void addInflationCurve(const QuantLib::Date& refdate,
@@ -112,8 +112,9 @@ public:
     
     QuantLib::ext::shared_ptr<ore::data::Report> outputCalibrationReport() override;
 
-    void addYieldCurve(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> yts,
-                       const std::string& name, bool isDiscount, const std::string& label) override;
+    void addYieldCurve(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> yts, const std::string& name,
+                       bool isDiscount, const std::string& label,
+                       QuantLib::Handle<QuantLib::IborIndex> iborIndex = QuantLib::Handle<QuantLib::IborIndex>()) override;
 
     // Add inflation curve data to array
     void addInflationCurve(const QuantLib::Date& refdate,
