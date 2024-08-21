@@ -1772,7 +1772,8 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
     // Add the headers to the report
 
     bool hasRegulations = false;
-    for (const auto& cr : simmData) {
+    for (const auto& scr : simmData) {
+        CrifRecord cr = scr.toCrifRecord();
         if (!cr.collectRegulations.empty() || !cr.postRegulations.empty()) {
             hasRegulations = true;
             break;
@@ -1800,18 +1801,20 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
             .addColumn("post_regulations", string());
 
     // Write the report body by looping over the netted CRIF records
-    for (const auto& cr : simmData) {
+    for (const auto& scr : simmData) {
+        CrifRecord cr = scr.toCrifRecord();
+
         // Skip to next netted CRIF record if 'AmountUSD' is negligible
         if (close_enough(cr.amountUsd, 0.0))
             continue;
 
         // Skip Schedule IM records
-        if (cr.imModel == "Schedule")
+        if (cr.imModel == CrifRecord::IMModel::Schedule)
             continue;
 
         // Same check as above, but for backwards compatibility, if im_model is not used
         // but Risk::Type is PV or Notional
-        if (cr.imModel.empty() &&
+        if (cr.imModel == CrifRecord::IMModel::Empty &&
             (cr.riskType == CrifRecord::RiskType::Notional || cr.riskType == CrifRecord::RiskType::PV))
             continue;
 
@@ -1827,7 +1830,7 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
             .add(cr.label1)
             .add(cr.label2)
             .add(cr.amountUsd)
-            .add(cr.imModel);
+            .add(ore::data::to_string(cr.imModel));
 
         if (hasRegulations) {
             string collectRegString = escapeCommaSeparatedList(regulationsToString(cr.collectRegulations), '\0');
@@ -1843,139 +1846,148 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
     LOG("SIMM data report written.");
 }
 
-void ReportWriter::writeCrifReport(const QuantLib::ext::shared_ptr<Report>& report, const Crif& crif) {
+void ReportWriter::writeCrifReport(const QuantLib::ext::shared_ptr<Report>& report,
+                                   const QuantLib::ext::shared_ptr<Crif>& crif) {
 
-    // If we have SIMM parameters, check if at least one of them uses netting set details optional field/s
-    // It is easier to check here than to pass the flag from other places, since otherwise we'd have to handle certain edge cases
-    // e.g. SIMM parameters use optional NSDs, but trades don't. So SIMM report should not display NSDs, but CRIF report still should.
-    bool hasNettingSetDetails = false;
-    for (const auto& cr : crif) {
-        if (!cr.nettingSetDetails.emptyOptionalFields())
-            hasNettingSetDetails = true;
-    }
+    if (crif) {
+        // If we have SIMM parameters, check if at least one of them uses netting set details optional field/s
+        // It is easier to check here than to pass the flag from other places, since otherwise we'd have to handle certain
+        // edge cases e.g. SIMM parameters use optional NSDs, but trades don't. So SIMM report should not display NSDs, but
+        // CRIF report still should.
+        bool hasNettingSetDetails = false;
+        for (const auto& scr : *crif) {
+            CrifRecord cr = scr.toCrifRecord();
 
-    std::vector<string> addFields;
-    bool hasCollectRegulations = false;
-    bool hasPostRegulations = false;
-    bool hasScheduleTrades = false;
-    for (const auto& cr : crif) {
-        // Check which additional fields are being used/populated
-        for (const auto& af : cr.additionalFields) {
-            if (std::find(addFields.begin(), addFields.end(), af.first) == addFields.end()) {
-                addFields.push_back(af.first);
+            if (!cr.nettingSetDetails.emptyOptionalFields())
+                hasNettingSetDetails = true;
+        }
+
+        std::vector<string> addFields;
+        bool hasCollectRegulations = false;
+        bool hasPostRegulations = false;
+        bool hasScheduleTrades = false;
+        for (const auto& scr : *crif) {
+            CrifRecord cr = scr.toCrifRecord();
+
+            // Check which additional fields are being used/populated
+            for (const auto& af : cr.additionalFields) {
+                if (std::find(addFields.begin(), addFields.end(), af.first) == addFields.end()) {
+                    addFields.push_back(af.first);
+                }
+            }
+
+            // Check if regulations are being used
+            if (!hasCollectRegulations)
+                hasCollectRegulations = !cr.collectRegulations.empty();
+            if (!hasPostRegulations)
+                hasPostRegulations = !cr.postRegulations.empty();
+
+            // Check if there are Schedule trades
+            if (!hasScheduleTrades) {
+                try {
+                    hasScheduleTrades = cr.imModel == CrifRecord::IMModel::Schedule;
+                } catch (std::exception&) {
+                }
             }
         }
 
-        // Check if regulations are being used
-        if (!hasCollectRegulations)
-            hasCollectRegulations = !cr.collectRegulations.empty();
-        if (!hasPostRegulations)
-            hasPostRegulations = !cr.postRegulations.empty();
+        // Add report headers
 
-        // Check if there are Schedule trades
-        if (!hasScheduleTrades) {
-            try {
-                hasScheduleTrades = parseIMModel(cr.imModel) == CrifRecord::IMModel::Schedule;
-            } catch (std::exception&) {
-            }
-        }
-    }
+        report->addColumn("TradeID", string()).addColumn("PortfolioID", string());
 
-    // Add report headers
-
-    report->addColumn("TradeID", string()).addColumn("PortfolioID", string());
-    
-    // Add additional netting set fields if netting set details are being used instead of just the netting set ID
-    if (hasNettingSetDetails) {
-        for (const string& optionalField : NettingSetDetails::optionalFieldNames())
-            report->addColumn(optionalField, string());
-    }
-
-    report->addColumn("ProductClass", string())
-        .addColumn("RiskType", string())
-        .addColumn("Qualifier", string())
-        .addColumn("Bucket", string())
-        .addColumn("Label1", string())
-        .addColumn("Label2", string())
-        .addColumn("AmountCurrency", string())
-        .addColumn("Amount", double(), 2)
-        .addColumn("AmountUSD", double(), 2)
-        .addColumn("IMModel", string())
-        .addColumn("TradeType", string());
-
-    if (hasScheduleTrades || crif.type() == Crif::CrifType::Frtb)
-        report->addColumn("end_date", string());
-
-    if (crif.type() == Crif::CrifType::Frtb) {
-        report->addColumn("Label3", string())
-            .addColumn("CreditQuality", string())
-            .addColumn("LongShortInd", string())
-            .addColumn("CoveredBondInd", string())
-            .addColumn("TrancheThickness", string())
-            .addColumn("BB_RW", string());
-    }
-
-    if (hasCollectRegulations)
-        report->addColumn("collect_regulations", string());
-
-    if (hasPostRegulations)
-        report->addColumn("post_regulations", string());
-
-    // Add additional CRIF fields
-    for (const string& f : addFields) {
-        report->addColumn(f, string());
-    }
-
-    // Write individual CRIF records
-    for (const auto& cr : crif) {
-        
-        report->next().add(cr.tradeId).add(cr.portfolioId);
-
+        // Add additional netting set fields if netting set details are being used instead of just the netting set ID
         if (hasNettingSetDetails) {
-            map<string, string> crNettingSetDetailsMap = NettingSetDetails(cr.nettingSetDetails).mapRepresentation();
             for (const string& optionalField : NettingSetDetails::optionalFieldNames())
-                report->add(crNettingSetDetailsMap[optionalField]);
+                report->addColumn(optionalField, string());
         }
 
-        report->add(ore::data::to_string(cr.productClass))
-            .add(ore::data::to_string(cr.riskType))
-            .add(cr.qualifier)
-            .add(cr.bucket)
-            .add(cr.label1)
-            .add(cr.label2)
-            .add(cr.amountCurrency)
-            .add(cr.amount)
-            .add(cr.amountUsd)
-            .add(cr.imModel)
-            .add(cr.tradeType);
+        report->addColumn("ProductClass", string())
+            .addColumn("RiskType", string())
+            .addColumn("Qualifier", string())
+            .addColumn("Bucket", string())
+            .addColumn("Label1", string())
+            .addColumn("Label2", string())
+            .addColumn("AmountCurrency", string())
+            .addColumn("Amount", double(), 2)
+            .addColumn("AmountUSD", double(), 2)
+            .addColumn("IMModel", string())
+            .addColumn("TradeType", string());
 
-        if (hasScheduleTrades || crif.type() == Crif::CrifType::Frtb)
-            report->add(cr.endDate);
+        if (hasScheduleTrades || crif->type() == Crif::CrifType::Frtb)
+            report->addColumn("end_date", string());
 
-        if (crif.type() == Crif::CrifType::Frtb) {
-            report->add(cr.label3)
-                .add(cr.creditQuality)
-                .add(cr.longShortInd)
-                .add(cr.coveredBondInd)
-                .add(cr.trancheThickness)
-                .add(cr.bb_rw);
+        if (crif->type() == Crif::CrifType::Frtb) {
+            report->addColumn("Label3", string())
+                .addColumn("CreditQuality", string())
+                .addColumn("LongShortInd", string())
+                .addColumn("CoveredBondInd", string())
+                .addColumn("TrancheThickness", string())
+                .addColumn("BB_RW", string());
         }
 
-        if (hasCollectRegulations) {
-            string regString = escapeCommaSeparatedList(regulationsToString(cr.collectRegulations), '\0');
-            report->add(regString);
+        if (hasCollectRegulations)
+            report->addColumn("collect_regulations", string());
+
+        if (hasPostRegulations)
+            report->addColumn("post_regulations", string());
+
+        // Add additional CRIF fields
+        for (const string& f : addFields) {
+            report->addColumn(f, string());
         }
 
-        if (hasPostRegulations) {
-            string regString = escapeCommaSeparatedList(regulationsToString(cr.postRegulations), '\0');
-            report->add(regString);
-        }
+        // Write individual CRIF records
+        for (const auto& scr : *crif) {
+            CrifRecord cr = scr.toCrifRecord();
 
-        for (const string& af : addFields) {
-            if (cr.additionalFields.find(af) == cr.additionalFields.end())
-                report->add("");
-            else
-                report->add(cr.getAdditionalFieldAsStr(af));
+            report->next().add(cr.tradeId).add(cr.nettingSetDetails.nettingSetId());
+
+            if (hasNettingSetDetails) {
+                map<string, string> crNettingSetDetailsMap = NettingSetDetails(cr.nettingSetDetails).mapRepresentation();
+                for (const string& optionalField : NettingSetDetails::optionalFieldNames())
+                    report->add(crNettingSetDetailsMap[optionalField]);
+            }
+
+            report->add(ore::data::to_string(cr.productClass))
+                .add(ore::data::to_string(cr.riskType))
+                .add(cr.qualifier)
+                .add(cr.bucket)
+                .add(cr.label1)
+                .add(cr.label2)
+                .add(cr.amountCurrency)
+                .add(cr.amount)
+                .add(cr.amountUsd)
+                .add(ore::data::to_string(cr.imModel))
+                .add(cr.tradeType);
+
+            if (hasScheduleTrades || crif->type() == Crif::CrifType::Frtb)
+                report->add(cr.endDate);
+
+            if (crif->type() == Crif::CrifType::Frtb) {
+                report->add(cr.label3)
+                    .add(cr.creditQuality)
+                    .add(cr.longShortInd)
+                    .add(cr.coveredBondInd)
+                    .add(cr.trancheThickness)
+                    .add(cr.bb_rw);
+            }
+
+            if (hasCollectRegulations) {
+                string regString = escapeCommaSeparatedList(regulationsToString(cr.collectRegulations), '\0');
+                report->add(regString);
+            }
+
+            if (hasPostRegulations) {
+                string regString = escapeCommaSeparatedList(regulationsToString(cr.postRegulations), '\0');
+                report->add(regString);
+            }
+
+            for (const string& af : addFields) {
+                if (cr.additionalFields.find(af) == cr.additionalFields.end())
+                    report->add("");
+                else
+                    report->add(cr.getAdditionalFieldAsStr(af));
+            }
         }
     }
 

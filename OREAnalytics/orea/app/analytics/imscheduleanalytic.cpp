@@ -28,14 +28,15 @@ namespace analytics {
 
 void IMScheduleAnalytic::loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     QL_REQUIRE(inputs_, "Inputs not set");
-    QL_REQUIRE(!inputs_->crif().empty(), "CRIF loader does not contain any records");
+    QL_REQUIRE(inputs_->crif() && !inputs_->crif()->empty(), "CRIF loader does not contain any records");
         
     crif_ = inputs_->crif();
-    crif_.fillAmountUsd(market());
-    hasNettingSetDetails_ = crif_.hasNettingSetDetails();
+    inputs_->crif()->fillAmountUsd(market());
+    hasNettingSetDetails_ = inputs_->crif()->hasNettingSetDetails();
 
     // Keep record of which netting sets have SEC and CFTC
-    for (const CrifRecord& cr : crif_) {
+    for (const SlimCrifRecord& scr : *inputs_->crif()) {
+        CrifRecord cr = scr.toCrifRecord();
         const NettingSetDetails& nsd = cr.nettingSetDetails;
 
         for (const SimmConfiguration::SimmSide& side : {SimmConfiguration::SimmSide::Call, SimmConfiguration::SimmSide::Post}) {
