@@ -151,6 +151,21 @@ QuantLib::ext::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>
                                  CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative,
                                  0.0)));
          break;
+     case YieldCurve::InterpolationMethod::LogNaturalCubic:
+         yieldts.reset(new CurveType<LogCubic>(dates, rates, dayCounter, LogCubic(CubicInterpolation::Kruger, true)));
+         break;
+     case YieldCurve::InterpolationMethod::LogFinancialCubic:
+         yieldts.reset(
+             new CurveType<LogCubic>(dates, rates, dayCounter,
+                                     LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative,
+                                              0.0, CubicInterpolation::FirstDerivative)));
+         break;
+     case YieldCurve::InterpolationMethod::LogCubicSpline:
+         yieldts.reset(
+             new CurveType<LogCubic>(dates, rates, dayCounter,
+                                     LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative,
+                                              0.0, CubicInterpolation::SecondDerivative, 0.0)));
+         break;
 
      default:
          QL_FAIL("Interpolation method '" << interpolationMethod << "' not recognised.");
