@@ -57,6 +57,16 @@ public:
     const bool empty() const;
 
     /*!
+      checks if at least one of the netting set definitions has calculateIMAmount = true
+    */
+    const bool calculateIMAmount() const;
+
+    /*!
+      returns the list of netting sets for which SIMM will be calculated as IM
+    */
+    const std::set<NettingSetDetails> calculateIMNettingSets() const;
+
+    /*!
       checks if object named id exists in manager
     */
     bool has(const string& id) const;
@@ -85,6 +95,11 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
     const std::map<NettingSetDetails, const QuantLib::ext::shared_ptr<NettingSetDefinition>>& nettingSetDefinitions() { return data_; }
+    
+    /*!
+      load all netting sets from unparsed
+    */
+    void loadAll();
 
 private:
     mutable map<NettingSetDetails, const QuantLib::ext::shared_ptr<NettingSetDefinition>> data_;

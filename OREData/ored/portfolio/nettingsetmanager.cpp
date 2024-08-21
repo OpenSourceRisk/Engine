@@ -57,6 +57,24 @@ const bool NettingSetManager::empty() const {
     return data_.empty();
 }
 
+const bool NettingSetManager::calculateIMAmount() const {
+    for (const auto& nsd : data_) {
+        if (nsd.second->activeCsaFlag() && nsd.second->csaDetails()->calculateIMAmount())
+            return true;
+    }
+    return false;
+}
+
+const set<NettingSetDetails> NettingSetManager::calculateIMNettingSets() const {
+    set<NettingSetDetails> calculateIMNettingSets = set<NettingSetDetails>();
+    for (const auto& nsd : data_) {
+        if (nsd.second->activeCsaFlag() && nsd.second->csaDetails()->calculateIMAmount()) {
+            calculateIMNettingSets.insert(nsd.first);
+        }
+    }
+    return calculateIMNettingSets;
+}
+
 QuantLib::ext::shared_ptr<NettingSetDefinition> NettingSetManager::get(const NettingSetDetails& nettingSetDetails) const {
     const auto it = data_.find(nettingSetDetails);
     if (it != data_.end())
@@ -71,7 +89,6 @@ QuantLib::ext::shared_ptr<NettingSetDefinition> NettingSetManager::get(const Net
     try {
         nettingSet->fromXMLString(uit->second);
         add(nettingSet);
-        unparsed_.erase(nettingSetDetails);
     } catch (std::exception& ex) {
         string err =
             "NettingSetDefinition for id " + to_string(nettingSetDetails) + " was requested, but could not be parsed.";
@@ -84,6 +101,22 @@ QuantLib::ext::shared_ptr<NettingSetDefinition> NettingSetManager::get(const Net
 
 QuantLib::ext::shared_ptr<NettingSetDefinition> NettingSetManager::get(const string& id) const {
     return get(NettingSetDetails(id));
+}
+
+void NettingSetManager::loadAll() {
+    for (const auto& [nsd, up] : unparsed_) {
+        QuantLib::ext::shared_ptr<NettingSetDefinition> nettingSet = QuantLib::ext::make_shared<NettingSetDefinition>();
+        try {
+            nettingSet->fromXMLString(up);
+            add(nettingSet);
+        } catch (std::exception& ex) {
+            string err = "NettingSetDefinition for id " + to_string(nsd) +
+                         " was requested, but could not be parsed.";
+            StructuredConfigurationErrorMessage("Netting set manager", nsd.nettingSetId(), err, ex.what())
+                .log();
+            QL_FAIL(err);
+        }
+    }
 }
 
 void NettingSetManager::fromXML(XMLNode* node) {
