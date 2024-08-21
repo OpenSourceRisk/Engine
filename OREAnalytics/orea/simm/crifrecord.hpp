@@ -28,8 +28,7 @@
 #include <string>
 #include <variant>
 #include <boost/multi_index/identity.hpp>
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index_container.hpp>
 
@@ -37,6 +36,7 @@ namespace ore {
 namespace analytics {
 
 using ore::data::NettingSetDetails;
+
 /*! A container for holding single CRIF records or aggregated CRIF records.
     A CRIF record is a row of the CRIF file outlined in the document:
     <em>ISDA SIMM Methodology, Risk Data Standards. Version 1.36: 1 February 2017.</em>
@@ -127,12 +127,48 @@ struct CrifRecord {
         All
     };
 
+    enum class IMModel {
+        Schedule,
+        SIMM,
+        SIMM_R, // Equivalent to SIMM
+        SIMM_P, // Equivalent to SIMM
+        Empty
+    };
+
+    //! SIMM regulators
+    enum class Regulation {
+        APRA,
+        CFTC,
+        ESA,
+        FINMA,
+        KFSC,
+        HKMA,
+        JFSA,
+        MAS,
+        OSFI,
+        RBI,
+        SEC,
+        SEC_unseg,
+        USPR,
+        NONREG,
+        BACEN,
+        SANT,
+        SFC,
+        UK,
+        AMFQ,
+        Included,
+        Unspecified,
+        Excluded,
+        Invalid
+    };
+
     //! There are two entries for curvature risk in frtb, a up and down shift
     enum class CurvatureScenario { Empty, Up, Down };
 
     // required data
     std::string tradeId;
-    std::string portfolioId;
+    std::string tradeType;
+    NettingSetDetails nettingSetDetails;
     ProductClass productClass = ProductClass::Empty;
     RiskType riskType = RiskType::Notional;
     std::string qualifier;
@@ -144,19 +180,13 @@ struct CrifRecord {
     mutable QuantLib::Real amountUsd = QuantLib::Null<QuantLib::Real>();
     
     // additional fields used exclusively by the SIMM calculator for handling amounts converted in a given result ccy
-    std::string resultCurrency;
+    mutable std::string resultCurrency;
     mutable QuantLib::Real amountResultCcy = QuantLib::Null<QuantLib::Real>();
 
     // optional data
-    std::string tradeType;
-    std::string agreementType;
-    std::string callType;
-    std::string initialMarginType;
-    std::string legalEntityId;
-    NettingSetDetails nettingSetDetails; // consists of the above: agreementType ... legalEntityId
-    mutable std::string imModel;
-    mutable std::string collectRegulations;
-    mutable std::string postRegulations;
+    mutable IMModel imModel = IMModel::Empty;
+    mutable std::set<Regulation> collectRegulations;
+    mutable std::set<Regulation> postRegulations;
     std::string endDate;
 
     // frtb fields
@@ -174,19 +204,16 @@ struct CrifRecord {
     CrifRecord() {}
 
     CrifRecord(std::string tradeId, std::string tradeType, NettingSetDetails nettingSetDetails,
-               ProductClass productClass, RiskType riskType,
-               std::string qualifier, std::string bucket, std::string label1, std::string label2,
-               std::string amountCurrency, QuantLib::Real amount, QuantLib::Real amountUsd, std::string imModel = "",
-               std::string collectRegulations = "", std::string postRegulations = "", std::string endDate = "",
+               ProductClass productClass, RiskType riskType, std::string qualifier, std::string bucket,
+               std::string label1, std::string label2, std::string amountCurrency, QuantLib::Real amount,
+               QuantLib::Real amountUsd, IMModel imModel = IMModel::Empty, std::set<Regulation> collectRegulations = {},
+               std::set<Regulation> postRegulations = {}, std::string endDate = "",
                std::map<std::string, std::string> extraFields = {})
-        : tradeId(tradeId), portfolioId(nettingSetDetails.nettingSetId()),
-          productClass(productClass), riskType(riskType), qualifier(qualifier),
-          bucket(bucket), label1(label1), label2(label2), amountCurrency(amountCurrency), amount(amount),
-          amountUsd(amountUsd), tradeType(tradeType), nettingSetDetails(nettingSetDetails), imModel(imModel),
+        : tradeId(tradeId), tradeType(tradeType), nettingSetDetails(nettingSetDetails), productClass(productClass),
+          riskType(riskType), qualifier(qualifier), bucket(bucket), label1(label1), label2(label2),
+          amountCurrency(amountCurrency), amount(amount), amountUsd(amountUsd), imModel(imModel),
           collectRegulations(collectRegulations), postRegulations(postRegulations), endDate(endDate) {
-        for (const auto& [key, value] : extraFields) {
-            additionalFields[key] = value;
-        }
+        additionalFields.insert(extraFields.begin(), extraFields.end());
     }
 
     RecordType type() const;
@@ -200,19 +227,16 @@ struct CrifRecord {
     // We use (and require) amountUsd for all risk types except for SIMM parameters AddOnNotionalFactor and
     // ProductClassMultiplier as these are multipliers and not amounts denominated in the amountCurrency
     bool requiresAmountUsd() const {
-        return riskType != RiskType::AddOnNotionalFactor &&
-               riskType != RiskType::ProductClassMultiplier;
+        return riskType != RiskType::AddOnNotionalFactor && riskType != RiskType::ProductClassMultiplier;
     }
 
     bool isSimmParameter() const {
-        return riskType == RiskType::AddOnFixedAmount ||
-               riskType == RiskType::AddOnNotionalFactor ||
+        return riskType == RiskType::AddOnFixedAmount || riskType == RiskType::AddOnNotionalFactor ||
                riskType == RiskType::ProductClassMultiplier;
     }
 
     bool isEmpty() const { return riskType == RiskType::Empty; }
 
-    
     bool isFrtbCurvatureRisk() const {
         switch (riskType) {
         case RiskType::GIRR_CURV:
@@ -284,22 +308,23 @@ struct CrifRecord {
     //! Define how CRIF records are compared
     bool operator<(const CrifRecord& cr) const {
         if (type() == RecordType::FRTB || cr.type() == RecordType::FRTB) {
-            return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
-                            label3, endDate, creditQuality, longShortInd, coveredBondInd, trancheThickness, bb_rw,
-                            amountCurrency, collectRegulations, postRegulations) <
-                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass, cr.riskType, cr.qualifier, cr.bucket,
-                            cr.label1, cr.label2, cr.label3, cr.endDate, cr.creditQuality, cr.longShortInd,
+            return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1,
+                            label2, label3, endDate, creditQuality, longShortInd, coveredBondInd, trancheThickness,
+                            bb_rw, amountCurrency, collectRegulations, postRegulations) <
+                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass, cr.riskType, cr.qualifier,
+                            cr.bucket, cr.label1, cr.label2, cr.label3, cr.endDate, cr.creditQuality, cr.longShortInd,
                             cr.coveredBondInd, cr.trancheThickness, cr.bb_rw, cr.amountCurrency, cr.collectRegulations,
                             cr.postRegulations);
         } else {
-            return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
-                            amountCurrency, collectRegulations, postRegulations) <
-                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass, cr.riskType, cr.qualifier, cr.bucket,
-                            cr.label1, cr.label2, cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
+            return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1,
+                            label2, amountCurrency, collectRegulations,
+                            postRegulations) < std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass,
+                                                        cr.riskType, cr.qualifier, cr.bucket, cr.label1, cr.label2,
+                                                        cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
         }
     }
 
-    static bool amountCcyLTCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
+    inline static bool amountCcyLTCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
         if (cr1.type() == RecordType::FRTB || cr2.type() == RecordType::FRTB) {
             return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
                             cr1.bucket, cr1.label1, cr1.label2, cr1.label3, cr1.endDate, cr1.creditQuality,
@@ -317,7 +342,7 @@ struct CrifRecord {
         }
     }
 
-    static bool amountCcyRegsLTCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
+    inline static bool amountCcyRegsLTCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
         if (cr1.type() == RecordType::FRTB || cr2.type() == RecordType::FRTB) {
             return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
                             cr1.bucket, cr1.label1, cr1.label2, cr1.label3, cr1.endDate, cr1.creditQuality,
@@ -327,29 +352,30 @@ struct CrifRecord {
                             cr2.longShortInd, cr2.coveredBondInd, cr2.trancheThickness, cr2.bb_rw);
         } else {
             return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
-                            cr1.bucket, cr1.label1, cr1.label2) <
-                   std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass, cr2.riskType,
-                            cr2.qualifier, cr2.bucket, cr2.label1, cr2.label2);
+                            cr1.bucket, cr1.label1,
+                            cr1.label2) < std::tie(cr2.tradeId, cr2.nettingSetDetails, cr2.productClass,
+                                                   cr2.riskType, cr2.qualifier, cr2.bucket, cr2.label1, cr2.label2);
         }
     }
 
     bool operator==(const CrifRecord& cr) const {
         if (type() == RecordType::FRTB || cr.type() == RecordType::FRTB) {
-            return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
-                            label3, endDate, creditQuality, longShortInd, coveredBondInd, trancheThickness, bb_rw,
-                            amountCurrency, collectRegulations, postRegulations) ==
-                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass, cr.riskType, cr.qualifier, cr.bucket,
-                            cr.label1, cr.label2, cr.label3, cr.endDate, cr.creditQuality, cr.longShortInd,
+            return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1,
+                            label2, label3, endDate, creditQuality, longShortInd, coveredBondInd, trancheThickness,
+                            bb_rw, amountCurrency, collectRegulations, postRegulations) ==
+                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass, cr.riskType, cr.qualifier,
+                            cr.bucket, cr.label1, cr.label2, cr.label3, cr.endDate, cr.creditQuality, cr.longShortInd,
                             cr.coveredBondInd, cr.trancheThickness, cr.bb_rw, cr.amountCurrency, cr.collectRegulations,
                             cr.postRegulations);
         } else {
-            return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1, label2,
-                            amountCurrency, collectRegulations, postRegulations) ==
-                   std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass, cr.riskType, cr.qualifier, cr.bucket,
-                            cr.label1, cr.label2, cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
+            return std::tie(tradeId, nettingSetDetails, productClass, riskType, qualifier, bucket, label1,
+                            label2, amountCurrency, collectRegulations,
+                            postRegulations) == std::tie(cr.tradeId, cr.nettingSetDetails, cr.productClass,
+                                                         cr.riskType, cr.qualifier, cr.bucket, cr.label1, cr.label2,
+                                                         cr.amountCurrency, cr.collectRegulations, cr.postRegulations);
         }
     }
-    static bool amountCcyEQCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
+    inline static bool amountCcyEQCompare(const CrifRecord& cr1, const CrifRecord& cr2) {
         if (cr1.type() == RecordType::FRTB || cr2.type() == RecordType::FRTB) {
             return std::tie(cr1.tradeId, cr1.nettingSetDetails, cr1.productClass, cr1.riskType, cr1.qualifier,
                             cr1.bucket, cr1.label1, cr1.label2, cr1.label3, cr1.endDate, cr1.creditQuality,
@@ -377,6 +403,12 @@ std::ostream& operator<<(std::ostream& out, const CrifRecord::RiskType& rt);
 
 std::ostream& operator<<(std::ostream& out, const CrifRecord::ProductClass& pc);
 
+std::ostream& operator<<(std::ostream& out, const CrifRecord::IMModel& model);
+
+std::ostream& operator<<(std::ostream& out, const CrifRecord::Regulation& regulation);
+
+std::ostream& operator<<(std::ostream& out, const std::set<CrifRecord::Regulation>& regulation);
+
 std::ostream& operator<<(std::ostream& out, const CrifRecord::CurvatureScenario& scenario);
 
 CrifRecord::RiskType parseRiskType(const std::string& rt);
@@ -384,6 +416,36 @@ CrifRecord::RiskType parseRiskType(const std::string& rt);
 CrifRecord::ProductClass parseProductClass(const std::string& pc);
 
 CrifRecord::CurvatureScenario parseFrtbCurvatureScenario(const std::string& scenario);
+
+CrifRecord::IMModel parseIMModel(const std::string& pc);
+
+CrifRecord::Regulation parseRegulation(const std::string& regulation);
+
+std::string combineRegulations(const std::string&, const std::string&);
+
+//! Reads a string containing regulations applicable for a given CRIF record
+std::set<CrifRecord::Regulation> parseRegulationString(const std::string& regsString,
+                                                       const std::set<CrifRecord::Regulation>& valueIfEmpty = {});
+
+//! Cleans a string defining regulations so that different permutations of the same set will
+//! be seen as the same string, e.g. "APRA,SEC,ESA" and "SEC,ESA,APRA" should be equivalent.
+//std::string sortRegulationString(const std::string& regsString);
+
+//! Removes a given vector of regulations from a string of regulations and returns a string with the regulations removed
+std::set<CrifRecord::Regulation> removeRegulations(const std::set<CrifRecord::Regulation>& regs,
+                                                   const std::set<CrifRecord::Regulation>& regsToRemove);
+
+//! Filters a string of regulations on a given vector of regulations and returns a string containing only those filtered
+//! regulations
+std::set<CrifRecord::Regulation> filterRegulations(const std::set<CrifRecord::Regulation>& regs,
+                                                   const std::set<CrifRecord::Regulation>& regsToFilter);
+
+//! From a vector of regulations, determine the winning regulation based on order of priority
+CrifRecord::Regulation getWinningRegulation(const std::set<CrifRecord::Regulation>& winningRegulations);
+
+std::string regulationsToString(const std::set<CrifRecord::Regulation>& regs);
+
+std::vector<CrifRecord::Regulation> standardRegulations();
 
 /*! A structure that we can use to aggregate CrifRecords across trades in a portfolio
     to provide the net sensitivities that we need to perform a downstream SIMM calculation.
@@ -397,5 +459,6 @@ typedef boost::multi_index_container<CrifRecord,
 >
     CrifRecordContainer;
 // clang-format on
+
 } // namespace analytics
 } // namespace ore

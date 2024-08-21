@@ -130,6 +130,9 @@ public:
       types, no matter whether useSpreadedTermStructures is true or false. */
     virtual QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
+    /*! Get offset scenario, or nullptr if none was set */
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario() const { return offsetScenario_; }
+
     /*! Return true if this instance uses spreaded term structures */
     bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
 

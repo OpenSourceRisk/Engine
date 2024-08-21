@@ -74,7 +74,7 @@ QuantLib::ext::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParame
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
     parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
     parameters->setSwapVolKeys({"EUR", "USD"});
-    parameters->swapVolDecayMode() = "ForwardVariance";
+    parameters->setSwapVolDecayMode("ForwardVariance");
 
     parameters->setDefaultNames({"dc2"});
     parameters->setDefaultTenors("", {6 * Months, 8 * Months, 1 * Years, 2 * Years});

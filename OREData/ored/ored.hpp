@@ -346,6 +346,9 @@
 #include <ored/scripting/asttoscriptconverter.hpp>
 #include <ored/scripting/computationgraphbuilder.hpp>
 #include <ored/scripting/context.hpp>
+#include <ored/scripting/engines/amccgbaseengine.hpp>
+#include <ored/scripting/engines/amccgpricingengine.hpp>
+#include <ored/scripting/engines/amccgswapengine.hpp>
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/cliquetoptionmcscriptengine.hpp>
@@ -366,7 +369,6 @@
 #include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
-#include <ored/scripting/models/hwcg.hpp>
 #include <ored/scripting/models/lgmcg.hpp>
 #include <ored/scripting/models/localvol.hpp>
 #include <ored/scripting/models/model.hpp>

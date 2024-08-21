@@ -45,6 +45,8 @@ public:
     SimmResults(const std::string& resultCcy = "", const std::string& calcCcy = "")
         : resultCcy_(resultCcy), calcCcy_(calcCcy){};
 
+    SimmResults(const SimmResults& simmResults);
+
     /*! Add initial margin value \p im to the results container for the given combination of
         SIMM <em>product class</em>, <em>risk class</em> and <em>margin type</em>
 
