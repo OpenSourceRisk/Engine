@@ -599,17 +599,13 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) const {
 void CurveConfigurations::addReportConfigurationNode(XMLDocument& doc, XMLNode* parent) const {
     // Allocate a node to contain the ReportConfiguration data
     XMLNode* node = doc.allocNode("ReportConfiguration");
-    // A flag to indicate whether or not the generated ReportConfiguration node contains any data
-    bool haveData = false;
     // A function to append data from member variables (ReportConfig objects) to the ReportConfiguration node
-    auto f = [&doc, node, &haveData](const ReportConfig& rc, const string& label) {
+    auto f = [&doc, node](const ReportConfig& rc, const string& label) {
         // From the ReportConfig object, generate a (possibly null) node.  If it exists it will have the label "Report".
         if (const auto& xml = rc.toXML(doc)) {
             // If the generated Report node has no children then exit
             if (XMLUtils::getChildrenNodes(xml, "").empty())
                 return;
-            // Tell the surrounding context that we have some data
-            haveData = true;
             // Append the data from the Report node to a new child node called "label" in the ReportConfiguration node
             XMLNode* child = doc.allocNode(label);
             XMLUtils::appendNode(node, child);
@@ -624,7 +620,7 @@ void CurveConfigurations::addReportConfigurationNode(XMLDocument& doc, XMLNode* 
     f(reportConfigIrSwaptionVols_, "IRSwaptionVolatilities");
     f(reportConfigYieldCurves_, "YieldCurves");
     // If the newly generated ReportConfiguration node contains any data then append it to the parent node
-    if (haveData)
+    if (!XMLUtils::getChildrenNodes(node, "").empty())
         XMLUtils::appendNode(parent, node);
 }
 
