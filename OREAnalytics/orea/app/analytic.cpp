@@ -80,10 +80,10 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
 
 void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                            const std::set<std::string>& runTypes) {
-    MEM_LOG_USING_LEVEL(ORE_WARNING)
+    MEM_LOG_USING_LEVEL(ORE_WARNING, "Starting " << label() << " Analytic::runAnalytic()");
     if (impl_) {
         impl_->runAnalytic(loader, runTypes);
-        MEM_LOG_USING_LEVEL(ORE_WARNING)
+        MEM_LOG_USING_LEVEL(ORE_WARNING, "Finishing " << label() << " Analytic::runAnalytic()")
     }
 }
 

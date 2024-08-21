@@ -234,7 +234,7 @@ void OREApp::analytics() {
 
     try {
         LOG("ORE analytics starting");
-        MEM_LOG_USING_LEVEL(ORE_WARNING)
+        MEM_LOG_USING_LEVEL(ORE_WARNING, "Starting OREApp::analytics()");
 
         QL_REQUIRE(params_, "ORE input parameters not set");
                 
@@ -323,12 +323,12 @@ void OREApp::analytics() {
         ostringstream oss;
         oss << "Error in ORE analytics: " << e.what();
         ALOG(oss.str());
-        MEM_LOG_USING_LEVEL(ORE_WARNING)
+        MEM_LOG_USING_LEVEL(ORE_WARNING, "Finishing OREApp::analytics()");
         CONSOLE(oss.str());
         QL_FAIL(oss.str());
     }
 
-    MEM_LOG_USING_LEVEL(ORE_WARNING)
+    MEM_LOG_USING_LEVEL(ORE_WARNING, "Finishing OREApp::analytics()");
     LOG("ORE analytics done");
 }
 
@@ -505,7 +505,7 @@ void OREApp::run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader) {
     try {
         LOG("ORE analytics starting");
         structuredLogger_->clear();
-        MEM_LOG_USING_LEVEL(ORE_WARNING)
+        MEM_LOG_USING_LEVEL(ORE_WARNING, "Starting OREApp::run()")
 
         QL_REQUIRE(inputs_, "ORE input parameters not set");
         
@@ -536,14 +536,14 @@ void OREApp::run(const QuantLib::ext::shared_ptr<MarketDataLoader> loader) {
         // Run the requested analytics
         analyticsManager_->runAnalytics(mcr);
 
-        MEM_LOG_USING_LEVEL(ORE_WARNING)
+        MEM_LOG_USING_LEVEL(ORE_WARNING, "Finishing OREApp::run()");
         // Leave any report writing to the calling aplication
     }
     catch (std::exception& e) {
         ostringstream oss;
         oss << "Error in ORE analytics: " << e.what();
         StructuredAnalyticsWarningMessage("OREApp::run()", oss.str(), e.what()).log();
-        MEM_LOG_USING_LEVEL(ORE_WARNING)
+        MEM_LOG_USING_LEVEL(ORE_WARNING, "Finishing OREApp::run()");
         CONSOLE(oss.str());
         QL_FAIL(oss.str());
         return;

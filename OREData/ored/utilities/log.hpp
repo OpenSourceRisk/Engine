@@ -556,15 +556,17 @@ private:
 #define TLOG(text) MLOG(oreSeverity::data, text)
 
 //! Logging macro specifically for logging memory usage
-#define MEM_LOG MEM_LOG_USING_LEVEL(oreSeverity::memory)
+#define MEM_LOG MEM_LOG_USING_LEVEL(oreSeverity::memory, "")
 
-#define MEM_LOG_USING_LEVEL(LEVEL)                                                                                      \
+#define MEM_LOG_USING_LEVEL(LEVEL, MSG)                                                                                 \
     {                                                                                                                   \
         if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(LEVEL)) {                         \
             boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                           \
             ore::data::Log::instance().header(LEVEL, __FILE__, __LINE__);                                               \
+            ore::data::Log::instance().logStream() << MSG << ": ";                                                      \
             ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getPeakMemoryUsageBytes()) << "|";  \
             ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getMemoryUsageBytes());             \
+            ore::data::Log::instance().logStream() << " (peakMemoryUsage (bytes) | memoryUsage (bytes))";               \
             ore::data::Log::instance().log(LEVEL);                                                                      \
         }                                                                                                               \
     }
