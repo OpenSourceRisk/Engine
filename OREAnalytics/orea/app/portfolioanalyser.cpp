@@ -103,9 +103,33 @@ void PortfolioAnalyser::riskFactorReport(Report& report) const {
     // Build report
     for (const ore::analytics::RiskFactorKey::KeyType& type : market_->riskFactorTypes()) {
         string strType = to_string(type);
+        string names;
         for (const string& name : market_->riskFactorNames(type)) {
-            report.next().add(strType).add(name);
+            if (names.empty())
+                names += name;
+            else
+                names += "|" + name;
         }
+        report.next().add(strType).add(names);
+    }
+}
+
+void PortfolioAnalyser::marketObjectReport(Report& report) const {
+    // Add report headers
+    report.addColumn("MarketObjectType", string())
+        .addColumn("MarketObjectName", string());
+
+    // Build report
+    for (const auto& type : market_->marketObjectTypes()) {
+        string strType = to_string(type);
+        string names;
+        for (const string& name : market_->marketObjectNames(type)) {
+            if (names.empty())
+                names += name;
+            else
+                names += "|" + name;
+        }            
+        report.next().add(strType).add(names);
     }
 }
 

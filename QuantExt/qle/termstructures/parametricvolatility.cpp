@@ -92,7 +92,8 @@ Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType 
         } else if (outputMarketQuoteType == MarketQuoteType::ShiftedLognormalVolatility) {
             if (strike > -outputLognormalShift)
                 return blackFormulaImpliedStdDev(outputOptionType, strike, forward, forwardPremium, 1.0,
-                                                 outputLognormalShift);
+                                                 outputLognormalShift) /
+                       std::sqrt(timeToExpiry);
             else
                 return 0.0;
         } else {

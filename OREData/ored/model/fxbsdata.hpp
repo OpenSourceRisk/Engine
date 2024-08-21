@@ -63,7 +63,9 @@ public:
 
     //! \name Setters/Getters
     //@{
+    const std::string& foreignCcy() const { return foreignCcy_; }
     std::string& foreignCcy() { return foreignCcy_; }
+    const std::string& domesticCcy() const { return domesticCcy_; }
     std::string& domesticCcy() { return domesticCcy_; }
     CalibrationType& calibrationType() { return calibrationType_; }
     bool& calibrateSigma() { return calibrateSigma_; }

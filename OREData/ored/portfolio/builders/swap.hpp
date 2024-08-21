@@ -170,5 +170,24 @@ private:
     const std::vector<Date> simulationDates_;
 };
 
+//! Implementation of SwapEngineBuilderBase implementing AMC-CG interface
+/*! \ingroup portfolio
+ */
+class AmcCgSwapEngineBuilder : public SwapEngineBuilderBase {
+public:
+    AmcCgSwapEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
+                            const std::vector<Date>& simulationDates)
+        : SwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates) {}
+
+protected:
+    // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
+                                                        const std::string& securitySpread) override;
+
+private:
+    const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
+    const std::vector<Date> simulationDates_;
+};
+
 } // namespace data
 } // namespace ore

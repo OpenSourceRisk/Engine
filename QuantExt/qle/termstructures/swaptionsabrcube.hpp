@@ -50,9 +50,13 @@ public:
     void performCalculations() const override;
     QuantLib::ext::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
 
-    QuantLib::ext::shared_ptr<ParametricVolatility> parametricVolatility() const { return parametricVolatility_; }
+    QuantLib::ext::shared_ptr<ParametricVolatility> parametricVolatility() const;
+
+    VolatilityType volatilityType() const override;
 
 private:
+    Real shiftImpl(Time optionTime, Time swapLength) const override;
+
     mutable std::map<std::pair<Real, Real>, QuantLib::ext::shared_ptr<ParametricVolatilitySmileSection>> cache_;
     mutable QuantLib::ext::shared_ptr<ParametricVolatility> parametricVolatility_;
     mutable Interpolation outputShiftInt_;

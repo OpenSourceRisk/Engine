@@ -60,7 +60,7 @@ public:
       is operated under FX basis consistent discounting curves relative to the collateral
       OIS curve. */
     CrossAssetModelBuilder( //! Market object
-        const QuantLib::ext::shared_ptr<Market>& market,
+        const ObservableValue<QuantLib::ext::shared_ptr<Market>>& market,
         //! cam configuration
         const QuantLib::ext::shared_ptr<CrossAssetModelData>& config,
         //! Market configuration for interest rate model calibration
@@ -81,8 +81,8 @@ public:
         const bool continueOnError = false,
         //! reference calibration grid
         const std::string& referenceCalibrationGrid_ = "",
-	//! salvaging algorithm to apply to correlation matrix
-	const SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
+        //! salvaging algorithm to apply to correlation matrix
+        const SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
         //! id of the builder
         const std::string& id = "unknown");
 
@@ -136,15 +136,15 @@ private:
         subBuilders_;
     mutable Array params_;
 
-    const QuantLib::ext::shared_ptr<ore::data::Market> market_;
-    const QuantLib::ext::shared_ptr<CrossAssetModelData> config_;
-    const std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_,
+    QuantLib::ObservableValue<QuantLib::ext::shared_ptr<ore::data::Market>> market_;
+    QuantLib::ext::shared_ptr<CrossAssetModelData> config_;
+    std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_,
         configurationInfCalibration_, configurationCrCalibration_, configurationComCalibration_, configurationFinalModel_;
-    const bool dontCalibrate_;
-    const bool continueOnError_;
-    const std::string referenceCalibrationGrid_;
-    const SalvagingAlgorithm::Type salvaging_;
-    const std::string id_;
+    bool dontCalibrate_;
+    bool continueOnError_;
+    std::string referenceCalibrationGrid_;
+    SalvagingAlgorithm::Type salvaging_;
+    std::string id_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;
@@ -155,6 +155,8 @@ private:
 
     // market observer
     QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;
+    // market handle observer (notified when handle gets relinked)
+    QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketHandleObserver_;
 
     // resulting model
     mutable RelinkableHandle<QuantExt::CrossAssetModel> model_;

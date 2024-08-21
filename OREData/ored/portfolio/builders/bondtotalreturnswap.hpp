@@ -36,10 +36,9 @@ using namespace std;
 
 class BondTRSEngineBuilder : public CachingPricingEngineBuilder<string, const string&> {
 protected:
-    BondTRSEngineBuilder(const std::string& model, const std::string& engine)
-        : CachingEngineBuilder(model, engine, {"BondTRS"}) {}
+    BondTRSEngineBuilder(const std::string& model, const std::string& engine);
 
-    virtual string keyImpl(const string& ccy) override { return ccy; }
+    string keyImpl(const string& ccy) override { return ccy; }
 };
 
 class DiscountingBondTRSEngineBuilder : public BondTRSEngineBuilder {
@@ -47,10 +46,7 @@ public:
     DiscountingBondTRSEngineBuilder() : BondTRSEngineBuilder("DiscountedCashflows", "DiscountingBondTRSEngine") {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& ccy) override {
-        Handle<YieldTermStructure> oisCurve = market_->discountCurve(ccy, configuration(MarketContext::pricing));
-        return QuantLib::ext::make_shared<QuantExt::DiscountingBondTRSEngine>(oisCurve);
-    }
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& ccy) override;
 };
 
 } // namespace data

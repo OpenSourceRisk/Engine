@@ -755,14 +755,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                  << (param.first == RiskFactorKey::KeyType::SwaptionVolatility ? "True" : "False"));
                             DLOG("Will convert to normal vol  : " << (convertToNormal ? "True" : "False"));
 
-                            // Set up a vol converter, and create if vol type is not normal
-                            SwaptionVolatilityConverter* converter = nullptr;
+                            boost::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
                             if (convertToNormal) {
-                                Handle<SwapIndex> swapIndex = initMarket->swapIndex(swapIndexBase, configuration);
-                                Handle<SwapIndex> shortSwapIndex =
-                                    initMarket->swapIndex(shortSwapIndexBase, configuration);
-                                converter = new SwaptionVolatilityConverter(asof_, *wrapper, *swapIndex,
-                                                                            *shortSwapIndex, Normal);
+                                swapIndex = *initMarket->swapIndex(swapIndexBase, configuration);
+                                shortSwapIndex = *initMarket->swapIndex(shortSwapIndexBase, configuration);
                             }
 
                             for (Size k = 0; k < strikeSpreads.size(); ++k) {
@@ -774,11 +770,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                      strikeSpreads[k];
                                         Real vol;
                                         if (convertToNormal) {
-                                            // if not a normal volatility use the converted to convert to normal at
-                                            // given point
-                                            vol = converter->convert(wrapper->optionDateFromTenor(optionTenors[i]),
-                                                                     underlyingTenors[j], strikeSpreads[k],
-                                                                     wrapper->dayCounter(), Normal);
+                                            vol = QuantExt::convertSwaptionVolatility(
+                                                asof_, optionTenors[i], underlyingTenors[j], swapIndex, shortSwapIndex,
+                                                wrapper->dayCounter(), strikeSpreads[k],
+                                                wrapper->volatility(optionTenors[i], underlyingTenors[j], strike, true),
+                                                wrapper->volatilityType(),
+                                                wrapper->shift(optionTenors[i], underlyingTenors[j]),
+                                                QuantLib::VolatilityType::Normal, 0.0);
                                         } else {
                                             vol =
                                                 wrapper->volatility(optionTenors[i], underlyingTenors[j], strike, true);
