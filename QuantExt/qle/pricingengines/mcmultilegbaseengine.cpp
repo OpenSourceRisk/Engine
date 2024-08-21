@@ -885,44 +885,28 @@ void McMultiLegBaseEngine::calculate() const {
         }
 
         if (isExerciseTime) {
-            // FIRST DRAFT
+
+            //calculate rebate (exercise fees) if existent
             auto pvRebate = RandomVariable(calibrationSamples_, 0.0);
 
             boost::shared_ptr<QuantExt::RebatedExercise> rebatedExercise =
                 boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
+
             if (rebatedExercise) {
-                Size idx = std::distance(exerciseTimes.begin(), exerciseTimes.find(*t));
+                Size exerciseTimes_idx = std::distance(exerciseTimes.begin(), exerciseTimes.find(*t));
 
-                double rdb = model_->reducedDiscountBond(0, *t, time(rebatedExercise->rebatePaymentDate(idx)), 0,
-                                                         discountCurves_[0]);
-                double num =
-                    model_->numeraire(0, time(rebatedExercise->rebatePaymentDate(idx)), 0.0, discountCurves_[0]);
-                double db =
-                    model_->discountBond(0, *t, time(rebatedExercise->rebatePaymentDate(idx)), 0, discountCurves_[0]);
-                double db_1p;
-                if (idx > 0)
-                    db_1p = model_->discountBond(0, time(rebatedExercise->rebatePaymentDate(idx - 1)),
-                                                 time(rebatedExercise->rebatePaymentDate(idx)), 0, discountCurves_[0]);
-                else
-                    db_1p = model_->discountBond(0, 0.0, time(rebatedExercise->rebatePaymentDate(idx)), 0,
-                                                 discountCurves_[0]);
+                if (rebatedExercise->rebate(exerciseTimes_idx) != 0.0) {
+                    Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
 
-                double dis = discountCurves_[0]->discount(rebatedExercise->rebatePaymentDate(idx));
-                double dis_1 = discountCurves_[0]->discount(1.0);
-                double dummy = 1.0;//0.93;
+                    RandomVariable rdb = lgmVectorised_[0].reducedDiscountBond(
+                        *t, time(rebatedExercise->rebatePaymentDate(exerciseTimes_idx)), pathValues[simulationTimes_idx][0], discountCurves_[0]);
 
-                double temp = rebatedExercise->rebate(idx) * db;  //rdb * num = db = 1.0, if t = *t
-
-                // std::cout << "ExerciseTime " << io::iso_date(rebatedExercise->rebatePaymentDate(idx)) << std::fixed
-                //           << " rdb " << rdb << " num " << num << " db " << db << " db_1p " << db_1p << " dis " << dis
-                //           << " dis_1 " << dis_1 << " dummy " << dummy << std::endl;
-
-                pvRebate = RandomVariable(calibrationSamples_, temp);
+                    pvRebate = rdb * RandomVariable(calibrationSamples_, rebatedExercise->rebate(exerciseTimes_idx));
+                }
             }
 
-            // FIRST DRAFT - END
             auto exerciseValue = regModelUndExInto[counter].apply(model_->stateProcess()->initialValues(),
-                                                                  pathValuesRef, simulationTimes) + pvRebate; //Henning
+                                                                  pathValuesRef, simulationTimes) + pvRebate;
             regModelContinuationValue[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                 regressorModel_, regressionVarianceCutoff_);
@@ -933,7 +917,7 @@ void McMultiLegBaseEngine::calculate() const {
                                                                               pathValuesRef, simulationTimes);
             pathValueOption = conditionalResult(exerciseValue > continuationValue &&
                                                     exerciseValue > RandomVariable(calibrationSamples_, 0.0),
-                                                pathValueUndExInto + pvRebate, pathValueOption); //Henning
+                                                pathValueUndExInto + pvRebate, pathValueOption);
             regModelOption[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                 regressorModel_, regressionVarianceCutoff_);
