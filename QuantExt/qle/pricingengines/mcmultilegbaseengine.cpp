@@ -886,21 +886,15 @@ void McMultiLegBaseEngine::calculate() const {
 
         if (isExerciseTime) {
 
-            //calculate rebate (exercise fees) if existent
-            auto pvRebate = RandomVariable(calibrationSamples_, 0.0);
+            // calculate rebate (exercise fees) if existent
 
-            boost::shared_ptr<QuantExt::RebatedExercise> rebatedExercise =
-                boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
-
-            if (rebatedExercise) {
+            RandomVariable pvRebate(calibrationSamples_, 0.0);
+            if (auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
                 Size exerciseTimes_idx = std::distance(exerciseTimes.begin(), exerciseTimes.find(*t));
-
                 if (rebatedExercise->rebate(exerciseTimes_idx) != 0.0) {
                     Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
-
                     RandomVariable rdb = lgmVectorised_[0].reducedDiscountBond(
                         *t, time(rebatedExercise->rebatePaymentDate(exerciseTimes_idx)), pathValues[simulationTimes_idx][0], discountCurves_[0]);
-
                     pvRebate = rdb * RandomVariable(calibrationSamples_, rebatedExercise->rebate(exerciseTimes_idx));
                 }
             }
