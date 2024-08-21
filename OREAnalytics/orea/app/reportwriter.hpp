@@ -163,7 +163,7 @@ public:
 
     //! Write out CRIF records to a report
     virtual void writeCrifReport(const QuantLib::ext::shared_ptr<ore::data::Report>& report,
-                                 const ore::analytics::Crif& crifRecords);
+                                 const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crifRecords);
 
     virtual void writeScenarioStatistics(const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator>& generator,
                                          const std::vector<ore::analytics::RiskFactorKey>& keys,

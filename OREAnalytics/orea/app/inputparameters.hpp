@@ -27,6 +27,7 @@
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/historicalscenarioreader.hpp>
@@ -199,7 +200,7 @@ public:
 
     // Setters for exposure simulation
     void setAmc(bool b) { amc_ = b; }
-    void setAmcCg(bool b) { amcCg_ = b; }
+    void setAmcCg(XvaEngineCG::Mode b) { amcCg_ = b; }
     void setXvaCgBumpSensis(bool b) { xvaCgBumpSensis_ = b; }
     void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
     void setXvaCgExternalDeviceCompatibilityMode(bool b) { xvaCgExternalDeviceCompatibilityMode_ = b; }
@@ -234,6 +235,11 @@ public:
     void setAmcPricingEngineFromFile(const std::string& fileName);
     void setAmcPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
         amcPricingEngine_ = engineData;
+    }
+    void setAmcCgPricingEngine(const std::string& xml);
+    void setAmcCgPricingEngineFromFile(const std::string& fileName);
+    void setAmcCgPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
+        amcCgPricingEngine_ = engineData;
     }
     void setNettingSetManager(const std::string& xml);
     void setNettingSetManagerFromFile(const std::string& fileName);
@@ -584,7 +590,7 @@ public:
      * Getters for exposure simulation 
      *********************************/
     bool amc() const { return amc_; }
-    bool amcCg() const { return amcCg_; }
+    XvaEngineCG::Mode amcCg() const { return amcCg_; }
     bool xvaCgBumpSensis() const { return xvaCgBumpSensis_; }
     bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
     bool xvaCgExternalDeviceCompatibilityMode() const { return xvaCgExternalDeviceCompatibilityMode_; }
@@ -610,6 +616,7 @@ public:
     const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData() const { return crossAssetModelData_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& simulationPricingEngine() const { return simulationPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& amcPricingEngine() const { return amcPricingEngine_; }
+    const QuantLib::ext::shared_ptr<ore::data::EngineData>& amcCgPricingEngine() const { return amcCgPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::NettingSetManager>& nettingSetManager() const { return nettingSetManager_; }
     // const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
@@ -719,7 +726,7 @@ public:
      * Getters for SIMM
      ******************/
     const std::string& simmVersion() const { return simmVersion_; }
-    const ore::analytics::Crif& crif() const { return crif_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif() const { return crif_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() const { return simmNameMapper_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() const { return simmBucketMapper_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SimmCalibrationData>& simmCalibrationData() const { return simmCalibrationData_; }
@@ -946,7 +953,7 @@ protected:
      * EXPOSURE analytic
      *******************/
     bool amc_ = false;
-    bool amcCg_ = false;
+    XvaEngineCG::Mode amcCg_ = XvaEngineCG::Mode::Disabled;
     bool xvaCgBumpSensis_ = false;
     bool xvaCgUseExternalComputeDevice_ = false;
     bool xvaCgExternalDeviceCompatibilityMode_ = false;
@@ -969,6 +976,7 @@ protected:
     QuantLib::ext::shared_ptr<CrossAssetModelData> crossAssetModelData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> simulationPricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> amcPricingEngine_;
+    QuantLib::ext::shared_ptr<ore::data::EngineData> amcCgPricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
     QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
     bool exposureProfiles_ = true;
@@ -1050,7 +1058,7 @@ protected:
      * SIMM analytic
      ***************/
     std::string simmVersion_;
-    ore::analytics::Crif crif_;
+    QuantLib::ext::shared_ptr<ore::analytics::Crif> crif_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
@@ -1061,6 +1069,7 @@ protected:
     bool enforceIMRegulations_ = false;
     bool useSimmParameters_ = true;
     bool writeSimmIntermediateReports_ = true;
+    bool loadCrifAdditionalFields_ = true;
 
     /***************
      * Zero to Par Conversion analytic

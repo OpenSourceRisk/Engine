@@ -25,6 +25,7 @@
 #include <orea/simm/imscheduleresults.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/utilities/timer.hpp>
 
 namespace ore {
 namespace analytics {
@@ -109,7 +110,7 @@ public:
     };
 
     //! Construct the IMScheduleCalculator from a container of netted CRIF records.
-    IMScheduleCalculator(const Crif& crif, const std::string& calculationCcy = "USD",
+    IMScheduleCalculator(const QuantLib::ext::shared_ptr<Crif>& crif, const std::string& calculationCcy = "USD",
                          const QuantLib::ext::shared_ptr<ore::data::Market> market = nullptr,
                          const bool determineWinningRegulations = true, const bool enforceIMRegulations = false,
                          const bool quiet = false,
