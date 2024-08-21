@@ -75,7 +75,7 @@
 
 \title{ORE Compute Framework Interface}
 \author{Acadia}
-\date{19 June 2023}
+\date{22 July 2024}
 \maketitle
 
 \newpage
@@ -88,8 +88,9 @@
 \hline
 Date & Author & Comment \\
 \hline
-19 June 2023 & Acadia & initial release\\
-15 April 2024 & Acadia & refactor context settings, add supportsDoublePrecision()\\
+19 June 2023 & Peter Caspers & initial release\\
+15 April 2024 & Peter Caspers & refactor context settings, add supportsDoublePrecision()\\
+22 July 2024 & Peter Caspers & add documentation of OpenCL framework, update doc of unit tests\\
 \hline
 \end{supertabular}
 \end{flushleft}
@@ -356,9 +357,12 @@ There are some unit tests testing all available external frameworks. The tests a
 \begin{itemize}
   \item \verb+testEnvironmentInit+: test to initialize each framework
   \item \verb+testSimpleCalc+: test a simple calculation
+  \item \verb+testSimpleCalcWithDoublePrecision+: test a simple calculation using double precision
   \item \verb+testLargeCalc+: test a larger scale calculation
   \item \verb+testRngGeneration+: test random variate generation
-  \item \verb+test_ScriptedTrade_FX_TaRF_XAUUSD_sensi_ops+: test a (simulated) sensi calculation for an FX TaRF
+  \item \verb+testReplayFlowError+: test replay of calculation with invalid calls into ComputeContext interface
+  \item \verb+testRngGenerationMt19937+: test MersenneTwister random number generation
+  \item \verb+testConditionalExpectation+: test conditional expectation calculation
 \end{itemize}
 
 The unit test also provide examples how an external calculation is orchestrated.
@@ -550,6 +554,153 @@ baseNpv_ = results_.value = externalAverage(externalOutput_[0]);
 \end{minted}
 
 Here, \verb+externalAverage()+ computes the average of the retrieved output vector.
+
+
+\section{OpenCL Framework}
+
+This section documents the OpenCL framework. It relies on the GPU Code Generator described in \ref{gpuCodeGenerator}.
+
+\subsection{Overview}
+
+The OpenCL framework provides contexts for all OpenCL devices.
+
+This framework creates one context per device, i.e. within a single ORE process there will be only once
+context \footnote{Note that ``context'' refers to the OpenCL term here, not the implementation of of the ORE interface
+ComputeContext by OpenClContext. The latter will be instantiated per thread as per ORE design of the thread-local
+ComputeEnvironment singleton as usual.} per device that is shared between threads. The reason for this design choice is
+the observation that running several contexts in paralell can lead to high GPU memory usage and ultimately ressource
+allocation errors on the GPU.
+
+\subsection{Random Number Generation}
+
+We support MersenneTwister repcliating the code from QuantLib. 
+
+When new variates are required in \verb+createInputVariates()+ the function \verb+updateVariatesPool()+ will be
+called. We maintain a pool of random variates, the size of this pool, i.e. the number of standard normal variables
+available in the pool, is stored in \verb+variatesPoolSize_+\footnote{The underlying assumption is that the seed for the
+rng is the same across all computations that are run against the OpenClContext.}.
+
+When \verb+updateVariatesPool()+ is called first we build the necessary programs on the GPU side:
+
+\begin{itemize}
+\item \verb+oreInvCumN()+: function that replicates QuantLib's \verb+InverseCumulativeNormal+, but with a 32bit unsigned
+  integer input that is converted to a $(0,1)$ double or float within the function.
+\item \verb+ore_seedInitialization()+: kernel that repcliates the seed initilization of QuantLib's
+  \verb+MersenneTwisterUniformRng+. Input is a seed $s$. The kernel populates the mt state which has size $624$. The
+  kernel is not parallelized, i.e. its global work size is $1$.
+\item \verb+ore_twist(__global ulong* mt)+: kernel that recpliates the state twist of QuantLib's
+  \verb+MersenneTwisterUniformRng+. The kernel is not parallelized, i.e. its global work size is $1$.
+\item \verb+ore_generate()+: kernel that recpliates the random number generation of QuantLib's
+  \verb+MersenneTwisterUniformRng+ combined with a call to \verb+oreInvCumN()+ to convert the result to a normal
+  variate. The kernel has global work size $624$ (size of mt state).
+\end{itemize}
+
+Then the new variates are generated following these steps:
+
+\begin{itemize}
+\item a new variates pool buffer is allocated on the device. The size is aligned with a multiple of $624$.
+\item the old variates pool buffer is copied to the new buffer.
+\item the new variates are generated in the new variates buffer using the kernel \verb+ore_generate()+.
+\end{itemize}
+
+\subsection{Conditional Expectation}
+
+Currently, conditional expectation is calculated on the host side, i.e. the necessary arguments are copied from device
+to host, the conditional expectation is calculated on the host and the result is copied back to the device. This is done
+using the \verb+conditionalExpectation()+ method for random variables, taking the regressand, regressors, filter, basis
+functions as inputs and using QR or SVD to estimate the linear regression.
+
+Future dev will support calculation on the device.
+
+\section{GPU Code Generator}\label{gpuCodeGenerator}
+
+This is a generic code generator for GPU kernels and is e.g. used by the OpenCL framework.
+
+\subsection{Variable management}
+
+Input variables, input variates and (intermediate) result variables $v_i$ are numbered as $i= 0, 1, 2, 3, \ldots$. They
+occur as contingent blocks in this sequence, first the input variables, then the variates and then the intermediate
+results. The numbering represented by $i$ is translated to code generator internal variables with types input, random
+variate, local and each with its own numbering starting at $0$. The mapping between the external numbering and the
+latter internal numbering is done by \verb+getVar()+ (external to internal) resp. \verb+getId()+ (internal to external).
+
+Output variables are declared by \verb+declareOutputVariable()+ and can be an input variable, input variate or
+intermediate result. They are not new variables, rather input variables, variates or intermediate results are marked as
+being an output to retrieve from the calculation. Output variables are ultimately ensured to be intermediate result
+variables $v_i$, and as such copied to the host and written to the output vector provided to the framework's
+\verb+finalizeCalculation()+ method.
+
+Intermediate result variables are generated within \verb+applyOperation()+. There is a distinction between pathwise
+operations and conditional expectation.
+
+\begin{itemize}
+\item for pathwise operations, a single intermediate result variable is generated
+\item for conditional expectation, no result is generated. The arguments to the conditional expectation and the result
+  are ensured to be intermediate result variables and stored, so that they can be retrieved via
+  conditionalExpectationVars(). It is then up to the framework to calculate the conditional expectation on the device or
+  host.
+\end{itemize}
+
+The result variable ids (these are external ids) are generated by \verb+generateResultId()+. This function will reuse
+variable ids that were freed by \verb+freeVariable()+, provided that the freed variable is not an input variable or
+input variate or an argument or the result of an conditional expectation calculation.
+
+The different variable types are represented as follows, \verb+i+ denoting the global work id.
+
+\begin{itemize}
+\item input variables: {\tt x[offset + i]}, with x a buffer in the global address space
+\item input variates: {\tt r[offset + i]}, with r a buffer in the global address space
+\item intermediate variables: {\tt b[offset + i]}, with b a buffer in the global address space. It is refered to as the
+  values buffer. Note that this buffer also contains conditional expectation arguments and results and all output
+  variables.
+\end{itemize}
+
+\subsection{Kernel function parts generation}\label{kernelFunctionPartsGeneration}
+
+A new kernel function is started if one of the following conditions are met:
+
+\begin{itemize}
+\item the max number of rhs-arguments (as a measure for code size) exceeds a given threshold
+  \verb+max_kernel_args+. This is done because we observe failing program builds when a kernel function gets too large.
+\item the result of a conditional expectation operation in the current kernel part is used as an argument to another
+  operation. This is done because to calculate the conditional expectation result we need to stop the current kernel and
+  invoke either another kernel on the device or do the claculation on the host (the latter requires copying the
+  arguments of the conditional expectation to the host and the result back to the device).
+\end{itemize}
+
+\subsection{Local variable replacement}\label{localVariableReplacement}
+
+The GPU code generator can replace intermediate variables by stackvariables $v0, v1, v2, \ldots$. If an intermediate
+variable is used frequently on the lhs or rhs of operations, replacing it by a stack variable can improve
+performance. This optimization follows the steps:
+
+\begin{itemize}
+\item For each kernel part that was determined in \ref{kernelFunctionPartsGeneration} we count the usage of intermediate
+  result variables on the lhs or rhs of operations.
+\item We select the \verb+max_local_vars+ most frequently used variables that are also used at least
+  \verb+min_usage_threshold+ times as variables to be replaced by stack variables.
+\item We determine the first usage on the lhs and rhs of each such variable within each kernel part. This information is
+  used to determine whether the lhs replacement by a stack variable requires a declaration and whether rhs replacements
+  by stack variables need an initialisation from the values buffer before their usage.
+\item We mark certain replaced variables as to be cached to the values buffer when they meet one of the following
+  criteria. This is done per kernel part:
+\begin{itemize}
+\item a variable is not used on the lhs strictly before it is used on the rhs in a kernel part strictly greater than the
+  current part
+\item a variable is an output variable and not use on the lhs in a strictly later part
+\item a variable in the last kernel part is an output variable
+\item a variable that is an argument or the result of conditional expectation operation
+\end{itemize}
+\end{itemize}
+
+\subsection{Elimination of replaced local variables from the values buffer}
+
+After the local variable replacement has been done (\ref{localVariableReplacement}), the following additional
+optimization is applied to the values buffer: If a variable is replaced by a stack variable in all kernel parts and is
+not marked as to be cached in any kernel part, it can be removed from the values buffer. The result of this step is
+expressed in bufferedLocalVarMap which maps an intermediate result id to the position in the values buffer. If no
+optimization is applied, this latter map is the identity.
+
 
 %% \begin{thebibliography}{*}
 %% \end{thebibliography}

@@ -11,12 +11,14 @@ oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 oreex.print_headline("Run ORE to produce AMC CG exposure")
 
 samples1=os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]
-print("samples1 =", samples1)
 os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]=""
-samples2=os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]
-print("samples2 =", samples2)
 
-oreex.run("Input/ore.xml")
+oreex.run("Input/ore_ad.xml")
+oreex.run("Input/ore_bump.xml")
+oreex.run("Input/ore_gpu.xml")
+oreex.run("Input/ore_cgcube.xml")
+oreex.run("Input/ore_cgcube_gpu.xml")
+oreex.run("Input/ore_amc_legacy.xml")
 
 os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]=samples1
 

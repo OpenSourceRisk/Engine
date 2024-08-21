@@ -40,7 +40,7 @@ addColumnToExisitingReport(const std::string& columnName, const std::string& val
             newReport->next();
             newReport->add(value);
             for (size_t col = 0; col < report->columns(); col++) {
-                newReport->add(report->data(col)[row]);
+                newReport->add(report->data(col, row));
             }
         }
         newReport->end();
@@ -65,10 +65,10 @@ addColumnsToExisitingReport(const QuantLib::ext::shared_ptr<InMemoryReport>& new
         for (size_t row = 0; row < report->rows(); row++) {
             newReport->next();
             for (size_t i = 0; i < newColsReport->columns(); ++i) {
-                newReport->add(newColsReport->data(i)[0]);
+                newReport->add(newColsReport->data(i, 0));
             }
             for (size_t col = 0; col < report->columns(); col++) {
-                newReport->add(report->data(col)[row]);
+                newReport->add(report->data(col, row));
             }
         }
         newReport->end();
@@ -105,8 +105,8 @@ QuantLib::ext::shared_ptr<InMemoryReport> flipReport(const QuantLib::ext::shared
         i = report->columnPosition(indexColumn);
 
     // get the new headers
-    auto newHeaders = report->data(i);
-    for (auto& h : newHeaders) {
+    for (size_t j = 0; j < report->rows(); ++j) {
+        auto h = report->data(i, j);
         if (std::string* hstr = boost::get<std::string>(&h))
             r->addColumn(*hstr, rt, precision);
         else
@@ -117,10 +117,10 @@ QuantLib::ext::shared_ptr<InMemoryReport> flipReport(const QuantLib::ext::shared
         if (j == i)
             continue;
 
-        auto data = report->data(j);
         r->next();
-        for (const auto& d : data)
-            r->add(d);
+        for (size_t k = 0; k < report->rows(); ++k) {
+            r->add(report->data(j, k));
+        }
     }
 
     r->end();

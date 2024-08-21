@@ -40,6 +40,7 @@ public:
     std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
                     const boost::optional<long>& memSlot, const std::size_t addRegressor1,
                     const std::size_t addRegressor2) const override;
+    std::size_t numeraire(const Date& s) const override;
     std::size_t fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate, const Date& start,
                            const Date& end, const Real spread, const Real gearing, const Integer lookback,
                            const Natural rateCutoff, const Natural fixingDays, const bool includeSpread, const Real cap,
@@ -62,7 +63,6 @@ protected:
     std::size_t getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
     std::size_t getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const override;
     std::size_t getDiscount(const Size idx, const Date& s, const Date& t) const override;
-    std::size_t getNumeraire(const Date& s) const override;
     std::size_t getFxSpot(const Size idx) const override;
 
     // input parameters
@@ -94,13 +94,6 @@ protected:
     mutable bool conditionalExpectationUseAsset_; // derived from input conditionalExpectationModelState
 
     mutable std::size_t underlyingPathsCgVersion_ = 0;
-
-    // data when paths are injected via the AMCModelCG interface
-    const std::vector<QuantLib::Real>* injectedPathTimes_ = nullptr;
-    const std::vector<std::vector<std::size_t>>* injectedPaths_ = nullptr;
-    const std::vector<bool>* injectedPathIsRelevantTime_;
-    bool injectedPathStickyCloseOutRun_;
-    Size overwriteModelSize_ = Null<Size>();
 };
 
 } // namespace data
