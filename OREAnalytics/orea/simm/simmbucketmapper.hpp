@@ -64,8 +64,12 @@ public:
 
     virtual const std::set<FailedMapping>& failedMappings() const = 0;
 
-    void updateFromCrif(const ore::analytics::Crif& crif) {
-        for (const auto& cr : crif) {
+    void updateFromCrif(const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif) {
+        if (!crif)
+            return;
+
+        for (const auto& scr : *crif) {
+            CrifRecord cr = scr.toCrifRecord();
             if (!cr.isSimmParameter() && hasBuckets(cr.riskType)) {
                 addMapping(cr.riskType, cr.qualifier, cr.bucket);
             }

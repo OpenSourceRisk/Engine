@@ -50,10 +50,9 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
         analytic()->reports()[LABEL]["crif"] = crifReport;
         LOG("CRIF report generated");
 
-        Crif simmDataCrif = simmAnalytic->crif().aggregate();
+        QuantLib::ext::shared_ptr<Crif> simmDataCrif = simmAnalytic->crif()->aggregate();
         QuantLib::ext::shared_ptr<InMemoryReport> simmDataReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString())
-            .writeSIMMData(simmAnalytic->crif(), simmDataReport);
+        ReportWriter(inputs_->reportNaString()).writeSIMMData(*simmDataCrif, simmDataReport, simmAnalytic->hasNettingSetDetails());
         analytic()->reports()[LABEL]["simm_data"] = simmDataReport;
         LOG("SIMM data report generated");
     }
@@ -109,11 +108,11 @@ void SimmAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::In
 
 void SimmAnalytic::loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     QL_REQUIRE(inputs_, "Inputs not set");
-    QL_REQUIRE(!inputs_->crif().empty(), "CRIF loader does not contain any records");
+    QL_REQUIRE(inputs_->crif() && !inputs_->crif()->empty(), "CRIF loader does not contain any records");
         
     crif_ = inputs_->crif();
-    crif_.fillAmountUsd(market());
-    hasNettingSetDetails_ = crif_.hasNettingSetDetails();
+    crif_->fillAmountUsd(market());
+    hasNettingSetDetails_ = crif_->hasNettingSetDetails();
 }
 
 } // namespace analytics

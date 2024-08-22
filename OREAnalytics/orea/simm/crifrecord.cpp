@@ -107,7 +107,8 @@ const bm<CrifRecord::ProductClass> productClassMap = boost::assign::list_of<bm<C
 
 const bm<CrifRecord::IMModel> imModelMap = boost::assign::list_of<bm<CrifRecord::IMModel>::value_type>(
     CrifRecord::IMModel::Schedule, "Schedule")(CrifRecord::IMModel::SIMM, "SIMM")(
-    CrifRecord::IMModel::SIMM_P, "SIMM-P")(CrifRecord::IMModel::SIMM_R, "SIMM-R");
+    CrifRecord::IMModel::SIMM_R, "SIMM-R")(CrifRecord::IMModel::SIMM_P, "SIMM-P")(
+    CrifRecord::IMModel::Empty, "");
 
 const bm<Regulation> regulationsMap = boost::assign::list_of<bm<Regulation>::value_type>(
     Regulation::APRA, "APRA")(Regulation::CFTC, "CFTC")(
@@ -137,7 +138,8 @@ ostream& operator<<(ostream& out, const CrifRecord::ProductClass& pc) {
 
 ostream& operator<<(ostream& out, const CrifRecord::IMModel& model) {
     QL_REQUIRE(imModelMap.left.count(model) > 0, "Product class not a valid CrifRecord::IMModel");
-    if (model == CrifRecord::IMModel::SIMM_P || model == CrifRecord::IMModel::SIMM_R)
+    if (model == CrifRecord::IMModel::SIMM_P || model == CrifRecord::IMModel::SIMM_R ||
+        model == CrifRecord::IMModel::SIMM)
         return out << "SIMM";
     else
         return out << imModelMap.left.at(model);
@@ -280,7 +282,7 @@ vector<std::set<std::string>> CrifRecord::additionalHeaders = {};
 ostream& operator<<(ostream& out, const CrifRecord& cr) {
     const NettingSetDetails& n = cr.nettingSetDetails;
     if (n.empty()) {
-        out << "[" << cr.tradeId << ", " << cr.portfolioId << ", " << cr.productClass << ", " << cr.riskType
+        out << "[" << cr.tradeId << ", " << cr.nettingSetDetails.nettingSetId() << ", " << cr.productClass << ", " << cr.riskType
             << ", " << cr.qualifier << ", " << cr.bucket << ", " << cr.label1 << ", " << cr.label2 << ", "
             << cr.amountCurrency << ", " << cr.amount << ", " << cr.amountUsd;
     } else {
