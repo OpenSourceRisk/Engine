@@ -354,7 +354,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
             switch (param.first) {
             case RiskFactorKey::KeyType::FXSpot: {
-            std::map<std::string, Handle<Quote>> fxQuotes;
+                std::map<std::string, Handle<Quote>> fxQuotes;
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
