@@ -21,13 +21,14 @@
 #include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/iborfracoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/instruments/rebatedexercise.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
-#include <qle/instruments/rebatedexercise.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -82,7 +83,13 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
     info.payCcyIndex = model_->ccyIndex(payCcy);
     info.payer = payer;
 
-    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow)) {
+    auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+    // we need to exclude FRAs with IborFraCoupon, as paydate and accrual start are the same by construction
+    // subsequently treat them as no cpn, hence exIntoCriterionTime = payTime
+    // FRAs with OvernightIndexedCoupon shall be fine, as paydate are not equal to accrual start
+    auto fracpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::IborFraCoupon>(flow);
+
+    if (cpn && !fracpn) {
         QL_REQUIRE(cpn->accrualStartDate() < flow->date(),
                    "McMultiLegBaseEngine::createCashflowInfo(): coupon leg "
                        << legNo << " cashflow " << cfNo << " has accrual start date (" << cpn->accrualStartDate()
