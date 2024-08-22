@@ -133,7 +133,7 @@ Risk Management Limited.
 \section{Summary}
 %==========================================
 
-This document describes the bond and bond-derivative pricing process in ORE.
+This document describes the bond pricing configuration in ORE.
 
 %==========================================
 \section{Overview}\label{overview}
@@ -148,26 +148,27 @@ Bond pricing depends on a number of market data inputs
 \begin{itemize}
 \item a CDS curve of the same issuer and seniority as the bond to proxy the credit risk
 \item a sector-rating curve representing the systematic part of the bond's credit risk
-\item a ``null'' - curve implying zero default risk for pricing. This is set up to calculate default risk sensitivities
-  or to apply stress scenarios to the curve.
-\item omitted entirely, implying zero default risk. In this case no credit curve sensitivities can be calculated
-  though. 
+\item a ``null'' - curve implying zero default risk for pricing, for the purpose of calculating default risk
+  sensitivities or to apply stress scenarios.
+\item omitted entirely, implying zero default risk. In this case no default risk sensitivities can be calculated though.
 \end{itemize}
 In all cases, the security spread can be used to represent additional credit / liquidity risk, see below.
-\item SecuritySpread [optional]: a single additional discounting spread, this can be interpreted as part of the credit
-  risk (generating additional default probabilty) or as part of the baseline discounting (liquidity spread). Assumed to
-  be zero if not given. Except: If a price quote is given and the security spread is configured in the security curve
-  config, but no market data is given for the security spread, the security spread is implied from the price quote.
+\item SecuritySpread [optional]: a single additional discounting spread. This can generally be interpreted as part of
+  the credit risk (generating additional default probabilty) or as part of the baseline discounting (liquidity
+  spread). Assumed to be zero if not given. Exception: If a price quote is given and the security spread is configured
+  in the security curve config, but no market data is given for the security spread, the security spread is implied from
+  the price quote.
 \item Recovery Rate [optional]: the recovery rate that applies in the event of a default of the bond. Assumed to be zero
   if not given.
 \item PriceQuote [optional]: a liquid price for the bond, this can be used to imply a security spread such that the
   market price of the bond matches the theoretical pricing of the bond.
-\item IncomeCurve [optional]: a repo curve, only relevant for bond forwards, if not given falls back to reference curve
+\item IncomeCurve [optional]: a repo curve, only relevant for bond forwards, falls back to reference curve if not given
 \item VolatilityCurve [optional]: a bond volatility surface, only relevant for bond options
 \end{itemize}
 
-The above is configured in the bond reference data and curve configurations. If the curve configurations are not given
-as an input, they are auto-generated\footnote{this feature might not be available in the public version of ore}.
+The above information is configured in the bond reference data and curve configurations. If the curve configurations are
+not given as an input, they are auto-generated\footnote{this feature might not be available in the public version of
+ore}.
 
 Depending on the specific nature of the bond (vanilla fixed rate, floating rate, convertible, callable, ...) additional
 market data might be needed to price a bond, e.g.
@@ -184,8 +185,8 @@ market data might be needed to price a bond, e.g.
 \section{Reference Data}\label{refdata}
 %==========================================
 
-Listing \ref{lst:bond_ref_data} shows and example of reference data of a bond.  The bond is identified via its id
-(ISIN:XS2257580857). The CreditCurveId has the same name in this case, the reference curve is set to EURIBOR-3M. No
+Listing \ref{lst:bond_ref_data} shows and example of reference data of a bond.  The bond is identified via its security
+id (ISIN:XS2257580857). The CreditCurveId has the same name in this case, the reference curve is set to EURIBOR-3M. No
 income or vol curve is specified for the bond.
 
 \begin{listing}[H]
@@ -260,10 +261,10 @@ It can be explicitly set up or ore can auto-generate it. Listing \ref{lst:autoge
 auto-generated config for the bond from section \ref{refdata}:
 
 \begin{itemize}
-\item SpreadQuote: Points to the security spread market data point. If it specified but not present in the market data
-  feed and a PriceQuote is specified and available in the market data, the security spread value is implied from the
-  price quote. Note: If no SpreadQuote is specified, no security spread will be implied, no matter if a price quote is
-  available.
+\item SpreadQuote: Points to the security spread market data point. If it specified in the curve config but not present
+  in the market data feed and a PriceQuote is specified and available in the market data, the security spread value is
+  implied from the price quote. Note: If no SpreadQuote is specified, no security spread will be implied, no matter if a
+  price quote is available.
 \item RecoveryRateQuote: Points to the recovery rate used for pricing. If this is not available in the market data, the
   credit curve recovery rate will be used as a fallback, or if no credit curve is specified either, zero will be used.
 \item PriceQuote: If specified and available in the market data and if SpreadQuote is specified but not available in the
@@ -300,7 +301,8 @@ The todays market configuration provides
 Listing \ref{lst:autogen_t0_config} shows an auto-generated example. Note that there are two mappings for the default
 curve. The pricing engine builders will always attempt to retrieve the credit curve from the second label starting with
 \verb+__SECCRCRV_+. This internal label contains both the security id and the credit curve id from the reference data of
-this security. Only if no such market object exists, the builder will fallback to the usual first label. 
+this security. The builder will fallback to the usual first label only if the market object under the second label is
+not available.
 
 This allows to calculate security specific credit curve sensitivities even if several bonds share the same credit curve.
 
@@ -319,9 +321,9 @@ This allows to calculate security specific credit curve sensitivities even if se
 \label{lst:autogen_t0_config}
 \end{listing}
 
-Recovery rates are added for both default curves (the credit curve specific recovery rate) and securities (the security
-specific recovery rate). In case of an overlap of names, one value will overwrite the other, so it is important to
-ensure consistent values in this case.
+Recovery rates are added to todays market for both default curves (the credit curve specific recovery rate) and
+securities (the security specific recovery rate). In case of an overlap of names, one value will overwrite the other, so
+it is important to ensure consistent values in this case.
 
 \subsection{Simulation configuration}\label{sim_config}
 
@@ -329,11 +331,9 @@ Listing \ref{lst:autogen_sim_config} shows an auto-generated simulation market c
 and securities to enable in the simulation. Note the usage of the security specific credit curve label starting with
 \verb+__SECCRCRV_+, see \ref{t0_config} for an explanation.
 
-As for the T0 market, Recovery rates are added for both default curves (the credit curve specific recovery rate) and
+Similar to todays market, recovery rates are added for both default curves (the credit curve specific recovery rate) and
 securities (the security specific recovery rate). In case of an overlap of names, one value will overwrite the other, so
-it is important to ensure consistent values in this case.
-
-For specified securities, security spreads are added to the sim market as well.
+it is again important to ensure consistent values in this case.
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -365,7 +365,7 @@ recovery rate).
 
 In this example, the credit curve recovery rate will be used though, because the name refers to the security specific
 credit curve starting with \verb+__SECCRCRV_+ and this name appears only in the default curve section of
-\ref{lst:autogen_sim_config}, not the securities section.
+\ref{lst:autogen_sim_config}, and not the securities section.
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -388,10 +388,6 @@ credit curve starting with \verb+__SECCRCRV_+ and this name appears only in the 
 \caption{Auto-generated sensitivity config for credit curves}
 \label{lst:autogen_sensi_config}
 \end{listing}
-
-\section{Example: pricing and sensitivities with different recovery rate assumptions}
-
-TODO
 
 %==========================================
 % \begin{appendix}
