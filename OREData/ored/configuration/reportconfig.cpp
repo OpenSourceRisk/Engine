@@ -101,10 +101,18 @@ XMLNode* ReportConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "ReportOnDeltaGrid", *reportOnDeltaGrid_);
     if (reportOnMoneynessGrid_)
         XMLUtils::addChild(doc, node, "ReportOnMoneynessGrid", *reportOnMoneynessGrid_);
+    if (reportOnStrikeGrid_)
+        XMLUtils::addChild(doc, node, "ReportOnStrikeGrid", *reportOnStrikeGrid_);
+    if (reportOnStrikeSpreadGrid_)
+        XMLUtils::addChild(doc, node, "ReportOnStrikeSpreadGrid", *reportOnStrikeSpreadGrid_);
     if (deltas_)
         XMLUtils::addGenericChildAsList(doc, node, "Deltas", *deltas_);
     if (moneyness_)
         XMLUtils::addGenericChildAsList(doc, node, "Moneyness", *moneyness_);
+    if (strikes_)
+        XMLUtils::addGenericChildAsList(doc, node, "Strikes", *strikes_);
+    if (strikeSpreads_)
+        XMLUtils::addGenericChildAsList(doc, node, "StrikeSpreads", *strikeSpreads_);
     if (expiries_)
         XMLUtils::addGenericChildAsList(doc, node, "Expiries", *expiries_);
     if (pillarDates_)
