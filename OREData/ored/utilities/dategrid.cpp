@@ -73,11 +73,13 @@ DateGrid::DateGrid(const string& grid, const QuantLib::Calendar& gridCalendar, c
     } else { // uniform grid of format "numPillars,spacing" (e.g. 40,1M)
         vector<string> tokens;
         boost::split(tokens, grid, boost::is_any_of(","));
-        if (tokens.size() <= 2) {
+        QL_REQUIRE(!tokens.empty(), "DateGrid(): no tokens in grid spec '" << grid << "'");
+        QuantLib::Integer gridSize;
+        if (tokens.size() <= 2 &&
+            tryParse(tokens[0], gridSize, std::function<QuantLib::Integer(const std::string& s)>(parseInteger))) {
             // uniform grid of format "numPillars,spacing" (e.g. 40,1M)
             Period gridTenor = 1 * Years; // default
-            Size gridSize = atoi(tokens[0].c_str());
-            QL_REQUIRE(gridSize > 0, "Invalid DateGrid string " << grid);
+            QL_REQUIRE(gridSize > 0, "DateGrid(): gridSize is zero, spec is '" << grid << "'");
             if (tokens.size() == 2)
                 gridTenor = data::parsePeriod(tokens[1]);
             if (gridTenor == Period(1, Days)) {
