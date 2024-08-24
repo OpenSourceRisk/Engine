@@ -96,6 +96,7 @@ public:
     void setPricingEngineFromFile(const std::string& fileName);
     void setTodaysMarketParams(const std::string& xml);
     void setTodaysMarketParamsFromFile(const std::string& fileName);
+    void setPortfolio(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
     void setPortfolio(const std::string& xml); 
     void setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath);
     void setMporPortfolio(const std::string& xml);
