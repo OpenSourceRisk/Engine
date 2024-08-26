@@ -27,6 +27,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ql/errors.hpp>
 #include <qle/instruments/equityforward.hpp>
 
@@ -45,30 +46,72 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = string("");
 
+    QuantLib::Position::Type longShort = parsePositionType(longShort_);
+    Date maturity = parseDate(maturityDate_);
+
     additionalData_["strikeCurrency"] = strikeCurrency_;
     additionalData_["quantity"] = quantity_;
 
+    // Payment Currency
     Currency ccy = parseCurrencyWithMinors(currency_);
+
+    // get the equity currency from the market
+    Currency equityCcy = engineFactory->market()->equityCurve(eqName())->currency();
+    QL_REQUIRE(!equityCcy.empty(), "No equity currency in equityCurve for equity " << eqName());
+
+    QL_REQUIRE(ccy == equityCcy || !fxIndex_.empty(),
+               "EquityForward currency " << ccy << " does not match equity currency " << equityCcy << " for trade "
+                                         << id() << ". Check trade xml, add an FX index if needed.");
 
     // convert strike to the major currency if needed
     Real strike;
     if (!strikeCurrency_.empty()) {
+        Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
+        QL_REQUIRE(strikeCcy == equityCcy, "Strike currency " << ccy << " does not match equity currency " << equityCcy
+                                                              << " for trade " << id());
         strike = convertMinorToMajorCurrency(strikeCurrency_, strike_);
-        // ensure strike currency matches equity currency
-    } else {        
-        WLOG("No Strike Currency provide for trade " << id() << ", assuming trade currency " << ccy);
-        strike = convertMinorToMajorCurrency(currency_, strike_);
+    } else {
+        WLOG("No Strike Currency provided for trade " << id() << ", assuming underlying currency " << equityCcy.code());
+        strike = convertMinorToMajorCurrency(equityCcy.code(), strike_);
     }
+    
     additionalData_["strike"] = strike;
 
-    QuantLib::Position::Type longShort = parsePositionType(longShort_);
-    Date maturity = parseDate(maturityDate_);
+    Date paymentDate;
+    if (payDate_.empty()) {
+        Natural conventionalLag = 0;
+        Calendar conventionalCalendar = NullCalendar();
+        BusinessDayConvention conventionalBdc = Unadjusted;
+        PaymentLag paymentLag;
+        if (payLag_.empty())
+            paymentLag = conventionalLag;
+        else
+            paymentLag = parsePaymentLag(payLag_);
+        Period payLag = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
+        Calendar payCalendar = payCalendar_.empty() ? conventionalCalendar : parseCalendar(payCalendar_);
+        BusinessDayConvention payConvention =
+            payConvention_.empty() ? conventionalBdc : parseBusinessDayConvention(payConvention_);
+        paymentDate = payCalendar.advance(maturity, payLag, payConvention);
+    } else {
+        paymentDate = parseDate(payDate_);
+    }
+
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
+    QuantLib::Date fixingDate;
+    QL_REQUIRE(paymentDate >= maturity, "FX Forward settlement date should equal or exceed the maturity date.");
+
+    if (ccy != equityCcy) {
+        fxIndex = buildFxIndex(fxIndex_, equityCcy.code(), ccy.code(), engineFactory->market(),
+                               engineFactory->configuration(MarketContext::pricing));
+        fixingDate = fxIndex->fixingDate(paymentDate);
+    }
 
     string name = eqName();
     additionalData_["underlyingSecurityId"] = name;
+    additionalData_["underlyingCurrency"] = equityCcy.code();
 
-    QuantLib::ext::shared_ptr<Instrument> inst =
-        QuantLib::ext::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike);
+    QuantLib::ext::shared_ptr<Instrument> inst = QuantLib::ext::make_shared<QuantExt::EquityForward>(
+        name, equityCcy, longShort, quantity_, maturity, strike, paymentDate, ccy, fxIndex, fixingDate);
 
     // set up other Trade details
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
@@ -77,22 +120,7 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
     notional_ = strike * quantity_;
-    notionalCurrency_ = ccy.code();
-
-    // We check the ccys here at the end of the build to ensure that the rest of the build above
-    // (which does not require the market) runs first
-
-    // get the equity currency from the market
-    Currency equityCcy = engineFactory->market()->equityCurve(eqName())->currency();
-
-    // ensure forward currency matches the equity currency
-    QL_REQUIRE(!equityCcy.empty(), "No equity currency in equityCurve for equity " << eqName());
-    QL_REQUIRE(ccy == equityCcy, "EquityForward currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
-    
-    if (!strikeCurrency_.empty()) {
-        Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
-        QL_REQUIRE(strikeCcy == equityCcy, "Strike currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
-    }
+    notionalCurrency_ = equityCcy.code();   
 
     // Pricing engine
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
@@ -117,6 +145,19 @@ void EquityForward::fromXML(XMLNode* node) {
     strike_ = XMLUtils::getChildValueAsDouble(eNode, "Strike", true);
     strikeCurrency_ = XMLUtils::getChildValue(eNode, "StrikeCurrency", false);
     quantity_ = XMLUtils::getChildValueAsDouble(eNode, "Quantity", true);
+    
+    if (XMLNode* settlementDataNode = XMLUtils::getChildNode(eNode, "SettlementData")) {
+        fxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", false);
+        payDate_ = XMLUtils::getChildValue(settlementDataNode, "Date", false);
+        if (payDate_.empty()) {
+            if (XMLNode* rulesNode = XMLUtils::getChildNode(settlementDataNode, "Rules")) {
+                payLag_ = XMLUtils::getChildValue(rulesNode, "PaymentLag", false);
+                payCalendar_ = XMLUtils::getChildValue(rulesNode, "PaymentCalendar", false);
+                payConvention_ = XMLUtils::getChildValue(rulesNode, "PaymentConvention", false);
+            }
+        }
+    }
+
 }
 
 XMLNode* EquityForward::toXML(XMLDocument& doc) const {
@@ -132,6 +173,23 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) const {
     if (!strikeCurrency_.empty())
         XMLUtils::addChild(doc, eNode, "StrikeCurrency", strikeCurrency_);
     XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
+    
+    XMLNode* settlementDataNode = doc.allocNode("SettlementData");
+    XMLUtils::appendNode(eNode, settlementDataNode);
+    if (!fxIndex_.empty())
+        XMLUtils::addChild(doc, settlementDataNode, "FXIndex", fxIndex_);
+    if (!payDate_.empty()) {
+        XMLUtils::addChild(doc, settlementDataNode, "Date", payDate_);
+    } else {
+        XMLNode* rulesNode = doc.allocNode("Rules");
+        XMLUtils::appendNode(settlementDataNode, rulesNode);
+        if (!payLag_.empty())
+            XMLUtils::addChild(doc, rulesNode, "PaymentLag", payLag_);
+        if (!payCalendar_.empty())
+            XMLUtils::addChild(doc, rulesNode, "PaymentCalendar", payCalendar_);
+        if (!payConvention_.empty())
+            XMLUtils::addChild(doc, rulesNode, "PaymentConvention", payConvention_);
+    }
     return node;
 }
 

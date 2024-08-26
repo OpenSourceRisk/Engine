@@ -49,18 +49,34 @@ void DiscountingEquityForwardEngine::calculate() const {
 
     results_.value = 0.0;
 
-    if (!detail::simple_event(arguments_.maturityDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+    if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
         Real lsInd = ((arguments_.longShort == Position::Long) ? 1.0 : -1.0);
         Real qty = arguments_.quantity;
         Date maturity = arguments_.maturityDate;
         Real strike = arguments_.strike;
         Real forwardPrice =
             equitySpot_->value() * divYieldCurve_->discount(maturity) / equityRefRateCurve_->discount(maturity);
-        DiscountFactor df = discountCurve_->discount(maturity);
+        DiscountFactor df = discountCurve_->discount(arguments_.payDate);
         results_.value = (lsInd * qty) * (forwardPrice - strike) * df;
-
+        Real fxRate = 1.0;
+        if (arguments_.payCurrency != arguments_.currency) {
+            QL_REQUIRE(arguments_.fxIndex != nullptr, "DiscountingEquityForwardEngine requires an FxIndex to convert "
+                                                      "from underyling currency ("
+                                                          << arguments_.currency << ") to payCurrency ("
+                                                          << arguments_.payCurrency << ")");
+            QL_REQUIRE(arguments_.fixingDate != Date(),
+                       "DiscountingEquityForwardEngine: Payment and Underlying currency don't match, require an fx "
+                       "fixing date for settlement conversion");
+            auto fxRate = arguments_.fxIndex->fixing(arguments_.fixingDate);
+            results_.value *= fxRate;
+        }
         results_.additionalResults["forwardPrice"] = forwardPrice;
-        results_.additionalResults["currentNotional"] = forwardPrice * strike;
+        results_.additionalResults["underlyingCcy"] = arguments_.currency;
+        results_.additionalResults["currentNotional"] = qty * forwardPrice * fxRate;
+        results_.additionalResults["currentNotionalCurrency"] = arguments_.payCurrency;
+        results_.additionalResults["fxRate"] = fxRate;
+        results_.additionalResults["fxFixingDate"] = arguments_.fixingDate;
+        results_.additionalResults["payCcy"] = arguments_.payCurrency;
     }
 } // calculate
 

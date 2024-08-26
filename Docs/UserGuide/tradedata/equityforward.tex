@@ -32,12 +32,50 @@ The meanings and allowable values of the elements in the \lstinline!EquityForwar
 	
 	Allowable values:  See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data}. \\
 	\item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
-	\item Currency: The  currency of the equity forward. \\
+	\item Currency: The payment currency of the equity forward. If underlying currency and payment currency don't match, one need to specify a FXIndex in the settlement data node.\\
 	Allowable values:  See Fiat Currencies and Minor Currencies in Table \ref{tab:currency}.
 	\item Strike: The agreed buy/sell price of the equity forward. \\
 	Allowable values:  Any positive real number.	
-	\item StrikeCurrency: [Optional] The currency of the strike value. Defaults to \lstinline!Currency! field \\
+	\item StrikeCurrency: [Optional] The currency of the strike value. Defaults to the underlying currency.\\
 	Allowable values:  See Fiat Currencies and Minor Currencies in Table \ref{tab:currency}.	
 	\item Quantity: The number of units of the underlying equity to be bought/sold. \\
 	Allowable values:  Any positive real number.
+	\item SettlementData [Optional]: This node is used to specify  the settlement of the cash flows on the value date.
 \end{itemize}
+
+A \lstinline!SettlementData! node is shown in Listing \ref{lst:eq_settlement_data_node}, and the meanings and allowable values of its elements follow below.
+
+\begin{itemize}
+\item FXIndex: The FX reference index for determining the FX fixing at the payment date. This field is required if the underlying currency doesn't match the deal currency. Otherwise, it is ignored. \\
+Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}.
+\item Date [Optional]: If specified, this will be the payment date. \\
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. If left blank or omitted, defaults to the maturity date with some adjustments applied
+from the \lstinline!Rules! sub-node.
+\item Rules [Optional]: If \lstinline!Date! is left blank or omitted, this node will be used to derive the payment date from the maturity date.
+The \lstinline!Rules! sub-node is shown in Listing \ref{lst:eq_settlement_data_node}, and the meanings and allowable values of its elements follow below.
+  \begin{itemize}
+	\item PaymentLag [Optional]: The lag between the value date and the payment date. \\
+	Allowable values: Any valid period, i.e.\ a non-negative whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
+  \emph{Y} (years).  Defaults to 0. If a whole number is given and no letter, it is assumed that it is a number of  \emph{D} (days).
+	\item PaymentCalendar [Optional]: The calendar to be used when applying the payment lag. \\
+	Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. Defaults to to NullCalendar (no holidays) if left blank or omitted.
+	\item PaymentConvention [Optional]: The roll convention to be used when applying the payment lag. \\
+	Allowable values: See Table \ref{tab:convention} Roll Convention. Defaults to Unadjusted if left blank or omitted.
+  \end{itemize}
+\end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SettlementData>
+  <FXIndex>FX-ECB-EUR-USD</FXIndex>
+  <Date>2020-09-03</Date>
+  <Rules>
+    <PaymentLag>2D</PaymentLag>
+    <PaymentCalendar>USD</PaymentCalendar>
+    <PaymentConvention>Following</PaymentConvention>
+  </Rules>
+</SettlementData>
+\end{minted}
+\caption{Example \lstinline!SettlementData! node with \lstinline!Rules! sub-node}
+\label{lst:eq_settlement_data_node}
+\end{listing}
