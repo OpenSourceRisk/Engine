@@ -67,9 +67,20 @@ void DiscountingEquityForwardEngine::calculate() const {
             QL_REQUIRE(arguments_.fixingDate != Date(),
                        "DiscountingEquityForwardEngine: Payment and Underlying currency don't match, require an fx "
                        "fixing date for settlement conversion");
-            auto fxRate = arguments_.fxIndex->fixing(arguments_.fixingDate);
+            QL_REQUIRE(arguments_.currency == arguments_.fxIndex->sourceCurrency(),
+                       "DiscountingEquityForwardEngine: Source currency of the FX Index ("
+                           << arguments_.fxIndex->sourceCurrency() << ") doesnt match underlying currency ("
+                           << arguments_.currency << ")");
+            QL_REQUIRE(arguments_.payCurrency == arguments_.fxIndex->targetCurrency(),
+                       "DiscountingEquityForwardEngine: Target currency of the FX Index ("
+                           << arguments_.fxIndex->targetCurrency() << ") doesnt match pay currency ("
+                           << arguments_.payCurrency << ")");
+            fxRate = arguments_.fxIndex->fixing(arguments_.fixingDate);
             results_.value *= fxRate;
         }
+        results_.additionalResults["valueDate"] = arguments_.maturityDate;
+        results_.additionalResults["paymentDate"] = arguments_.payDate;
+        results_.additionalResults["discountFactor"] = df;
         results_.additionalResults["forwardPrice"] = forwardPrice;
         results_.additionalResults["underlyingCcy"] = arguments_.currency;
         results_.additionalResults["currentNotional"] = qty * forwardPrice * fxRate;

@@ -101,7 +101,7 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     QL_REQUIRE(paymentDate >= maturity, "FX Forward settlement date should equal or exceed the maturity date.");
 
     if (ccy != equityCcy) {
-        fxIndex = buildFxIndex(fxIndex_, equityCcy.code(), ccy.code(), engineFactory->market(),
+        fxIndex = buildFxIndex(fxIndex_, ccy.code(), equityCcy.code(), engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing));
         fixingDate = fxIndex->fixingDate(paymentDate);
     }
