@@ -138,6 +138,7 @@ public:
         BASE_CORRELATION,
         SHIFT,
         TRANSITION_PROBABILITY,
+        CONVERSION_FACTOR,
         NONE
     };
 
@@ -1935,6 +1936,29 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
+class BondFutureConversionFactor : public MarketDatum {
+public:
+    BondFutureConversionFactor() {}
+    //! Constructor
+    BondFutureConversionFactor(Real value, Date asofDate, const string& name, const string& securityId)
+        : MarketDatum(value, asofDate, name, QuoteType::PRICE, InstrumentType::BOND), securityID_(securityId) {}
+
+    //! Make a copy of the market datum
+    QuantLib::ext::shared_ptr<MarketDatum> clone() override {
+        return QuantLib::ext::make_shared<BondFutureConversionFactor>(quote_->value(), asofDate_, name_, securityID_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const string& securityID() const { return securityID_; }
+    //@}
+private:
+    string securityID_;
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
+};
+
 //! Transition Probability data class
 class TransitionProbabilityQuote : public MarketDatum {
 public:
@@ -2005,4 +2029,5 @@ BOOST_CLASS_EXPORT_KEY(ore::data::CommodityOptionQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CorrelationQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::CPRQuote);
 BOOST_CLASS_EXPORT_KEY(ore::data::BondPriceQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::BondFutureConversionFactor);
 BOOST_CLASS_EXPORT_KEY(ore::data::TransitionProbabilityQuote);

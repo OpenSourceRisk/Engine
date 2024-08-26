@@ -669,6 +669,8 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
             return QuantLib::ext::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
         else if (quoteType == MarketDatum::QuoteType::PRICE)
             return QuantLib::ext::make_shared<BondPriceQuote>(value, asof, datumName, securityID);
+        else if (quoteType == MarketDatum::QuoteType::CONVERSION_FACTOR)
+            return QuantLib::ext::make_shared<BondFutureConversionFactor>(value, asof, datumName, securityID);
     }
 
     case MarketDatum::InstrumentType::CDS_INDEX: {
