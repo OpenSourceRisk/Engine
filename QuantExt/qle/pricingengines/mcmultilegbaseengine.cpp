@@ -84,17 +84,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
     info.payer = payer;
 
     auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
-    // we need to exclude FRAs with IborFraCoupon, as paydate and accrual start are the same by construction
-    // subsequently treat them as no cpn, hence exIntoCriterionTime = payTime
-    // FRAs with OvernightIndexedCoupon shall be fine, as paydate are not equal to accrual start
-    auto fracpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::IborFraCoupon>(flow);
-
-    if (cpn && !fracpn) {
-        QL_REQUIRE(cpn->accrualStartDate() < flow->date(),
-                   "McMultiLegBaseEngine::createCashflowInfo(): coupon leg "
-                       << legNo << " cashflow " << cfNo << " has accrual start date (" << cpn->accrualStartDate()
-                       << ") >= pay date (" << flow->date()
-                       << "), which breaks an assumption in the engine. This situation is unexpected.");
+    if (cpn && cpn->accrualStartDate() < flow->date()) {
         info.exIntoCriterionTime = time(cpn->accrualStartDate()) + tinyTime;
     } else {
         info.exIntoCriterionTime = info.payTime;
