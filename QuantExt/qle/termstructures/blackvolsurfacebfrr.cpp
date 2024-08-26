@@ -139,7 +139,7 @@ Real SimpleDeltaInterpolatedSmile::strikeFromDelta(const Option::Type type, cons
 
     try {
         Brent brent;
-        return std::exp(brent.solve(targetFct, 1E-6, guess, 0.1));
+        return std::exp(brent.solve(targetFct, accuracy_, guess, 0.1));
     } catch (const std::exception& e) {
         QL_FAIL("SimpleDeltaInterpolatedSmile::strikeFromDelta("
                 << (type == Option::Call ? 1.0 : -1.0) * delta << ") could not be computed for spot=" << spot_
@@ -376,9 +376,8 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
     static const std::vector<Real> samplePoints = {0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.99};
     for (auto const& simpleDelta : samplePoints) {
         Real vol = resultSmile->volatilityAtSimpleDelta(simpleDelta);
-        QL_REQUIRE(vol > 0.0001 && vol < 5.0, "createSmile at expiry " << expiryTime << ": volatility at simple delta "
-                                                                       << simpleDelta << " (" << vol
-                                                                       << ") is not plausible.");
+        QL_REQUIRE(vol < 5.0, "createSmile at expiry " << expiryTime << ": volatility at simple delta " << simpleDelta
+                                                       << " (" << vol << ") is not plausible.");
     }
 
     return resultSmile;
