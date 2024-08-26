@@ -23,33 +23,28 @@
 namespace QuantExt {
 
 Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::DeltaType dt, Real spot, Real domDiscount,
-                        Real forDiscount, QuantLib::ext::shared_ptr<BlackVolTermStructure> vol, Real t, Real accuracy,
-                        Size maxIterations) {
-    Real forward = spot / domDiscount * forDiscount;
-    Real result = forward, lastResult;
-    Size iterations = 0;
-    do {
-        Real stddev = std::sqrt(vol->blackVariance(t, result));
-        try {
-            BlackDeltaCalculator bdc(optionType, dt, spot, domDiscount, forDiscount, stddev);
-            lastResult = result;
-            result = bdc.strikeFromDelta(delta);
-        } catch (const std::exception& e) {
-            QL_FAIL("getStrikeFromDelta("
-                    << (optionType == Option::Call ? 1.0 : -1.0) * delta << ") could not be computed for spot=" << spot
-                    << ", forward=" << spot / domDiscount * forDiscount << " (domRate=" << -std::log(domDiscount) / t
-                    << ", forRate=" << -std::log(forDiscount) / t << "), vol=" << stddev / std::sqrt(t)
-                    << ", expiry=" << t << ": " << e.what());
-        }
-    } while (std::abs((result - lastResult) / lastResult) > accuracy && ++iterations < maxIterations);
-    QL_REQUIRE(iterations < maxIterations, "getStrikeFromDelta: max iterations ("
-                                               << maxIterations << "), no solution found for accuracy " << accuracy
-                                               << ", last iterations: " << lastResult << "/" << result
-                                               << ", spot=" << spot << ", forward=" << spot / domDiscount * forDiscount
-                                               << " (domRate=" << -std::log(domDiscount) / t
-                                               << ", forRate=" << -std::log(forDiscount) / t << "), expiry=" << t);
+                        Real forDiscount, QuantLib::ext::shared_ptr<BlackVolTermStructure> vol, Real t, Real accuracy) {
 
-    return result;
+    auto targetFct = [optionType, &delta, dt, &spot, &domDiscount, &forDiscount, &vol, &t](const Real x) {
+        Real k = std::exp(x);
+        return BlackDeltaCalculator(optionType, dt, spot, domDiscount, forDiscount, std::sqrt(vol->blackVariance(t, k)))
+                   .deltaFromStrike(k) -
+               delta;
+    };
+
+    Real guess = std::log(BlackDeltaCalculator(optionType, dt, spot, domDiscount, forDiscount,
+                                               std::sqrt(vol->blackVariance(t, spot / domDiscount * forDiscount)))
+                              .strikeFromDelta(delta));
+
+    try {
+        Brent brent;
+        return std::exp(brent.solve(targetFct, accuracy, guess, 0.1));
+    } catch (const std::exception& e) {
+        QL_FAIL("getStrikeFromDelta(" << (optionType == Option::Call ? 1.0 : -1.0) * delta
+                                      << ") could not be computed for spot=" << spot << ", forward="
+                                      << spot / domDiscount * forDiscount << " (domRate=" << -std::log(domDiscount) / t
+                                      << ", forRate=" << -std::log(forDiscount) / t << ")");
+    }
 }
 
 Real getAtmStrike(DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at, Real spot, Real domDiscount, Real forDiscount,

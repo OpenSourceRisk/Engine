@@ -125,30 +125,29 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
 
 Real SimpleDeltaInterpolatedSmile::strikeFromDelta(const Option::Type type, const Real delta,
                                                    const DeltaVolQuote::DeltaType dt) {
-    Real result = forward_, lastResult;
-    Size iterations = 0;
-    do {
-        Real stddev = std::sqrt(expiryTime_) * volatility(result);
-        try {
-            BlackDeltaCalculator c(type, dt, spot_, domDisc_, forDisc_, stddev);
-            lastResult = result;
-            result = c.strikeFromDelta((type == Option::Call ? 1.0 : -1.0) * delta);
-        } catch (const std::exception& e) {
-            QL_FAIL("SimpleDeltaInterpolatedSmile::strikeFromDelta("
-                    << (type == Option::Call ? 1.0 : -1.0) * delta << ") could not be computed for spot=" << spot_
-                    << ", forward=" << spot_ / domDisc_ * forDisc_ << " (domRate=" << -std::log(domDisc_) / expiryTime_
-                    << ", forRate=" << -std::log(forDisc_) / expiryTime_ << "), vol=" << stddev / std::sqrt(expiryTime_)
-                    << ", expiry=" << expiryTime_ << ": " << e.what());
-        }
-    } while (std::abs((result - lastResult) / lastResult) > accuracy_ && ++iterations < maxIterations_);
-    QL_REQUIRE(iterations < maxIterations_,
-               "SmileDeltaInterpolatedSmile::strikeFromDelta("
-                   << (type == Option::Call ? 1.0 : -1.0) * delta << "): max iterations (" << maxIterations_
-                   << "), no solution found for accuracy " << accuracy_ << ", last iterations: " << lastResult << "/"
-                   << result << ", spot=" << spot_ << ", forward=" << spot_ / domDisc_ * forDisc_
-                   << " (domRate=" << -std::log(domDisc_) / expiryTime_
-                   << ", forRate=" << -std::log(forDisc_) / expiryTime_ << "), expiry=" << expiryTime_);
-    return result;
+
+    auto targetFct = [type, &delta, dt, this](const Real x) {
+        Real k = std::exp(x);
+        return BlackDeltaCalculator(type, dt, spot_, domDisc_, forDisc_, volatility(k) * std::sqrt(expiryTime_))
+                   .deltaFromStrike(k) -
+               (type == Option::Call ? 1.0 : -1.0) * delta;
+    };
+
+    Real guess = std::log(
+        BlackDeltaCalculator(type, dt, spot_, domDisc_, forDisc_, std::sqrt(expiryTime_) * volatility(forward_))
+            .strikeFromDelta((type == Option::Call ? 1.0 : -1.0) * delta));
+
+    try {
+        Brent brent;
+        return std::exp(brent.solve(targetFct, 1E-6, guess, 0.1));
+    } catch (const std::exception& e) {
+        QL_FAIL("SimpleDeltaInterpolatedSmile::strikeFromDelta("
+                << (type == Option::Call ? 1.0 : -1.0) * delta << ") could not be computed for spot=" << spot_
+                << ", forward=" << spot_ / domDisc_ * forDisc_ << " (domRate=" << -std::log(domDisc_) / expiryTime_
+                << ", forRate=" << -std::log(forDisc_) / expiryTime_ << "), expiry=" << expiryTime_ << ": "
+                << e.what());
+    }
+
 }
 
 Real SimpleDeltaInterpolatedSmile::atmStrike(const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at) {
