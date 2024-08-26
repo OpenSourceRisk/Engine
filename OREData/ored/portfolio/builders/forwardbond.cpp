@@ -47,8 +47,8 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngi
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, const string& creditCurveId,
-                                       const bool hasCreditRisk, const string& securityId,
+CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, const string& discountCurveName,
+                                       const string& creditCurveId, const bool hasCreditRisk, const string& securityId,
                                        const string& referenceCurveId, const string& incomeCurveId) {
 
     DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");
@@ -76,7 +76,9 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
 
     // to discount the contract, might be a OIS curve
     Handle<YieldTermStructure> contractCurve =
-        market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
 
     return buildMcEngine(lgm, spreadedCurve, simulationDates_, modelIndex, incomeCurve, contractCurve, referenceCurve);
 }
