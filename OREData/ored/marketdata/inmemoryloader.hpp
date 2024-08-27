@@ -20,6 +20,8 @@
 
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
+#include <qle/utilities/serializationdate.hpp>
+#include <boost/serialization/base_object.hpp>
 
 namespace ore {
 namespace data {
@@ -50,10 +52,23 @@ public:
     // clear data
     void reset();
 
+    // get and set actual date
+    void setActualDate(const QuantLib::Date& d) { actualDate_ = d; }
+    virtual const Date& actualDate() const override { return actualDate_; }
+
 protected:
     std::map<QuantLib::Date, std::set<QuantLib::ext::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
     std::set<Fixing> fixings_;
     std::set<QuantExt::Dividend> dividends_;
+    /*! For lagged market data, where we need to take data from a different date but want to treat it as belonging to
+       the valuation date.
+     */
+    Date actualDate_ = Date();
+
+private:
+    //! Serialization
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Utility function for loading market quotes and fixings from an in memory csv buffer
@@ -70,3 +85,5 @@ void loadDataFromBuffers(
 
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_KEY(ore::data::InMemoryLoader);

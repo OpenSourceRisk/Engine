@@ -21,6 +21,10 @@
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/set.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -149,6 +153,44 @@ void InMemoryLoader::reset() {
     actualDate_ = Date();
 }
 
+template <class Archive>
+void serialize(
+    Archive& ar,
+    std::map<QuantLib::Date, std::set<QuantLib::ext::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>>& md,
+    const unsigned int) {
+
+    std::vector<std::pair<QuantLib::Date, MarketDatum*>> mdv;
+    if (Archive::is_saving::value) {
+        for (const auto& [k, v] : md) {
+            for (const auto m : v) {
+                mdv.push_back(std::make_pair(k, m.get()));
+            }
+        }        
+        ar& mdv;
+    } else {
+        ar& mdv;
+        std::set<QuantLib::ext::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator> s1;
+        for (const auto& p : mdv) {
+            auto it = md.find(p.first);
+            if (it == md.end())
+                md[p.first] = std::set<QuantLib::ext::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>();
+            QuantLib::ext::shared_ptr<MarketDatum> mdp(p.second);
+            md.at(p.first).insert(mdp);
+        }
+    }
+}
+
+template <class Archive> void InMemoryLoader::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<Loader>(*this);
+    ar& data_;
+    ar& fixings_;
+    ar& dividends_;
+    ar& actualDate_;
+}
+
+template void InMemoryLoader::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void InMemoryLoader::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+
 void load(InMemoryLoader& loader, const vector<string>& data, bool isMarket, bool implyTodaysFixings) {
     LOG("MemoryLoader started");
 
@@ -195,3 +237,5 @@ void loadDataFromBuffers(InMemoryLoader& loader, const std::vector<std::string>&
 
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::InMemoryLoader);

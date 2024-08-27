@@ -31,7 +31,7 @@
 #include <orea/cube/npvcube.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/trade.hpp>
-#include <ored/utilities/serializationdate.hpp>
+#include <qle/utilities/serializationdate.hpp>
 
 namespace ore {
 namespace analytics {

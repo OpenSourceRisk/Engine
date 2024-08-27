@@ -117,6 +117,8 @@ public:
     void setMporDate(const QuantLib::Date& d) { mporDate_ = d; }
     void setMporCalendar(const std::string& s); 
     void setMporForward(bool b) { mporForward_ = b; }
+    void setMarketDataLoaderOutput(const std::string& s) { marketDataLoaderOutput_ = s; }
+    void setMarketDataLoaderInput(const std::string& s) { marketDataLoaderInput_ = s; }
 
     // Setters for npv analytics
     void setOutputAdditionalResults(bool b) { outputAdditionalResults_ = b; }
@@ -501,6 +503,8 @@ public:
     }
     bool mporOverlappingPeriods() const { return mporOverlappingPeriods_; }
     bool mporForward() const { return mporForward_; }
+    const std::string& marketDataLoaderOutput() { return marketDataLoaderOutput_; }
+    const std::string& marketDataLoaderInput() { return marketDataLoaderInput_; }
 
     /***************************
      * Getters for npv analytics
@@ -873,6 +877,8 @@ protected:
     bool mporOverlappingPeriods_ = true;
     QuantLib::Calendar mporCalendar_;
     bool mporForward_ = true;
+    std::string marketDataLoaderOutput_;
+    std::string marketDataLoaderInput_;
 
     /**************
      * NPV analytic
