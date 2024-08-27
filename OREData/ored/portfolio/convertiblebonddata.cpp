@@ -91,7 +91,7 @@ void ConvertibleBondData::CallabilityData::fromXML(XMLNode* node) {
                                                               &parseBool, false);
     triggerRatios_ = XMLUtils::getChildrenValuesWithAttributes<double>(
         node, "TriggerRatios", "TriggerRatio", "startDate", triggerRatioDates_, &parseReal, false);
-    nOfMTriggers_ = XMLUtils::getChildrenValuesWithAttributes(node, "NofMTriggers", "NofMTrigger", "startDate",
+    nOfMTriggers_ = XMLUtils::getChildrenValuesWithAttributes(node, "NOfMTriggers", "NOfMTrigger", "startDate",
                                                               nOfMTriggerDates_, false);
     if (auto tmp = XMLUtils::getChildNode(node, "MakeWhole")) {
         makeWholeData_.fromXML(tmp);

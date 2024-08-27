@@ -264,9 +264,11 @@ XMLNode* DefaultCurveConfig::Config::toXML(XMLDocument& doc) const {
         XMLUtils::addChildren(doc, node, "SourceCurves", "SourceCurve", multiSectionSourceCurveIds_);
         XMLUtils::addChildren(doc, node, "SwitchDates", "SwitchDate", multiSectionSwitchDates_);
     } else if ( type_ == Type::TransitionMatrix) {
+        XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
         XMLUtils::addChild(doc, node, "InitialState", initialState_);
         XMLUtils::addChild(doc, node, "States", boost::algorithm::join(states_, ","));
     } else if (type_ == Type::Null) {
+        XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
         XMLUtils::addChild(doc, node, "Type", "Null");
         XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
