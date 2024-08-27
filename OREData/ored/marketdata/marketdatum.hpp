@@ -26,10 +26,10 @@
 #include <ored/marketdata/expiry.hpp>
 #include <ored/marketdata/strike.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ored/utilities/serializationdate.hpp>
 #include <ored/utilities/serializationdaycounter.hpp>
-#include <ored/utilities/serializationperiod.hpp>
 #include <ored/utilities/strike.hpp>
+#include <qle/utilities/serializationdate.hpp>
+#include <qle/utilities/serializationperiod.hpp>
 
 #include <ql/currency.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -188,7 +188,7 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& t
 
 //! Money market data class
 /*!
-  This class holds single market points of type
+  This class holds single market points of type 
   - MM
 
   Specific data comprise currency, fwdStart, term

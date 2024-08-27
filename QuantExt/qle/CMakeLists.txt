@@ -1004,6 +1004,8 @@ utilities/commodity.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp
+utilities/serializationdate.hpp
+utilities/serializationperiod.hpp
 utilities/time.hpp
 version.hpp)
 

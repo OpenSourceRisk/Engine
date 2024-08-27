@@ -287,6 +287,14 @@ void MarketDataLoader::populateLoader(
         quotes_[d] = quotes;
     }
     LOG("Got market data");
+
+    if (!inputs_->marketDataLoaderOutput().empty()) {
+        LOG("Serialize market data loader to'" << inputs_->marketDataLoaderOutput() << "'");
+        std::ofstream os(inputs_->marketDataLoaderOutput(), std::ios::binary);
+        boost::archive::binary_oarchive oa(os, boost::archive::no_header);
+        oa << *loader_;
+        os.close();
+    }
 }
 
 }
