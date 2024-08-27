@@ -180,6 +180,7 @@ public:
 
     // add to XML doc
     void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName) const;
+    void addReportConfigurationNode(XMLDocument& doc, XMLNode* parent) const;
 };
 
 class CurveConfigurationsManager {
