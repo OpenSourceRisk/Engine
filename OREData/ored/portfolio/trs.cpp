@@ -151,16 +151,14 @@ XMLNode* TRS::AdditionalCashflowData::toXML(XMLDocument& doc) const {
 std::map<AssetClass, std::set<std::string>>
 TRS::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
-    if (!portfolioId_.empty() && underlying_.size() == 0) {
-        if (underlying_.size() == 0 && referenceDataManager->hasData("PortfolioBasket", portfolioId_)) {
+
+    if (!portfolioId_.empty()) {
+        result[AssetClass::PORTFOLIO_DETAILS].insert(portfolioId_);
+        if (underlying_.empty()) {
             populateFromReferenceData(referenceDataManager);
-        } else if(underlying_.size() == 0) {
-            AssetClass test;
-            test = parseAssetClass("PORTFOLIO_DETAILS");
-            result[test].insert(portfolioId_);
-        }      
+        }
     }
-    
+
     for (Size i = 0; i < underlying_.size(); ++i) {
         QL_REQUIRE(underlying_[i], "TRS::underlyingIndices(): underlying trade is null");
         // a builder might update the underlying (e.g. promote it from bond to convertible bond)
@@ -306,7 +304,7 @@ TRS::getFxIndex(const QuantLib::ext::shared_ptr<Market> market, const std::strin
 void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("TRS::build() called for id = " << id());
-    std::cout << id() << std::endl;
+
     // clear trade members
 
     reset();
