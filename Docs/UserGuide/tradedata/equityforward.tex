@@ -29,32 +29,40 @@ The meanings and allowable values of the elements in the \lstinline!EquityForwar
 	\item Maturity: The maturity date of the forward contract, i.e. the date when the underlying equity will be bought/sold. \\
 	Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 	\item Name: The identifier of the underlying equity or equity index. 
-	
 	Allowable values:  See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data}. \\
-	\item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
-	\item Currency: The payment currency of the equity forward. If underlying currency and payment currency don't match, one need to specify a FXIndex in the settlement data node.\\
+	\item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. 
+		The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
+	\item Currency: The payment currency of the equity forward. If the equity underlying is quoted in a different currency, a 
+		\lstinline!FXIndex! in the \lstinline!SettlementData! sub-node is required to convert the payoff into the payment currency.\\
 	Allowable values:  See Fiat Currencies and Minor Currencies in Table \ref{tab:currency}.
-	\item Strike: The agreed buy/sell price of the equity forward. \\
+	\item Strike: The agreed buy/sell price of the equity forward.\\
 	Allowable values:  Any positive real number.	
-	\item StrikeCurrency: [Optional] The currency of the strike value. Defaults to the underlying currency.\\
+	\item StrikeCurrency: [Optional] The currency of the strike value. The strike has to be align with underlying quotation currency. 
+		If the strike currency is quoted in the minor currency, the strike value will be adjusted to the major currency. 
+		Defaults to the payment currency if omitted or blank.\\
 	Allowable values:  See Fiat Currencies and Minor Currencies in Table \ref{tab:currency}.	
 	\item Quantity: The number of units of the underlying equity to be bought/sold. \\
 	Allowable values:  Any positive real number.
-	\item SettlementData [Optional]: This node is used to specify  the settlement of the cash flows on the value date.
+	\item SettlementData [Optional]: This node is used to specify the settlement of the cash flows.
 \end{itemize}
+
+The strike value must be quoted in the same currency as the underlying. The underlying prices are always converted to the major underlying currency during curve building. 
+If the strike is quoted in the minor underlying currency, it will be also converted to the major underlying currency. If the strike
+currency is blank or omitted, it defaults to payment currency, in this case the payment currency needs to be the same as the underlying currency and same logic applies for 
+minor to major currency conversion.
 
 A \lstinline!SettlementData! node is shown in Listing \ref{lst:eq_settlement_data_node}, and the meanings and allowable values of its elements follow below.
 
 \begin{itemize}
-\item FXIndex: The FX reference index for determining the FX fixing at the payment date. This field is required if the underlying currency doesn't match the deal currency. Otherwise, it is ignored. \\
+\item FXIndex: The FX reference index for determining the FX fixing used to convert the amount from the underlying equity quotation currency to the payment currency. This field is required if the underlying currency doesn't match the deal currency. Otherwise, it is ignored. \\
 Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}.
 \item Date [Optional]: If specified, this will be the payment date. \\
-Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. If left blank or omitted, defaults to the maturity date with some adjustments applied
-from the \lstinline!Rules! sub-node.
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. If left blank or omitted, the payment date will be derived from the maturity date applying the \lstinline!PaymentLag!, 
+\lstinline!PaymentCalendar! and the \lstinline!PaymentConvention! as defined in the \lstinline!Rules! sub-node.
 \item Rules [Optional]: If \lstinline!Date! is left blank or omitted, this node will be used to derive the payment date from the maturity date.
 The \lstinline!Rules! sub-node is shown in Listing \ref{lst:eq_settlement_data_node}, and the meanings and allowable values of its elements follow below.
   \begin{itemize}
-	\item PaymentLag [Optional]: The lag between the value date and the payment date. \\
+	\item PaymentLag [Optional]: The lag between the maturity date and the payment date. \\
 	Allowable values: Any valid period, i.e.\ a non-negative whole number, optionally followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
   \emph{Y} (years).  Defaults to 0. If a whole number is given and no letter, it is assumed that it is a number of  \emph{D} (days).
 	\item PaymentCalendar [Optional]: The calendar to be used when applying the payment lag. \\

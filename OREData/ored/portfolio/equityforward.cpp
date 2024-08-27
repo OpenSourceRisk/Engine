@@ -71,8 +71,10 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
                                                               << " for trade " << id());
         strike = convertMinorToMajorCurrency(strikeCurrency_, strike_);
     } else {
-        WLOG("No Strike Currency provided for trade " << id() << ", assuming underlying currency " << equityCcy.code());
-        strike = convertMinorToMajorCurrency(equityCcy.code(), strike_);
+        WLOG("No Strike Currency provided for trade " << id() << ", assuming payment currency " << currency_);
+        QL_REQUIRE(ccy == equityCcy, "Strike currency " << ccy << " does not match equity currency " << equityCcy
+                                                        << " for trade " << id());
+        strike = convertMinorToMajorCurrency(currency_, strike_);
     }
     
     additionalData_["strike"] = strike;
