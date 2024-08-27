@@ -47,39 +47,35 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     additionalData_["isdaTransaction"] = string("");
 
     QuantLib::Position::Type longShort = parsePositionType(longShort_);
-    Date maturity = parseDate(maturityDate_);
 
     additionalData_["strikeCurrency"] = strikeCurrency_;
     additionalData_["quantity"] = quantity_;
+    additionalData_["underlyingSecurityId"] = eqName();
 
     // Payment Currency
     Currency ccy = parseCurrencyWithMinors(currency_);
-
-    // get the equity currency from the market
-    Currency equityCcy = engineFactory->market()->equityCurve(eqName())->currency();
-    QL_REQUIRE(!equityCcy.empty(), "No equity currency in equityCurve for equity " << eqName());
-
-    QL_REQUIRE(ccy == equityCcy || !fxIndex_.empty(),
-               "EquityForward currency " << ccy << " does not match equity currency " << equityCcy << " for trade "
-                                         << id() << ". Check trade xml, add an FX index if needed.");
-
-    // convert strike to the major currency if needed
+    Currency strikeCcy = ccy;
     Real strike;
+    npvCurrency_ = ccy.code();
+    
+    // convert strike to the major currency if needed
     if (!strikeCurrency_.empty()) {
-        Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
-        QL_REQUIRE(strikeCcy == equityCcy, "Strike currency " << ccy << " does not match equity currency " << equityCcy
-                                                              << " for trade " << id());
+        strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
         strike = convertMinorToMajorCurrency(strikeCurrency_, strike_);
     } else {
+        strikeCcy = ccy;
         WLOG("No Strike Currency provided for trade " << id() << ", assuming payment currency " << currency_);
-        QL_REQUIRE(ccy == equityCcy, "Strike currency " << ccy << " does not match equity currency " << equityCcy
-                                                        << " for trade " << id());
         strike = convertMinorToMajorCurrency(currency_, strike_);
     }
-    
     additionalData_["strike"] = strike;
+    // Notional - we really need todays spot to get the correct notional.
+    // But rather than having it move around we use strike * quantity
+    notional_ = strike * quantity_;
+    notionalCurrency_ = strikeCcy.code();
 
-    Date paymentDate;
+    Date maturity = parseDate(maturityDate_);
+    maturity_ = maturity;
+    Date paymentDate = maturity;
     if (payDate_.empty()) {
         Natural conventionalLag = 0;
         Calendar conventionalCalendar = NullCalendar();
@@ -97,11 +93,24 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     } else {
         paymentDate = parseDate(payDate_);
     }
+    QL_REQUIRE(paymentDate >= maturity, "FX Forward settlement date should equal or exceed the maturity date.");
+    maturity_ = paymentDate;
+
+    // get the equity currency from the market
+    Currency equityCcy = engineFactory->market()->equityCurve(eqName())->currency();
+    QL_REQUIRE(!equityCcy.empty(), "No equity currency in equityCurve for equity " << eqName());    
+    additionalData_["underlyingCurrency"] = equityCcy.code();
+    
+
+    QL_REQUIRE(ccy == equityCcy || !fxIndex_.empty(),
+               "EquityForward currency " << ccy << " does not match equity currency " << equityCcy << " for trade "
+                                         << id() << ". Check trade xml, add an FX index if needed.");
+
+    QL_REQUIRE(strikeCcy == equityCcy,
+               "Strike currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
 
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
     QuantLib::Date fixingDate;
-    QL_REQUIRE(paymentDate >= maturity, "FX Forward settlement date should equal or exceed the maturity date.");
-
     if (ccy != equityCcy) {
         fxIndex = buildFxIndex(fxIndex_, ccy.code(), equityCcy.code(), engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing));
@@ -110,28 +119,18 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         requiredFixings_.addFixingDate(fixingDate, fxIndex_, paymentDate);
     }
 
-    string name = eqName();
-    additionalData_["underlyingSecurityId"] = name;
-    additionalData_["underlyingCurrency"] = equityCcy.code();
-
     QuantLib::ext::shared_ptr<Instrument> inst = QuantLib::ext::make_shared<QuantExt::EquityForward>(
-        name, equityCcy, longShort, quantity_, maturity, strike, paymentDate, ccy, fxIndex, fixingDate);
+        eqName(), equityCcy, longShort, quantity_, maturity, strike, paymentDate, ccy, fxIndex, fixingDate);
 
     // set up other Trade details
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
-    npvCurrency_ = ccy.code();
-    maturity_ = maturity;
-    // Notional - we really need todays spot to get the correct notional.
-    // But rather than having it move around we use strike * quantity
-    notional_ = strike * quantity_;
-    notionalCurrency_ = equityCcy.code();   
-
+    
     // Pricing engine
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
     QuantLib::ext::shared_ptr<EquityForwardEngineBuilder> eqFwdBuilder =
         QuantLib::ext::dynamic_pointer_cast<EquityForwardEngineBuilder>(builder);
-    inst->setPricingEngine(eqFwdBuilder->engine(name, ccy));
+    inst->setPricingEngine(eqFwdBuilder->engine(eqName(), ccy));
     setSensitivityTemplate(*eqFwdBuilder);
 }
     
