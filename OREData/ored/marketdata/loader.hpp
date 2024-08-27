@@ -92,16 +92,23 @@ public:
     //! Optional load dividends method
     virtual std::set<QuantExt::Dividend> loadDividends() const;
 
-    virtual const QuantLib::Date& actualDate() const { return QuantLib::Date(); }
+    void setActualDate(const QuantLib::Date& d) { actualDate_ = d; }
+    const Date& actualDate() const { return actualDate_; }
 
 	std::pair<bool, string> checkFxDuplicate(const ext::shared_ptr<MarketDatum>, const QuantLib::Date&);
 
 private:
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version){};
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) { 
+        ar& actualDate_; 
+    };
 
 protected:
+    /*! For lagged market data, where we need to take data from a different date but want to treat it as belonging to
+       the valuation date.
+     */
+    Date actualDate_ = Date();
 };
 } // namespace data
 } // namespace ore

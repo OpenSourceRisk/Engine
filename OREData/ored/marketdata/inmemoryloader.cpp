@@ -185,7 +185,6 @@ template <class Archive> void InMemoryLoader::serialize(Archive& ar, const unsig
     ar& data_;
     ar& fixings_;
     ar& dividends_;
-    ar& actualDate_;
 }
 
 template void InMemoryLoader::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);

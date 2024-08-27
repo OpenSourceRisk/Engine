@@ -52,18 +52,10 @@ public:
     // clear data
     void reset();
 
-    // get and set actual date
-    void setActualDate(const QuantLib::Date& d) { actualDate_ = d; }
-    virtual const Date& actualDate() const override { return actualDate_; }
-
 protected:
     std::map<QuantLib::Date, std::set<QuantLib::ext::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator>> data_;
     std::set<Fixing> fixings_;
     std::set<QuantExt::Dividend> dividends_;
-    /*! For lagged market data, where we need to take data from a different date but want to treat it as belonging to
-       the valuation date.
-     */
-    Date actualDate_ = Date();
 
 private:
     //! Serialization
