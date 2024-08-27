@@ -43,14 +43,14 @@ namespace data {
 
 class fwdBondEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&, const bool,
-                                         const string&, const string&, const string&> {
+                                         const string&, const string&, const string&, const bool> {
 protected:
     fwdBondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"ForwardBond"}) {}
 
     virtual string keyImpl(const string& id, const Currency& ccy, const string& creditCurveId, const bool hasCreditRisk,
                            const string& securityId, const string& referenceCurveId,
-                           const string& incomeCurveId) override {
+                           const string& incomeCurveId, const bool dirty) override {
 
         // id is _not_ part of the key
         std::string returnString = ccy.code() + "_" + creditCurveId + "_" + (hasCreditRisk ? "1_" : "0_") + securityId +
@@ -69,7 +69,7 @@ protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const Currency& ccy,
                                                         const string& creditCurveId, const bool hasCreditRisk,
                                                         const string& securityId, const string& referenceCurveId,
-                                                        const string& incomeCurveId) override {
+                                                        const string& incomeCurveId, const bool dirty) override {
 
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
@@ -104,12 +104,22 @@ protected:
         } catch (...) {
         }
 
+        Handle<Quote> conversionFactor;
+        try {
+            conversionFactor = market_->conversionFactor(securityId, configuration(MarketContext::pricing));
+        } catch (...) {
+        }
+        if (conversionFactor.empty() || dirty){
+            WLOG("conversionFactor for " << securityId << " is set to 1.0, either dirty or empty.")
+            conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+        }
+
         if (!hasCreditRisk) {
             dpts = Handle<DefaultProbabilityTermStructure>();
         }
 
         return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, incomeTS, yts, bondSpread, dpts,
-                                                                          recovery, tsperiod);
+                                                                          recovery, conversionFactor, tsperiod);
     }
 };
 
@@ -121,9 +131,11 @@ public:
 
 protected:
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
-    virtual QuantLib::ext::shared_ptr<PricingEngine>
-    engineImpl(const string& id, const Currency& ccy, const string& creditCurveId, const bool hasCreditRisk,
-               const string& securityId, const string& referenceCurveId, const string& incomeCurveId) override;
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const Currency& ccy,
+                                                                const string& creditCurveId, const bool hasCreditRisk,
+                                                                const string& securityId,
+                                                                const string& referenceCurveId,
+                                                                const string& incomeCurveId, const bool dirty) override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::ext::shared_ptr<QuantExt::LGM>& lgm,

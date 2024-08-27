@@ -37,12 +37,12 @@ DiscountingForwardBondEngine::DiscountingForwardBondEngine(
     const Handle<YieldTermStructure>& discountCurve, const Handle<YieldTermStructure>& incomeCurve,
     const Handle<YieldTermStructure>& bondReferenceYieldCurve, const Handle<Quote>& bondSpread,
     const Handle<DefaultProbabilityTermStructure>& bondDefaultCurve, const Handle<Quote>& bondRecoveryRate,
-    Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows, const Date& settlementDate,
-    const Date& npvDate)
+    const Handle<Quote>& conversionFactor, Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows,
+    const Date& settlementDate, const Date& npvDate)
     : discountCurve_(discountCurve), incomeCurve_(incomeCurve), bondReferenceYieldCurve_(bondReferenceYieldCurve),
       bondSpread_(bondSpread), bondDefaultCurve_(bondDefaultCurve), bondRecoveryRate_(bondRecoveryRate),
-      timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows),
-      settlementDate_(settlementDate), npvDate_(npvDate) {
+      conversionFactor_(conversionFactor), timestepPeriod_(timestepPeriod),
+      includeSettlementDateFlows_(includeSettlementDateFlows), settlementDate_(settlementDate), npvDate_(npvDate) {
 
     bondReferenceYieldCurve_ =
         bondSpread_.empty() ? bondReferenceYieldCurve
@@ -101,7 +101,7 @@ void DiscountingForwardBondEngine::calculate() const {
 
     boost::tie(results_.forwardValue, results_.value) = calculateForwardContractPresentValue(
         results_.underlyingSpotValue, cmpPayment, npvDate, maturityDate, arguments_.fwdSettlementDate,
-        !arguments_.isPhysicallySettled, cmpPaymentDate_use, dirty);
+        !arguments_.isPhysicallySettled, cmpPaymentDate_use, dirty, conversionFactor_->value());
 }
 
 Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDate) const {
@@ -276,7 +276,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
 
 QuantLib::ext::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPresentValue(
     Real spotValue, Real cmpPayment, Date npvDate, Date computeDate, Date settlementDate, bool cashSettlement,
-    Date cmpPaymentDate, bool dirty) const {
+    Date cmpPaymentDate, bool dirty, double conversionFactor) const {
 
     // here we go with the true forward computation
     Real forwardBondValue = 0.0;
@@ -545,6 +545,10 @@ QuantLib::ext::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardC
     }
 
     forwardContractPresentValue += fwdBondRecovery;
+
+    // accrualAmount is calculated on the coupon period aroud the fwd settlement date, we can safely use the
+    // conversion factor on the clean price
+    forwardContractPresentValue /= conversionFactor;
 
     return QuantLib::ext::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
 }
