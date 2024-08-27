@@ -20,6 +20,8 @@
 #include <qle/indexes/equityindex.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 using namespace::std;
 using namespace::QuantLib;
@@ -71,5 +73,17 @@ QuantLib::ext::shared_ptr<Observable> DividendManager::notifier(const string& na
 void DividendManager::clearHistory(const std::string& name) { data_.erase(name); }
 
 void DividendManager::clearHistories() { data_.clear(); }
-  
+
+template <class Archive> void Dividend::serialize(Archive& ar, const unsigned int version) {
+    ar& exDate;
+    ar& name;
+    ar& rate;
+    ar& payDate;
 }
+
+template void Dividend::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void Dividend::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+  
+} // namespace QuantExt
+
+BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::Dividend);

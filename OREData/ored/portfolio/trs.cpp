@@ -151,6 +151,14 @@ XMLNode* TRS::AdditionalCashflowData::toXML(XMLDocument& doc) const {
 std::map<AssetClass, std::set<std::string>>
 TRS::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
+
+    if (!portfolioId_.empty()) {
+        result[AssetClass::PORTFOLIO_DETAILS].insert(portfolioId_);
+        if (underlying_.empty()) {
+            populateFromReferenceData(referenceDataManager);
+        }
+    }
+
     for (Size i = 0; i < underlying_.size(); ++i) {
         QL_REQUIRE(underlying_[i], "TRS::underlyingIndices(): underlying trade is null");
         // a builder might update the underlying (e.g. promote it from bond to convertible bond)
@@ -826,7 +834,7 @@ std::ostream& operator<<(std::ostream& os, const TRS::FundingData::NotionalType 
     return os;
 }
 
-void TRS::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) {
+void TRS::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) const{
 
     if (!portfolioId_.empty() && referenceData != nullptr &&
         (referenceData->hasData(PortfolioBasketReferenceDatum::TYPE, portfolioId_))) {
@@ -839,15 +847,15 @@ void TRS::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDat
     }
 }
 
-void TRS::getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) {
+void TRS::getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const{
 
     DLOG("populating portfolio basket data from reference data");
     QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty portfolio reference datum given");
 
     auto refData = ptfReferenceDatum->getTrades();
     underlying_.clear();
-    for (Size i = 0; i < refData.size(); i++) {   
-        underlyingDerivativeId_.push_back(std::to_string(i));
+    for (Size i = 0; i < refData.size(); i++) {
+        underlyingDerivativeId_.push_back((std::to_string(i)));
         QL_REQUIRE(refData[i] != nullptr, "expected 'Trade' node under 'Derivative' node");
         underlying_.push_back(refData[i]);
     }

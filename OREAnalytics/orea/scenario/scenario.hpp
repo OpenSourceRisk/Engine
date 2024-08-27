@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/utilities/serializationdate.hpp>
+#include <qle/utilities/serializationdate.hpp>
 
 #include <ql/shared_ptr.hpp>
 #include <ql/math/array.hpp>

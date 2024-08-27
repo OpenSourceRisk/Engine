@@ -26,7 +26,7 @@
 #include <orea/cube/npvsensicube.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/trade.hpp>
-#include <ored/utilities/serializationdate.hpp>
+#include <qle/utilities/serializationdate.hpp>
 
 #include <ql/errors.hpp>
 

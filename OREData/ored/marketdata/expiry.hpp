@@ -24,8 +24,8 @@
 #pragma once
 
 #include <ql/shared_ptr.hpp>
-#include <ored/utilities/serializationdate.hpp>
-#include <ored/utilities/serializationperiod.hpp>
+#include <qle/utilities/serializationdate.hpp>
+#include <qle/utilities/serializationperiod.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 #include <string>
