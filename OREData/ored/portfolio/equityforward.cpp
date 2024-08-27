@@ -104,6 +104,9 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         fxIndex = buildFxIndex(fxIndex_, ccy.code(), equityCcy.code(), engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing));
         fixingDate = fxIndex->fixingDate(paymentDate);
+        if (fixingDate <= paymentDate) {
+            requiredFixings_.addFixingDate(fixingDate, fxIndex_, paymentDate);
+        }
     }
 
     string name = eqName();
