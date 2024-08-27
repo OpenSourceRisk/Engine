@@ -931,23 +931,36 @@ void ScriptedTradeEngineBuilder::setupCorrelations() {
 
 void ScriptedTradeEngineBuilder::setLastRelevantDate() {
     lastRelevantDate_ = Date::minDate();
+    lastRelevantDateType_ = "Earliest Allowed Date";
     for (auto const& s : staticAnalyser_->indexEvalDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
-    for (auto const& d : staticAnalyser_->regressionDates())
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Index Eval Date" : lastRelevantDateType_;
+        }
+    for (auto const& d : staticAnalyser_->regressionDates()) {
         lastRelevantDate_ = std::max(lastRelevantDate_, d);
+        lastRelevantDateType_ = lastRelevantDate_ == d ? "Regression Date" : lastRelevantDateType_;
+    }
     for (auto const& s : staticAnalyser_->payObsDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Observation Date" : lastRelevantDateType_;
+        }
     for (auto const& s : staticAnalyser_->payPayDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Pay Date" : lastRelevantDateType_;
+        }
     for (auto const& s : staticAnalyser_->discountObsDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Discount Observation Date" : lastRelevantDateType_;
+        }
     for (auto const& s : staticAnalyser_->discountPayDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Discount Pay Date" : lastRelevantDateType_;
+        }
     DLOG("last relevant date: " << lastRelevantDate_);
 }
 

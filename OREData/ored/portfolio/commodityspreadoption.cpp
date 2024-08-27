@@ -270,6 +270,8 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
         // maturity gets overwritten every time, and it is ok. If the last option is settled with delay, maturity is set
         // to the settlement date.
         maturity_ = maturity_ == Date() ? paymentDate : std::max(maturity_, paymentDate);
+        if (maturity_ == paymentDate)
+            maturityType_ = "Payment Date";
 
         // build the instrument for the i-th cfs
         QuantLib::ext::shared_ptr<QuantExt::CommoditySpreadOption> spreadOption =
@@ -293,8 +295,11 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
     // Add premium
     auto configuration = engineBuilder->configuration(MarketContext::pricing);
-    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, firstMultiplier,
-                                                optionData_.premiumData(), -bsInd, ccy, engineFactory, configuration));
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, firstMultiplier,
+                                       optionData_.premiumData(), -bsInd, ccy, engineFactory, configuration);
+    maturity_ = std::max(maturity_, lastPremiumDate);
+    if (maturity_ == lastPremiumDate)
+        maturityType_ = "Last Premium Date";
 
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(firstInstrument, firstMultiplier, additionalInstruments,
                                                         additionalMultipliers);

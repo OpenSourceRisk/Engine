@@ -74,6 +74,7 @@ void ForwardRateAgreement::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     setSensitivityTemplate(*swapBuilder);
     instrument_.reset(new VanillaInstrument(swap));
     maturity_ = endDate;
+    maturityType_ = "End Date";
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {

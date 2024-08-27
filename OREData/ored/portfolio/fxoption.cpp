@@ -120,6 +120,7 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         // Build the trade using the shared functionality in the base class.
         VanillaOptionTrade::build(engineFactory);
         maturity_ = paymentDate;
+        maturityType_ = "Payment Date";
     } else {
         VanillaOptionTrade::build(engineFactory);
     }

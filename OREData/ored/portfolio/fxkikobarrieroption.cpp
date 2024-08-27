@@ -90,6 +90,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     // Exercise
     Date expiryDate = parseDate(option_.exerciseDates().front());
     maturity_ = std::max(expiryDate, option_.premiumData().latestPremiumDate());
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Option's Latest Premium Date";
 
     QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
 

@@ -133,6 +133,7 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     }
 
     maturity_ = cds->coupons().back()->date();
+    maturityType_ = "Last CDS Coupon Date";
 
     QuantLib::ext::shared_ptr<CreditDefaultSwapEngineBuilder> cdsBuilder =
         QuantLib::ext::dynamic_pointer_cast<CreditDefaultSwapEngineBuilder>(builder);

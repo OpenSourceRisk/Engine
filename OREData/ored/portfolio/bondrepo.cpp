@@ -77,6 +77,7 @@ void BondRepo::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     npvCurrency_ = cashLegData_.currency();
     notionalCurrency_ = cashLegData_.currency();
     maturity_ = CashFlows::maturityDate(cashLeg_);
+    maturityType_ = "Cash Leg Maturity Date";
     notional_ = currentNotional(cashLeg_);
 
     // start with the cashleg's legs

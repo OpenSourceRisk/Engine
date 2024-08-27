@@ -75,6 +75,7 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
     notional_ = underlying_->notional() * bondData_.bondNotional();
     notionalCurrency_ = underlying_->bondData().currency();
     maturity_ = std::max(optionData_.premiumData().latestPremiumDate(), underlying_->maturity());
+    maturityType_ = maturity_ == underlying_->maturity() ? "Underlying Bond Maturity Date" : "Option's Latest Premium Date";
 
     auto qlBondInstr = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(underlying_->instrument()->qlInstrument());
     QL_REQUIRE(qlBondInstr, "BondOption::build(): could not cast to QuantLib::Bond");

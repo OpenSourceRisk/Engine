@@ -783,8 +783,11 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     // if the maturity date was not set by the trs underlying builder, set it here
     if (maturity_ == Date::minDate()) {
         maturity_ = std::max(valuationDates.back(), paymentDates.back());
+        maturityType_ = maturity_ == valuationDates.back() ? "Final Vaulation Date" : "Final Payment Date";
         for (auto const& l : fundingLegs) {
             maturity_ = std::max(maturity_, CashFlows::maturityDate(l));
+            if (maturity_ == CashFlows::maturityDate(l))
+                maturityType_ = "Funding Leg Maturity Date";
         }
     }
 }

@@ -120,6 +120,7 @@ void CBO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     instrument_.reset(new VanillaInstrument(cbo, multiplier_));
 
     maturity_ = schedule.endDate();
+    maturityType_ = "Final Schedule Date";
     npvCurrency_ = ccy_;
     notional_ = investedNotional_;
     legs_ = vector<QuantLib::Leg>(1, tranches[idx].leg);

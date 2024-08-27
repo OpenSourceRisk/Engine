@@ -142,6 +142,7 @@ void Trade::reset() {
     notional_ = Null<Real>();
     notionalCurrency_.clear();
     maturity_ = Date();
+    maturityType_.clear();
     issuer_.clear();
     requiredFixings_.clear();
     sensitivityTemplate_.clear();
