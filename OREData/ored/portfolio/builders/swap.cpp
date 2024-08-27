@@ -60,8 +60,11 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(con
     auto lgm = cam_->lgm(currIdx);
     std::vector<Size> modelIndex(1, cam_->pIdx(CrossAssetModel::AssetType::IR, currIdx));
 
-    // we assume that the given cam has pricing discount curves attached already
-    Handle<YieldTermStructure> discountCurve;
+    Handle<YieldTermStructure> discountCurve =
+        discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
+
     return buildMcEngine(lgm, discountCurve, simulationDates_, modelIndex);
 }
 

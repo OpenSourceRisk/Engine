@@ -240,9 +240,12 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                     if (wc.hasWildcard()) {
                         for (auto const& q : loader.get(wc, asof)) {
                             if (wc.matches(q->name())) {
-                                QL_REQUIRE(recoveryRate_ == Null<Real>(),
-                                           "There is more than one recovery rate matching the pattern '" << wc.pattern()
-                                                                                                         << "'.");
+                                QL_REQUIRE(
+                                    recoveryRate_ == Null<Real>() ||
+                                        QuantLib::close_enough(recoveryRate_, q->quote()->value()),
+                                    "There is more than one recovery rate with different values matching the pattern '"
+                                        << wc.pattern() << "', values: " << recoveryRate_ << ", "
+                                        << q->quote()->value());
                                 recoveryRate_ = q->quote()->value();
                             }
                         }
@@ -747,9 +750,13 @@ void DefaultCurve::buildTransitionMatrixCurve(const std::string& curveID, const 
 void DefaultCurve::buildNullCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
                                   const Date& asof, const DefaultCurveSpec& spec) {
     LOG("Start building null default curve for " << curveID);
-    curve_ = QuantLib::ext::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(
-        QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(asof, 0.0, config.dayCounter())));
-    recoveryRate_ = 0.0;
+    if (recoveryRate_ == Null<Real>())
+        recoveryRate_ = 0.0;
+    curve_ = QuantLib::ext::make_shared<QuantExt::CreditCurve>(
+        Handle<DefaultProbabilityTermStructure>(
+            QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(asof, 0.0, config.dayCounter())),
+        QuantLib::Handle<QuantLib::YieldTermStructure>(),
+        QuantLib::Handle<Quote>(QuantLib::ext::make_shared<QuantLib::SimpleQuote>(recoveryRate_)));
     LOG("Finished building default curve of type Null for curve " << curveID);
 }
 
