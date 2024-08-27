@@ -123,10 +123,10 @@ public:
 
     /*! Returns the names of the underlying instruments for each asset class */
     std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
+    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr, const bool useCache = true);
     std::set<std::string>
     underlyingIndices(AssetClass assetClass,
-                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
+                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr, const bool useCache = true);
 
 private:
     bool buildFailedTrades_, ignoreTradeBuildFail_;
