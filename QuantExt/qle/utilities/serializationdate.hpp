@@ -43,7 +43,7 @@ template <class Archive> void serialize(Archive& ar, QuantLib::Date& d, const un
     } else {
         // When deserializing, write out saved long and convert to Date
         ar& big;
-        if (big == 0)
+        if (big > 109500 || big == 0)
             d = QuantLib::Date();
         else
             d = QuantLib::Date(big);

@@ -17,8 +17,8 @@
 */
 
 #include <ored/report/inmemoryreport.hpp>
-#include <ored/utilities/serializationdate.hpp>
-#include <ored/utilities/serializationperiod.hpp>
+#include <qle/utilities/serializationdate.hpp>
+#include <qle/utilities/serializationperiod.hpp>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/serialization/serialization.hpp>

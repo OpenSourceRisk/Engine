@@ -209,6 +209,7 @@ app/dummymarketdataloader.hpp
 app/initbuilders.hpp
 app/inputparameters.hpp
 app/marketcalibrationreport.hpp
+app/marketdatabinaryloader.hpp
 app/marketdatacsvloader.hpp
 app/marketdatainmemoryloader.hpp
 app/marketdataloader.hpp
