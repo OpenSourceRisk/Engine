@@ -156,10 +156,10 @@ where $X_t$ converts one equity ccy unit to bond ccy
   
   Allowable values: Any positive real number.
 
-\item NofMTriggers: A list of n-of-m trigger specifications for calls, i.e. the soft-call trigger defined by
-  TriggerRatios must be observed on n of the m days before the exercise dates for the call to be active. Only applicable
-  to Calls, not to Puts. Optional, defaults to ``0-of-0'' \\
-  Allowable values: x-of-y with x, y non-negative integers, ``0-of-0'' disables the trigger
+\item NOfMTriggers: A list of n-of-m trigger specifications for calls, i.e. the soft-call trigger defined by
+  TriggerRatios must be observed on n of the m calendar days in the period before (and including) a call date. Only applicable
+  to Calls, not to Puts. Optional, defaults to ``1-of-1'' \\
+  Allowable values: x-of-y with x, y non-negative integers, ``1-of-1'' corresponds to a vanilla call specification
 
 \item MakeWhole: A list of make whole conditions. Optional. Possible subnodes are:
   \begin{itemize}
@@ -214,9 +214,9 @@ where $X_t$ converts one equity ccy unit to bond ccy
       <Soft>false</Soft>
     </Soft>
     <TriggerRatios/>
-    <NofMTriggers>
+    <NOfMTriggers>
       <NOfMTrigger>20-of-30</NOfMTrigger>
-    </NofMTriggers>
+    </NOfMTriggers>
   </CallData>
 \end{minted}
 \caption{Convertible bond call data example 1}
