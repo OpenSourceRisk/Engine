@@ -116,7 +116,7 @@ void Portfolio::removeMatured(const Date& asof) {
             string maturityType = (*it).second->maturityType().empty()
                 ? "" : (*it).second->maturityType();
             string message = "Trade is Matured. " + maturityType + " [" + maturityDate.str() +
-                             "]" + " is past Valuation Date.";
+                             "]" + " is On or Before Valuation Date.";
             StructuredTradeWarningMessage((*it).second, "", message).log();
             it=trades_.erase(it);
         } else {
