@@ -20,8 +20,10 @@
 #include <orea/engine/observationmode.hpp>
 
 #include <ored/portfolio/scriptedtrade.hpp>
+#include <ored/configuration/currencyconfig.hpp>
 #include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/currencyparser.hpp>
+#include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 

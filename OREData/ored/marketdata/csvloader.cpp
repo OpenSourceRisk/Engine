@@ -149,12 +149,12 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                             }
                         }
                         if (addFX.first && data_[date].insert(md).second) {
-                            LOG("Added MarketDatum " << key);
+                            DLOG("Added MarketDatum " << key);
                         } else if (!addFX.first) {
-                            LOG("Skipped MarketDatum " << key << " - dominant FX already present.")
+                            DLOG("Skipped MarketDatum " << key << " - dominant FX already present.")
                         }
 						else {
-                            LOG("Skipped MarketDatum " << key << " - this is already present.");
+                            DLOG("Skipped MarketDatum " << key << " - this is already present.");
                         }
                     }
                 } catch (std::exception& e) {

@@ -711,7 +711,7 @@ AssetClass parseAssetClass(const std::string& s) {
     static map<string, AssetClass> assetClasses = {{"EQ", AssetClass::EQ},     {"FX", AssetClass::FX},
                                                    {"COM", AssetClass::COM},   {"IR", AssetClass::IR},
                                                    {"INF", AssetClass::INF},   {"CR", AssetClass::CR},
-                                                   {"BOND", AssetClass::BOND}, {"BOND_INDEX", AssetClass::BOND_INDEX}};
+                                                   {"BOND", AssetClass::BOND}, {"BOND_INDEX", AssetClass::BOND_INDEX}, {"PORTFOLIO_DETAILS", AssetClass::PORTFOLIO_DETAILS}};
     auto it = assetClasses.find(s);
     if (it != assetClasses.end()) {
         return it->second;
@@ -738,6 +738,8 @@ std::ostream& operator<<(std::ostream& os, AssetClass a) {
         return os << "BOND";
     case AssetClass::BOND_INDEX:
         return os << "BOND_INDEX";
+    case AssetClass::PORTFOLIO_DETAILS:
+        return os << "PORTFOLIO_DETAILS";
     default:
         QL_FAIL("Unknown AssetClass");
     }

@@ -38,6 +38,7 @@ namespace data {
 /* This class provides an implementation of the model interface. Derived classes have to implement
    - ModelCG::referenceDate()
    - ModelCG::npv()
+   - ModelCG::numeraire()
    - ModelCG::fwdCompAvg()
    - ModelCG::getDirectFxSpotT0()
    - ModelCG::getDirectDiscountT0()
@@ -101,8 +102,6 @@ protected:
     virtual std::size_t getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const = 0;
     // get discount factor P(s,t) for ccy currencies[idx], t > s >= referenceDate
     virtual std::size_t getDiscount(const Size idx, const Date& s, const Date& t) const = 0;
-    // get numeraire N(s) for ccy curencies[idx], s >= referenceDate
-    virtual std::size_t getNumeraire(const Date& s) const = 0;
     // get fx spot for currencies[idx] vs. currencies[0], as of the referenceDate, should be 1 for idx=0
     virtual std::size_t getFxSpot(const Size idx) const = 0;
     // get barrier probability for refDate <= obsdate1 <= obsdate2, the case obsdate1 < refDate is handled in this class

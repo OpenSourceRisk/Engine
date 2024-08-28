@@ -157,6 +157,7 @@ math/deltagammavar.cpp
 math/differentialevolution_mt.cpp
 math/discretedistribution.cpp
 math/fillemptymatrix.cpp
+math/gpucodegenerator.cpp
 math/matrixfunctions.cpp
 math/openclenvironment.cpp
 math/randomvariable.cpp
@@ -645,6 +646,7 @@ math/discretedistribution.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/flatextrapolation2d.hpp
+math/gpucodegenerator.hpp
 math/kendallrankcorrelation.hpp
 math/logquadraticinterpolation.hpp
 math/matrixfunctions.hpp
@@ -1002,6 +1004,8 @@ utilities/commodity.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp
+utilities/serializationdate.hpp
+utilities/serializationperiod.hpp
 utilities/time.hpp
 version.hpp)
 

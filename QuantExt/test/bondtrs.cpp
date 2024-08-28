@@ -150,7 +150,7 @@ BOOST_DATA_TEST_CASE(testBondTRS, boost::unit_test::data::make(testData), data) 
     QuantLib::ext::shared_ptr<BondTRS> trs = QuantLib::ext::make_shared<BondTRS>(
         bondIndex, 1.0, Null<Real>(), std::vector<QuantLib::Leg>{fundingLeg, fundingNotionalLeg},
         true, valuationDates, paymentDates);
-    auto trsEngine = QuantLib::ext::make_shared<DiscountingBondTRSEngine>(oisCurve, false);
+    auto trsEngine = QuantLib::ext::make_shared<DiscountingBondTRSEngine>(oisCurve, false, false);
     trs->setPricingEngine(trsEngine);
 
     // build floating rate note (risk free, i.e. zero credit spread, security spread)

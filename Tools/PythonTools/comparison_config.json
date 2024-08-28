@@ -202,142 +202,6 @@
           }
         ]
       },
-      "combined_crif\\.csv": {
-        "keys": [
-          "TradeID",
-          "PortfolioID",
-          "ProductClass",
-          "RiskType",
-          "Qualifier",
-          "Bucket",
-          "Label1",
-          "Label2"
-        ],
-        "use_cols": [
-          "AmountCurrency",
-          "Amount",
-          "AmountUSD",
-          "IMModel",
-          "TradeType"
-        ],
-        "require_equal_optional_cols": false,
-        "optional_cols": [
-          "collect_regulations",
-          "post_regulations"
-        ],
-        "col_types" : {
-          "ProductClass" : "str",
-          "RiskType" : "str",
-          "Qualifier" : "str",
-          "Bucket" : "str",
-          "Label1" : "str",
-          "Label2" : "str"
-        },
-        "drop_rows" : {
-          "cols": [
-            "Amount",
-            "AmountUSD"
-          ],
-          "threshold": 0.0
-        },
-        "column_settings": [
-          {
-            "names": [
-              "Amount",
-              "AmountUSD"
-            ],
-            "abs_tol": 1e-2,
-            "rel_tol": 1e-12
-          },
-          {
-            "names": [
-              "IMModel",
-              "TradeType",
-              "collect_regulations",
-              "post_regulations"
-            ],
-            "abs_tol": null,
-            "rel_tol": null
-          }
-        ]
-      },
-      "crif\\.csv": {
-        "keys": [
-          "TradeID",
-          "PortfolioID",
-          "ProductClass",
-          "RiskType",
-          "Qualifier",
-          "Bucket",
-          "Label1",
-          "Label2"
-        ],
-        "use_cols": [
-          "AmountCurrency",
-          "Amount",
-          "AmountUSD",
-          "IMModel",
-          "TradeType"
-        ],
-        "optional_cols": [
-          "BaseCurrency",
-          "end_date",
-          "trade_date",
-          "notional",
-          "trade_currency",
-          "notional2",
-          "trade_currency2",
-          "underlying",
-          "mtm_curr",
-          "mtm_value",
-          "settlement_type",
-          "strike",
-          "call_put",
-          "long_short",
-          "asset_class",
-          "base_product",
-          "sub_product",
-          "xccy_resettable"
-        ],
-        "optional_keys": [
-          "collect_regulations",
-          "post_regulations"
-        ],
-        "col_types" : {
-          "ProductClass" : "str",
-          "RiskType" : "str",
-          "Qualifier" : "str",
-          "Bucket" : "str",
-          "Label1" : "str",
-          "Label2" : "str"
-        },
-        "drop_rows" : {
-          "cols": [
-            "Amount",
-            "AmountUSD"
-          ],
-          "threshold": 0.0
-        },
-        "column_settings": [
-          {
-            "names": [
-              "Amount",
-              "AmountUSD"
-            ],
-            "abs_tol": 1e-2,
-            "rel_tol": 1e-12
-          },
-          {
-            "names": [
-              "BaseCurrency",
-              "IMModel",
-              "TradeType"
-            ],
-            "abs_tol": null,
-            "rel_tol": null
-          }
-        ]
-      },
       "sa_cva_pricer\\.csv": {
         "keys": [
           "RiskType",
@@ -524,6 +388,88 @@
             ],
             "abs_tol": null,
             "rel_tol": 1e-12
+          }
+        ]
+      },
+      ".*crif.csv": {
+        "keys": [
+          "TradeID",
+          "PortfolioID",
+          "ProductClass",
+          "RiskType",
+          "Qualifier",
+          "Bucket",
+          "Label1",
+          "Label2"
+        ],
+        "use_cols": [
+          "AmountCurrency",
+          "Amount",
+          "AmountUSD",
+          "IMModel",
+          "TradeType"
+        ],
+        "optional_cols": [
+          "BaseCurrency",
+          "end_date",
+          "trade_date",
+          "notional",
+          "trade_currency",
+          "notional2",
+          "trade_currency2",
+          "underlying",
+          "mtm_curr",
+          "mtm_value",
+          "settlement_type",
+          "strike",
+          "call_put",
+          "long_short",
+          "asset_class",
+          "base_product",
+          "sub_product",
+          "xccy_resettable"
+        ],
+        "optional_keys": [
+          "collect_regulations",
+          "post_regulations",
+          "AgreementType",
+          "CallType",
+          "InitialMarginType",
+          "LegalEntityId"
+        ],
+        "col_types" : {
+          "ProductClass" : "str",
+          "RiskType" : "str",
+          "Qualifier" : "str",
+          "Bucket" : "str",
+          "Label1" : "str",
+          "Label2" : "str"
+        },
+        "drop_rows" : {
+          "cols": [
+            "Amount",
+            "AmountUSD"
+          ],
+          "threshold": 0.0
+        },
+        "column_settings": [
+          {
+            "names": [
+              "Amount",
+              "AmountUSD"
+            ],
+            "abs_tol": 1e-2,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "BaseCurrency",
+              "AmountCurrency",
+              "IMModel",
+              "TradeType"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
           }
         ]
       },
@@ -732,13 +678,15 @@
         },
         "use_cols": [
           "InitialMargin",
-          "Regulation",
           "Currency",
           "CalculationCurrency"
         ],
         "optional_cols": [
           "InitialMargin(Report)",
           "ReportCurrency"
+        ],
+        "optional_keys": [
+          "Regulation"
         ],
         "column_settings": [
           {
@@ -751,7 +699,6 @@
           },
           {
             "names": [
-              "Regulation",
               "Currency",
               "CalculationCurrency",
               "ReportCurrency"

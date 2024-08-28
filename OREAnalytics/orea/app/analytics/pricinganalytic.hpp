@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytic.hpp
-    \brief ORE Analytics Manager
+/*! \file orea/app/pricinganalytic.hpp
+    \brief Pricing Analytic
 */
 
 #pragma once

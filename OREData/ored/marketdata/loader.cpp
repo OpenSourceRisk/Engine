@@ -119,3 +119,5 @@ std::set<QuantExt::Dividend> Loader::loadDividends() const { return {}; }
 
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::Loader);

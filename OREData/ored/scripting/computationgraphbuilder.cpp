@@ -446,7 +446,7 @@ public:
             } else {
                 // otherwise we evaluate the "or" condition
                 value.push(logicalOr(left, right));
-                node = cg_min(g_, cg_const(g_, 1.0), cg_add(g_, left_node, right_node));
+                node = cg_max(g_, left_node, right_node);
             }
             value_node.push(node);
             TRACE("conditionOr( " << left << " , " << right << " ) (#" << node << ")", n);

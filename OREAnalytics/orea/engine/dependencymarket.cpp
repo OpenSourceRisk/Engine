@@ -519,7 +519,6 @@ Handle<EquityIndex2> DependencyMarket::equityCurve(const string& name, const str
     auto fyts = equityForecastCurve(name, config);
     auto dyts = equityDividendCurve(name, config);
     auto spot = equitySpot(name, config);
-    addMarketObject(MarketObject::EquityCurve, name, config);
     Calendar equityCal;
     Currency equityCcy;
     if (curveConfigs_ && curveConfigs_->hasEquityCurveConfig(name)) {

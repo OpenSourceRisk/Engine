@@ -44,8 +44,10 @@ std::string ccyStr(const Currency& c) {
 } // namespace
 
 DiscountingBondTRSEngine::DiscountingBondTRSEngine(const Handle<YieldTermStructure>& discountCurve,
-                                                   const bool treatSecuritySpreadAsCreditSpread)
-    : discountCurve_(discountCurve), treatSecuritySpreadAsCreditSpread_(treatSecuritySpreadAsCreditSpread) {
+                                                   const bool treatSecuritySpreadAsCreditSpread,
+                                                   const bool survivalWeightedFundingReturnCashflows)
+    : discountCurve_(discountCurve), treatSecuritySpreadAsCreditSpread_(treatSecuritySpreadAsCreditSpread),
+      survivalWeightedFundingReturnCashflows_(survivalWeightedFundingReturnCashflows) {
     registerWith(discountCurve_);
 }
 
@@ -88,13 +90,27 @@ void DiscountingBondTRSEngine::calculate() const {
     Real fundingLeg = 0.0;
     Size fundingLegNo = 2;
     for (auto const& l : arguments_.fundingLeg) {
-        fundingLeg += CashFlows::npv(l, **discountCurve_, false);
         for (auto const& c : l) {
             if (c->hasOccurred(today))
                 continue;
+
+            // the funding leg payments terminate when the underlying bond defaults
+
+            Real S = 1.0;
+
+            if (survivalWeightedFundingReturnCashflows_) {
+                S = (treatSecuritySpreadAsCreditSpread_ ? exp(-bondSpread->value() / (1.0 - recoveryVal) *
+                                                              discountCurve_->timeFromReference(c->date()))
+                                                        : 1.0) *
+                    bondDefaultCurve->survivalProbability(c->date());
+            }
+
+            fundingLeg += c->amount() * discountCurve_->discount(c->date()) * S;
+
             cfResults.emplace_back();
             cfResults.back().amount = -mult * c->amount();
             cfResults.back().payDate = c->date();
+            cfResults.back().discountFactor = discountCurve_->discount(c->date()) * S;
             cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
             cfResults.back().legNumber = fundingLegNo;
             cfResults.back().type = "Funding";
@@ -116,11 +132,26 @@ void DiscountingBondTRSEngine::calculate() const {
 
     // 4 handle total return leg (leg #0)
 
-    Real returnLeg = CashFlows::npv(arguments_.returnLeg, **discountCurve_, false);
+    Real returnLeg = 0.0;
 
     for (auto const& c : arguments_.returnLeg) {
         if (c->hasOccurred(today))
             continue;
+
+        // the return leg payments terminate when the underlying bond defaults
+
+        Real S = 1.0;
+
+        if (survivalWeightedFundingReturnCashflows_) {
+            // the bond index itself is not conditional on survival, so here we just take the security spread
+            // into account
+            S = treatSecuritySpreadAsCreditSpread_
+                    ? exp(-bondSpread->value() / (1.0 - recoveryVal) * discountCurve_->timeFromReference(c->date()))
+                    : 1.0;
+        }
+
+        returnLeg += c->amount() * discountCurve_->discount(c->date()) * S;
+
         cfResults.emplace_back();
         cfResults.back().amount = mult * c->amount();
         cfResults.back().payDate = c->date();
@@ -204,21 +235,22 @@ void DiscountingBondTRSEngine::calculate() const {
 
         // 5d determine survivial prob S and fx conversion rate for bond cashflow
 
-        Probability S = bondDefaultCurve->survivalProbability(bondFlowPayDate);
         // FIXME which fixing date should we use for the fx conversion
         Date fxFixingDate = bondFlowValuationDate;
         if (arguments_.fxIndex)
             fxFixingDate = arguments_.fxIndex->fixingCalendar().adjust(fxFixingDate, Preceding);
         Real fx = arguments_.fxIndex ? arguments_.fxIndex->fixing(fxFixingDate) : 1.0;
-        Real spreadFactor = treatSecuritySpreadAsCreditSpread_
-                                ? exp(-bondSpread->value() * discountCurve_->timeFromReference(bondFlowPayDate))
-                                : 1.0;
+        Real S =
+            (treatSecuritySpreadAsCreditSpread_
+                 ? exp(-bondSpread->value() / (1.0 - recoveryVal) * discountCurve_->timeFromReference(bondFlowPayDate))
+                 : 1.0) *
+            bondDefaultCurve->survivalProbability(bondFlowPayDate);
 
         // 5e set bond cashflow and additional results
 
         cfResults.emplace_back();
         cfResults.back().amount = mult * bd->cashflows()[i]->amount() * fx * arguments_.bondNotional;
-        cfResults.back().discountFactor = discountCurve_->discount(bondFlowPayDate) * S * spreadFactor;
+        cfResults.back().discountFactor = discountCurve_->discount(bondFlowPayDate) * S;
         cfResults.back().payDate = bondFlowPayDate;
         cfResults.back().currency = ccyStr(arguments_.fundingCurrency);
         cfResults.back().legNumber = 1;
@@ -245,8 +277,7 @@ void DiscountingBondTRSEngine::calculate() const {
 
         // 5f bond cashflow npv contribution
 
-        bondPayments +=
-            bd->cashflows()[i]->amount() * S * discountCurve_->discount(bondFlowPayDate) * fx * spreadFactor;
+        bondPayments += bd->cashflows()[i]->amount() * S * discountCurve_->discount(bondFlowPayDate) * fx;
 
         // 5g bond cashflow recovery contribution
 
@@ -257,7 +288,12 @@ void DiscountingBondTRSEngine::calculate() const {
             if (effectiveStartDate < today)
                 effectiveStartDate = today;
             if (endDate > effectiveStartDate) {
-                Probability P = bondDefaultCurve->defaultProbability(effectiveStartDate, endDate);
+                Probability P = 1.0 - (treatSecuritySpreadAsCreditSpread_
+                                           ? exp(-bondSpread->value() / (1.0 - recoveryVal) *
+                                                 (discountCurve_->timeFromReference(endDate) -
+                                                  discountCurve_->timeFromReference(effectiveStartDate)))
+                                           : 1.0) *
+                                          (1.0 - bondDefaultCurve->defaultProbability(effectiveStartDate, endDate));
                 Date defaultDate = effectiveStartDate + (endDate - effectiveStartDate) / 2;
                 // FIXME which fixing date should we use for the fx conversion?
                 Real fx = arguments_.fxIndex ? arguments_.fxIndex->fixing(arguments_.fxIndex->fixingCalendar().adjust(
@@ -291,7 +327,12 @@ void DiscountingBondTRSEngine::calculate() const {
                     Date stepDate = startDate + 1 * Months; // hardcoded period
                     Date endDate = (stepDate > redemption->date()) ? redemption->date() : stepDate;
                     Date defaultDate = startDate + (endDate - startDate) / 2;
-                    Probability P = bondDefaultCurve->defaultProbability(startDate, endDate);
+                    Probability P =
+                        1.0 - (treatSecuritySpreadAsCreditSpread_ ? exp(-bondSpread->value() / (1.0 - recoveryVal) *
+                                                                        (discountCurve_->timeFromReference(endDate) -
+                                                                         discountCurve_->timeFromReference(startDate)))
+                                                                  : 1.0) *
+                                  (1.0 - bondDefaultCurve->defaultProbability(startDate, endDate));
                     // FIXME which fixing date should we use for the fx conversion?
                     Real fx = arguments_.fxIndex
                                   ? arguments_.fxIndex->fixing(

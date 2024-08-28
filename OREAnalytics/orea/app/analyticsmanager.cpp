@@ -101,6 +101,8 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
         return;
 
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps = todaysMarketParams();
+
+
     std::set<Date> marketDates;
     for (const auto& a : analytics_) {
         auto mdates = a.second->marketDates();
@@ -164,7 +166,7 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
     for (auto a : analytics_) {
         Timer analyticTimer = a.second->getTimer();
         if (!analyticTimer.empty()) {
-            timer.addTimer(a.first, a.second->getTimer());
+            timer.addTimer(a.first, analyticTimer);
         }
     }
     if (!timer.empty()) {

@@ -82,7 +82,7 @@ public:
         CommodityFuture,
         FxOption,
         FxOptionTimeWeighting,
-	BondYield
+        BondYield
     };
 
     //! Default destructor

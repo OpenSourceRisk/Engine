@@ -349,6 +349,11 @@ void InputParameters::setAmcPricingEngine(const std::string& xml) {
     amcPricingEngine_->fromXMLString(xml);
 }
 
+void InputParameters::setAmcCgPricingEngine(const std::string& xml) {
+    amcCgPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    amcCgPricingEngine_->fromXMLString(xml);
+}
+
 void InputParameters::setXvaCgSensiScenarioData(const std::string& xml) {
     xvaCgSensiScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     xvaCgSensiScenarioData_->fromXMLString(xml);
@@ -441,6 +446,11 @@ void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
     amcPricingEngine_->fromFile(fileName);
 }
 
+void InputParameters::setAmcCgPricingEngineFromFile(const std::string& fileName) {
+    amcCgPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    amcCgPricingEngine_->fromFile(fileName);
+}
+
 void InputParameters::setNettingSetManager(const std::string& xml) {
     nettingSetManager_ = QuantLib::ext::make_shared<NettingSetManager>();
     nettingSetManager_->fromXMLString(xml);
@@ -520,11 +530,13 @@ void InputParameters::setCovarianceDataFromBuffer(const std::string& xml) {
 }
 
 void InputParameters::setSensitivityStreamFromFile(const std::string& fileName) {
-    sensitivityStream_ = QuantLib::ext::make_shared<SensitivityFileStream>(fileName);
+    sensitivityStream_ = QuantLib::ext::make_shared<SensitivityFileStream>(
+        fileName, csvSeparator_, csvCommentCharacter_, csvQuoteChar_, csvEscapeChar_);
 }
 
 void InputParameters::setSensitivityStreamFromBuffer(const std::string& buffer) {
-    sensitivityStream_ = QuantLib::ext::make_shared<SensitivityBufferStream>(buffer);
+    sensitivityStream_ = QuantLib::ext::make_shared<SensitivityBufferStream>(
+        buffer, csvSeparator_, csvCommentCharacter_, csvQuoteChar_, csvEscapeChar_);
 }
 
 void InputParameters::setBenchmarkVarPeriod(const std::string& period) { 
@@ -708,7 +720,8 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     pnlOutputFileName_ = params->get("pnl", "outputFileName", false);
     parStressTestConversionFile_ = params->get("parStressConversion", "stressZeroScenarioDataFile", false);
     pnlExplainOutputFileName_ = params->get("pnlExplain", "outputFileName", false);
-    scenarioNpvOutputFileName_ = params->get("scenarioNpv", "outputFileName", false);
+    riskFactorsOutputFileName_ = params->get("portfolioDetails", "riskFactorFileName", false);
+    marketObjectsOutputFileName_ = params->get("portfolioDetails", "marketObjectFileName", false);
 
     zeroToParShiftFile_ = params->get("zeroToParShift", "parShiftsFile", false);
     // map internal report name to output file name
@@ -736,7 +749,8 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["pnl"] = pnlOutputFileName_;
     fileNameMap_["parStress_ZeroStressData"] = parStressTestConversionFile_;
     fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;
-    fileNameMap_["scenario_npv"] = scenarioNpvOutputFileName_;
+    fileNameMap_["risk_factors"] = riskFactorsOutputFileName_;
+    fileNameMap_["market_objects"] = marketObjectsOutputFileName_;
     
     fileNameMap_["parshifts"] = zeroToParShiftFile_;
     vector<Size> dimOutputGridPoints;

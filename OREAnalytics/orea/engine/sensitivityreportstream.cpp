@@ -39,7 +39,7 @@ SensitivityRecord SensitivityReportStream::next() {
     if (row_ <= report_->rows()) {
         vector<Report::ReportType> entries;
         for (Size i = 0; i < report_->columns(); i++) {
-            entries.push_back(report_->data(i).at(row_ - 1));
+            entries.push_back(report_->data(i, row_ - 1));
         }
         return processRecord(entries);
     }

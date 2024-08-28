@@ -83,7 +83,7 @@ bool DefaultableEquityJumpDiffusionModelBuilder::requiresRecalibration() const {
 
 bool DefaultableEquityJumpDiffusionModelBuilder::calibrationPointsChanged(const bool updateCache) const {
 
-    // get the current foewards and vols
+    // get the current forwards and vols
 
     std::vector<Real> forwards;
     std::vector<Real> variances;
@@ -198,6 +198,17 @@ Real DefaultableEquityJumpDiffusionModel::h(const Real t, const Real S) const {
 }
 
 Real DefaultableEquityJumpDiffusionModel::sigma(const Real t) const { return sigma_[getTimeIndex(t)]; }
+
+Real DefaultableEquityJumpDiffusionModel::variance(const Real t) const {
+    Size tidx = getTimeIndex(t);
+    if (t > stepTimes_.back())
+        return variance_.back() + (t - stepTimes_.back()) * sigma_.back() * sigma_.back();
+    return variance_[tidx] - (stepTimes_[tidx] - t) * sigma_[tidx] * sigma_[tidx];
+}
+
+Real DefaultableEquityJumpDiffusionModel::int_r_q(const Real t) const {
+    return std::log(equity_->equityDividendCurve()->discount(t) / equity_->equityForecastCurve()->discount(t));
+}
 
 Real DefaultableEquityJumpDiffusionModel::r(const Real t) const {
     if (t > fh_) {
@@ -605,6 +616,15 @@ void DefaultableEquityJumpDiffusionModel::bootstrap(
 
         } // bootstrap over step times
     }     // case p!= 0
+
+    // update accumulated variance
+
+    variance_.resize(sigma_.size());
+    Real v = 0;
+    for (Size i = 0; i < sigma_.size(); ++i) {
+        v += sigma_[i] * sigma_[i] * (stepTimes_[i] - (i == 0 ? 0.0 : stepTimes_[i - 1]));
+        variance_[i] = v;
+    }
 }
 
 } // namespace QuantExt

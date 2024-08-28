@@ -27,9 +27,10 @@
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/marketdatum.hpp>
-#include <ored/utilities/serializationdate.hpp>
+#include <qle/utilities/serializationdate.hpp>
 
 #include <boost/serialization/serialization.hpp>
+#include <boost/serialization/export.hpp>
 #include <ql/shared_ptr.hpp>
 
 #include <vector>
@@ -57,11 +58,7 @@ struct Fixing {
 private:
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& date;
-        ar& name;
-        ar& fixing;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Compare fixings
@@ -72,3 +69,5 @@ void applyFixings(const std::set<Fixing>& fixings);
 
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_KEY(ore::data::Fixing);
