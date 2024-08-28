@@ -197,8 +197,7 @@ set<Regulation> parseRegulationString(const string& regsString,
         return regs;
 }
 
-set<Regulation> removeRegulations(const set<Regulation>& regs,
-                                              const set<Regulation>& regsToRemove) {
+set<Regulation> removeRegulations(const set<Regulation>& regs, const set<Regulation>& regsToRemove) {
 
     set<Regulation> newRegs;
 
@@ -208,8 +207,7 @@ set<Regulation> removeRegulations(const set<Regulation>& regs,
     return newRegs;
 }
 
-set<Regulation> filterRegulations(const set<Regulation>& regs,
-                                              const set<Regulation>& regsToFilter) {
+set<Regulation> filterRegulations(const set<Regulation>& regs, const set<Regulation>& regsToFilter) {
     set<Regulation> newRegs;
 
     std::copy_if(regs.begin(), regs.end(), std::inserter(newRegs, newRegs.end()),
