@@ -17,9 +17,10 @@
 */
 
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
-#include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -461,7 +462,7 @@ void PortfolioBasketReferenceDatum::fromXML(XMLNode* node) {
         XMLNode* componentsNode = XMLUtils::getChildNode(innerNode, "Components");
         QL_REQUIRE(componentsNode, "No Components node");
 
-        tradecomponents_.clear();
+        auto portfolio = QuantLib::ext::make_shared<Portfolio>();
         auto c = XMLUtils::getChildrenNodes(componentsNode, "Trade");
         int k = 0;
         for (auto const n : c) {
@@ -490,7 +491,7 @@ void PortfolioBasketReferenceDatum::fromXML(XMLNode* node) {
                     
                 trade->setEnvelope(env);
                 trade->fromXML(n);
-                tradecomponents_.push_back(trade);
+                portfolio->add(trade);
                 DLOG("Added Trade " << id << " (" << trade->id() << ")"
                                         << " type:" << tradeType << " to composite trade " << this->id() << ".");
                 k += 1;
@@ -502,6 +503,17 @@ void PortfolioBasketReferenceDatum::fromXML(XMLNode* node) {
             }
             
          }
+
+        tradecomponents_ = portfolio->toXMLString();
+}
+
+vector<QuantLib::ext::shared_ptr<Trade>> PortfolioBasketReferenceDatum::getTrades() const {
+    auto portfolio = QuantLib::ext::make_shared<Portfolio>();
+    portfolio->fromXMLString(tradecomponents_);
+    vector<QuantLib::ext::shared_ptr<Trade>> result;
+    for (auto const& t : portfolio->trades())
+        result.push_back(t.second);
+    return result;
 }
 
 XMLNode* PortfolioBasketReferenceDatum::toXML(XMLDocument& doc) const {
@@ -509,13 +521,12 @@ XMLNode* PortfolioBasketReferenceDatum::toXML(XMLDocument& doc) const {
         XMLNode* rdNode = XMLUtils::addChild(doc, node, type() + "ReferenceData");
         XMLUtils::appendNode(node, rdNode);
         XMLNode* cNode = XMLUtils::addChild(doc, rdNode, "Components");
-        for (auto& u : tradecomponents_) {
-            auto test = u->toXML(doc);
-            XMLUtils::appendNode(cNode, test);
+        for (auto& u : getTrades()) {
+            XMLUtils::appendNode(cNode, u->toXML(doc));
         }
 
         return node;
-    }
+}
 
 // Credit
 void CreditReferenceDatum::fromXML(XMLNode* node) {

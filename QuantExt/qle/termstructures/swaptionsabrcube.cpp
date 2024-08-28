@@ -19,6 +19,7 @@
 #include <qle/termstructures/swaptionsabrcube.hpp>
 
 #include <ql/experimental/math/laplaceinterpolation.hpp>
+#include <ql/indexes/swapindex.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 
 namespace QuantExt {
@@ -91,6 +92,7 @@ void SwaptionSabrCube::performCalculations() const {
     }
 
     outputShiftInt_ = LinearInterpolation(outputShiftX_.begin(), outputShiftX_.end(), outputShiftY_.begin());
+    outputShiftInt_.enableExtrapolation();
 
     std::vector<Matrix> interpolatedVolSpreads(strikeSpreads_.size(),
                                                Matrix(allSwapLengths.size(), allOptionTimes.size(), Null<Real>()));
@@ -175,8 +177,8 @@ boost::shared_ptr<SmileSection> SwaptionSabrCube::smileSectionImpl(Time optionTi
     if (auto c = cache_.find(std::make_pair(optionTime, swapLength)); c != cache_.end()) {
         return c->second;
     }
-    Real forward =
-        atmStrike(optionDateFromTime(optionTime), std::max<int>(1, static_cast<int>(swapLength * 12.0 + 0.5)) * Months);
+    Real forward = atmStrike(swapIndexBase_->fixingCalendar().adjust(optionDateFromTime(optionTime)),
+                             std::max<int>(1, static_cast<int>(swapLength * 12.0 + 0.5)) * Months);
     auto tmp = boost::make_shared<ParametricVolatilitySmileSection>(
         optionTime, swapLength, forward, parametricVolatility_,
         volatilityType() == QuantLib::Normal ? ParametricVolatility::MarketQuoteType::NormalVolatility

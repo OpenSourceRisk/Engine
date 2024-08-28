@@ -83,7 +83,7 @@ void forwardEvaluation(const ComputationGraph& g, std::vector<T>& values,
                          (g.redBlockId(p) == 0 || redBlockReconstruction)))
                         continue;
 
-                    // apply the deleter
+                    // add to nodes to delete
 
                     nodesToDelete.insert(p);
 

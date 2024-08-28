@@ -63,6 +63,7 @@ public:
 
     //! \name Setters/Getters
     //@{
+    const std::string& eqName() const { return name_; }
     std::string& eqName() { return name_; }
     std::string& currency() { return ccy_; }
     CalibrationType& calibrationType() { return calibrationType_; }

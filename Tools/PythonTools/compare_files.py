@@ -235,7 +235,7 @@ def compare_files_df(name, file_1, file_2, config=None):
         missing_okeys = []
         for okey in optional_keys:
             if okey in df_1.columns and okey in df_2.columns:
-                keys.append(okey)
+                keys = keys + [okey]
             elif (okey in df_1.columns and not okey in df_2.columns) or (okey not in df_1.columns and okey in df_2.columns):
                 missing_okeys.append(okey)
 

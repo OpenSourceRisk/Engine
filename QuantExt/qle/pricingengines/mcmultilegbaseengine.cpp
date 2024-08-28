@@ -21,9 +21,11 @@
 #include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/iborfracoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/instruments/rebatedexercise.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
@@ -81,12 +83,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
     info.payCcyIndex = model_->ccyIndex(payCcy);
     info.payer = payer;
 
-    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow)) {
-        QL_REQUIRE(cpn->accrualStartDate() < flow->date(),
-                   "McMultiLegBaseEngine::createCashflowInfo(): coupon leg "
-                       << legNo << " cashflow " << cfNo << " has accrual start date (" << cpn->accrualStartDate()
-                       << ") >= pay date (" << flow->date()
-                       << "), which breaks an assumption in the engine. This situation is unexpected.");
+    auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+    if (cpn && cpn->accrualStartDate() < flow->date()) {
         info.exIntoCriterionTime = time(cpn->accrualStartDate()) + tinyTime;
     } else {
         info.exIntoCriterionTime = info.payTime;
@@ -884,8 +882,22 @@ void McMultiLegBaseEngine::calculate() const {
         }
 
         if (isExerciseTime) {
+
+            // calculate rebate (exercise fees) if existent
+
+            RandomVariable pvRebate(calibrationSamples_, 0.0);
+            if (auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
+                Size exerciseTimes_idx = std::distance(exerciseTimes.begin(), exerciseTimes.find(*t));
+                if (rebatedExercise->rebate(exerciseTimes_idx) != 0.0) {
+                    Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
+                    RandomVariable rdb = lgmVectorised_[0].reducedDiscountBond(
+                        *t, time(rebatedExercise->rebatePaymentDate(exerciseTimes_idx)), pathValues[simulationTimes_idx][0], discountCurves_[0]);
+                    pvRebate = rdb * RandomVariable(calibrationSamples_, rebatedExercise->rebate(exerciseTimes_idx));
+                }
+            }
+
             auto exerciseValue = regModelUndExInto[counter].apply(model_->stateProcess()->initialValues(),
-                                                                  pathValuesRef, simulationTimes);
+                                                                  pathValuesRef, simulationTimes) + pvRebate;
             regModelContinuationValue[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
                 regressorModel_, regressionVarianceCutoff_);
@@ -896,11 +908,7 @@ void McMultiLegBaseEngine::calculate() const {
                                                                               pathValuesRef, simulationTimes);
             pathValueOption = conditionalResult(exerciseValue > continuationValue &&
                                                     exerciseValue > RandomVariable(calibrationSamples_, 0.0),
-                                                pathValueUndExInto, pathValueOption);
-            regModelOption[counter] = RegressionModel(
-                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                regressorModel_, regressionVarianceCutoff_);
-            regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
+                                                pathValueUndExInto + pvRebate, pathValueOption);
         }
 
         if (isXvaTime) {

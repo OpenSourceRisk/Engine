@@ -169,8 +169,14 @@ void FdConvertibleBondEvents::processExerciseData(const std::vector<ConvertibleB
         }
         for (Size i = indexStart; i <= indexEnd; ++i) {
             targetFlags[i] = true;
-            targetData[i] = CallData{c.price,  c.priceType,        c.includeAccrual,
-                                     c.isSoft, c.softTriggerRatio, std::function<Real(Real, Real)>()};
+            targetData[i] = CallData{c.price,
+                                     c.priceType,
+                                     c.includeAccrual,
+                                     c.isSoft,
+                                     c.softTriggerRatio,
+                                     c.softTriggerM,
+                                     c.softTriggerN,
+                                     std::function<Real(Real, Real)>()};
         }
     }
 }
