@@ -309,7 +309,7 @@ void FXVolatilityCurveConfig::populateRequiredCurveIds() {
         } else if (tokens.size() == 1) {
             requiredCurveIds_[CurveSpec::CurveType::Yield].insert(fxForeignYieldCurveID_);
         } else {
-            QL_FAIL("Cannot determine the required domestic yield curve for fx vol curve " << curveID_);
+            QL_FAIL("Cannot determine the required foreign yield curve for fx vol curve " << curveID_);
         }
     }
 
