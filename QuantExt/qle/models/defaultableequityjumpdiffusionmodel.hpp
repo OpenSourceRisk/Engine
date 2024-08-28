@@ -147,6 +147,12 @@ public:
     Real q(const Real t) const;
     Real sigma(const Real t) const;
 
+    // accumulated variance int_0^t sigma^2(s) ds
+    Real variance(const Real t) const;
+
+    // integrated drift int^0^t (r(s) - q(s)) ds
+    Real int_r_q(const Real t) const;
+
     // annualised dividend yield over 0 <= s < t
     Real dividendYield(const Real s, const Real t) const;
 
@@ -166,7 +172,7 @@ private:
 
     // input data
     std::vector<Real> stepTimes_;
-    mutable std::vector<Real> h0_, sigma_;
+    mutable std::vector<Real> h0_, sigma_, variance_;
     QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equity_;
     Handle<DefaultProbabilityTermStructure> creditCurve_;
     DayCounter volDayCounter_;

@@ -21,13 +21,14 @@
 #include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/iborfracoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/instruments/rebatedexercise.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
-#include <qle/instruments/rebatedexercise.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -82,12 +83,8 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
     info.payCcyIndex = model_->ccyIndex(payCcy);
     info.payer = payer;
 
-    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow)) {
-        QL_REQUIRE(cpn->accrualStartDate() < flow->date(),
-                   "McMultiLegBaseEngine::createCashflowInfo(): coupon leg "
-                       << legNo << " cashflow " << cfNo << " has accrual start date (" << cpn->accrualStartDate()
-                       << ") >= pay date (" << flow->date()
-                       << "), which breaks an assumption in the engine. This situation is unexpected.");
+    auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+    if (cpn && cpn->accrualStartDate() < flow->date()) {
         info.exIntoCriterionTime = time(cpn->accrualStartDate()) + tinyTime;
     } else {
         info.exIntoCriterionTime = info.payTime;
