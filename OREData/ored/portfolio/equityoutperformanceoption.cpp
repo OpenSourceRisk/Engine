@@ -124,6 +124,9 @@ void EquityOutperformanceOption::build(const QuantLib::ext::shared_ptr<EngineFac
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst, mult, additionalInstruments, additionalMultipliers));
     npvCurrency_ = currency_;
     maturity_ = std::max(lastPremiumDate, std::max(maturity_, valuationDate));
+    maturityType_ = maturity_ == lastPremiumDate ? "Last Premium Date"
+                    : maturity_ == valuationDate ? "Valuation Date"
+                                                 : "Maturity Date";
     notional_ = amount_;
     notionalCurrency_= currency_;
 }

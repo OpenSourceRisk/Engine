@@ -103,6 +103,8 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
 
     additionalData_["payDate"] = payDate;
     maturity_ = std::max(payDate, maturityDate);
+    if (maturity_ == payDate)
+        maturityType_ = "Pay Date";
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
 
     Date fixingDate;

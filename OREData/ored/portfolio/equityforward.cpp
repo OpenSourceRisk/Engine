@@ -74,6 +74,7 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
     npvCurrency_ = ccy.code();
     maturity_ = maturity;
+    maturityType_ = "Given Maturity Date";
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
     notional_ = strike * quantity_;
