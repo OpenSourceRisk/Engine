@@ -206,7 +206,12 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             }
             QL_REQUIRE(haveAllAtmValues, "Did not find all required quotes to build ATM surface");
 
-            // convert atm vols if specified
+            // convert atm vols if specified and we are not building a parametric surface (the latter will handle
+            // conversion to output vol type and shift itself and expects the original input vol type and shift
+            // for the calibration step, there is no advantage of an early conversion, we can only loose information)
+
+            bool earlyConversionToOutputVolTypeAndShift =
+                config->interpolation() == GenericYieldVolatilityCurveConfig::Interpolation::Linear;
 
             QL_REQUIRE(config->outputShift().empty() ||
                            config->outputShift().size() == config->underlyingTenors().size(),
@@ -214,19 +219,26 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                            << config->outputShift().size() << ") must match the size of underlying tenors ("
                            << config->underlyingTenors().size());
 
+            if(earlyConversionToOutputVolTypeAndShift)
             for (Size i = 0; i < config->optionTenors().size(); ++i) {
                 for (Size j = 0; j < config->underlyingTenors().size(); ++j) {
-                    vols[i][j] = QuantExt::convertSwaptionVolatility(
-                        asof, optionTenors[i], underlyingTenors[j], swapIndexBase, shortSwapIndexBase,
-                        config->dayCounter(), 0.0, vols[i][j],
-                        config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
-                            ? QuantLib::VolatilityType::Normal
-                            : QuantLib::VolatilityType::ShiftedLognormal,
-                        isSln ? shifts[i][j] : 0.0,
-                        config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
-                            ? QuantLib::VolatilityType::Normal
-                            : QuantLib::VolatilityType::ShiftedLognormal,
-                        config->outputShift().empty() ? (isSln ? shifts[i][j] : 0.0) : config->outputShift()[j]);
+                    try {
+                        vols[i][j] = QuantExt::convertSwaptionVolatility(
+                            asof, optionTenors[i], underlyingTenors[j], swapIndexBase, shortSwapIndexBase,
+                            config->dayCounter(), 0.0, vols[i][j],
+                            config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                                ? QuantLib::VolatilityType::Normal
+                                : QuantLib::VolatilityType::ShiftedLognormal,
+                            isSln ? shifts[i][j] : 0.0,
+                            config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                                ? QuantLib::VolatilityType::Normal
+                                : QuantLib::VolatilityType::ShiftedLognormal,
+                            config->outputShift().empty() ? (isSln ? shifts[i][j] : 0.0) : config->outputShift()[j]);
+                    } catch (const std::exception& e) {
+                        QL_FAIL("error while converting swaption input market volatility quotes for option tenor "
+                                << optionTenors[i] << ", swap tenor " << underlyingTenors[j]
+                                << ", strike atmf to output vol type / shift: " << e.what());
+                    }
                     if (isSln)
                         shifts[i][j] =
                             config->outputShift().empty() ? (isSln ? shifts[i][j] : 0.0) : config->outputShift()[j];
@@ -242,7 +254,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     asof, config->calendar(), config->businessDayConvention(), optionTenors, underlyingTenors, vols,
                     config->dayCounter(),
                     config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat,
-                    config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                    (earlyConversionToOutputVolTypeAndShift
+                         ? config->outputVolatilityType()
+                         : config->volatilityType()) == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                         ? QuantLib::Normal
                         : QuantLib::ShiftedLognormal,
                     isSln ? shifts : Matrix(vols.rows(), vols.columns(), 0.0));
@@ -259,7 +273,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 // Constant volatility
                 atm = QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
                     asof, config->calendar(), config->businessDayConvention(), vols[0][0], config->dayCounter(),
-                    config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                    (earlyConversionToOutputVolTypeAndShift
+                         ? config->outputVolatilityType()
+                         : config->volatilityType()) == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                         ? QuantLib::Normal
                         : QuantLib::ShiftedLognormal,
                     isSln ? shifts[0][0] : 0.0));
@@ -341,20 +357,33 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         zero[i * smileUnderlyingTenors.size() + j][k] = close_enough(md->quote()->value(), 0.0);
 
                         Real vol = 0.0;
-                        if(!zero[i * smileUnderlyingTenors.size() + j][k]) {
-                            vol = QuantExt::convertSwaptionVolatility(
-                                asof, smileOptionTenors[i], smileUnderlyingTenors[j], swapIndexBase, shortSwapIndexBase,
-                                config->dayCounter(), spreads[k], md->quote()->value(),
-                                config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
-                                    ? QuantLib::VolatilityType::Normal
-                                    : QuantLib::VolatilityType::ShiftedLognormal,
-                                isSln ? shifts[iAtm][jAtm] : 0.0,
-                                config->outputVolatilityType() ==
-                                        GenericYieldVolatilityCurveConfig::VolatilityType::Normal
-                                    ? QuantLib::VolatilityType::Normal
-                                    : QuantLib::VolatilityType::ShiftedLognormal,
-                                config->outputShift().empty() ? (isSln ? shifts[iAtm][jAtm] : 0.0)
-                                                              : config->outputShift()[jAtm]);
+                        if (!zero[i * smileUnderlyingTenors.size() + j][k]) {
+                            if (earlyConversionToOutputVolTypeAndShift) {
+                                try {
+                                    vol = QuantExt::convertSwaptionVolatility(
+                                        asof, smileOptionTenors[i], smileUnderlyingTenors[j], swapIndexBase,
+                                        shortSwapIndexBase, config->dayCounter(), spreads[k], md->quote()->value(),
+                                        config->volatilityType() ==
+                                                GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                                            ? QuantLib::VolatilityType::Normal
+                                            : QuantLib::VolatilityType::ShiftedLognormal,
+                                        isSln ? shifts[iAtm][jAtm] : 0.0,
+                                        config->outputVolatilityType() ==
+                                                GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                                            ? QuantLib::VolatilityType::Normal
+                                            : QuantLib::VolatilityType::ShiftedLognormal,
+                                        config->outputShift().empty() ? (isSln ? shifts[iAtm][jAtm] : 0.0)
+                                                                      : config->outputShift()[jAtm]);
+                                } catch (const std::exception& e) {
+                                    QL_FAIL("error while converting swaption input market volatility quotes for option "
+                                            "tenor "
+                                            << smileOptionTenors[i] << ", swap tenor " << smileUnderlyingTenors[j]
+                                            << ", smile spread " << spreads[k]
+                                            << " to output vol type / shift: " << e.what());
+                                }
+                            } else {
+                                vol = md->quote()->value();
+                            }
                         }
 
                         // vol is absolute vols by strike so construct the vol spreads here
