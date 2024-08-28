@@ -83,28 +83,38 @@ Real ParametricVolatility::convert(const Real inputQuote, const MarketQuoteType 
 
     // ... and compute the result from the forward premium
 
-    switch (marketModelType_) {
-    case MarketModelType::Black76: {
-        if (outputMarketQuoteType == MarketQuoteType::Price) {
-            return forwardPremium * (discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry));
-        } else if (outputMarketQuoteType == MarketQuoteType::NormalVolatility) {
-            return exactBachelierImpliedVolatility(outputOptionType, strike, forward, timeToExpiry, forwardPremium);
-        } else if (outputMarketQuoteType == MarketQuoteType::ShiftedLognormalVolatility) {
-            if (strike > -outputLognormalShift)
-                return blackFormulaImpliedStdDev(outputOptionType, strike, forward, forwardPremium, 1.0,
-                                                 outputLognormalShift) /
-                       std::sqrt(timeToExpiry);
-            else
-                return 0.0;
-        } else {
-            QL_FAIL("ParametricVolatility::convert(): MarketQuoteType ("
-                    << static_cast<int>(outputMarketQuoteType) << ") not handled. Internal error, contact dev.");
+    try {
+
+        switch (marketModelType_) {
+        case MarketModelType::Black76: {
+            if (outputMarketQuoteType == MarketQuoteType::Price) {
+                return forwardPremium * (discountCurve_.empty() ? 1.0 : discountCurve_->discount(timeToExpiry));
+            } else if (outputMarketQuoteType == MarketQuoteType::NormalVolatility) {
+                return exactBachelierImpliedVolatility(outputOptionType, strike, forward, timeToExpiry, forwardPremium);
+            } else if (outputMarketQuoteType == MarketQuoteType::ShiftedLognormalVolatility) {
+                if (strike > -outputLognormalShift)
+                    return blackFormulaImpliedStdDev(outputOptionType, strike, forward, forwardPremium, 1.0,
+                                                     outputLognormalShift) /
+                           std::sqrt(timeToExpiry);
+                else
+                    return 0.0;
+            } else {
+                QL_FAIL("MarketQuoteType (" << static_cast<int>(outputMarketQuoteType)
+                                            << ") not handled. Internal error, contact dev.");
+            }
+            break;
         }
-        break;
-    }
-    default:
-        QL_FAIL("ParametricVolatility::convert(): MarketModelType (" << static_cast<int>(marketModelType_)
-                                                                     << ") not handled. Internal error, contact dev.");
+        default:
+            QL_FAIL("MarketModelType (" << static_cast<int>(marketModelType_)
+                                        << ") not handled. Internal error, contact dev.");
+        }
+
+    } catch (const std::exception& e) {
+        QL_FAIL("ParametricVolatility::convert(): error converting input value "
+                << inputQuote << " type " << static_cast<int>(inputMarketQuoteType) << ", shift " << inputLognormalShift
+                << " to output type " << static_cast<int>(outputMarketQuoteType) << ", shift " << outputLognormalShift
+                << " at expiry time " << timeToExpiry << ", strike " << strike << ", forward " << forward
+                << ", fwd premium " << forwardPremium << ": " << e.what());
     }
 }
 
