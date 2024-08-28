@@ -37,8 +37,8 @@ The meanings and allowable values of the elements in the \lstinline!EquityForwar
 	Allowable values:  See Fiat Currencies and Minor Currencies in Table \ref{tab:currency}.
 	\item Strike: The agreed buy/sell price of the equity forward.\\
 	Allowable values:  Any positive real number.	
-	\item StrikeCurrency: [Optional] The currency of the strike value. The strike has to be align with underlying quotation currency. 
-		If the strike currency is quoted in the minor currency, the strike value will be adjusted to the major currency. 
+	\item StrikeCurrency: [Optional] The currency of the strike value. The strike value has to be in underlying quotation currency. 
+		If the strike currency is quoted in the minor currency, the strike value will be converted to the major currency. 
 		Defaults to the payment currency if omitted or blank.\\
 	Allowable values:  See Fiat Currencies and Minor Currencies in Table \ref{tab:currency}.	
 	\item Quantity: The number of units of the underlying equity to be bought/sold. \\
