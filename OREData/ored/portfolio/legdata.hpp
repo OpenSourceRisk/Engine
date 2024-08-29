@@ -95,7 +95,7 @@ public:
     CashflowData() : LegAdditionalData("Cashflow", "CashflowData", true) {}
     //! Constructor
     CashflowData(const vector<double>& amounts, const vector<string>& dates)
-        : LegAdditionalData("Cashflow", "CashflowData"), amounts_(amounts), dates_(dates) {}
+        : LegAdditionalData("Cashflow", "CashflowData", true), amounts_(amounts), dates_(dates) {}
 
     //! \name Inspectors
     //@{
