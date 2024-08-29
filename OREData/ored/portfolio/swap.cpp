@@ -207,6 +207,8 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     for (auto const& l : legs_) {
         if (!l.empty()) {
             maturity_ = std::max(maturity_, l.back()->date());
+            if (maturity_ == l.back()->date())
+                maturityType_ = "Leg End Date";
             startDate = std::min(startDate, l.front()->date());
             QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(l.front());
             if (coupon)

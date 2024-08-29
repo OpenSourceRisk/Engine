@@ -18,7 +18,7 @@
 
 #include <orea/cube/sparsenpvcube.hpp>
 
-#include <ored/utilities/serializationdate.hpp>
+#include <qle/utilities/serializationdate.hpp>
 
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>

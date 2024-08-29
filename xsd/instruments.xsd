@@ -808,6 +808,8 @@
       </xs:element>
       <xs:element name="Notionals" minOccurs="0">
         <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <!-- This choice allows either Notional or Exchanges/FXReset to appear first -->
           <xs:sequence>
             <xs:element name="Notional" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
@@ -823,7 +825,23 @@
             <xs:element type="exchanges" name="Exchanges" minOccurs="0" maxOccurs="1"/>
             </xs:choice>
           </xs:sequence>
-        </xs:complexType>
+          <xs:sequence>
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element type="fxreset" name="FXReset" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="exchanges" name="Exchanges" minOccurs="0" maxOccurs="1"/>
+          </xs:choice>
+          <xs:element name="Notional" minOccurs="0" maxOccurs="unbounded">
+            <xs:complexType>
+              <xs:simpleContent>
+                <xs:extension base="xs:float">
+                  <xs:attribute name="startDate" type="xs:string" />
+                </xs:extension>
+              </xs:simpleContent>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:choice>
+      </xs:complexType>
       </xs:element>
       <xs:element type="scheduleData" name="ScheduleData" minOccurs="0"/>
       <xs:element name="PaymentDates" minOccurs="0" maxOccurs="1">
@@ -4693,7 +4711,7 @@
       <xs:element type="stFreeStyleEventSchedule" name="FixingSchedule"/>
     </xs:all>
   </xs:complexType>
-  
+
   <xs:complexType name="cashPositionData">
     <xs:all>
       <xs:element type="extendedCurrencyCode" name="Currency"/>

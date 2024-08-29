@@ -35,6 +35,8 @@ namespace ore {
 namespace data {
 using namespace QuantLib;
 
+NettingSetDetails getNettingSetDetails(XMLNode* node);
+
 class CSA {
 public:
     /*!
@@ -145,6 +147,7 @@ std::ostream& operator<<(std::ostream& out, CSA::Type t);
 */
 class NettingSetDefinition : public XMLSerializable {
 public:
+    NettingSetDefinition(){}
     /*!
       builds a NettingSetDefinition from an XML input
     */

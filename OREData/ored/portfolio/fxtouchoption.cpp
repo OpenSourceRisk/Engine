@@ -216,6 +216,7 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
         
         maturity_ = std::max(lastPremiumDate, payDate);
+        maturityType_ = maturity_ == lastPremiumDate ? "Last Premium Date" : "Pay Date";
 
         return barrierOptionWrapper;
     };

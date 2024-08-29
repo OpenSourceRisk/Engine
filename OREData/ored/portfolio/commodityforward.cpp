@@ -158,6 +158,8 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
 
     if (paymentDate != Date())
         maturity_ = std::max(maturity_, paymentDate);
+    if (maturity_ == paymentDate)
+        maturityType_ = "Payment Date";
 
     // Pricing engine
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);

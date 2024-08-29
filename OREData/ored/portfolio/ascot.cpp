@@ -91,6 +91,7 @@ void Ascot::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& eng
 
     notional_ = bond_.data().bondData().bondNotional();
     maturity_ = bond_.maturity();
+    maturityType_ = "Bond Maturity Date";
 }
 
 void Ascot::fromXML(XMLNode* node) {

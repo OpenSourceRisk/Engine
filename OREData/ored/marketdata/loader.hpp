@@ -32,6 +32,7 @@
 #include <ored/utilities/wildcard.hpp>
 
 #include <qle/indexes/dividendmanager.hpp>
+#include <qle/utilities/serializationdate.hpp>
 #include <ql/time/date.hpp>
 
 #include <ql/shared_ptr.hpp>
@@ -99,7 +100,9 @@ public:
 private:
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {}
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) { 
+        ar& actualDate_; 
+    };
 
 protected:
     /*! For lagged market data, where we need to take data from a different date but want to treat it as belonging to
@@ -109,3 +112,5 @@ protected:
 };
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_KEY(ore::data::Loader);

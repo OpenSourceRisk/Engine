@@ -73,13 +73,20 @@ Real convertSwaptionVolatility(const Date& asof, const Period& optionTenor, cons
     // convert permium back to vol
 
     Real outputVol;
-    if (outputType == QuantLib::VolatilityType::Normal) {
-        outputVol = exactBachelierImpliedVolatility(otmOptionType, atmStrike + strikeSpread, atmStrike, timeToExpiry,
-                                                    forwardPremium);
-    } else {
-        outputVol = blackFormulaImpliedStdDev(otmOptionType, atmStrike + strikeSpread, atmStrike, forwardPremium, 1.0,
-                                              outputShift) /
-                    std::sqrt(timeToExpiry);
+    try {
+        if (outputType == QuantLib::VolatilityType::Normal) {
+            outputVol = exactBachelierImpliedVolatility(otmOptionType, atmStrike + strikeSpread, atmStrike,
+                                                        timeToExpiry, forwardPremium);
+        } else {
+            outputVol = blackFormulaImpliedStdDev(otmOptionType, atmStrike + strikeSpread, atmStrike, forwardPremium,
+                                                  1.0, outputShift) /
+                        std::sqrt(timeToExpiry);
+        }
+    } catch (const std::exception& e) {
+        QL_FAIL("convertSwaptionVolatility(): error converting input vol "
+                << inputVol << ", type " << inputType << ", shift " << inputShift << " to output type " << outputType
+                << ", shift " << outputShift << " at option tenor " << optionTenor << ", swap tenor " << swapTenor
+                << ", atmf = " << atmStrike << ", fwd premium " << forwardPremium << ": " << e.what());
     }
 
     // return the result

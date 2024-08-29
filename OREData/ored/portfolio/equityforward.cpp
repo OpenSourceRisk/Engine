@@ -75,6 +75,7 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     Date maturity = parseDate(maturityDate_);
     maturity_ = maturity;
+    maturityType_ = "Given Maturity Date";
     Date paymentDate = maturity;
     if (payDate_.empty()) {
         Natural conventionalLag = 0;
