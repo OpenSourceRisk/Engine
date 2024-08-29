@@ -62,7 +62,7 @@ class ReferenceDataManager;
 // Really bad name....
 class LegAdditionalData : public XMLSerializable {
 public:
-    LegAdditionalData(const string& legType, const string& legNodeName, bool isSimmPlainVanillaIrLeg = false)
+    LegAdditionalData(const string& legType, const string& legNodeName, bool isSimmPlainVanillaIrLeg)
         : legType_(legType), legNodeName_(legNodeName), isSimmPlainVanillaIrLeg_(isSimmPlainVanillaIrLeg) {}
     LegAdditionalData(const string& legType, bool isSimmPlainVanillaIrLeg = false)
         : legType_(legType), legNodeName_(legType + "LegData"), isSimmPlainVanillaIrLeg_(isSimmPlainVanillaIrLeg) {}
