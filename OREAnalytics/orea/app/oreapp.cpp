@@ -1564,6 +1564,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setAmcPathDataOutput(tmp);
 
+    tmp = params_->get("simulation", "scenarioFile", false);
+    if (tmp != "")
+        setScenarioReader((inputPath / tmp).generic_string());
+
     setSimulationPricingEngine(pricingEngine());
     setExposureObservationModel(observationModel());
     setExposureBaseCurrency(baseCurrency());
@@ -2187,6 +2191,18 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setScenarioOutputZeroRate(parseBool(tmp));
 
+        tmp = params_->get("scenarioStatistics", "outputStatistics", false);
+        if (tmp != "")
+            setScenarioOutputStatistics(parseBool(tmp));
+
+        tmp = params_->get("scenarioStatistics", "outputDistributions", false);
+        if (tmp != "")
+            setScenarioOutputDistributions(parseBool(tmp));
+
+        tmp = params_->get("scenarioStatistics", "amcPathDataOutput", false);
+        if (tmp != "")
+            setAmcPathDataOutput(tmp);
+
         tmp = params_->get("scenarioStatistics", "simulationConfigFile", false);
         if (tmp != "") {
             string simulationConfigFile = (inputPath / tmp).generic_string();
@@ -2200,35 +2216,11 @@ void OREAppInputParameters::loadParameters() {
         } else {
             ALOG("Simulation market, model and scenario generator data not loaded");
         }
-
-        tmp = params_->get("scenarioStatistics", "scenariodump", false);
-        if (tmp != "")
-            setWriteScenarios(true);
     }
 
     tmp = params_->get("portfolioDetails", "active", false);
     if (!tmp.empty() && parseBool(tmp)) {
         insertAnalytic("PORTFOLIO_DETAILS");               
-    }
-
-    tmp = params_->get("scenarioNpv", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
-        insertAnalytic("SCENARIO_NPV");
-
-        tmp = params_->get("scenarioNpv", "simulationConfigFile", false);
-        if (tmp != "") {
-            string simulationConfigFile = (inputPath / tmp).generic_string();
-            LOG("Loading simulation config from file" << simulationConfigFile);
-            setExposureSimMarketParamsFromFile(simulationConfigFile);
-            setScenarioGeneratorDataFromFile(simulationConfigFile);
-        } else {
-            ALOG("Simulation market data not loaded");
-        }
-                
-        tmp = params_->get("scenarioNpv", "scenarioFile", false);
-        QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
-        std::string scenarioFile = (inputPath / tmp).generic_string();
-        setScenarioReader(scenarioFile);
     }
 
     if (analytics().size() == 0) {

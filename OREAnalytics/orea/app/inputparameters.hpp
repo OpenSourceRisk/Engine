@@ -411,6 +411,8 @@ public:
     // Setters for ScenarioStatistics
     void setScenarioDistributionSteps(const Size s) { scenarioDistributionSteps_ = s; }
     void setScenarioOutputZeroRate(const bool b) { scenarioOutputZeroRate_ = b; }
+    void setScenarioOutputStatistics(const bool b) { scenarioOutputStatistics_ = b; }
+    void setScenarioOutputDistributions(const bool b) { scenarioOutputDistributions_ = b; }
     // Setters for par stress conversion
     void setParStressSimMarketParams(const std::string& xml);
     void setParStressSimMarketParamsFromFile(const std::string& fileName);
@@ -768,6 +770,8 @@ public:
     // Getters for ScenarioStatistics
     const Size& scenarioDistributionSteps() const { return scenarioDistributionSteps_; }
     const bool& scenarioOutputZeroRate() const { return scenarioOutputZeroRate_; }
+    const bool scenarioOutputStatistics() const { return scenarioOutputStatistics_; }
+    const bool scenarioOutputDistributions() const { return scenarioOutputDistributions_; }
 
     // Getters for ParStressConversion
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& parStressSimMarketParams() const {
@@ -1100,6 +1104,8 @@ protected:
      ***************/
     Size scenarioDistributionSteps_ = 20;
     bool scenarioOutputZeroRate_ = false;
+    bool scenarioOutputStatistics_ = true;
+    bool scenarioOutputDistributions_ = true;
 
     /*****************
      * PAR STRESS CONVERSION analytic

@@ -97,6 +97,7 @@
 #include <orea/engine/parsensitivityutilities.hpp>
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/engine/parstressscenarioconverter.hpp>
+#include <orea/engine/pathdata.hpp>
 #include <orea/engine/pnlexplainreport.hpp>
 #include <orea/engine/riskfilter.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>

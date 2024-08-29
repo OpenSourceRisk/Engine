@@ -695,6 +695,8 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     curvesOutputFileName_ = params->get("curves", "outputFileName", false);
     scenarioDumpFileName_ = params->get("simulation", "scenariodump", false);
     scenarioOutputName_ = params->get("scenario", "scenarioOutputFile", false);
+    if (scenarioOutputName_.empty())
+        scenarioOutputName_ = params->get("scenarioStatistics", "scenarioOutputFile", false);
     cubeFileName_ = params->get("simulation", "cubeFile", false);
     mktCubeFileName_ = params->get("simulation", "aggregationScenarioDataFileName", false);
     rawCubeFileName_ = params->get("xva", "rawCubeOutputFile", false);
