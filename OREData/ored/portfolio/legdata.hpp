@@ -62,14 +62,16 @@ class ReferenceDataManager;
 // Really bad name....
 class LegAdditionalData : public XMLSerializable {
 public:
-    LegAdditionalData(const string& legType, const string& legNodeName)
-        : legType_(legType), legNodeName_(legNodeName) {}
-    LegAdditionalData(const string& legType) : legType_(legType), legNodeName_(legType + "LegData") {}
+    LegAdditionalData(const string& legType, const string& legNodeName, bool isSimmPlainVanillaIrLeg = false)
+        : legType_(legType), legNodeName_(legNodeName), isSimmPlainVanillaIrLeg_(isSimmPlainVanillaIrLeg) {}
+    LegAdditionalData(const string& legType, bool isSimmPlainVanillaIrLeg = false)
+        : legType_(legType), legNodeName_(legType + "LegData"), isSimmPlainVanillaIrLeg_(isSimmPlainVanillaIrLeg) {}
 
     const string& legType() const { return legType_; }
     const string& legNodeName() const { return legNodeName_; }
     const std::set<std::string>& indices() const { return indices_; }
-
+    //! check if a x-ccy swap with the leg qualifies for the isda simm exemption treatment
+    const bool isSimmPlainVanillaIrLeg() const { return isSimmPlainVanillaIrLeg_; };
 protected:
     /*! Store the set of ORE index names that appear on this leg.
         Should be populated by derived classes.
@@ -79,6 +81,7 @@ protected:
 private:
     string legType_;
     string legNodeName_; // the XML node name
+    bool isSimmPlainVanillaIrLeg_;
 };
 
 //! Serializable Cashflow Leg Data
@@ -89,7 +92,7 @@ private:
 class CashflowData : public LegAdditionalData {
 public:
     //! Default constructor
-    CashflowData() : LegAdditionalData("Cashflow", "CashflowData") {}
+    CashflowData() : LegAdditionalData("Cashflow", "CashflowData", true) {}
     //! Constructor
     CashflowData(const vector<double>& amounts, const vector<string>& dates)
         : LegAdditionalData("Cashflow", "CashflowData"), amounts_(amounts), dates_(dates) {}
@@ -117,10 +120,10 @@ private:
 class FixedLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    FixedLegData() : LegAdditionalData("Fixed") {}
+    FixedLegData() : LegAdditionalData("Fixed", true) {}
     //! Constructor
     FixedLegData(const vector<double>& rates, const vector<string>& rateDates = vector<string>())
-        : LegAdditionalData("Fixed"), rates_(rates), rateDates_(rateDates) {}
+        : LegAdditionalData("Fixed", true), rates_(rates), rateDates_(rateDates) {}
 
     //! \name Inspectors
     //@{
@@ -179,7 +182,7 @@ private:
 class FloatingLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    FloatingLegData() : LegAdditionalData("Floating") {}
+    FloatingLegData() : LegAdditionalData("Floating", true) {}
     //! Constructor
     FloatingLegData(const string& index, QuantLib::Size fixingDays, bool isInArrears, const vector<double>& spreads,
                     const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
@@ -192,7 +195,7 @@ public:
                     bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none,
                     const std::string& lastRecentPeriodCalendar = std::string(), bool telescopicValueDates = false,
                     const std::map<QuantLib::Date, double>& historicalFixings = {})
-        : LegAdditionalData("Floating"), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays),
+        : LegAdditionalData("Floating", true), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays),
           lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears), isAveraged_(isAveraged),
           hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads), spreadDates_(spreadDates),
           caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
@@ -896,6 +899,7 @@ public:
     const string& lastPeriodDayCounter() const { return lastPeriodDayCounter_; }
     const ScheduleData& paymentSchedule() const { return paymentSchedule_; }
     bool strictNotionalDates() const { return strictNotionalDates_; }
+    const bool isSimmPlainVanillaIrLeg() const { return concreteLegData_->isSimmPlainVanillaIrLeg(); };
     //@}
 
     //! \name modifiers

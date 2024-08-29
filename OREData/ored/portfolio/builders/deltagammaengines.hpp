@@ -83,7 +83,7 @@ public:
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys,
-                                                        const Currency& base) override {
+                                                        const Currency& base, bool useXccyYieldCurves) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
         bool computeDelta = parseBool(engineParameter("ComputeDelta"));
@@ -93,7 +93,12 @@ protected:
         std::vector<Handle<YieldTermStructure>> discountCurves;
         std::vector<Handle<Quote>> fxQuotes;
         for (Size i = 0; i < ccys.size(); ++i) {
-            discountCurves.push_back(xccyYieldCurve(market_, ccys[i].code(), configuration(MarketContext::pricing)));
+            if (useXccyYieldCurves) {
+                discountCurves.push_back(
+                    xccyYieldCurve(market_, ccys[i].code(), configuration(MarketContext::pricing)));
+            } else {
+                discountCurves.push_back(market_->discountCurve(ccys[i].code(), configuration(MarketContext::pricing)));
+            }
             string pair = ccys[i].code() + base.code();
             fxQuotes.push_back(market_->fxRate(pair, configuration(MarketContext::pricing)));
         }
