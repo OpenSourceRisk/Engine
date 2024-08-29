@@ -302,6 +302,7 @@ void CommodityAveragePriceOption::buildStandardOption(const QuantLib::ext::share
     setSensitivityTemplate(commOption.sensitivityTemplate());
     instrument_ = commOption.instrument();
     maturity_ = commOption.maturity();
+    maturityType_ = "Commodity Option Maturity Date";
 }
 
 void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const Leg& leg,
@@ -314,6 +315,7 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
 
     // Populate relevant Trade members
     maturity_ = std::max(optionData_.premiumData().latestPremiumDate(), apoFlow->date());
+    maturityType_ = maturity_ == apoFlow->date() ? "Payment Date" : "Option's Latest Premium Date";
     
     Date lastApoFixingDate = apoFlow->indices().rbegin()->first;
 

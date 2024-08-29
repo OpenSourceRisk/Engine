@@ -378,6 +378,8 @@ void CommoditySwap::buildLeg(const QuantLib::ext::shared_ptr<EngineFactory>& ef,
 
     // Update maturity
     maturity_ = max(CashFlows::maturityDate(leg), maturity_);
+    if (maturity_ == CashFlows::maturityDate(leg))
+        maturityType_ = "Leg Maturity Date";
 
 }
 

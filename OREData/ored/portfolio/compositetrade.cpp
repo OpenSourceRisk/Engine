@@ -94,6 +94,8 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
         }
 
 	    maturity_ = std::max(maturity_, trade->maturity());
+        if (maturity_ == trade->maturity())
+            maturityType_ = trade->id() + "Maturity";
     }
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(compositeInstrument));
 

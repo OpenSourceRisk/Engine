@@ -60,6 +60,7 @@ public:
     // these are guaranteed to be set only after engine() was called
     const std::string& npvCurrency() const { return model_ ? model_->baseCcy() : modelCG_->baseCcy(); }
     const QuantLib::Date& lastRelevantDate() const { return lastRelevantDate_; }
+    const std::string& lastRelevantDateType() const { return lastRelevantDateType_; }
     bool includePastCashflows() const { return includePastCashflows_; }
     const std::string& simmProductClass() const { return simmProductClass_; }
     const std::string& scheduleProductClass() const { return scheduleProductClass_; }
@@ -119,6 +120,7 @@ protected:
     ASTNodePtr ast_;
     std::string npvCurrency_;
     QuantLib::Date lastRelevantDate_;
+    std::string lastRelevantDateType_;
     std::string simmProductClass_;
     std::string scheduleProductClass_;
     std::string sensitivityTemplate_;

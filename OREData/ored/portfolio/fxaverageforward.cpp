@@ -79,6 +79,7 @@ void FxAverageForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     notional_ = settlementNotional_;
     notionalCurrency_ = settlementCurrency_;
     maturity_ = payDate;
+    maturityType_ = "Pay Date";
 
     LOG("FxAverageForward::build() done");
 }

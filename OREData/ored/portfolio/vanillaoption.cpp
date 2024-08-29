@@ -59,6 +59,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with
     // payment after expiry.
     maturity_ = expiryDate_;
+    maturityType_ = "Expiry Date";
     // Exercise
     QuantLib::ext::shared_ptr<Exercise> exercise;
     switch (exerciseType) {
@@ -148,6 +149,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
 
             // Update the maturity date.
             maturity_ = paymentDate;
+            maturityType_ = "Payment Date";
 
         } else {
             if (forwardDate_ == QuantLib::Date()) {
@@ -240,8 +242,11 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, mult,
-                                                option_.premiumData(), -bsInd, ccy, engineFactory, configuration));
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
+                                         -bsInd, ccy, engineFactory, configuration);
+    maturity_ = std::max(maturity_, lastPremiumDate);
+    if (maturity_ == lastPremiumDate)
+        maturityType_ = "Last Premium Date";
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
