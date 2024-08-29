@@ -197,6 +197,7 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
     legCurrencies_.insert(legCurrencies_.end(), protectionCcys.begin(), protectionCcys.end());
     legPayers_.insert(legPayers_.end(), protectionPayer.begin(), protectionPayer.end());
     maturity_ = qleInstr->maturity();
+    maturityType_ = "Protection End Date or Fee Payment Date";
 
     // set pricing engine
     qleInstr->setPricingEngine(builder->engine(id(), this));
@@ -288,6 +289,7 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const QuantLib::ext::s
     legCurrencies_.insert(legCurrencies_.end(), protectionCcys.begin(), protectionCcys.end());
     legPayers_.insert(legPayers_.end(), protectionPayer.begin(), protectionPayer.end());
     maturity_ = qleInstr->maturity();
+    maturityType_ = "Protection End Date or Fee Payment Date";
 
     // set pricing engine
 
