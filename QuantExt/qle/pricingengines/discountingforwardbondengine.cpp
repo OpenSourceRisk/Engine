@@ -371,6 +371,12 @@ QuantLib::ext::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardC
                 "of them to be populated.");
     }
 
+    // apply conversion factor for future calcs
+
+    // accrualAmount is calculated on the coupon period aroud the fwd settlement date, we can safely use the
+    // conversion factor on the clean price. builder ensures we have a clean price or we divide by one.
+    forwardContractForwardValue /= conversionFactor;
+
     // forwardContractPresentValue adjusted for potential default before computeDate:
     forwardContractPresentValue =
         forwardContractForwardValue * (discountCurve_->discount(settlementDate)) *
@@ -545,10 +551,6 @@ QuantLib::ext::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardC
     }
 
     forwardContractPresentValue += fwdBondRecovery;
-
-    // accrualAmount is calculated on the coupon period aroud the fwd settlement date, we can safely use the
-    // conversion factor on the clean price
-    forwardContractPresentValue /= conversionFactor;
 
     return QuantLib::ext::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
 }
