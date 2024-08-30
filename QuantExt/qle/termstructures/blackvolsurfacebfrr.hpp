@@ -83,7 +83,8 @@ public:
     SmileInterpolation smileInterpolation() const { return smileInterpolation_; }
 
     const std::vector<bool>& smileHasError() const;
-    const std::vector<std::string>& smileErrorMessage() const;
+    const std::vector<bool>& smileHasWarning() const;
+    const std::vector<std::vector<std::string>>& smileMessages() const;
 
 private:
     Volatility blackVolImpl(Time t, Real strike) const override;
@@ -91,6 +92,21 @@ private:
     void performCalculations() const override;
     void clearCaches() const;
     double interpolateInTime(double t, double t1, double t2, double v1, double v2) const;
+
+    QuantLib::ext::shared_ptr<detail::SimpleDeltaInterpolatedSmile>
+    createSmile(const Size index, const Real spot, const Real domDisc, const Real forDisc, const Real expiryTime,
+                const std::vector<Real>& deltas, const std::vector<Real>& bfQuotes, const std::vector<Real>& rrQuotes,
+                const Real atmVol, const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at,
+                const Option::Type riskReversalInFavorOf, const bool butterflyIsBrokerStyle,
+                const BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation) const;
+
+    QuantLib::ext::shared_ptr<detail::SimpleDeltaInterpolatedSmile>
+    createSmileImpl(const Real spot, const Real domDisc, const Real forDisc, const Real expiryTime,
+                    const std::vector<Real>& deltas, const std::vector<Real>& bfQuotes,
+                    const std::vector<Real>& rrQuotes, const Real atmVol, const DeltaVolQuote::DeltaType dt,
+                    const DeltaVolQuote::AtmType at, const Option::Type riskReversalInFavorOf,
+                    const bool butterflyIsBrokerStyle,
+                    const BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation) const;
 
     std::vector<Date> dates_;
     std::vector<Real> deltas_;
@@ -113,15 +129,15 @@ private:
     TimeInterpolation timeInterpolation_;
     FxVolatilityTimeWeighting timeWeighting_;
 
-    mutable Real switchTime_, settlDomDisc_, settlForDisc_, settlLag_;
+    mutable Real switchTime_, settlDomDisc_, settlForDisc_;
     mutable std::vector<Real> expiryTimes_;
     mutable std::vector<Date> settlementDates_;
     mutable std::vector<Real> currentDeltas_;
 
     mutable std::vector<QuantLib::ext::shared_ptr<detail::SimpleDeltaInterpolatedSmile>> smiles_;
     mutable std::map<Real, QuantLib::ext::shared_ptr<detail::SimpleDeltaInterpolatedSmile>> cachedInterpolatedSmiles_;
-    mutable std::vector<bool> smileHasError_;
-    mutable std::vector<std::string> smileErrorMessage_;
+    mutable std::vector<bool> smileHasError_, smileHasWarning_;
+    mutable std::vector<std::vector<std::string>> smileMessages_;
 };
 
 namespace detail {
@@ -135,13 +151,12 @@ public:
                                  const BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation,
                                  const Real accuracy = 1E-6, const Size maxIterations = 1000);
 
-    Real volatilityAtSimpleDelta(const Real tnp);
     Real volatility(const Real strike);
     Real strikeFromDelta(const Option::Type type, const Real delta, const DeltaVolQuote::DeltaType dt);
     Real atmStrike(const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at);
+    Real simpleDeltaFromStrike(const Real strike) const;
 
 private:
-    Real simpleDeltaFromStrike(const Real strike) const;
 
     Real spot_, domDisc_, forDisc_, expiryTime_;
     std::vector<Real> deltas_, putVols_, callVols_;
@@ -156,13 +171,6 @@ private:
     std::vector<Real> x_, y_;
     QuantLib::ext::shared_ptr<Interpolation> interpolation_;
 };
-
-QuantLib::ext::shared_ptr<SimpleDeltaInterpolatedSmile>
-createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real expiryTime,
-            const std::vector<Real>& deltas, const std::vector<Real>& bfQuotes, const std::vector<Real>& rrQuotes,
-            const Real atmVol, const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at,
-            const Option::Type riskReversalInFavorOf, const bool butterflyIsBrokerStyle,
-            const BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation);
 
 } // namespace detail
 

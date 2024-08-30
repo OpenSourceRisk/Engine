@@ -38,7 +38,7 @@ Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::Delt
 
     try {
         Brent brent;
-        return std::exp(brent.solve(targetFct, accuracy, guess, 0.1));
+        return std::exp(brent.solve(targetFct, accuracy, guess, 0.0001));
     } catch (const std::exception& e) {
         QL_FAIL("getStrikeFromDelta(" << (optionType == Option::Call ? 1.0 : -1.0) * delta
                                       << ") could not be computed for spot=" << spot << ", forward="
