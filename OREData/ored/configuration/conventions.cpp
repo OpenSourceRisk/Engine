@@ -80,12 +80,15 @@ const QuantLib::ext::shared_ptr<ore::data::Conventions>& InstrumentConventions::
     QL_REQUIRE(it != conventions_.begin(), "InstrumentConventions: Could not find conventions for " << dt);
     --it;
     constexpr std::size_t max_num_warnings = 10;
-    if (numberOfEmittedWarnings_ < max_num_warnings) {
-        ++numberOfEmittedWarnings_;
-        WLOG("InstrumentConventions: Could not find conventions for "
-             << dt << ", using conventions from " << it->first
-             << (numberOfEmittedWarnings_ == max_num_warnings ? " (no more warnings of this type will be emitted)"
-                                                              : ""));
+    // If we have set one single global convention (without date) there is no reason to assume that there are date specific conventions
+    if (!(conventions_.size() == 1 && it->first == Date())) {
+        if (numberOfEmittedWarnings_ < max_num_warnings) {
+            ++numberOfEmittedWarnings_;
+            WLOG("InstrumentConventions: Could not find conventions for "
+                << dt << ", using conventions from " << it->first
+                << (numberOfEmittedWarnings_ == max_num_warnings ? " (no more warnings of this type will be emitted)"
+                                                                : ""));
+        }
     }
     return it->second;
 }
