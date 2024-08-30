@@ -617,6 +617,7 @@ void ConvertibleBond::build(const QuantLib::ext::shared_ptr<ore::data::EngineFac
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qlConvertible, multiplier);
     npvCurrency_ = notionalCurrency_ = data_.bondData().currency();
     maturity_ = qlUnderlyingBond->maturityDate();
+    maturityType_ = "Underlying Bond's Maturity Date";
     notional_ = qlUnderlyingBond->notional();
     legs_ = {qlUnderlyingBond->cashflows()};
     legCurrencies_ = {npvCurrency_};

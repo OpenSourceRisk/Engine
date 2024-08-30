@@ -289,22 +289,24 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
 }
 
 void FXVolatilityCurveConfig::populateRequiredCurveIds() {
-    if (!fxDomesticYieldCurveID_.empty() && !fxForeignYieldCurveID_.empty()) {
-        std::vector<string> domTokens, forTokens;
-        split(domTokens, fxDomesticYieldCurveID_, boost::is_any_of("/"));
-        split(forTokens, fxForeignYieldCurveID_, boost::is_any_of("/"));
-
-        if (domTokens.size() == 3 && domTokens[0] == "Yield") {
-            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(domTokens[2]);
-        } else if (domTokens.size() == 1) {
+    if (!fxDomesticYieldCurveID_.empty()) {
+        std::vector<string> tokens;
+        split(tokens, fxDomesticYieldCurveID_, boost::is_any_of("/"));
+        if (tokens.size() == 3 && tokens[0] == "Yield") {
+            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(tokens[2]);
+        } else if (tokens.size() == 1) {
             requiredCurveIds_[CurveSpec::CurveType::Yield].insert(fxDomesticYieldCurveID_);
         } else {
             QL_FAIL("Cannot determine the required domestic yield curve for fx vol curve " << curveID_);
         }
+    }
 
-        if (forTokens.size() == 3 && forTokens[0] == "Yield") {
-            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(forTokens[2]);
-        } else if (forTokens.size() == 1) {
+    if (!fxForeignYieldCurveID_.empty()) {
+        std::vector<string> tokens;
+        split(tokens, fxForeignYieldCurveID_, boost::is_any_of("/"));
+        if (tokens.size() == 3 && tokens[0] == "Yield") {
+            requiredCurveIds_[CurveSpec::CurveType::Yield].insert(tokens[2]);
+        } else if (tokens.size() == 1) {
             requiredCurveIds_[CurveSpec::CurveType::Yield].insert(fxForeignYieldCurveID_);
         } else {
             QL_FAIL("Cannot determine the required foreign yield curve for fx vol curve " << curveID_);

@@ -100,6 +100,7 @@ void VarSwap::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactory>& e
     npvCurrency_ = currency_;
     notionalCurrency_ = currency_;
     maturity_ = endDate;
+    maturityType_ = "End Date";
 
     // add required fixings
     for (Date d = cal_.advance(start_, -1 * Days); d <= endDate; d = cal_.advance(d, 1 * Days)) {

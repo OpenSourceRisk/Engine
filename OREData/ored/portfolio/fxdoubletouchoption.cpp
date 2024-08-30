@@ -112,6 +112,7 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     }
     QL_REQUIRE(payDate >= expiryDate, "Settlement date cannot be earlier than expiry date");
     maturity_ = std::max(option_.premiumData().latestPremiumDate(), payDate);
+    maturityType_ = maturity_ == payDate ? "Pay Date" : "Option's Latest Premium Date";
 
     Real levelLow = barrier_.levels()[0].value();
     Real levelHigh = barrier_.levels()[1].value();

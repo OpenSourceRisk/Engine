@@ -216,6 +216,7 @@ void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory
     }
 
     maturity_ = cds->coupons().back()->date();
+    maturityType_ = "Last Coupon Date";
 
     cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveIdWithTerm(),
                                              basketCreditCurves, boost::none, swap_.recoveryRate(), false));

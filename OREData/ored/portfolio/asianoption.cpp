@@ -192,10 +192,13 @@ void AsianOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     maturity_ = expiryDate;
-    maturity_ =
-        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
-                                        positionType == QuantLib::Position::Long ? -1.0 : 1.0, payCcy, engineFactory,
-                                        configuration));
+    maturityType_ = "Expiry Date";
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
+                                       positionType == QuantLib::Position::Long ? -1.0 : 1.0, payCcy, engineFactory,
+                                       configuration);
+    maturity_ = std::max(maturity_, lastPremiumDate);
+    if (maturity_ == lastPremiumDate)
+        maturityType_ = "Last Premium Date";
 
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(asian, mult, additionalInstruments, additionalMultipliers);
 

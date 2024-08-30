@@ -280,6 +280,7 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
 
     npvCurrency_ = bondData_.currency();
     maturity_ = bond->cashflows().back()->date();
+    maturityType_ = "Final Bond Cashlow Date";
     notional_ = currentNotional(bond->cashflows());
     notionalCurrency_ = bondData_.currency();
 
