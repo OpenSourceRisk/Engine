@@ -60,7 +60,7 @@ IMScheduleCalculator::IMScheduleCalculator(const QuantLib::ext::shared_ptr<Crif>
     QL_REQUIRE(checkCurrency(calculationCcy_),
                "The calculation currency (" << calculationCcy_ << ") must be a valid ISO currency code");
     if (!crif) {
-        WLOG("IMScheduleCalculator(): CRIF input is empty");
+        WLOG("IMScheduleCalculator(): CRIF input is null");
         return;
     }
 
