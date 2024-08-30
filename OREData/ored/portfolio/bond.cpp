@@ -359,14 +359,14 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
                                               const std::string& securityId) const {
     BondData data(securityId, 1.0);
     data.populateFromBondReferenceData(referenceData);
-    ore::data::Bond bond(Envelope(), data);
-    bond.id() = "VanillaBondBuilder_" + securityId;
-    bond.build(engineFactory);
+    auto bond = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), data);
+    bond->id() = "VanillaBondBuilder_" + securityId;
+    bond->build(engineFactory);
 
-    QL_REQUIRE(bond.instrument(), "VanillaBondBuilder: constructed bond is null, this is unexpected");
-    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+    QL_REQUIRE(bond->instrument(), "VanillaBondBuilder: constructed bond is null, this is unexpected");
+    auto qlBond = QuantLib::ext::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
 
-    QL_REQUIRE(bond.instrument() && bond.instrument()->qlInstrument(),
+    QL_REQUIRE(bond->instrument() && bond->instrument()->qlInstrument(),
                "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
                "(either the instrument wrapper or the ql instrument is null)");
 
@@ -376,6 +376,7 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
 
     Result res;
     res.bond = qlBond;
+    res.bondTrade = bond;
 
     if (data.isInflationLinked()) {
         res.isInflationLinked = true;       
