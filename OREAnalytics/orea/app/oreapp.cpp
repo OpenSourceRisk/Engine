@@ -456,8 +456,7 @@ void OREApp::run() {
     runTimer_.start();
     
     try {
-        if (structuredLogger_ != nullptr) 
-            structuredLogger_->clear();
+        structuredLogger_->clear();
         analytics();
     } catch (std::exception& e) {
         StructuredAnalyticsWarningMessage("OREApp::run()", "Error", e.what()).log();
@@ -570,6 +569,8 @@ void OREApp::setupLog(Size mask, const std::string& path, const std::string& fil
         Log::instance().switchOn();
         auto progressLogger = QuantLib::ext::make_shared<ProgressLogger>(progressLogToConsole);
         Log::instance().registerIndependentLogger(progressLogger);
+        structuredLogger_ = QuantLib::ext::make_shared<StructuredLogger>();
+        Log::instance().registerIndependentLogger(structuredLogger_);
 
         return;
     }
