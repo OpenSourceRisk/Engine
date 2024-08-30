@@ -24,11 +24,24 @@ using namespace QuantLib;
 namespace QuantExt {
 
 EquityForward::EquityForward(const std::string& name, const Currency& currency, const Position::Type& longShort,
-                             const Real& quantity, const Date& maturityDate, const Real& strike)
+                             const Real& quantity, const Date& maturityDate, const Real& strike, const Date& payDate,
+                             const Currency payCcy,
+                             const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex, const Date& fixingDate)
     : name_(name), currency_(currency), longShort_(longShort), quantity_(quantity), maturityDate_(maturityDate),
-      strike_(strike) {}
+      strike_(strike), payDate_(payDate), payCcy_(payCcy), fxIndex_(fxIndex), fixingDate_(fixingDate) {
+    if (payDate_ == Date()) {
+        payDate_ = maturityDate_;
+    }
+    if (payCcy_ == Currency()) {
+        payCcy_ = currency_;
+    }
+    if(payCcy_ != currency_){
+        QL_REQUIRE(fxIndex_ != nullptr, "Payment Currency doesnt match underlying currency, please provide a FxIndex");
+        registerWith(fxIndex_);
+    }
+}
 
-bool EquityForward::isExpired() const { return detail::simple_event(maturityDate_).hasOccurred(); }
+bool EquityForward::isExpired() const { return detail::simple_event(payDate_).hasOccurred(); }
 
 void EquityForward::setupArguments(PricingEngine::arguments* args) const {
     EquityForward::arguments* arguments = dynamic_cast<EquityForward::arguments*>(args);
@@ -39,6 +52,10 @@ void EquityForward::setupArguments(PricingEngine::arguments* args) const {
     arguments->quantity = quantity_;
     arguments->maturityDate = maturityDate_;
     arguments->strike = strike_;
+    arguments->payCurrency = payCcy_;
+    arguments->payDate = payDate_;
+    arguments->fxIndex = fxIndex_;
+    arguments->fixingDate = fixingDate_;
 }
 
 void EquityForward::arguments::validate() const {
