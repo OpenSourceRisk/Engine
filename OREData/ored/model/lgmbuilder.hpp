@@ -78,6 +78,7 @@ public:
     //@}
 
 private:
+    void processException(const std::string& s, const std::exception& e);
     void performCalculations() const override;
     void buildSwaptionBasket() const;
     void updateSwaptionBasketVols() const;

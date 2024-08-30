@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
 
     Date asof(7, July, 2019);
     Settings::instance().evaluationDate() = asof;
-    auto testMarket = QuantLib::ext::make_shared<OredTestMarket>(asof);
+    QuantLib::ext::shared_ptr<Market> testMarket = QuantLib::ext::make_shared<OredTestMarket>(asof);
 
     // build IR-FX-EQ CAM
 
@@ -151,7 +151,8 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
     cmb.addCorrelation("FX:EURUSD", "EQ:SP5", Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.4)));
 
     auto camBuilder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
-        testMarket, QuantLib::ext::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, cmb.correlations()));
+        testMarket,
+        QuantLib::ext::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, cmb.correlations()));
     auto model = camBuilder->model();
 
     //  set up gaussian cam adapter with simulation dates = calibration expiries

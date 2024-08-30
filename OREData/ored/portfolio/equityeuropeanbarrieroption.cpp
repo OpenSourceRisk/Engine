@@ -171,6 +171,7 @@ void EquityEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFa
     notional_ = strike_.value() * quantity_; 
     notionalCurrency_ = strike_.currency(); 
     maturity_ = std::max(lastPremiumDate, expiryDate);
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Last Premium Date";
 
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = strike_.value();

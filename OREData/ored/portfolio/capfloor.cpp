@@ -129,6 +129,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                     QuantLib::ext::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
             }
             maturity_ = CashFlows::maturityDate(legs_.front());
+            maturityType_ = "Leg Maturity Date";
         } else {
             // For the cases where we don't have regular cap / floor support we treat the index approximately as an Ibor
             // index and build an QuantLib::CapFloor with associated pricing engine. The only remaining case where this
@@ -166,6 +167,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             setSensitivityTemplate(*capFloorBuilder);
 
             maturity_ = QuantLib::ext::dynamic_pointer_cast<QuantLib::CapFloor>(qlInstrument)->maturityDate();
+            maturityType_ = "Floating Leg Maturity Date";
         }
 
     } else if (legData_.legType() == "CMS") {
@@ -206,6 +208,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                 QuantLib::ext::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
         }
         maturity_ = CashFlows::maturityDate(legs_.front());
+        maturityType_ = "Leg Maturity Date";
 
     } else if (legData_.legType() == "DurationAdjustedCMS") {
         auto cmsData = QuantLib::ext::dynamic_pointer_cast<DurationAdjustedCmsLegData>(legData_.concreteLegData());
@@ -265,6 +268,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                 QuantLib::ext::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
         }
         maturity_ = CashFlows::maturityDate(legs_.front());
+        maturityType_ = "Leg Maturity Date";
     } else if (legData_.legType() == "CPI") {
         DLOG("CPI CapFloor Type " << capFloorType << " ID " << id());
 
@@ -383,6 +387,8 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                 setSensitivityTemplate(*capFloorBuilder);
                 QuantLib::ext::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
+                if (maturity_ == capfloor->payDate())
+                    maturityType_ = "CapFloor Pay Date";
             }
 
             if (capFloorType == QuantLib::CapFloor::Floor || capFloorType == QuantLib::CapFloor::Collar) {
@@ -395,6 +401,8 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                 setSensitivityTemplate(*capFloorBuilder);
                 QuantLib::ext::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
+                if (maturity_ == capfloor->payDate())
+                    maturityType_ = "CapFloor Pay Date";
             }
         }
 
@@ -461,6 +469,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         // Wrap the QL instrument in a vanilla instrument
 
         maturity_ = QuantLib::ext::dynamic_pointer_cast<QuantLib::YoYInflationCapFloor>(qlInstrument)->maturityDate();
+        maturityType_ = "YoY Leg Maturity Date";
     } else {
         QL_FAIL("Invalid legType " << legData_.legType() << " for CapFloor");
     }
@@ -479,9 +488,12 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, multiplier, premiumData_,
-                                                -multiplier, parseCurrency(legData_.currency()), engineFactory,
-                                                engineFactory->configuration(MarketContext::pricing)));
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, multiplier, premiumData_,
+                                       -multiplier, parseCurrency(legData_.currency()), engineFactory,
+                                       engineFactory->configuration(MarketContext::pricing));
+    maturity_ = std::max(maturity_, lastPremiumDate);
+    if (maturity_ == lastPremiumDate)
+        maturityType_ = "Last Premium Date";
 
     // set instrument
     instrument_ =

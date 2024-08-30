@@ -27,6 +27,7 @@
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/historicalscenarioreader.hpp>
@@ -52,6 +53,8 @@
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/utilities/calendaradjustmentconfig.hpp>
+#include <ored/configuration/currencyconfig.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <boost/filesystem/path.hpp>
 #include <filesystem>
@@ -114,6 +117,8 @@ public:
     void setMporDate(const QuantLib::Date& d) { mporDate_ = d; }
     void setMporCalendar(const std::string& s); 
     void setMporForward(bool b) { mporForward_ = b; }
+    void setMarketDataLoaderOutput(const std::string& s) { marketDataLoaderOutput_ = s; }
+    void setMarketDataLoaderInput(const std::string& s) { marketDataLoaderInput_ = s; }
 
     // Setters for npv analytics
     void setOutputAdditionalResults(bool b) { outputAdditionalResults_ = b; }
@@ -126,6 +131,10 @@ public:
     void setOutputTodaysMarketCalibration(bool b) { outputTodaysMarketCalibration_ = b; }
     void setCurvesMarketConfig(const std::string& s) { curvesMarketConfig_ = s; }
     void setCurvesGrid(const std::string& s) { curvesGrid_ = s; }
+    void setCalendarAdjustment(const std::string& xml);
+    void setCalendarAdjustmentFromFile(const std::string& fileName);
+    void setCurrencyConfig(const std::string& xml);
+    void setCurrencyConfigFromFile(const std::string& fileName);
 
     // Setters for sensi analytics
     void setXbsParConversion(bool b) { xbsParConversion_ = b; }
@@ -173,7 +182,7 @@ public:
     void setStressUpperBoundRatesDiscountFactor(const double value) { stressUpperBoundRatesDiscountFactor_ = value; }
     void setStressAccurary(const double value) { stressAccurary_ = value; };
     // Setters for VaR
-    void setSalvageCovariance(bool b) { salvageCovariance_ = b; }
+    void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
     void setVarBreakDown(bool b) { varBreakDown_ = b; }
     void setPortfolioFilter(const std::string& s) { portfolioFilter_ = s; }
@@ -192,9 +201,8 @@ public:
     void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
 
     // Setters for exposure simulation
-    void setSalvageCorrelationMatrix(bool b) { salvageCorrelationMatrix_ = b; }
     void setAmc(bool b) { amc_ = b; }
-    void setAmcCg(bool b) { amcCg_ = b; }
+    void setAmcCg(XvaEngineCG::Mode b) { amcCg_ = b; }
     void setXvaCgBumpSensis(bool b) { xvaCgBumpSensis_ = b; }
     void setXvaCgUseExternalComputeDevice(bool b) { xvaCgUseExternalComputeDevice_ = b; }
     void setXvaCgExternalDeviceCompatibilityMode(bool b) { xvaCgExternalDeviceCompatibilityMode_ = b; }
@@ -229,6 +237,11 @@ public:
     void setAmcPricingEngineFromFile(const std::string& fileName);
     void setAmcPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
         amcPricingEngine_ = engineData;
+    }
+    void setAmcCgPricingEngine(const std::string& xml);
+    void setAmcCgPricingEngineFromFile(const std::string& fileName);
+    void setAmcCgPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
+        amcCgPricingEngine_ = engineData;
     }
     void setNettingSetManager(const std::string& xml);
     void setNettingSetManagerFromFile(const std::string& fileName);
@@ -462,6 +475,8 @@ public:
         return useCounterpartyOriginalPortfolio_;
     }
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& mporPortfolio() const { return mporPortfolio_; }
+    const QuantLib::ext::shared_ptr<ore::data::CurrencyConfig>& currencyConfigs() { return currencyConfig_; }
+    const QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig>& calendarAdjustmentConfigs() { return calendarAdjustment_; }
 
     QuantLib::Size maxRetries() const { return maxRetries_; }
     QuantLib::Size nThreads() const { return nThreads_; }
@@ -488,6 +503,8 @@ public:
     }
     bool mporOverlappingPeriods() const { return mporOverlappingPeriods_; }
     bool mporForward() const { return mporForward_; }
+    const std::string& marketDataLoaderOutput() { return marketDataLoaderOutput_; }
+    const std::string& marketDataLoaderInput() { return marketDataLoaderInput_; }
 
     /***************************
      * Getters for npv analytics
@@ -559,7 +576,7 @@ public:
     /*****************
      * Getters for VaR
      *****************/
-    bool salvageCovariance() const { return salvageCovariance_; }
+    SalvagingAlgorithm::Type  getVarSalvagingAlgorithm() const { return varSalvagingAlgorithm_; }
     const std::vector<Real>& varQuantiles() const { return varQuantiles_; }
     bool varBreakDown() const { return varBreakDown_; }
     const std::string& portfolioFilter() const { return portfolioFilter_; }
@@ -576,9 +593,8 @@ public:
     /*********************************
      * Getters for exposure simulation 
      *********************************/
-    bool salvageCorrelationMatrix() const { return salvageCorrelationMatrix_; }
     bool amc() const { return amc_; }
-    bool amcCg() const { return amcCg_; }
+    XvaEngineCG::Mode amcCg() const { return amcCg_; }
     bool xvaCgBumpSensis() const { return xvaCgBumpSensis_; }
     bool xvaCgUseExternalComputeDevice() const { return xvaCgUseExternalComputeDevice_; }
     bool xvaCgExternalDeviceCompatibilityMode() const { return xvaCgExternalDeviceCompatibilityMode_; }
@@ -604,6 +620,7 @@ public:
     const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData() const { return crossAssetModelData_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& simulationPricingEngine() const { return simulationPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& amcPricingEngine() const { return amcPricingEngine_; }
+    const QuantLib::ext::shared_ptr<ore::data::EngineData>& amcCgPricingEngine() const { return amcCgPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::NettingSetManager>& nettingSetManager() const { return nettingSetManager_; }
     // const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
@@ -713,7 +730,7 @@ public:
      * Getters for SIMM
      ******************/
     const std::string& simmVersion() const { return simmVersion_; }
-    const ore::analytics::Crif& crif() const { return crif_; }
+    const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crif() const { return crif_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SimmBasicNameMapper>& simmNameMapper() const { return simmNameMapper_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper>& simmBucketMapper() const { return simmBucketMapper_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SimmCalibrationData>& simmCalibrationData() const { return simmCalibrationData_; }
@@ -835,6 +852,8 @@ protected:
     QuantLib::ext::shared_ptr<ore::data::Conventions> conventions_;
     QuantLib::ext::shared_ptr<ore::data::IborFallbackConfig> iborFallbackConfig_;
     CurveConfigurationsManager curveConfigs_;
+    QuantLib::ext::shared_ptr<ore::data::CalendarAdjustmentConfig> calendarAdjustment_;
+    QuantLib::ext::shared_ptr<ore::data::CurrencyConfig> currencyConfig_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> pricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_, useCounterpartyOriginalPortfolio_, mporPortfolio_;
@@ -846,7 +865,7 @@ protected:
     bool eomInflationFixings_ = true;
     bool useMarketDataFixings_ = true;
     bool iborFallbackOverride_ = false;
-    bool csvCommentCharacter_ = true;
+    char csvCommentCharacter_ = '#';
     char csvEolChar_ = '\n';
     char csvSeparator_ = ',';
     char csvQuoteChar_ = '\0';
@@ -858,6 +877,8 @@ protected:
     bool mporOverlappingPeriods_ = true;
     QuantLib::Calendar mporCalendar_;
     bool mporForward_ = true;
+    std::string marketDataLoaderOutput_;
+    std::string marketDataLoaderInput_;
 
     /**************
      * NPV analytic
@@ -918,7 +939,7 @@ protected:
     /*****************
      * VAR analytics
      *****************/
-    bool salvageCovariance_ = false;
+    SalvagingAlgorithm::Type varSalvagingAlgorithm_ = SalvagingAlgorithm::None;
     std::vector<Real> varQuantiles_;
     bool varBreakDown_ = false;
     std::string portfolioFilter_;
@@ -937,9 +958,8 @@ protected:
     /*******************
      * EXPOSURE analytic
      *******************/
-    bool salvageCorrelationMatrix_ = false;
     bool amc_ = false;
-    bool amcCg_ = false;
+    XvaEngineCG::Mode amcCg_ = XvaEngineCG::Mode::Disabled;
     bool xvaCgBumpSensis_ = false;
     bool xvaCgUseExternalComputeDevice_ = false;
     bool xvaCgExternalDeviceCompatibilityMode_ = false;
@@ -962,6 +982,7 @@ protected:
     QuantLib::ext::shared_ptr<CrossAssetModelData> crossAssetModelData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> simulationPricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> amcPricingEngine_;
+    QuantLib::ext::shared_ptr<ore::data::EngineData> amcCgPricingEngine_;
     QuantLib::ext::shared_ptr<ore::data::NettingSetManager> nettingSetManager_;
     QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
     bool exposureProfiles_ = true;
@@ -1043,7 +1064,7 @@ protected:
      * SIMM analytic
      ***************/
     std::string simmVersion_;
-    ore::analytics::Crif crif_;
+    QuantLib::ext::shared_ptr<ore::analytics::Crif> crif_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
@@ -1054,6 +1075,7 @@ protected:
     bool enforceIMRegulations_ = false;
     bool useSimmParameters_ = true;
     bool writeSimmIntermediateReports_ = true;
+    bool loadCrifAdditionalFields_ = true;
 
     /***************
      * Zero to Par Conversion analytic
@@ -1158,9 +1180,13 @@ private:
     std::string parConversionJacobiInverseFileName_;
     std::string pnlOutputFileName_;
     std::string parStressTestConversionFile_;
-    std::string pnlExplainOutputFileName_;
+    std::string pnlExplainOutputFileName_;    
+    std::string riskFactorsOutputFileName_;
+    std::string marketObjectsOutputFileName_;
     std::string zeroToParShiftFile_;
 };
+
+void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);
 
 } // namespace analytics
 } // namespace ore

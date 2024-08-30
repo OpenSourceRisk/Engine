@@ -203,13 +203,14 @@ void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError
                                                                      << ")");
     ext::shared_ptr<Market> market = offsetScenario_ != nullptr ? simMarketCalibration_ : analytic()->market();
     QL_REQUIRE(market != nullptr, "Internal error, buildCrossAssetModel needs to be called after the market is built.");
+
     CrossAssetModelBuilder modelBuilder(
         market, analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
         inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
         inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
         inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "",
-        inputs_->salvageCorrelationMatrix() ? SalvagingAlgorithm::Spectral : SalvagingAlgorithm::None,
-        "xva cam building");
+        analytic()->configurations().crossAssetModelData->getSalvagingAlgorithm(), "xva cam building");
+
     model_ = *modelBuilder.model();
 }
 
@@ -448,6 +449,7 @@ XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::Cros
 }
 
 void XvaAnalyticImpl::buildAmcPortfolio() {
+
     LOG("XVA: buildAmcPortfolio");
     const string msg = "XVA: Build AMC portfolio";
     CONSOLEW(msg);
@@ -471,7 +473,10 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
         if (inputs_->amcTradeTypes().find(trade->tradeType()) != inputs_->amcTradeTypes().end()) {
             try {
                 trade->reset();
-                trade->build(factory);
+                if(inputs_->amcCg() != XvaEngineCG::Mode::CubeGeneration) {
+                    // the amc-cg engine will build the trades itself
+                    trade->build(factory);
+                }
                 amcPortfolio_->add(trade);
                 DLOG("trade " << tradeId << " is added to amc portfolio");
             } catch (const std::exception& e) {
@@ -502,62 +507,92 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
 
     std::string message = "XVA: Build AMC Cube " + std::to_string(amcPortfolio_->size()) + " x " +
                           std::to_string(grid_->valuationDates().size()) + " x " + std::to_string(samples_) + "... ";
+    CONSOLEW(message);
     auto progressBar = QuantLib::ext::make_shared<SimpleProgressBar>(message, ConsoleLog::instance().width(),
                                                                      ConsoleLog::instance().progressBarWidth());
-    auto progressLog = QuantLib::ext::make_shared<ProgressLog>("XVA: Building AMC Cube...", 100, oreSeverity::notice);
+    auto progressLog = QuantLib::ext::make_shared<ProgressLog>("XVA: Build AMC Cube...", 100, oreSeverity::notice);
 
-    if (inputs_->nThreads() == 1) {
+    if (inputs_->amcCg() == XvaEngineCG::Mode::CubeGeneration) {
+
+        // cube generation with amc-cg engine
+
         initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
-        ext::shared_ptr<ore::data::Market> market =
-            offsetScenario_ == nullptr ? analytic()->market() : offsetSimMarket_;
 
-        AMCValuationEngine amcEngine(model_, inputs_->scenarioGeneratorData(), market,
-                                     inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
-                                     inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
-                                     inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates(),
-                                     inputs_->amcPathDataInput(), inputs_->amcPathDataOutput());
-        amcEngine.registerProgressIndicator(progressBar);
-        amcEngine.registerProgressIndicator(progressLog);
+        XvaEngineCG engine(
+            inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
+            analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
+            inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
+            amcPortfolio_, inputs_->marketConfig("simulation"), inputs_->marketConfig("lgmcalibration"),
+            inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
+            inputs_->xvaCgBumpSensis(), inputs_->xvaCgUseExternalComputeDevice(),
+            inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
+            inputs_->xvaCgExternalComputeDevice(), true, true);
+
+        engine.registerProgressIndicator(progressBar);
+        engine.registerProgressIndicator(progressLog);
         if (!scenarioData_.empty())
-            amcEngine.aggregationScenarioData() = *scenarioData_;
-        amcEngine.buildCube(amcPortfolio_, amcCube_);
+            engine.setAggregationScenarioData(*scenarioData_);
+        engine.setOffsetScenario(offsetScenario_);
+        engine.setNpvOutputCube(amcCube_);
+        engine.run();
+
     } else {
-        auto cubeFactory = [this](const QuantLib::Date& asof, const std::set<std::string>& ids,
-                                  const std::vector<QuantLib::Date>& dates,
-                                  const Size samples) -> QuantLib::ext::shared_ptr<NPVCube> {
-            if (cubeDepth_ == 1)
-                return QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
-            else
-                return QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples, cubeDepth_,
-                                                                                0.0f);
-        };
 
-        auto simMarketParams =
-            offsetScenario_ == nullptr ? analytic()->configurations().simMarketParams : offsetSimMarketParams_;
+        // cube generation with amc engine
 
-        AMCValuationEngine amcEngine(
-            inputs_->nThreads(), inputs_->asof(), samples_, analytic()->loader(), inputs_->scenarioGeneratorData(),
-            inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
-            inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
-            inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates(),
-            inputs_->crossAssetModelData(), inputs_->amcPricingEngine(), inputs_->curveConfigs().get(),
-            analytic()->configurations().todaysMarketParams, inputs_->marketConfig("lgmcalibration"),
-            inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
-            inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
-            inputs_->marketConfig("simulation"), inputs_->amcPathDataInput(), inputs_->amcPathDataOutput(),
-            inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory, offsetScenario_,
-            simMarketParams);
+        if (inputs_->nThreads() == 1) {
+            initCube(amcCube_, amcPortfolio_->ids(), cubeDepth_);
+            ext::shared_ptr<ore::data::Market> market =
+                offsetScenario_ == nullptr ? analytic()->market() : offsetSimMarket_;
 
-        amcEngine.registerProgressIndicator(progressBar);
-        amcEngine.registerProgressIndicator(progressLog);
-        if (!scenarioData_.empty())
-            amcEngine.aggregationScenarioData() = *scenarioData_;
-        amcEngine.buildCube(amcPortfolio_);
-        amcCube_ = QuantLib::ext::make_shared<JointNPVCube>(amcEngine.outputCubes());
+            AMCValuationEngine amcEngine(
+                model_, inputs_->scenarioGeneratorData(), market,
+                inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
+                inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
+                inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates(),
+                inputs_->amcPathDataInput(), inputs_->amcPathDataOutput());
+            amcEngine.registerProgressIndicator(progressBar);
+            amcEngine.registerProgressIndicator(progressLog);
+            if (!scenarioData_.empty())
+                amcEngine.aggregationScenarioData() = *scenarioData_;
+            amcEngine.buildCube(amcPortfolio_, amcCube_);
+        } else {
+            auto cubeFactory = [this](const QuantLib::Date& asof, const std::set<std::string>& ids,
+                                      const std::vector<QuantLib::Date>& dates,
+                                      const Size samples) -> QuantLib::ext::shared_ptr<NPVCube> {
+                if (cubeDepth_ == 1)
+                    return QuantLib::ext::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+                else
+                    return QuantLib::ext::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples,
+                                                                                    cubeDepth_, 0.0f);
+            };
+
+            auto simMarketParams =
+                offsetScenario_ == nullptr ? analytic()->configurations().simMarketParams : offsetSimMarketParams_;
+
+            AMCValuationEngine amcEngine(
+                inputs_->nThreads(), inputs_->asof(), samples_, analytic()->loader(), inputs_->scenarioGeneratorData(),
+                inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
+                inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
+                inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates(),
+                inputs_->crossAssetModelData(), inputs_->amcPricingEngine(), inputs_->curveConfigs().get(),
+                analytic()->configurations().todaysMarketParams, inputs_->marketConfig("lgmcalibration"),
+                inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
+                inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
+                inputs_->marketConfig("simulation"), inputs_->amcPathDataInput(), inputs_->amcPathDataOutput(),
+                inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory, offsetScenario_,
+                simMarketParams);
+
+            amcEngine.registerProgressIndicator(progressBar);
+            amcEngine.registerProgressIndicator(progressLog);
+            if (!scenarioData_.empty())
+                amcEngine.aggregationScenarioData() = *scenarioData_;
+            amcEngine.buildCube(amcPortfolio_);
+            amcCube_ = QuantLib::ext::make_shared<JointNPVCube>(amcEngine.outputCubes());
+        }
     }
 
     CONSOLE("OK");
-
     LOG("XVA: amcRun completed");
 }
 
@@ -662,19 +697,22 @@ void XvaAnalyticImpl::runPostProcessor() {
 void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                   const std::set<std::string>& runTypes) {
 
-    if (inputs_->amcCg()) {
-        LOG("XVA analytic is running with amc cg engine (experimental).");
-        // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config in sim market
-        // there...
+    LOG("XVA analytic is running with amc cg mode '" << inputs_->amcCg() << "'.");
+
+    if (inputs_->amcCg() == XvaEngineCG::Mode::Full) {
+        // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
+        // in sim market there...
         XvaEngineCG engine(
-            inputs_->nThreads(), inputs_->asof(), loader, inputs_->curveConfigs().get(),
+            inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), loader, inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
-            inputs_->amcPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
+            inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
             inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgUseExternalComputeDevice(),
             inputs_->xvaCgExternalDeviceCompatibilityMode(), inputs_->xvaCgUseDoublePrecisionForExternalCalculation(),
             inputs_->xvaCgExternalComputeDevice(), true, true);
+
+        engine.run();
 
         analytic()->reports()["XVA"]["xvacg-exposure"] = engine.exposureReport();
         if (inputs_->xvaCgSensiScenarioData())
@@ -727,7 +765,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         // Initialize the residual "classical" portfolio that we do not process using AMC
         auto residualPortfolio = QuantLib::ext::make_shared<Portfolio>(inputs_->buildFailedTrades());
 
-        if (inputs_->amc()) {
+        if (inputs_->amc() || inputs_->amcCg() == XvaEngineCG::Mode::CubeGeneration) {
             // Build a separate sub-portfolio for the AMC cube generation and perform its training
             buildAmcPortfolio();
 

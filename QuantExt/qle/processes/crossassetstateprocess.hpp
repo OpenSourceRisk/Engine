@@ -54,6 +54,9 @@ public:
     // enables and resets the cache, once enabled the simulated times must stay the stame
     void resetCache(const Size timeSteps) const;
 
+    // get sqrt correlation matrix (only available for Euler discretization, empty otherwise)
+    const Matrix& sqrtCorrelation() const { return sqrtCorrelation_; }
+
 protected:
     virtual Matrix diffusionOnCorrelatedBrownians(Time t, const Array& x) const;
     virtual Matrix diffusionOnCorrelatedBrowniansImpl(Time t, const Array& x) const;

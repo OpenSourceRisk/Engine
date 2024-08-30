@@ -117,7 +117,9 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CrossAssetModelData() : bootstrapTolerance_(0.0), discretization_(CrossAssetModel::Discretization::Exact) {
+    CrossAssetModelData()
+        : bootstrapTolerance_(0.0), discretization_(CrossAssetModel::Discretization::Exact),
+          salvagingAlgorithm_(SalvagingAlgorithm::None) {
         correlations_ = QuantLib::ext::make_shared<InstantaneousCorrelations>();
     }
 
@@ -133,9 +135,12 @@ public:
         //! Choice of probability measure
         const std::string& measure = "LGM",
         //! Choice of discretization
-        const CrossAssetModel::Discretization discretization = CrossAssetModel::Discretization::Exact)
+        const CrossAssetModel::Discretization discretization = CrossAssetModel::Discretization::Exact,
+        //! Choice of salvaging algorithm
+        const QuantLib::SalvagingAlgorithm::Type& salvagingAlgorithm = SalvagingAlgorithm::None)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(std::vector<QuantLib::ext::shared_ptr<EqBsData>>()),
-          bootstrapTolerance_(tolerance), measure_(measure), discretization_(discretization) {
+          bootstrapTolerance_(tolerance), measure_(measure), discretization_(discretization),
+          salvagingAlgorithm_(salvagingAlgorithm) {
         correlations_ = QuantLib::ext::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
@@ -158,9 +163,11 @@ public:
         //! Choice of probability measure
         const std::string& measure = "LGM",
         //! Choice of discretization
-        const CrossAssetModel::Discretization discretization = CrossAssetModel::Discretization::Exact)
+        const CrossAssetModel::Discretization discretization = CrossAssetModel::Discretization::Exact,
+        //! Choice of salvaging algorithm
+        const QuantLib::SalvagingAlgorithm::Type& salvagingAlgorithm = SalvagingAlgorithm::None)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), bootstrapTolerance_(tolerance),
-          measure_(measure), discretization_(discretization) {
+          measure_(measure), discretization_(discretization), salvagingAlgorithm_(salvagingAlgorithm) {
         correlations_ = QuantLib::ext::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
@@ -193,11 +200,13 @@ public:
         //! Choice of probability measure
         const std::string& measure = "LGM",
         //! Choice of discretization
-        const CrossAssetModel::Discretization discretization = CrossAssetModel::Discretization::Exact)
+        const CrossAssetModel::Discretization discretization = CrossAssetModel::Discretization::Exact,
+        //! Choice of salvaging algorithm
+        const QuantLib::SalvagingAlgorithm::Type& salvagingAlgorithm = SalvagingAlgorithm::None)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), infConfigs_(infConfigs),
           crLgmConfigs_(crLgmConfigs), crCirConfigs_(crCirConfigs), comConfigs_(comConfigs),
           numberOfCreditStates_(numberOfCreditStates), bootstrapTolerance_(tolerance), measure_(measure),
-          discretization_(discretization) {
+          discretization_(discretization), salvagingAlgorithm_(salvagingAlgorithm) {
         correlations_ = QuantLib::ext::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
@@ -235,6 +244,7 @@ public:
     Real bootstrapTolerance() const { return bootstrapTolerance_; }
     const std::string& measure() const { return measure_; }
     CrossAssetModel::Discretization discretization() const { return discretization_; }
+    QuantLib::SalvagingAlgorithm::Type getSalvagingAlgorithm() const { return salvagingAlgorithm_; }
     //@}
 
     //! \name Setters
@@ -259,6 +269,7 @@ public:
     Real& bootstrapTolerance() { return bootstrapTolerance_; }
     std::string& measure() { return measure_; }
     CrossAssetModel::Discretization& discretization() { return discretization_; }
+    void setNumberOfCreditStates(QuantLib::Size n) { numberOfCreditStates_ = n; }
     //@}
 
     //! \name Serialisation
@@ -313,6 +324,8 @@ private:
     Real bootstrapTolerance_;
     std::string measure_;
     CrossAssetModel::Discretization discretization_;
+    QuantLib::SalvagingAlgorithm::Type salvagingAlgorithm_;
+
 };
 
 CrossAssetModel::Discretization parseDiscretization(const string& s);

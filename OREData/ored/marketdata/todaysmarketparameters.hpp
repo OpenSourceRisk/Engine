@@ -53,6 +53,7 @@ using std::vector;
 std::ostream& operator<<(std::ostream& out, const MarketObject& o);
 
 std::set<MarketObject> getMarketObjectTypes();
+MarketObject parseMarketObject(const std::string& mo);
 
 class MarketConfiguration {
 public:

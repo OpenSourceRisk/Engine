@@ -24,6 +24,7 @@ app/analytics/parscenarioanalytic.cpp
 app/analytics/parstressconversionanalytic.cpp
 app/analytics/pnlanalytic.cpp
 app/analytics/pnlexplainanalytic.cpp
+app/analytics/portfoliodetailsanalytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
@@ -45,6 +46,7 @@ app/marketdatainmemoryloader.cpp
 app/marketdataloader.cpp
 app/oreapp.cpp
 app/parameters.cpp
+app/portfolioanalyser.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
 app/xvarunner.cpp
@@ -61,6 +63,7 @@ engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
 engine/cptycalculator.cpp
 engine/decomposedsensitivitystream.cpp
+engine/dependencymarket.cpp
 engine/filteredsensitivitystream.cpp
 engine/historicalpnlgenerator.cpp
 engine/historicalsensipnlcalculator.cpp
@@ -188,6 +191,7 @@ app/analytics/parscenarioanalytic.hpp
 app/analytics/parstressconversionanalytic.hpp
 app/analytics/pnlanalytic.hpp
 app/analytics/pnlexplainanalytic.hpp
+app/analytics/portfoliodetailsanalytic.hpp
 app/analytics/pricinganalytic.hpp
 app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
@@ -201,14 +205,17 @@ app/analytics/xvastressanalytic.hpp
 app/analytics/zerotoparshiftanalytic.hpp
 app/analyticsmanager.hpp
 app/cleanupsingletons.hpp
+app/dummymarketdataloader.hpp
 app/initbuilders.hpp
 app/inputparameters.hpp
 app/marketcalibrationreport.hpp
+app/marketdatabinaryloader.hpp
 app/marketdatacsvloader.hpp
 app/marketdatainmemoryloader.hpp
 app/marketdataloader.hpp
 app/oreapp.hpp
 app/parameters.hpp
+app/portfolioanalyser.hpp
 app/reportwriter.hpp
 app/sensitivityrunner.hpp
 app/structuredanalyticserror.hpp
@@ -233,6 +240,7 @@ engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cptycalculator.hpp
 engine/decomposedsensitivitystream.hpp
+engine/dependencymarket.hpp
 engine/filteredsensitivitystream.hpp
 engine/historicalpnlgenerator.hpp
 engine/historicalsensipnlcalculator.hpp
@@ -346,7 +354,7 @@ simulation/simmarket.hpp
 version.hpp)
 
 writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
-add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} "engine/pnlexplainreport.cpp")
+add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
 target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})

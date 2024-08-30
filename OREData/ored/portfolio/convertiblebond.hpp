@@ -78,6 +78,10 @@ struct ConvertibleBondBuilder : public BondBuilder {
     BondBuilder::Result build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                               const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                               const std::string& securityId) const override;
+    void modifyToForwardBond(const Date& expiry, boost::shared_ptr<QuantLib::Bond>& bond,
+                             const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
+                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
+                             const std::string& securityId) const override;
 };
 
 } // namespace data

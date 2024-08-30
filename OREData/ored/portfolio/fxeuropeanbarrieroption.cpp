@@ -152,6 +152,7 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
 
     // delayed pay date is only affecting the maturity
     maturity_ = std::max({option_.premiumData().latestPremiumDate(), paymentDate});
+    maturityType_ = maturity_ == paymentDate ? "Payment Date" : "Option's Latest Premium Date";
 
     QuantLib::ext::shared_ptr<Instrument> digital;
     QuantLib::ext::shared_ptr<Instrument> vanillaK;

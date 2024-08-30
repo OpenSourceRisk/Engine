@@ -99,6 +99,7 @@ private:
     std::vector<std::size_t> numberOfVariates_;
     std::vector<std::size_t> numberOfVars_;
     std::vector<std::vector<std::size_t>> outputVars_;
+    std::vector<std::size_t> numberOfOperations_;
 
     // 2 curent calc
 
@@ -169,6 +170,7 @@ std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::siz
         numberOfVariates_.push_back(0);
         numberOfVars_.push_back(0);
         outputVars_.push_back({});
+        numberOfOperations_.push_back(0);
 
         currentId_ = size_.size();
         newCalc_ = true;
@@ -192,6 +194,7 @@ std::pair<std::size_t, bool> BasicCpuContext::initiateCalculation(const std::siz
             numberOfVariates_[id - 1] = 0;
             numberOfVars_[id - 1] = 0;
             outputVars_[id - 1].clear();
+            numberOfOperations_[id - 1] = 0;
             newCalc_ = true;
         }
 
@@ -296,7 +299,7 @@ std::size_t BasicCpuContext::applyOperation(const std::size_t randomVariableOpCo
     // update num of ops in debug info
 
     if (settings_.debug)
-        debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
+        numberOfOperations_[currentId_ - 1] += size_[currentId_ - 1];
 
     // return result id
 
@@ -304,8 +307,6 @@ std::size_t BasicCpuContext::applyOperation(const std::size_t randomVariableOpCo
 }
 
 void BasicCpuContext::freeVariable(const std::size_t id) {
-    QL_REQUIRE(currentState_ == ComputeState::calc,
-               "BasicCpuContext::free(): not in state calc (" << static_cast<int>(currentState_) << ")");
     QL_REQUIRE(currentId_ > 0, "BasicCpuContext::freeVariable(): current id is not set");
     QL_REQUIRE(newCalc_, "BasicCpuContext::freeVariable(): id (" << currentId_ << ") in version "
                                                                  << version_[currentId_ - 1] << " is replayed.");
@@ -381,13 +382,17 @@ void BasicCpuContext::finalizeCalculation(std::vector<double*>& output) {
             v = &values_[id];
         else if (id < numberOfInputVars_[currentId_ - 1] + numberOfVariates_[currentId_ - 1]) {
             v = &variates_[id - numberOfInputVars_[currentId_ - 1]];
-        }
-        else
+        } else
             v = &values_[id - numberOfVariates_[currentId_ - 1]];
         for (Size j = 0; j < size_[currentId_ - 1]; ++j) {
             output[i][j] = v->operator[](j);
         }
     }
+
+    // update debug info
+
+    if(settings_.debug)
+        debugInfo_.numberOfOperations += numberOfOperations_[currentId_ - 1];
 }
 
 const ComputeContext::DebugInfo& BasicCpuContext::debugInfo() const { return debugInfo_; }

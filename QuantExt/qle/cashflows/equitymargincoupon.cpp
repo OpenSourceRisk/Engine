@@ -288,7 +288,7 @@ EquityMarginLeg::operator Leg() const {
             } else {
                 QL_REQUIRE(fxIndex_ == nullptr,
                            "EquityMarginLeg: can not compute quantity from nominal when fx conversion is required");
-                QL_REQUIRE(!notionals_.empty(), "EquityMarginLeg: can not compute qunantity, since no notional is given");
+                QL_REQUIRE(!notionals_.empty(), "EquityMarginLeg: can not compute quantity, since no notional is given");
                 quantity = notionals_.front() ;
             }
         } else {

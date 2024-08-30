@@ -128,6 +128,8 @@ public:
 
     virtual void writePricingStats(ore::data::Report& report, const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
 
+    virtual void writeRunTimes(ore::data::Report& report, const Timer& timer);
+
     virtual void writeCube(ore::data::Report& report, const QuantLib::ext::shared_ptr<NPVCube>& cube,
                            const std::map<std::string, std::string>& nettingSetMap = std::map<std::string, std::string>());
 
@@ -141,14 +143,14 @@ public:
     */
     virtual void
     writeSIMMReport(const std::map<SimmConfiguration::SimmSide,
-                                   std::map<NettingSetDetails, std::pair<std::string, SimmResults>>>& simmResultsMap,
+                       std::map<NettingSetDetails, std::pair<CrifRecord::Regulation, SimmResults>>>& finalSimmResultsMap,
                     const QuantLib::ext::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
                     const std::string& simmResultCcy = "", const std::string& simmCalcCcyCall = "",
                     const std::string& simmCalcCcyPost = "", const std::string& reportCcy = "",
                     QuantLib::Real fxSpot = 1.0, QuantLib::Real outputThreshold = 0.005);
     virtual void
     writeSIMMReport(const std::map<SimmConfiguration::SimmSide,
-                                   std::map<NettingSetDetails, std::map<std::string, SimmResults>>>& simmResultsMap,
+                       std::map<NettingSetDetails, std::map<std::set<CrifRecord::Regulation>, SimmResults>>>& simmResultsMap,
                     const QuantLib::ext::shared_ptr<ore::data::Report> report, const bool hasNettingSetDetails = false,
                     const std::string& simmResultCcy = "", const std::string& simmCalcCcyCall = "",
                     const std::string& simmCalcCcyPost = "", const std::string& reportCcy = "",
@@ -161,7 +163,7 @@ public:
 
     //! Write out CRIF records to a report
     virtual void writeCrifReport(const QuantLib::ext::shared_ptr<ore::data::Report>& report,
-                                 const ore::analytics::Crif& crifRecords);
+                                 const QuantLib::ext::shared_ptr<ore::analytics::Crif>& crifRecords);
 
     virtual void writeScenarioStatistics(const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGenerator>& generator,
                                          const std::vector<ore::analytics::RiskFactorKey>& keys,
@@ -194,7 +196,7 @@ public:
 
     virtual void writeIMScheduleSummaryReport(
         const std::map<SimmConfiguration::SimmSide,
-                       std::map<NettingSetDetails, std::pair<std::string, IMScheduleResults>>>& finalResultsMap,
+                       std::map<NettingSetDetails, std::pair<CrifRecord::Regulation, IMScheduleResults>>>& finalResultsMap,
         const QuantLib::ext::shared_ptr<Report> report, const bool hasNettingSetDetails = false,
         const std::string& simmResultCcy = "", const std::string& reportCcy = "", QuantLib::Real fxSpot = 1.0,
         QuantLib::Real outputThreshold = 0.005);

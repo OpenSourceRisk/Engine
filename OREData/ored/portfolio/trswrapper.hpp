@@ -148,9 +148,11 @@ class TRSWrapper::engine : public QuantLib::GenericEngine<TRSWrapper::arguments,
 
 class TRSWrapperAccrualEngine : public TRSWrapper::engine {
 public:
+    explicit TRSWrapperAccrualEngine(const Handle<YieldTermStructure>& additionalCashflowCurrencyDiscountCurve = {});
     void calculate() const override;
 
 private:
+    Handle<YieldTermStructure> additionalCashflowCurrencyDiscountCurve_;
     /* Computes underlying value, fx conversion for each underlying and the start date of the nth current
        valuation period. Notice there might be more than one "current" valuation period, if a payment lag
        is present and nth refers to the nth such period in order the associated valuation periods are

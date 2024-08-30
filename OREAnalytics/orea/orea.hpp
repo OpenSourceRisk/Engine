@@ -29,6 +29,7 @@
 #include <orea/app/analytics/parstressconversionanalytic.hpp>
 #include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/pnlexplainanalytic.hpp>
+#include <orea/app/analytics/portfoliodetailsanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
 #include <orea/app/analytics/scenariostatisticsanalytic.hpp>
@@ -42,14 +43,17 @@
 #include <orea/app/analytics/zerotoparshiftanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/cleanupsingletons.hpp>
+#include <orea/app/dummymarketdataloader.hpp>
 #include <orea/app/initbuilders.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
+#include <orea/app/marketdatabinaryloader.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
 #include <orea/app/marketdatainmemoryloader.hpp>
 #include <orea/app/marketdataloader.hpp>
 #include <orea/app/oreapp.hpp>
 #include <orea/app/parameters.hpp>
+#include <orea/app/portfolioanalyser.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
@@ -73,6 +77,7 @@
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
+#include <orea/engine/dependencymarket.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/historicalpnlgenerator.hpp>
 #include <orea/engine/historicalsensipnlcalculator.hpp>

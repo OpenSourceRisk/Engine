@@ -42,6 +42,7 @@ void VarAnalyticImpl::setUpConfigurations() {
 
 void VarAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                               const std::set<std::string>& runTypes) {
+    
     MEM_LOG;
     LOG("Running parametric VaR");
 
@@ -97,8 +98,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
 
         varReport_ = ext::make_shared<ParametricVarReport>(
             inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), inputs_->varQuantiles(),
-            varParams,
-            inputs_->salvageCovariance(), boost::none, std::move(sensiArgs), inputs_->varBreakDown());
+            varParams, inputs_->getVarSalvagingAlgorithm(), boost::none, std::move(sensiArgs), inputs_->varBreakDown());
     } else {
         TimePeriod benchmarkVarPeriod(parseListOfValues<Date>(inputs_->benchmarkVarPeriod(), &parseDate),
                                       inputs_->mporDays(), inputs_->mporCalendar());
@@ -133,7 +133,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         varReport_ = ext::make_shared<ParametricVarReport>(
             inputs_->baseCurrency(), analytic()->portfolio(), inputs_->portfolioFilter(), scenarios,
             inputs_->varQuantiles(), varParams,
-            inputs_->salvageCovariance(), benchmarkVarPeriod, std::move(sensiArgs), inputs_->varBreakDown());
+            inputs_->getVarSalvagingAlgorithm(), benchmarkVarPeriod, std::move(sensiArgs), inputs_->varBreakDown());
     }
 }
 

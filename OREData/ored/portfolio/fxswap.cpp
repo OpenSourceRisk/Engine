@@ -44,6 +44,7 @@ void FxSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory
     Date nearDate = data::parseDate(nearDate_);
     Date farDate = data::parseDate(farDate_);
     maturity_ = farDate;
+    maturityType_ = "Far Date";
 
     notional_ = nearBoughtAmount_;
     notionalCurrency_ = nearBoughtCurrency_;

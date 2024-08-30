@@ -155,10 +155,12 @@ void CapFloorVolCurve::termAtmOptCurve(const Date& asof, CapFloorVolatilityCurve
     // Get the ATM cap floor term vol curve
     QuantLib::ext::shared_ptr<QuantExt::CapFloorTermVolCurve> cftvc = atmCurve(asof, config, loader);
 
-    // Hardcode some values. Can add them to the CapFloorVolatilityCurveConfig later if needed.
     bool flatFirstPeriod = true;
-    VolatilityType optVolType = Normal;
+    VolatilityType optVolType = volatilityType(config.outputVolatilityType());
     Real optDisplacement = 0.0;
+    if (optVolType == QuantLib::ShiftedLognormal) {
+        optDisplacement = config.outputShift() != Null<Real>() ? config.outputShift() : shift;
+    }
 
     // Get configuration values for bootstrap
     Real accuracy = config.bootstrapConfig().accuracy();
@@ -315,11 +317,6 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
         cftvc = Handle<QuantExt::CapFloorTermVolCurve>(atmCurve(asof, config, loader));
     }
 
-    // Hardcode some values. Can add them to the CapFloorVolatilityCurveConfig later if needed.
-    bool flatFirstPeriod = true;
-    VolatilityType optVolType = Normal;
-    Real optDisplacement = 0.0;
-
     // Get configuration values for bootstrap
     Real accuracy = config.bootstrapConfig().accuracy();
     Real globalAccuracy = config.bootstrapConfig().globalAccuracy();
@@ -361,7 +358,28 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
     QuantLib::ext::shared_ptr<QuantExt::OptionletStripper> optionletStripper;
     VolatilityType volType = volatilityType(config.volatilityType());
     bool onOpt = interpOnOpt(config);
-    SabrParametricVolatility::ModelVariant sabrModelVariant;
+
+    bool flatFirstPeriod = true;
+
+    VolatilityType optVolType = volType;
+    Real optDisplacement = shift;
+    VolatilityType outputVolType = volatilityType(config.outputVolatilityType());
+    Real outputDisplacement = 0.0;
+    if (outputVolType == QuantLib::ShiftedLognormal) {
+        outputDisplacement = config.outputShift() != Null<Real>() ? config.outputShift() : shift;
+    }
+
+    // convert to output vol type and shift, but not if we are calibrating to sabr, in which case
+    // the sabr surface will handle the conversion and the calibration is on the original vol type / shift
+    std::optional<SabrParametricVolatility::ModelVariant> sabrModelVariant;
+    if (!tryParse<std::optional<SabrParametricVolatility::ModelVariant>>(
+            config.strikeInterpolation(), sabrModelVariant,
+            std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
+                [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); }))) {
+        optVolType = outputVolType;
+        optDisplacement = outputDisplacement;
+    }
+
     if (onOpt) {
         // This is not pretty but can't think of a better way (with template functions and or classes)
         if (config.timeInterpolation() == "Linear") {
@@ -400,17 +418,15 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
                 }
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Linear, CubicFlat>>(
                     asof, transform(*optionletStripper));
-            } else if (tryParse(
-                           config.strikeInterpolation(), sabrModelVariant,
-                           std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
-                               [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); }))) {
+            } else if (sabrModelVariant) {
                 if (includeAtm) {
                     optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Linear, Linear>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
                 }
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<Linear>>(
-                    asof, transform(*optionletStripper), sabrModelVariant, Linear(), boost::none,
-                    initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                    asof, transform(*optionletStripper), *sabrModelVariant, Linear(), outputVolType, outputDisplacement,
+                    config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
+                    maxAcceptableError);
             } else {
                 QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -451,17 +467,15 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
                 }
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, CubicFlat>>(
                     asof, transform(*optionletStripper));
-            } else if (tryParse(
-                           config.strikeInterpolation(), sabrModelVariant,
-                           std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
-                               [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); }))) {
+            } else if (sabrModelVariant) {
                 if (includeAtm) {
                     optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<LinearFlat, Linear>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
                 }
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<LinearFlat>>(
-                    asof, transform(*optionletStripper), sabrModelVariant, LinearFlat(), boost::none,
-                    initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                    asof, transform(*optionletStripper), *sabrModelVariant, LinearFlat(), outputVolType, outputDisplacement,
+                    config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
+                    maxAcceptableError);
             } else {
                 QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -502,17 +516,15 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
                 }
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, CubicFlat>>(
                     asof, transform(*optionletStripper));
-            } else if (tryParse(
-                           config.strikeInterpolation(), sabrModelVariant,
-                           std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
-                               [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); }))) {
+            } else if (sabrModelVariant) {
                 if (includeAtm) {
                     optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<BackwardFlat, Linear>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
                 }
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<BackwardFlat>>(
-                    asof, transform(*optionletStripper), sabrModelVariant, BackwardFlat(), boost::none,
-                    initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                    asof, transform(*optionletStripper), *sabrModelVariant, BackwardFlat(), outputVolType, outputDisplacement,
+                    config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
+                    maxAcceptableError);
             } else {
                 QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -553,17 +565,15 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
                 }
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, CubicFlat>>(
                     asof, transform(*optionletStripper));
-            } else if (tryParse(
-                           config.strikeInterpolation(), sabrModelVariant,
-                           std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
-                               [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); }))) {
+            } else if (sabrModelVariant) {
                 if (includeAtm) {
                     optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<Cubic, Linear>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
                 }
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<Cubic>>(
-                    asof, transform(*optionletStripper), sabrModelVariant, Cubic(), boost::none, initialModelParameters,
-                    maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                    asof, transform(*optionletStripper), *sabrModelVariant, Cubic(), outputVolType, outputDisplacement,
+                    config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
+                    maxAcceptableError);
             }
             {
                 QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
@@ -605,17 +615,15 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
                 }
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, CubicFlat>>(
                     asof, transform(*optionletStripper));
-            } else if (tryParse(
-                           config.strikeInterpolation(), sabrModelVariant,
-                           std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
-                               [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); }))) {
+            } else if (sabrModelVariant) {
                 if (includeAtm) {
                     optionletStripper = QuantLib::ext::make_shared<OptionletStripperWithAtm<CubicFlat, Linear>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
                 }
                 capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<CubicFlat>>(
-                    asof, transform(*optionletStripper), sabrModelVariant, CubicFlat(), boost::none,
-                    initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                    asof, transform(*optionletStripper), *sabrModelVariant, CubicFlat(), outputVolType, outputDisplacement,
+                    config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
+                    maxAcceptableError);
             } else {
                 QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -851,6 +859,21 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
     VolatilityType volType = volatilityType(config.volatilityType());
     bool isOis = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(iborIndex) != nullptr;
 
+
+    VolatilityType outputVolType = volatilityType(config.outputVolatilityType());
+    Real outputDisplacement = 0.0;
+    if (outputVolType == QuantLib::ShiftedLognormal) {
+        outputDisplacement = config.outputShift() != Null<Real>() ? config.outputShift() : shift;
+    }
+
+    // convert to output vol type and shift, but not if we are calibrating to sabr, in which case
+    // the sabr surface will handle the conversion and the calibration is on the original vol type / shift
+    std::optional<SabrParametricVolatility::ModelVariant> sabrModelVariant;
+    tryParse<std::optional<SabrParametricVolatility::ModelVariant>>(
+        config.strikeInterpolation(), sabrModelVariant,
+        std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
+            [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); }));
+
     if (config.tenors()[0] == "*") {
         wildcardTenor = true;
     } else {
@@ -1025,8 +1048,6 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         config.settleDays(), config.calendar(), config.businessDayConvention(), iborIndex, fixingDates, strikes_vec,
         vols_vec, config.dayCounter(), volType, shift);
 
-    SabrParametricVolatility::ModelVariant sabrModelVariant;
-
     // This is not pretty but can't think of a better way (with template functions and or classes)
     if (config.timeInterpolation() == "Linear") {
         if (config.strikeInterpolation() == "Linear") {
@@ -1039,12 +1060,10 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         } else if (config.strikeInterpolation() == "CubicFlat") {
             capletVol_ =
                 QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Linear, CubicFlat>>(asof, optionletSurface);
-        } else if (tryParse(config.strikeInterpolation(), sabrModelVariant,
-                            std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
-                                [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); }))) {
+        } else if (sabrModelVariant) {
             capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<Linear>>(
-                asof, optionletSurface, sabrModelVariant, Linear(), boost::none, initialModelParameters,
-                maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                asof, optionletSurface, *sabrModelVariant, Linear(), outputVolType, outputDisplacement, config.modelShift(),
+                initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
         } else {
             QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -1062,12 +1081,11 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         } else if (config.strikeInterpolation() == "CubicFlat") {
             capletVol_ =
                 QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, CubicFlat>>(asof, optionletSurface);
-        } else if (tryParse(config.strikeInterpolation(), sabrModelVariant,
-                            std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
-                                [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); }))) {
+        } else if (sabrModelVariant) {
             capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<LinearFlat>>(
-                asof, optionletSurface, sabrModelVariant, LinearFlat(), boost::none, initialModelParameters,
-                maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                asof, optionletSurface, *sabrModelVariant, LinearFlat(), outputVolType, outputDisplacement,
+                config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
+                maxAcceptableError);
         } else {
             QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -1085,12 +1103,11 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         } else if (config.strikeInterpolation() == "CubicFlat") {
             capletVol_ =
                 QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, CubicFlat>>(asof, optionletSurface);
-        } else if (tryParse(config.strikeInterpolation(), sabrModelVariant,
-                            std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
-                                [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); }))) {
+        } else if (sabrModelVariant) {
             capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<BackwardFlat>>(
-                asof, optionletSurface, sabrModelVariant, BackwardFlat(), boost::none, initialModelParameters,
-                maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                asof, optionletSurface, *sabrModelVariant, BackwardFlat(), outputVolType, outputDisplacement,
+                config.modelShift(), initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold,
+                maxAcceptableError);
         } else {
             QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -1106,12 +1123,10 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         } else if (config.strikeInterpolation() == "CubicFlat") {
             capletVol_ =
                 QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, CubicFlat>>(asof, optionletSurface);
-        } else if (tryParse(config.strikeInterpolation(), sabrModelVariant,
-                            std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
-                                [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); }))) {
+        } else if (sabrModelVariant) {
             capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<Cubic>>(
-                asof, optionletSurface, sabrModelVariant, Cubic(), boost::none, initialModelParameters,
-                maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                asof, optionletSurface, *sabrModelVariant, Cubic(), outputVolType, outputDisplacement, config.modelShift(),
+                initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
         } else {
             QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -1129,12 +1144,10 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
         } else if (config.strikeInterpolation() == "CubicFlat") {
             capletVol_ =
                 QuantLib::ext::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, CubicFlat>>(asof, optionletSurface);
-        } else if (tryParse(config.strikeInterpolation(), sabrModelVariant,
-                            std::function<QuantExt::SabrParametricVolatility::ModelVariant(const std::string&)>(
-                                [](const std::string& s) { return parseSabrParametricVolatilityModelVariant(s); }))) {
+        } else if (sabrModelVariant) {
             capletVol_ = QuantLib::ext::make_shared<QuantExt::SabrStrippedOptionletAdapter<CubicFlat>>(
-                asof, optionletSurface, sabrModelVariant, CubicFlat(), boost::none, initialModelParameters,
-                maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                asof, optionletSurface, *sabrModelVariant, CubicFlat(), outputVolType, outputDisplacement, config.modelShift(),
+                initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
         } else {
             QL_FAIL("Optionlet vol config " << config.curveID() << " has unexpected strike interpolation "
                                             << config.strikeInterpolation());
@@ -1696,6 +1709,17 @@ void CapFloorVolCurve::logSABRParameters() const {
         DLOGGERSTREAM(p->calibrationError());
         DLOG("isInterpolated (1 means calibration failed and point is interpolated):");
         DLOGGERSTREAM(p->isInterpolated());
+        DLOG("SABR calibration results for individual strikes:");
+        DLOG("timeToExpiry,underlyingLength,forward,strike,marketInput,caibrationTarget,calibrationResult,error,"
+             "accepted");
+        for (auto const& c : p->calibrationResults()) {
+            for (std::size_t i = 0; i < c.strikes.size(); ++i) {
+                DLOG(c.timeToExpiry << "," << (c.underlyingLength == Null<Real>() ? 0.0 : c.underlyingLength) << ","
+                                    << c.forward << "," << c.strikes[i] << "," << c.marketInput[i] << ","
+                                    << c.calibrationTarget[i] << "," << c.calibrationResult[i] << "," << c.error << ","
+                                    << std::boolalpha << c.accepted);
+            }
+        }
     }
 }
 

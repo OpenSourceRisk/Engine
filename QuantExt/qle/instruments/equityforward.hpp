@@ -31,7 +31,7 @@
 #include <ql/money.hpp>
 #include <ql/position.hpp>
 #include <ql/quote.hpp>
-
+#include <qle/indexes/fxindex.hpp>
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -47,7 +47,7 @@ public:
     //@{
     EquityForward( //! Equity Name
         const std::string& name,
-        //! Currency
+        //! Currency of the underlying
         const Currency& currency,
         //! if true, we are long the forward
         const Position::Type& longShort,
@@ -56,7 +56,15 @@ public:
         //! Maturity date
         const Date& maturityDate,
         //! Strike
-        const Real& strike);
+        const Real& strike,
+        // Payment Date
+        const Date& payDate = Date(),
+        // Payment Currency
+        const Currency payCcy = Currency(),
+        // FX Index used for fx conversion
+        const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+        // Fixing Date for a fx conversion if paymentCurrency != currency
+        const Date& fixingDate = Date());
     //! \name Instrument interface
     //@{
     bool isExpired() const override;
@@ -71,6 +79,8 @@ public:
     Real quantity() const { return quantity_; }
     Date maturityDate() const { return maturityDate_; }
     Real strike() const { return strike_; }
+    Date payDate() const { return payDate_; }
+    QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex() const { return fxIndex_; }
     //@}
 private:
     // data members
@@ -80,6 +90,10 @@ private:
     Real quantity_;
     Date maturityDate_;
     Real strike_;
+    Date payDate_;
+    Currency payCcy_;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
+    Date fixingDate_;
 };
 
 //! \ingroup instruments
@@ -91,6 +105,10 @@ public:
     Real quantity;
     Date maturityDate;
     Real strike;
+    Date payDate;
+    Currency payCurrency;
+    QuantLib::ext::shared_ptr<FxIndex> fxIndex;
+    Date fixingDate;
     void validate() const override;
 };
 

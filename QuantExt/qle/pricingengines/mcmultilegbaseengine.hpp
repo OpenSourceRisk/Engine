@@ -118,7 +118,7 @@ protected:
     // results, these are read from derived engines
     mutable Real resultUnderlyingNpv_, resultValue_;
 
-private:
+
     static constexpr Real tinyTime = 1E-10;
 
     // data structure storing info needed to generate the amount for a cashflow
@@ -178,7 +178,7 @@ private:
                      const std::vector<size_t>& relevantPathIndex,
                      const std::vector<size_t>& relevantTimeIndex) override;
 
-    private:
+    protected:
         std::vector<Size> externalModelIndices_;
         Settlement::Type settlement_;
         std::set<Real> exerciseXvaTimes_;

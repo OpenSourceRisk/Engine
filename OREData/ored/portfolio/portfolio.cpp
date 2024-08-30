@@ -111,7 +111,13 @@ bool Portfolio::remove(const std::string& tradeID) {
 void Portfolio::removeMatured(const Date& asof) {
     for (auto it = trades_.begin(); it != trades_.end(); /* manual */) {
         if ((*it).second->isExpired(asof)) {
-            StructuredTradeWarningMessage((*it).second, "", "Trade is Matured").log();
+            std::ostringstream maturityDate;
+            maturityDate << (*it).second->maturity();
+            string maturityType = (*it).second->maturityType().empty()
+                ? "" : (*it).second->maturityType();
+            string message = "Trade is Matured. " + maturityType + " [" + maturityDate.str() +
+                             "]" + " is On or Before Valuation Date.";
+            StructuredTradeWarningMessage((*it).second, "", message).log();
             it=trades_.erase(it);
         } else {
             ++it;
@@ -231,9 +237,9 @@ map<string, RequiredFixings::FixingDates> Portfolio::fixings(const Date& settlem
 }
 
 std::map<AssetClass, std::set<std::string>>
-Portfolio::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) {
+Portfolio::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager, const bool useCache) {
 
-    if (!underlyingIndicesCache_.empty())
+    if (!underlyingIndicesCache_.empty() && useCache)
         return underlyingIndicesCache_;
 
     map<AssetClass, std::set<std::string>> result;
@@ -256,9 +262,9 @@ Portfolio::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManage
 
 std::set<std::string>
 Portfolio::underlyingIndices(AssetClass assetClass,
-                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) {
+                             const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager, const bool useCache) {
 
-    std::map<AssetClass, std::set<std::string>> indices = underlyingIndices(referenceDataManager);
+    std::map<AssetClass, std::set<std::string>> indices = underlyingIndices(referenceDataManager, useCache);
     auto it = indices.find(assetClass);
     if (it != indices.end()) {
         return it->second;

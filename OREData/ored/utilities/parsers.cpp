@@ -711,7 +711,7 @@ AssetClass parseAssetClass(const std::string& s) {
     static map<string, AssetClass> assetClasses = {{"EQ", AssetClass::EQ},     {"FX", AssetClass::FX},
                                                    {"COM", AssetClass::COM},   {"IR", AssetClass::IR},
                                                    {"INF", AssetClass::INF},   {"CR", AssetClass::CR},
-                                                   {"BOND", AssetClass::BOND}, {"BOND_INDEX", AssetClass::BOND_INDEX}};
+                                                   {"BOND", AssetClass::BOND}, {"BOND_INDEX", AssetClass::BOND_INDEX}, {"PORTFOLIO_DETAILS", AssetClass::PORTFOLIO_DETAILS}};
     auto it = assetClasses.find(s);
     if (it != assetClasses.end()) {
         return it->second;
@@ -738,6 +738,8 @@ std::ostream& operator<<(std::ostream& os, AssetClass a) {
         return os << "BOND";
     case AssetClass::BOND_INDEX:
         return os << "BOND_INDEX";
+    case AssetClass::PORTFOLIO_DETAILS:
+        return os << "PORTFOLIO_DETAILS";
     default:
         QL_FAIL("Unknown AssetClass");
     }
@@ -1505,6 +1507,42 @@ std::ostream& operator<<(std::ostream& os, Exercise::Type type) {
     } else {
         QL_FAIL("Exercise::Type (" << static_cast<int>(type)
                                    << " not recognized. Expected 'European', 'Bermudan', or 'American'.");
+    }
+
+    return os;
+}
+
+SalvagingAlgorithm::Type parseSalvagingAlgorithmType(const std::string& s) {
+    static map<string, SalvagingAlgorithm::Type> m = {{"None", SalvagingAlgorithm::None},
+                                                      {"Spectral", SalvagingAlgorithm::Spectral},
+                                                      {"Hypersphere", SalvagingAlgorithm::Hypersphere},
+                                                      {"LowerDiagonal", SalvagingAlgorithm::LowerDiagonal},
+                                                      {"Higham", SalvagingAlgorithm::Higham}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("SalvagingAlgorithm type \"" << s << "\" not recognized");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type) {
+
+    if (type == SalvagingAlgorithm::None) {
+        os << "None";
+    } else if (type == SalvagingAlgorithm::Spectral) {
+        os << "Spectral";
+    } else if (type == SalvagingAlgorithm::Hypersphere) {
+        os << "Hypersphere";
+    } else if (type == SalvagingAlgorithm::LowerDiagonal) {
+        os << "LowerDiagonal";
+    } else if (type == SalvagingAlgorithm::Higham) {
+        os << "Higham";
+    } else {
+        QL_FAIL("SalvagingAlgorithm::Type ("
+                << static_cast<int>(type)
+                << " not recognized. Expected 'None', 'Spectral', 'Hypersphere', 'LowerDiagonal', or 'Higham'.");
     }
 
     return os;

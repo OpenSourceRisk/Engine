@@ -115,6 +115,8 @@ public:
     Dimension dimension() const { return dimension_; }
     VolatilityType volatilityType() const { return volatilityType_; }
     VolatilityType outputVolatilityType() const { return outputVolatilityType_; }
+    const vector<Real>& modelShift() const { return modelShift_; }
+    const vector<Real>& outputShift() const { return outputShift_; }
     Interpolation interpolation() const { return interpolation_; }
     Extrapolation extrapolation() const { return extrapolation_; }
     const vector<string>& optionTenors() const { return optionTenors_; }
@@ -149,6 +151,8 @@ public:
     Dimension& dimension() { return dimension_; }
     VolatilityType& volatilityType() { return volatilityType_; }
     VolatilityType& outputVolatilityType() { return outputVolatilityType_; }
+    vector<Real>& modelShift() { return modelShift_; }
+    vector<Real>& outputShift() { return outputShift_; }
     Interpolation& interpolation() { return interpolation_; }
     Extrapolation& extrapolation() { return extrapolation_; }
     vector<string>& optionTenors() { return optionTenors_; }
@@ -175,6 +179,8 @@ private:
     Dimension dimension_ = Dimension::Smile;
     VolatilityType volatilityType_ = VolatilityType::Normal;
     VolatilityType outputVolatilityType_ = VolatilityType::Normal;
+    vector<double> modelShift_;
+    vector<double> outputShift_;
     Interpolation interpolation_ = Interpolation::Linear;
     Extrapolation extrapolation_ = Extrapolation::Flat;
     vector<string> optionTenors_, underlyingTenors_;

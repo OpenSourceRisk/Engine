@@ -416,12 +416,13 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                 // cashflow is written as expectation of deflated base ccy amount at T0, converted to flow ccy
                 // with the T0 FX Spot and compounded back to the pay date on T0 curves
                 Real fx = 1.0;
-                Real discount = 1.0;
+                Real discount = 0.0;
+                cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i));
                 if (paylog->dates().at(i) > model_->referenceDate()) {
                     fx = model_->getDirectFxSpotT0(paylog->currencies().at(i), model_->baseCcy());
                     discount = model_->getDirectDiscountT0(paylog->dates().at(i), paylog->currencies().at(i));
+                    cashFlowResults[i].amount /= fx * discount;
                 }
-                cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i)) / fx / discount;
                 cashFlowResults[i].payDate = paylog->dates().at(i);
                 cashFlowResults[i].currency = paylog->currencies().at(i);
                 cashFlowResults[i].legNumber = paylog->legNos().at(i);
