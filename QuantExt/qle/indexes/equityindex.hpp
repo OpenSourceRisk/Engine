@@ -31,7 +31,7 @@
 #include <ql/currency.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/dividendmanager.hpp>
-#include <qle/termstructures/equitydiscretedividendcurve.hpp>
+#include <qle/termstructures/equityannounceddividendcurve.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -49,7 +49,7 @@ public:
                 const Handle<Quote> spotQuote = Handle<Quote>(),
                 const Handle<YieldTermStructure>& rate = Handle<YieldTermStructure>(),
                 const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>(),
-                const Handle<EquityDiscreteDividendCurve>& discreteDividend = Handle<EquityDiscreteDividendCurve>());
+                const Handle<EquityAnnouncedDividendCurve>& discreteDividend = Handle<EquityAnnouncedDividendCurve>());
     //! \name Index interface
     //@{
     std::string name() const override;
@@ -79,7 +79,7 @@ public:
     const Handle<Quote>& equitySpot() const { return spotQuote_; }
     const Handle<YieldTermStructure>& equityForecastCurve() const { return rate_; }
     const Handle<YieldTermStructure>& equityDividendCurve() const { return dividend_; }
-    const Handle<EquityDiscreteDividendCurve>& discreteDividendCurve() const { return discreteDividend_; }
+    const Handle<EquityAnnouncedDividendCurve>& announcedDividendCurve() const { return announcedDividend_; }
     //@}
     //! \name Fixing calculations
     //@{
@@ -92,13 +92,14 @@ public:
     //! \name Additional methods
     //@{
     virtual QuantLib::ext::shared_ptr<EquityIndex2> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
-          const Handle<YieldTermStructure>& dividend, const Handle<EquityDiscreteDividendCurve>& discreteDividend) const;
+          const Handle<YieldTermStructure>& dividend,
+          const Handle<EquityAnnouncedDividendCurve>& announcedDividend) const;
     // @}
 protected:
     std::string familyName_;
     Currency currency_;
     const Handle<YieldTermStructure> rate_, dividend_;
-    const Handle<EquityDiscreteDividendCurve> discreteDividend_;
+    const Handle<EquityAnnouncedDividendCurve> announcedDividend_;
     std::string name_;
     const Handle<Quote> spotQuote_;
 

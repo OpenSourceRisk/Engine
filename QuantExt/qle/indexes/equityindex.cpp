@@ -29,15 +29,15 @@ namespace QuantExt {
 
 EquityIndex2::EquityIndex2(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency,
                          const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
-                         const Handle<YieldTermStructure>& dividend, const Handle<EquityDiscreteDividendCurve>& discreteDividend)
-    : familyName_(familyName), currency_(currency), rate_(rate), dividend_(dividend), discreteDividend_(discreteDividend),
+                         const Handle<YieldTermStructure>& dividend, const Handle<EquityAnnouncedDividendCurve>& discreteDividend)
+    : familyName_(familyName), currency_(currency), rate_(rate), dividend_(dividend), announcedDividend_(discreteDividend),
       spotQuote_(spotQuote), fixingCalendar_(fixingCalendar) {
 
     name_ = familyName;
     registerWith(spotQuote_);
     registerWith(rate_);
     registerWith(dividend_);
-    registerWith(discreteDividend_);
+    registerWith(announcedDividend_);
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
 }
@@ -98,10 +98,14 @@ Real EquityIndex2::forecastFixing(const Time& fixingTime, bool incDividend) cons
     if (incDividend) {
         forward = price / rate_->discount(fixingTime);
     } else {
-        Real discreteDividend = 0.0;
-        if (!discreteDividend_.empty())
-            discreteDividend = discreteDividend_->accumulatedDividends(fixingTime);
-        forward = price * dividend_->discount(fixingTime) / rate_->discount(fixingTime) - discreteDividend;
+        Real announcedDividendT0 = 0.0;
+        Real announcedDividend = 0.0;
+        if (!announcedDividend_.empty()) {
+            announcedDividendT0 = announcedDividend_->discountedFutureDividends(0.0);
+            announcedDividend = announcedDividend_->discountedFutureDividends(fixingTime);
+        }
+        forward = (price - announcedDividendT0) * dividend_->discount(fixingTime) / rate_->discount(fixingTime) +
+                  announcedDividend;
     }
     return forward;
 }
@@ -140,7 +144,8 @@ Real EquityIndex2::dividendsBetweenDates(const Date& startDate, const Date& endD
 }
 
 QuantLib::ext::shared_ptr<EquityIndex2> EquityIndex2::clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
-    const Handle<YieldTermStructure>& dividend, const Handle<EquityDiscreteDividendCurve>& discreteDividend) const {
+                    const Handle<YieldTermStructure>& dividend,
+                    const Handle<EquityAnnouncedDividendCurve>& discreteDividend) const {
     return QuantLib::ext::make_shared<EquityIndex2>(familyName(), fixingCalendar(), currency(), spotQuote, rate, dividend, discreteDividend);
 }
 

@@ -285,7 +285,7 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_
         Real spotVal = eqCurve->equitySpot()->value();
         Handle<Quote> divSpot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spotVal));
         eqCurve = eqCurve->clone(divSpot, eqCurve->equityForecastCurve(), eqCurve->equityDividendCurve(),
-                                 eqCurve->discreteDividendCurve());
+                                 eqCurve->announcedDividendCurve());
     }
 
     Currency dataCurrency = parseCurrencyWithMinors(data.currency());

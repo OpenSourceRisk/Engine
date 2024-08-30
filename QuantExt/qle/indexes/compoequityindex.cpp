@@ -72,8 +72,8 @@ Real CompoEquityIndex::pastFixing(const Date& fixingDate) const {
 
 QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> CompoEquityIndex::clone(const Handle<Quote> spotQuote,
     const Handle<YieldTermStructure>& rate, const Handle<YieldTermStructure>& dividend,
-    const Handle<EquityDiscreteDividendCurve>& discreteDividend) const {
-    return QuantLib::ext::make_shared<CompoEquityIndex>(source_->clone(spotQuote, rate, dividend, discreteDividend),
+                        const Handle<EquityAnnouncedDividendCurve>& announcedDividend) const {
+    return QuantLib::ext::make_shared<CompoEquityIndex>(source_->clone(spotQuote, rate, dividend, announcedDividend),
                                                         fxIndex_);
 }
 

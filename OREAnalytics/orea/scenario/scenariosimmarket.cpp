@@ -598,7 +598,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         QuantLib::ext::shared_ptr<EquityIndex2> ei(
                             curve->clone(equitySpot(name, configuration), forecastTs,
-                                         yieldCurve(YieldCurveType::EquityDividend, name, configuration), curve->discreteDividendCurve()));
+                                         yieldCurve(YieldCurveType::EquityDividend, name, configuration), curve->announcedDividendCurve()));
                         Handle<EquityIndex2> eh(ei);
                         equityCurves_.insert(make_pair(make_pair(Market::defaultConfiguration, name), eh));
                     } catch (const std::exception& e) {

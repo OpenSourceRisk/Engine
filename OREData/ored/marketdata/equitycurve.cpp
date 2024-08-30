@@ -27,7 +27,7 @@
 #include <ql/termstructures/yield/zerocurve.hpp>
 #include <qle/indexes/dividendmanager.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
-#include <qle/termstructures/equitydiscretedividendcurve.hpp>
+#include <qle/termstructures/equityannounceddividendcurve.hpp>
 #include <qle/termstructures/flatforwarddividendcurve.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 
@@ -384,7 +384,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                     dividends.insert(*fd);            
         }
 
-        Handle<EquityDiscreteDividendCurve> discreteDividendCurve;
+        Handle<EquityAnnouncedDividendCurve> announcedDividendCurve;
 
         // Build the Dividend Yield curve from the quotes loaded
         vector<Rate> dividendRates;
@@ -393,8 +393,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             buildCurveType == EquityCurveConfig::Type::OptionPremium ||
             buildCurveType == EquityCurveConfig::Type::NoDividends) {
 
-            discreteDividendCurve = Handle<EquityDiscreteDividendCurve>(
-                ext::make_shared<EquityDiscreteDividendCurve>(asof, dividends, calendar, dc_));
+            announcedDividendCurve = Handle<EquityAnnouncedDividendCurve>(ext::make_shared<EquityAnnouncedDividendCurve>(
+                asof, dividends, forecastYieldTermStructure, calendar, dc_));
 
             if (buildCurveType == EquityCurveConfig::Type::NoDividends) {
                 DLOG("Building flat Equity Dividend Yield curve as no quotes provided");
@@ -403,19 +403,22 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                     Handle<YieldTermStructure>(ext::make_shared<FlatForward>(asof, 0.0, dc_));
                 equityIndex_ = ext::make_shared<EquityIndex2>(
                     spec.curveConfigID(), calendar, parseCurrency(config->currency()), equitySpot,
-                    forecastYieldTermStructure, dividendYieldTermStructure, discreteDividendCurve);
+                    forecastYieldTermStructure, dividendYieldTermStructure, announcedDividendCurve);
                 return;
             } else {
                 // Convert Fwds into dividends.
-                // Fwd = Spot e^{(r-q)T} - D
-                // => q = 1/T Log(Spot/(Fwd + D)) + r
+                // Fwd = (Spot - A_0) e^{(r-q)T} + A_t 
+                // A_t is the discounted announed dividend at t
+                // => q = 1/T Log(Spot - A_0/(Fwd - A_t)) + r
+                Real announcedDividendT0 = announcedDividendCurve->discountedFutureDividends(0);
                 for (Size i = 0; i < quotes_.size(); i++) {
                     QL_REQUIRE(quotes_[i] > 0, "Invalid Forward Price " << quotes_[i] << " for " << spec_.name()
                                                                         << ", expiry: " << terms_[i]);
                     Time t = dc_.yearFraction(asof, terms_[i]);
                     Rate ir = forecastYieldTermStructure->zeroRate(t, Continuous);
-                    Real discreteDividend = discreteDividendCurve->accumulatedDividends(t);
-                    dividendRates.push_back(::log(equitySpot->value() / (quotes_[i] + discreteDividend)) / t + ir);
+                    Real announcedDividend = announcedDividendCurve->discountedFutureDividends(t);
+                    dividendRates.push_back(
+                        ::log((equitySpot->value() - announcedDividendT0) / (quotes_[i] - announcedDividend)) / t + ir);
                 }
             }
         } else if (buildCurveType == EquityCurveConfig::Type::DividendYield) {
@@ -486,7 +489,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
         equityIndex_ =
             QuantLib::ext::make_shared<EquityIndex2>(spec.curveConfigID(), calendar, parseCurrency(config->currency()), equitySpot, 
-                forecastYieldTermStructure, dividendYieldTermStructure, discreteDividendCurve);
+                forecastYieldTermStructure, dividendYieldTermStructure, announcedDividendCurve);
 
         if (buildCalibrationInfo) {
 
