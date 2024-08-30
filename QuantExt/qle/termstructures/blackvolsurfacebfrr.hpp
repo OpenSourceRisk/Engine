@@ -42,7 +42,7 @@ class SimpleDeltaInterpolatedSmile;
 
 class BlackVolatilitySurfaceBFRR : public  BlackVolatilityTermStructure, public LazyObject {
 public:
-    enum class SmileInterpolation { Linear, Cubic };
+    enum class SmileInterpolation { Linear = 1, Cubic = 2 };
     enum class TimeInterpolation { V, V2T };
 
     BlackVolatilitySurfaceBFRR(
@@ -152,9 +152,11 @@ public:
                                  const Real accuracy = 1E-6, const Size maxIterations = 1000);
 
     Real volatility(const Real strike);
+    Real volatilityAtSimpleDelta(const Real simpleDelta);
     Real strikeFromDelta(const Option::Type type, const Real delta, const DeltaVolQuote::DeltaType dt);
     Real atmStrike(const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at);
     Real simpleDeltaFromStrike(const Real strike) const;
+    BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation() const;
 
 private:
 

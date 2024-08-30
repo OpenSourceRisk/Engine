@@ -194,11 +194,22 @@ Real SimpleDeltaInterpolatedSmile::volatility(const Real strike) {
     return tmp;
 }
 
+Real SimpleDeltaInterpolatedSmile::volatilityAtSimpleDelta(const Real simpleDelta) {
+    Real tmp = untransformVol((*interpolation_)(simpleDelta));
+    QL_REQUIRE(std::isfinite(tmp), "SimpleDeltaInterpolatedSmile::volatilityAtSimpleDelta() non-finite result ("
+                                       << tmp << ") for simple delta " << simpleDelta);
+    return tmp;
+}
+
 Real SimpleDeltaInterpolatedSmile::simpleDeltaFromStrike(const Real strike) const {
     if (close_enough(strike, 0.0))
         return 0.0;
     CumulativeNormalDistribution Phi;
     return Phi(std::log(strike / forward_) / (std::max(atmVol_, 0.1) * std::sqrt(expiryTime_)));
+}
+
+BlackVolatilitySurfaceBFRR::SmileInterpolation SimpleDeltaInterpolatedSmile::smileInterpolation() const {
+    return smileInterpolation_;
 }
 
 } // namespace detail
@@ -476,6 +487,14 @@ QuantLib::ext::shared_ptr<detail::SimpleDeltaInterpolatedSmile> BlackVolatilityS
 
         resultSmile = targetFunction.bestSmile;
     }
+
+    static const std::vector<Real> samplePoints = {0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 0.9, 0.95, 0.99};
+    for (auto const& simpleDelta : samplePoints) {
+        Real vol = resultSmile->volatilityAtSimpleDelta(simpleDelta);
+        QL_REQUIRE(vol < 5.0, "createSmile at expiry " << expiryTime << ": volatility at simple delta " << simpleDelta
+                                                       << " (" << vol << ") is not plausible.");
+    }
+
     return resultSmile;
 }
 
@@ -728,14 +747,24 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
     Date optionDate = lowerDate(t, referenceDate(), dayCounter());
     Date settlDate = spotCalendar_.advance(optionDate, spotDays_ * Days);
 
+    SmileInterpolation minimalSmileInterpolation = SmileInterpolation::Cubic;
+    if(index_p != Null<Size>()) {
+        minimalSmileInterpolation = static_cast<SmileInterpolation>(std::min(
+            static_cast<int>(minimalSmileInterpolation), static_cast<int>(smiles_[index_p]->smileInterpolation())));
+    }
+    if(index_m != Null<Size>()) {
+        minimalSmileInterpolation = static_cast<SmileInterpolation>(std::min(
+            static_cast<int>(minimalSmileInterpolation), static_cast<int>(smiles_[index_m]->smileInterpolation())));
+    }
+
     try {
         smile = QuantLib::ext::make_shared<detail::SimpleDeltaInterpolatedSmile>(
             spot_->value(), domesticTS_->discount(settlDate) / settlDomDisc_,
             foreignTS_->discount(settlDate) / settlForDisc_, t, currentDeltas_, putVols_i, callVols_i, atmVol_i, dt_c,
-            at_c, smileInterpolation_);
+            at_c, minimalSmileInterpolation);
     } catch (const std::exception& e) {
         Size failureIndex = index_m != Null<Size>() ? index_m : index_p;
-        if (smileInterpolation_ != SmileInterpolation::Linear) {
+        if (minimalSmileInterpolation != SmileInterpolation::Linear) {
             smileHasWarning_[failureIndex] = true;
             smileMessages_[failureIndex].push_back(std::string(e.what()) + " - will retry with linear interpolation.");
             try {
