@@ -27,7 +27,6 @@ app/analytics/pnlexplainanalytic.cpp
 app/analytics/portfoliodetailsanalytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/scenarioanalytic.cpp
-app/analytics/scenarionpvanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
 app/analytics/simmanalytic.cpp
 app/analytics/stresstestanalytic.cpp
@@ -196,7 +195,6 @@ app/analytics/pnlexplainanalytic.hpp
 app/analytics/portfoliodetailsanalytic.hpp
 app/analytics/pricinganalytic.hpp
 app/analytics/scenarioanalytic.hpp
-app/analytics/scenarionpvanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
 app/analytics/simmanalytic.hpp
 app/analytics/stresstestanalytic.hpp

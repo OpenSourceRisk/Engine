@@ -42,15 +42,15 @@ public:
     }
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
-    virtual void setUpConfigurations() override;
+    void setUpConfigurations() override;
 
     void checkConfigurations(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
 
 protected:
     QuantLib::ext::shared_ptr<ore::data::EngineFactory> engineFactory() override;
-    virtual void buildScenarioSimMarket();
-    virtual void buildCrossAssetModel(bool continueOnError);
-    virtual void buildScenarioGenerator(bool continueOnError);
+    void buildScenarioSimMarket();
+    void buildCrossAssetModel(bool continueOnError);
+    void buildScenarioGenerator(bool continueOnError);
 
     void initCubeDepth();
     void initCube(QuantLib::ext::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth);

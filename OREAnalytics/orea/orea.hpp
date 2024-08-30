@@ -32,7 +32,6 @@
 #include <orea/app/analytics/portfoliodetailsanalytic.hpp>
 #include <orea/app/analytics/pricinganalytic.hpp>
 #include <orea/app/analytics/scenarioanalytic.hpp>
-#include <orea/app/analytics/scenarionpvanalytic.hpp>
 #include <orea/app/analytics/scenariostatisticsanalytic.hpp>
 #include <orea/app/analytics/simmanalytic.hpp>
 #include <orea/app/analytics/stresstestanalytic.hpp>

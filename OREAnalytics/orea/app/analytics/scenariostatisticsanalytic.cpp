@@ -138,7 +138,7 @@ void ScenarioStatisticsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr
     if (inputs_->scenarioOutputStatistics()) {
         auto statsReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         scenarioGenerator->reset();
-        ReportWriter().writeScenarioStatistics(scenarioGenerator, keys, samples_, grid_->valuationDates(),
+        ReportWriter().writeScenarioStatistics(scenarioGenerator, keys, samples_, grid_->dates(),
                                                *statsReport);
         analytic()->reports()["SCENARIO_STATISTICS"]["scenario_statistics"] = statsReport;
     }
@@ -146,14 +146,14 @@ void ScenarioStatisticsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr
     if (inputs_->scenarioOutputDistributions()) {
         auto distributionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         scenarioGenerator->reset();
-        ReportWriter().writeScenarioDistributions(scenarioGenerator, keys, samples_, grid_->valuationDates(),
+        ReportWriter().writeScenarioDistributions(scenarioGenerator, keys, samples_, grid_->dates(),
                                                   inputs_->scenarioDistributionSteps(), *distributionReport);
         analytic()->reports()["SCENARIO_STATISTICS"]["scenario_distribution"] = distributionReport;
     }
 
     // if we just want to write out scenarios, loop over the samples/dates and the ScenarioWriter handles the output
     if (!(inputs_->scenarioOutputDistributions() || inputs_->scenarioOutputStatistics())) {
-        const auto& dates = grid_->valuationDates();
+        const auto& dates = grid_->dates();
         for (Size i = 0; i < samples_; ++i) {
             for (Size d = 0; d < dates.size(); ++d)
                 scenarioGenerator->next(dates[d]);            
