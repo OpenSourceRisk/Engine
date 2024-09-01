@@ -38,7 +38,7 @@ public:
         : CrossCurrencySwapEngineBuilderBase("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
 
 protected:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base) override;
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base, bool) override;
 
 private:
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
