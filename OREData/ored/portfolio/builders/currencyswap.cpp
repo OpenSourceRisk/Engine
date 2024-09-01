@@ -39,7 +39,7 @@ struct CcyComp {
 } // namespace
 
 QuantLib::ext::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys,
-                                                                             const Currency& base) {
+                                                                             const Currency& base, bool) {
 
     std::set<Currency, CcyComp> allCurrencies(ccys.begin(), ccys.end());
     allCurrencies.insert(base);
