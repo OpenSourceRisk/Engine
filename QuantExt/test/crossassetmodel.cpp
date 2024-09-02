@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 // clang-format on
+#include <qle/indexes/equityindex.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
@@ -3301,7 +3302,9 @@ struct IrFxEqModelTestData {
           eqDivSp(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.01, Actual365Fixed())),
           eqDivLh(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.0075, Actual365Fixed())),
           usdEurSpotToday(QuantLib::ext::make_shared<SimpleQuote>(0.90)), eurEurSpotToday(QuantLib::ext::make_shared<SimpleQuote>(1.0)),
-          spSpotToday(QuantLib::ext::make_shared<SimpleQuote>(2100)), lhSpotToday(QuantLib::ext::make_shared<SimpleQuote>(12.50)) {
+          spSpotToday(QuantLib::ext::make_shared<SimpleQuote>(2100)), lhSpotToday(QuantLib::ext::make_shared<SimpleQuote>(12.50)), 
+          eqIndSp(QuantLib::ext::make_shared<EquityIndex2>("SP", UnitedStates(UnitedStates::Settlement), USDCurrency(), spSpotToday, usdYts, eqDivSp)),
+          eqIndLh(QuantLib::ext::make_shared<EquityIndex2>("LH", TARGET(), EURCurrency(), lhSpotToday, eurYts, eqDivLh)) {
 
         SavedSettings backup;
 
@@ -3448,6 +3451,7 @@ struct IrFxEqModelTestData {
     Handle<YieldTermStructure> eurYts, usdYts;
     Handle<YieldTermStructure> eqDivSp, eqDivLh;
     Handle<Quote> usdEurSpotToday, eurEurSpotToday, spSpotToday, lhSpotToday;
+    Handle<EquityIndex2> eqIndSp, eqIndLh;
     std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
     QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact, ccLgmEuler;
     Size eurIdx, usdIdx, eurUsdIdx, eqSpIdx, eqLhIdx;
@@ -3553,9 +3557,9 @@ BOOST_AUTO_TEST_CASE(testEqLgm5fPayouts) {
                                           QuantLib::ext::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
 
     QuantLib::ext::shared_ptr<DiscountingEquityForwardEngine> lhFwdEngine =
-        QuantLib::ext::make_shared<DiscountingEquityForwardEngine>(d.eurYts, d.eqDivLh, d.lhSpotToday, d.eurYts);
+        QuantLib::ext::make_shared<DiscountingEquityForwardEngine>(d.eqIndLh, d.eurYts);
     QuantLib::ext::shared_ptr<DiscountingEquityForwardEngine> spFwdEngine =
-        QuantLib::ext::make_shared<DiscountingEquityForwardEngine>(d.usdYts, d.eqDivSp, d.spSpotToday, d.usdYts);
+        QuantLib::ext::make_shared<DiscountingEquityForwardEngine>(d.eqIndSp, d.usdYts);
 
     lhFwdTrade->setPricingEngine(lhFwdEngine);
     spFwdTrade->setPricingEngine(spFwdEngine);
