@@ -83,7 +83,7 @@ SimmCalculator::SimmCalculator(const QuantLib::ext::shared_ptr<ore::analytics::C
       market_(market), quiet_(quiet), hasSEC_(hasSEC) {
 
     if (!crif) {
-        WLOG("IMScheduleCalculator(): CRIF input is empty");
+        WLOG("SimmCalculator(): CRIF input is null");
         return;
     }
 
