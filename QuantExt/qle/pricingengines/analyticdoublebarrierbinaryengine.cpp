@@ -39,9 +39,10 @@ void AnalyticDoubleBarrierBinaryEngine::calculate() const {
     if (flipResults_) {
         // Invert spot, costOfCarry
         auto it = results_.additionalResults.find("spot");
-        if (it != results_.additionalResults.end())
+        if (it != results_.additionalResults.end()) {
             results_.additionalResults["spot_pricing"] = it->second;
             it->second = 1. / boost::any_cast<Real>(it->second);
+        }
         it = results_.additionalResults.find("costOfCarry");
         if (it != results_.additionalResults.end())
             it->second = -1. * boost::any_cast<Real>(it->second);

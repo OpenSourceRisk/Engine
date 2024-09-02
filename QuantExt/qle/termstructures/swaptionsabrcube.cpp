@@ -92,6 +92,7 @@ void SwaptionSabrCube::performCalculations() const {
     }
 
     outputShiftInt_ = LinearInterpolation(outputShiftX_.begin(), outputShiftX_.end(), outputShiftY_.begin());
+    outputShiftInt_.enableExtrapolation();
 
     std::vector<Matrix> interpolatedVolSpreads(strikeSpreads_.size(),
                                                Matrix(allSwapLengths.size(), allOptionTimes.size(), Null<Real>()));

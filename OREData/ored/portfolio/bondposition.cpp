@@ -91,6 +91,8 @@ void BondPosition::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactor
         weights_.push_back(u.weight());
         bidAskAdjustments_.push_back(u.bidAskAdjustment());
         maturity_ = std::max(bonds_.back().bond->maturityDate(), maturity_);
+        if (maturity_ == bonds_.back().bond->maturityDate())
+            maturityType_ = "Bond Maturity Date";
     }
 
     // get fx quotes

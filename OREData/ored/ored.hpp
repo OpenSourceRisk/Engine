@@ -405,9 +405,7 @@
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
-#include <ored/utilities/serializationdate.hpp>
 #include <ored/utilities/serializationdaycounter.hpp>
-#include <ored/utilities/serializationperiod.hpp>
 #include <ored/utilities/strike.hpp>
 #include <ored/utilities/timeperiod.hpp>
 #include <ored/utilities/timer.hpp>

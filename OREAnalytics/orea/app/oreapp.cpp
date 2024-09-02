@@ -26,6 +26,7 @@
 #endif
 
 #include <orea/app/cleanupsingletons.hpp>
+#include <orea/app/marketdatabinaryloader.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
 #include <orea/app/marketdatainmemoryloader.hpp>
 #include <orea/app/oreapp.hpp>
@@ -246,9 +247,13 @@ void OREApp::analytics() {
         InstrumentConventions::instance().setConventions(inputs_->conventions());
 
         // Create a market data loader that reads market data, fixings, dividends from csv files
-        auto csvLoader = buildCsvLoader(params_);
-        auto loader = QuantLib::ext::make_shared<MarketDataCsvLoader>(inputs_, csvLoader);
-
+        QuantLib::ext::shared_ptr<MarketDataLoader> loader;
+        if (!inputs_->marketDataLoaderInput().empty()) {
+            loader = QuantLib::ext::make_shared<MarketDataBinaryLoader>(inputs_, inputs_->marketDataLoaderInput());
+        } else {
+            auto csvLoader = buildCsvLoader(params_);
+            loader = QuantLib::ext::make_shared<MarketDataCsvLoader>(inputs_, csvLoader);
+        }
         // Create the analytics manager
         analyticsManager_ = QuantLib::ext::make_shared<AnalyticsManager>(inputs_, loader);
         LOG("Available analytics: " << to_string(analyticsManager_->validAnalytics()));
@@ -451,8 +456,7 @@ void OREApp::run() {
     runTimer_.start();
     
     try {
-        if (structuredLogger_ != nullptr) 
-            structuredLogger_->clear();
+        structuredLogger_->clear();
         analytics();
     } catch (std::exception& e) {
         StructuredAnalyticsWarningMessage("OREApp::run()", "Error", e.what()).log();
@@ -565,6 +569,8 @@ void OREApp::setupLog(Size mask, const std::string& path, const std::string& fil
         Log::instance().switchOn();
         auto progressLogger = QuantLib::ext::make_shared<ProgressLogger>(progressLogToConsole);
         Log::instance().registerIndependentLogger(progressLogger);
+        structuredLogger_ = QuantLib::ext::make_shared<StructuredLogger>();
+        Log::instance().registerIndependentLogger(structuredLogger_);
 
         return;
     }
@@ -799,6 +805,12 @@ void OREAppInputParameters::loadParameters() {
         QL_REQUIRE(tmp.size() == 1, "csvSeparator must be exactly one character");
         setCsvSeparator(tmp[0]);
     }
+    
+    if (params_->has("setup", "marketDataLoaderOutput"))
+        setMarketDataLoaderOutput(params_->get("setup", "marketDataLoaderOutput"));
+    
+    if (params_->has("setup", "marketDataLoaderInput"))
+        setMarketDataLoaderInput(params_->get("setup", "marketDataLoaderInput"));
 
     /*************
      * NPV

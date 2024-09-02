@@ -319,6 +319,7 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     // Keep this comment about the maturity date being the underlying maturity instead of the option expiry.
     // [RL] Align option product maturities with ISDA AANA/GRID guidance as of November 2020.
     maturity_ = cds->coupons().back()->date();
+    maturityType_ = "Underlying Maturity";
 
     // Set Trade members _before_ possibly adding the premium payment below.
     legs_ = {cds->coupons()};
@@ -333,9 +334,12 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
     string configuration = iCdsOptionEngineBuilder->configuration(MarketContext::pricing);
-    maturity_ =
-        std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
-                                        option_.premiumData(), -indicatorLongShort, ccy, engineFactory, configuration));
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, indicatorLongShort,
+                                       option_.premiumData(), -indicatorLongShort, ccy, engineFactory,
+                                       configuration);
+    maturity_ = std::max(maturity_, lastPremiumDate);
+    if (maturity_ == lastPremiumDate)
+        maturityType_ = "Last Premium Date";
 
     // Instrument wrapper depends on the settlement type.
     // The instrument build should be indpednent of the evaluation date. However, the general behavior

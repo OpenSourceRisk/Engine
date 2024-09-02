@@ -138,6 +138,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     legPayers_ = {firstLegIsPayer};
     Currency currency = parseCurrency(currency_);
     maturity_ = bond->cashflows().back()->date();
+    maturityType_ = "Bond Cashflow Date";
     notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
 
     // first ctor is for vanilla fwd bonds, second for tlocks with a lock rate specifying the payoff

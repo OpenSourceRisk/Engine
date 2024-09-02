@@ -45,6 +45,7 @@ struct string_cmp {
 // Ease the notation below
 template <typename T> using bm = boost::bimap<T, boost::bimaps::set_of<std::string, string_cmp>>;
 
+// clang-format off
 // Initialise the bimaps
 const bm<RiskType> riskTypeMap = boost::assign::list_of<bm<RiskType>::value_type>(
     RiskType::Commodity, "Risk_Commodity")
@@ -120,9 +121,10 @@ const bm<Regulation> regulationsMap = boost::assign::list_of<bm<Regulation>::val
     Regulation::USPR, "USPR")(Regulation::NONREG, "NONREG")(
     Regulation::BACEN, "BACEN")(Regulation::SANT, "SANT")(
     Regulation::SFC, "SFC")(Regulation::UK, "UK")(
-    Regulation::AMFQ, "AMFQ")(Regulation::Included, "Included")(
-    Regulation::Unspecified, "Unspecified")(Regulation::Excluded, "Excluded")(
-    Regulation::Invalid, "Invalid");
+    Regulation::AMFQ, "AMFQ")(Regulation::BANX, "BANX")(
+    Regulation::Included, "Included")(Regulation::Unspecified, "Unspecified")(
+    Regulation::Excluded, "Excluded")(Regulation::Invalid, "Invalid");
+// clang-format on
 
 ostream& operator<<(ostream& out, const RiskType& rt) {
     QL_REQUIRE(riskTypeMap.left.count(rt) > 0,
@@ -195,8 +197,7 @@ set<Regulation> parseRegulationString(const string& regsString,
         return regs;
 }
 
-set<Regulation> removeRegulations(const set<Regulation>& regs,
-                                              const set<Regulation>& regsToRemove) {
+set<Regulation> removeRegulations(const set<Regulation>& regs, const set<Regulation>& regsToRemove) {
 
     set<Regulation> newRegs;
 
@@ -206,8 +207,7 @@ set<Regulation> removeRegulations(const set<Regulation>& regs,
     return newRegs;
 }
 
-set<Regulation> filterRegulations(const set<Regulation>& regs,
-                                              const set<Regulation>& regsToFilter) {
+set<Regulation> filterRegulations(const set<Regulation>& regs, const set<Regulation>& regsToFilter) {
     set<Regulation> newRegs;
 
     std::copy_if(regs.begin(), regs.end(), std::inserter(newRegs, newRegs.end()),
