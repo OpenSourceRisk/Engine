@@ -17,14 +17,14 @@
 */
 
 #include <boost/algorithm/string.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/vector.hpp>
 #include <ored/marketdata/inmemoryloader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/set.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -35,14 +35,14 @@ namespace data {
 namespace {
 QuantLib::ext::shared_ptr<MarketDatum> makeDummyMarketDatum(const Date& d, const std::string& name) {
     return QuantLib::ext::make_shared<MarketDatum>(0.0, d, name, MarketDatum::QuoteType::NONE,
-                                           MarketDatum::InstrumentType::NONE);
+                                                   MarketDatum::InstrumentType::NONE);
 }
 } // namespace
 
 std::vector<QuantLib::ext::shared_ptr<MarketDatum>> InMemoryLoader::loadQuotes(const QuantLib::Date& d) const {
     auto it = data_.find(d);
-    if(it == data_.end())
-	return {};
+    if (it == data_.end())
+        return {};
     return std::vector<QuantLib::ext::shared_ptr<MarketDatum>>(it->second.begin(), it->second.end());
 }
 
@@ -55,9 +55,9 @@ QuantLib::ext::shared_ptr<MarketDatum> InMemoryLoader::get(const string& name, c
 }
 
 std::set<QuantLib::ext::shared_ptr<MarketDatum>> InMemoryLoader::get(const std::set<std::string>& names,
-                                                             const QuantLib::Date& asof) const {
+                                                                     const QuantLib::Date& asof) const {
     auto it = data_.find(asof);
-    if(it == data_.end())
+    if (it == data_.end())
         return {};
     std::set<QuantLib::ext::shared_ptr<MarketDatum>> result;
     for (auto const& n : names) {
@@ -69,7 +69,7 @@ std::set<QuantLib::ext::shared_ptr<MarketDatum>> InMemoryLoader::get(const std::
 }
 
 std::set<QuantLib::ext::shared_ptr<MarketDatum>> InMemoryLoader::get(const Wildcard& wildcard,
-                                                             const QuantLib::Date& asof) const {
+                                                                     const QuantLib::Date& asof) const {
     if (!wildcard.hasWildcard()) {
         // no wildcard => use get by name function
         try {
@@ -121,9 +121,9 @@ void InMemoryLoader::add(QuantLib::Date date, const string& name, QuantLib::Real
                 auto it = data_[date].find(makeDummyMarketDatum(date, addFX.second));
                 TLOG("Replacing MarketDatum " << addFX.second << " with " << name << " due to FX Dominance.");
                 if (it != data_[date].end())
-					data_[date].erase(it);
-			}
-		}
+                    data_[date].erase(it);
+            }
+        }
         if (addFX.first && data_[date].insert(md).second) {
             TLOG("Added MarketDatum " << name);
         } else if (!addFX.first) {
@@ -142,7 +142,8 @@ void InMemoryLoader::addFixing(QuantLib::Date date, const string& name, QuantLib
 
 void InMemoryLoader::addDividend(const QuantExt::Dividend& dividend) {
     if (!dividends_.insert(dividend).second) {
-        WLOG("Skipped Dividend " << dividend.name << "@" << QuantLib::io::iso_date(dividend.exDate) << " - this is already present.");
+        WLOG("Skipped Dividend " << dividend.name << "@" << QuantLib::io::iso_date(dividend.exDate)
+                                 << " - this is already present.");
     }
 }
 
@@ -162,13 +163,13 @@ void serialize(
     std::vector<std::pair<QuantLib::Date, MarketDatum*>> mdv;
     if (Archive::is_saving::value) {
         for (const auto& [k, v] : md) {
-            for (const auto m : v) {
+            for (const auto& m : v) {
                 mdv.push_back(std::make_pair(k, m.get()));
             }
-        }        
-        ar& mdv;
+        }
+        ar & mdv;
     } else {
-        ar& mdv;
+        ar & mdv;
         std::set<QuantLib::ext::shared_ptr<MarketDatum>, SharedPtrMarketDatumComparator> s1;
         for (const auto& p : mdv) {
             auto it = md.find(p.first);
@@ -182,9 +183,9 @@ void serialize(
 
 template <class Archive> void InMemoryLoader::serialize(Archive& ar, const unsigned int version) {
     ar& boost::serialization::base_object<Loader>(*this);
-    ar& data_;
-    ar& fixings_;
-    ar& dividends_;
+    ar & data_;
+    ar & fixings_;
+    ar & dividends_;
 }
 
 template void InMemoryLoader::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);

@@ -96,6 +96,7 @@ public:
     void setPricingEngineFromFile(const std::string& fileName);
     void setTodaysMarketParams(const std::string& xml);
     void setTodaysMarketParamsFromFile(const std::string& fileName);
+    void setPortfolio(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
     void setPortfolio(const std::string& xml); 
     void setPortfolioFromFile(const std::string& fileNameString, const std::filesystem::path& inputPath);
     void setMporPortfolio(const std::string& xml);
@@ -383,7 +384,8 @@ public:
     void setSimmCalculationCurrencyPost(const std::string& s) { simmCalculationCurrencyPost_ = s; }
     void setSimmResultCurrency(const std::string& s) { simmResultCurrency_ = s; }
     void setSimmReportingCurrency(const std::string& s) { simmReportingCurrency_ = s; }
-    void setEnforceIMRegulations(bool b) { enforceIMRegulations_= b; }
+    void setEnforceIMRegulations(bool b) { enforceIMRegulations_ = b; }
+    void setRemoveInvalidCrifRecords(bool b) { removeInvalidCrifRecords_ = b; }
     void setWriteSimmIntermediateReports(bool b) { writeSimmIntermediateReports_ = b; }
 
     // Setters for ZeroToParSensiConversion
@@ -741,6 +743,7 @@ public:
     const std::string& simmResultCurrency() const { return simmResultCurrency_; }
     const std::string& simmReportingCurrency() const { return simmReportingCurrency_; }
     bool enforceIMRegulations() const { return enforceIMRegulations_; }
+    bool removeInvalidCrifRecords() const { return removeInvalidCrifRecords_; }
     QuantLib::ext::shared_ptr<SimmConfiguration> getSimmConfiguration();
     bool writeSimmIntermediateReports() const { return writeSimmIntermediateReports_; }
 
@@ -1077,6 +1080,7 @@ protected:
     std::string simmResultCurrency_ = "";
     std::string simmReportingCurrency_ = "";
     bool enforceIMRegulations_ = false;
+    bool removeInvalidCrifRecords_ = true;
     bool useSimmParameters_ = true;
     bool writeSimmIntermediateReports_ = true;
     bool loadCrifAdditionalFields_ = true;

@@ -174,6 +174,11 @@ void InputParameters::setTodaysMarketParamsFromFile(const std::string& fileName)
     todaysMarketParams_->fromFile(fileName);
 }
 
+void InputParameters::setPortfolio(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) {
+    portfolio_ = portfolio;
+    scaleUpPortfolio(portfolio_);
+}
+
 void InputParameters::setPortfolio(const std::string& xml) {
     portfolio_ = QuantLib::ext::make_shared<Portfolio>(buildFailedTrades_);
     portfolio_->fromXMLString(xml);

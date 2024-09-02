@@ -156,6 +156,7 @@ struct CrifRecord {
         SFC,
         UK,
         AMFQ,
+        BANX,
         Included,
         Unspecified,
         Excluded,

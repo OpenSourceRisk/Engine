@@ -90,7 +90,7 @@ public:
     Handle<YoYInflationIndex>
     yoyInflationIndex(const string& indexName,
                       const string& configuration = Market::defaultConfiguration) const override;
-    Handle<CPIVolatilitySurface>
+    Handle<QuantLib::CPIVolatilitySurface>
     cpiInflationCapFloorVolatilitySurface(const string& indexName,
                                           const string& configuration = Market::defaultConfiguration) const override;
     Handle<Quote> equitySpot(const string& eqName,
