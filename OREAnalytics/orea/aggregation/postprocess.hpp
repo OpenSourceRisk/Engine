@@ -59,6 +59,7 @@ using namespace data;
   - Basel Effective Expected Exposure, EEE_B: max( EEE_B(t-1), EE_B(t))
   - Basel Effective Expected Positive Exposure, EEPE_B
   - Potential Future Exposure, PFE: q-Quantile of the distribution of
+  - Time-Weighted Exposure (only on netting set level): 1 / T SUM_i=0^T EPE(t) \DELTA(t)
 
   2) Dynamic Initial Margin via regression
 

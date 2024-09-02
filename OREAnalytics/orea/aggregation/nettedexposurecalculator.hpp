@@ -139,6 +139,8 @@ protected:
     map<string, std::vector<Real>> expectedCollateral_;
     map<string, std::vector<Real>> colvaInc_;
     map<string, std::vector<Real>> eoniaFloorInc_;
+    map<string, std::vector<Real>> ee_bTimeWeighted_;
+    map<string, std::vector<Real>> eee_bTimeWeighted_;
     map<string, Real> epe_b_;
     map<string, Real> eepe_b_;
     map<string, Real> colva_;
