@@ -84,9 +84,10 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
     try {
         conversionFactor = market_->conversionFactor(securityId, configuration(MarketContext::pricing));
     } catch (...) {
+        conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
     }
-    if (conversionFactor.empty() || dirty) {
-        WLOG("conversionFactor for " << securityId << " is set to 1.0, either dirty or empty.")
+    if (dirty && conversionFactor->value() != 1.0) {
+        WLOG("conversionFactor for " << securityId << " is overwritten to 1.0, settlement is dirty")
         conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
     }
 
