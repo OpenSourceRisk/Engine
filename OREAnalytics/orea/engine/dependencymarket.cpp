@@ -369,8 +369,8 @@ Handle<Quote> DependencyMarket::recoveryRate(const string& name, const string&) 
     return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
 }
 
-Handle<Quote> DependencyMarket::conversionFactor(const string& name, const string&) const {
-    //no addRiskFactor or addMarketObject called
+Handle<Quote> DependencyMarket::conversionFactor(const string& name, const string& config) const {
+    addMarketObject(MarketObject::Security, name, config);
     return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
 }
 
