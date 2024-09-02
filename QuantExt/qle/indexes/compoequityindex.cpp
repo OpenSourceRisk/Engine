@@ -44,7 +44,7 @@ QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> CompoEquityIndex::source() con
 void CompoEquityIndex::addDividend(const Dividend& dividend, bool forceOverwrite) {
     if (dividendCutoffDate_ == Date() || dividend.exDate >= dividendCutoffDate_) {
         Dividend newDiv(dividend.exDate, dividend.name, dividend.rate / fxIndex_->fixing(dividend.exDate),
-                        dividend.payDate);
+                        dividend.payDate, dividend.announcementDate);
         source_->addDividend(newDiv, forceOverwrite);
         LazyObject::update();
     }
@@ -55,7 +55,7 @@ void CompoEquityIndex::performCalculations() const {
     auto const& ts = source_->dividendFixings();
     for (auto const& d : ts) {
         if (dividendCutoffDate_ == Date() || d.exDate >= dividendCutoffDate_) {
-            Dividend div(d.exDate, d.name, d.rate * fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(d.exDate, Preceding)), d.payDate);
+            Dividend div(d.exDate, d.name, d.rate * fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(d.exDate, Preceding)), d.payDate, d.announcementDate);
             dividendFixings_.insert(div);
         }
     }

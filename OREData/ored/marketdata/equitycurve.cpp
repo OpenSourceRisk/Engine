@@ -380,7 +380,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         if (!history.empty()) {
             for (std::set<QuantExt::Dividend>::const_iterator fd = history.begin();
                  fd != history.end(); ++fd)
-                if (fd->exDate > asof)
+                if (fd->exDate > asof && fd->announcementDate <= asof)
                     dividends.insert(*fd);            
         }
 

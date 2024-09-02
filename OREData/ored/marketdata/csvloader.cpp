@@ -171,10 +171,15 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                 }
             } else if (dataType == DataType::Dividend) {
                 Date payDate = date;
-                if (tokens.size() == 4)
-                    payDate = parseDate(tokens[3]);
+                Date announcementDate = date;
+                if (tokens.size() > 3) {
+                    if (!tokens[3].empty())
+                        payDate = parseDate(tokens[3]);
+                    if (tokens.size() == 5 && !tokens[4].empty())
+                        announcementDate = parseDate(tokens[4]);
+                }
                 // process dividends
-                if (!dividends_.insert(QuantExt::Dividend(date, key, value, payDate)).second) {
+                if (!dividends_.insert(QuantExt::Dividend(date, key, value, payDate, announcementDate)).second) {
                     WLOG("Skipped Dividend " << key << "@" << QuantLib::io::iso_date(date)
                                                 << " - this is already present.");
                 }

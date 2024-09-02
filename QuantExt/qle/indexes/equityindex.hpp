@@ -49,7 +49,7 @@ public:
                 const Handle<Quote> spotQuote = Handle<Quote>(),
                 const Handle<YieldTermStructure>& rate = Handle<YieldTermStructure>(),
                 const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>(),
-                const Handle<EquityAnnouncedDividendCurve>& discreteDividend = Handle<EquityAnnouncedDividendCurve>());
+                const Handle<EquityAnnouncedDividendCurve>& announcedDividend = Handle<EquityAnnouncedDividendCurve>());
     //! \name Index interface
     //@{
     std::string name() const override;

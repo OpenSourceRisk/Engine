@@ -29,8 +29,8 @@ namespace QuantExt {
 
 EquityIndex2::EquityIndex2(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency,
                          const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
-                         const Handle<YieldTermStructure>& dividend, const Handle<EquityAnnouncedDividendCurve>& discreteDividend)
-    : familyName_(familyName), currency_(currency), rate_(rate), dividend_(dividend), announcedDividend_(discreteDividend),
+                         const Handle<YieldTermStructure>& dividend, const Handle<EquityAnnouncedDividendCurve>& announcedDividend)
+    : familyName_(familyName), currency_(currency), rate_(rate), dividend_(dividend), announcedDividend_(announcedDividend),
       spotQuote_(spotQuote), fixingCalendar_(fixingCalendar) {
 
     name_ = familyName;
