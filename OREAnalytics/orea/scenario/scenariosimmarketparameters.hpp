@@ -383,6 +383,11 @@ public:
     bool simulateCprs() const { return paramsSimulate(RiskFactorKey::KeyType::CPR); }
     const vector<string>& cprs() const { return cprs_; }
 
+    void setConversionFactors(const vector<string>& names);
+    void setSimulateConversionFactors(bool simulate);
+    bool simulateConversionFactors() const { return paramsSimulate(RiskFactorKey::KeyType::ConversionFactor); }
+    const vector<string>& conversionFactors() const { return conversionFactors_; }
+
     void setSimulateBaseCorrelations(bool simulate);
     vector<Period>& baseCorrelationTerms() { return baseCorrelationTerms_; }
     vector<Real>& baseCorrelationDetachmentPoints() { return baseCorrelationDetachmentPoints_; }
@@ -512,6 +517,8 @@ private:
 
     bool cprSimulate_;
     vector<string> cprs_;
+
+    vector<string> conversionFactors_;
 
     vector<Period> baseCorrelationTerms_;
     vector<Real> baseCorrelationDetachmentPoints_;
