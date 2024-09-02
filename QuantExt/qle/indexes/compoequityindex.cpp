@@ -44,7 +44,7 @@ QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> CompoEquityIndex::source() con
 void CompoEquityIndex::addDividend(const Dividend& dividend, bool forceOverwrite) {
     if (dividendCutoffDate_ == Date() || dividend.exDate >= dividendCutoffDate_) {
         Dividend newDiv(dividend.exDate, dividend.name, dividend.rate / fxIndex_->fixing(dividend.exDate),
-                        dividend.payDate);
+                        dividend.payDate, dividend.announcementDate);
         source_->addDividend(newDiv, forceOverwrite);
         LazyObject::update();
     }
@@ -55,7 +55,7 @@ void CompoEquityIndex::performCalculations() const {
     auto const& ts = source_->dividendFixings();
     for (auto const& d : ts) {
         if (dividendCutoffDate_ == Date() || d.exDate >= dividendCutoffDate_) {
-            Dividend div(d.exDate, d.name, d.rate * fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(d.exDate, Preceding)), d.payDate);
+            Dividend div(d.exDate, d.name, d.rate * fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(d.exDate, Preceding)), d.payDate, d.announcementDate);
             dividendFixings_.insert(div);
         }
     }
@@ -71,9 +71,10 @@ Real CompoEquityIndex::pastFixing(const Date& fixingDate) const {
 }
 
 QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> CompoEquityIndex::clone(const Handle<Quote> spotQuote,
-                                                       const Handle<YieldTermStructure>& rate,
-                                                       const Handle<YieldTermStructure>& dividend) const {
-    return QuantLib::ext::make_shared<CompoEquityIndex>(source_->clone(spotQuote, rate, dividend), fxIndex_);
+    const Handle<YieldTermStructure>& rate, const Handle<YieldTermStructure>& dividend,
+                        const Handle<EquityAnnouncedDividendCurve>& announcedDividend) const {
+    return QuantLib::ext::make_shared<CompoEquityIndex>(source_->clone(spotQuote, rate, dividend, announcedDividend),
+                                                        fxIndex_);
 }
 
 } // namespace QuantExt

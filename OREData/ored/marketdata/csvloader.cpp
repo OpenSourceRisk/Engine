@@ -118,7 +118,8 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
             boost::split(tokens, line, boost::is_any_of(",;\t "), boost::token_compress_on);
 
             // TODO: should we try, catch and log any invalid lines?
-            QL_REQUIRE(tokens.size() == 3 || tokens.size() == 4, "Invalid CSVLoader line, 3 tokens expected " << line);
+            QL_REQUIRE(tokens.size() >= 3 || tokens.size() <= 5,
+                       "Invalid CSVLoader line, between 3 and 5 tokens expected " << line);
             if (tokens.size() == 4)
                 QL_REQUIRE(dataType == DataType::Dividend, "CSVLoader, dataType must be of type Dividend");
             Date date = parseDate(tokens[0]);
@@ -171,14 +172,17 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
                 }
             } else if (dataType == DataType::Dividend) {
                 Date payDate = date;
-                if (tokens.size() == 4)
-                    payDate = parseDate(tokens[3]);
+                Date announcementDate = date;
+                if (tokens.size() > 3) {
+                    if (!tokens[3].empty())
+                        payDate = parseDate(tokens[3]);
+                    if (tokens.size() == 5 && !tokens[4].empty())
+                        announcementDate = parseDate(tokens[4]);
+                }
                 // process dividends
-                if (date <= today) {
-                    if (!dividends_.insert(QuantExt::Dividend(date, key, value, payDate)).second) {
-                        WLOG("Skipped Dividend " << key << "@" << QuantLib::io::iso_date(date)
-                                                 << " - this is already present.");
-                    }
+                if (!dividends_.insert(QuantExt::Dividend(date, key, value, payDate, announcementDate)).second) {
+                    WLOG("Skipped Dividend " << key << "@" << QuantLib::io::iso_date(date)
+                                                << " - this is already present.");
                 }
             } else {
                 QL_FAIL("unknown data type");
