@@ -118,7 +118,8 @@ void CSVLoader::loadFile(const string& filename, DataType dataType) {
             boost::split(tokens, line, boost::is_any_of(",;\t "), boost::token_compress_on);
 
             // TODO: should we try, catch and log any invalid lines?
-            QL_REQUIRE(tokens.size() == 3 || tokens.size() == 4, "Invalid CSVLoader line, 3 tokens expected " << line);
+            QL_REQUIRE(tokens.size() >= 3 || tokens.size() <= 5,
+                       "Invalid CSVLoader line, between 3 and 5 tokens expected " << line);
             if (tokens.size() == 4)
                 QL_REQUIRE(dataType == DataType::Dividend, "CSVLoader, dataType must be of type Dividend");
             Date date = parseDate(tokens[0]);
