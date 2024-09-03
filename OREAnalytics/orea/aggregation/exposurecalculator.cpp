@@ -199,8 +199,8 @@ void ExposureCalculator::build() {
                 epe_b[j + 1] = epe_b_runningSum / times[j];
                 eepe_b[j + 1] = eepe_b_runningSum / times[j];
                 if(d <= baselMaxEEPDate){
-                    epe_b_[nettingSetId] = epe_b[j + 1];
-                    eepe_b_[nettingSetId] = eepe_b[j + 1];
+                    epe_b_[tradeId] = epe_b[j + 1];
+                    eepe_b_[tradeId] = eepe_b[j + 1];
                 }
             }
             std::sort(distribution.begin(), distribution.end());
