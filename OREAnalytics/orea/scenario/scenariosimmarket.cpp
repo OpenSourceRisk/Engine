@@ -2817,7 +2817,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         try {
                             v = initMarket->conversionFactor(name, configuration)->value();
                         } catch (...) {
-                            LOG("ConversionFactor " << name << " uses default value of 1.0.");
+                            DLOG("ConversionFactor " << name << " uses default value of 1.0.");
                             v = 1.0;
                         }
 

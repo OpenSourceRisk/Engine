@@ -1936,12 +1936,18 @@ private:
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
+//! Bond Future ConversionFactor
+/*!
+This class holds single market points of type CONVERSION_FACTOR for a single Bond future
+\ingroup marketdata
+*/
 class BondFutureConversionFactor : public MarketDatum {
 public:
     BondFutureConversionFactor() {}
     //! Constructor
     BondFutureConversionFactor(Real value, Date asofDate, const string& name, const string& securityId)
-        : MarketDatum(value, asofDate, name, QuoteType::PRICE, InstrumentType::BOND), securityID_(securityId) {}
+        : MarketDatum(value, asofDate, name, QuoteType::CONVERSION_FACTOR, InstrumentType::BOND),
+          securityID_(securityId) {}
 
     //! Make a copy of the market datum
     QuantLib::ext::shared_ptr<MarketDatum> clone() override {

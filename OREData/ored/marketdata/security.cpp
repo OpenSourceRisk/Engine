@@ -34,7 +34,7 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
         const QuantLib::ext::shared_ptr<SecurityConfig>& config = curveConfigs.securityConfig(spec.securityID());
 
         string spreadQuote = config->spreadQuote();
-        if (spreadQuote != "" && loader.has(spreadQuote, asof)) {
+        if (!spreadQuote.empty() && loader.has(spreadQuote, asof)) {
             QuantLib::ext::shared_ptr<SecuritySpreadQuote> q =
                 QuantLib::ext::dynamic_pointer_cast<SecuritySpreadQuote>(loader.get(spreadQuote, asof));
             QL_REQUIRE(q, "Failed to cast " << spreadQuote << " to SecuritySpreadQuote");
@@ -43,7 +43,7 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
 
         // get recovery quote
         string recoveryQuote = config->recoveryRatesQuote();
-        if (recoveryQuote != "" && loader.has(recoveryQuote, asof)) {
+        if (!recoveryQuote.empty() && loader.has(recoveryQuote, asof)) {
             QuantLib::ext::shared_ptr<RecoveryRateQuote> q =
                 QuantLib::ext::dynamic_pointer_cast<RecoveryRateQuote>(loader.get(recoveryQuote, asof));
             QL_REQUIRE(q, "Failed to cast " << recoveryQuote << " to RecoveryRateQuote");
@@ -52,7 +52,7 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
 
         // get cpr quote
         string cprQuote = config->cprQuote();
-        if (cprQuote != "" && loader.has(cprQuote,asof)) {
+        if (!cprQuote.empty() && loader.has(cprQuote,asof)) {
             QuantLib::ext::shared_ptr<CPRQuote> q = QuantLib::ext::dynamic_pointer_cast<CPRQuote>(loader.get(cprQuote, asof));
             QL_REQUIRE(q, "Failed to cast " << cprQuote << " to CPRQuote");
             cpr_ = q->quote();
@@ -60,7 +60,7 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
 
         // get price quote
         string priceQuote = config->priceQuote();
-        if (priceQuote != "" && loader.has(priceQuote,asof)) {
+        if (!priceQuote.empty() && loader.has(priceQuote,asof)) {
             QuantLib::ext::shared_ptr<BondPriceQuote> q =
                 QuantLib::ext::dynamic_pointer_cast<BondPriceQuote>(loader.get(priceQuote, asof));
             QL_REQUIRE(q, "Failed to cast " << priceQuote << " to BondPriceQuote");
@@ -69,7 +69,7 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
 
         // get conversion factor
         string conversionFactor = config->conversionFactor();
-        if (conversionFactor != "" && loader.has(conversionFactor,asof)) {
+        if (!conversionFactor.empty() && loader.has(conversionFactor,asof)) {
             QuantLib::ext::shared_ptr<BondFutureConversionFactor> q =
                 QuantLib::ext::dynamic_pointer_cast<BondFutureConversionFactor>(loader.get(conversionFactor, asof));
             QL_REQUIRE(q, "Failed to cast " << conversionFactor << " to BondFutureConversionFactor");
