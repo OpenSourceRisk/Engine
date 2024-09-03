@@ -210,16 +210,16 @@ void NettedExposureCalculator::build() {
         else {
             DLOG("Netting set " << nettingSetId << ", IA base = VM base = 0");
         }
-        Real ee_bTimeSum = 0.0;
-        Real eee_bTimeSum = 0.0;
+        Real epe_b_runningSum = 0.0;
+        Real eepe_b_runningSum = 0.0;
         // max out of simulation time and latest netting maturity
         Handle<YieldTermStructure> curve = market_->discountCurve(baseCurrency_, configuration_);
         vector<Real> epe(cube_->dates().size() + 1, 0.0);
         vector<Real> ene(cube_->dates().size() + 1, 0.0);
         vector<Real> ee_b(cube_->dates().size() + 1, 0.0);
-        vector<Real> ee_bTimeWeighted(cube_->dates().size() + 1, 0.0);
+        vector<Real> epe_b(cube_->dates().size() + 1, 0.0);
         vector<Real> eee_b(cube_->dates().size() + 1, 0.0);
-        vector<Real> eee_bTimeWeighted(cube_->dates().size() + 1, 0.0);
+        vector<Real> eepe_b(cube_->dates().size() + 1, 0.0);
         vector<Real> eee_b_kva_1(cube_->dates().size() + 1, 0.0);
         vector<Real> eee_b_kva_2(cube_->dates().size() + 1, 0.0);
         vector<Real> eepe_b_kva_1(cube_->dates().size() + 1, 0.0);
@@ -247,8 +247,8 @@ void NettedExposureCalculator::build() {
         eab[0] = npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
-        ee_bTimeWeighted[0] = ee_b[0];
-        eee_bTimeWeighted[0] = eee_b[0];
+        epe_b[0] = ee_b[0];
+        eepe_b[0] = eee_b[0];
         nettedCube_->setT0(npv, nettingSetCount);
         exposureCube_->setT0(epe[0], nettingSetCount, ExposureIndex::EPE);
         exposureCube_->setT0(ene[0], nettingSetCount, ExposureIndex::ENE);
@@ -403,17 +403,13 @@ void NettedExposureCalculator::build() {
             ee_b[j + 1] = epe[j + 1] / curve->discount(cube_->dates()[j]);
             eee_b[j + 1] = std::max(eee_b[j], ee_b[j + 1]);
             if(date <= nettingSetMaturity[nettingSetId]){
-                //std::cout << j << "," << to_string(cube_->dates()[j]) << "," << timeDeltas[j] << "," << ee_b[j + 1]
-                //          << "," << times[j] << "," << ee_bTimeSum;
-                
-                ee_bTimeSum += ee_b[j + 1] * timeDeltas[j];
-                //std::cout << "," << ee_bTimeSum << std::endl;
-                eee_bTimeSum += eee_b[j + 1] * timeDeltas[j];
-                ee_bTimeWeighted[j + 1] = ee_bTimeSum / times[j];
-                eee_bTimeWeighted[j + 1] = eee_bTimeSum / times[j];
+                epe_b_runningSum += ee_b[j + 1] * timeDeltas[j];
+                eepe_b_runningSum += eee_b[j + 1] * timeDeltas[j];
+                epe_b[j + 1] = epe_b_runningSum / times[j];
+                eepe_b[j + 1] = eepe_b_runningSum / times[j];
                 if(date <= baselMaxEEPDate){
-                    epe_b_[nettingSetId] = ee_bTimeWeighted[j + 1];
-                    eepe_b_[nettingSetId] = eee_bTimeWeighted[j + 1];
+                    epe_b_[nettingSetId] = epe_b[j + 1];
+                    eepe_b_[nettingSetId] = eepe_b[j + 1];
                 }
             }
             std::sort(distribution.begin(), distribution.end());
@@ -426,8 +422,8 @@ void NettedExposureCalculator::build() {
         expectedCollateral_[nettingSetId] = eab;
         colvaInc_[nettingSetId] = colvaInc;
         eoniaFloorInc_[nettingSetId] = eoniaFloorInc;
-        epe_bTimeWeighted_[nettingSetId] = ee_bTimeWeighted;
-        eepe_bTimeWeighted_[nettingSetId] = eee_bTimeWeighted;
+        epe_bTimeWeighted_[nettingSetId] = epe_b;
+        eepe_bTimeWeighted_[nettingSetId] = eepe_b;
         nettingSetCount++;
     }
 

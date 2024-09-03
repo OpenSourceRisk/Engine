@@ -627,6 +627,14 @@ const vector<Real>& PostProcess::tradePFE(const string& tradeId) {
     return exposureCalculator_->pfe(tradeId);
 }
 
+const vector<Real>& PostProcess::tradeEPE_B_timeWeighted(const string& tradeId) {
+    return exposureCalculator_->epe_b_timeWeighted(tradeId);
+}
+
+const vector<Real>& PostProcess::tradeEEPE_B_timeWeighted(const string& tradeId) {
+    return exposureCalculator_->eepe_b_timeWeighted(tradeId);
+}
+
 const vector<Real>& PostProcess::netEPE(const string& nettingSetId) {
     QL_REQUIRE(netEPE_.find(nettingSetId) != netEPE_.end(),
                "Netting set " << nettingSetId << " not found in exposure map");

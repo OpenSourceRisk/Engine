@@ -208,6 +208,10 @@ public:
     const Real& tradeEEPE_B(const string& tradeId);
     //! Return trade level Potential Future Exposure evolution
     const vector<Real>& tradePFE(const string& tradeId);
+    //! Return trade level Expected Positive Exposure evolution
+    const vector<Real>& tradeEPE_B_timeWeighted(const string& tradeId);
+    //! Return trade level Effective Expected Positive Exposure evolution
+    const vector<Real>& tradeEEPE_B_timeWeighted(const string& tradeId);
     // const vector<Real>& tradeVAR(const string& tradeId);
 
     //! Return Netting Set Expected Positive Exposure evolution
