@@ -56,9 +56,6 @@ BOOST_AUTO_TEST_CASE(testForwardBond1) { // test if bond and forwardbond comp co
     Handle<DefaultProbabilityTermStructure> dpts(QuantLib::ext::make_shared<FlatHazardRate>(today, issuerSpreadQuote, dc));
     Handle<Quote> bondSpecificSpread(QuantLib::ext::make_shared<SimpleQuote>(0.005));
 
-    // create spreaded yts (apply spread on reference curve)
-    yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
-
     // build the underlying fixed rate bond
     Date startDate = today;
     Date endDate = startDate + Period(10, Years);
@@ -98,6 +95,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond1) { // test if bond and forwardbond comp co
         QuantLib::ext::make_shared<FlatForward>(today, incomeQuote, dc, Compounded, Semiannual));
     // Handle<Quote> recoveryRate(QuantLib::ext::make_shared<SimpleQuote>(0.4));
 
+    // create spreaded yts (apply spread on reference curve)
+    yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
+
     // build the forward bond
     // Date valueDate = today;
     Date fwdMaturityDate = today;
@@ -132,9 +132,6 @@ BOOST_AUTO_TEST_CASE(testForwardBond2) { // same testcase as above, but differen
     Handle<YieldTermStructure> yts(QuantLib::ext::make_shared<FlatForward>(today, rateQuote, dc, Compounded, Semiannual));
     Handle<DefaultProbabilityTermStructure> dpts(QuantLib::ext::make_shared<FlatHazardRate>(today, issuerSpreadQuote, dc));
     Handle<Quote> bondSpecificSpread(QuantLib::ext::make_shared<SimpleQuote>(0.005));
-
-    // create spreaded yts (apply spread on reference curve)
-    yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
 
     // build the underlying fixed rate bond
     Date startDate = today;
@@ -173,6 +170,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond2) { // same testcase as above, but differen
     Handle<YieldTermStructure> incomeTS(
         QuantLib::ext::make_shared<FlatForward>(today, incomeQuote, dc, Compounded, Semiannual));
 
+    // create spreaded yts (apply spread on reference curve)
+    yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
+
     // build the forward bond
     // Date valueDate = today;
     Date fwdMaturityDate = today;
@@ -210,9 +210,6 @@ BOOST_AUTO_TEST_CASE(testForwardBond3) { // now true forward bond, but coupon pa
     Handle<DefaultProbabilityTermStructure> dpts(QuantLib::ext::make_shared<FlatHazardRate>(today, issuerSpreadQuote, dc));
     Handle<Quote> bondSpecificSpread(QuantLib::ext::make_shared<SimpleQuote>(0.005));
 
-    // create spreaded yts (apply spread on reference curve)
-    yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
-
     // build the underlying fixed rate bond
     Date startDate = today;
     Date endDate = startDate + Period(10, Years);
@@ -249,6 +246,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond3) { // now true forward bond, but coupon pa
     Handle<Quote> incomeQuote(QuantLib::ext::make_shared<SimpleQuote>(0.005));
     Handle<YieldTermStructure> incomeTS(
         QuantLib::ext::make_shared<FlatForward>(today, incomeQuote, dc, Compounded, Semiannual));
+
+    // create spreaded yts (apply spread on reference curve)
+    yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
 
     // build the forward bond
     // Date valueDate = today;
@@ -471,9 +471,6 @@ BOOST_AUTO_TEST_CASE(testForwardBond6) { // now true forward bond, but coupon pa
     Handle<DefaultProbabilityTermStructure> dpts(QuantLib::ext::make_shared<FlatHazardRate>(today, issuerSpreadQuote, dc));
     Handle<Quote> bondSpecificSpread(QuantLib::ext::make_shared<SimpleQuote>(0.005));
 
-    // create spreaded yts (apply spread on reference curve)
-    yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
-
     // build the underlying fixed rate bond
     Date startDate = today;
     Date endDate = startDate + Period(10, Years);
@@ -510,6 +507,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond6) { // now true forward bond, but coupon pa
     Handle<Quote> incomeQuote(QuantLib::ext::make_shared<SimpleQuote>(0.005));
     Handle<YieldTermStructure> incomeTS(
         QuantLib::ext::make_shared<FlatForward>(today, incomeQuote, dc, Compounded, Semiannual));
+
+    // create spreaded yts (apply spread on reference curve)
+    yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
 
     // build the forward bond
     // Date valueDate = today;
