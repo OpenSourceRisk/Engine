@@ -68,6 +68,8 @@ using std::set;
 */
 class ValuationEngine : public ore::data::ProgressReporter {
 public:
+    enum class ErrorPolicy { RemoveAll, RemoveSample };
+
     //! Constructor
     ValuationEngine(
         //! Valuation date
@@ -88,6 +90,8 @@ public:
         QuantLib::ext::shared_ptr<analytics::NPVCube> outputCube,
         //! Calculators to use
         std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators,
+        //! Error policy
+        const ErrorPolicy = ErrorPolicy::RemoveAll,
         //! Use sticky date in MPOR evaluation?
         bool mporStickyDate = true,
         //! Output cube for netting set-level results
@@ -101,18 +105,21 @@ public:
 
 private:
     void recalibrateModels();
-    std::pair<double, double> populateCube(const QuantLib::Date& d, size_t cubeDateIndex, size_t sample,
-                                           bool isValueDate, bool isStickyDate, bool scenarioUpdated,
-                                           const std::map<std::string, QuantLib::ext::shared_ptr<ore::data::Trade>>& trades,
-                                           std::vector<bool>& tradeHasError,
-                                           const std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>& calculators,
-                                           QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCube,
-                                           QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCubeNettingSet,
-                                           const std::map<std::string, size_t>& counterparties,
-                                           const std::vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>& cptyCalculators,
-                                           QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCptyCube);
-    void runCalculators(bool isCloseOutDate, const std::map<std::string, QuantLib::ext::shared_ptr<ore::data::Trade>>& trades,
-                        std::vector<bool>& tradeHasError,
+    std::pair<double, double>
+    populateCube(const QuantLib::Date& d, size_t cubeDateIndex, size_t sample, bool isValueDate, bool isStickyDate,
+                 bool scenarioUpdated, const std::map<std::string, QuantLib::ext::shared_ptr<ore::data::Trade>>& trades,
+                 const ErrorPolicy errorPolicy, std::vector<bool>& tradeHasT0Error,
+                 std::vector<bool>& tradeHasSampleError,
+                 const std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>& calculators,
+                 QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCube,
+                 QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCubeNettingSet,
+                 const std::map<std::string, size_t>& counterparties,
+                 const std::vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>& cptyCalculators,
+                 QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCptyCube);
+    void runCalculators(bool isCloseOutDate,
+                        const std::map<std::string, QuantLib::ext::shared_ptr<ore::data::Trade>>& trades,
+                        const ErrorPolicy errorPolicy, std::vector<bool>& tradeHasT0Error,
+                        std::vector<bool>& tradeHasSampleError,
                         const std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>& calculators,
                         QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCube,
                         QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCubeSensis, const QuantLib::Date& d,

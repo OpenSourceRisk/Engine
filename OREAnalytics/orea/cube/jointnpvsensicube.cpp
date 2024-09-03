@@ -141,14 +141,14 @@ std::set<QuantLib::Size> JointNPVSensiCube::relevantScenarios() const {
     return tmp;
 }
 
-void JointNPVSensiCube::remove(Size id) {
+void JointNPVSensiCube::removeT0(Size id) {
     const auto& c = cubeAndId(id);
-    c.first->remove(c.second);
+    c.first->removeT0(c.second);
 }
 
-void JointNPVSensiCube::remove(Size id, Size sample) {
+void JointNPVSensiCube::remove(Size id, Size sample, bool useT0) {
     const auto& c = cubeAndId(id);
-    c.first->remove(c.second, sample);
+    c.first->remove(c.second, sample, useT0);
 }
 
 } // namespace analytics

@@ -191,7 +191,8 @@ void SensitivityAnalysis::generateSensitivities() {
             ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
             for (auto const& i : this->progressIndicators())
                 engine.registerProgressIndicator(i);
-            engine.buildCube(pf, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
+            engine.buildCube(pf, cube, calculators, ValuationEngine::ErrorPolicy::RemoveAll, true, nullptr, nullptr, {},
+                             dryRun_);
 
             sensiCubes_.push_back(QuantLib::ext::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
                                                                       scenarioGenerator_->shiftSizes(),
@@ -254,7 +255,7 @@ void SensitivityAnalysis::generateSensitivities() {
                 [&baseCcy]() -> std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> {
                     return {QuantLib::ext::make_shared<NPVCalculator>(baseCcy)};
                 },
-                {}, true, dryRun_);
+                ValuationEngine::ErrorPolicy::RemoveAll, {}, true, dryRun_);
             std::vector<QuantLib::ext::shared_ptr<NPVSensiCube>> miniCubes;
             for (auto const& c : engine.outputCubes()) {
                 miniCubes.push_back(QuantLib::ext::dynamic_pointer_cast<NPVSensiCube>(c));
