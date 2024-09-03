@@ -49,7 +49,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngi
 QuantLib::ext::shared_ptr<PricingEngine>
 CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, const string& discountCurveName,
                                        const string& creditCurveId, const bool hasCreditRisk, const string& securityId,
-                                       const string& referenceCurveId, const string& incomeCurveId) {
+                                       const string& referenceCurveId, const bool spreadOnIncomeFallback, const string& incomeCurveId) {
 
     DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");
 
@@ -71,10 +71,19 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
             spreadedCurve, market_->securitySpread(securityId, configuration(MarketContext::pricing))));
 
     // fall back on reference curve if no income curve is specified
-    Handle<YieldTermStructure> incomeCurve = market_->yieldCurve(
-        incomeCurveId.empty() ? referenceCurveId : incomeCurveId, configuration(MarketContext::pricing));
+    Handle<YieldTermStructure> incomeCurve;
+    if (incomeCurveId.empty()) {
+        if (spreadOnIncomeFallback) {
+            incomeCurve = spreadedCurve;
+        } else {
+            incomeCurve = referenceCurve;
+        }
 
-    // to discount the contract, might be a OIS curve
+    } else {
+        incomeCurve = indexOrYieldCurve(market_, incomeCurveId, configuration(MarketContext::pricing));
+    }
+
+    // to discount the forward contract, might be a OIS curve
     Handle<YieldTermStructure> contractCurve =
         discountCurveName.empty()
             ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))

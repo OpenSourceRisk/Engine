@@ -43,14 +43,14 @@ namespace data {
 
 class fwdBondEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&, const string&,
-                                         const bool, const string&, const string&, const string&> {
+                                         const bool, const string&, const string&, const bool, const string&> {
 protected:
     fwdBondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"ForwardBond"}) {}
 
     virtual string keyImpl(const string& id, const Currency& ccy, const std::string& discountCurveName,
                            const string& creditCurveId, const bool hasCreditRisk, const string& securityId,
-                           const string& referenceCurveId, const string& incomeCurveId) override {
+                           const string& referenceCurveId, const bool spreadOnIncomeFallback, const string& incomeCurveId) override {
 
         // id is _not_ part of the key
         std::string returnString = ccy.code() + "_" + creditCurveId + "_" + (hasCreditRisk ? "1_" : "0_") + securityId +
@@ -68,20 +68,47 @@ public:
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const Currency& ccy, const std::string& discountCurveName, const string& creditCurveId,
-               const bool hasCreditRisk, const string& securityId, const string& referenceCurveId,
+               const bool hasCreditRisk, const string& securityId, const string& referenceCurveId, const bool spreadOnIncomeFallback,
                const string& incomeCurveId) override {
 
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
-        Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
 
+        // reference curve
+        Handle<YieldTermStructure> referenceCurve =
+            market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
+
+        // include spread
+        Handle<Quote> bondSpread;
+        try {
+            bondSpread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
+        } catch (...) {
+            bondSpread = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
+        }
+
+        // spreaded reference curve
+        Handle<YieldTermStructure> spreadedCurve = Handle<YieldTermStructure>(
+            QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(referenceCurve, bondSpread));
+
+        // curve for discounting of the forward derivative contract. OIS, usually.
         Handle<YieldTermStructure> discountCurve =
             discountCurveName.empty()
                 ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                 : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
+
         // fall back on reference curve if no income curve is specified
-        Handle<YieldTermStructure> incomeTS = market_->yieldCurve(
-            incomeCurveId.empty() ? referenceCurveId : incomeCurveId, configuration(MarketContext::pricing));
+        Handle<YieldTermStructure> incomeCurve;
+        if (incomeCurveId.empty()) {
+            if (spreadOnIncomeFallback) {  //defaults to false
+                incomeCurve = spreadedCurve;
+            } else {
+                incomeCurve = referenceCurve;
+            }
+
+        } else {
+            incomeCurve = indexOrYieldCurve(market_, incomeCurveId, configuration(MarketContext::pricing));
+        }
+
         Handle<DefaultProbabilityTermStructure> dpts;
         // credit curve may not always be used. If credit curve ID is empty proceed without it
         if (!creditCurveId.empty())
@@ -99,18 +126,11 @@ protected:
                 recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
         }
 
-        Handle<Quote> bondSpread;
-        try {
-            // spread is optional, pass empty handle to engine if not given (will be treated as 0 spread there)
-            bondSpread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
-        } catch (...) {
-        }
-
         if (!hasCreditRisk) {
             dpts = Handle<DefaultProbabilityTermStructure>();
         }
 
-        return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountCurve, incomeTS, yts, bondSpread, dpts,
+        return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountCurve, incomeCurve, spreadedCurve, bondSpread, dpts,
                                                                           recovery, tsperiod);
     }
 };
@@ -125,7 +145,7 @@ protected:
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
     virtual QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const Currency& ccy, const std::string& discountCurveName, const string& creditCurveId,
-               const bool hasCreditRisk, const string& securityId, const string& referenceCurveId,
+               const bool hasCreditRisk, const string& securityId, const string& referenceCurveId, const bool spreadOnIncomeFallback,
                const string& incomeCurveId) override;
 
 private:

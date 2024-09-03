@@ -59,6 +59,7 @@ void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
     creditGroup = XMLUtils::getChildValue(node, "CreditGroup", false);
     referenceCurveId = XMLUtils::getChildValue(node, "ReferenceCurveId", true);
     incomeCurveId = XMLUtils::getChildValue(node, "IncomeCurveId", false);
+    spreadOnIncomeFallback = XMLUtils::getChildValue(node, "SpreadOnIncomeFallback", false);
     volatilityCurveId = XMLUtils::getChildValue(node, "VolatilityCurveId", false);
     settlementDays = XMLUtils::getChildValue(node, "SettlementDays", true);
     calendar = XMLUtils::getChildValue(node, "Calendar", true);
@@ -84,6 +85,7 @@ XMLNode* BondReferenceDatum::BondData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "CreditGroup", creditGroup);
     XMLUtils::addChild(doc, node, "ReferenceCurveId", referenceCurveId);
     XMLUtils::addChild(doc, node, "IncomeCurveId", incomeCurveId);
+    XMLUtils::addChild(doc, node, "SpreadOnIncomeFallback", spreadOnIncomeFallback);
     XMLUtils::addChild(doc, node, "VolatilityCurveId", volatilityCurveId);
     XMLUtils::addChild(doc, node, "SettlementDays", settlementDays);
     XMLUtils::addChild(doc, node, "Calendar", calendar);

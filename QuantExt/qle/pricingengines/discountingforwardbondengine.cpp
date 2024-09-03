@@ -44,10 +44,6 @@ DiscountingForwardBondEngine::DiscountingForwardBondEngine(
       timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows),
       settlementDate_(settlementDate), npvDate_(npvDate) {
 
-    bondReferenceYieldCurve_ =
-        bondSpread_.empty() ? bondReferenceYieldCurve
-                            : Handle<YieldTermStructure>(
-                                  QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(bondReferenceYieldCurve, bondSpread_));
     registerWith(discountCurve_);           // curve for discounting of the forward derivative contract. OIS, usually.
     registerWith(incomeCurve_);             // this is a curve for compounding of the bond
     registerWith(bondReferenceYieldCurve_); // this is the bond reference curve, for discounting, usually RePo

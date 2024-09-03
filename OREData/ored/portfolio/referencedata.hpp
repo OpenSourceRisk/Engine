@@ -104,10 +104,11 @@ public:
         string referenceCurveId;
         string incomeCurveId;
         string volatilityCurveId;
-	string priceQuoteMethod;
+	    string priceQuoteMethod;
         string priceQuoteBaseValue;
         std::vector<LegData> legData;
         string subType;
+        string spreadOnIncomeFallback;
         void fromXML(XMLNode* node) override;
         XMLNode* toXML(ore::data::XMLDocument& doc) const override;
     };

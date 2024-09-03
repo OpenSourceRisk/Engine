@@ -88,6 +88,7 @@ public:
     const string& settlementDays() const { return settlementDays_; }
     const string& calendar() const { return calendar_; }
     const string& issueDate() const { return issueDate_; }
+    const string& spreadOnIncomeFallback() const { return spreadOnIncomeFallback_; }
     QuantExt::BondIndex::PriceQuoteMethod priceQuoteMethod() const;
     Real priceQuoteBaseValue() const;
     const std::vector<LegData>& coupons() const { return coupons_; }
@@ -128,6 +129,7 @@ private:
     string securityId_;
     string referenceCurveId_;
     string incomeCurveId_;     // only used for bond derivatives
+    string spreadOnIncomeFallback_; // only used for bond derivatives
     string volatilityCurveId_; // only used for bond derivatives
     string settlementDays_;
     string calendar_;
