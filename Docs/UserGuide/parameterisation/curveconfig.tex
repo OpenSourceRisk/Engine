@@ -1022,6 +1022,8 @@ Listing \ref{lst:security_configuration} shows the configuration of the Securiti
 \item an optional RecoveryRateQuote. Usually a pricer will fall back on the recovery rate associated to the credit curve
   involved in the pricing if no security specific recovery rate is given. If no credit curve is given either, a zero
   recovery rate will be assumed.
+\item an optional ConversionFactor. In case of a bond future, a conversion factor might be applied. The application requires
+  a clean price settlement. Otherwise the default value of 1.0 for the conversion factor will be used.
 \item an optional PriceQuote. If the bond spread imply analytics is available, this is used to imply a SpreadQuote to
   match a given bond price. Notice that if a SpreadQuote is given explicitly in the market data, this will override an
   implied spread. Also see \ref{example:70}.
@@ -1043,6 +1045,7 @@ Note: in case of a forward bond, the convention for security specification requi
     <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
     <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
     <PriceQuote>BOND/PRICE/SECURITY_1</PriceQuote>
+    <ConversionFactor>BOND/CONVERSION_FACTOR/SECURITY_1</ConversionFactor>
   </Security>
 </Securities>
 \end{minted}
