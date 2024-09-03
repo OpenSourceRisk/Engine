@@ -225,7 +225,10 @@ public:
     //! Return Netting Set Potential Future Exposure evolution
     const vector<Real>& netPFE(const string& nettingSetId);
     // const vector<Real>& netVAR(const string& nettingSetId);
-
+    // Return Netting Set Basel the time averaged Expected Positive Exposure evolution
+    const vector<Real>& netEPE_B_timeWeighted(const string& nettingSetId);
+    // Return Netting Set Basel the time averaged Effective Expected Positive Exposure evolution
+    const vector<Real>& netEEPE_B_timeWeighted(const string& nettingSetId);
     //! Return the netting set's expected collateral evolution
     const vector<Real>& expectedCollateral(const string& nettingSetId);
     //! Return the netting set's expected COLVA increments through time

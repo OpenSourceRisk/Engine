@@ -22,6 +22,7 @@
 
 #include <ql/time/date.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
+#include <ql/time/date.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -212,7 +213,6 @@ void NettedExposureCalculator::build() {
         Real ee_bTimeSum = 0.0;
         Real eee_bTimeSum = 0.0;
         // max out of simulation time and latest netting maturity
-        const Real nettingSetMaturityTime = dc.yearFraction(today, nettingSetMaturity[nettingSetId]);
         Handle<YieldTermStructure> curve = market_->discountCurve(baseCurrency_, configuration_);
         vector<Real> epe(cube_->dates().size() + 1, 0.0);
         vector<Real> ene(cube_->dates().size() + 1, 0.0);
@@ -403,8 +403,12 @@ void NettedExposureCalculator::build() {
             ee_b[j + 1] = epe[j + 1] / curve->discount(cube_->dates()[j]);
             eee_b[j + 1] = std::max(eee_b[j], ee_b[j + 1]);
             if(date <= nettingSetMaturity[nettingSetId]){
-                ee_bTimeSum += ee_b[j+1] * timeDeltas[j];
-                eee_bTimeSum += ee_b[j+1] * timeDeltas[j];
+                //std::cout << j << "," << to_string(cube_->dates()[j]) << "," << timeDeltas[j] << "," << ee_b[j + 1]
+                //          << "," << times[j] << "," << ee_bTimeSum;
+                
+                ee_bTimeSum += ee_b[j + 1] * timeDeltas[j];
+                //std::cout << "," << ee_bTimeSum << std::endl;
+                eee_bTimeSum += eee_b[j + 1] * timeDeltas[j];
                 ee_bTimeWeighted[j + 1] = ee_bTimeSum / times[j];
                 eee_bTimeWeighted[j + 1] = eee_bTimeSum / times[j];
                 if(date <= baselMaxEEPDate){
@@ -422,11 +426,11 @@ void NettedExposureCalculator::build() {
         expectedCollateral_[nettingSetId] = eab;
         colvaInc_[nettingSetId] = colvaInc;
         eoniaFloorInc_[nettingSetId] = eoniaFloorInc;
-        ee_bTimeWeighted_[nettingSetId] = ee_bTimeWeighted;
-        eee_bTimeWeighted_[nettingSetId] = eee_bTimeWeighted;
+        epe_bTimeWeighted_[nettingSetId] = ee_bTimeWeighted;
+        eepe_bTimeWeighted_[nettingSetId] = eee_bTimeWeighted;
         nettingSetCount++;
     }
-                
+
     if (marginalAllocation_ && !multiPath_) {
         for (Size i = 0; i < portfolio_->trades().size(); ++i) {
             for (Size j = 0; j < cube_->dates().size(); ++j) {

@@ -673,6 +673,14 @@ const vector<Real>& PostProcess::netPFE(const string& nettingSetId) {
     return nettedExposureCalculator_->pfe(nettingSetId);
 }
 
+const vector<Real>& PostProcess::netEPE_B_timeWeighted(const string& nettingSetId){
+    return nettedExposureCalculator_->epe_b_timeWeighted(nettingSetId);
+}
+
+const vector<Real>& PostProcess::netEEPE_B_timeWeighted(const string& nettingSetId) {
+    return nettedExposureCalculator_->eepe_b_timeWeighted(nettingSetId);
+}
+
 const vector<Real>& PostProcess::expectedCollateral(const string& nettingSetId) {
     return nettedExposureCalculator_->expectedCollateral(nettingSetId);
 }
