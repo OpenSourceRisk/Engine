@@ -104,8 +104,9 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
         {"BASE_CORRELATION", MarketDatum::QuoteType::BASE_CORRELATION},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
-        {"NULL", MarketDatum::QuoteType::NONE},
-        {"TRANSITION_PROBABILITY", MarketDatum::QuoteType::TRANSITION_PROBABILITY}};
+        {"TRANSITION_PROBABILITY", MarketDatum::QuoteType::TRANSITION_PROBABILITY},
+        {"CONVERSION_FACTOR", MarketDatum::QuoteType::CONVERSION_FACTOR},
+        {"NULL", MarketDatum::QuoteType::NONE}};
 
     if (s == "RATE_GVOL")
         LOG("Use of deprecated quote type RATE_GVOL");
@@ -669,6 +670,8 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
             return QuantLib::ext::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
         else if (quoteType == MarketDatum::QuoteType::PRICE)
             return QuantLib::ext::make_shared<BondPriceQuote>(value, asof, datumName, securityID);
+        else if (quoteType == MarketDatum::QuoteType::CONVERSION_FACTOR)
+            return QuantLib::ext::make_shared<BondFutureConversionFactor>(value, asof, datumName, securityID);
     }
 
     case MarketDatum::InstrumentType::CDS_INDEX: {
