@@ -39,7 +39,9 @@ class GaussianCam : public ModelImpl, public AmcModel {
 public:
     /* analogue to ModelImpl, plus:
        - cam: a handle to the underlying cross asset model
-       - the currencies, curves, fxSpots need to match those in the cam (FIXME, remove them from the ctor?)
+       - the currencies, curves, fxSpots need to match those in the cam (curves are used for discount and numeraire
+         calcs, if overwritten with other curves, which is used for the external discount_curve and security_spread
+         handling!)
        - simulationDates are the dates on which indices can be observed
        - regressionOrder is the regression order used to compute conditional expectations in npv()
        - timeStepsPerYear time steps used for discretisation (overwritten by 1 if exact discretisation is used
