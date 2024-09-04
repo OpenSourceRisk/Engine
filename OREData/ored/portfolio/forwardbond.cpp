@@ -159,10 +159,10 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     if (!bondData_.spreadOnIncomeFallback().empty())
         spreadOnIncomeFallback = parseBool(bondData_.spreadOnIncomeFallback());
 
-    fwdBond->setPricingEngine(
-        fwdBondBuilder->engine(id(), currency, envelope().additionalField("discount_curve", false, std::string()),
-                               bondData_.creditCurveId(), bondData_.hasCreditRisk(), bondData_.securityId(),
-                               bondData_.referenceCurveId(), spreadOnIncomeFallback, bondData_.incomeCurveId()));
+    fwdBond->setPricingEngine(fwdBondBuilder->engine(
+        id(), currency, envelope().additionalField("discount_curve", false, std::string()), bondData_.creditCurveId(),
+        bondData_.hasCreditRisk(), bondData_.securityId(), bondData_.referenceCurveId(), spreadOnIncomeFallback,
+        bondData_.incomeCurveId(), settlementDirty));
 
     setSensitivityTemplate(*fwdBondBuilder);
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0));

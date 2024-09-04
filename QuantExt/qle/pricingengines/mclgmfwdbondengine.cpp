@@ -116,6 +116,9 @@ double McLgmFwdBondEngine::payOff() const {
     // vanilla forward bond calculation
     double forwardContractForwardValue = (*arguments_.payoff)(forwardBondValue - accruedAmount_);
 
+    // builder ensures we calculate with a clean price or we divide by one
+    forwardContractForwardValue /= conversionFactor();
+
     // include compensation payments
     double forwardContractPresentValue =
         forwardContractForwardValue * contractCurve_->discount(contractCurveDate_) -
@@ -201,12 +204,15 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
 
         // vanilla forward bond calculation : differentiate between long/short
         RandomVariable forwardContractForwardValue;
-        if (engine_->arguments_.longInForward)
-            forwardContractForwardValue = RandomVariable(samples, fwdBndPayOff->strike()) -
-                                          (forwardBondValue - RandomVariable(samples, engine_->accruedAmount_));
-        else
+        if (fwdBndPayOff->forwardType() == Position::Type::Long)
             forwardContractForwardValue = (forwardBondValue - RandomVariable(samples, engine_->accruedAmount_)) -
                                           RandomVariable(samples, fwdBndPayOff->strike());
+        else
+            forwardContractForwardValue = RandomVariable(samples, fwdBndPayOff->strike()) -
+                                          (forwardBondValue - RandomVariable(samples, engine_->accruedAmount_));
+
+        // builder ensures we have a clean price or we divide by one.
+        forwardContractForwardValue /= RandomVariable(samples, engine_->conversionFactor());
 
         // Present value and compensation payment...
         auto disc_contract = engine_->lgmVectorised_[0].discountBond(

@@ -41,16 +41,17 @@
 namespace ore {
 namespace data {
 
-class fwdBondEngineBuilder
-    : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&, const string&,
-                                         const bool, const string&, const string&, const bool, const string&> {
+class fwdBondEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&,
+                                                                const string&, const bool, const string&, const string&,
+                                                                const bool, const string&, const bool> {
 protected:
     fwdBondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"ForwardBond"}) {}
 
     virtual string keyImpl(const string& id, const Currency& ccy, const std::string& discountCurveName,
                            const string& creditCurveId, const bool hasCreditRisk, const string& securityId,
-                           const string& referenceCurveId, const bool spreadOnIncomeFallback, const string& incomeCurveId) override {
+                           const string& referenceCurveId, const bool spreadOnIncomeFallback,
+                           const string& incomeCurveId, const bool dirty) override {
 
         // id is _not_ part of the key
         std::string returnString = ccy.code() + "_" + creditCurveId + "_" + (hasCreditRisk ? "1_" : "0_") + securityId +
@@ -68,8 +69,8 @@ public:
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const Currency& ccy, const std::string& discountCurveName, const string& creditCurveId,
-               const bool hasCreditRisk, const string& securityId, const string& referenceCurveId, const bool spreadOnIncomeFallback,
-               const string& incomeCurveId) override {
+               const bool hasCreditRisk, const string& securityId, const string& referenceCurveId,
+               const bool spreadOnIncomeFallback, const string& incomeCurveId, const bool dirty) override {
 
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
@@ -126,12 +127,30 @@ protected:
                 recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
         }
 
+        Handle<Quote> bondSpread;
+        try {
+            // spread is optional, pass empty handle to engine if not given (will be treated as 0 spread there)
+            bondSpread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
+        } catch (...) {
+        }
+
+        Handle<Quote> conversionFactor;
+        try {
+            conversionFactor = market_->conversionFactor(securityId, configuration(MarketContext::pricing));
+        } catch (...) {
+            conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+        }
+        if (dirty && conversionFactor->value() != 1.0){
+            WLOG("conversionFactor for " << securityId << " is overwritten to 1.0, settlement is dirty")
+            conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+        }
+
         if (!hasCreditRisk) {
             dpts = Handle<DefaultProbabilityTermStructure>();
         }
 
         return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountCurve, incomeCurve, spreadedCurve, bondSpread, dpts,
-                                                                          recovery, tsperiod);
+                                                                          recovery, conversionFactor, tsperiod);
     }
 };
 
@@ -145,8 +164,8 @@ protected:
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
     virtual QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const Currency& ccy, const std::string& discountCurveName, const string& creditCurveId,
-               const bool hasCreditRisk, const string& securityId, const string& referenceCurveId, const bool spreadOnIncomeFallback,
-               const string& incomeCurveId) override;
+               const bool hasCreditRisk, const string& securityId, const string& referenceCurveId,
+               const bool spreadOnIncomeFallback, const string& incomeCurveId, const bool dirty) override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::ext::shared_ptr<QuantExt::LGM>& lgm,
@@ -155,7 +174,8 @@ private:
                                                            const std::vector<Size>& externalModelIndices,
                                                            const Handle<YieldTermStructure>& incomeCurve,
                                                            const Handle<YieldTermStructure>& discountContractCurve,
-                                                           const Handle<YieldTermStructure>& referenceCurve);
+                                                           const Handle<YieldTermStructure>& referenceCurve,
+                                                           const Handle<Quote>& conversionFactor);
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
 };
