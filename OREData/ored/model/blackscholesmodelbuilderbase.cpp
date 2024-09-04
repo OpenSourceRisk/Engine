@@ -24,17 +24,19 @@ namespace data {
 
 BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
     const Handle<YieldTermStructure>& curve, const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
-    const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear)
+    const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
+    const Handle<YieldTermStructure>& baseCurve)
     : BlackScholesModelBuilderBase(std::vector<Handle<YieldTermStructure>>{curve},
                                    std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>{process},
-                                   simulationDates, addDates, timeStepsPerYear) {}
+                                   simulationDates, addDates, timeStepsPerYear, baseCurve) {}
 
 BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
     const std::vector<Handle<YieldTermStructure>>& curves,
     const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
-    const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear)
-    : curves_(curves), processes_(processes), simulationDates_(simulationDates), addDates_(addDates),
-      timeStepsPerYear_(timeStepsPerYear) {
+    const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
+    const Handle<YieldTermStructure>& baseCurve)
+    : curves_(curves), baseCurve_(baseCurve), processes_(processes), simulationDates_(simulationDates),
+      addDates_(addDates), timeStepsPerYear_(timeStepsPerYear) {
 
     QL_REQUIRE(!curves_.empty(), "BlackScholesModelBuilderBase: no curves given");
 
@@ -42,6 +44,7 @@ BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
 
     for (auto const& c : curves_)
         registerWith(c);
+    registerWith(baseCurve_);
 
     for (auto const& p : processes_) {
         registerWith(p->blackVolatility());
@@ -56,6 +59,8 @@ BlackScholesModelBuilderBase::BlackScholesModelBuilderBase(
     alwaysForwardNotifications();
 
     allCurves_ = curves_;
+    if(!baseCurve_.empty())
+        allCurves_.push_back(baseCurve_);
     for (auto const& p : processes_) {
         vols_.push_back(p->blackVolatility());
         allCurves_.push_back(p->riskFreeRate());

@@ -37,12 +37,14 @@ public:
                              const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
                              const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                              const Size timeStepsPerYear = 0, const std::string& calibration = "ATM",
-                             const std::vector<std::vector<Real>>& calibrationStrikes = {});
+                             const std::vector<std::vector<Real>>& calibrationStrikes = {},
+                             const Handle<YieldTermStructure>& baseCurve = {});
     BlackScholesModelBuilder(const Handle<YieldTermStructure>& curve,
                              const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                              const std::set<Date>& simulationDates, const std::set<Date>& addDates,
                              const Size timeStepsPerYear = 0, const std::string& calibration = "ATM",
-                             const std::vector<Real>& calibrationStrikes = {});
+                             const std::vector<Real>& calibrationStrikes = {},
+                             const Handle<YieldTermStructure>& baseCurve = {});
 
     std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> getCalibratedProcesses() const override;
 
