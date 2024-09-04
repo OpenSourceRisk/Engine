@@ -82,6 +82,8 @@ bool BlackScholesModelBuilderBase::requiresRecalibration() const {
     return calibrationPointsChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_;
 }
 
+void BlackScholesModelBuilderBase::newCalcWithoutRecalibration() const { calculate(); }
+
 void BlackScholesModelBuilderBase::forceRecalculate() {
     forceCalibration_ = true;
     ModelBuilder::forceRecalculate();

@@ -56,6 +56,7 @@ public:
     //@{
     void forceRecalculate() override;
     bool requiresRecalibration() const override;
+    void newCalcWithoutRecalibration() const override;
     //@}
 
 protected:
