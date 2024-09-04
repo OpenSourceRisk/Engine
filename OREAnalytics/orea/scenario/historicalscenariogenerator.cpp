@@ -191,23 +191,22 @@ HistoricalScenarioGenerator::HistoricalScenarioGenerator(
 void HistoricalScenarioGenerator::setDates() {
     // construct the vectors of start and end dates
     for (Size i = 0; i < historicalScenarioLoader_->numScenarios();) {
-        Date sDate = historicalScenarioLoader_->dates()[i];
+        auto dates = historicalScenarioLoader_->dates();
+        Date sDate = dates[i];
         Date eDate = cal_.advance(sDate, mporDays_ * Days);
-        auto it =
-            std::find(historicalScenarioLoader_->dates().begin(), historicalScenarioLoader_->dates().end(), eDate);
-        if (it != historicalScenarioLoader_->dates().end()) {
+        auto it = std::find(dates.begin(), dates.end(), eDate);
+        if (it != dates.end()) {
             startDates_.push_back(sDate);
             endDates_.push_back(eDate);
         }
         if (overlapping_) {
             ++i;
         } else {
-            if (it != historicalScenarioLoader_->dates().end()) {
-                i = std::distance(historicalScenarioLoader_->dates().begin(), it);
+            if (it != dates.end()) {
+                i = std::distance(dates.begin(), it);
             } else {
-                i = std::distance(historicalScenarioLoader_->dates().begin(),
-                                  std::upper_bound(historicalScenarioLoader_->dates().begin(),
-                                                   historicalScenarioLoader_->dates().end(), eDate));
+                i = std::distance(dates.begin(),
+                                  std::upper_bound(dates.begin(), dates.end(), eDate));
             }
         }
     }
