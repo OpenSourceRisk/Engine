@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond1) { // test if bond and forwardbond comp co
     // Handle<Quote> recoveryRate(QuantLib::ext::make_shared<SimpleQuote>(0.4));
 
     // create spreaded yts (apply spread on reference curve)
-    yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
+    Handle<YieldTermStructure> yts2 = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
 
     // build the forward bond
     // Date valueDate = today;
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond1) { // test if bond and forwardbond comp co
         new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
                                   compensationPayment, compensationPaymentDate));
     QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
+        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, 2 * Months));
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << fwdBond->NPV());
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond2) { // same testcase as above, but differen
         QuantLib::ext::make_shared<FlatForward>(today, incomeQuote, dc, Compounded, Semiannual));
 
     // create spreaded yts (apply spread on reference curve)
-    yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
+    Handle<YieldTermStructure> yts2 = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
 
     // build the forward bond
     // Date valueDate = today;
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond2) { // same testcase as above, but differen
                                   compensationPayment, compensationPaymentDate));
 
     QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
+        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, 2 * Months));
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << fwdBond->NPV());
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond3) { // now true forward bond, but coupon pa
         QuantLib::ext::make_shared<FlatForward>(today, incomeQuote, dc, Compounded, Semiannual));
 
     // create spreaded yts (apply spread on reference curve)
-    yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
+    Handle<YieldTermStructure> yts2 = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
 
     // build the forward bond
     // Date valueDate = today;
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond3) { // now true forward bond, but coupon pa
                                   compensationPayment, compensationPaymentDate));
 
     QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
+        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, 2 * Months));
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << fwdBond->NPV());
@@ -326,6 +326,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond4) { // now true forward bond, one coupon be
     Handle<YieldTermStructure> incomeTS(
         QuantLib::ext::make_shared<FlatForward>(today, incomeQuote, dc, Compounded, Semiannual));
 
+    // create spreaded yts (apply spread on reference curve)
+    Handle<YieldTermStructure> yts2 = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
+
     // build the forward bond
     // Date valueDate = today;
     Date fwdMaturityDate = today + 7 * Months + 7 * Days; // there is one CF in those two months. today+7*Months happens
@@ -340,7 +343,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond4) { // now true forward bond, one coupon be
                                   compensationPayment, compensationPaymentDate));
 
     QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
+        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, 2 * Months));
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << std::setprecision(12) << fwdBond->NPV());
@@ -425,6 +428,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond5) { // now true forward bond, one coupon be
     Handle<YieldTermStructure> incomeTS(
         QuantLib::ext::make_shared<FlatForward>(today, incomeQuote, dc, Compounded, Semiannual));
 
+    // create spreaded yts (apply spread on reference curve)
+    Handle<YieldTermStructure> yts2 = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
+
     // build the forward bond
     // Date valueDate = today;
     Date fwdMaturityDate = today + 7 * Months + 7 * Days; // there is one CF in those two months. today+7*Months happens
@@ -439,7 +445,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond5) { // now true forward bond, one coupon be
                                   compensationPayment, compensationPaymentDate));
 
     QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
+        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, 2 * Months));
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price = " << std::setprecision(12) << fwdBond->NPV());
@@ -509,7 +515,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond6) { // now true forward bond, but coupon pa
         QuantLib::ext::make_shared<FlatForward>(today, incomeQuote, dc, Compounded, Semiannual));
 
     // create spreaded yts (apply spread on reference curve)
-    yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
+    Handle<YieldTermStructure> yts2 = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(yts, bondSpecificSpread));
 
     // build the forward bond
     // Date valueDate = today;
@@ -523,7 +529,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond6) { // now true forward bond, but coupon pa
                                   compensationPayment, compensationPaymentDate));
 
     QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine_sh(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
+        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, 2 * Months));
     fwdBond_sh->setPricingEngine(fwdBondEngine_sh);
 
     BOOST_TEST_MESSAGE("Forward Bond price long = " << fwdBond_sh->NPV());
@@ -539,7 +545,7 @@ BOOST_AUTO_TEST_CASE(testForwardBond6) { // now true forward bond, but coupon pa
                                   compensationPayment, compensationPaymentDate));
 
     QuantLib::ext::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
-        discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
+        discountTS, incomeTS, yts2, bondSpecificSpread, dpts, recovery, 2 * Months));
     fwdBond->setPricingEngine(fwdBondEngine);
 
     BOOST_TEST_MESSAGE("Forward Bond price short = " << fwdBond->NPV());
