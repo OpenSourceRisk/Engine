@@ -18,12 +18,14 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
 \begin{itemize}
    \item BondData: A {\tt BondData} block specifying the underlying bond as described in section~\ref{ss:bond}. A long
      position must be taken in the bond, i.e.~({\tt Payer}) flag must be set to ({\tt true}). The bond data block
-     contains an additional field for forward bonds
+     contains additional fields for forward bonds
      \begin{itemize}
      \item IncomeCurveId: The benchmark curve to be used for compounding, this must match a name of a curve in the yield
        curves or index curve block in {\tt todaysmarket.xml}. It is optional to provide this curve. If left out the
        market reference yield curve from {\tt todaysmarket.xml} is used for compounding.
-     \end{itemize}
+     \item SpreadOnIncomeFallback: In case the IncomeCurveId is omitted, hence the fallback is the reference yield curve is used,
+      this flag enables the addition of the bond spread to the reference curve. Default value is {\tt false}, i.e. spread will not be added.
+    \end{itemize}
    \item SettlementData: The entity defining the terms of settlement:
    \begin{itemize}
        \item ForwardMaturityDate: The date of maturity of the forward contract. \\
@@ -69,6 +71,7 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
      <BondData>
       ...
       <IncomeCurveId>BENCHMARKINCOME-EUR<IncomeCurveId>
+      <SpreadOnIncomeFallback>true<SpreadOnIncomeFallback>
      </BondData>
      <SettlementData>
        <ForwardMaturityDate>20160808</ForwardMaturityDate>
