@@ -184,11 +184,7 @@ void SensitivityAnalysis::generateSensitivities() {
                 QuantLib::ext::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
             pf->reset();
             pf->build(factory, "sensi analysis");
-            if (recalibrateModels_)
-                modelBuilders_ = factory->modelBuilders();
-            else
-                modelBuilders_.clear();
-            ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
+            ValuationEngine engine(asof_, dg, simMarket_, factory->modelBuilders(), recalibrateModels_);
             for (auto const& i : this->progressIndicators())
                 engine.registerProgressIndicator(i);
             engine.buildCube(pf, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
