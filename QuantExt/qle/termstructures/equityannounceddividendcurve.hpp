@@ -57,8 +57,14 @@ public:
     QuantLib::Real discountedFutureDividends(Time t) {
         if (discountedDivs_.size() > 1) {
             std::vector<Time>::const_iterator it = std::upper_bound(times_.begin(), times_.end(), t);
+            if (it == times_.end())
+                return 0.0;
             QuantLib::Size i = std::min<QuantLib::Size>(it - times_.begin(), times_.size());
-            return discountedDivs_[i - 1] * discountCurve_->discount(times_[i-1]) / discountCurve_->discount(t);
+            auto discountDiv = discountedDivs_[i - 1];
+            if (QuantLib::close_enough(discountDiv, 0.0))
+                return discountDiv;
+            else
+                return discountDiv * discountCurve_->discount(times_[i-1]) / discountCurve_->discount(t);
         } else
             return discountedDivs_[0];
     }
