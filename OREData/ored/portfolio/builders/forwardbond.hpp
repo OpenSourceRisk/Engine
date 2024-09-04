@@ -127,13 +127,6 @@ protected:
                 recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
         }
 
-        Handle<Quote> bondSpread;
-        try {
-            // spread is optional, pass empty handle to engine if not given (will be treated as 0 spread there)
-            bondSpread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
-        } catch (...) {
-        }
-
         Handle<Quote> conversionFactor;
         try {
             conversionFactor = market_->conversionFactor(securityId, configuration(MarketContext::pricing));
