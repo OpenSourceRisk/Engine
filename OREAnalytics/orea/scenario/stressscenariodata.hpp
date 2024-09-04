@@ -57,11 +57,24 @@ public:
         Real shiftSize;
     };
 
+    class FxVolShiftData(){
+        const vector<Period> expiries() const;
+        const vector<Period> shift() const;
+    }
+
     struct VolShiftData {
         ShiftType shiftType;
         vector<Period> shiftExpiries;
         vector<Real> shifts; 
+
     };
+
+    struct FxVolShiftData{
+        ShiftType shiftType;
+        Period shiftTenor;
+        Real shfit;
+        vector<Real> weights;
+    }
 
     struct CapFloorVolShiftData {
         ShiftType shiftType;
