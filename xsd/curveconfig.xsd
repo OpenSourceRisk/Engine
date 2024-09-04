@@ -708,6 +708,7 @@
       <xs:element type="xs:string" name="RecoveryRateQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="CPRQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceQuote" minOccurs="0"/>
+      <xs:element type="xs:string" name="ConversionFactor" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

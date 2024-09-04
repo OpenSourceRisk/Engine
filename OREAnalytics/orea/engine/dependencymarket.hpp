@@ -72,6 +72,7 @@ public:
                                                                         const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::CreditCurve> defaultCurve(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::Quote> recoveryRate(const std::string&, const std::string&) const override;
+    virtual QuantLib::Handle<QuantLib::Quote> conversionFactor(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::CreditVolCurve> cdsVol(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantExt::BaseCorrelationTermStructure> baseCorrelation(const std::string&, const std::string&) const override;
     virtual QuantLib::Handle<QuantLib::OptionletVolatilityStructure> capFloorVol(const std::string&,

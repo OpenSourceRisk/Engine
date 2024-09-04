@@ -42,9 +42,10 @@ public:
     //@{
     //! Detailed constructor
     SecurityConfig(const string& curveID, const string& curveDescription, const string& spreadQuote = "",
-                   const string& recoveryQuote = "", const string& cprQuote = "", const string& priceQuote = "")
+                   const string& recoveryQuote = "", const string& cprQuote = "", const string& priceQuote = "",
+                   const string& conversionFactor = "")
         : CurveConfig(curveID, curveDescription), spreadQuote_(spreadQuote), recoveryQuote_(recoveryQuote),
-          cprQuote_(cprQuote), priceQuote_(priceQuote) {
+          cprQuote_(cprQuote), priceQuote_(priceQuote), conversionFactor_(conversionFactor) {
         setQuotes();
     };
     //! Default constructor
@@ -57,6 +58,7 @@ public:
     const string& recoveryRatesQuote() { return recoveryQuote_; }
     const string& cprQuote() { return cprQuote_; }
     const string& priceQuote() { return priceQuote_; }
+    const string& conversionFactor() { return conversionFactor_; }
     //@}
 
     void fromXML(XMLNode* node) override {
@@ -68,6 +70,7 @@ public:
         recoveryQuote_ = XMLUtils::getChildValue(node, "RecoveryRateQuote", false);
         cprQuote_ = XMLUtils::getChildValue(node, "CPRQuote", false);
         priceQuote_ = XMLUtils::getChildValue(node, "PriceQuote", false);
+        conversionFactor_ = XMLUtils::getChildValue(node, "ConversionFactor", false);
         setQuotes();
     }
 
@@ -84,6 +87,8 @@ public:
             XMLUtils::addChild(doc, node, "CPRQuote", cprQuote_);
         if (!priceQuote_.empty())
             XMLUtils::addChild(doc, node, "PriceQuote", priceQuote_);
+        if (!conversionFactor_.empty())
+            XMLUtils::addChild(doc, node, "ConversionFactor", conversionFactor_);
         return node;
     }
 
@@ -98,8 +103,10 @@ private:
             quotes_.push_back(cprQuote_);
         if (!priceQuote_.empty())
             quotes_.push_back(priceQuote_);
+        if (!conversionFactor_.empty())
+            quotes_.push_back(conversionFactor_);
     }
-    string spreadQuote_, recoveryQuote_, cprQuote_, priceQuote_;
+    string spreadQuote_, recoveryQuote_, cprQuote_, priceQuote_, conversionFactor_;
 };
 } // namespace data
 } // namespace ore
