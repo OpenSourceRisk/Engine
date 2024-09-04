@@ -40,14 +40,15 @@ using namespace QuantLib;
 
 class BlackScholesModelBuilderBase : public ModelBuilder {
 public:
-    BlackScholesModelBuilderBase(const std::vector<Handle<YieldTermStructure>>& curves,
-                                 const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
-                                 const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                                 const Size timeStepsPerYear);
+    BlackScholesModelBuilderBase(
+        const std::vector<Handle<YieldTermStructure>>& curves,
+        const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
+        const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
+        const Handle<YieldTermStructure>& baseCurve = {});
     BlackScholesModelBuilderBase(const Handle<YieldTermStructure>& curve,
                                  const QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>& process,
                                  const std::set<Date>& simulationDates, const std::set<Date>& addDates,
-                                 const Size timeStepsPerYear);
+                                 const Size timeStepsPerYear, const Handle<YieldTermStructure>& baseCurve = {});
 
     Handle<BlackScholesModelWrapper> model() const;
 
@@ -73,6 +74,7 @@ protected:
     bool calibrationPointsChanged(const bool updateCache) const;
 
     const std::vector<Handle<YieldTermStructure>> curves_;
+    const Handle<YieldTermStructure> baseCurve_;
     const std::vector<QuantLib::ext::shared_ptr<GeneralizedBlackScholesProcess>> processes_;
     const std::set<Date> simulationDates_, addDates_;
     const Size timeStepsPerYear_;
