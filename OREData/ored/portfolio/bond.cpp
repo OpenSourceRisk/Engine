@@ -173,26 +173,30 @@ void BondData::initialise() {
 }
 
 void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<BondReferenceDatum>& referenceDatum,
-					       const std::string& startDate, const std::string& endDate) {
+                                             const std::string& startDate, const std::string& endDate) {
     DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
-    ore::data::populateFromBondReferenceData(subType_, issuerId_, settlementDays_, calendar_, issueDate_, priceQuoteMethod_,
-                                             priceQuoteBaseValue_, creditCurveId_, creditGroup_, referenceCurveId_,
-                                             incomeCurveId_, volatilityCurveId_, coupons_, securityId_, referenceDatum,
-                                             startDate, endDate);
+    ore::data::populateFromBondReferenceData(subType_, issuerId_, settlementDays_, calendar_, issueDate_,
+                                             priceQuoteMethod_, priceQuoteBaseValue_, creditCurveId_, creditGroup_,
+                                             referenceCurveId_, incomeCurveId_, volatilityCurveId_, coupons_,
+                                             securityId_, referenceDatum, startDate, endDate);
     initialise();
     checkData();
 }
 
 void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-					     const std::string& startDate, const std::string& endDate) {
+                                             const std::string& startDate, const std::string& endDate) {
     QL_REQUIRE(!securityId_.empty(), "BondData::populateFromBondReferenceData(): no security id given");
-    if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, securityId_)) {
-        DLOG("could not get BondReferenceDatum for name " << securityId_ << " leave data in trade unchanged");
+    string strippedSecId = BondBuilder::checkForwardBond(securityId_).second;
+    if (strippedSecId.empty())
+        strippedSecId = securityId_;
+
+    if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, strippedSecId)) {
+        DLOG("could not get BondReferenceDatum for name " << strippedSecId << " leave data in trade unchanged");
         initialise();
         checkData();
     } else {
         auto bondRefData = QuantLib::ext::dynamic_pointer_cast<BondReferenceDatum>(
-            referenceData->getData(BondReferenceDatum::TYPE, securityId_));
+            referenceData->getData(BondReferenceDatum::TYPE, strippedSecId));
         QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
         populateFromBondReferenceData(bondRefData, startDate, endDate);
     }
@@ -370,7 +374,7 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
                "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
                "(either the instrument wrapper or the ql instrument is null)");
 
-    Date expiry = checkForwardBond(securityId);
+    Date expiry = checkForwardBond(securityId).first;
     if (expiry != Date())
         modifyToForwardBond(expiry, qlBond, engineFactory, referenceData, securityId);
 
@@ -379,7 +383,7 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
     res.bondTrade = bond;
 
     if (data.isInflationLinked()) {
-        res.isInflationLinked = true;       
+        res.isInflationLinked = true;
     }
     res.hasCreditRisk = data.hasCreditRisk() && !data.creditCurveId().empty();
     res.currency = data.currency();
@@ -391,21 +395,22 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
     return res;
 }
 
-Date BondBuilder::checkForwardBond(const std::string& securityId) const {
+std::pair<Date, std::string> BondBuilder::checkForwardBond(const std::string& securityId) {
 
     // forward bonds shall have a security id of type isin_FWDEXP_expiry
     vector<string> tokens;
     boost::split(tokens, securityId, boost::is_any_of("_"));
 
-    // string id = tokens[0];
     Date expiry = Date();
+    string strippedId;
     if (tokens.size() == 3) {
         if (tokens[1] == "FWDEXP") {
             DLOG("BondBuilder::checkForwardBond : Forward Bond identified " << securityId);
             expiry = parseDate(tokens[2]);
+            strippedId = tokens[0];
         }
     }
-    return expiry;
+    return std::make_pair(expiry, strippedId);
 }
 
 void VanillaBondBuilder::modifyToForwardBond(const Date& expiry, boost::shared_ptr<QuantLib::Bond>& bond,
