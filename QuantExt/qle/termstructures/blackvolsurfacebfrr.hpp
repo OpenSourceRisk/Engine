@@ -58,7 +58,8 @@ public:
         const Option::Type riskReversalInFavorOf = Option::Call, const bool butterflyIsBrokerStyle = true,
         const SmileInterpolation smileInterpolation = SmileInterpolation::Cubic,
         const TimeInterpolation timeInterpolation = TimeInterpolation::V,
-        const FxVolatilityTimeWeighting timeWeighting = FxVolatilityTimeWeighting());
+        const FxVolatilityTimeWeighting timeWeighting = FxVolatilityTimeWeighting(),
+        const Real butterflyErrorTolerance = 0.01);
 
     Date maxDate() const override { return Date::maxDate(); }
     Real minStrike() const override { return 0; }
@@ -128,6 +129,7 @@ private:
     SmileInterpolation smileInterpolation_;
     TimeInterpolation timeInterpolation_;
     FxVolatilityTimeWeighting timeWeighting_;
+    Real butterflyErrorTolerance_;
 
     mutable Real switchTime_, settlDomDisc_, settlForDisc_;
     mutable std::vector<Real> expiryTimes_;

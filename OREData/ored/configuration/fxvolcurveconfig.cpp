@@ -197,6 +197,8 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         parseFxVolatilityTimeInterpolation(XMLUtils::getChildValue(node, "TimeInterpolation", false, "V"));
     timeWeighting_ = XMLUtils::getChildValue(node, "TimeWeighting", false);
 
+    butterflyErrorTolerance_ = parseReal(XMLUtils::getChildValue(node, "ButterflyErrorTolerance", false, "0.01"));
+
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
     }
@@ -283,6 +285,7 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "TimeInterpolation", to_string(timeInterpolation_));
     XMLUtils::addChild(doc, node, "TimeWeighting", timeWeighting_);
+    XMLUtils::addChild(doc, node, "ButterflyErrorTolerance", butterflyErrorTolerance_);
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     
     return node;
