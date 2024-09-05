@@ -192,6 +192,7 @@
       <xs:element type="extrapolationType" name="SmileExtrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="TimeInterpolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="TimeWeighting" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:float" name="ButterflyErrorTolerance" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
