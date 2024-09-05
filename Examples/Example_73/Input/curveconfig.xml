@@ -323,18 +323,18 @@
 	</SwaptionVolatilities>
 	<Securities>
 		<Security>
-			<CurveId>SECURITY_FWDEXP_20251220</CurveId>
+			<CurveId>SECURITY_1_FWDEXP_20251220</CurveId>
 			<CurveDescription>Security</CurveDescription>
-			<SpreadQuote>BOND/YIELD_SPREAD/SECURITY_FWDEXP_20251220</SpreadQuote>
-			<RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_FWDEXP_20251220</RecoveryRateQuote>
-			<PriceQuote>BOND/PRICE/SECURITY_FWDEXP_20251220</PriceQuote>
+			<SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1_FWDEXP_20251220</SpreadQuote>
+			<RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1_FWDEXP_20251220</RecoveryRateQuote>
+			<PriceQuote>BOND/PRICE/SECURITY_1_FWDEXP_20251220</PriceQuote>
 		</Security>
 		<Security>
-			<CurveId>SECURITY_cutted</CurveId>
+			<CurveId>SECURITY_1_cutted</CurveId>
 			<CurveDescription>Security</CurveDescription>
-			<SpreadQuote>BOND/YIELD_SPREAD/SECURITY_cutted</SpreadQuote>
-			<RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_cutted</RecoveryRateQuote>
-			<PriceQuote>BOND/PRICE/SECURITY_cutted</PriceQuote>
+			<SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1_cutted</SpreadQuote>
+			<RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1_cutted</RecoveryRateQuote>
+			<PriceQuote>BOND/PRICE/SECURITY_1_cutted</PriceQuote>
 		</Security>
 	</Securities>
 </CurveConfiguration>
