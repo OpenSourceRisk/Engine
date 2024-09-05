@@ -202,7 +202,7 @@ Real BondSpreadImply::implySpread(const std::string& securityId, const Real clea
     DLOG("effective market price  = " << cleanPrice * inflationFactor * adj);
 
     //check if fwd bond
-    Date expiry = BondBuilder::checkForwardBond(b.securityId);
+    Date expiry = BondBuilder::checkForwardBond(b.securityId).first;
 
     auto targetFunction = [&b, spreadQuote, cleanPrice, adj, inflationFactor, expiry](const Real& s) {
         spreadQuote->setValue(s);
