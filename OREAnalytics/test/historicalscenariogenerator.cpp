@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(testHistoricalScenarioGeneratorTransform) {
     }
 
     scenarioMap[d1] = s1;
-    scenarioMap[d1] = s2;
+    scenarioMap[d2] = s2;
     scenarios.push_back(scenarioMap);
     QuantLib::ext::shared_ptr<HistoricalScenarioLoader> histScenariosLoader = QuantLib::ext::make_shared<HistoricalScenarioLoader>();
     histScenariosLoader->scenarios() = scenarios;
