@@ -51,7 +51,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcBondEngineBuilder::buildMcEngine(
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-CamAmcBondEngineBuilder::engineImpl(const Currency& ccy, const string& creditCurveId, const bool hasCreditRisk,
+CamAmcBondEngineBuilder::engineImpl(const Currency& ccy, const string& creditCurveId,
                                     const string& securityId, const string& referenceCurveId) {
 
     DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");

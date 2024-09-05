@@ -118,7 +118,8 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
             ? QuantLib::ext::make_shared<QuantLib::FlatHazardRate>(npvDate, 0.0, bondReferenceYieldCurve_->dayCounter())
             : bondDefaultCurve_.currentLink();
     Rate recoveryVal = bondRecoveryRate_.empty() ? 0.0 : bondRecoveryRate_->value(); // setup default bond recovery rate
-
+    std::cout << "BondDefaultCurveEmpty " << bondDefaultCurve_.empty() << std::endl;
+    std::cout << bondRecoveryRate_.empty() << " " << recoveryVal << std::endl;
     std::vector<Date> bondCashflowPayDates;
     std::vector<Real> bondCashflows, bondCashflowSurvivalProbabilities, bondCashflowDiscountFactors;
 
