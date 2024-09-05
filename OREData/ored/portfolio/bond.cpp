@@ -391,7 +391,7 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
     return res;
 }
 
-Date BondBuilder::checkForwardBond(const std::string& securityId) const {
+Date BondBuilder::checkForwardBond(const std::string& securityId) {
 
     // forward bonds shall have a security id of type isin_FWDEXP_expiry
     vector<string> tokens;
