@@ -19,7 +19,7 @@
 */
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string_regex.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondutils.hpp>
 #include <ored/portfolio/builders/bond.hpp>
@@ -338,7 +338,12 @@ BondBuilder::Result BondFactory::build(const QuantLib::ext::shared_ptr<EngineFac
                                        const std::string& securityId) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto const& b : builders_) {
-        if (referenceData->hasData(b.first, securityId)) {
+
+        string strippedSecId = BondBuilder::checkForwardBond(securityId).second;
+        if (strippedSecId.empty())
+            strippedSecId = securityId;
+
+        if (referenceData->hasData(b.first, strippedSecId)) {
             auto tmp = b.second->build(engineFactory, referenceData, securityId);
             tmp.builderLabel = b.first;
             return tmp;
@@ -399,17 +404,18 @@ std::pair<Date, std::string> BondBuilder::checkForwardBond(const std::string& se
 
     // forward bonds shall have a security id of type isin_FWDEXP_expiry
     vector<string> tokens;
-    boost::split(tokens, securityId, boost::is_any_of("_"));
+    boost::algorithm::split_regex(tokens, securityId, boost::regex( "_FWDEXP_" ));
 
     Date expiry = Date();
     string strippedId;
-    if (tokens.size() == 3) {
-        if (tokens[1] == "FWDEXP") {
+    if (tokens.size() == 2) {
             DLOG("BondBuilder::checkForwardBond : Forward Bond identified " << securityId);
-            expiry = parseDate(tokens[2]);
+            expiry = parseDate(tokens[1]);
             strippedId = tokens[0];
-        }
     }
+
+
+
     return std::make_pair(expiry, strippedId);
 }
 
