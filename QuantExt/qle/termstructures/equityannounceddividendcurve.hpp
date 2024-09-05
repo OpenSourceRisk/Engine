@@ -40,7 +40,7 @@ public:
         times_.push_back(0.0);
         discountedDivs_.push_back(0.0);
         for (auto& d : dividends) {
-            QuantLib::Time time = timeFromReference(d.exDate);
+            QuantLib::Time time = timeFromReference(d.payDate);
             for (Size i = 0; i < times_.size(); ++i) {
                 discountedDivs_[i] += d.rate * discountCurve->discount(time);
             }
@@ -57,8 +57,11 @@ public:
     QuantLib::Real discountedFutureDividends(Time t) {
         if (discountedDivs_.size() > 1) {
             std::vector<Time>::const_iterator it = std::upper_bound(times_.begin(), times_.end(), t);
-            QuantLib::Size i = std::min<QuantLib::Size>(it - times_.begin(), times_.size());
-            return discountedDivs_[i - 1] * discountCurve_->discount(times_[i-1]) / discountCurve_->discount(t);
+            if (it == times_.end())
+                return 0.0;
+            QuantLib::Size i = it - times_.begin();
+            auto discountDiv = discountedDivs_[i - 1];
+            return discountDiv / discountCurve_->discount(t);
         } else
             return discountedDivs_[0];
     }

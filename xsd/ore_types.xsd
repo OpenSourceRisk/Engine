@@ -277,6 +277,7 @@
 				<xs:enumeration value="ZAc" />
 				<xs:enumeration value="ZAC" />
 				<xs:enumeration value="ZAX" />
+				<xs:enumeration value="USc" />
 			</xs:restriction>
 		</xs:simpleType>
      </xs:union>
