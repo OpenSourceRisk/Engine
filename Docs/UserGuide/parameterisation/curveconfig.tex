@@ -232,6 +232,7 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
     <DayCounter>A365</DayCounter>
     <Calendar>US,JP</Calendar>
     <Conventions>USD-JPY-FXOPTION</Conventions>
+    <ButterflyErrorTolerance>0.01</ButterflyErrorTolerance>
   </FXVolatility>
 \end{minted}
 \caption{FX option volatility configuration Smile / BFRR with 10 and 25 BF and RR}
@@ -299,6 +300,8 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
 \end{itemize}
 \item TimeInterpolation [Optional]: specifies whether time interpolation is done in volatility ({\tt V}, default) or
   variance ({\tt V2T})
+\item ButterflyErrorTolerance [Optional]: max allowed error for broker butterfly match, defaults to 0.01 relative rmse
+  of broker butterfly market premiums vs theoretical premiums
 \item TimeWeighting [Optional]: if given, a time weighting scheme is applied for time interpolation, see the
   documentation of FxOptionTimeWeighting convention for more details
 \item Expiries: Option expiries in period form. A wildcard may also be used. In the wildcard case, it will look for any
