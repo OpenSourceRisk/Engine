@@ -96,6 +96,7 @@ public:
     Handle<QuantExt::CreditCurve> defaultCurve(const string&,
                                   const string& configuration = Market::defaultConfiguration) const override;
     Handle<Quote> recoveryRate(const string&, const string& configuration = Market::defaultConfiguration) const override;
+    Handle<Quote> conversionFactor(const string&, const string& configuration = Market::defaultConfiguration) const override;
 
     //! CDS volatilities
     Handle<QuantExt::CreditVolCurve> cdsVol(const string& name,
@@ -216,6 +217,7 @@ protected:
     mutable map<pair<string, string>, Handle<QuantExt::CreditVolCurve>> cdsVols_;
     mutable map<pair<string, string>, Handle<QuantExt::BaseCorrelationTermStructure>> baseCorrelations_;
     mutable map<pair<string, string>, Handle<Quote>> recoveryRates_;
+    mutable map<pair<string, string>, Handle<Quote>> conversionFactors_;
     mutable map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
     mutable map<pair<string, string>, std::pair<string, QuantLib::Period>> capFloorIndexBase_;
     mutable map<pair<string, string>, Handle<YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;

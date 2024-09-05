@@ -349,9 +349,20 @@ std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> LgmBuilder::swapt
     return swaptionBasket_;
 }
 
+void LgmBuilder::recalibrate() const {
+    suspendCalibration_ = false;
+    calculate();
+}
+
+void LgmBuilder::newCalcWithoutRecalibration() const {
+    suspendCalibration_ = true;
+    calculate();
+}
+
 bool LgmBuilder::requiresRecalibration() const {
     return requiresCalibration_ &&
-           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
+           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_) &&
+           !suspendCalibration_;
 }
 
 void LgmBuilder::performCalculations() const {

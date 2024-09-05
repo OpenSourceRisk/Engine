@@ -48,8 +48,9 @@ namespace analytics {
 
 ValuationEngine::ValuationEngine(const Date& today, const QuantLib::ext::shared_ptr<DateGrid>& dg,
                                  const QuantLib::ext::shared_ptr<SimMarket>& simMarket,
-                                 const set<std::pair<string, QuantLib::ext::shared_ptr<ModelBuilder>>>& modelBuilders)
-    : today_(today), dg_(dg), simMarket_(simMarket), modelBuilders_(modelBuilders) {
+                                 const set<std::pair<string, QuantLib::ext::shared_ptr<ModelBuilder>>>& modelBuilders,
+                                 const bool recalibrate)
+    : today_(today), dg_(dg), simMarket_(simMarket), modelBuilders_(modelBuilders), recalibrate_(recalibrate) {
 
     QL_REQUIRE(dg_->size() > 0, "Error, DateGrid size must be > 0");
     QL_REQUIRE(today <= dg_->dates().front(), "ValuationEngine: Error today ("
@@ -63,7 +64,10 @@ void ValuationEngine::recalibrateModels() {
     for (auto const& b : modelBuilders_) {
         if (om == ObservationMode::Mode::Disable)
             b.second->forceRecalculate();
-        b.second->recalibrate();
+        if (recalibrate_)
+            b.second->recalibrate();
+        else
+            b.second->newCalcWithoutRecalibration();
     }
 }
 

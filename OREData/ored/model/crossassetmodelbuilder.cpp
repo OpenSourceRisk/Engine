@@ -138,19 +138,30 @@ const std::vector<Real>& CrossAssetModelBuilder::comOptionCalibrationErrors() {
     return comOptionCalibrationErrors_;
 }
 
+void CrossAssetModelBuilder::recalibrate() const {
+    suspendCalibration_ = false;
+    calculate();
+}
+
+void CrossAssetModelBuilder::newCalcWithoutRecalibration() const {
+    suspendCalibration_ = true;
+    calculate();
+}
+
 bool CrossAssetModelBuilder::requiresRecalibration() const {
     for (auto okv : subBuilders_)
         for (auto ikv : okv.second)
             if (ikv.second->requiresRecalibration())
                 return true;
-    return marketHandleObserver_->hasUpdated(true) || marketObserver_->hasUpdated(true);
+    return marketHandleObserver_->hasUpdated(false) || marketObserver_->hasUpdated(false);
 }
 
 void CrossAssetModelBuilder::performCalculations() const {
     // if any of the sub models requires a recalibration, we rebuilt the model
     // TODO we could do this more selectively
-    if (!dontCalibrate_ && requiresRecalibration()) {
-        // reset market observer update flag
+    if (!dontCalibrate_ && requiresRecalibration() && !suspendCalibration_) {
+        // reset market / market handle observer update flags
+        marketHandleObserver_->hasUpdated(true);
         marketObserver_->hasUpdated(true);
         buildModel();
     }
