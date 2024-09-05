@@ -11,7 +11,7 @@
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>2000</Samples>
+    <Samples>50</Samples>
     <CloseOutLag>2W</CloseOutLag>
     <MporMode>StickyDate</MporMode>
     <DayCounter>A365F</DayCounter>
