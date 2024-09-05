@@ -201,7 +201,7 @@ Real SimpleDeltaInterpolatedSmile::simpleDeltaFromStrike(const Real strike) cons
     if (close_enough(strike, 0.0))
         return 0.0;
     CumulativeNormalDistribution Phi;
-    return Phi(std::log(strike / forward_) / (std::max(atmVol_, 0.1) * std::sqrt(expiryTime_)));
+    return Phi(std::log(strike / forward_) / (atmVol_ * std::sqrt(expiryTime_)));
 }
 
 BlackVolatilitySurfaceBFRR::SmileInterpolation SimpleDeltaInterpolatedSmile::smileInterpolation() const {
