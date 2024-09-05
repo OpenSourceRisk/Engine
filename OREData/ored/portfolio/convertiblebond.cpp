@@ -721,7 +721,7 @@ BondBuilder::Result ConvertibleBondBuilder::build(const QuantLib::ext::shared_pt
         "ConvertibleBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
         "(either the instrument wrapper or the ql instrument is null)");
 
-    Date expiry = checkForwardBond(securityId);
+    Date expiry = checkForwardBond(securityId).first;
     if (expiry != Date())
         modifyToForwardBond(expiry, qlBond, engineFactory, referenceData, securityId);
 
