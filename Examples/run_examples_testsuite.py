@@ -8,6 +8,8 @@ import nose
 import collections
 #collections.Callable = collections.abc.Callable
 
+examples_exempt_from_scenariogenerator_samples_overwrite = ['Example_54', 'Example_55', 'Example_56', 'Example_60', 'Example_67', 'Example_68', 'Example_70', 'Example_72']
+
 # Pull in some shared utilities
 script_dir = Path(__file__).parents[0]
 sys.path.append(os.path.join(script_dir, '../'))
@@ -50,8 +52,10 @@ class TestExamples(unittest.TestCase):
             self.logger.warning('No ExpectedOutput folder detected, skipped.')
 
     def runAndRegressExample(self, name):
-        if not name.endswith('Example_54'):
-            os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = '50'
+        os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = '50'
+        for exname in examples_exempt_from_scenariogenerator_samples_overwrite:
+            if name.endswith(exname):
+                os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = ''
         self.logger.info('{}: run {}'.format(self._testMethodName, name))
         ret = run_example(name)
         os.environ['OVERWRITE_SCENARIOGENERATOR_SAMPLES'] = ''
