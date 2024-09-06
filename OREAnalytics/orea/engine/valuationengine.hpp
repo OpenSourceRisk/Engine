@@ -80,7 +80,9 @@ public:
         const QuantLib::ext::shared_ptr<analytics::SimMarket>& simMarket,
         //! model builders to be updated
         const set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>& modelBuilders =
-            set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>());
+            set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>(),
+        //! whether recalibrate() or newCalcWithoutCalibration() is called on model builders
+        const bool recalibrate = true);
 
     //! Build NPV cube
     void buildCube(
@@ -122,7 +124,7 @@ private:
                         std::vector<bool>& tradeHasSampleError,
                         const std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>>& calculators,
                         QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCube,
-                        QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCubeSensis, const QuantLib::Date& d,
+                        QuantLib::ext::shared_ptr<analytics::NPVCube>& outputCubeNettingSet, const QuantLib::Date& d,
                         const QuantLib::Size cubeDateIndex, const QuantLib::Size sample, const std::string& label = "");
     void runCalculators(bool isCloseOutDate, const std::map<std::string, QuantLib::Size>& counterparties,
                         const std::vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>& calculators,
@@ -133,6 +135,7 @@ private:
     QuantLib::ext::shared_ptr<ore::data::DateGrid> dg_;
     QuantLib::ext::shared_ptr<ore::analytics::SimMarket> simMarket_;
     set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
+    bool recalibrate_ = true;
 };
 } // namespace analytics
 } // namespace ore

@@ -909,6 +909,7 @@ termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
 termstructures/dynamicyoyoptionletvolatilitystructure.hpp
 termstructures/eqcommoptionsurfacestripper.hpp
+termstructures/equityannounceddividendcurve.hpp
 termstructures/equityforwardcurvestripper.hpp
 termstructures/flatcorrelation.hpp
 termstructures/flatforwarddividendcurve.hpp

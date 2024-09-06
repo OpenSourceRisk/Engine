@@ -41,14 +41,17 @@ struct Dividend {
     QuantLib::Real rate = QuantLib::Null<QuantLib::Real>();
     //! Dividend Payment date
     QuantLib::Date payDate = QuantLib::Date();
+    //! Dividend Announcement date
+    QuantLib::Date announcementDate = QuantLib::Date();
 
     //! Constructor
     Dividend() {}
-    Dividend(const QuantLib::Date& ed, const std::string& s, const QuantLib::Real r, const QuantLib::Date& pd)
-        : exDate(ed), name(s), rate(r), payDate(pd) {}
+    Dividend(const QuantLib::Date& ed, const std::string& s, const QuantLib::Real r, const QuantLib::Date& pd,
+             const QuantLib::Date& ad)
+        : exDate(ed), name(s), rate(r), payDate(pd), announcementDate(ad) {}
     bool empty() {
         return name.empty() && exDate == QuantLib::Date() && rate == QuantLib::Null<QuantLib::Real>() &&
-               payDate == QuantLib::Date();
+               payDate == QuantLib::Date() && announcementDate == QuantLib::Date();
     }
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);

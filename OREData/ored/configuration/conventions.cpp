@@ -2792,7 +2792,7 @@ pair<bool, QuantLib::ext::shared_ptr<Convention>> Conventions::get(const string&
             used_.insert(id);
             return std::make_pair(true, c);
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
     }
     return make_pair(false, nullptr);
 }
@@ -2823,7 +2823,7 @@ std::set<QuantLib::ext::shared_ptr<Convention>> Conventions::get(const Conventio
 bool Conventions::has(const string& id) const {
     try {
         get(id);
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
         return false;
     }
     boost::shared_lock<boost::shared_mutex> lock(mutex_);

@@ -318,9 +318,7 @@ void MultiThreadedValuationEngine::buildCube(
                 // build valuation engine
 
                 auto valEngine = QuantLib::ext::make_shared<ore::analytics::ValuationEngine>(
-                    today_, dateGrid_, simMarket,
-                    recalibrateModels_ ? engineFactory->modelBuilders()
-                                       : std::set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>());
+                    today_, dateGrid_, simMarket, engineFactory->modelBuilders(), recalibrateModels_);
                 valEngine->registerProgressIndicator(progressIndicator);
 
                 // build mini-cube

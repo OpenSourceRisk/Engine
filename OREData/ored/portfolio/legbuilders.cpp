@@ -284,7 +284,8 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const QuantLib::ext::shared_
     if (eqData->returnType() == EquityReturnType::Dividend) {
         Real spotVal = eqCurve->equitySpot()->value();
         Handle<Quote> divSpot = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(spotVal));
-        eqCurve = eqCurve->clone(divSpot, eqCurve->equityForecastCurve(), eqCurve->equityDividendCurve());
+        eqCurve = eqCurve->clone(divSpot, eqCurve->equityForecastCurve(), eqCurve->equityDividendCurve(),
+                                 eqCurve->announcedDividendCurve());
     }
 
     Currency dataCurrency = parseCurrencyWithMinors(data.currency());

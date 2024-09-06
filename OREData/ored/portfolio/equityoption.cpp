@@ -165,7 +165,7 @@ void EquityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                                              -bsInd, ccy, engineFactory, configuration);
         maturity_ = std::max(maturity_, latestPremiumDate);
         if (maturity_ == latestPremiumDate)
-            maturityType_ == "Latest Premium Date";
+            maturityType_ = "Latest Premium Date";
 
         instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
             new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));

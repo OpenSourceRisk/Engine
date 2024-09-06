@@ -105,6 +105,8 @@ public:
     //@{
     void forceRecalculate() override;
     bool requiresRecalibration() const override;
+    void recalibrate() const override;
+    void newCalcWithoutRecalibration() const override;
     //@}
 
 private:
@@ -146,12 +148,13 @@ private:
     SalvagingAlgorithm::Type salvaging_;
     std::string id_;
 
+
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
 
-    // helper flag to process forceRecalculate()
     bool forceCalibration_ = false;
+    mutable bool suspendCalibration_ = false;
 
     // market observer
     QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;

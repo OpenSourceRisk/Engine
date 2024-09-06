@@ -134,6 +134,7 @@ protected:
     std::string baseCcy_;
     std::vector<std::string> modelCcys_;
     std::vector<Handle<YieldTermStructure>> modelCurves_;
+    Handle<YieldTermStructure> baseCcyModelCurve_;
     std::vector<Handle<Quote>> modelFxSpots_;
     std::vector<std::string> modelIndices_, modelIndicesCurrencies_;
     std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> modelIrIndices_;
