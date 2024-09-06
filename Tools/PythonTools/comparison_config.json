@@ -1218,7 +1218,9 @@
               "PFE",
               "ExpectedCollateral",
               "BaselEE",
-              "BaselEEE"
+              "BaselEEE",
+              "TimeWeightedBaselEPE",
+              "TimeWeightedBaselEEPE"
             ],
             "abs_tol": 1.0,
             "rel_tol": 1e-12
@@ -1239,7 +1241,9 @@
               "AllocatedENE",
               "PFE",
               "BaselEE",
-              "BaselEEE"
+              "BaselEEE",
+              "TimeWeightedBaselEPE",
+              "TimeWeightedBaselEEPE"
             ],
             "abs_tol": 1.0,
             "rel_tol": 1e-12
