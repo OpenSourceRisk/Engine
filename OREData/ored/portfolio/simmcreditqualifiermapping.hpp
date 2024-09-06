@@ -29,7 +29,7 @@ namespace ore {
 namespace data {
 
 struct SimmCreditQualifierMapping {
-    SimmCreditQualifierMapping() {}
+    SimmCreditQualifierMapping() : hasCreditRisk(true) {}
     SimmCreditQualifierMapping(const std::string& targetQualifier, const std::string& creditGroup, bool hasCreditRisk)
         : targetQualifier(targetQualifier), creditGroup(creditGroup), hasCreditRisk(hasCreditRisk) {}
     SimmCreditQualifierMapping(std::string&& targetQualifier, std::string&& creditGroup, bool hasCreditRisk)
