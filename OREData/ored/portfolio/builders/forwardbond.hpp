@@ -98,12 +98,10 @@ protected:
             if (!creditCurveId.empty())
                 recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
         }
-        std::cout << "SecurityID" << securityId << " recovery "<< (!recovery.empty() ? recovery->value() : 0.0 )<< std::endl;
         Handle<Quote> bondSpread;
         try {
             // spread is optional, pass empty handle to engine if not given (will be treated as 0 spread there)
             bondSpread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
-            std::cout << "SecurityID" << securityId << " bondSpread "<< (!bondSpread.empty() ? bondSpread->value() : 0.0 )<< std::endl;
         } catch (...) {
         }
 
