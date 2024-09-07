@@ -364,7 +364,7 @@ QuantLib::ext::shared_ptr<NPVCube> buildNPVCube(QuantLib::ext::shared_ptr<DateGr
     if (withCloseOutGrid)
         calculators.push_back(QuantLib::ext::make_shared<MPORCalculator>(npvCalc));
     BOOST_TEST_MESSAGE("mporStickyDate "<<mporStickyDate);
-    valEngine.buildCube(portfolio, cube, calculators, mporStickyDate);
+    valEngine.buildCube(portfolio, cube, calculators, ValuationEngine::ErrorPolicy::RemoveAll, mporStickyDate);
     t.stop();
     double elapsed = t.elapsed().wall * 1e-9;
     
