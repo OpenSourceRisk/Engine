@@ -70,7 +70,6 @@ void BondData::fromXML(XMLNode* node) {
     settlementDays_ = XMLUtils::getChildValue(node, "SettlementDays", false);
     calendar_ = XMLUtils::getChildValue(node, "Calendar", false);
     issueDate_ = XMLUtils::getChildValue(node, "IssueDate", false);
-    spreadOnIncomeFallback_ = XMLUtils::getChildValue(node, "SpreadOnIncomeFallback", false);
     priceQuoteMethod_ = XMLUtils::getChildValue(node, "PriceQuoteMethod", false);
     priceQuoteBaseValue_ = XMLUtils::getChildValue(node, "PriceQuoteBaseValue", false);
     if (auto n = XMLUtils::getChildNode(node, "BondNotional")) {
@@ -116,8 +115,6 @@ XMLNode* BondData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
     if (!issueDate_.empty())
         XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
-    if (!spreadOnIncomeFallback_.empty())
-        XMLUtils::addChild(doc, bondNode, "SpreadOnIncomeFallback", spreadOnIncomeFallback_);
     if(!priceQuoteMethod_.empty())
 	XMLUtils::addChild(doc, bondNode, "PriceQuoteMethod", priceQuoteMethod_);
     if(!priceQuoteBaseValue_.empty())
@@ -178,10 +175,10 @@ void BondData::initialise() {
 void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<BondReferenceDatum>& referenceDatum,
                                              const std::string& startDate, const std::string& endDate) {
     DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
-    ore::data::populateFromBondReferenceData(
-        subType_, issuerId_, settlementDays_, calendar_, issueDate_, priceQuoteMethod_, priceQuoteBaseValue_,
-        creditCurveId_, creditGroup_, referenceCurveId_, incomeCurveId_, spreadOnIncomeFallback_, volatilityCurveId_,
-        coupons_, securityId_, referenceDatum, startDate, endDate);
+    ore::data::populateFromBondReferenceData(subType_, issuerId_, settlementDays_, calendar_, issueDate_,
+                                             priceQuoteMethod_, priceQuoteBaseValue_, creditCurveId_, creditGroup_,
+                                             referenceCurveId_, incomeCurveId_, volatilityCurveId_, coupons_,
+                                             securityId_, referenceDatum, startDate, endDate);
     initialise();
     checkData();
 }

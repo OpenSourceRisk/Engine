@@ -340,7 +340,6 @@
       <xs:element type="xs:string" name="SecurityId"/>
       <xs:element type="xs:string" name="ReferenceCurveId" minOccurs="0"/>
       <xs:element type="xs:string" name="IncomeCurveId" minOccurs="0"/>
-      <xs:element type="xs:string" name="SpreadOnIncomeFallback" minOccurs="0"/>
       <xs:element type="xs:string" name="VolatilityCurveId" minOccurs="0"/>
       <xs:element type="xs:string" name="SettlementDays" minOccurs="0"/>
       <xs:element type="xs:string" name="Calendar" minOccurs="0"/>

@@ -27,8 +27,8 @@ void populateFromBondReferenceData(std::string& subType, std::string& issuerId, 
                                    std::string& calendar, std::string& issueDate, std::string& priceQuoteMethod,
                                    string& priceQuoteBaseValue, std::string& creditCurveId, std::string& creditGroup,
                                    std::string& referenceCurveId, std::string& incomeCurveId,
-                                   std::string& spreadOnIncomeFallback, std::string& volatilityCurveId,
-                                   std::vector<LegData>& coupons, const std::string& name,
+                                   std::string& volatilityCurveId, std::vector<LegData>& coupons,
+                                   const std::string& name,
                                    const QuantLib::ext::shared_ptr<BondReferenceDatum>& bondRefData,
                                    const std::string& startDate, const std::string& endDate) {
     DLOG("populating data bond from reference data");
@@ -76,10 +76,6 @@ void populateFromBondReferenceData(std::string& subType, std::string& issuerId, 
     if (incomeCurveId.empty()) {
         incomeCurveId = bondRefData->bondData().incomeCurveId;
         TLOG("overwrite incomeCurveId with '" << incomeCurveId << "'");
-    }
-    if (spreadOnIncomeFallback.empty()) {
-        spreadOnIncomeFallback = bondRefData->bondData().spreadOnIncomeFallback;
-        TLOG("overwrite spreadOnIncomeFallback with '" << spreadOnIncomeFallback << "'");
     }
     if (volatilityCurveId.empty()) {
         volatilityCurveId = bondRefData->bondData().volatilityCurveId;

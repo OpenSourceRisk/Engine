@@ -49,8 +49,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngi
 QuantLib::ext::shared_ptr<PricingEngine>
 CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, const string& discountCurveName,
                                        const string& creditCurveId, const bool hasCreditRisk, const string& securityId,
-                                       const string& referenceCurveId, const bool spreadOnIncomeFallback,
-                                       const string& incomeCurveId, const bool dirty) {
+                                       const string& referenceCurveId, const string& incomeCurveId, const bool dirty) {
 
     DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");
 
@@ -66,29 +65,24 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
         referenceCurveId.empty() ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                                  : indexOrYieldCurve(market_, referenceCurveId, configuration(MarketContext::pricing));
 
-    // include spread
+    // include bond spread, if any
     Handle<Quote> bondSpread;
     try {
         bondSpread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
+        referenceCurve = Handle<YieldTermStructure>(
+            QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(referenceCurve, bondSpread));
     } catch (...) {
         bondSpread = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     }
 
-    // spreaded reference curve
-    Handle<YieldTermStructure> spreadedCurve =
-        Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(referenceCurve, bondSpread));
+    // income curve, fallback reference curve
+    Handle<YieldTermStructure> incomeCurve = market_->yieldCurve(
+        incomeCurveId.empty() ? referenceCurveId : incomeCurveId, configuration(MarketContext::pricing));
 
-    // fall back on reference curve if no income curve is specified
-    Handle<YieldTermStructure> incomeCurve;
-    if (incomeCurveId.empty()) {
-        if (spreadOnIncomeFallback) {
-            incomeCurve = spreadedCurve;
-        } else {
-            incomeCurve = referenceCurve;
-        }
-
-    } else {
-        incomeCurve = indexOrYieldCurve(market_, incomeCurveId, configuration(MarketContext::pricing));
+    bool spreadOnIncome = parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "false"));
+    if (spreadOnIncome) {
+        incomeCurve =
+            Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve, bondSpread));
     }
 
     // to discount the forward contract, might be a OIS curve
@@ -108,7 +102,7 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
         conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
     }
 
-    return buildMcEngine(lgm, spreadedCurve, simulationDates_, modelIndex, incomeCurve, contractCurve, referenceCurve,
+    return buildMcEngine(lgm, referenceCurve, simulationDates_, modelIndex, incomeCurve, contractCurve, referenceCurve,
                          conversionFactor);
 }
 

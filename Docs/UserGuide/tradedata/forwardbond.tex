@@ -23,8 +23,6 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
      \item IncomeCurveId: The benchmark curve to be used for compounding, this must match a name of a curve in the yield
        curves or index curve block in {\tt todaysmarket.xml}. It is optional to provide this curve. If left out the
        market reference yield curve from {\tt todaysmarket.xml} is used for compounding.
-     \item SpreadOnIncomeFallback: In case the IncomeCurveId is omitted, hence the fallback is the reference yield curve is used,
-      this flag enables the addition of the bond spread to the reference curve. Default value is {\tt false}, i.e. spread will not be added.
     \end{itemize}
    \item SettlementData: The entity defining the terms of settlement:
    \begin{itemize}
@@ -71,7 +69,6 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
      <BondData>
       ...
       <IncomeCurveId>BENCHMARKINCOME-EUR<IncomeCurveId>
-      <SpreadOnIncomeFallback>true<SpreadOnIncomeFallback>
      </BondData>
      <SettlementData>
        <ForwardMaturityDate>20160808</ForwardMaturityDate>
