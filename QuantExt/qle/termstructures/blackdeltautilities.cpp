@@ -32,11 +32,10 @@ Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::Delt
                delta;
     };
 
-    Real guess = std::log(BlackDeltaCalculator(optionType, dt, spot, domDiscount, forDiscount,
-                                               std::sqrt(vol->blackVariance(t, spot / domDiscount * forDiscount)))
-                              .strikeFromDelta(delta));
-
     try {
+        Real guess = std::log(BlackDeltaCalculator(optionType, dt, spot, domDiscount, forDiscount,
+                                                   std::sqrt(vol->blackVariance(t, spot / domDiscount * forDiscount)))
+                                  .strikeFromDelta(delta));
         Brent brent;
         return std::exp(brent.solve(targetFct, accuracy, guess, 0.0001));
     } catch (const std::exception& e) {

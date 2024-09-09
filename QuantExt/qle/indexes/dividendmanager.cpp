@@ -79,6 +79,7 @@ template <class Archive> void Dividend::serialize(Archive& ar, const unsigned in
     ar& name;
     ar& rate;
     ar& payDate;
+    ar& announcementDate;
 }
 
 template void Dividend::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);

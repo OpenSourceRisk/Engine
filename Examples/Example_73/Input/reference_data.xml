@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <ReferenceData>
-  <ReferenceDatum id="SECURITY_FWDEXP_20251220">
+  <ReferenceDatum id="SECURITY_1">
     <Type>Bond</Type>
     <BondReferenceData>
       <IssuerId>CPTY_C</IssuerId>
@@ -50,7 +50,7 @@
       </LegData>
     </BondReferenceData>
   </ReferenceDatum>
-  <ReferenceDatum id="SECURITY_cutted">
+  <ReferenceDatum id="SECURITY_1_cutted">
     <Type>Bond</Type>
     <BondReferenceData>
       <IssuerId>CPTY_C</IssuerId>
