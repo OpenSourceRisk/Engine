@@ -82,10 +82,8 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         Natural conventionalLag = 0;
         Calendar conventionalCalendar = NullCalendar();
         BusinessDayConvention conventionalBdc = Unadjusted;
-        if (!fxIndex_.empty() && settlement_ == "Cash") {
-            std::tie(conventionalLag, conventionalCalendar, conventionalBdc) =
-                getFxIndexConventions(fxIndex_.empty() ? boughtCurrency_ + soldCurrency_ : fxIndex_);
-        }
+        std::tie(conventionalLag, conventionalCalendar, conventionalBdc) =
+            getFxIndexConventions(fxIndex_.empty() ? boughtCurrency_ + soldCurrency_ : fxIndex_);
         PaymentLag paymentLag;
         if (payLag_.empty())
             paymentLag = conventionalLag;
