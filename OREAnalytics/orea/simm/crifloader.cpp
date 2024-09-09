@@ -53,24 +53,25 @@ using std::vector;
 
 namespace ore {
 namespace analytics {
-
+   
+// clang-format off
 // Required headers
 map<Size, set<string>> CrifLoader::requiredHeaders = {
-    {0, {"tradeid", "trade_id"}},
-    {1, {"portfolioid", "portfolio_id"}},
-    {2, {"productclass", "product_class", "asset_class"}},
-    {3, {"risktype", "risk_type"}},
-    {4, {"qualifier"}},
-    {5, {"bucket"}},
-    {6, {"label1"}},
-    {7, {"label2"}},
-    {8, {"amountcurrency", "currency", "amount_currency"}},
-    {9, {"amount"}},
-    {10, {"amountusd", "amount_usd"}}};
+    {1,  {"portfolioid", "portfolio_id"}},
+    {3,  {"risktype", "risk_type"}}};
 
 // Optional headers
 map<Size, set<string>> CrifLoader::optionalHeaders = {
     
+    {0,  {"tradeid", "trade_id"}},
+    {2,  {"productclass", "product_class", "asset_class"}},
+    {4,  {"qualifier"}},
+    {5,  {"bucket"}},
+    {6,  {"label1"}},
+    {7,  {"label2"}},
+    {8,  {"amountcurrency", "currency", "amount_currency"}},
+    {9,  {"amount"}},
+    {10, {"amountusd", "amount_usd"}},
     {11, {"agreementtype", "agreement_type"}},
     {12, {"calltype", "call_type"}},
     {13, {"initialmargintype", "initial_margin_type"}},
@@ -86,6 +87,7 @@ map<Size, set<string>> CrifLoader::optionalHeaders = {
     {23, {"coveredbonind"}},
     {24, {"tranchethickness"}},
     {25, {"bb_rw"}}};
+// clang-format on
 
 
 // Ease syntax
@@ -383,7 +385,7 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
         
         // Qualifier - There are many other possible qualifier values, but we only do case-insensitive checks
         // for those with standardised values, i.e. currencies or ccy pairs
-        cr.qualifier = entries[columnIndex_.at(4)];
+        cr.qualifier = loadOptionalString(4);
         if ((cr.riskType == RiskType::IRCurve || cr.riskType == RiskType::IRVol || cr.riskType == RiskType::FX) &&
             cr.qualifier.size() == 3) {
             string ccyUpper = boost::to_upper_copy(cr.qualifier);
@@ -407,12 +409,12 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
         }
 
         // Bucket - Hardcoded "Residual" for case-insensitive check since this is currently the only non-numeric value
-        cr.bucket = entries[columnIndex_.at(5)];
+        cr.bucket = loadOptionalString(5);
         if (boost::to_lower_copy(cr.bucket) == "residual")
             cr.bucket = "Residual";
 
         // Label1
-        cr.label1 = entries[columnIndex_.at(6)];
+        cr.label1 = loadOptionalString(6);
         if (configuration_->isValidRiskType(cr.riskType)) {
             for (const string& l : configuration_->labels1(cr.riskType)) {
                 if (boost::to_lower_copy(cr.label1) == boost::to_lower_copy(l))
@@ -420,7 +422,7 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
             }
         }
         // Label2
-        cr.label2 = entries[columnIndex_.at(7)];
+        cr.label2 = loadOptionalString(7);
         if (configuration_->isValidRiskType(cr.riskType)) {
             for (const string& l : configuration_->labels2(cr.riskType)) {
                 if (boost::to_lower_copy(cr.label2) == boost::to_lower_copy(l))
