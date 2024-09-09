@@ -4,6 +4,8 @@
 An Equity Swap uses its own trade type  \emph{EquitySwap}, and is set up using a {\tt EquitySwapData} node with one leg of type  \emph{Equity} and one more leg - called Funding leg -  that can be either \emph{Fixed} or  \emph{Floating}. Listing \ref{lst:equityswap} shows an example. The
 Equity leg contains an additional {\tt EquityLegData} block. See \ref{ss:equitylegdata} for details on the Equity leg specification.
 
+Note that the  \emph{Equity} leg of an \emph{EquitySwap} can only include one single underlying equity name (that can be an equity index name). For instruments with more than one underlying equity name, TradeType \emph{TotalReturnSwap} (GenericTRS) should be used instead.
+
 Cross currency \emph{EquitySwaps} are supported, i.e. the Equity and the Funding legs do not need to have the same currency. However, if the Funding leg uses \lstinline!Indexings! with \lstinline!FromAssetLeg! 
  set to \emph{true} to derive the notionals from the Equity leg, then the Funding leg must use the same currency as the Equity leg.
  
