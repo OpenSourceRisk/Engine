@@ -69,11 +69,13 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
     Handle<Quote> bondSpread;
     try {
         bondSpread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
-        referenceCurve = Handle<YieldTermStructure>(
-            QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(referenceCurve, bondSpread));
     } catch (...) {
         bondSpread = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     }
+
+    // include spread
+    Handle<YieldTermStructure> spreadedCurve =
+        Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(referenceCurve, bondSpread));
 
     // income curve, fallback reference curve
     Handle<YieldTermStructure> incomeCurve = market_->yieldCurve(
@@ -102,7 +104,7 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
         conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
     }
 
-    return buildMcEngine(lgm, referenceCurve, simulationDates_, modelIndex, incomeCurve, contractCurve, referenceCurve,
+    return buildMcEngine(lgm, spreadedCurve, simulationDates_, modelIndex, incomeCurve, contractCurve, referenceCurve,
                          conversionFactor);
 }
 
