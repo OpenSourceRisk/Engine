@@ -234,8 +234,29 @@ std::stringstream CsvBufferCrifLoader::stream() const {
 }
 
 QuantLib::ext::shared_ptr<Crif> StringStreamCrifLoader::loadFromStream(std::stringstream&& stream) {
-    LOG("Starting StringStreamCrifLoader::loadFromStream()");
+
+    auto result = QuantLib::ext::make_shared<Crif>();
+
+    // Check first if the stream is empty (just the header row and a blank row)
     string line;
+    Size lineCount = 0;
+    bool secondLineIsEmpty = false;
+    while (getline(stream, line, eol_)) {
+        lineCount++;
+        if (lineCount == 2) {
+            auto entries = parseListOfValues(line, escapeChar_, delim_, quoteChar_);
+            secondLineIsEmpty =
+                std::all_of(entries.begin(), entries.end(), [](const string& val) { return val.empty(); });
+        }
+    }
+    if (lineCount == 2 && secondLineIsEmpty)
+        return result;
+
+    // Reset the stream position
+    stream.clear();
+    stream.seekg(0, std::ios::beg);
+
+    LOG("Starting StringStreamCrifLoader::loadFromStream()");
     vector<string> entries;
     bool headerProcessed = false;
     Size emptyLines = 0;
@@ -243,7 +264,6 @@ QuantLib::ext::shared_ptr<Crif> StringStreamCrifLoader::loadFromStream(std::stri
     Size invalidLines = 0;
     Size maxIndex = 0;
     Size currentLine = 0;
-    auto result = QuantLib::ext::make_shared<Crif>();
     while (getline(stream, line, eol_)) {
 
         // Keep track of current line number for messages
