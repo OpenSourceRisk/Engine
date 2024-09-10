@@ -48,6 +48,7 @@ public:
                 mdFilterEqVols = std::find(tokens.begin(), tokens.end(), "EQVOLS") != tokens.end();
                 mdFilterIrVols = std::find(tokens.begin(), tokens.end(), "IRVOLS") != tokens.end();
                 mdFilterCommVols = std::find(tokens.begin(), tokens.end(), "COMMVOLS") != tokens.end();
+                mdFilterCpiVols = std::find(tokens.begin(), tokens.end(), "CPIVOLS") != tokens.end();
             }
         }
 
@@ -60,6 +61,7 @@ public:
         bool mdFilterEqVols = true;
         bool mdFilterIrVols = true;
         bool mdFilterCommVols = true;
+        bool mdFilterCpiVols = true;
     };
 
     MarketCalibrationReportBase(const std::string& calibrationFilter);
@@ -92,6 +94,10 @@ public:
     // Add ir vol curve data to array
     virtual void addIrVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::IrVolCalibrationInfo> vol,
                           const std::string& name, const std::string& label) = 0;
+
+    // Add cpi vol curve data to array
+    virtual void addCpiVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::CpiVolCalibrationInfo> vol,
+        const std::string& name, const std::string& label) = 0;
 
     // populate the calibration reports
     virtual void populateReport(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
@@ -137,6 +143,10 @@ public:
     // Add ir vol curve data to array
     void addIrVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::IrVolCalibrationInfo> vol,
                   const std::string& name, const std::string& label) override;
+
+    // Add cpi vol curve data to array
+    virtual void addCpiVol(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::CpiVolCalibrationInfo> vol,
+                           const std::string& name, const std::string& label) override;
 
 private:
      QuantLib::ext::shared_ptr<ore::data::Report> report_;
