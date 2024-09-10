@@ -52,8 +52,6 @@ void FwdBondEngineBuilder::setCurves(const string& id, const Currency& ccy, cons
 
     bool spreadOnIncome = parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "false"));
 
-    std::cout << "spreadOnIncome " << spreadOnIncome << std::endl;
-
     if (spreadOnIncome) {
         incomeCurve_ = Handle<YieldTermStructure>(
             QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve_, bondSpread_));
@@ -63,8 +61,6 @@ void FwdBondEngineBuilder::setCurves(const string& id, const Currency& ccy, cons
     discountCurve_ = discountCurveName.empty()
                          ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                          : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
-
-    std::cout << "discountCurveName " << discountCurveName << std::endl;
 
     try {
         conversionFactor_ = market_->conversionFactor(securityId, configuration(MarketContext::pricing));
