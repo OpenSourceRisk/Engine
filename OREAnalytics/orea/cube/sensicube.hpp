@@ -29,6 +29,7 @@
 #include <qle/utilities/serializationdate.hpp>
 
 #include <ql/errors.hpp>
+#include <ql/utilities/null.hpp>
 
 #include <boost/make_shared.hpp>
 #include <boost/math/special_functions/relative_difference.hpp>
@@ -100,15 +101,19 @@ public:
         }
     }
 
-    void remove(Size i) override {
-        this->check(i,0,0);
+    void removeT0(Size i) override {
+        this->check(i, 0, 0);
         this->t0Data_[i] = 0.0;
-        this->tradeNPVs_[i].clear();
     }
 
-    void remove(Size i, Size k) override {
-        this->check(i,0,k);
-        this->tradeNPVs_[i].erase(k);
+    void remove(Size i, Size k, bool useT0) override {
+        this->check(i, 0, k);
+        // we can ignore useT0 since get() return the t0 value anyhow if missing k
+        if (k != QuantLib::Null<Size>()) {
+            this->tradeNPVs_[i].erase(k);
+        } else {
+            this->tradeNPVs_[i].clear();
+        }
     }
 
     std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(QuantLib::Size i) const override { return tradeNPVs_[i]; }

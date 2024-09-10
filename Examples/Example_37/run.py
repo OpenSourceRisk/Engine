@@ -6,9 +6,6 @@ from ore_examples_helper import OreExample
 
 import pca
 import os
-
-# undo the overwrite during the automatic testing
-os.environ.pop('OVERWRITE_SCENARIOGENERATOR_SAMPLES', None)
         
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 

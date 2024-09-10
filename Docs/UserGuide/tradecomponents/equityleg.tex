@@ -73,9 +73,9 @@ Allowable values: 0 $<$ DividendFactor $\leq$  1.   Defaults to \emph{1} if left
 
 Allowable values: A node of the same form as \lstinline!ScheduleData!, (see \ref{ss:schedule_data}). Note that the number of dates (and periods) in the \lstinline!ValuationSchedule! must be the same as in the \lstinline!ScheduleData!.  If omitted, equity valuation dates follow the schedule of the equity leg adjusted for FixingDays.
 
-\item FixingDays [Optional]: The number of days before payment date for equity valuation. \emph{N.B.} Only used when no valuation schedule present. Defaults to \emph{0}.
+\item FixingDays [Optional]: The number of days before payment date for equity valuation. \emph{N.B.} Only used when no valuation schedule present. The calendar used when applying the fixing days is the equity curve calendar (defined in the equity reference data for the underlying equity) combined with the FxIndex calendar (if applicable).
 
-Allowable values: Any non-negative integer.
+Allowable values: Any non-negative integer. Defaults to \emph{0} if left blank or omitted.
 
 \item FXTerms [Mandatory when leg and equity currencies differ]: For the case when the currency  the underlying equity is quoted in, is different from the leg currency.  The \lstinline!FXTerm! node contains the following elements:
 \begin{itemize}
