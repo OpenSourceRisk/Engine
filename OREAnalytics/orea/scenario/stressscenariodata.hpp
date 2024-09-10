@@ -57,25 +57,28 @@ public:
         Real shiftSize;
     };
 
-    class FxVolShiftData(){
-        const vector<Period> expiries() const;
-        const vector<Period> shift() const;
-    }
-
     struct VolShiftData {
         ShiftType shiftType;
         vector<Period> shiftExpiries;
         vector<Real> shifts; 
-
     };
 
-    struct FxVolShiftData{
+    struct FXVolShiftData {
+        
+        enum FxVolShiftMode {
+            Explicit,      // Shifts are given, if only one shift is given perform parallel shift
+            OneTenorShift, // Only one shift and shiftExpiry allowed, keep all other tenors unshifted
+            WeightedShifts // Only one shift and shiftExpiry allowed, derive the shifts for the weightTenors by 
+                           // shift_t = shift_shiftExpiry * w_t / w_shiftExpiry
+        }; 
         ShiftType shiftType;
-        Period shiftTenor;
-        Real shfit;
+        vector<Period> shiftExpiries;
+        vector<Real> shifts;
+        vector<Period> weightTenors;
         vector<Real> weights;
-    }
-
+        FxVolShiftMode mode = FxVolShiftMode::Explicit;
+    };
+    
     struct CapFloorVolShiftData {
         ShiftType shiftType;
         vector<Period> shiftExpiries;
@@ -96,7 +99,7 @@ public:
         map<string, CurveShiftData> indexCurveShifts;          // by index name
         map<string, CurveShiftData> yieldCurveShifts;          // by yield curve name
         map<string, SpotShiftData> fxShifts;                   // by currency pair
-        map<string, VolShiftData> fxVolShifts;                 // by currency pair
+        map<string, FXVolShiftData>fxVolShifts;                // by currency pair
         map<string, SpotShiftData> equityShifts;               // by equity
         map<string, VolShiftData> equityVolShifts;             // by equity
         map<string, CapFloorVolShiftData> capVolShifts;        // by currency

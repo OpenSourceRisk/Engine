@@ -398,7 +398,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
         // buffer for shifted zero curves
         std::vector<Real> shiftedValues(n_fxvol_exp);
 
-        StressTestScenarioData::VolShiftData data = d.second;
+        StressTestScenarioData::FXVolShiftData data = d.second;
 
         //DayCounter dc = parseDayCounter(simMarketData_->fxVolDayCounter(ccypair));
         DayCounter dc;
