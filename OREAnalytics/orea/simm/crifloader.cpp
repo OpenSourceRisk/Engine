@@ -25,6 +25,7 @@
 #include <ored/utilities/parsers.hpp>
 
 #include <algorithm>
+#include <tuple>
 #include <boost/algorithm/string.hpp>
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/adaptor/indexed.hpp>
@@ -44,11 +45,13 @@ using QuantLib::Real;
 using std::exception;
 using std::getline;
 using std::ifstream;
+using std::make_tuple;
 using std::map;
 using std::max_element;
 using std::pair;
 using std::set;
 using std::string;
+using std::tuple;
 using std::vector;
 
 namespace ore {
@@ -234,36 +237,18 @@ std::stringstream CsvBufferCrifLoader::stream() const {
 }
 
 QuantLib::ext::shared_ptr<Crif> StringStreamCrifLoader::loadFromStream(std::stringstream&& stream) {
-
-    auto result = QuantLib::ext::make_shared<Crif>();
-
-    // Check first if the stream is empty (just the header row and a blank row)
-    string line;
-    Size lineCount = 0;
-    bool secondLineIsEmpty = false;
-    while (getline(stream, line, eol_)) {
-        lineCount++;
-        if (lineCount == 2) {
-            auto entries = parseListOfValues(line, escapeChar_, delim_, quoteChar_);
-            secondLineIsEmpty =
-                std::all_of(entries.begin(), entries.end(), [](const string& val) { return val.empty(); });
-        }
-    }
-    if (lineCount == 2 && secondLineIsEmpty)
-        return result;
-
-    // Reset the stream position
-    stream.clear();
-    stream.seekg(0, std::ios::beg);
-
     LOG("Starting StringStreamCrifLoader::loadFromStream()");
+    string line;
     vector<string> entries;
     bool headerProcessed = false;
     Size emptyLines = 0;
     Size validLines = 0;
+    Size blankLines = 0;
     Size invalidLines = 0;
     Size maxIndex = 0;
     Size currentLine = 0;
+    vector<tuple<string, string, string, string>> structuredErrors;
+    auto result = QuantLib::ext::make_shared<Crif>();
     while (getline(stream, line, eol_)) {
 
         // Keep track of current line number for messages
@@ -283,10 +268,12 @@ QuantLib::ext::shared_ptr<Crif> StringStreamCrifLoader::loadFromStream(std::stri
 
         if (headerProcessed) {
             // Process a regular line of the CRIF file
-            if (process(entries, maxIndex, currentLine, result)) {
+            if (process(entries, maxIndex, currentLine, result, structuredErrors)) {
                 ++validLines;
             } else {
                 ++invalidLines;
+                if (std::all_of(entries.begin(), entries.end(), [](const string& val) { return val.empty(); }))
+                    ++blankLines;
             }
         } else {
             // Process the header line of the CRIF file
@@ -297,6 +284,11 @@ QuantLib::ext::shared_ptr<Crif> StringStreamCrifLoader::loadFromStream(std::stri
                 [](const pair<Size, Size>& p1, const pair<Size, Size>& p2) { return p1.second < p2.second; });
             maxIndex = maxPair->second;
         }
+    }
+
+    if (invalidLines != blankLines) {
+        for (const auto& [tradeId, tradeType, exceptionType, exceptionMsg] : structuredErrors)
+            ore::data::StructuredTradeErrorMessage(tradeId, tradeType, exceptionType, exceptionMsg).log();
     }
 
     LOG("Out of " << currentLine << " lines, there were " << validLines << " valid lines, " << invalidLines
@@ -357,7 +349,9 @@ void StringStreamCrifLoader::processHeader(const vector<string>& headers) {
     }
 }
 
-bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxIndex, Size currentLine, const QuantLib::ext::shared_ptr<Crif>& result) {
+bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxIndex, Size currentLine,
+                                     const QuantLib::ext::shared_ptr<Crif>& result,
+                                     vector<tuple<string, string, string, string>>& structuredErrors) {
     CrifRecord cr;
     // Return early if there are not enough entries in the line
     if (entries.size() <= maxIndex) {
@@ -480,10 +474,11 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
         // Add the CRIF record to the net records
         addRecordToCrif(result, std::move(cr));
     } catch (const exception& e) {
-        ore::data::StructuredTradeErrorMessage(tradeId, tradeType, "CRIF loading",
-            "Line number: " + to_string(currentLine) +
-                ". Error processing CRIF line, so skipping it. Error: " + to_string(e.what()))
-            .log();
+        tuple<string, string, string, string> msg =
+            make_tuple(tradeId, tradeType, string("CRIF loading"),
+                       "Line number: " + to_string(currentLine) +
+                           ". Error processing CRIF line, so skipping it. Error: " + to_string(e.what()));
+        structuredErrors.push_back(msg);
         return false;
     }
 
