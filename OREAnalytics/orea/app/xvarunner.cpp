@@ -223,7 +223,8 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
     DLOG("run valuation engine");
 
     ValuationEngine engine(asof_, scenarioGeneratorData_->getGrid(), simMarket_);
-    engine.buildCube(portfolio, cube_, calculators, scenarioGeneratorData_->withMporStickyDate(), nettingCube_);
+    engine.buildCube(portfolio, cube_, calculators, ValuationEngine::ErrorPolicy::RemoveAll,
+                     scenarioGeneratorData_->withMporStickyDate(), nettingCube_);
 }
 
 void XvaRunner::generatePostProcessor(const QuantLib::ext::shared_ptr<Market>& market,

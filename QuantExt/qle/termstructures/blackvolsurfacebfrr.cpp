@@ -25,7 +25,6 @@
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/math/solvers1d/brent.hpp>
-#include <ql/math/solvers1d/newton.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 
 namespace QuantExt {
@@ -137,15 +136,12 @@ Real SimpleDeltaInterpolatedSmile::strikeFromDelta(const Option::Type type, cons
         return tmp;
     };
 
+    try {
     Real guess = std::log(
         BlackDeltaCalculator(type, dt, spot_, domDisc_, forDisc_, std::sqrt(expiryTime_) * volatility(forward_))
             .strikeFromDelta((type == Option::Call ? 1.0 : -1.0) * delta));
-
-    try {
         Brent brent;
-        // Newton newton;
         return std::exp(brent.solve(targetFct, accuracy_, guess, 0.0001));
-        // return std::exp(newton.solve(targetFct, accuracy_, guess, 0.01));
     } catch (const std::exception& e) {
         QL_FAIL("SimpleDeltaInterpolatedSmile::strikeFromDelta("
                 << delta << ") could not be computed for spot=" << spot_ << ", forward=" << spot_ / domDisc_ * forDisc_
@@ -223,13 +219,15 @@ BlackVolatilitySurfaceBFRR::BlackVolatilitySurfaceBFRR(
     const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at, const Period& switchTenor,
     const DeltaVolQuote::DeltaType ltdt, const DeltaVolQuote::AtmType ltat, const Option::Type riskReversalInFavorOf,
     const bool butterflyIsBrokerStyle, const SmileInterpolation smileInterpolation,
-    const TimeInterpolation timeInterpolation, const FxVolatilityTimeWeighting timeWeighting)
+    const TimeInterpolation timeInterpolation, const FxVolatilityTimeWeighting timeWeighting,
+    const Real butterflyErrorTolerance)
     : BlackVolatilityTermStructure(referenceDate, calendar, Following, dayCounter), dates_(dates), deltas_(deltas),
       bfQuotes_(bfQuotes), rrQuotes_(rrQuotes), atmQuotes_(atmQuotes), spot_(spot), spotDays_(spotDays),
       spotCalendar_(spotCalendar), domesticTS_(domesticTS), foreignTS_(foreignTS), dt_(dt), at_(at),
       switchTenor_(switchTenor), ltdt_(ltdt), ltat_(ltat), riskReversalInFavorOf_(riskReversalInFavorOf),
       butterflyIsBrokerStyle_(butterflyIsBrokerStyle), smileInterpolation_(smileInterpolation),
-      timeInterpolation_(timeInterpolation), timeWeighting_(timeWeighting) {
+      timeInterpolation_(timeInterpolation), timeWeighting_(timeWeighting),
+      butterflyErrorTolerance_(butterflyErrorTolerance) {
 
     // checks
 
@@ -481,9 +479,9 @@ QuantLib::ext::shared_ptr<detail::SimpleDeltaInterpolatedSmile> BlackVolatilityS
         Problem problem(targetFunction, noConstraint, guess);
         lm.minimize(problem, endCriteria);
 
-        QL_REQUIRE(targetFunction.bestValue < 0.01, "createSmile at expiry "
-                                                        << expiryTime << " failed: target function value ("
-                                                        << problem.functionValue() << ") not close to zero");
+        QL_REQUIRE(targetFunction.bestValue < butterflyErrorTolerance_,
+                   "createSmile at expiry " << expiryTime << " failed: butterfly error (" << problem.functionValue()
+                                            << ") exceeds tolerance " << butterflyErrorTolerance_);
 
         resultSmile = targetFunction.bestSmile;
     }

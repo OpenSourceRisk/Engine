@@ -371,7 +371,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
         ValuationEngine engine(inputs_->asof(), grid_, simMarket_);
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
-        engine.buildCube(portfolio, cube_, calculators(),
+        engine.buildCube(portfolio, cube_, calculators(), ValuationEngine::ErrorPolicy::RemoveAll,
                          analytic()->configurations().scenarioGeneratorData->withMporStickyDate(), nettingSetCube_,
                          cptyCube_, cptyCalculators());
     } else {
@@ -418,7 +418,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
         engine.registerProgressIndicator(progressBar);
         engine.registerProgressIndicator(progressLog);
 
-        engine.buildCube(portfolio, calculators, cptyCalculators,
+        engine.buildCube(portfolio, calculators, ValuationEngine::ErrorPolicy::RemoveAll, cptyCalculators,
                          analytic()->configurations().scenarioGeneratorData->withMporStickyDate());
 
         cube_ = QuantLib::ext::make_shared<JointNPVCube>(engine.outputCubes(), portfolio->ids());

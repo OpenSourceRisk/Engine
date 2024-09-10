@@ -112,6 +112,7 @@ public:
     const string& baseVolatility2() const { return baseVolatility2_; }
     const string& fxIndexTag() const { return fxIndexTag_; }
     const ReportConfig& reportConfig() const { return reportConfig_; }
+    double butterflyErrorTolerance() const { return butterflyErrorTolerance_; }
     //@}
 
     //! \name Setters
@@ -133,6 +134,7 @@ public:
     string& baseVolatility1() { return baseVolatility1_; }
     string& baseVolatility2() { return baseVolatility2_; }
     string& fxIndexTag() { return fxIndexTag_; }
+    double& butterflyErrorTolerance() { return butterflyErrorTolerance_; }
     //@}
 
 private:
@@ -157,6 +159,7 @@ private:
     string baseVolatility2_;
     string fxIndexTag_;
     ReportConfig reportConfig_;
+    double butterflyErrorTolerance_ = 0.01;
 };
 
 FXVolatilityCurveConfig::TimeInterpolation parseFxVolatilityTimeInterpolation(const std::string& s);

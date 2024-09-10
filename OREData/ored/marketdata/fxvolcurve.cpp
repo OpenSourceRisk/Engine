@@ -417,7 +417,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
         asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, config->dayCounter(), config->calendar(),
         fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
         longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp, interp2,
-        buildTimeWeighting(asof, config->dayCounter()));
+        buildTimeWeighting(asof, config->dayCounter()), config->butterflyErrorTolerance());
 
     vol_->enableExtrapolation();
 }
