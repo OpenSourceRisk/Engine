@@ -86,10 +86,6 @@ void FwdBondEngineBuilder::setCurves(const string& id, const Currency& ccy, cons
         if (!creditCurveId.empty())
             recovery_ = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
     }
-
-    if (!hasCreditRisk) {
-        dpts_ = Handle<DefaultProbabilityTermStructure>();
-    }
 };
 
 QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngine(
