@@ -69,7 +69,7 @@ public:
             Explicit,      // Shifts are given, if only one shift is given perform parallel shift
             OneTenorShift, // Only one shift and shiftExpiry allowed, keep all other tenors unshifted
             WeightedShifts // Only one shift and shiftExpiry allowed, derive the shifts for the weightTenors by 
-                           // shift_t = shift_shiftExpiry * w_t / w_shiftExpiry
+                           // shift_t = shift_ref * w_t / w_ref
         }; 
         ShiftType shiftType;
         vector<Period> shiftExpiries;
