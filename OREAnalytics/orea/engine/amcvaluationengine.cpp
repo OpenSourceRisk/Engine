@@ -21,6 +21,7 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/pathdata.hpp>
 
 #include <ored/marketdata/clonedloader.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
@@ -41,7 +42,6 @@
 #include <ored/portfolio/optionwrapper.hpp>
 
 #include <boost/timer/timer.hpp>
-#include <boost/serialization/vector.hpp>
 
 #include <future>
 
@@ -139,20 +139,6 @@ feeContributions(const Size j, const QuantLib::ext::shared_ptr<ScenarioGenerator
     }
     return result;
 }
-
-struct PathData {
-    std::vector<std::vector<std::vector<Real>>> fxBuffer;
-    std::vector<std::vector<std::vector<Real>>> irStateBuffer;
-    std::vector<Real> pathTimes;
-    std::vector<std::vector<RandomVariable>> paths;
-    friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& fxBuffer;
-        ar& irStateBuffer;
-        ar& pathTimes;
-        ar& paths;
-    }
-};
 
 PathData getPathData(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& model,
                      const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& sgd,

@@ -16,14 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/scenario/historicalscenariofilereader.hpp
+/*! \file orea/scenario/scenariofilereader.hpp
     \brief Class for reading historical scenarios from file
     \ingroup scenario
 */
 
 #pragma once
 
-#include <orea/scenario/historicalscenarioreader.hpp>
+#include <orea/scenario/scenarioreader.hpp>
 
 #include <orea/scenario/scenariofactory.hpp>
 #include <ored/utilities/csvfilereader.hpp>
@@ -33,16 +33,16 @@
 namespace ore {
 namespace analytics {
 
-//! Class for reading historical scenarios from a csv file
-class HistoricalScenarioFileReader : public HistoricalScenarioReader {
+//! Class for reading  scenarios from a csv file
+class ScenarioFileReader : public ScenarioReader {
 public:
     /*! Constructor where \p filename gives the path to the file from which to
         read the scenarios and \p scenarioFactory is a factory for building Scenarios
     */
-    HistoricalScenarioFileReader(const std::string& fileName,
+    ScenarioFileReader(const std::string& fileName,
                                  const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory);
     //! Destructor
-    ~HistoricalScenarioFileReader() override;
+    ~ScenarioFileReader() override;
     //! Return true if there is another Scenario to read and move to it
     bool next() override;
     //! Return the current scenario's date if reader is still valid and `Null<Date>()` otherwise
