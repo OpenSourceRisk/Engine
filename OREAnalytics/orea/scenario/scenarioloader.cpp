@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/scenario/historicalscenarioloader.hpp>
+#include <orea/scenario/scenarioloader.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -28,17 +28,51 @@ using namespace QuantLib;
 namespace ore {
 namespace analytics {
 
-QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioLoader::getHistoricalScenario(const QuantLib::Date& date) const {
-    QL_REQUIRE(historicalScenarios_.size() > 0, "No Historical Scenarios Loaded");
+void ScenarioLoader::add(const QuantLib::Date& date, Size index,
+    const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario) {
+    if (index >= scenarios_.size()) {
+        scenarios_.push_back({});
+    }
 
-    auto it = std::find(dates_.begin(), dates_.end(), date);
-    QL_REQUIRE(it != dates_.end(), "HistoricalScenarioLoader can't find an index for date " << date);
+    auto& scenMap = scenarios_[index];
+    auto it = scenMap.find(date);
+    QL_REQUIRE(it == scenMap.end(), "Scenario already loaded for date, index pair");
+    scenMap[date] = scenario;
+}
 
-    Size index = std::distance(dates_.begin(), it);
-    return historicalScenarios_[index];
+SimpleScenarioLoader::SimpleScenarioLoader(const boost::shared_ptr<ScenarioReader>& scenarioReader) {
+    while (scenarioReader->next()) {
+        auto scenario = scenarioReader->scenario();
+        Date scenarioDate = scenario->asof();
+        string label = scenario->label();
+        Size index;
+        auto it = indexMap_.find(label);
+        if (it == indexMap_.end()) {
+            index = scenarios_.size();
+            indexMap_[label] = index;
+        } else
+            index = it->second;
+
+        add(scenarioDate, index, scenarioReader->scenario());
+    }
+
+    // We require all the same dates for each sample
+    if (scenarios_.size() > 0) {
+        Size ds = scenarios_.front().size();
+        for (Size i = 1; i < scenarios_.size(); i++) {
+            QL_REQUIRE(ds = scenarios_[i].size(), "Number of dates must be the same for each scenario label.");   
+        }
+    }
+}
+
+QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioLoader::getScenario(const QuantLib::Date& date) const {
+    QL_REQUIRE(scenarios_.size() == 1, "No historical scenarios Loaded");
+    auto it = scenarios_[0].find(date);
+    QL_REQUIRE(it != scenarios_[0].end(), "ScenarioLoader can't find scenarios for date " << date);
+    return it->second;
 };
 
-HistoricalScenarioLoader::HistoricalScenarioLoader(const QuantLib::ext::shared_ptr<HistoricalScenarioReader>& scenarioReader,
+HistoricalScenarioLoader::HistoricalScenarioLoader(const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader,
                                                    const Date& startDate, const Date& endDate,
                                                    const Calendar& calendar) {
 
@@ -80,8 +114,7 @@ HistoricalScenarioLoader::HistoricalScenarioLoader(const QuantLib::ext::shared_p
         if (d <= endDate) {
             // create scenario and store it
             DLOG("Loading scenario for date " << iso_date(d));
-            historicalScenarios_.push_back(scenarioReader->scenario());
-            dates_.push_back(d);
+            add(d, 0, scenarioReader->scenario());
 
             // Advance the request date
             d = calendar.advance(d, 1 * Days);
@@ -91,11 +124,11 @@ HistoricalScenarioLoader::HistoricalScenarioLoader(const QuantLib::ext::shared_p
         }
     }
 
-    LOG("Loaded " << historicalScenarios_.size() << " from " << startDate << " to " << endDate);
+    LOG("Loaded " << scenarios_.size() << " from " << startDate << " to " << endDate);
 }
 
 HistoricalScenarioLoader::HistoricalScenarioLoader(
-    const boost::shared_ptr<HistoricalScenarioReader>& scenarioReader,
+    const boost::shared_ptr<ScenarioReader>& scenarioReader,
     const std::set<Date>& dates) {
     while (scenarioReader->next()) {
         Date scenarioDate = scenarioReader->date();
@@ -104,12 +137,11 @@ HistoricalScenarioLoader::HistoricalScenarioLoader(
         if (it == dates.end())
             continue;
         else {
-            historicalScenarios_.push_back(scenarioReader->scenario());
-            dates_.push_back(scenarioDate);            
+            add(scenarioDate, 0, scenarioReader->scenario());   
         }
-        if (dates_.size() == dates.size())
+        if (scenarios_.size() == dates.size())
             break;
-    }    
+    }
 }
 
 HistoricalScenarioLoader::HistoricalScenarioLoader(
@@ -121,11 +153,9 @@ HistoricalScenarioLoader::HistoricalScenarioLoader(
         auto it = dates.find(scenarioDate);
         if (it == dates.end())
             continue;
-        else {
-            historicalScenarios_.push_back(s);
-            dates_.push_back(scenarioDate);
-        }
-        if (dates_.size() == dates.size())
+        else
+            add(scenarioDate, 0, s);
+        if (scenarios_.size() == dates.size())
             break;
     }
 }

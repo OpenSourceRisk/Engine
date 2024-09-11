@@ -407,7 +407,7 @@ void LgmBuilder::performCalculations() const {
     std::string errorTemplate =
         std::string("Failed to calibrate LGM Model. ") +
         (continueOnError_ ? std::string("Calculation will proceed anyway - using the calibration as is!")
-                          : std::string("Calculation will aborted."));
+                          : std::string("Calculation will be aborted."));
     try {
         if (data_->calibrateA() && !data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) {
             DLOG("call calibrateVolatilitiesIterative for volatility calibration (bootstrap)");
