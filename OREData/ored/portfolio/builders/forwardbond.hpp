@@ -41,11 +41,11 @@
 namespace ore {
 namespace data {
 
-class fwdBondEngineBuilder
+class FwdBondEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&, const string&,
                                          const bool, const string&, const string&, const string&, const bool> {
 protected:
-    fwdBondEngineBuilder(const std::string& model, const std::string& engine)
+    FwdBondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"ForwardBond"}) {}
 
     virtual string keyImpl(const string& id, const Currency& ccy, const std::string& discountCurveName,
@@ -58,12 +58,27 @@ protected:
 
         return returnString;
     }
+
+    void setCurves(const string& id, const Currency& ccy, const std::string& discountCurveName,
+                   const string& creditCurveId, const bool hasCreditRisk, const string& securityId,
+                   const string& referenceCurveId, const string& incomeCurveId, const bool dirty);
+
+    Handle<YieldTermStructure> referenceCurve_;
+    Handle<Quote> bondSpread_;
+    Handle<YieldTermStructure> spreadedReferenceCurve_;
+    Handle<YieldTermStructure> discountCurve_;
+    Handle<YieldTermStructure> incomeCurve_;
+    bool spreadOnIncome_;
+    Handle<Quote> conversionFactor_;
+    // not used in AMC yet
+    Handle<DefaultProbabilityTermStructure> dpts_;
+    Handle<Quote> recovery_;
 };
 
-class DiscountingForwardBondEngineBuilder : public fwdBondEngineBuilder {
+class DiscountingForwardBondEngineBuilder : public FwdBondEngineBuilder {
 public:
     DiscountingForwardBondEngineBuilder()
-        : fwdBondEngineBuilder("DiscountedCashflows", "DiscountingForwardBondEngine") {}
+        : FwdBondEngineBuilder("DiscountedCashflows", "DiscountingForwardBondEngine") {}
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine>
@@ -73,64 +88,21 @@ protected:
 
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
-        Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
 
-        Handle<YieldTermStructure> discountCurve =
-            discountCurveName.empty()
-                ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
-                : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
-        // fall back on reference curve if no income curve is specified
-        Handle<YieldTermStructure> incomeTS = market_->yieldCurve(
-            incomeCurveId.empty() ? referenceCurveId : incomeCurveId, configuration(MarketContext::pricing));
-        Handle<DefaultProbabilityTermStructure> dpts;
-        // credit curve may not always be used. If credit curve ID is empty proceed without it
-        if (!creditCurveId.empty())
-            dpts =
-                securitySpecificCreditCurve(market_, securityId, creditCurveId, configuration(MarketContext::pricing))
-                    ->curve();
-        Handle<Quote> recovery;
-        try {
-            recovery = market_->recoveryRate(securityId, configuration(MarketContext::pricing));
-        } catch (...) {
-            // otherwise fall back on curve recovery
-            WLOG("security specific recovery rate not found for security ID "
-                 << securityId << ", falling back on the recovery rate for credit curve Id " << creditCurveId);
-            if (!creditCurveId.empty())
-                recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
-        }
+        setCurves(id, ccy, discountCurveName, creditCurveId, hasCreditRisk, securityId, referenceCurveId, incomeCurveId,
+                  dirty);
 
-        Handle<Quote> bondSpread;
-        try {
-            // spread is optional, pass empty handle to engine if not given (will be treated as 0 spread there)
-            bondSpread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
-        } catch (...) {
-        }
-
-        Handle<Quote> conversionFactor;
-        try {
-            conversionFactor = market_->conversionFactor(securityId, configuration(MarketContext::pricing));
-        } catch (...) {
-            conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
-        }
-        if (dirty && conversionFactor->value() != 1.0){
-            WLOG("conversionFactor for " << securityId << " is overwritten to 1.0, settlement is dirty")
-            conversionFactor = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
-        }
-
-        if (!hasCreditRisk) {
-            dpts = Handle<DefaultProbabilityTermStructure>();
-        }
-
-        return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(discountCurve, incomeTS, yts, bondSpread, dpts,
-                                                                          recovery, conversionFactor, tsperiod);
+        return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(
+            discountCurve_, incomeCurve_, spreadedReferenceCurve_, bondSpread_, dpts_, recovery_, conversionFactor_,
+            tsperiod);
     }
 };
 
-class CamAmcFwdBondEngineBuilder : public fwdBondEngineBuilder {
+class CamAmcFwdBondEngineBuilder : public FwdBondEngineBuilder {
 public:
     CamAmcFwdBondEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
                                const std::vector<Date>& simulationDates)
-        : fwdBondEngineBuilder("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
+        : FwdBondEngineBuilder("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
 
 protected:
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
