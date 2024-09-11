@@ -286,7 +286,7 @@ QuantLib::ext::shared_ptr<Crif> StringStreamCrifLoader::loadFromStream(std::stri
         }
     }
 
-    if (!(invalidLines == blankLines && invalidLines == currentLine)) {
+    if (blankLines != (currentLine - 1)) {
         for (const auto& [tradeId, tradeType, exceptionType, exceptionMsg] : structuredErrors)
             ore::data::StructuredTradeErrorMessage(tradeId, tradeType, exceptionType, exceptionMsg).log();
     }
