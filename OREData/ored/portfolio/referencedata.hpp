@@ -104,7 +104,7 @@ public:
         string referenceCurveId;
         string incomeCurveId;
         string volatilityCurveId;
-	string priceQuoteMethod;
+	    string priceQuoteMethod;
         string priceQuoteBaseValue;
         std::vector<LegData> legData;
         string subType;
