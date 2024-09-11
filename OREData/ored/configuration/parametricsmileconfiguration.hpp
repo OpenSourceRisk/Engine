@@ -36,6 +36,7 @@ class ParametricSmileConfiguration : public XMLSerializable {
 public:
     class Parameter : public XMLSerializable {
     public:
+        enum class Calibration { Fixed, Calibrated, Implied };
         void fromXML(ore::data::XMLNode* node) override;
         ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
