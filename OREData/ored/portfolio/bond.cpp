@@ -28,8 +28,8 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/utilities/to_string.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
@@ -115,10 +115,10 @@ XMLNode* BondData::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
     if (!issueDate_.empty())
         XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
-    if(!priceQuoteMethod_.empty())
-	XMLUtils::addChild(doc, bondNode, "PriceQuoteMethod", priceQuoteMethod_);
-    if(!priceQuoteBaseValue_.empty())
-	XMLUtils::addChild(doc, bondNode, "PriceQuoteBaseValue", priceQuoteBaseValue_);
+    if (!priceQuoteMethod_.empty())
+        XMLUtils::addChild(doc, bondNode, "PriceQuoteMethod", priceQuoteMethod_);
+    if (!priceQuoteBaseValue_.empty())
+        XMLUtils::addChild(doc, bondNode, "PriceQuoteBaseValue", priceQuoteBaseValue_);
     XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
@@ -173,18 +173,18 @@ void BondData::initialise() {
 }
 
 void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<BondReferenceDatum>& referenceDatum,
-					       const std::string& startDate, const std::string& endDate) {
+                                             const std::string& startDate, const std::string& endDate) {
     DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
-    ore::data::populateFromBondReferenceData(subType_, issuerId_, settlementDays_, calendar_, issueDate_, priceQuoteMethod_,
-                                             priceQuoteBaseValue_, creditCurveId_, creditGroup_, referenceCurveId_,
-                                             incomeCurveId_, volatilityCurveId_, coupons_, securityId_, referenceDatum,
-                                             startDate, endDate);
+    ore::data::populateFromBondReferenceData(subType_, issuerId_, settlementDays_, calendar_, issueDate_,
+                                             priceQuoteMethod_, priceQuoteBaseValue_, creditCurveId_, creditGroup_,
+                                             referenceCurveId_, incomeCurveId_, volatilityCurveId_, coupons_,
+                                             securityId_, referenceDatum, startDate, endDate);
     initialise();
     checkData();
 }
 
 void BondData::populateFromBondReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-					     const std::string& startDate, const std::string& endDate) {
+                                             const std::string& startDate, const std::string& endDate) {
     QL_REQUIRE(!securityId_.empty(), "BondData::populateFromBondReferenceData(): no security id given");
     if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, securityId_)) {
         DLOG("could not get BondReferenceDatum for name " << securityId_ << " leave data in trade unchanged");
@@ -271,10 +271,11 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     }
 
     Currency currency = parseCurrency(bondData_.currency());
-    QuantLib::ext::shared_ptr<BondEngineBuilder> bondBuilder = QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
+    QuantLib::ext::shared_ptr<BondEngineBuilder> bondBuilder =
+        QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
-    bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
-                                               bondData_.securityId(), bondData_.referenceCurveId()));
+    bond->setPricingEngine(
+        bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId()));
     setSensitivityTemplate(*bondBuilder);
     instrument_.reset(new VanillaInstrument(bond, mult));
 
@@ -347,8 +348,8 @@ BondBuilder::Result BondFactory::build(const QuantLib::ext::shared_ptr<EngineFac
                "data and that there is a builder for the reference data type.");
 }
 
-void BondFactory::addBuilder(const std::string& referenceDataType, const QuantLib::ext::shared_ptr<BondBuilder>& builder,
-                             const bool allowOverwrite) {
+void BondFactory::addBuilder(const std::string& referenceDataType,
+                             const QuantLib::ext::shared_ptr<BondBuilder>& builder, const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(builders_.insert(std::make_pair(referenceDataType, builder)).second || allowOverwrite,
                "BondFactory::addBuilder(" << referenceDataType << "): builder for key already exists.");
@@ -379,7 +380,7 @@ BondBuilder::Result VanillaBondBuilder::build(const QuantLib::ext::shared_ptr<En
     res.bondTrade = bond;
 
     if (data.isInflationLinked()) {
-        res.isInflationLinked = true;       
+        res.isInflationLinked = true;
     }
     res.hasCreditRisk = data.hasCreditRisk() && !data.creditCurveId().empty();
     res.currency = data.currency();
@@ -436,7 +437,7 @@ void VanillaBondBuilder::modifyToForwardBond(const Date& expiry, boost::shared_p
         QuantLib::ext::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << securityId);
     modifiedBond->setPricingEngine(bondBuilder->engine(parseCurrency(data.currency()), data.creditCurveId(),
-                                                       data.hasCreditRisk(), securityId, data.referenceCurveId()));
+                                                       securityId, data.referenceCurveId()));
 
     // store modified bond
     bond = modifiedBond;

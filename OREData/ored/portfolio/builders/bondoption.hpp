@@ -45,22 +45,22 @@ namespace data {
 \ingroup builders
 */
 class BondOptionEngineBuilder
-    : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&, const bool,
+    : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&,
                                          const string&, const string&, const string&> {
 public:
     BondOptionEngineBuilder() : CachingEngineBuilder("Black", "BlackBondOptionEngine", {"BondOption"}) {}
 
 protected:
     virtual std::string keyImpl(const string& id, const Currency& ccy, const string& creditCurveId,
-                                const bool hasCreditRisk, const string& securityId, const string& referenceCurveId,
+                                const string& securityId, const string& referenceCurveId,
                                 const string& volatilityCurveId) override {
         // id is _not_ part of the key
-        return ccy.code() + "_" + creditCurveId + "_" + (hasCreditRisk ? "1_" : "0_") + securityId + "_" +
+        return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" +
                referenceCurveId + "_" + volatilityCurveId + "_" + "BondOption";
     }
 
     virtual QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
-    engineImpl(const string& id, const Currency& ccy, const string& creditCurveId, const bool hasCreditRisk,
+    engineImpl(const string& id, const Currency& ccy, const string& creditCurveId,
                const string& securityId, const string& referenceCurveId, const string& volatilityCurveId) override {
 
         Handle<YieldTermStructure> discountCurve =
@@ -92,10 +92,6 @@ protected:
             // spread is optional, pass empty handle to engine if not given (will be treated as 0 spread there)
             spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
         } catch (...) {
-        }
-
-        if (!hasCreditRisk) {
-            dpts = Handle<DefaultProbabilityTermStructure>();
         }
 
         return QuantLib::ext::make_shared<QuantExt::BlackBondOptionEngine>(
