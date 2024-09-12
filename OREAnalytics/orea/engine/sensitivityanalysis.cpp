@@ -283,16 +283,16 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
     case RiskFactorKey::KeyType::FXSpot: {
         auto itr = sensiParams.fxShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.fxShiftData().end(), "shiftData not found for " << keylabel);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
             shiftMult = simMarket->fxRate(keylabel, marketConfiguration)->value();
         }
     } break;
     case RiskFactorKey::KeyType::EquitySpot: {
         auto itr = sensiParams.equityShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.equityShiftData().end(), "shiftData not found for " << keylabel);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
             shiftMult = simMarket->equitySpot(keylabel, marketConfiguration)->value();
         }
     } break;
@@ -357,13 +357,13 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         string pair = keylabel;
         auto itr = sensiParams.fxVolShiftData().find(pair);
         QL_REQUIRE(itr != sensiParams.fxVolShiftData().end(), "shiftData not found for " << pair);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
-            vector<Real> strikes = sensiParams.fxVolShiftData().at(pair).shiftStrikes;
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
+            vector<Real> strikes = sensiParams.fxVolShiftData().at(pair)->shiftStrikes;
             QL_REQUIRE(strikes.size() == 1 && close_enough(strikes[0], 0), "Only ATM FX vols supported");
             Real atmFwd = 0.0; // hardcoded, since only ATM supported
             Size keyIdx = key.index;
-            Period p = itr->second.shiftExpiries[keyIdx];
+            Period p = itr->second->shiftExpiries[keyIdx];
             Handle<BlackVolTermStructure> vts = simMarket->fxVol(pair, marketConfiguration);
             Time t = vts->dayCounter().yearFraction(asof, asof + p);
             Real atmVol = vts->blackVol(t, atmFwd);
@@ -374,10 +374,10 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         string pair = keylabel;
         auto itr = sensiParams.equityVolShiftData().find(pair);
         QL_REQUIRE(itr != sensiParams.equityVolShiftData().end(), "shiftData not found for " << pair);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
             Size keyIdx = key.index;
-            Period p = itr->second.shiftExpiries[keyIdx];
+            Period p = itr->second->shiftExpiries[keyIdx];
             Handle<BlackVolTermStructure> vts = simMarket->equityVol(pair, marketConfiguration);
             Time t = vts->dayCounter().yearFraction(asof, asof + p);
             Real atmVol = vts->blackVol(t, Null<Real>());
@@ -387,11 +387,11 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
     case RiskFactorKey::KeyType::SwaptionVolatility: {
         auto itr = sensiParams.swaptionVolShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.swaptionVolShiftData().end(), "shiftData not found for " << keylabel);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
-            vector<Real> strikes = itr->second.shiftStrikes;
-            vector<Period> tenors = itr->second.shiftTerms;
-            vector<Period> expiries = itr->second.shiftExpiries;
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
+            vector<Real> strikes = itr->second->shiftStrikes;
+            vector<Period> tenors = itr->second->shiftTerms;
+            vector<Period> expiries = itr->second->shiftExpiries;
             Size keyIdx = key.index;
             Size expIdx = keyIdx / (tenors.size() * strikes.size());
             Period p_exp = expiries[expIdx];
@@ -407,13 +407,13 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         string securityId = keylabel;
         auto itr = sensiParams.yieldVolShiftData().find(securityId);
         QL_REQUIRE(itr != sensiParams.yieldVolShiftData().end(), "shiftData not found for " << securityId);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
-            vector<Real> strikes = itr->second.shiftStrikes;
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
+            vector<Real> strikes = itr->second->shiftStrikes;
             QL_REQUIRE(strikes.size() == 1 && close_enough(strikes[0], 0.0),
                        "shift strikes should be {0.0} for yield volatilities");
-            vector<Period> tenors = itr->second.shiftTerms;
-            vector<Period> expiries = itr->second.shiftExpiries;
+            vector<Period> tenors = itr->second->shiftTerms;
+            vector<Period> expiries = itr->second->shiftExpiries;
             Size keyIdx = key.index;
             Size expIdx = keyIdx / (tenors.size() * strikes.size());
             Period p_exp = expiries[expIdx];
@@ -442,9 +442,9 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         string name = keylabel;
         auto itr = sensiParams.cdsVolShiftData().find(name);
         QL_REQUIRE(itr != sensiParams.cdsVolShiftData().end(), "shiftData not found for " << name);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
-            vector<Period> expiries = itr->second.shiftExpiries;
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
+            vector<Period> expiries = itr->second->shiftExpiries;
             Size keyIdx = key.index;
             Size expIdx = keyIdx;
             Period p_exp = expiries[expIdx];
@@ -472,10 +472,10 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         string name = keylabel;
         auto itr = sensiParams.baseCorrelationShiftData().find(name);
         QL_REQUIRE(itr != sensiParams.baseCorrelationShiftData().end(), "shiftData not found for " << name);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
-            vector<Real> lossLevels = itr->second.shiftLossLevels;
-            vector<Period> terms = itr->second.shiftTerms;
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
+            vector<Real> lossLevels = itr->second->shiftLossLevels;
+            vector<Period> terms = itr->second->shiftTerms;
             Size keyIdx = key.index;
             Size lossLevelIdx = keyIdx / terms.size();
             Real lossLevel = lossLevels[lossLevelIdx];
@@ -570,12 +570,12 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         auto it = sensiParams.commodityVolShiftData().find(keylabel);
         QL_REQUIRE(it != sensiParams.commodityVolShiftData().end(), "shiftData not found for " << keylabel);
 
-        shiftSize = it->second.shiftSize;
-        if (it->second.shiftType == ShiftType::Relative) {
-            Size moneynessIndex = key.index / it->second.shiftExpiries.size();
-            Size expiryIndex = key.index % it->second.shiftExpiries.size();
-            Real moneyness = it->second.shiftStrikes[moneynessIndex];
-            Period expiry = it->second.shiftExpiries[expiryIndex];
+        shiftSize = it->second->shiftSize;
+        if (it->second->shiftType == ShiftType::Relative) {
+            Size moneynessIndex = key.index / it->second->shiftExpiries.size();
+            Size expiryIndex = key.index % it->second->shiftExpiries.size();
+            Real moneyness = it->second->shiftStrikes[moneynessIndex];
+            Period expiry = it->second->shiftExpiries[expiryIndex];
             Real spotValue = simMarket->commodityPriceCurve(keylabel, marketConfiguration)->price(0);
             Handle<BlackVolTermStructure> vts = simMarket->commodityVolatility(keylabel, marketConfiguration);
             Time t = vts->dayCounter().yearFraction(asof, asof + expiry);
@@ -586,8 +586,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
     case RiskFactorKey::KeyType::SecuritySpread: {
         auto itr = sensiParams.securityShiftData().find(keylabel);
         QL_REQUIRE(itr != sensiParams.securityShiftData().end(), "shiftData not found for " << keylabel);
-        shiftSize = itr->second.shiftSize;
-        if (itr->second.shiftType == ShiftType::Relative) {
+        shiftSize = itr->second->shiftSize;
+        if (itr->second->shiftType == ShiftType::Relative) {
             shiftMult = 1.0;
             try {
                 shiftMult = simMarket->securitySpread(keylabel, marketConfiguration)->value();
