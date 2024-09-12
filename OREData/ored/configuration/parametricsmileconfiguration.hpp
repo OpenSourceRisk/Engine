@@ -24,6 +24,9 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+
+#include <qle/termstructures/parametricvolatility.hpp>
+
 #include <ql/utilities/null.hpp>
 
 namespace ore {
