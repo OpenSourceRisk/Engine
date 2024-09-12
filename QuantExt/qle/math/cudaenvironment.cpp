@@ -45,6 +45,7 @@
 #define MAX_BUILD_LOG_LOGFILE 1024U
 
 namespace {
+#ifdef ORE_ENABLE_CUDA
 std::string curandGetErrorString(curandStatus_t err) {
     switch (err) {
     case CURAND_STATUS_SUCCESS:
@@ -133,10 +134,8 @@ std::string cusolverGetErrorString(cusolverStatus_t err) {
     default:
         return "unknown cusolver error code " + std::to_string(err);
     }
+#endif
 }
-
-std::map<std::string, std::string> getGPUArchitecture{{"Nvidia Geforce RTX 3080", "compute_86"},
-                                                       {"Quadro T1000", "compute_75"}};
 } // namespace
 
 namespace QuantExt {
@@ -145,8 +144,8 @@ namespace QuantExt {
 
 class CudaContext : public ComputeContext {
 public:
-    CudaContext(size_t device,
-                const std::vector<std::pair<std::string, std::string>>& deviceInfo, const bool supportsDoublePrecision);
+    CudaContext(size_t device, const std::vector<std::pair<std::string, std::string>>& deviceInfo,
+                const std::string gpuArchitecture, const bool supportsDoublePrecision);
     ~CudaContext() override final;
     void init() override final;
 
@@ -194,9 +193,10 @@ private:
 
     bool initialized_ = false;
     size_t device_;
-    size_t NUM_THREADS_ = 64;
+    size_t NUM_THREADS_ = 256;
     
     std::vector<std::pair<std::string, std::string>> deviceInfo_;
+    std::string gpuArchitecture_;
     bool supportsDoublePrecision_;
     size_t maxRandomVariates_;
     double* d_randomVariables_;
@@ -249,21 +249,27 @@ private:
     CUfunction ore_twistKernel_;
     CUfunction ore_generateKernel_;
 
-    // 4a Conditional Expectation
-    //std::vector<size_t> idCE_; // per calc id
-    //std::vector<CUmodule> moduleCE_;  // id by idCE_
-    //std::vector<CUkernel> kernelCE_;  // id by idCE_
+    // 4a Expectation
+    std::vector<std::vector<int>> numOfExpectationInKernel_; // vector per calc id per kernel: -1 means initial kernel, -2 means expectation result id used on rhs, -3 means both intial kernel and expectation result id used on rhs, >0 means number of expectation in intermediate kernel
+    std::vector<int> numOfExpectation_; //int per calc id: store the number of expectations which will be used for the size of eR
+    std::string newKernelE_; // current calc: temp store the expection intermediate calculation of the next kernel
+    std::vector<size_t>
+        resultIdUnprocessedE_; // current calc: store the number of the result id returned from the expectation that have not been calculated
+    std::vector<size_t>
+        resultIdFlatE_; // current calc: store the number of the result id returned from the expectation that have been calculated
+    size_t expectationCount_;
+    size_t expectationKernelCount_;
+    
 
     // 4b Conditional Expectation
     //size_t conditionalExpectationCount_;
-    std::map<size_t, std::vector<std::vector<size_t>>> basisFunctionCE_; // vector per conditional expectation: store number of basis functions per conditional expectation
+    std::vector<std::vector<std::vector<size_t>>> basisFunctionCE_; // vector per conditional expectation: store number of basis functions per conditional expectation
     std::vector<size_t> basisFunctionHelper_; // current calc: store the basis function number in the current kernel
     std::vector<size_t> lastResultIdCE_; // current calc: store the last result id used for all the operations before the conditional expectation
     std::vector<std::vector<size_t>> resultIdCE_; // current calc: store the number of the result id returned from the conditional expectation
-    std::vector<bool> hasExpectation_; // current calc: true if the kernel has expectation
     std::string newKernelCE_; // current calc: temp store the conditional expection calculation of the next kernel
     std::vector<size_t> idCopiedToValues_; // current calc: id that are needed in the future kernels are copied to the values
-    std::map<size_t, size_t> valuesSize_; // values size per calc with conditional expectation: number of id stored in values
+    std::vector<size_t> valuesSize_; // values size per calc with conditional expectation: number of id stored in values
     std::vector<size_t> kernelOfIdCopiedToValues_; // current calc: store the kernel num of the if copied to values
 };
 
@@ -274,9 +280,10 @@ CudaFramework::CudaFramework() {
     for (std::size_t d = 0; d < nDevices; ++d) {
         cudaDeviceProp device_prop;
         cudaGetDeviceProperties(&device_prop, 0);
+        std::string arch = "compute_" + std::to_string(device_prop.major * 10 + device_prop.minor);
         char device_name[MAX_N_NAME];
         std::vector<std::pair<std::string, std::string>> deviceInfo;
-        contexts_["CUDA/DEFAULT/" + std::string(device_prop.name)] = new CudaContext(d, deviceInfo, true);
+        contexts_["CUDA/DEFAULT/" + std::string(device_prop.name)] = new CudaContext(d, deviceInfo, arch, true);
     }
 }
 
@@ -287,9 +294,10 @@ CudaFramework::~CudaFramework() {
 }
 
 CudaContext::CudaContext(
-    size_t device,
-    const std::vector<std::pair<std::string, std::string>>& deviceInfo, const bool supportsDoublePrecision)
-    : initialized_(false), device_(device), deviceInfo_(deviceInfo), supportsDoublePrecision_(supportsDoublePrecision) {}
+    size_t device, const std::vector<std::pair<std::string, std::string>>& deviceInfo,
+                         const std::string gpuArchitecture, const bool supportsDoublePrecision)
+    : initialized_(false), device_(device), deviceInfo_(deviceInfo),
+      gpuArchitecture_(gpuArchitecture), supportsDoublePrecision_(supportsDoublePrecision) {}
 
 CudaContext::~CudaContext() {
     if (initialized_) {
@@ -470,6 +478,11 @@ std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t 
         nOutputVariables_.push_back(0);
         nRandomVariables_.push_back(0);
         nOperations_.push_back(0);
+        numOfExpectationInKernel_.emplace_back();
+        numOfExpectationInKernel_.back().push_back(0);
+        numOfExpectation_.push_back(0);
+        basisFunctionCE_.emplace_back();
+        valuesSize_.push_back(0);
 
         currentId_ = hasKernel_.size();
         newCalc = true;
@@ -493,12 +506,11 @@ std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t 
             nOutputVariables_[id - 1] = 0;
             nRandomVariables_[id - 1] = 0;
             nOperations_[id - 1] = 0;
-            if (basisFunctionCE_.find(id) != basisFunctionCE_.end()) {
-                basisFunctionCE_[id].clear();
-            }
-            if (valuesSize_.find(id) != valuesSize_.end()) {
-                valuesSize_[id] = 0;
-            }
+            numOfExpectationInKernel_[id - 1].clear();
+            numOfExpectationInKernel_[id - 1].push_back(0);
+            numOfExpectation_[id - 1] = 0;
+            basisFunctionCE_[id - 1].clear();
+            valuesSize_[id - 1] = 0;
             newCalc = true;
         }
 
@@ -517,12 +529,16 @@ std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t 
     lastResultIdCE_.clear();
     resultIdCE_.clear();
     resultIdCE_.emplace_back();
+    resultIdUnprocessedE_.clear();
+    resultIdFlatE_.clear();
     kernelOfIdCopiedToValues_.clear();
 	source_.push_back("");
-	hasExpectation_.push_back(false);
     basisFunctionHelper_.clear();
     basisFunctionHelper_.push_back(0);
+    expectationCount_ = 0;
+    expectationKernelCount_ = 0;
     idCopiedToValues_.clear();
+    newKernelE_ = "";
     newKernelCE_ = "";
 
     // set state
@@ -985,10 +1001,10 @@ void CudaContext::updateVariatesMT19937_CPU() {
             nvrtcCall(nvrtcCreateProgram(&nvrtcProgram, rngKernelSource.c_str(), "kernel.cu", 0, nullptr, nullptr), "updateVariatesMT19937_CPU(), nvrtcCreateProgram()");
             //QL_REQUIRE(nvrtcErr == NVRTC_SUCCESS, "CudaContext::updateVariatesMT19937_CPU(): error during nvrtcCreateProgram(): "
             //                                          << nvrtcGetErrorString(nvrtcErr));
-
+            std::string gpuArchOption = "--gpu-architecture=" + gpuArchitecture_;
             const char* compileOptions[] = {
                 //"--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
-                "--gpu-architecture=compute_75", "-std=c++17", "-dopt=on",
+                gpuArchOption.c_str(), "-std=c++17", "-dopt=on",
                 //"--time=D:/GitHub/Engine/build/QuantExt/test/Debug/time.txt",
                 nullptr};
             nvrtcCall(nvrtcCompileProgram(nvrtcProgram, 3, compileOptions), "updateVariatesMT19937_CPU(), nvrtcCompileProgram()");
@@ -1111,7 +1127,7 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
     QL_REQUIRE(!hasKernel_[currentId_ - 1], "CudaContext::applyOperation(): id (" << currentId_ << ") in version "
                                                                                     << version_[currentId_ - 1]
                                                                                     << " has a kernel already.");
-    // Check if vaiable id is in conditional expectation result id
+    // Check if variable id is in conditional expectation result id
     if (!resultIdCE_.back().empty()) {
         for (std::size_t i = 0; i < args.size(); ++i) {
             if (std::find(resultIdCE_.back().begin(), resultIdCE_.back().end(), args[i]) != resultIdCE_.back().end()) {
@@ -1119,15 +1135,56 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
                 lastResultIdCE_.push_back(nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1]);
                 freedVariables_.clear(); // test
 			    source_.push_back(newKernelCE_);
+                //std::cout << "source_.size() after source_.push_back(newKernelCE_); = " << source_.size() << std::endl;
+                numOfExpectationInKernel_[currentId_ - 1].push_back(0);
                 newKernelCE_ = "";
-			    hasExpectation_.push_back(false);
-                basisFunctionCE_[currentId_].push_back(basisFunctionHelper_);
+                basisFunctionCE_[currentId_ - 1].push_back(basisFunctionHelper_);
                 basisFunctionHelper_.clear();
                 basisFunctionHelper_.push_back(0);
                 resultIdCE_.emplace_back();
             }
         }
-    }
+    } 
+    // Check if variable id is in expectation result id
+    if (!resultIdUnprocessedE_.empty()) {
+        for (std::size_t i = 0; i < args.size(); ++i) {
+            if (std::find(resultIdUnprocessedE_.begin(), resultIdUnprocessedE_.end(), args[i]) != resultIdUnprocessedE_.end()) {
+                numOfExpectationInKernel_[currentId_ - 1].push_back(expectationCount_);
+                expectationCount_ = 0;
+                ++expectationKernelCount_;
+                source_.push_back(newKernelE_);
+                //std::cout << "source_.size() after source_.push_back(newKernelE_) = " << source_.size() << std::endl;
+                source_.push_back(newKernelCE_);
+                numOfExpectationInKernel_[currentId_ - 1].push_back(0);
+                lastResultIdCE_.push_back(nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1]);
+                lastResultIdCE_.push_back(nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1]);
+                //std::cout << "source_.size() after source_.push_back(""); = " << source_.size() << std::endl;
+                newKernelCE_ = "";
+                newKernelE_ = "";
+                basisFunctionCE_[currentId_ - 1].push_back(basisFunctionHelper_);
+                basisFunctionHelper_.clear();
+                basisFunctionHelper_.push_back(0);
+                resultIdCE_.emplace_back();
+                resultIdCE_.emplace_back();
+                // Add all unprocessed id into flat id list
+                resultIdFlatE_.insert(resultIdFlatE_.end(), resultIdUnprocessedE_.begin(), resultIdUnprocessedE_.end());
+                resultIdUnprocessedE_.clear();
+                freedVariables_.clear();
+       //         // end the current kernel, start a new kernel
+       //         lastResultIdCE_.push_back(nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1]);
+       //         freedVariables_.clear(); // test
+			    //source_.push_back(newKernelCE_);
+       //         expectationCount_.push_back(0);
+       //         isExpectationKernel_.back().push_back(false);
+       //         newKernelCE_ = "";
+			    //hasExpectation_.push_back(false);
+       //         basisFunctionCE_[currentId_].push_back(basisFunctionHelper_);
+       //         basisFunctionHelper_.clear();
+       //         basisFunctionHelper_.push_back(0);
+       //         resultIdCE_.emplace_back();
+            }
+        }
+    } 
 
     // determine variable id to use for result
     std::size_t resultId;
@@ -1167,23 +1224,44 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
                     argStr[i] = "v" + std::to_string(args[i]);
                 }
                 else {
-                    // id is conditional expectation calculcated at the beginning of this kernel, not read from values
-                    auto secToLast = resultIdCE_[resultIdCE_.size() - 2];
-                    if (std::find(secToLast.begin(), secToLast.end(), args[i]) != secToLast.end())
-                        argStr[i] = "v" + std::to_string(args[i]);
+                    // id is expectation result, read from eR
+                    auto eIt = std::find(resultIdFlatE_.begin(), resultIdFlatE_.end(), args[i]);
+                    if (eIt != resultIdFlatE_.end()){
+                        argStr[i] = "eR[" + std::to_string(std::distance(resultIdFlatE_.begin(), eIt)) + "]";
+                        switch (numOfExpectationInKernel_[currentId_ - 1].back()) {
+                            case -1:
+                                numOfExpectationInKernel_[currentId_ - 1].back() = -3;
+                                break;
+                            case -2:
+                            case -3:
+                                break;
+                            default:
+                                numOfExpectationInKernel_[currentId_ - 1].back() = -2;
+                                break;
+                        }
+                    }
                     else {
-                        // id read from values
-                        auto iter = std::find(idCopiedToValues_.begin(), idCopiedToValues_.end(), args[i]);
-                        if (iter != idCopiedToValues_.end())
-                            argStr[i] = "values[tid + " + std::to_string(size_[currentId_ - 1] * (std::distance(idCopiedToValues_.begin(), iter))) + "]";
+                        // id is conditional expectation calculcated at the beginning of this kernel, not read from values
+                        std::vector<size_t> secToLast;
+                        //std::cout << "here source_.size() = " << source_.size() << std::endl;
+                        //std::cout << "here numOfExpectationInKernel_[currentId_ - 1].size() = " << numOfExpectationInKernel_[currentId_ - 1].size() << std::endl;
+                        secToLast = resultIdCE_[resultIdCE_.size() - (numOfExpectationInKernel_[currentId_ - 1][numOfExpectationInKernel_[currentId_ - 1].size()-2] > 0?3:2)];
+                        if (std::find(secToLast.begin(), secToLast.end(), args[i]) != secToLast.end())
+                            argStr[i] = "v" + std::to_string(args[i]);
                         else {
-                            idCopiedToValues_.push_back(args[i]);
-                            auto ub = std::distance(lastResultIdCE_.begin(), std::upper_bound(lastResultIdCE_.begin(), lastResultIdCE_.end(), args[i]));
-                            if (std::find(resultIdCE_[ub].begin(), resultIdCE_[ub].end(), args[i]) == resultIdCE_[ub].end())
-                                kernelOfIdCopiedToValues_.push_back(ub);
-                            else
-                                kernelOfIdCopiedToValues_.push_back(ub + 1);
-                            argStr[i] = "values[tid + " + std::to_string(size_[currentId_ - 1] * (idCopiedToValues_.size())) + "]";
+                            // id read from values
+                            auto iter = std::find(idCopiedToValues_.begin(), idCopiedToValues_.end(), args[i]);
+                            if (iter != idCopiedToValues_.end())
+                                argStr[i] = "values[tid + " + std::to_string(size_[currentId_ - 1] * (std::distance(idCopiedToValues_.begin(), iter))) + "]";
+                            else {
+                                idCopiedToValues_.push_back(args[i]);
+                                auto ub = std::distance(lastResultIdCE_.begin(), std::upper_bound(lastResultIdCE_.begin(), lastResultIdCE_.end(), args[i]));
+                                if (std::find(resultIdCE_[ub].begin(), resultIdCE_[ub].end(), args[i]) == resultIdCE_[ub].end())
+                                    kernelOfIdCopiedToValues_.push_back(ub);
+                                else
+                                    kernelOfIdCopiedToValues_.push_back(ub + 1);
+                                argStr[i] = "values[tid + " + std::to_string(size_[currentId_ - 1] * (idCopiedToValues_.size())) + "]";
+                            }
                         }
                     }
                 }
@@ -1205,7 +1283,6 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
 
         switch (randomVariableOpCode) {
             case RandomVariableOpCode::None: {
-                break;
             }
             case RandomVariableOpCode::Add: {
                 source_.back() += argStr[0];
@@ -1293,25 +1370,57 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
                    "CudaContext::applyOperation() ConditionalExpectation args.size() must be >= 2, got" << args.size());
         if (args.size() == 2){
             //std::cout << "Add Expectation" << std::endl;
+            QL_REQUIRE(size_[currentId_ - 1] <= 65536,
+                   "CudaContext::applyOperation() Expectation only support less than 65536 samples, got" << size_[currentId_ - 1]);
             // Expectation
-			hasExpectation_.back() = true;
-			source_.back() += "      if (threadIdx.x == 0) partialSum = 0.0;\n"
-			                                         "      __syncthreads();\n"
-													 "      if (ore_closeEnough(" + argStr[1] + ", 1.0)) atomicAdd(&partialSum, " + argStr[0] + ");\n"
-                		                             "      __syncthreads();\n"
-                                                     "      if (threadIdx.x == 0) mean = 0;\n"
-                                                     "      if (threadIdx.x == 0) atomicAdd(&globalSum, partialSum);\n"
-                                                     "      __syncthreads();\n"
-                                                     //"      printf(\"blockIdx = %d, threadIdx = %d, partialSum = %.5f\\n\", blockIdx.x, threadIdx.x, partialSum);"
-                                                     //"      printf(\"blockIdx = %d, threadIdx = %d, globalSum = %.5f\\n\", blockIdx.x, threadIdx.x, globalSum);"  
-                                                     "      if (threadIdx.x == 0) {\n"
-                                                     "          mean = globalSum / " + std::to_string(size_[currentId_ - 1]) + ";\n"
-                                                     "          globalSum = 0.0;\n"
-                                                     "      }\n"
-                                                     "      __syncthreads();\n"
-                                                     //"      printf(\"blockIdx = %d, threadIdx = %d, mean = %.5f\\n\", blockIdx.x, threadIdx.x, mean);"
-                                                     "      " + (resultIdNeedsDeclaration?"double v":"v") + std::to_string(resultId) + " = mean;\n";
-                                                     //"      printf(\"blockIdx = %d, threadIdx = %d, v6 = %.5f\\n\", blockIdx.x, threadIdx.x, v6);";
+            ++numOfExpectation_[currentId_ - 1];
+            switch (numOfExpectationInKernel_[currentId_ - 1].back()) {
+                case -2:
+                    numOfExpectationInKernel_[currentId_ - 1].back() = -3;
+                    break;
+                case -1:
+                case -3:
+                    break;
+                default:
+                    numOfExpectationInKernel_[currentId_ - 1].back() = -1;
+                    break;
+            }
+			source_.back() += "     if (ore_closeEnough(" + argStr[1] + ", 1.0)) partialSum[threadIdx.x] = " + argStr[0] + ";\n"
+                              "     else partialSum[threadIdx.x] = 0;\n"
+                              "      __syncthreads();\n"
+                              "     for (int s = blockDim.x / 2; s > 0; s >>= 1) {\n"
+                              "         if (threadIdx.x < s) partialSum[threadIdx.x] += partialSum[threadIdx.x + s];\n"
+                              "         __syncthreads();\n"
+                              "     }\n"
+                              "     if (threadIdx.x == 0) e[blockIdx.x + " + std::to_string(nNUM_BLOCKS_[currentId_ - 1] * expectationCount_) + "] = partialSum[0];\n";
+            newKernelE_ +=  "   if (blockIdx.x == " + std::to_string(expectationCount_) + ") {\n"
+                            "       if (threadIdx.x < " + std::to_string(nNUM_BLOCKS_[currentId_ - 1]) + ") partialSum[threadIdx.x] = e[threadIdx.x + " + std::to_string(nNUM_BLOCKS_[currentId_ - 1] * expectationCount_) + "];\n"
+                            "       __syncthreads();\n"
+                            "       for (int s = " + std::to_string(static_cast<int>(std::pow(2, (std::ceil(std::log2(nNUM_BLOCKS_[currentId_ - 1])) - 1)))) + "; s > 0; s >>= 1) {\n"
+                            "            if (threadIdx.x < s && threadIdx.x + s < " + std::to_string(nNUM_BLOCKS_[currentId_ - 1]) + ") partialSum[threadIdx.x] += partialSum[threadIdx.x + s];\n"
+                            "           __syncthreads();\n"
+                            "       }\n"
+                            "       eR[" + std::to_string(resultIdFlatE_.size() + expectationCount_) + "] = partialSum[0] / " + std::to_string(size_[currentId_ - 1]) + ";\n"
+                            "   }\n";
+            //std::cout << "newKernelE_ = " << newKernelE_ << std::endl;
+            ++expectationCount_;
+            resultIdUnprocessedE_.push_back(resultId);
+			           //                              "      __syncthreads();\n"
+													 //"      if (ore_closeEnough(" + argStr[1] + ", 1.0)) atomicAdd(&partialSum, " + argStr[0] + ");\n"
+              //  		                             "      __syncthreads();\n"
+              //                                       "      if (threadIdx.x == 0) mean = 0;\n"
+              //                                       "      if (threadIdx.x == 0) atomicAdd(&globalSum, partialSum);\n"
+              //                                       "      __syncthreads();\n"
+              //                                       //"      printf(\"blockIdx = %d, threadIdx = %d, partialSum = %.5f\\n\", blockIdx.x, threadIdx.x, partialSum);"
+              //                                       //"      printf(\"blockIdx = %d, threadIdx = %d, globalSum = %.5f\\n\", blockIdx.x, threadIdx.x, globalSum);"  
+              //                                       "      if (threadIdx.x == 0) {\n"
+              //                                       "          mean = globalSum / " + std::to_string(size_[currentId_ - 1]) + ";\n"
+              //                                       "          globalSum = 0.0;\n"
+              //                                       "      }\n"
+              //                                       "      __syncthreads();\n"
+              //                                       //"      printf(\"blockIdx = %d, threadIdx = %d, mean = %.5f\\n\", blockIdx.x, threadIdx.x, mean);"
+              //                                       "      " + (resultIdNeedsDeclaration?"double v":"v") + std::to_string(resultId) + " = mean;\n";
+              //                                       //"      printf(\"blockIdx = %d, threadIdx = %d, v6 = %.5f\\n\", blockIdx.x, threadIdx.x, v6);";
             //std::cout << "End Expectation" << std::endl;
             //std::cout << "source_.size() =" << source_.size() << std::endl;
             //std::cout << "source_[0] = " << source_[0] << std::endl;
@@ -1335,7 +1444,7 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
                 //strA_unfilter[i] = "A_unfilter" + std::to_string(source_.size() - 1) + "[tid * " + std::to_string(basisFunctionSize)  + " + " + std::to_string(i) + "]";
                 // column-major
                 strA[i] = "A[tid + " + std::to_string(size_[currentId_ - 1] * (i + basisFunctionHelper_.back())) + "]";
-                strA_unfilter[i] = "A_unfilter" + std::to_string(source_.size() - 1) + "[tid + " + std::to_string(size_[currentId_ - 1] * (i + basisFunctionHelper_.back())) + "]";
+                strA_unfilter[i] = "A_unfilter" + std::to_string(source_.size() - 1 - expectationKernelCount_) + "[tid + " + std::to_string(size_[currentId_ - 1] * (i + basisFunctionHelper_.back())) + "]";
             }
             //std::cout <<"here5" << std::endl;
             // calculate basis function, write to A_unfilter
@@ -1430,7 +1539,7 @@ void CudaContext::freeVariable(const std::size_t id) {
     // only variables that were added during the current kernel can be freed.
     //std::cout << "freeVariable::id = " << id << std::endl;
     //std::cout << "freeVariable::(numResultIdCE_.back() + inputVarIsScalar_.size() + nRandomVariables_[currentId_ - 1]) = " << (numResultIdCE_.back() + inputVarIsScalar_.size() + nRandomVariables_[currentId_ - 1]) << std::endl;
-    if (id < inputVarIsScalar_.size()||(lastResultIdCE_.empty()? false: (id <= (lastResultIdCE_.back()))))
+    if (id < (inputVarIsScalar_.size() + nRandomVariables_[currentId_ - 1])||(lastResultIdCE_.empty()? false: (id <= (lastResultIdCE_.back()))))
         return;
 
     freedVariables_.push_back(id);
@@ -1473,6 +1582,8 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
     if (settings_.debug) {
         timerBase = timer.elapsed().wall;
     }
+    //std::cout << "inputVariables_ = " << inputVarIsScalar_.size() <<std::endl;
+    //std::cout << "randomVariables_ = " << nRandomVariables_[currentId_ - 1] << std::endl;
     double* input;
     size_t inputSize = inputVarOffset_.back() * sizeof(double);
     cudaCall(cudaMalloc(&input, inputSize), "finalizeCalculation, cudaMalloc(&input)");
@@ -1504,7 +1615,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
     // build kernel if necessary
 
     if (!hasKernel_[currentId_ - 1]) {
-
+        //std::cout << "Start building kernel" << std::endl;
         std::string includeSource =
             "__device__ bool ore_closeEnough(const double x, const double y) {\n"
             "    double tol = 42.0 * 0x1.0p-52;\n"
@@ -1523,14 +1634,57 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
 
         //std::cout << "source_.size() = " << source_.size() << std::endl;
         //std::cout << "conditionalExpectationCount_ = " << conditionalExpectationCount_ << std::endl;
+        // if newKernelE_ is not empty, add a new kernel
+        if (!newKernelE_.empty()) {
+            //std::cout << "newKernelCE_ = " << newKernelCE_ << std::endl;
+            ++expectationKernelCount_;
+            source_.push_back(newKernelE_);
+            //std::cout << "source_.size() after source_.push_back(newKernelE_) in finalizeCalculation = " << source_.size() << std::endl;
+            numOfExpectationInKernel_[currentId_ - 1].push_back(expectationCount_);
+            //lastResultIdCE_.push_back(lastResultIdCE_.back());
+            //auto lastResultIdCE_ = resultIdCE_.back();
+            //resultIdCE_.back().clear();
+            //resultIdCE_.push_back(lastResultIdCE_);
+            resultIdCE_.emplace_back();
+            basisFunctionCE_[currentId_ - 1].push_back(basisFunctionHelper_);
+            basisFunctionHelper_.clear();
+            std::vector<std::vector<size_t>> basisFunction = basisFunctionCE_[currentId_ - 1];
+            //std::cout << "newKernelE_ not empty: basisFunction.size() = " << basisFunction.size() << std::endl;
+            //for (size_t ii = 0; ii < basisFunction.size(); ++ii) {
+            //    for (size_t ij = 0; ij < basisFunction[ii].size(); ++ij) {
+            //        std::cout << "basisFunction[" << ii << "][" << ij << "] = " << basisFunction[ii][ij] << std::endl;
+            //    }
+            //}
+            resultIdFlatE_.insert(resultIdFlatE_.end(), resultIdUnprocessedE_.begin(), resultIdUnprocessedE_.end());
+            resultIdUnprocessedE_.clear();
+            //for (auto const & p: basisFunctionCE_) {
+            //    std::cout << "basisFunctionCE_ key = " << p.first << std::endl;
+            //    std::cout << "basisFunctionCE_ value[0].size() = " << p.second[0].size() << std::endl;
+            //    for (size_t i = 0; i < p.second[0].size(); ++i)
+            //        std::cout << "if !newKernelCE_.empty basisFunctionCE_[currentId_][" << i << "] = " << p.second[0][i] << std::endl;
+            //}
+        }
         // if newKernelCE_ is not empty, add a new kernel
         if (!newKernelCE_.empty()) {
             //std::cout << "newKernelCE_ = " << newKernelCE_ << std::endl;
-            source_.push_back(newKernelCE_);
-            hasExpectation_.push_back(false);
-            lastResultIdCE_.push_back(nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1]);
+            if (numOfExpectationInKernel_[currentId_ - 1].size() > 1 && numOfExpectationInKernel_[currentId_ - 1][numOfExpectationInKernel_[currentId_ - 1].size()-2] > 0)
+                source_.back() +=  newKernelCE_;
+            else {
+                source_.push_back(newKernelCE_);
+                numOfExpectationInKernel_[currentId_ - 1].push_back(0);
+                basisFunctionCE_[currentId_ - 1].push_back(basisFunctionHelper_);
+            }
+            //std::cout << "source_.size() after source_.push_back(newKernelCE_) in finalizeCalculation = " << source_.size() << std::endl;
+            //numOfExpectationInKernel_[currentId_ - 1].push_back(0);
+            //lastResultIdCE_.push_back(nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1]);
             resultIdCE_.emplace_back();
-            basisFunctionCE_[currentId_].push_back(basisFunctionHelper_);
+            std::vector<std::vector<size_t>> basisFunction = basisFunctionCE_[currentId_ - 1];
+            //std::cout << "newKernelCE_ not empty:basisFunction.size() = " << basisFunction.size() << std::endl;
+            //for (size_t ii = 0; ii < basisFunction.size(); ++ii) {
+            //    for (size_t ij = 0; ij < basisFunction[ii].size(); ++ij) {
+            //        std::cout << "basisFunction[" << ii << "][" << ij << "] = " << basisFunction[ii][ij] << std::endl;
+            //    }
+            //}
             basisFunctionHelper_.clear();
             //for (auto const & p: basisFunctionCE_) {
             //    std::cout << "basisFunctionCE_ key = " << p.first << std::endl;
@@ -1543,10 +1697,10 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
         std::string kernelSource;
         if (source_.size() == 1) {
             // expectation
-            if (hasExpectation_[0]) {
-                includeSource += "__device__ double globalSum = 0.0;\n";
-                                 //"__device__ double mean = 0.0;\n";          
-            }
+            //if (hasExpectation_[0]) {
+            //    includeSource += "__device__ double globalSum = 0.0;\n";
+            //                     //"__device__ double mean = 0.0;\n";          
+            //}
             // No conditional expectation
             kernelName[0] =
             "ore_kernel_" + std::to_string(currentId_) + "_" + std::to_string(version_[currentId_ - 1]);
@@ -1583,57 +1737,61 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
         } else {
             // Have expectation
             // Check if any element in the vector is true
-            bool hasExpectation = std::any_of(hasExpectation_.begin(), hasExpectation_.end(), [](bool b) {
-                return b;
-            });
-            if (hasExpectation) {
-                includeSource += "__device__ double globalSum = 0.0;\n";
-                                 //"__device__ double mean = 0.0;\n";          
-            }
+            //bool hasExpectation = std::any_of(hasExpectation_.begin(), hasExpectation_.end(), [](bool b) {
+            //    return b;
+            //});
+            //if (hasExpectation) {
+            //    includeSource += "__device__ double globalSum = 0.0;\n";
+            //                     //"__device__ double mean = 0.0;\n";          
+            //}
             kernelSource += includeSource;
             // Have conditional expectation
             for (int s = source_.size() - 1; s >= 0; --s) {
-                //std::cout << "s = " << s << std::endl;
-                kernelName[s] = "ore_kernel_" + std::to_string(currentId_) + "_" + std::to_string(version_[currentId_ - 1]) + "_" + std::to_string(s);
-                std::string thisKernel = "extern \"C\" __global__ void " + kernelName[s] + 
-                                         "(const double* input, const double* randomVariables, double* values" + 
-                                         ((s == source_.size() - 1)?", double* output":", double* A, double* b, double* A_unfilter" + std::to_string(s)) +
-                                         ((s == 0)?"":", const double* A_unfilter" + std::to_string(s-1) + ", const double* X") + ") {\n" +
-                                         (hasExpectation_[s]?"  __shared__ double partialSum;\n__shared__ double mean;\n":"") +
-                                         "  int tid = blockIdx.x * blockDim.x + threadIdx.x;\n"
-                                         "  if (tid < " + std::to_string(size_[currentId_ - 1]) + ") {\n";
-                //for (size_t id = 0; id < nRandomVariables_[currentId_ - 1]; ++id) {
-                //    // original version
-                //    thisKernel += "       double v" + std::to_string(id + nInputVars_) + " = randomVariables[tid + " +
-                //                   std::to_string(id * size_[currentId_ - 1]) + "];\n";
-                //    //kernelSource += "printf(\"v" + std::to_string(id + nInputVars_) + " = %.5f\\n\", v" +
-                //    //                std::to_string(id + nInputVars_) + ");\n";
-
-                //    if (settings_.debug)
-                //        debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
-                //}
-                thisKernel += source_[s];
-                //std::cout << "head added" << std::endl;
+                //std::cout << "resultIdCE_.size() = " << resultIdCE_.size() << std::endl;
+                std::string outputSource = "";
                 // output (If last kernel, add output. If not, add values)
                 if (s == source_.size() - 1){
                     size_t ii = 0;
-                    auto secToLast = resultIdCE_[resultIdCE_.size() - 2];
+                    auto secToLast = resultIdCE_[resultIdCE_.size() - (numOfExpectationInKernel_[currentId_ - 1][numOfExpectationInKernel_[currentId_ - 1].size()-2] > 0?3:2)];
+                    //std::cout << "numOfExpectationInKernel_[currentId_ - 1].size() = " << numOfExpectationInKernel_[currentId_ - 1].size() << std::endl;
+                    //std::cout << "numOfExpectationInKernel_[currentId_ - 1][0] = " << numOfExpectationInKernel_[currentId_ - 1][0] << std::endl;
+                    //std::cout << "numOfExpectationInKernel_[currentId_ - 1][1] = " << numOfExpectationInKernel_[currentId_ - 1][1] << std::endl;
+                    //std::cout << "numOfExpectationInKernel_[currentId_ - 1][2] = " << numOfExpectationInKernel_[currentId_ - 1][2] << std::endl;
+                    //std::cout << "secToLast id = " << resultIdCE_.size() - (numOfExpectationInKernel_[currentId_ - 1][numOfExpectationInKernel_[currentId_ - 1].size()-2] > 0?3:2) << std::endl;
+                    //std::cout << "here source_.size() = " << source_.size() << std::endl;
+                    //std::cout << "here numOfExpectationInKernel_[currentId_ - 1].size() = " << numOfExpectationInKernel_[currentId_ - 1].size() << std::endl;
+                    //std::cout << "secToLast.size() = " << secToLast.size() << std::endl;
+                    //std::cout << "lastResultIdCE_.size() = " << lastResultIdCE_.size() << std::endl;
+                    //std::cout << "lastResultIdCE_[0] = " << lastResultIdCE_[0] << std::endl;
+                    //std::cout << "lastResultIdCE_[1] = " << lastResultIdCE_[1] << std::endl;
+                    //std::cout << "lastResultIdCE_[2] = " << lastResultIdCE_[2] << std::endl;
                     for (auto const& out : outputVariables_) {
-                        if (out >= inputVarIsScalar_.size() + nRandomVariables_[currentId_ - 1]) {
-                            //std::cout << "out = " << out << std::endl;
-                            //std::cout << "resultIdCE_.back().size() = " << resultIdCE_.back().size() << std::endl;
-          /*                  for (size_t num = 0; num < resultIdCE_.back().size(); ++num){
-                                std::cout << "resultIdCE_.back()[" << num << "] = " << resultIdCE_.back()[num] << std::endl;
-                            }*/
-                        }
-                        if (out < inputVarIsScalar_.size())
-                            thisKernel += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = input[" +
+                        //std::cout << "out = " << out << std::endl;
+                        auto expectationResult = std::find(resultIdFlatE_.begin(), resultIdFlatE_.end(), out) ;
+            /*            for (auto const& id :  resultIdFlatE_)
+                            std::cout << "resultIdFlatE_ = " << id << std::endl; */
+          //              if (out >= inputVarIsScalar_.size() + nRandomVariables_[currentId_ - 1]) {
+          //                  //std::cout << "out = " << out << std::endl;
+          //                  //std::cout << "resultIdCE_.back().size() = " << resultIdCE_.back().size() << std::endl;
+          ///*                  for (size_t num = 0; num < resultIdCE_.back().size(); ++num){
+          //                      std::cout << "resultIdCE_.back()[" << num << "] = " << resultIdCE_.back()[num] << std::endl;
+          //                  }*/
+          //              }
+                        if (out < inputVarIsScalar_.size()){
+                            //std::cout << "out < inputVarIsScalar_.size()" << std::endl;
+                            outputSource += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = input[" +
                                             std::to_string(out) + (inputVarIsScalar_[out] ? "" : " + tid") + "];\n";
-                        else if (out < inputVarIsScalar_.size() + nRandomVariables_[currentId_ - 1])
-                            thisKernel += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = randomVariables[tid + " +
+                        } else if (out < inputVarIsScalar_.size() + nRandomVariables_[currentId_ - 1])
+                            outputSource += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = randomVariables[tid + " +
                                             std::to_string((out - inputVarIsScalar_.size()) * size_[currentId_ - 1]) + "];\n";
+                        else if (expectationResult != resultIdFlatE_.end()) {
+                            //std::cout << "output from expectation" << std::endl;
+                            outputSource += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = eR[" +
+                                            std::to_string(std::distance(resultIdFlatE_.begin(), expectationResult)) + "];\n";
+                            numOfExpectationInKernel_[currentId_ - 1].back() = -2;
+                            }
                         else if (std::find(secToLast.begin(), secToLast.end(), out) != secToLast.end())
-                            thisKernel += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = v" +
+                            outputSource += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = v" +
                                             std::to_string(out) + ";\n";
                         else if (out < lastResultIdCE_.back()){
                             //std::cout << "out = " << out << std::endl;
@@ -1644,7 +1802,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
                             auto it = std::find(idCopiedToValues_.begin(), idCopiedToValues_.end(), out);
                             if (it != idCopiedToValues_.end()){
                                 //std::cout << "here true" << std::endl;
-                                thisKernel += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = values[tid + " +
+                                outputSource += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = values[tid + " +
                                             std::to_string(std::distance(idCopiedToValues_.begin(), it) * size_[currentId_ - 1]) + "];\n";
                             }else {
                                 //std::cout << "here false" << std::endl;
@@ -1663,14 +1821,15 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
                                     //std::cout << "found" << std::endl;
                                     kernelOfIdCopiedToValues_.push_back(ub + 1);
                                 }
-                                thisKernel += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = values[tid + " + std::to_string(size_[currentId_ - 1] * (idCopiedToValues_.size() - 1)) + "];\n";
+                                outputSource += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = values[tid + " + std::to_string(size_[currentId_ - 1] * (idCopiedToValues_.size() - 1)) + "];\n";
                             }
                         } else
-                            thisKernel += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = v" +
+                            outputSource += "       output[tid + " + std::to_string(ii * size_[currentId_ - 1]) + "] = v" +
                                             std::to_string(out) + ";\n";
                         //kernelSource += "       printf(\"output[tid + " + std::to_string(ii) + "] = %.5f \\n\", output[tid + " +
                         //                std::to_string(ii) + "]);\n";
                         ++ii;
+                        //std::cout << "after for loop" << std::endl;
                     }
                 }
                 else {
@@ -1697,21 +1856,74 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
                         //std::cout << "kernelOfIdCopiedToValues_[" << ii << "] = " << kernelOfIdCopiedToValues_[ii] << std::endl;
                         //std::cout << "idCopiedToValues_[" << ii << "] = " << idCopiedToValues_[ii] << std::endl;
                         if (kernelOfIdCopiedToValues_[ii] == s){
-                            thisKernel += "       values[tid + " + std::to_string(size_[currentId_ - 1] * ii) + "] = v" + std::to_string(idCopiedToValues_[ii]) + ";\n";
+                            outputSource += "       values[tid + " + std::to_string(size_[currentId_ - 1] * ii) + "] = v" + std::to_string(idCopiedToValues_[ii]) + ";\n";
                         }
                     }
                     //std::cout << thisKernel << std::endl;
                 }
-                thisKernel += "   }\n"
-                                "}\n";
+                //for (auto const& outt : idCopiedToValues_) {
+                //    std::cout << "idCopiedToValues_ = " << outt << std::endl;
+                //}
+                //for (auto const& outt : kernelOfIdCopiedToValues_) {
+                //    std::cout << "kernelOfIdCopiedToValues_ = " << outt << std::endl;
+                //}
+
+                //std::cout << "s = " << s << std::endl;
+                kernelName[s] = "ore_kernel_" + std::to_string(currentId_) + "_" + std::to_string(version_[currentId_ - 1]) + "_" + std::to_string(s);
+                std::string thisKernel;
+                if (numOfExpectationInKernel_[currentId_ - 1][s] > 0) {
+                    // expectation kernel
+                    thisKernel = "extern \"C\" __global__ void " + kernelName[s] + "(double* e, double* eR) {\n__shared__ double partialSum[" + std::to_string(NUM_THREADS_) + "];\n";
+                }
+                else
+                    thisKernel = "extern \"C\" __global__ void " + kernelName[s] + 
+                                "(const double* input, const double* randomVariables, double* values" + 
+                                ((s == source_.size() - 1)?", double* output":", double* A, double* b, double* A_unfilter" + std::to_string(s - expectationKernelCount_)) +
+                                ((s == 0)?"":", const double* A_unfilter" + std::to_string(s - 1 - expectationKernelCount_) + ", const double* X") + 
+                                ((numOfExpectationInKernel_[currentId_ - 1][s] == -1)?", double* e":"") +
+                                ((numOfExpectationInKernel_[currentId_ - 1][s] == -2)?", double* eR":"") +
+                                ((numOfExpectationInKernel_[currentId_ - 1][s] == -3)?", double* e, double* eR":"") + ") {\n" +
+                                ((numOfExpectationInKernel_[currentId_ - 1][s] == -1) || (numOfExpectationInKernel_[currentId_ - 1][s] == -3)?
+                                    "  __shared__ double partialSum[" + std::to_string(NUM_THREADS_)+"];\n":"") +
+                                "  int tid = blockIdx.x * blockDim.x + threadIdx.x;\n"
+                                "  if (tid < " + std::to_string(size_[currentId_ - 1]) + ") {\n";
+                //for (size_t id = 0; id < nRandomVariables_[currentId_ - 1]; ++id) {
+                //    // original version
+                //    thisKernel += "       double v" + std::to_string(id + nInputVars_) + " = randomVariables[tid + " +
+                //                   std::to_string(id * size_[currentId_ - 1]) + "];\n";
+                //    //kernelSource += "printf(\"v" + std::to_string(id + nInputVars_) + " = %.5f\\n\", v" +
+                //    //                std::to_string(id + nInputVars_) + ");\n";
+
+                //    if (settings_.debug)
+                //        debugInfo_.numberOfOperations += 1 * size_[currentId_ - 1];
+                //}
+                thisKernel += source_[s];
+                thisKernel += outputSource;
+                //std::cout << "head added" << std::endl;
+                if (numOfExpectationInKernel_[currentId_ - 1][s] <= 0) thisKernel += "   }\n";
+                thisKernel += "}\n";
+
+                if (numOfExpectationInKernel_[currentId_ - 1][s] > 0)
+                    --expectationKernelCount_;
 
                 kernelSource += thisKernel;
-            }
+            } // end for (int s = source_.size() - 1; s >= 0; --s) {
+            //std::cout << "resultIdCE_.size() = " << resultIdCE_.size() << std::endl;
+            //for (size_t ii = 0; ii < resultIdCE_.size(); ++ii) {
+            //    for (size_t ij = 0; ij < resultIdCE_[ii].size(); ++ij) {
+            //        std::cout << "resultIdCE_[" << ii << "][" << ij << "] = " << resultIdCE_[ii][ij] << std::endl;
+            //    }
+            //}
             // store the size of values to valuesSize
-            valuesSize_[currentId_] = idCopiedToValues_.size();
+            valuesSize_[currentId_ - 1] = idCopiedToValues_.size();
         }
 
         std::cout << kernelSource << std::endl;
+        //for (size_t i = 0; i < numOfExpectationInKernel_[currentId_ - 1].size(); ++i) {
+        //    std::cout << numOfExpectationInKernel_[currentId_ - 1][i] << "  ";
+        //}
+        //std::cout << std::endl;
+
         if (settings_.debug) {
             timerBase = timer.elapsed().wall;
         }
@@ -1730,24 +1942,26 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
         //    "--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
         //    "--gpu-architecture=compute_75", "-std=c++17", "-dopt=on", "--time=D:/GitHub/Engine/build/QuantExt/test/Debug/time.txt", nullptr};
         //nvrtcErr = nvrtcCompileProgram(nvrtcProgram, 5, compileOptions);
+        std::string gpuArchOption = "--gpu-architecture=" + gpuArchitecture_;
         const char* compileOptions[] = {
             //"--include-path=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include",
-            "--gpu-architecture=compute_75",
+            gpuArchOption.c_str(),
             "--split-compile=0",
             "-std=c++17",
             //"-dopt=on",
             //"--time=time.txt",
             nullptr};
-        nvrtcCall(nvrtcCompileProgram(nvrtcProgram, 3, compileOptions), "finalizeCalculation(), nvrtcCompileProgram()");
+        //nvrtcCall(nvrtcCompileProgram(nvrtcProgram, 3, compileOptions), "finalizeCalculation(), nvrtcCompileProgram()");
+        nvrtcCompileProgram(nvrtcProgram, 3, compileOptions);
         //std::cout << "CudaContext::finalizeCalculation(): error during nvrtcCompileProgram(): "
         //                                         << nvrtcGetErrorString(nvrtcErr) << std::endl;
 
-        //size_t logSize;
-        //nvrtcGetProgramLogSize(nvrtcProgram, &logSize);
-        //char* log = new char[logSize];
-        //nvrtcGetProgramLog(nvrtcProgram, log);
-        //std::cerr << "NVRTC compilation log:\n" << log << std::endl;
-        //delete[] log;
+        size_t logSize;
+        nvrtcGetProgramLogSize(nvrtcProgram, &logSize);
+        char* log = new char[logSize];
+        nvrtcGetProgramLog(nvrtcProgram, log);
+        std::cout << "NVRTC compilation log:\n" << log << std::endl;
+        delete[] log;
 
         //QL_REQUIRE(nvrtcErr == NVRTC_SUCCESS, "CudaContext::finalizeCalculation(): error during nvrtcCompileProgram(): "
         //                                          << nvrtcGetErrorString(nvrtcErr));
@@ -1787,7 +2001,6 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
 
         hasKernel_[currentId_ - 1] = true;
 		source_.clear();
-		hasExpectation_.clear();
         
         if (settings_.debug) {
             debugInfo_.nanoSecondsProgramBuild += timer.elapsed().wall - timerBase;
@@ -1796,12 +2009,17 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
 
     // Allocate memory for values (conditional expectation)
     double* values;
-    if (!basisFunctionCE_[currentId_].empty()) {
-        cudaCall(cudaMalloc(&values, sizeof(double) * size_[currentId_ - 1] * valuesSize_[currentId_]), "finalizeCalculation, cudaMalloc(&values)");
+    if (!basisFunctionCE_[currentId_ - 1].empty()) {
+        cudaCall(cudaMalloc(&values, sizeof(double) * size_[currentId_ - 1] * valuesSize_[currentId_ - 1]), "finalizeCalculation, cudaMalloc(&values)");
         //std::cout << "valuesSize_[currentId_].size()) = " << valuesSize_[currentId_] << std::endl;
         //QL_REQUIRE(cudaErr == cudaSuccess,
         //           "CudaContext::finalizeCalculation(): memory allocate for values fails: " << cudaGetErrorString(cudaErr));
     }
+
+    // Allocate memory for eR (expectation results)
+    double* eR;
+    if (numOfExpectation_[currentId_ - 1] > 0)
+        cudaCall(cudaMalloc(&eR, sizeof(double) * numOfExpectation_[currentId_ - 1]), "finalizeCalculation, cudaMalloc(&eR)");
 
     //std::cout << "Before kernel execution" << std::endl;
 
@@ -1827,14 +2045,73 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
         //}
     
     } else{
-        //std::cout << "Start conditional expectation" << std::endl;
-        // conditional expectation
-        std::vector<std::vector<size_t>> basisFunction = basisFunctionCE_[currentId_];
+        // more than one kernel => have expectation and/or conditional expectation
+        size_t unfilterCount_ = 0;
+        bool haveExpectation = false;
+        bool expectationInitialized = false;
+        bool haveConditionalExpectation = false;
+        bool previousKernelHaveConditionalExpectation = false;
+        std::vector<std::vector<size_t>> basisFunction = basisFunctionCE_[currentId_ - 1];
         //std::cout << "basisFunction.size() = " << basisFunction.size() << std::endl;
+        //for (size_t ii = 0; ii < basisFunction.size(); ++ii) {
+        //    for (size_t ij = 0; ij < basisFunction[ii].size(); ++ij) {
+        //        std::cout << "basisFunction[" << ii << "][" << ij << "] = " << basisFunction[ii][ij] << std::endl;
+        //    }
+        //}
         //cusolverStatus_t cusolverErr;
         cusolverDnHandle_t cusolverHandle;
-        cusolverCall(cusolverDnCreate(&cusolverHandle), "finalizeCalculation, cusolverDnCreate()");
-        cusolverCall(cusolverDnSetStream(cusolverHandle, stream_), "finalizeCalculation, cusolverDnSetStream()");
+        cusolverDnIRSParams_t gels_params;
+        cusolverDnIRSInfos_t gels_infos;
+        bool cusolverInitiated = false;
+        double* A;
+        double* b;
+        double* X;
+        int* d_info;
+        double* d_work;
+        size_t d_workspace;
+        //cudaCall(cudaMalloc((void**)&d_info, sizeof(size_t)), "finalizeCalculation(), cudaMalloc(&d_info)");
+        std::vector<double*> A_unfilter(kernel_[currentId_ - 1].size() - 1 - std::count_if(numOfExpectationInKernel_[currentId_ -1].begin(), numOfExpectationInKernel_[currentId_ -1].end(), [](int c){return c > 0;}));
+        // initiate cusolver if have conditional expectation
+        if (basisFunction[0].size() > 0) {
+            haveConditionalExpectation = true;
+            previousKernelHaveConditionalExpectation = true;
+            cusolverCall(cusolverDnCreate(&cusolverHandle), "finalizeCalculation, cusolverDnCreate()");
+            cusolverCall(cusolverDnSetStream(cusolverHandle, stream_), "finalizeCalculation, cusolverDnSetStream()");
+            cusolverCall(cusolverDnIRSParamsCreate(&gels_params), "finalizeCalculation, cusolverDnIRSParamsCreate()");
+            cusolverCall(cusolverDnIRSInfosCreate(&gels_infos), "finalizeCalculation, cusolverDnIRSInfosCreate()");
+
+            cusolverCall(cusolverDnIRSParamsSetSolverPrecisions(gels_params, CUSOLVER_R_64F, CUSOLVER_R_64F), "finalizeCalculation, cusolverDnIRSParamsSetSolverPrecisions()");
+            cusolverCall(cusolverDnIRSParamsSetRefinementSolver(gels_params, CUSOLVER_IRS_REFINE_NONE), "finalizeCalculation, cusolverDnIRSParamsSetRefinementSolver()");//CUSOLVER_IRS_REFINE_CLASSICAL, CUSOLVER_IRS_REFINE_NONE
+            cusolverCall(cusolverDnIRSParamsSetMaxIters(gels_params, 1), "finalizeCalculation, cusolverDnIRSParamsSetMaxIters()");
+            cusolverCall(cusolverDnIRSParamsEnableFallback(gels_params), "finalizeCalculation, cusolverDnIRSParamsEnableFallback()");
+            cudaCall(cudaMalloc((void**)&d_info, sizeof(size_t)), "finalizeCalculation(), cudaMalloc(&d_info)");
+            cusolverInitiated = true;
+            cudaCall(cudaMalloc(&A, basisFunction[0].back() * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&A)");
+            //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for A fails: "
+            //                                    << cudaGetErrorString(cudaErr));
+            cudaCall(cudaMalloc(&b, (basisFunction[0].size() - 1) * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&B)");
+            //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for b fails: "
+            //                                    << cudaGetErrorString(cudaErr));
+            //std::cout << "A_unfilter.size() = " << A_unfilter.size() << std::endl;
+            cudaCall(cudaMalloc(&A_unfilter[0], basisFunction[0].back() * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&A_unfilter[0])");
+            //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for A_filter[0] fails: "
+            //                                    << cudaGetErrorString(cudaErr));
+        }
+
+        double* e;
+        if (numOfExpectationInKernel_[currentId_ - 1][0] == -1) {
+            haveExpectation = true;
+            // find the next positive number in numOfExpectationInKernel_, which determines the size of e
+            int eSize;
+            for (int n: numOfExpectationInKernel_[currentId_ - 1]){
+                if (n > 0) {
+                    eSize = n;
+                    break;
+                }
+            }
+            cudaCall(cudaMalloc(&e, eSize * nNUM_BLOCKS_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&e)");
+            expectationInitialized = true;
+        }
   
         //std::cout << "First kernel" << std::endl;
         // first kernel
@@ -1848,21 +2125,37 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
         //    }
         //}
         //std::cout << "basisFunctionCE_[currentId_][0] = " << basisFunctionCE_[currentId_][0] << std::endl;
-        double* A;
-        cudaCall(cudaMalloc(&A, basisFunction[0].back() * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&A)");
+        //double* A;
+        //cudaCall(cudaMalloc(&A, basisFunction[0].back() * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&A)");
         //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for A fails: "
         //                                    << cudaGetErrorString(cudaErr));
-        double* b;
-        cudaCall(cudaMalloc(&b, (basisFunction[0].size() - 1) * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&B)");
+        //double* b;
+        //cudaCall(cudaMalloc(&b, (basisFunction[0].size() - 1) * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&B)");
         //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for b fails: "
         //                                    << cudaGetErrorString(cudaErr));
-        std::vector<double*> A_unfilter(kernel_[currentId_ - 1].size() - 1);
+        //std::vector<double*> A_unfilter(kernel_[currentId_ - 1].size() - 1);
         //std::cout << "A_unfilter.size() = " << A_unfilter.size() << std::endl;
-        cudaCall(cudaMalloc(&A_unfilter[0], basisFunction[0].back() * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&A_unfilter[0])");
+        //cudaCall(cudaMalloc(&A_unfilter[0], basisFunction[0].back() * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&A_unfilter[0])");
         //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for A_filter[0] fails: "
         //                                    << cudaGetErrorString(cudaErr));
         // set kernel args
-        void* args0[] = {&input, &d_randomVariables_, &values, &A, &b, &A_unfilter[0]};
+        //void* args0[] = {&input, &d_randomVariables_, &values, &A, &b, &A_unfilter[0], &e};
+        void* args0[] = {&input, &d_randomVariables_, &values, nullptr, nullptr, nullptr, nullptr};
+        if (haveExpectation && haveConditionalExpectation){
+            args0[3] = &A;
+            args0[4] = &b;
+            args0[5] = &A_unfilter[0];
+            args0[6] = &e;
+        } else {
+            if (haveExpectation)
+                args0[3] = &e;
+            else if (haveConditionalExpectation) {
+                args0[3] = &A;
+                args0[4] = &b;
+                args0[5] = &A_unfilter[0];
+            }
+        }
+
         //std::cout << "Start execute kernel" << std::endl;
         // execute kernel
         if (settings_.debug) {
@@ -1899,175 +2192,268 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
         //}
 
         // linear regression
-        double* X;
-        cudaCall(cudaMalloc(&X, basisFunction[0].back() * sizeof(double)), "finalizeCalculation(), cudaMalloc(&X)");
-        //std::cout << "basisFunction[0].back() = " << basisFunction[0].back() << std::endl;
-        //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for X[0] fails: "
-        //                                    << cudaGetErrorString(cudaErr));
+        if (haveConditionalExpectation) {
+            cudaCall(cudaMalloc(&X, basisFunction[0].back() * sizeof(double)), "finalizeCalculation(), cudaMalloc(&X)");
+            //std::cout << "basisFunction[0].back() = " << basisFunction[0].back() << std::endl;
+            //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for X[0] fails: "
+            //                                    << cudaGetErrorString(cudaErr));
 
-        timerBase = timer.elapsed().wall;
+            timerBase = timer.elapsed().wall;
 
-        /*
-        std::vector<cusolverDnHandle_t> handles;
-        std::vector<cudaStream_t> streams;
-        std::vector<int*> d_infos;
-        std::vector<double*> d_works;
-        std::vector<size_t> d_workspaces;
-        std::vector<int> niters;
-        std::vector<cusolverDnIRSParams_t> gels_params_vec;
-        std::vector<cusolverDnIRSInfos_t> gels_infos_vec;
+            /*
+            std::vector<cusolverDnHandle_t> handles;
+            std::vector<cudaStream_t> streams;
+            std::vector<int*> d_infos;
+            std::vector<double*> d_works;
+            std::vector<size_t> d_workspaces;
+            std::vector<int> niters;
+            std::vector<cusolverDnIRSParams_t> gels_params_vec;
+            std::vector<cusolverDnIRSInfos_t> gels_infos_vec;
 
-        size_t nStream = 2;
+            size_t nStream = 2;
 
-        for (size_t i = 0; i < nStream; ++i) {
-            cusolverDnHandle_t handle;
-            handles.push_back(handle);
-            cusolverErr = cusolverDnCreate(&handles[i]);
-            cudaStream_t tmpStream;
-            streams.push_back(tmpStream);
-            cudaStreamCreate(&streams[i]);
-            cusolverDnSetStream(handles[i], streams[i]);
-            int* d_info;
-            d_infos.push_back(d_info);
-            cudaErr = cudaMalloc((void**)&d_infos[i], sizeof(size_t));
-            niters.push_back(0);
-            double* d_work;
-            size_t d_workspace;
-            d_works.push_back(d_work);
-            d_workspaces.push_back(d_workspace);
+            for (size_t i = 0; i < nStream; ++i) {
+                cusolverDnHandle_t handle;
+                handles.push_back(handle);
+                cusolverErr = cusolverDnCreate(&handles[i]);
+                cudaStream_t tmpStream;
+                streams.push_back(tmpStream);
+                cudaStreamCreate(&streams[i]);
+                cusolverDnSetStream(handles[i], streams[i]);
+                int* d_info;
+                d_infos.push_back(d_info);
+                cudaErr = cudaMalloc((void**)&d_infos[i], sizeof(size_t));
+                niters.push_back(0);
+                double* d_work;
+                size_t d_workspace;
+                d_works.push_back(d_work);
+                d_workspaces.push_back(d_workspace);
 
-            cusolverDnIRSParams_t gels_params;
-            gels_params_vec.push_back(gels_params);
-            cusolverDnIRSParamsCreate(&gels_params_vec[i]);
-            cusolverDnIRSInfos_t gels_infos;
-            gels_infos_vec.push_back(gels_infos);
-            cusolverDnIRSInfosCreate(&gels_infos_vec[i]);
+                cusolverDnIRSParams_t gels_params;
+                gels_params_vec.push_back(gels_params);
+                cusolverDnIRSParamsCreate(&gels_params_vec[i]);
+                cusolverDnIRSInfos_t gels_infos;
+                gels_infos_vec.push_back(gels_infos);
+                cusolverDnIRSInfosCreate(&gels_infos_vec[i]);
 
-            cusolverDnIRSParamsSetSolverPrecisions(gels_params_vec[i], CUSOLVER_R_64F, CUSOLVER_R_32F);
-            cusolverDnIRSParamsSetRefinementSolver(gels_params_vec[i], CUSOLVER_IRS_REFINE_CLASSICAL);//CUSOLVER_IRS_REFINE_CLASSICAL, CUSOLVER_IRS_REFINE_NONE
-            cusolverDnIRSParamsSetMaxIters(gels_params_vec[i], 1);
-            cusolverDnIRSParamsEnableFallback(gels_params_vec[i]);
-        } */
+                cusolverDnIRSParamsSetSolverPrecisions(gels_params_vec[i], CUSOLVER_R_64F, CUSOLVER_R_32F);
+                cusolverDnIRSParamsSetRefinementSolver(gels_params_vec[i], CUSOLVER_IRS_REFINE_CLASSICAL);//CUSOLVER_IRS_REFINE_CLASSICAL, CUSOLVER_IRS_REFINE_NONE
+                cusolverDnIRSParamsSetMaxIters(gels_params_vec[i], 1);
+                cusolverDnIRSParamsEnableFallback(gels_params_vec[i]);
+            } */
 
-        //    //int* d_info;
-        //    //cudaErr = cudaMalloc((void**)&d_info, sizeof(size_t));
-        //    //d_infos.push_back(d_info);
+            //    //int* d_info;
+            //    //cudaErr = cudaMalloc((void**)&d_info, sizeof(size_t));
+            //    //d_infos.push_back(d_info);
 
-        cusolverDnIRSParams_t gels_params;
-        cusolverCall(cusolverDnIRSParamsCreate(&gels_params), "finalizeCalculation, cusolverDnIRSParamsCreate()");
-        cusolverDnIRSInfos_t gels_infos;
-        cusolverCall(cusolverDnIRSInfosCreate(&gels_infos), "finalizeCalculation, cusolverDnIRSInfosCreate()");
+            //cusolverDnIRSParams_t gels_params;
+            //cusolverCall(cusolverDnIRSParamsCreate(&gels_params), "finalizeCalculation, cusolverDnIRSParamsCreate()");
+            //cusolverDnIRSInfos_t gels_infos;
+            //cusolverCall(cusolverDnIRSInfosCreate(&gels_infos), "finalizeCalculation, cusolverDnIRSInfosCreate()");
 
-        cusolverCall(cusolverDnIRSParamsSetSolverPrecisions(gels_params, CUSOLVER_R_64F, CUSOLVER_R_64F), "finalizeCalculation, cusolverDnIRSParamsSetSolverPrecisions()");
-        cusolverCall(cusolverDnIRSParamsSetRefinementSolver(gels_params, CUSOLVER_IRS_REFINE_NONE), "finalizeCalculation, cusolverDnIRSParamsSetRefinementSolver()");//CUSOLVER_IRS_REFINE_CLASSICAL, CUSOLVER_IRS_REFINE_NONE
-        cusolverCall(cusolverDnIRSParamsSetMaxIters(gels_params, 1), "finalizeCalculation, cusolverDnIRSParamsSetMaxIters()");
-        cusolverCall(cusolverDnIRSParamsEnableFallback(gels_params), "finalizeCalculation, cusolverDnIRSParamsEnableFallback()");
+            //cusolverCall(cusolverDnIRSParamsSetSolverPrecisions(gels_params, CUSOLVER_R_64F, CUSOLVER_R_64F), "finalizeCalculation, cusolverDnIRSParamsSetSolverPrecisions()");
+            //cusolverCall(cusolverDnIRSParamsSetRefinementSolver(gels_params, CUSOLVER_IRS_REFINE_NONE), "finalizeCalculation, cusolverDnIRSParamsSetRefinementSolver()");//CUSOLVER_IRS_REFINE_CLASSICAL, CUSOLVER_IRS_REFINE_NONE
+            //cusolverCall(cusolverDnIRSParamsSetMaxIters(gels_params, 1), "finalizeCalculation, cusolverDnIRSParamsSetMaxIters()");
+            //cusolverCall(cusolverDnIRSParamsEnableFallback(gels_params), "finalizeCalculation, cusolverDnIRSParamsEnableFallback()");
 
-        int* d_info;
-        double* d_work;
-        size_t d_workspace;
-        cudaCall(cudaMalloc((void**)&d_info, sizeof(size_t)), "finalizeCalculation(), cudaMalloc(&d_info)");
-
-        //}
-        //std::cout << "handle 1" << std::endl;
-        size_t numBF = 0;
-        for (size_t i = 0; i < basisFunction[0].size() - 1; ++i) {
-            //cusolverDnSetStream(handles[i%nStream], streams[i%nStream]);
-            //std::cout << "steams " << i%nStream << std::endl;
             //int* d_info;
             //double* d_work;
             //size_t d_workspace;
-            //cusolverErr = cusolverDnSetStream(handles[i%nStream], streams[i%nStream]);
-            //std::cout << "cusolverErr cusolverDnDDgels() = " << cusolverErr << std::endl;
+            //cudaCall(cudaMalloc((void**)&d_info, sizeof(size_t)), "finalizeCalculation(), cudaMalloc(&d_info)");
+
+            //}
+            //std::cout << "handle 1" << std::endl;
+            size_t numBF = 0;
+            for (size_t i = 0; i < basisFunction[0].size() - 1; ++i) {
+                //cusolverDnSetStream(handles[i%nStream], streams[i%nStream]);
+                //std::cout << "steams " << i%nStream << std::endl;
+                //int* d_info;
+                //double* d_work;
+                //size_t d_workspace;
+                //cusolverErr = cusolverDnSetStream(handles[i%nStream], streams[i%nStream]);
+                //std::cout << "cusolverErr cusolverDnDDgels() = " << cusolverErr << std::endl;
+                numBF = basisFunction[0][i+1] - basisFunction[0][i];
+                if (i == 0) {
+                    cusolverCall(cusolverDnIRSXgels_bufferSize(cusolverHandle, gels_params, size_[currentId_ - 1], numBF, 1, &d_workspace), "finalizeCalculation, cusolverDnIRSXgels_bufferSize(first kernel)");
+                    //cusolverErr = cusolverDnDSgels_bufferSize(handles[i%nStream], size_[currentId_ - 1], numBF, 1, A_temp, size_[currentId_ - 1], b_temp, size_[currentId_ - 1], X_temp, numBF, NULL, &d_workspace);
+                    //std::cout << "cusolverErr cusolverDnDSgels_bufferSize() = " << cusolverErr << std::endl;
+                    cudaCall(cudaMalloc((void**)&d_work, sizeof(double) * d_workspace), "finalizeCalculation(), cudaMalloc(&d_work)");
+                }
+                else if (numBF != basisFunction[0][i] - basisFunction[0][i-1]) {
+                    releaseMem(d_work, "finalizeCalculation() first kernel");
+                    cusolverCall(cusolverDnIRSXgels_bufferSize(cusolverHandle, gels_params, size_[currentId_ - 1], numBF, 1, &d_workspace), "finalizeCalculation, cusolverDnIRSXgels_bufferSize(first kernel)");
+                    //cusolverErr = cusolverDnDSgels_bufferSize(handles[i%nStream], size_[currentId_ - 1], numBF, 1, A_temp, size_[currentId_ - 1], b_temp, size_[currentId_ - 1], X_temp, numBF, NULL, &d_workspace);
+                    //std::cout << "cusolverErr cusolverDnDSgels_bufferSize() = " << cusolverErr << std::endl;
+                    cudaCall(cudaMalloc((void**)&d_work, sizeof(double) * d_workspace), "finalizeCalculation(), cudaMalloc(&d_work)");
+                }
             
-            numBF = basisFunction[0][i+1] - basisFunction[0][i];
-            //double* A_temp;
-            //cudaMalloc((void**)&A_temp, sizeof(double) * size_[currentId_ - 1] * numBF);
-            //cudaMemcpyAsync(A_temp, A + size_[currentId_ - 1] * basisFunction[0][i], sizeof(double) * size_[currentId_ - 1] * numBF, cudaMemcpyDeviceToDevice, stream_);
-            //double* b_temp;
-            //cudaMalloc((void**)&b_temp, sizeof(double) * size_[currentId_ - 1]);
-            //cudaMemcpyAsync(b_temp, b + size_[currentId_ - 1] * i, sizeof(double) * size_[currentId_ - 1] , cudaMemcpyDeviceToDevice, stream_);
-            //double* X_temp;
-            //cudaMalloc((void**)&X_temp, sizeof(double) * numBF);
+                //double* A_temp;
+                //cudaMalloc((void**)&A_temp, sizeof(double) * size_[currentId_ - 1] * numBF);
+                //cudaMemcpyAsync(A_temp, A + size_[currentId_ - 1] * basisFunction[0][i], sizeof(double) * size_[currentId_ - 1] * numBF, cudaMemcpyDeviceToDevice, stream_);
+                //double* b_temp;
+                //cudaMalloc((void**)&b_temp, sizeof(double) * size_[currentId_ - 1]);
+                //cudaMemcpyAsync(b_temp, b + size_[currentId_ - 1] * i, sizeof(double) * size_[currentId_ - 1] , cudaMemcpyDeviceToDevice, stream_);
+                //double* X_temp;
+                //cudaMalloc((void**)&X_temp, sizeof(double) * numBF);
          
-            //cusolverErr = cusolverDnIRSXgels_bufferSize(handles[i%nStream], gels_params_vec[i%nStream], size_[currentId_ - 1], numBF, 1, &d_workspaces[i%nStream]);
-            //std::cout << "cusolverErr cusolverDnDSgels_bufferSize() = " << cusolverErr << std::endl;
-            cusolverCall(cusolverDnIRSXgels_bufferSize(cusolverHandle, gels_params, size_[currentId_ - 1], numBF, 1, &d_workspace), "finalizeCalculation, cusolverDnIRSXgels_bufferSize(first kernel)");
-            //cusolverErr = cusolverDnDSgels_bufferSize(handles[i%nStream], size_[currentId_ - 1], numBF, 1, A_temp, size_[currentId_ - 1], b_temp, size_[currentId_ - 1], X_temp, numBF, NULL, &d_workspace);
-            //std::cout << "cusolverErr cusolverDnDSgels_bufferSize() = " << cusolverErr << std::endl;
-            cudaCall(cudaMalloc((void**)&d_work, sizeof(double) * d_workspace), "finalizeCalculation(), cudaMalloc(&d_work)");
-            //cusolverErr = cusolverDnIRSXgels(handles[i%nStream], gels_params_vec[i%nStream], gels_infos_vec[i%nStream], size_[currentId_ - 1], numBF, 1, A + size_[currentId_ - 1] * basisFunction[0][i], size_[currentId_ - 1], b + size_[currentId_ - 1] * i, size_[currentId_ - 1], X + basisFunction[0][i], numBF, d_works[i%nStream], d_workspaces[i%nStream], &niters[i%nStream], d_infos[i%nStream]);
-            //std::cout << "cusolverErr cusolverDnDSgels() = " << cusolverErr << std::endl;
-            int niter = 0;
-            cusolverCall(cusolverDnIRSXgels(cusolverHandle, gels_params, gels_infos, size_[currentId_ - 1], numBF, 1, A + size_[currentId_ - 1] * basisFunction[0][i], size_[currentId_ - 1], b + size_[currentId_ - 1] * i, size_[currentId_ - 1], X + basisFunction[0][i], numBF, d_work, d_workspace, &niter, d_info), "finalizeCalculation, cusolverDnIRSXgels(first kernel)");
-            //cusolverCall(cusolverDnIRSXgels(cusolverHandle, gels_params, gels_infos, size_[currentId_ - 1], numBF, 1, A_temp, size_[currentId_ - 1], b_temp, size_[currentId_ - 1], X_temp, numBF, d_work, d_workspace, &niters, d_info);
-            //cusolverErr = cusolverDnDSgels(handles[i%nStream], size_[currentId_ - 1], numBF, 1, A_temp, size_[currentId_ - 1], b_temp, size_[currentId_ - 1], X_temp, numBF, d_work, d_workspace, &niters, d_info);
-            //std::cout << "cusolverErr cusolverDnDDgels() = " << cusolverErr << std::endl;
-            //cudaStreamSynchronize(streams[i%nStream]);
-            //std::cout << "niters = " << niters[i%nStream] << std::endl;
-            //cudaMemcpyAsync(X + basisFunction[0][i], X_temp, sizeof(double) * numBF , cudaMemcpyDeviceToDevice, stream_);
-            //int h_info;
-            //cudaMemcpyAsync(&h_info, d_infos[i%nStream], sizeof(int), cudaMemcpyDeviceToHost, streams[i%nStream]);
-            //cudaStreamSynchronize(streams[i%nStream]);
-            //std::cout << "h_info = " << h_info << std::endl;
+                //cusolverErr = cusolverDnIRSXgels_bufferSize(handles[i%nStream], gels_params_vec[i%nStream], size_[currentId_ - 1], numBF, 1, &d_workspaces[i%nStream]);
+                //std::cout << "cusolverErr cusolverDnDSgels_bufferSize() = " << cusolverErr << std::endl;
+                //cusolverCall(cusolverDnIRSXgels_bufferSize(cusolverHandle, gels_params, size_[currentId_ - 1], numBF, 1, &d_workspace), "finalizeCalculation, cusolverDnIRSXgels_bufferSize(first kernel)");
+                //cusolverErr = cusolverDnDSgels_bufferSize(handles[i%nStream], size_[currentId_ - 1], numBF, 1, A_temp, size_[currentId_ - 1], b_temp, size_[currentId_ - 1], X_temp, numBF, NULL, &d_workspace);
+                //std::cout << "cusolverErr cusolverDnDSgels_bufferSize() = " << cusolverErr << std::endl;
+                //cudaCall(cudaMalloc((void**)&d_work, sizeof(double) * d_workspace), "finalizeCalculation(), cudaMalloc(&d_work)");
+                //cusolverErr = cusolverDnIRSXgels(handles[i%nStream], gels_params_vec[i%nStream], gels_infos_vec[i%nStream], size_[currentId_ - 1], numBF, 1, A + size_[currentId_ - 1] * basisFunction[0][i], size_[currentId_ - 1], b + size_[currentId_ - 1] * i, size_[currentId_ - 1], X + basisFunction[0][i], numBF, d_works[i%nStream], d_workspaces[i%nStream], &niters[i%nStream], d_infos[i%nStream]);
+                //std::cout << "cusolverErr cusolverDnDSgels() = " << cusolverErr << std::endl;
+                int niter = 0;
+                cusolverCall(cusolverDnIRSXgels(cusolverHandle, gels_params, gels_infos, size_[currentId_ - 1], numBF, 1, A + size_[currentId_ - 1] * basisFunction[0][i], size_[currentId_ - 1], b + size_[currentId_ - 1] * i, size_[currentId_ - 1], X + basisFunction[0][i], numBF, d_work, d_workspace, &niter, d_info), "finalizeCalculation, cusolverDnIRSXgels(first kernel)");
+                //cusolverCall(cusolverDnIRSXgels(cusolverHandle, gels_params, gels_infos, size_[currentId_ - 1], numBF, 1, A_temp, size_[currentId_ - 1], b_temp, size_[currentId_ - 1], X_temp, numBF, d_work, d_workspace, &niters, d_info);
+                //cusolverErr = cusolverDnDSgels(handles[i%nStream], size_[currentId_ - 1], numBF, 1, A_temp, size_[currentId_ - 1], b_temp, size_[currentId_ - 1], X_temp, numBF, d_work, d_workspace, &niters, d_info);
+                //std::cout << "cusolverErr cusolverDnDDgels() = " << cusolverErr << std::endl;
+                //cudaStreamSynchronize(streams[i%nStream]);
+                //std::cout << "niters = " << niters[i%nStream] << std::endl;
+                //cudaMemcpyAsync(X + basisFunction[0][i], X_temp, sizeof(double) * numBF , cudaMemcpyDeviceToDevice, stream_);
+                //int h_info;
+                //cudaMemcpyAsync(&h_info, d_infos[i%nStream], sizeof(int), cudaMemcpyDeviceToHost, streams[i%nStream]);
+                //cudaStreamSynchronize(streams[i%nStream]);
+                //std::cout << "h_info = " << h_info << std::endl;
+                //releaseMem(d_work, "finalizeCalculation() first kernel");
+                //cudaFree(d_info);
+                //releaseMem(A_temp, "finalizeCalculation() first kernel");
+                //releaseMem(b_temp, "finalizeCalculation() first kernel");
+                //releaseMem(X_temp, "finalizeCalculation() first kernel");
+            }
             releaseMem(d_work, "finalizeCalculation() first kernel");
-            //cudaFree(d_info);
-            //releaseMem(A_temp, "finalizeCalculation() first kernel");
-            //releaseMem(b_temp, "finalizeCalculation() first kernel");
-            //releaseMem(X_temp, "finalizeCalculation() first kernel");
+            //std::cout << "handle 2" << std::endl;
+            //for (size_t i = 0; i < nStream; ++i) {
+            //    //cudaFree(d_infos[i]);
+            //    cusolverErr = cusolverDnDestroy(handles[i%nStream]);
+            //    //std::cout << "cusolverErr cusolverDnDestroy() = " << cusolverErr << std::endl;
+            //    cudaStreamSynchronize(streams[i]);
+            //    cudaStreamDestroy(streams[i]);
+            //}
+
+            //std::cout << "time used for cuSolver: " << (timer.elapsed().wall - timerBase)/1000000 << "ms" << std::endl;
+
+            ////temp check result
+            //int h_info = 0;
+            ////cudaMemcpyAsync(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost, stream_);
+            //cudaMemcpy(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost);
+            //std::cout << "cusolver info: " << h_info << std::endl;
+
+            ////temp check result
+            //cudaStreamSynchronize(stream_);
+            //double* hX;
+            ////////cudaMemcpyAsync(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost, stream_);
+            //cudaMallocHost(&hX, basisFunction[0].back() * sizeof(double));
+            //////std::cout << "cudaErr = " << cudaErr << std::endl;
+            //cudaMemcpy(hX, X, basisFunction[0].back() * sizeof(double), cudaMemcpyDeviceToHost);
+            //////std::cout << "cudaErr = " << cudaErr << std::endl;
+            //for (size_t i = 0; i < basisFunction[0].back(); ++i) {
+            //    std::cout << "X["<< i % 5 <<"] = " << hX[i] << std::endl;
+            //}
+
+            //cudaStreamSynchronize(stream_);
+            // clear memory
+            releaseMem(A, "CudaContext::finalizeCalculation::A");
+            releaseMem(b, "CudaContext::finalizeCalculation::b");
+            ++unfilterCount_;
         }
-        //std::cout << "handle 2" << std::endl;
-        //for (size_t i = 0; i < nStream; ++i) {
-        //    //cudaFree(d_infos[i]);
-        //    cusolverErr = cusolverDnDestroy(handles[i%nStream]);
-        //    //std::cout << "cusolverErr cusolverDnDestroy() = " << cusolverErr << std::endl;
-        //    cudaStreamSynchronize(streams[i]);
-        //    cudaStreamDestroy(streams[i]);
-        //}
-
-        std::cout << "time used for cuSolver: " << (timer.elapsed().wall - timerBase)/1000000 << "ms" << std::endl;
-
-        ////temp check result
-        //int h_info = 0;
-        ////cudaMemcpyAsync(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost, stream_);
-        //cudaMemcpy(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost);
-        //std::cout << "cusolver info: " << h_info << std::endl;
-
-        ////temp check result
-        //cudaStreamSynchronize(stream_);
-        //double* hX;
-        //////cudaMemcpyAsync(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost, stream_);
-        //cudaErr = cudaMallocHost(&hX, basisFunction[0].back() * sizeof(double));
-        ////std::cout << "cudaErr = " << cudaErr << std::endl;
-        //cudaErr = cudaMemcpy(hX, X, basisFunction[0].back() * sizeof(double), cudaMemcpyDeviceToHost);
-        ////std::cout << "cudaErr = " << cudaErr << std::endl;
-        //for (size_t i = 0; i < basisFunction[0].back(); ++i) {
-        //    std::cout << "X["<< i % 5 <<"] = " << hX[i] << std::endl;
-        //}
-
-        //cudaStreamSynchronize(stream_);
-        // clear memory
-        releaseMem(A, "CudaContext::finalizeCalculation::A");
-        releaseMem(b, "CudaContext::finalizeCalculation::b");
-
         //std::cout << "First kernel end " << std::endl;
         // second to penultimate kernel
         for (size_t k = 1; k < kernel_[currentId_ - 1].size() - 1; ++k) {
             //std::cout << "for loop called " << k << std::endl;
             //std::cout << "basisFunction[" << k <<"].size() = " << basisFunction[k].size() << std::endl;
-            // Allocate memory for A, b, A_filter
-            cudaCall(cudaMalloc(&A, basisFunction[k].back() * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&A)");
-            //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for A fails: "
-            //                                    << cudaGetErrorString(cudaErr));
-            cudaCall(cudaMalloc(&b, (basisFunction[k].size() - 1) * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&b)");
-            //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for b fails: "
-            //                                    << cudaGetErrorString(cudaErr));
-            cudaCall(cudaMalloc(&A_unfilter[k], basisFunction[k].back() * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&A_unfilter[k])");
-            //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for A_unfilter[k] fails: "
-            //                                    << cudaGetErrorString(cudaErr));
+            // Expectation
+            if (numOfExpectationInKernel_[currentId_ - 1][k] > 0) {
+                // Expectation kernel
+                void* args[] = {&e, &eR};
+                cuCall(cuLaunchKernel(kernel_[currentId_ - 1][k], numOfExpectationInKernel_[currentId_ - 1][k], 1, 1, NUM_THREADS_, 1, 1, 0, stream_, args,
+                                   nullptr), "finalizeCalculation, cuLaunchKernel(middle kernels, expectation)");
+                releaseMem(e, "CudaContext::finalizeCalculation::e");
+                expectationInitialized = false;
+                continue;
+            } else if (numOfExpectationInKernel_[currentId_ - 1][k] == -1 || numOfExpectationInKernel_[currentId_ - 1][k] == -3){
+                haveExpectation = true;
+                if (expectationInitialized = false) {
+                    // find the next positive number in numOfExpectationInKernel_, which determines the size of e
+                    int eSize;
+                    for (int n: numOfExpectationInKernel_[currentId_ - 1]){
+                        if (n > 0) {
+                            eSize = n;
+                            break;
+                        }
+                    }
+                    cudaCall(cudaMalloc(&e, eSize * nNUM_BLOCKS_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&e)");
+                    expectationInitialized = true;
+                }
+            } else if (numOfExpectationInKernel_[currentId_ - 1][k] == 0)
+                haveExpectation = false;
+
+            if (basisFunction[k].size() > 0){
+                haveConditionalExpectation = true;
+                if (!cusolverInitiated){
+                    cusolverCall(cusolverDnCreate(&cusolverHandle), "finalizeCalculation, cusolverDnCreate()");
+                    cusolverCall(cusolverDnSetStream(cusolverHandle, stream_), "finalizeCalculation, cusolverDnSetStream()");
+                    cusolverCall(cusolverDnIRSParamsCreate(&gels_params), "finalizeCalculation, cusolverDnIRSParamsCreate()");
+                    cusolverCall(cusolverDnIRSInfosCreate(&gels_infos), "finalizeCalculation, cusolverDnIRSInfosCreate()");
+
+                    cusolverCall(cusolverDnIRSParamsSetSolverPrecisions(gels_params, CUSOLVER_R_64F, CUSOLVER_R_64F), "finalizeCalculation, cusolverDnIRSParamsSetSolverPrecisions()");
+                    cusolverCall(cusolverDnIRSParamsSetRefinementSolver(gels_params, CUSOLVER_IRS_REFINE_NONE), "finalizeCalculation, cusolverDnIRSParamsSetRefinementSolver()");//CUSOLVER_IRS_REFINE_CLASSICAL, CUSOLVER_IRS_REFINE_NONE
+                    cusolverCall(cusolverDnIRSParamsSetMaxIters(gels_params, 1), "finalizeCalculation, cusolverDnIRSParamsSetMaxIters()");
+                    cusolverCall(cusolverDnIRSParamsEnableFallback(gels_params), "finalizeCalculation, cusolverDnIRSParamsEnableFallback()");
+                    cudaCall(cudaMalloc((void**)&d_info, sizeof(size_t)), "finalizeCalculation(), cudaMalloc(&d_info)");
+                    cusolverInitiated = true;
+                }
+                // Allocate memory for A, b, A_filter
+                cudaCall(cudaMalloc(&A, basisFunction[k].back() * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&A)");
+                //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for A fails: "
+                //                                    << cudaGetErrorString(cudaErr));
+                cudaCall(cudaMalloc(&b, (basisFunction[k].size() - 1) * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&b)");
+                //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for b fails: "
+                //                                    << cudaGetErrorString(cudaErr));
+                cudaCall(cudaMalloc(&A_unfilter[unfilterCount_], basisFunction[k].back() * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&A_unfilter[unfilterCount_])");
+                //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for A_unfilter[k] fails: "
+                //                                    << cudaGetErrorString(cudaErr));
+            } else
+                haveConditionalExpectation = false;
+
+            //// Allocate memory for A, b, A_filter
+            //cudaCall(cudaMalloc(&A, basisFunction[k].back() * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&A)");
+            ////QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for A fails: "
+            ////                                    << cudaGetErrorString(cudaErr));
+            //cudaCall(cudaMalloc(&b, (basisFunction[k].size() - 1) * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&b)");
+            ////QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for b fails: "
+            ////                                    << cudaGetErrorString(cudaErr));
+            //cudaCall(cudaMalloc(&A_unfilter[k], basisFunction[k].back() * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMalloc(&A_unfilter[k])");
+            ////QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for A_unfilter[k] fails: "
+            ////                                    << cudaGetErrorString(cudaErr));
             
             // set kernel args
-            void* args[] = {&input, &d_randomVariables_, &values, &A, &b, &A_unfilter[k], &A_unfilter[k-1], &X};
+            std::vector<double*> argVec;
+            if (haveConditionalExpectation) {
+                //std::cout << "unfilterCount_ = " << unfilterCount_ << std::endl;
+                argVec.push_back(A);
+                argVec.push_back(b);
+                argVec.push_back(A_unfilter[unfilterCount_]);
+            }
+            if (previousKernelHaveConditionalExpectation){
+                //std::cout << "previousKernelHaveConditionalExpectation" << std::endl;
+                argVec.push_back(A_unfilter[unfilterCount_-1]);
+                argVec.push_back(X);
+            }
+            if (haveExpectation)
+                argVec.push_back(e);
+            if (numOfExpectationInKernel_[currentId_-1][k] == -2 || numOfExpectationInKernel_[currentId_-1][k] == -3)
+                argVec.push_back(eR);
+            previousKernelHaveConditionalExpectation = haveConditionalExpectation;
+            void* args[] = {&input, &d_randomVariables_, &values, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+            int nArgs = 3;
+            for (auto& ptr : argVec) {
+                args[nArgs] = &ptr;
+                ++nArgs;
+            }
+
+            //void* args[] = {&input, &d_randomVariables_, &values, &A, &b, &A_unfilter[unfilterCount_], &A_unfilter[unfilterCount_-1], &X};
 
             // execute kernel
             if (settings_.debug) {
@@ -2082,56 +2468,70 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
             //}
 
             //cudaStreamSynchronize(stream_);
+            if (haveConditionalExpectation) {
+                // clear memory
+                releaseMem(A_unfilter[unfilterCount_-1], "CudaContext::finalizeCalculation::A_unfilter[k-1]");
+                releaseMem(X, "CudaContext::finalizeCalculation::X");
 
-            // clear memory
-            releaseMem(A_unfilter[k-1], "CudaContext::finalizeCalculation::A_unfilter[k-1]");
-            releaseMem(X, "CudaContext::finalizeCalculation::X");
+                // linear regression
+                cudaCall(cudaMalloc(&X, basisFunction[k].back() * sizeof(double)), "finalizeCalculation(), cudaMalloc(&X)");
+                //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for X[k] fails: "
+                //                                    << cudaGetErrorString(cudaErr));
 
-            // linear regression
-            cudaCall(cudaMalloc(&X, basisFunction[k].back() * sizeof(double)), "finalizeCalculation(), cudaMalloc(&X)");
-            //QL_REQUIRE(cudaErr == cudaSuccess, "CudaContext::finalizeCalculation(): memory allocate for X[k] fails: "
-            //                                    << cudaGetErrorString(cudaErr));
+                for (size_t i = 0; i < basisFunction[k].size()-1; ++i) {
+                    //int* d_info;
+                    //double* d_work;
+                    //size_t d_workspace;
+                    size_t numBF;
 
-            for (size_t i = 0; i < basisFunction[k].size()-1; ++i) {
-                //int* d_info;
-                //double* d_work;
-                //size_t d_workspace;
-
-                numBF = basisFunction[k][i+1] - basisFunction[k][i];
-                cusolverCall(cusolverDnIRSXgels_bufferSize(cusolverHandle, gels_params, size_[currentId_ - 1], numBF, 1, &d_workspace), "finalizeCalculation, cusolverDnIRSXgels_bufferSize(middle kernels)");
-                //std::cout << "cusolverErr = " << cusolverErr << std::endl;
-                cudaCall(cudaMalloc((void**)&d_work, sizeof(double) * d_workspace), "finalizeCalculation(), cudaMalloc(&d_work)");
-                //cudaErr = cudaMalloc((void**)&d_infos[i%nStream], sizeof(size_t));
-                int niter = 0;
-                cusolverCall(cusolverDnIRSXgels(cusolverHandle, gels_params, gels_infos, size_[currentId_ - 1], numBF, 1, A + size_[currentId_ - 1] * basisFunction[k][i], size_[currentId_ - 1], b + size_[currentId_ - 1] * i, size_[currentId_ - 1], X + basisFunction[k][i], numBF, d_work, d_workspace, &niter, d_info), "finalizeCalculation, cusolverDnIRSXgels(middle kernels)");
-                //std::cout << "cusolverErr = " << cusolverErr << std::endl;
+                    numBF = basisFunction[k][i+1] - basisFunction[k][i];
+                    if (i == 0) {
+                        cusolverCall(cusolverDnIRSXgels_bufferSize(cusolverHandle, gels_params, size_[currentId_ - 1], numBF, 1, &d_workspace), "finalizeCalculation, cusolverDnIRSXgels_bufferSize(middle kernels)");
+                        //std::cout << "cusolverErr = " << cusolverErr << std::endl;
+                        cudaCall(cudaMalloc((void**)&d_work, sizeof(double) * d_workspace), "finalizeCalculation(), cudaMalloc(&d_work)");
+                    }
+                    else if (numBF != basisFunction[k][i] - basisFunction[k][i-1]){
+                        releaseMem(d_work, "CUDAContext::finalizeCalculation() middle kernels");
+                        cusolverCall(cusolverDnIRSXgels_bufferSize(cusolverHandle, gels_params, size_[currentId_ - 1], numBF, 1, &d_workspace), "finalizeCalculation, cusolverDnIRSXgels_bufferSize(middle kernels)");
+                        //std::cout << "cusolverErr = " << cusolverErr << std::endl;
+                        cudaCall(cudaMalloc((void**)&d_work, sizeof(double) * d_workspace), "finalizeCalculation(), cudaMalloc(&d_work)");
+                    }
+                    //cusolverCall(cusolverDnIRSXgels_bufferSize(cusolverHandle, gels_params, size_[currentId_ - 1], numBF, 1, &d_workspace), "finalizeCalculation, cusolverDnIRSXgels_bufferSize(middle kernels)");
+                    //std::cout << "cusolverErr = " << cusolverErr << std::endl;
+                    //cudaCall(cudaMalloc((void**)&d_work, sizeof(double) * d_workspace), "finalizeCalculation(), cudaMalloc(&d_work)");
+                    //cudaErr = cudaMalloc((void**)&d_infos[i%nStream], sizeof(size_t));
+                    int niter = 0;
+                    cusolverCall(cusolverDnIRSXgels(cusolverHandle, gels_params, gels_infos, size_[currentId_ - 1], numBF, 1, A + size_[currentId_ - 1] * basisFunction[k][i], size_[currentId_ - 1], b + size_[currentId_ - 1] * i, size_[currentId_ - 1], X + basisFunction[k][i], numBF, d_work, d_workspace, &niter, d_info), "finalizeCalculation, cusolverDnIRSXgels(middle kernels)");
+                    //std::cout << "cusolverErr = " << cusolverErr << std::endl;
+                    //releaseMem(d_work, "CUDAContext::finalizeCalculation() middle kernels");
+                    //cudaFree(d_info);
+                }
                 releaseMem(d_work, "CUDAContext::finalizeCalculation() middle kernels");
-                //cudaFree(d_info);
+                //temp check result
+                //int h_info = 0;
+                //cudaMemcpyAsync(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost, stream_);
+                //cudaMemcpy(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost);
+                //std::cout << "cusolver info: " << h_info << std::endl;
+
+                // temp output
+                //double* hX2;
+                //////cudaMemcpyAsync(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost, stream_);
+                //cudaMallocHost(&hX2, basisFunctionCE_[currentId_][k].back() * sizeof(double));
+                ////std::cout << "cudaErr = " << cudaGetErrorString(cudaErr) << std::endl;
+                //cudaMemcpy(hX2, X, basisFunctionCE_[currentId_][k].back() * sizeof(double), cudaMemcpyDeviceToHost);
+                ////std::cout << "cudaErr = " << cudaGetErrorString(cudaErr) << std::endl;
+                //for (size_t i = 0; i < 5; ++i) {
+                //    std::cout << "X2["<< i <<"] = " << hX2[i] << std::endl;
+                //}
+
+                //cudaStreamSynchronize(stream_);
+                // clear memory
+                releaseMem(A, "CudaContext::finalizeCalculation::A");
+                releaseMem(b, "CudaContext::finalizeCalculation::b");
+                ++unfilterCount_;
             }
-
-            //temp check result
-            //int h_info = 0;
-            //cudaMemcpyAsync(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost, stream_);
-            //cudaMemcpy(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost);
-            //std::cout << "cusolver info: " << h_info << std::endl;
-
-            // temp output
-            //double* hX2;
-            ////cudaMemcpyAsync(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost, stream_);
-            //cudaErr = cudaMallocHost(&hX2, basisFunctionCE_[currentId_][k] * sizeof(double));
-            //std::cout << "cudaErr = " << cudaGetErrorString(cudaErr) << std::endl;
-            //cudaErr = cudaMemcpy(hX2, X, basisFunctionCE_[currentId_][k] * sizeof(double), cudaMemcpyDeviceToHost);
-            //std::cout << "cudaErr = " << cudaGetErrorString(cudaErr) << std::endl;
-    /*        for (size_t i = 0; i < 5; ++i) {
-                std::cout << "X["<< i <<"] = " << hX2[i] << std::endl;
-            }*/
-
-            //cudaStreamSynchronize(stream_);
-            // clear memory
-            releaseMem(A, "CudaContext::finalizeCalculation::A");
-            releaseMem(b, "CudaContext::finalizeCalculation::b");
         }
-
+        //std::cout << "A_unfilter.size() = " << A_unfilter.size() << std::endl;
         //cudaStreamSynchronize(stream_);
         //double* hX1;
         //cudaMemcpyAsync(&h_info, d_info, sizeof(int), cudaMemcpyDeviceToHost, stream_);
@@ -2144,7 +2544,21 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
         //}
         // last kernel
         // set kernel args
-        void* argsFinal[] = {&input, &d_randomVariables_, &values, &dOutput_[nOutputVariables_[currentId_ - 1]], &A_unfilter.back(), &X};
+        //void* argsFinal[] = {&input, &d_randomVariables_, &values, &dOutput_[nOutputVariables_[currentId_ - 1]], &A_unfilter.back(), &X, &eR};
+        std::vector<double*> argVec;
+        void* argsFinal[] = {&input, &d_randomVariables_, &values, &dOutput_[nOutputVariables_[currentId_ - 1]], nullptr, nullptr, nullptr};
+        if (previousKernelHaveConditionalExpectation){
+            argVec.push_back(A_unfilter.back());
+            argVec.push_back(X);
+        }
+        if (numOfExpectationInKernel_[currentId_-1].back() == -2)
+            argVec.push_back(eR);
+        int nArgs = 4;
+        for (auto& ptr : argVec) {
+            argsFinal[nArgs] = &ptr;
+            ++nArgs;
+        }
+
         //void* argsTmp[] = {&input, &d_randomVariables_, &values, &output, &A_unfilter.back(), &X};
         //void* args0[] = {&input, &d_randomVariables_, &values, &A, &b, &A_unfilter[0]};
         // execute kernel
