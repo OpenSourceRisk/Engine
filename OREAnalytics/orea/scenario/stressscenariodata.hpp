@@ -64,19 +64,19 @@ public:
     };
 
     struct FXVolShiftData {
-        
-        enum FxVolShiftMode {
-            Explicit,      // Shifts are given, if only one shift is given perform parallel shift
-            OneTenorShift, // Only one shift and shiftExpiry allowed, keep all other tenors unshifted
-            WeightedShifts // Only one shift and shiftExpiry allowed, derive the shifts for the weightTenors by 
-                           // shift_t = shift_ref * w_t / w_ref
-        }; 
+
+        enum AtmShiftMode {
+            Explicit,   // Shifts are given, if only one shift is given perform parallel shift
+            Unadjusted, // Shift only one pillar and leave other unadjusted
+            Weighted    // Shift for one pillar given, derive the other shifts from given weights by shift_t = shift_ref *
+                        // w_t / w_ref
+        };
         ShiftType shiftType;
         vector<Period> shiftExpiries;
         vector<Real> shifts;
         vector<Period> weightTenors;
         vector<Real> weights;
-        FxVolShiftMode mode = FxVolShiftMode::Explicit;
+        AtmShiftMode mode = AtmShiftMode::Explicit;
     };
     
     struct CapFloorVolShiftData {

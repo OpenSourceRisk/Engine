@@ -171,9 +171,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 auto shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType"));
                 XMLNode* shiftsNode = XMLUtils::getChildNode(child, "Shifts");
                 XMLNode* shiftExpiriesNode = XMLUtils::getChildNode(child, "ShiftExpiries");
-                XMLNode* shiftNode = XMLUtils::getChildNode(child, "Shift");
-                XMLNode* tenorNode = XMLUtils::getChildNode(child, "Tenor");
-                XMLNode* weightNodes = XMLUtils::getChildNode(child, "Weights");
+                XMLNode* weightedShiftsNode = XMLUtils::getChildNode(child, "WeightedShifts");
                 if ((shiftsNode != nullptr) && (shiftExpiriesNode != nullptr)) {
                     FXVolShiftData data;
                     data.mode = FXVolShiftData::Explicit;
@@ -185,26 +183,38 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                                                    << data.shiftExpiries.size()
                                                    << ". Please check stresstest config for FxVol " << ccypair);
                     test.fxVolShifts[ccypair] = data;
-                } else if(shiftNode != nullptr && tenorNode != nullptr && weightNodes != nullptr){
+                } else if (weightedShiftsNode != nullptr) {
+                    std::string weightingSchema = XMLUtils::getChildValue(weightedShiftsNode, "WeightingSchema", true);
+                    boost::to_lower(weightingSchema);
                     FXVolShiftData data;
-                    data.mode = FXVolShiftData::WeightedShifts;
-                    data.shiftType = shiftType;
-                    data.shifts = std::vector<Real>(1, XMLUtils::getChildValueAsDouble(child, "Shift", true));
-                    data.shiftExpiries = std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(child, "Tenor", true));
-                    data.weights = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftWeights", true);
-                    data.weightTenors = XMLUtils::getChildrenValuesAsPeriods(child, "WeightTenors", true);
-                    QL_REQUIRE(data.weights.size() == data.weightTenors.size(),
-                               "Length of weights " << data.weights.size() << " does not match length of weightTenors "
-                                                    << data.weightTenors.size()
-                                                    << ". Please check stresstest config for FxVol " << ccypair);
+                    if (weightingSchema == "unadjusted"){
+                        data.mode = FXVolShiftData::Unadjusted;
+                        data.shifts = std::vector<Real>(1, XMLUtils::getChildValueAsDouble(child, "Shift", true));
+                        data.shiftExpiries =
+                            std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(child, "Tenor", true));
+                    } else if(weightingSchema == "weighted"){
+                        data.mode = FXVolShiftData::Weighted;
+                        data.shifts = std::vector<Real>(1, XMLUtils::getChildValueAsDouble(child, "Shift", true));
+                        data.shiftExpiries =
+                            std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(child, "Tenor", true));
+                        data.weights = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftWeights", true);
+                        data.weightTenors = XMLUtils::getChildrenValuesAsPeriods(child, "WeightTenors", true);
+                        QL_REQUIRE(data.weights.size() == data.weightTenors.size(),
+                                   "Length of weights "
+                                       << data.weights.size() << " does not match length of weightTenors "
+                                       << data.weightTenors.size() << ". Please check stresstest config for FxVol "
+                                       << ccypair);
+                        
+                    } else{
+                        QL_FAIL("FxVolStressTestData: unexpected weighting scheme, got "
+                                << weightingSchema << " expected 'unadjusted' or 'weighted', please check config for "<< ccypair);
+                        continue;
+                    }
                     test.fxVolShifts[ccypair] = data;
-                } else if (shiftNode != nullptr && tenorNode != nullptr) {
-                    FXVolShiftData data;
-                    data.mode = FXVolShiftData::OneTenorShift;
-                    data.shiftType = shiftType;
-                    data.shifts = std::vector<Real>(1, XMLUtils::getChildValueAsDouble(child, "Shift", true));
-                    data.shiftExpiries = std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(child, "Tenor", true));
-                    test.fxVolShifts[ccypair] = data;
+                } else{
+                    QL_FAIL("Expect either Shifts and Shiftsexpiries nodes or a WeightedShifts node, please check config "
+                         "for FxVolStressScenario "
+                         << ccypair);
                 }
             }
         }
@@ -374,26 +384,28 @@ void fxVolDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
             XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data.shiftType));
             XMLUtils::addGenericChildAsList(doc, childNode, "Shifts", data.shifts);
             XMLUtils::addGenericChildAsList(doc, childNode, "ShiftExpiries", data.shiftExpiries);
-        } else if (data.mode == StressTestScenarioData::FXVolShiftData::OneTenorShift) {
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::Unadjusted) {
             auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
             XMLUtils::addAttribute(doc, childNode, identifier, key);
-            XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data.shiftType));
-            XMLUtils::addChild(doc, childNode, "Shift", data.shifts.front());
-            XMLUtils::addChild(doc, childNode, "Tenor", data.shiftExpiries.front());
-        } else if (data.mode == StressTestScenarioData::FXVolShiftData::WeightedShifts) {
+            auto weightedShiftsNode = XMLUtils::addChild(doc, childNode, "WeightedShifts");
+            XMLUtils::addChild(doc, weightedShiftsNode, "WeightingSchema", "Unadjusted");
+            XMLUtils::addChild(doc, weightedShiftsNode, "Shift", data.shifts.front());
+            XMLUtils::addChild(doc, weightedShiftsNode, "Tenor", data.shiftExpiries.front());
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::Weighted) {
             QL_REQUIRE(data.shifts.size() == 1, "Internal Error: WeightedShift should have only one shift, please check construction of FxVolShiftData");
             QL_REQUIRE(
                 data.shiftExpiries.size() == 1,
                 "Internal Error: WeightedShift should have only one shift, please check construction of FxVolShiftData");
             auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
             XMLUtils::addAttribute(doc, childNode, identifier, key);
-            XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data.shiftType));
-            XMLUtils::addChild(doc, childNode, "Shift", data.shifts.front());
-            XMLUtils::addChild(doc, childNode, "Tenor", data.shiftExpiries.front());
-            XMLUtils::addGenericChildAsList(doc, childNode, "ShiftWeights", data.weights);
-            XMLUtils::addGenericChildAsList(doc, childNode, "WeightTenors", data.weightTenors);
+            auto weightedShiftsNode = XMLUtils::addChild(doc, childNode, "WeightedShifts");
+            XMLUtils::addChild(doc, weightedShiftsNode, "WeightingSchema", "Weighted");
+            XMLUtils::addChild(doc, weightedShiftsNode, "Shift", data.shifts.front());
+            XMLUtils::addChild(doc, weightedShiftsNode, "Tenor", data.shiftExpiries.front());
+            XMLUtils::addGenericChildAsList(doc, weightedShiftsNode, "ShiftWeights", data.weights);
+            XMLUtils::addGenericChildAsList(doc, weightedShiftsNode, "WeightTenors", data.weightTenors);
         } else {
-            QL_FAIL("internal error: unexpected FxVolShiftData, expected Explicit Shifts, OneTenorShift or weighted shifts, contact dev");
+            QL_FAIL("internal error: unexpected FxVolShiftData, expected Explicit Shifts, Unadjusted or weighted shifts, contact dev");
         }
     }
 }

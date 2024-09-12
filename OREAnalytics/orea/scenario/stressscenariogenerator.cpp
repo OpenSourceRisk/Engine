@@ -436,7 +436,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
 
             for (Size j = 0; j < shiftTenors.size(); ++j)
                 shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
-        } else if(data.mode == StressTestScenarioData::FXVolShiftData::WeightedShifts){
+        } else if(data.mode == StressTestScenarioData::FXVolShiftData::Weighted){
             QL_REQUIRE(data.weightTenors.size() == data.weights.size(), "Mismatch between weights and weightTenors");
             QL_REQUIRE(data.shiftExpiries.size() == 1, "Expect exaclty one tenor for weighted shift scheme");
             QL_REQUIRE(data.shifts.size() == 1, "Expect exaclty one shift for weighted shift scheme");
@@ -445,13 +445,13 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
             std::vector<Period> shiftTenors = data.weightTenors;
             auto it = std::find(shiftTenors.begin(), shiftTenors.end(), referenceTenor);
             QL_REQUIRE(it != shiftTenors.end(), "Couldnt find reference weight for shift expiry");
-            double referenceWeight = *it;
+            double referenceWeight = data.weights[std::distance(shiftTenors.begin(), it)];
             const double weightedRefShift = referenceShift / referenceWeight;
             for (Size j = 0; j < shiftTenors.size(); ++j) {
                 shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
                 shifts.push_back(weightedRefShift * data.weights[j]);
             }
-        } else if (data.mode == StressTestScenarioData::FXVolShiftData::OneTenorShift){
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::Unadjusted){
             // Usually there will be 
             QL_REQUIRE(data.shiftExpiries.size() == 1, "Expect exaclty one tenor for One Tenor shift scheme");
             QL_REQUIRE(data.shifts.size() == 1, "Expect exaclty one shift for One Tenor shift scheme");
