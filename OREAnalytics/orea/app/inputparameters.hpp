@@ -30,7 +30,7 @@
 #include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
-#include <orea/scenario/historicalscenarioreader.hpp>
+#include <orea/scenario/scenarioreader.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
@@ -195,7 +195,7 @@ public:
     void setCovarianceDataFromBuffer(const std::string& xml);
     void setSensitivityStreamFromFile(const std::string& fileName);
     void setBenchmarkVarPeriod(const std::string& period);
-    void setHistoricalScenarioReader(const std::string& fileName);
+    void setScenarioReader(const std::string& fileName);
     void setSensitivityStreamFromBuffer(const std::string& buffer);
     void setHistVarSimMarketParams(const std::string& xml);
     void setHistVarSimMarketParamsFromFile(const std::string& fileName);
@@ -413,6 +413,8 @@ public:
     // Setters for ScenarioStatistics
     void setScenarioDistributionSteps(const Size s) { scenarioDistributionSteps_ = s; }
     void setScenarioOutputZeroRate(const bool b) { scenarioOutputZeroRate_ = b; }
+    void setScenarioOutputStatistics(const bool b) { scenarioOutputStatistics_ = b; }
+    void setScenarioOutputDistributions(const bool b) { scenarioOutputDistributions_ = b; }
     // Setters for par stress conversion
     void setParStressSimMarketParams(const std::string& xml);
     void setParStressSimMarketParamsFromFile(const std::string& fileName);
@@ -588,7 +590,7 @@ public:
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& covarianceData() const { return covarianceData_; }
     const QuantLib::ext::shared_ptr<SensitivityStream>& sensitivityStream() const { return sensitivityStream_; }
     std::string benchmarkVarPeriod() const { return benchmarkVarPeriod_; }
-    QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader() const { return historicalScenarioReader_;};
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader() const { return scenarioReader_;};
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& histVarSimMarketParams() const { return histVarSimMarketParams_; }
     bool outputHistoricalScenarios() const { return outputHistoricalScenarios_; }
     
@@ -771,6 +773,8 @@ public:
     // Getters for ScenarioStatistics
     const Size& scenarioDistributionSteps() const { return scenarioDistributionSteps_; }
     const bool& scenarioOutputZeroRate() const { return scenarioOutputZeroRate_; }
+    const bool scenarioOutputStatistics() const { return scenarioOutputStatistics_; }
+    const bool scenarioOutputDistributions() const { return scenarioOutputDistributions_; }
 
     // Getters for ParStressConversion
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& parStressSimMarketParams() const {
@@ -953,7 +957,7 @@ protected:
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarianceData_;
     QuantLib::ext::shared_ptr<SensitivityStream> sensitivityStream_;
     std::string benchmarkVarPeriod_;
-    QuantLib::ext::shared_ptr<HistoricalScenarioReader> historicalScenarioReader_;
+    QuantLib::ext::shared_ptr<ScenarioReader> scenarioReader_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> histVarSimMarketParams_;
     std::string baseScenarioLoc_;
     bool outputHistoricalScenarios_ = false;
@@ -1104,6 +1108,8 @@ protected:
      ***************/
     Size scenarioDistributionSteps_ = 20;
     bool scenarioOutputZeroRate_ = false;
+    bool scenarioOutputStatistics_ = true;
+    bool scenarioOutputDistributions_ = true;
 
     /*****************
      * PAR STRESS CONVERSION analytic
@@ -1188,6 +1194,7 @@ private:
     std::string riskFactorsOutputFileName_;
     std::string marketObjectsOutputFileName_;
     std::string zeroToParShiftFile_;
+    std::string scenarioNpvOutputFileName_;
 };
 
 void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);

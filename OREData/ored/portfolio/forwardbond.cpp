@@ -151,8 +151,8 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
                                                            settlementDirty, compensationPayment,
                                                            compensationPaymentDate, bondData_.bondNotional(), dv01);
 
-    QuantLib::ext::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
-        QuantLib::ext::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
+    QuantLib::ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
 
     fwdBond->setPricingEngine(

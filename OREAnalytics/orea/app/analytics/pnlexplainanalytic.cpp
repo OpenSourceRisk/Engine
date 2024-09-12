@@ -97,7 +97,7 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     auto t1Scenario = pnlImpl->t1Scenario();
 
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> scenarios;
-    if (!inputs_->historicalScenarioReader()) {
+    if (!inputs_->scenarioReader()) {
         analytic()->reports()[label_]["pnl_scenario_t0"] = pnlAnalytic->reports().at("PNL").at("pnl_scenario_t0");
         analytic()->reports()[label_]["pnl_scenario_t1"] = pnlAnalytic->reports().at("PNL").at("pnl_scenario_t1");
 
@@ -132,7 +132,7 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         } else
             scenarios = zeroScenarios;
     } else {
-        auto scenarios = buildHistoricalScenarioGenerator(inputs_->historicalScenarioReader(), adjFactors, pnlDates,
+        auto scenarios = buildHistoricalScenarioGenerator(inputs_->scenarioReader(), adjFactors, pnlDates,
                                                           analytic()->configurations().simMarketParams,
                                                           analytic()->configurations().todaysMarketParams);
         scenarios->baseScenario() = t0Scenario;

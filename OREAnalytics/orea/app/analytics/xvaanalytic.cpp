@@ -175,22 +175,28 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
 }
 
 void XvaAnalyticImpl::buildScenarioGenerator(const bool continueOnCalibrationError) {
-    if (!model_)
-        buildCrossAssetModel(continueOnCalibrationError);
-    ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
-    QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
-    string config = inputs_->marketConfig("simulation");
-    auto market = offsetScenario_ == nullptr ? analytic()->market() : simMarketCalibration_;
-    scenarioGenerator_ =
-        sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), market, config);
-    QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator");
+    if (inputs_->scenarioReader()) {
+        auto loader = QuantLib::ext::make_shared<SimpleScenarioLoader>(inputs_->scenarioReader());
+        auto slg = QuantLib::ext::make_shared<ScenarioLoaderGenerator>(loader, inputs_->asof(), grid_->dates(),
+                                                                       grid_->timeGrid());
+        scenarioGenerator_ = slg;
+    } else {
+        if (!model_)
+            buildCrossAssetModel(continueOnCalibrationError);
+        ScenarioGeneratorBuilder sgb(analytic()->configurations().scenarioGeneratorData);
+        QuantLib::ext::shared_ptr<ScenarioFactory> sf = QuantLib::ext::make_shared<SimpleScenarioFactory>(true);
+        string config = inputs_->marketConfig("simulation");
+        auto market = offsetScenario_ == nullptr ? analytic()->market() : simMarketCalibration_;
+        scenarioGenerator_ = sgb.build(model_, sf, analytic()->configurations().simMarketParams, inputs_->asof(), market, config,
+                      QuantLib::ext::make_shared<MultiPathGeneratorFactory>(), inputs_->amcPathDataOutput());
+        QL_REQUIRE(scenarioGenerator_, "failed to build the scenario generator");
+    }
     samples_ = analytic()->configurations().scenarioGeneratorData->samples();
     LOG("simulation grid size " << grid_->size());
     LOG("simulation grid valuation dates " << grid_->valuationDates().size());
     LOG("simulation grid close-out dates " << grid_->closeOutDates().size());
     LOG("simulation grid front date " << io::iso_date(grid_->dates().front()));
     LOG("simulation grid back date " << io::iso_date(grid_->dates().back()));
-
     if (inputs_->writeScenarios()) {
         auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         analytic()->reports()["XVA"]["scenario"] = report;

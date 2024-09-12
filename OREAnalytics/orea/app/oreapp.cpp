@@ -1218,7 +1218,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("historicalSimulationVar", "historicalScenarioFile", false);
         QL_REQUIRE(tmp != "", "historicalScenarioFile not provided");
         std::string scenarioFile = (inputPath / tmp).generic_string();
-        setHistoricalScenarioReader(scenarioFile);
+        setScenarioReader(scenarioFile);
 
         tmp = params_->get("historicalSimulationVar", "simulationConfigFile", false);
         QL_REQUIRE(tmp != "", "simulationConfigFile not provided");
@@ -1325,7 +1325,7 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("pnlExplain", "historicalScenarioFile", false);
         if (tmp != "") {
             std::string scenarioFile = (inputPath / tmp).generic_string();
-            setHistoricalScenarioReader(scenarioFile);
+            setScenarioReader(scenarioFile);
         }
 
         tmp = params_->get("pnlExplain", "simulationConfigFile", false);
@@ -1564,6 +1564,10 @@ void OREAppInputParameters::loadParameters() {
     tmp = params_->get("simulation", "amcPathDataOutput", false);
     if (tmp != "")
         setAmcPathDataOutput(tmp);
+
+    tmp = params_->get("simulation", "scenarioFile", false);
+    if (tmp != "")
+        setScenarioReader((inputPath / tmp).generic_string());
 
     setSimulationPricingEngine(pricingEngine());
     setExposureObservationModel(observationModel());
@@ -2188,6 +2192,18 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setScenarioOutputZeroRate(parseBool(tmp));
 
+        tmp = params_->get("scenarioStatistics", "outputStatistics", false);
+        if (tmp != "")
+            setScenarioOutputStatistics(parseBool(tmp));
+
+        tmp = params_->get("scenarioStatistics", "outputDistributions", false);
+        if (tmp != "")
+            setScenarioOutputDistributions(parseBool(tmp));
+
+        tmp = params_->get("scenarioStatistics", "amcPathDataOutput", false);
+        if (tmp != "")
+            setAmcPathDataOutput(tmp);
+
         tmp = params_->get("scenarioStatistics", "simulationConfigFile", false);
         if (tmp != "") {
             string simulationConfigFile = (inputPath / tmp).generic_string();
@@ -2201,10 +2217,6 @@ void OREAppInputParameters::loadParameters() {
         } else {
             ALOG("Simulation market, model and scenario generator data not loaded");
         }
-
-        tmp = params_->get("scenarioStatistics", "scenariodump", false);
-        if (tmp != "")
-            setWriteScenarios(true);
     }
 
     tmp = params_->get("portfolioDetails", "active", false);

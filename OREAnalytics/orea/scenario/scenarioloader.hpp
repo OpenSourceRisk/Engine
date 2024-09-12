@@ -26,15 +26,66 @@
 #include <boost/make_shared.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/scenariofactory.hpp>
-#include <orea/scenario/historicalscenarioreader.hpp>
+#include <orea/scenario/scenarioreader.hpp>
 #include <ql/time/calendar.hpp>
 #include <vector>
 
 namespace ore {
 namespace analytics {
 
+class ScenarioLoader {
+public:
+    ScenarioLoader(){};
+    
+    //! Number of scenarios
+    QuantLib::Size numScenarios() const { return scenarios_.size() * scenarios_.front().size(); }
+
+    const std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ore::analytics::Scenario>>& getScenarios(Size i) {
+        QL_REQUIRE(i < scenarios_.size(), "Invalid index " << i << " for scenarios");
+        return scenarios_.at(i);
+    }
+
+    //! Set scenarios
+    std::vector<std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ore::analytics::Scenario>>>& scenarios() {
+        return scenarios_;
+    }
+
+    //! The scenarios
+    const std::vector<std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ore::analytics::Scenario>>>&
+    scenarios() const {
+        return scenarios_;
+    }
+
+    // add a scenario
+    void add(const QuantLib::Date& date, Size index, const QuantLib::ext::shared_ptr<ore::analytics::Scenario>& scenario);
+
+protected:
+    // to be populated by derived classes
+    std::vector<std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ore::analytics::Scenario>>> scenarios_;
+};
+
 //! Class for loading historical scenarios
-class HistoricalScenarioLoader {
+class SimpleScenarioLoader : public ScenarioLoader {
+public:
+    //! Default constructor
+    SimpleScenarioLoader() {}
+
+    /*! Constructor that loads scenarios, read from \p scenarioReader
+        \warning The scenarios coming from \p scenarioReader must be in ascending order. If not,
+                 an exception is thrown.
+    */
+    SimpleScenarioLoader(
+        //! A scenario reader that feeds the loader with scenarios
+        const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader);
+
+    QuantLib::Size samples() { return indexMap_.size(); }
+
+protected:
+    std::map<std::string, QuantLib::Size> indexMap_;
+};
+
+//! Class for loading historical scenarios
+class HistoricalScenarioLoader : public ScenarioLoader {
 public:
     //! Default constructor
     HistoricalScenarioLoader() {}
@@ -47,8 +98,8 @@ public:
     */
     HistoricalScenarioLoader(
         //! A scenario reader that feeds the loader with scenarios
-        const QuantLib::ext::shared_ptr<HistoricalScenarioReader>& scenarioReader,
-        //! The first date to load a a scenario for
+        const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader,
+        //! The first date to load a scenario for
         const QuantLib::Date& startDate,
         //! The last date to load a scenario for
         const QuantLib::Date& endDate,
@@ -58,8 +109,8 @@ public:
      /*! Constructor that loads scenarios, read from \p scenarioReader, for given dates */
     HistoricalScenarioLoader(
         //! A scenario reader that feeds the loader with scenarios
-        const boost::shared_ptr<HistoricalScenarioReader>& scenarioReader,
-        //! The first date to load a a scenario for
+        const boost::shared_ptr<ScenarioReader>& scenarioReader,
+        //! The first date to load a scenario for
         const std::set<QuantLib::Date>& dates);
 
      /*! Constructor that loads scenarios from a vector */
@@ -70,24 +121,14 @@ public:
         const std::set<QuantLib::Date>& dates);
 
     //! Get a Scenario for a given date
-    QuantLib::ext::shared_ptr<ore::analytics::Scenario> getHistoricalScenario(const QuantLib::Date& date) const;
-    //! Number of scenarios
-    QuantLib::Size numScenarios() const { return historicalScenarios_.size(); }
-    //! Set historical scenarios
-    std::vector<QuantLib::ext::shared_ptr<ore::analytics::Scenario>>& historicalScenarios() { return historicalScenarios_; }
-    //! The historical scenarios
-    const std::vector<QuantLib::ext::shared_ptr<ore::analytics::Scenario>>& historicalScenarios() const {
-        return historicalScenarios_;
-    }
-    //! Set historical scenario dates
-    std::vector<QuantLib::Date>& dates() { return dates_; }
-    //! The historical scenario dates
-    const std::vector<QuantLib::Date>& dates() const { return dates_; }
+    QuantLib::ext::shared_ptr<ore::analytics::Scenario> getScenario(const QuantLib::Date& date) const;
 
-protected:
-    // to be populated by derived classes
-    std::vector<QuantLib::ext::shared_ptr<ore::analytics::Scenario>> historicalScenarios_;
-    std::vector<QuantLib::Date> dates_;
+    std::vector<QuantLib::Date> dates() { 
+        std::vector<QuantLib::Date> dts;
+        for (const auto& s : scenarios_[0])
+            dts.push_back(s.first);
+        return dts;
+    }
 };
 
 } // namespace analytics

@@ -107,7 +107,7 @@ void ParametricVarAnalyticImpl::setVarReport(const QuantLib::ext::shared_ptr<ore
         if (auto adjLoader = QuantLib::ext::dynamic_pointer_cast<AdjustedInMemoryLoader>(loader))
             adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
 
-        auto scenarios = buildHistoricalScenarioGenerator(inputs_->historicalScenarioReader(), adjFactors,
+        auto scenarios = buildHistoricalScenarioGenerator(inputs_->scenarioReader(), adjFactors,
             benchmarkVarPeriod, inputs_->mporCalendar(), inputs_->mporDays(), analytic()->configurations().simMarketParams,
             analytic()->configurations().todaysMarketParams, inputs_->mporOverlappingPeriods());
 
@@ -153,7 +153,7 @@ void HistoricalSimulationVarAnalyticImpl::setVarReport(
         adjFactors = QuantLib::ext::make_shared<ore::data::AdjustmentFactors>(adjLoader->adjustmentFactors());
         
     auto scenarios =
-        buildHistoricalScenarioGenerator(inputs_->historicalScenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(),
+        buildHistoricalScenarioGenerator(inputs_->scenarioReader(), adjFactors, benchmarkVarPeriod, inputs_->mporCalendar(),
         inputs_->mporDays(), analytic()->configurations().simMarketParams,
         analytic()->configurations().todaysMarketParams, inputs_->mporOverlappingPeriods());
     
