@@ -151,6 +151,21 @@ QuantLib::ext::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>
                                  CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative,
                                  0.0)));
          break;
+     case YieldCurve::InterpolationMethod::LogNaturalCubic:
+         yieldts.reset(new CurveType<LogCubic>(dates, rates, dayCounter, LogCubic(CubicInterpolation::Kruger, true)));
+         break;
+     case YieldCurve::InterpolationMethod::LogFinancialCubic:
+         yieldts.reset(
+             new CurveType<LogCubic>(dates, rates, dayCounter,
+                                     LogCubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative,
+                                              0.0, CubicInterpolation::FirstDerivative)));
+         break;
+     case YieldCurve::InterpolationMethod::LogCubicSpline:
+         yieldts.reset(
+             new CurveType<LogCubic>(dates, rates, dayCounter,
+                                     LogCubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative,
+                                              0.0, CubicInterpolation::SecondDerivative, 0.0)));
+         break;
 
      default:
          QL_FAIL("Interpolation method '" << interpolationMethod << "' not recognised.");
@@ -359,8 +374,23 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         if (buildCalibrationInfo_) {
             if (calibrationInfo_ == nullptr)
                 calibrationInfo_ = QuantLib::ext::make_shared<YieldCurveCalibrationInfo>();
+
+            try {
+                ReportConfig rc =
+                    effectiveReportConfig(curveConfigs.reportConfigYieldCurves(), curveConfig_->reportConfig());
+                std::vector<Date> pillarDates = *rc.pillarDates();
+                if (!pillarDates.empty()) {
+                    calibrationInfo_->pillarDates.clear();
+                    for (auto const& pd : pillarDates)
+                        calibrationInfo_->pillarDates.push_back(pd);
+                }
+            } catch (...) {
+                DLOG("Report configuration for yield curves not set - using predefined/default pillar dates.");
+            }
+
             calibrationInfo_->dayCounter = zeroDayCounter_.name();
             calibrationInfo_->currency = currency_.code();
+
             if (calibrationInfo_->pillarDates.empty()) {
                 for (auto const& p : YieldCurveCalibrationInfo::defaultPeriods)
                     calibrationInfo_->pillarDates.push_back(asofDate_ + p);

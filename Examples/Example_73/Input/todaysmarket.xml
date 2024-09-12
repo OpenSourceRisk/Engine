@@ -24,8 +24,8 @@
 		<DefaultCurve name="CPTY_C">Default/EUR/CPTY_C</DefaultCurve>
 	</DefaultCurves>
 	<Securities id="default">
-		<Security name="SECURITY_FWDEXP_20251220">Security/SECURITY_FWDEXP_20251220</Security>
-		<Security name="SECURITY_cutted">Security/SECURITY_cutted</Security>
+		<Security name="SECURITY_1_FWDEXP_20251220">Security/SECURITY_1_FWDEXP_20251220</Security>
+		<Security name="SECURITY_1_cutted">Security/SECURITY_1_cutted</Security>
 	</Securities>
 </TodaysMarket>
 

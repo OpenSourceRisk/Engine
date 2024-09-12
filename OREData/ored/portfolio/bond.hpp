@@ -183,6 +183,7 @@ struct BondBuilder {
     struct Result {
         std::string builderLabel;
         QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
+        QuantLib::ext::shared_ptr<ore::data::Bond> bondTrade;
         QuantLib::ext::shared_ptr<QuantExt::ModelBuilder> modelBuilder; // might be nullptr
         bool isInflationLinked = false;
         bool hasCreditRisk = true;
@@ -203,7 +204,8 @@ struct BondBuilder {
                                      const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                      const std::string& securityId) const = 0;
-    Date checkForwardBond(const std::string& securityId) const;
+    // function returns empty Date and String, if the securityId is not a forward bond
+    static std::pair<Date, std::string> checkForwardBond(const std::string& securityId);
 };
 
 class BondFactory : public QuantLib::Singleton<BondFactory, std::integral_constant<bool, true>> {

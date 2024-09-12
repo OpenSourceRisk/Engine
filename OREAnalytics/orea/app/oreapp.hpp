@@ -45,10 +45,11 @@ public:
       : params_(params), inputs_(nullptr), console_(console), logRootPath_(logRootPath) {}
 
     //! Constructor that assumes we have already assembled input parameters via API
-    OREApp(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const std::string& logFile, Size logLevel = 31,
-           bool console = false, const boost::filesystem::path& logRootPath = boost::filesystem::path())
-      : params_(nullptr), inputs_(inputs), logFile_(logFile), logMask_(logLevel), console_(console),
-	logRootPath_(logRootPath) {}
+    OREApp(const QuantLib::ext::shared_ptr<InputParameters>& inputs, const std::string& logFile = "",
+           Size logLevel = 31, bool console = false, bool clearLog = true,
+           const boost::filesystem::path& logRootPath = boost::filesystem::path())
+        : params_(nullptr), inputs_(inputs), logFile_(logFile), logMask_(logLevel), console_(console),
+          clearLog_(clearLog), logRootPath_(logRootPath) {}
 
     //! Destructor
     virtual ~OREApp();
@@ -80,10 +81,24 @@ public:
 
     std::vector<std::string> getErrors();
 
+    QuantLib::ext::shared_ptr<BufferLogger> getLogger(const std::string& name);
+
+    std::vector<std::string>& getProgressLog();
+
     //! time for executing run(...) in seconds
     Real getRunTime();
 
     std::string version();
+
+    //! set up logging
+    void setupLog(QuantLib::Size mask = 15, const std::string& path = "", const std::string& file = "",
+                  const boost::filesystem::path& logRootPath = boost::filesystem::path(),
+                  const std::string& progressLogFile = "", QuantLib::Size progressLogRotationSize = 100 * 1024 * 1024,
+                  bool progressLogToConsole = false, const std::string& structuredLogFile = "",
+                  QuantLib::Size structuredLogRotationSize = 100 * 1024 * 1024);
+    
+    //! remove logs
+    void closeLog();
     
 protected:
     virtual void analytics();
@@ -92,13 +107,6 @@ protected:
     void buildInputParameters(QuantLib::ext::shared_ptr<InputParameters> inputs,
                               const QuantLib::ext::shared_ptr<Parameters>& params);
     QuantLib::ext::shared_ptr<CSVLoader> buildCsvLoader(const QuantLib::ext::shared_ptr<Parameters>& params);
-    //! set up logging
-    void setupLog(const std::string& path, const std::string& file, QuantLib::Size mask,
-                  const boost::filesystem::path& logRootPath, const std::string& progressLogFile = "",
-                  QuantLib::Size progressLogRotationSize = 100 * 1024 * 1024, bool progressLogToConsole = false,
-                  const std::string& structuredLogFile = "", QuantLib::Size structuredLogRotationSize = 100 * 1024 * 1024);
-    //! remove logs
-    void closeLog();
 
     void initFromParams();
     void initFromInputs();
@@ -117,6 +125,7 @@ protected:
     Size logMask_;
     bool console_;
     string outputPath_;
+    bool clearLog_ = true;
     boost::filesystem::path logRootPath_;
     string progressLogFile_ = "";
     QuantLib::Size progressLogRotationSize_ = 100 * 1024 * 1024;

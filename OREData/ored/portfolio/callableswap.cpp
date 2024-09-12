@@ -59,6 +59,8 @@ void CallableSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     notional_ = swap_.notional();
     notionalCurrency_ = swap_.notionalCurrency();
     maturity_ = swap_.maturity();
+    maturityType_ = "Swap Maturity Date";
+
 
     requiredFixings_.addData(swap_.requiredFixings());
 }

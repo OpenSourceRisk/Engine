@@ -24,6 +24,7 @@ app/analytics/parscenarioanalytic.cpp
 app/analytics/parstressconversionanalytic.cpp
 app/analytics/pnlanalytic.cpp
 app/analytics/pnlexplainanalytic.cpp
+app/analytics/portfoliodetailsanalytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
@@ -103,14 +104,15 @@ scenario/crossassetmodelscenariogenerator.cpp
 scenario/csvscenariogenerator.cpp
 scenario/deltascenario.cpp
 scenario/deltascenariofactory.cpp
-scenario/historicalscenariofilereader.cpp
 scenario/historicalscenariogenerator.cpp
-scenario/historicalscenarioloader.cpp
 scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
+scenario/scenariofilereader.cpp
+scenario/scenariogenerator.cpp
 scenario/scenariogeneratorbuilder.cpp
 scenario/scenariogeneratordata.cpp
 scenario/scenariogeneratortransform.cpp
+scenario/scenarioloader.cpp
 scenario/scenarioshiftcalculator.cpp
 scenario/scenariosimmarket.cpp
 scenario/scenariosimmarketparameters.cpp
@@ -190,6 +192,7 @@ app/analytics/parscenarioanalytic.hpp
 app/analytics/parstressconversionanalytic.hpp
 app/analytics/pnlanalytic.hpp
 app/analytics/pnlexplainanalytic.hpp
+app/analytics/portfoliodetailsanalytic.hpp
 app/analytics/pricinganalytic.hpp
 app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
@@ -203,9 +206,11 @@ app/analytics/xvastressanalytic.hpp
 app/analytics/zerotoparshiftanalytic.hpp
 app/analyticsmanager.hpp
 app/cleanupsingletons.hpp
+app/dummymarketdataloader.hpp
 app/initbuilders.hpp
 app/inputparameters.hpp
 app/marketcalibrationreport.hpp
+app/marketdatabinaryloader.hpp
 app/marketdatacsvloader.hpp
 app/marketdatainmemoryloader.hpp
 app/marketdataloader.hpp
@@ -248,6 +253,7 @@ engine/multistatenpvcalculator.hpp
 engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp
 engine/observationmode.hpp
+engine/pathdata.hpp
 engine/parametricvar.hpp
 engine/parsensitivityanalysis.hpp
 engine/parsensitivitycubestream.hpp
@@ -280,18 +286,18 @@ scenario/crossassetmodelscenariogenerator.hpp
 scenario/csvscenariogenerator.hpp
 scenario/deltascenario.hpp
 scenario/deltascenariofactory.hpp
-scenario/historicalscenariofilereader.hpp
 scenario/historicalscenariogenerator.hpp
-scenario/historicalscenarioloader.hpp
-scenario/historicalscenarioreader.hpp
 scenario/lgmscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariofactory.hpp
+scenario/scenariofilereader.hpp
 scenario/scenariofilter.hpp
 scenario/scenariogenerator.hpp
 scenario/scenariogeneratorbuilder.hpp
 scenario/scenariogeneratordata.hpp
 scenario/scenariogeneratortransform.hpp
+scenario/scenarioloader.hpp
+scenario/scenarioreader.hpp
 scenario/scenarioshiftcalculator.hpp
 scenario/scenariosimmarket.hpp
 scenario/scenariosimmarketparameters.hpp
@@ -350,7 +356,7 @@ simulation/simmarket.hpp
 version.hpp)
 
 writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
-add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} "engine/pnlexplainreport.cpp")
+add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
 target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})

@@ -117,13 +117,13 @@ XvaExplainResults::XvaExplainResults(const QuantLib::ext::shared_ptr<InMemoryRep
     size_t cvaColumn = xvaReport->columnPosition("CVA");
     for (size_t i = 0; i < xvaReport->rows(); ++i) {
 
-        const std::string& scenario = boost::get<std::string>(xvaReport->data(scenarioIdColumn)[i]);
+        const std::string& scenario = boost::get<std::string>(xvaReport->data(scenarioIdColumn, i));
 
-        const std::string& tradeId = boost::get<std::string>(xvaReport->data(tradeIdColumn)[i]);
+        const std::string& tradeId = boost::get<std::string>(xvaReport->data(tradeIdColumn, i));
 
-        const std::string& nettingset = boost::get<std::string>(xvaReport->data(nettingSetIdColumn)[i]);
+        const std::string& nettingset = boost::get<std::string>(xvaReport->data(nettingSetIdColumn, i));
 
-        const double cva = boost::get<double>(xvaReport->data(cvaColumn)[i]);
+        const double cva = boost::get<double>(xvaReport->data(cvaColumn, i));
 
         const auto key = XvaReportKey{tradeId, nettingset};
         if (scenario != "BASE" && scenario != "t1") {
@@ -131,7 +131,7 @@ XvaExplainResults::XvaExplainResults(const QuantLib::ext::shared_ptr<InMemoryRep
                 auto rfKey = parseRiskFactorKey(scenario);
                 fullRevalScenarioCva_[rfKey][key] = cva;
                 keyTypes_.insert(rfKey.keytype);
-            } catch (const std::exception& e) {
+            } catch (const std::exception&) {
                 StructuredAnalyticsErrorMessage("XvaExplain", "Unexpected RiskFactor",
                                                 scenario + "is not a valid riskfactor, skip it in xva explain report");
             }

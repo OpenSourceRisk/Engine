@@ -176,18 +176,30 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     // 12 get the t0 curves for each model ccy
 
+    // We allow external discount_curve and security_spread and overwrite the first modelCurve entry. The original base
+    // ccy discount curve is stored in baseCcyModelCurve_ and used to set up drift in processes, i.e. the external
+    // discount curve + sec spread is only used for discounting and numeraire calc. This is not supported for CG at the
+    // moment. TODO can this be implemented in a cleaner way?
     std::string externalDiscountCurve = scriptedTrade.envelope().additionalField("discount_curve", false);
     std::string externalSecuritySpread = scriptedTrade.envelope().additionalField("security_spread", false);
+
+    QL_REQUIRE(!useCg_ || (externalDiscountCurve.empty() && externalSecuritySpread.empty()),
+               "useCg = true does not support external discount_curve or security_spread at the moment.");
+
     for (auto const& c : modelCcys_) {
         // for base ccy we account for an external discount curve and security spread if given
         Handle<YieldTermStructure> yts =
             externalDiscountCurve.empty() || c != baseCcy_
                 ? market_->discountCurve(c, configuration(MarketContext::pricing))
                 : indexOrYieldCurve(market_, externalDiscountCurve, configuration(MarketContext::pricing));
-        if (!externalSecuritySpread.empty() && c == baseCcy_)
+        if (!externalSecuritySpread.empty() && c == baseCcy_) {
             yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
                 yts, market_->securitySpread(externalSecuritySpread, configuration(MarketContext::pricing))));
+        }
         modelCurves_.push_back(yts);
+        // set original base ccy curve in any case (used to construct BS processes)
+        if (c == baseCcy_)
+            baseCcyModelCurve_ = market_->discountCurve(c, configuration(MarketContext::pricing));
         DLOG("curve for " << c << " added.");
     }
 
@@ -931,23 +943,36 @@ void ScriptedTradeEngineBuilder::setupCorrelations() {
 
 void ScriptedTradeEngineBuilder::setLastRelevantDate() {
     lastRelevantDate_ = Date::minDate();
+    lastRelevantDateType_ = "Earliest Allowed Date";
     for (auto const& s : staticAnalyser_->indexEvalDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
-    for (auto const& d : staticAnalyser_->regressionDates())
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Index Eval Date" : lastRelevantDateType_;
+        }
+    for (auto const& d : staticAnalyser_->regressionDates()) {
         lastRelevantDate_ = std::max(lastRelevantDate_, d);
+        lastRelevantDateType_ = lastRelevantDate_ == d ? "Regression Date" : lastRelevantDateType_;
+    }
     for (auto const& s : staticAnalyser_->payObsDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Observation Date" : lastRelevantDateType_;
+        }
     for (auto const& s : staticAnalyser_->payPayDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Pay Date" : lastRelevantDateType_;
+        }
     for (auto const& s : staticAnalyser_->discountObsDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Discount Observation Date" : lastRelevantDateType_;
+        }
     for (auto const& s : staticAnalyser_->discountPayDates())
-        for (auto const& d : s.second)
+        for (auto const& d : s.second) {
             lastRelevantDate_ = std::max(lastRelevantDate_, d);
+            lastRelevantDateType_ = lastRelevantDate_ == d ? "Discount Pay Date" : lastRelevantDateType_;
+        }
     DLOG("last relevant date: " << lastRelevantDate_);
 }
 
@@ -975,7 +1000,7 @@ void ScriptedTradeEngineBuilder::setupBlackScholesProcesses() {
                 market_->commodityPriceCurve(name, configuration(MarketContext::pricing))));
             auto priceCurve = market_->commodityPriceCurve(name, configuration(MarketContext::pricing));
             auto fc = modelIndicesCurrencies_[i] == baseCcy_
-                          ? modelCurves_.front()
+                          ? baseCcyModelCurve_
                           : market_->discountCurve(modelIndicesCurrencies_[i], configuration(MarketContext::pricing));
             auto div = Handle<YieldTermStructure>(QuantLib::ext::make_shared<PriceTermStructureAdapter>(*priceCurve, *fc));
             div->enableExtrapolation();
@@ -987,9 +1012,9 @@ void ScriptedTradeEngineBuilder::setupBlackScholesProcesses() {
             std::string targetCcy = ind.fx()->targetCurrency().code();
             std::string sourceCcy = ind.fx()->sourceCurrency().code();
             auto spot = market_->fxSpot(sourceCcy + targetCcy, configuration(MarketContext::pricing));
-            auto div = sourceCcy == baseCcy_ ? modelCurves_.front()
+            auto div = sourceCcy == baseCcy_ ? baseCcyModelCurve_
                                              : market_->discountCurve(sourceCcy, configuration(MarketContext::pricing));
-            auto fc = targetCcy == baseCcy_ ? modelCurves_.front()
+            auto fc = targetCcy == baseCcy_ ? baseCcyModelCurve_
                                             : market_->discountCurve(targetCcy, configuration(MarketContext::pricing));
             if (!zeroVolatility_)
                 vol = market_->fxVol(sourceCcy + targetCcy, configuration(MarketContext::pricing));
@@ -1211,7 +1236,7 @@ void ScriptedTradeEngineBuilder::buildBlackScholes(const std::string& id,
     // ignore timeStepsPerYear if we have no correlations, i.e. we can take large timesteps without changing anything
     auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, correlations_.empty() ? 0 : timeStepsPerYear_,
-        calibration_, getCalibrationStrikesVector(filteredStrikes, modelIndices_));
+        calibration_, getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_);
     if (useCg_) {
         modelCG_ = QuantLib::ext::make_shared<BlackScholesCG>(
             modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_, modelIndices_,
@@ -1232,7 +1257,7 @@ void ScriptedTradeEngineBuilder::buildFdBlackScholes(const std::string& id,
     auto filteredStrikes = filterBlackScholesCalibrationStrikes(calibrationStrikes_, modelIndices_, processes_, T);
     auto builder = QuantLib::ext::make_shared<BlackScholesModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, calibration_,
-        getCalibrationStrikesVector(filteredStrikes, modelIndices_));
+        getCalibrationStrikesVector(filteredStrikes, modelIndices_), baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<FdBlackScholesBase>(
         modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_, modelInfIndices_, modelIndices_,
         modelIndicesCurrencies_, payCcys_, builder->model(), correlations_, simulationDates_, iborFallbackConfig,
@@ -1253,7 +1278,7 @@ void ScriptedTradeEngineBuilder::buildLocalVol(const std::string& id, const Ibor
 
     auto builder = QuantLib::ext::make_shared<LocalVolModelBuilder>(
         modelCurves_, processes_, simulationDates_, addDates_, timeStepsPerYear_, lvType, calibrationMoneyness_,
-        !calibrate_ || zeroVolatility_);
+        !calibrate_ || zeroVolatility_, baseCcyModelCurve_);
     model_ = QuantLib::ext::make_shared<LocalVol>(modelSize_, modelCcys_, modelCurves_, modelFxSpots_, modelIrIndices_,
                                                   modelInfIndices_, modelIndices_, modelIndicesCurrencies_,
                                                   builder->model(), correlations_, mcParams_, simulationDates_,

@@ -16,19 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/app/analytics/imscheduleanalytic.hpp>
-#include <orea/app/analytics/parconversionanalytic.hpp>
-#include <orea/app/analytics/pnlexplainanalytic.hpp>
-#include <orea/app/analytics/parstressconversionanalytic.hpp>
-#include <orea/app/analytics/pricinganalytic.hpp>
-#include <orea/app/analytics/scenarioanalytic.hpp>
-#include <orea/app/analytics/scenariostatisticsanalytic.hpp>
-#include <orea/app/analytics/simmanalytic.hpp>
-#include <orea/app/analytics/stresstestanalytic.hpp>
-#include <orea/app/analytics/varanalytic.hpp>
-#include <orea/app/analytics/xvaanalytic.hpp>
-#include <orea/app/analytics/xvastressanalytic.hpp>
-#include <orea/app/analytics/pnlanalytic.hpp>
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/reportwriter.hpp>
@@ -114,6 +101,8 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
         return;
 
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps = todaysMarketParams();
+
+
     std::set<Date> marketDates;
     for (const auto& a : analytics_) {
         auto mdates = a.second->marketDates();
@@ -177,7 +166,7 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
     for (auto a : analytics_) {
         Timer analyticTimer = a.second->getTimer();
         if (!analyticTimer.empty()) {
-            timer.addTimer(a.first, a.second->getTimer());
+            timer.addTimer(a.first, analyticTimer);
         }
     }
     if (!timer.empty()) {

@@ -116,6 +116,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     // Set some trade variables
     npvCurrency_ = legData_.currency();
     maturity_ = leg.back()->date();
+    maturityType_ = "Latest Leg Date";
     notionalCurrency_ = legData_.currency();
     legs_ = {leg};
     legPayers_ = {legData_.isPayer()};
@@ -635,9 +636,12 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         vector<Real> mults;
         Real upfrontAmount = upfrontFee_ * origTrancheNtl;
         string configuration = cdoEngineBuilder->configuration(MarketContext::pricing);
-        maturity_ =
-            std::max(maturity_, addPremiums(insts, mults, 1.0, PremiumData(upfrontAmount, ccy.code(), upfrontDate),
-                                            side == Protection::Buyer ? -1.0 : 1.0, ccy, engineFactory, configuration));
+        Date lastPremiumDate = addPremiums(insts, mults, 1.0, PremiumData(upfrontAmount, ccy.code(), upfrontDate),
+                                           side == Protection::Buyer ? -1.0 : 1.0, ccy, engineFactory,
+                                           configuration);
+        maturity_ = std::max(maturity_, lastPremiumDate);
+        if (maturity_ == lastPremiumDate)
+            maturityType_ = "Last Premium Date";
 
         instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(vanilla, 1.0, insts, mults);
 

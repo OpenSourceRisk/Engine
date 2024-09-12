@@ -27,7 +27,8 @@ BondTRSEngineBuilder::BondTRSEngineBuilder(const std::string& model, const std::
 QuantLib::ext::shared_ptr<PricingEngine> DiscountingBondTRSEngineBuilder::engineImpl(const string& ccy) {
     return QuantLib::ext::make_shared<QuantExt::DiscountingBondTRSEngine>(
         market_->discountCurve(ccy, configuration(MarketContext::pricing)),
-        parseBool(modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false")));
+        parseBool(modelParameter("TreatSecuritySpreadAsCreditSpread", {}, false, "false")),
+        parseBool(modelParameter("SurvivalWeightedFundingReturnCashflows", {}, false, "false")));
 }
 
 } // namespace data

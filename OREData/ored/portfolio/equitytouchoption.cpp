@@ -165,6 +165,7 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     notional_ = payoffAmount_;
     notionalCurrency_ = payoffCurrency_;
     maturity_ = std::max(lastPremiumDate, expiryDate);
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Last Premium Date";
 
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days))

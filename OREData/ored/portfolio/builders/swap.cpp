@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/builders/swap.hpp>
+#include <ored/scripting/engines/amccgswapengine.hpp>
 
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
@@ -59,9 +60,20 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(con
     auto lgm = cam_->lgm(currIdx);
     std::vector<Size> modelIndex(1, cam_->pIdx(CrossAssetModel::AssetType::IR, currIdx));
 
-    // we assume that the given cam has pricing discount curves attached already
-    Handle<YieldTermStructure> discountCurve;
+    Handle<YieldTermStructure> discountCurve =
+        discountCurveName.empty()
+            ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+            : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
+
     return buildMcEngine(lgm, discountCurve, simulationDates_, modelIndex);
+}
+
+QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwapEngineBuilder::engineImpl(const Currency& ccy,
+                                                                            const std::string& discountCurveName,
+                                                                            const std::string& securitySpread) {
+    DLOG("Building AMCCG Swap engine for ccy " << ccy << " (from externally given modelcg)");
+    QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
+    return QuantLib::ext::make_shared<AmcCgSwapEngine>(modelCg_, simulationDates_, ccy.code());
 }
 
 } // namespace data

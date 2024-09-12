@@ -191,23 +191,22 @@ HistoricalScenarioGenerator::HistoricalScenarioGenerator(
 void HistoricalScenarioGenerator::setDates() {
     // construct the vectors of start and end dates
     for (Size i = 0; i < historicalScenarioLoader_->numScenarios();) {
-        Date sDate = historicalScenarioLoader_->dates()[i];
+        auto dates = historicalScenarioLoader_->dates();
+        Date sDate = dates[i];
         Date eDate = cal_.advance(sDate, mporDays_ * Days);
-        auto it =
-            std::find(historicalScenarioLoader_->dates().begin(), historicalScenarioLoader_->dates().end(), eDate);
-        if (it != historicalScenarioLoader_->dates().end()) {
+        auto it = std::find(dates.begin(), dates.end(), eDate);
+        if (it != dates.end()) {
             startDates_.push_back(sDate);
             endDates_.push_back(eDate);
         }
         if (overlapping_) {
             ++i;
         } else {
-            if (it != historicalScenarioLoader_->dates().end()) {
-                i = std::distance(historicalScenarioLoader_->dates().begin(), it);
+            if (it != dates.end()) {
+                i = std::distance(dates.begin(), it);
             } else {
-                i = std::distance(historicalScenarioLoader_->dates().begin(),
-                                  std::upper_bound(historicalScenarioLoader_->dates().begin(),
-                                                   historicalScenarioLoader_->dates().end(), eDate));
+                i = std::distance(dates.begin(),
+                                  std::upper_bound(dates.begin(), dates.end(), eDate));
             }
         }
     }
@@ -239,8 +238,8 @@ std::pair<QuantLib::ext::shared_ptr<Scenario>, QuantLib::ext::shared_ptr<Scenari
     // Get the two historicals we are using
     QL_REQUIRE(i_ < numScenarios(),
                "Cannot generate any more scenarios (i=" << i_ << " numScenarios=" << numScenarios() << ")");
-    QuantLib::ext::shared_ptr<Scenario> s1 = historicalScenarioLoader_->getHistoricalScenario(startDates_[i_]);
-    QuantLib::ext::shared_ptr<Scenario> s2 = historicalScenarioLoader_->getHistoricalScenario(endDates_[i_]);
+    QuantLib::ext::shared_ptr<Scenario> s1 = historicalScenarioLoader_->getScenario(startDates_[i_]);
+    QuantLib::ext::shared_ptr<Scenario> s2 = historicalScenarioLoader_->getScenario(endDates_[i_]);
     return std::pair<QuantLib::ext::shared_ptr<Scenario>, QuantLib::ext::shared_ptr<Scenario>>(s1, s2);
 }
 
@@ -522,7 +521,7 @@ QuantLib::ext::shared_ptr<Scenario> HistoricalScenarioGeneratorWithFilteredDates
 }
 
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
-    const QuantLib::ext::shared_ptr<HistoricalScenarioReader>& hsr,
+    const QuantLib::ext::shared_ptr<ScenarioReader>& hsr,
     const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const TimePeriod& period,
     Calendar calendar, Size mporDays,
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
@@ -541,7 +540,7 @@ QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGe
 }
 
 QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> buildHistoricalScenarioGenerator(
-    const QuantLib::ext::shared_ptr<HistoricalScenarioReader>& hsr,
+    const QuantLib::ext::shared_ptr<ScenarioReader>& hsr,
     const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors, const std::set<QuantLib::Date>& dates,
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParams,
     const QuantLib::ext::shared_ptr<TodaysMarketParameters>& marketParams) {

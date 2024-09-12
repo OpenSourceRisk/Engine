@@ -235,6 +235,7 @@
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/flatextrapolation2d.hpp>
+#include <qle/math/gpucodegenerator.hpp>
 #include <qle/math/kendallrankcorrelation.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/matrixfunctions.hpp>
@@ -497,6 +498,7 @@
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
+#include <qle/termstructures/equityannounceddividendcurve.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/flatforwarddividendcurve.hpp>
@@ -592,5 +594,7 @@
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
+#include <qle/utilities/serializationdate.hpp>
+#include <qle/utilities/serializationperiod.hpp>
 #include <qle/utilities/time.hpp>
 #include <qle/version.hpp>

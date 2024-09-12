@@ -212,6 +212,7 @@ void BalanceGuaranteedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>
     legs_ = {fixLeg, fltLeg};
     legPayers_ = {swap_[fixedLegIndex].isPayer(), swap_[floatingLegIndex].isPayer()};
     maturity_ = bgSwap->maturityDate();
+    maturityType_ = "Swap Leg Maturity Date";
 }
 
 void BalanceGuaranteedSwap::fromXML(XMLNode* node) {

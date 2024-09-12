@@ -105,6 +105,7 @@ void CommoditySwaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     }
     // use underlying maturity independent of settlement type, following ISDA GRID/AANA guidance
     maturity_ = swap->maturityDate();
+    maturityType_ = "Underlying Maturity Date";
 }
 
 QuantLib::Real CommoditySwaption::notional() const {

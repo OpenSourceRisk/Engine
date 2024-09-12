@@ -41,23 +41,23 @@ class CurveSpec {
 public:
     //! Supported curve types
     enum class CurveType {
-        FX,
-        Yield,
-        CapFloorVolatility,
-        SwaptionVolatility,
-        YieldVolatility,
-        FXVolatility,
-        Default,
-        CDSVolatility,
-        Inflation,
-        InflationCapFloorVolatility,
-        Equity,
-        EquityVolatility,
-        Security,
-        BaseCorrelation,
-        Commodity,
-        CommodityVolatility,
-        Correlation
+        FX = 0,
+        Yield = 1,
+        CapFloorVolatility = 2,
+        SwaptionVolatility = 3,
+        YieldVolatility = 4,
+        FXVolatility = 5,
+        Default = 6,
+        CDSVolatility = 7,
+        Inflation = 8,
+        InflationCapFloorVolatility = 9,
+        Equity = 10,
+        EquityVolatility = 11,
+        Security = 12,
+        BaseCorrelation = 13,
+        Commodity = 14,
+        CommodityVolatility = 15,
+        Correlation = 16
     };
 
     //! Default constructor

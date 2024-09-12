@@ -721,6 +721,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 recoveryRates_[make_pair(configuration, node.name)] = itr->second->recoveryRate();
             if (!itr->second->cpr().empty())
                 cprs_[make_pair(configuration, node.name)] = itr->second->cpr();
+            if (!itr->second->conversionFactor().empty())
+                conversionFactors_[make_pair(configuration, node.name)] = itr->second->conversionFactor();
             break;
         }
 

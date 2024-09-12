@@ -74,5 +74,16 @@ bool operator<(const Fixing& f1, const Fixing& f2) {
     return f1.date < f2.date;
 }
 
+template <class Archive> void Fixing::serialize(Archive& ar, const unsigned int version) {
+    ar& date;
+    ar& name;
+    ar& fixing;
+}
+
+template void Fixing::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void Fixing::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::Fixing);

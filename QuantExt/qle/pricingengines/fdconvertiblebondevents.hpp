@@ -43,6 +43,8 @@ public:
         bool includeAccrual;
         bool isSoft;
         Real softTriggerRatio;
+        Real softTriggerM;
+        Real softTriggerN;
         // make whole result of cr increase as a function of stock price and current cr
         std::function<Real(Real, Real)> mwCr;
     };

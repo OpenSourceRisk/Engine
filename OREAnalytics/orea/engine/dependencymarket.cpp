@@ -369,6 +369,12 @@ Handle<Quote> DependencyMarket::recoveryRate(const string& name, const string&) 
     return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
 }
 
+Handle<Quote> DependencyMarket::conversionFactor(const string& name, const string& config) const {
+    addRiskFactor(RiskFactorKey::KeyType::ConversionFactor, name);
+    addMarketObject(MarketObject::Security, name, config);
+    return Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+}
+
 Handle<CreditVolCurve> DependencyMarket::cdsVol(const string& name, const string& config) const {
     addRiskFactor(RiskFactorKey::KeyType::CDSVolatility, name);
     addMarketObject(MarketObject::CDSVol, name, config);
@@ -519,7 +525,6 @@ Handle<EquityIndex2> DependencyMarket::equityCurve(const string& name, const str
     auto fyts = equityForecastCurve(name, config);
     auto dyts = equityDividendCurve(name, config);
     auto spot = equitySpot(name, config);
-    addMarketObject(MarketObject::EquityCurve, name, config);
     Calendar equityCal;
     Currency equityCcy;
     if (curveConfigs_ && curveConfigs_->hasEquityCurveConfig(name)) {

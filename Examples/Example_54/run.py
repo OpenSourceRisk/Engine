@@ -5,10 +5,6 @@ import os
 sys.path.append('../')
 from ore_examples_helper import OreExample
 
-if "OVERWRITE_SCENARIOGENERATOR_SAMPLES" in os.environ:
-    backupSamples = os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"]
-    os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"] = ""
-
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
 oreex.print_headline("Run ORE to produce AMC exposure")
@@ -38,6 +34,3 @@ oreex.setup_plot("dim_lpiswp")
 oreex.plot("dim_evolution.csv", 8, 4, 'b', "DIM Evolution", filter='CPTY_B', filterCol=7)
 oreex.decorate_plot(title="Example Scripting / AMC - DIM Evolution for LPI Swap (sticky date mpor mode)")
 oreex.save_plot_to_file()
-
-if "OVERWRITE_SCENARIOGENERATOR_SAMPLES" in os.environ:
-    os.environ["OVERWRITE_SCENARIOGENERATOR_SAMPLES"] = backupSamples

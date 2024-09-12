@@ -82,6 +82,7 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
     Date expiryDate = parseDate(option_.exerciseDates().front());
     QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
     maturity_ = std::max(option_.premiumData().latestPremiumDate(), expiryDate);
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Option's Latest Premium Date";
 
     // QL does not have an FXDigitalOption, so we add a vanilla one here and wrap
     // it in a composite.

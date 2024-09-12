@@ -62,7 +62,8 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
 
     isXCCY_ = false;
     isResetting_ = false;
-
+    allLegsAreSimmPlainVanillaIrLegs_ = true;
+    
     for (Size i = 0; i < numLegs; ++i) {
         // allow minor currencies for Equity legs as some exchanges trade in these, e.g LSE in pence - GBX or GBp
         // minor currencies on other legs will fail here
@@ -74,6 +75,11 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         if (currencies[i] != currency)
             isXCCY_ = true;
         isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
+        
+        if(!legData_[i].isSimmPlainVanillaIrLeg()){
+            
+            allLegsAreSimmPlainVanillaIrLegs_ = false;
+        }
     }
 
     
@@ -179,7 +185,9 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         QuantLib::ext::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
-        swap->setPricingEngine(swapBuilder->engine(currenciesForMcSimulation, npvCcy));
+        bool useXccyYieldCurvesForDiscounting = allLegsAreSimmPlainVanillaIrLegs_;
+        swap->setPricingEngine(
+            swapBuilder->engine(currenciesForMcSimulation, npvCcy, useXccyYieldCurvesForDiscounting));
         setSensitivityTemplate(*swapBuilder);
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
@@ -207,6 +215,8 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     for (auto const& l : legs_) {
         if (!l.empty()) {
             maturity_ = std::max(maturity_, l.back()->date());
+            if (maturity_ == l.back()->date())
+                maturityType_ = "Leg End Date";
             startDate = std::min(startDate, l.front()->date());
             QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(l.front());
             if (coupon)

@@ -192,6 +192,7 @@
       <xs:element type="extrapolationType" name="SmileExtrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="TimeInterpolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="TimeWeighting" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:float" name="ButterflyErrorTolerance" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -690,6 +691,7 @@
       <xs:element type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="yieldCurveReport" name="Report" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -707,6 +709,7 @@
       <xs:element type="xs:string" name="RecoveryRateQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="CPRQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceQuote" minOccurs="0"/>
+      <xs:element type="xs:string" name="ConversionFactor" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -1283,6 +1286,13 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+        <xs:element name="YieldCurves" minOccurs="0">
+            <xs:complexType>
+                <xs:all>
+                    <xs:element type="yieldCurveReport" name="Report" minOccurs="0"/>
+                </xs:all>
+            </xs:complexType>
+        </xs:element>
     </xs:all>
   </xs:complexType>
 
@@ -1297,8 +1307,14 @@
       <xs:element type="xs:string" name="Strikes" minOccurs="0"/>
       <xs:element type="xs:string" name="StrikeSpreads" minOccurs="0"/>
       <xs:element type="xs:string" name="Expiries" minOccurs="0"/>
+      <xs:element type="xs:string" name="PillarDates" minOccurs="0"/>
       <xs:element type="xs:string" name="UnderlyingTenors" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
-  
+
+  <xs:complexType name="yieldCurveReport">
+    <xs:all>
+      <xs:element type="xs:string" name="PillarDates" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
 </xs:schema>

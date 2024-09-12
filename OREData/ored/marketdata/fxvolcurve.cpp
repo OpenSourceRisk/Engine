@@ -417,7 +417,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
         asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, config->dayCounter(), config->calendar(),
         fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
         longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp, interp2,
-        buildTimeWeighting(asof, config->dayCounter()));
+        buildTimeWeighting(asof, config->dayCounter()), config->butterflyErrorTolerance());
 
     vol_->enableExtrapolation();
 }
@@ -1210,10 +1210,11 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                             " deltas that were initially provided, because all smiles were invalid.");
                     }
                     for (Size i = 0; i < bfrr->dates().size(); ++i) {
-                        if (bfrr->smileHasError()[i]) {
-                            calibrationInfo_->messages.push_back("Ignore invalid smile at expiry " +
-                                                                 ore::data::to_string(bfrr->dates()[i]) + ": " +
-                                                                 bfrr->smileErrorMessage()[i]);
+                        if (bfrr->smileHasError()[i] || bfrr->smileHasWarning()[i]) {
+                            calibrationInfo_->messages.push_back(
+                                "Smile at expiry " + ore::data::to_string(bfrr->dates()[i]) + " (" +
+                                (bfrr->smileHasError()[i] ? "error" : "recoverable warning") +
+                                "): " + boost::join(bfrr->smileMessages()[i], " / "));
                         }
                     }
                 }

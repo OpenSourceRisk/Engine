@@ -40,13 +40,16 @@ CompositeIndex::CompositeIndex(const std::string& name, const std::vector<QuantL
         registerWith(f);
     }
 
-    std::vector<Calendar> cals;
     for (auto const& i : indices) {
         registerWith(i);
-        cals.push_back(i->fixingCalendar());
     }
 
-    fixingCalendar_ = JointCalendar(cals);
+    std::vector<Calendar> cals;
+    std::transform(indices.begin(), indices.end(), std::back_inserter(cals),
+                   [](const auto& i) { return i->fixingCalendar(); });
+
+    // holidays for single sub-indices are adjusted the preceding rule in fixing()
+    fixingCalendar_ = JointCalendar(cals, QuantLib::JointCalendarRule::JoinBusinessDays);
 }
 
 std::string CompositeIndex::name() const { return name_; }
@@ -62,7 +65,8 @@ Real CompositeIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) c
     for (Size i = 0; i < indices_.size(); ++i) {
         Real indexFixing;
         try {
-            indexFixing = indices_[i]->fixing(fixingDate, forecastTodaysFixing);
+            indexFixing =
+                indices_[i]->fixing(indices_[i]->fixingCalendar().adjust(fixingDate, Preceding), forecastTodaysFixing);
         } catch (const std::exception&) {
             auto gi = QuantLib::ext::dynamic_pointer_cast<QuantExt::GenericIndex>(indices_[i]);
             if (gi && gi->expiry() != Date() && fixingDate >= gi->expiry())
