@@ -38,7 +38,8 @@ using namespace QuantLib;
 SabrParametricVolatility::SabrParametricVolatility(
     const ModelVariant modelVariant, const std::vector<MarketSmile> marketSmiles, const MarketModelType marketModelType,
     const MarketQuoteType inputMarketQuoteType, const Handle<YieldTermStructure> discountCurve,
-    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters,
+    const std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
+        modelParameters,
     const std::map<QuantLib::Real, QuantLib::Real>& modelShifts, const Size maxCalibrationAttempts,
     const Real exitEarlyErrorThreshold, const Real maxAcceptableError)
     : ParametricVolatility(marketSmiles, marketModelType, inputMarketQuoteType, discountCurve),
@@ -68,12 +69,12 @@ ParametricVolatility::MarketQuoteType SabrParametricVolatility::preferredOutputQ
     }
 }
 
-std::vector<Real> SabrParametricVolatility::getGuess(const std::vector<std::pair<Real, bool>>& params,
+std::vector<Real> SabrParametricVolatility::getGuess(const std::vector<std::pair<Real, ParameterCalibration>>& params,
                                                      const std::vector<Real>& randomSeq, const Real forward,
                                                      const Real lognormalShift) const {
     std::vector<Real> result(4);
     for (Size i = 0, j = 0; i < 4; ++i) {
-        if (params[i].second) {
+        if (params[i].second == ParametricVolatility::ParameterCalibration::Fixed) {
             result[i] = params[i].first;
         } else {
             switch (i) {
@@ -103,20 +104,39 @@ std::vector<Real> SabrParametricVolatility::getGuess(const std::vector<std::pair
     return result;
 }
 
-std::vector<std::pair<Real, bool>> SabrParametricVolatility::defaultModelParameters() const {
+std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>
+SabrParametricVolatility::defaultModelParameters() const {
     switch (modelVariant_) {
     case ModelVariant::Hagan2002Lognormal:
-        return {{0.0050, false}, {0.8, false}, {0.30, false}, {0.0, false}};
+        return {{0.0050, ParameterCalibration::Implied},
+                {0.8, ParameterCalibration::Calibrated},
+                {0.30, ParameterCalibration::Calibrated},
+                {0.0, ParameterCalibration::Calibrated}};
     case ModelVariant::Hagan2002Normal:
-        return {{0.0050, false}, {0.8, false}, {0.30, false}, {0.0, false}};
+        return {{0.0050, ParameterCalibration::Implied},
+                {0.8, ParameterCalibration::Calibrated},
+                {0.30, ParameterCalibration::Calibrated},
+                {0.0, ParameterCalibration::Calibrated}};
     case ModelVariant::Hagan2002NormalZeroBeta:
-        return {{0.0050, false}, {0.0, true}, {0.30, false}, {0.0, false}};
+        return {{0.0050, ParameterCalibration::Implied},
+                {0.0, ParameterCalibration::Fixed},
+                {0.30, ParameterCalibration::Calibrated},
+                {0.0, ParameterCalibration::Calibrated}};
     case ModelVariant::Antonov2015FreeBoundaryNormal:
-        return {{0.0050, false}, {0.0, true}, {0.30, false}, {0.0, false}};
+        return {{0.0050, ParameterCalibration::Implied},
+                {0.0, ParameterCalibration::Fixed},
+                {0.30, ParameterCalibration::Calibrated},
+                {0.0, ParameterCalibration::Calibrated}};
     case ModelVariant::KienitzLawsonSwaynePde:
-        return {{0.0050, false}, {0.8, false}, {0.30, false}, {0.0, false}};
+        return {{0.0050, ParameterCalibration::Implied},
+                {0.8, ParameterCalibration::Calibrated},
+                {0.30, ParameterCalibration::Calibrated},
+                {0.0, ParameterCalibration::Calibrated}};
     case ModelVariant::FlochKennedy:
-        return {{0.0050, false}, {0.8, false}, {0.30, false}, {0.0, false}};
+        return {{0.0050, ParameterCalibration::Implied},
+                {0.8, ParameterCalibration::Calibrated},
+                {0.30, ParameterCalibration::Calibrated},
+                {0.0, ParameterCalibration::Calibrated}};
     default:
         QL_FAIL("SabrParametricVolatility::defaultModelParameters(): model variant (" << static_cast<int>(modelVariant_)
                                                                                       << ") not handled.");
@@ -252,15 +272,14 @@ std::vector<Real> SabrParametricVolatility::evaluateSabr(const std::vector<Real>
     return result;
 }
 
-std::tuple<std::vector<Real>, Real, Real, Size>
-SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmile,
-                                                   const std::vector<std::pair<Real, bool>>& params) const {
+std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibrateModelParameters(
+    const MarketSmile& marketSmile, const std::vector<std::pair<Real, ParameterCalibration>>& params) const {
 
     // determine the number of free parameters
 
     Size noFreeParams = 0;
     for (auto const& p : params)
-        if (!p.second)
+        if (p.second != ParameterCalibration::Fixed)
             ++noFreeParams;
 
     // determine the shift for the model (if applicable)
@@ -302,7 +321,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
         std::function<std::vector<Real>(const std::vector<Real>&, const Real, const Real, const Real,
                                         const std::vector<Real>&)>
             evalSabr_;
-        std::vector<std::pair<Real, bool>> params_;
+        std::vector<std::pair<Real, ParameterCalibration>> params_;
         std::vector<Real> invParams_;
         std::function<std::vector<Real>(const std::vector<Real>&)> direct_;
         std::function<std::vector<Real>(const std::vector<Real>&)> inverse_;
@@ -310,7 +329,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
         std::vector<Real> evalSabr(const Array& x) const {
             std::vector<Real> params(4);
             for (Size i = 0, j = 0; i < params_.size(); ++i) {
-                if (params_[i].second)
+                if (params_[i].second != ParametricVolatility::ParameterCalibration::Fixed)
                     params[i] = invParams_[i];
                 else
                     params[i] = x[j++];
@@ -382,7 +401,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
         if (attempt == 0) {
             // first attempt uses given initial model parameters
             for (Size i = 0, j = 0; i < t.invParams_.size(); ++i) {
-                if (!params[i].second) {
+                if (params[i].second != ParametricVolatility::ParameterCalibration::Fixed) {
                     guess[j++] = t.invParams_[i];
                 }
             }
@@ -391,7 +410,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
             auto g = inverse(getGuess(params, haltonRsg.nextSequence().value, t.forward_, t.lognormalShift_),
                              t.forward_, t.lognormalShift_);
             for (Size i = 0, j = 0; i < g.size(); ++i) {
-                if (!params[i].second) {
+                if (params[i].second != ParametricVolatility::ParameterCalibration::Fixed) {
                     guess[j++] = g[i];
                 }
             }
@@ -408,7 +427,7 @@ SabrParametricVolatility::calibrateModelParameters(const MarketSmile& marketSmil
         if (thisError < bestError) {
             bestError = thisError;
             for (Size i = 0, j = 0; i < bestResult.size(); ++i) {
-                if (params[i].second)
+                if (params[i].second == ParametricVolatility::ParameterCalibration::Fixed)
                     bestResult[i] = t.invParams_[i];
                 else
                     bestResult[i] = problem.currentValue()[j++];

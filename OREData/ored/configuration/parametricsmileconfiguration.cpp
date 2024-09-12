@@ -18,6 +18,7 @@
 
 #include <ored/configuration/parametricsmileconfiguration.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using namespace QuantLib;
 
@@ -28,14 +29,22 @@ void ParametricSmileConfiguration::Parameter::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Parameter");
     name = XMLUtils::getChildValue(node, "Name", true);
     initialValue = parseListOfValues<Real>(XMLUtils::getChildValue(node, "InitialValue", true), parseReal);
-    isFixed = parseBool(XMLUtils::getChildValue(node, "IsFixed", true));
+    if (auto n = XMLUtils::getChildNode(node, "IsFixed")) {
+        WLOG("parametric smile configuration: the usage of IsFixed = true, false is deprecated, use Calibration = "
+             "Fixed, Calibrated, Implied.");
+        calibration = parseBool(XMLUtils::getNodeValue(n))
+                          ? QuantExt::ParametricVolatility::ParameterCalibration::Fixed
+                          : QuantExt::ParametricVolatility::ParameterCalibration::Implied;
+    } else {
+        calibration = parseParametricSmileParameterCalibration(XMLUtils::getChildValue(node, "Calibration", true));
+    }
 }
 
 XMLNode* ParametricSmileConfiguration::Parameter::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("Parameter");
     XMLUtils::addChild(doc, n, "Name", name);
     XMLUtils::addChild(doc, n, "InitialValue", initialValue);
-    XMLUtils::addChild(doc, n, "IsFixed", isFixed);
+    XMLUtils::addChild(doc, n, "Calibration", ore::data::to_string(calibration));
     return n;
 }
 
@@ -99,6 +108,33 @@ const ParametricSmileConfiguration::Parameter& ParametricSmileConfiguration::par
 
 const ParametricSmileConfiguration::Calibration& ParametricSmileConfiguration::calibration() const {
     return calibration_;
+}
+
+QuantExt::ParametricVolatility::ParameterCalibration parseParametricSmileParameterCalibration(const std::string& s) {
+    if (s == "Fixed") {
+        return QuantExt::ParametricVolatility::ParameterCalibration::Fixed;
+    } else if (s == "Calibrated") {
+        return QuantExt::ParametricVolatility::ParameterCalibration::Calibrated;
+    } else if (s == "Implied") {
+        return QuantExt::ParametricVolatility::ParameterCalibration::Implied;
+    } else {
+        QL_FAIL("parseParametricSmileParameterCalibration: '"
+                << s << "' not recognized. Expected one of Fixed, Calibrated, Implied.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, QuantExt::ParametricVolatility::ParameterCalibration c) {
+    switch (c) {
+    case QuantExt::ParametricVolatility::ParameterCalibration::Fixed:
+        return os << "Fixed";
+    case QuantExt::ParametricVolatility::ParameterCalibration::Calibrated:
+        return os << "Calibrated";
+    case QuantExt::ParametricVolatility::ParameterCalibration::Implied:
+        return os << "Implied";
+    default:
+        QL_FAIL("operator<<(ParametricVolatility::ParameterCalibration): enum value "
+                << static_cast<int>(c) << " not handled. This is an internal error.");
+    }
 }
 
 } // namespace data

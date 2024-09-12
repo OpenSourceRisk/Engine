@@ -36,13 +36,13 @@ class ParametricSmileConfiguration : public XMLSerializable {
 public:
     class Parameter : public XMLSerializable {
     public:
-        enum class Calibration { Fixed, Calibrated, Implied };
         void fromXML(ore::data::XMLNode* node) override;
         ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
         std::string name;
         std::vector<double> initialValue = {0.0};
-        bool isFixed = false;
+        QuantExt::ParametricVolatility::ParameterCalibration calibration =
+            QuantExt::ParametricVolatility::ParameterCalibration::Calibrated;
     };
 
     class Calibration : public XMLSerializable {
@@ -74,6 +74,10 @@ private:
     std::vector<Parameter> parameters_;
     Calibration calibration_;
 };
+
+QuantExt::ParametricVolatility::ParameterCalibration parseParametricSmileParameterCalibration(const std::string& s);
+
+std::ostream& operator<<(std::ostream& os, QuantExt::ParametricVolatility::ParameterCalibration type);
 
 } // namespace data
 } // namespace ore
