@@ -245,15 +245,15 @@ public:
     void addYieldCurveShiftData(const string& s, const QuantLib::ext::shared_ptr<CurveShiftData>& d) {
         yieldCurveShiftData_[s] = d;
     }
-    void addFxShiftData(const string& s, const SpotShiftData& d) { fxShiftData_[s] = d; }
-    void addSwaptionVolShiftData(const string& s, const GenericYieldVolShiftData& d) { swaptionVolShiftData_[s] = d; }
-    void addYieldVolShiftData(const string& s, const GenericYieldVolShiftData& d) { yieldVolShiftData_[s] = d; }
+    void addFxShiftData(const string& s, const QuantLib::ext::shared_ptr<SpotShiftData>& d) { fxShiftData_[s] = d; }
+    void addSwaptionVolShiftData(const string& s, const QuantLib::ext::shared_ptr<GenericYieldVolShiftData>& d) { swaptionVolShiftData_[s] = d; }
+    void addYieldVolShiftData(const string& s, const QuantLib::ext::shared_ptr<GenericYieldVolShiftData>& d) { yieldVolShiftData_[s] = d; }
     void addCapFloorVolShiftData(const string& s, const QuantLib::ext::shared_ptr<CapFloorVolShiftData>& d) {
         capFloorVolShiftData_[s] = d;
     }
-    void addFxVolShiftData(const string& s, const VolShiftData& d) { fxVolShiftData_[s] = d; }
-    void addCdsVolShiftData(const string& s, const CdsVolShiftData& d) { cdsVolShiftData_[s] = d; }
-    void addBaseCorrelationShiftData(const string& s, const BaseCorrelationShiftData& d) {
+    void addFxVolShiftData(const string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d) { fxVolShiftData_[s] = d; }
+    void addCdsVolShiftData(const string& s, const QuantLib::ext::shared_ptr<CdsVolShiftData>& d) { cdsVolShiftData_[s] = d; }
+    void addBaseCorrelationShiftData(const string& s, const QuantLib::ext::shared_ptr<BaseCorrelationShiftData>& d) {
         baseCorrelationShiftData_[s] = d;
     }
     void addZeroInflationCurveShiftData(const string& s, const QuantLib::ext::shared_ptr<CurveShiftData>& d) {
@@ -274,18 +274,18 @@ public:
                                               const QuantLib::ext::shared_ptr<CapFloorVolShiftData>& d) {
         zeroInflationCapFloorVolShiftData_[s] = d;
     }
-    void addEquityShiftData(const string& s, const SpotShiftData& d) { equityShiftData_[s] = d; }
+    void addEquityShiftData(const string& s, const QuantLib::ext::shared_ptr<SpotShiftData>& d) { equityShiftData_[s] = d; }
     void addDividendYieldShiftData(const string& s, const QuantLib::ext::shared_ptr<CurveShiftData>& d) {
         dividendYieldShiftData_[s] = d;
     }
-    void addEquityVolShiftData(const string& s, const VolShiftData& d) { equityVolShiftData_[s] = d; }
+    void addEquityVolShiftData(const string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d) { equityVolShiftData_[s] = d; }
     void addCommodityCurrencies(const string& s, const string& d) { commodityCurrencies_[s] = d; }
     void addCommodityCurveShiftData(const string& s, const QuantLib::ext::shared_ptr<CurveShiftData>& d) {
         commodityCurveShiftData_[s] = d;
     }
-    void addCommodityVolShiftData(const string& s, const VolShiftData& d) { commodityVolShiftData_[s] = d; }
-    void addCorrelationShiftData(const string& s, const VolShiftData& d) { correlationShiftData_[s] = d; }
-    void addSecurityShiftData(const string& s, const SpotShiftData& d) { securityShiftData_[s] = d; }
+    void addCommodityVolShiftData(const string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d) { commodityVolShiftData_[s] = d; }
+    void addCorrelationShiftData(const string& s, const QuantLib::ext::shared_ptr<VolShiftData>& d) { correlationShiftData_[s] = d; }
+    void addSecurityShiftData(const string& s, const QuantLib::ext::shared_ptr<SpotShiftData>& d) { securityShiftData_[s] = d; }
 
     void setCrossGammaFilter(const vector<pair<string, string>>& d) { crossGammaFilter_ = d; }
     void setComputeGamma(const bool b) { computeGamma_ = b; }
