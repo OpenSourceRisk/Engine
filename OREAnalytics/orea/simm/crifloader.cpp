@@ -67,7 +67,7 @@ map<Size, set<string>> CrifLoader::requiredHeaders = {
 map<Size, set<string>> CrifLoader::optionalHeaders = {
     
     {0,  {"tradeid", "trade_id"}},
-    {2,  {"productclass", "product_class", "asset_class"}},
+    {2,  {"productclass", "product_class"}},
     {4,  {"qualifier"}},
     {5,  {"bucket"}},
     {6,  {"label1"}},
