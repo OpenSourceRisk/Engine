@@ -34,10 +34,10 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     QuantLib::ext::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
     QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory, QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
     Date today, QuantLib::ext::shared_ptr<DateGrid> grid, QuantLib::ext::shared_ptr<ore::data::Market> initMarket,
-    const std::string& configuration)
+    const std::string& configuration, const std::string& amcPathDataOutput, Size samples)
     : ScenarioPathGenerator(today, grid->dates(), grid->timeGrid()), model_(model), pathGenerator_(pathGenerator),
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
-      configuration_(configuration) {
+      configuration_(configuration), amcPathDataOutput_(amcPathDataOutput), totalSamples_(samples) {
 
     LOG("CrossAssetModelScenarioGenerator ctor called");
     
@@ -48,6 +48,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     DayCounter dc = model_->irModel(0)->termStructure()->dayCounter();
     n_ccy_ = model_->components(CrossAssetModel::AssetType::IR);
+    n_fx_ = model->components(CrossAssetModel::AssetType::FX);
     n_eq_ = model_->components(CrossAssetModel::AssetType::EQ);
     n_inf_ = model_->components(CrossAssetModel::AssetType::INF);
     n_cr_ = model_->components(CrossAssetModel::AssetType::CR);
@@ -56,6 +57,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     n_survivalweights_ = simMarketConfig_->additionalScenarioDataSurvivalWeights().size();
     n_indices_ = simMarketConfig_->indices().size();
     n_curves_ = simMarketConfig_->yieldCurveNames().size();
+    n_states_ = model->stateProcess()->size();
 
     // Cache yield curve keys
     discountCurveKeys_.reserve(n_ccy_ * simMarketConfig_->yieldCurveTenors("").size());
@@ -310,6 +312,15 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         }
     }
 
+    // if we have an amcPathDataOutput create the PathData
+    if (!amcPathDataOutput.empty()) {
+        pathData_.fxBuffer.resize(n_fx_, std::vector<std::vector<Real>>(grid->dates().size() + 1, std::vector<Real>(samples)));
+        pathData_.irStateBuffer.resize(n_ccy_, std::vector<std::vector<Real>>(grid->dates().size() + 1, std::vector<Real>(samples)));
+        pathData_.pathTimes = std::vector<Real>(std::next(grid->timeGrid().begin(), 1), grid->timeGrid().end());
+        pathData_.paths.resize(pathData_.pathTimes.size(),
+                                std::vector<RandomVariable>(n_states_, RandomVariable(samples)));
+    }
+
     LOG("CrossAssetModelScenarioGenerator ctor done");
 }
 
@@ -324,11 +335,35 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
     std::vector<QuantLib::ext::shared_ptr<Scenario>> scenarios(dates_.size());
     QL_REQUIRE(pathGenerator_ != nullptr, "CrossAssetModelScenarioGenerator::nextPath(): pathGenerator is null");
     Sample<MultiPath> sample = pathGenerator_->next();
+    ++currentSample_;
     DayCounter dc = model_->irModel(0)->termStructure()->dayCounter();
 
+    if (!amcPathDataOutput_.empty()) {
+        for (Size k = 0; k < n_fx_; ++k) {
+            for (Size j = 0; j < timeGrid_.size(); ++j) {
+                pathData_.fxBuffer[k][j][currentSample_ - 1] =
+                    std::exp(sample.value[model_->pIdx(CrossAssetModel::AssetType::FX, k)][j]);
+            }
+        }
+
+        for (Size k = 0; k < n_ccy_; ++k) {
+            for (Size j = 0; j < timeGrid_.size(); ++j) {
+                pathData_.irStateBuffer[k][j][currentSample_ - 1] =
+                    sample.value[model_->pIdx(CrossAssetModel::AssetType::IR, k)][j];
+            }
+        }
+
+        for (Size k = 0; k < n_states_; ++k) {
+            for (Size j = 0; j < pathData_.pathTimes.size(); ++j) {
+                pathData_.paths[j][k].set(currentSample_ - 1, sample.value[k][j + 1]);
+            }
+        }
+    }
+
     std::vector<Array> ir_state(n_ccy_);
-    for (Size j = 0; j < n_ccy_; ++j)
+    for (Size j = 0; j < n_ccy_; ++j) {
         ir_state[j] = Array(model_->irModel(j)->n());
+    }
 
     Array ir_state_aux(model_->irModel(0)->n_aux());
 
@@ -572,6 +607,14 @@ std::vector<QuantLib::ext::shared_ptr<Scenario>> CrossAssetModelScenarioGenerato
                               survivalWeightsDefaultCurves_[k]->curve()->survivalProbability(dates_[i]));
             scenarios[i]->add(recoveryRateKeys_[k], rr);
         }
+    }
+
+    if (totalSamples_ == currentSample_ && !amcPathDataOutput_.empty()) {
+        LOG("Serialize paths, fx and irState buffers to'" << amcPathDataOutput_ << "'");
+        std::ofstream os(amcPathDataOutput_, std::ios::binary);
+        boost::archive::binary_oarchive oa(os, boost::archive::no_header);
+        oa << pathData_;
+        os.close();
     }
     return scenarios;
 }
