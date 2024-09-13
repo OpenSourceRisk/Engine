@@ -388,7 +388,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
     
     for (auto d : std.fxVolShifts) {
         string ccypair = d.first;
-        if(!simMarketData_->fxVolIsSurface(ccypair)){
+        if(simMarketData_->fxVolIsSurface(ccypair)){
             StructuredConfigurationErrorMessage("Simulation Market", "Fx Volatility",
                                                 "Stresstest support only ATM shifts", "Skip stresstest for " + ccypair)
                 .log();
@@ -429,14 +429,15 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
       
         if (data.mode == StressTestScenarioData::FXVolShiftData::Explicit) {
             std::vector<Period> shiftTenors = data.shiftExpiries;
-            std::vector<Time> shiftTimes(shiftTenors.size());
             shifts = data.shifts;
             QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
             QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
 
-            for (Size j = 0; j < shiftTenors.size(); ++j)
-                shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
+            for (Size j = 0; j < shiftTenors.size(); ++j){
+                shiftTimes.push_back(dc.yearFraction(asof, asof + shiftTenors[j]));
+            }
         } else if(data.mode == StressTestScenarioData::FXVolShiftData::Weighted){
+            DLOG("FX Vol Stress Scenario with weighted schema")
             QL_REQUIRE(data.weightTenors.size() == data.weights.size(), "Mismatch between weights and weightTenors");
             QL_REQUIRE(data.shiftExpiries.size() == 1, "Expect exaclty one tenor for weighted shift scheme");
             QL_REQUIRE(data.shifts.size() == 1, "Expect exaclty one shift for weighted shift scheme");
@@ -445,11 +446,18 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
             std::vector<Period> shiftTenors = data.weightTenors;
             auto it = std::find(shiftTenors.begin(), shiftTenors.end(), referenceTenor);
             QL_REQUIRE(it != shiftTenors.end(), "Couldnt find reference weight for shift expiry");
-            double referenceWeight = data.weights[std::distance(shiftTenors.begin(), it)];
+            size_t weightPos = std::distance(shiftTenors.begin(), it);
+            double referenceWeight = data.weights[weightPos];
+            QL_REQUIRE(referenceWeight > 0.0 && !QuantLib::close_enough(referenceWeight, 0.0),
+                       "Only script positive reference weight is allowed");
             const double weightedRefShift = referenceShift / referenceWeight;
+            DLOG("Compute shifts from weights")
+            DLOG("j,pillar,time,shift")
             for (Size j = 0; j < shiftTenors.size(); ++j) {
-                shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
+                QL_REQUIRE(data.weights[j] >= 0, "only positive weights for weighted stresstest allowed");
+                shiftTimes.push_back(dc.yearFraction(asof, asof + shiftTenors[j]));
                 shifts.push_back(weightedRefShift * data.weights[j]);
+                DLOG(j << "," << shiftTenors[j] << "," << shiftTimes.back() << "," << shifts.back());
             }
         } else if (data.mode == StressTestScenarioData::FXVolShiftData::Unadjusted){
             // Usually there will be 
@@ -477,9 +485,15 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
             // apply shift at tenor point j
             applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues, j == 0 ? true : false);
         }
-       
+
+        DLOG("Output generated fx vol stress test scenario " << std.label << " " << ccypair);
+        DLOG("j,rfkey,tenor,time,value,shiftedvalue,shift");
+
+
         for (Size k = 0; k < n_fxvol_exp; ++k) {
             RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, ccypair, k);
+            DLOG(k << "," << key << "," << simMarketData_->fxVolExpiries(ccypair)[k] << "," << times[k] << ","
+                   << values[k] << "," << shiftedValues[k] << "," << shiftedValues[k] - values[k]);
             if (stressData_->useSpreadedTermStructures()) {
                 scenario->add(key, shiftedValues[k] - values[k]);
             } else {

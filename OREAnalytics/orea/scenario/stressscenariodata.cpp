@@ -189,16 +189,19 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                     FXVolShiftData data;
                     if (weightingSchema == "unadjusted"){
                         data.mode = FXVolShiftData::Unadjusted;
-                        data.shifts = std::vector<Real>(1, XMLUtils::getChildValueAsDouble(child, "Shift", true));
+                        data.shifts = std::vector<Real>(1, XMLUtils::getChildValueAsDouble(weightedShiftsNode, "Shift", true));
                         data.shiftExpiries =
-                            std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(child, "Tenor", true));
+                            std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(weightedShiftsNode, "Tenor", true));
                     } else if(weightingSchema == "weighted"){
                         data.mode = FXVolShiftData::Weighted;
-                        data.shifts = std::vector<Real>(1, XMLUtils::getChildValueAsDouble(child, "Shift", true));
+                        data.shifts =
+                            std::vector<Real>(1, XMLUtils::getChildValueAsDouble(weightedShiftsNode, "Shift", true));
                         data.shiftExpiries =
-                            std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(child, "Tenor", true));
-                        data.weights = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftWeights", true);
-                        data.weightTenors = XMLUtils::getChildrenValuesAsPeriods(child, "WeightTenors", true);
+                            std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(weightedShiftsNode, "Tenor", true));
+                        data.weights =
+                            XMLUtils::getChildrenValuesAsDoublesCompact(weightedShiftsNode, "ShiftWeights", true);
+                        data.weightTenors =
+                            XMLUtils::getChildrenValuesAsPeriods(weightedShiftsNode, "WeightTenors", true);
                         QL_REQUIRE(data.weights.size() == data.weightTenors.size(),
                                    "Length of weights "
                                        << data.weights.size() << " does not match length of weightTenors "
