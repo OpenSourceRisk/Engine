@@ -428,13 +428,13 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
             }
         }
 
-        // We populate these 'required' values using loadOptional*, but they will have been validated already in processHeader,
-        // and missing amountUsd (but with valid amount and amountCurrency) values populated later on in the analytics
-
-        cr.amountCurrency = loadOptionalString(8);
-        string amountCcyUpper = boost::to_upper_copy(cr.amountCurrency);
-        if (!amountCcyUpper.empty() && !checkCurrency(cr.amountCurrency) && checkCurrency(amountCcyUpper))
-            cr.amountCurrency = amountCcyUpper;
+        if (cr.riskType != CrifRecord::RiskType::ProductClassMultiplier &&
+            cr.riskType != CrifRecord::RiskType::AddOnNotionalFactor) {
+            cr.amountCurrency = loadOptionalString(8);
+            string amountCcyUpper = boost::to_upper_copy(cr.amountCurrency);
+            if (!amountCcyUpper.empty() && !checkCurrency(cr.amountCurrency) && checkCurrency(amountCcyUpper))
+                cr.amountCurrency = amountCcyUpper;
+        }
 
         cr.amount = loadOptionalReal(9);
         cr.amountUsd = loadOptionalReal(10);
