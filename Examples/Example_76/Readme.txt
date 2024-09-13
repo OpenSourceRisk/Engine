@@ -9,11 +9,9 @@ All trades have their final cash flow on the as of date.
    Cap and Floor
    FX Forward
    FX Call and Put Options
-   Equity Forwards
+   Equity Forward
    European Equity Calls and Puts
-   Fixed Rate Bond
-   CPI Swap
-   YoY Inflation Swap
+   Forward Bond
    CDS
    
 2) Market
