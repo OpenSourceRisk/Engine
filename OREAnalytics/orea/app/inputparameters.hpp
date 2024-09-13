@@ -81,6 +81,10 @@ public:
     void setBuildFailedTrades(bool b) { buildFailedTrades_ = b; }
     void setObservationModel(const std::string& s) { observationModel_ = s; }
     void setImplyTodaysFixings(bool b) { implyTodaysFixings_ = b; }
+    void setIncludeTodaysCashFlows(bool b) {
+        includeTodaysCashFlows_ = b;
+        Settings::instance().includeTodaysCashFlows() = b;
+    }
     void setMarketConfig(const std::string& config, const std::string& context);
     void setRefDataManager(const std::string& xml);
     void setRefDataManagerFromFile(const std::string& fileName);
@@ -466,6 +470,7 @@ public:
     bool buildFailedTrades() const { return buildFailedTrades_; }
     const std::string& observationModel() const { return observationModel_; }
     bool implyTodaysFixings() const { return implyTodaysFixings_; }
+    bool includeTodaysCashFlows() const { return includeTodaysCashFlows_; }
     const std::map<std::string, std::string>&  marketConfigs() const { return marketConfigs_; }
     const std::string& marketConfig(const std::string& context);
     const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() const { return refDataManager_; }
@@ -854,6 +859,8 @@ protected:
     bool buildFailedTrades_ = true;
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
+    bool includeTodaysCashFlows_ = false;
+  
     std::map<std::string, std::string> marketConfigs_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
     QuantLib::ext::shared_ptr<ore::data::Conventions> conventions_;

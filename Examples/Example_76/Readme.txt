@@ -1,0 +1,34 @@
+Demonstrate the effect of Settings::instance().includeTodaysCashFlows()
+All trades have their final cash flow on the as of date.
+
+1) Portfolio
+
+   Vanilla Swap in EUR
+   EUR/USD Cross Currency Swaps, with and without reset
+   European Swaption
+   Cap and Floor
+   FX Forward
+   FX Call and Put Options
+   Equity Forwards
+   European Equity Calls and Puts
+   Fixed Rate Bond
+   CPI Swap
+   YoY Inflation Swap
+   CDS
+   
+2) Market
+
+   Pseudo market as of 5/02/2016
+   
+3) Pricing
+
+   Multi curve pricing with separate discount and forward curves
+
+4) Analytics
+
+   Pricing
+
+5) Run Example
+
+   python run.py
+

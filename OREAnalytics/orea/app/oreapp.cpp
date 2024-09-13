@@ -54,6 +54,8 @@
 
 #include <mutex>
 
+#include <iostream>
+
 using namespace std;
 using namespace ore::data;
 using namespace ore::analytics;
@@ -622,6 +624,7 @@ void OREAppInputParameters::loadParameters() {
     setEomInflationFixings(false);
     setUseMarketDataFixings(false);
     setBuildFailedTrades(false);
+    setIncludeTodaysCashFlows(false);
 
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
 
@@ -716,6 +719,16 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setImplyTodaysFixings(ore::data::parseBool(tmp));
 
+    tmp = params_->get("setup", "includeTodaysCashFlows", false);
+    if (tmp != "")
+        setIncludeTodaysCashFlows(ore::data::parseBool(tmp));
+
+    optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+    if (inc)
+        std::cout << "includeTodaysCashFlows initialised: " << *inc << std::endl;
+    else
+        std::cout << "includeTodaysCashFlows not initialised" << std::endl;
+    
     tmp = params_->get("setup", "referenceDataFile", false);
     if (tmp != "") {
         filesystem::path refDataFile = inputPath / tmp;

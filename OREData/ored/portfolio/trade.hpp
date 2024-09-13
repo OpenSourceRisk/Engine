@@ -158,7 +158,13 @@ public:
 
     const string& maturityType() const { return maturityType_; }
 
-    virtual bool isExpired(const Date& d) const { return d >= maturity_; }
+    virtual bool isExpired(const Date& d) const {
+        ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+	if (inc && *inc)
+	    return d > maturity_;
+	else
+	    return d >= maturity_;	
+    }
 
     const string& issuer() const { return issuer_; }
 
