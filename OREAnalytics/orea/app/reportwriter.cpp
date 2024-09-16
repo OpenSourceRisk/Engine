@@ -1793,8 +1793,9 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
         .addColumn("Qualifier", string())
         .addColumn("Label1", string())
         .addColumn("Label2", string())
-        .addColumn("Amount", double())
-        .addColumn("IMModel", string());
+        .addColumn("AmountCurrency", string())
+        .addColumn("Amount", double(), 2)
+        .addColumn("AmountUSD", double(), 2);
 
     if (hasRegulations)
         dataReport->addColumn("collect_regulations", string())
@@ -1811,7 +1812,11 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
         // Skip Schedule IM records
         if (cr.imModel == CrifRecord::IMModel::Schedule)
             continue;
-
+        
+        // Skip if the CRIF Record type is not SIMM
+        if (cr.type() != CrifRecord::RecordType::SIMM)
+            continue;
+        
         // Same check as above, but for backwards compatibility, if im_model is not used
         // but Risk::Type is PV or Notional
         if (cr.imModel == CrifRecord::IMModel::Empty &&
@@ -1829,8 +1834,9 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
             .add(cr.qualifier)
             .add(cr.label1)
             .add(cr.label2)
-            .add(cr.amountUsd)
-            .add(ore::data::to_string(cr.imModel));
+            .add(cr.amountCurrency)
+            .add(cr.amount)
+            .add(cr.amountUsd);
 
         if (hasRegulations) {
             string collectRegString = escapeCommaSeparatedList(regulationsToString(cr.collectRegulations), '\0');

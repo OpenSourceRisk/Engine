@@ -498,8 +498,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         exitEarlyErrorThreshold, maxAcceptableError);
                 }
 
-                // Wrap it in a SwaptionVolCubeWithATM
-                vol_ = QuantLib::ext::make_shared<QuantExt::SwaptionVolCubeWithATM>(cube);
+                // Wrap it in a SwaptionVolCubeWithATM, disable short-cut for atm vol retrieval
+                vol_ = QuantLib::ext::make_shared<QuantExt::SwaptionVolCubeWithATM>(
+                    cube, config->interpolation() == GenericYieldVolatilityCurveConfig::Interpolation::Linear);
             }
         }
 

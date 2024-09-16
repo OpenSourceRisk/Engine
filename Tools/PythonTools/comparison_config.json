@@ -76,12 +76,14 @@
         },
         "use_cols": [
           "Amount",
-          "IMModel"
+          "AmountUSD",
+          "AmountCurrency"
         ],
         "column_settings": [
           {
             "names": [
-              "Amount"
+              "Amount",
+              "AmountUSD"
             ],
             "abs_tol": 1.0,
             "rel_tol": 1e-12
