@@ -724,10 +724,10 @@ void OREAppInputParameters::loadParameters() {
         setIncludeTodaysCashFlows(ore::data::parseBool(tmp));
 
     optional<bool> inc = Settings::instance().includeTodaysCashFlows();
-    if (inc)
-        std::cout << "includeTodaysCashFlows initialised: " << *inc << std::endl;
-    else
-        std::cout << "includeTodaysCashFlows not initialised" << std::endl;
+    // if (inc)
+    //     std::cout << "includeTodaysCashFlows initialised: " << *inc << std::endl;
+    // else
+    //     std::cout << "includeTodaysCashFlows not initialised" << std::endl;
     
     tmp = params_->get("setup", "referenceDataFile", false);
     if (tmp != "") {
