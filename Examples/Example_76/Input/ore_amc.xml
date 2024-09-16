@@ -15,7 +15,7 @@
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
-    <Parameter name="includeTodaysCashFlows">Y</Parameter>
+    <Parameter name="includeTodaysCashFlows">N</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
@@ -42,6 +42,7 @@
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
+      <Parameter name="includeTodaysCashFlows">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
       <Parameter name="amcTradeTypes">Swap,Swaption,FxForward,FxOption</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>

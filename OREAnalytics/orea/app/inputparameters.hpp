@@ -206,6 +206,7 @@ public:
     void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
 
     // Setters for exposure simulation
+    void setExposureIncludeTodaysCashFlows(bool b) { exposureIncludeTodaysCashFlows_ = b; }
     void setAmc(bool b) { amc_ = b; }
     void setAmcCg(XvaEngineCG::Mode b) { amcCg_ = b; }
     void setXvaCgBumpSensis(bool b) { xvaCgBumpSensis_ = b; }
@@ -602,6 +603,7 @@ public:
     /*********************************
      * Getters for exposure simulation 
      *********************************/
+    bool exposureIncludeTodaysCashFlows() const { return exposureIncludeTodaysCashFlows_; }
     bool amc() const { return amc_; }
     XvaEngineCG::Mode amcCg() const { return amcCg_; }
     bool xvaCgBumpSensis() const { return xvaCgBumpSensis_; }
@@ -1011,6 +1013,7 @@ protected:
     QuantLib::ext::shared_ptr<AggregationScenarioData> mktCube_;
     Real simulationBootstrapTolerance_ = 0.0001;
     Size reportBufferSize_ = 0;
+    bool exposureIncludeTodaysCashFlows_ = false;
 
     /**************
      * XVA analytic
@@ -1074,6 +1077,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaStressSensitivityScenarioData_;
     bool xvaStressWriteCubes_ = false;
     bool firstMporCollateralAdjustment_ = false;
+
     /***************
      * SIMM analytic
      ***************/

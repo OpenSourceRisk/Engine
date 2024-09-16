@@ -455,6 +455,10 @@ void OREApp::run() {
         return;
     }
 
+    ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+    bool ginc = inc ? *inc : false;
+    LOG("Global IncludeTodaysCashFlows is set to " << (ginc ? "true" : "false"))
+	
     runTimer_.start();
     
     try {
@@ -1529,12 +1533,20 @@ void OREAppInputParameters::loadParameters() {
     /************
      * Simulation
      ************/
-
+    
     tmp = params_->get("simulation", "active", false);
     if (!tmp.empty() && parseBool(tmp)) {
         insertAnalytic("EXPOSURE");
     }
 
+    tmp = params_->get("simulation", "includeTodaysCashFlows", false);
+    if (tmp != "")
+        setExposureIncludeTodaysCashFlows(ore::data::parseBool(tmp));
+    else {
+        // use the global setting
+        setExposureIncludeTodaysCashFlows(includeTodaysCashFlows());
+    }
+    
     // check this here because we need to know further below when checking for EXPOSURE or XVA analytic
     tmp = params_->get("xva", "active", false);
     if (!tmp.empty() && parseBool(tmp))

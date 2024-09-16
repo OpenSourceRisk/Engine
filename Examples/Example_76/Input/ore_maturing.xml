@@ -40,37 +40,5 @@
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
     </Analytic>
-    <Analytic type="simulation">
-      <Parameter name="active">N</Parameter>
-      <Parameter name="simulationConfigFile">mcsimulation.xml</Parameter>
-      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-      <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="storeScenarios">N</Parameter>
-      <Parameter name="cubeFile">cube.csv.gz</Parameter>
-      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
-    </Analytic>
-    <Analytic type="xva">
-      <Parameter name="active">N</Parameter>
-      <Parameter name="csaFile">netting.xml</Parameter>
-      <Parameter name="cubeFile">cube.csv.gz</Parameter>
-      <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
-      <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="exposureProfiles">Y</Parameter>
-      <Parameter name="quantile">0.95</Parameter>
-      <Parameter name="calculationType">Symmetric</Parameter>
-      <Parameter name="allocationMethod">None</Parameter>
-      <Parameter name="marginalAllocationLimit">1.0</Parameter>
-      <Parameter name="exerciseNextBreak">N</Parameter>
-      <Parameter name="cva">Y</Parameter>
-      <Parameter name="dva">N</Parameter>
-      <Parameter name="dvaName">BANK</Parameter>
-      <Parameter name="fva">N</Parameter>
-      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
-      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
-      <Parameter name="colva">N</Parameter>
-      <Parameter name="collateralFloor">N</Parameter>
-      <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-    </Analytic>
   </Analytics>
 </ORE>
