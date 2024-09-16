@@ -150,7 +150,7 @@
           <WeightingSchema>Weighted</WeightingSchema>
           <Shift>0.1</Shift>
           <Tenor>1Y</Tenor>
-          <ShiftWeights>0.5,1.0,2.0,3.0,4.0,5.0,6.0</Weights>
+          <ShiftWeights>0.5,1.0,2.0,3.0,4.0,5.0,6.0</ShiftWeights>
           <WeightTenors>6M,1Y,2Y,4Y,5Y,7Y,10Y</WeightTenors>
         </WeightedShifts>
       </FxVolatility>

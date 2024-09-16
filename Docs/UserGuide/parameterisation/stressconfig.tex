@@ -25,6 +25,57 @@ different shift sizes applied to each point of the curve (or surface / cube).
 In case of the swaption volatility shifts, the single value given as {\tt Shift} (without the attributes {\tt expiry}
 and {\tt term}) represents a default value that is used whenever no explicit value is given for a expiry / term pair.
 
+In case of fx volatility shifts, the ATM shifts and expiries can be given explicitly similar to the sensitivity config (see \ref{lst:stress_config_fxvol_explict}), or 
+a single shift with an weighting schema (see Example listing \ref{stress_config_fxvol_weighting}). In case of the explicit schema, if only one tenor and shift is given a
+parallel shift will be performed. There are two weighting schemas supported:
+\begin{itemize}
+  \item {\\tt Unadjusted}: The shift will be applied only to the given tenor, all other tenors are kept unadjusted.
+  \item {\\tt Weighted}: The given shift $s_i$ will be applied to the given tenor $i$, the shifts for all other tenors will be derived 
+  from by the shift and the given shifts $s_j = s_i \frac{w_j}{w_i}$.
+\end{itemize}
+
+\begin{listing}
+  <FxVolatilities>
+      <FxVolatility ccypair="USDEUR">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.3</Shifts>
+        <ShiftExpiries>6M, 1Y, 2Y, 4Y, 5Y, 7Y, 10Y</ShiftExpiries>
+      </FxVolatility>
+    </FxVolatilities>
+\end{lisiting}
+\label{lst:stress_config_fxvol_explicit}
+
+
+\begin{listing}
+  <FxVolatilities>
+      <FxVolatility ccypair="USDEUR">
+        <ShiftType>Absolute</ShiftType>
+        <WeightedShifts>
+          <WeightingSchema>Weighted</WeightingSchema>
+          <Shift>0.1</Shift>
+          <Tenor>1Y</Tenor>
+          <ShiftWeights>0.5,1.0,2.0,3.0,4.0,5.0,6.0</ShiftWeights>
+          <WeightTenors>6M,1Y,2Y,4Y,5Y,7Y,10Y</WeightTenors>
+        </WeightedShifts>
+      </FxVolatility>
+\end{listing}
+\label{lst:stress_config_fxvol_weighting}
+
+\begin{listing}
+  <FxVolatilities>
+      <FxVolatility ccypair="USDEUR">
+        <ShiftType>Absolute</ShiftType>
+        <WeightedShifts>
+          <WeightingSchema>Unadjusted</WeightingSchema>
+          <Shift>0.1</Shift>
+          <Tenor>1Y</Tenor>
+        </WeightedShifts>
+      </FxVolatility>
+    </FxVolatilities>
+\end{listing}
+\label{lst:stress_config_fxvol_weighting_off}
+
+
 UseSpreadedTermStructures: If set to true, spreaded termstructures over t0 will be used for the scenario calculation, to
 improve the alignment of the scenario sim market and t0 curves.
 
