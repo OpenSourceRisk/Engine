@@ -329,7 +329,7 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
         std::vector<Real> evalSabr(const Array& x) const {
             std::vector<Real> params(4);
             for (Size i = 0, j = 0; i < params_.size(); ++i) {
-                if (params_[i].second != ParametricVolatility::ParameterCalibration::Fixed)
+                if (params_[i].second == ParametricVolatility::ParameterCalibration::Fixed)
                     params[i] = invParams_[i];
                 else
                     params[i] = x[j++];
