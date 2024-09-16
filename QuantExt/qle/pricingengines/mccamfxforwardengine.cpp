@@ -54,9 +54,6 @@ void McCamFxForwardEngine::calculate() const {
     exercise_ = nullptr;
     
     // includeSettlementDateFlows_ = arguments_.includeSettlementDateFlows;
-    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
-    if (includeToday)
-      includeSettlementDateFlows_ = *includeToday;
         
     McMultiLegBaseEngine::calculate();
 

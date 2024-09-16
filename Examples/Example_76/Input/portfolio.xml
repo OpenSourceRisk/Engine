@@ -337,7 +337,7 @@
         <LongShort>Short</LongShort>
         <OptionType>Call</OptionType>
         <Style>European</Style>
-        <Settlement>Physical</Settlement>
+        <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
           <ExerciseDate>2016-03-04</ExerciseDate>

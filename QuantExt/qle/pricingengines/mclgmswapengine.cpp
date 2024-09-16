@@ -31,10 +31,6 @@ void McLgmSwapEngine::calculate() const {
     }
     exercise_ = nullptr;
 
-    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
-    if (includeToday)
-      includeSettlementDateFlows_ = *includeToday;
-
     McMultiLegBaseEngine::calculate();
     results_.value = resultValue_;
     results_.additionalResults["amcCalculator"] = amcCalculator();
