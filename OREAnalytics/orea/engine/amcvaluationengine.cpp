@@ -21,6 +21,7 @@
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/pathdata.hpp>
 
 #include <ored/marketdata/clonedloader.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
@@ -41,7 +42,6 @@
 #include <ored/portfolio/optionwrapper.hpp>
 
 #include <boost/timer/timer.hpp>
-#include <boost/serialization/vector.hpp>
 
 #include <future>
 
@@ -139,20 +139,6 @@ feeContributions(const Size j, const QuantLib::ext::shared_ptr<ScenarioGenerator
     }
     return result;
 }
-
-struct PathData {
-    std::vector<std::vector<std::vector<Real>>> fxBuffer;
-    std::vector<std::vector<std::vector<Real>>> irStateBuffer;
-    std::vector<Real> pathTimes;
-    std::vector<std::vector<RandomVariable>> paths;
-    friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& fxBuffer;
-        ar& irStateBuffer;
-        ar& pathTimes;
-        ar& paths;
-    }
-};
 
 PathData getPathData(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& model,
                      const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& sgd,
@@ -389,8 +375,10 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
             for (Size i = 0; i < trade.second->instrument()->additionalInstruments().size(); ++i) {
                 if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::Payment>(
                         trade.second->instrument()->additionalInstruments()[i])) {
-                    tradeFees.back().push_back(std::make_tuple(model->ccyIndex(p->currency()), p->cashFlow()->amount(),
-                                                               p->cashFlow()->date()));
+                    tradeFees.back().push_back(std::make_tuple(
+                        model->ccyIndex(p->currency()),
+                        p->cashFlow()->amount() * trade.second->instrument()->additionalMultipliers()[i],
+                        p->cashFlow()->date()));
                 } else {
                     StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
                                                 "only QuantExt::Payment is handled as additional instrument.")
@@ -564,9 +552,11 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 auto res = simulatePathInterface2(amcCalculators[j], pathData.pathTimes, pathData.paths, allTimes, allTimes, 
                                                   tradeLabel[j], tradeType[j]);
                 Real v = outputCube->getT0(tradeId[j], 0);
-                outputCube->setT0(v + res[0].at(0) * fx(pathData.fxBuffer, currencyIndex[j], 0, 0) *
+                outputCube->setT0(v +
+                                      res[0].at(0) * fx(pathData.fxBuffer, currencyIndex[j], 0, 0) *
                                           numRatio(model, pathData.irStateBuffer, currencyIndex[j], 0, 0.0, 0) *
-                                          effectiveMultiplier[j],
+                                          effectiveMultiplier[j] +
+                                      resFee[0][0],
                                   tradeId[j], 0);
                 std::map<QuantLib::Date, std::vector<std::tuple<QuantLib::Date, double, size_t>>>
                     closeOutDateToValuationDate;

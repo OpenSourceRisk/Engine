@@ -184,14 +184,11 @@ void SensitivityAnalysis::generateSensitivities() {
                 QuantLib::ext::make_shared<EngineFactory>(ed, simMarket_, configurations, referenceData_, iborFallbackConfig_);
             pf->reset();
             pf->build(factory, "sensi analysis");
-            if (recalibrateModels_)
-                modelBuilders_ = factory->modelBuilders();
-            else
-                modelBuilders_.clear();
-            ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
+            ValuationEngine engine(asof_, dg, simMarket_, factory->modelBuilders(), recalibrateModels_);
             for (auto const& i : this->progressIndicators())
                 engine.registerProgressIndicator(i);
-            engine.buildCube(pf, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
+            engine.buildCube(pf, cube, calculators, ValuationEngine::ErrorPolicy::RemoveAll, true, nullptr, nullptr, {},
+                             dryRun_);
 
             sensiCubes_.push_back(QuantLib::ext::make_shared<SensitivityCube>(cube, scenGen->scenarioDescriptions(),
                                                                       scenarioGenerator_->shiftSizes(),
@@ -254,7 +251,7 @@ void SensitivityAnalysis::generateSensitivities() {
                 [&baseCcy]() -> std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> {
                     return {QuantLib::ext::make_shared<NPVCalculator>(baseCcy)};
                 },
-                {}, true, dryRun_);
+                ValuationEngine::ErrorPolicy::RemoveAll, {}, true, dryRun_);
             std::vector<QuantLib::ext::shared_ptr<NPVSensiCube>> miniCubes;
             for (auto const& c : engine.outputCubes()) {
                 miniCubes.push_back(QuantLib::ext::dynamic_pointer_cast<NPVSensiCube>(c));

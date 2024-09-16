@@ -27,8 +27,8 @@ BOOST_AUTO_TEST_CASE(testHistoricalScenarioGeneratorTransform) {
     BOOST_TEST_MESSAGE(
         "Checking transformation of discount factors to zero rates in Historical Scenario Generator Transform...");
 
-    vector<QuantLib::ext::shared_ptr<Scenario>> scenarios;
-
+    vector<map<Date, QuantLib::ext::shared_ptr<Scenario>>> scenarios;
+    map<Date, QuantLib::ext::shared_ptr<Scenario>> scenarioMap;
     // Make up some scenarios
     Date d1 = Date(14, April, 2016);
     Date d2 = d1 + Period(1, Days);
@@ -55,10 +55,11 @@ BOOST_AUTO_TEST_CASE(testHistoricalScenarioGeneratorTransform) {
         s2->add(rf.first, rf.second);
     }
 
-    scenarios.push_back(s1);
-    scenarios.push_back(s2);
+    scenarioMap[d1] = s1;
+    scenarioMap[d2] = s2;
+    scenarios.push_back(scenarioMap);
     QuantLib::ext::shared_ptr<HistoricalScenarioLoader> histScenariosLoader = QuantLib::ext::make_shared<HistoricalScenarioLoader>();
-    histScenariosLoader->historicalScenarios() = scenarios;
+    histScenariosLoader->scenarios() = scenarios;
     histScenariosLoader->dates() = vector<Date>{d1, d2};
     QuantLib::ext::shared_ptr<HistoricalScenarioGenerator> histScenarios = QuantLib::ext::make_shared<HistoricalScenarioGenerator>(
         histScenariosLoader, QuantLib::ext::make_shared<SimpleScenarioFactory>(true), TARGET(), nullptr, 1);

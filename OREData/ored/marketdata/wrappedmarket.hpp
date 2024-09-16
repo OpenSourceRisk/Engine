@@ -74,6 +74,8 @@ public:
     defaultCurve(const string& name, const string& configuration = Market::defaultConfiguration) const override;
     Handle<Quote> recoveryRate(const string& name,
                                const string& configuration = Market::defaultConfiguration) const override;
+    Handle<Quote> conversionFactor(const string& name,
+                                   const string& configuration = Market::defaultConfiguration) const override;
     Handle<QuantExt::CreditVolCurve> cdsVol(const string& name,
                                             const string& configuration = Market::defaultConfiguration) const override;
     Handle<QuantExt::BaseCorrelationTermStructure>

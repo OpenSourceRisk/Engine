@@ -158,8 +158,6 @@ private:
     //! do dry run
     bool dryRun_;
 
-    //! model builders
-    std::set<std::pair<string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>> modelBuilders_;
     //! sensitivityCube
     std::vector<QuantLib::ext::shared_ptr<SensitivityCube>> sensiCubes_;
 
