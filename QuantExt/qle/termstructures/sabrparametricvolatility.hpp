@@ -108,6 +108,8 @@ private:
     std::tuple<std::vector<Real>, Real, Real, QuantLib::Size>
     calibrateModelParameters(const MarketSmile& marketSmile,
                              const std::vector<std::pair<Real, ParameterCalibration>>& params) const;
+    std::vector<Real> implyAlpha(const std::vector<Real>& params, const Real forward, const Real tte, const Real shift,
+                                 const Real atmVol) const;
 
     ModelVariant modelVariant_;
     std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, ParameterCalibration>>>
