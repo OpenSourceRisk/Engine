@@ -375,8 +375,10 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
             for (Size i = 0; i < trade.second->instrument()->additionalInstruments().size(); ++i) {
                 if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::Payment>(
                         trade.second->instrument()->additionalInstruments()[i])) {
-                    tradeFees.back().push_back(std::make_tuple(model->ccyIndex(p->currency()), p->cashFlow()->amount(),
-                                                               p->cashFlow()->date()));
+                    tradeFees.back().push_back(std::make_tuple(
+                        model->ccyIndex(p->currency()),
+                        p->cashFlow()->amount() * trade.second->instrument()->additionalMultipliers()[i],
+                        p->cashFlow()->date()));
                 } else {
                     StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
                                                 "only QuantExt::Payment is handled as additional instrument.")
@@ -550,9 +552,11 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 auto res = simulatePathInterface2(amcCalculators[j], pathData.pathTimes, pathData.paths, allTimes, allTimes, 
                                                   tradeLabel[j], tradeType[j]);
                 Real v = outputCube->getT0(tradeId[j], 0);
-                outputCube->setT0(v + res[0].at(0) * fx(pathData.fxBuffer, currencyIndex[j], 0, 0) *
+                outputCube->setT0(v +
+                                      res[0].at(0) * fx(pathData.fxBuffer, currencyIndex[j], 0, 0) *
                                           numRatio(model, pathData.irStateBuffer, currencyIndex[j], 0, 0.0, 0) *
-                                          effectiveMultiplier[j],
+                                          effectiveMultiplier[j] +
+                                      resFee[0][0],
                                   tradeId[j], 0);
                 std::map<QuantLib::Date, std::vector<std::tuple<QuantLib::Date, double, size_t>>>
                     closeOutDateToValuationDate;
