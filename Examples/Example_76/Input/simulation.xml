@@ -1,6 +1,250 @@
 <?xml version="1.0"?>
 <Simulation>
 
+  <Parameters>  
+    <Discretization>Exact</Discretization>
+    <Grid>5,1W</Grid>
+    <!--<Grid>242,1M</Grid>-->
+    <Calendar>EUR,USD,GBP,CHF</Calendar>
+    <Sequence>SobolBrownianBridge</Sequence>
+    <Scenario>Simple</Scenario>
+    <Seed>42</Seed>
+    <Samples>1000</Samples>
+    <DayCounter>A365F</DayCounter>
+  </Parameters>
+
+  <!--
+	This section determines the simulation model composition
+	and the calibration of all components.
+    -->
+  <CrossAssetModel>
+    <DomesticCcy>EUR</DomesticCcy>
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+      <Currency>GBP</Currency>
+      <Currency>CHF</Currency>
+      <Currency>JPY</Currency>
+    </Currencies>
+    <Equities>
+      <Equity>SP5</Equity>
+      <Equity>Lufthansa</Equity>
+    </Equities>
+    <!--
+    <CreditNames>
+      <CreditName>CPTY_C</CreditName>
+      <CreditName>BANK</CreditName>
+    </CreditNames>
+    -->
+    <BootstrapTolerance>0.0001</BootstrapTolerance>
+    <InterestRateModels>
+      <LGM ccy="default">
+        <CalibrationType>Bootstrap</CalibrationType>
+        <!-- Bootstrap, BestFit -->
+        <Volatility>
+          <Calibrate>Y</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <!-- Hagan, HullWhite -->
+          <ParamType>Piecewise</ParamType>
+          <!-- Constant, Piecewise -->
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <!-- <TimeGrid/> -->
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+          <!-- <InitialValue>0.01</InitialValue>-->
+        </Volatility>
+        <Reversion>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
+          <!-- Hagan, HullWhite -->
+          <ParamType>Constant</ParamType>
+          <!-- Constant, Piecewise -->
+          <TimeGrid/>
+          <InitialValue>0.03</InitialValue>
+        </Reversion>
+        <CalibrationSwaptions>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+          <Strikes/>
+        </CalibrationSwaptions>
+        <ParameterTransformation>
+          <ShiftHorizon>0.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+      <LGM ccy="EUR">
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Volatility>
+          <Calibrate>Y</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+        </Volatility>
+        <Reversion>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.03</InitialValue>
+        </Reversion>
+        <CalibrationSwaptions>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+          <Strikes/>
+        </CalibrationSwaptions>
+        <ParameterTransformation>
+          <ShiftHorizon>0.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+      <LGM ccy="CHF">
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Volatility>
+          <Calibrate>Y</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+        </Volatility>
+        <Reversion>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.03</InitialValue>
+        </Reversion>
+        <CalibrationSwaptions>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+          <Strikes/>
+        </CalibrationSwaptions>
+        <ParameterTransformation>
+          <ShiftHorizon>0.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+    </InterestRateModels>
+    <ForeignExchangeModels>
+      <CrossCcyLGM foreignCcy="default">
+        <DomesticCcy>EUR</DomesticCcy>
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Sigma>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
+        </Sigma>
+        <CalibrationOptions>
+          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+          <Strikes/>
+          <!-- ATMF, +25D, -25D, 1.2345 -->
+        </CalibrationOptions>
+      </CrossCcyLGM>
+      <CrossCcyLGM foreignCcy="USD">
+        <DomesticCcy>EUR</DomesticCcy>
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Sigma>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
+        </Sigma>
+        <CalibrationOptions>
+          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+          <Strikes/>
+          <!-- ATMF, +25D, -25D, 1.2345 -->
+        </CalibrationOptions>
+      </CrossCcyLGM>
+      <CrossCcyLGM foreignCcy="GBP">
+        <DomesticCcy>EUR</DomesticCcy>
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Sigma>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>    1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1,  0.1, 0.1</InitialValue>
+        </Sigma>
+        <CalibrationOptions>
+          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+          <Strikes/>
+        </CalibrationOptions>
+      </CrossCcyLGM>
+    </ForeignExchangeModels>
+    <EquityModels>
+      <CrossAssetLGM name="default">
+        <Currency>EUR</Currency>
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Sigma>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>    1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1,  0.1, 0.1</InitialValue>
+        </Sigma>
+        <CalibrationOptions>
+          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+          <Strikes/>
+        </CalibrationOptions>
+      </CrossAssetLGM>    
+      <CrossAssetLGM name="SP5">
+        <Currency>USD</Currency>
+        <CalibrationType>Bootstrap</CalibrationType>
+        <Sigma>
+          <Calibrate>Y</Calibrate>
+          <ParamType>Piecewise</ParamType>
+          <TimeGrid>    1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1,  0.1, 0.1</InitialValue>
+        </Sigma>
+        <CalibrationOptions>
+          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+          <Strikes/>
+        </CalibrationOptions>
+      </CrossAssetLGM>
+    </EquityModels>    
+    <!--
+    <CreditModels>
+      <LGM name="default">
+        <CalibrationType>None</CalibrationType>
+        <Volatility>
+          <Calibrate>N</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+        </Volatility>
+        <Reversion>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.03</InitialValue>
+        </Reversion>
+        <CalibrationCdsOptions>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+          <Strikes/>
+        </CalibrationCdsOptions>
+        <ParameterTransformation>
+          <ShiftHorizon>0.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+    </CreditModels>
+    -->
+    <InstantaneousCorrelations>
+      <Correlation factor1="IR:EUR" factor2="IR:USD">0.3</Correlation>
+      <Correlation factor1="IR:EUR" factor2="IR:GBP">0.3</Correlation>
+      <Correlation factor1="IR:USD" factor2="IR:GBP">0.3</Correlation>
+      <Correlation factor1="IR:EUR" factor2="FX:USDEUR">0</Correlation>
+      <Correlation factor1="IR:EUR" factor2="FX:GBPEUR">0</Correlation>
+      <Correlation factor1="IR:GBP" factor2="FX:USDEUR">0</Correlation>
+      <Correlation factor1="IR:GBP" factor2="FX:GBPEUR">0</Correlation>
+      <Correlation factor1="IR:USD" factor2="FX:USDEUR">0</Correlation>
+      <Correlation factor1="IR:USD" factor2="FX:GBPEUR">0</Correlation>
+      <Correlation factor1="FX:USDEUR" factor2="FX:GBPEUR">0</Correlation>
+      <!-- ... -->
+    </InstantaneousCorrelations>
+  </CrossAssetModel>
+
   <Market>
 
     <BaseCurrency>EUR</BaseCurrency>
@@ -22,7 +266,7 @@
         <Extrapolation>Y</Extrapolation>
       </Configuration>
     </YieldCurves>
-    
+
     <Indices>
       <Index>EUR-EURIBOR-6M</Index>
       <Index>EUR-EURIBOR-3M</Index>
@@ -38,7 +282,7 @@
       <Index>JPY-LIBOR-6M</Index>
       <Index>JPY-TONAR</Index>
     </Indices>
-		
+
     <SwapIndices>
       <SwapIndex>
         <Name>EUR-CMS-1Y</Name>
@@ -50,28 +294,31 @@
       </SwapIndex>
     </SwapIndices>
 
+    <!--
     <DefaultCurves>
-      <Names>
-	    <Name>CPTY_C</Name>
-		<Name>BANK</Name>
-      </Names>
-      <Tenors>6M,1Y,2Y,5Y,10Y</Tenors>
       <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
+      <Names>
+	<Name>CPTY_C</Name>
+	<Name>BANK</Name>
+      </Names>
+      <Tenors>6M,1Y,2Y</Tenors>
     </DefaultCurves>
-
+    -->
+    
     <Equities>
+      <SimulateDividendYield>false</SimulateDividendYield>
       <Names>
         <Name>SP5</Name>
         <Name>Lufthansa</Name>
       </Names>
       <DividendTenors>6M,1Y,2Y</DividendTenors>
-    </Equities>
-
+    </Equities>    
+    
     <!-- Even if we do not simulate them - option pricing needs vol
-    surfaces, so we need to specify here how we propagate the
-    vol structure and what its composition will be -->
+	   surfaces, so we need to specify here how we propagate the
+	   vol structure and what its composition will be -->
     <SwaptionVolatilities>
-      <Simulate>true</Simulate>
+      <Simulate>false</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
       <Currencies>
@@ -86,8 +333,8 @@
     </SwaptionVolatilities>
     
     <CapFloorVolatilities>
-      <Simulate>true</Simulate>
-      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <Simulate>false</Simulate>
+      <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
       <Currencies>
         <Currency>EUR</Currency>
         <Currency>USD</Currency>
@@ -97,20 +344,20 @@
     </CapFloorVolatilities>
 
     <FxVolatilities>
-      <Simulate>true</Simulate>
+      <Simulate>false</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
       <CurrencyPairs>
-        <CurrencyPair>USDEUR</CurrencyPair>
-        <CurrencyPair>GBPEUR</CurrencyPair>
-        <CurrencyPair>JPYEUR</CurrencyPair>
+        <CurrencyPair>EURUSD</CurrencyPair>
+        <CurrencyPair>EURGBP</CurrencyPair>
+        <CurrencyPair>EURJPY</CurrencyPair>
         <!--<CurrencyPair>GBPUSD</CurrencyPair>-->
       </CurrencyPairs>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
     </FxVolatilities>
- 	
-	<EquityVolatilities>
-      <Simulate>true</Simulate>
+
+    <EquityVolatilities>
+      <Simulate>false</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
       <Names>
@@ -119,39 +366,21 @@
       </Names>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
     </EquityVolatilities>     
-	
+
     <BenchmarkCurves>
       <BenchmarkCurve>
-        <Currency>EUR</Currency>
-        <Name>BENCHMARK_EUR</Name>
+	<Currency>EUR</Currency>
+	<Name>BENCHMARK_EUR</Name>
       </BenchmarkCurve>
     </BenchmarkCurves>
 
     <Securities>
-      <Simulate>true</Simulate>
+      <Simulate>false</Simulate>
       <Names>
         <Name>SECURITY_1</Name>
       </Names>
     </Securities>
-
-    <ZeroInflationIndexCurves>
-      <Names>
-      	<Name>EUHICP</Name>
-        <Name>EUHICPXT</Name>
-        <Name>FRHICP</Name>
-        <Name>UKRPI</Name>
-        <Name>USCPI</Name>
-      </Names>
-      <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
-    </ZeroInflationIndexCurves>
-
-    <YYInflationIndexCurves>
-	    <Names>
-          <Name>EUHICPXT</Name>
-		</Names>
-        <Tenors>1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
-    </YYInflationIndexCurves>
-
+      
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->
     <AggregationScenarioDataCurrencies>
@@ -164,7 +393,7 @@
       <Index>EUR-EONIA</Index>
       <Index>USD-LIBOR-3M</Index>
     </AggregationScenarioDataIndices>
-    
+
   </Market>
 
 </Simulation>

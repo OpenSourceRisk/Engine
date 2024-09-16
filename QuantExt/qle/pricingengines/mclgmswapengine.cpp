@@ -30,6 +30,11 @@ void McLgmSwapEngine::calculate() const {
         payer_[i] = QuantLib::close_enough(arguments_.payer[i], -1.0);
     }
     exercise_ = nullptr;
+
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    if (includeToday)
+      includeSettlementDateFlows_ = *includeToday;
+
     McMultiLegBaseEngine::calculate();
     results_.value = resultValue_;
     results_.additionalResults["amcCalculator"] = amcCalculator();

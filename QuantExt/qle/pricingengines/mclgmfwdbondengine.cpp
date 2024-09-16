@@ -85,6 +85,10 @@ void McLgmFwdBondEngine::calculate() const {
     // no option
     exercise_ = nullptr;
 
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    if (includeToday)
+      includeSettlementDateFlows_ = *includeToday;
+
     McMultiLegBaseEngine::calculate();
 
     // take result from base engine, akin to calculateBondNpv in DiscountingForwardBondEngine

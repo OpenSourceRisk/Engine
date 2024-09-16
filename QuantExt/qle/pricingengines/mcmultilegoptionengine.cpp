@@ -62,6 +62,10 @@ void McMultiLegOptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     optionSettlement_ = arguments_.settlementType;
 
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    if (includeToday)
+      includeSettlementDateFlows_ = *includeToday;
+
     McMultiLegBaseEngine::calculate();
 
     // convert base ccy result from McMultiLegbaseEngine to desired npv currency

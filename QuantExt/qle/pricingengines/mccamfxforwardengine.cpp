@@ -52,7 +52,11 @@ void McCamFxForwardEngine::calculate() const {
     currency_ = {foreignCcy_, domesticCcy_};
     payer_ = {false, true};
     exercise_ = nullptr;
-    includeSettlementDateFlows_ = arguments_.includeSettlementDateFlows;
+    
+    // includeSettlementDateFlows_ = arguments_.includeSettlementDateFlows;
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    if (includeToday)
+      includeSettlementDateFlows_ = *includeToday;
         
     McMultiLegBaseEngine::calculate();
 
