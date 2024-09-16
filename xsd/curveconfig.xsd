@@ -125,7 +125,7 @@
     <xs:all>
       <xs:element type="xs:string" name="Name"/>
       <xs:element type="xs:string" name="InitialValue"/>
-      <xs:element type="xs:boolean" name="Calibration"/>
+      <xs:element type="parametricVolatilityParameterCalibration" name="Calibration"/>
     </xs:all>
   </xs:complexType>
 
