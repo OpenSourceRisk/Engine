@@ -77,6 +77,25 @@ void ForwardRateAgreement::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     maturityType_ = "End Date";
 }
 
+const std::map<std::string,boost::any>& ForwardRateAgreement::additionalData() const{
+    
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap =
+        QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
+
+    if (swap != nullptr && swap->numberOfLegs()== 1 && swap->leg(1).size() == 1) {
+        const auto& cf = swap->leg(1)[0];
+        auto oncpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cf);
+        if (oncpn != nullptr) {
+            auto fairRate = oncpn->effectiveIndexFixing();
+            additionalData_["implied_future_rate"] = 100. * (1.0 - fairRate);
+        } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::IborFraCoupon>(cf)){
+            auto fairRate = cpn->indexFixing();
+            additionalData_["implied_future_rate"] = 100. * (1.0 - fairRate);
+        }
+    }
+    return additionalData_;
+}
+
 void ForwardRateAgreement::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* fNode = XMLUtils::getChildNode(node, "ForwardRateAgreementData");
