@@ -24,6 +24,9 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+
+#include <qle/termstructures/parametricvolatility.hpp>
+
 #include <ql/utilities/null.hpp>
 
 namespace ore {
@@ -41,7 +44,8 @@ public:
 
         std::string name;
         std::vector<double> initialValue = {0.0};
-        bool isFixed = false;
+        QuantExt::ParametricVolatility::ParameterCalibration calibration =
+            QuantExt::ParametricVolatility::ParameterCalibration::Calibrated;
     };
 
     class Calibration : public XMLSerializable {
