@@ -121,6 +121,27 @@ double McLgmFwdBondEngine::payOff() const {
         forwardContractForwardValue * contractCurve_->discount(contractCurveDate_) -
         cmpPayment_ * contractCurve_->discount(cmpPaymentDate_);
 
+    std::cout << std::fixed << std::setprecision(10) << std::endl;
+    std::cout << "underlyingSpotValue " << results_.underlyingSpotValue << std::endl;
+    std::cout << "incomeCurve " << io::iso_date(incomeCurveDate_) << " " << incomeCurve_->discount(incomeCurveDate_)
+              << std::endl;
+    std::cout << "contractCurve " << io::iso_date(contractCurveDate_) << " "
+              << contractCurve_->discount(contractCurveDate_) << std::endl;
+    std::cout << "referenceCurve " << io::iso_date(incomeCurveDate_) << " "
+              << referenceCurve_->discount(incomeCurveDate_) << std::endl;
+    std::cout << "referenceCurve+spread " << io::iso_date(incomeCurveDate_) << " "
+              << discountCurves_[0]->discount(incomeCurveDate_) << std::endl;
+    // 15/12/2025
+    Date cfDate(15, December, 2025);
+    std::cout << "incomeCurve " << io::iso_date(cfDate) << " " << incomeCurve_->discount(cfDate) << std::endl;
+    std::cout << "contractCurve " << io::iso_date(cfDate) << " " << contractCurve_->discount(cfDate) << std::endl;
+    std::cout << "referenceCurve " << io::iso_date(cfDate) << " " << referenceCurve_->discount(cfDate) << std::endl;
+    std::cout << "referenceCurve+spread " << io::iso_date(cfDate) << " " << discountCurves_[0]->discount(cfDate)
+              << std::endl;
+              Date cf2Date(17, March, 2025);
+                  std::cout << "contractCurve " << io::iso_date(cf2Date) << " " << contractCurve_->discount(cf2Date) << std::endl;
+
+
     return forwardContractPresentValue;
 }
 
@@ -199,14 +220,14 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
         auto numeraire_inclSpread = engine_->lgmVectorised_[0].numeraire(
             t, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)], engine_->discountCurves_[0]);
 
-        auto numeraire_exclSpread = engine_->lgmVectorised_[0].numeraire(
-            t, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)], engine_->referenceCurve_);
+        // auto numeraire_exclSpread = engine_->lgmVectorised_[0].numeraire(
+        //     t, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)], engine_->referenceCurve_);
 
-        RandomVariable spotNumeraireAdjusted = underylingSpotRV * numeraire_inclSpread / numeraire_exclSpread;
+        RandomVariable spotNumeraireAdjusted = underylingSpotRV * numeraire_inclSpread; //  / numeraire_exclSpread;
 
         // compounding
         auto disc_income = engine_->lgmVectorised_[0].discountBond(
-            0.0, incomeCurveTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
+            t , incomeCurveTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
             engine_->incomeCurve_);
 
         RandomVariable forwardBondValue = spotNumeraireAdjusted / disc_income;
@@ -225,11 +246,11 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
 
         // Present value and compensation payment...
         auto disc_contract = engine_->lgmVectorised_[0].discountBond(
-            0.0, contractCurveTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
+            t , contractCurveTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
             engine_->contractCurve_);
 
         auto disc_cmpPayment = engine_->lgmVectorised_[0].discountBond(
-            0.0, cmpPaymentTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
+            t , cmpPaymentTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
             engine_->contractCurve_);
 
         // forwardContractPresentValue
