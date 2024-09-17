@@ -187,6 +187,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                     std::string weightingSchema = XMLUtils::getChildValue(weightedShiftsNode, "WeightingSchema", true);
                     boost::to_lower(weightingSchema);
                     FXVolShiftData data;
+                    data.shiftType = shiftType;
                     if (weightingSchema == "unadjusted"){
                         data.mode = FXVolShiftData::Unadjusted;
                         data.shifts = std::vector<Real>(1, XMLUtils::getChildValueAsDouble(weightedShiftsNode, "Shift", true));
@@ -211,7 +212,6 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                     } else{
                         QL_FAIL("FxVolStressTestData: unexpected weighting scheme, got "
                                 << weightingSchema << " expected 'unadjusted' or 'weighted', please check config for "<< ccypair);
-                        continue;
                     }
                     test.fxVolShifts[ccypair] = data;
                 } else{

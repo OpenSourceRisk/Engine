@@ -479,7 +479,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
                 shifts.push_back(0.0);
             }
         }
-
+        DLOG("Apply shift with shiftType " << shiftType);
         // FIXME: Apply same shifts to non-ATM vectors if present
         for (Size j = 0; j < shiftTimes.size(); ++j) {
             // apply shift at tenor point j
