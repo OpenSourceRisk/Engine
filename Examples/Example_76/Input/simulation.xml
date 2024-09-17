@@ -27,24 +27,6 @@
       <Index>USD-FedFunds</Index>
     </Indices>
 
-    <SwapIndices>
-    </SwapIndices>
-
-    <DefaultCurves>
-    </DefaultCurves>
-
-    <Equities>
-    </Equities>   
-
-    <!-- Even if we do not simulate them - option pricing needs vol
-       surfaces, so we need to specify here how we propagate the
-       vol structure and what its composition will be -->
-    <SwaptionVolatilities>
-    </SwaptionVolatilities>
-    
-    <CapFloorVolatilities>
-    </CapFloorVolatilities>
-
     <FxVolatilities>
       <Simulate>true</Simulate>
       
@@ -56,15 +38,7 @@
       <Expiries>6M,1Y,2Y,4Y,5Y,7Y</Expiries>
       <SimulateATMOnly>true</SimulateATMOnly>
     </FxVolatilities>
- 	
-	<EquityVolatilities>
-    </EquityVolatilities>     
-	
-    <BenchmarkCurves>
-    </BenchmarkCurves>
-
-    <Securities>
-    </Securities>
+ 	    
   
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->
