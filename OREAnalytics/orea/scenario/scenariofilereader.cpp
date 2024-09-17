@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/scenario/historicalscenariofilereader.hpp>
+#include <orea/scenario/scenariofilereader.hpp>
 
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -31,7 +31,7 @@ using namespace QuantLib;
 namespace ore {
 namespace analytics {
 
-HistoricalScenarioFileReader::HistoricalScenarioFileReader(const string& fileName,
+ScenarioFileReader::ScenarioFileReader(const string& fileName,
                                                            const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory)
     : scenarioFactory_(scenarioFactory), file_(fileName, true), finished_(false) {
 
@@ -48,18 +48,18 @@ HistoricalScenarioFileReader::HistoricalScenarioFileReader(const string& fileNam
     }
 }
 
-HistoricalScenarioFileReader::~HistoricalScenarioFileReader() {
+ScenarioFileReader::~ScenarioFileReader() {
     // Close the file
     file_.close();
     LOG("The file has been closed");
 }
 
-bool HistoricalScenarioFileReader::next() {
+bool ScenarioFileReader::next() {
     finished_ = file_.next() ? false : true;
     return !finished_;
 }
 
-Date HistoricalScenarioFileReader::date() const {
+Date ScenarioFileReader::date() const {
     if (finished_) {
         return Null<Date>();
     } else {
@@ -67,15 +67,16 @@ Date HistoricalScenarioFileReader::date() const {
     }
 }
 
-QuantLib::ext::shared_ptr<ore::analytics::Scenario> HistoricalScenarioFileReader::scenario() const {
+QuantLib::ext::shared_ptr<ore::analytics::Scenario> ScenarioFileReader::scenario() const {
     if (finished_) {
         return nullptr;
     } else {
         Date date = parseDate(file_.get("Date"));
         Real numeraire = parseReal(file_.get("Numeraire"));
+        string label = file_.get("Scenario");
         TLOG("Creating scenario for date " << io::iso_date(date));
         QuantLib::ext::shared_ptr<Scenario> scenario =
-            scenarioFactory_->buildScenario(date, true, false, std::string(), numeraire);
+            scenarioFactory_->buildScenario(date, true, false, label, numeraire);
         Real value;
         for (Size k = 0; k < keys_.size(); ++k) {
             if (ore::data::tryParseReal(file_.get(k + 3), value))

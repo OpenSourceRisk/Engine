@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/scenario/historicalscenarioreader.hpp
-    \brief historical scenario reader
+/*! \file orea/scenario/scenarioreader.hpp
+    \brief scenario reader
     \ingroup scenario
 */
 
@@ -30,11 +30,11 @@
 namespace ore {
 namespace analytics {
 
-//! Base Class for reading historical scenarios
-class HistoricalScenarioReader {
+//! Base Class for reading scenarios
+class ScenarioReader {
 public:
     //! Destructor
-    virtual ~HistoricalScenarioReader() {}
+    virtual ~ScenarioReader() {}
     //! Return true if there is another Scenario to read and move to it
     virtual bool next() = 0;
     //! Return the current scenario's date if reader is still valid and `Null<Date>()` otherwise

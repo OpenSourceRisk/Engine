@@ -104,7 +104,9 @@ void MultiThreadedValuationEngine::setAggregationScenarioData(
 void MultiThreadedValuationEngine::buildCube(
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
     const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::ValuationCalculator>>()>& calculators,
-    const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::CounterpartyCalculator>>()>& cptyCalculators,
+    const ValuationEngine::ErrorPolicy errorPolicy,
+    const std::function<std::vector<QuantLib::ext::shared_ptr<ore::analytics::CounterpartyCalculator>>()>&
+        cptyCalculators,
     bool mporStickyDate, bool dryRun) {
 
     boost::timer::cpu_timer timer;
@@ -261,8 +263,9 @@ void MultiThreadedValuationEngine::buildCube(
 
     for (Size i = 0; i < eff_nThreads; ++i) {
 
-        auto job = [this, obsMode, dryRun, &calculators, &cptyCalculators, mporStickyDate, &portfoliosAsString,
-                    &scenarioGenerators, &loaders, &workerPricingStats, &progressIndicator](int id) -> resultType {
+        auto job = [this, obsMode, dryRun, &calculators, errorPolicy, &cptyCalculators, mporStickyDate,
+                    &portfoliosAsString, &scenarioGenerators, &loaders, &workerPricingStats,
+                    &progressIndicator](int id) -> resultType {
             // set thread local singletons
 
             QuantLib::Settings::instance().evaluationDate() = today_;
@@ -315,15 +318,13 @@ void MultiThreadedValuationEngine::buildCube(
                 // build valuation engine
 
                 auto valEngine = QuantLib::ext::make_shared<ore::analytics::ValuationEngine>(
-                    today_, dateGrid_, simMarket,
-                    recalibrateModels_ ? engineFactory->modelBuilders()
-                                       : std::set<std::pair<std::string, QuantLib::ext::shared_ptr<QuantExt::ModelBuilder>>>());
+                    today_, dateGrid_, simMarket, engineFactory->modelBuilders(), recalibrateModels_);
                 valEngine->registerProgressIndicator(progressIndicator);
 
                 // build mini-cube
 
-                valEngine->buildCube(portfolio, miniCubes_[id], calculators(), mporStickyDate, miniNettingSetCubes_[id],
-                                     miniCptyCubes_[id],
+                valEngine->buildCube(portfolio, miniCubes_[id], calculators(), errorPolicy, mporStickyDate,
+                                     miniNettingSetCubes_[id], miniCptyCubes_[id],
                                      cptyCalculators ? cptyCalculators()
                                                      : std::vector<QuantLib::ext::shared_ptr<CounterpartyCalculator>>(),
                                      dryRun);

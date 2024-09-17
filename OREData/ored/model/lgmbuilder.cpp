@@ -349,9 +349,20 @@ std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>> LgmBuilder::swapt
     return swaptionBasket_;
 }
 
+void LgmBuilder::recalibrate() const {
+    suspendCalibration_ = false;
+    calculate();
+}
+
+void LgmBuilder::newCalcWithoutRecalibration() const {
+    suspendCalibration_ = true;
+    calculate();
+}
+
 bool LgmBuilder::requiresRecalibration() const {
     return requiresCalibration_ &&
-           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_);
+           (volSurfaceChanged(false) || marketObserver_->hasUpdated(false) || forceCalibration_) &&
+           !suspendCalibration_;
 }
 
 void LgmBuilder::performCalculations() const {
@@ -396,7 +407,7 @@ void LgmBuilder::performCalculations() const {
     std::string errorTemplate =
         std::string("Failed to calibrate LGM Model. ") +
         (continueOnError_ ? std::string("Calculation will proceed anyway - using the calibration as is!")
-                          : std::string("Calculation will aborted."));
+                          : std::string("Calculation will be aborted."));
     try {
         if (data_->calibrateA() && !data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) {
             DLOG("call calibrateVolatilitiesIterative for volatility calibration (bootstrap)");

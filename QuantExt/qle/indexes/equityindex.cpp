@@ -29,14 +29,15 @@ namespace QuantExt {
 
 EquityIndex2::EquityIndex2(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency,
                          const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
-                         const Handle<YieldTermStructure>& dividend)
-    : familyName_(familyName), currency_(currency), rate_(rate), dividend_(dividend), spotQuote_(spotQuote),
-      fixingCalendar_(fixingCalendar) {
+                         const Handle<YieldTermStructure>& dividend, const Handle<EquityAnnouncedDividendCurve>& announcedDividend)
+    : familyName_(familyName), currency_(currency), rate_(rate), dividend_(dividend), announcedDividend_(announcedDividend),
+      spotQuote_(spotQuote), fixingCalendar_(fixingCalendar) {
 
     name_ = familyName;
     registerWith(spotQuote_);
     registerWith(rate_);
     registerWith(dividend_);
+    registerWith(announcedDividend_);
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
 }
@@ -47,13 +48,13 @@ Real EquityIndex2::fixing(const Date& fixingDate, bool forecastTodaysFixing) con
 
 Real EquityIndex2::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const {
 
-    QL_REQUIRE(isValidFixingDate(fixingDate),
-               "Fixing date " << fixingDate << " is not valid for equity index '" << name_ << "'");
-
     Date today = Settings::instance().evaluationDate();
 
     if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
         return forecastFixing(fixingDate, incDividend);
+
+    QL_REQUIRE(isValidFixingDate(fixingDate),
+               "Fixing date " << fixingDate << " is not valid for equity index '" << name_ << "'");
 
     Real result = Null<Decimal>();
 
@@ -97,7 +98,14 @@ Real EquityIndex2::forecastFixing(const Time& fixingTime, bool incDividend) cons
     if (incDividend) {
         forward = price / rate_->discount(fixingTime);
     } else {
-        forward = price * dividend_->discount(fixingTime) / rate_->discount(fixingTime);
+        Real announcedDividendT0 = 0.0;
+        Real announcedDividend = 0.0;
+        if (!announcedDividend_.empty()) {
+            announcedDividendT0 = announcedDividend_->discountedFutureDividends(0.0);
+            announcedDividend = announcedDividend_->discountedFutureDividends(fixingTime);
+        }
+        forward = (price - announcedDividendT0) * dividend_->discount(fixingTime) / rate_->discount(fixingTime) +
+                  announcedDividend;
     }
     return forward;
 }
@@ -118,15 +126,16 @@ void EquityIndex2::addDividend(const Dividend& dividend, bool forceOverwrite) {
     DividendManager::instance().setHistory(tag, divs);
 }
 
-Real EquityIndex2::dividendsBetweenDates(const Date& startDate, const Date& endDate) const {
+Real EquityIndex2::dividendsBetweenDates(const Date& startDate, const Date& endDate, const bool historicalOnly) const {
     const Date& today = Settings::instance().evaluationDate();
+
+    Date end = historicalOnly ? std::min(endDate, today) : endDate;
 
     const std::set<Dividend>& history = dividendFixings();
     Real dividends = 0.0;
 
     if (!history.empty()) {
-        for (std::set<Dividend>::const_iterator fd = history.begin();
-             fd != history.end() && fd->exDate <= std::min(endDate, today); ++fd) {
+        for (std::set<Dividend>::const_iterator fd = history.begin(); fd != history.end() && fd->exDate <= end; ++fd) {
             if (fd->exDate >= startDate)
                 dividends += fd->rate;
         }
@@ -135,8 +144,9 @@ Real EquityIndex2::dividendsBetweenDates(const Date& startDate, const Date& endD
 }
 
 QuantLib::ext::shared_ptr<EquityIndex2> EquityIndex2::clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
-                                                  const Handle<YieldTermStructure>& dividend) const {
-    return QuantLib::ext::make_shared<EquityIndex2>(familyName(), fixingCalendar(), currency(), spotQuote, rate, dividend);
+                    const Handle<YieldTermStructure>& dividend,
+                    const Handle<EquityAnnouncedDividendCurve>& discreteDividend) const {
+    return QuantLib::ext::make_shared<EquityIndex2>(familyName(), fixingCalendar(), currency(), spotQuote, rate, dividend, discreteDividend);
 }
 
 } // namespace QuantExt

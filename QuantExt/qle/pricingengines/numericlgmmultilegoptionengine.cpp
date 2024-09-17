@@ -253,10 +253,15 @@ RandomVariable getRebatePv(const LgmVectorised& lgm, const Real t, const RandomV
     if (exercise == nullptr)
         return RandomVariable(x.size(), 0.0);
     if (exercise->type() == Exercise::American) {
+        // we use an approximate rebate settlement delay here!
         return RandomVariable(x.size(), exercise->rebate(0)) *
                lgm.reducedDiscountBond(
-                   t, lgm.parametrization()->termStructure()->timeFromReference(exercise->rebatePaymentDate(d)), x,
-                   discountCurve);
+                   t,
+                   t + lgm.parametrization()->termStructure()->timeFromReference(
+                           exercise->rebatePaymentCalendar().advance(
+                               lgm.parametrization()->termStructure()->referenceDate(),
+                               exercise->rebateSettlementPeriod(), exercise->rebatePaymentConvention())),
+                   x, discountCurve);
     } else {
         auto f = std::find(exercise->dates().begin(), exercise->dates().end(), d);
         QL_REQUIRE(f != exercise->dates().end(), "NumericLgmMultiLegOptionEngine: internal error: exercise date "

@@ -21,7 +21,7 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
-#include <orea/scenario/historicalscenariofilereader.hpp>
+#include <orea/scenario/scenariofilereader.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
@@ -548,12 +548,12 @@ void InputParameters::setBenchmarkVarPeriod(const std::string& period) {
     benchmarkVarPeriod_ = period;
 }
 
-void InputParameters::setHistoricalScenarioReader(const std::string& fileName) {
+void InputParameters::setScenarioReader(const std::string& fileName) {
     boost::filesystem::path baseScenarioPath(fileName);
     QL_REQUIRE(exists(baseScenarioPath), "The provided base scenario file, " << baseScenarioPath << ", does not exist");
     QL_REQUIRE(is_regular_file(baseScenarioPath),
                "The provided base scenario file, " << baseScenarioPath << ", is not a file");
-    historicalScenarioReader_ = QuantLib::ext::make_shared<HistoricalScenarioFileReader>(
+    scenarioReader_ = QuantLib::ext::make_shared<ScenarioFileReader>(
         fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
 }
 
@@ -700,6 +700,8 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     curvesOutputFileName_ = params->get("curves", "outputFileName", false);
     scenarioDumpFileName_ = params->get("simulation", "scenariodump", false);
     scenarioOutputName_ = params->get("scenario", "scenarioOutputFile", false);
+    if (scenarioOutputName_.empty())
+        scenarioOutputName_ = params->get("scenarioStatistics", "scenarioOutputFile", false);
     cubeFileName_ = params->get("simulation", "cubeFile", false);
     mktCubeFileName_ = params->get("simulation", "aggregationScenarioDataFileName", false);
     rawCubeFileName_ = params->get("xva", "rawCubeOutputFile", false);

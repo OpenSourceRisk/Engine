@@ -45,7 +45,8 @@ public:
                        const Real regressionVarianceCutoff = Null<Real>(),
                        const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
                        const Handle<YieldTermStructure>& contractCurve = Handle<YieldTermStructure>(),
-                       const Handle<YieldTermStructure>& referenceCurve = Handle<YieldTermStructure>())
+                       const Handle<YieldTermStructure>& referenceCurve = Handle<YieldTermStructure>(),
+                       const Handle<Quote>& conversionFactor = Handle<Quote>())
         : GenericEngine<QuantExt::ForwardBond::arguments, QuantExt::ForwardBond::results>(),
           McMultiLegBaseEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
                                    std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
@@ -58,17 +59,21 @@ public:
         incomeCurve_ = incomeCurve;
         contractCurve_ = contractCurve;
         referenceCurve_ = referenceCurve;
+        conversionFactor_ = conversionFactor;
+
         registerWith(model);
         for (auto& h : discountCurves_)
             registerWith(h);
         registerWith(incomeCurve_);
         registerWith(contractCurve_);
         registerWith(referenceCurve_);
+        registerWith(conversionFactor_);
     }
 
     void calculate() const override;
     void setMember() const;
     double payOff() const;
+    double conversionFactor() const { return conversionFactor_->value(); } ;
 
     class FwdBondAmcCalculator : public McMultiLegBaseEngine::MultiLegBaseAmcCalculator {
     public:
@@ -94,6 +99,7 @@ private:
     Handle<YieldTermStructure> incomeCurve_;
     Handle<YieldTermStructure> contractCurve_;
     Handle<YieldTermStructure> referenceCurve_;
+    Handle<Quote> conversionFactor_;
 
     mutable Real accruedAmount_;
     mutable Real cmpPayment_;
