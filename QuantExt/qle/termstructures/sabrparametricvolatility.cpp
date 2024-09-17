@@ -19,6 +19,7 @@
 #include <qle/models/kienitzlawsonswaynesabrpdedensity.hpp>
 #include <qle/models/normalsabr.hpp>
 #include <qle/termstructures/sabrparametricvolatility.hpp>
+#include <qle/math/flatextrapolation.hpp>
 
 #include <ql/experimental/math/laplaceinterpolation.hpp>
 #include <ql/math/comparison.hpp>
@@ -75,7 +76,7 @@ std::vector<Real> SabrParametricVolatility::getGuess(const std::vector<std::pair
                                                      const Real lognormalShift) const {
     std::vector<Real> result(4);
     for (Size i = 0, j = 0; i < 4; ++i) {
-        if (params[i].second == ParametricVolatility::ParameterCalibration::Fixed) {
+        if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated) {
             result[i] = params[i].first;
         } else {
             switch (i) {
@@ -299,17 +300,19 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
 
     // get atm vol from market smile, converted to the preferred model vol type
 
-    Real atmVol = Null<Real>();
-    for (Size i = 0; i < marketSmile.strikes.size() && atmVol == Null<Real>(); ++i) {
-        if (QuantLib::close_enough(marketSmile.strikes[i], marketSmile.forward)) {
-            atmVol =
-                convert(marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift,
-                        marketSmile.optionTypes.empty() ? boost::none
-                                                        : boost::optional<Option::Type>(marketSmile.optionTypes[i]),
-                        marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward,
-                        preferredOutputQuoteType(), modelLognormalShift, boost::none);
-        }
+    std::vector<Real> x, y;
+    for (Size i = 0; i < marketSmile.strikes.size(); ++i) {
+        x.push_back(marketSmile.strikes[i]);
+        y.push_back(convert(marketSmile.marketQuotes[i], inputMarketQuoteType_, marketSmile.lognormalShift,
+                            marketSmile.optionTypes.empty() ? boost::none
+                                                            : boost::optional<Option::Type>(marketSmile.optionTypes[i]),
+                            marketSmile.timeToExpiry, marketSmile.strikes[i], marketSmile.forward,
+                            preferredOutputQuoteType(), modelLognormalShift, boost::none));
     }
+
+    Interpolation m = LinearFlat().interpolate(x.begin(), x.end(), y.begin());
+    m.enableExtrapolation();
+    Real atmVol = m(marketSmile.forward);
 
     // if there are no free parameters, we pass back fixed parameters (maybe implied alpha) as the result
 
@@ -353,7 +356,7 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
         std::vector<Real> evalSabr(const Array& x) const {
             std::vector<Real> params(4);
             for (Size i = 0, j = 0; i < params_.size(); ++i) {
-                if (params_[i].second == ParametricVolatility::ParameterCalibration::Fixed)
+                if (params_[i].second != ParametricVolatility::ParameterCalibration::Calibrated)
                     params[i] = invParams_[i];
                 else
                     params[i] = x[j++];
@@ -402,6 +405,7 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
     t.inverse_ = [this, f = t.forward_, s = t.lognormalShift_](const std::vector<Real>& y) { return inverse(y, f, s); };
     t.direct_ = [this, f = t.forward_, s = t.lognormalShift_](const std::vector<Real>& x) { return direct(x, f, s); };
 
+    t.atmVol_ = atmVol;
     t.strikes_ = marketSmile.strikes;
     for (Size i = 0; i < marketSmile.marketQuotes.size(); ++i) {
         t.marketQuotes_.push_back(convert(
@@ -432,7 +436,7 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
         if (attempt == 0) {
             // first attempt uses given initial model parameters
             for (Size i = 0, j = 0; i < t.invParams_.size(); ++i) {
-                if (params[i].second != ParametricVolatility::ParameterCalibration::Fixed) {
+                if (params[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
                     guess[j++] = t.invParams_[i];
                 }
             }
@@ -441,7 +445,7 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
             auto g = inverse(getGuess(params, haltonRsg.nextSequence().value, t.forward_, t.lognormalShift_),
                              t.forward_, t.lognormalShift_);
             for (Size i = 0, j = 0; i < g.size(); ++i) {
-                if (params[i].second != ParametricVolatility::ParameterCalibration::Fixed) {
+                if (params[i].second == ParametricVolatility::ParameterCalibration::Calibrated) {
                     guess[j++] = g[i];
                 }
             }
@@ -450,7 +454,7 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
         Problem problem(t, noConstraint, guess);
         try {
             lm.minimize(problem, endCriteria);
-        } catch (...) {
+        } catch (const std::exception& e) {
             continue;
         }
 
@@ -458,12 +462,15 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
         if (thisError < bestError) {
             bestError = thisError;
             for (Size i = 0, j = 0; i < bestResult.size(); ++i) {
-                if (params[i].second == ParametricVolatility::ParameterCalibration::Fixed)
+                if (params[i].second != ParametricVolatility::ParameterCalibration::Calibrated)
                     bestResult[i] = t.invParams_[i];
                 else
                     bestResult[i] = problem.currentValue()[j++];
             }
             bestResult = direct(bestResult, t.forward_, t.lognormalShift_);
+            if (params[0].second == ParametricVolatility::ParameterCalibration::Implied)
+                bestResult =
+                    implyAlpha(bestResult, marketSmile.forward, marketSmile.timeToExpiry, modelLognormalShift, atmVol);
         }
 
         if (bestError < exitEarlyErrorThreshold_)
@@ -494,6 +501,9 @@ std::vector<Real> SabrParametricVolatility::implyAlpha(const std::vector<Real>& 
                                                        const Real tte, const Real shift, const Real atmVol) const {
     QL_REQUIRE(atmVol != Null<Real>(), "SabrParametricVolatility::implyAlpha(): no atm vol given to imply alpha.");
 
+    QL_REQUIRE(params.size() == 4,
+               "SabrParametricVolatility::implyAlpha(), params have wrong size (" << params.size() << "), expected 4");
+
     auto result = params;
 
     switch (modelVariant_) {
@@ -513,6 +523,7 @@ std::vector<Real> SabrParametricVolatility::implyAlpha(const std::vector<Real>& 
         try {
             result[0] = brent.solve(target, 1E-6, params[0], 1E-5);
         } catch (const std::exception& e) {
+            QL_FAIL("SabrParametricVolatility::implyAlpha() failed: " << e.what());
         }
     }
     }
@@ -588,7 +599,7 @@ void SabrParametricVolatility::calculate() {
             calibrationErrors_[key] = error;
             lognormalShifts_[key] = shift;
             noOfAttempts_[key] = noOfAttempts;
-        } catch (const std::exception&) {
+        } catch (const std::exception& e) {
             // all calibration failed -> do not populate params, but interpolate them below
         }
     }
