@@ -130,4 +130,31 @@ bool operator<(const ParametricVolatility::MarketSmile& s, const ParametricVolat
     return false;
 }
 
+QuantExt::ParametricVolatility::ParameterCalibration parseParametricSmileParameterCalibration(const std::string& s) {
+    if (s == "Fixed") {
+        return QuantExt::ParametricVolatility::ParameterCalibration::Fixed;
+    } else if (s == "Calibrated") {
+        return QuantExt::ParametricVolatility::ParameterCalibration::Calibrated;
+    } else if (s == "Implied") {
+        return QuantExt::ParametricVolatility::ParameterCalibration::Implied;
+    } else {
+        QL_FAIL("parseParametricSmileParameterCalibration: '"
+                << s << "' not recognized. Expected one of Fixed, Calibrated, Implied.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, QuantExt::ParametricVolatility::ParameterCalibration c) {
+    switch (c) {
+    case QuantExt::ParametricVolatility::ParameterCalibration::Fixed:
+        return os << "Fixed";
+    case QuantExt::ParametricVolatility::ParameterCalibration::Calibrated:
+        return os << "Calibrated";
+    case QuantExt::ParametricVolatility::ParameterCalibration::Implied:
+        return os << "Implied";
+    default:
+        QL_FAIL("operator<<(ParametricVolatility::ParameterCalibration): enum value "
+                << static_cast<int>(c) << " not handled. This is an internal error.");
+    }
+}
+
 } // namespace QuantExt

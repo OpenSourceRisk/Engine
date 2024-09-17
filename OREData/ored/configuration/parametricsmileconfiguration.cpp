@@ -36,7 +36,8 @@ void ParametricSmileConfiguration::Parameter::fromXML(XMLNode* node) {
                           ? QuantExt::ParametricVolatility::ParameterCalibration::Fixed
                           : QuantExt::ParametricVolatility::ParameterCalibration::Implied;
     } else {
-        calibration = parseParametricSmileParameterCalibration(XMLUtils::getChildValue(node, "Calibration", true));
+        calibration =
+            QuantExt::parseParametricSmileParameterCalibration(XMLUtils::getChildValue(node, "Calibration", true));
     }
 }
 
@@ -108,33 +109,6 @@ const ParametricSmileConfiguration::Parameter& ParametricSmileConfiguration::par
 
 const ParametricSmileConfiguration::Calibration& ParametricSmileConfiguration::calibration() const {
     return calibration_;
-}
-
-QuantExt::ParametricVolatility::ParameterCalibration parseParametricSmileParameterCalibration(const std::string& s) {
-    if (s == "Fixed") {
-        return QuantExt::ParametricVolatility::ParameterCalibration::Fixed;
-    } else if (s == "Calibrated") {
-        return QuantExt::ParametricVolatility::ParameterCalibration::Calibrated;
-    } else if (s == "Implied") {
-        return QuantExt::ParametricVolatility::ParameterCalibration::Implied;
-    } else {
-        QL_FAIL("parseParametricSmileParameterCalibration: '"
-                << s << "' not recognized. Expected one of Fixed, Calibrated, Implied.");
-    }
-}
-
-std::ostream& operator<<(std::ostream& os, QuantExt::ParametricVolatility::ParameterCalibration c) {
-    switch (c) {
-    case QuantExt::ParametricVolatility::ParameterCalibration::Fixed:
-        return os << "Fixed";
-    case QuantExt::ParametricVolatility::ParameterCalibration::Calibrated:
-        return os << "Calibrated";
-    case QuantExt::ParametricVolatility::ParameterCalibration::Implied:
-        return os << "Implied";
-    default:
-        QL_FAIL("operator<<(ParametricVolatility::ParameterCalibration): enum value "
-                << static_cast<int>(c) << " not handled. This is an internal error.");
-    }
 }
 
 } // namespace data

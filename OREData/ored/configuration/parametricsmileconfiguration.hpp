@@ -78,9 +78,5 @@ private:
     Calibration calibration_;
 };
 
-QuantExt::ParametricVolatility::ParameterCalibration parseParametricSmileParameterCalibration(const std::string& s);
-
-std::ostream& operator<<(std::ostream& os, QuantExt::ParametricVolatility::ParameterCalibration type);
-
 } // namespace data
 } // namespace ore

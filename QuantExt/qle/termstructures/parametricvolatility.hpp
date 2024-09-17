@@ -85,4 +85,7 @@ protected:
    (timeToExpiry1, underlyingLength1) < (timeToExpiry2, underlyingLength2)*/
 bool operator<(const ParametricVolatility::MarketSmile& s, const ParametricVolatility::MarketSmile& t);
 
+QuantExt::ParametricVolatility::ParameterCalibration parseParametricSmileParameterCalibration(const std::string& s);
+std::ostream& operator<<(std::ostream& os, QuantExt::ParametricVolatility::ParameterCalibration type);
+
 } // namespace QuantExt
