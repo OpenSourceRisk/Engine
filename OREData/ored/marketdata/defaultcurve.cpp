@@ -232,7 +232,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
     const QuantLib::ext::shared_ptr<DefaultCurveConfig>& configs = curveConfigs.defaultCurveConfig(spec.curveConfigID());
     bool built = false;
     std::string errors;
-    std::string typeStr_;
+    std::string typeStr;
     for (auto const& config : configs->configs()) {
         try {
             recoveryRate_ = Null<Real>();
@@ -266,35 +266,33 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             case DefaultCurveConfig::Config::Type::SpreadCDS:
             case DefaultCurveConfig::Config::Type::Price:
                 buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
-                typeStr_ = "SpreadCDS";
+                typeStr = "SpreadCDS";
                 break;
             case DefaultCurveConfig::Config::Type::HazardRate:
                 buildHazardRateCurve(configs->curveID(), config.second, asof, spec, loader);
-                typeStr_ = "HazardRate";
+                typeStr = "HazardRate";
                 break;
             case DefaultCurveConfig::Config::Type::Benchmark:
                 buildBenchmarkCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
-                typeStr_ = "Benchmark";
+                typeStr = "Benchmark";
                 break;
             case DefaultCurveConfig::Config::Type::MultiSection:
                 buildMultiSectionCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
-                typeStr_ = "MultiSection";
+                typeStr = "MultiSection";
                 break;
             case DefaultCurveConfig::Config::Type::TransitionMatrix:
                 buildTransitionMatrixCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
-                typeStr_ = "TransitionMatrix";
+                typeStr = "TransitionMatrix";
                 break;
             case DefaultCurveConfig::Config::Type::Null:
                 buildNullCurve(configs->curveID(), config.second, asof, spec);
-                typeStr_ = "Null";
+                typeStr = "Null";
                 break;
             default:
                 QL_FAIL("The DefaultCurveConfig type " << static_cast<int>(config.second.type())
                                                        << " was not recognised");
             }
             built = true;
-
-            h_.linkTo(p_);
 
             if (buildCalibrationInfo) {
                 auto calInfo = QuantLib::ext::make_shared<DefaultCurveCalibrationInfo>();
@@ -314,7 +312,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 //}
 
                 // Build calibration structure
-                calInfo->typeStr = typeStr_;
+                calInfo->typeStr = typeStr;
                 calInfo->dayCounter = config.second.dayCounter().name();
                 calInfo->calendar = curve_->refData().calendar.name();
                 calInfo->runningSpread = config.second.runningSpread();
@@ -324,11 +322,10 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                         calInfo->pillarDates.push_back(asof + p);
                 }
                 for (auto const& d : calInfo->pillarDates) {
-                    // Error occurs here...
-                    //calInfo->defaultProb.push_back(p_->defaultProbability(d, true));
-                    //calInfo->survivalProb.push_back(p_->survivalProbability(d, true));
-                    //calInfo->hazardRates.push_back(p_->hazardRate(d, true));
-                    //calInfo->defaultDensities.push_back(p_->defaultDensity(d, true));
+                    calInfo->defaultProb.push_back(curve_->curve()->defaultProbability(d, true));
+                    calInfo->survivalProb.push_back(curve_->curve()->survivalProbability(d, true));
+                    calInfo->hazardRates.push_back(curve_->curve()->hazardRate(d, true));
+                    calInfo->defaultDensities.push_back(curve_->curve()->defaultDensity(d, true));
                 }
 
                 calibrationInfo_ = calInfo;

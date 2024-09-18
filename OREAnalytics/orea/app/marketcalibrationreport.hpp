@@ -96,7 +96,8 @@ public:
                           const std::string& name, const std::string& label) = 0;
 
     // Add default curve data to array
-    virtual void addDefaultCurve(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::DefaultCurveCalibrationInfo> yts,
+    virtual void addDefaultCurve(const QuantLib::Date& refdate,
+                                 QuantLib::ext::shared_ptr<ore::data::DefaultCurveCalibrationInfo> dflt,
                                    std::string const& name, std::string const& label) = 0;
 
     // populate the calibration reports
@@ -145,7 +146,8 @@ public:
                   const std::string& name, const std::string& label) override;
 
     // Add default curve data to array
-    void addDefaultCurve(const QuantLib::Date& refdate, QuantLib::ext::shared_ptr<ore::data::DefaultCurveCalibrationInfo> yts, 
+    void addDefaultCurve(const QuantLib::Date& refdate,
+                         QuantLib::ext::shared_ptr<ore::data::DefaultCurveCalibrationInfo> dflt, 
                         const std::string& name, const std::string& label) override;
 
 private:

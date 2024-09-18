@@ -495,11 +495,11 @@ void MarketCalibrationReport::addDefaultCurve(const QuantLib::Date& refdate,
     addRowReport(defaultStr, id, "runningSpread", "", "", "", info->runningSpread);
 
     for (Size i = 0; i < info->pillarDates.size(); ++i) {
-        //std::string tStr = std::to_string(info->pillarDates.at(i));
-        addRowReport(defaultStr, id, "defaultProbabilty", "", "", "", info->defaultProb.at(i));
-        addRowReport(defaultStr, id, "survivalProbabilty", "", "", "", info->survivalProb.at(i));
-        addRowReport(defaultStr, id, "hazardRates", "", "", "", info->hazardRates.at(i));
-        addRowReport(defaultStr, id, "defaultDensities", "", "", "", info->defaultDensities.at(i));
+        std::string tStr = to_string(info->pillarDates.at(i));
+        addRowReport(defaultStr, id, "defaultProbabilty", tStr, "", "", info->defaultProb.at(i));
+        addRowReport(defaultStr, id, "survivalProbabilty", tStr, "", "", info->survivalProb.at(i));
+        addRowReport(defaultStr, id, "hazardRates", tStr, "", "", info->hazardRates.at(i));
+        addRowReport(defaultStr, id, "defaultDensities", tStr, "", "", info->defaultDensities.at(i));
     }
 
     calibrations_[label][defaultStr].insert(id);

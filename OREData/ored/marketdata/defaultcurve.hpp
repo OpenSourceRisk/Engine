@@ -72,9 +72,6 @@ private:
     QuantLib::ext::shared_ptr<DefaultCurveConfig> curveConfig_;
     Real recoveryRate_;
 
-    RelinkableHandle<DefaultProbabilityTermStructure> h_;
-    QuantLib::ext::shared_ptr<DefaultProbabilityTermStructure> p_;
-
     //! Build a default curve from CDS spread quotes
     void buildCdsCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const QuantLib::Date& asof,
                        const DefaultCurveSpec& spec, const Loader& loader,
