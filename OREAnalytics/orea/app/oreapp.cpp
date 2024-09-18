@@ -983,6 +983,10 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "") {
             setStressAccurary(parseReal(tmp));
         }
+        tmp = params_->get("stress", "precision", false);
+        if (tmp != "") {
+            setStressPrecision((Size)parseReal(tmp));
+        }
     }
 
     /****************

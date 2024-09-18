@@ -65,7 +65,7 @@ public:
                QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = {},
                const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-               bool continueOnError = false);
+               bool continueOnError = false, int stressPrecision = 2);
 
     //! Return set of trades analysed
     const std::set<std::string>& trades() { return trades_; }
@@ -92,6 +92,8 @@ private:
     std::map<std::pair<string, string>, Real> shiftedNPV_, delta_;
     // scenario labels
     std::set<std::string> labels_, trades_;
+    // precision of stress output
+    Size stressPrecision_;
 };
 } // namespace analytics
 } // namespace ore

@@ -178,6 +178,7 @@ public:
     void setStressLowerBoundRatesDiscountFactor(const double value) { stressLowerBoundRatesDiscountFactor_ = value; }
     void setStressUpperBoundRatesDiscountFactor(const double value) { stressUpperBoundRatesDiscountFactor_ = value; }
     void setStressAccurary(const double value) { stressAccurary_ = value; };
+    void setStressPrecision(const Size value) { stressPrecision_ = value; };
     // Setters for VaR
     void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
@@ -563,6 +564,8 @@ public:
         return stressUpperBoundRatesDiscountFactor_;
     }
     double stressAccurary() const { return stressAccurary_; };
+    Size stressPrecision() const { return stressPrecision_; };
+    
     /*****************
      * Getters for VaR
      *****************/
@@ -922,6 +925,7 @@ protected:
     double stressLowerBoundRatesDiscountFactor_;
     double stressUpperBoundRatesDiscountFactor_;
     double stressAccurary_;
+    Size stressPrecision_;
 
     /*****************
      * VAR analytics

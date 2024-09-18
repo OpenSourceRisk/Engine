@@ -44,7 +44,7 @@ StressTest::StressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& po
                        const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams,
                        QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
                        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
-                       const IborFallbackConfig& iborFallbackConfig, bool continueOnError) {
+                       const IborFallbackConfig& iborFallbackConfig, bool continueOnError, int stressPrecision) {
 
     LOG("Run Stress Test");
     DLOG("Build Simulation Market");
@@ -113,6 +113,8 @@ StressTest::StressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& po
         }
     }
     LOG("Stress testing done");
+    
+    stressPrecision_=stressPrecision;
 }
 
 void StressTest::writeReport(const QuantLib::ext::shared_ptr<ore::data::Report>& report, Real outputThreshold) {
@@ -121,7 +123,7 @@ void StressTest::writeReport(const QuantLib::ext::shared_ptr<ore::data::Report>&
     report->addColumn("ScenarioLabel", string());
     report->addColumn("Base NPV", double(), 2);
     report->addColumn("Scenario NPV", double(), 2);
-    report->addColumn("Sensitivity", double(), 6);
+    report->addColumn("Sensitivity", double(), stressPrecision_);
 
     for (auto const& [id, npv] : shiftedNPV_) {
         string tradeId = id.first;
