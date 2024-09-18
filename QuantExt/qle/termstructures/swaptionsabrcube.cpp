@@ -32,7 +32,8 @@ SwaptionSabrCube::SwaptionSabrCube(
     const boost::shared_ptr<SwapIndex>& shortSwapIndexBase,
     const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
     const boost::optional<QuantLib::VolatilityType> outputVolatilityType,
-    const std::map<std::pair<Period, Period>, std::vector<std::pair<Real, bool>>>& initialModelParameters,
+    const std::map<std::pair<Period, Period>, std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
+        initialModelParameters,
     const std::vector<Real>& outputShift, const std::vector<Real>& modelShift,
     const QuantLib::Size maxCalibrationAttempts, const QuantLib::Real exitEarlyErrorThreshold,
     const QuantLib::Real maxAcceptableError)
@@ -118,7 +119,9 @@ void SwaptionSabrCube::performCalculations() const {
     // build market smiles on the grid
 
     std::vector<ParametricVolatility::MarketSmile> marketSmiles;
-    std::map<std::pair<QuantLib::Real, QuantLib::Real>, std::vector<std::pair<Real, bool>>> modelParameters;
+    std::map<std::pair<QuantLib::Real, QuantLib::Real>,
+             std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>
+        modelParameters;
     for (Size i = 0; i < allOptionTenors.size(); ++i) {
         for (Size j = 0; j < allSwapTenors.size(); ++j) {
             Real forward = atmStrike(allOptionTenors[i], allSwapTenors[j]);
