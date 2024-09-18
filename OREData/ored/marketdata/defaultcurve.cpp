@@ -226,10 +226,13 @@ namespace data {
 DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loader,
                            const CurveConfigurations& curveConfigs,
                            map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
-                           map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves) {
+                           map<string, QuantLib::ext::shared_ptr<DefaultCurve>>& defaultCurves,
+                           const bool buildCalibrationInfo) {
+
     const QuantLib::ext::shared_ptr<DefaultCurveConfig>& configs = curveConfigs.defaultCurveConfig(spec.curveConfigID());
     bool built = false;
     std::string errors;
+    std::string typeStr_;
     for (auto const& config : configs->configs()) {
         try {
             recoveryRate_ = Null<Real>();
@@ -257,32 +260,80 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                     }
                 }
             }
+
             // Build the default curve of the requested type
             switch (config.second.type()) {
             case DefaultCurveConfig::Config::Type::SpreadCDS:
             case DefaultCurveConfig::Config::Type::Price:
                 buildCdsCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
+                typeStr_ = "SpreadCDS";
                 break;
             case DefaultCurveConfig::Config::Type::HazardRate:
                 buildHazardRateCurve(configs->curveID(), config.second, asof, spec, loader);
+                typeStr_ = "HazardRate";
                 break;
             case DefaultCurveConfig::Config::Type::Benchmark:
                 buildBenchmarkCurve(configs->curveID(), config.second, asof, spec, loader, yieldCurves);
+                typeStr_ = "Benchmark";
                 break;
             case DefaultCurveConfig::Config::Type::MultiSection:
                 buildMultiSectionCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
+                typeStr_ = "MultiSection";
                 break;
             case DefaultCurveConfig::Config::Type::TransitionMatrix:
                 buildTransitionMatrixCurve(configs->curveID(), config.second, asof, spec, loader, defaultCurves);
+                typeStr_ = "TransitionMatrix";
                 break;
             case DefaultCurveConfig::Config::Type::Null:
                 buildNullCurve(configs->curveID(), config.second, asof, spec);
+                typeStr_ = "Null";
                 break;
             default:
                 QL_FAIL("The DefaultCurveConfig type " << static_cast<int>(config.second.type())
                                                        << " was not recognised");
             }
             built = true;
+
+            h_.linkTo(p_);
+
+            if (buildCalibrationInfo) {
+                auto calInfo = QuantLib::ext::make_shared<DefaultCurveCalibrationInfo>();
+
+                // Get Report Config details first
+                // TO DO
+                //try {
+                //    ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigYieldCurves(), curveConfig_->reportConfig());
+                //    std::vector<Date> pillarDates = *rc.pillarDates();
+                //    if (!pillarDates.empty()) {
+                //        calibrationInfo_->pillarDates.clear();
+                //        for (auto const& pd : pillarDates)
+                //            calibrationInfo_->pillarDates.push_back(pd);
+                //    }
+                //} catch (...) {
+                //    DLOG("Report configuration for default curves not set - using predefined/default pillar dates.");
+                //}
+
+                // Build calibration structure
+                calInfo->typeStr = typeStr_;
+                calInfo->dayCounter = config.second.dayCounter().name();
+                calInfo->calendar = curve_->refData().calendar.name();
+                calInfo->runningSpread = config.second.runningSpread();
+
+                if (calInfo->pillarDates.empty()) {
+                    for (auto const& p : DefaultCurveCalibrationInfo::defaultPeriods)
+                        calInfo->pillarDates.push_back(asof + p);
+                }
+                for (auto const& d : calInfo->pillarDates) {
+                    // Error occurs here...
+                    //calInfo->defaultProb.push_back(p_->defaultProbability(d, true));
+                    //calInfo->survivalProb.push_back(p_->survivalProbability(d, true));
+                    //calInfo->hazardRates.push_back(p_->hazardRate(d, true));
+                    //calInfo->defaultDensities.push_back(p_->defaultDensity(d, true));
+                }
+
+                calibrationInfo_ = calInfo;
+            }
+
             break;
         } catch (exception& e) {
             std::ostringstream message;

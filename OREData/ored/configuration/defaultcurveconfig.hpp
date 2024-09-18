@@ -26,6 +26,7 @@
 #include <boost/optional.hpp>
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
@@ -117,6 +118,7 @@ public:
         QuantLib::Period& indexTerm() { return indexTerm_; }
         boost::optional<bool>& implyDefaultFromMarket() { return implyDefaultFromMarket_; }
         bool& allowNegativeRates() { return allowNegativeRates_; }
+        const ReportConfig& reportConfig() const { return reportConfig_; }
         //@}
 
     private:
@@ -141,6 +143,7 @@ public:
         vector<string> multiSectionSwitchDates_;
         string initialState_;
         vector<string> states_;
+        ReportConfig reportConfig_;
 
         /*! Indicates if the reference entity's default status should be implied from the market data. If \c true, this
             behaviour is active and if \c false it is not. If not explicitly set, it is assumed to be \c false.

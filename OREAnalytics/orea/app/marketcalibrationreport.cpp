@@ -138,6 +138,13 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
             addIrVol(calibrationInfo->asof, c.second, c.first, label);
         }
     }
+
+    if (calibrationFilters_.mdFilterDefCurves) {
+        // default curves
+        for (auto const& c : calibrationInfo->defaultCurveCalibrationInfo) {
+            addDefaultCurve(calibrationInfo->asof, c.second, c.first, label);
+        }
+    }
 }
 
 MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationFilter, 
@@ -466,5 +473,37 @@ void MarketCalibrationReport::addIrVol(const QuantLib::Date& refdate,
 
     calibrations_[label][type].insert(id);
 }
+
+// Add default curve data to array
+void MarketCalibrationReport::addDefaultCurve(const QuantLib::Date& refdate, 
+                                              QuantLib::ext::shared_ptr<ore::data::DefaultCurveCalibrationInfo> info,
+                                              const std::string& id, const std::string& label) {
+    if (info == nullptr)
+        return;
+    
+    const string defaultStr = "defaultCurve";
+
+    // check if we have already processed this curve
+    if (checkCalibrations(label, defaultStr, id)) {
+        DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
+        return;
+    }
+
+    addRowReport(defaultStr, id, "type", "", "", "", info->typeStr);
+    addRowReport(defaultStr, id, "dayCounter", "", "", "", info->dayCounter);
+    addRowReport(defaultStr, id, "calendar", "", "", "", info->calendar);
+    addRowReport(defaultStr, id, "runningSpread", "", "", "", info->runningSpread);
+
+    for (Size i = 0; i < info->pillarDates.size(); ++i) {
+        //std::string tStr = std::to_string(info->pillarDates.at(i));
+        addRowReport(defaultStr, id, "defaultProbabilty", "", "", "", info->defaultProb.at(i));
+        addRowReport(defaultStr, id, "survivalProbabilty", "", "", "", info->survivalProb.at(i));
+        addRowReport(defaultStr, id, "hazardRates", "", "", "", info->hazardRates.at(i));
+        addRowReport(defaultStr, id, "defaultDensities", "", "", "", info->defaultDensities.at(i));
+    }
+
+    calibrations_[label][defaultStr].insert(id);
+}
+
 } // namespace analytics
 } // namespace ore
