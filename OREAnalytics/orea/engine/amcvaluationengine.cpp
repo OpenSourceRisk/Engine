@@ -800,12 +800,15 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
             cubeFactory_(today_, portfolios[i]->ids(), scenarioGeneratorData_->getGrid()->valuationDates(), nSamples_));
     }
 
-    // precompute sim dates
+    // precompute sim dates and close out dates for sticky run (if run is not sticky, the latter vector will be empty)
 
-    std::vector<Date> simDates =
-        scenarioGeneratorData_->withCloseOutLag() && !scenarioGeneratorData_->withMporStickyDate()
-            ? scenarioGeneratorData_->getGrid()->dates()
-            : scenarioGeneratorData_->getGrid()->valuationDates();
+    std::vector<Date> simDates, stickyCloseOutDates;
+    if (scenarioGeneratorData_->withMporStickyDate()) {
+        simDates = scenarioGeneratorData_->getGrid()->valuationDates();
+        stickyCloseOutDates = scenarioGeneratorData_->getGrid()->closeOutDates();
+    } else {
+        simDates = scenarioGeneratorData_->getGrid()->dates();
+    }
 
     // build progress indicator consolidating the results from the threads
 
@@ -869,8 +872,8 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
     for (Size i = 0; i < eff_nThreads; ++i) {
 
-        auto job = [this, obsMode, &portfoliosAsString, &loaders, &simDates, &progressIndicator, &pathData,
-                    &marketModelBuilder](int id) -> resultType {
+        auto job = [this, obsMode, &portfoliosAsString, &loaders, &simDates, &stickyCloseOutDates, &progressIndicator,
+                    &pathData, &marketModelBuilder](int id) -> resultType {
 
             // set thread local singletons
 
@@ -899,7 +902,8 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
                 auto engineFactory = QuantLib::ext::make_shared<EngineFactory>(
                     edCopy, market, configurations, referenceData_, iborFallbackConfig_,
-                    EngineBuilderFactory::instance().generateAmcEngineBuilders(model, simDates), true);
+                    EngineBuilderFactory::instance().generateAmcEngineBuilders(model, simDates, stickyCloseOutDates),
+                    true);
 
                 portfolio->build(engineFactory, "amc-val-engine", true);
 

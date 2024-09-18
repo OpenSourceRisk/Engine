@@ -158,8 +158,9 @@ protected:
 class CamAmcSwapEngineBuilder : public SwapEngineBuilderBase {
 public:
     CamAmcSwapEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                            const std::vector<Date>& simulationDates)
-        : SwapEngineBuilderBase("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
+                            const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
+        : SwapEngineBuilderBase("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates),
+          stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
@@ -173,6 +174,7 @@ private:
                                                    const std::vector<Size>& externalModelIndices);
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
 };
 
 //! Implementation of SwapEngineBuilderBase implementing AMC-CG interface
@@ -181,8 +183,9 @@ private:
 class AmcCgSwapEngineBuilder : public SwapEngineBuilderBase {
 public:
     AmcCgSwapEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
-                            const std::vector<Date>& simulationDates)
-        : SwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates) {}
+                           const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
+        : SwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates),
+          stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
@@ -192,6 +195,7 @@ protected:
 private:
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data
