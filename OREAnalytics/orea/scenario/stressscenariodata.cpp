@@ -168,11 +168,57 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                  child = XMLUtils::getNextSibling(child)) {
                 string ccypair = XMLUtils::getAttribute(child, "ccypair");
                 LOG("Loading stress parameters for FX vols " << ccypair);
-                VolShiftData data;
-                data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType"));
-                data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
-                data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
-                test.fxVolShifts[ccypair] = data;
+                auto shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType"));
+                XMLNode* shiftsNode = XMLUtils::getChildNode(child, "Shifts");
+                XMLNode* shiftExpiriesNode = XMLUtils::getChildNode(child, "ShiftExpiries");
+                XMLNode* weightedShiftsNode = XMLUtils::getChildNode(child, "WeightedShifts");
+                if ((shiftsNode != nullptr) && (shiftExpiriesNode != nullptr)) {
+                    FXVolShiftData data;
+                    data.mode = FXVolShiftData::Explicit;
+                    data.shiftType = shiftType;
+                    data.shifts = XMLUtils::getNodeValueAsDoublesCompact(shiftsNode);
+                    data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+                    QL_REQUIRE(data.shifts.size() == data.shiftExpiries.size(),
+                               "Length of shifts " << data.shifts.size() << " does not match length of shiftExpiries "
+                                                   << data.shiftExpiries.size()
+                                                   << ". Please check stresstest config for FxVol " << ccypair);
+                    test.fxVolShifts[ccypair] = data;
+                } else if (weightedShiftsNode != nullptr) {
+                    std::string weightingSchema = XMLUtils::getChildValue(weightedShiftsNode, "WeightingSchema", true);
+                    boost::to_lower(weightingSchema);
+                    FXVolShiftData data;
+                    data.shiftType = shiftType;
+                    if (weightingSchema == "unadjusted"){
+                        data.mode = FXVolShiftData::Unadjusted;
+                        data.shifts = std::vector<Real>(1, XMLUtils::getChildValueAsDouble(weightedShiftsNode, "Shift", true));
+                        data.shiftExpiries =
+                            std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(weightedShiftsNode, "Tenor", true));
+                    } else if(weightingSchema == "weighted"){
+                        data.mode = FXVolShiftData::Weighted;
+                        data.shifts =
+                            std::vector<Real>(1, XMLUtils::getChildValueAsDouble(weightedShiftsNode, "Shift", true));
+                        data.shiftExpiries =
+                            std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(weightedShiftsNode, "Tenor", true));
+                        data.weights =
+                            XMLUtils::getChildrenValuesAsDoublesCompact(weightedShiftsNode, "ShiftWeights", true);
+                        data.weightTenors =
+                            XMLUtils::getChildrenValuesAsPeriods(weightedShiftsNode, "WeightTenors", true);
+                        QL_REQUIRE(data.weights.size() == data.weightTenors.size(),
+                                   "Length of weights "
+                                       << data.weights.size() << " does not match length of weightTenors "
+                                       << data.weightTenors.size() << ". Please check stresstest config for FxVol "
+                                       << ccypair);
+                        
+                    } else{
+                        QL_FAIL("FxVolStressTestData: unexpected weighting scheme, got "
+                                << weightingSchema << " expected 'unadjusted' or 'weighted', please check config for "<< ccypair);
+                    }
+                    test.fxVolShifts[ccypair] = data;
+                } else{
+                    QL_FAIL("Expect either Shifts and Shiftsexpiries nodes or a WeightedShifts node, please check config "
+                         "for FxVolStressScenario "
+                         << ccypair);
+                }
             }
         }
         LOG("Get Equity spot stress parameters");
@@ -329,6 +375,48 @@ void volShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
     }
 }
 
+
+void fxVolDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
+                       const std::map<std::string, StressTestScenarioData::FXVolShiftData>& shiftdata,
+                       const std::string& identifier, const std::string& nodeName, const std::string& parentNodeName) {
+    auto parentNode = XMLUtils::addChild(doc, node, parentNodeName);
+    for (const auto& [key, data] : shiftdata) {
+        if (data.mode == StressTestScenarioData::FXVolShiftData::Explicit) {
+            auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
+            XMLUtils::addAttribute(doc, childNode, identifier, key);
+            XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data.shiftType));
+            XMLUtils::addGenericChildAsList(doc, childNode, "Shifts", data.shifts);
+            XMLUtils::addGenericChildAsList(doc, childNode, "ShiftExpiries", data.shiftExpiries);
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::Unadjusted) {
+            auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
+            XMLUtils::addAttribute(doc, childNode, identifier, key);
+            auto weightedShiftsNode = XMLUtils::addChild(doc, childNode, "WeightedShifts");
+            XMLUtils::addChild(doc, weightedShiftsNode, "WeightingSchema", "Unadjusted");
+            XMLUtils::addChild(doc, weightedShiftsNode, "Shift", data.shifts.front());
+            XMLUtils::addChild(doc, weightedShiftsNode, "Tenor", data.shiftExpiries.front());
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::Weighted) {
+            QL_REQUIRE(data.shifts.size() == 1, "Internal Error: WeightedShift should have only one shift, please check construction of FxVolShiftData");
+            QL_REQUIRE(
+                data.shiftExpiries.size() == 1,
+                "Internal Error: WeightedShift should have only one shift, please check construction of FxVolShiftData");
+            auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
+            XMLUtils::addAttribute(doc, childNode, identifier, key);
+            auto weightedShiftsNode = XMLUtils::addChild(doc, childNode, "WeightedShifts");
+            XMLUtils::addChild(doc, weightedShiftsNode, "WeightingSchema", "Weighted");
+            XMLUtils::addChild(doc, weightedShiftsNode, "Shift", data.shifts.front());
+            XMLUtils::addChild(doc, weightedShiftsNode, "Tenor", data.shiftExpiries.front());
+            XMLUtils::addGenericChildAsList(doc, weightedShiftsNode, "ShiftWeights", data.weights);
+            XMLUtils::addGenericChildAsList(doc, weightedShiftsNode, "WeightTenors", data.weightTenors);
+        } else {
+            QL_FAIL("internal error: unexpected FxVolShiftData, expected Explicit Shifts, Unadjusted or weighted shifts, contact dev");
+        }
+    }
+}
+
+
+
+
+
 void spotShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
                         const std::map<std::string, StressTestScenarioData::SpotShiftData>& data,
                         const std::string& identifier, const std::string& nodeName) {
@@ -411,7 +499,7 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
         volShiftDataToXml(doc, testNode, test.equityVolShifts, "equity", "EquityVolatility", "EquityVolatilities");
         // FX
         spotShiftDataToXml(doc, testNode, test.fxShifts, "ccypair", "FxSpot");
-        volShiftDataToXml(doc, testNode, test.fxVolShifts, "ccypair", "FxVolatility", "FxVolatilities");
+        fxVolDataToXml(doc, testNode, test.fxVolShifts, "ccypair", "FxVolatility", "FxVolatilities");
     }
     return node;
 }
