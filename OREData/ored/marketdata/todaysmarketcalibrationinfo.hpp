@@ -168,6 +168,26 @@ struct IrVolCalibrationInfo {
     std::vector<std::string> messages;
 };
 
+// cpi vols
+
+struct CpiVolCalibrationInfo {
+    std::string dayCounter;
+    std::string calendar;
+    bool isArbitrageFree;
+    std::vector<QuantLib::Date> expiryDates;
+    std::vector<QuantLib::Date> optionObservationDates;
+    std::vector<double> times;
+    std::vector<double> optionLifeTimes;
+    std::vector<double> forwards;
+    std::vector<double> strikes;
+    std::vector<std::vector<double>> strikeGridProb;
+    std::vector<std::vector<double>> strikeGridImpliedVolatility;
+    std::vector<std::vector<bool>> strikeGridCallSpreadArbitrage;
+    std::vector<std::vector<bool>> strikeGridButterflyArbitrage;
+    std::vector<double> forwardCPI;
+    std::vector<std::vector<double>> strikeCPI;
+};
+
 // main container
 
 struct TodaysMarketCalibrationInfo {
@@ -188,6 +208,8 @@ struct TodaysMarketCalibrationInfo {
     std::map<std::string, QuantLib::ext::shared_ptr<IrVolCalibrationInfo>> irVolCalibrationInfo;
     // comm vols
     std::map<std::string, QuantLib::ext::shared_ptr<FxEqCommVolCalibrationInfo>> commVolCalibrationInfo;
+    // cpi vols
+    std::map<std::string, QuantLib::ext::shared_ptr<CpiVolCalibrationInfo>> cpiVolCalibrationInfo;
 };
 
 } // namespace data

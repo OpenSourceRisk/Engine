@@ -199,6 +199,10 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     useLastAvailableFixingDate_ =
         XMLUtils::getChildValueAsBool(node, "UseLastFixingDate", false, false);
     populateRequiredCurveIds();
+
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        reportConfig_.fromXML(tmp);
+    }
 }
 
 XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
@@ -251,6 +255,7 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "Conventions", conventions_);
     if (useLastAvailableFixingDate_)
         XMLUtils::addChild(doc, node, "UseLastFixingDate", useLastAvailableFixingDate_);
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     return node;
 }
 } // namespace data
