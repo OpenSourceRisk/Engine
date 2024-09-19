@@ -93,6 +93,12 @@ void ReportConfig::fromXML(XMLNode* node) {
     } else {
         underlyingTenors_ = boost::none;
     }
+
+    if (auto tmp = XMLUtils::getChildNode(node, "PillarTenors")) {
+        pillarTenors_ = parseListOfValues<Period>(XMLUtils::getNodeValue(tmp), &parsePeriod);
+    } else {
+        pillarTenors_ = boost::none;
+    }
 }
 
 XMLNode* ReportConfig::toXML(XMLDocument& doc) const {
@@ -119,6 +125,8 @@ XMLNode* ReportConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addGenericChildAsList(doc, node, "Pillar Dates", *pillarDates_);
     if (underlyingTenors_)
         XMLUtils::addGenericChildAsList(doc, node, "UnderlyingTenors", *underlyingTenors_);
+    if (pillarTenors_)
+        XMLUtils::addGenericChildAsList(doc, node, "PillarTenors", *pillarTenors_);
     return node;
 }
 
@@ -134,6 +142,7 @@ ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const Repor
     std::vector<Period> expiries;
     std::vector<Date> pillarDates;
     std::vector<Period> underlyingTenors;
+    std::vector<Period> pillarTenors;
 
     if (localConfig.reportOnDeltaGrid())
         reportOnDeltaGrid = *localConfig.reportOnDeltaGrid();
@@ -190,8 +199,13 @@ ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const Repor
     else if (globalConfig.underlyingTenors())
         underlyingTenors = *globalConfig.underlyingTenors();
 
+    if (localConfig.pillarTenors())
+        pillarTenors = *localConfig.pillarTenors();
+    else if (globalConfig.pillarTenors())
+        pillarTenors = *globalConfig.pillarTenors();
+
     return ReportConfig(reportOnDeltaGrid, reportOnMoneynessGrid, reportOnStrikeGrid, reportOnStrikeSpreadGrid, deltas,
-                        moneyness, strikes, strikeSpreads, expiries, pillarDates, underlyingTenors);
+                        moneyness, strikes, strikeSpreads, expiries, pillarDates, underlyingTenors, pillarTenors);
 }
 
 } // namespace data

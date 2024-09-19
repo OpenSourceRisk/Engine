@@ -37,6 +37,7 @@ namespace ore {
 namespace data {
 using ore::data::Conventions;
 using ore::data::CurveConfigurations;
+using ore::data::DefaultCurveConfig;
 using QuantLib::Date;
 
 class YieldCurve;
@@ -69,7 +70,6 @@ private:
     DefaultCurveSpec spec_;
     QuantLib::ext::shared_ptr<QuantExt::CreditCurve> curve_;
     QuantLib::ext::shared_ptr<DefaultCurveCalibrationInfo> calibrationInfo_;
-    QuantLib::ext::shared_ptr<DefaultCurveConfig> curveConfig_;
     Real recoveryRate_;
 
     //! Build a default curve from CDS spread quotes

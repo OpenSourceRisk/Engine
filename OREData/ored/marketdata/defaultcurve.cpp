@@ -298,18 +298,18 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 auto calInfo = QuantLib::ext::make_shared<DefaultCurveCalibrationInfo>();
 
                 // Get Report Config details first
-                // TO DO
-                //try {
-                //    ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigYieldCurves(), curveConfig_->reportConfig());
-                //    std::vector<Date> pillarDates = *rc.pillarDates();
-                //    if (!pillarDates.empty()) {
-                //        calibrationInfo_->pillarDates.clear();
-                //        for (auto const& pd : pillarDates)
-                //            calibrationInfo_->pillarDates.push_back(pd);
-                //    }
-                //} catch (...) {
-                //    DLOG("Report configuration for default curves not set - using predefined/default pillar dates.");
-                //}
+                try {
+                    ReportConfig rc =
+                        effectiveReportConfig(curveConfigs.reportConfigDefaultCurves(), configs->reportConfig());
+                    std::vector<QuantLib::Period> pillars = *rc.pillarTenors();
+                    if (!pillars.empty()) {
+                        calInfo->pillarDates.clear();
+                        for (auto const& p : pillars)
+                            calInfo->pillarDates.push_back(asof + p);
+                    }
+                } catch (...) {
+                    DLOG("Report configuration for default curves not set - using predefined/default pillar dates.");
+                }
 
                 // Build calibration structure
                 calInfo->typeStr = typeStr;
