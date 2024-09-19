@@ -202,6 +202,10 @@ protected:
         std::vector<Filter> exercised_;
     };
 
+    // generate the mc path values of the model process
+    void generatePathValues(const std::vector<Real>& simulationTimes,
+                            std::vector<std::vector<RandomVariable>>& pathValues) const;
+
     // the model training logic
     void calculateModels(const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaTimes,
                          const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
