@@ -345,7 +345,7 @@ LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, con
             yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
     return buildMcEngine([this](const std::string& p, const std::vector<std::string>& q, const bool m,
                                 const std::string& d) { return this->engineParameter(p, q, m, d); },
-                         lgm, yts, modelIndex, {}, {});
+                         lgm, yts, modelIndex, simulationDates_, stickyCloseOutDates_);
 } // LgmCam engineImpl
 
 } // namespace data
