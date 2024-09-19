@@ -616,6 +616,8 @@ void InflationCapFloorVolCurve::setCalibrationInfo(
     const CurveConfigurations& curveConfigs,
     map<string, QuantLib::ext::shared_ptr<InflationCurve>>& inflationCurves) {
 
+    QL_REQUIRE(cpiVolSurface_, "CPI vol surface cannot be null");
+
     ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigInflationCapFloorVols(), config->reportConfig());
 
     std::vector<Real> strikes = *rc.strikes();
