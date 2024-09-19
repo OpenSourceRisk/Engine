@@ -81,30 +81,31 @@ void ForwardRateAgreement::build(const QuantLib::ext::shared_ptr<EngineFactory>&
 }
 
 const std::map<std::string, boost::any>& ForwardRateAgreement::additionalData() const {
+    QL_REQUIRE(instrument_ != nullptr, "no internal instrument set");
+    QuantLib::ext::shared_ptr<QuantLib::Swap> swap =
+        QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
+    QL_REQUIRE(swap != nullptr, "expect underlying ql instrument to be a swap");
+    QL_REQUIRE(swap->numberOfLegs() == 1, "expect underlying ql instrument to be a swap with one leg");
+    QL_REQUIRE(swap->leg(0).size() == 1, "expect that the underlying instrument is a swap with exaclty one cashflow");
+    const auto& cf = swap->leg(0)[0];
+    auto oncpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cf);
+    auto iborcpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::IborFraCoupon>(cf);
+    QL_REQUIRE(oncpn != nullptr || iborcpn != nullptr,
+               "unexpected coupon type, expect OvernightIndexedCoupon or IborFraCoupon, contact dev, skip adding "
+               "implied_future_rate to additional results");
     try {
-        QuantLib::ext::shared_ptr<QuantLib::Swap> swap =
-            QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
-        QL_REQUIRE(swap != nullptr, "expect underlying ql instrument to be a swap");
-        QL_REQUIRE(swap->numberOfLegs() == 1, "expect underlying ql instrument to be a swap with one leg");
-        QL_REQUIRE(swap->leg(0).size() == 1,
-                   "expect that the underlying instrument is a swap with exaclty one cashflow");
-        const auto& cf = swap->leg(0)[0];
-        auto oncpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(cf);
+        double fairRate = 0.0;
         if (oncpn != nullptr) {
-            auto fairRate = oncpn->effectiveIndexFixing();
-            additionalData_["implied_future_rate"] = 100. * (1.0 - fairRate);
-        } else if (auto cpn = QuantLib::ext::dynamic_pointer_cast<QuantExt::IborFraCoupon>(cf)) {
-            auto fairRate = cpn->indexFixing();
-            additionalData_["implied_future_rate"] = 100. * (1.0 - fairRate);
+            fairRate = oncpn->effectiveIndexFixing();
         } else {
-            QL_FAIL("unexpected coupon type, expect "
-                    "OvernightIndexedCoupon or IborFraCoupon, contact dev, skip adding "
-                    "implied_future_rate to additional results");
+            fairRate = iborcpn->indexFixing();
         }
+        additionalData_["implied_future_rate"] = 100. * (1.0 - fairRate);
     } catch (const std::exception& e) {
-        StructuredTradeWarningMessage(id(), tradeType(), "Internal warning",
-                                      "additionalData(): skip adding implied_future_rate to additional results, got " +
-                                          ore::data::to_string(e.what()))
+        StructuredTradeWarningMessage(
+            id(), tradeType(), "Internal warning",
+            "additionalData(): skip adding implied_future_rate to additional results, got unexpected error:" +
+                ore::data::to_string(e.what()))
             .log();
     }
     return additionalData_;
