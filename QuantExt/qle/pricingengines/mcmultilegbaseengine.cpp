@@ -48,14 +48,18 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
     const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
     const LsmBasisSystem::PolynomialType polynomType, const SobolBrownianGenerator::Ordering ordering,
     SobolRsg::DirectionIntegers directionIntegers, const std::vector<Handle<YieldTermStructure>>& discountCurves,
-    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices, const bool minimalObsDate,
-    const RegressorModel regressorModel, const Real regressionVarianceCutoff)
+    const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
+    const std::vector<Size>& externalModelIndices, const bool minimalObsDate, const RegressorModel regressorModel,
+    const Real regressionVarianceCutoff, const bool recalibrateOnStickyCloseOutDates,
+    const bool reevaluateExerciseInStickyRun)
     : model_(model), calibrationPathGenerator_(calibrationPathGenerator), pricingPathGenerator_(pricingPathGenerator),
       calibrationSamples_(calibrationSamples), pricingSamples_(pricingSamples), calibrationSeed_(calibrationSeed),
       pricingSeed_(pricingSeed), polynomOrder_(polynomOrder), polynomType_(polynomType), ordering_(ordering),
       directionIntegers_(directionIntegers), discountCurves_(discountCurves), simulationDates_(simulationDates),
       externalModelIndices_(externalModelIndices), minimalObsDate_(minimalObsDate), regressorModel_(regressorModel),
-      regressionVarianceCutoff_(regressionVarianceCutoff) {
+      regressionVarianceCutoff_(regressionVarianceCutoff),
+      recalibrateOnStickyCloseOutDates_(recalibrateOnStickyCloseOutDates),
+      reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun) {
 
     if (discountCurves_.empty())
         discountCurves_.resize(model_->components(CrossAssetModel::AssetType::IR));
@@ -947,10 +951,15 @@ void McMultiLegBaseEngine::calculate() const {
 
     // construct the amc calculator
 
+    // TODO populate the val and sticky closeout dates models properly
     amcCalculator_ = QuantLib::ext::make_shared<MultiLegBaseAmcCalculator>(
-        externalModelIndices_, optionSettlement_, exerciseXvaTimes, exerciseTimes, xvaTimes, regModelUndDirty,
-        regModelUndExInto, regModelContinuationValue, regModelOption, resultValue_,
-        model_->stateProcess()->initialValues(), model_->irlgm1f(0)->currency());
+        externalModelIndices_, optionSettlement_, exerciseXvaTimes, exerciseTimes, xvaTimes,
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelUndDirty, regModelUndDirty},
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelUndExInto, regModelUndExInto},
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelContinuationValue,
+                                                                          regModelContinuationValue},
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelOption, regModelOption}, resultValue_,
+        model_->stateProcess()->initialValues(), model_->irlgm1f(0)->currency(), reevaluateExerciseInStickyRun_);
 }
 
 QuantLib::ext::shared_ptr<AmcCalculator> McMultiLegBaseEngine::amcCalculator() const { return amcCalculator_; }
@@ -958,16 +967,16 @@ QuantLib::ext::shared_ptr<AmcCalculator> McMultiLegBaseEngine::amcCalculator() c
 McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
     const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
     const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
-    const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndDirty,
-    const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndExInto,
-    const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelContinuationValue,
-    const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelOption, const Real resultValue,
-    const Array& initialState, const Currency& baseCurrency)
+    const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndDirty,
+    const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndExInto,
+    const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelContinuationValue,
+    const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelOption, const Real resultValue,
+    const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun)
     : externalModelIndices_(externalModelIndices), settlement_(settlement), exerciseXvaTimes_(exerciseXvaTimes),
       exerciseTimes_(exerciseTimes), xvaTimes_(xvaTimes), regModelUndDirty_(regModelUndDirty),
       regModelUndExInto_(regModelUndExInto), regModelContinuationValue_(regModelContinuationValue),
       regModelOption_(regModelOption), resultValue_(resultValue), initialState_(initialState),
-      baseCurrency_(baseCurrency) {}
+      baseCurrency_(baseCurrency), reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun) {}
 
 std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalculator::simulatePath(
     const std::vector<QuantLib::Real>& pathTimes, const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
@@ -984,10 +993,12 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
                    << relevantPathIndex.size() << ") and xvaTimes (" << xvaTimes_.size() << ") - internal error.");
 
     bool stickyCloseOutRun = false;
+    std::size_t regModelIndex = 0;
 
     for (size_t i = 0; i < relevantPathIndex.size(); ++i) {
         if (relevantPathIndex[i] != relevantTimeIndex[i]) {
             stickyCloseOutRun = true;
+            regModelIndex = 1;
             break;
         }
     }
@@ -1024,7 +1035,7 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
             QL_REQUIRE(ind < exerciseXvaTimes_.size(),
                        "MultiLegBaseAmcCalculator::simulatePath(): internal error, xva time "
                            << t << " not found in exerciseXvaTimes vector.");
-            result[++counter] = regModelUndDirty_[ind].apply(initialState_, effPaths, xvaTimes_);
+            result[++counter] = regModelUndDirty_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
         }
         return result;
     }
@@ -1032,7 +1043,7 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
     /* if we have an exercise we need to determine the exercise indicators except for a sticky run
        where we reuse the last saved indicators */
 
-    if (!stickyCloseOutRun) {
+    if (!stickyCloseOutRun || reevaluateExerciseInStickyRun_) {
 
         exercised_ = std::vector<Filter>(exerciseTimes_.size() + 1, Filter(samples, false));
         Size counter = 0;
@@ -1047,9 +1058,10 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
 
             // make the exercise decision
 
-            RandomVariable exerciseValue = regModelUndExInto_[ind].apply(initialState_, effPaths, xvaTimes_);
+            RandomVariable exerciseValue =
+                regModelUndExInto_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
             RandomVariable continuationValue =
-                regModelContinuationValue_[ind].apply(initialState_, effPaths, xvaTimes_);
+                regModelContinuationValue_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
 
             exercised_[counter + 1] = !exercised_[counter] && exerciseValue > continuationValue &&
                                       exerciseValue > RandomVariable(samples, 0.0);
@@ -1076,7 +1088,8 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
 
         if (xvaTimes_.find(t) != xvaTimes_.end()) {
 
-            RandomVariable optionValue = regModelOption_[counter].apply(initialState_, effPaths, xvaTimes_);
+            RandomVariable optionValue =
+                regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
 
             /* Exercise value is "undExInto" if we are in the period between the date on which the exercise happend and
                the next exercise date after that, otherwise it is the full dirty npv. This assumes that two exercise
@@ -1091,9 +1104,10 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
                appropriately adjusted to the coupon periods. The worst that can happen is that the exercised value
                uses the full dirty npv at a too early time. */
 
-            RandomVariable exercisedValue = conditionalResult(
-                exercised_[exerciseCounter], regModelUndExInto_[counter].apply(initialState_, effPaths, xvaTimes_),
-                regModelUndDirty_[counter].apply(initialState_, effPaths, xvaTimes_));
+            RandomVariable exercisedValue =
+                conditionalResult(exercised_[exerciseCounter],
+                                  regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
+                                  regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
 
             if (settlement_ == Settlement::Type::Cash) {
                 exercisedValue = applyInverseFilter(exercisedValue, cashExerciseValueWasAccountedForOnXvaTime);
@@ -1308,4 +1322,4 @@ McMultiLegBaseEngine::RegressionModel::apply(const Array& initialState,
     return conditionalExpectation(regressor, basisFns_, regressionCoeffs_);
 }
 
-} // namespace QuantExt
+        } // namespace QuantExt

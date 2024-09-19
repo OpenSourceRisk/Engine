@@ -198,14 +198,14 @@ public:
           stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId, const bool hasCreditRisk,
-                           const string& securityId, const string& referenceCurveId) override;
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
+                                                                const bool hasCreditRisk, const string& securityId,
+                                                                const string& referenceCurveId) override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::ext::shared_ptr<QuantExt::LGM>& lgm,
-                                                   const Handle<YieldTermStructure>& discountCurve,
-                                                   const std::vector<Date>& simulationDates,
-                                                   const std::vector<Size>& externalModelIndices);
+                                                           const Handle<YieldTermStructure>& discountCurve,
+                                                           const std::vector<Size>& externalModelIndices);
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
     const std::vector<Date> stickyCloseOutDates_;

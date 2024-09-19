@@ -79,9 +79,11 @@ protected:
         const SobolRsg::DirectionIntegers directionIntegers,
         const std::vector<Handle<YieldTermStructure>>& discountCurves = std::vector<Handle<YieldTermStructure>>(),
         const std::vector<Date>& simulationDates = std::vector<Date>(),
+        const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
         const RegressorModel regressorModel = RegressorModel::Simple,
-        const Real regressionVarianceCutoff = Null<Real>());
+        const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
+        const bool reevaluateExerciseInStickyRun = false);
 
     // run calibration and pricing (called from derived engines)
     void calculate() const;
@@ -107,10 +109,13 @@ protected:
     SobolRsg::DirectionIntegers directionIntegers_;
     std::vector<Handle<YieldTermStructure>> discountCurves_;
     std::vector<Date> simulationDates_;
+    std::vector<Date> stickyCloseOutDates_;
     std::vector<Size> externalModelIndices_;
     bool minimalObsDate_;
     RegressorModel regressorModel_;
     Real regressionVarianceCutoff_;
+    bool recalibrateOnStickyCloseOutDates_;
+    bool reevaluateExerciseInStickyRun_;
 
     // the generated amc calculator
     mutable QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator_;
@@ -162,14 +167,15 @@ protected:
     // the implementation of the amc calculator interface used by the amc valuation engine
     class MultiLegBaseAmcCalculator : public AmcCalculator {
     public:
-        MultiLegBaseAmcCalculator(const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
-                                  const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes,
-                                  const std::set<Real>& xvaTimes,
-                                  const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndDirty,
-                                  const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndExInto,
-                                  const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelContinuationValue,
-                                  const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelOption,
-                                  const Real resultValue, const Array& initialState, const Currency& baseCurrency);
+        MultiLegBaseAmcCalculator(
+            const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
+            const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
+            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndDirty,
+            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndExInto,
+            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelContinuationValue,
+            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelOption,
+            const Real resultValue, const Array& initialState, const Currency& baseCurrency,
+            const bool reevaluateExerciseInStickyRun);
 
         Currency npvCurrency() override { return baseCurrency_; }
         std::vector<QuantExt::RandomVariable>
@@ -184,13 +190,14 @@ protected:
         std::set<Real> exerciseXvaTimes_;
         std::set<Real> exerciseTimes_;
         std::set<Real> xvaTimes_;
-        std::vector<McMultiLegBaseEngine::RegressionModel> regModelUndDirty_;
-        std::vector<McMultiLegBaseEngine::RegressionModel> regModelUndExInto_;
-        std::vector<McMultiLegBaseEngine::RegressionModel> regModelContinuationValue_;
-        std::vector<McMultiLegBaseEngine::RegressionModel> regModelOption_;
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelUndDirty_;
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelUndExInto_;
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelContinuationValue_;
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelOption_;
         Real resultValue_;
         Array initialState_;
         Currency baseCurrency_;
+        bool reevaluateExerciseInStickyRun_;
 
         std::vector<Filter> exercised_;
     };
