@@ -61,13 +61,13 @@ void fxVolShiftData(std::map<std::string, StressTestScenarioData::FXVolShiftData
                   double shift, const std::vector<QuantLib::Period>& tenors) {
     if (volData.count(key.name) == 0) {
         StressTestScenarioData::FXVolShiftData shiftData;
-        shiftData.mode = StressTestScenarioData::FXVolShiftData::Explicit;
+        shiftData.mode = StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit;
         shiftData.shiftType = ShiftType::Absolute;
         shiftData.shiftExpiries = tenors;
         shiftData.shifts = std::vector<double>(shiftData.shiftExpiries.size(), 0.0);
         volData[key.name] = shiftData;
     }
-    QL_REQUIRE(volData[key.name].mode == StressTestScenarioData::FXVolShiftData::Explicit,
+    QL_REQUIRE(volData[key.name].mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit,
                "Internal error, for XvA Explain use only explicit fx vol stress data, contact dev");
     volData[key.name].shifts[key.index] = shift;
 }

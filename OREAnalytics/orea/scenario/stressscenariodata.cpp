@@ -174,7 +174,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 XMLNode* weightedShiftsNode = XMLUtils::getChildNode(child, "WeightedShifts");
                 if ((shiftsNode != nullptr) && (shiftExpiriesNode != nullptr)) {
                     FXVolShiftData data;
-                    data.mode = FXVolShiftData::Explicit;
+                    data.mode = FXVolShiftData::AtmShiftMode::Explicit;
                     data.shiftType = shiftType;
                     data.shifts = XMLUtils::getNodeValueAsDoublesCompact(shiftsNode);
                     data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
@@ -189,12 +189,12 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                     FXVolShiftData data;
                     data.shiftType = shiftType;
                     if (weightingSchema == "unadjusted"){
-                        data.mode = FXVolShiftData::Unadjusted;
+                        data.mode = FXVolShiftData::AtmShiftMode::Unadjusted;
                         data.shifts = std::vector<Real>(1, XMLUtils::getChildValueAsDouble(weightedShiftsNode, "Shift", true));
                         data.shiftExpiries =
                             std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(weightedShiftsNode, "Tenor", true));
                     } else if(weightingSchema == "weighted"){
-                        data.mode = FXVolShiftData::Weighted;
+                        data.mode = FXVolShiftData::AtmShiftMode::Weighted;
                         data.shifts =
                             std::vector<Real>(1, XMLUtils::getChildValueAsDouble(weightedShiftsNode, "Shift", true));
                         data.shiftExpiries =
@@ -381,20 +381,20 @@ void fxVolDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
                        const std::string& identifier, const std::string& nodeName, const std::string& parentNodeName) {
     auto parentNode = XMLUtils::addChild(doc, node, parentNodeName);
     for (const auto& [key, data] : shiftdata) {
-        if (data.mode == StressTestScenarioData::FXVolShiftData::Explicit) {
+        if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit) {
             auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
             XMLUtils::addAttribute(doc, childNode, identifier, key);
             XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data.shiftType));
             XMLUtils::addGenericChildAsList(doc, childNode, "Shifts", data.shifts);
             XMLUtils::addGenericChildAsList(doc, childNode, "ShiftExpiries", data.shiftExpiries);
-        } else if (data.mode == StressTestScenarioData::FXVolShiftData::Unadjusted) {
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Unadjusted) {
             auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
             XMLUtils::addAttribute(doc, childNode, identifier, key);
             auto weightedShiftsNode = XMLUtils::addChild(doc, childNode, "WeightedShifts");
             XMLUtils::addChild(doc, weightedShiftsNode, "WeightingSchema", "Unadjusted");
             XMLUtils::addChild(doc, weightedShiftsNode, "Shift", data.shifts.front());
             XMLUtils::addChild(doc, weightedShiftsNode, "Tenor", data.shiftExpiries.front());
-        } else if (data.mode == StressTestScenarioData::FXVolShiftData::Weighted) {
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Weighted) {
             QL_REQUIRE(data.shifts.size() == 1, "Internal Error: WeightedShift should have only one shift, please check construction of FxVolShiftData");
             QL_REQUIRE(
                 data.shiftExpiries.size() == 1,
