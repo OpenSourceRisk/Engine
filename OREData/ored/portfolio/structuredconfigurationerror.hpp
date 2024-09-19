@@ -36,7 +36,7 @@ public:
                                         const std::string& exceptionType, const std::string& exceptionWhat,
                                         const std::map<std::string, std::string>& subFields = {})
         : StructuredMessage(Category::Error, Group::Configuration, exceptionWhat,
-                            std::map<string, string>({{"exceptionType", exceptionType},
+                            std::map<std::string, std::string>({{"exceptionType", exceptionType},
                                                       {"configurationType", configurationType},
                                                       {"configurationId", configurationId}})) {
         addSubFields(subFields);
