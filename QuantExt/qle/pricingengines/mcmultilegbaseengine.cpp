@@ -688,6 +688,119 @@ RandomVariable McMultiLegBaseEngine::cashflowPathValue(const CashflowInfo& cf,
     return amount * RandomVariable(n, cf.payer ? -1.0 : 1.0);
 }
 
+void McMultiLegBaseEngine::calculateModels(
+    const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes,
+    const std::set<Real>& xvaTimes, const std::vector<CashflowInfo>& cashflowInfo,
+    const std::vector<std::vector<RandomVariable>>& pathValues,
+    const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
+    std::vector<RegressionModel>& regModelUndDirty, std::vector<RegressionModel>& regModelUndExInto,
+    std::vector<RegressionModel>& regModelContinuationValue, std::vector<RegressionModel>& regModelOption,
+    RandomVariable& pathValueUndDirty, RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const {
+
+    // for each xva and exercise time collect the relevant cashflow amounts and train a model on them
+
+    enum class CfStatus { open, cached, done };
+    std::vector<CfStatus> cfStatus(cashflowInfo.size(), CfStatus::open);
+
+    std::vector<RandomVariable> amountCache(cashflowInfo.size());
+
+    Size counter = exerciseXvaTimes.size() - 1;
+
+    for (auto t = exerciseXvaTimes.rbegin(); t != exerciseXvaTimes.rend(); ++t) {
+
+        bool isExerciseTime = exerciseTimes.find(*t) != exerciseTimes.end();
+        bool isXvaTime = xvaTimes.find(*t) != xvaTimes.end();
+
+        for (Size i = 0; i < cashflowInfo.size(); ++i) {
+
+            /* we assume here that exIntoCriterionTime > t implies payTime > t, this must be ensured by the
+               createCashflowInfo method */
+
+            if (cfStatus[i] == CfStatus::open) {
+                if (cashflowInfo[i].exIntoCriterionTime > *t) {
+                    auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
+                    pathValueUndDirty += tmp;
+                    pathValueUndExInto += tmp;
+                    cfStatus[i] = CfStatus::done;
+                } else if (cashflowInfo[i].payTime > *t - (includeSettlementDateFlows_ ? tinyTime : 0.0)) {
+                    auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
+                    pathValueUndDirty += tmp;
+                    amountCache[i] = tmp;
+                    cfStatus[i] = CfStatus::cached;
+                }
+            } else if (cfStatus[i] == CfStatus::cached) {
+                if (cashflowInfo[i].exIntoCriterionTime > *t) {
+                    pathValueUndExInto += amountCache[i];
+                    cfStatus[i] = CfStatus::done;
+                    amountCache[i].clear();
+                }
+            }
+        }
+
+        if (exercise_ != nullptr) {
+            regModelUndExInto[counter] = RegressionModel(
+                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
+                regressorModel_, regressionVarianceCutoff_);
+            regModelUndExInto[counter].train(polynomOrder_, polynomType_, pathValueUndExInto, pathValuesRef,
+                                             simulationTimes);
+        }
+
+        if (isExerciseTime) {
+
+            // calculate rebate (exercise fees) if existent
+
+            RandomVariable pvRebate(calibrationSamples_, 0.0);
+            if (auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
+                Size exerciseTimes_idx = std::distance(exerciseTimes.begin(), exerciseTimes.find(*t));
+                if (rebatedExercise->rebate(exerciseTimes_idx) != 0.0) {
+                    Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
+                    RandomVariable rdb = lgmVectorised_[0].reducedDiscountBond(
+                        *t, time(rebatedExercise->rebatePaymentDate(exerciseTimes_idx)), pathValues[simulationTimes_idx][0], discountCurves_[0]);
+                    pvRebate = rdb * RandomVariable(calibrationSamples_, rebatedExercise->rebate(exerciseTimes_idx));
+                }
+            }
+
+            auto exerciseValue = regModelUndExInto[counter].apply(model_->stateProcess()->initialValues(),
+                                                                  pathValuesRef, simulationTimes) + pvRebate;
+            regModelContinuationValue[counter] = RegressionModel(
+                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
+                regressorModel_, regressionVarianceCutoff_);
+            regModelContinuationValue[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef,
+                                                     simulationTimes,
+                                                     exerciseValue > RandomVariable(calibrationSamples_, 0.0));
+            auto continuationValue = regModelContinuationValue[counter].apply(model_->stateProcess()->initialValues(),
+                                                                              pathValuesRef, simulationTimes);
+            pathValueOption = conditionalResult(exerciseValue > continuationValue &&
+                                                    exerciseValue > RandomVariable(calibrationSamples_, 0.0),
+                                                pathValueUndExInto + pvRebate, pathValueOption);
+        }
+
+        if (isXvaTime) {
+            regModelUndDirty[counter] = RegressionModel(
+                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] != CfStatus::open; }, **model_,
+                regressorModel_, regressionVarianceCutoff_);
+            regModelUndDirty[counter].train(polynomOrder_, polynomType_, pathValueUndDirty, pathValuesRef,
+                                            simulationTimes);
+        }
+
+        if (exercise_ != nullptr) {
+            regModelOption[counter] = RegressionModel(
+                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
+                regressorModel_, regressionVarianceCutoff_);
+            regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
+        }
+
+        --counter;
+    }
+
+    // add the remaining live cashflows to get the underlying value
+
+    for (Size i = 0; i < cashflowInfo.size(); ++i) {
+        if (cfStatus[i] == CfStatus::open)
+            pathValueUndDirty += cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
+    }
+}
+
 void McMultiLegBaseEngine::calculate() const {
 
     McEngineStats::instance().other_timer.resume();
@@ -828,117 +941,19 @@ void McMultiLegBaseEngine::calculate() const {
 
     McEngineStats::instance().calc_timer.resume();
 
-    // for each xva and exercise time collect the relevant cashflow amounts and train a model on them
+    // setup the models
 
     std::vector<RegressionModel> regModelUndDirty(exerciseXvaTimes.size());          // available on xva times
     std::vector<RegressionModel> regModelUndExInto(exerciseXvaTimes.size());         // available on xva and ex times
     std::vector<RegressionModel> regModelContinuationValue(exerciseXvaTimes.size()); // available on ex times
     std::vector<RegressionModel> regModelOption(exerciseXvaTimes.size());            // available on xva and ex times
-
-    enum class CfStatus { open, cached, done };
-    std::vector<CfStatus> cfStatus(cashflowInfo.size(), CfStatus::open);
-
     RandomVariable pathValueUndDirty(calibrationSamples_);
     RandomVariable pathValueUndExInto(calibrationSamples_);
     RandomVariable pathValueOption(calibrationSamples_);
 
-    std::vector<RandomVariable> amountCache(cashflowInfo.size());
-
-    Size counter = exerciseXvaTimes.size() - 1;
-
-    for (auto t = exerciseXvaTimes.rbegin(); t != exerciseXvaTimes.rend(); ++t) {
-
-        bool isExerciseTime = exerciseTimes.find(*t) != exerciseTimes.end();
-        bool isXvaTime = xvaTimes.find(*t) != xvaTimes.end();
-
-        for (Size i = 0; i < cashflowInfo.size(); ++i) {
-
-            /* we assume here that exIntoCriterionTime > t implies payTime > t, this must be ensured by the
-               createCashflowInfo method */
-
-            if (cfStatus[i] == CfStatus::open) {
-                if (cashflowInfo[i].exIntoCriterionTime > *t) {
-                    auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
-                    pathValueUndDirty += tmp;
-                    pathValueUndExInto += tmp;
-                    cfStatus[i] = CfStatus::done;
-                } else if (cashflowInfo[i].payTime > *t - (includeSettlementDateFlows_ ? tinyTime : 0.0)) {
-                    auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
-                    pathValueUndDirty += tmp;
-                    amountCache[i] = tmp;
-                    cfStatus[i] = CfStatus::cached;
-                }
-            } else if (cfStatus[i] == CfStatus::cached) {
-                if (cashflowInfo[i].exIntoCriterionTime > *t) {
-                    pathValueUndExInto += amountCache[i];
-                    cfStatus[i] = CfStatus::done;
-                    amountCache[i].clear();
-                }
-            }
-        }
-
-        if (exercise_ != nullptr) {
-            regModelUndExInto[counter] = RegressionModel(
-                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                regressorModel_, regressionVarianceCutoff_);
-            regModelUndExInto[counter].train(polynomOrder_, polynomType_, pathValueUndExInto, pathValuesRef,
-                                             simulationTimes);
-        }
-
-        if (isExerciseTime) {
-
-            // calculate rebate (exercise fees) if existent
-
-            RandomVariable pvRebate(calibrationSamples_, 0.0);
-            if (auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
-                Size exerciseTimes_idx = std::distance(exerciseTimes.begin(), exerciseTimes.find(*t));
-                if (rebatedExercise->rebate(exerciseTimes_idx) != 0.0) {
-                    Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
-                    RandomVariable rdb = lgmVectorised_[0].reducedDiscountBond(
-                        *t, time(rebatedExercise->rebatePaymentDate(exerciseTimes_idx)), pathValues[simulationTimes_idx][0], discountCurves_[0]);
-                    pvRebate = rdb * RandomVariable(calibrationSamples_, rebatedExercise->rebate(exerciseTimes_idx));
-                }
-            }
-
-            auto exerciseValue = regModelUndExInto[counter].apply(model_->stateProcess()->initialValues(),
-                                                                  pathValuesRef, simulationTimes) + pvRebate;
-            regModelContinuationValue[counter] = RegressionModel(
-                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                regressorModel_, regressionVarianceCutoff_);
-            regModelContinuationValue[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef,
-                                                     simulationTimes,
-                                                     exerciseValue > RandomVariable(calibrationSamples_, 0.0));
-            auto continuationValue = regModelContinuationValue[counter].apply(model_->stateProcess()->initialValues(),
-                                                                              pathValuesRef, simulationTimes);
-            pathValueOption = conditionalResult(exerciseValue > continuationValue &&
-                                                    exerciseValue > RandomVariable(calibrationSamples_, 0.0),
-                                                pathValueUndExInto + pvRebate, pathValueOption);
-        }
-
-        if (isXvaTime) {
-            regModelUndDirty[counter] = RegressionModel(
-                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] != CfStatus::open; }, **model_,
-                regressorModel_, regressionVarianceCutoff_);
-            regModelUndDirty[counter].train(polynomOrder_, polynomType_, pathValueUndDirty, pathValuesRef,
-                                            simulationTimes);
-        }
-
-        if (exercise_ != nullptr) {
-            regModelOption[counter] = RegressionModel(
-                *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, **model_,
-                regressorModel_, regressionVarianceCutoff_);
-            regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
-        }
-
-        --counter;
-    }
-
-    // add the remaining live cashflows to get the underlying value
-
-    for (Size i = 0; i < cashflowInfo.size(); ++i) {
-        if (cfStatus[i] == CfStatus::open)
-            pathValueUndDirty += cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
-    }
+    calculateModels(simulationTimes, exerciseXvaTimes, exerciseTimes, xvaTimes, cashflowInfo, pathValues, pathValuesRef,
+                    regModelUndDirty, regModelUndExInto, regModelContinuationValue, regModelOption, pathValueUndDirty,
+                    pathValueUndExInto, pathValueOption);
 
     // set the result value (= underlying value if no exercise is given, otherwise option value)
 

@@ -202,6 +202,18 @@ protected:
         std::vector<Filter> exercised_;
     };
 
+    // the model training logic
+    void calculateModels(const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaTimes,
+                         const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
+                         const std::vector<CashflowInfo>& cashflowInfo,
+                         const std::vector<std::vector<RandomVariable>>& pathValues,
+                         const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
+                         std::vector<RegressionModel>& regModelUndDirty,
+                         std::vector<RegressionModel>& regModelUndExInto,
+                         std::vector<RegressionModel>& regModelContinuationValue,
+                         std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
+                         RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
+
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
 
