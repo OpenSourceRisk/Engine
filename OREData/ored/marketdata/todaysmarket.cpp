@@ -614,6 +614,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 QuantLib::ext::shared_ptr<InflationCapFloorVolCurve> inflationCapFloorVolCurve =
                     QuantLib::ext::make_shared<InflationCapFloorVolCurve>(asof_, *infcapfloorspec, *loader_, *curveConfigs_,
                                                                   requiredYieldCurves_, requiredInflationCurves_);
+                calibrationInfo_->cpiVolCalibrationInfo[infcapfloorspec->name()] = inflationCapFloorVolCurve->calibrationInfo();
                 itr = requiredInflationCapFloorVolCurves_
                           .insert(make_pair(infcapfloorspec->name(), inflationCapFloorVolCurve))
                           .first;
