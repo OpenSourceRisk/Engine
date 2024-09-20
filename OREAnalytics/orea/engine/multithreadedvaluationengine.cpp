@@ -265,21 +265,22 @@ void MultiThreadedValuationEngine::buildCube(
     // get obs mode of main thread, so that we can set this mode in the worker threads below
     ore::analytics::ObservationMode::Mode obsMode = ore::analytics::ObservationMode::instance().mode();
 
+    std::size_t nCPU = std::thread::hardware_concurrency();
+    std::cout << "nCPU = " << nCPU << std::endl;
+
     for (Size i = 0; i < eff_nThreads; ++i) {
 
-        auto job = [this, obsMode, dryRun, &calculators, errorPolicy, &cptyCalculators, mporStickyDate,
+        auto job = [this, &jobs, obsMode, dryRun, &calculators, errorPolicy, &cptyCalculators, mporStickyDate,
                     &portfoliosAsString, &scenarioGenerators, &loaders, &workerPricingStats,
                     &progressIndicator](int id) -> resultType {
 
-
 #ifdef BOOST_OS_LINUX
-
-        // set cpu affinity for this thread
+            // set cpu affinity for this thread
 
             cpu_set_t cpuset;
             CPU_ZERO(&cpuset);
             CPU_SET(id, &cpuset);
-            if (int rc = pthread_setaffinity_np(std::this_thread.native_handle(), sizeof(cpu_set_t), &cpuset)) {
+            if (int rc = pthread_setaffinity_np(jobs[i].native_handle(), sizeof(cpu_set_t), &cpuset)) {
                 std::cerr << "MultithreadedValuationEngine: error while setting thread affinity: return code " << rc
                           << std::endl;
             }
