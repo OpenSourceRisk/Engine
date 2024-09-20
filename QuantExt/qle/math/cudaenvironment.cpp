@@ -216,7 +216,6 @@ private:
     std::vector<CUmodule> module_;
     std::vector<std::vector<CUfunction>> kernel_;
     std::vector<std::size_t> nRandomVariables_;
-    std::vector<std::size_t> nOperations_;
     std::vector<std::size_t> nNUM_BLOCKS_;
     std::vector<std::size_t> nOutputVariables_;
 
@@ -225,6 +224,7 @@ private:
     std::size_t currentId_ = 0;
     ComputeState currentState_ = ComputeState::idle;
     std::size_t nInputVars_;
+    std::size_t nOperations_;
     Settings settings_;
     std::vector<size_t> inputVarOffset_;
     std::vector<double> inputVar_;
@@ -450,7 +450,6 @@ std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t 
 
         nOutputVariables_.push_back(0);
         nRandomVariables_.push_back(0);
-        nOperations_.push_back(0);
         numOfExpectationInKernel_.emplace_back();
         numOfExpectationInKernel_.back().push_back(0);
         numOfExpectation_.push_back(0);
@@ -478,7 +477,6 @@ std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t 
             releaseModule(module_[id - 1], "initiateCalculation"); // releaseModule will also release the linked kernel
             nOutputVariables_[id - 1] = 0;
             nRandomVariables_[id - 1] = 0;
-            nOperations_[id - 1] = 0;
             numOfExpectationInKernel_[id - 1].clear();
             numOfExpectationInKernel_[id - 1].push_back(0);
             numOfExpectation_[id - 1] = 0;
@@ -495,6 +493,7 @@ std::pair<std::size_t, bool> CudaContext::initiateCalculation(const std::size_t 
     inputVarOffset_.clear();
     inputVarOffset_.push_back(0);
     inputVar_.clear();
+    nOperations_ = 0;
 
     freedVariables_.clear();
     outputVariables_.clear();
@@ -817,7 +816,7 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
         for (std::size_t i = 0; i < args.size(); ++i) {
             if (std::find(resultIdCE_.back().begin(), resultIdCE_.back().end(), args[i]) != resultIdCE_.back().end()) {
                 // end the current kernel, start a new kernel
-                lastResultIdCE_.push_back(nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1]);
+                lastResultIdCE_.push_back(nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_);
                 freedVariables_.clear();
 			    source_.push_back(newKernelCE_);
                 numOfExpectationInKernel_[currentId_ - 1].push_back(0);
@@ -839,8 +838,8 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
                 source_.push_back(newKernelE_);
                 source_.push_back(newKernelCE_);
                 numOfExpectationInKernel_[currentId_ - 1].push_back(0);
-                lastResultIdCE_.push_back(nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1]);
-                lastResultIdCE_.push_back(nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1]);
+                lastResultIdCE_.push_back(nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_);
+                lastResultIdCE_.push_back(nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_);
                 newKernelCE_ = "";
                 newKernelE_ = "";
                 basisFunctionCE_[currentId_ - 1].push_back(basisFunctionHelper_);
@@ -864,8 +863,8 @@ std::size_t CudaContext::applyOperation(const std::size_t randomVariableOpCode,
         freedVariables_.pop_back();
         resultIdNeedsDeclaration = false;
     } else {
-        resultId = nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_[currentId_ - 1];
-        ++nOperations_[currentId_ - 1];
+        resultId = nInputVars_ + nRandomVariables_[currentId_ - 1] + nOperations_;
+        ++nOperations_;
         resultIdNeedsDeclaration = true;
     }
 
