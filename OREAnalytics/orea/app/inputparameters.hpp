@@ -925,7 +925,7 @@ protected:
     double stressLowerBoundRatesDiscountFactor_;
     double stressUpperBoundRatesDiscountFactor_;
     double stressAccurary_;
-    Size stressPrecision_;
+    Size stressPrecision_ = 2;
 
     /*****************
      * VAR analytics
