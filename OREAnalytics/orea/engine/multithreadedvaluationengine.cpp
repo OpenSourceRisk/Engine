@@ -28,9 +28,15 @@
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/dategrid.hpp>
 
+#include <boost/predef.h>
 #include <boost/timer/timer.hpp>
 
 #include <future>
+
+#ifdef BOOST_OS_LINUX
+#include <pthread.h>
+#include <sched.h>
+#endif
 
 // #include <ctpl_stl.h>
 
@@ -261,8 +267,24 @@ void MultiThreadedValuationEngine::buildCube(
 
     for (Size i = 0; i < eff_nThreads; ++i) {
 
-        auto job = [this, obsMode, dryRun, &calculators, &cptyCalculators, mporStickyDate, &portfoliosAsString,
-                    &scenarioGenerators, &loaders, &workerPricingStats, &progressIndicator](int id) -> resultType {
+        auto job = [this, obsMode, dryRun, &calculators, errorPolicy, &cptyCalculators, mporStickyDate,
+                    &portfoliosAsString, &scenarioGenerators, &loaders, &workerPricingStats,
+                    &progressIndicator](int id) -> resultType {
+
+
+#ifdef BOOST_OS_LINUX
+
+        // set cpu affinity for this thread
+
+            cpu_set_t cpuset;
+            CPU_ZERO(&cpuset);
+            CPU_SET(id, &cpuset);
+            if (int rc = pthread_setaffinity_np(std::this_thread.native_handle(), sizeof(cpu_set_t), &cpuset)) {
+                std::cerr << "MultithreadedValuationEngine: error while setting thread affinity: return code " << rc
+                          << std::endl;
+            }
+#endif
+
             // set thread local singletons
 
             QuantLib::Settings::instance().evaluationDate() = today_;
