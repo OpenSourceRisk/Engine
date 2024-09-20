@@ -26,7 +26,6 @@
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
-#include <qle/math/flatextrapolation.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
@@ -40,6 +39,7 @@
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/indexes/swapindex.hpp>
+#include <ql/math/interpolations/linearinterpolation.hpp>
 
 namespace QuantExt {
 
@@ -57,7 +57,8 @@ McMultiLegBaseEngine::McMultiLegBaseEngine(
       calibrationSamples_(calibrationSamples), pricingSamples_(pricingSamples), calibrationSeed_(calibrationSeed),
       pricingSeed_(pricingSeed), polynomOrder_(polynomOrder), polynomType_(polynomType), ordering_(ordering),
       directionIntegers_(directionIntegers), discountCurves_(discountCurves), simulationDates_(simulationDates),
-      externalModelIndices_(externalModelIndices), minimalObsDate_(minimalObsDate), regressorModel_(regressorModel),
+      stickyCloseOutDates_(stickyCloseOutDates), externalModelIndices_(externalModelIndices),
+      minimalObsDate_(minimalObsDate), regressorModel_(regressorModel),
       regressionVarianceCutoff_(regressionVarianceCutoff),
       recalibrateOnStickyCloseOutDates_(recalibrateOnStickyCloseOutDates),
       reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun) {
@@ -941,10 +942,10 @@ void McMultiLegBaseEngine::calculate() const {
             xvaTimesWithCloseOutLag.push_back(time(d));
         }
         std::vector<Real> xvaTimesVec(xvaTimes.begin(), xvaTimes.end());
-        Interpolation l =
-            LinearFlat().interpolate(xvaTimesVec.begin(), xvaTimesVec.end(), xvaTimesWithCloseOutLag.begin());
-        std::transform(xvaTimes.begin(), xvaTimes.end(), std::back_inserter(xvaTimesWithCloseOutLag),
-                       [&l](const Real t) { return l(t); });
+        Interpolation l = Linear().interpolate(xvaTimesVec.begin(), xvaTimesVec.end(), xvaTimesWithCloseOutLag.begin());
+        l.enableExtrapolation();
+        std::transform(simulationTimes.begin(), simulationTimes.end(),
+                       std::back_inserter(simulationTimesWithCloseOutLag), [&l](const Real t) { return l(t); });
     }
 
     // simulate the paths for the calibration
@@ -1144,6 +1145,7 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
 
             exercised_[counter + 1] = !exercised_[counter] && exerciseValue > continuationValue &&
                                       exerciseValue > RandomVariable(samples, 0.0);
+
 
             ++counter;
         }
