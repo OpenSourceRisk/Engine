@@ -1666,21 +1666,28 @@ TestConfigurationObjects::setupSensitivityScenarioData(bool hasSwapVolCube, bool
         sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] =
             QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftParData>(cvsData);
     }
-    sensiData->fxShiftData()["EURUSD"] = fxsData;
-    sensiData->fxShiftData()["EURGBP"] = fxsData;
-    sensiData->fxShiftData()["EURJPY"] = fxsData;
-    sensiData->fxShiftData()["EURCHF"] = fxsData;
 
-    sensiData->fxVolShiftData()["EURUSD"] = fxvsData;
-    sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
-    sensiData->fxVolShiftData()["EURJPY"] = fxvsData;
-    sensiData->fxVolShiftData()["EURCHF"] = fxvsData;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData::SpotShiftData> fxsDataPtr =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(fxsData);
+    sensiData->fxShiftData()["EURUSD"] = fxsDataPtr;
+    sensiData->fxShiftData()["EURGBP"] = fxsDataPtr;
+    sensiData->fxShiftData()["EURJPY"] = fxsDataPtr;
+    sensiData->fxShiftData()["EURCHF"] = fxsDataPtr;
 
-    sensiData->swaptionVolShiftData()["EUR"] = swvsData;
-    sensiData->swaptionVolShiftData()["GBP"] = swvsData;
-    sensiData->swaptionVolShiftData()["USD"] = swvsData;
-    sensiData->swaptionVolShiftData()["JPY"] = swvsData;
-    sensiData->swaptionVolShiftData()["CHF"] = swvsData;
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData::VolShiftData> fxvsDataPtr =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(fxvsData);
+    sensiData->fxVolShiftData()["EURUSD"] = fxvsDataPtr;
+    sensiData->fxVolShiftData()["EURGBP"] = fxvsDataPtr;
+    sensiData->fxVolShiftData()["EURJPY"] = fxvsDataPtr;
+    sensiData->fxVolShiftData()["EURCHF"] = fxvsDataPtr;
+
+    QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData> swvsDataPtr =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData>(swvsData);
+    sensiData->swaptionVolShiftData()["EUR"] = swvsDataPtr;
+    sensiData->swaptionVolShiftData()["GBP"] = swvsDataPtr;
+    sensiData->swaptionVolShiftData()["USD"] = swvsDataPtr;
+    sensiData->swaptionVolShiftData()["JPY"] = swvsDataPtr;
+    sensiData->swaptionVolShiftData()["CHF"] = swvsDataPtr;
 
     sensiData->capFloorVolShiftData()["EUR"] =
         QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
@@ -1719,19 +1726,27 @@ TestConfigurationObjects::setupSensitivityScenarioData(bool hasSwapVolCube, bool
         sensiData->creditCurveShiftData()["dc3"] =
             QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftParData>(cvsData);
     }
-    sensiData->cdsVolShiftData()["dc"] = cdsvsData;
-    sensiData->cdsVolShiftData()["dc2"] = cdsvsData;
-    sensiData->cdsVolShiftData()["dc3"] = cdsvsData;
+    sensiData->cdsVolShiftData()["dc"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CdsVolShiftData>(cdsvsData);
+    sensiData->cdsVolShiftData()["dc2"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CdsVolShiftData>(cdsvsData);
+    sensiData->cdsVolShiftData()["dc3"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CdsVolShiftData>(cdsvsData);
 
-    sensiData->equityShiftData()["SP5"] = eqsData;
-    sensiData->equityShiftData()["Lufthansa"] = eqsData;
+    sensiData->equityShiftData()["SP5"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(eqsData);
+    sensiData->equityShiftData()["Lufthansa"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(eqsData);
 
-    sensiData->equityVolShiftData()["SP5"] = eqvsData;
-    sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
+    sensiData->equityVolShiftData()["SP5"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(eqvsData);
+    sensiData->equityVolShiftData()["Lufthansa"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(eqvsData);
     sensiData->dividendYieldShiftData()["SP5"] = eqdivData;
     sensiData->dividendYieldShiftData()["Lufthansa"] = eqdivData;
 
-    sensiData->baseCorrelationShiftData()["Tranch1"] = bcorrData;
+    sensiData->baseCorrelationShiftData()["Tranch1"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::BaseCorrelationShiftData>(bcorrData);
 
     sensiData->zeroInflationCurveShiftData()["UKRPI"] = zinfData;
 
@@ -1912,12 +1927,14 @@ QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigura
     sensiData->yieldCurveShiftData()["BondCurve0"] =
         QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->fxShiftData()["EURGBP"] = fxsData;
+    sensiData->fxShiftData()["EURGBP"] = QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(fxsData);
 
-    sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
+    sensiData->fxVolShiftData()["EURGBP"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(fxvsData);
 
-    sensiData->swaptionVolShiftData()["EUR"] = swvsData;
-    sensiData->swaptionVolShiftData()["GBP"] = swvsData;
+    sensiData->swaptionVolShiftData()["EUR"] = QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData>(swvsData);
+    sensiData->swaptionVolShiftData()["GBP"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData>(swvsData);
 
     sensiData->creditCurveShiftData()["BondIssuer0"] =
         QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
@@ -1980,12 +1997,16 @@ QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigura
     sensiData->yieldCurveShiftData()["BondCurve0"] =
         QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->fxShiftData()["EURGBP"] = fxsData;
+    sensiData->fxShiftData()["EURGBP"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(fxsData);
 
-    sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
+    sensiData->fxVolShiftData()["EURGBP"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(fxvsData);
 
-    sensiData->swaptionVolShiftData()["EUR"] = swvsData;
-    sensiData->swaptionVolShiftData()["GBP"] = swvsData;
+    sensiData->swaptionVolShiftData()["EUR"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData>(swvsData);
+    sensiData->swaptionVolShiftData()["GBP"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData>(swvsData);
 
     sensiData->creditCurveShiftData()["BondIssuer0"] =
         QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
@@ -2091,22 +2112,36 @@ QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigura
     sensiData->creditCurveShiftData()["BondIssuer0"] =
         QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->fxShiftData()["EURUSD"] = fxsData;
-    sensiData->fxShiftData()["EURGBP"] = fxsData;
-    sensiData->fxShiftData()["EURJPY"] = fxsData;
-    sensiData->fxShiftData()["EURCHF"] = fxsData;
+    sensiData->fxShiftData()["EURUSD"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(fxsData);
+    sensiData->fxShiftData()["EURGBP"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(fxsData);
+    sensiData->fxShiftData()["EURJPY"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(fxsData);
+    sensiData->fxShiftData()["EURCHF"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(fxsData);
 
-    sensiData->fxVolShiftData()["EURUSD"] = fxvsData;
-    sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
-    sensiData->fxVolShiftData()["EURJPY"] = fxvsData;
-    sensiData->fxVolShiftData()["EURCHF"] = fxvsData;
-    sensiData->fxVolShiftData()["GBPCHF"] = fxvsData;
+    sensiData->fxVolShiftData()["EURUSD"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(fxvsData);
+    sensiData->fxVolShiftData()["EURGBP"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(fxvsData);
+    sensiData->fxVolShiftData()["EURJPY"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(fxvsData);
+    sensiData->fxVolShiftData()["EURCHF"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(fxvsData);
+    sensiData->fxVolShiftData()["GBPCHF"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(fxvsData);
 
-    sensiData->swaptionVolShiftData()["EUR"] = swvsData;
-    sensiData->swaptionVolShiftData()["GBP"] = swvsData;
-    sensiData->swaptionVolShiftData()["USD"] = swvsData;
-    sensiData->swaptionVolShiftData()["JPY"] = swvsData;
-    sensiData->swaptionVolShiftData()["CHF"] = swvsData;
+    sensiData->swaptionVolShiftData()["EUR"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData>(swvsData);
+    sensiData->swaptionVolShiftData()["GBP"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData>(swvsData);
+    sensiData->swaptionVolShiftData()["USD"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData>(swvsData);
+    sensiData->swaptionVolShiftData()["JPY"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData>(swvsData);
+    sensiData->swaptionVolShiftData()["CHF"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData>(swvsData);
 
     sensiData->capFloorVolShiftData()["EUR"] =
         QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
@@ -2115,11 +2150,15 @@ QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigura
         QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
     sensiData->capFloorVolShiftData()["USD"]->indexName = "USD-LIBOR-3M";
 
-    sensiData->equityShiftData()["SP5"] = eqsData;
-    sensiData->equityShiftData()["Lufthansa"] = eqsData;
+    sensiData->equityShiftData()["SP5"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(eqsData);
+    sensiData->equityShiftData()["Lufthansa"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::SpotShiftData>(eqsData);
 
-    sensiData->equityVolShiftData()["SP5"] = eqvsData;
-    sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
+    sensiData->equityVolShiftData()["SP5"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(eqvsData);
+    sensiData->equityVolShiftData()["Lufthansa"] =
+        QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(eqvsData);
 
     sensiData->zeroInflationCurveShiftData()["UKRPI"] =
         QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(zinfData);
@@ -2132,8 +2171,8 @@ QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigura
     sensiData->commodityCurveShiftData()["COMDTY_WTI_USD"] = commodityShiftData;
     sensiData->commodityCurrencies()["COMDTY_WTI_USD"] = "USD";
 
-    sensiData->commodityVolShiftData()["COMDTY_GOLD_USD"] = commodityVolShiftData;
-    sensiData->commodityVolShiftData()["COMDTY_WTI_USD"] = commodityVolShiftData;
+    sensiData->commodityVolShiftData()["COMDTY_GOLD_USD"] = QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(commodityVolShiftData);
+    sensiData->commodityVolShiftData()["COMDTY_WTI_USD"] = QuantLib::ext::make_shared<ore::analytics::SensitivityScenarioData::VolShiftData>(commodityVolShiftData);
 
     return sensiData;
 }

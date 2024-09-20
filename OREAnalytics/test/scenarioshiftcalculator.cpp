@@ -215,8 +215,8 @@ BOOST_AUTO_TEST_CASE(testAbsoluteFxShift) {
     Real exp = 3.0;
 
     // FX spot sensitivity set up to have 5bp absolute shift
-    ssd->fxShiftData()["EURUSD"].shiftSize = shift;
-    ssd->fxShiftData()["EURUSD"].shiftType = ShiftType::Absolute;
+    ssd->fxShiftData()["EURUSD"]->shiftSize = shift;
+    ssd->fxShiftData()["EURUSD"]->shiftType = ShiftType::Absolute;
 
     // EURUSD spot scenario
     RiskFactorKey rf(RFType::FXSpot, "EURUSD", 0);
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(testAbsoluteFxShift) {
 
     // Scale the shift size and the calculated shift multiple should scale
     Real factor = 1 / 5.0;
-    ssd->fxShiftData()["EURUSD"].shiftSize *= factor;
+    ssd->fxShiftData()["EURUSD"]->shiftSize *= factor;
     cal = ssc.shift(rf, scen_1, scen_2);
     exp /= factor;
     BOOST_CHECK_CLOSE(cal, exp, tol);
@@ -256,8 +256,8 @@ BOOST_AUTO_TEST_CASE(testRelativeFxShift) {
     auto ssp = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
 
     // FX spot sensitivity set up to have 2% relative shift
-    ssd->fxShiftData()["EURUSD"].shiftSize = shift;
-    ssd->fxShiftData()["EURUSD"].shiftType = ShiftType::Relative;
+    ssd->fxShiftData()["EURUSD"]->shiftSize = shift;
+    ssd->fxShiftData()["EURUSD"]->shiftType = ShiftType::Relative;
 
     // EURUSD spot scenario
     RiskFactorKey rf(RFType::FXSpot, "EURUSD", 0);
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(testRelativeFxShift) {
 
     // Scale the shift size and the calculated shift multiple should scale
     Real factor = 1 / 2.0;
-    ssd->fxShiftData()["EURUSD"].shiftSize *= factor;
+    ssd->fxShiftData()["EURUSD"]->shiftSize *= factor;
     cal = ssc.shift(rf, scen_1, scen_2);
     exp /= factor;
     BOOST_CHECK_CLOSE(cal, exp, tol);
@@ -297,8 +297,8 @@ BOOST_AUTO_TEST_CASE(testAbsoluteSwaptionVolShift) {
     Real exp = 8.45;
 
     // Swaption volatility sensitivity set up to have 1bp absolute shift
-    ssd->swaptionVolShiftData()["EUR"].shiftSize = shift;
-    ssd->swaptionVolShiftData()["EUR"].shiftType = ShiftType::Absolute;
+    ssd->swaptionVolShiftData()["EUR"]->shiftSize = shift;
+    ssd->swaptionVolShiftData()["EUR"]->shiftType = ShiftType::Absolute;
 
     // Swaption volatility scenario (index will correspond to some point on
     // a cube or matrix)
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(testAbsoluteSwaptionVolShift) {
 
     // Scale the shift size and the calculated shift multiple should scale
     Real factor = 1 / 2.0;
-    ssd->swaptionVolShiftData()["EUR"].shiftSize *= factor;
+    ssd->swaptionVolShiftData()["EUR"]->shiftSize *= factor;
     cal = ssc.shift(rf, scen_1, scen_2);
     exp /= factor;
     BOOST_CHECK_CLOSE(cal, exp, tol);
@@ -339,8 +339,8 @@ BOOST_AUTO_TEST_CASE(testRelativeSwaptionVolShift) {
     Real exp = 5.5;
 
     // Swaption volatility sensitivity set up to have 1% relative shift
-    ssd->swaptionVolShiftData()["EUR"].shiftSize = shift;
-    ssd->swaptionVolShiftData()["EUR"].shiftType = ShiftType::Relative;
+    ssd->swaptionVolShiftData()["EUR"]->shiftSize = shift;
+    ssd->swaptionVolShiftData()["EUR"]->shiftType = ShiftType::Relative;
 
     // Swaption volatility scenario (index will correspond to some point on
     // a cube or matrix)
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(testRelativeSwaptionVolShift) {
 
     // Scale the shift size and the calculated shift multiple should scale
     Real factor = 1 / 2.0;
-    ssd->swaptionVolShiftData()["EUR"].shiftSize *= factor;
+    ssd->swaptionVolShiftData()["EUR"]->shiftSize *= factor;
     cal = ssc.shift(rf, scen_1, scen_2);
     exp /= factor;
     BOOST_CHECK_CLOSE(cal, exp, tol);
