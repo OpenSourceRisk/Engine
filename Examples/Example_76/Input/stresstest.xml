@@ -1,0 +1,178 @@
+<StressTesting>
+  <UseSpreadedTermStructures>true</UseSpreadedTermStructures>
+  <StressTest id="parallel_vols">
+
+    <DiscountCurves>
+    </DiscountCurves>
+
+    <IndexCurves>
+    </IndexCurves>
+
+    <YieldCurves>
+    </YieldCurves>
+
+    <FxSpots>
+    </FxSpots>
+
+    <FxVolatilities>
+      <FxVolatility ccypair="USDEUR">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.1</Shifts>
+        <ShiftExpiries>1Y</ShiftExpiries>
+      </FxVolatility>
+    </FxVolatilities>
+
+
+    <SwaptionVolatilities>
+    </SwaptionVolatilities>
+
+
+    <CapFloorVolatilities>
+    </CapFloorVolatilities>
+
+
+    <EquitySpots>
+    </EquitySpots>
+
+
+    <EquityVolatilities>
+    </EquityVolatilities>
+    <SecuritySpreads />
+    <RecoveryRates />
+    <SurvivalProbabilities />
+  </StressTest>
+
+  <StressTest id="explicit_vols">
+
+    <DiscountCurves>
+    </DiscountCurves>
+
+    <IndexCurves>
+    </IndexCurves>
+
+    <YieldCurves>
+    </YieldCurves>
+
+    <FxSpots>
+    </FxSpots>
+
+    <FxVolatilities>
+      <FxVolatility ccypair="USDEUR">
+        <ShiftType>Absolute</ShiftType>
+        <Shifts>0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.3</Shifts>
+        <ShiftExpiries>6M, 1Y, 2Y, 4Y, 5Y, 7Y, 10Y</ShiftExpiries>
+      </FxVolatility>
+    </FxVolatilities>
+
+
+    <SwaptionVolatilities>
+    </SwaptionVolatilities>
+
+
+    <CapFloorVolatilities>
+    </CapFloorVolatilities>
+
+
+    <EquitySpots>
+    </EquitySpots>
+
+
+    <EquityVolatilities>
+    </EquityVolatilities>
+    <SecuritySpreads />
+    <RecoveryRates />
+    <SurvivalProbabilities />
+  </StressTest>
+
+  <StressTest id="weighting_off">
+
+    <DiscountCurves>
+    </DiscountCurves>
+
+    <IndexCurves>
+    </IndexCurves>
+
+    <YieldCurves>
+    </YieldCurves>
+
+    <FxSpots>
+    </FxSpots>
+
+    <FxVolatilities>
+      <FxVolatility ccypair="USDEUR">
+        <ShiftType>Absolute</ShiftType>
+        <WeightedShifts>
+          <WeightingSchema>Unadjusted</WeightingSchema>
+          <Shift>0.1</Shift>
+          <Tenor>1Y</Tenor>
+        </WeightedShifts>
+      </FxVolatility>
+    </FxVolatilities>
+
+
+    <SwaptionVolatilities>
+    </SwaptionVolatilities>
+
+
+    <CapFloorVolatilities>
+    </CapFloorVolatilities>
+
+
+    <EquitySpots>
+    </EquitySpots>
+
+
+    <EquityVolatilities>
+    </EquityVolatilities>
+    <SecuritySpreads />
+    <RecoveryRates />
+    <SurvivalProbabilities />
+  </StressTest>
+
+  <StressTest id="weighting">
+
+    <DiscountCurves>
+    </DiscountCurves>
+
+    <IndexCurves>
+    </IndexCurves>
+
+    <YieldCurves>
+    </YieldCurves>
+
+    <FxSpots>
+    </FxSpots>
+
+    <FxVolatilities>
+      <FxVolatility ccypair="USDEUR">
+        <ShiftType>Absolute</ShiftType>
+        <WeightedShifts>
+          <WeightingSchema>Weighted</WeightingSchema>
+          <Shift>0.1</Shift>
+          <Tenor>1Y</Tenor>
+          <ShiftWeights>0.5,1.0,2.0,3.0,4.0,5.0,6.0</ShiftWeights>
+          <WeightTenors>6M,1Y,2Y,4Y,5Y,7Y,10Y</WeightTenors>
+        </WeightedShifts>
+      </FxVolatility>
+    </FxVolatilities>
+
+
+    <SwaptionVolatilities>
+    </SwaptionVolatilities>
+
+
+    <CapFloorVolatilities>
+    </CapFloorVolatilities>
+
+
+    <EquitySpots>
+    </EquitySpots>
+
+
+    <EquityVolatilities>
+    </EquityVolatilities>
+    <SecuritySpreads />
+    <RecoveryRates />
+    <SurvivalProbabilities />
+  </StressTest>
+</StressTesting>

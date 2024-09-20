@@ -28,7 +28,7 @@
 #include <ored/marketdata/inflationcurve.hpp>
 #include <ored/marketdata/loader.hpp>
 
-#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
+#include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 
 namespace ore {
@@ -55,9 +55,10 @@ public:
     const QuantLib::ext::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const {
         return yoyVolSurface_;
     }
-    const QuantLib::ext::shared_ptr<QuantLib::CPIVolatilitySurface> cpiInflationCapFloorVolSurface() const {
+    const QuantLib::ext::shared_ptr<QuantExt::CPIVolatilitySurface> cpiInflationCapFloorVolSurface() const {
         return cpiVolSurface_;
     }
+    QuantLib::ext::shared_ptr<CpiVolCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
 
     //@}
 private:
@@ -69,14 +70,23 @@ private:
                          const QuantLib::ext::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config,
                          map<string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves,
                          map<string, QuantLib::ext::shared_ptr<InflationCurve>>& inflationCurves);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> getIndex(
+        InflationCapFloorVolatilityCurveSpec spec,
+        const QuantLib::ext::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config,
+        const map<string, QuantLib::ext::shared_ptr<InflationCurve>>& inflationCurves);
+    void setCalibrationInfo(Date asof, InflationCapFloorVolatilityCurveSpec spec,
+        const QuantLib::ext::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config,
+        const CurveConfigurations& curveConfigs,
+        map<string, QuantLib::ext::shared_ptr<InflationCurve>>& inflationCurves);
 
     InflationCapFloorVolatilityCurveSpec spec_;
     QuantLib::ext::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyVolSurface_;
-    QuantLib::ext::shared_ptr<QuantLib::CPIVolatilitySurface> cpiVolSurface_;
+    QuantLib::ext::shared_ptr<QuantExt::CPIVolatilitySurface> cpiVolSurface_;
     QuantLib::ext::shared_ptr<InflationTermStructure> surface_;
     bool useMarketYoyCurve_;
     QuantLib::ext::shared_ptr<YoYInflationTermStructure> yoyTs_;
     Handle<YieldTermStructure> discountCurve_;
+    QuantLib::ext::shared_ptr<CpiVolCalibrationInfo> calibrationInfo_;
 };
 } // namespace data
 } // namespace ore

@@ -446,7 +446,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat);
                     cube->enableExtrapolation();
                 } else {
-                    std::map<std::pair<QuantLib::Period, QuantLib::Period>, std::vector<std::pair<Real, bool>>>
+                    std::map<std::pair<QuantLib::Period, QuantLib::Period>,
+                             std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>>
                         initialModelParameters;
                     Size maxCalibrationAttempts = 10;
                     Real exitEarlyErrorThreshold = 0.005;
@@ -471,12 +472,12 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                                        << ") = " << optionTenors.size() * underlyingTenors.size() << ")");
                         for (Size i = 0; i < optionTenors.size(); ++i) {
                             for (Size j = 0; j < underlyingTenors.size(); ++j) {
-                                std::vector<std::pair<Real, bool>> tmp;
+                                std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>> tmp;
                                 Size idx = alpha.initialValue.size() == 1 ? 0 : i * underlyingTenors.size() + j;
-                                tmp.push_back(std::make_pair(alpha.initialValue[idx], alpha.isFixed));
-                                tmp.push_back(std::make_pair(beta.initialValue[idx], beta.isFixed));
-                                tmp.push_back(std::make_pair(nu.initialValue[idx], nu.isFixed));
-                                tmp.push_back(std::make_pair(rho.initialValue[idx], rho.isFixed));
+                                tmp.push_back(std::make_pair(alpha.initialValue[idx], alpha.calibration));
+                                tmp.push_back(std::make_pair(beta.initialValue[idx], beta.calibration));
+                                tmp.push_back(std::make_pair(nu.initialValue[idx], nu.calibration));
+                                tmp.push_back(std::make_pair(rho.initialValue[idx], rho.calibration));
                                 initialModelParameters[std::make_pair(optionTenors[i], underlyingTenors[j])] = tmp;
                             }
                         }
@@ -497,8 +498,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         exitEarlyErrorThreshold, maxAcceptableError);
                 }
 
-                // Wrap it in a SwaptionVolCubeWithATM
-                vol_ = QuantLib::ext::make_shared<QuantExt::SwaptionVolCubeWithATM>(cube);
+                // Wrap it in a SwaptionVolCubeWithATM, disable short-cut for atm vol retrieval
+                vol_ = QuantLib::ext::make_shared<QuantExt::SwaptionVolCubeWithATM>(
+                    cube, config->interpolation() == GenericYieldVolatilityCurveConfig::Interpolation::Linear);
             }
         }
 

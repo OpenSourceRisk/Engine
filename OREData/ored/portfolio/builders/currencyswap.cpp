@@ -106,9 +106,11 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engine
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurves, simulationDates_,
-        externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        stickyCloseOutDates_, externalModelIndices, parseBool(engineParameter("MinObsDate")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
-        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 
     return engine;
 }

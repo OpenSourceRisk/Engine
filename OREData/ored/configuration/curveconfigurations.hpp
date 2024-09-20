@@ -69,6 +69,7 @@ public:
     const ReportConfig& reportConfigIrCapFloorVols() const { return reportConfigIrCapFloorVols_; }
     const ReportConfig& reportConfigIrSwaptionVols() const { return reportConfigIrSwaptionVols_; }
     const ReportConfig& reportConfigYieldCurves() const { return reportConfigYieldCurves_; }
+    const ReportConfig& reportConfigInflationCapFloorVols() const { return reportConfigInflationCapFloorVols_; }
     const ReportConfig& reportConfigDefaultCurves() const { return reportConfigDefaultCurves_; }
 
     bool hasYieldCurveConfig(const std::string& curveID) const;
@@ -169,6 +170,7 @@ public:
     ReportConfig reportConfigIrCapFloorVols_;
     ReportConfig reportConfigIrSwaptionVols_;
     ReportConfig reportConfigYieldCurves_;
+    ReportConfig reportConfigInflationCapFloorVols_;
     ReportConfig reportConfigDefaultCurves_;
 
     mutable std::map<CurveSpec::CurveType, std::map<std::string, QuantLib::ext::shared_ptr<CurveConfig>>> configs_;

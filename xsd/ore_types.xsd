@@ -956,5 +956,13 @@
       <xs:enumeration value="Central"/>
     </xs:restriction>
   </xs:simpleType>
+
+  <xs:simpleType name="parametricVolatilityParameterCalibration">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Fixed"/>
+      <xs:enumeration value="Calibrated"/>
+      <xs:enumeration value="Implied"/>
+    </xs:restriction>
+  </xs:simpleType>
     
 </xs:schema>

@@ -106,7 +106,9 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             LegData tmpLegData = legData_;
             QuantLib::ext::shared_ptr<FloatingLegData> tmpFloatData = QuantLib::ext::make_shared<FloatingLegData>(*floatData);
             tmpFloatData->floors() = floors_;
+            tmpFloatData->floorDates() = floorDates_;
             tmpFloatData->caps() = caps_;
+            tmpFloatData->capDates() = capDates_;
             tmpFloatData->nakedOption() = true;
             tmpLegData.concreteLegData() = tmpFloatData;
             legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
@@ -186,7 +188,9 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         LegData tmpLegData = legData_;
         QuantLib::ext::shared_ptr<CMSLegData> tmpFloatData = QuantLib::ext::make_shared<CMSLegData>(*cmsData);
         tmpFloatData->floors() = floors_;
+        tmpFloatData->floorDates() = floorDates_;
         tmpFloatData->caps() = caps_;
+        tmpFloatData->capDates() = capDates_;
         tmpFloatData->nakedOption() = true;
         tmpLegData.concreteLegData() = tmpFloatData;
         legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
@@ -216,7 +220,9 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         LegData tmpLegData = legData_;
         auto tmpCmsData = QuantLib::ext::make_shared<DurationAdjustedCmsLegData>(*cmsData);
         tmpCmsData->floors() = floors_;
+        tmpCmsData->floorDates() = floorDates_;
         tmpCmsData->caps() = caps_;
+        tmpCmsData->capDates() = capDates_;
         tmpCmsData->nakedOption() = true;
         tmpLegData.concreteLegData() = tmpCmsData;
         legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
@@ -246,7 +252,9 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         LegData tmpLegData = legData_;
         QuantLib::ext::shared_ptr<CMSSpreadLegData> tmpFloatData = QuantLib::ext::make_shared<CMSSpreadLegData>(*cmsSpreadData);
         tmpFloatData->floors() = floors_;
+        tmpFloatData->floorDates() = floorDates_;
         tmpFloatData->caps() = caps_;
+        tmpFloatData->capDates() = capDates_;
         tmpFloatData->nakedOption() = true;
         tmpLegData.concreteLegData() = tmpFloatData;
         legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
@@ -337,23 +345,25 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
         legs_.push_back(makeCPILeg(legData_, zeroIndex.currentLink(), engineFactory));
 
-        // If a vector of cap/floor rates are provided, ensure they align with the number of schedule periods
-        if (floors_.size() > 1) {
-            QL_REQUIRE(floors_.size() == legs_[0].size(),
-                       "The number of floor rates provided does not match the number of schedule periods");
+        
+        // If any cap/floor rates are provided, ensure they align with the number of schedule periods
+        vector < double> effectiveFloors_ = floors_;
+        if (floors_.size() > 0) {
+            effectiveFloors_.resize(legs_[0].size(), floors_.back());
+            for (int d = 0; d < floorDates_.size(); d++) {
+                QL_REQUIRE(floorDates_[d] == "",
+                           "CPI CapFloor build error, start dates for cap rates or floor rates are not supported");
+            }
         }
 
-        if (caps_.size() > 1) {
-            QL_REQUIRE(caps_.size() == legs_[0].size(),
-                       "The number of cap rates provided does not match the number of schedule periods");
+        vector<double> effectiveCaps_ = caps_;
+        if (caps_.size() > 0) {
+            effectiveCaps_.resize(legs_[0].size(), caps_.back());
+            for (int d = 0; d < capDates_.size(); d++) {
+                QL_REQUIRE(capDates_[d] == "",
+                           "CPI CapFloor build error, start dates for cap rates or floor rates are not supported");
+            }
         }
-
-        // If one cap/floor rate is given, extend the vector to align with the number of schedule periods
-        if (floors_.size() == 1)
-            floors_.resize(legs_[0].size(), floors_[0]);
-
-        if (caps_.size() == 1)
-            caps_.resize(legs_[0].size(), caps_[0]);
 
         QuantLib::ext::shared_ptr<CpiCapFloorEngineBuilder> capFloorBuilder =
             QuantLib::ext::dynamic_pointer_cast<CpiCapFloorEngineBuilder>(builder);
@@ -381,7 +391,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
             if (capFloorType == QuantLib::CapFloor::Cap || capFloorType == QuantLib::CapFloor::Collar) {
                 QuantLib::ext::shared_ptr<CPICapFloor> capfloor = QuantLib::ext::make_shared<CPICapFloor>(
-                    Option::Call, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, caps_[i], zeroIndex,
+                    Option::Call, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, effectiveCaps_[i], zeroIndex,
                     observationLag, interpolationMethod);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 setSensitivityTemplate(*capFloorBuilder);
@@ -395,7 +405,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                 // for collars we want a long cap, short floor
                 Real sign = capFloorType == QuantLib::CapFloor::Floor ? 1.0 : -1.0;
                 QuantLib::ext::shared_ptr<CPICapFloor> capfloor = QuantLib::ext::make_shared<CPICapFloor>(
-                    Option::Put, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, floors_[i], zeroIndex,
+                    Option::Put, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, effectiveFloors_[i], zeroIndex,
                     observationLag, interpolationMethod);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 setSensitivityTemplate(*capFloorBuilder);
@@ -431,32 +441,36 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
         legs_.push_back(makeYoYLeg(legData_, yoyIndex.currentLink(), engineFactory));
 
-        // If a vector of cap/floor rates are provided, ensure they align with the number of schedule periods
-        if (floors_.size() > 1) {
-            QL_REQUIRE(floors_.size() == legs_[0].size(),
-                       "The number of floor rates provided does not match the number of schedule periods");
+        // If any cap/floor rates are provided, ensure they align with the number of schedule periods
+        vector<double> effectiveFloors_ = floors_;
+        if (floors_.size() > 0) {
+            effectiveFloors_.resize(legs_[0].size(), floors_.back());
+            for (int d = 0; d < floorDates_.size(); d++) {
+                QL_REQUIRE(floorDates_[d] == "",
+                           "YoY CapFloor build error, start dates for cap rates or floor rates are not supported");
+            }
         }
 
-        if (caps_.size() > 1) {
-            QL_REQUIRE(caps_.size() == legs_[0].size(),
-                       "The number of cap rates provided does not match the number of schedule periods");
+        vector<double> effectiveCaps_ = caps_;
+        if (caps_.size() > 0) {
+            effectiveCaps_.resize(legs_[0].size(), caps_.back());
+            DLOG(capDates_.back().c_str());
+            DLOG(legs_[0].size());
+            for (int d = 0; d < capDates_.size(); d++) {
+                QL_REQUIRE(capDates_[d] == "",
+                           "YoY CapFloor build error, start dates for cap rates or floor rates are not supported");
+            }
         }
-
-        // If one cap/floor rate is given, extend the vector to align with the number of schedule periods
-        if (floors_.size() == 1)
-            floors_.resize(legs_[0].size(), floors_[0]);
-
-        if (caps_.size() == 1)
-            caps_.resize(legs_[0].size(), caps_[0]);
 
         // Create QL YoY Inflation CapFloor instrument
         if (capFloorType == QuantLib::CapFloor::Cap) {
-            qlInstrument = QuantLib::ext::shared_ptr<YoYInflationCapFloor>(new YoYInflationCap(legs_[0], caps_));
+            qlInstrument = QuantLib::ext::shared_ptr<YoYInflationCapFloor>(new YoYInflationCap(legs_[0], effectiveCaps_));
         } else if (capFloorType == QuantLib::CapFloor::Floor) {
-            qlInstrument = QuantLib::ext::shared_ptr<YoYInflationCapFloor>(new YoYInflationFloor(legs_[0], floors_));
+            qlInstrument =
+                QuantLib::ext::shared_ptr<YoYInflationCapFloor>(new YoYInflationFloor(legs_[0], effectiveFloors_));
         } else if (capFloorType == QuantLib::CapFloor::Collar) {
-            qlInstrument = QuantLib::ext::shared_ptr<YoYInflationCapFloor>(
-                new YoYInflationCapFloor(QuantLib::YoYInflationCapFloor::Collar, legs_[0], caps_, floors_));
+            qlInstrument = QuantLib::ext::shared_ptr<YoYInflationCapFloor>(new YoYInflationCapFloor(
+                QuantLib::YoYInflationCapFloor::Collar, legs_[0], effectiveCaps_, effectiveFloors_));
         } else {
             QL_FAIL("unknown YoYInflation cap/floor type");
         }
@@ -792,8 +806,10 @@ void CapFloor::fromXML(XMLNode* node) {
     XMLNode* capFloorNode = XMLUtils::getChildNode(node, "CapFloorData");
     longShort_ = XMLUtils::getChildValue(capFloorNode, "LongShort", true);
     legData_.fromXML(XMLUtils::getChildNode(capFloorNode, "LegData"));
-    caps_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "Caps", "Cap");
-    floors_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "Floors", "Floor");
+    caps_ = XMLUtils::getChildrenValuesWithAttributes<Real>(capFloorNode, "Caps", "Cap", "startDate", capDates_,
+                                                            &parseReal);
+    floors_ = XMLUtils::getChildrenValuesWithAttributes<Real>(capFloorNode, "Floors", "Floor", "startDate", floorDates_,
+                                                              &parseReal);
     premiumData_.fromXML(capFloorNode);
 }
 
@@ -803,8 +819,9 @@ XMLNode* CapFloor::toXML(XMLDocument& doc) const {
     XMLUtils::appendNode(node, capFloorNode);
     XMLUtils::addChild(doc, capFloorNode, "LongShort", longShort_);
     XMLUtils::appendNode(capFloorNode, legData_.toXML(doc));
-    XMLUtils::addChildren(doc, capFloorNode, "Caps", "Cap", caps_);
-    XMLUtils::addChildren(doc, capFloorNode, "Floors", "Floor", floors_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, capFloorNode, "Caps", "Cap", caps_, "startDate", capDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, capFloorNode, "Floors", "Floor", floors_, "startDate",
+                                                floorDates_);
     XMLUtils::appendNode(capFloorNode, premiumData_.toXML(doc));
     return node;
 }

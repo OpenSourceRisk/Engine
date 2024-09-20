@@ -16,14 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/algorithm/string.hpp>
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
+#include <qle/termstructures/parametricvolatility.hpp>
+
 #include <ql/errors.hpp>
+
+#include <boost/algorithm/string.hpp>
 
 namespace ore {
 namespace data {

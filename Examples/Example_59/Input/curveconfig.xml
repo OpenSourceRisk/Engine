@@ -46,22 +46,22 @@
           <Parameter>
             <Name>alpha</Name>
             <InitialValue>0.0050</InitialValue>
-            <IsFixed>false</IsFixed>
+            <Calibration>Implied</Calibration>
           </Parameter>
           <Parameter>
             <Name>beta</Name>
             <InitialValue>0.0</InitialValue>
-            <IsFixed>true</IsFixed>
+            <Calibration>Fixed</Calibration>
           </Parameter>
           <Parameter>
             <Name>nu</Name>
             <InitialValue>0.30</InitialValue>
-            <IsFixed>false</IsFixed>
+            <Calibration>Calibrated</Calibration>
           </Parameter>
           <Parameter>
             <Name>rho</Name>
             <InitialValue>0.0</InitialValue>
-            <IsFixed>false</IsFixed>
+            <Calibration>Calibrated</Calibration>
           </Parameter>
         </Parameters>
         <!-- alternatively, the parameters can be specified for each optionlet, e.g.: -->
@@ -69,22 +69,22 @@
         <!--   <Parameter> -->
         <!--     <Name>alpha</Name> -->
         <!--     <InitialValue>0.0050,0.0060,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050</InitialValue> -->
-        <!--     <IsFixed>true</IsFixed> -->
+        <!--     <Calibration>Fixed</Calibration> -->
         <!--   </Parameter> -->
         <!--   <Parameter> -->
         <!--     <Name>beta</Name> -->
         <!--     <InitialValue>0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.1</InitialValue> -->
-        <!--     <IsFixed>true</IsFixed> -->
+        <!--     <Calibration>Fixed</Calibration> -->
         <!--   </Parameter> -->
         <!--   <Parameter> -->
         <!--     <Name>nu</Name> -->
         <!--     <InitialValue>0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.20,0.30</InitialValue> -->
-        <!--     <IsFixed>true</IsFixed> -->
+        <!--     <Calibration>Fixed</Calibration> -->
         <!--   </Parameter> -->
         <!--   <Parameter> -->
         <!--     <Name>rho</Name> -->
         <!--     <InitialValue>0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.9,0.0,0.0</InitialValue> -->
-        <!--     <IsFixed>true</IsFixed> -->
+        <!--     <Calibration>Fixed</Calibration> -->
         <!--   </Parameter> -->
         <!-- </Parameters> -->
         <Calibration>
@@ -132,22 +132,22 @@
           <Parameter>
             <Name>alpha</Name>
             <InitialValue>0.0050</InitialValue>
-            <IsFixed>false</IsFixed>
+            <Calibration>Implied</Calibration>
           </Parameter>
           <Parameter>
             <Name>beta</Name>
             <InitialValue>0.0</InitialValue>
-            <IsFixed>true</IsFixed>
+            <Calibration>Fixed</Calibration>
           </Parameter>
           <Parameter>
             <Name>nu</Name>
             <InitialValue>0.30</InitialValue>
-            <IsFixed>false</IsFixed>
+            <Calibration>Calibrated</Calibration>
           </Parameter>
           <Parameter>
             <Name>rho</Name>
             <InitialValue>0.0</InitialValue>
-            <IsFixed>false</IsFixed>
+            <Calibration>Calibrated</Calibration>
           </Parameter>
         </Parameters>
         <!-- alternatively the parameters can be specified per option tenor (row) and swap tenor (col), e.g.:  -->
@@ -175,7 +175,7 @@
         <!--     0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050, -->
         <!--     0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050,0.0050 -->
         <!--     </InitialValue> -->
-        <!--     <IsFixed>true</IsFixed> -->
+        <!--     <Calibration>Fixed</Calibration> -->
         <!--   </Parameter> -->
         <!--   <Parameter> -->
         <!--     <Name>beta</Name> -->
@@ -200,7 +200,7 @@
         <!--       0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0, -->
         <!--       0.8,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0 -->
         <!--     </InitialValue> -->
-        <!--     <IsFixed>true</IsFixed> -->
+        <!--     <Calibration>Fixed</Calibration> -->
         <!--   </Parameter> -->
         <!--   <Parameter> -->
         <!--     <Name>nu</Name> -->
@@ -225,7 +225,7 @@
         <!--       0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30, -->
         <!--       0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30,0.30 -->
         <!--     </InitialValue> -->
-        <!--     <IsFixed>true</IsFixed> -->
+        <!--     <Calibration>Fixed</Calibration> -->
         <!--   </Parameter> -->
         <!--   <Parameter> -->
         <!--     <Name>rho</Name> -->
@@ -250,7 +250,7 @@
         <!--       0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0, -->
         <!--       0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-0.99 -->
         <!--     </InitialValue> -->
-        <!--     <IsFixed>true</IsFixed> -->
+        <!--     <Calibration>Fixed</Calibration> -->
         <!--   </Parameter> -->
         <!-- </Parameters> -->
         <Calibration>

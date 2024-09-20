@@ -1880,9 +1880,10 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
 void ScriptedTradeEngineBuilder::addAmcGridToContext(QuantLib::ext::shared_ptr<Context>& context) const {
     // the amc grid might be empty, but we add the _AMC_SimDates variable to the context anyway, since
     // a script might rely on its existence
-    DLOG("adding amc date grid (" << amcGrid_.size() << ") to context as _AMC_SimDates");
+    DLOG("adding amc date grid with " << amcSimDates_.size() << " sim dates and " << amcStickyCloseOutDates_.size()
+                                      << " close out dates (set up for sticky runs only!) to context as _AMC_SimDates");
     std::vector<ValueType> tmp;
-    for (auto const& d : amcGrid_)
+    for (auto const& d : amcSimDates_)
         tmp.push_back(EventVec{modelSize_, d});
     context->arrays["_AMC_SimDates"] = tmp;
 }

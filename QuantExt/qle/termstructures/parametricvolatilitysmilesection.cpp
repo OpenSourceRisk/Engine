@@ -37,8 +37,9 @@ Real ParametricVolatilitySmileSection::atmLevel() const { return atmLevel_; }
 Real ParametricVolatilitySmileSection::volatilityImpl(Rate strike) const {
     if (auto v = cache_.find(strike); v != cache_.end())
         return v->second;
-    Real tmp = parametricVolatility_->evaluate(exerciseTime(), swapLength_, strike, atmLevel_, outputMarketQuoteType_,
-                                               shift());
+    Real tmp =
+        parametricVolatility_->evaluate(exerciseTime(), swapLength_, strike == Null<Real>() ? atmLevel() : strike,
+                                        atmLevel_, outputMarketQuoteType_, shift());
     cache_[strike] = tmp;
     return tmp;
 }

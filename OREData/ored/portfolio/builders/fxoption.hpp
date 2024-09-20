@@ -75,9 +75,9 @@ class CamAmcFxOptionEngineBuilder : public VanillaOptionEngineBuilder {
 public:
     // for external cam, with additional simulation dates (AMC)
     CamAmcFxOptionEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                                const std::vector<Date>& simulationDates)
+                                const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
         : VanillaOptionEngineBuilder("CrossAssetModel", "AMC", {"FxOption"}, AssetClass::FX, Date()), cam_(cam),
-          simulationDates_(simulationDates) {}
+          simulationDates_(simulationDates), stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
     // the pricing engine depends on the ccys only, so the base class key implementation will just do fine
@@ -87,6 +87,7 @@ protected:
 private:
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
 };
     
 } // namespace data

@@ -57,7 +57,7 @@
       <xs:element type="indexcurves" name="IndexCurves"/>
       <xs:element type="yieldcurves" name="YieldCurves"/>
       <xs:element type="fxspots" name="FxSpots"/>
-      <xs:element type="fxvolatilities" name="FxVolatilities"/>
+      <xs:element type="stressfxvolatilities" name="FxVolatilities"/>
       <xs:element type="swaptionvolatilities" name="SwaptionVolatilities"/>
       <xs:element type="stresscapfloorvolatilities" name="CapFloorVolatilities"/>
       <xs:element type="equityspots" name="EquitySpots" minOccurs="0"/>
@@ -67,6 +67,39 @@
       <xs:element type="survivalprobabilities" name="SurvivalProbabilities"/>
     </xs:all>
     <xs:attribute type="xs:string" name="id" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="stressfxvolatilities">
+    <xs:sequence>
+      <xs:element type="stressfxvolatility" name="FxVolatility" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="stressfxvolatility">
+    <xs:sequence>
+      <xs:element type="shiftTypeEntry" name="ShiftType" maxOccurs="unbounded"/>
+      <xs:choice>
+        <xs:sequence>
+          <xs:element type="xs:string" name="Shifts"/>
+          <xs:element type="xs:string" name="ShiftExpiries"/>
+        </xs:sequence>
+
+        <xs:sequence>
+          <xs:element name="WeightedShifts">
+            <xs:complexType>
+              <xs:all>
+                <xs:element type="xs:string" name="WeightingSchema"/>
+                <xs:element type="xs:string" name="Shift"/>
+                <xs:element type="xs:string" name="Tenor"/>
+                <xs:element type="xs:string" name="ShiftWeights" minOccurs="0"/>
+                <xs:element type="xs:string" name="WeightTenors" minOccurs="0"/>
+              </xs:all>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute type="currencyPair" name="ccypair" use="required"/>
   </xs:complexType>
 
 </xs:schema>

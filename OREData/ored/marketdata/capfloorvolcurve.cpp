@@ -327,7 +327,8 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
     Size dontThrowSteps = config.bootstrapConfig().dontThrowSteps();
 
     // Get configuration values for parametric smile
-    std::vector<std::vector<std::pair<Real, bool>>> initialModelParameters;
+    std::vector<std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>>
+        initialModelParameters;
     Size maxCalibrationAttempts = 10;
     Real exitEarlyErrorThreshold = 0.005;
     Real maxAcceptableError = 0.05;
@@ -343,12 +344,13 @@ void CapFloorVolCurve::termOptSurface(const Date& asof, CapFloorVolatilityCurveC
                        << alpha.initialValue.size() << ") beta size (" << beta.initialValue.size() << ") nu size ("
                        << nu.initialValue.size() << ") rho size (" << rho.initialValue.size() << ") must match");
         for (Size i = 0; i < alpha.initialValue.size(); ++i) {
-            initialModelParameters.push_back(std::vector<std::pair<Real, bool>>());
-            initialModelParameters.back().push_back(std::make_pair(alpha.initialValue[i], alpha.isFixed));
-            initialModelParameters.back().push_back(std::make_pair(beta.initialValue[i], beta.isFixed));
-            initialModelParameters.back().push_back(std::make_pair(nu.initialValue[i], nu.isFixed));
-            initialModelParameters.back().push_back(std::make_pair(rho.initialValue[i], rho.isFixed));
-        }
+            initialModelParameters.push_back(
+                std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>());
+            initialModelParameters.back().push_back(std::make_pair(alpha.initialValue[i], alpha.calibration));
+            initialModelParameters.back().push_back(std::make_pair(beta.initialValue[i], beta.calibration));
+            initialModelParameters.back().push_back(std::make_pair(nu.initialValue[i], nu.calibration));
+            initialModelParameters.back().push_back(std::make_pair(rho.initialValue[i], rho.calibration));
+       }
         maxCalibrationAttempts = config.parametricSmileConfiguration()->calibration().maxCalibrationAttempts;
         exitEarlyErrorThreshold = config.parametricSmileConfiguration()->calibration().exitEarlyErrorThreshold;
         maxAcceptableError = config.parametricSmileConfiguration()->calibration().maxAcceptableError;
@@ -813,7 +815,8 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
     QL_REQUIRE(config.optionalQuotes() == false, "Optional quotes for optionlet volatilities are not supported.");
 
     // Get configuration values for parametric smile
-    std::vector<std::vector<std::pair<Real,bool>>> initialModelParameters;
+    std::vector<std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>>
+        initialModelParameters;
     Size maxCalibrationAttempts = 10;
     Real exitEarlyErrorThreshold = 0.005;
     Real maxAcceptableError = 0.05;
@@ -829,11 +832,12 @@ void CapFloorVolCurve::optOptSurface(const QuantLib::Date& asof, CapFloorVolatil
                        << alpha.initialValue.size() << ") beta size (" << beta.initialValue.size() << ") nu size ("
                        << nu.initialValue.size() << ") rho size (" << rho.initialValue.size() << ") must match");
         for (Size i = 0; i < alpha.initialValue.size(); ++i) {
-            initialModelParameters.push_back(std::vector<std::pair<Real, bool>>());
-            initialModelParameters.back().push_back(std::make_pair(alpha.initialValue[i], alpha.isFixed));
-            initialModelParameters.back().push_back(std::make_pair(beta.initialValue[i], beta.isFixed));
-            initialModelParameters.back().push_back(std::make_pair(nu.initialValue[i], nu.isFixed));
-            initialModelParameters.back().push_back(std::make_pair(rho.initialValue[i], rho.isFixed));
+            initialModelParameters.push_back(
+                std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>());
+            initialModelParameters.back().push_back(std::make_pair(alpha.initialValue[i], alpha.calibration));
+            initialModelParameters.back().push_back(std::make_pair(beta.initialValue[i], beta.calibration));
+            initialModelParameters.back().push_back(std::make_pair(nu.initialValue[i], nu.calibration));
+            initialModelParameters.back().push_back(std::make_pair(rho.initialValue[i], rho.calibration));
         }
         maxCalibrationAttempts = config.parametricSmileConfiguration()->calibration().maxCalibrationAttempts;
         exitEarlyErrorThreshold = config.parametricSmileConfiguration()->calibration().exitEarlyErrorThreshold;

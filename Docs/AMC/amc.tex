@@ -115,6 +115,7 @@ na & 25 February 2019  & Peter Caspers & initial version\\
 na & 23 October 2023 & Peter Caspers & add parameter RegressorModel\\
 na & 4 April 2024 & Peter Caspers & add parameter RegressionVarianceCutoff\\
 na & 18 June 2024 & Henning Segger & add bond engine\\
+na & 19 September 2024 & Peter Caspers & add parameters RecalibrateOnStickyCloseOutDates, ReevaluateExerciseInStickyRun\\
 \hline
 \end{supertabular}
 \end{center}
@@ -257,6 +258,8 @@ The pricing engine configuration is similar for all AMC enabled products, e.g. f
     <Parameter name="MinObsDate">true</Parameter>
     <Parameter name="RegressorModel">Simple</Parameter>
     <Parameter name="RegressionVarianceCutoff">1E-5</Parameter>
+    <Parameter name="RecalibrateOnStickyCloseOutDates">false</Parameter>
+    <Parameter name="ReevaluateExerciseInStickyRun">false</Parameter>
   </EngineParameters>
 </Product>
 \end{minted}
@@ -299,6 +302,14 @@ engine types. The engine parameters are the same for all products:
 \item \verb+RegressionVarianceCutoff+: Optional. If given, a coordinate transform and (possibly) a factor reduction is
   applied to the regressors, such that $1-\epsilon$ of the total variance of regressors is kept, where $\epsilon$ the
   given parameter. This helps dealing with collinearity and also reducing the dimnensionality of the regression model.
+\item \verb+RecalibrateOnStickyCloseOutDates+: Optional, defaults to false. If true, the amc regression models are
+  retrained on close-out dates in a sticky-date simulation. Otherwise the regression model from the valuation date is
+  reused for the sticky run. If the valuation date is close to today (e.g. today + 1D) and the close-out date is
+  relatively speaking further out (e.g. today + 15D), recalibration on close-out dates might be necessary to ensure
+  stable results.
+\item \verb+ReevaluateExerciseInStickyRun+: Optional, defaults to false. If true, the exercise decision is updated for
+  the run on sticky close-out dates, otherwise the exercise indicator from the valuation date is reused on the close-out
+  date.
 \end{enumerate}
 
 \begin{table}[hbt]
@@ -667,7 +678,8 @@ engines sets up the following protected member variables (serving as parameters 
   in cash
 \end{enumerate}
 
-Though both bond engines inherit from \verb+McMultiLegBaseEngine+ bespoke \verb+calculate()+ and \verb+amcCalculator()+ methods are in place for the bond flavours.
+Though both bond engines inherit from \verb+McMultiLegBaseEngine+ bespoke \verb+calculate()+ and \verb+amcCalculator()+
+methods are in place for the bond flavours.
 
 A call to \verb+McMultiLegBaseEngine::calculate()+ will set the result member variables
 

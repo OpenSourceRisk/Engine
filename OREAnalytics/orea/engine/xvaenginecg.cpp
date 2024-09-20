@@ -214,11 +214,18 @@ void XvaEngineCG::buildPortfolio() {
     configurations[MarketContext::irCalibration] = marketConfigurationInCcy_;
     configurations[MarketContext::fxCalibration] = marketConfiguration_;
     configurations[MarketContext::pricing] = marketConfiguration_;
+
+    std::vector<Date> simDates, stickyCloseOutDates;
+    if (scenarioGeneratorData_->withMporStickyDate()) {
+        simDates = scenarioGeneratorData_->getGrid()->valuationDates();
+        stickyCloseOutDates = scenarioGeneratorData_->getGrid()->closeOutDates();
+    } else {
+        simDates = scenarioGeneratorData_->getGrid()->dates();
+    }
+
     auto factory = QuantLib::ext::make_shared<EngineFactory>(
         edCopy, simMarket_, configurations, referenceData_, iborFallbackConfig_,
-        EngineBuilderFactory::instance().generateAmcCgEngineBuilders(model_,
-                                                                     scenarioGeneratorData_->getGrid()->dates()),
-        true);
+        EngineBuilderFactory::instance().generateAmcCgEngineBuilders(model_, simDates, stickyCloseOutDates), true);
 
     portfolio_->build(factory, "xva engine cg", true);
 

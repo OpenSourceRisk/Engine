@@ -125,7 +125,7 @@
     <xs:all>
       <xs:element type="xs:string" name="Name"/>
       <xs:element type="xs:string" name="InitialValue"/>
-      <xs:element type="xs:boolean" name="IsFixed"/>
+      <xs:element type="parametricVolatilityParameterCalibration" name="Calibration"/>
     </xs:all>
   </xs:complexType>
 
@@ -668,6 +668,7 @@
       <xs:element type="xs:string" name="QuoteIndex" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="UseLastFixingDate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -1293,6 +1294,13 @@
                 </xs:all>
             </xs:complexType>
         </xs:element>
+      <xs:element name="InflationCapFloorVolatilities" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
     </xs:all>
   </xs:complexType>
 

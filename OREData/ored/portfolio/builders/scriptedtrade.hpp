@@ -42,15 +42,15 @@ public:
 
     //! constructor that builds an AMC - enabled pricing engine
     ScriptedTradeEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& amcCam,
-                               const std::vector<Date>& amcGrid)
+                               const std::vector<Date>& amcSimDates, const std::vector<Date>& amcStickyCloseOutDates)
         : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmc_(true), amcCam_(amcCam),
-          amcGrid_(amcGrid) {}
+          amcSimDates_(amcSimDates), amcStickyCloseOutDates_(amcStickyCloseOutDates) {}
 
     //! constructor that builds an AMCCG pricing engine
     ScriptedTradeEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& amcCgModel,
-                               const std::vector<Date>& amcGrid)
+                               const std::vector<Date>& amcSimDates, const std::vector<Date>& amcStickyCloseOutDates)
         : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmc_(true), amcCgModel_(amcCgModel),
-          amcGrid_(amcGrid) {}
+          amcSimDates_(amcSimDates), amcStickyCloseOutDates_(amcStickyCloseOutDates) {}
 
     QuantLib::ext::shared_ptr<QuantExt::ScriptedInstrument::engine>
     engine(const std::string& id, const ScriptedTrade& scriptedTrade,
@@ -111,7 +111,7 @@ protected:
     bool buildingAmc_ = false;
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> amcCam_;
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> amcCgModel_;
-    const std::vector<Date> amcGrid_;
+    const std::vector<Date> amcSimDates_, amcStickyCloseOutDates_;
 
     // cache for parsed asts
     std::map<std::string, ASTNodePtr> astCache_;

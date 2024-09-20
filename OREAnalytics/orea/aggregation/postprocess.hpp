@@ -59,6 +59,7 @@ using namespace data;
   - Basel Effective Expected Exposure, EEE_B: max( EEE_B(t-1), EE_B(t))
   - Basel Effective Expected Positive Exposure, EEPE_B
   - Potential Future Exposure, PFE: q-Quantile of the distribution of
+  - Time-Weighted Exposure (only on netting set level): 1 / T SUM_i=0^T EPE(t) \DELTA(t)
 
   2) Dynamic Initial Margin via regression
 
@@ -207,6 +208,10 @@ public:
     const Real& tradeEEPE_B(const string& tradeId);
     //! Return trade level Potential Future Exposure evolution
     const vector<Real>& tradePFE(const string& tradeId);
+    //! Return trade level Expected Positive Exposure evolution
+    const vector<Real>& tradeEPE_B_timeWeighted(const string& tradeId);
+    //! Return trade level Effective Expected Positive Exposure evolution
+    const vector<Real>& tradeEEPE_B_timeWeighted(const string& tradeId);
     // const vector<Real>& tradeVAR(const string& tradeId);
 
     //! Return Netting Set Expected Positive Exposure evolution
@@ -224,7 +229,10 @@ public:
     //! Return Netting Set Potential Future Exposure evolution
     const vector<Real>& netPFE(const string& nettingSetId);
     // const vector<Real>& netVAR(const string& nettingSetId);
-
+    // Return Netting Set Basel the time averaged Expected Positive Exposure evolution
+    const vector<Real>& netEPE_B_timeWeighted(const string& nettingSetId);
+    // Return Netting Set Basel the time averaged Effective Expected Positive Exposure evolution
+    const vector<Real>& netEEPE_B_timeWeighted(const string& nettingSetId);
     //! Return the netting set's expected collateral evolution
     const vector<Real>& expectedCollateral(const string& nettingSetId);
     //! Return the netting set's expected COLVA increments through time

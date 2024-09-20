@@ -51,7 +51,6 @@ void McLgmBondEngine::calculate() const {
 
 } // McLgmBondEngine::calculate
 
-
 std::vector<QuantExt::RandomVariable> McLgmBondEngine::BondAmcCalculator::simulatePath(
     const std::vector<QuantLib::Real>& pathTimes, const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
     const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) {
@@ -63,6 +62,17 @@ std::vector<QuantExt::RandomVariable> McLgmBondEngine::BondAmcCalculator::simula
     QL_REQUIRE(relevantPathIndex.size() == xvaTimes_.size(),
                "FwdBondAmcCalculator::simulatePath() inconsistent relevant path indexes ("
                    << relevantPathIndex.size() << ") and xvaTimes (" << xvaTimes_.size() << ") - internal error.");
+
+    // bool stickyCloseOutRun = false;
+    std::size_t regModelIndex = 0;
+
+    for (size_t i = 0; i < relevantPathIndex.size(); ++i) {
+        if (relevantPathIndex[i] != relevantTimeIndex[i]) {
+            // stickyCloseOutRun = true;
+            regModelIndex = 1;
+            break;
+        }
+    }
 
     // init result vector
     Size samples = paths.front().front().size();
@@ -92,7 +102,7 @@ std::vector<QuantExt::RandomVariable> McLgmBondEngine::BondAmcCalculator::simula
         QL_REQUIRE(ind < exerciseXvaTimes_.size(), "FwdBondAmcCalculator::simulatePath(): internal error, xva time "
                                                        << t << " not found in exerciseXvaTimes vector.");
 
-        RandomVariable bondRV = regModelUndDirty_[ind].apply(initialState_, effPaths, xvaTimes_);
+        RandomVariable bondRV = regModelUndDirty_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
 
         // numeraire multiplication (incl and excl security spread), required as the base engine uses the numeraire
         // incl. the spread

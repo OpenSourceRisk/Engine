@@ -101,8 +101,9 @@ protected:
 class CamAmcFwdBondEngineBuilder : public FwdBondEngineBuilder {
 public:
     CamAmcFwdBondEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                               const std::vector<Date>& simulationDates)
-        : FwdBondEngineBuilder("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
+                               const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
+        : FwdBondEngineBuilder("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates),
+          stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
@@ -122,6 +123,7 @@ private:
                                                            const Handle<Quote>& conversionFactor);
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data

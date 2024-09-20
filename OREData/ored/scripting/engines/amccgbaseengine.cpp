@@ -53,8 +53,12 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                                 const std::vector<QuantLib::Date>& simulationDates)
-    : modelCg_(modelCg), simulationDates_(simulationDates) {
+                                 const std::vector<QuantLib::Date>& simulationDates,
+                                 const std::vector<QuantLib::Date>& stickyCloseOutDates,
+                                 const bool recalibrateOnStickyCloseOutDates, const bool reevaluateExerciseInStickyRun)
+    : modelCg_(modelCg), simulationDates_(simulationDates), stickyCloseOutDates_(stickyCloseOutDates),
+      recalibrateOnStickyCloseOutDates_(recalibrateOnStickyCloseOutDates),
+      reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun) {
 
     // determine name of npv node, we can use anything that is not yet taken
 

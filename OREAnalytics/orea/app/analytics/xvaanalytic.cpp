@@ -438,7 +438,7 @@ void XvaAnalyticImpl::buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio
 
 QuantLib::ext::shared_ptr<EngineFactory>
 XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                                  const std::vector<Date>& grid) {
+                                  const std::vector<Date>& simDates, const std::vector<Date>& stickyCloseOutDates) {
     LOG("XvaAnalytic::engineFactory() called");
     QuantLib::ext::shared_ptr<EngineData> edCopy = QuantLib::ext::make_shared<EngineData>(*inputs_->amcPricingEngine());
     edCopy->globalParameters()["GenerateAdditionalResults"] = "false";
@@ -450,7 +450,7 @@ XvaAnalyticImpl::amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::Cros
     ext::shared_ptr<ore::data::Market> market = offsetScenario_ == nullptr ? analytic()->market() : offsetSimMarket_;
     auto factory = QuantLib::ext::make_shared<EngineFactory>(
         edCopy, market, configurations, inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
-        EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, grid), true);
+        EngineBuilderFactory::instance().generateAmcEngineBuilders(cam, simDates, stickyCloseOutDates), true);
     return factory;
 }
 
@@ -461,14 +461,16 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
     CONSOLEW(msg);
     ProgressMessage(msg, 0, 1).log();
 
-    LOG("buildAmcPortfolio: Check sim dates");
-    std::vector<Date> simDates = analytic()->configurations().scenarioGeneratorData->withCloseOutLag() &&
-                                         !analytic()->configurations().scenarioGeneratorData->withMporStickyDate()
-                                     ? analytic()->configurations().scenarioGeneratorData->getGrid()->dates()
-                                     : analytic()->configurations().scenarioGeneratorData->getGrid()->valuationDates();
+    std::vector<Date> simDates, stickyCloseOutDates;
+    if (analytic()->configurations().scenarioGeneratorData->withMporStickyDate()) {
+        simDates = analytic()->configurations().scenarioGeneratorData->getGrid()->valuationDates();
+        stickyCloseOutDates = analytic()->configurations().scenarioGeneratorData->getGrid()->closeOutDates();
+    } else {
+        simDates = analytic()->configurations().scenarioGeneratorData->getGrid()->dates();
+    }
 
     LOG("buildAmcPortfolio: Register additional engine builders");
-    auto factory = amcEngineFactory(model_, simDates);
+    auto factory = amcEngineFactory(model_, simDates, stickyCloseOutDates);
 
     LOG("buildAmcPortfolio: Load Portfolio");
     QuantLib::ext::shared_ptr<Portfolio> portfolio = inputs_->portfolio();
