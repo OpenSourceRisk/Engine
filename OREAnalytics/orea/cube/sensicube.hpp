@@ -107,9 +107,9 @@ public:
     }
 
     void remove(Size i, Size k, bool useT0) override {
-        this->check(i, 0, k);
         // we can ignore useT0 since get() return the t0 value anyhow if missing k
         if (k != QuantLib::Null<Size>()) {
+            this->check(i, 0, k);
             this->tradeNPVs_[i].erase(k);
         } else {
             this->tradeNPVs_[i].clear();

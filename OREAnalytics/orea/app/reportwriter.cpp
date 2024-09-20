@@ -827,6 +827,8 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
     const vector<Real>& pfe = postProcess->tradePFE(tradeId);
     const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
     const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
+    const vector<Real>& epe_b = postProcess->tradeEPE_B_timeWeighted(tradeId);
+    const vector<Real>& eepe_b = postProcess->tradeEEPE_B_timeWeighted(tradeId);
     report.addColumn("TradeId", string())
         .addColumn("Date", Date())
         .addColumn("Time", double(), 6)
@@ -836,7 +838,9 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
         .addColumn("AllocatedENE", double())
         .addColumn("PFE", double())
         .addColumn("BaselEE", double())
-        .addColumn("BaselEEE", double());
+        .addColumn("BaselEEE", double())
+        .addColumn("TimeWeightedBaselEPE", double(), 2)
+        .addColumn("TimeWeightedBaselEEPE", double(), 2);
     report.next()
         .add(tradeId)
         .add(today)
@@ -847,7 +851,9 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
         .add(aene[0])
         .add(pfe[0])
         .add(ee_b[0])
-        .add(eee_b[0]);
+        .add(eee_b[0])
+        .add(epe_b[0])
+        .add(eepe_b[0]);
     for (Size j = 0; j < dates.size(); ++j) {
 
         Time time = dc.yearFraction(today, dates[j]);
@@ -861,7 +867,9 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
             .add(aene[j + 1])
             .add(pfe[j + 1])
             .add(ee_b[j + 1])
-            .add(eee_b[j + 1]);
+            .add(eee_b[j + 1])
+            .add(epe_b[j + 1])
+            .add(eepe_b[j + 1]);
     }
     report.end();
 }
@@ -877,7 +885,8 @@ void addNettingSetExposure(ore::data::Report& report, QuantLib::ext::shared_ptr<
     const vector<Real>& eee_b = postProcess->netEEE_B(nettingSetId);
     const vector<Real>& pfe = postProcess->netPFE(nettingSetId);
     const vector<Real>& ecb = postProcess->expectedCollateral(nettingSetId);
-
+    const vector<Real>& epe_b = postProcess->netEPE_B_timeWeighted(nettingSetId);
+    const vector<Real>& eepe_b = postProcess->netEEPE_B_timeWeighted(nettingSetId);
     report.next()
         .add(nettingSetId)
         .add(today)
@@ -887,7 +896,9 @@ void addNettingSetExposure(ore::data::Report& report, QuantLib::ext::shared_ptr<
         .add(pfe[0])
         .add(ecb[0])
         .add(ee_b[0])
-        .add(eee_b[0]);
+        .add(eee_b[0])
+        .add(epe_b[0])
+        .add(eepe_b[0]);
     for (Size j = 0; j < dates.size(); ++j) {
         Real time = dc.yearFraction(today, dates[j]);
         report.next()
@@ -899,7 +910,9 @@ void addNettingSetExposure(ore::data::Report& report, QuantLib::ext::shared_ptr<
             .add(pfe[j + 1])
             .add(ecb[j + 1])
             .add(ee_b[j + 1])
-            .add(eee_b[j + 1]);
+            .add(eee_b[j + 1])
+            .add(epe_b[j + 1])
+            .add(eepe_b[j + 1]);
     }
 }
 
@@ -913,7 +926,9 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, QuantLib:
         .addColumn("PFE", double(), 2)
         .addColumn("ExpectedCollateral", double(), 2)
         .addColumn("BaselEE", double(), 2)
-        .addColumn("BaselEEE", double(), 2);
+        .addColumn("BaselEEE", double(), 2)
+        .addColumn("TimeWeightedBaselEPE", double(), 2)
+        .addColumn("TimeWeightedBaselEEPE", double(), 2);
     addNettingSetExposure(report, postProcess, nettingSetId);
     report.end();
 }

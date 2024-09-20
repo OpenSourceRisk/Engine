@@ -548,6 +548,10 @@ void CurveConfigurations::fromXML(XMLNode* node) {
             if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
                 reportConfigYieldCurves_.fromXML(tmp3);
         }
+        if (auto tmp2 = XMLUtils::getChildNode(tmp, "InflationCapFloorVolatilities")) {
+            if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
+                reportConfigInflationCapFloorVols_.fromXML(tmp3);
+        }
     }
 
     // Load YieldCurves, FXVols, etc, etc
@@ -619,6 +623,7 @@ void CurveConfigurations::addReportConfigurationNode(XMLDocument& doc, XMLNode* 
     f(reportConfigIrCapFloorVols_, "IRCapFloorVolatilities");
     f(reportConfigIrSwaptionVols_, "IRSwaptionVolatilities");
     f(reportConfigYieldCurves_, "YieldCurves");
+    f(reportConfigInflationCapFloorVols_, "InflationCapFloorVolatilities");
     // If the newly generated ReportConfiguration node contains any data then append it to the parent node
     if (!XMLUtils::getChildrenNodes(node, "").empty())
         XMLUtils::appendNode(parent, node);

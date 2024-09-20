@@ -15,4 +15,3 @@ oreex.run("Input/ore.xml")
 oreex.print_headline("Run AMC simulation for short term portfolio with includeTodaysCashFlows=true")
 oreex.run("Input/ore_amc.xml")
 
-

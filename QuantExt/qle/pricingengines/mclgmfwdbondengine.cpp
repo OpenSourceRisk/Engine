@@ -41,10 +41,7 @@ void McLgmFwdBondEngine::setMember() const {
         cmpPaymentDate = npvDate;
     }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////
     // set interim results for both payoff and amc calculator
-    /////////////////////////////////////////////////////////////////////////////////////////////
-
     cmpPayment_ = cmpPaymentDate >= npvDate ? cmpPayment : 0.0;
 
     // the case of dirty strike corresponds here to an accrual of 0.0. This will be convenient in the code.
@@ -149,6 +146,17 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
         boost::dynamic_pointer_cast<ForwardBondTypePayoff>(engine_->arguments_.payoff);
     QL_REQUIRE(fwdBndPayOff, "not a ForwardBondTypePayoff");
 
+    // bool stickyCloseOutRun = false;
+    std::size_t regModelIndex = 0;
+
+    for (size_t i = 0; i < relevantPathIndex.size(); ++i) {
+        if (relevantPathIndex[i] != relevantTimeIndex[i]) {
+            // stickyCloseOutRun = true;
+            regModelIndex = 1;
+            break;
+        }
+    }
+
     // init result vector
     Size samples = paths.front().front().size();
     std::vector<RandomVariable> result(xvaTimes_.size() + 1, RandomVariable(paths.front().front().size(), 0.0));
@@ -182,8 +190,9 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
         QL_REQUIRE(ind < exerciseXvaTimes_.size(), "FwdBondAmcCalculator::simulatePath(): internal error, xva time "
                                                        << t << " not found in exerciseXvaTimes vector.");
 
-        RandomVariable underylingSpotRV = regModelUndDirty_[ind].apply(initialState_, effPaths, xvaTimes_) *
-                                          RandomVariable(samples, engine_->arguments_.bondNotional);
+        RandomVariable underylingSpotRV =
+            regModelUndDirty_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_) *
+            RandomVariable(samples, engine_->arguments_.bondNotional);
 
         // numeraire multiplication (incl and excl security spread), required as the base engine uses the numeraire
         // incl. the spread
