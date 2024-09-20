@@ -60,7 +60,8 @@ protected:
     QuantLib::ext::shared_ptr<Portfolio> classicRun(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
 
     QuantLib::ext::shared_ptr<EngineFactory>
-    amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& grid);
+    amcEngineFactory(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam, const std::vector<Date>& simDates,
+                     const std::vector<Date>& stickyCloseOutDates);
     void buildAmcPortfolio();
     void amcRun(bool doClassicRun);
 

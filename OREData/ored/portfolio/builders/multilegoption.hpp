@@ -68,8 +68,10 @@ class CamAmcMultiLegOptionEngineBuilder : public MultiLegOptionEngineBuilderBase
 public:
     // for external cam, with additional simulation dates (AMC)
     CamAmcMultiLegOptionEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                                      const std::vector<Date>& simulationDates)
-        : MultiLegOptionEngineBuilderBase("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates) {}
+                                      const std::vector<Date>& simulationDates,
+                                      const std::vector<Date>& stickyCloseOutDates)
+        : MultiLegOptionEngineBuilderBase("CrossAssetModel", "AMC"), cam_(cam), simulationDates_(simulationDates),
+          stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
     // the pricing engine depends on the ccys only
@@ -91,6 +93,7 @@ protected:
 private:
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data
