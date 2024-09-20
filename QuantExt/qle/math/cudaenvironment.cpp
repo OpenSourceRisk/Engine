@@ -136,8 +136,8 @@ std::string cusolverGetErrorString(cusolverStatus_t err) {
     default:
         return "unknown cusolver error code " + std::to_string(err);
     }
-#endif
 }
+#endif
 } // namespace
 
 namespace QuantExt {
