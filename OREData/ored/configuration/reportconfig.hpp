@@ -42,12 +42,11 @@ public:
                  const boost::optional<std::vector<Real>>& strikeSpreads,
                  const boost::optional<std::vector<Period>>& expiries,
                  const boost::optional<std::vector<Date>>& pillarDates,
-                 const boost::optional<std::vector<Period>>& underlyingTenors,
-                 const boost::optional<std::vector<Period>>& pillarTenors)
+                 const boost::optional<std::vector<Period>>& underlyingTenors)
         : reportOnDeltaGrid_(reportOnDeltaGrid), reportOnMoneynessGrid_(reportOnMoneynessGrid),
           reportOnStrikeGrid_(reportOnStrikeGrid), reportOnStrikeSpreadGrid_(reportOnStrikeSpreadGrid), deltas_(deltas),
           moneyness_(moneyness), strikes_(strikes), strikeSpreads_(strikeSpreads), expiries_(expiries),
-          pillarDates_(pillarDates), underlyingTenors_(underlyingTenors), pillarTenors_(pillarTenors) {}
+          pillarDates_(pillarDates), underlyingTenors_(underlyingTenors) {}
 
     const boost::optional<bool> reportOnDeltaGrid() const { return reportOnDeltaGrid_; }
     const boost::optional<bool> reportOnMoneynessGrid() const { return reportOnMoneynessGrid_; }
@@ -60,7 +59,6 @@ public:
     const boost::optional<std::vector<Period>>& expiries() const { return expiries_; }
     const boost::optional<std::vector<Date>>& pillarDates() const { return pillarDates_; }
     const boost::optional<std::vector<Period>>& underlyingTenors() const { return underlyingTenors_; }
-    const boost::optional<std::vector<Period>>& pillarTenors() const { return pillarTenors_; }
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) const override;
@@ -78,7 +76,6 @@ private:
     boost::optional<std::vector<Period>> expiries_;
     boost::optional<std::vector<Date>> pillarDates_;
     boost::optional<std::vector<Period>> underlyingTenors_;
-    boost::optional<std::vector<Period>> pillarTenors_;
 };
 
 ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const ReportConfig& localConfig);

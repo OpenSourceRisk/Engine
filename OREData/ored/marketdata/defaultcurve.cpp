@@ -301,7 +301,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 try {
                     ReportConfig rc =
                         effectiveReportConfig(curveConfigs.reportConfigDefaultCurves(), configs->reportConfig());
-                    std::vector<QuantLib::Period> pillars = *rc.pillarTenors();
+                    std::vector<QuantLib::Period> pillars = *rc.expiries();
                     if (!pillars.empty()) {
                         calInfo->pillarDates.clear();
                         for (auto const& p : pillars)

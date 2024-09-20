@@ -28,7 +28,7 @@ const std::vector<Period> YieldCurveCalibrationInfo::defaultPeriods = {
     3 * Years, 5 * Years, 7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
 
 const std::vector<Period> DefaultCurveCalibrationInfo::defaultPeriods = {
-    1 * Weeks, 2 * Weeks, 3 * Months, 6 * Months, 9 * Months, 1 * Years,  2 * Years,
+    3 * Months, 6 * Months, 9 * Months, 1 * Years,  2 * Years,
     3 * Years, 5 * Years, 7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
 
 } // namespace data
