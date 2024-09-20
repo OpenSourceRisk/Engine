@@ -179,12 +179,9 @@ private:
 
     void releaseMem(double*& m, const std::string& desc);
     void releaseMem(int*& m, const std::string& desc);
-    //void releaseMemCU(CUdeviceptr dptr, const std::string& description);
     void releaseModule(CUmodule& k, const std::string& desc);
     void releaseStream(cudaStream_t& stream, const std::string& desc);
-    //void releaseMersenneTwisterStates(curandStateMtgp32*& rngState, const std::string& desc);
     void updateVariatesMTGP32();
-    //void updateVariatesMTGP32_dynamic();
     void updateVariatesMT19937();
     void updateVariatesMT19937_CPU();
 
@@ -205,7 +202,7 @@ private:
     bool supportsDoublePrecision_;
     size_t maxRandomVariates_;
     double* d_randomVariables_;
-    //CUdeviceptr d_randomVariables_;
+
 
     // will be accumulated over all calcs
     ComputeContext::DebugInfo debugInfo_;
@@ -222,8 +219,6 @@ private:
     std::vector<std::size_t> nOperations_;
     std::vector<std::size_t> nNUM_BLOCKS_;
     std::vector<std::size_t> nOutputVariables_;
-
-    std::map<std::size_t, double*> dOutput_;
 
     // 2 curent calc
 
@@ -306,18 +301,8 @@ CudaContext::CudaContext(
 
 CudaContext::~CudaContext() {
     if (initialized_) {
-        //CUresult err;
-        //cudaError_t cudaErr;
-        //for (auto& ptr : dOutput_) {
-        //    releaseMem(ptr.second, "~CudaContext()::");
-        //}
-
-        //releaseMem(dOutput_[0], "~CudaContext()::dOutput_[0]");
+        //cuInit(0);
         //releaseMem(d_randomVariables_, "~CudaContext()::d_randomVariables_");
-        //cudaErr = cudaFree(d_randomVariables_);
-        //std::cout << "cudaFree(d_randomVariables_): " << cudaGetErrorString(cudaErr) << std::endl; 
-        //releaseMemCU(d_randomVariables_, "~CudaContext()");
-
 
         for (Size i = 0; i < module_.size(); ++i) {
             if (disposed_[i])
@@ -325,9 +310,7 @@ CudaContext::~CudaContext() {
             releaseModule(module_[i], "~CudaContext()");
         }
         
-        releaseStream(stream_, "~CudaContext()");
-        //releaseMemCU(d_randomVariables_, "~CudaContext()");
-        
+        releaseStream(stream_, "~CudaContext()");        
     }
 }
 
@@ -1229,11 +1212,9 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
     cudaCall(cudaMemcpyAsync(input, h_input, inputSize, cudaMemcpyHostToDevice, stream_), "finalizeCalculation, cudaMemcpyAsync(input, h_input)");
     
     // Allocate memory for output
-    if (dOutput_.count(nOutputVariables_[currentId_ - 1]) == 0) {
-        double* d_output;
-        cudaCall(cudaMalloc(&d_output, nOutputVariables_[currentId_ - 1] * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation, cudaMalloc(d_output)");
-        dOutput_[nOutputVariables_[currentId_ - 1]] = d_output;
-    }
+    double* d_output;
+    cudaCall(cudaMalloc(&d_output, nOutputVariables_[currentId_ - 1] * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation, cudaMalloc(d_output)");
+    
     if (settings_.debug) {
         debugInfo_.nanoSecondsDataCopy += timer.elapsed().wall - timerBase;
     }
@@ -1271,7 +1252,6 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
         }
         // if newKernelCE_ is not empty, add a new kernel
         if (!newKernelCE_.empty()) {
-            //std::cout << "newKernelCE_ = " << newKernelCE_ << std::endl;
             if (numOfExpectationInKernel_[currentId_ - 1].size() > 1 && numOfExpectationInKernel_[currentId_ - 1][numOfExpectationInKernel_[currentId_ - 1].size()-2] > 0)
                 source_.back() +=  newKernelCE_;
             else {
@@ -1450,7 +1430,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
 
         // set kernel args
         void* args[] = {&input,
-                        &dOutput_[nOutputVariables_[currentId_ - 1]],
+                        &d_output,
                         &d_randomVariables_};
 
         // execute kernel
@@ -1680,7 +1660,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
         // last kernel
         // set kernel args
         std::vector<double*> argVec;
-        void* argsFinal[] = {&input, &d_randomVariables_, &values, &dOutput_[nOutputVariables_[currentId_ - 1]], nullptr, nullptr, nullptr};
+        void* argsFinal[] = {&input, &d_randomVariables_, &values, &d_output, nullptr, nullptr, nullptr};
         if (previousKernelHaveConditionalExpectation){
             argVec.push_back(A_unfilter.back());
             argVec.push_back(X);
@@ -1721,9 +1701,9 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
     }
     double* h_output;
     cudaCall(cudaMallocHost(&h_output, nOutputVariables_[currentId_ - 1] * size_[currentId_ - 1] * sizeof(double)), "finalizeCalculation(), cudaMallocHost(&h_output)");
-    cudaCall(cudaMemcpyAsync(h_output, dOutput_[nOutputVariables_[currentId_ - 1]],
+    cudaCall(cudaMemcpyAsync(h_output, d_output,
                               sizeof(double) * size_[currentId_ - 1] * nOutputVariables_[currentId_ - 1],
-                              cudaMemcpyDeviceToHost, stream_), "finalizeCalculation(), cudaMemcpyAsync(h_output, dOutput_[nOutputVariables_[currentId_ - 1]])");
+                              cudaMemcpyDeviceToHost, stream_), "finalizeCalculation(), cudaMemcpyAsync(h_output, d_output)");
     cudaCall(cudaStreamSynchronize(stream_), "finalizeCalculation(), cudaStreamSynchronize()");
     for (size_t i = 0; i < nOutputVariables_[currentId_ - 1]; ++i) {
         std::copy(h_output + i * size_[currentId_ - 1],
@@ -1732,6 +1712,7 @@ void CudaContext::finalizeCalculation(std::vector<double*>& output) {
 
     // clear memory
     releaseMem(input, "finalizeCalculation()");
+    releaseMem(d_output, "finalizeCalculation()");
     cudaCall(cudaFreeHost(h_input), "finalizeCalculation(), cudaFreeHost(h_input)");
     cudaCall(cudaFreeHost(h_output), "finalizeCalculation(), cudaFreeHost(h_output)");
     if (settings_.debug) {
