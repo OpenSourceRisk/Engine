@@ -41,7 +41,8 @@ public:
     YoYInflationOptionletVolStripper(const QuantLib::ext::shared_ptr<QuantLib::CapFloorTermVolSurface>& volSurface,
                                      const QuantLib::ext::shared_ptr<YoYInflationIndex>& index,
                                      const Handle<YieldTermStructure>& nominalTs,
-                                     VolatilityType type = ShiftedLognormal, Real displacement = 0.0);
+                                     VolatilityType type = ShiftedLognormal, Real displacement = 0.0,
+                                     bool dontThrow = false, size_t dontThrowSteps = 10);
 
     const QuantLib::ext::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const {
         return yoyOptionletVolSurface_;
@@ -58,6 +59,8 @@ private:
     Handle<YieldTermStructure> nominalTs_;
     VolatilityType type_;
     Real displacement_;
+    bool dontThrow_;
+    size_t dontThrowSteps_;
 };
 } // namespace QuantExt
 

@@ -34,9 +34,9 @@ namespace QuantExt {
 
 YoYInflationOptionletVolStripper::YoYInflationOptionletVolStripper(
     const QuantLib::ext::shared_ptr<CapFloorTermVolSurface>& volSurface, const QuantLib::ext::shared_ptr<YoYInflationIndex>& index,
-    const Handle<YieldTermStructure>& nominalTs, VolatilityType type, Real displacement)
-    : volSurface_(volSurface), yoyIndex_(index), nominalTs_(nominalTs), type_(type), displacement_(displacement) {
-
+    const Handle<YieldTermStructure>& nominalTs, VolatilityType type, Real displacement, bool dontThrow, size_t dontThrowSteps)
+    : volSurface_(volSurface), yoyIndex_(index), nominalTs_(nominalTs), type_(type), displacement_(displacement), dontThrow_(dontThrow),
+    dontThrowSteps_(dontThrowSteps) {
     performCalculations();
 }
 
