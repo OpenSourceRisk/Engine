@@ -79,16 +79,25 @@ private:
     void fprintString(const string& s) const {
         bool quoted = s.size() > 1 && s[0] == quoteChar_ && s[s.size() - 1] == quoteChar_;
         string sc = quoted ? s.substr(1, s.size() - 2) : s;
+
+        bool containsComma = sc.find(',') != std::string::npos;
+        
         boost::replace_all(sc, "\n", "\\n");
         boost::replace_all(sc, "\t", "\\t");
-        if (quoteChar_ != '\0') {
-            if (quoteChar_ == '"')
-                boost::replace_all(sc, "\"", "\\\"");
-            fputc(quoteChar_, fp_);
+
+        if (containsComma && quoteChar_ != '\0') {
+            if (quoteChar_ == '"') {
+                boost::replace_all(sc, "\"", "\"\"");  // Escape internal double quotes per CSV convention
+            }
+            fputc(quoteChar_, fp_);  // Opening quote
         }
+
         fprintf(fp_, "%s", sc.c_str());
-        if (quoteChar_ != '\0')
-            fputc(quoteChar_, fp_);
+
+        // Add closing quote if necessary
+        if (containsComma && quoteChar_ != '\0') {
+            fputc(quoteChar_, fp_);  // Closing quote
+        }
     }
 
     FILE* fp_;
