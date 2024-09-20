@@ -22,6 +22,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <qle/termstructures/parametricvolatility.hpp>
+
 #include <ql/errors.hpp>
 
 #include <boost/algorithm/string.hpp>

@@ -401,7 +401,8 @@ Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extr
 
 \item ParametricSmileConfiguration: Optional. Applies to SABR only. If not given, default values are used. Allows to specify initial values
   for calibrated parameters, to exclude single parameters from calibration and to set calibration parameters. See
-  listing \ref{lst:capfloorvol_parametric_smile_config}.
+  listing \ref{lst:capfloorvol_parametric_smile_config}. See Example 59 for how to configure single value and
+  termstructures of sabr parameters for swaption and cap curve configs.
 
 \item \lstinline!QuoteIncludesIndexName! [Optional]:
 If true, the quote labels that are looked up in the market data to build the surface include the index name as e.g. in \lstinline!CAPFLOOR/RATE_NVOL/USD/USD-LIBOR-3M/1Y/3M/0/0/0.01!. If false, the index name is not include as in \lstinline!CAPFLOOR/RATE_NVOL/USD/1Y/3M/0/0/0.01!. If the flag is not given, it defaults to false. Including the index name in the market quotes allows to build cap surfaces on different underlying indices with the same tenor. The flag also affects shift quotes as e.g. \lstinline!CAPFLOOR/SHIFT/USD/USD-LIBOR-3M/5Y! (index included in quote) vs. \lstinline!CAPFLOOR/SHIFT/USD/5Y! (index not included in quote).
@@ -642,22 +643,22 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
     <Parameter>
       <Name>alpha</Name>
       <InitialValue>0.0050</InitialValue>
-      <IsFixed>false</IsFixed>
+      <Calibration>Implied</Calibration>
     </Parameter>
     <Parameter>
       <Name>beta</Name>
       <InitialValue>0.0</InitialValue>
-      <IsFixed>true</IsFixed>
+      <Calibration>Fixed</Calibration>
     </Parameter>
     <Parameter>
       <Name>nu</Name>
       <InitialValue>0.30</InitialValue>
-      <IsFixed>false</IsFixed>
+      <Calibration>Calibrated</Calibration>
     </Parameter>
     <Parameter>
       <Name>rho</Name>
       <InitialValue>0.0</InitialValue>
-      <IsFixed>false</IsFixed>
+      <Calibration>Calibrated</Calibration>
     </Parameter>
   </Parameters>
   <Calibration>

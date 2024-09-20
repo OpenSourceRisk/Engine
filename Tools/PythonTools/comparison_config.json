@@ -76,12 +76,14 @@
         },
         "use_cols": [
           "Amount",
-          "IMModel"
+          "AmountUSD",
+          "AmountCurrency"
         ],
         "column_settings": [
           {
             "names": [
-              "Amount"
+              "Amount",
+              "AmountUSD"
             ],
             "abs_tol": 1.0,
             "rel_tol": 1e-12
@@ -1218,7 +1220,9 @@
               "PFE",
               "ExpectedCollateral",
               "BaselEE",
-              "BaselEEE"
+              "BaselEEE",
+              "TimeWeightedBaselEPE",
+              "TimeWeightedBaselEEPE"
             ],
             "abs_tol": 1.0,
             "rel_tol": 1e-12
@@ -1239,7 +1243,9 @@
               "AllocatedENE",
               "PFE",
               "BaselEE",
-              "BaselEEE"
+              "BaselEEE",
+              "TimeWeightedBaselEPE",
+              "TimeWeightedBaselEEPE"
             ],
             "abs_tol": 1.0,
             "rel_tol": 1e-12

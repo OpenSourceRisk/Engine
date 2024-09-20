@@ -18,6 +18,7 @@
 
 #include <ored/configuration/parametricsmileconfiguration.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using namespace QuantLib;
 
@@ -28,14 +29,23 @@ void ParametricSmileConfiguration::Parameter::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Parameter");
     name = XMLUtils::getChildValue(node, "Name", true);
     initialValue = parseListOfValues<Real>(XMLUtils::getChildValue(node, "InitialValue", true), parseReal);
-    isFixed = parseBool(XMLUtils::getChildValue(node, "IsFixed", true));
+    if (auto n = XMLUtils::getChildNode(node, "IsFixed")) {
+        WLOG("parametric smile configuration: the usage of IsFixed = true, false is deprecated, use Calibration = "
+             "Fixed, Calibrated, Implied.");
+        calibration = parseBool(XMLUtils::getNodeValue(n))
+                          ? QuantExt::ParametricVolatility::ParameterCalibration::Fixed
+                          : QuantExt::ParametricVolatility::ParameterCalibration::Implied;
+    } else {
+        calibration =
+            QuantExt::parseParametricSmileParameterCalibration(XMLUtils::getChildValue(node, "Calibration", true));
+    }
 }
 
 XMLNode* ParametricSmileConfiguration::Parameter::toXML(XMLDocument& doc) const {
     XMLNode* n = doc.allocNode("Parameter");
     XMLUtils::addChild(doc, n, "Name", name);
     XMLUtils::addChild(doc, n, "InitialValue", initialValue);
-    XMLUtils::addChild(doc, n, "IsFixed", isFixed);
+    XMLUtils::addChild(doc, n, "Calibration", ore::data::to_string(calibration));
     return n;
 }
 

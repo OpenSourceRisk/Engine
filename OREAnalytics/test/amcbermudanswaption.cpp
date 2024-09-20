@@ -623,13 +623,13 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
         engineMc = QuantLib::ext::make_shared<McLgmNonstandardSwaptionEngine>(
             testCase.inBaseCcy ? lgm_eur : lgm_usd, MersenneTwisterAntithetic, SobolBrownianBridge,
             testCase.trainingPaths, 0, 4711, 4712, 6, LsmBasisSystem::Monomial, SobolBrownianGenerator::Steps,
-            SobolRsg::JoeKuoD7, Handle<YieldTermStructure>(), grid->dates(), externalModelIndices);
+            SobolRsg::JoeKuoD7, Handle<YieldTermStructure>(), grid->dates(), std::vector<Date>{}, externalModelIndices);
         swaption->setPricingEngine(engineMc);
     } else {
         engineMc = QuantLib::ext::make_shared<McLgmSwaptionEngine>(
             testCase.inBaseCcy ? lgm_eur : lgm_usd, MersenneTwisterAntithetic, SobolBrownianBridge,
             testCase.trainingPaths, 0, 4711, 4712, 6, LsmBasisSystem::Monomial, SobolBrownianGenerator::Steps,
-            SobolRsg::JoeKuoD7, Handle<YieldTermStructure>(), grid->dates(), externalModelIndices);
+            SobolRsg::JoeKuoD7, Handle<YieldTermStructure>(), grid->dates(), std::vector<Date>{}, externalModelIndices);
         swaption->setPricingEngine(engineMc);
     }
 

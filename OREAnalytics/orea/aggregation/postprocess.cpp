@@ -627,6 +627,14 @@ const vector<Real>& PostProcess::tradePFE(const string& tradeId) {
     return exposureCalculator_->pfe(tradeId);
 }
 
+const vector<Real>& PostProcess::tradeEPE_B_timeWeighted(const string& tradeId) {
+    return exposureCalculator_->epe_b_timeWeighted(tradeId);
+}
+
+const vector<Real>& PostProcess::tradeEEPE_B_timeWeighted(const string& tradeId) {
+    return exposureCalculator_->eepe_b_timeWeighted(tradeId);
+}
+
 const vector<Real>& PostProcess::netEPE(const string& nettingSetId) {
     QL_REQUIRE(netEPE_.find(nettingSetId) != netEPE_.end(),
                "Netting set " << nettingSetId << " not found in exposure map");
@@ -671,6 +679,14 @@ const Real& PostProcess::netEEPE_B(const string& nettingSetId) {
 
 const vector<Real>& PostProcess::netPFE(const string& nettingSetId) {
     return nettedExposureCalculator_->pfe(nettingSetId);
+}
+
+const vector<Real>& PostProcess::netEPE_B_timeWeighted(const string& nettingSetId){
+    return nettedExposureCalculator_->epe_b_timeWeighted(nettingSetId);
+}
+
+const vector<Real>& PostProcess::netEEPE_B_timeWeighted(const string& nettingSetId) {
+    return nettedExposureCalculator_->eepe_b_timeWeighted(nettingSetId);
 }
 
 const vector<Real>& PostProcess::expectedCollateral(const string& nettingSetId) {
