@@ -348,10 +348,8 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         
         // If any cap/floor rates are provided, ensure they align with the number of schedule periods
         vector < double> effectiveFloors_ = floors_;
-        vector < string> effectiveFloorDates_ = floorDates_;
         if (floors_.size() > 0) {
             effectiveFloors_.resize(legs_[0].size(), floors_.back());
-            effectiveFloorDates_.resize(legs_[0].size(), floorDates_.back());
             for (int d = 0; d < floorDates_.size(); d++) {
                 QL_REQUIRE(floorDates_[d] == "",
                            "CPI CapFloor build error, start dates for cap rates or floor rates are not supported");
@@ -359,10 +357,8 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         }
 
         vector<double> effectiveCaps_ = caps_;
-        vector<string> effectiveCapDates_ = capDates_;
         if (caps_.size() > 0) {
             effectiveCaps_.resize(legs_[0].size(), caps_.back());
-            effectiveCapDates_.resize(legs_[0].size(), capDates_.back());
             for (int d = 0; d < capDates_.size(); d++) {
                 QL_REQUIRE(capDates_[d] == "",
                            "CPI CapFloor build error, start dates for cap rates or floor rates are not supported");
@@ -447,24 +443,22 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
         // If any cap/floor rates are provided, ensure they align with the number of schedule periods
         vector<double> effectiveFloors_ = floors_;
-        vector<string> effectiveFloorDates_ = floorDates_;
         if (floors_.size() > 0) {
             effectiveFloors_.resize(legs_[0].size(), floors_.back());
-            effectiveFloorDates_.resize(legs_[0].size(), floorDates_.back());
             for (int d = 0; d < floorDates_.size(); d++) {
                 QL_REQUIRE(floorDates_[d] == "",
-                           "CPI CapFloor build error, start dates for cap rates or floor rates are not supported");
+                           "YoY CapFloor build error, start dates for cap rates or floor rates are not supported");
             }
         }
 
         vector<double> effectiveCaps_ = caps_;
-        vector<string> effectiveCapDates_ = capDates_;
         if (caps_.size() > 0) {
             effectiveCaps_.resize(legs_[0].size(), caps_.back());
-            effectiveCapDates_.resize(legs_[0].size(), capDates_.back());
+            DLOG(capDates_.back().c_str());
+            DLOG(legs_[0].size());
             for (int d = 0; d < capDates_.size(); d++) {
                 QL_REQUIRE(capDates_[d] == "",
-                           "CPI CapFloor build error, start dates for cap rates or floor rates are not supported");
+                           "YoY CapFloor build error, start dates for cap rates or floor rates are not supported");
             }
         }
 
