@@ -27,7 +27,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 void FwdBondEngineBuilder::setCurves(const string& id, const Currency& ccy, const std::string& discountCurveName,
-                                     const string& creditCurveId, const bool hasCreditRisk, const string& securityId,
+                                     const string& creditCurveId, const string& securityId,
                                      const string& referenceCurveId, const string& incomeCurveId, const bool dirty) {
 
     // for discounting underlying bond make use of reference curve
@@ -86,10 +86,6 @@ void FwdBondEngineBuilder::setCurves(const string& id, const Currency& ccy, cons
         if (!creditCurveId.empty())
             recovery_ = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
     }
-
-    if (!hasCreditRisk) {
-        dpts_ = Handle<DefaultProbabilityTermStructure>();
-    }
 };
 
 QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngine(
@@ -116,8 +112,8 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngi
 
 QuantLib::ext::shared_ptr<PricingEngine>
 CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, const string& discountCurveName,
-                                       const string& creditCurveId, const bool hasCreditRisk, const string& securityId,
-                                       const string& referenceCurveId, const string& incomeCurveId, const bool dirty) {
+                                       const string& creditCurveId, string& securityId, const string& referenceCurveId,
+                                       const string& incomeCurveId, const bool dirty) {
 
     DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");
 
@@ -128,8 +124,7 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
 
     WLOG("CamAmcFwdBondEngineBuilder : creditCurveId not used at present");
 
-    setCurves(id, ccy, discountCurveName, creditCurveId, hasCreditRisk, securityId, referenceCurveId, incomeCurveId,
-              dirty);
+    setCurves(id, ccy, discountCurveName, creditCurveId, securityId, referenceCurveId, incomeCurveId, dirty);
 
     return buildMcEngine(lgm, spreadedReferenceCurve_, simulationDates_, modelIndex, incomeCurve_, discountCurve_,
                          referenceCurve_, conversionFactor_);

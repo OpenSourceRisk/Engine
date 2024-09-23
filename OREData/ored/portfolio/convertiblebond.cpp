@@ -607,7 +607,7 @@ void ConvertibleBond::build(const QuantLib::ext::shared_ptr<ore::data::EngineFac
         conversionData, mandatoryConversionData, conversionResetData, dividendProtectionData,
         data_.detachable().empty() ? false : parseBool(data_.detachable()), isPerpetual);
     qlConvertible->setPricingEngine(builder->engine(
-        id(), data_.bondData().currency(), data_.bondData().creditCurveId(), data_.bondData().hasCreditRisk(),
+        id(), data_.bondData().currency(), data_.bondData().creditCurveId(),
         data_.bondData().securityId(), data_.bondData().referenceCurveId(), exchangeableData.isExchangeable, equity, fx,
         data_.conversionData().exchangeableData().equityCreditCurve(), qlUnderlyingBond->startDate(), lastDate));
     setSensitivityTemplate(*builder);
@@ -676,9 +676,9 @@ void ConvertibleBondTrsUnderlyingBuilder::build(
 
     creditRiskCurrency = t->data().bondData().currency();
     creditQualifierMapping[securitySpecificCreditCurveName(t->bondData().securityId(), t->bondData().creditCurveId())] =
-        SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup());
+        SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup(), t->data().bondData().hasCreditRisk());
     creditQualifierMapping[t->bondData().creditCurveId()] =
-        SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup());
+        SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup(), t->data().bondData().hasCreditRisk());
 }
 
 void ConvertibleBondTrsUnderlyingBuilder::updateUnderlying(
