@@ -89,8 +89,7 @@ protected:
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
 
-        setCurves(id, ccy, discountCurveName, creditCurveId, hasCreditRisk, securityId, referenceCurveId, incomeCurveId,
-                  dirty);
+        setCurves(id, ccy, discountCurveName, creditCurveId, securityId, referenceCurveId, incomeCurveId, dirty);
 
         return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(
             discountCurve_, incomeCurve_, spreadedReferenceCurve_, bondSpread_, dpts_, recovery_, conversionFactor_,
