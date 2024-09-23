@@ -711,14 +711,14 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     
     optional<bool> localIncTodaysCashFlows = inputs_->exposureIncludeTodaysCashFlows();
     Settings::instance().includeTodaysCashFlows() = localIncTodaysCashFlows;
-    LOG("Exposure IncludeTodaysCashFlows is defined: " << (localIncTodaysCashFlows ? "true" : "false"));
+    LOG("Simulation IncludeTodaysCashFlows is defined: " << (localIncTodaysCashFlows ? "true" : "false"));
     if (localIncTodaysCashFlows) {
         LOG("Exposure IncludeTodaysCashFlows is set to " << (*localIncTodaysCashFlows ? "true" : "false"));
     }
     
     bool localIncRefDateEvents = inputs_->exposureIncludeReferenceDateEvents();
     Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
-    LOG("Exposure IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
+    LOG("Simulation IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
 
     if (inputs_->amcCg() == XvaEngineCG::Mode::Full) {
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
