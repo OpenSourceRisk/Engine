@@ -82,9 +82,8 @@ void DiscountingFxForwardEngine::calculate() const {
     results_.additionalResults["currency[2]"] = ccy2_.code();
 
     // The instrument flag overrides what is passed to the engine c'tor
-    bool includeSettlementDateFlows = arguments_.includeSettlementDateFlows;
-    
-    if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeSettlementDateFlows)) {
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeToday)) {
         Real disc1near = currency1Discountcurve_->discount(npvDate);
         Real disc1far = currency1Discountcurve_->discount(arguments_.payDate);
         Real disc2near = currency2Discountcurve_->discount(npvDate);
