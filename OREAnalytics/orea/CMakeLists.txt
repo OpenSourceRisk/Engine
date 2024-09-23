@@ -364,6 +364,10 @@ if(ORE_USE_ZLIB)
     add_definitions(-DORE_USE_ZLIB)
 endif()
 
+if(ORE_MULTITHREADING_CPU_AFFINITY)
+    add_definitions(-DORE_MULTIHREADING_CPU_AFFINITY)
+endif()
+
 if (QL_USE_PCH)
 target_precompile_headers(${OREA_LIB_NAME}
   PUBLIC
