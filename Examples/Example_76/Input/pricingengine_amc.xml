@@ -1,6 +1,140 @@
 <?xml version="1.0"?>
 <PricingEngines>
 
+    <Product type="Swap">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">50000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">6</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CrossCurrencySwap">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">10000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">2</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxForward">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">10000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">2</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="FxOption">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">10000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">2</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">50000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">6</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="EuropeanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">50000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">6</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="MultiLegOption">
+    <Model>CrossAssetModel</Model>
+    <ModelParameters/>
+    <Engine>AMC</Engine>
+    <EngineParameters>
+      <Parameter name="Training.Sequence">MersenneTwisterAntithetic</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">10000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">4</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
+    </EngineParameters>
+  </Product>
+
   <Product type="BondTRS">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
@@ -19,38 +153,6 @@
       <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
   </Product>
-  <Product type="Swap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingSwapEngine</Engine>
-    <EngineParameters>
-      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="CrossCurrencySwap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingCrossCurrencySwapEngine</Engine>
-    <EngineParameters>
-      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="FxForward">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingFxForwardEngine</Engine>
-    <EngineParameters>
-      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="FxOption">
-    <Model>GarmanKohlhagen</Model>
-    <ModelParameters/>
-    <Engine>AnalyticEuropeanEngine</Engine>
-    <EngineParameters>
-      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
-    </EngineParameters>
-  </Product>
   <Product type="FxOptionAmerican">
     <Model>GarmanKohlhagen</Model>
     <ModelParameters/>
@@ -62,37 +164,6 @@
       <Parameter name="DampingSteps">0</Parameter>
       <Parameter name="EnforceMonotoneVariance">true</Parameter>
       <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="EuropeanSwaption">
-    <Model>BlackBachelier</Model>
-    <!-- depends on input vol -->
-    <ModelParameters/>
-    <Engine>BlackBachelierSwaptionEngine</Engine>
-    <EngineParameters>
-      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="BermudanSwaption">
-    <Model>LGM</Model>
-    <ModelParameters>
-      <Parameter name="Calibration">Bootstrap</Parameter>
-      <Parameter name="CalibrationStrategy">CoterminalDealStrike</Parameter>
-      <Parameter name="ReferenceCalibrationGrid">400,3M</Parameter>
-      <Parameter name="Reversion">0.0</Parameter>
-      <Parameter name="ReversionType">HullWhite</Parameter>
-      <Parameter name="Volatility">0.01</Parameter>
-      <Parameter name="VolatilityType">Hagan</Parameter>
-      <Parameter name="ShiftHorizon">0.5</Parameter>
-      <Parameter name="Tolerance">0.20</Parameter>
-    </ModelParameters>
-    <Engine>Grid</Engine>
-    <EngineParameters>
-      <Parameter name="sy">5.0</Parameter>
-      <Parameter name="ny">30</Parameter>
-      <Parameter name="sx">5.0</Parameter>
-      <Parameter name="nx">30</Parameter>
-      <Parameter name="SensitivityTemplate">IR_FD</Parameter>
     </EngineParameters>
   </Product>
   <Product type="CapFloor">
@@ -127,32 +198,6 @@
     <Model>BlackOrBachelier</Model>
     <ModelParameters/>
     <Engine>BlackAverageONIndexedCouponPricer</Engine>
-    <EngineParameters>
-      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="CappedFlooredCpiLegCoupons">
-    <Model>Black</Model>
-    <ModelParameters/>
-    <Engine>BlackAnalytic</Engine>
-    <EngineParameters>
-      <Parameter name="useLastFixingDate">true</Parameter>
-      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="CappedFlooredCpiLegCashFlows">
-    <Model>Black</Model>
-    <ModelParameters/>
-    <Engine>BlackAnalytic</Engine>
-    <EngineParameters>
-      <Parameter name="useLastFixingDate">true</Parameter>
-      <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="CapFlooredAverageBMACouponLeg">
-    <Model>BlackOrBachelier</Model>
-    <ModelParameters/>
-    <Engine>BlackAverageBMACouponPricer</Engine>
     <EngineParameters>
       <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
     </EngineParameters>
@@ -194,15 +239,6 @@
       <Parameter name="DampingSteps">0</Parameter>
       <Parameter name="EnforceMonotoneVariance">true</Parameter>
       <Parameter name="SensitivityTemplate">EQ_FD</Parameter>
-    </EngineParameters>
-  </Product>
-  <Product type="EquityOutperformanceOption">
-    <Model>BlackScholesMerton</Model>
-    <ModelParameters/>
-    <Engine>AnalyticOutperformanceOptionEngine</Engine>
-    <EngineParameters>
-      <Parameter name="IntegrationPoints">32</Parameter>
-      <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
     </EngineParameters>
   </Product>
   <Product type="Bond">
@@ -262,6 +298,22 @@
       <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
     </EngineParameters>
   </Product>
+  <Product type="CommodityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCommodityForwardEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommoditySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>CommoditySwapEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
   <Product type="IndexCreditDefaultSwap">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
@@ -283,7 +335,6 @@
       <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
     </EngineParameters>
   </Product>
-
   <Product type="EquityOptionEuropeanCS">
     <Model>BlackScholesMerton</Model>
     <ModelParameters/>
@@ -292,7 +343,6 @@
       <Parameter name="SensitivityTemplate">EQ_Analytical</Parameter>
     </EngineParameters>
   </Product>
-
   <Product type="FxOptionEuropeanCS">
     <Model>GarmanKohlhagen</Model>
     <ModelParameters/>
@@ -301,7 +351,6 @@
       <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
     </EngineParameters>
   </Product>
-
   <!-- Global Parameters -->
   <GlobalParameters>
     <Parameter name="ContinueOnCalibrationError">true</Parameter>

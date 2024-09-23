@@ -707,6 +707,19 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     LOG("XVA analytic is running with amc cg mode '" << inputs_->amcCg() << "'.");
 
+    SavedSettings settings;
+    
+    optional<bool> localIncTodaysCashFlows = inputs_->exposureIncludeTodaysCashFlows();
+    Settings::instance().includeTodaysCashFlows() = localIncTodaysCashFlows;
+    LOG("Simulation IncludeTodaysCashFlows is defined: " << (localIncTodaysCashFlows ? "true" : "false"));
+    if (localIncTodaysCashFlows) {
+        LOG("Exposure IncludeTodaysCashFlows is set to " << (*localIncTodaysCashFlows ? "true" : "false"));
+    }
+    
+    bool localIncRefDateEvents = inputs_->exposureIncludeReferenceDateEvents();
+    Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
+    LOG("Simulation IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
+
     if (inputs_->amcCg() == XvaEngineCG::Mode::Full) {
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
         // in sim market there...
@@ -1019,6 +1032,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     // reset that mode
     ObservationMode::instance().setMode(inputs_->observationModel());
+
     ProgressMessage("Running XVA Analytic", 1, 1).log();
 }
 

@@ -17,6 +17,7 @@
 */
 
 #include <ql/event.hpp>
+#include <ql/settings.hpp>
 
 #include <qle/instruments/fxforward.hpp>
 
@@ -102,8 +103,9 @@ FxForward::FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote,
 }
 
 bool FxForward::isExpired() const {
-    Date p = includeSettlementDateFlows_ ? payDate_ + 1*Days : payDate_;
-    return detail::simple_event(p).hasOccurred();
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    Date refDate = Settings::instance().evaluationDate();
+    return detail::simple_event(payDate_).hasOccurred(refDate, includeToday);
 }
 
 void FxForward::setupExpired() const {

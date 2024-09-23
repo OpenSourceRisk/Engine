@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="SWAP">
+  <Trade id="SWAP_Maturing">
     <TradeType>Swap</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -26,9 +26,9 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <Rules>
+          <Rules><!-- spot start from 20160205, 20Y term --> 
             <StartDate>20150205</StartDate>
-            <EndDate>20160304</EndDate>
+            <EndDate>20160205</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -58,9 +58,9 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <Rules>
+          <Rules><!-- spot start 20160205, 20Y term -->
             <StartDate>20150205</StartDate>
-            <EndDate>20160304</EndDate>
+            <EndDate>20160205</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>MF</Convention>
@@ -74,7 +74,7 @@
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="CC_SWAP">
+  <Trade id="CC_SWAP_Maturing">
     <TradeType>Swap</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -109,12 +109,12 @@
         <ScheduleData>
           <Rules>
             <StartDate>20150205</StartDate>
-            <EndDate>20160304</EndDate>
+            <EndDate>20160205</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>MF</Convention>
             <TermConvention>MF</TermConvention>
-            <Rule>Backward</Rule>
+            <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
@@ -145,12 +145,12 @@
         <ScheduleData>
           <Rules>
             <StartDate>20150205</StartDate>
-            <EndDate>20160304</EndDate>
+            <EndDate>20160205</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>MF</Convention>
             <TermConvention>MF</TermConvention>
-            <Rule>Backward</Rule>
+            <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
@@ -159,7 +159,7 @@
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="CC_SWAP_RESET">
+  <Trade id="CC_SWAP_RESET_Maturing">
     <TradeType>Swap</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -194,12 +194,12 @@
         <ScheduleData>
           <Rules>
             <StartDate>20150205</StartDate>
-            <EndDate>20160304</EndDate>
+            <EndDate>20160205</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>MF</Convention>
             <TermConvention>MF</TermConvention>
-            <Rule>Backward</Rule>
+            <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
@@ -236,12 +236,12 @@
         <ScheduleData>
           <Rules>
             <StartDate>20150205</StartDate>
-            <EndDate>20160304</EndDate>
+            <EndDate>20160205</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>MF</Convention>
             <TermConvention>MF</TermConvention>
-            <Rule>Backward</Rule>
+            <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
@@ -250,7 +250,7 @@
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="FXFWD">
+  <Trade id="FXFWD_Maturing">
     <TradeType>FxForward</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -261,14 +261,14 @@
       <AdditionalFields/>
     </Envelope>
     <FxForwardData>
-      <ValueDate>2016-03-04</ValueDate>
+      <ValueDate>2016-02-05</ValueDate>
       <BoughtCurrency>EUR</BoughtCurrency>
       <BoughtAmount>1000000</BoughtAmount>
       <SoldCurrency>USD</SoldCurrency>
       <SoldAmount>1100000</SoldAmount>
     </FxForwardData>
   </Trade>
-  <Trade id="FX_CALL">
+  <Trade id="FX_CALL_Expiring">
     <TradeType>FxOption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -286,7 +286,7 @@
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2016-03-04</ExerciseDate>
+          <ExerciseDate>2016-02-05</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <BoughtCurrency>EUR</BoughtCurrency>
@@ -295,7 +295,7 @@
       <SoldAmount>1100000</SoldAmount>
     </FxOptionData>
   </Trade>
-  <Trade id="FX_PUT">
+  <Trade id="FX_PUT_Expiring">
     <TradeType>FxOption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -313,7 +313,7 @@
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2016-03-04</ExerciseDate>
+          <ExerciseDate>2016-02-05</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <BoughtCurrency>EUR</BoughtCurrency>
@@ -322,7 +322,7 @@
       <SoldAmount>1100000</SoldAmount>
     </FxOptionData>
   </Trade>
-  <Trade id="EUROPEAN_SWAPTION">
+  <Trade id="EUROPEAN_SWAPTION_Expiring">
     <TradeType>Swaption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -340,7 +340,7 @@
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2016-03-04</ExerciseDate>
+          <ExerciseDate>2016-02-05</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <LegData>
@@ -404,7 +404,7 @@
       </LegData>
     </SwaptionData>
   </Trade>
-  <Trade id="FLOOR_USD">
+  <Trade id="FLOOR_USD_Maturing">
     <TradeType>CapFloor</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -428,12 +428,12 @@
         <ScheduleData>
           <Rules>
 	    <StartDate>20150205</StartDate>
-            <EndDate>20160304</EndDate>
+            <EndDate>20160205</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>US</Calendar>
             <Convention>MF</Convention>
             <TermConvention>MF</TermConvention>
-            <Rule>Backward</Rule>
+            <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
@@ -454,7 +454,7 @@
       </Floors>
     </CapFloorData>
   </Trade>
-  <Trade id="FLOOR_EUR">
+  <Trade id="FLOOR_EUR_Maturing">
     <TradeType>CapFloor</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -478,12 +478,12 @@
         <ScheduleData>
           <Rules>
 	    <StartDate>20150205</StartDate>
-            <EndDate>20160304</EndDate>
+            <EndDate>20160205</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>MF</Convention>
             <TermConvention>MF</TermConvention>
-            <Rule>Backward</Rule>
+            <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
@@ -504,7 +504,7 @@
       </Floors>
     </CapFloorData>
   </Trade>
-  <Trade id="Forward_Bond">
+  <Trade id="Forward_Bond_Maturing">
     <TradeType>ForwardBond</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -552,7 +552,7 @@
         </LegData>
       </BondData>
       <SettlementData>
-        <ForwardMaturityDate>20160304</ForwardMaturityDate>
+        <ForwardMaturityDate>20160205</ForwardMaturityDate>
         <Amount>6300000.00</Amount>
         <SettlementDirty>true</SettlementDirty>
       </SettlementData>
@@ -563,7 +563,7 @@
       <LongInForward>true</LongInForward>
     </ForwardBondData>
   </Trade>
-  <Trade id="EQ_FWD_SP5">
+  <Trade id="EQ_FWD_SP5_Maturing">
     <TradeType>EquityForward</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -575,7 +575,7 @@
     </Envelope>
     <EquityForwardData>
       <LongShort>Short</LongShort>
-      <Maturity>2016-03-04</Maturity>
+      <Maturity>2016-02-05</Maturity>
       <Name>SP5</Name>
       <Currency>USD</Currency>
       <Strike>2147.56</Strike>
@@ -583,7 +583,7 @@
       <Quantity>775</Quantity>
     </EquityForwardData>
   </Trade>
-  <Trade id="EQ_FWD_LUFT">
+  <Trade id="EQ_FWD_LUFT_Maturing">
     <TradeType>EquityForward</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -595,14 +595,14 @@
     </Envelope>
     <EquityForwardData>
       <LongShort>Long</LongShort>
-      <Maturity>2016-03-04</Maturity>
+      <Maturity>2016-02-05</Maturity>
       <Name>Lufthansa</Name>
       <Currency>EUR</Currency>
       <Strike>12.24</Strike>
       <Quantity>775</Quantity>
     </EquityForwardData>
   </Trade>
-  <Trade id="EQ_CALL_SP5">
+  <Trade id="EQ_CALL_SP5_Expiring">
     <TradeType>EquityOption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -620,7 +620,7 @@
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2016-03-04</ExerciseDate>
+          <ExerciseDate>2016-02-05</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <Name>SP5</Name>
@@ -629,7 +629,7 @@
       <Quantity>775</Quantity>
     </EquityOptionData>
   </Trade>
-  <Trade id="EQ_PUT_SP5">
+  <Trade id="EQ_PUT_SP5_Expiring">
     <TradeType>EquityOption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -647,7 +647,7 @@
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2016-03-04</ExerciseDate>
+          <ExerciseDate>2016-02-05</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <Name>SP5</Name>
@@ -656,7 +656,7 @@
       <Quantity>775</Quantity>
     </EquityOptionData>
   </Trade>
-  <Trade id="EQ_CALL_LUFT">
+  <Trade id="EQ_CALL_LUFT_Expiring">
     <TradeType>EquityOption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -674,7 +674,7 @@
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2016-03-04</ExerciseDate>
+          <ExerciseDate>2016-02-05</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <Name>Lufthansa</Name>
@@ -683,7 +683,7 @@
       <Quantity>775</Quantity>
     </EquityOptionData>
   </Trade>
-  <Trade id="EQ_PUT_LUFT">
+  <Trade id="EQ_PUT_LUFT_Expiring">
     <TradeType>EquityOption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -701,7 +701,7 @@
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2016-03-04</ExerciseDate>
+          <ExerciseDate>2016-02-05</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <Name>Lufthansa</Name>
@@ -710,7 +710,7 @@
       <Quantity>775</Quantity>
     </EquityOptionData>
   </Trade>
-  <Trade id="CDS">
+  <Trade id="CDS_Maturing">
     <TradeType>CreditDefaultSwap</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
@@ -745,7 +745,7 @@
         <ScheduleData>
           <Rules>
             <StartDate>20150205</StartDate>
-            <EndDate>20160304</EndDate>
+            <EndDate>20160205</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>US</Calendar>
             <Convention>F</Convention>

@@ -41,11 +41,23 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     LOG("Running XVA_SENSITIVITY analytic.");
 
+    SavedSettings settings;
+
+    optional<bool> localIncTodaysCashFlows = inputs_->exposureIncludeTodaysCashFlows();
+    Settings::instance().includeTodaysCashFlows() = localIncTodaysCashFlows;
+    LOG("Simulation IncludeTodaysCashFlows is defined: " << (localIncTodaysCashFlows ? "true" : "false"));
+    if (localIncTodaysCashFlows) {
+        LOG("Exposure IncludeTodaysCashFlows is set to " << (*localIncTodaysCashFlows ? "true" : "false"));
+    }
+    
+    bool localIncRefDateEvents = inputs_->exposureIncludeReferenceDateEvents();
+    Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
+    LOG("Simulation IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
+
     Settings::instance().evaluationDate() = inputs_->asof();
 
     QL_REQUIRE(inputs_->portfolio(), "XvaSensitivityAnalytic::run: No portfolio loaded.");
 
-    Settings::instance().evaluationDate() = inputs_->asof();
     std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
 
     auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
