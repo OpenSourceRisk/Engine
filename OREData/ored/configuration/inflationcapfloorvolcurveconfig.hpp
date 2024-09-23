@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
@@ -88,6 +89,7 @@ public:
     const std::string& quoteIndex() const { return quoteIndex_; }
     const std::string& conventions() const { return conventions_; }
     const bool& useLastAvailableFixingDate() const { return useLastAvailableFixingDate_; }
+    const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     //@}
 
     //! \name Setters
@@ -135,6 +137,7 @@ private:
     std::string quoteIndex_;
     std::string conventions_;
     bool useLastAvailableFixingDate_;
+    BootstrapConfig bootstrapConfig_;
 };
 
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::VolatilityType t);

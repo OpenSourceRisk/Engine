@@ -177,6 +177,11 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
             strikes_.push_back(to_string(s));
         for (Size i = 0; i < strikes_.size(); ++i)
             DLOG("ZC Inflation Cap/Floor Strike " << i << " = " << strikes_[i]);
+
+        // Optional bootstrap configuration
+        if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
+            bootstrapConfig_.fromXML(n);
+        }
     } else {
         strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
         QL_REQUIRE(!strikes_.empty(), "Strikes node should not be empty");
@@ -251,6 +256,7 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "Conventions", conventions_);
     if (useLastAvailableFixingDate_)
         XMLUtils::addChild(doc, node, "UseLastFixingDate", useLastAvailableFixingDate_);
+    XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
     return node;
 }
 } // namespace data

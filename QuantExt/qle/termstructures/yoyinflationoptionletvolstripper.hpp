@@ -42,7 +42,11 @@ public:
                                      const QuantLib::ext::shared_ptr<YoYInflationIndex>& index,
                                      const Handle<YieldTermStructure>& nominalTs,
                                      VolatilityType type = ShiftedLognormal, Real displacement = 0.0,
-                                     bool dontThrow = false, size_t dontThrowSteps = 10);
+                                     QuantLib::Real accuracy = QuantLib::Null<QuantLib::Real>(),
+                                     QuantLib::Real globalAccuracy = QuantLib::Null<QuantLib::Real>(),
+                                     bool dontThrow = false, QuantLib::Size maxAttempts = 1,
+                                     QuantLib::Real maxFactor = 2.0, QuantLib::Real minFactor = 2.0,
+                                     QuantLib::Size dontThrowSteps = 10);
 
     const QuantLib::ext::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const {
         return yoyOptionletVolSurface_;
@@ -59,8 +63,13 @@ private:
     Handle<YieldTermStructure> nominalTs_;
     VolatilityType type_;
     Real displacement_;
+    QuantLib::Real accuracy_;
+    QuantLib::Real globalAccuracy_;
     bool dontThrow_;
-    size_t dontThrowSteps_;
+    QuantLib::Size maxAttempts_;
+    QuantLib::Real maxFactor_;
+    QuantLib::Real minFactor_;
+    QuantLib::Size dontThrowSteps_;
 };
 } // namespace QuantExt
 
