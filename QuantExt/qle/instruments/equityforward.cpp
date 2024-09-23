@@ -42,7 +42,6 @@ EquityForward::EquityForward(const std::string& name, const Currency& currency, 
 }
 
 bool EquityForward::isExpired() const {
-    //return detail::simple_event(payDate_).hasOccurred();
     ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
     Date refDate = Settings::instance().evaluationDate();
     return detail::simple_event(payDate_).hasOccurred(refDate, includeToday);

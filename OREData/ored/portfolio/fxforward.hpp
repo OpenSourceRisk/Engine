@@ -44,8 +44,6 @@ public:
         : Trade("FxForward", env), maturityDate_(maturityDate), boughtCurrency_(boughtCurrency),
           boughtAmount_(boughtAmount), soldCurrency_(soldCurrency), soldAmount_(soldAmount), settlement_(settlement),
           fxIndex_(fxIndex), payDate_(payDate) {}
-
-    // bool isExpired(const Date& d) const override;
     
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;

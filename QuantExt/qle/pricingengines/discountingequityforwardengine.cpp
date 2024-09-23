@@ -47,7 +47,6 @@ void DiscountingEquityForwardEngine::calculate() const {
 
     ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
     if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeToday)) {
-    // if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
         Real lsInd = ((arguments_.longShort == Position::Long) ? 1.0 : -1.0);
         Real qty = arguments_.quantity;
         Date maturity = arguments_.maturityDate;

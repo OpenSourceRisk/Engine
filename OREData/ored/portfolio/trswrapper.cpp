@@ -133,7 +133,6 @@ TRSWrapper::TRSWrapper(
 }
 
 bool TRSWrapper::isExpired() const {
-    // return detail::simple_event(lastDate_).hasOccurred();
     ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
     Date refDate = Settings::instance().evaluationDate();
     return detail::simple_event(lastDate_).hasOccurred(refDate, includeToday);

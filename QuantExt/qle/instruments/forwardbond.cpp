@@ -44,7 +44,6 @@ ForwardBond::ForwardBond(const QuantLib::ext::shared_ptr<Bond>& underlying, cons
       bondNotional_(bondNotional), dv01_(dv01) {}
 
 bool ForwardBond::isExpired() const {
-    //return detail::simple_event(fwdMaturityDate_).hasOccurred();
     ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
     Date refDate = Settings::instance().evaluationDate();
     return detail::simple_event(fwdMaturityDate_).hasOccurred(refDate, includeToday);
