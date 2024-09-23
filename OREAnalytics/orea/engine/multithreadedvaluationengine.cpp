@@ -308,6 +308,7 @@ void MultiThreadedValuationEngine::buildCube(
         auto job = [this,
 #ifdef ORE_MULTITHREADING_CPU_AFFINITY
                     &jobs,
+                    &cpuIds,
 #endif
                     obsMode, dryRun, &calculators, &cptyCalculators, mporStickyDate, &portfoliosAsString,
                     &scenarioGenerators, &loaders, &workerPricingStats, &progressIndicator](int id) -> resultType {
