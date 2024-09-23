@@ -82,8 +82,10 @@ public:
     void setObservationModel(const std::string& s) { observationModel_ = s; }
     void setImplyTodaysFixings(bool b) { implyTodaysFixings_ = b; }
     void setIncludeTodaysCashFlows(bool b) {
-        includeTodaysCashFlows_ = b;
         Settings::instance().includeTodaysCashFlows() = b;
+    }
+    void setIncludeReferenceDateEvents(bool b) {
+        Settings::instance().includeReferenceDateEvents() = b;
     }
     void setMarketConfig(const std::string& config, const std::string& context);
     void setRefDataManager(const std::string& xml);
@@ -207,6 +209,7 @@ public:
 
     // Setters for exposure simulation
     void setExposureIncludeTodaysCashFlows(bool b) { exposureIncludeTodaysCashFlows_ = b; }
+    void setExposureIncludeReferenceDateEvents(bool b) { exposureIncludeReferenceDateEvents_ = b; }
     void setAmc(bool b) { amc_ = b; }
     void setAmcCg(XvaEngineCG::Mode b) { amcCg_ = b; }
     void setXvaCgBumpSensis(bool b) { xvaCgBumpSensis_ = b; }
@@ -471,7 +474,6 @@ public:
     bool buildFailedTrades() const { return buildFailedTrades_; }
     const std::string& observationModel() const { return observationModel_; }
     bool implyTodaysFixings() const { return implyTodaysFixings_; }
-    bool includeTodaysCashFlows() const { return includeTodaysCashFlows_; }
     const std::map<std::string, std::string>&  marketConfigs() const { return marketConfigs_; }
     const std::string& marketConfig(const std::string& context);
     const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() const { return refDataManager_; }
@@ -603,7 +605,8 @@ public:
     /*********************************
      * Getters for exposure simulation 
      *********************************/
-    bool exposureIncludeTodaysCashFlows() const { return exposureIncludeTodaysCashFlows_; }
+    optional<bool> exposureIncludeTodaysCashFlows() const { return exposureIncludeTodaysCashFlows_; }
+    bool exposureIncludeReferenceDateEvents() const { return exposureIncludeReferenceDateEvents_; }
     bool amc() const { return amc_; }
     XvaEngineCG::Mode amcCg() const { return amcCg_; }
     bool xvaCgBumpSensis() const { return xvaCgBumpSensis_; }
@@ -861,7 +864,8 @@ protected:
     bool buildFailedTrades_ = true;
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
-    bool includeTodaysCashFlows_ = false;
+    optional<bool> includeTodaysCashFlows_;
+    bool includeReferenceDateEvents_ = false;
   
     std::map<std::string, std::string> marketConfigs_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
@@ -1013,7 +1017,8 @@ protected:
     QuantLib::ext::shared_ptr<AggregationScenarioData> mktCube_;
     Real simulationBootstrapTolerance_ = 0.0001;
     Size reportBufferSize_ = 0;
-    bool exposureIncludeTodaysCashFlows_ = false;
+    optional<bool> exposureIncludeTodaysCashFlows_;
+    bool exposureIncludeReferenceDateEvents_ = false;
 
     /**************
      * XVA analytic

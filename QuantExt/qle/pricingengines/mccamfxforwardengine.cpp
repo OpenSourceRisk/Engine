@@ -55,8 +55,6 @@ void McCamFxForwardEngine::calculate() const {
     payer_ = {false, true};
     exercise_ = nullptr;
     
-    // includeSettlementDateFlows_ = arguments_.includeSettlementDateFlows;
-        
     McMultiLegBaseEngine::calculate();
 
     // convert base ccy result from McMultiLegbaseEngine to desired npv currency

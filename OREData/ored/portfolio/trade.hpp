@@ -160,10 +160,7 @@ public:
 
     virtual bool isExpired(const Date& d) const {
         ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
-	if (inc && *inc)
-	    return d > maturity_;
-	else
-	    return d >= maturity_;	
+	return detail::simple_event(maturity_).hasOccurred(d, inc);
     }
 
     const string& issuer() const { return issuer_; }

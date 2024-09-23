@@ -707,12 +707,19 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
     LOG("XVA analytic is running with amc cg mode '" << inputs_->amcCg() << "'.");
 
-    ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
-    bool globalIncludeTodaysCashFlows = inc ? *inc : false;
-    bool localIncludeTodaysCashFlows = inputs_->exposureIncludeTodaysCashFlows();
-    Settings::instance().includeTodaysCashFlows() = localIncludeTodaysCashFlows;
-    LOG("Exposure IncludeTodaysCashFlows is set to " << (localIncludeTodaysCashFlows ? "true" : "false"));
+    SavedSettings settings;
     
+    optional<bool> localIncTodaysCashFlows = inputs_->exposureIncludeTodaysCashFlows();
+    Settings::instance().includeTodaysCashFlows() = localIncTodaysCashFlows;
+    LOG("Exposure IncludeTodaysCashFlows is defined: " << (localIncTodaysCashFlows ? "true" : "false"));
+    if (localIncTodaysCashFlows) {
+        LOG("Exposure IncludeTodaysCashFlows is set to " << (*localIncTodaysCashFlows ? "true" : "false"));
+    }
+    
+    bool localIncRefDateEvents = inputs_->exposureIncludeReferenceDateEvents();
+    Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
+    LOG("Exposure IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
+
     if (inputs_->amcCg() == XvaEngineCG::Mode::Full) {
         // note: market configs both set to simulation, see note in xvaenginecg, we'd need inccy config
         // in sim market there...
@@ -1027,8 +1034,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     ObservationMode::instance().setMode(inputs_->observationModel());
 
     // reset cash flow treatment
-    Settings::instance().includeTodaysCashFlows() = globalIncludeTodaysCashFlows;
-    LOG("IncludeTodaysCashFlows reset to " << (globalIncludeTodaysCashFlows ? "true" : "false"));
+    //Settings::instance().includeTodaysCashFlows() = globalIncludeTodaysCashFlows;
+    //LOG("IncludeTodaysCashFlows reset to " << (globalIncludeTodaysCashFlows ? "true" : "false"));
 
     ProgressMessage("Running XVA Analytic", 1, 1).log();
 }

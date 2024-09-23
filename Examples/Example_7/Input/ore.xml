@@ -16,6 +16,7 @@
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
     <Parameter name="includeTodaysCashFlows">Y</Parameter>
+    <Parameter name="includeReferenceDateEvents">Y</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>

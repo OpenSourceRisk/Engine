@@ -727,11 +727,9 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setIncludeTodaysCashFlows(ore::data::parseBool(tmp));
 
-    // optional<bool> inc = Settings::instance().includeTodaysCashFlows();
-    // if (inc)
-    //     std::cout << "includeTodaysCashFlows initialised: " << *inc << std::endl;
-    // else
-    //     std::cout << "includeTodaysCashFlows not initialised" << std::endl;
+    tmp = params_->get("setup", "includeReferenceDateEvents", false);
+    if (tmp != "")
+        setIncludeReferenceDateEvents(ore::data::parseBool(tmp));
     
     tmp = params_->get("setup", "referenceDataFile", false);
     if (tmp != "") {
@@ -1543,10 +1541,20 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setExposureIncludeTodaysCashFlows(ore::data::parseBool(tmp));
     else {
-        // use the global setting
-        setExposureIncludeTodaysCashFlows(includeTodaysCashFlows());
+        // use the global setting if available
+        optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+        if (inc)
+	    setExposureIncludeTodaysCashFlows(*inc);
     }
     
+    tmp = params_->get("simulation", "includeReferenceDateEvents", false);
+    if (tmp != "")
+        setExposureIncludeReferenceDateEvents(ore::data::parseBool(tmp));
+    else {
+        // use the global setting
+        setExposureIncludeReferenceDateEvents(Settings::instance().includeReferenceDateEvents());
+    }
+
     // check this here because we need to know further below when checking for EXPOSURE or XVA analytic
     tmp = params_->get("xva", "active", false);
     if (!tmp.empty() && parseBool(tmp))
