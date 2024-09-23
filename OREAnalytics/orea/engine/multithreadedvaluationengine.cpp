@@ -28,7 +28,6 @@
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/dategrid.hpp>
 
-#include <boost/predef.h>
 #include <boost/timer/timer.hpp>
 
 #include <future>
