@@ -10,7 +10,7 @@ oreex.print_headline("Run ORE for maturing portfolio with includeTodaysCashFlows
 oreex.run("Input/ore_maturing.xml")
 
 oreex.print_headline("Run classic simulation for short term portfolio with includeTodaysCashFlows=true")
-oreex.run("Input/ore.xml")
+oreex.run("Input/ore_classic.xml")
 
 oreex.print_headline("Run AMC simulation for short term portfolio with includeTodaysCashFlows=true")
 oreex.run("Input/ore_amc.xml")

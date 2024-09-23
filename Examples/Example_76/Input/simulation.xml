@@ -22,20 +22,17 @@
     <Currencies>
       <Currency>EUR</Currency>
       <Currency>USD</Currency>
-      <Currency>GBP</Currency>
-      <Currency>CHF</Currency>
-      <Currency>JPY</Currency>
     </Currencies>
     <Equities>
       <Equity>SP5</Equity>
       <Equity>Lufthansa</Equity>
     </Equities>
-    <!--
     <CreditNames>
+      <!--
       <CreditName>CPTY_C</CreditName>
       <CreditName>BANK</CreditName>
+      -->
     </CreditNames>
-    -->
     <BootstrapTolerance>0.0001</BootstrapTolerance>
     <InterestRateModels>
       <LGM ccy="default">
@@ -155,20 +152,6 @@
           <!-- ATMF, +25D, -25D, 1.2345 -->
         </CalibrationOptions>
       </CrossCcyLGM>
-      <CrossCcyLGM foreignCcy="GBP">
-        <DomesticCcy>EUR</DomesticCcy>
-        <CalibrationType>Bootstrap</CalibrationType>
-        <Sigma>
-          <Calibrate>Y</Calibrate>
-          <ParamType>Piecewise</ParamType>
-          <TimeGrid>    1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-          <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1,  0.1, 0.1</InitialValue>
-        </Sigma>
-        <CalibrationOptions>
-          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
-          <Strikes/>
-        </CalibrationOptions>
-      </CrossCcyLGM>
     </ForeignExchangeModels>
     <EquityModels>
       <CrossAssetLGM name="default">
@@ -232,15 +215,8 @@
     -->
     <InstantaneousCorrelations>
       <Correlation factor1="IR:EUR" factor2="IR:USD">0.3</Correlation>
-      <Correlation factor1="IR:EUR" factor2="IR:GBP">0.3</Correlation>
-      <Correlation factor1="IR:USD" factor2="IR:GBP">0.3</Correlation>
       <Correlation factor1="IR:EUR" factor2="FX:USDEUR">0</Correlation>
-      <Correlation factor1="IR:EUR" factor2="FX:GBPEUR">0</Correlation>
-      <Correlation factor1="IR:GBP" factor2="FX:USDEUR">0</Correlation>
-      <Correlation factor1="IR:GBP" factor2="FX:GBPEUR">0</Correlation>
       <Correlation factor1="IR:USD" factor2="FX:USDEUR">0</Correlation>
-      <Correlation factor1="IR:USD" factor2="FX:GBPEUR">0</Correlation>
-      <Correlation factor1="FX:USDEUR" factor2="FX:GBPEUR">0</Correlation>
       <!-- ... -->
     </InstantaneousCorrelations>
   </CrossAssetModel>
@@ -252,9 +228,6 @@
     <Currencies>
       <Currency>EUR</Currency>
       <Currency>USD</Currency>
-      <Currency>GBP</Currency>
-      <Currency>CHF</Currency>
-      <Currency>JPY</Currency>
     </Currencies>
 
     <YieldCurves>
@@ -274,13 +247,6 @@
       <Index>USD-LIBOR-3M</Index>
       <Index>USD-LIBOR-6M</Index>
       <Index>USD-FedFunds</Index>
-      <Index>GBP-LIBOR-6M</Index>
-      <Index>GBP-LIBOR-3M</Index>
-      <Index>GBP-SONIA</Index>
-      <Index>CHF-LIBOR-6M</Index>
-      <Index>CHF-TOIS</Index>
-      <Index>JPY-LIBOR-6M</Index>
-      <Index>JPY-TONAR</Index>
     </Indices>
 
     <SwapIndices>
@@ -324,9 +290,6 @@
       <Currencies>
         <Currency>EUR</Currency>
         <Currency>USD</Currency>
-        <Currency>GBP</Currency>
-        <Currency>CHF</Currency>
-        <Currency>JPY</Currency>
       </Currencies>
       <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
@@ -349,9 +312,6 @@
       <!-- Alternative: ConstantVariance -->
       <CurrencyPairs>
         <CurrencyPair>EURUSD</CurrencyPair>
-        <CurrencyPair>EURGBP</CurrencyPair>
-        <CurrencyPair>EURJPY</CurrencyPair>
-        <!--<CurrencyPair>GBPUSD</CurrencyPair>-->
       </CurrencyPairs>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
     </FxVolatilities>

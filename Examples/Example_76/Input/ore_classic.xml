@@ -3,19 +3,20 @@
   <Setup>
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
-    <Parameter name="outputPath">Output</Parameter>
+    <Parameter name="outputPath">Output/classic</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
-    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
-    <Parameter name="conventionsFile">conventions.xml</Parameter>
-    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">None</Parameter>
-    <Parameter name="includeTodaysCashFlows">N</Parameter>
+    <Parameter name="includeTodaysCashFlows">Y</Parameter>
+    <Parameter name="includeReferenceDateEvents">Y</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">default</Parameter>
@@ -44,6 +45,7 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="includeTodaysCashFlows">Y</Parameter>
+      <Parameter name="includeReferenceDateEvents">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
