@@ -317,10 +317,11 @@ void MultiThreadedValuationEngine::buildCube(
             CPU_ZERO(&cpuset);
             CPU_SET(cpuIds[id], &cpuset);
             if (int rc = pthread_setaffinity_np(jobs[id].native_handle(), sizeof(cpu_set_t), &cpuset)) {
-                std::cerr << "MultithreadedValuationEngine: error while setting thread affinity: return code " << rc
-                          << std::endl;
+                WLOG("Error while setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]
+                                                                    << ": got return code " << rc);
+            } else {
+                LOG("Setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]);
             }
-            LOG("Setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]);
 #endif
 
             // set thread local singletons
