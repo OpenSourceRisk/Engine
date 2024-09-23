@@ -4,6 +4,7 @@ set(QuantExt-Test_SRC ad.cpp
 analyticcashsettledeuropeanengine.cpp
 analyticeuropeanenginedeltagamma.cpp
 analyticlgmswaptionengine.cpp
+analytichwswaptionengine.cpp
 basecorrelationcurve.cpp
 bfrrvolsurface.cpp
 blackswaptionenginedeltagamma.cpp
