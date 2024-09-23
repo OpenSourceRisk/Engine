@@ -317,10 +317,10 @@ void MultiThreadedValuationEngine::buildCube(
             CPU_ZERO(&cpuset);
             CPU_SET(cpuIds[id], &cpuset);
             if (int rc = pthread_setaffinity_np(jobs[id].native_handle(), sizeof(cpu_set_t), &cpuset)) {
-                WLOG("Error while setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]
+                WLOG("[MULTITHREADING] Error while setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]
                                                                     << ": got return code " << rc);
             } else {
-                LOG("Setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]);
+                WLOG("[MULTITHREADING] Setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]);
             }
 #endif
 
