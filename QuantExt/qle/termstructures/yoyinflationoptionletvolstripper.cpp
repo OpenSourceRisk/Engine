@@ -46,13 +46,6 @@ YoYInflationOptionletVolStripper::YoYInflationOptionletVolStripper(
 
 void YoYInflationOptionletVolStripper::performCalculations() {
 
-    Calendar cal = yoyIndex_->yoyInflationTermStructure()->calendar();
-    Period obsLag = yoyIndex_->yoyInflationTermStructure()->observationLag();
-    Size settDays = volSurface_->settlementDays();
-    DayCounter dc = yoyIndex_->yoyInflationTermStructure()->dayCounter();
-    BusinessDayConvention bdc = volSurface_->businessDayConvention();
-    Frequency frequency = yoyIndex_->frequency();
-
     YoYPriceSurfaceFromVolatilities volToPriceConverter;
 
     auto priceSurface = volToPriceConverter(volSurface_, yoyIndex_, nominalTs_, type_, displacement_);

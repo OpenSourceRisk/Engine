@@ -20,7 +20,8 @@ QuantLib::ext::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> YoYOptionletS
         firstCapletSolver = std::make_unique<QuantLib::YoYOptionletSolver>();
     }
 
-    auto yoyStripper = QuantLib::ext::make_shared<QuantLib::InterpolatedYoYOptionletStripper<QuantLib::Linear>>(
+    auto yoyStripper = QuantLib::ext::make_shared<
+        QuantLib::InterpolatedYoYOptionletStripper<QuantLib::Linear, QuantExt::IterativeBootstrap>>(
         std::move(firstCapletSolver),
         QuantExt::IterativeBootstrap<
             InterpolatedYoYOptionletStripper<Linear, QuantExt::IterativeBootstrap>::optionlet_curve>(

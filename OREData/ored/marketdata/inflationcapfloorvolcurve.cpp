@@ -37,6 +37,7 @@
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
 #include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
+#include <qle/termstructures/yoyoptionletsurfacestripper.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -584,29 +585,19 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         yoySurface->setMaturities(optionletTerms);
         surface_ = yoySurface;
 
-        QuantLib::ext::shared_ptr<InterpolatedYoYOptionletStripper<QuantLib::Linear>> yoyStripper =
-            QuantLib::ext::make_shared<InterpolatedYoYOptionletStripper<QuantLib::Linear>>();
+        // Get configuration values for bootstrap
+        Real accuracy = config->bootstrapConfig().accuracy();
+        Real globalAccuracy = config->bootstrapConfig().globalAccuracy();
+        bool dontThrow = config->bootstrapConfig().dontThrow();
+        Size maxAttempts = config->bootstrapConfig().maxAttempts();
+        Real maxFactor = config->bootstrapConfig().maxFactor();
+        Real minFactor = config->bootstrapConfig().minFactor();
+        Size dontThrowSteps = config->bootstrapConfig().dontThrowSteps();
 
-        // Create an empty volatility surface to pass to the engine
-        QuantLib::ext::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> ovs =
-            QuantLib::ext::dynamic_pointer_cast<QuantLib::YoYOptionletVolatilitySurface>(
-                QuantLib::ext::make_shared<QuantLib::ConstantYoYOptionletVolatility>(
-                    0.0, yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(),
-                    yoySurface->dayCounter(), yoySurface->observationLag(), yoySurface->frequency(),
-                    yoySurface->indexIsInterpolated()));
-        Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs);
+        YoYOptionletSurfaceStripper optionletStripper;
 
-        // create a yoy Index from the surfaces termstructure
-        yoyTs_ = yoySurface->YoYTS();
-        QuantLib::ext::shared_ptr<YoYInflationIndex> yoyIndex = index->clone(Handle<YoYInflationTermStructure>(yoyTs_));
-
-        QuantLib::ext::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
-            QuantLib::ext::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs, discountCurve_);
-
-        yoyVolSurface_ = QuantLib::ext::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
-            yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(),
-            yoySurface->dayCounter(), yoySurface->observationLag(), yoySurface, cfEngine, yoyStripper, 0, Linear(),
-            VolatilityType::Normal);
+        yoyVolSurface_ = optionletStripper(yoySurface, index, discountCurve_, accuracy, globalAccuracy, maxAttempts,
+                                           maxFactor, minFactor, dontThrow, dontThrowSteps);
     }
 }
 

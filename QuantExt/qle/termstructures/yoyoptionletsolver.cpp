@@ -16,25 +16,26 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 #include <iostream>
+#include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/yoyoptionletsolver.hpp>
 
 namespace QuantExt {
 
-YoYOptionletStripperSolverWithFallBack::YoYOptionletStripperSolverWithFallBack(double minVol = 1e-8,
-                                                                               double maxVol = 0.3, size_t steps = 10)
+YoYOptionletStripperSolverWithFallBack::YoYOptionletStripperSolverWithFallBack(double minVol, double maxVol,
+                                                                               size_t steps)
     : minVol_(minVol), maxVol_(maxVol), steps_(steps) {}
 
 double YoYOptionletStripperSolverWithFallBack::solveForImpliedVol(
     QuantLib::YoYInflationCapFloor::Type type, QuantLib::Real slope, QuantLib::Rate K, QuantLib::Period& lag,
     QuantLib::Natural fixingDays, const QuantLib::ext::shared_ptr<QuantLib::YoYInflationIndex>& anIndex,
     const QuantLib::ext::shared_ptr<QuantLib::YoYCapFloorTermPriceSurface>& surf,
-    QuantLib::ext::shared_ptr<QuantLib::YoYInflationCapFloorEngine> p, QuantLib::Real priceToMatch) const override {
+    QuantLib::ext::shared_ptr<QuantLib::YoYInflationCapFloorEngine> p, QuantLib::Real priceToMatch) const {
     try {
         return solver_.solveForImpliedVol(type, slope, K, lag, fixingDays, anIndex, surf, p, priceToMatch);
     } catch (const std::exception& e) {
         std::cout << "Failed to imply first caplet vol, fallback to no throw" << std::endl;
         ObjectiveFunction error(type, slope, K, lag, fixingDays, anIndex, surf, p, priceToMatch);
-        double v = QuantLib::detail::dontThrowFallback(error, minVol_, maxVol_, steps_);
+        double v = QuantExt::detail::dontThrowFallback(error, minVol_, maxVol_, steps_);
         std::cout << " Got dont throwfallback v = " << v << std::endl;
         return v;
     }
