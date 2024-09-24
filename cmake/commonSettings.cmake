@@ -52,6 +52,7 @@ endif()
 # set compiler macro if CUDA is enabled
 if (ORE_ENABLE_CUDA)
   add_compile_definitions(ORE_ENABLE_CUDA)
+endif()
 
 # set compiler macro if zlib is enabled
 if(ORE_USE_ZLIB)
