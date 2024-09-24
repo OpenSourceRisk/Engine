@@ -215,8 +215,11 @@ BOOST_AUTO_TEST_CASE(testAbsoluteFxShift) {
     Real exp = 3.0;
 
     // FX spot sensitivity set up to have 5bp absolute shift
-    ssd->fxShiftData()["EURUSD"]->shiftSize = shift;
-    ssd->fxShiftData()["EURUSD"]->shiftType = ShiftType::Absolute;
+    SensitivityScenarioData::SpotShiftData sfd;
+    sfd.shiftSize = shift;
+    sfd.shiftType = ShiftType::Absolute;
+
+    ssd->fxShiftData()["EURUSD"] = QuantLib::ext::make_shared<SensitivityScenarioData::SpotShiftData>(sfd);
 
     // EURUSD spot scenario
     RiskFactorKey rf(RFType::FXSpot, "EURUSD", 0);

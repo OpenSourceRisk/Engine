@@ -325,7 +325,7 @@ protected:
     map<string, QuantLib::ext::shared_ptr<CurveShiftData>> discountCurveShiftData_;     // key: ccy
     map<string, QuantLib::ext::shared_ptr<CurveShiftData>> indexCurveShiftData_;        // key: indexName
     map<string, QuantLib::ext::shared_ptr<CurveShiftData>> yieldCurveShiftData_;        // key: yieldCurveName
-    map < string, QuantLib::ext::shared_ptr<SpotShiftData>> fxShiftData_;                // key: ccy pair
+    map<string, QuantLib::ext::shared_ptr<SpotShiftData>> fxShiftData_;                // key: ccy pair
     map<string, QuantLib::ext::shared_ptr<CapFloorVolShiftData>> capFloorVolShiftData_; // key: ccy
     map<string, QuantLib::ext::shared_ptr<GenericYieldVolShiftData>> swaptionVolShiftData_;                // key: ccy
     map<string, QuantLib::ext::shared_ptr<GenericYieldVolShiftData>> yieldVolShiftData_;                   // key: securityId
