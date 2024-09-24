@@ -79,23 +79,27 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     // Derive settlement date from payment data parameters
     Date payDate;
     if (payDate_.empty()) {
-        Natural conventionalLag = 0;
-        Calendar conventionalCalendar = NullCalendar();
-        BusinessDayConvention conventionalBdc = Unadjusted;
-        if (!fxIndex_.empty() && settlement_ == "Cash") {
+        if(settlement_ == "Cash" && fxIndex_.empty()) {
+            // for cash settled trades we don't enforce an fx index in order not to break existing trades
+            payDate = maturityDate;
+        } else {
+            // otherwise we derive the pay date from the value date using the available conventions
+            Natural conventionalLag = 0;
+            Calendar conventionalCalendar = NullCalendar();
+            BusinessDayConvention conventionalBdc = Unadjusted;
             std::tie(conventionalLag, conventionalCalendar, conventionalBdc) =
                 getFxIndexConventions(fxIndex_.empty() ? boughtCurrency_ + soldCurrency_ : fxIndex_);
+            PaymentLag paymentLag;
+            if (payLag_.empty())
+                paymentLag = conventionalLag;
+            else
+                paymentLag = parsePaymentLag(payLag_);
+            Period payLag = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
+            Calendar payCalendar = payCalendar_.empty() ? conventionalCalendar : parseCalendar(payCalendar_);
+            BusinessDayConvention payConvention =
+                payConvention_.empty() ? conventionalBdc : parseBusinessDayConvention(payConvention_);
+            payDate = payCalendar.advance(maturityDate, payLag, payConvention);
         }
-        PaymentLag paymentLag;
-        if (payLag_.empty())
-            paymentLag = conventionalLag;
-        else
-            paymentLag = parsePaymentLag(payLag_);
-        Period payLag = boost::apply_visitor(PaymentLagPeriod(), paymentLag);
-        Calendar payCalendar = payCalendar_.empty() ? conventionalCalendar : parseCalendar(payCalendar_);
-        BusinessDayConvention payConvention =
-            payConvention_.empty() ? conventionalBdc : parseBusinessDayConvention(payConvention_);
-        payDate = payCalendar.advance(maturityDate, payLag, payConvention);
     } else {
         payDate = parseDate(payDate_);
         QL_REQUIRE(payDate >= maturityDate, "FX Forward settlement date should equal or exceed the maturity date.");
