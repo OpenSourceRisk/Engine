@@ -211,6 +211,7 @@
 
 #include <qle/math/basiccpuenvironment.hpp>
 #include <qle/math/openclenvironment.hpp>
+#include <qle/math/cudaenvironment.hpp>
 
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
@@ -549,6 +550,7 @@ void dataBuilders() {
 
     ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR("OpenCL", QuantExt::OpenClFramework, false);
     ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR("BasicCpu", QuantExt::BasicCpuFramework, false);
+    ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR("CUDA", QuantExt::CudaFramework, false);
 }
 
 } // namespace ore::data

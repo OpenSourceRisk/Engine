@@ -54,8 +54,6 @@
 
 #include <mutex>
 
-#include <iostream>
-
 using namespace std;
 using namespace ore::data;
 using namespace ore::analytics;
@@ -456,8 +454,8 @@ void OREApp::run() {
     }
 
     ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
-    bool ginc = inc ? *inc : false;
-    LOG("Global IncludeTodaysCashFlows is set to " << (ginc ? "true" : "false"))
+    LOG("Global IncludeTodaysCashFlows is set " << (inc ? "true" : "false") << ", value: " << 
+                                                   (inc ? (*inc ? "true" : "false") : "na") );
 	
     runTimer_.start();
     
@@ -628,7 +626,6 @@ void OREAppInputParameters::loadParameters() {
     setEomInflationFixings(false);
     setUseMarketDataFixings(false);
     setBuildFailedTrades(false);
-    setIncludeTodaysCashFlows(false);
 
     QL_REQUIRE(params_->hasGroup("setup"), "parameter group 'setup' missing");
 

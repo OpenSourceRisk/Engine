@@ -166,13 +166,6 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     legCurrencies_ = {boughtCurrency_, soldCurrency_};
     legPayers_ = {false, true};
 }
-
-// bool FxForward::isExpired(const Date& date) const {
-//     if (includeSettlementDateFlows_)
-//         return date > maturity_;
-//     else
-//         return date >= maturity_;
-// }
     
 QuantLib::Real FxForward::notional() const {
     // try to get the notional from the additional results of the instrument

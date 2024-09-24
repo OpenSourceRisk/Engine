@@ -1033,10 +1033,6 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     // reset that mode
     ObservationMode::instance().setMode(inputs_->observationModel());
 
-    // reset cash flow treatment
-    //Settings::instance().includeTodaysCashFlows() = globalIncludeTodaysCashFlows;
-    //LOG("IncludeTodaysCashFlows reset to " << (globalIncludeTodaysCashFlows ? "true" : "false"));
-
     ProgressMessage("Running XVA Analytic", 1, 1).log();
 }
 
