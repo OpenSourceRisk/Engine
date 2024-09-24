@@ -453,6 +453,10 @@ void OREApp::run() {
         return;
     }
 
+    ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+    LOG("Global IncludeTodaysCashFlows is set " << (inc ? "true" : "false") << ", value: " << 
+                                                   (inc ? (*inc ? "true" : "false") : "na") );
+	
     runTimer_.start();
     
     try {
@@ -716,6 +720,14 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setImplyTodaysFixings(ore::data::parseBool(tmp));
 
+    tmp = params_->get("setup", "includeTodaysCashFlows", false);
+    if (tmp != "")
+        setIncludeTodaysCashFlows(ore::data::parseBool(tmp));
+
+    tmp = params_->get("setup", "includeReferenceDateEvents", false);
+    if (tmp != "")
+        setIncludeReferenceDateEvents(ore::data::parseBool(tmp));
+    
     tmp = params_->get("setup", "referenceDataFile", false);
     if (tmp != "") {
         filesystem::path refDataFile = inputPath / tmp;
@@ -1516,10 +1528,28 @@ void OREAppInputParameters::loadParameters() {
     /************
      * Simulation
      ************/
-
+    
     tmp = params_->get("simulation", "active", false);
     if (!tmp.empty() && parseBool(tmp)) {
         insertAnalytic("EXPOSURE");
+    }
+
+    tmp = params_->get("simulation", "includeTodaysCashFlows", false);
+    if (tmp != "")
+        setExposureIncludeTodaysCashFlows(ore::data::parseBool(tmp));
+    else {
+        // use the global setting if available
+        optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+        if (inc)
+	    setExposureIncludeTodaysCashFlows(*inc);
+    }
+    
+    tmp = params_->get("simulation", "includeReferenceDateEvents", false);
+    if (tmp != "")
+        setExposureIncludeReferenceDateEvents(ore::data::parseBool(tmp));
+    else {
+        // use the global setting
+        setExposureIncludeReferenceDateEvents(Settings::instance().includeReferenceDateEvents());
     }
 
     // check this here because we need to know further below when checking for EXPOSURE or XVA analytic

@@ -160,6 +160,7 @@ Date & Author & Comment \\
 16 June 2023 & Acadia & updates for release 10\\
 16 October 2023 & Acadia & updates for release 11\\
 24 May 2024 & Acadia & updates for release 12\\
+September 2024 & Acadia & updates for release 13\\
 \hline
 \end{supertabular}
 \end{center}
@@ -1147,6 +1148,20 @@ Example & Description \\
 69 &  Convert Zero Rate Shifts into Par Rate Shifts \\
 \hline
 70 &  Forward Bond Exposure with AMC and implied Bondspread \\
+\hline
+71 &  TODO \\
+\hline
+72 &  TODO \\
+\hline
+73 &  TODO \\
+\hline
+74 &  TODO \\
+\hline
+75 &  TODO \\
+\hline
+76 &  Reference Date Cashflows \\
+\hline
+77 &  TODO \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -3817,6 +3832,80 @@ Both fields, PriceQuote and SpreadQuote, are mandatory. In the market data file,
 Otherwise the spread quote is used or none.
 
 In case of a forward bond, the convention for security specification requires the format \emph{securityId\_FWDEXP\_expiryDate}.
+
+%--------------------------------------------------------------------
+\subsection{TODO: Portfolio Details Analytic}% Example 74
+\label{example:74}
+%--------------------------------------------------------------------
+
+%--------------------------------------------------------------------
+\subsection{TODO: Classic and AMC Simulation with Horizon Shift}% Example 75
+\label{example:75}
+%--------------------------------------------------------------------
+
+%--------------------------------------------------------------------
+\subsection{Reference Date Cashflows}% Example 76
+\label{example:76}
+%--------------------------------------------------------------------
+
+This example demonstrates the configuration of the treatment of reference date events resp.~cash flows.
+QuantLib provides two flags for this purpose in its Settings Singleton object,
+\begin{itemize}
+\item includeReferenceDateEvents
+\item includeTodaysCashFlows
+\end{itemize}
+to control whether such events/flows are included in the NPV calculation on the reference date or treated
+as matured and hence excluded. We expose both flags in ORE now. A global choice, applied across all
+analytics, can be made in the Setup section of ore.xml
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Setup>
+    ...
+    <Parameter name="includeTodaysCashFlows">Y</Parameter>
+    <Parameter name="includeReferenceDateEvents">Y</Parameter>
+  </Setup>
+\end{minted}
+
+A ``local'' and possibly different choice can be made for the simulation based analytics
+in the ``simulation'' analytic section 
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <Analytic type="simulation">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="includeTodaysCashFlows">Y</Parameter>
+      <Parameter name="includeReferenceDateEvents">Y</Parameter>
+      ...
+    </Analytic>
+\end{minted}
+
+which applies to XVA, XVA Sensitivity and XVA Stress analytics.
+
+These flags -- in the global and simulation section -- are optional. If omitted, default values
+({\tt false}) will apply. Kicking off the example with \\
+
+\medskip
+
+\centerline{\tt python run.py} 
+
+\medskip
+kicks off three ORE runs
+\begin{itemize}
+\item NPV analytic for a portfolio of trades all maturing resp. expiring on the valuation date -
+  to show that the maturing trades are still present in the result report and show a non-zero NPV.
+\item XVA/Exposure analytic for a similar portfolio of trades all maturing resp. expiring on week in the
+  future - to demonstrate that the ``classic'' exposure is non-zero on maturity/expiry
+\item XVA/Exposure as above but using AMC simulation
+\end{itemize}
+
+The portfolio contains Single and Cross Currency Swaps, Caps/Floors, Swaptions, FX Forwards, FX Options,
+Equity Forwards, Equity Options, CDS.
+
+These flags are also accessible/settable in the ORE Python wrapper.
+
+%--------------------------------------------------------------------
+\subsection{TODO: FX Volatility Stresstest}% Example 77
+\label{example:77}
+%--------------------------------------------------------------------
 
 \clearpage
 %========================================================

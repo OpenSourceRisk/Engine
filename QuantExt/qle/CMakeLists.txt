@@ -246,6 +246,7 @@ pricingengines/analyticdoublebarrierengine.cpp
 pricingengines/analyticeuropeanengine.cpp
 pricingengines/analyticeuropeanenginedeltagamma.cpp
 pricingengines/analyticeuropeanforwardengine.cpp
+pricingengines/analytichwswaptionengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
 pricingengines/analyticjyyoycapfloorengine.cpp
 pricingengines/analyticlgmcdsoptionengine.cpp
@@ -780,6 +781,7 @@ pricingengines/analyticdoublebarrierengine.hpp
 pricingengines/analyticeuropeanengine.hpp
 pricingengines/analyticeuropeanenginedeltagamma.hpp
 pricingengines/analyticeuropeanforwardengine.hpp
+pricingengines/analytichwswaptionengine.hpp
 pricingengines/analyticjycpicapfloorengine.hpp
 pricingengines/analyticjyyoycapfloorengine.hpp
 pricingengines/analyticlgmcdsoptionengine.hpp

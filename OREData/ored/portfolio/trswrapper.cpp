@@ -132,7 +132,11 @@ TRSWrapper::TRSWrapper(
         lastDate_ = std::max(lastDate_, c->date());
 }
 
-bool TRSWrapper::isExpired() const { return detail::simple_event(lastDate_).hasOccurred(); }
+bool TRSWrapper::isExpired() const {
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    Date refDate = Settings::instance().evaluationDate();
+    return detail::simple_event(lastDate_).hasOccurred(refDate, includeToday);
+}
 
 void TRSWrapper::setupArguments(PricingEngine::arguments* args) const {
     TRSWrapper::arguments* a = dynamic_cast<TRSWrapper::arguments*>(args);
