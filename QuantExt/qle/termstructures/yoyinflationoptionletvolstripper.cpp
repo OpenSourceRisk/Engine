@@ -40,7 +40,8 @@ YoYInflationOptionletVolStripper::YoYInflationOptionletVolStripper(
     VolatilityType type, Real displacement, QuantLib::Real accuracy, QuantLib::Real globalAccuracy, bool dontThrow,
     QuantLib::Size maxAttempts, QuantLib::Real maxFactor, QuantLib::Real minFactor, QuantLib::Size dontThrowSteps)
     : volSurface_(volSurface), yoyIndex_(index), nominalTs_(nominalTs), type_(type), displacement_(displacement),
-      dontThrow_(dontThrow), dontThrowSteps_(dontThrowSteps) {
+      accuracy_(accuracy), globalAccuracy_(globalAccuracy), dontThrow_(dontThrow), maxAttempts_(maxAttempts),
+      maxFactor_(maxFactor), minFactor_(minFactor), dontThrowSteps_(dontThrowSteps) {
     performCalculations();
 }
 

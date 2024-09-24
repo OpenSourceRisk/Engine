@@ -44,10 +44,12 @@ QuantLib::ext::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> YoYOptionletS
     QuantLib::ext::shared_ptr<QuantLib::YoYInflationBachelierCapFloorEngine> cfEngine =
         QuantLib::ext::make_shared<QuantLib::YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs, discountCurve);
 
-    return QuantLib::ext::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
+    auto curve =  QuantLib::ext::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
         priceSurface->settlementDays(), priceSurface->calendar(), priceSurface->businessDayConvention(),
         priceSurface->dayCounter(), priceSurface->observationLag(), priceSurface, cfEngine, yoyStripper, 0, Linear(),
         VolatilityType::Normal);
+    curve->enableExtrapolation();
+    return curve;
 }
 
 } // namespace QuantExt
