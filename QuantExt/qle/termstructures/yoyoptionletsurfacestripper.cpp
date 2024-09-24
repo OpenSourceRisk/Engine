@@ -10,7 +10,9 @@ QuantLib::ext::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> YoYOptionletS
     const QuantLib::ext::shared_ptr<QuantLib::YoYInflationIndex>& index,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve, double accuracy, double globalAccuracy,
     size_t maxAttemps, double maxFactor, double minFactor, bool dontThrow, size_t dontThrowSteps) const {
-
+    QL_REQUIRE(priceSurface != nullptr, "YoYOptionletSurfaceStripper: missing price surface");
+    QL_REQUIRE(index != nullptr, "YoYOptionletSurfaceStripper: missing yoy index");
+    QL_REQUIRE(!discountCurve.empty(), "YoYOptionletSurfaceStripper: missing discount curve");
     std::unique_ptr<QuantLib::YoYOptionletBaseSolver> firstCapletSolver;
 
     if (dontThrow) {

@@ -33,11 +33,8 @@ double YoYOptionletStripperSolverWithFallBack::solveForImpliedVol(
     try {
         return solver_.solveForImpliedVol(type, slope, K, lag, fixingDays, anIndex, surf, p, priceToMatch);
     } catch (const std::exception& e) {
-        std::cout << "Failed to imply first caplet vol, fallback to no throw" << std::endl;
         ObjectiveFunction error(type, slope, K, lag, fixingDays, anIndex, surf, p, priceToMatch);
-        double v = QuantExt::detail::dontThrowFallback(error, minVol_, maxVol_, steps_);
-        std::cout << " Got dont throwfallback v = " << v << std::endl;
-        return v;
+        return QuantExt::detail::dontThrowFallback(error, minVol_, maxVol_, steps_);
     }
 }
 
