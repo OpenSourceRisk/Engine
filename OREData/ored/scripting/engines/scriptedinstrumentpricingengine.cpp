@@ -203,6 +203,7 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                 discount = model_->discount(referenceDate, paylog->dates().at(i), paylog->currencies().at(i)).at(0);
                 cashFlowResults[i].amount /= fx * discount;
             }
+            cashFlowResults[i].fixingDate = paylog->obsDates().at(i);
             cashFlowResults[i].payDate = paylog->dates().at(i);
             cashFlowResults[i].currency = paylog->currencies().at(i);
             cashFlowResults[i].legNumber = paylog->legNos().at(i);
