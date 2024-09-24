@@ -80,10 +80,10 @@ private:
         bool quoted = s.size() > 1 && s[0] == quoteChar_ && s[s.size() - 1] == quoteChar_;
         string sc = quoted ? s.substr(1, s.size() - 2) : s;
 
-        bool containsSep = sc.find(sep_) != std::string::npos;
-                
         boost::replace_all(sc, "\n", "\\n");
         boost::replace_all(sc, "\t", "\\t");
+
+        bool containsSep = sc.find(sep_) != std::string::npos;
 
         // If quote character is \0, use double quotes instead
         char effectiveQuoteChar = (quoteChar_ == '\0' && containsSep) ? '"' : quoteChar_;
