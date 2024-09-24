@@ -33,9 +33,10 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
-QuantLib::ext::shared_ptr<PricingEngine> CamAmcBondEngineBuilder::buildMcEngine(
-    const QuantLib::ext::shared_ptr<LGM>& lgm, const Handle<YieldTermStructure>& discountCurve,
-    const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices) {
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcBondEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm,
+                                       const Handle<YieldTermStructure>& discountCurve,
+                                       const std::vector<Size>& externalModelIndices) {
 
     return QuantLib::ext::make_shared<QuantExt::McLgmBondEngine>(
         lgm, parseSequenceType(engineParameter("Training.Sequence")),
@@ -44,10 +45,13 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcBondEngineBuilder::buildMcEngine(
         parseInteger(engineParameter("Pricing.Seed")), parseInteger(engineParameter("Training.BasisFunctionOrder")),
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
-        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurve, simulationDates,
-        externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurve,
+        Handle<YieldTermStructure>(), simulationDates_, stickyCloseOutDates_, externalModelIndices,
+        parseBool(engineParameter("MinObsDate")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
-        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
@@ -74,7 +78,7 @@ CamAmcBondEngineBuilder::engineImpl(const Currency& ccy, const string& creditCur
             yts, market_->securitySpread(securityId, configuration(MarketContext::pricing))));
 
     //yts registering done in qle/pricingengines/mclgmbondengine.hpp
-    return buildMcEngine(lgm, yts, simulationDates_, modelIndex);
+    return buildMcEngine(lgm, yts, modelIndex);
 }
 
 } // namespace data

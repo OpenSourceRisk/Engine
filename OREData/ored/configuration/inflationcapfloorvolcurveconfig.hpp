@@ -25,6 +25,7 @@
 
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -89,6 +90,7 @@ public:
     const std::string& quoteIndex() const { return quoteIndex_; }
     const std::string& conventions() const { return conventions_; }
     const bool& useLastAvailableFixingDate() const { return useLastAvailableFixingDate_; }
+    const ReportConfig& reportConfig() const { return reportConfig_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     //@}
 
@@ -137,6 +139,7 @@ private:
     std::string quoteIndex_;
     std::string conventions_;
     bool useLastAvailableFixingDate_;
+    ReportConfig reportConfig_;
     BootstrapConfig bootstrapConfig_;
 };
 

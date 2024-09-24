@@ -32,10 +32,10 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
-QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm,
-                                                                        const Handle<YieldTermStructure>& discountCurve,
-                                                                        const std::vector<Date>& simulationDates,
-                                                                        const std::vector<Size>& externalModelIndices) {
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm,
+                                       const Handle<YieldTermStructure>& discountCurve,
+                                       const std::vector<Size>& externalModelIndices) {
 
     return QuantLib::ext::make_shared<QuantExt::McLgmSwapEngine>(
         lgm, parseSequenceType(engineParameter("Training.Sequence")),
@@ -44,15 +44,17 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::buildMcEngine(
         parseInteger(engineParameter("Pricing.Seed")), parseInteger(engineParameter("Training.BasisFunctionOrder")),
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
-        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurve, simulationDates,
-        externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurve, simulationDates_,
+        stickyCloseOutDates_, externalModelIndices, parseBool(engineParameter("MinObsDate")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
-        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())));
+        parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(const Currency& ccy,
-                                                                     const std::string& discountCurveName,
-                                                                     const std::string& securitySpread) {
+                                                                             const std::string& discountCurveName,
+                                                                             const std::string& securitySpread) {
     DLOG("Building AMC Swap engine for ccy " << ccy << " (from externally given CAM)");
 
     QL_REQUIRE(cam_ != nullptr, "LgmAmcSwapEngineBuilder::engineImpl: cam is null");
@@ -65,7 +67,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(con
             ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
             : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
 
-    return buildMcEngine(lgm, discountCurve, simulationDates_, modelIndex);
+    return buildMcEngine(lgm, discountCurve, modelIndex);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwapEngineBuilder::engineImpl(const Currency& ccy,
@@ -73,7 +75,10 @@ QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwapEngineBuilder::engineImpl(cons
                                                                             const std::string& securitySpread) {
     DLOG("Building AMCCG Swap engine for ccy " << ccy << " (from externally given modelcg)");
     QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
-    return QuantLib::ext::make_shared<AmcCgSwapEngine>(modelCg_, simulationDates_, ccy.code());
+    return QuantLib::ext::make_shared<AmcCgSwapEngine>(
+        ccy.code(), modelCg_, simulationDates_, stickyCloseOutDates_,
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 } // namespace data

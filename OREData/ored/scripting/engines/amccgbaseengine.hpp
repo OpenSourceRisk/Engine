@@ -40,7 +40,10 @@ using QuantLib::Null;
 class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
     AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                    const std::vector<QuantLib::Date>& simulationDates);
+                    const std::vector<QuantLib::Date>& simulationDates,
+                    const std::vector<QuantLib::Date>& stickyCloseOutDates,
+                    const bool recalibrateOnStickyCloseOutDates = false,
+                    const bool reevaluateExerciseInStickyRun = false);
     std::string npvName() const override;
     void buildComputationGraph() const override;
     void calculate() const;
@@ -48,6 +51,9 @@ public:
 protected:
     QuantLib::ext::shared_ptr<ModelCG> modelCg_;
     std::vector<QuantLib::Date> simulationDates_;
+    std::vector<QuantLib::Date> stickyCloseOutDates_;
+    bool recalibrateOnStickyCloseOutDates_;
+    bool reevaluateExerciseInStickyRun_;
 
     // input data from the derived pricing engines, to be set in these engines
     mutable std::vector<QuantLib::Leg> leg_;

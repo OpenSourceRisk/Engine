@@ -65,7 +65,7 @@ public:
 
     struct FXVolShiftData {
 
-        enum AtmShiftMode {
+        enum class AtmShiftMode {
             Explicit,   // Shifts are given, if only one shift is given perform parallel shift
             Unadjusted, // Shift only one pillar and leave other unadjusted
             Weighted    // Shift for one pillar given, derive the other shifts from given weights by shift_t = shift_ref *

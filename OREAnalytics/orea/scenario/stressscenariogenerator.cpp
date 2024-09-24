@@ -426,8 +426,8 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
         ShiftType shiftType = data.shiftType;
         vector<Real> shifts;
         std::vector<Time> shiftTimes;
-      
-        if (data.mode == StressTestScenarioData::FXVolShiftData::Explicit) {
+
+        if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit) {
             std::vector<Period> shiftTenors = data.shiftExpiries;
             shifts = data.shifts;
             QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
@@ -436,11 +436,11 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
             for (Size j = 0; j < shiftTenors.size(); ++j){
                 shiftTimes.push_back(dc.yearFraction(asof, asof + shiftTenors[j]));
             }
-        } else if(data.mode == StressTestScenarioData::FXVolShiftData::Weighted){
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Weighted) {
             DLOG("FX Vol Stress Scenario with weighted schema")
             QL_REQUIRE(data.weightTenors.size() == data.weights.size(), "Mismatch between weights and weightTenors");
-            QL_REQUIRE(data.shiftExpiries.size() == 1, "Expect exaclty one tenor for weighted shift scheme");
-            QL_REQUIRE(data.shifts.size() == 1, "Expect exaclty one shift for weighted shift scheme");
+            QL_REQUIRE(data.shiftExpiries.size() == 1, "Weighting schema 'Weighted' requires exactly one tenor");
+            QL_REQUIRE(data.shifts.size() == 1, "Weighting schema 'Weighted' requires exactly one shift");
             Period referenceTenor = data.shiftExpiries.front();
             Real referenceShift = data.shifts.front();
             std::vector<Period> shiftTenors = data.weightTenors;
@@ -449,7 +449,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
             size_t weightPos = std::distance(shiftTenors.begin(), it);
             double referenceWeight = data.weights[weightPos];
             QL_REQUIRE(referenceWeight > 0.0 && !QuantLib::close_enough(referenceWeight, 0.0),
-                       "Only script positive reference weight is allowed");
+                       "Only strict positive reference weight is allowed");
             const double weightedRefShift = referenceShift / referenceWeight;
             DLOG("Compute shifts from weights")
             DLOG("j,pillar,time,shift")
@@ -459,20 +459,18 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
                 shifts.push_back(weightedRefShift * data.weights[j]);
                 DLOG(j << "," << shiftTenors[j] << "," << shiftTimes.back() << "," << shifts.back());
             }
-        } else if (data.mode == StressTestScenarioData::FXVolShiftData::Unadjusted){
-            // Usually there will be 
-            QL_REQUIRE(data.shiftExpiries.size() == 1, "Expect exaclty one tenor for One Tenor shift scheme");
-            QL_REQUIRE(data.shifts.size() == 1, "Expect exaclty one shift for One Tenor shift scheme");
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Unadjusted) {
+            QL_REQUIRE(data.shiftExpiries.size() == 1, "Weighting schema 'Unadjusted' requires exactly one tenor");
+            QL_REQUIRE(data.shifts.size() == 1, "Weighting schema 'Unadjusted' requires exactly one shift");
             Time expiryTime = dc.yearFraction(asof, asof + data.shiftExpiries.front());
-            if(expiryTime >= 1e-6){
+            if (expiryTime >= 1e-6) {
                 shiftTimes.push_back(expiryTime - 1e-6);
                 shiftTimes.push_back(expiryTime);
                 shiftTimes.push_back(expiryTime + 1e-6);
                 shifts.push_back(0.0);
                 shifts.push_back(data.shifts.front());
                 shifts.push_back(0.0);
-
-            } else{
+            } else {
                 shiftTimes.push_back(expiryTime);
                 shiftTimes.push_back(expiryTime + 1e-6);
                 shifts.push_back(data.shifts.front());
