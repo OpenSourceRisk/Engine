@@ -245,11 +245,13 @@ QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5
     cvsData.shiftType = ShiftType::Absolute;
     cvsData.shiftSize = 0.0001;
 
-    QuantLib::ext::shared_ptr<SensitivityScenarioData::SpotShiftData> fxsData;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::SpotShiftData> fxsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::SpotShiftData>();
     fxsData->shiftType = ShiftType::Relative;
     fxsData->shiftSize = 0.01;
 
-    QuantLib::ext::shared_ptr<SensitivityScenarioData::VolShiftData> fxvsData;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::VolShiftData> fxvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::VolShiftData>();
     fxvsData->shiftType = ShiftType::Relative;
     fxvsData->shiftSize = 1.0;
     fxvsData->shiftExpiries = {1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,
@@ -277,7 +279,8 @@ QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5
         91 * Months, 92 * Months, 10 * Years,  15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
-    QuantLib::ext::shared_ptr<SensitivityScenarioData::GenericYieldVolShiftData> swvsData;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::GenericYieldVolShiftData> swvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::GenericYieldVolShiftData>();
     swvsData->shiftType = ShiftType::Relative;
     swvsData->shiftSize = 0.01;
     swvsData->shiftExpiries = {1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,
@@ -361,11 +364,13 @@ QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5
     cvsData.shiftType = ShiftType::Absolute;
     cvsData.shiftSize = 0.0001;
 
-    QuantLib::ext::shared_ptr<SensitivityScenarioData::SpotShiftData> fxsData;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::SpotShiftData> fxsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::SpotShiftData>();
     fxsData->shiftType = ShiftType::Relative;
     fxsData->shiftSize = 0.01;
 
-    QuantLib::ext::shared_ptr<SensitivityScenarioData::VolShiftData> fxvsData;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::VolShiftData> fxvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::VolShiftData>();
     fxvsData->shiftType = ShiftType::Relative;
     fxvsData->shiftSize = 1.0;
     fxvsData->shiftExpiries = {5 * Years};
@@ -376,7 +381,8 @@ QuantLib::ext::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
-    QuantLib::ext::shared_ptr<SensitivityScenarioData::GenericYieldVolShiftData> swvsData;
+    QuantLib::ext::shared_ptr<SensitivityScenarioData::GenericYieldVolShiftData> swvsData =
+        QuantLib::ext::make_shared<SensitivityScenarioData::GenericYieldVolShiftData>();
     swvsData->shiftType = ShiftType::Relative;
     swvsData->shiftSize = 0.01;
     swvsData->shiftExpiries = {6 * Months, 1 * Years, 3 * Years, 5 * Years, 10 * Years};
