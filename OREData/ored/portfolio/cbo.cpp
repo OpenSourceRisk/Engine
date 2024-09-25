@@ -281,9 +281,9 @@ void CBOTrsUnderlyingBuilder::build(
     for (Size i = 0; i < bonds.size(); ++i) {
         creditQualifierMapping[ore::data::securitySpecificCreditCurveName(bonds[i]->bondData().securityId(),
                                                                           bonds[i]->bondData().creditCurveId())] =
-            SimmCreditQualifierMapping(bonds[i]->bondData().securityId(), bonds[i]->bondData().creditGroup());
+            SimmCreditQualifierMapping(bonds[i]->bondData().securityId(), bonds[i]->bondData().creditGroup(), true);
         creditQualifierMapping[bonds[i]->bondData().creditCurveId()] =
-            SimmCreditQualifierMapping(bonds[i]->bondData().securityId(), bonds[i]->bondData().creditGroup());
+            SimmCreditQualifierMapping(bonds[i]->bondData().securityId(), bonds[i]->bondData().creditGroup(), true);
     }
 }
 
