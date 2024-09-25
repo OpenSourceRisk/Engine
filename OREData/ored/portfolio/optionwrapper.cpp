@@ -90,7 +90,7 @@ Real OptionWrapper::NPV() const {
         // by introducing the cash settlement date into the option wrapper (note
         // that we will probably need an effective cash settlement date then to
         // maintain the relative position to the effective exercise date).
-        Real npv = (isPhysicalDelivery_ || today == exerciseDate_)
+      Real npv = (isPhysicalDelivery_ || (today == exerciseDate_ && Settings::instance().includeReferenceDateEvents()))
                        ? multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_
                        : 0.0;
         return npv + addNPV;
