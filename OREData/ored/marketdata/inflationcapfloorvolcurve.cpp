@@ -33,11 +33,12 @@
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
+#include <qle/termstructures/yoyoptionletsurfacestripper.hpp>
+#include <qle/termstructures/yoypricesurfacefromvols.hpp>
 
-#include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
 #include <qle/pricingengines/cpibacheliercapfloorengine.hpp>
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
-#include <qle/termstructures/yoyoptionletsurfacestripper.hpp>
+
 
 #include <qle/models/carrmadanarbitragecheck.hpp>
 
@@ -249,9 +250,23 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
                 true, Handle<YoYInflationTermStructure>(yyTs));
         }
 
-        QuantLib::ext::shared_ptr<YoYInflationOptionletVolStripper> volStripper =
-            QuantLib::ext::make_shared<YoYInflationOptionletVolStripper>(capVol, index, discountCurve_, quoteVolatilityType);
-        yoyVolSurface_ = volStripper->yoyInflationCapFloorVolSurface();
+        YoYPriceSurfaceFromVolatilities volToPriceConverter;
+
+        auto priceSurface = volToPriceConverter(capVol, index, discountCurve_, quoteVolatilityType, 0.0);
+
+        // Get configuration values for bootstrap
+        Real accuracy = config->bootstrapConfig().accuracy();
+        Real globalAccuracy = config->bootstrapConfig().globalAccuracy();
+        bool dontThrow = config->bootstrapConfig().dontThrow();
+        Size maxAttempts = config->bootstrapConfig().maxAttempts();
+        Real maxFactor = config->bootstrapConfig().maxFactor();
+        Real minFactor = config->bootstrapConfig().minFactor();
+        Size dontThrowSteps = config->bootstrapConfig().dontThrowSteps();
+
+        YoYOptionletSurfaceStripper optionletStripper;
+
+        yoyVolSurface_ = optionletStripper(priceSurface, index, discountCurve_, accuracy, globalAccuracy, maxAttempts,
+                                           maxFactor, minFactor, dontThrow, dontThrowSteps);
 
     } else if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) {
 

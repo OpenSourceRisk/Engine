@@ -408,7 +408,6 @@ termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolconstantspread.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
-termstructures/yoyinflationoptionletvolstripper.cpp
 termstructures/yoyoptionletsolver.cpp
 termstructures/yoyoptionletsurfacestripper.cpp
 termstructures/yoypricesurfacefromvols.cpp
@@ -1004,7 +1003,6 @@ termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyoptionletsolver.hpp
 termstructures/yoyoptionletsurfacestripper.hpp
 termstructures/yoypricesurfacefromvols.hpp
-termstructures/yoyinflationoptionletvolstripper.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
 time/dateutilities.hpp

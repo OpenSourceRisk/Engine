@@ -367,6 +367,7 @@
 #include <qle/pricingengines/analyticeuropeanengine.hpp>
 #include <qle/pricingengines/analyticeuropeanenginedeltagamma.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
+#include <qle/pricingengines/analytichwswaptionengine.hpp>
 #include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticjyyoycapfloorengine.hpp>
 #include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
@@ -583,7 +584,6 @@
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
-#include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
 #include <qle/termstructures/yoyoptionletsolver.hpp>
 #include <qle/termstructures/yoyoptionletsurfacestripper.hpp>
 #include <qle/termstructures/yoypricesurfacefromvols.hpp>
