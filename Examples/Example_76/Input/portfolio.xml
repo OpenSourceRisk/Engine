@@ -321,12 +321,12 @@
 	  </Dates>
 	</PaymentData>
 	<AutomaticExercise>true</AutomaticExercise>
-	<FXIndex>FX-ECB-EUR-USD</FXIndex>
       </OptionData>
       <BoughtCurrency>EUR</BoughtCurrency>
       <BoughtAmount>1000000</BoughtAmount>
       <SoldCurrency>USD</SoldCurrency>
       <SoldAmount>1100000</SoldAmount>
+      <FXIndex>FX-ECB-EUR-USD</FXIndex>
     </FxOptionData>
   </Trade>
   <Trade id="FX_PUT">
