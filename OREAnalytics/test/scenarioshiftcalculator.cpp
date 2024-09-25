@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(testRelativeFxShift) {
     auto ssp = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
 
     // FX spot sensitivity set up to have 2% relative shift
-    ssd->fxShiftData()["EURYUSD"] = QuantLib::ext::make_shared<SensitivityScenarioData::SpotShiftData>();
+    ssd->fxShiftData()["EURUSD"] = QuantLib::ext::make_shared<SensitivityScenarioData::SpotShiftData>();
     ssd->fxShiftData()["EURUSD"]->shiftSize = shift;
     ssd->fxShiftData()["EURUSD"]->shiftType = ShiftType::Relative;
 
