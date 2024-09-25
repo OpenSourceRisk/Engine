@@ -259,6 +259,7 @@ BOOST_AUTO_TEST_CASE(testRelativeFxShift) {
     auto ssp = QuantLib::ext::make_shared<ScenarioSimMarketParameters>();
 
     // FX spot sensitivity set up to have 2% relative shift
+    ssd->fxShiftData()["EURYUSD"] = QuantLib::ext::make_shared<SensitivityScenarioData::SpotShiftData>();
     ssd->fxShiftData()["EURUSD"]->shiftSize = shift;
     ssd->fxShiftData()["EURUSD"]->shiftType = ShiftType::Relative;
 
@@ -300,6 +301,7 @@ BOOST_AUTO_TEST_CASE(testAbsoluteSwaptionVolShift) {
     Real exp = 8.45;
 
     // Swaption volatility sensitivity set up to have 1bp absolute shift
+    ssd->swaptionVolShiftData()["EUR"] = QuantLib::ext::make_shared<SensitivityScenarioData::GenericYieldVolShiftData>();
     ssd->swaptionVolShiftData()["EUR"]->shiftSize = shift;
     ssd->swaptionVolShiftData()["EUR"]->shiftType = ShiftType::Absolute;
 
@@ -342,6 +344,8 @@ BOOST_AUTO_TEST_CASE(testRelativeSwaptionVolShift) {
     Real exp = 5.5;
 
     // Swaption volatility sensitivity set up to have 1% relative shift
+    ssd->swaptionVolShiftData()["EUR"] =
+        QuantLib::ext::make_shared<SensitivityScenarioData::GenericYieldVolShiftData>();
     ssd->swaptionVolShiftData()["EUR"]->shiftSize = shift;
     ssd->swaptionVolShiftData()["EUR"]->shiftType = ShiftType::Relative;
 
