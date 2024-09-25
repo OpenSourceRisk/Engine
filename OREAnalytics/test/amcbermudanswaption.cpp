@@ -636,7 +636,7 @@ BOOST_DATA_TEST_CASE(testBermudanSwaptionExposure, boost::unit_test::data::make(
     // wrapper (long option)
 
     QuantLib::ext::shared_ptr<InstrumentWrapper> wrapperGrid = QuantLib::ext::make_shared<BermudanOptionWrapper>(
-        swaption, vanillaswap ? false : true, exerciseDates, testCase.isPhysical, undInst);
+        swaption, vanillaswap ? false : true, exerciseDates, exerciseDates, testCase.isPhysical, undInst);
     wrapperGrid->initialise(grid->dates());
 
     // collect discounted epe

@@ -320,6 +320,8 @@
 	    <Date>2016-03-08</Date>
 	  </Dates>
 	</PaymentData>
+	<AutomaticExercise>true</AutomaticExercise>
+	<FXIndex>FX-ECB-EUR-USD</FXIndex>
       </OptionData>
       <BoughtCurrency>EUR</BoughtCurrency>
       <BoughtAmount>1000000</BoughtAmount>

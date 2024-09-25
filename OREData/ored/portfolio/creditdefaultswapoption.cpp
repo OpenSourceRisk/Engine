@@ -305,7 +305,7 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     } else {
         bool isLong = positionType == Position::Long;
         bool isPhysical = settleType == Settlement::Physical;
-        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(cdsOption, isLong, exerciseDate,
+        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(cdsOption, isLong, exerciseDate, exerciseDate, 
             isPhysical, cds, 1.0, 1.0, additionalInstruments, additionalMultipliers);
     }
 }

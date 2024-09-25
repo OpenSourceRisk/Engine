@@ -409,7 +409,8 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     instrument_ = QuantLib::ext::make_shared<BermudanOptionWrapper>(
         swaption, positionType_ == Position::Long ? true : false, exerciseBuilder_->noticeDates(),
-        settlementType_ == Settlement::Physical ? true : false, underlyingSwaps, 1.0, 1.0, additionalInstruments,
+        exerciseBuilder_->settlementDates(), settlementType_ == Settlement::Physical ? true : false,
+	underlyingSwaps, 1.0, 1.0, additionalInstruments,
         additionalMultipliers);
 
     maturity_ = std::max(maturity_, lastPremiumDate);

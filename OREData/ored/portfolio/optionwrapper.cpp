@@ -27,20 +27,26 @@ namespace ore {
 namespace data {
 
 OptionWrapper::OptionWrapper(const QuantLib::ext::shared_ptr<Instrument>& inst, const bool isLongOption,
-                             const std::vector<Date>& exerciseDate, const bool isPhysicalDelivery,
+                             const std::vector<Date>& exerciseDate,
+			     const std::vector<Date>& settlementDate, const bool isPhysicalDelivery,
                              const std::vector<QuantLib::ext::shared_ptr<Instrument>>& undInst, const Real multiplier,
                              const Real undMultiplier,
                              const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
                              const std::vector<Real>& additionalMultipliers)
     : InstrumentWrapper(inst, multiplier, additionalInstruments, additionalMultipliers), isLong_(isLongOption),
       isPhysicalDelivery_(isPhysicalDelivery), contractExerciseDates_(exerciseDate),
-      effectiveExerciseDates_(exerciseDate), underlyingInstruments_(undInst),
+      effectiveExerciseDates_(exerciseDate), settlementDates_(settlementDate), underlyingInstruments_(undInst),
       activeUnderlyingInstrument_(undInst.at(0)), undMultiplier_(undMultiplier), exercised_(false), exercisable_(true),
-      exerciseDate_(Date()) {
+      exerciseDate_(Date()), settlementDate_(Date()) {
     QL_REQUIRE(exerciseDate.size() == undInst.size(), "number of exercise dates ("
                                                           << exerciseDate.size()
                                                           << ") must be equal to underlying instrument vector size ("
                                                           << undInst.size() << ")");
+
+    QL_REQUIRE(exerciseDate.size() == settlementDate.size(), "number of exercise dates ("
+                                                          << exerciseDate.size()
+                                                          << ") must be equal to the number of settlement dates ("
+                                                          << settlementDate.size() << ")");
 }
 
 void OptionWrapper::initialise(const vector<Date>& dateGrid) {
@@ -65,6 +71,7 @@ void OptionWrapper::initialise(const vector<Date>& dateGrid) {
 void OptionWrapper::reset() {
     exercised_ = false;
     exerciseDate_ = Date();
+    settlementDate_ = Date();
 }
 
 Real OptionWrapper::NPV() const {
@@ -77,6 +84,7 @@ Real OptionWrapper::NPV() const {
                 if (exercise()) {
                     exercised_ = true;
                     exerciseDate_ = today;
+                    settlementDate_ = settlementDates_[i];
                 }
             }
         }
@@ -90,7 +98,13 @@ Real OptionWrapper::NPV() const {
         // by introducing the cash settlement date into the option wrapper (note
         // that we will probably need an effective cash settlement date then to
         // maintain the relative position to the effective exercise date).
-      Real npv = (isPhysicalDelivery_ || (today == exerciseDate_ && Settings::instance().includeReferenceDateEvents()))
+        // Real npv = (isPhysicalDelivery_ || (today == exerciseDate_ && Settings::instance().includeReferenceDateEvents()))
+        //                  ? multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_
+        //                  : 0.0;
+        // Real npv = (isPhysicalDelivery_ || (today >= exerciseDate_ && today <= settlementDate_))
+        //                ? multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_
+        //                : 0.0;
+        Real npv = (isPhysicalDelivery_ || today == exerciseDate_)
                        ? multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_
                        : 0.0;
         return npv + addNPV;
