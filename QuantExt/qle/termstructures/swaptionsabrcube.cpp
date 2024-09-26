@@ -136,7 +136,7 @@ void SwaptionSabrCube::performCalculations() const {
                 ParametricVolatility::MarketSmile{allOptionTimes[i],
                                                   allSwapLengths[j],
                                                   forward,
-                                                  SwaptionVolatilityCube::shift(allOptionTenors[i], allSwapTenors[j]),
+                                                  atmVol()->shift(allOptionTenors[i], allSwapTenors[j]),
                                                   {},
                                                   strikes,
                                                   vols});
@@ -159,7 +159,7 @@ void SwaptionSabrCube::performCalculations() const {
 
     parametricVolatility_ = boost::make_shared<SabrParametricVolatility>(
         modelVariant_, marketSmiles, ParametricVolatility::MarketModelType::Black76,
-        SwaptionVolatilityCube::volatilityType() == QuantLib::Normal
+        atmVol()->volatilityType() == QuantLib::Normal
             ? ParametricVolatility::MarketQuoteType::NormalVolatility
             : ParametricVolatility::MarketQuoteType::ShiftedLognormalVolatility,
         Handle<YieldTermStructure>(), modelParameters, modelShift, maxCalibrationAttempts_, exitEarlyErrorThreshold_,

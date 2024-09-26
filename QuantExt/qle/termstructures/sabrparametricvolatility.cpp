@@ -323,7 +323,7 @@ std::tuple<std::vector<Real>, Real, Real, Size> SabrParametricVolatility::calibr
         }
         if (params[0].second == ParametricVolatility::ParameterCalibration::Implied) {
             resultParams = implyAlpha(resultParams, marketSmile.forward, marketSmile.timeToExpiry,
-                                      marketSmile.lognormalShift, atmVol);
+                                      modelLognormalShift, atmVol);
         }
         return std::make_tuple(resultParams, 0.0, modelLognormalShift, 0);
     }
