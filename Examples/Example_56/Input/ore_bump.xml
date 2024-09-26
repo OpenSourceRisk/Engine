@@ -5,7 +5,7 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output/bump</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">31</Parameter>
+    <Parameter name="logMask">63</Parameter>
     <Parameter name="marketDataFile">market.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -44,18 +44,19 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
-      <Parameter name="amcCg">Y</Parameter>
-      <Parameter name="xvaCgBumpSensis">Y</Parameter>
+      <!-- Disabled (legacy AMC), CubeGeneration (AMC-CG, classic PP), Full (AMC-CG, cg PP) -->
+      <Parameter name="amcCg">Full</Parameter>
+      <!-- If given and amcCg=Full, we compute xva sensis in the AMC-CG engine -->
       <Parameter name="xvaCgSensitivityConfigFile">xvasensiconfig.xml</Parameter>
+      <!-- If true, AMC-CG engine uses bump, otherwise AD to compute xva sensis -->
+      <Parameter name="xvaCgBumpSensis">true</Parameter>
       <Parameter name="amcTradeTypes">Swap</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>
+      <Parameter name="amcCgPricingEnginesFile">pricingengine_amccg.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
-      <Parameter name="cubeFile">cube.csv.gz</Parameter>
-      <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
-      <Parameter name="aggregationScenarioDataDump">scenariodata.csv</Parameter>
     </Analytic>
   </Analytics>
 </ORE>

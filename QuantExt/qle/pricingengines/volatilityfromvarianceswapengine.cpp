@@ -35,6 +35,8 @@ void VolatilityFromVarianceSwapEngine::calculate() const {
     const Real volatilityStrike = sqrt(arguments_.strike);
 
     results_.value = multiplier * df * arguments_.notional * 100.0 * (volatility - volatilityStrike);
+    results_.additionalResults["VarianceNotional"] = arguments_.notional / (2.0 * 100.0 * volatilityStrike);
+    results_.additionalResults["VegaNotional"] = arguments_.notional;
 }
 
 } // namespace QuantExt

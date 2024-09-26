@@ -104,6 +104,7 @@ void CliquetOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     npvCurrency_ = currency_;
     maturity_ = expiryDate;
+    maturityType_ = "Expiry Date";
     notional_ = cliquetNotional_;
     notionalCurrency_ = currency_;
 

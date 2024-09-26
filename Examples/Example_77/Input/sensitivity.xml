@@ -1,0 +1,101 @@
+<SensitivityAnalysis>
+  <UseSpreadedTermStructures>true</UseSpreadedTermStructures>
+  <!-- Discount curve shifts -->
+  <DiscountCurves>
+
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+
+    <DiscountCurve ccy="USD">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+
+  </DiscountCurves>
+
+  <!-- Index curve shifts -->
+  <IndexCurves>
+
+
+    <IndexCurve index="EUR-EURIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+
+    <IndexCurve index="EUR-EONIA">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+
+    <IndexCurve index="USD-LIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+
+  </IndexCurves>
+
+  <!-- Yield curve shifts -->
+  <YieldCurves>
+    <YieldCurve name="BENCHMARK_EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+  </YieldCurves>
+
+  <!-- FX spot shifts -->
+  <FxSpots>
+    <FxSpot ccypair="USDEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+  </FxSpots>
+
+  <!-- FX ATM vol shifts -->
+  <FxVolatilities>
+    <FxVolatility ccypair="USDEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>6M,1Y,2Y,4Y,5Y,7Y</ShiftExpiries>
+      <ShiftStrikes/>
+    </FxVolatility>
+  </FxVolatilities>
+
+  <!-- Swaption ATM vol shifts -->
+  <SwaptionVolatilities>
+  </SwaptionVolatilities>
+
+  <!-- Cap/Floor (Optionlet or Flat) vol surface shifts -->
+  <CapFloorVolatilities>
+  </CapFloorVolatilities>
+
+  <CDSVolatilities>
+  </CDSVolatilities>
+
+  <!-- Credit Curve shifts -->
+  <CreditCurves>
+  </CreditCurves>
+
+  <!-- Equity spot shifts -->
+  <EquitySpots>
+  </EquitySpots>
+
+  <!-- Equity ATM vol shifts -->
+  <EquityVolatilities>
+  </EquityVolatilities>
+
+  <BaseCorrelations></BaseCorrelations>
+
+  <!-- Cross Gamma filter: Pairs of factor sub-strings -->
+  <CrossGammaFilter>
+  </CrossGammaFilter>
+
+
+</SensitivityAnalysis>

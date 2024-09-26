@@ -118,8 +118,9 @@ private:
 class LGMAmcSwaptionEngineBuilder final : public LGMSwaptionEngineBuilder {
 public:
     LGMAmcSwaptionEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
-                                const std::vector<Date>& simulationDates)
-        : LGMSwaptionEngineBuilder("AMC"), cam_(cam), simulationDates_(simulationDates) {}
+                                const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
+        : LGMSwaptionEngineBuilder("AMC"), cam_(cam), simulationDates_(simulationDates),
+          stickyCloseOutDates_(stickyCloseOutDates) {}
 
 private:
     string keyImpl(const string& id, const string& ccy, const std::vector<Date>& dates, const Date& maturity,
@@ -134,6 +135,7 @@ private:
 
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data

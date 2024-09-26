@@ -57,6 +57,21 @@ void volShiftData(std::map<std::string, StressTestScenarioData::VolShiftData>& v
     volData[key.name].shifts[key.index] = shift;
 }
 
+void fxVolShiftData(std::map<std::string, StressTestScenarioData::FXVolShiftData>& volData, const RiskFactorKey& key,
+                  double shift, const std::vector<QuantLib::Period>& tenors) {
+    if (volData.count(key.name) == 0) {
+        StressTestScenarioData::FXVolShiftData shiftData;
+        shiftData.mode = StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit;
+        shiftData.shiftType = ShiftType::Absolute;
+        shiftData.shiftExpiries = tenors;
+        shiftData.shifts = std::vector<double>(shiftData.shiftExpiries.size(), 0.0);
+        volData[key.name] = shiftData;
+    }
+    QL_REQUIRE(volData[key.name].mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit,
+               "Internal error, for XvA Explain use only explicit fx vol stress data, contact dev");
+    volData[key.name].shifts[key.index] = shift;
+}
+
 void swaptionVolShiftData(std::map<std::string, StressTestScenarioData::SwaptionVolShiftData>& volData,
                           const RiskFactorKey& key, double shift,
                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
@@ -117,13 +132,13 @@ XvaExplainResults::XvaExplainResults(const QuantLib::ext::shared_ptr<InMemoryRep
     size_t cvaColumn = xvaReport->columnPosition("CVA");
     for (size_t i = 0; i < xvaReport->rows(); ++i) {
 
-        const std::string& scenario = boost::get<std::string>(xvaReport->data(scenarioIdColumn)[i]);
+        const std::string& scenario = boost::get<std::string>(xvaReport->data(scenarioIdColumn, i));
 
-        const std::string& tradeId = boost::get<std::string>(xvaReport->data(tradeIdColumn)[i]);
+        const std::string& tradeId = boost::get<std::string>(xvaReport->data(tradeIdColumn, i));
 
-        const std::string& nettingset = boost::get<std::string>(xvaReport->data(nettingSetIdColumn)[i]);
+        const std::string& nettingset = boost::get<std::string>(xvaReport->data(nettingSetIdColumn, i));
 
-        const double cva = boost::get<double>(xvaReport->data(cvaColumn)[i]);
+        const double cva = boost::get<double>(xvaReport->data(cvaColumn, i));
 
         const auto key = XvaReportKey{tradeId, nettingset};
         if (scenario != "BASE" && scenario != "t1") {
@@ -321,8 +336,8 @@ XvaExplainAnalyticImpl::createStressTestData(const QuantLib::ext::shared_ptr<ore
                 break;
             }
             case RiskFactorKey::KeyType::FXVolatility: {
-                volShiftData(fullRevalScenario.fxVolShifts, key, shift, simParameters->fxVolExpiries(key.name));
-                volShiftData(scenario.fxVolShifts, key, shift, simParameters->fxVolExpiries(key.name));
+                fxVolShiftData(fullRevalScenario.fxVolShifts, key, shift, simParameters->fxVolExpiries(key.name));
+                fxVolShiftData(scenario.fxVolShifts, key, shift, simParameters->fxVolExpiries(key.name));
                 inScope = true;
                 break;
             }

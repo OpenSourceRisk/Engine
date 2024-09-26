@@ -86,6 +86,7 @@ protected:
 private:
     bool isResetting_;
     Size notionalTakenFromLeg_;
+    bool allLegsAreSimmPlainVanillaIrLegs_ = false;
 };
 
 std::string isdaSubProductSwap(const std::string& tradeId, const vector<LegData>& legData);

@@ -153,10 +153,12 @@ math/blockmatrixinverse.cpp
 math/bucketeddistribution.cpp
 math/compiledformula.cpp
 math/computeenvironment.cpp
+math/cudaenvironment.cpp
 math/deltagammavar.cpp
 math/differentialevolution_mt.cpp
 math/discretedistribution.cpp
 math/fillemptymatrix.cpp
+math/gpucodegenerator.cpp
 math/matrixfunctions.cpp
 math/openclenvironment.cpp
 math/randomvariable.cpp
@@ -244,6 +246,7 @@ pricingengines/analyticdoublebarrierengine.cpp
 pricingengines/analyticeuropeanengine.cpp
 pricingengines/analyticeuropeanenginedeltagamma.cpp
 pricingengines/analyticeuropeanforwardengine.cpp
+pricingengines/analytichwswaptionengine.cpp
 pricingengines/analyticjycpicapfloorengine.cpp
 pricingengines/analyticjyyoycapfloorengine.cpp
 pricingengines/analyticlgmcdsoptionengine.cpp
@@ -405,7 +408,9 @@ termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolconstantspread.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
-termstructures/yoyinflationoptionletvolstripper.cpp
+termstructures/yoyoptionletsolver.cpp
+termstructures/yoyoptionletsurfacestripper.cpp
+termstructures/yoypricesurfacefromvols.cpp
 time/dateutilities.cpp
 time/yearcounter.cpp
 utilities/cashflows.cpp
@@ -639,12 +644,14 @@ math/compiledformula.hpp
 math/computeenvironment.hpp
 math/constantinterpolation.hpp
 math/covariancesalvage.hpp
+math/cudaenvironment.hpp
 math/deltagammavar.hpp
 math/differentialevolution_mt.hpp
 math/discretedistribution.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/flatextrapolation2d.hpp
+math/gpucodegenerator.hpp
 math/kendallrankcorrelation.hpp
 math/logquadraticinterpolation.hpp
 math/matrixfunctions.hpp
@@ -776,6 +783,7 @@ pricingengines/analyticdoublebarrierengine.hpp
 pricingengines/analyticeuropeanengine.hpp
 pricingengines/analyticeuropeanenginedeltagamma.hpp
 pricingengines/analyticeuropeanforwardengine.hpp
+pricingengines/analytichwswaptionengine.hpp
 pricingengines/analyticjycpicapfloorengine.hpp
 pricingengines/analyticjyyoycapfloorengine.hpp
 pricingengines/analyticlgmcdsoptionengine.hpp
@@ -907,6 +915,7 @@ termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
 termstructures/dynamicyoyoptionletvolatilitystructure.hpp
 termstructures/eqcommoptionsurfacestripper.hpp
+termstructures/equityannounceddividendcurve.hpp
 termstructures/equityforwardcurvestripper.hpp
 termstructures/flatcorrelation.hpp
 termstructures/flatforwarddividendcurve.hpp
@@ -991,7 +1000,9 @@ termstructures/weightedyieldtermstructure.hpp
 termstructures/yieldplusdefaultyieldtermstructure.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
 termstructures/yoyinflationcurveobserverstatic.hpp
-termstructures/yoyinflationoptionletvolstripper.hpp
+termstructures/yoyoptionletsolver.hpp
+termstructures/yoyoptionletsurfacestripper.hpp
+termstructures/yoypricesurfacefromvols.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
 time/dateutilities.hpp
@@ -1002,6 +1013,8 @@ utilities/commodity.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp
+utilities/serializationdate.hpp
+utilities/serializationperiod.hpp
 utilities/time.hpp
 version.hpp)
 
@@ -1016,6 +1029,15 @@ if(ORE_ENABLE_OPENCL)
     find_package(OpenCL REQUIRED)
     target_link_libraries(${QLE_LIB_NAME} OpenCL::OpenCL)
   endif()
+endif()
+
+if (ORE_ENABLE_CUDA)
+  find_package(CUDAToolkit REQUIRED)
+  target_link_libraries(${QLE_LIB_NAME} CUDA::cuda_driver)
+  target_link_libraries(${QLE_LIB_NAME} CUDA::cudart)
+  target_link_libraries(${QLE_LIB_NAME} CUDA::nvrtc)
+  target_link_libraries(${QLE_LIB_NAME} CUDA::curand)
+  target_link_libraries(${QLE_LIB_NAME} CUDA::cusolver)
 endif()
 
 if(NOT USE_GLOBAL_ORE_BUILD AND QL_USE_PCH)

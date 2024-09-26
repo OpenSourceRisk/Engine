@@ -32,7 +32,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! less bloated version of swaption vol converter below
+//! swaption vol converter
 Real convertSwaptionVolatility(const Date& asof, const Period& optionTenor, const Period& swapTenor,
                                const boost::shared_ptr<SwapIndex>& swapIndexBase,
                                const boost::shared_ptr<SwapIndex>& shortSwapIndexBase, const DayCounter volDayCounter,

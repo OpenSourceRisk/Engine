@@ -63,6 +63,22 @@ public:
         vector<Real> shifts; 
     };
 
+    struct FXVolShiftData {
+
+        enum class AtmShiftMode {
+            Explicit,   // Shifts are given, if only one shift is given perform parallel shift
+            Unadjusted, // Shift only one pillar and leave other unadjusted
+            Weighted    // Shift for one pillar given, derive the other shifts from given weights by shift_t = shift_ref *
+                        // w_t / w_ref
+        };
+        ShiftType shiftType;
+        vector<Period> shiftExpiries;
+        vector<Real> shifts;
+        vector<Period> weightTenors;
+        vector<Real> weights;
+        AtmShiftMode mode = AtmShiftMode::Explicit;
+    };
+    
     struct CapFloorVolShiftData {
         ShiftType shiftType;
         vector<Period> shiftExpiries;
@@ -83,7 +99,7 @@ public:
         map<string, CurveShiftData> indexCurveShifts;          // by index name
         map<string, CurveShiftData> yieldCurveShifts;          // by yield curve name
         map<string, SpotShiftData> fxShifts;                   // by currency pair
-        map<string, VolShiftData> fxVolShifts;                 // by currency pair
+        map<string, FXVolShiftData>fxVolShifts;                // by currency pair
         map<string, SpotShiftData> equityShifts;               // by equity
         map<string, VolShiftData> equityVolShifts;             // by equity
         map<string, CapFloorVolShiftData> capVolShifts;        // by currency

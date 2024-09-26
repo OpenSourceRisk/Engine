@@ -39,46 +39,56 @@ public:
                        const SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                        const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
                        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                       const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
+                       const Handle<YieldTermStructure>& contractCurve = Handle<YieldTermStructure>(),
+                       const Handle<YieldTermStructure>& referenceCurve = Handle<YieldTermStructure>(),
+                       const Handle<Quote>& conversionFactor = Handle<Quote>(),
                        const std::vector<Date> simulationDates = std::vector<Date>(),
+                       const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
                        const std::vector<Size> externalModelIndices = std::vector<Size>(),
                        const bool minimalObsDate = true, const RegressorModel regressorModel = RegressorModel::Simple,
                        const Real regressionVarianceCutoff = Null<Real>(),
-                       const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-                       const Handle<YieldTermStructure>& contractCurve = Handle<YieldTermStructure>(),
-                       const Handle<YieldTermStructure>& referenceCurve = Handle<YieldTermStructure>())
+                       const bool recalibrateOnStickyCloseOutDates = false,
+                       const bool reevaluateExerciseInStickyRun = false)
         : GenericEngine<QuantExt::ForwardBond::arguments, QuantExt::ForwardBond::results>(),
           McMultiLegBaseEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
                                    std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
                                    std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>>())),
                                calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                                calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
-                               {discountCurve}, simulationDates, externalModelIndices, minimalObsDate, regressorModel,
-                               regressionVarianceCutoff) {
+                               {discountCurve}, simulationDates, stickyCloseOutDates, externalModelIndices,
+                               minimalObsDate, regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
+                               reevaluateExerciseInStickyRun) {
 
         incomeCurve_ = incomeCurve;
         contractCurve_ = contractCurve;
         referenceCurve_ = referenceCurve;
+        conversionFactor_ = conversionFactor;
+
         registerWith(model);
         for (auto& h : discountCurves_)
             registerWith(h);
         registerWith(incomeCurve_);
         registerWith(contractCurve_);
         registerWith(referenceCurve_);
+        registerWith(conversionFactor_);
     }
 
     void calculate() const override;
     void setMember() const;
     double payOff() const;
+    double conversionFactor() const { return conversionFactor_->value(); } ;
 
     class FwdBondAmcCalculator : public McMultiLegBaseEngine::MultiLegBaseAmcCalculator {
     public:
         FwdBondAmcCalculator(McMultiLegBaseEngine::MultiLegBaseAmcCalculator c)
             : McMultiLegBaseEngine::MultiLegBaseAmcCalculator(c){};
 
-        std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
-                                                           const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-                                                           const std::vector<size_t>& relevantPathIndex,
-                                                           const std::vector<size_t>& relevantTimeIndex) override;
+        std::vector<QuantExt::RandomVariable>
+        simulatePath(const std::vector<QuantLib::Real>& pathTimes,
+                     const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+                     const std::vector<size_t>& relevantPathIndex,
+                     const std::vector<size_t>& relevantTimeIndex) override;
 
         Currency npvCurrency() override { return baseCurrency_; }
 
@@ -94,6 +104,7 @@ private:
     Handle<YieldTermStructure> incomeCurve_;
     Handle<YieldTermStructure> contractCurve_;
     Handle<YieldTermStructure> referenceCurve_;
+    Handle<Quote> conversionFactor_;
 
     mutable Real accruedAmount_;
     mutable Real cmpPayment_;

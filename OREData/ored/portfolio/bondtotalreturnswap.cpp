@@ -199,6 +199,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     instrument_.reset(new VanillaInstrument(bondTRS));
     // maturity_ = std::max(valuationDates.back(), paymentDates.back());
     maturity_ = bondIndex->bond()->maturityDate();
+    maturityType_ = "Bond Maturity Date";
     notional_ = bondIndex->bond()->notional() * bondData_.bondNotional();
 
     // cashflows will be generated as additional results in the pricing engine

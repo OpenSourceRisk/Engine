@@ -678,11 +678,11 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
     map<string, Real> npvMap;
     Date asof = Settings::instance().evaluationDate();
     for (Size i = 0; i < cashflowReport.rows(); ++i) {
-        string tradeId = QuantLib::ext::get<string>(cashflowReport.data(tradeIdColumn).at(i));
-        string tradeType = QuantLib::ext::get<string>(cashflowReport.data(tradeTypeColumn).at(i));
-        Date payDate = QuantLib::ext::get<Date>(cashflowReport.data(payDateColumn).at(i));
-        string ccy = QuantLib::ext::get<string>(cashflowReport.data(ccyColumn).at(i));
-        Real pv = QuantLib::ext::get<Real>(cashflowReport.data(pvColumn).at(i));
+        string tradeId = QuantLib::ext::get<string>(cashflowReport.data(tradeIdColumn, i));
+        string tradeType = QuantLib::ext::get<string>(cashflowReport.data(tradeTypeColumn, i));
+        Date payDate = QuantLib::ext::get<Date>(cashflowReport.data(payDateColumn, i));
+        string ccy = QuantLib::ext::get<string>(cashflowReport.data(ccyColumn, i));
+        Real pv = QuantLib::ext::get<Real>(cashflowReport.data(pvColumn, i));
         Real fx = 1.0;
     // There shouldn't be entries in the cf report without ccy. We assume ccy = baseCcy in this case and log an error.
         if (ccy.empty()) {
@@ -827,6 +827,8 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
     const vector<Real>& pfe = postProcess->tradePFE(tradeId);
     const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
     const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
+    const vector<Real>& epe_b = postProcess->tradeEPE_B_timeWeighted(tradeId);
+    const vector<Real>& eepe_b = postProcess->tradeEEPE_B_timeWeighted(tradeId);
     report.addColumn("TradeId", string())
         .addColumn("Date", Date())
         .addColumn("Time", double(), 6)
@@ -836,7 +838,9 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
         .addColumn("AllocatedENE", double())
         .addColumn("PFE", double())
         .addColumn("BaselEE", double())
-        .addColumn("BaselEEE", double());
+        .addColumn("BaselEEE", double())
+        .addColumn("TimeWeightedBaselEPE", double(), 2)
+        .addColumn("TimeWeightedBaselEEPE", double(), 2);
     report.next()
         .add(tradeId)
         .add(today)
@@ -847,7 +851,9 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
         .add(aene[0])
         .add(pfe[0])
         .add(ee_b[0])
-        .add(eee_b[0]);
+        .add(eee_b[0])
+        .add(epe_b[0])
+        .add(eepe_b[0]);
     for (Size j = 0; j < dates.size(); ++j) {
 
         Time time = dc.yearFraction(today, dates[j]);
@@ -861,7 +867,9 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, QuantLib::ext:
             .add(aene[j + 1])
             .add(pfe[j + 1])
             .add(ee_b[j + 1])
-            .add(eee_b[j + 1]);
+            .add(eee_b[j + 1])
+            .add(epe_b[j + 1])
+            .add(eepe_b[j + 1]);
     }
     report.end();
 }
@@ -877,7 +885,8 @@ void addNettingSetExposure(ore::data::Report& report, QuantLib::ext::shared_ptr<
     const vector<Real>& eee_b = postProcess->netEEE_B(nettingSetId);
     const vector<Real>& pfe = postProcess->netPFE(nettingSetId);
     const vector<Real>& ecb = postProcess->expectedCollateral(nettingSetId);
-
+    const vector<Real>& epe_b = postProcess->netEPE_B_timeWeighted(nettingSetId);
+    const vector<Real>& eepe_b = postProcess->netEEPE_B_timeWeighted(nettingSetId);
     report.next()
         .add(nettingSetId)
         .add(today)
@@ -887,7 +896,9 @@ void addNettingSetExposure(ore::data::Report& report, QuantLib::ext::shared_ptr<
         .add(pfe[0])
         .add(ecb[0])
         .add(ee_b[0])
-        .add(eee_b[0]);
+        .add(eee_b[0])
+        .add(epe_b[0])
+        .add(eepe_b[0]);
     for (Size j = 0; j < dates.size(); ++j) {
         Real time = dc.yearFraction(today, dates[j]);
         report.next()
@@ -899,7 +910,9 @@ void addNettingSetExposure(ore::data::Report& report, QuantLib::ext::shared_ptr<
             .add(pfe[j + 1])
             .add(ecb[j + 1])
             .add(ee_b[j + 1])
-            .add(eee_b[j + 1]);
+            .add(eee_b[j + 1])
+            .add(epe_b[j + 1])
+            .add(eepe_b[j + 1]);
     }
 }
 
@@ -913,7 +926,9 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, QuantLib:
         .addColumn("PFE", double(), 2)
         .addColumn("ExpectedCollateral", double(), 2)
         .addColumn("BaselEE", double(), 2)
-        .addColumn("BaselEEE", double(), 2);
+        .addColumn("BaselEEE", double(), 2)
+        .addColumn("TimeWeightedBaselEPE", double(), 2)
+        .addColumn("TimeWeightedBaselEEPE", double(), 2);
     addNettingSetExposure(report, postProcess, nettingSetId);
     report.end();
 }
@@ -1772,7 +1787,8 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
     // Add the headers to the report
 
     bool hasRegulations = false;
-    for (const auto& cr : simmData) {
+    for (const auto& scr : simmData) {
+        CrifRecord cr = scr.toCrifRecord();
         if (!cr.collectRegulations.empty() || !cr.postRegulations.empty()) {
             hasRegulations = true;
             break;
@@ -1792,26 +1808,33 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
         .addColumn("Qualifier", string())
         .addColumn("Label1", string())
         .addColumn("Label2", string())
-        .addColumn("Amount", double())
-        .addColumn("IMModel", string());
+        .addColumn("AmountCurrency", string())
+        .addColumn("Amount", double(), 2)
+        .addColumn("AmountUSD", double(), 2);
 
     if (hasRegulations)
         dataReport->addColumn("collect_regulations", string())
             .addColumn("post_regulations", string());
 
     // Write the report body by looping over the netted CRIF records
-    for (const auto& cr : simmData) {
+    for (const auto& scr : simmData) {
+        CrifRecord cr = scr.toCrifRecord();
+
         // Skip to next netted CRIF record if 'AmountUSD' is negligible
         if (close_enough(cr.amountUsd, 0.0))
             continue;
 
         // Skip Schedule IM records
-        if (cr.imModel == "Schedule")
+        if (cr.imModel == CrifRecord::IMModel::Schedule)
             continue;
-
+        
+        // Skip if the CRIF Record type is not SIMM
+        if (cr.type() != CrifRecord::RecordType::SIMM)
+            continue;
+        
         // Same check as above, but for backwards compatibility, if im_model is not used
         // but Risk::Type is PV or Notional
-        if (cr.imModel.empty() &&
+        if (cr.imModel == CrifRecord::IMModel::Empty &&
             (cr.riskType == CrifRecord::RiskType::Notional || cr.riskType == CrifRecord::RiskType::PV))
             continue;
 
@@ -1826,8 +1849,9 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
             .add(cr.qualifier)
             .add(cr.label1)
             .add(cr.label2)
-            .add(cr.amountUsd)
-            .add(cr.imModel);
+            .add(cr.amountCurrency)
+            .add(cr.amount)
+            .add(cr.amountUsd);
 
         if (hasRegulations) {
             string collectRegString = escapeCommaSeparatedList(regulationsToString(cr.collectRegulations), '\0');
@@ -1843,139 +1867,148 @@ void ReportWriter::writeSIMMData(const ore::analytics::Crif& simmData, const Qua
     LOG("SIMM data report written.");
 }
 
-void ReportWriter::writeCrifReport(const QuantLib::ext::shared_ptr<Report>& report, const Crif& crif) {
+void ReportWriter::writeCrifReport(const QuantLib::ext::shared_ptr<Report>& report,
+                                   const QuantLib::ext::shared_ptr<Crif>& crif) {
 
-    // If we have SIMM parameters, check if at least one of them uses netting set details optional field/s
-    // It is easier to check here than to pass the flag from other places, since otherwise we'd have to handle certain edge cases
-    // e.g. SIMM parameters use optional NSDs, but trades don't. So SIMM report should not display NSDs, but CRIF report still should.
-    bool hasNettingSetDetails = false;
-    for (const auto& cr : crif) {
-        if (!cr.nettingSetDetails.emptyOptionalFields())
-            hasNettingSetDetails = true;
-    }
+    if (crif) {
+        // If we have SIMM parameters, check if at least one of them uses netting set details optional field/s
+        // It is easier to check here than to pass the flag from other places, since otherwise we'd have to handle certain
+        // edge cases e.g. SIMM parameters use optional NSDs, but trades don't. So SIMM report should not display NSDs, but
+        // CRIF report still should.
+        bool hasNettingSetDetails = false;
+        for (const auto& scr : *crif) {
+            CrifRecord cr = scr.toCrifRecord();
 
-    std::vector<string> addFields;
-    bool hasCollectRegulations = false;
-    bool hasPostRegulations = false;
-    bool hasScheduleTrades = false;
-    for (const auto& cr : crif) {
-        // Check which additional fields are being used/populated
-        for (const auto& af : cr.additionalFields) {
-            if (std::find(addFields.begin(), addFields.end(), af.first) == addFields.end()) {
-                addFields.push_back(af.first);
+            if (!cr.nettingSetDetails.emptyOptionalFields())
+                hasNettingSetDetails = true;
+        }
+
+        std::vector<string> addFields;
+        bool hasCollectRegulations = false;
+        bool hasPostRegulations = false;
+        bool hasScheduleTrades = false;
+        for (const auto& scr : *crif) {
+            CrifRecord cr = scr.toCrifRecord();
+
+            // Check which additional fields are being used/populated
+            for (const auto& af : cr.additionalFields) {
+                if (std::find(addFields.begin(), addFields.end(), af.first) == addFields.end()) {
+                    addFields.push_back(af.first);
+                }
+            }
+
+            // Check if regulations are being used
+            if (!hasCollectRegulations)
+                hasCollectRegulations = !cr.collectRegulations.empty();
+            if (!hasPostRegulations)
+                hasPostRegulations = !cr.postRegulations.empty();
+
+            // Check if there are Schedule trades
+            if (!hasScheduleTrades) {
+                try {
+                    hasScheduleTrades = cr.imModel == CrifRecord::IMModel::Schedule;
+                } catch (std::exception&) {
+                }
             }
         }
 
-        // Check if regulations are being used
-        if (!hasCollectRegulations)
-            hasCollectRegulations = !cr.collectRegulations.empty();
-        if (!hasPostRegulations)
-            hasPostRegulations = !cr.postRegulations.empty();
+        // Add report headers
 
-        // Check if there are Schedule trades
-        if (!hasScheduleTrades) {
-            try {
-                hasScheduleTrades = parseIMModel(cr.imModel) == CrifRecord::IMModel::Schedule;
-            } catch (std::exception&) {
-            }
-        }
-    }
+        report->addColumn("TradeID", string()).addColumn("PortfolioID", string());
 
-    // Add report headers
-
-    report->addColumn("TradeID", string()).addColumn("PortfolioID", string());
-    
-    // Add additional netting set fields if netting set details are being used instead of just the netting set ID
-    if (hasNettingSetDetails) {
-        for (const string& optionalField : NettingSetDetails::optionalFieldNames())
-            report->addColumn(optionalField, string());
-    }
-
-    report->addColumn("ProductClass", string())
-        .addColumn("RiskType", string())
-        .addColumn("Qualifier", string())
-        .addColumn("Bucket", string())
-        .addColumn("Label1", string())
-        .addColumn("Label2", string())
-        .addColumn("AmountCurrency", string())
-        .addColumn("Amount", double(), 2)
-        .addColumn("AmountUSD", double(), 2)
-        .addColumn("IMModel", string())
-        .addColumn("TradeType", string());
-
-    if (hasScheduleTrades || crif.type() == Crif::CrifType::Frtb)
-        report->addColumn("end_date", string());
-
-    if (crif.type() == Crif::CrifType::Frtb) {
-        report->addColumn("Label3", string())
-            .addColumn("CreditQuality", string())
-            .addColumn("LongShortInd", string())
-            .addColumn("CoveredBondInd", string())
-            .addColumn("TrancheThickness", string())
-            .addColumn("BB_RW", string());
-    }
-
-    if (hasCollectRegulations)
-        report->addColumn("collect_regulations", string());
-
-    if (hasPostRegulations)
-        report->addColumn("post_regulations", string());
-
-    // Add additional CRIF fields
-    for (const string& f : addFields) {
-        report->addColumn(f, string());
-    }
-
-    // Write individual CRIF records
-    for (const auto& cr : crif) {
-        
-        report->next().add(cr.tradeId).add(cr.portfolioId);
-
+        // Add additional netting set fields if netting set details are being used instead of just the netting set ID
         if (hasNettingSetDetails) {
-            map<string, string> crNettingSetDetailsMap = NettingSetDetails(cr.nettingSetDetails).mapRepresentation();
             for (const string& optionalField : NettingSetDetails::optionalFieldNames())
-                report->add(crNettingSetDetailsMap[optionalField]);
+                report->addColumn(optionalField, string());
         }
 
-        report->add(ore::data::to_string(cr.productClass))
-            .add(ore::data::to_string(cr.riskType))
-            .add(cr.qualifier)
-            .add(cr.bucket)
-            .add(cr.label1)
-            .add(cr.label2)
-            .add(cr.amountCurrency)
-            .add(cr.amount)
-            .add(cr.amountUsd)
-            .add(cr.imModel)
-            .add(cr.tradeType);
+        report->addColumn("ProductClass", string())
+            .addColumn("RiskType", string())
+            .addColumn("Qualifier", string())
+            .addColumn("Bucket", string())
+            .addColumn("Label1", string())
+            .addColumn("Label2", string())
+            .addColumn("AmountCurrency", string())
+            .addColumn("Amount", double(), 2)
+            .addColumn("AmountUSD", double(), 2)
+            .addColumn("IMModel", string())
+            .addColumn("TradeType", string());
 
-        if (hasScheduleTrades || crif.type() == Crif::CrifType::Frtb)
-            report->add(cr.endDate);
+        if (hasScheduleTrades || crif->type() == Crif::CrifType::Frtb)
+            report->addColumn("end_date", string());
 
-        if (crif.type() == Crif::CrifType::Frtb) {
-            report->add(cr.label3)
-                .add(cr.creditQuality)
-                .add(cr.longShortInd)
-                .add(cr.coveredBondInd)
-                .add(cr.trancheThickness)
-                .add(cr.bb_rw);
+        if (crif->type() == Crif::CrifType::Frtb) {
+            report->addColumn("Label3", string())
+                .addColumn("CreditQuality", string())
+                .addColumn("LongShortInd", string())
+                .addColumn("CoveredBondInd", string())
+                .addColumn("TrancheThickness", string())
+                .addColumn("BB_RW", string());
         }
 
-        if (hasCollectRegulations) {
-            string regString = escapeCommaSeparatedList(regulationsToString(cr.collectRegulations), '\0');
-            report->add(regString);
+        if (hasCollectRegulations)
+            report->addColumn("collect_regulations", string());
+
+        if (hasPostRegulations)
+            report->addColumn("post_regulations", string());
+
+        // Add additional CRIF fields
+        for (const string& f : addFields) {
+            report->addColumn(f, string());
         }
 
-        if (hasPostRegulations) {
-            string regString = escapeCommaSeparatedList(regulationsToString(cr.postRegulations), '\0');
-            report->add(regString);
-        }
+        // Write individual CRIF records
+        for (const auto& scr : *crif) {
+            CrifRecord cr = scr.toCrifRecord();
 
-        for (const string& af : addFields) {
-            if (cr.additionalFields.find(af) == cr.additionalFields.end())
-                report->add("");
-            else
-                report->add(cr.getAdditionalFieldAsStr(af));
+            report->next().add(cr.tradeId).add(cr.nettingSetDetails.nettingSetId());
+
+            if (hasNettingSetDetails) {
+                map<string, string> crNettingSetDetailsMap = NettingSetDetails(cr.nettingSetDetails).mapRepresentation();
+                for (const string& optionalField : NettingSetDetails::optionalFieldNames())
+                    report->add(crNettingSetDetailsMap[optionalField]);
+            }
+
+            report->add(ore::data::to_string(cr.productClass))
+                .add(ore::data::to_string(cr.riskType))
+                .add(cr.qualifier)
+                .add(cr.bucket)
+                .add(cr.label1)
+                .add(cr.label2)
+                .add(cr.amountCurrency)
+                .add(cr.amount)
+                .add(cr.amountUsd)
+                .add(ore::data::to_string(cr.imModel))
+                .add(cr.tradeType);
+
+            if (hasScheduleTrades || crif->type() == Crif::CrifType::Frtb)
+                report->add(cr.endDate);
+
+            if (crif->type() == Crif::CrifType::Frtb) {
+                report->add(cr.label3)
+                    .add(cr.creditQuality)
+                    .add(cr.longShortInd)
+                    .add(cr.coveredBondInd)
+                    .add(cr.trancheThickness)
+                    .add(cr.bb_rw);
+            }
+
+            if (hasCollectRegulations) {
+                string regString = escapeCommaSeparatedList(regulationsToString(cr.collectRegulations), '\0');
+                report->add(regString);
+            }
+
+            if (hasPostRegulations) {
+                string regString = escapeCommaSeparatedList(regulationsToString(cr.postRegulations), '\0');
+                report->add(regString);
+            }
+
+            for (const string& af : addFields) {
+                if (cr.additionalFields.find(af) == cr.additionalFields.end())
+                    report->add("");
+                else
+                    report->add(cr.getAdditionalFieldAsStr(af));
+            }
         }
     }
 
@@ -2154,7 +2187,7 @@ void ReportWriter::writeStockSplitReport(const QuantLib::ext::shared_ptr<Scenari
 
                 Real price = Null<Real>();
                 if (std::find(hsdates.begin(), hsdates.end(), d) != hsdates.end()) {
-                    auto scen = hsloader->getHistoricalScenario(d);
+                    auto scen = hsloader->getScenario(d);
                     RiskFactorKey rf(RiskFactorKey::KeyType::EquitySpot, name);
                     if (scen->has(rf))
                         price = scen->get(rf);
@@ -2218,12 +2251,12 @@ void ReportWriter::writeHistoricalScenarios(const QuantLib::ext::shared_ptr<Hist
     // each scenario might have a different set of keys, so we collect the union of all keys
     // and write them out (missing keys will be written as NA to the report)
     std::set<RiskFactorKey> allKeys;
-    for (const auto& s : hsloader->historicalScenarios())
-        allKeys.insert(s->keys().begin(), s->keys().end());
+    for (const auto& s : hsloader->scenarios()[0])
+        allKeys.insert(s.second->keys().begin(), s.second-> keys().end());
     ScenarioWriter sw(nullptr, report, std::vector<RiskFactorKey>(allKeys.begin(), allKeys.end()));
     bool writeHeader = true;
-    for (const auto& s : hsloader->historicalScenarios()) {
-        sw.writeScenario(s, writeHeader);
+    for (const auto& s : hsloader->scenarios()[0]) {
+        sw.writeScenario(s.second, writeHeader);
         writeHeader = false;
     }
 }
@@ -2437,14 +2470,14 @@ Real aggregateTradeFlow(const std::string& tradeId, const Date& d0, const Date& 
 
     Real flow = 0.0;
     for (Size i = 0; i < cashFlowReport->rows(); ++i) {
-        string id = boost::get<string>(cashFlowReport->data(tradeIdColumn).at(i));
+        string id = boost::get<string>(cashFlowReport->data(tradeIdColumn, i));
     if (id != tradeId)
         continue;
-    Date date = boost::get<Date>(cashFlowReport->data(dateColumn).at(i));
+    Date date = boost::get<Date>(cashFlowReport->data(dateColumn, i));
     if (date <= d0 || date > d1)
         continue;
-    string ccy = boost::get<string>(cashFlowReport->data(ccyColumn).at(i));
-    Real amount = boost::get<Real>(cashFlowReport->data(amountColumn).at(i));
+    string ccy = boost::get<string>(cashFlowReport->data(ccyColumn, i));
+    Real amount = boost::get<Real>(cashFlowReport->data(amountColumn, i));
     Real fx = 1.0;
     if (ccy != baseCurrency)
         fx = market->fxRate(ccy + baseCurrency, configuration)->value();
@@ -2532,30 +2565,30 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
 
     map<string, Size> t1IdMap;
     for (Size j = 0; j < t1NpvReport->rows(); ++j) {
-    string tradeId = boost::get<string>(t1NpvReport->data(tradeIdColumn).at(j));
+    string tradeId = boost::get<string>(t1NpvReport->data(tradeIdColumn, j));
         t1IdMap[tradeId] = j;
     }
 
     std::set<string> t0Ids;
     for (Size i = 0; i < t0NpvReport->rows(); ++i) {
         try {
-            string tradeId = boost::get<string>(t0NpvReport->data(tradeIdColumn).at(i));
+            string tradeId = boost::get<string>(t0NpvReport->data(tradeIdColumn, i));
             t0Ids.insert(tradeId);
-            string tradeId2 = boost::get<string>(t0NpvLaggedReport->data(tradeIdColumn).at(i));
-            string tradeId3 = boost::get<string>(t1NpvLaggedReport->data(tradeIdColumn).at(i));
+            string tradeId2 = boost::get<string>(t0NpvLaggedReport->data(tradeIdColumn, i));
+            string tradeId3 = boost::get<string>(t1NpvLaggedReport->data(tradeIdColumn, i));
             QL_REQUIRE(tradeId == tradeId2 && tradeId == tradeId3, "inconsistent ordering of NPV reports");
-            string tradeType = boost::get<string>(t0NpvReport->data(tradeTypeColumn).at(i));
-            Date maturityDate = boost::get<Date>(t0NpvReport->data(maturityDateColumn).at(i));
-            Real maturityTime = boost::get<Real>(t0NpvReport->data(maturityTimeColumn).at(i));
-            string ccy = boost::get<string>(t0NpvReport->data(baseCcyColumn).at(i));
+            string tradeType = boost::get<string>(t0NpvReport->data(tradeTypeColumn, i));
+            Date maturityDate = boost::get<Date>(t0NpvReport->data(maturityDateColumn, i));
+            Real maturityTime = boost::get<Real>(t0NpvReport->data(maturityTimeColumn, i));
+            string ccy = boost::get<string>(t0NpvReport->data(baseCcyColumn, i));
             QL_REQUIRE(ccy == baseCurrency, "inconsistent NPV and base currencies");
-            Real t0Npv = boost::get<Real>(t0NpvReport->data(npvBaseColumn).at(i));
-            Real t0NpvLagged = boost::get<Real>(t0NpvLaggedReport->data(npvBaseColumn).at(i));
-            Real t1NpvLagged = boost::get<Real>(t1NpvLaggedReport->data(npvBaseColumn).at(i));
-            Real t1Npvt0Port = boost::get<Real>(t1Npvt0PortReport->data(npvBaseColumn).at(i));
+            Real t0Npv = boost::get<Real>(t0NpvReport->data(npvBaseColumn, i));
+            Real t0NpvLagged = boost::get<Real>(t0NpvLaggedReport->data(npvBaseColumn, i));
+            Real t1NpvLagged = boost::get<Real>(t1NpvLaggedReport->data(npvBaseColumn, i));
+            Real t1Npvt0Port = boost::get<Real>(t1Npvt0PortReport->data(npvBaseColumn, i));
 
             auto it = t1IdMap.find(tradeId);
-            Real t1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1NpvReport->data(npvBaseColumn).at(it->second));
+            Real t1Npv = it == t1IdMap.end() ? 0.0 : boost::get<Real>(t1NpvReport->data(npvBaseColumn, it->second));
             
             Real hypotheticalCleanPnl = t0NpvLagged - t0Npv;
             Real periodFlow = aggregateTradeFlow(tradeId, startDate, endDate, t0CashFlowReport, market, configuration, baseCurrency);
@@ -2602,13 +2635,13 @@ void ReportWriter::writePnlReport(ore::data::Report& report,
 
           string tradeId = tId.first;
           Size loc = tId.second;
-          string tradeType = boost::get<string>(t1NpvReport->data(tradeTypeColumn).at(loc));
-          Date maturityDate = boost::get<Date>(t1NpvReport->data(maturityDateColumn).at(loc));
-          Real maturityTime = boost::get<Real>(t1NpvReport->data(maturityTimeColumn).at(loc));
-          string ccy = boost::get<string>(t1NpvReport->data(baseCcyColumn).at(loc));
+          string tradeType = boost::get<string>(t1NpvReport->data(tradeTypeColumn, loc));
+          Date maturityDate = boost::get<Date>(t1NpvReport->data(maturityDateColumn, loc));
+          Real maturityTime = boost::get<Real>(t1NpvReport->data(maturityTimeColumn, loc));
+          string ccy = boost::get<string>(t1NpvReport->data(baseCcyColumn, loc));
           QL_REQUIRE(ccy == baseCurrency, "inconsistent NPV and base currencies");
 
-          Real t1Npv = boost::get<Real>(t1NpvReport->data(npvBaseColumn).at(loc));
+          Real t1Npv = boost::get<Real>(t1NpvReport->data(npvBaseColumn, loc));
           LOG("PnL report, writing line " << loc << " tradeId " << tradeId);
 
           report.next()

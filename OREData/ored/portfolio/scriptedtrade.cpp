@@ -59,6 +59,7 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     npvCurrency_ = builder->npvCurrency();
     maturity_ = builder->lastRelevantDate();
+    maturityType_ = builder->lastRelevantDateType();
     notional_ = Null<Real>(); // is handled by override of notional()
     notionalCurrency_ = "";   // is handled by override of notionalCurrency()
     legs_.clear();
@@ -67,9 +68,13 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData,
-                                                premiumMultiplier, parseCurrencyWithMinors(npvCurrency_), engineFactory,
-                                                builder->configuration(MarketContext::pricing)));
+    Date latestPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData,
+                                         premiumMultiplier, parseCurrencyWithMinors(npvCurrency_), engineFactory,
+                                         builder->configuration(MarketContext::pricing));
+    maturity_ = std::max(maturity_, latestPremiumDate);
+    if (maturity_ == latestPremiumDate)
+        maturityType_ = "Latest Premium Date";
+
 
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qleInstr, 1.0, additionalInstruments, additionalMultipliers);
     

@@ -562,13 +562,19 @@ RandomVariable GaussianCam::getDiscount(const Size idx, const Date& s, const Dat
 RandomVariable GaussianCam::getDiscount(const Size idx, const Date& s, const Date& t,
                                         const Handle<YieldTermStructure>& targetCurve) const {
     LgmVectorised lgmv(cam_->lgm(currencyPositionInCam_[idx])->parametrization());
+    Handle<YieldTermStructure> effectiveTargetCurve;
+    if (!targetCurve.empty()) {
+        effectiveTargetCurve = targetCurve;
+    } else {
+        effectiveTargetCurve = curves_[idx];
+    }
     return lgmv.discountBond(timeFromReference(s), curves_.front()->timeFromReference(t), irStates_.at(s)[idx],
-                             targetCurve);
+                             effectiveTargetCurve);
 }
 
 RandomVariable GaussianCam::getNumeraire(const Date& s) const {
     LgmVectorised lgmv(cam_->lgm(currencyPositionInCam_[0])->parametrization());
-    return lgmv.numeraire(timeFromReference(s), irStates_.at(s)[0]);
+    return lgmv.numeraire(timeFromReference(s), irStates_.at(s)[0], curves_.front());
 }
 
 Real GaussianCam::getFxSpot(const Size idx) const { return fxSpots_.at(idx)->value(); }

@@ -354,7 +354,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
             switch (param.first) {
             case RiskFactorKey::KeyType::FXSpot: {
-            std::map<std::string, Handle<Quote>> fxQuotes;
+                std::map<std::string, Handle<Quote>> fxQuotes;
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
@@ -598,7 +598,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         QuantLib::ext::shared_ptr<EquityIndex2> ei(
                             curve->clone(equitySpot(name, configuration), forecastTs,
-                                         yieldCurve(YieldCurveType::EquityDividend, name, configuration)));
+                                         yieldCurve(YieldCurveType::EquityDividend, name, configuration), curve->announcedDividendCurve()));
                         Handle<EquityIndex2> eh(ei);
                         equityCurves_.insert(make_pair(make_pair(Market::defaultConfiguration, name), eh));
                     } catch (const std::exception& e) {
@@ -1284,8 +1284,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         writeSimData(simDataTmp, absoluteSimDataTmp, param.first, name, {});
                         simDataWritten = true;
-                        recoveryRates_.insert(
-                            make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, param.first, simDataWritten);
                     }
@@ -2802,6 +2800,35 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                            std::forward_as_tuple(v));
                             }
                         }
+                        writeSimData(simDataTmp, absoluteSimDataTmp, param.first, name, {});
+                        simDataWritten = true;
+                    } catch (const std::exception& e) {
+                        processException(continueOnError, e, name, param.first, simDataWritten);
+                    }
+                }
+                break;
+
+            case RiskFactorKey::KeyType::ConversionFactor:
+                for (const auto& name : param.second.second) {
+                    bool simDataWritten = false;
+                    try {
+                        DLOG("Adding ConversionFactor " << name << " from configuration " << configuration);
+                        Real v;
+                        try {
+                            v = initMarket->conversionFactor(name, configuration)->value();
+                        } catch (...) {
+                            DLOG("ConversionFactor " << name << " uses default value of 1.0.");
+                            v = 1.0;
+                        }
+
+                        auto q = QuantLib::ext::make_shared<SimpleQuote>(v);
+                        conversionFactors_.insert(
+                            make_pair(make_pair(Market::defaultConfiguration, name), Handle<Quote>(q)));
+
+                        if (param.second.first) // is set to false within ScenarioSimMarketParameters::fromXML
+                            simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
+                                               std::forward_as_tuple(q));
+
                         writeSimData(simDataTmp, absoluteSimDataTmp, param.first, name, {});
                         simDataWritten = true;
                     } catch (const std::exception& e) {

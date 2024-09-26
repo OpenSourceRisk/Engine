@@ -41,9 +41,10 @@ LocalVolModelBuilder::LocalVolModelBuilder(
     const std::vector<Handle<YieldTermStructure>>& curves,
     const std::vector<ext::shared_ptr<GeneralizedBlackScholesProcess>>& processes,
     const std::set<Date>& simulationDates, const std::set<Date>& addDates, const Size timeStepsPerYear,
-    const Type lvType, const std::vector<Real>& calibrationMoneyness, const bool dontCalibrate)
-    : BlackScholesModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear), lvType_(lvType),
-      calibrationMoneyness_(calibrationMoneyness), dontCalibrate_(dontCalibrate) {
+    const Type lvType, const std::vector<Real>& calibrationMoneyness, const bool dontCalibrate,
+    const Handle<YieldTermStructure>& baseCurve)
+    : BlackScholesModelBuilderBase(curves, processes, simulationDates, addDates, timeStepsPerYear, baseCurve),
+      lvType_(lvType), calibrationMoneyness_(calibrationMoneyness), dontCalibrate_(dontCalibrate) {
     // we have to observe the whole vol surface for the Dupire implementation unfortunately; we can specify the time
     // steps that are relevant, but not a set of discrete strikes
     if (lvType == Type::Dupire) {

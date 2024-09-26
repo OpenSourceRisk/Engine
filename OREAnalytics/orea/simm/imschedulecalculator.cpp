@@ -50,7 +50,7 @@ using QuantLib::Null;
 namespace ore {
 namespace analytics {
 
-IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calculationCcy,
+IMScheduleCalculator::IMScheduleCalculator(const QuantLib::ext::shared_ptr<Crif>& crif, const string& calculationCcy,
                                            const QuantLib::ext::shared_ptr<ore::data::Market> market,
                                            const bool determineWinningRegulations, const bool enforceIMRegulations,
                                            const bool quiet,
@@ -59,14 +59,19 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
 
     QL_REQUIRE(checkCurrency(calculationCcy_),
                "The calculation currency (" << calculationCcy_ << ") must be a valid ISO currency code");
+    if (!crif) {
+        WLOG("IMScheduleCalculator(): CRIF input is null");
+        return;
+    }
 
     QuantLib::Date today = QuantLib::Settings::instance().evaluationDate();
     QuantLib::DayCounter dayCounter = QuantLib::ActualActual(QuantLib::ActualActual::ISDA);
 
     // Collect Schedule CRIF records
     timer_.start("Cleaning up CRIF input");
-    for (const CrifRecord& cr : crif) {
-        const bool isSchedule = cr.imModel == "Schedule";
+    for (const auto& scr : *crif) {
+        CrifRecord cr = scr.toCrifRecord();
+        const bool isSchedule = cr.imModel == CrifRecord::IMModel::Schedule;
 
         if (!isSchedule) {
             if (determineWinningRegulations) {
@@ -96,9 +101,9 @@ IMScheduleCalculator::IMScheduleCalculator(const Crif& crif, const string& calcu
     // Separate out CRIF records by regulations and collect per-trade data
     LOG("IMScheduleCalculator: Collecting CRIF trade data");
     timer_.start("Collecting trade data");
-    for (const auto& crifRecord : crif) {
-        if (crifRecord.imModel == "Schedule")
-            collectTradeData(crifRecord, enforceIMRegulations);
+    for (const auto& slimCrifRecord : *crif) {
+        if (slimCrifRecord.imModel() == CrifRecord::IMModel::Schedule)
+            collectTradeData(slimCrifRecord.toCrifRecord(), enforceIMRegulations);
     }
     timer_.stop("Collecting trade data");
 
@@ -391,6 +396,9 @@ void IMScheduleCalculator::collectTradeData(const CrifRecord& cr, const bool enf
     QL_REQUIRE(cr.riskType == RiskType::PV || cr.riskType == RiskType::Notional,
                "Unexpected risk type found in CRIF " << cr.riskType << " for trade ID " << cr.tradeId);
 
+    Real amount = cr.riskType == RiskType::Notional ? std::fabs(cr.amount) : cr.amount;
+    Real amountUsd = cr.riskType == RiskType::Notional ? std::fabs(cr.amountUsd) : cr.amountUsd;
+
     for (const auto& side : {SimmSide::Call, SimmSide::Post}) {
         const NettingSetDetails& nettingSetDetails = cr.nettingSetDetails;
 
@@ -431,16 +439,16 @@ void IMScheduleCalculator::collectTradeData(const CrifRecord& cr, const bool enf
                         QL_REQUIRE(tradeData.missingPVData(), "Adding PV data for trade that already has PV data, i.e. "
                                                               "multiple PV records found for the same trade: "
                                                                   << tradeData.tradeId);
-                        tradeData.presentValue = cr.amount;
-                        tradeData.presentValueUsd = cr.amountUsd;
+                        tradeData.presentValue = amount;
+                        tradeData.presentValueUsd = amountUsd;
                         tradeData.presentValueCcy = cr.amountCurrency;
                     } else {
                         QL_REQUIRE(tradeData.missingNotionalData(),
                                    "Adding Notional data for trade that already has PV data, i.e. "
                                    "multiple Notional records found for the same trade: "
                                        << tradeData.tradeId);
-                        tradeData.notional = cr.amount;
-                        tradeData.notionalUsd = cr.amountUsd;
+                        tradeData.notional = amount;
+                        tradeData.notionalUsd = amountUsd;
                         tradeData.notionalCcy = cr.amountCurrency;
                     }
                 } else {
@@ -456,7 +464,7 @@ void IMScheduleCalculator::collectTradeData(const CrifRecord& cr, const bool enf
                     }
                     tradeDataMap.insert(
                         {cr.tradeId, IMScheduleTradeData(cr.tradeId, cr.nettingSetDetails, cr.riskType, cr.productClass,
-                                                         cr.amount, cr.amountCurrency, cr.amountUsd,
+                                                         amount, cr.amountCurrency, amountUsd,
                                                          parseDate(cr.endDate), calculationCcy_, collectRegs, postRegs)});
                 }
             }

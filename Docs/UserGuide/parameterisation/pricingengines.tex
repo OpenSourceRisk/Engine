@@ -3724,7 +3724,8 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item TimestepPeriod: discretization interval for zero bond pricing
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to false
 \end{itemize}
 
 \begin{longlisting}
@@ -3736,6 +3737,7 @@ The parameters have the following meaning:
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}

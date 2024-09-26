@@ -182,6 +182,7 @@ void CreditLinkedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     notionalCurrency_ = npvCurrency_;
     legCurrencies_ = std::vector<std::string>(legs_.size(), npvCurrency_);
     maturity_ = qlInstr->maturity();
+    maturityType_ = "CreditLinkedSwap's Latest Leg Date";
 
     // set pricing engine
 

@@ -47,8 +47,7 @@ public:
     virtual std::vector<QuantExt::RandomVariable>
     simulatePath(const std::vector<QuantLib::Real>& pathTimes,
                  const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-                 const std::vector<size_t>& relevantPathIndex,
-                 const std::vector<size_t>& relevantTimeIndex) = 0;
+                 const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) = 0;
 };
 
 } // namespace QuantExt

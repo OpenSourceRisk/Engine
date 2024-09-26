@@ -45,6 +45,7 @@ struct string_cmp {
 // Ease the notation below
 template <typename T> using bm = boost::bimap<T, boost::bimaps::set_of<std::string, string_cmp>>;
 
+// clang-format off
 // Initialise the bimaps
 const bm<RiskType> riskTypeMap = boost::assign::list_of<bm<RiskType>::value_type>(
     RiskType::Commodity, "Risk_Commodity")
@@ -107,7 +108,8 @@ const bm<CrifRecord::ProductClass> productClassMap = boost::assign::list_of<bm<C
 
 const bm<CrifRecord::IMModel> imModelMap = boost::assign::list_of<bm<CrifRecord::IMModel>::value_type>(
     CrifRecord::IMModel::Schedule, "Schedule")(CrifRecord::IMModel::SIMM, "SIMM")(
-    CrifRecord::IMModel::SIMM_P, "SIMM-P")(CrifRecord::IMModel::SIMM_R, "SIMM-R");
+    CrifRecord::IMModel::SIMM_R, "SIMM-R")(CrifRecord::IMModel::SIMM_P, "SIMM-P")(
+    CrifRecord::IMModel::Empty, "");
 
 const bm<Regulation> regulationsMap = boost::assign::list_of<bm<Regulation>::value_type>(
     Regulation::APRA, "APRA")(Regulation::CFTC, "CFTC")(
@@ -119,9 +121,10 @@ const bm<Regulation> regulationsMap = boost::assign::list_of<bm<Regulation>::val
     Regulation::USPR, "USPR")(Regulation::NONREG, "NONREG")(
     Regulation::BACEN, "BACEN")(Regulation::SANT, "SANT")(
     Regulation::SFC, "SFC")(Regulation::UK, "UK")(
-    Regulation::AMFQ, "AMFQ")(Regulation::Included, "Included")(
-    Regulation::Unspecified, "Unspecified")(Regulation::Excluded, "Excluded")(
-    Regulation::Invalid, "Invalid");
+    Regulation::AMFQ, "AMFQ")(Regulation::BANX, "BANX")(
+    Regulation::Included, "Included")(Regulation::Unspecified, "Unspecified")(
+    Regulation::Excluded, "Excluded")(Regulation::Invalid, "Invalid");
+// clang-format on
 
 ostream& operator<<(ostream& out, const RiskType& rt) {
     QL_REQUIRE(riskTypeMap.left.count(rt) > 0,
@@ -137,7 +140,8 @@ ostream& operator<<(ostream& out, const CrifRecord::ProductClass& pc) {
 
 ostream& operator<<(ostream& out, const CrifRecord::IMModel& model) {
     QL_REQUIRE(imModelMap.left.count(model) > 0, "Product class not a valid CrifRecord::IMModel");
-    if (model == CrifRecord::IMModel::SIMM_P || model == CrifRecord::IMModel::SIMM_R)
+    if (model == CrifRecord::IMModel::SIMM_P || model == CrifRecord::IMModel::SIMM_R ||
+        model == CrifRecord::IMModel::SIMM)
         return out << "SIMM";
     else
         return out << imModelMap.left.at(model);
@@ -193,8 +197,7 @@ set<Regulation> parseRegulationString(const string& regsString,
         return regs;
 }
 
-set<Regulation> removeRegulations(const set<Regulation>& regs,
-                                              const set<Regulation>& regsToRemove) {
+set<Regulation> removeRegulations(const set<Regulation>& regs, const set<Regulation>& regsToRemove) {
 
     set<Regulation> newRegs;
 
@@ -204,8 +207,7 @@ set<Regulation> removeRegulations(const set<Regulation>& regs,
     return newRegs;
 }
 
-set<Regulation> filterRegulations(const set<Regulation>& regs,
-                                              const set<Regulation>& regsToFilter) {
+set<Regulation> filterRegulations(const set<Regulation>& regs, const set<Regulation>& regsToFilter) {
     set<Regulation> newRegs;
 
     std::copy_if(regs.begin(), regs.end(), std::inserter(newRegs, newRegs.end()),
@@ -280,7 +282,7 @@ vector<std::set<std::string>> CrifRecord::additionalHeaders = {};
 ostream& operator<<(ostream& out, const CrifRecord& cr) {
     const NettingSetDetails& n = cr.nettingSetDetails;
     if (n.empty()) {
-        out << "[" << cr.tradeId << ", " << cr.portfolioId << ", " << cr.productClass << ", " << cr.riskType
+        out << "[" << cr.tradeId << ", " << cr.nettingSetDetails.nettingSetId() << ", " << cr.productClass << ", " << cr.riskType
             << ", " << cr.qualifier << ", " << cr.bucket << ", " << cr.label1 << ", " << cr.label2 << ", "
             << cr.amountCurrency << ", " << cr.amount << ", " << cr.amountUsd;
     } else {

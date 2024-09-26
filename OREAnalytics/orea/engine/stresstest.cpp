@@ -83,7 +83,7 @@ StressTest::StressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& po
     ValuationEngine engine(asof, dg, simMarket, factory->modelBuilders());
 
     engine.registerProgressIndicator(QuantLib::ext::make_shared<ProgressLog>("stress scenarios", 100, oreSeverity::notice));
-    engine.buildCube(portfolio, cube, calculators);
+    engine.buildCube(portfolio, cube, calculators, ValuationEngine::ErrorPolicy::RemoveSample);
 
     /*****************
      * Collect results

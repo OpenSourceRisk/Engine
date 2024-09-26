@@ -52,7 +52,7 @@ public:
     /*! Destructor */
     virtual ~CrifLoader() {}
 
-    virtual Crif loadCrif() {
+    virtual QuantLib::ext::shared_ptr<Crif> loadCrif() {
         auto crif = loadCrifImpl();
         if (updateMapper_ && configuration_->bucketMapper() != nullptr) {
             configuration_->bucketMapper()->updateFromCrif(crif);
@@ -64,9 +64,9 @@ public:
     const QuantLib::ext::shared_ptr<SimmConfiguration>& simmConfiguration() { return configuration_; }
 
 protected:
-    virtual Crif loadCrifImpl() = 0;
+    virtual QuantLib::ext::shared_ptr<Crif> loadCrifImpl() = 0;
 
-    void addRecordToCrif(Crif& crif, CrifRecord&& recordToAdd) const;
+    void addRecordToCrif(const QuantLib::ext::shared_ptr<Crif>& crif, CrifRecord&& recordToAdd) const;
 
     //! Check if the record is a valid Simm Crif Record
     void validateSimmRecord(const CrifRecord& cr) const;
@@ -106,10 +106,10 @@ public:
                            char escapeChar = '\\', const std::string& nullString = "#N/A");
 
 protected:
-    Crif loadCrifImpl() override { return loadFromStream(stream()); }
+    QuantLib::ext::shared_ptr<Crif> loadCrifImpl() override { return loadFromStream(stream()); }
 
     //! Core CRIF loader from generic istream
-    Crif loadFromStream(std::stringstream&& stream);
+    QuantLib::ext::shared_ptr<Crif> loadFromStream(std::stringstream&& stream);
 
     virtual std::stringstream stream() const = 0;
     /*! Internal map from known index of CRIF record member to file column
@@ -127,7 +127,9 @@ protected:
     /*! Process a line of a CRIF file and return true if valid line
         or false if an invalid line
     */
-    bool process(const std::vector<std::string>& entries, QuantLib::Size maxIndex, QuantLib::Size currentLine, Crif& result);
+    bool process(const std::vector<std::string>& entries, QuantLib::Size maxIndex, QuantLib::Size currentLine,
+                 const QuantLib::ext::shared_ptr<Crif>& result,
+                 std::vector<std::tuple<std::string, std::string, std::string, std::string>>& structuredErrors);
     char eol_;
     char delim_;
     char quoteChar_;

@@ -230,6 +230,8 @@ public:
     defaultCurve(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<Quote> recoveryRate(const string&,
                                        const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<Quote> conversionFactor(const string&,
+                                           const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name (Index) CDS Option volatilities

@@ -42,15 +42,15 @@ public:
 
     //! constructor that builds an AMC - enabled pricing engine
     ScriptedTradeEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& amcCam,
-                               const std::vector<Date>& amcGrid)
+                               const std::vector<Date>& amcSimDates, const std::vector<Date>& amcStickyCloseOutDates)
         : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmc_(true), amcCam_(amcCam),
-          amcGrid_(amcGrid) {}
+          amcSimDates_(amcSimDates), amcStickyCloseOutDates_(amcStickyCloseOutDates) {}
 
     //! constructor that builds an AMCCG pricing engine
     ScriptedTradeEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& amcCgModel,
-                               const std::vector<Date>& amcGrid)
+                               const std::vector<Date>& amcSimDates, const std::vector<Date>& amcStickyCloseOutDates)
         : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmc_(true), amcCgModel_(amcCgModel),
-          amcGrid_(amcGrid) {}
+          amcSimDates_(amcSimDates), amcStickyCloseOutDates_(amcStickyCloseOutDates) {}
 
     QuantLib::ext::shared_ptr<QuantExt::ScriptedInstrument::engine>
     engine(const std::string& id, const ScriptedTrade& scriptedTrade,
@@ -60,6 +60,7 @@ public:
     // these are guaranteed to be set only after engine() was called
     const std::string& npvCurrency() const { return model_ ? model_->baseCcy() : modelCG_->baseCcy(); }
     const QuantLib::Date& lastRelevantDate() const { return lastRelevantDate_; }
+    const std::string& lastRelevantDateType() const { return lastRelevantDateType_; }
     bool includePastCashflows() const { return includePastCashflows_; }
     const std::string& simmProductClass() const { return simmProductClass_; }
     const std::string& scheduleProductClass() const { return scheduleProductClass_; }
@@ -110,7 +111,7 @@ protected:
     bool buildingAmc_ = false;
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> amcCam_;
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> amcCgModel_;
-    const std::vector<Date> amcGrid_;
+    const std::vector<Date> amcSimDates_, amcStickyCloseOutDates_;
 
     // cache for parsed asts
     std::map<std::string, ASTNodePtr> astCache_;
@@ -119,6 +120,7 @@ protected:
     ASTNodePtr ast_;
     std::string npvCurrency_;
     QuantLib::Date lastRelevantDate_;
+    std::string lastRelevantDateType_;
     std::string simmProductClass_;
     std::string scheduleProductClass_;
     std::string sensitivityTemplate_;
@@ -132,6 +134,7 @@ protected:
     std::string baseCcy_;
     std::vector<std::string> modelCcys_;
     std::vector<Handle<YieldTermStructure>> modelCurves_;
+    Handle<YieldTermStructure> baseCcyModelCurve_;
     std::vector<Handle<Quote>> modelFxSpots_;
     std::vector<std::string> modelIndices_, modelIndicesCurrencies_;
     std::vector<std::pair<std::string, QuantLib::ext::shared_ptr<InterestRateIndex>>> modelIrIndices_;

@@ -108,7 +108,7 @@ void PricingAnalyticImpl::runAnalytic(
                 DateGrid grid(inputs_->curvesGrid());
                 std::string config = inputs_->curvesMarketConfig();
                 ReportWriter(inputs_->reportNaString())
-                    .writeCurves(*curvesReport, config, grid, *inputs_->todaysMarketParams(),
+                    .writeCurves(*curvesReport, config, grid, *analytic()->configurations().todaysMarketParams,
                                  analytic()->market(), inputs_->continueOnError());
                 analytic()->reports()[type]["curves"] = curvesReport;
                 CONSOLE("OK");

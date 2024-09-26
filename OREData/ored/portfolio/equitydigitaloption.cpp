@@ -95,6 +95,7 @@ void EquityDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     notionalCurrency_ = payoffCurrency_; 
     npvCurrency_ = payoffCurrency_;
     maturity_ = std::max(lastPremiumDate, expiryDate);
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Last Premium Date";
 
     additionalData_["payoffAmount"] = payoffAmount_;
     additionalData_["payoffCurrency"] = payoffCurrency_;
