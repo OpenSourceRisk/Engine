@@ -317,7 +317,7 @@
         </ExerciseDates>
 	<PaymentData>
 	  <Dates>
-	    <Date>2016-03-08</Date>
+	    <Date>2016-03-10</Date>
 	  </Dates>
 	</PaymentData>
 	<AutomaticExercise>true</AutomaticExercise>
@@ -368,7 +368,7 @@
     </Envelope>
     <SwaptionData>
       <OptionData>
-        <LongShort>Short</LongShort>
+        <LongShort>Long</LongShort>
         <OptionType>Call</OptionType>
         <Style>European</Style>
         <Settlement>Cash</Settlement>
@@ -418,7 +418,7 @@
         <PaymentConvention>Following</PaymentConvention>
         <FixedLegData>
           <Rates>
-            <Rate>0.05</Rate>
+            <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
         <ScheduleData>
@@ -450,7 +450,7 @@
     </Envelope>
     <SwaptionData>
       <OptionData>
-        <LongShort>Short</LongShort>
+        <LongShort>Long</LongShort>
         <OptionType>Call</OptionType>
         <Style>European</Style>
         <Settlement>Cash</Settlement>
@@ -460,7 +460,7 @@
         </ExerciseDates>
 	<PaymentData>
 	  <Dates>
-	    <Date>2016-03-08</Date>
+	    <Date>2016-03-10</Date>
 	  </Dates>
 	</PaymentData>
       </OptionData>
@@ -505,7 +505,7 @@
         <PaymentConvention>Following</PaymentConvention>
         <FixedLegData>
           <Rates>
-            <Rate>0.05</Rate>
+            <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
         <ScheduleData>

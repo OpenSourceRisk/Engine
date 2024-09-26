@@ -20,6 +20,10 @@
 #include <ql/option.hpp>
 #include <ql/settings.hpp>
 
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <iostream>
+
 using namespace QuantLib;
 using namespace std;
 
@@ -79,34 +83,45 @@ Real OptionWrapper::NPV() const {
 
     Date today = Settings::instance().evaluationDate();
     if (!exercised_) {
-        for (Size i = 0; i < effectiveExerciseDates_.size(); ++i) {
+
+        bool isExerciseDate = false;
+	for (Size i = 0; i < effectiveExerciseDates_.size(); ++i) {
             if (today == effectiveExerciseDates_[i]) {
-                if (exercise()) {
-                    exercised_ = true;
-                    exerciseDate_ = today;
-                    settlementDate_ = settlementDates_[i];
-                }
-            }
-        }
+	        isExerciseDate = true;
+		break;
+	    }
+	}
+
+        if (!isExerciseDate) {
+	    // cache NPV for later exercise with cash settlement, i.e. as a proxy for the cash settlement amount 
+	    lastNpvBeforeExercise_ = multiplier2() * getTimedNPV(instrument_) * multiplier_;
+	}
+	else {
+	    // now exercise if we are one an exercise date
+	    for (Size i = 0; i < effectiveExerciseDates_.size(); ++i) {
+	        if (today == effectiveExerciseDates_[i]) {
+		    if (exercise()) {
+		        exercised_ = true;
+			exerciseDate_ = today;
+		    }
+		}
+	    }
+	}
     }
+    
     if (exercised_) {
-        // if exercised, return underlying npv for physical settlement and also for
-        // cash settlement if we are still on the exercise date (since the cash
-        // settlement takes place strictly after the exercise date usually)
-        // FIXME: we assume that the settlement date lies strictly after the exercise
-        // date, but before or on the next simulation date. Check this explicitly
-        // by introducing the cash settlement date into the option wrapper (note
-        // that we will probably need an effective cash settlement date then to
-        // maintain the relative position to the effective exercise date).
-        // Real npv = (isPhysicalDelivery_ || (today == exerciseDate_ && Settings::instance().includeReferenceDateEvents()))
+        // Old: We treat cash settlement like physical delivery on expiry
+        // Real npv = (isPhysicalDelivery_ || today == exerciseDate_)
         //                  ? multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_
         //                  : 0.0;
-        // Real npv = (isPhysicalDelivery_ || (today >= exerciseDate_ && today <= settlementDate_))
-        //                ? multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_
-        //                : 0.0;
-        Real npv = (isPhysicalDelivery_ || today == exerciseDate_)
-                       ? multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_
-                       : 0.0;
+        // New:
+        // If exercised we rely on the adequate underlying instrument, e.g. a Swap in case of physical
+        // delivery or a Swap containing a single settlement date flow in case of cash settlement.
+        // The cash settlement underlying should be alive until the settlement date (with correct 
+        // handling on the settlement date) and a flow amount that is consistent with the option valuation
+        // shortly before or on expiry, and we rely on underlying NPV = 0 beyond cash settlement.
+        // Real npv0 = multiplier2() * getTimedNPV(instrument_) * multiplier_;
+	Real npv = multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_;
         return npv + addNPV;
     } else {
         // if not exercised we just return the original option's NPV
@@ -156,13 +171,41 @@ bool BermudanOptionWrapper::exercise() const {
 
     // set active underlying instrument
     Date today = Settings::instance().evaluationDate();
+    int dateIndex = -1;
     for (Size i = 0; i < effectiveExerciseDates_.size(); ++i) {
         if (today == effectiveExerciseDates_[i]) {
             activeUnderlyingInstrument_ = underlyingInstruments_[i];
-            break;
+	    dateIndex = i;
+	    break;
         }
     }
+
     bool exercise = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > getTimedNPV(instrument_) * multiplier_;
+
+    // FIXME: Update the active underlying in case of exercise and cash settlement
+    // - settlement currency
+    // - discounting
+    // - create settlement instrument "shell" similar to underlying instruments upfront, update amount later ?
+    if (exercise && !isPhysicalDelivery_) {
+        // update the active underlying instrument to hold a simple cash settlement flow
+        QL_REQUIRE(dateIndex >= 0, "settlement date index not set");
+        Real amount = lastNpvBeforeExercise_;
+	settlementDate_ = settlementDates_[dateIndex];
+	Leg leg = {ext::make_shared<SimpleCashFlow>(amount, settlementDate_)};
+	vector<Leg> legs = {leg};
+	vector<bool> payer = {false};
+	auto inst = ext::make_shared<QuantLib::Swap>(legs, payer);
+	Handle<YieldTermStructure> ts(ext::make_shared<FlatForward>(0, TARGET(), 0.0, Actual365Fixed()));
+	ext::shared_ptr<PricingEngine> engine = ext::make_shared<DiscountingSwapEngine>(ts);
+	inst->setPricingEngine(engine);
+
+	std::cout << "exercised a cash settled option, today " << io::iso_date(today)
+		  << " settlement date " << io::iso_date(settlementDate_)
+		  << " amount " << amount
+		  << std::endl;
+	
+	activeUnderlyingInstrument_ = inst;
+    }
     return exercise;
 }
 } // namespace data

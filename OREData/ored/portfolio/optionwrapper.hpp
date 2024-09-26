@@ -117,6 +117,7 @@ protected:
     bool exercisable_;
     mutable QuantLib::Date exerciseDate_;
     mutable QuantLib::Date settlementDate_;
+    mutable Real lastNpvBeforeExercise_;
 };
 
 //! European Option Wrapper
