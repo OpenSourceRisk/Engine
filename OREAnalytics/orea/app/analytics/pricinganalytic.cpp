@@ -33,8 +33,7 @@ namespace analytics {
  *******************************************************************/
 
 void PricingAnalyticImpl::setUpConfigurations() {    
-    if (find(begin(analytic()->analyticTypes()), end(analytic()->analyticTypes()), "SENSITIVITY") !=
-        end(analytic()->analyticTypes())) {
+    if (find(begin(inputs_->analytics()), end(inputs_->analytics()), "SENSITIVITY") != end(inputs_->analytics())) {
         analytic()->configurations().simulationConfigRequired = true;
         analytic()->configurations().sensitivityConfigRequired = true;
     }  
