@@ -551,6 +551,13 @@ void FixingDateGetter::visit(CPICoupon& c) {
         c.fixingDate(), IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
         c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), c.observationInterpolation(),
         c.cpiIndex()->frequency(), c.date());
+
+    Date today = Settings::instance().evaluationDate();
+    Date settlementObservationDate = today - c.observationLag();
+    requiredFixings_.addZeroInflationFixingDate(
+        settlementObservationDate, IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
+        c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), c.observationInterpolation(),
+        c.cpiIndex()->frequency(), c.date());
 }
 
 void FixingDateGetter::visit(YoYInflationCoupon& c) {
