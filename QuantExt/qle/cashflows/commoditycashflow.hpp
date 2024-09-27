@@ -77,7 +77,7 @@ std::set<QuantLib::Date> pricingDates(const QuantLib::Date& start, const QuantLi
 */
 bool isPricingDate(const QuantLib::Date& d, const QuantLib::Calendar& pricingCalendar, bool useBusinessDays = true);
 
-class CommodityCashFlow : public QuantLib::LazyObject, public QuantLib::CashFlow {
+class CommodityCashFlow :  public QuantLib::CashFlow {
 public:
     CommodityCashFlow(QuantLib::Real quantity, QuantLib::Real spread, QuantLib::Real gearing, bool useFuturePrice,
                       const ext::shared_ptr<CommodityIndex>& index, const ext::shared_ptr<FxIndex>& fxIndex);

@@ -98,7 +98,7 @@ protected:
 
      \ingroup cashflows
  */
-class FXLinkedCashFlow : public CashFlow, public FXLinked, public Observer {
+class FXLinkedCashFlow : public CashFlow, public FXLinked {
 public:
     FXLinkedCashFlow(const Date& cashFlowDate, const Date& fixingDate, Real foreignAmount,
                      QuantLib::ext::shared_ptr<FxIndex> fxIndex);
@@ -150,7 +150,7 @@ inline void FXLinkedCashFlow::accept(AcyclicVisitor& v) {
 
  \ingroup cashflows
  */
-class AverageFXLinkedCashFlow : public CashFlow, public AverageFXLinked, public Observer {
+class AverageFXLinkedCashFlow : public CashFlow, public AverageFXLinked {
 public:
     AverageFXLinkedCashFlow(const Date& cashFlowDate, const std::vector<Date>& fixingDates, Real foreignAmount,
                             QuantLib::ext::shared_ptr<FxIndex> fxIndex, const bool inverted = false);

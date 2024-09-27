@@ -50,7 +50,7 @@ std::ostream& operator<<(std::ostream& out, EquityReturnType t);
 /*!
     \ingroup cashflows
 */
-class EquityCoupon : public Coupon, public Observer {   
+class EquityCoupon : public Coupon {   
 public:
     EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
                  const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve, const DayCounter& dayCounter,

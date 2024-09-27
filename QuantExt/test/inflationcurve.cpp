@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingUnknown
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = false;
     // Build Curve and Index
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>();
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated);
 
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixing) {
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = true;
     // Build Curve and Index
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>();
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated);
 
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveInterpolatedLastMonthFixing) {
     bool isInterpolated = true;
     bool useLastKnownFixingDateAsBaseDate = true;
     // Build Curve and Index
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>();
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated);
 
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingUnknown
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = false;
     // Build Curve and Index
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>();
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto seasonalityCurve = buildSeasonalityCurve();
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated,
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingWithSea
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = true;
     // Build Curve and Index
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>();
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto seasonalityCurve = buildSeasonalityCurve();
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated,
