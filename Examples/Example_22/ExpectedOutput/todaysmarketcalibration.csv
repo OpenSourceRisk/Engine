@@ -2094,39 +2094,6 @@ inflationCuve,EUHICP_ZC_Swaps,cpi,2045-10-01,,,double,159.22856593
 inflationCuve,EUHICP_ZC_Swaps,time,2045-11-01,,,double,29.75890411
 inflationCuve,EUHICP_ZC_Swaps,zeroRate,2045-11-01,,,double,0.01561350
 inflationCuve,EUHICP_ZC_Swaps,cpi,2045-11-01,,,double,159.49209162
-inflationCuve,EUHICPXT_YY_Swaps,dayCounter,,,,string,Actual/365 (Fixed)
-inflationCuve,EUHICPXT_YY_Swaps,calendar,,,,string,TARGET
-inflationCuve,EUHICPXT_YY_Swaps,baseDate,,,,date,2015-11-01
-inflationCuve,EUHICPXT_YY_Swaps,time,2016-11-01,,,double,0.73972603
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2016-11-01,,,double,0.01165000
-inflationCuve,EUHICPXT_YY_Swaps,time,2017-11-01,,,double,1.73972603
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2017-11-01,,,double,0.01299023
-inflationCuve,EUHICPXT_YY_Swaps,time,2018-11-01,,,double,2.73972603
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2018-11-01,,,double,0.01395946
-inflationCuve,EUHICPXT_YY_Swaps,time,2019-11-01,,,double,3.73972603
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2019-11-01,,,double,0.01449465
-inflationCuve,EUHICPXT_YY_Swaps,time,2020-11-01,,,double,4.74246575
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2020-11-01,,,double,0.01504192
-inflationCuve,EUHICPXT_YY_Swaps,time,2021-11-01,,,double,5.74246575
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2021-11-01,,,double,0.01548301
-inflationCuve,EUHICPXT_YY_Swaps,time,2022-11-01,,,double,6.74246575
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2022-11-01,,,double,0.01605509
-inflationCuve,EUHICPXT_YY_Swaps,time,2023-11-01,,,double,7.74246575
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2023-11-01,,,double,0.01663186
-inflationCuve,EUHICPXT_YY_Swaps,time,2024-11-01,,,double,8.74520548
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2024-11-01,,,double,0.01740015
-inflationCuve,EUHICPXT_YY_Swaps,time,2025-11-01,,,double,9.74520548
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2025-11-01,,,double,0.01788415
-inflationCuve,EUHICPXT_YY_Swaps,time,2027-11-01,,,double,11.74520548
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2027-11-01,,,double,0.01893714
-inflationCuve,EUHICPXT_YY_Swaps,time,2030-11-01,,,double,14.74794521
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2030-11-01,,,double,0.02031124
-inflationCuve,EUHICPXT_YY_Swaps,time,2035-11-01,,,double,19.75068493
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2035-11-01,,,double,0.02133385
-inflationCuve,EUHICPXT_YY_Swaps,time,2040-11-01,,,double,24.75616438
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2040-11-01,,,double,0.02188211
-inflationCuve,EUHICPXT_YY_Swaps,time,2045-11-01,,,double,29.75890411
-inflationCuve,EUHICPXT_YY_Swaps,yoyRate,2045-11-01,,,double,0.02140314
 inflationCuve,EUHICPXT_ZC_Swaps,dayCounter,,,,string,Actual/365 (Fixed)
 inflationCuve,EUHICPXT_ZC_Swaps,calendar,,,,string,TARGET
 inflationCuve,EUHICPXT_ZC_Swaps,baseDate,,,,date,2015-11-01
@@ -4656,7 +4623,7 @@ inflationCuve,USCPI_ZC_Swaps,time,2055-11-01,,,double,39.76438356
 inflationCuve,USCPI_ZC_Swaps,zeroRate,2055-11-01,,,double,0.01878701
 inflationCuve,USCPI_ZC_Swaps,cpi,2055-11-01,,,double,498.23531002
 fxVol,EURUSD,dayCounter,,,,string,Actual/365 (Fixed)
-fxVol,EURUSD,calendar,,,,string,"JoinHolidays(TARGET, US settlement)"
+fxVol,EURUSD,calendar,,,,string,JoinHolidays(TARGET, US settlement)
 fxVol,EURUSD,atmType,,,,string,AtmDeltaNeutral
 fxVol,EURUSD,deltaType,,,,string,Spot
 fxVol,EURUSD,longTermAtmType,,,,string,AtmDeltaNeutral
@@ -4699,9 +4666,3 @@ irVol,SwaptionVolatility/EUR/EUR_SW_SMILE,dayCounter,,,,string,Actual/365 (Fixed
 irVol,SwaptionVolatility/EUR/EUR_SW_SMILE,calendar,,,,string,TARGET
 irVol,SwaptionVolatility/EUR/EUR_SW_SMILE,isArbitrageFree,,,,bool,true
 irVol,SwaptionVolatility/EUR/EUR_SW_SMILE,volatilityType,,,,string,Normal
-cpiVol,EUHICPXT_ZC_CF,dayCounter,,,,string,Actual/Actual (ISDA)
-cpiVol,EUHICPXT_ZC_CF,calendar,,,,string,TARGET
-cpiVol,EUHICPXT_ZC_CF,isArbitrageFree,,,,bool,true
-cpiVol,USCPI_ZC_CF,dayCounter,,,,string,Actual/Actual (ISDA)
-cpiVol,USCPI_ZC_CF,calendar,,,,string,US settlement
-cpiVol,USCPI_ZC_CF,isArbitrageFree,,,,bool,true
