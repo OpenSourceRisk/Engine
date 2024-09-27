@@ -986,17 +986,10 @@
       ".*todaysmarketcalibration.*\\.csv": {
         "keys": [
           "MarketObjectType",
-          "ResultValue"
+          "MarketObjectId"
         ],
-        "column_settings": [
-          {
-            "names": [
-              "MarketObjectType",
-              "ResultValue"
-            ],
-            "abs_tol": 1e-2,
-            "rel_tol": 1e-12
-          }
+        "use_cols": [
+            "ResultValue"
         ]
       },
       "flownpv.csv": {
