@@ -140,6 +140,7 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
         else if(cf->hasOccurred(npvDate, includeRefDateFlows)){
             CashFlowResults cfRes = populateCashFlowResultsFromCashflow(cf);
             calculationResults.cashflowResults.push_back(cfRes);
+            continue;
         }
         hasLiveCashFlow = true;
 
