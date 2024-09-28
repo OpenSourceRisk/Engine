@@ -66,6 +66,7 @@ The parameters have the following meaning:
 \begin{itemize}
 \item TimestepPeriod: discretization interval for zero bond pricing
 \item SensitivityTemplate [optional]: the sensitivity template to use 
+\item IncludePastCashflows [optional]: include past cashflows in the cashflow report, defaults to false (ignored in the DiscountingRiskyBondEngineMultiState)
 \end{itemize}
 
 \begin{longlisting}
@@ -77,6 +78,7 @@ The parameters have the following meaning:
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+        <Parameter name="IncludePastCashflows">true</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
