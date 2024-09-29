@@ -88,7 +88,7 @@ private:
         // If quote character is \0, use double quotes instead
         char effectiveQuoteChar = (quoteChar_ == '\0' && containsSep) ? '"' : quoteChar_;
 
-        if (containsSep || effectiveQuoteChar != '\0') {
+        if (effectiveQuoteChar != '\0') {
             if (effectiveQuoteChar == '"')
                 boost::replace_all(sc, "\"", "\"\"");            
             fputc(effectiveQuoteChar, fp_);
@@ -96,7 +96,7 @@ private:
 
         fprintf(fp_, "%s", sc.c_str());
 
-        if (containsSep || effectiveQuoteChar != '\0')
+        if (effectiveQuoteChar != '\0')
             fputc(effectiveQuoteChar, fp_);
     }
 
