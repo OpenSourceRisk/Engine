@@ -4623,7 +4623,7 @@ inflationCuve,USCPI_ZC_Swaps,time,2055-11-01,,,double,39.76438356
 inflationCuve,USCPI_ZC_Swaps,zeroRate,2055-11-01,,,double,0.01878701
 inflationCuve,USCPI_ZC_Swaps,cpi,2055-11-01,,,double,498.23531002
 fxVol,EURUSD,dayCounter,,,,string,Actual/365 (Fixed)
-fxVol,EURUSD,calendar,,,,string,"JoinHolidays(TARGET, US settlement)"
+fxVol,EURUSD,calendar,,,,string,JoinHolidays(TARGET, US settlement)
 fxVol,EURUSD,atmType,,,,string,AtmDeltaNeutral
 fxVol,EURUSD,deltaType,,,,string,Spot
 fxVol,EURUSD,longTermAtmType,,,,string,AtmDeltaNeutral
