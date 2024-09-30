@@ -38,8 +38,8 @@ namespace detail {
     searching for a helper root between \c xMin and \c xMax, we use this function to return the value that gives
     the minimum absolute helper error in the interval between \c xMin and \c xMax inclusive.
 */
-template <class Curve>
-QuantLib::Real dontThrowFallback(const QuantLib::BootstrapError<Curve>& error, QuantLib::Real xMin, QuantLib::Real xMax,
+template <class ErrorFunctor>
+QuantLib::Real dontThrowFallback(const ErrorFunctor& error, QuantLib::Real xMin, QuantLib::Real xMax,
                                  QuantLib::Size steps) {
 
     QL_REQUIRE(xMin < xMax, "Expected xMin to be less than xMax");
