@@ -528,7 +528,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
                                         swaptionTenor = cms->swapIndex()->tenor();
                                         qlIndexName = cms->swapIndex()->iborIndex()->name();
                                         usesSwaptionVol = true;
-                                    }else if(auto cms = boost::dynamic_pointer_cast<DurationAdjustedCmsCoupon>(tmp->underlying())) {
+                                    }else if(auto cms = QuantLib::ext::dynamic_pointer_cast<DurationAdjustedCmsCoupon>(tmp->underlying())) {
                                         swaptionTenor = cms->swapIndex()->tenor();
                                         qlIndexName = cms->swapIndex()->iborIndex()->name();
                                         usesSwaptionVol = true;

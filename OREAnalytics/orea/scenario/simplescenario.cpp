@@ -28,7 +28,7 @@ namespace ore {
 namespace analytics {
 
 SimpleScenario::SimpleScenario(Date asof, const std::string& label, Real numeraire,
-                               const boost::shared_ptr<SharedData>& sharedData)
+                               const QuantLib::ext::shared_ptr<SharedData>& sharedData)
     : sharedData_(sharedData == nullptr ? QuantLib::ext::make_shared<SharedData>() : sharedData), asof_(asof),
       label_(label), numeraire_(numeraire) {}
 

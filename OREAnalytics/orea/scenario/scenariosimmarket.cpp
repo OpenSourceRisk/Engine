@@ -755,7 +755,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                  << (param.first == RiskFactorKey::KeyType::SwaptionVolatility ? "True" : "False"));
                             DLOG("Will convert to normal vol  : " << (convertToNormal ? "True" : "False"));
 
-                            boost::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
+                            QuantLib::ext::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
                             if (convertToNormal) {
                                 swapIndex = *initMarket->swapIndex(swapIndexBase, configuration);
                                 shortSwapIndex = *initMarket->swapIndex(shortSwapIndexBase, configuration);
@@ -3310,9 +3310,9 @@ void ScenarioSimMarket::applyCurveAlgebra() {
 
 void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
                                                            const Handle<YieldTermStructure>& base) {
-    if (auto c = boost::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
+    if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
         c->makeThisCurveSpreaded(base);
-    } else if (auto c = boost::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
         c->makeThisCurveSpreaded(base);
     } else {
         QL_FAIL("ScenarioSimMarket::applyCurveAlgebraSpreadedRateCurve(): target curve could not be cast to one of the "

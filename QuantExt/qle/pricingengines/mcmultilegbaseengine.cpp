@@ -754,7 +754,7 @@ void McMultiLegBaseEngine::calculateModels(
             // calculate rebate (exercise fees) if existent
 
             RandomVariable pvRebate(calibrationSamples_, 0.0);
-            if (auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
+            if (auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
                 Size exerciseTimes_idx = std::distance(exerciseTimes.begin(), exerciseTimes.find(*t));
                 if (rebatedExercise->rebate(exerciseTimes_idx) != 0.0) {
                     Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
