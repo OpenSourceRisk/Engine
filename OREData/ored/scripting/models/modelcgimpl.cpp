@@ -222,7 +222,7 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
             getInflationIndexFixing(returnMissingFixingAsNull, indexInput, inf->second,
                                     std::distance(infIndices_.begin(), inf), lim.first, obsdate, fwddate, baseDate);
         // if the index is not interpolated we are done
-        if (!indexInfo.inf()->interpolated()) {
+        if (!indexInfo.infIsInterpolated()) {
             return indexStart;
         }
         // otherwise we need to get a second value and interpolate as in ZeroInflationIndex

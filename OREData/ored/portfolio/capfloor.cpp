@@ -391,7 +391,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
             if (capFloorType == QuantLib::CapFloor::Cap || capFloorType == QuantLib::CapFloor::Collar) {
                 QuantLib::ext::shared_ptr<CPICapFloor> capfloor = QuantLib::ext::make_shared<CPICapFloor>(
-                    Option::Call, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, effectiveCaps_[i], zeroIndex,
+                    Option::Call, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, effectiveCaps_[i], zeroIndex.currentLink(),
                     observationLag, interpolationMethod);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 setSensitivityTemplate(*capFloorBuilder);
@@ -405,7 +405,7 @@ void CapFloor::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                 // for collars we want a long cap, short floor
                 Real sign = capFloorType == QuantLib::CapFloor::Floor ? 1.0 : -1.0;
                 QuantLib::ext::shared_ptr<CPICapFloor> capfloor = QuantLib::ext::make_shared<CPICapFloor>(
-                    Option::Put, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, effectiveFloors_[i], zeroIndex,
+                    Option::Put, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, effectiveFloors_[i], zeroIndex.currentLink(),
                     observationLag, interpolationMethod);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 setSensitivityTemplate(*capFloorBuilder);

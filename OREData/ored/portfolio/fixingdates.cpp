@@ -519,10 +519,7 @@ void FixingDateGetter::visit(CPICashFlow& c) {
     auto zeroInflationIndex = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(c.index());
     QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
 
-    QL_DEPRECATED_DISABLE_WARNING
-    bool isInterpolated = c.interpolation() == QuantLib::CPI::Linear ||
-                          (c.interpolation() == QuantLib::CPI::AsIndex && zeroInflationIndex->interpolated());
-    QL_DEPRECATED_ENABLE_WARNING
+    bool isInterpolated = c.interpolation() == QuantLib::CPI::Linear;
 
     requiredFixings_.addZeroInflationFixingDate(
         c.baseDate(), IndexNameTranslator::instance().oreName(c.index()->name()), isInterpolated,
@@ -537,10 +534,7 @@ void FixingDateGetter::visit(CPICashFlow& c) {
 
 void FixingDateGetter::visit(CPICoupon& c) {
 
-    QL_DEPRECATED_DISABLE_WARNING
-    bool isInterpolated = c.observationInterpolation() == QuantLib::CPI::Linear ||
-                          (c.observationInterpolation() == QuantLib::CPI::AsIndex && c.cpiIndex()->interpolated());
-    QL_DEPRECATED_ENABLE_WARNING
+    bool isInterpolated = c.observationInterpolation() == QuantLib::CPI::Linear;
 
     requiredFixings_.addZeroInflationFixingDate(
         c.baseDate(), IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,

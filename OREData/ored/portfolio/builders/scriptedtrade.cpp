@@ -1082,11 +1082,9 @@ void ScriptedTradeEngineBuilder::compileSimulationAndAddDates() {
                 for (auto const& d : s.second) {
                     auto lim = inflationPeriod(d, info.inf()->frequency());
                     simulationDates_.insert(lim.first + lag);
-                    QL_DEPRECATED_DISABLE_WARNING
-                    // This will be removed in a later release and all inf indices are then flat
-                    if (info.inf()->interpolated())
+                    // Allow interpolation of indices for convencience (avoid interpolation logic in script)
+                    if (info.infIsInterpolated())
                         simulationDates_.insert(d + lag);
-                    QL_DEPRECATED_ENABLE_WARNING
                 }
             } else {
                 // for all other indices we just take the original dates

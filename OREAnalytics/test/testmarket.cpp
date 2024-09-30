@@ -385,7 +385,7 @@ TestMarket::TestMarket(Date asof, bool swapVolCube) : MarketImpl(false) {
     // We there fore added the new UKROi as UKRP1 and keep the "original" below.
     
     // build inflation indices
-    auto zeroIndex = Handle<ZeroInflationIndex>(QuantLib::ext::make_shared<UKRPI>(true, flatZeroInflationCurve(0.02, 0.01)));
+    auto zeroIndex = Handle<ZeroInflationIndex>(QuantLib::ext::make_shared<UKRPI>(flatZeroInflationCurve(0.02, 0.01)));
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRP1")] = zeroIndex;
     yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRP1")] = Handle<YoYInflationIndex>(
         QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(*zeroIndex, false, flatYoYInflationCurve(0.02, 0.01)));

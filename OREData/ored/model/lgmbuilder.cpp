@@ -687,8 +687,7 @@ void LgmBuilder::buildSwaptionBasket() const {
             swaptionBasket_.push_back(helper);
             swaptionStrike_.push_back(updatedStrike);
             expiryTimes.push_back(calibrationDiscountCurve_->timeFromReference(expiryDate));
-            Date matDate = helper->underlyingSwap() ? helper->underlyingSwap()->maturityDate()
-                                                    : helper->underlyingOvernightIndexedSwap()->maturityDate();
+            Date matDate = helper->underlying()->maturityDate();
             maturityTimes.push_back(calibrationDiscountCurve_->timeFromReference(matDate));
             if (refCalDate != referenceCalibrationDates.end())
                 lastRefCalDate = *refCalDate;

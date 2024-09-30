@@ -24,6 +24,7 @@
 #include <ql/math/matrix.hpp>
 #include <ql/pricingengines/blackcalculator.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
+#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
@@ -31,7 +32,6 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
-#include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/utilities/inflation.hpp>
 
@@ -124,12 +124,11 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib:
                 index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(cd.discountTS), start);
         helpers.push_back(instrument);
     }
-    Rate baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(useLastKnownFixing, start, today, cd.zeroCouponPillars[0],
-                                                                cd.dayCounter, cd.obsLag, cd.zeroCouponQuotes[0],
-                                                                cd.obsLag, cd.dayCounter, index, isInterpolated);
-    QuantLib::ext::shared_ptr<ZeroInflationCurve> curve = QuantLib::ext::make_shared<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
-        today, cd.fixingCalendar, dc, cd.obsLag, index->frequency(), baseRate, helpers, 1e-10, index,
-        useLastKnownFixing);
+    Date baseDate =
+        QuantExt::ZeroInflation::curveBaseDate(useLastKnownFixing, today, cd.obsLag, index->frequency(), index);
+    QuantLib::ext::shared_ptr<ZeroInflationCurve> curve =
+        QuantLib::ext::make_shared<QuantLib::PiecewiseZeroInflationCurve<Linear>>(today, baseDate, index->frequency(),
+                                                                                  dc, helpers, seasonality, 1e-10);
     if (seasonality) {
         curve->setSeasonality(seasonality);
     }

@@ -2191,7 +2191,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                            "instead of QuantLib::CPIVolatilitySurface");
                                 hCpiVol = Handle<QuantLib::CPIVolatilitySurface>(
                                     QuantLib::ext::make_shared<InterpolatedCPIVolatilitySurface<Bilinear>>(
-                                        optionTenors, strikes, quotes, zeroInflationIndex.currentLink(),
+                                        optionTenors, strikes, quotes, zeroInflationIndex.currentLink(), false,
                                         wrapper->settlementDays(), wrapper->calendar(),
                                         wrapper->businessDayConvention(), wrapper->dayCounter(),
                                         wrapper->observationLag(), surface->capFloorStartDate(), Bilinear(),

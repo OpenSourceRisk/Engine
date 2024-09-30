@@ -83,11 +83,10 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         for (auto const& d : f.second) {
             IndexInfo info(f.first);
             if (info.isInf()) {
-                QL_DEPRECATED_DISABLE_WARNING
-                requiredFixings_.addZeroInflationFixingDate(d, info.infName(), info.inf()->interpolated(),
+                requiredFixings_.addZeroInflationFixingDate(d, info.infName(), info.infIsInterpolated(),
                                                             info.inf()->frequency(), info.inf()->availabilityLag(),
                                                             CPI::AsIndex, info.inf()->frequency(), Date::maxDate(), false, false);
-                QL_DEPRECATED_ENABLE_WARNING
+
             } else if (info.isFx()) {
                 // for FX we do not know if FX-TAG-CCY1-CCY2 or FX-TAG-CCY2-CCY1 is in the history, require both
                 requiredFixings_.addFixingDate(d, f.first, Date::maxDate(), false, false);

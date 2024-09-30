@@ -20,7 +20,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ql/termstructures/inflationtermstructure.hpp>
-#include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
@@ -77,21 +77,21 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib:
     QuantLib::ext::shared_ptr<YieldTermStructure> discountTS =
         QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(flatZero), dc);
 
-    std::vector<QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper>> helpers;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTraits::helper>> helpers;
     for (size_t i = 0; i < cd.zeroCouponQuotes.size(); ++i) {
         Date maturity = today + cd.zeroCouponPillars[i];
         Rate quote = cd.zeroCouponQuotes[i];
-        QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
+        QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTraits::helper> instrument =
             QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
-                Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(quote)), cd.obsLag, maturity, fixingCalendar, bdc, dc,
-                index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(discountTS), today);
+                Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(quote)), cd.obsLag, maturity, fixingCalendar, bdc,
+                dc, index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(discountTS), today);
         helpers.push_back(instrument);
     }
-    Rate baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(useLastKnownFixing, today, today, cd.zeroCouponPillars[0],
-                                                                cd.dayCounter, cd.obsLag, cd.zeroCouponQuotes[0],
-                                                                cd.obsLag, cd.dayCounter, index, isInterpolated);
-    QuantLib::ext::shared_ptr<ZeroInflationCurve> curve = QuantLib::ext::make_shared<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
-        today, fixingCalendar, dc, cd.obsLag, index->frequency(), baseRate, helpers, 1e-10, index, useLastKnownFixing);
+    Date baseDate =
+        QuantExt::ZeroInflation::curveBaseDate(useLastKnownFixing, today, cd.obsLag, index->frequency(), index);
+    QuantLib::ext::shared_ptr<ZeroInflationCurve> curve =
+        QuantLib::ext::make_shared<QuantLib::PiecewiseZeroInflationCurve<Linear>>(today, baseDate, index->frequency(),
+                                                                                  dc, helpers, seasonality, 1e-10);
     if (seasonality) {
         curve->setSeasonality(seasonality);
     }
