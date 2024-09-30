@@ -92,9 +92,10 @@ Real OptionWrapper::NPV() const {
 	    }
 	}
 
-        if (!isExerciseDate) {
-	    // cache NPV for later exercise with cash settlement, i.e. as a proxy for the cash settlement amount 
-	    lastNpvBeforeExercise_ = multiplier2() * getTimedNPV(instrument_) * multiplier_;
+	if (!isExerciseDate) {
+	    // Cache NPV along the path for later exercise with cash settlement,
+	    // i.e. as a proxy for the cash settlement amount if the instrument isn't priced on exercise date anymore
+	    cachedNpv_ = multiplier2() * getTimedNPV(instrument_) * multiplier_;
 	}
 	else {
 	    // now exercise if we are one an exercise date
@@ -104,6 +105,9 @@ Real OptionWrapper::NPV() const {
 		        exercised_ = true;
 			exerciseDate_ = today;
 			settlementDate_ = settlementDates_[i];
+			// update the cached NPV if available on exercise date
+			if (!instrument_->isExpired())
+			    cachedNpv_ = multiplier2() * getTimedNPV(instrument_) * multiplier_;
 		    }
 		}
 	    }
@@ -120,7 +124,7 @@ Real OptionWrapper::NPV() const {
 	    if (detail::simple_event(settlementDate_).hasOccurred(today, inc))
 	        return 0.0;
 	    else
-	        return lastNpvBeforeExercise_ + addNPV;
+	        return cachedNpv_ + addNPV;
 	}
     } else {
         // if not exercised we just return the original option's NPV

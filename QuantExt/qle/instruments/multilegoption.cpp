@@ -67,10 +67,13 @@ void MultiLegOption::deepUpdate() {
 bool MultiLegOption::isExpired() const {
     Date today = Settings::instance().evaluationDate();
     if (exercise_ == nullptr || exercise_->dates().empty()) {
-        return today >= maturityDate();
+        // return today >= maturityDate();
+        ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+        return detail::simple_event(maturityDate()).hasOccurred(today, inc);
     } else {
         // only the option itself is represented, not something we exercised into
-        return today >= exercise_->dates().back();
+	//return today >= exercise_->dates().back();
+        return detail::simple_event(exercise_->dates().back()).hasOccurred(today);
     }
 }
 
