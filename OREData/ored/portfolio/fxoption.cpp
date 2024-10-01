@@ -75,55 +75,71 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     expiryDate_ = parseDate(option_.exerciseDates().front());
     QuantLib::Date paymentDate = expiryDate_;
     if (option_.settlement() == "Physical" && opd) {
+
         if (opd->rulesBased()) {
             const Calendar& cal = opd->calendar();
             QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
             paymentDate = cal.advance(expiryDate_, opd->lag(), Days, opd->convention());
         } else {
             if (opd->dates().size() > 1)
-                ore::data::StructuredTradeWarningMessage(
-                    id(), tradeType(), "Trade build", "Found more than 1 payment date. The first one will be used.")
+                ore::data::StructuredTradeWarningMessage(id(), tradeType(), "Trade build",
+                                                         "Found more than 1 payment date. The first one will be used.")
                     .log();
             paymentDate = opd->dates().front();
         }
 
         QL_REQUIRE(paymentDate >= expiryDate_, "Settlement date must be greater than or equal to expiry date.");
 
+        forwardDate_ = paymentDate;
+        paymentDate_ = paymentDate;
+
         if (expiryDate_ <= today) {
-            // building an fx forward instrument instead of the option
-            Date fixingDate;
+
+            // option is expired, build an fx forward representing the physical underlying if exercised or null if not
+
             Currency boughtCcy = parseCurrency(assetName_);
             Currency soldCcy = parseCurrency(currency_);
-            ext::shared_ptr<QuantLib::Instrument> instrument =
-                ext::make_shared<QuantExt::FxForward>(quantity_, boughtCcy, soldAmount(), soldCcy, maturity_, false,
-                                                        true, paymentDate, soldCcy, fixingDate);
-            instrument_.reset(new VanillaInstrument(instrument));
+            ext::shared_ptr<QuantLib::Instrument> qlinstr;
             if (option_.exerciseData()) {
-                if (option_.exerciseData()->date() <= expiryDate_) {
-                    // option is exercised
-                    // fxforward flow are flows from trade data
-                    legs_ = {{ext::make_shared<SimpleCashFlow>(quantity_, paymentDate)},
-                                {ext::make_shared<SimpleCashFlow>(soldAmount(), paymentDate)}};
-                    legCurrencies_ = {assetName_, currency_};
-                    legPayers_ = {false, true};
-                } else
-                    QL_REQUIRE(option_.exerciseData()->date() <= expiryDate_,
-                                "Trade build error, exercise after option expiry is not allowed");
+                QL_REQUIRE(option_.exerciseData()->date() <= expiryDate_,
+                           "Trade build error, exercise after option expiry is not allowed");
+                // option is exercised
+                legs_ = {{ext::make_shared<SimpleCashFlow>(quantity_, paymentDate)},
+                         {ext::make_shared<SimpleCashFlow>(soldAmount(), paymentDate)}};
+                legCurrencies_ = {assetName_, currency_};
+                legPayers_ = {false, true};
+                qlinstr = ext::make_shared<QuantExt::FxForward>(quantity_, boughtCcy, soldAmount(), soldCcy,
+                                                                paymentDate, false, true);
             } else {
                 // option not exercised
-                // set flows = 0
                 legs_ = {};
+                qlinstr = ext::make_shared<QuantExt::FxForward>(0.0, boughtCcy, 0.0, soldCcy, paymentDate, false, true);
             }
-            forwardDate_ = paymentDate;
-            paymentDate_ = paymentDate;
+
+            QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxForward");
+            auto fxBuilder = QuantLib::ext::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
+            QL_REQUIRE(fxBuilder, "FxOption::build(): internal error: could not cast to FxForwardEngineBuilderBase");
+            qlinstr->setPricingEngine(fxBuilder->engine(boughtCcy,soldCcy));
+            auto configuration = fxBuilder->configuration(MarketContext::pricing);
+
+            maturity_ = paymentDate;
+            Position::Type positionType = parsePositionType(option_.longShort());
+            Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
+            Real mult = quantity_ * bsInd;
+
+            std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
+            std::vector<Real> additionalMultipliers;
+            maturity_ =
+                std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, mult,
+                                                option_.premiumData(), -bsInd, soldCcy, engineFactory, configuration));
+            instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qlinstr, mult, additionalInstruments,
+                                                                        additionalMultipliers);
+            return;
         }
-        // Build the trade using the shared functionality in the base class.
-        VanillaOptionTrade::build(engineFactory);
-        maturity_ = paymentDate;
-        maturityType_ = "Payment Date";
-    } else {
-        VanillaOptionTrade::build(engineFactory);
     }
+
+    VanillaOptionTrade::build(engineFactory);
+
 }
 
 void FxOption::fromXML(XMLNode* node) {
