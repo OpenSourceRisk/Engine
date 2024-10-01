@@ -88,7 +88,8 @@ void ScriptedInstrumentPricingEngine::calculate() const {
 
     // clear NPVMem() regression coefficients
 
-    model_->resetNPVMem();
+    if(!staticNpvMem_)
+        model_->resetNPVMem();
 
     // if the model uses a separate training phase for NPV(), run this
 
