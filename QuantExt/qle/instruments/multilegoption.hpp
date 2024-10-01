@@ -43,7 +43,8 @@ public:
     MultiLegOption(const std::vector<Leg>& legs, const std::vector<bool>& payer, const std::vector<Currency>& currency,
                    const QuantLib::ext::shared_ptr<Exercise>& exercise = QuantLib::ext::shared_ptr<Exercise>(),
                    const Settlement::Type settlementType = Settlement::Physical,
-                   Settlement::Method settlementMethod = Settlement::PhysicalOTC);
+                   Settlement::Method settlementMethod = Settlement::PhysicalOTC,
+		   const std::vector<Date>& settlementDates = {});
 
     const std::vector<Leg>& legs() const { return legs_; }
     const std::vector<bool>& payer() const { return payer_; }
@@ -51,6 +52,7 @@ public:
     const QuantLib::ext::shared_ptr<Exercise> exercise() const { return exercise_; }
     const Settlement::Type settlementType() const { return settlementType_; }
     const Settlement::Method settlementMethod() const { return settlementMethod_; }
+    const std::vector<Date>& settlementDates() { return settlementDates_; }
 
     void deepUpdate() override;
     bool isExpired() const override;
@@ -67,6 +69,7 @@ private:
     const QuantLib::ext::shared_ptr<Exercise> exercise_;
     const Settlement::Type settlementType_;
     const Settlement::Method settlementMethod_;
+    std::vector<Date> settlementDates_;
     Date maturity_;
     // results
     mutable Real underlyingNpv_;
@@ -80,6 +83,7 @@ public:
     QuantLib::ext::shared_ptr<Exercise> exercise;
     Settlement::Type settlementType;
     Settlement::Method settlementMethod;
+    std::vector<Date> settlementDates;
     void validate() const override {}
 };
 
