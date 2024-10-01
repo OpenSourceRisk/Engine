@@ -36,6 +36,7 @@
 #include <ql/time/calendars/unitedkingdom.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -149,10 +150,11 @@ public:
         };
         // we can use historical or first ZCIIS for this
         // we know historical is WAY off market-implied, so use market implied flat.
-        Rate baseZeroRate = ratesZCII[0] / 100.0;
+        auto obsLag = Period(2, Months);
+        auto frequency = ii->frequency();
+        Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, obsLag, frequency, ii);
         QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
-            asof_, UnitedKingdom(), ActualActual(ActualActual::ISDA), Period(2, Months), ii->frequency(),
-            baseZeroRate, instruments));
+            asof_, baseDate, frequency, ActualActual(ActualActual::ISDA), instruments));
         pCPIts->recalculate();
         cpiTS = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
         hUKRPI = Handle<ZeroInflationIndex>(

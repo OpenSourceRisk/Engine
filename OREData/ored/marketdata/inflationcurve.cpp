@@ -261,9 +261,12 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             // base zero rate: if given, take it, otherwise set it to first quote
             Real baseRate =
                 config->baseRate() != Null<Real>() ? config->baseRate() : instruments.front()->quote()->value();
-            curve_ = QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
-                asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), interpolatedIndex_,
-                baseRate, instruments, config->tolerance()));
+            Date baseDate =
+                QuantExt::ZeroInflation::curveBaseDate(false, asof, curveObsLag, config->frequency(), index);
+            curve_ =
+                QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
+                    asof, baseDate, baseRate, config->frequency(), interpolatedIndex_, config->dayCounter(),
+                    instruments, {}, config->tolerance()));
             // force bootstrap so that errors are thrown during the build, not later
             QuantLib::ext::static_pointer_cast<PiecewiseYoYInflationCurve<Linear>>(curve_)->yoyRate(QL_EPSILON);
         }

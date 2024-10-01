@@ -285,13 +285,13 @@ BOOST_AUTO_TEST_CASE(testRepricingCalibrationInstruments) {
             calibrationExpiries[i], Date(7, July, 2029), vol, iborIndex, fixedLegTenor, fixedDayCounter,
             floatDayCounter, testMarket->discountCurve("EUR"), BlackCalibrationHelper::RelativePriceError, Null<Real>(),
             1.0, swvol->volatilityType(), swvol->shift(optionTime, swapLength));
-        Real atmStrike = helper->underlyingSwap()->fairRate();
+        Real atmStrike = helper->underlying()->fairRate();
         // script price
         auto workingContext = QuantLib::ext::make_shared<Context>(*context);
         std::vector<ValueType> fixedSchedule, floatSchedule, fixingSchedule;
-        for (auto const& d : helper->underlyingSwap()->fixedSchedule().dates())
+        for (auto const& d : helper->underlying()->fixedSchedule().dates())
             fixedSchedule.push_back(EventVec{paths, d});
-        for (auto const& d : helper->underlyingSwap()->floatingSchedule().dates()) {
+        for (auto const& d : helper->underlying()->floatingSchedule().dates()) {
             floatSchedule.push_back(EventVec{paths, d});
             fixingSchedule.push_back(EventVec{paths, iborIndex->fixingDate(d)});
         }

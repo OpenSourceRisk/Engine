@@ -29,7 +29,7 @@
 
 #include <ql/experimental/inflation/yoycapfloortermpricesurface.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
-
+#include <qle/utilities/inflation.hpp>
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -315,10 +315,11 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::calculateYoYTermStructur
     // however for the data to be self-consistent
     // we pick this as the end of the curve
     Rate baseYoYRate = atmYoYSwapRate(referenceDate()); //!
-
+    QuantLib::Date baseDate = QuantExt::ZeroInflation::curveBaseDate(
+        false, nominalTS_->referenceDate(), observationLag(), yoyIndex()->frequency(), yoyIndex());
     QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<I1D>> pYITS(new PiecewiseYoYInflationCurve<I1D>(
-        nominalTS_->referenceDate(), calendar(), dayCounter(), observationLag(), yoyIndex()->frequency(),
-        yoyIndex()->interpolated(), baseYoYRate, YYhelpers));
+        nominalTS_->referenceDate(), baseDate, baseYoYRate, yoyIndex()->frequency(), yoyIndex()->interpolated(),
+        dayCounter(), YYhelpers));
     pYITS->recalculate();
     yoy_ = pYITS; // store
 
