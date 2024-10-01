@@ -256,7 +256,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         ccys.push_back(parseCurrency(c));
     auto swaption =
         QuantLib::ext::make_shared<QuantExt::MultiLegOption>(underlying_->legs(), underlying_->legPayers(), ccys,
-                                                     exerciseBuilder_->exercise(), settlementType_, settlementMethod_);
+	    exerciseBuilder_->exercise(), settlementType_, settlementMethod_, exerciseBuilder_->settlementDates());
 
     std::string builderType;
     std::vector<std::string> builderPrecheckMessages;
