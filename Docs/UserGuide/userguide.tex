@@ -1149,19 +1149,21 @@ Example & Description \\
 \hline
 70 &  Forward Bond Exposure with AMC and implied Bondspread \\
 \hline
-71 &  TODO \\
+71 &  TODO: FX NDF \\
 \hline
-72 &  TODO \\
+72 &  TODO: XVA with firstMporCollateralAdjustment \\
 \hline
-73 &  TODO \\
+73 &  TODO: Classic and AMC Simulation with Horizon Shift \\
 \hline
-74 &  TODO \\
+74 &  TODO: Portfolio Details Analytic \\
 \hline
-75 &  TODO \\
+75 &  TODO: Classic and AMC Simulation with Horizon Shift \\
 \hline
 76 &  Reference Date Cashflows \\
 \hline
-77 &  TODO \\
+77 &  FX Volatility Stress Scenarios using weighting schema\\
+\hline
+78 &  Bond Pricing with past cashflows in cashflow report \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -3798,6 +3800,7 @@ computes the xva and exposure measures under each shifted market condition.
 The aggregation of the results to sensitivites need to handled outside of ORE. 
 These external computed sensitivites can be converted to par sensitivities with the 
 zero-to-par conversion analytic (see \ref{example:50}).
+
 %--------------------------------------------------------------------
 \subsection{Zero Rate Shifts To Par Shifts}% Example 69
 \label{example:69}
@@ -3806,6 +3809,16 @@ zero-to-par conversion analytic (see \ref{example:50}).
 The example in folder {\tt Examples/Example\_69} demonstrates the conversion of zero shifts to par rate shifts.
 ORE applies the zero rate shifts to the zero curves and computes the resulting shifts in the implied fair rate of a given set of par instruments. 
 The zero rate shifts are defined as stresstests and the par instruments are defined in the usual sensitivity configuration.
+
+%--------------------------------------------------------------------
+\subsection{TODO: XVA Explain}% Example 70
+\label{example:70}
+%--------------------------------------------------------------------
+
+%--------------------------------------------------------------------
+\subsection{TODO: FX NDF}% Example 71
+\label{example:71}
+%--------------------------------------------------------------------
 
 %--------------------------------------------------------------------
 \subsection{First Margin Period of Risk Collateral Adjustment}% Example 72

@@ -147,13 +147,13 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     const QuantLib::Handle<QuantLib::Quote>& spot = spotQuote();
     if (barrier_.levels().size() < 2)
         instWrapper = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
-            barrier, positionType == Position::Long ? true : false, expiryDate,
+	    barrier, positionType == Position::Long ? true : false, expiryDate, payDate, 
             settleType == Settlement::Physical ? true : false, vanilla, boost::get<Barrier::Type>(barrierType),
             spot, barrier_.levels()[0].value(), rebate, tradeCurrency(), startDate_, index, calendar_,
             tradeMultiplier(), tradeMultiplier(), additionalInstruments, additionalMultipliers);
     else
         instWrapper = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
-            barrier, positionType == Position::Long ? true : false, expiryDate,
+            barrier, positionType == Position::Long ? true : false, expiryDate, payDate, 
             settleType == Settlement::Physical ? true : false, vanilla, boost::get<DoubleBarrier::Type>(barrierType),
             spot, barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, tradeCurrency(), startDate_,
             index, calendar_, tradeMultiplier(), tradeMultiplier(), additionalInstruments, additionalMultipliers);

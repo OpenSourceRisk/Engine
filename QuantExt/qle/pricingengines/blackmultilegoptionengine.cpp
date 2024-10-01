@@ -307,7 +307,8 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     // and a shift from volatility_ we floor swapLength at 1/12 here therefore.
     swapLength = std::max(swapLength, 1.0 / 12.0);
 
-    Real variance = volatility_->blackVariance(exerciseDate, swapLength, effectiveFixedRate);
+    Date today = Settings::instance().evaluationDate();
+    Real variance = exerciseDate == today ? 0.0 : volatility_->blackVariance(exerciseDate, swapLength, effectiveFixedRate);
     Real displacement =
         volatility_->volatilityType() == ShiftedLognormal ? volatility_->shift(exerciseDate, swapLength) : 0.0;
 

@@ -334,7 +334,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngine>(
             script.npv(), script.results(), model_, ast_, context, script.code(), interactive_, amcCam_ != nullptr,
             std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
-            generateAdditionalResults, includePastCashflows_);
+            generateAdditionalResults, includePastCashflows_, staticNpvMem_);
     } else if (modelCG_) {
         auto rt = globalParameters_.find("RunType");
         std::string runType = rt != globalParameters_.end() ? rt->second : "<<no run type set>>";
@@ -517,6 +517,7 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     externalComputeDevice_ = engineParameter("ExternalComputeDevice", {}, false, "");
     externalDeviceCompatibilityMode_ = parseBool(engineParameter("ExternalDeviceCompatibilityMode", {}, false, "false"));
     includePastCashflows_ = parseBool(engineParameter("IncludePastCashflows", {resolvedProductTag_}, false, "false"));
+    staticNpvMem_ = parseBool(engineParameter("StaticNpvMem", {resolvedProductTag_}, false, "false"));
     salvagingAlgorithm_ =
         parseSalvagingAlgorithmType(engineParameter("SalvagingAlgorithm", {resolvedProductTag_}, false, "Spectral"));
 

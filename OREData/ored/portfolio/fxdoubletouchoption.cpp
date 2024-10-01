@@ -179,9 +179,8 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 
     Handle<Quote> spot = market->fxSpot(fgnCcy.code() + domCcy.code());
     instrument_ = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
-        doubleTouch, isLong, expiryDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, domCcy,
+        doubleTouch, isLong, expiryDate, payDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, domCcy,
         start, fxIndex, cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
-
 
     Calendar fixingCal = fxIndex ? fxIndex->fixingCalendar() : cal;
     if (start != Date()) {
