@@ -159,6 +159,8 @@ public:
     const std::vector<QuantLib::Date>& exerciseDates() const { return exerciseDates_; }
     /* alive notice dates (w.r.t. global eval date), for American style -> only start, end notice date */
     const std::vector<QuantLib::Date>& noticeDates() const { return noticeDates_; }
+    // alive (cash) settlement dates
+    const std::vector<QuantLib::Date>& settlementDates() const { return settlementDates_; }
 
     // true if exercised
     bool isExercised() const { return isExercised_; }
@@ -174,6 +176,7 @@ private:
 
     std::vector<QuantLib::Date> exerciseDates_;
     std::vector<QuantLib::Date> noticeDates_;
+    std::vector<QuantLib::Date> settlementDates_;
 
     bool isExercised_ = false;
     QuantLib::Date exerciseDate_;

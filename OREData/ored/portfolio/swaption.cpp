@@ -256,7 +256,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         ccys.push_back(parseCurrency(c));
     auto swaption =
         QuantLib::ext::make_shared<QuantExt::MultiLegOption>(underlying_->legs(), underlying_->legPayers(), ccys,
-                                                     exerciseBuilder_->exercise(), settlementType_, settlementMethod_);
+	    exerciseBuilder_->exercise(), settlementType_, settlementMethod_, exerciseBuilder_->settlementDates());
 
     std::string builderType;
     std::vector<std::string> builderPrecheckMessages;
@@ -409,7 +409,8 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     instrument_ = QuantLib::ext::make_shared<BermudanOptionWrapper>(
         swaption, positionType_ == Position::Long ? true : false, exerciseBuilder_->noticeDates(),
-        settlementType_ == Settlement::Physical ? true : false, underlyingSwaps, 1.0, 1.0, additionalInstruments,
+        exerciseBuilder_->settlementDates(), settlementType_ == Settlement::Physical ? true : false,
+	underlyingSwaps, 1.0, 1.0, additionalInstruments,
         additionalMultipliers);
 
     maturity_ = std::max(maturity_, lastPremiumDate);
