@@ -210,7 +210,7 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
     IndexInfo indexInfo(index);
 
     // 1 handle inflation indices
-    QL_DEPRECATED_DISABLE_WARNING
+
     if (indexInfo.isInf()) {
         auto inf = std::find_if(infIndices_.begin(), infIndices_.end(), comp(indexInput));
         QL_REQUIRE(inf != infIndices_.end(),
@@ -237,7 +237,6 @@ std::size_t ModelCGImpl::eval(const std::string& indexInput, const Date& obsdate
         g_->setVariable(id, n);
         return n;
     }
-    QL_DEPRECATED_ENABLE_WARNING
     // 2 handle non-inflation indices
 
     // 2a handle historical fixings and today's fixings (if given as a historical fixing)

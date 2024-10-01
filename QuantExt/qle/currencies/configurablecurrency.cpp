@@ -26,13 +26,13 @@ using namespace QuantLib;
 ConfigurableCurrency::ConfigurableCurrency(const std::string& name, const std::string& code, Integer numericCode,
                                            const std::string& symbol, const std::string& fractionSymbol,
                                            Integer fractionsPerUnit, const Rounding& rounding,
-                                           const std::string& formatString, const std::set<std::string>& minorUnitCodes,
+                                           const std::set<std::string>& minorUnitCodes,
                                            ConfigurableCurrency::Type currencyType)
-    : Currency(name, code, numericCode, symbol, fractionSymbol, fractionsPerUnit, rounding, formatString, Currency(),
+    : Currency(name, code, numericCode, symbol, fractionSymbol, fractionsPerUnit, rounding, Currency(),
                minorUnitCodes),
       currencyType_(currencyType) {
     data_ = QuantLib::ext::make_shared<Currency::Data>(name, code, numericCode, symbol, fractionSymbol, fractionsPerUnit,
-                                               rounding, formatString, Currency(), minorUnitCodes);
+                                               rounding, Currency(), minorUnitCodes);
     currencyName_ = name;
 }
 
