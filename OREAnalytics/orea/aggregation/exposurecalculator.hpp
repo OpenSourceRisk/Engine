@@ -67,7 +67,8 @@ public:
 	    //! Flag to indicate exposure evaluation with dynamic credit
         const bool multiPath,
         //! Flag to indicate flipped xva calculation
-        const bool flipViewXVA
+        const bool flipViewXVA,
+	const bool exposureProfilesUseCloseOutValues_ = false
     );
 
     virtual ~ExposureCalculator() {}
@@ -155,6 +156,7 @@ protected:
     map<string, std::vector<Real>> eepe_bTimeWeighted_;
     vector<Real> getMeanExposure(const string& tid, ExposureIndex index);
     bool flipViewXVA_;
+    bool exposureProfilesUseCloseOutValues_ = false;
 };
 
 } // namespace analytics
