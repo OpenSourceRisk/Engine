@@ -56,8 +56,6 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
     expiryDate_ = parseDate(option_.exerciseDates().front());
-    // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with
-    // payment after expiry.
     maturity_ = expiryDate_;
     maturityType_ = "Expiry Date";
     // Exercise
@@ -153,7 +151,6 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
 
         } else {
             if (forwardDate_ == QuantLib::Date()) {
-                // If payment date is not greater than expiry, build QuantLib::VanillaOption.
                 if (sameCcy) {
                     LOG("Build VanillaOption for trade " << id());
                     vanilla = QuantLib::ext::make_shared<QuantLib::VanillaOption>(payoff, exercise);
@@ -172,7 +169,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
                 LOG("Build VanillaForwardOption for trade " << id());
                 QL_REQUIRE(sameCcy, "Quanto payoff is not currently supported for Forward Options: Trade " << id());
                 vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
-                if (assetClassUnderlying_ == AssetClass::COM)
+                if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX)
                     tradeTypeBuilder = tradeType_ + "Forward";
             }
         }
@@ -191,7 +188,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Forward Options currently supported");
             LOG("Built VanillaForwardOption for trade " << id());
             vanilla = QuantLib::ext::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_, paymentDate_);
-            if (assetClassUnderlying_ == AssetClass::COM)
+            if (assetClassUnderlying_ == AssetClass::COM || assetClassUnderlying_ == AssetClass::FX)
                 tradeTypeBuilder = tradeType_ + "Forward";
         }
 
@@ -213,27 +210,27 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
 
     if (sameCcy) {
         QuantLib::ext::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
-                QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
-	QL_REQUIRE(vanillaOptionBuilder != nullptr, "No engine builder found for trade type " << tradeTypeBuilder);
+            QuantLib::ext::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
+        QL_REQUIRE(vanillaOptionBuilder != nullptr, "No engine builder found for trade type " << tradeTypeBuilder);
 
-    if (forwardDate_ != Date()) {
-        vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, false));
-    } else {
-        vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, true));
-    }
-    setSensitivityTemplate(*vanillaOptionBuilder);
+        if (forwardDate_ != Date()) {
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, false));
+        } else {
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, true));
+        }
+        setSensitivityTemplate(*vanillaOptionBuilder);
 
-	configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
+        configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
     } else {
         QuantLib::ext::shared_ptr<QuantoVanillaOptionEngineBuilder> quantoVanillaOptionBuilder =
-                QuantLib::ext::dynamic_pointer_cast<QuantoVanillaOptionEngineBuilder>(builder);
-	QL_REQUIRE(quantoVanillaOptionBuilder != nullptr, "No (Quanto) engine builder found for trade type "
-                                                                << tradeTypeBuilder);
+            QuantLib::ext::dynamic_pointer_cast<QuantoVanillaOptionEngineBuilder>(builder);
+        QL_REQUIRE(quantoVanillaOptionBuilder != nullptr,
+                   "No (Quanto) engine builder found for trade type " << tradeTypeBuilder);
 
-	vanilla->setPricingEngine(quantoVanillaOptionBuilder->engine(assetName_, underlyingCurrency, ccy, expiryDate_));
+        vanilla->setPricingEngine(quantoVanillaOptionBuilder->engine(assetName_, underlyingCurrency, ccy, expiryDate_));
         setSensitivityTemplate(*quantoVanillaOptionBuilder);
 
-	configuration = quantoVanillaOptionBuilder->configuration(MarketContext::pricing);
+        configuration = quantoVanillaOptionBuilder->configuration(MarketContext::pricing);
     }
 
     Position::Type positionType = parsePositionType(option_.longShort());
@@ -247,6 +244,11 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";
+
+    if (forwardDate_ != Null<Date>() && forwardDate_ > maturity_) {
+        maturity_ = forwardDate_;
+        maturityType_ = "Forward Date";
+    }
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));

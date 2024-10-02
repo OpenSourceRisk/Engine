@@ -91,7 +91,6 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         QL_REQUIRE(paymentDate >= expiryDate_, "Settlement date must be greater than or equal to expiry date.");
 
         forwardDate_ = paymentDate;
-        paymentDate_ = paymentDate;
 
         if (expiryDate_ <= today) {
 
@@ -123,9 +122,10 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             auto configuration = fxBuilder->configuration(MarketContext::pricing);
 
             maturity_ = paymentDate;
+            maturityType_ = "Payment Date";
             Position::Type positionType = parsePositionType(option_.longShort());
             Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
-            Real mult = quantity_ * bsInd;
+            Real mult = bsInd;
 
             std::vector<QuantLib::ext::shared_ptr<Instrument>> additionalInstruments;
             std::vector<Real> additionalMultipliers;
@@ -134,12 +134,14 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                                                 option_.premiumData(), -bsInd, soldCcy, engineFactory, configuration));
             instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qlinstr, mult, additionalInstruments,
                                                                         additionalMultipliers);
+            notionalCurrency_ = npvCurrency_ = soldCcy.code();
+            notional_ = soldAmount();
+            setSensitivityTemplate(*builder);
             return;
         }
     }
 
     VanillaOptionTrade::build(engineFactory);
-
 }
 
 void FxOption::fromXML(XMLNode* node) {
