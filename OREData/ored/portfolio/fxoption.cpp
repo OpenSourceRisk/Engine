@@ -91,6 +91,7 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         QL_REQUIRE(paymentDate >= expiryDate_, "Settlement date must be greater than or equal to expiry date.");
 
         forwardDate_ = paymentDate;
+        paymentDate_ = paymentDate;
 
         if (expiryDate_ <= today) {
 

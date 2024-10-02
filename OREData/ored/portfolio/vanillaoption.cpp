@@ -58,6 +58,10 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     expiryDate_ = parseDate(option_.exerciseDates().front());
     maturity_ = expiryDate_;
     maturityType_ = "Expiry Date";
+    if (paymentDate_ != Null<Date>()) {
+        maturity_ = paymentDate_;
+        maturityType_ = "Payment Date";
+    }
     // Exercise
     QuantLib::ext::shared_ptr<Exercise> exercise;
     switch (exerciseType) {
@@ -244,11 +248,6 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
     maturity_ = std::max(maturity_, lastPremiumDate);
     if (maturity_ == lastPremiumDate)
         maturityType_ = "Last Premium Date";
-
-    if (forwardDate_ != Null<Date>() && forwardDate_ > maturity_) {
-        maturity_ = forwardDate_;
-        maturityType_ = "Forward Date";
-    }
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
