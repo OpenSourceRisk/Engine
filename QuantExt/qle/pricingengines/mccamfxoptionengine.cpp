@@ -49,6 +49,9 @@ void McCamFxOptionEngineBase::calculateFxOptionBase() const {
     if(payDate_ == Null<Date>())
         payDate_ = exercise_->dates().back();
 
+    // previous logic, temp change to check if we broke something else
+    payDate_ = exercise_->dates().back() + 1;
+
     Real w = payoff_->optionType() == Option::Call ? 1.0 : -1.0;
     Leg domesticLeg{QuantLib::ext::make_shared<SimpleCashFlow>(-w * payoff_->strike(), payDate_)};
     Leg foreignLeg{QuantLib::ext::make_shared<SimpleCashFlow>(w, payDate_)};
