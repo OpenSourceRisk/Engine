@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<TodaysMarket>
+  <Configuration id="default">
+    <DiscountingCurvesId>ois</DiscountingCurvesId>
+  </Configuration>
+  <YieldCurves id="default">
+    <YieldCurve name="USD.BMK.GVN.CURVE_SHIFTED">Yield/USD/USD.BMK.GVN.CURVE_SHIFTED</YieldCurve>
+  </YieldCurves>
+  <DiscountingCurves id="ois">
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves id="default">
+    <Index name="USD-FedFunds">Yield/USD/USD1D</Index>
+    <Index name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
+  </IndexForwardingCurves>
+  <DefaultCurves id="default">
+    <DefaultCurve name="USD.CSB.DEFAULT_CURVE_SHIFTED">Default/USD/USD.CSB.DEFAULT_CURVE_SHIFTED</DefaultCurve>
+  </DefaultCurves>
+</TodaysMarket>

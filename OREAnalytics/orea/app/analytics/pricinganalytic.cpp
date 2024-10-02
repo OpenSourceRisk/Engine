@@ -152,7 +152,7 @@ void PricingAnalyticImpl::runAnalytic(
             else {
                 LOG("Multi-threaded sensi analysis");
                 sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
-                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), marketConfig,
+                    inputs_->nThreads(), inputs_->asof(), analytic()->loader(), analytic()->portfolio(), marketConfig,
                     inputs_->pricingEngine(), analytic()->configurations().simMarketParams,
                     analytic()->configurations().sensiScenarioData, inputs_->sensiRecalibrateModels(),
                     analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,

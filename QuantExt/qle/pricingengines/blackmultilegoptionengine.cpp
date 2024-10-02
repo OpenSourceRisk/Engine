@@ -227,7 +227,8 @@ void BlackMultiLegOptionEngineBase::calculate() const {
             fixedNpv += c.amount * c.discountFactor;
         }
     }
-    Real weightedFixedRate = weightedFixedRateNom / weightedFixedRateDenom;
+    Real weightedFixedRate =
+        QuantLib::close_enough(weightedFixedRateDenom, 0.0) ? 0.0 : weightedFixedRateNom / weightedFixedRateDenom;
 
     // determine the pv-weighted floating margin, the floating bps, the floating npv
 
@@ -242,7 +243,9 @@ void BlackMultiLegOptionEngineBase::calculate() const {
             floatingNpv += c.amount * c.discountFactor;
         }
     }
-    Real weightedFloatingSpread = weightedFloatingSpreadNom / weightedFloatingSpreadDenom;
+    Real weightedFloatingSpread = QuantLib::close_enough(weightedFloatingSpreadDenom, 0.0)
+                                      ? 0.0
+                                      : weightedFloatingSpreadNom / weightedFloatingSpreadDenom;
 
     // determine the simple cf npv
 
@@ -259,7 +262,8 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     // determine the spread correction
 
-    Real spreadCorrection = weightedFloatingSpread * std::abs(floatingBps / fixedBps);
+    Real spreadCorrection =
+        weightedFloatingSpread * (QuantLib::close_enough(fixedBps, 0.0) ? 0.0 : std::abs(floatingBps / fixedBps));
 
     Real effectiveAtmForward = atmForward - spreadCorrection;
     Real effectiveFixedRate = weightedFixedRate - spreadCorrection;
@@ -269,7 +273,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     Real simpleCfCorrection = 0.0;
     for (auto const& c : cfInfo) {
         if (c.fixedRate == Null<Real>() && c.floatingSpread == Null<Real>()) {
-            simpleCfCorrection += c.amount * c.discountFactor / fixedBps;
+            simpleCfCorrection += QuantLib::close_enough(fixedBps, 0.0) ? 0.0 : c.amount * c.discountFactor / fixedBps;
         }
     }
 
@@ -303,7 +307,8 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     // and a shift from volatility_ we floor swapLength at 1/12 here therefore.
     swapLength = std::max(swapLength, 1.0 / 12.0);
 
-    Real variance = volatility_->blackVariance(exerciseDate, swapLength, effectiveFixedRate);
+    Date today = Settings::instance().evaluationDate();
+    Real variance = exerciseDate == today ? 0.0 : volatility_->blackVariance(exerciseDate, swapLength, effectiveFixedRate);
     Real displacement =
         volatility_->volatilityType() == ShiftedLognormal ? volatility_->shift(exerciseDate, swapLength) : 0.0;
 

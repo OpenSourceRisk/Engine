@@ -50,6 +50,7 @@ An example pricing engine configuration looks as follows.
       <Parameter name="Interactive">false</Parameter>
       <Parameter name="BootstrapTolerance">0.1</Parameter>
       <Parameter name="IncludePastCashflows">true</Parameter>
+      <Parameter name="StaticNpvMem">false</Parameter>
       <Parameter name="RegressionVarianceCutoff">1E-5</Parameter>
       <Parameter name="SalvagingAlgorithm">Spectral</Parameter>
       <!-- product specific parameters -->
@@ -141,6 +142,10 @@ The engine parameters have the following meaning:
 \item BootstrapTolerance: tolerance for calibration bootstrap, only applies to model = GaussianCam
 \item IncludePastCashflows: if true, LOGPAY() will generate cashflow information for pay dates on or before the
   reference date. Optional, defaults to false.
+\item StaticNpvMem: if true, NPVMEM() will trigger a single calibration for the lifetime of a pricing engine, i.e. the
+  regression model will e.g. be kept constant across sensitivity or stress scenarios. If false (default), the regression
+  model will be retrained on each calculation of the pricing engine. Howoever, notice that an AMC calculation will
+  always use the regression model from the main engine calculation if NPVMEM() is used.
 \item RegressionVarianceCutoff: Optional. Only relevant for MC models. If given, a coordinate transform and (possibly) a
   factor reduction is applied to the regressors used for conditional expectation calculation, such that $1-\epsilon$ of
   the total variance of regressors is kept, where $\epsilon$ the given parameter. This helps dealing with collinearity
