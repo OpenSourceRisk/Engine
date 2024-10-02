@@ -45,7 +45,9 @@ void McCamFxOptionEngineBase::calculateFxOptionBase() const {
     QL_REQUIRE(payoff_, "McCamFxOptionEngineBase: payoff has unexpected type");
     QL_REQUIRE(exercise_->type() == Exercise::European, "McCamFxOptionEngineBase: not an European option");
     QL_REQUIRE(!exercise_->dates().empty(), "McCamFxOptionEngineBase: exercise dates are empty");
-    QL_REQUIRE(payDate_ != Date(), "McCamFxOptionEngineBase: no pay date given");
+
+    if(payDate_ == Null<Date>())
+        payDate_ = exercise_->dates().back();
 
     Real w = payoff_->optionType() == Option::Call ? 1.0 : -1.0;
     Leg domesticLeg{QuantLib::ext::make_shared<SimpleCashFlow>(-w * payoff_->strike(), payDate_)};
@@ -85,7 +87,7 @@ void McCamFxEuropeanForwardOptionEngine::calculate() const {
 
     payoff_ = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
     exercise_ = arguments_.exercise;
-    payDate_ = arguments_.forwardDate;
+    payDate_ = arguments_.paymentDate;
     optionSettlement_ = Settlement::Physical;
 
     McCamFxOptionEngineBase::calculateFxOptionBase();
