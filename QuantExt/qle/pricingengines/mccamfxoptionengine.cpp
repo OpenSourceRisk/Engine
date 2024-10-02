@@ -24,7 +24,7 @@ namespace QuantExt {
 
 using namespace QuantLib;
 
-McCamFxOptionEngine::McCamFxOptionEngine(
+McCamFxOptionEngineBase::McCamFxOptionEngineBase(
     const Handle<CrossAssetModel>& model, const Currency& domesticCcy, const Currency& foreignCcy,
     const Currency& npvCcy, const SequenceType calibrationPathGenerator, const SequenceType pricingPathGenerator,
     const Size calibrationSamples, const Size pricingSamples, const Size calibrationSeed, const Size pricingSeed,
@@ -39,30 +39,21 @@ McCamFxOptionEngine::McCamFxOptionEngine(
                            discountCurves, simulationDates, stickyCloseOutDates, externalModelIndices, minimalObsDate,
                            regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
                            reevaluateExerciseInStickyRun),
-      domesticCcy_(domesticCcy), foreignCcy_(foreignCcy), npvCcy_(npvCcy) {
-    registerWith(model_);
-    for (auto const& h : discountCurves)
-        registerWith(h);
-}
+      domesticCcy_(domesticCcy), foreignCcy_(foreignCcy), npvCcy_(npvCcy) {}
 
-void McCamFxOptionEngine::calculate() const {
+void McCamFxOptionEngineBase::calculateFxOptionBase() const {
+    QL_REQUIRE(payoff_, "McCamFxOptionEngineBase: payoff has unexpected type");
+    QL_REQUIRE(exercise_->type() == Exercise::European, "McCamFxOptionEngineBase: not an European option");
+    QL_REQUIRE(!exercise_->dates().empty(), "McCamFxOptionEngineBase: exercise dates are empty");
+    QL_REQUIRE(payDate_ != Date(), "McCamFxOptionEngineBase: no pay date given");
 
-    auto payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
-    QL_REQUIRE(payoff, "McCamFxOptionEngine: non-striked payoff given");
-    QL_REQUIRE(arguments_.exercise->type() == Exercise::European, "McCamFxOptionEngine: not an European option");
-    QL_REQUIRE(!arguments_.exercise->dates().empty(), "McCamFxOptionEngine: exercise dates are empty");
-
-    Date payDate = arguments_.exercise->dates().front() + 1;
-
-    Real w = payoff->optionType() == Option::Call ? 1.0 : -1.0;
-    Leg domesticLeg{QuantLib::ext::make_shared<SimpleCashFlow>(-w * payoff->strike(), payDate)};
-    Leg foreignLeg{QuantLib::ext::make_shared<SimpleCashFlow>(w, payDate)};
+    Real w = payoff_->optionType() == Option::Call ? 1.0 : -1.0;
+    Leg domesticLeg{QuantLib::ext::make_shared<SimpleCashFlow>(-w * payoff_->strike(), payDate_)};
+    Leg foreignLeg{QuantLib::ext::make_shared<SimpleCashFlow>(w, payDate_)};
 
     leg_ = {domesticLeg, foreignLeg};
     currency_ = {domesticCcy_, foreignCcy_};
     payer_ = {false, false};
-    exercise_ = arguments_.exercise;
-    optionSettlement_ = Settlement::Cash;
 
     McMultiLegBaseEngine::calculate();
 
@@ -71,9 +62,51 @@ void McCamFxOptionEngine::calculate() const {
     Size npvCcyIndex = model_->ccyIndex(npvCcy_);
     if (npvCcyIndex > 0)
         fxSpot = model_->fxbs(npvCcyIndex - 1)->fxSpotToday()->value();
-    results_.value = resultValue_ / fxSpot;
-    results_.additionalResults["underlyingNpv"] = resultUnderlyingNpv_ / fxSpot;
+
+    fxOptionResultValue_ = resultValue_ / fxSpot;
+    fxOptionUnderlyingNpv_ = resultUnderlyingNpv_ / fxSpot;
+}
+
+void McCamFxOptionEngine::calculate() const {
+
+    payoff_ = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+    exercise_ = arguments_.exercise;
+    payDate_ = exercise_->dates().front() + 1;
+    optionSettlement_ = Settlement::Physical;
+
+    McCamFxOptionEngineBase::calculateFxOptionBase();
+
+    results_.value = fxOptionResultValue_;
+    results_.additionalResults["underlyingNpv"] = fxOptionUnderlyingNpv_;
     results_.additionalResults["amcCalculator"] = amcCalculator();
-} // calculate
+}
+
+void McCamFxEuropeanForwardOptionEngine::calculate() const {
+
+    payoff_ = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+    exercise_ = arguments_.exercise;
+    payDate_ = arguments_.forwardDate;
+    optionSettlement_ = Settlement::Physical;
+
+    McCamFxOptionEngineBase::calculateFxOptionBase();
+
+    results_.value = fxOptionResultValue_;
+    results_.additionalResults["underlyingNpv"] = fxOptionUnderlyingNpv_;
+    results_.additionalResults["amcCalculator"] = amcCalculator();
+}
+
+void McCamFxEuropeanCSOptionEngine::calculate() const {
+
+    payoff_ = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+    exercise_ = arguments_.exercise;
+    payDate_ = arguments_.paymentDate;
+    optionSettlement_ = Settlement::Cash;
+
+    McCamFxOptionEngineBase::calculateFxOptionBase();
+
+    results_.value = fxOptionResultValue_;
+    results_.additionalResults["underlyingNpv"] = fxOptionUnderlyingNpv_;
+    results_.additionalResults["amcCalculator"] = amcCalculator();
+}
 
 } // namespace QuantExt
