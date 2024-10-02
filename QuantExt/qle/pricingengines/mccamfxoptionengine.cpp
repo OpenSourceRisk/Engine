@@ -73,8 +73,8 @@ void McCamFxOptionEngine::calculate() const {
 
     payoff_ = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
     exercise_ = arguments_.exercise;
-    payDate_ = exercise_->dates().front() + 1;
     optionSettlement_ = Settlement::Physical;
+    payDate_ = Date(); // will be set in calculateFxOptionBase()
 
     McCamFxOptionEngineBase::calculateFxOptionBase();
 
@@ -87,7 +87,7 @@ void McCamFxEuropeanForwardOptionEngine::calculate() const {
 
     payoff_ = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
     exercise_ = arguments_.exercise;
-    payDate_ = arguments_.paymentDate;
+    payDate_ = arguments_.paymentDate; // might be null, in which case it will be set in calculateFxOptionBase()
     optionSettlement_ = Settlement::Physical;
 
     McCamFxOptionEngineBase::calculateFxOptionBase();
@@ -101,7 +101,7 @@ void McCamFxEuropeanCSOptionEngine::calculate() const {
 
     payoff_ = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
     exercise_ = arguments_.exercise;
-    payDate_ = arguments_.paymentDate;
+    payDate_ = arguments_.paymentDate; // always given
     optionSettlement_ = Settlement::Cash;
 
     McCamFxOptionEngineBase::calculateFxOptionBase();
