@@ -2756,5 +2756,21 @@ void ReportWriter::writeXvaExplainSummary(ore::data::Report& report, const ore::
     }
 }
 
+void ReportWriter::writeCalibrationReport(ore::data::Report& report,
+					  QuantLib::ext::shared_ptr<CrossAssetModel> model) {
+    try {
+        report.addColumn("RiskFactor", string())
+            .addColumn("TradeId", string());
+
+	report.next();
+	report.add("A");
+	report.add("B");
+	
+    } catch (const std::exception& e) {
+        ALOG("Failed to write calibration report, got " << e.what());
+    }
+}
+
+
 } // namespace analytics
 } // namespace ore
