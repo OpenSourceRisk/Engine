@@ -1811,6 +1811,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setExposureProfiles(parseBool(tmp));
 
+    tmp = params_->get("xva", "exposureProfilesUseCloseOutValues", false);
+    if (tmp != "")
+        setExposureProfilesUseCloseOutValues(parseBool(tmp));
+    
     tmp = params_->get("xva", "quantile", false);
     if (tmp != "")
         setPfeQuantile(parseReal(tmp));
