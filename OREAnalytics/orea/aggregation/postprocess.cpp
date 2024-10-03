@@ -181,7 +181,8 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         QuantLib::ext::make_shared<ExposureCalculator>(
             portfolio, cube_, cubeInterpretation_,
             market_, analytics_["exerciseNextBreak"], baseCurrency_, configuration_,
-            quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"]
+            quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"],
+	    analytics_["exposureProfilesUseCloseOutValues"]
         );
     exposureCalculator_->build();
 
@@ -206,7 +207,8 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         dimCalculator_, fullInitialCollateralisation_,
         allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,
         exposureCalculator_->exposureCube(), ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
-        analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_, firstMporCollateralAdjustment_);
+        analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_, firstMporCollateralAdjustment_,
+	analytics_["exposureProfilesUseCloseOutValues"]);
     nettedExposureCalculator_->build();
 
     /********************************************************
