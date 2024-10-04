@@ -57,7 +57,6 @@ protected:
     Currency domesticCcy_, foreignCcy_, npvCcy_;
 
     mutable QuantLib::ext::shared_ptr<QuantLib::StrikedTypePayoff> payoff_;
-    mutable QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise_;
     mutable Date payDate_;
 
     mutable Real fxOptionResultValue_;
