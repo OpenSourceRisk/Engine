@@ -191,9 +191,6 @@ void MarketDataLoader::populateFixings(
     if (fixings_.size() > 0 && impl_)
         impl()->retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
         
-    // apply all fixings now
-    applyFixings(loader_->loadFixings());
-
     // check and warn any missing fixings - only warn for mandatory fixings
     for (const auto& [indexName, fixingDates] : fixings_) {
         for (const auto& [d, mandatory] :fixingDates) {
