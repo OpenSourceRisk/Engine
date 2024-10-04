@@ -190,6 +190,8 @@ void MarketDataLoader::populateFixings(
 
     if (fixings_.size() > 0 && impl_)
         impl()->retrieveFixings(loader_, fixings_, lastAvailableFixingLookupMap);
+
+    applyFixings(loader_->loadFixings());
         
     // check and warn any missing fixings - only warn for mandatory fixings
     for (const auto& [indexName, fixingDates] : fixings_) {
@@ -254,7 +256,6 @@ void MarketDataLoader::populateLoader(
 
     LOG("Adding the loaded fixings to the IndexManager");
     LOG("Fixings size = " << ore::data::to_string(fixings_.size()));
-    applyFixings(loader_->loadFixings());
 
     // Get set of quotes we need
     LOG("Generating market datum set");
