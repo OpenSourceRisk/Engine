@@ -160,6 +160,7 @@ Date & Author & Comment \\
 16 June 2023 & Acadia & updates for release 10\\
 16 October 2023 & Acadia & updates for release 11\\
 24 May 2024 & Acadia & updates for release 12\\
+September 2024 & Acadia & updates for release 13\\
 \hline
 \end{supertabular}
 \end{center}
@@ -1147,6 +1148,22 @@ Example & Description \\
 69 &  Convert Zero Rate Shifts into Par Rate Shifts \\
 \hline
 70 &  Forward Bond Exposure with AMC and implied Bondspread \\
+\hline
+71 &  TODO: FX NDF \\
+\hline
+72 &  TODO: XVA with firstMporCollateralAdjustment \\
+\hline
+73 &  TODO: Classic and AMC Simulation with Horizon Shift \\
+\hline
+74 &  TODO: Portfolio Details Analytic \\
+\hline
+75 &  TODO: Classic and AMC Simulation with Horizon Shift \\
+\hline
+76 &  Reference Date Cashflows \\
+\hline
+77 &  FX Volatility Stress Scenarios using weighting schema\\
+\hline
+78 &  Bond Pricing with past cashflows in cashflow report \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -3783,6 +3800,7 @@ computes the xva and exposure measures under each shifted market condition.
 The aggregation of the results to sensitivites need to handled outside of ORE. 
 These external computed sensitivites can be converted to par sensitivities with the 
 zero-to-par conversion analytic (see \ref{example:50}).
+
 %--------------------------------------------------------------------
 \subsection{Zero Rate Shifts To Par Shifts}% Example 69
 \label{example:69}
@@ -3791,6 +3809,16 @@ zero-to-par conversion analytic (see \ref{example:50}).
 The example in folder {\tt Examples/Example\_69} demonstrates the conversion of zero shifts to par rate shifts.
 ORE applies the zero rate shifts to the zero curves and computes the resulting shifts in the implied fair rate of a given set of par instruments. 
 The zero rate shifts are defined as stresstests and the par instruments are defined in the usual sensitivity configuration.
+
+%--------------------------------------------------------------------
+\subsection{TODO: XVA Explain}% Example 70
+\label{example:70}
+%--------------------------------------------------------------------
+
+%--------------------------------------------------------------------
+\subsection{TODO: FX NDF}% Example 71
+\label{example:71}
+%--------------------------------------------------------------------
 
 %--------------------------------------------------------------------
 \subsection{First Margin Period of Risk Collateral Adjustment}% Example 72
@@ -3817,6 +3845,80 @@ Both fields, PriceQuote and SpreadQuote, are mandatory. In the market data file,
 Otherwise the spread quote is used or none.
 
 In case of a forward bond, the convention for security specification requires the format \emph{securityId\_FWDEXP\_expiryDate}.
+
+%--------------------------------------------------------------------
+\subsection{TODO: Portfolio Details Analytic}% Example 74
+\label{example:74}
+%--------------------------------------------------------------------
+
+%--------------------------------------------------------------------
+\subsection{TODO: Classic and AMC Simulation with Horizon Shift}% Example 75
+\label{example:75}
+%--------------------------------------------------------------------
+
+%--------------------------------------------------------------------
+\subsection{Reference Date Cashflows}% Example 76
+\label{example:76}
+%--------------------------------------------------------------------
+
+This example demonstrates the configuration of the treatment of reference date events resp.~cash flows.
+QuantLib provides two flags for this purpose in its Settings Singleton object,
+\begin{itemize}
+\item includeReferenceDateEvents
+\item includeTodaysCashFlows
+\end{itemize}
+to control whether such events/flows are included in the NPV calculation on the reference date or treated
+as matured and hence excluded. We expose both flags in ORE now. A global choice, applied across all
+analytics, can be made in the Setup section of ore.xml
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+  <Setup>
+    ...
+    <Parameter name="includeTodaysCashFlows">Y</Parameter>
+    <Parameter name="includeReferenceDateEvents">Y</Parameter>
+  </Setup>
+\end{minted}
+
+A ``local'' and possibly different choice can be made for the simulation based analytics
+in the ``simulation'' analytic section 
+
+\begin{minted}[fontsize=\scriptsize]{xml}
+    <Analytic type="simulation">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="includeTodaysCashFlows">Y</Parameter>
+      <Parameter name="includeReferenceDateEvents">Y</Parameter>
+      ...
+    </Analytic>
+\end{minted}
+
+which applies to XVA, XVA Sensitivity and XVA Stress analytics.
+
+These flags -- in the global and simulation section -- are optional. If omitted, default values
+({\tt false}) will apply. Kicking off the example with \\
+
+\medskip
+
+\centerline{\tt python run.py} 
+
+\medskip
+kicks off three ORE runs
+\begin{itemize}
+\item NPV analytic for a portfolio of trades all maturing resp. expiring on the valuation date -
+  to show that the maturing trades are still present in the result report and show a non-zero NPV.
+\item XVA/Exposure analytic for a similar portfolio of trades all maturing resp. expiring on week in the
+  future - to demonstrate that the ``classic'' exposure is non-zero on maturity/expiry
+\item XVA/Exposure as above but using AMC simulation
+\end{itemize}
+
+The portfolio contains Single and Cross Currency Swaps, Caps/Floors, Swaptions, FX Forwards, FX Options,
+Equity Forwards, Equity Options, CDS.
+
+These flags are also accessible/settable in the ORE Python wrapper.
+
+%--------------------------------------------------------------------
+\subsection{TODO: FX Volatility Stresstest}% Example 77
+\label{example:77}
+%--------------------------------------------------------------------
 
 \clearpage
 %========================================================
@@ -4101,7 +4203,7 @@ type can be (so far) in
 \item sensitivity
 \item stress
 \item parStressConversion
-\item parametricVar
+\item parametricVars
 \item historicalSimulationVar
 \item pnl
 \item pnlExplain
@@ -4283,6 +4385,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
     <Parameter name="exposureProfilesByTrade">Y</Parameter>
+    <Parameter name="exposureProfilesUseCloseOutDates">Y</Parameter>
     <Parameter name="quantile">0.95</Parameter>
     <Parameter name="calculationType">NoLag</Parameter>      
     <Parameter name="allocationMethod">None</Parameter>    
@@ -4347,6 +4450,7 @@ FX rates)
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
 \item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
 \item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
+\item {\tt exposureProfilesUseCloseOutDates:} Flag to force the use of close-out dates in exposure reporting (EPE, ENE, PFE), by default set to false, i.e. default dates are used in single trade exposures and for netting set exposures with inactive CSAs. If set to true, ORE uses close-out values in single trade exposures and netting set exposures even if the CSA is not active. This requires a close-out simulation grid (see section \ref{sec:simulation}), and for netting set exposure reporting {\tt calculationType} needs to be set to {\tt NoLag} (see below).
 \item {\tt quantile:} Confidence level for Potential Future Exposure (PFE) reporting
 \item {\tt calculationType:} Determines the settlement of margin calls. The admissible choices depend on having a close-out grid, see table \ref{tab:calcTypes}; \\
 	\begin{itemize}

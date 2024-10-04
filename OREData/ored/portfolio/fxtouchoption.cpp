@@ -212,7 +212,7 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         Handle<Quote> spot = market->fxRate(fgnCcy.code() + domCcy.code());
 
         auto barrierOptionWrapper = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
-            barrier, isLong, expiryDate, false, underlying, barrierType, spot, level, rebate, domCcy, start, fxIndex,
+            barrier, isLong, expiryDate, payDate, false, underlying, barrierType, spot, level, rebate, domCcy, start, fxIndex,
             cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
         
         maturity_ = std::max(lastPremiumDate, payDate);

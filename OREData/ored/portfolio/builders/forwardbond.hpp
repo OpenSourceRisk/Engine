@@ -43,25 +43,25 @@ namespace data {
 
 class FwdBondEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const Currency&, const string&, const string&,
-                                         const bool, const string&, const string&, const string&, const bool> {
+                                         const string&, const string&, const string&, const bool> {
 protected:
     FwdBondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"ForwardBond"}) {}
 
     virtual string keyImpl(const string& id, const Currency& ccy, const std::string& discountCurveName,
-                           const string& creditCurveId, const bool hasCreditRisk, const string& securityId,
-                           const string& referenceCurveId, const string& incomeCurveId, const bool dirty) override {
+                           const string& creditCurveId, const string& securityId, const string& referenceCurveId,
+                           const string& incomeCurveId, const bool dirty) override {
 
         // id is _not_ part of the key
-        std::string returnString = ccy.code() + "_" + creditCurveId + "_" + (hasCreditRisk ? "1_" : "0_") + securityId +
+        std::string returnString = ccy.code() + "_" + creditCurveId + "_"  + securityId +
                                    "_" + referenceCurveId + "_" + incomeCurveId;
 
         return returnString;
     }
 
     void setCurves(const string& id, const Currency& ccy, const std::string& discountCurveName,
-                   const string& creditCurveId, const bool hasCreditRisk, const string& securityId,
-                   const string& referenceCurveId, const string& incomeCurveId, const bool dirty);
+                   const string& creditCurveId, const string& securityId, const string& referenceCurveId,
+                   const string& incomeCurveId, const bool dirty);
 
     Handle<YieldTermStructure> referenceCurve_;
     Handle<Quote> bondSpread_;
@@ -73,7 +73,7 @@ protected:
     // not used in AMC yet
     Handle<DefaultProbabilityTermStructure> dpts_;
     Handle<Quote> recovery_;
-};
+    };
 
 class DiscountingForwardBondEngineBuilder : public FwdBondEngineBuilder {
 public:
@@ -83,14 +83,13 @@ public:
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine>
     engineImpl(const string& id, const Currency& ccy, const std::string& discountCurveName, const string& creditCurveId,
-               const bool hasCreditRisk, const string& securityId, const string& referenceCurveId,
-               const string& incomeCurveId, const bool dirty) override {
+               const string& securityId, const string& referenceCurveId, const string& incomeCurveId,
+               const bool dirty) override {
 
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
 
-        setCurves(id, ccy, discountCurveName, creditCurveId, hasCreditRisk, securityId, referenceCurveId, incomeCurveId,
-                  dirty);
+        setCurves(id, ccy, discountCurveName, creditCurveId, securityId, referenceCurveId, incomeCurveId, dirty);
 
         return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(
             discountCurve_, incomeCurve_, spreadedReferenceCurve_, bondSpread_, dpts_, recovery_, conversionFactor_,
@@ -107,10 +106,11 @@ public:
 
 protected:
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
-    virtual QuantLib::ext::shared_ptr<PricingEngine>
-    engineImpl(const string& id, const Currency& ccy, const std::string& discountCurveName, const string& creditCurveId,
-               const bool hasCreditRisk, const string& securityId, const string& referenceCurveId,
-               const string& incomeCurveId, const bool dirty) override;
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const Currency& ccy,
+                                                                const std::string& discountCurveName,
+                                                                const string& creditCurveId, const string& securityId,
+                                                                const string& referenceCurveId,
+                                                                const string& incomeCurveId, const bool dirty) override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::ext::shared_ptr<QuantExt::LGM>& lgm,

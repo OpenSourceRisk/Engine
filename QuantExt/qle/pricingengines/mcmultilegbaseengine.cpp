@@ -843,6 +843,10 @@ void McMultiLegBaseEngine::generatePathValues(const std::vector<Real>& simulatio
 
 void McMultiLegBaseEngine::calculate() const {
 
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    if (includeToday)
+        includeSettlementDateFlows_ = *includeToday;
+
     McEngineStats::instance().other_timer.resume();
 
     // check data set by derived engines

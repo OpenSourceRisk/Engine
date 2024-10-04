@@ -179,6 +179,22 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
     }
     std::sort(sortedExerciseDates.begin(), sortedExerciseDates.end());
 
+    // build vector of sorted settlement dates
+    const ext::optional<OptionPaymentData>& opd = optionData.paymentData();
+    std::vector<QuantLib::Date> sortedSettlementDates;
+    if (opd) {
+        if (opd->rulesBased()) {
+            const Calendar& cal = opd->calendar();
+            QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
+            for (Size i = 0; i < sortedExerciseDates.size(); ++i)
+	        sortedSettlementDates.push_back(cal.advance(sortedExerciseDates[i], opd->lag(), Days, opd->convention()));
+        } else {
+	      sortedSettlementDates = opd->dates();
+        }
+    }
+    else
+        sortedSettlementDates = sortedExerciseDates;
+
     // check that we have exactly two exercise dates for american style
 
     QL_REQUIRE(optionData.style() != "American" || sortedExerciseDates.size() == 2,
@@ -201,6 +217,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
             isExerciseDateAlive[i] = true;
             noticeDates_.push_back(noticeDate);
             exerciseDates_.push_back(sortedExerciseDates[i]);
+            settlementDates_.push_back(sortedSettlementDates[i]);
             DLOG("Got notice date " << QuantLib::io::iso_date(noticeDate) << " using notice period " << noticePeriod
                                     << ", convention " << noticeBdc << ", calendar " << noticeCal.name()
                                     << " from exercise date " << exerciseDates_.back());

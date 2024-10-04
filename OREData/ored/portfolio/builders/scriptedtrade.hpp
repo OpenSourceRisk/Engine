@@ -168,6 +168,7 @@ protected:
     bool externalDeviceCompatibilityMode_;
     std::string externalComputeDevice_;
     bool includePastCashflows_;
+    bool staticNpvMem_;
     SalvagingAlgorithm::Type salvagingAlgorithm_;
 };
 

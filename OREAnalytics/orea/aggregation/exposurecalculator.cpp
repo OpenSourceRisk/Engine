@@ -36,13 +36,14 @@ ExposureCalculator::ExposureCalculator(
     const QuantLib::ext::shared_ptr<Market>& market,
     bool exerciseNextBreak, const string& baseCurrency, const string& configuration,
     const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
-    const bool flipViewXVA)
+    const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues)
     : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation),
        market_(market), exerciseNextBreak_(exerciseNextBreak),
       baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType),
       multiPath_(multiPath), dates_(cube->dates()),
-      today_(market_->asofDate()), dc_(ActualActual(ActualActual::ISDA)), flipViewXVA_(flipViewXVA) {
+      today_(market_->asofDate()), dc_(ActualActual(ActualActual::ISDA)), flipViewXVA_(flipViewXVA),
+      exposureProfilesUseCloseOutValues_(exposureProfilesUseCloseOutValues) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");
 
@@ -173,8 +174,9 @@ void ExposureCalculator::build() {
 
                 Real positiveCashFlow = cubeInterpretation_->getMporPositiveFlows(cube_, i, j, k);
                 Real negativeCashFlow = cubeInterpretation_->getMporNegativeFlows(cube_, i, j, k);
-                //for single trade exposures, always default value is relevant
-                Real npv = defaultValue;
+                // for single trade exposures, the default value is relevant, unless we force
+		// using the close out value instead
+                Real npv = exposureProfilesUseCloseOutValues_ ? closeOutValue : defaultValue;
                 epe[j + 1] += std::max(npv, 0.0) / cube_->samples();
                 ene[j + 1] += std::max(-npv, 0.0) / cube_->samples();
                 nettingSetDefaultValue_[nettingSetId][j][k] += defaultValue;

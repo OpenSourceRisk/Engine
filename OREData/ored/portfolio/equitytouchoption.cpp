@@ -158,8 +158,9 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->equitySpot(assetName);
+    Date settlementDate = expiryDate;
     instrument_ = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
-        barrier, isLong, expiryDate, false, underlying, barrierType, spot, level, rebate, ccy, start, eqIndex, cal, payoffAmount_,
+        barrier, isLong, expiryDate, settlementDate, false, underlying, barrierType, spot, level, rebate, ccy, start, eqIndex, cal, payoffAmount_,
         payoffAmount_, additionalInstruments, additionalMultipliers);
     npvCurrency_ = payoffCurrency_;
     notional_ = payoffAmount_;
