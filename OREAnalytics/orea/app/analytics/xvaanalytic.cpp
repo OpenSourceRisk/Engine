@@ -621,7 +621,8 @@ void XvaAnalyticImpl::runPostProcessor() {
     analytics["cvaSensi"] = inputs_->cvaSensi();
     analytics["flipViewXVA"] = inputs_->flipViewXVA();
     analytics["creditMigration"] = inputs_->creditMigrationAnalytic();
-
+    analytics["exposureProfilesUseCloseOutValues"] = inputs_->exposureProfilesUseCloseOutValues();
+    
     string baseCurrency = inputs_->xvaBaseCurrency();
     string calculationType = inputs_->collateralCalculationType();
     string allocationMethod = inputs_->exposureAllocationMethod();

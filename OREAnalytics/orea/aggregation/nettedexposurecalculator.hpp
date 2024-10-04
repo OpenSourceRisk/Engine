@@ -68,7 +68,8 @@ public:
                              //  in case of a positive mtm keep the undercollateralization (difference between initial
                              //  vm margin and mtm)  constant during first mpor period,
                              //  analog for overcollaterializations in case of negative mtm.
-                             const bool firstMporCollateralAdjustment);
+                             const bool firstMporCollateralAdjustment,
+			     const bool exposureProfilesUseCloseOutValues = false);
 
     virtual ~NettedExposureCalculator() {}
     const QuantLib::ext::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
@@ -158,6 +159,7 @@ protected:
     bool withMporStickyDate_;
     MporCashFlowMode mporCashFlowMode_;
     bool firstMporCollateralAdjustment_ = false;
+    bool exposureProfilesUseCloseOutValues_ = false;
 };
 
 } // namespace analytics

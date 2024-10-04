@@ -279,6 +279,7 @@ public:
     void setFullInitialCollateralisation(bool b) { fullInitialCollateralisation_ = b; }
     void setExposureProfiles(bool b) { exposureProfiles_ = b; }
     void setExposureProfilesByTrade(bool b) { exposureProfilesByTrade_ = b; }
+    void setExposureProfilesUseCloseOutValues(bool b) { exposureProfilesUseCloseOutValues_ = b; }
     void setPfeQuantile(Real r) { pfeQuantile_ = r; }
     void setCollateralCalculationType(const std::string& s) { collateralCalculationType_ = s; }
     void setExposureAllocationMethod(const std::string& s) { exposureAllocationMethod_ = s; }
@@ -459,6 +460,7 @@ public:
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
     void insertAnalytic(const std::string& s); 
+    void removeAnalytic(const std::string& s);
 
 
 
@@ -655,6 +657,7 @@ public:
     bool fullInitialCollateralisation() const { return fullInitialCollateralisation_; }
     bool exposureProfiles() const { return exposureProfiles_; }
     bool exposureProfilesByTrade() const { return exposureProfilesByTrade_; }
+    bool exposureProfilesUseCloseOutValues() const { return exposureProfilesUseCloseOutValues_; }
     Real pfeQuantile() const { return pfeQuantile_; }
     const std::string&  collateralCalculationType() const { return collateralCalculationType_; }
     const std::string& exposureAllocationMethod() const { return exposureAllocationMethod_; }
@@ -1007,6 +1010,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
     bool exposureProfiles_ = true;
     bool exposureProfilesByTrade_ = true;
+    bool exposureProfilesUseCloseOutValues_ = false;
     Real pfeQuantile_ = 0.95;
     bool fullInitialCollateralisation_ = false;
     std::string collateralCalculationType_ = "NoLag";

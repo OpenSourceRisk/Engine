@@ -4203,7 +4203,7 @@ type can be (so far) in
 \item sensitivity
 \item stress
 \item parStressConversion
-\item parametricVar
+\item parametricVars
 \item historicalSimulationVar
 \item pnl
 \item pnlExplain
@@ -4385,6 +4385,7 @@ to txt or csv in which case an uncompressed version of the file is written to di
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
     <Parameter name="exposureProfilesByTrade">Y</Parameter>
+    <Parameter name="exposureProfilesUseCloseOutDates">Y</Parameter>
     <Parameter name="quantile">0.95</Parameter>
     <Parameter name="calculationType">NoLag</Parameter>      
     <Parameter name="allocationMethod">None</Parameter>    
@@ -4449,6 +4450,7 @@ FX rates)
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
 \item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
 \item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
+\item {\tt exposureProfilesUseCloseOutDates:} Flag to force the use of close-out dates in exposure reporting (EPE, ENE, PFE), by default set to false, i.e. default dates are used in single trade exposures and for netting set exposures with inactive CSAs. If set to true, ORE uses close-out values in single trade exposures and netting set exposures even if the CSA is not active. This requires a close-out simulation grid (see section \ref{sec:simulation}), and for netting set exposure reporting {\tt calculationType} needs to be set to {\tt NoLag} (see below).
 \item {\tt quantile:} Confidence level for Potential Future Exposure (PFE) reporting
 \item {\tt calculationType:} Determines the settlement of margin calls. The admissible choices depend on having a close-out grid, see table \ref{tab:calcTypes}; \\
 	\begin{itemize}
