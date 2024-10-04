@@ -63,6 +63,7 @@ bool DividendManager::hasHistory(const string& name) const { return data_.find(t
 const set<Dividend>& DividendManager::getHistory(const string& name) { return data_[to_upper_copy(name)]; }
 
 void DividendManager::setHistory(const string& name, const std::set<Dividend>& history) {
+    notifier(name)->notifyObservers();
     data_[to_upper_copy(name)] = history;
 }
 
@@ -90,9 +91,18 @@ QuantLib::ext::shared_ptr<Observable> DividendManager::notifier(const string& na
     return o;
 }
 
-void DividendManager::clearHistory(const std::string& name) { data_.erase(name); }
+void DividendManager::clearHistory(const std::string& name) {
+    notifier(name)->notifyObservers();
+    data_.erase(name);
+    notifiers_.erase(name);
+}
 
-void DividendManager::clearHistories() { data_.clear(); }
+void DividendManager::clearHistories() {
+    for (auto const& d : data_)
+        notifier(d.first)->notifyObservers();
+    data_.clear();
+    notifiers_.clear();
+}
 
 template <class Archive> void Dividend::serialize(Archive& ar, const unsigned int version) {
     ar& exDate;
