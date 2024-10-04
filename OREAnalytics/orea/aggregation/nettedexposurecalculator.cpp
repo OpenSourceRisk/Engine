@@ -46,7 +46,8 @@ NettedExposureCalculator::NettedExposureCalculator(
     const bool fullInitialCollateralisation, const bool marginalAllocation, const Real marginalAllocationLimit,
     const QuantLib::ext::shared_ptr<NPVCube>& tradeExposureCube, const Size allocatedEpeIndex,
     const Size allocatedEneIndex, const bool flipViewXVA, const bool withMporStickyDate,
-    const MporCashFlowMode mporCashFlowMode, const bool firstMporCollateralAdjustment)
+    const MporCashFlowMode mporCashFlowMode, const bool firstMporCollateralAdjustment,
+    const bool exposureProfilesUseCloseOutValues)
     : portfolio_(portfolio), market_(market), cube_(cube), baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType), multiPath_(multiPath), nettingSetManager_(nettingSetManager),
       collateralBalances_(collateralBalances), nettingSetDefaultValue_(nettingSetDefaultValue),
@@ -57,7 +58,8 @@ NettedExposureCalculator::NettedExposureCalculator(
       marginalAllocationLimit_(marginalAllocationLimit), tradeExposureCube_(tradeExposureCube),
       allocatedEpeIndex_(allocatedEpeIndex), allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA),
       withMporStickyDate_(withMporStickyDate), mporCashFlowMode_(mporCashFlowMode),
-      firstMporCollateralAdjustment_(firstMporCollateralAdjustment) {
+      firstMporCollateralAdjustment_(firstMporCollateralAdjustment),
+      exposureProfilesUseCloseOutValues_(exposureProfilesUseCloseOutValues) {
 
     set<string> nettingSetIds;
     for (auto nettingSet : nettingSetDefaultValue) {
@@ -145,9 +147,11 @@ void NettedExposureCalculator::build() {
             balance = collateralBalances_->get(nettingSetId);
             DLOG("got collateral balances for netting set " << nettingSetId);
         }
-        
-        //only for active CSA and calcType == NoLag close-out value is relevant
-        if (netting->activeCsaFlag() && calcType_ == CollateralExposureHelper::CalculationType::NoLag) 
+
+	// Only for active CSA and calcType == NoLag close-out value is relevant, unless we force
+	// using close-out values in the absence of an active CSA
+        if ((netting->activeCsaFlag() || exposureProfilesUseCloseOutValues_) &&
+	    calcType_ == CollateralExposureHelper::CalculationType::NoLag) 
             data = nettingSetCloseOutValue_[nettingSetId];
         
         vector<vector<Real>> nettingSetMporPositiveFlow = nettingSetMporPositiveFlow_[nettingSetId];
