@@ -60,19 +60,35 @@ std::ostream& operator<<(std::ostream& out, Dividend dividend) {
 
 bool DividendManager::hasHistory(const string& name) const { return data_.find(to_upper_copy(name)) != data_.end(); }
 
-const set<Dividend>& DividendManager::getHistory(const string& name) {
-    return data_[to_upper_copy(name)].value();
-}
-
-ObservableValue<std::set<Dividend>>& DividendManager::getHistoryObservableValueRef(const std::string& name) {
-    return data_[name];
-}
+const set<Dividend>& DividendManager::getHistory(const string& name) { return data_[to_upper_copy(name)]; }
 
 void DividendManager::setHistory(const string& name, const std::set<Dividend>& history) {
     data_[to_upper_copy(name)] = history;
 }
 
-QuantLib::ext::shared_ptr<Observable> DividendManager::notifier(const string& name) { return data_[to_upper_copy(name)]; }
+void DividendManager::addDividend(const std::string& name, const Dividend& dividend, const bool forceOverwrite) {
+    auto& divs = data_[name];
+    if (!forceOverwrite) {
+        bool duplicateFixing = false;
+        for (const auto& d : divs) {
+            if (d == dividend)
+                duplicateFixing = true;
+        }
+        QL_REQUIRE(!duplicateFixing, "At least one duplicated fixing provided: ("
+                                         << dividend.name << ", " << dividend.exDate << ", " << dividend.rate << ")");
+    }
+    divs.insert(dividend);
+    notifier(name)->notifyObservers();
+}
+
+QuantLib::ext::shared_ptr<Observable> DividendManager::notifier(const string& name) {
+    auto n = notifiers_.find(name);
+    if (n != notifiers_.end())
+        return n->second;
+    auto o = ext::make_shared<Observable>();
+    notifiers_[name] = o;
+    return o;
+}
 
 void DividendManager::clearHistory(const std::string& name) { data_.erase(name); }
 

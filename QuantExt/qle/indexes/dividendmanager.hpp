@@ -24,6 +24,7 @@
 #define quantext_dividendmanager_hpp
 
 #include <ql/patterns/singleton.hpp>
+#include <ql/patterns/observable.hpp>
 #include <ql/timeseries.hpp>
 #include <ql/utilities/observablevalue.hpp>
 #include <qle/utilities/serializationdate.hpp>
@@ -78,18 +79,18 @@ public:
     bool hasHistory(const std::string& name) const;
     //! returns the (possibly empty) history of the index fixings
     const std::set<Dividend>& getHistory(const std::string& name);
-    //! returns the observable value for a history
-    QuantLib::ObservableValue<std::set<Dividend>>& getHistoryObservableValueRef(const std::string& name);
     //! stores the historical fixings of the index
     void setHistory(const std::string& name, const std::set<Dividend>&);
+    //! add dividend
+    void addDividend(const std::string& name, const Dividend& dividend, bool forceOverwrite = false);
     //! observer notifying of changes in the index fixings
     QuantLib::ext::shared_ptr<QuantLib::Observable> notifier(const std::string& name);
     void clearHistory(const std::string& name);
     void clearHistories();
 
 private:
-    typedef std::map<std::string, QuantLib::ObservableValue<std::set<Dividend>>> history_map;
-    history_map data_;
+    mutable std::map<std::string, std::set<Dividend>> data_;
+    mutable std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::Observable>> notifiers_;
 };
 
 } // namespace QuantExt
