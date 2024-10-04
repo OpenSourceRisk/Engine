@@ -1661,7 +1661,7 @@ void ReportWriter::writeSIMMReport(
         .addColumn("Bucket", string())
         .addColumn("SimmSide", string())
         .addColumn("Regulation", string())
-        .addColumn("InitialMargin", double(), 2)
+        .addColumn("InitialMargin", double(), 9)
         .addColumn("Currency", string())
         .addColumn("CalculationCurrency", string());
     if (!reportCcy.empty()) {
