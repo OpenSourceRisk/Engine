@@ -64,6 +64,10 @@ const set<Dividend>& DividendManager::getHistory(const string& name) {
     return data_[to_upper_copy(name)].value();
 }
 
+ObservableValue<std::set<Dividend>>& DividendManager::getHistoryObservableValueRef(const std::string& name) {
+    return data_[name];
+}
+
 void DividendManager::setHistory(const string& name, const std::set<Dividend>& history) {
     data_[to_upper_copy(name)] = history;
 }

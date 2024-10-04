@@ -78,6 +78,8 @@ public:
     bool hasHistory(const std::string& name) const;
     //! returns the (possibly empty) history of the index fixings
     const std::set<Dividend>& getHistory(const std::string& name);
+    //! returns the observable value for a history
+    QuantLib::ObservableValue<std::set<Dividend>>& getHistoryObservableValueRef(const std::string& name);
     //! stores the historical fixings of the index
     void setHistory(const std::string& name, const std::set<Dividend>&);
     //! observer notifying of changes in the index fixings

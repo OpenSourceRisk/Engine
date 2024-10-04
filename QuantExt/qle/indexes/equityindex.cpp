@@ -111,8 +111,8 @@ Real EquityIndex2::forecastFixing(const Time& fixingTime, bool incDividend) cons
 }
 
 void EquityIndex2::addDividend(const Dividend& dividend, bool forceOverwrite) {
-    std::string tag = name();
-    std::set<Dividend> divs = DividendManager::instance().getHistory(tag);
+    auto& obsValue = DividendManager::instance().getHistoryObservableValueRef(name());
+    auto& divs = obsValue.ref();
     if (!forceOverwrite) {
         bool duplicateFixing = false;
         for (const auto& d : divs) {
@@ -123,7 +123,7 @@ void EquityIndex2::addDividend(const Dividend& dividend, bool forceOverwrite) {
             << dividend.name << ", " << dividend.exDate << ", " << dividend.rate << ")");
     }
     divs.insert(dividend);
-    DividendManager::instance().setHistory(tag, divs);
+    obsValue.notifyObservers();
 }
 
 Real EquityIndex2::dividendsBetweenDates(const Date& startDate, const Date& endDate, const bool historicalOnly) const {
