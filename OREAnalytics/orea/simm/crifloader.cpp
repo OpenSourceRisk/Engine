@@ -89,7 +89,10 @@ map<Size, set<string>> CrifLoader::optionalHeaders = {
     {22, {"longshortind"}},
     {23, {"coveredbonind"}},
     {24, {"tranchethickness"}},
-    {25, {"bb_rw"}}};
+    {25, {"bb_rw"}},
+    {26, {"use_cp_trade"}}
+
+};
 // clang-format on
 
 
@@ -202,8 +205,8 @@ void CrifLoader::updateMapping(const CrifRecord& cr) const {
 
 StringStreamCrifLoader::StringStreamCrifLoader(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
     const std::vector<std::set<std::string>>& additionalHeaders, bool updateMapper,
-    bool aggregateTrades, char eol, char delim, char quoteChar, char escapeChar, const std::string& nullString)
-    : CrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades), eol_(eol), delim_(delim),
+    bool aggregateTrades, bool allowUseCounterpartyTrade, char eol, char delim, char quoteChar, char escapeChar, const std::string& nullString)
+    : CrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades, allowUseCounterpartyTrade), eol_(eol), delim_(delim),
     quoteChar_(quoteChar), escapeChar_(escapeChar), nullString_(nullString) {
     
     size_t maxIndexRequired = *boost::max_element(requiredHeaders | boost::adaptors::map_keys);
@@ -365,7 +368,25 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
     auto loadOptionalString = [&entries, this](int column) {
         return columnIndex_.count(column) == 0 ? "" : entries[columnIndex_[column]];
     };
-    auto loadOptionalReal = [&entries, this](int column) -> QuantLib::Real{
+    // Returns default value if field cannot be found, or if it is empty or fails to parse to a bool
+    auto loadOptionalBool = [&entries, this](int column, bool defaultValue) -> bool {
+        if (columnIndex_.count(column) == 0) {
+            return defaultValue;
+        } else {
+            bool res = defaultValue;
+            
+            const std::string& value = entries[columnIndex_[column]];
+            if (value.empty())
+                return res;
+
+            try {
+                res = parseBool(value);
+            } catch (...) {}
+
+            return res;
+        }
+    };
+    auto loadOptionalReal = [&entries, this](int column) -> QuantLib::Real {
         if (columnIndex_.count(column) == 0) {
             return QuantLib::Null<QuantLib::Real>();
         } else{
@@ -380,6 +401,19 @@ bool StringStreamCrifLoader::process(const vector<string>& entries, Size maxInde
     try {
         tradeId = loadOptionalString(0);
         tradeType = loadOptionalString(15);
+        bool useCpTrade = loadOptionalBool(26, false);
+        if (useCpTrade) {
+            if (allowUseCounterpartyTrade_) {
+                ore::data::StructuredTradeWarningMessage(tradeId, tradeType, "JSON CRIF loading",
+                                                         "Skipping over CRIF record with use_cp_trade=true")
+                    .log();
+                return false;
+            } else {
+                QL_FAIL("IM exposure cannot be calculated because one or more trades is picking Counterparty "
+                        "sensitivities.");
+            }
+        }
+
         imModel = loadOptionalString(16);
 
         cr.tradeId = tradeId;
