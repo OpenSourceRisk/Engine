@@ -44,10 +44,10 @@ public:
         This is the default. To override this the flag \p keepTradeId may be set to true.
     */
     CrifLoader(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
-               const std::vector<std::set<std::string>>& additionalHeaders = {},
-               bool updateMapper = false, bool aggregateTrades = true)
+               const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+               bool aggregateTrades = true, bool allowUseCounterpartyTrade = true)
         : configuration_(configuration), additionalHeaders_(additionalHeaders), updateMapper_(updateMapper),
-          aggregateTrades_(aggregateTrades) {}
+          aggregateTrades_(aggregateTrades), allowUseCounterpartyTrade_(allowUseCounterpartyTrade) {}
 
     /*! Destructor */
     virtual ~CrifLoader() {}
@@ -70,7 +70,7 @@ protected:
 
     //! Check if the record is a valid Simm Crif Record
     void validateSimmRecord(const CrifRecord& cr) const;
-    //! Override currency codes 
+    //! Override currency codes
     void currencyOverrides(CrifRecord& crifRecord) const;
     //! update bucket mappings
     void updateMapping(const CrifRecord& cr) const;
@@ -96,14 +96,17 @@ protected:
 
     //! Map giving optional CRIF file headers and their allowable alternatives
     static std::map<QuantLib::Size, std::set<std::string>> optionalHeaders;
+
+    bool allowUseCounterpartyTrade_;
 };
 
 class StringStreamCrifLoader : public CrifLoader {
 public:
     StringStreamCrifLoader(const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
                            const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
-                           bool aggregateTrades = true, char eol = '\n', char delim = '\t', char quoteChar = '\0',
-                           char escapeChar = '\\', const std::string& nullString = "#N/A");
+                           bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+                           char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+                           const std::string& nullString = "#N/A");
 
 protected:
     QuantLib::ext::shared_ptr<Crif> loadCrifImpl() override { return loadFromStream(stream()); }
@@ -117,7 +120,6 @@ protected:
         trade ID in the CRIF file e.g. n. The map entry would be [0, n]
     */
     std::map<QuantLib::Size, QuantLib::Size> columnIndex_;
-
 
     std::map<QuantLib::Size, std::set<std::string>> additionalHeadersIndexMap_;
 
@@ -140,11 +142,12 @@ protected:
 class CsvFileCrifLoader : public StringStreamCrifLoader {
 public:
     CsvFileCrifLoader(const std::string& filename, const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
-                      const std::vector<std::set<std::string>>& additionalHeaders = {},
-                      bool updateMapper = false, bool aggregateTrades = true, char eol = '\n', char delim = '\t',
-                      char quoteChar = '\0', char escapeChar = '\\', const std::string& nullString = "#N/A")
-        : StringStreamCrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades, eol, delim, quoteChar,
-                                 escapeChar, nullString),
+                      const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+                      bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+                      char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+                      const std::string& nullString = "#N/A")
+        : StringStreamCrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades,
+                                 allowUseCounterpartyTrade, eol, delim, quoteChar, escapeChar, nullString),
           filename_(filename) {}
 
 protected:
@@ -155,11 +158,12 @@ protected:
 class CsvBufferCrifLoader : public StringStreamCrifLoader {
 public:
     CsvBufferCrifLoader(const std::string& buffer, const QuantLib::ext::shared_ptr<SimmConfiguration>& configuration,
-                        const std::vector<std::set<std::string>>& additionalHeaders = {},
-                        bool updateMapper = false, bool aggregateTrades = true, char eol = '\n', char delim = '\t',
-                        char quoteChar = '\0', char escapeChar = '\\', const std::string& nullString = "#N/A")
-        : StringStreamCrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades, eol, delim, quoteChar,
-                                 escapeChar, nullString),
+                        const std::vector<std::set<std::string>>& additionalHeaders = {}, bool updateMapper = false,
+                        bool aggregateTrades = true, bool allowUseCounterpartyTrade = true, char eol = '\n',
+                        char delim = '\t', char quoteChar = '\0', char escapeChar = '\\',
+                        const std::string& nullString = "#N/A")
+        : StringStreamCrifLoader(configuration, additionalHeaders, updateMapper, aggregateTrades,
+                                 allowUseCounterpartyTrade, eol, delim, quoteChar, escapeChar, nullString),
           buffer_(buffer) {}
 
 protected:
