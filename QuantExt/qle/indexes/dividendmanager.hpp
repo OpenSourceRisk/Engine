@@ -77,7 +77,7 @@ private:
     //! add dividend
     void addDividend(const std::string& name, const Dividend& dividend, bool forceOverwrite);
 
-    // public:
+public:
     //! returns whether historical fixings were stored for the index
     bool hasHistory(const std::string& name) const;
     //! returns the (possibly empty) history of the index fixings
