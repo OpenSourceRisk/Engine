@@ -94,14 +94,12 @@ QuantLib::ext::shared_ptr<Observable> DividendManager::notifier(const string& na
 void DividendManager::clearHistory(const std::string& name) {
     notifier(name)->notifyObservers();
     data_.erase(name);
-    notifiers_.erase(name);
 }
 
 void DividendManager::clearHistories() {
     for (auto const& d : data_)
         notifier(d.first)->notifyObservers();
     data_.clear();
-    notifiers_.clear();
 }
 
 template <class Archive> void Dividend::serialize(Archive& ar, const unsigned int version) {
