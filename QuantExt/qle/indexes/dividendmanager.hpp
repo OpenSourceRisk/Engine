@@ -73,16 +73,17 @@ class DividendManager : public QuantLib::Singleton<DividendManager> {
 
 private:
     DividendManager() = default;
+    friend class EquityIndex2;
+    //! add dividend
+    void addDividend(const std::string& name, const Dividend& dividend, bool forceOverwrite);
 
-public:
+    // public:
     //! returns whether historical fixings were stored for the index
     bool hasHistory(const std::string& name) const;
     //! returns the (possibly empty) history of the index fixings
     const std::set<Dividend>& getHistory(const std::string& name);
     //! stores the historical fixings of the index
     void setHistory(const std::string& name, const std::set<Dividend>&);
-    //! add dividend
-    void addDividend(const std::string& name, const Dividend& dividend, bool forceOverwrite = false);
     //! observer notifying of changes in the index fixings
     QuantLib::ext::shared_ptr<QuantLib::Observable> notifier(const std::string& name);
     void clearHistory(const std::string& name);
