@@ -59,21 +59,25 @@ protected:
         return returnString;
     }
 
-    void setCurves(const string& id, const Currency& ccy, const std::string& discountCurveName,
-                   const string& creditCurveId, const string& securityId, const string& referenceCurveId,
-                   const string& incomeCurveId, const bool dirty);
-
-    Handle<YieldTermStructure> referenceCurve_;
-    Handle<Quote> bondSpread_;
-    Handle<YieldTermStructure> spreadedReferenceCurve_;
-    Handle<YieldTermStructure> discountCurve_;
-    Handle<YieldTermStructure> incomeCurve_;
-    bool spreadOnIncome_;
-    Handle<Quote> conversionFactor_;
-    // not used in AMC yet
-    Handle<DefaultProbabilityTermStructure> dpts_;
-    Handle<Quote> recovery_;
+    protected:
+    struct Curves {
+            Handle<YieldTermStructure> referenceCurve_;
+            Handle<Quote> bondSpread_;
+            Handle<YieldTermStructure> spreadedReferenceCurve_;
+            Handle<YieldTermStructure> discountCurve_;
+            Handle<YieldTermStructure> incomeCurve_;
+            Handle<Quote> conversionFactor_;
+            // not used in AMC yet
+            Handle<DefaultProbabilityTermStructure> dpts_;
+            Handle<Quote> recovery_;
     };
+
+    FwdBondEngineBuilder::Curves getCurves(const string& id, const Currency& ccy,
+                                             const std::string& discountCurveName, const string& creditCurveId,
+                                             const string& securityId, const string& referenceCurveId,
+                                             const string& incomeCurveId, const bool dirty);
+
+};
 
 class DiscountingForwardBondEngineBuilder : public FwdBondEngineBuilder {
 public:
@@ -88,12 +92,12 @@ protected:
 
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
-
-        setCurves(id, ccy, discountCurveName, creditCurveId, securityId, referenceCurveId, incomeCurveId, dirty);
+        auto curves =
+            getCurves(id, ccy, discountCurveName, creditCurveId, securityId, referenceCurveId, incomeCurveId, dirty);
 
         return QuantLib::ext::make_shared<QuantExt::DiscountingForwardBondEngine>(
-            discountCurve_, incomeCurve_, spreadedReferenceCurve_, bondSpread_, dpts_, recovery_, conversionFactor_,
-            tsperiod);
+            curves.discountCurve_, curves.incomeCurve_, curves.spreadedReferenceCurve_, curves.bondSpread_,
+            curves.dpts_, curves.recovery_, curves.conversionFactor_, tsperiod);
     }
 };
 
