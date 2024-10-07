@@ -726,7 +726,7 @@ void McMultiLegBaseEngine::calculateModels(
                     pathValueUndDirty += tmp;
                     pathValueUndExInto += tmp;
                     cfStatus[i] = CfStatus::done;
-                } else if (cashflowInfo[i].payTime > *t - (includeSettlementDateFlows_ ? tinyTime : 0.0)) {
+                } else if (cashflowInfo[i].payTime > *t - (includeTodaysCashflows_ ? tinyTime : 0.0)) {
                     auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
                     pathValueUndDirty += tmp;
                     amountCache[i] = tmp;
@@ -843,9 +843,10 @@ void McMultiLegBaseEngine::generatePathValues(const std::vector<Real>& simulatio
 
 void McMultiLegBaseEngine::calculate() const {
 
-    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
-    if (includeToday)
-        includeSettlementDateFlows_ = *includeToday;
+    includeReferenceDateEvents_ = Settings::instance().includeReferenceDateEvents();
+    includeTodaysCashflows_ = Settings::instance().includeTodaysCashFlows()
+                                  ? *Settings::instance().includeTodaysCashFlows()
+                                  : includeReferenceDateEvents_;
 
     McEngineStats::instance().other_timer.resume();
 
@@ -881,7 +882,7 @@ void McMultiLegBaseEngine::calculate() const {
         Size cashflowNo = 0;
         for (auto const& cashflow : leg) {
             // we can skip cashflows that are paid
-            if (cashflow->date() < today_ || (!includeSettlementDateFlows_ && cashflow->date() == today_))
+            if (cashflow->date() < today_ || (!includeTodaysCashflows_ && cashflow->date() == today_))
                 continue;
             // for an alive cashflow, populate the data
             cashflowInfo.push_back(createCashflowInfo(cashflow, currency, payer, legNo, cashflowNo));
@@ -1043,7 +1044,7 @@ void McMultiLegBaseEngine::calculate() const {
                                                                           regModelContinuationValueCloseOut},
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelOption, regModelOptionCloseOut},
         resultValue_, model_->stateProcess()->initialValues(), model_->irlgm1f(0)->currency(),
-        reevaluateExerciseInStickyRun_);
+        reevaluateExerciseInStickyRun_, includeTodaysCashflows_, includeReferenceDateEvents_);
 }
 
 QuantLib::ext::shared_ptr<AmcCalculator> McMultiLegBaseEngine::amcCalculator() const { return amcCalculator_; }
@@ -1055,12 +1056,14 @@ McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
     const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndExInto,
     const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelContinuationValue,
     const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelOption, const Real resultValue,
-    const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun)
+    const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun,
+    const bool includeTodaysCashflows, const bool includeReferenceDateEvents)
     : externalModelIndices_(externalModelIndices), settlement_(settlement), exerciseXvaTimes_(exerciseXvaTimes),
       exerciseTimes_(exerciseTimes), xvaTimes_(xvaTimes), regModelUndDirty_(regModelUndDirty),
       regModelUndExInto_(regModelUndExInto), regModelContinuationValue_(regModelContinuationValue),
       regModelOption_(regModelOption), resultValue_(resultValue), initialState_(initialState),
-      baseCurrency_(baseCurrency), reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun) {}
+      baseCurrency_(baseCurrency), reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun),
+      includeTodaysCashflows_(includeTodaysCashflows), includeReferenceDateEvents_(includeReferenceDateEvents) {}
 
 std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalculator::simulatePath(
     const std::vector<QuantLib::Real>& pathTimes, const std::vector<std::vector<QuantExt::RandomVariable>>& paths,

@@ -97,7 +97,7 @@ protected:
     mutable std::vector<bool> payer_;
     mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
-    mutable bool includeSettlementDateFlows_ = false;
+    mutable bool exerciseIntoIncludeSameDayFlows_ = false;
 
     // data members
     Handle<CrossAssetModel> model_;
@@ -116,6 +116,10 @@ protected:
     Real regressionVarianceCutoff_;
     bool recalibrateOnStickyCloseOutDates_;
     bool reevaluateExerciseInStickyRun_;
+
+    // set from global settings
+    mutable bool includeTodaysCashflows_;
+    mutable bool includeReferenceDateEvents_;
 
     // the generated amc calculator
     mutable QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator_;
@@ -175,7 +179,8 @@ protected:
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelContinuationValue,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelOption,
             const Real resultValue, const Array& initialState, const Currency& baseCurrency,
-            const bool reevaluateExerciseInStickyRun);
+            const bool reevaluateExerciseInStickyRun, const bool includeTodaysCashflows,
+            const bool includeReferenceDateEvents);
 
         Currency npvCurrency() override { return baseCurrency_; }
         std::vector<QuantExt::RandomVariable>
@@ -198,6 +203,10 @@ protected:
         Array initialState_;
         Currency baseCurrency_;
         bool reevaluateExerciseInStickyRun_;
+
+        // set from global settings via base engine
+        bool includeTodaysCashflows_;
+        bool includeReferenceDateEvents_;
 
         std::vector<Filter> exercised_;
     };
