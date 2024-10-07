@@ -460,6 +460,7 @@ public:
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
     void insertAnalytic(const std::string& s); 
+    void removeAnalytic(const std::string& s);
 
 
 
