@@ -23,13 +23,15 @@
 
 namespace QuantExt {
 
-DiscountingFxForwardEngine::DiscountingFxForwardEngine(
-    const Currency& ccy1, const Handle<YieldTermStructure>& currency1Discountcurve, const Currency& ccy2,
-    const Handle<YieldTermStructure>& currency2Discountcurve, const Handle<Quote>& spotFX,
-    boost::optional<bool> includeSettlementDateFlows, const Date& settlementDate, const Date& npvDate)
+DiscountingFxForwardEngine::DiscountingFxForwardEngine(const Currency& ccy1,
+                                                       const Handle<YieldTermStructure>& currency1Discountcurve,
+                                                       const Currency& ccy2,
+                                                       const Handle<YieldTermStructure>& currency2Discountcurve,
+                                                       const Handle<Quote>& spotFX, const Date& settlementDate,
+                                                       const Date& npvDate)
     : ccy1_(ccy1), currency1Discountcurve_(currency1Discountcurve), ccy2_(ccy2),
-      currency2Discountcurve_(currency2Discountcurve), spotFX_(spotFX),
-      includeSettlementDateFlows_(includeSettlementDateFlows), settlementDate_(settlementDate), npvDate_(npvDate) {
+      currency2Discountcurve_(currency2Discountcurve), spotFX_(spotFX), settlementDate_(settlementDate),
+      npvDate_(npvDate) {
     registerWith(currency1Discountcurve_);
     registerWith(currency2Discountcurve_);
     registerWith(spotFX_);
@@ -81,7 +83,6 @@ void DiscountingFxForwardEngine::calculate() const {
     results_.additionalResults["currency[1]"] = ccy1_.code();
     results_.additionalResults["currency[2]"] = ccy2_.code();
 
-    // The instrument flag overrides what is passed to the engine c'tor
     ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
     if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeToday)) {
         Real disc1near = currency1Discountcurve_->discount(npvDate);
