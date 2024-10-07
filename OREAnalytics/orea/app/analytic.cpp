@@ -206,7 +206,7 @@ void Analytic::buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLo
             // Build the market
             market_ = QuantLib::ext::make_shared<TodaysMarket>(
                 configurations().asofDate, configurations().todaysMarketParams, loader_, configurations().curveConfig,
-                inputs()->continueOnError(), true, inputs()->lazyMarketBuilding(), inputs()->refDataManager(), false,
+                inputs()->continueOnError(), false, inputs()->lazyMarketBuilding(), inputs()->refDataManager(), false,
                 *inputs()->iborFallbackConfig());
         } catch (const std::exception& e) {
             if (marketRequired) {
@@ -296,7 +296,7 @@ QuantLib::ext::shared_ptr<Loader> implyBondSpreads(const Date& asof,
     if (!securities.empty()) {
         // always continue on error and always use lazy market building
         QuantLib::ext::shared_ptr<Market> market =
-            QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, true, true, true,
+            QuantLib::ext::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, true, false, true,
                                              params->refDataManager(), false, *params->iborFallbackConfig());
         return BondSpreadImply::implyBondSpreads(securities, params->refDataManager(), market, params->pricingEngine(),
                                                  Market::defaultConfiguration, *params->iborFallbackConfig());
