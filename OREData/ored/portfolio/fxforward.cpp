@@ -147,17 +147,12 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
 
     // get pricing engine builder
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    QuantLib::ext::shared_ptr<FxForwardEngineBuilderBase> fxBuilder =
-        QuantLib::ext::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
+    auto fxBuilder = QuantLib::ext::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
+    QL_REQUIRE(fxBuilder, "FxForward::build(): internal error: could not cast to FxForwardEngineBuilderBase");
 
-    string tmp = fxBuilder->engineParameter("includeSettlementDateFlows", {}, false, "");
-    includeSettlementDateFlows_ = tmp == "" ? false : parseBool(tmp);    
-    
-    QuantLib::ext::shared_ptr<QuantLib::Instrument> instrument =
-        QuantLib::ext::make_shared<QuantExt::FxForward>(boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false,
-                                                settlement_ == "Physical", payDate, payCcy, fixingDate, fxIndex,
-                                                includeSettlementDateFlows_);
+    auto instrument = QuantLib::ext::make_shared<QuantExt::FxForward>(boughtAmount_, boughtCcy, soldAmount_, soldCcy,
+                                                                      maturityDate, false, settlement_ == "Physical",
+                                                                      payDate, payCcy, fixingDate, fxIndex);
     instrument_.reset(new VanillaInstrument(instrument));
 
     // set pricing engine
