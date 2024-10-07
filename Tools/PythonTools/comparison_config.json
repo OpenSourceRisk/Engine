@@ -983,6 +983,29 @@
           }
         ]
       },
+      ".*todaysmarketcalibration.*\\.csv": {
+        "keys": [
+          "MarketObjectType",
+          "MarketObjectId",
+          "ResultId",
+          "ResultKey1",
+          "ResultKey2",
+          "ResultKey3"
+        ],
+        "use_cols": [
+          "ResultType",
+          "ResultValue"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "ResultValue"
+            ],
+            "abs_tol": 1e-2,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "flownpv.csv": {
         "keys": [
           "TradeId"
