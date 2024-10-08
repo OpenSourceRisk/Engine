@@ -29,6 +29,7 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/fxbsdata.hpp>
+#include <ored/model/crossassetmodeldata.hpp>
 #include <qle/models/marketobserver.hpp>
 #include <qle/models/modelbuilder.hpp>
 #include <qle/models/crossassetmodel.hpp>
@@ -52,6 +53,8 @@ public:
         const QuantLib::ext::shared_ptr<ore::data::Market>& market,
         //! FX model parameters/description
         const QuantLib::ext::shared_ptr<FxBsData>& data,
+	//! Cached calibration to be applied in the build process
+        const ext::shared_ptr<ParametrizationData>& cachedCalibration,
         //! Market configuration to use
         const std::string& configuration = Market::defaultConfiguration,
         //! the reference calibration grid

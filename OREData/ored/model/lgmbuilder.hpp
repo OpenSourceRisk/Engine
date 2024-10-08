@@ -30,6 +30,7 @@
 #include <qle/models/lgm.hpp>
 
 #include <ored/model/irlgmdata.hpp>
+#include <ored/model/crossassetmodeldata.hpp>
 #include <qle/models/marketobserver.hpp>
 #include <qle/models/modelbuilder.hpp>
 
@@ -52,6 +53,7 @@ public:
         i.e. it is not read as a discount curve from the market (except as a fallback in case we do not find
         the swap index). */
     LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
+	       const ext::shared_ptr<ParametrizationData>& cachedCalibration = nullptr,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
                const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
                const bool setCalibrationInfo = false, const std::string& id = "unknwon");

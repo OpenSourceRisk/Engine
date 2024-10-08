@@ -39,7 +39,7 @@ namespace ore {
 namespace data {
 
 FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<FxBsData>& data,
-                         const std::string& configuration, const std::string& referenceCalibrationGrid)
+			 const ext::shared_ptr<ParametrizationData>& cachedCalibration, const std::string& configuration, const std::string& referenceCalibrationGrid)
     : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid) {
 
     optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
@@ -75,20 +75,40 @@ FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
 
     Array sigmaTimes, sigma;
     if (data->sigmaParamType() == ParamType::Constant) {
-        QL_REQUIRE(data->sigmaTimes().size() == 0, "empty sigma tme grid expected");
+        QL_REQUIRE(data->sigmaTimes().size() == 0, "empty sigma time grid expected");
         QL_REQUIRE(data->sigmaValues().size() == 1, "initial sigma grid size 1 expected");
         sigmaTimes = Array(0);
-        sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
+	if (cachedCalibration) {
+	    WLOG("Override initial FX sigma with cached calibration");
+	    sigma =  Array(cachedCalibration->volValues.begin(), cachedCalibration->volValues.end());
+	}
+	else {
+	    sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
+	}
     } else {
         if (data->calibrateSigma() && data->calibrationType() == CalibrationType::Bootstrap) { // override
             QL_REQUIRE(optionExpiries_.size() > 0, "optionExpiries is empty");
-            sigmaTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
-            sigma = Array(sigmaTimes.size() + 1, data->sigmaValues()[0]);
+	    if (cachedCalibration) {
+	        WLOG("Override initial FX sigma with cached calibration");
+		sigma =  Array(cachedCalibration->volValues.begin(), cachedCalibration->volValues.end());
+		sigmaTimes = Array(cachedCalibration->volTimes.begin(), cachedCalibration->volTimes.end());
+	    }
+            else {
+	        sigmaTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
+		sigma = Array(sigmaTimes.size() + 1, data->sigmaValues()[0]);
+	    }
         } else {
             // use input time grid and input alpha array otherwise
-            sigmaTimes = Array(data_->sigmaTimes().begin(), data_->sigmaTimes().end());
-            sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
-            QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "sigma grids do not match");
+	    if (cachedCalibration) {
+	        WLOG("Override initial FX sigma with cached calibration");
+		sigma =  Array(cachedCalibration->volValues.begin(), cachedCalibration->volValues.end());
+		sigmaTimes = Array(cachedCalibration->volTimes.begin(), cachedCalibration->volTimes.end());
+	    }
+            else {
+	        sigmaTimes = Array(data_->sigmaTimes().begin(), data_->sigmaTimes().end());
+		sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
+		QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "sigma grids do not match");
+	    }
         }
     }
 

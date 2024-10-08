@@ -332,6 +332,7 @@ CrossAssetModel::Discretization parseDiscretization(const string& s);
 
 /*! Class to hold the data (including calibration) for reconstructing
     parametrizations of Cross Asset Model components
+    TODO: Move this outside crossassetmodeldata eventually
 */
 class ParametrizationData {
 public:

@@ -425,8 +425,6 @@ void InputParameters::setXvaSensiPricingEngineFromFile(const std::string& fileNa
 }
 
 void InputParameters::setCalibrationFromFile(const std::string& fileName) {
-    DLOG("InputParameters::setCalibrationFromFile called");
-
     calibrationData_.clear();
     
     CSVFileReader reader(fileName, true); // first line contains headers
@@ -440,7 +438,8 @@ void InputParameters::setCalibrationFromFile(const std::string& fileName) {
     QL_REQUIRE(reader.hasField("ParameterValue"), "Column ParameterValue missing in calibration report");
     
     auto data = ext::make_shared<ParametrizationData>();
-
+    Real epsilon = QL_EPSILON;
+    
     while (reader.next()) {
         string assetType = reader.get("AssetType");
 	Size sequenceNumber = parseInteger(reader.get("SequenceNumber"));
@@ -453,8 +452,10 @@ void InputParameters::setCalibrationFromFile(const std::string& fileName) {
 	if (reader.currentLine() > 0 &&
 	    (assetType != data->assetType || sequenceNumber != data->sequenceNumber)) {
 	    // Store this parametrization data set 
-	    calibrationData_[assetType][sequenceNumber] = data;
-	    DLOG("Next Parametrization");
+	    QL_REQUIRE(data->volTimes.size() + 1 == data->volValues.size(), "volatility vector size mismatch");
+	    QL_REQUIRE(data->revTimes.size() + 1 == data->revValues.size(), "reversion vector size mismatch");
+	    calibrationData_[data->assetType][data->sequenceNumber] = data;
+	    DLOG("Stored calibrationData " << data->assetType << " " << data->sequenceNumber);
 	    DLOG("AssetType: " << data->assetType);
 	    DLOG("SequenceNumber: " << data->sequenceNumber);
 	    DLOG("ParametrizationType: " << data->parametrizationType);
@@ -463,7 +464,7 @@ void InputParameters::setCalibrationFromFile(const std::string& fileName) {
 	    DLOG("VolValues: " << to_string(data->volValues));
 	    DLOG("RevTimes: " << to_string(data->revTimes));
 	    DLOG("RevValues: " << to_string(data->revValues));
-	    // ... and create the next
+	    // ... and create the next empty struct
 	    data = ext::make_shared<ParametrizationData>();
 	}
 	data->assetType = assetType;
@@ -471,17 +472,23 @@ void InputParameters::setCalibrationFromFile(const std::string& fileName) {
 	data->parametrizationType = parametrizationType;
 	data->currency = currency;
 	if (name == "Volatility") {
-	    data->volTimes.push_back(time);
+	    if (time > epsilon)
+	        data->volTimes.push_back(time);
 	    data->volValues.push_back(value);
 	}
 	else if (name == "Reversion") {
-	    data->revTimes.push_back(time);
+	    if (time > epsilon)
+	        data->revTimes.push_back(time);
 	    data->revValues.push_back(value);
 	}
 	else {
 	    QL_FAIL("Calibration report parameterName " << name << " unexpected");
 	}
     }
+
+    // Store the final data set
+    calibrationData_[data->assetType][data->sequenceNumber] = data;
+    DLOG("Stored calibrationData " << data->assetType << " " << data->sequenceNumber);
 }
 
 // XVA Explain

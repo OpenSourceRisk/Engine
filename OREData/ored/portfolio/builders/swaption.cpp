@@ -220,7 +220,7 @@ QuantLib::ext::shared_ptr<QuantExt::LGM> LGMSwaptionEngineBuilder::model(const s
     // Build and calibrate model
     DLOG("Build LGM model");
     QuantLib::ext::shared_ptr<LgmBuilder> calib = QuantLib::ext::make_shared<LgmBuilder>(
-        market_, data, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
+        market_, data, nullptr, configuration(MarketContext::irCalibration), tolerance, continueOnCalibrationError,
         referenceCalibrationGrid, generateAdditionalResults, id);
 
     // In some cases, we do not want to calibrate the model

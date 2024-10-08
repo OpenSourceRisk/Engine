@@ -118,7 +118,8 @@ private:
     void copyModelParams(const CrossAssetModel::AssetType t0, const Size param0, const Size index0, const Size i0,
                          const CrossAssetModel::AssetType t1, const Size param1, const Size index1, const Size i1,
                          const Real mult) const;
-
+    ext::shared_ptr<ParametrizationData> getParametrizationData(string assetType, Size sequenceNumber) const;
+  
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> swaptionBaskets_;
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> fxOptionBaskets_;
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> eqOptionBaskets_;
