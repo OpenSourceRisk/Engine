@@ -82,14 +82,14 @@ XvaRunner::getProjectedScenarioGenerator(const boost::optional<std::set<std::str
 void XvaRunner::buildCamModel(const QuantLib::ext::shared_ptr<ore::data::Market>& market, bool continueOnErr) {
 
     LOG("XvaRunner::buildCamModel() called");
-
     Settings::instance().evaluationDate() = asof_;
     CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_,
-					inputs_->calibrationData(), Market::defaultConfiguration,
+					CalibrationData(), Market::defaultConfiguration,
                                         Market::defaultConfiguration, Market::defaultConfiguration,
                                         Market::defaultConfiguration, Market::defaultConfiguration,
                                         Market::defaultConfiguration, false, continueOnErr, "",
                                         crossAssetModelData_->getSalvagingAlgorithm(), "xva cam building");
+    LOG("XvaRunner modelBuilder OK");
     model_ = *modelBuilder.model();
 }
 

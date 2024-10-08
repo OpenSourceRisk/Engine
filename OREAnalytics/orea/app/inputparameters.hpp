@@ -642,7 +642,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
     QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
-    const std::map<string, std::map<QuantLib::Size, QuantLib::ext::shared_ptr<ParametrizationData>>> calibrationData() const { return calibrationData_; }
+    const std::map<string, std::map<QuantLib::Size, QuantLib::ext::shared_ptr<ParametrizationData>>>& calibrationData() const { return calibrationData_; }
   
     /*****************
      * Getters for xva
