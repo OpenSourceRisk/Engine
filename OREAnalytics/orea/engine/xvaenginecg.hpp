@@ -60,7 +60,8 @@ public:
                 const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
                 const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
                 const QuantLib::ext::shared_ptr<ore::analytics::CrossAssetModelData>& crossAssetModelData,
-                const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
+                const CalibrationData& calibrationData,
+		const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
                 const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
                 const string& marketConfiguration = Market::defaultConfiguration,
                 const string& marketConfigurationInCcy = Market::inCcyConfiguration,
@@ -135,6 +136,7 @@ private:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> simMarketData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> engineData_;
     QuantLib::ext::shared_ptr<ore::analytics::CrossAssetModelData> crossAssetModelData_;
+    CalibrationData calibrationData_;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData> scenarioGeneratorData_;
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
     std::string marketConfiguration_;

@@ -67,7 +67,8 @@ void CalibrationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrat
     QL_REQUIRE(market != nullptr, "Internal error, buildCrossAssetModel needs to be called after the market is built.");
 
     builder_ = ext::make_shared<CrossAssetModelBuilder>(
-        market, analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
+	market, analytic()->configurations().crossAssetModelData, inputs_->calibrationData(),
+	inputs_->marketConfig("lgmcalibration"),
         inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
         inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
         inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "",

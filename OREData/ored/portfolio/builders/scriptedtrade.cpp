@@ -1687,12 +1687,13 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     std::string configurationInCcy = configuration(MarketContext::irCalibration);
     std::string configurationXois = configuration(MarketContext::pricing);
     auto discretization = useCg_ ? CrossAssetModel::Discretization::Euler : CrossAssetModel::Discretization::Exact;
+    CalibrationData cd;
     auto camBuilder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         market_,
         QuantLib::ext::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs,
                                                         crCirConfigs, comConfigs, 0, camCorrelations,
                                                         bootstrapTolerance_, "LGM", discretization),
-        configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
+        cd, configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
         salvagingAlgorithm_, id);
 
@@ -1792,6 +1793,7 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
     std::string configurationInCcy = configuration(MarketContext::irCalibration);
     std::string configurationXois = configuration(MarketContext::pricing);
 
+    CalibrationData cd;
     auto camBuilder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         market_,
         QuantLib::ext::make_shared<CrossAssetModelData>(
@@ -1802,7 +1804,7 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
             std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>{}, 0,
             std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>{}, bootstrapTolerance_, "LGM",
             CrossAssetModel::Discretization::Exact),
-        configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
+        cd, configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
         configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
         salvagingAlgorithm_, id);
 

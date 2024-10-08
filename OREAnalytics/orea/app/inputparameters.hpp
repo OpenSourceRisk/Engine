@@ -257,6 +257,7 @@ public:
     void setCollateralBalances(const std::string& xml); 
     void setCollateralBalancesFromFile(const std::string& fileName);
     void setReportBufferSize(Size s) { reportBufferSize_ = s; }
+    void setCalibrationFromFile(const std::string& fileName);
     // TODO: load from XML
     // void setCounterpartyManager(const std::string& xml);
 
@@ -641,7 +642,8 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
     QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
-
+    const std::map<string, std::map<QuantLib::Size, QuantLib::ext::shared_ptr<ParametrizationData>>> calibrationData() const { return calibrationData_; }
+  
     /*****************
      * Getters for xva
      *****************/
@@ -1022,7 +1024,8 @@ protected:
     Size reportBufferSize_ = 0;
     optional<bool> exposureIncludeTodaysCashFlows_;
     bool exposureIncludeReferenceDateEvents_ = false;
-
+    std::map<string, std::map<QuantLib::Size, QuantLib::ext::shared_ptr<ParametrizationData>>> calibrationData_;
+ 
     /**************
      * XVA analytic
      **************/

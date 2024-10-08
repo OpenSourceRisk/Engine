@@ -1721,8 +1721,12 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("simulation", "xvaCgBumpSensis", false);
 	if (!tmp.empty())
 	    setXvaCgBumpSensis(parseBool(tmp));
-    }
 
+	tmp = params_->get("simulation", "calibrationInputFile", false);
+	if (tmp != "")
+	    setCalibrationFromFile((inputPath / tmp).generic_string());
+    }
+    
     /**********************
      * XVA specifically
      **********************/

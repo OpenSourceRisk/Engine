@@ -63,6 +63,8 @@ public:
         const ObservableValue<QuantLib::ext::shared_ptr<Market>>& market,
         //! cam configuration
         const QuantLib::ext::shared_ptr<CrossAssetModelData>& config,
+	//! cached calibration data, possibly empty
+	const CalibrationData& calibrationData = CalibrationData(),
         //! Market configuration for interest rate model calibration
         const std::string& configurationLgmCalibration = Market::defaultConfiguration,
         //! Market configuration for FX model calibration
@@ -140,6 +142,7 @@ private:
 
     QuantLib::ObservableValue<QuantLib::ext::shared_ptr<ore::data::Market>> market_;
     QuantLib::ext::shared_ptr<CrossAssetModelData> config_;
+    CalibrationData calibrationData_;
     std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_,
         configurationInfCalibration_, configurationCrCalibration_, configurationComCalibration_, configurationFinalModel_;
     bool dontCalibrate_;
@@ -147,7 +150,6 @@ private:
     std::string referenceCalibrationGrid_;
     SalvagingAlgorithm::Type salvaging_;
     std::string id_;
-
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;

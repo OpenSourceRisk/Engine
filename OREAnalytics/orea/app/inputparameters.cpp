@@ -424,6 +424,66 @@ void InputParameters::setXvaSensiPricingEngineFromFile(const std::string& fileNa
     xvaSensiPricingEngine_->fromFile(fileName);
 }
 
+void InputParameters::setCalibrationFromFile(const std::string& fileName) {
+    DLOG("InputParameters::setCalibrationFromFile called");
+
+    calibrationData_.clear();
+    
+    CSVFileReader reader(fileName, true); // first line contains headers
+
+    QL_REQUIRE(reader.hasField("AssetType"), "Column AssetType missing in calibration report");
+    QL_REQUIRE(reader.hasField("SequenceNumber"), "Column SequenceNumber missing in calibration report");
+    QL_REQUIRE(reader.hasField("ParametrizationType"), "Column ParametrizationType missing in calibration report");
+    QL_REQUIRE(reader.hasField("ParameterName"), "Column ParameterName missing in calibration report");
+    QL_REQUIRE(reader.hasField("ParameterValues"), "Column ParameterValues missing in calibration report");
+    QL_REQUIRE(reader.hasField("ParameterTime"), "Column ParameterTime missing in calibration report");
+    QL_REQUIRE(reader.hasField("ParameterValue"), "Column ParameterValue missing in calibration report");
+    
+    auto data = ext::make_shared<ParametrizationData>();
+
+    while (reader.next()) {
+        string assetType = reader.get("AssetType");
+	Size sequenceNumber = parseInteger(reader.get("SequenceNumber"));
+	string parametrizationType = reader.get("ParametrizationType");
+	string currency = reader.get("Currency");
+	string name = reader.get("ParameterName");
+	Real time = parseReal(reader.get("ParameterTime"));
+	Real value = parseReal(reader.get("ParameterValue"));
+
+	if (reader.currentLine() > 0 &&
+	    (assetType != data->assetType || sequenceNumber != data->sequenceNumber)) {
+	    // Store this parametrization data set 
+	    calibrationData_[assetType][sequenceNumber] = data;
+	    DLOG("Next Parametrization");
+	    DLOG("AssetType: " << data->assetType);
+	    DLOG("SequenceNumber: " << data->sequenceNumber);
+	    DLOG("ParametrizationType: " << data->parametrizationType);
+	    DLOG("Currency: " << data->currency);
+	    DLOG("VolTimes: " << to_string(data->volTimes));
+	    DLOG("VolValues: " << to_string(data->volValues));
+	    DLOG("RevTimes: " << to_string(data->revTimes));
+	    DLOG("RevValues: " << to_string(data->revValues));
+	    // ... and create the next
+	    data = ext::make_shared<ParametrizationData>();
+	}
+	data->assetType = assetType;
+	data->sequenceNumber = sequenceNumber;
+	data->parametrizationType = parametrizationType;
+	data->currency = currency;
+	if (name == "Volatility") {
+	    data->volTimes.push_back(time);
+	    data->volValues.push_back(value);
+	}
+	else if (name == "Reversion") {
+	    data->revTimes.push_back(time);
+	    data->revValues.push_back(value);
+	}
+	else {
+	    QL_FAIL("Calibration report parameterName " << name << " unexpected");
+	}
+    }
+}
+
 // XVA Explain
 
 void InputParameters::setXvaExplainSimMarketParams(const std::string& xml) {

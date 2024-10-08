@@ -211,7 +211,8 @@ void XvaAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrationError
     QL_REQUIRE(market != nullptr, "Internal error, buildCrossAssetModel needs to be called after the market is built.");
 
     CrossAssetModelBuilder modelBuilder(
-        market, analytic()->configurations().crossAssetModelData, inputs_->marketConfig("lgmcalibration"),
+        market, analytic()->configurations().crossAssetModelData,
+	inputs_->calibrationData(), inputs_->marketConfig("lgmcalibration"),
         inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
         inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
         inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "",
@@ -529,7 +530,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
         XvaEngineCG engine(
             inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
-            inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
+            inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->calibrationData(),
+	    inputs_->scenarioGeneratorData(),
             amcPortfolio_, inputs_->marketConfig("simulation"), inputs_->marketConfig("lgmcalibration"),
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgUseExternalComputeDevice(),
@@ -583,7 +585,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
                 inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
                 inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
                 inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates(),
-                inputs_->crossAssetModelData(), inputs_->amcPricingEngine(), inputs_->curveConfigs().get(),
+                inputs_->crossAssetModelData(), inputs_->calibrationData(),
+		inputs_->amcPricingEngine(), inputs_->curveConfigs().get(),
                 analytic()->configurations().todaysMarketParams, inputs_->marketConfig("lgmcalibration"),
                 inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
                 inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
@@ -747,7 +750,7 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
         XvaEngineCG engine(
             inputs_->amcCg(), inputs_->nThreads(), inputs_->asof(), analytic()->loader(), inputs_->curveConfigs().get(),
             analytic()->configurations().todaysMarketParams, analytic()->configurations().simMarketParams,
-            inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->scenarioGeneratorData(),
+            inputs_->amcCgPricingEngine(), inputs_->crossAssetModelData(), inputs_->calibrationData(), inputs_->scenarioGeneratorData(),
             inputs_->portfolio(), inputs_->marketConfig("simulation"), inputs_->marketConfig("simulation"),
             inputs_->xvaCgSensiScenarioData(), inputs_->refDataManager(), *inputs_->iborFallbackConfig(),
             inputs_->xvaCgBumpSensis(), inputs_->xvaCgUseExternalComputeDevice(),

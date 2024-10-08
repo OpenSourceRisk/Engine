@@ -2766,7 +2766,8 @@ void ReportWriter::writeXvaExplainSummary(ore::data::Report& report, const ore::
 
 void ReportWriter::writeCalibrationReport(ore::data::Report& report,
 					  QuantLib::ext::shared_ptr<CrossAssetModelBuilder> modelBuilder) {
-    report.addColumn("ParametrizationNumber", Size())
+    report.addColumn("AssetType", string())
+        .addColumn("SequenceNumber", Size())
         .addColumn("ParametrizationType", string())
         .addColumn("BaseCurrency", string())
         .addColumn("Currency", string())
@@ -2779,6 +2780,7 @@ void ReportWriter::writeCalibrationReport(ore::data::Report& report,
         ext::shared_ptr<CrossAssetModel> model = *modelBuilder->model();
         string baseCcy = model->ir(0)->currency().code();
         const std::vector<QuantLib::ext::shared_ptr<Parametrization>>& p = model->parametrizations();	
+	Size irCount = 0, fxCount = 0;
 	for (Size i = 0; i < p.size(); ++i) {
 	    // Determine the parametrization type to interprete the data and to be able to reconstruct 
 	    // the model from the report later
@@ -2800,8 +2802,6 @@ void ReportWriter::writeCalibrationReport(ore::data::Report& report,
 	    // EQ
 	    else if (ext::dynamic_pointer_cast<EqBsConstantParametrization>(p[i]))
 	        paraType = "EqBsConstant";
-	    else if (ext::dynamic_pointer_cast<EqBsPiecewiseConstantParametrization>(p[i]))
-	        paraType = "EqBsPiecewiseConstant";
 	    else if (ext::dynamic_pointer_cast<EqBsPiecewiseConstantParametrization>(p[i]))
 	        paraType = "EqBsPiecewiseConstant";
 	    // CR
@@ -2838,7 +2838,8 @@ void ReportWriter::writeCalibrationReport(ore::data::Report& report,
 			   "unmatched irlgm1f alpha times/values");
 		for (Size j = 0; j < alphaValues.size(); ++j) {
 		    report.next();
-		    report.add(i)
+		    report.add("IR")
+		        .add(irCount)
 		        .add(paraType)
 		        .add(baseCcy)
 		        .add(lgm->currency().code())
@@ -2853,7 +2854,8 @@ void ReportWriter::writeCalibrationReport(ore::data::Report& report,
 			   "unmatched irlgm1f kappa times/values");
 		for (Size j = 0; j < kappaValues.size(); ++j) {
 		    report.next();
-		    report.add(i)
+		    report.add("IR")
+		        .add(irCount)
 		        .add(paraType)
 		        .add(baseCcy)
 		        .add(lgm->currency().code())
@@ -2862,6 +2864,7 @@ void ReportWriter::writeCalibrationReport(ore::data::Report& report,
 		        .add(j == 0 ? 0.0 : kappaTimes[j-1])
 		        .add(kappaValues[j]);
 		}
+		irCount++;
 	    }
 	    else if (auto fxbs = ext::dynamic_pointer_cast<FxBsParametrization>(p[i])) {
 	        QL_REQUIRE(fxbs->numberOfParameters() == 1, "1 fxbs parameter expected");
@@ -2870,15 +2873,17 @@ void ReportWriter::writeCalibrationReport(ore::data::Report& report,
 		QL_REQUIRE(times.size() == values.size() - 1, "unmatched fxbs sigma times/values");
 		for (Size j = 0; j < values.size(); ++j) {
 		    report.next();
-		    report.add(i)
+		    report.add("FX")
+		        .add(fxCount)
 		        .add(paraType)
 		        .add(baseCcy)
 		        .add(fxbs->currency().code())
-		        .add("Sigma")
+		        .add("Volatility")
 		        .add(values.size())
 		        .add(j == 0 ? 0.0 : times[j-1])
 		        .add(values[j]);
 		}
+		fxCount++;
 	    }
 	    else {
 	        ALOG("Parametrization " << i << " not covered by the calibration report yet");
