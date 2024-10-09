@@ -1243,6 +1243,8 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
             } else {
                 if (t > cashSettlementTimes_[exerciseCounter - 1] + (includeTodaysCashflows_ ? tinyTime : -tinyTime)) {
                     exercisedValue = RandomVariable(samples, 0.0);
+                    if (exerciseCounter == exerciseTimes_.size())
+                        optionValue = RandomVariable(samples, 0.0);
                 } else {
                     exercisedValue = cashExerciseValue;
                 }
