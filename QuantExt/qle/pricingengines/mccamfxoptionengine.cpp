@@ -41,12 +41,10 @@ McCamFxOptionEngineBase::McCamFxOptionEngineBase(
                            reevaluateExerciseInStickyRun),
       domesticCcy_(domesticCcy), foreignCcy_(foreignCcy), npvCcy_(npvCcy) {}
 
-void McCamFxOptionEngineBase::calculateFxOptionBase() const {
+void McCamFxOptionEngineBase::setupLegs() const {
     QL_REQUIRE(payoff_, "McCamFxOptionEngineBase: payoff has unexpected type");
-    QL_REQUIRE(exercise_->type() == Exercise::European, "McCamFxOptionEngineBase: not an European option");
-    QL_REQUIRE(!exercise_->dates().empty(), "McCamFxOptionEngineBase: exercise dates are empty");
 
-    if(payDate_ == Null<Date>())
+    if (payDate_ == Null<Date>())
         payDate_ = exercise_->dates().back();
 
     Real w = payoff_->optionType() == Option::Call ? 1.0 : -1.0;
@@ -56,6 +54,12 @@ void McCamFxOptionEngineBase::calculateFxOptionBase() const {
     leg_ = {domesticLeg, foreignLeg};
     currency_ = {domesticCcy_, foreignCcy_};
     payer_ = {false, false};
+}
+
+void McCamFxOptionEngineBase::calculateFxOptionBase() const {
+    QL_REQUIRE(exercise_->type() == Exercise::European, "McCamFxOptionEngineBase: not an European option");
+    QL_REQUIRE(!exercise_->dates().empty(), "McCamFxOptionEngineBase: exercise dates are empty");
+
     exerciseIntoIncludeSameDayFlows_ = true;
 
     McMultiLegBaseEngine::calculate();
@@ -77,6 +81,7 @@ void McCamFxOptionEngine::calculate() const {
     optionSettlement_ = Settlement::Physical;
     payDate_ = Date(); // will be set in calculateFxOptionBase()
 
+    McCamFxOptionEngineBase::setupLegs();
     McCamFxOptionEngineBase::calculateFxOptionBase();
 
     results_.value = fxOptionResultValue_;
@@ -91,6 +96,7 @@ void McCamFxEuropeanForwardOptionEngine::calculate() const {
     payDate_ = arguments_.paymentDate; // might be null, in which case it will be set in calculateFxOptionBase()
     optionSettlement_ = Settlement::Physical;
 
+    McCamFxOptionEngineBase::setupLegs();
     McCamFxOptionEngineBase::calculateFxOptionBase();
 
     results_.value = fxOptionResultValue_;
@@ -100,12 +106,48 @@ void McCamFxEuropeanForwardOptionEngine::calculate() const {
 
 void McCamFxEuropeanCSOptionEngine::calculate() const {
 
-    payoff_ = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
-    exercise_ = arguments_.exercise;
-    payDate_ = arguments_.paymentDate; // always given
-    optionSettlement_ = Settlement::Cash;
+    QL_REQUIRE(arguments_.exercise->dates().size() == 1,
+               "McCamFxEuropeanCSOptionEngine::calculate(): expected 1 exercise date, got "
+                   << arguments_.exercise->dates().size());
 
-    McCamFxOptionEngineBase::calculateFxOptionBase();
+    Date today = Settings::instance().evaluationDate();
+
+    payDate_ = arguments_.paymentDate; // always given
+    cashSettlementDates_ = {payDate_};
+
+    if (arguments_.exercise->dates().back() < today) {
+
+        // handle option expiry in the past, this means we have a deterministic payoff
+
+        Real payoffAmount = 0.0;
+        if (arguments_.automaticExercise) {
+            QL_REQUIRE(arguments_.underlying, "Expect a valid underlying index when exercise is automatic.");
+            payoffAmount = (*arguments_.payoff)(arguments_.underlying->fixing(arguments_.exercise->dates().back()));
+        } else if (arguments_.exercised) {
+            QL_REQUIRE(arguments_.priceAtExercise != Null<Real>(), "Expect a valid price at exercise when option "
+                                                                       << "has been manually exercised.");
+            payoffAmount = (*arguments_.payoff)(arguments_.priceAtExercise);
+        }
+
+        leg_ = {Leg{QuantLib::ext::make_shared<SimpleCashFlow>(payoffAmount, payDate_)}};
+        currency_ = {domesticCcy_};
+        payer_ = {false};
+
+        McCamFxOptionEngineBase::calculateFxOptionBase();
+
+    } else {
+
+        // handle option expiry in the future (or today)
+
+        payoff_ = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+        exercise_ = arguments_.exercise;
+        optionSettlement_ = Settlement::Cash;
+
+        McCamFxOptionEngineBase::setupLegs();
+        McCamFxOptionEngineBase::calculateFxOptionBase();
+    }
+
+    // set results
 
     results_.value = fxOptionResultValue_;
     results_.additionalResults["underlyingNpv"] = fxOptionUnderlyingNpv_;
