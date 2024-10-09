@@ -94,8 +94,8 @@ FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
 		sigmaTimes = Array(cachedCalibration->volTimes.begin(), cachedCalibration->volTimes.end());
 	    }
             else {
-	        sigmaTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
 		sigma = Array(sigmaTimes.size() + 1, data->sigmaValues()[0]);
+	        sigmaTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
 	    }
         } else {
             // use input time grid and input alpha array otherwise
@@ -105,10 +105,10 @@ FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
 		sigmaTimes = Array(cachedCalibration->volTimes.begin(), cachedCalibration->volTimes.end());
 	    }
             else {
-	        sigmaTimes = Array(data_->sigmaTimes().begin(), data_->sigmaTimes().end());
 		sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
-		QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "sigma grids do not match");
+	        sigmaTimes = Array(data_->sigmaTimes().begin(), data_->sigmaTimes().end());
 	    }
+	    QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "sigma grids do not match");
         }
     }
 

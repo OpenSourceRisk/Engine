@@ -424,6 +424,17 @@ void InputParameters::setXvaSensiPricingEngineFromFile(const std::string& fileNa
     xvaSensiPricingEngine_->fromFile(fileName);
 }
 
+void logParametrizationData(const ext::shared_ptr<ParametrizationData>& data) {
+    DLOG("AssetType: " << data->assetType);
+    DLOG("SequenceNumber: " << data->sequenceNumber);
+    DLOG("ParametrizationType: " << data->parametrizationType);
+    DLOG("Currency: " << data->currency);
+    DLOG("VolTimes: " << to_string(data->volTimes));
+    DLOG("VolValues: " << to_string(data->volValues));
+    DLOG("RevTimes: " << to_string(data->revTimes));
+    DLOG("RevValues: " << to_string(data->revValues));
+}
+  
 void InputParameters::setCalibrationFromFile(const std::string& fileName) {
     calibrationData_.clear();
     
@@ -451,19 +462,19 @@ void InputParameters::setCalibrationFromFile(const std::string& fileName) {
 
 	if (reader.currentLine() > 0 &&
 	    (assetType != data->assetType || sequenceNumber != data->sequenceNumber)) {
-	    // Store this parametrization data set 
-	    QL_REQUIRE(data->volTimes.size() + 1 == data->volValues.size(), "volatility vector size mismatch");
-	    QL_REQUIRE(data->revTimes.size() + 1 == data->revValues.size(), "reversion vector size mismatch");
+
+	    // Check and store this parametrization data set 
+	    logParametrizationData(data);
+
+	    QL_REQUIRE(data->volTimes.size() + 1 == data->volValues.size(), "volatility vector size mismatch, "
+		       << data->volTimes.size() << " times vs " << data->volValues.size() << " values");
+	    QL_REQUIRE(data->revValues.size() == 0 ||
+		       data->revTimes.size() + 1 == data->revValues.size(), "reversion vector size mismatch, "
+		       << data->revTimes.size() << " times vs " << data->revValues.size() << " values");
+
 	    calibrationData_[data->assetType][data->sequenceNumber] = data;
 	    DLOG("Stored calibrationData " << data->assetType << " " << data->sequenceNumber);
-	    DLOG("AssetType: " << data->assetType);
-	    DLOG("SequenceNumber: " << data->sequenceNumber);
-	    DLOG("ParametrizationType: " << data->parametrizationType);
-	    DLOG("Currency: " << data->currency);
-	    DLOG("VolTimes: " << to_string(data->volTimes));
-	    DLOG("VolValues: " << to_string(data->volValues));
-	    DLOG("RevTimes: " << to_string(data->revTimes));
-	    DLOG("RevValues: " << to_string(data->revValues));
+
 	    // ... and create the next empty struct
 	    data = ext::make_shared<ParametrizationData>();
 	}
@@ -486,7 +497,15 @@ void InputParameters::setCalibrationFromFile(const std::string& fileName) {
 	}
     }
 
-    // Store the final data set
+    // Check and store the final data set
+    logParametrizationData(data);
+
+    QL_REQUIRE(data->volTimes.size() + 1 == data->volValues.size(), "volatility vector size mismatch, "
+	       << data->volTimes.size() << " times vs " << data->volValues.size() << " values");
+    QL_REQUIRE(data->revValues.size() == 0 ||
+	       data->revTimes.size() + 1 == data->revValues.size(), "reversion vector size mismatch, "
+		       << data->revTimes.size() << " times vs " << data->revValues.size() << " values");
+
     calibrationData_[data->assetType][data->sequenceNumber] = data;
     DLOG("Stored calibrationData " << data->assetType << " " << data->sequenceNumber);
 }
