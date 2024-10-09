@@ -88,14 +88,15 @@ FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
     } else {
         if (data->calibrateSigma() && data->calibrationType() == CalibrationType::Bootstrap) { // override
             QL_REQUIRE(optionExpiries_.size() > 0, "optionExpiries is empty");
+	    
 	    if (cachedCalibration) {
 	        WLOG("Override initial FX sigma with cached calibration");
 		sigma =  Array(cachedCalibration->volValues.begin(), cachedCalibration->volValues.end());
 		sigmaTimes = Array(cachedCalibration->volTimes.begin(), cachedCalibration->volTimes.end());
 	    }
             else {
-		sigma = Array(sigmaTimes.size() + 1, data->sigmaValues()[0]);
-	        sigmaTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
+		sigmaTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
+	        sigma = Array(sigmaTimes.size() + 1, data->sigmaValues()[0]);
 	    }
         } else {
             // use input time grid and input alpha array otherwise
