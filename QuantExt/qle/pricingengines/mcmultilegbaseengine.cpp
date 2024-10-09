@@ -919,7 +919,8 @@ void McMultiLegBaseEngine::calculate() const {
             if (d < today_ || (!includeReferenceDateEvents_ && d == today_))
                 continue;
             exerciseTimes.insert(time(d));
-            cashSettlementTimes.push_back(time(cashSettlementDates_[counter++]));
+            if (optionSettlement_ == Settlement::Type::Cash)
+                cashSettlementTimes.push_back(time(cashSettlementDates_[counter++]));
         }
     }
 
