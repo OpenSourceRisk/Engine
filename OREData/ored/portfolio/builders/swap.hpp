@@ -31,7 +31,6 @@
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
-#include <qle/pricingengines/mclgmswaptionengine.hpp>
 
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
