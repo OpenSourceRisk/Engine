@@ -37,7 +37,7 @@ void PricingAnalyticImpl::setUpConfigurations() {
         end(analytic()->analyticTypes())) {
         analytic()->configurations().simulationConfigRequired = true;
         analytic()->configurations().sensitivityConfigRequired = true;
-    }  
+    } 
 
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();

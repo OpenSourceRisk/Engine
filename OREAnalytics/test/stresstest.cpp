@@ -150,91 +150,91 @@ QuantLib::ext::shared_ptr<StressTestScenarioData> setupStressScenarioData() {
 
     StressTestScenarioData::StressTestData data;
     data.label = "stresstest_1";
-    data.discountCurveShifts["EUR"] = StressTestScenarioData::CurveShiftData();
-    data.discountCurveShifts["EUR"].shiftType = ShiftType::Absolute;
-    data.discountCurveShifts["EUR"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
+    data.discountCurveShifts["EUR"] = ext::make_shared<StressTestScenarioData::CurveShiftData>();
+    data.discountCurveShifts["EUR"]->shiftType = ShiftType::Absolute;
+    data.discountCurveShifts["EUR"]->shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                    5 * Years,  7 * Years, 10 * Years};
-    data.discountCurveShifts["EUR"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.discountCurveShifts["USD"] = StressTestScenarioData::CurveShiftData();
-    data.discountCurveShifts["USD"].shiftType = ShiftType::Absolute;
-    data.discountCurveShifts["USD"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
+    data.discountCurveShifts["EUR"]->shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
+    data.discountCurveShifts["USD"] = ext::make_shared<StressTestScenarioData::CurveShiftData>();
+    data.discountCurveShifts["USD"]->shiftType = ShiftType::Absolute;
+    data.discountCurveShifts["USD"]->shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                    5 * Years,  7 * Years, 10 * Years};
-    data.discountCurveShifts["USD"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.discountCurveShifts["GBP"] = StressTestScenarioData::CurveShiftData();
-    data.discountCurveShifts["GBP"].shiftType = ShiftType::Absolute;
-    data.discountCurveShifts["GBP"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
+    data.discountCurveShifts["USD"]->shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
+    data.discountCurveShifts["GBP"] = ext::make_shared<StressTestScenarioData::CurveShiftData>();
+    data.discountCurveShifts["GBP"]->shiftType = ShiftType::Absolute;
+    data.discountCurveShifts["GBP"]->shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                    5 * Years,  7 * Years, 10 * Years};
-    data.discountCurveShifts["GBP"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.discountCurveShifts["JPY"] = StressTestScenarioData::CurveShiftData();
-    data.discountCurveShifts["JPY"].shiftType = ShiftType::Absolute;
-    data.discountCurveShifts["JPY"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
+    data.discountCurveShifts["GBP"]->shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
+    data.discountCurveShifts["JPY"] = ext::make_shared<StressTestScenarioData::CurveShiftData>();
+    data.discountCurveShifts["JPY"]->shiftType = ShiftType::Absolute;
+    data.discountCurveShifts["JPY"]->shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                    5 * Years,  7 * Years, 10 * Years};
-    data.discountCurveShifts["JPY"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.discountCurveShifts["CHF"] = StressTestScenarioData::CurveShiftData();
-    data.discountCurveShifts["CHF"].shiftType = ShiftType::Absolute;
-    data.discountCurveShifts["CHF"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
+    data.discountCurveShifts["JPY"]->shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
+    data.discountCurveShifts["CHF"] = ext::make_shared<StressTestScenarioData::CurveShiftData>();
+    data.discountCurveShifts["CHF"]->shiftType = ShiftType::Absolute;
+    data.discountCurveShifts["CHF"]->shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                    5 * Years,  7 * Years, 10 * Years};
-    data.discountCurveShifts["CHF"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.indexCurveShifts["EUR-EURIBOR-6M"] = StressTestScenarioData::CurveShiftData();
-    data.indexCurveShifts["EUR-EURIBOR-6M"].shiftType = ShiftType::Absolute;
-    data.indexCurveShifts["EUR-EURIBOR-6M"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
+    data.discountCurveShifts["CHF"]->shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
+    data.indexCurveShifts["EUR-EURIBOR-6M"] = ext::make_shared<StressTestScenarioData::CurveShiftData>();
+    data.indexCurveShifts["EUR-EURIBOR-6M"]->shiftType = ShiftType::Absolute;
+    data.indexCurveShifts["EUR-EURIBOR-6M"]->shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                            5 * Years,  7 * Years, 10 * Years};
-    data.indexCurveShifts["EUR-EURIBOR-6M"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.indexCurveShifts["USD-LIBOR-3M"] = StressTestScenarioData::CurveShiftData();
-    data.indexCurveShifts["USD-LIBOR-3M"].shiftType = ShiftType::Absolute;
-    data.indexCurveShifts["USD-LIBOR-3M"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
+    data.indexCurveShifts["EUR-EURIBOR-6M"]->shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
+    data.indexCurveShifts["USD-LIBOR-3M"] = ext::make_shared<StressTestScenarioData::CurveShiftData>();
+    data.indexCurveShifts["USD-LIBOR-3M"]->shiftType = ShiftType::Absolute;
+    data.indexCurveShifts["USD-LIBOR-3M"]->shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                          5 * Years,  7 * Years, 10 * Years};
-    data.indexCurveShifts["USD-LIBOR-3M"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.indexCurveShifts["USD-LIBOR-6M"] = StressTestScenarioData::CurveShiftData();
-    data.indexCurveShifts["USD-LIBOR-6M"].shiftType = ShiftType::Absolute;
-    data.indexCurveShifts["USD-LIBOR-6M"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
+    data.indexCurveShifts["USD-LIBOR-3M"]->shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
+    data.indexCurveShifts["USD-LIBOR-6M"] = ext::make_shared<StressTestScenarioData::CurveShiftData>();
+    data.indexCurveShifts["USD-LIBOR-6M"]->shiftType = ShiftType::Absolute;
+    data.indexCurveShifts["USD-LIBOR-6M"]->shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                          5 * Years,  7 * Years, 10 * Years};
-    data.indexCurveShifts["USD-LIBOR-6M"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.indexCurveShifts["GBP-LIBOR-6M"] = StressTestScenarioData::CurveShiftData();
-    data.indexCurveShifts["GBP-LIBOR-6M"].shiftType = ShiftType::Absolute;
-    data.indexCurveShifts["GBP-LIBOR-6M"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
+    data.indexCurveShifts["USD-LIBOR-6M"]->shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
+    data.indexCurveShifts["GBP-LIBOR-6M"] = ext::make_shared<StressTestScenarioData::CurveShiftData>();
+    data.indexCurveShifts["GBP-LIBOR-6M"]->shiftType = ShiftType::Absolute;
+    data.indexCurveShifts["GBP-LIBOR-6M"]->shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                          5 * Years,  7 * Years, 10 * Years};
-    data.indexCurveShifts["GBP-LIBOR-6M"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.indexCurveShifts["CHF-LIBOR-6M"] = StressTestScenarioData::CurveShiftData();
-    data.indexCurveShifts["CHF-LIBOR-6M"].shiftType = ShiftType::Absolute;
-    data.indexCurveShifts["CHF-LIBOR-6M"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
+    data.indexCurveShifts["GBP-LIBOR-6M"]->shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
+    data.indexCurveShifts["CHF-LIBOR-6M"] = ext::make_shared<StressTestScenarioData::CurveShiftData>();
+    data.indexCurveShifts["CHF-LIBOR-6M"]->shiftType = ShiftType::Absolute;
+    data.indexCurveShifts["CHF-LIBOR-6M"]->shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                          5 * Years,  7 * Years, 10 * Years};
-    data.indexCurveShifts["CHF-LIBOR-6M"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.indexCurveShifts["JPY-LIBOR-6M"] = StressTestScenarioData::CurveShiftData();
-    data.indexCurveShifts["JPY-LIBOR-6M"].shiftType = ShiftType::Absolute;
-    data.indexCurveShifts["JPY-LIBOR-6M"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
+    data.indexCurveShifts["CHF-LIBOR-6M"]->shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
+    data.indexCurveShifts["JPY-LIBOR-6M"] = ext::make_shared<StressTestScenarioData::CurveShiftData>();
+    data.indexCurveShifts["JPY-LIBOR-6M"]->shiftType = ShiftType::Absolute;
+    data.indexCurveShifts["JPY-LIBOR-6M"]->shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                          5 * Years,  7 * Years, 10 * Years};
-    data.indexCurveShifts["JPY-LIBOR-6M"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.fxShifts["EURUSD"] = StressTestScenarioData::SpotShiftData();
-    data.fxShifts["EURUSD"].shiftType = ShiftType::Relative;
-    data.fxShifts["EURUSD"].shiftSize = 0.01;
-    data.fxShifts["EURGBP"] = StressTestScenarioData::SpotShiftData();
-    data.fxShifts["EURGBP"].shiftType = ShiftType::Relative;
-    data.fxShifts["EURGBP"].shiftSize = 0.01;
-    data.fxShifts["EURJPY"] = StressTestScenarioData::SpotShiftData();
-    data.fxShifts["EURJPY"].shiftType = ShiftType::Relative;
-    data.fxShifts["EURJPY"].shiftSize = 0.01;
-    data.fxShifts["EURCHF"] = StressTestScenarioData::SpotShiftData();
-    data.fxShifts["EURCHF"].shiftType = ShiftType::Relative;
-    data.fxShifts["EURCHF"].shiftSize = 0.01;
-    data.fxVolShifts["EURUSD"] = StressTestScenarioData::FXVolShiftData();
-    data.fxVolShifts["EURUSD"].shiftType = ShiftType::Absolute;
-    data.fxVolShifts["EURUSD"].shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
-    data.fxVolShifts["EURUSD"].shifts = {0.10, 0.11, 0.13, 0.14};
-    data.fxVolShifts["EURGBP"] = StressTestScenarioData::FXVolShiftData();
-    data.fxVolShifts["EURGBP"].shiftType = ShiftType::Absolute;
-    data.fxVolShifts["EURGBP"].shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
-    data.fxVolShifts["EURGBP"].shifts = {0.10, 0.11, 0.13, 0.14};
-    data.fxVolShifts["EURJPY"] = StressTestScenarioData::FXVolShiftData();
-    data.fxVolShifts["EURJPY"].shiftType = ShiftType::Absolute;
-    data.fxVolShifts["EURJPY"].shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
-    data.fxVolShifts["EURJPY"].shifts = {0.10, 0.11, 0.13, 0.14};
-    data.fxVolShifts["EURCHF"] = StressTestScenarioData::FXVolShiftData();
-    data.fxVolShifts["EURCHF"].shiftType = ShiftType::Absolute;
-    data.fxVolShifts["EURCHF"].shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
-    data.fxVolShifts["EURCHF"].shifts = {0.10, 0.11, 0.13, 0.14};
+    data.indexCurveShifts["JPY-LIBOR-6M"]->shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
+    data.fxShifts["EURUSD"] = ext::make_shared<StressTestScenarioData::SpotShiftData>();
+    data.fxShifts["EURUSD"]->shiftType = ShiftType::Relative;
+    data.fxShifts["EURUSD"]->shiftSize = 0.01;
+    data.fxShifts["EURGBP"] = ext::make_shared<StressTestScenarioData::SpotShiftData>();
+    data.fxShifts["EURGBP"]->shiftType = ShiftType::Relative;
+    data.fxShifts["EURGBP"]->shiftSize = 0.01;
+    data.fxShifts["EURJPY"] = ext::make_shared<StressTestScenarioData::SpotShiftData>();
+    data.fxShifts["EURJPY"]->shiftType = ShiftType::Relative;
+    data.fxShifts["EURJPY"]->shiftSize = 0.01;
+    data.fxShifts["EURCHF"] = ext::make_shared<StressTestScenarioData::SpotShiftData>();
+    data.fxShifts["EURCHF"]->shiftType = ShiftType::Relative;
+    data.fxShifts["EURCHF"]->shiftSize = 0.01;
+    data.fxVolShifts["EURUSD"] = ext::make_shared<StressTestScenarioData::FXVolShiftData>();
+    data.fxVolShifts["EURUSD"]->shiftType = ShiftType::Absolute;
+    data.fxVolShifts["EURUSD"]->shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
+    data.fxVolShifts["EURUSD"]->shifts = {0.10, 0.11, 0.13, 0.14};
+    data.fxVolShifts["EURGBP"] = ext::make_shared<StressTestScenarioData::FXVolShiftData>();
+    data.fxVolShifts["EURGBP"]->shiftType = ShiftType::Absolute;
+    data.fxVolShifts["EURGBP"]->shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
+    data.fxVolShifts["EURGBP"]->shifts = {0.10, 0.11, 0.13, 0.14};
+    data.fxVolShifts["EURJPY"] = ext::make_shared<StressTestScenarioData::FXVolShiftData>();
+    data.fxVolShifts["EURJPY"]->shiftType = ShiftType::Absolute;
+    data.fxVolShifts["EURJPY"]->shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
+    data.fxVolShifts["EURJPY"]->shifts = {0.10, 0.11, 0.13, 0.14};
+    data.fxVolShifts["EURCHF"] = ext::make_shared<StressTestScenarioData::FXVolShiftData>();
+    data.fxVolShifts["EURCHF"]->shiftType = ShiftType::Absolute;
+    data.fxVolShifts["EURCHF"]->shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
+    data.fxVolShifts["EURCHF"]->shifts = {0.10, 0.11, 0.13, 0.14};
 
-    stressData->data() = vector<StressTestScenarioData::StressTestData>(1, data);
+    stressData->setData(vector<StressTestScenarioData::StressTestData>(1, data));
 
     return stressData;
 }
