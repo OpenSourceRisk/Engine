@@ -1045,6 +1045,10 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "") {
             setStressAccurary(parseReal(tmp));
         }
+        tmp = params_->get("stress", "precision", false);
+        if (tmp != "") {
+            setStressPrecision((Size)parseReal(tmp));
+        }
     }
 
     /****************
@@ -1404,17 +1408,17 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setMporDays(static_cast<Size>(parseInteger(tmp)));
 
-        tmp = params_->get("simm", "crif", false);
-        if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
-            setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
-        }
-
         tmp = params_->get("simm", "simmCalibration", false);
         if (tmp != "") {
             string file = (inputPath / tmp).generic_string();
             if (boost::filesystem::exists(file))
                 setSimmCalibrationDataFromFile(file);
+        }
+
+        tmp = params_->get("simm", "crif", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
         }
 
         tmp = params_->get("simm", "calculationCurrency", false);

@@ -115,13 +115,13 @@ StressTest::StressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& po
     LOG("Stress testing done");
 }
 
-void StressTest::writeReport(const QuantLib::ext::shared_ptr<ore::data::Report>& report, Real outputThreshold) {
+void StressTest::writeReport(const QuantLib::ext::shared_ptr<ore::data::Report>& report, Real outputThreshold, Size precision) {
 
     report->addColumn("TradeId", string());
     report->addColumn("ScenarioLabel", string());
     report->addColumn("Base NPV", double(), 2);
     report->addColumn("Scenario NPV", double(), 2);
-    report->addColumn("Sensitivity", double(), 2);
+    report->addColumn("Sensitivity", double(), precision);
 
     for (auto const& [id, npv] : shiftedNPV_) {
         string tradeId = id.first;

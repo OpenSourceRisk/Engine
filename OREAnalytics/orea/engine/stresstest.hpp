@@ -83,7 +83,7 @@ public:
     const std::map<std::pair<std::string, std::string>, Real>& delta() { return delta_; }
 
     //! Write NPV by trade/scenario to a file (base and shifted NPVs, delta)
-    void writeReport(const QuantLib::ext::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
+    void writeReport(const QuantLib::ext::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0, Size precision=2);
 
 private:
     // base NPV by trade

@@ -93,7 +93,7 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         analytic()->configurations().simMarketParams, scenarioData, *analytic()->configurations().curveConfig,
         *analytic()->configurations().todaysMarketParams, nullptr, inputs_->refDataManager(),
         *inputs_->iborFallbackConfig(), inputs_->continueOnError());
-    stressTest->writeReport(report, inputs_->stressThreshold());
+    stressTest->writeReport(report, inputs_->stressThreshold(), inputs_->stressPrecision());
     analytic()->reports()[label()]["stress"] = report;
     CONSOLE("OK");
 }
