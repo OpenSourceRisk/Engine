@@ -1157,6 +1157,8 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
         exercised_ = std::vector<Filter>(exerciseTimes_.size() + 1, Filter(samples, false));
         Size counter = 0;
 
+        Filter wasExercised(samples, false);
+
         for (auto t : exerciseTimes_) {
 
             // find the time in the exerciseXvaTimes vector
@@ -1172,9 +1174,9 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
             RandomVariable continuationValue =
                 regModelContinuationValue_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
 
-            exercised_[counter + 1] = !exercised_[counter] && exerciseValue > continuationValue &&
-                                      exerciseValue > RandomVariable(samples, 0.0);
-
+            exercised_[counter + 1] =
+                !wasExercised && exerciseValue > continuationValue && exerciseValue > RandomVariable(samples, 0.0);
+            wasExercised = wasExercised || exercised_[counter + 1];
 
             ++counter;
         }
@@ -1188,6 +1190,7 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
 
     Filter wasExercised(samples, false);
     RandomVariable cashExerciseValue(samples, 0.0);
+    std::map<Real, RandomVariable> cashSettlements;
 
     for (auto t : exerciseXvaTimes_) {
 
@@ -1198,61 +1201,68 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
             ++exerciseCounter;
             wasExercised = wasExercised || exercised_[exerciseCounter];
 
-            // determine contribution to cash exercise value if there are paths on which the cash option is exercised
+            // if cash settled, determine the amount on exercise and until when it is to be included in exposure
 
             if (settlement_ == Settlement::Type::Cash) {
-                cashExerciseValue += conditionalResult(
-                    exercised_[exerciseCounter],
-                    regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
-                    RandomVariable(samples, 0.0));
+                RandomVariable cashPayment =
+                    regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
+                cashPayment = applyFilter(cashPayment, exercised_[exerciseCounter]);
+                cashSettlements[cashSettlementTimes_[exerciseCounter - 1]] = cashPayment;
             }
         }
 
         if (xvaTimes_.find(t) != xvaTimes_.end()) {
 
-            RandomVariable optionValue =
-                regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
+                // there is no continuation value on the last exercise date
 
-            /* Physical Settlement:
+                RandomVariable futureOptionValue =
+                    exerciseCounter == exerciseTimes_.size()
+                        ? RandomVariable(samples, 0.0)
+                        : regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
 
-               Exercise value is "undExInto" if we are in the period between the date on which the exercise happend and
-               the next exercise date after that, otherwise it is the full dirty npv. This assumes that two exercise
-               dates d1, d2 are not so close together that a coupon
+                /* Physical Settlement:
 
-               - pays after d1, d2
-               - but does not belong to the exercise-into underlying for both d1 and d2
+                   Exercise value is "undExInto" if we are in the period between the date on which the exercise happend
+                   and the next exercise date after that, otherwise it is the full dirty npv. This assumes that two
+                   exercise dates d1, d2 are not so close together that a coupon
 
-               This assumption seems reasonable, since we would never exercise on d1 but wait until d2 since the
-               underlying which we exercise into is the same in both cases.
-               We don't introduce a hard check for this, but we rather assume that the exercise dates are set up
-               appropriately adjusted to the coupon periods. The worst that can happen is that the exercised value
-               uses the full dirty npv at a too early time.
+                   - pays after d1, d2
+                   - but does not belong to the exercise-into underlying for both d1 and d2
 
-               Cash Settlement:
+                   This assumption seems reasonable, since we would never exercise on d1 but wait until d2 since the
+                   underlying which we exercise into is the same in both cases.
+                   We don't introduce a hard check for this, but we rather assume that the exercise dates are set up
+                   appropriately adjusted to the coupon periods. The worst that can happen is that the exercised value
+                   uses the full dirty npv at a too early time.
 
-               We use cashExerciseValue as set on the exercise time above as the PV until the exercise date. The behaviour
-               on the settlement date itself is dependent on includeTodaysCashflows_.
-            */
+                   Cash Settlement:
 
-            RandomVariable exercisedValue;
+                   We use the cashSettlements map constructed on each exercise date.
 
-            if(settlement_ == Settlement::Type::Physical) {
-                exercisedValue = conditionalResult(
-                    exercised_[exerciseCounter],
-                    regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
-                    regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
-            } else {
-                if (t > cashSettlementTimes_[exerciseCounter - 1] + (includeTodaysCashflows_ ? tinyTime : -tinyTime)) {
-                    exercisedValue = RandomVariable(samples, 0.0);
-                    if (exerciseCounter == exerciseTimes_.size())
-                        optionValue = RandomVariable(samples, 0.0);
+                */
+
+                RandomVariable exercisedValue(samples, 0.0);
+
+                if (settlement_ == Settlement::Type::Physical) {
+                    exercisedValue = conditionalResult(
+                        exercised_[exerciseCounter],
+                        regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
+                        regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
                 } else {
-                    exercisedValue = cashExerciseValue;
+                    exercisedValue.setAll(0.0);
+                    for (auto it = cashSettlements.begin(); it != cashSettlements.end();) {
+                        if (t < it->first + (includeTodaysCashflows_ ? tinyTime : -tinyTime)) {
+                            exercisedValue += it->second;
+                            ++it;
+                        } else {
+                            it = cashSettlements.erase(it);
+                        }
+                    }
                 }
-            }
 
             result[xvaCounter + 1] =
-                max(RandomVariable(samples, 0.0), conditionalResult(wasExercised, exercisedValue, optionValue));
+                max(RandomVariable(samples, 0.0), conditionalResult(wasExercised, exercisedValue, futureOptionValue));
+
             ++xvaCounter;
         }
 
