@@ -624,6 +624,33 @@ checking out the source code from the github repository as described in section 
 ORE releases are regularly provided in the form of source code archives, Windows exe\-cutables {\tt ore.exe}, example
 cases and documentation. Release archives will be provided at \url{https://github.com/opensourcerisk/engine/releases}.
 
+\subsubsection{Linux container images}
+
+We build and release a container image, which includes the necessary libraries and binaries. \\
+
+\medskip
+Usage example: \\
+
+\medskip
+{\tt docker run ghcr.io/OpenSourceRisk/ore-engine:centos-stream9-latest [<ore\_argument> ...] } \\
+
+\medskip
+Other tags and versions are available, see \url{https://github.com/OpenSourceRisk/Engine/pkgs/container/ore-engine/versions?filters\%5Bversion_type\%5D=tagged} \\
+
+\medskip
+If you need to bring in files from your container host, then use a container volume to mount a host directory into the running container: \\
+
+\medskip
+{\tt docker run -v <host\_dir>:<container\_dir> ghcr.io/OpenSourceRisk/ore-engine:centos-stream9-latest [<ore\_argument> ...] } \\
+
+\medskip
+For example, this command can be used to run a single example from the {\tt Examples} directory: \\
+
+\medskip
+{\tt docker run -v <workspace>/Examples:/ore/Examples -i -t -w /ore/Examples/Example\_1 ghcr.io/OpenSourceRisk/ore-engine:centos-stream9-latest Input/ore.xml } \\
+
+\subsubsection{Windows binaries}
+
 The release contains the QuantLib source version that ORE depends on. This is the latest QuantLib release that precedes the ORE release including a small number of patches.
 
 \medskip

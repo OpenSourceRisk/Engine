@@ -1,0 +1,138 @@
+ARG debian_tag=11
+# set `variant` to `ci` to omit the test run - useful for CI where we want to run (and extract) results separately
+ARG variant=tested
+
+#
+# builder image
+#
+FROM debian:${debian_tag} AS builder-ci
+
+# Set to override number of build jobs. Will default to number of cores available.
+ARG build_jobs=
+ARG cmake_build_type=Release
+
+COPY CMakeLists.txt /ore/CMakeLists.txt
+COPY QuantLib /ore/QuantLib
+COPY QuantExt /ore/QuantExt
+COPY OREData /ore/OREData
+COPY OREAnalytics /ore/OREAnalytics
+COPY App /ore/App
+COPY ThirdPartyLibs /ore/ThirdPartyLibs
+COPY ORETest /ore/ORETest
+COPY cmake /ore/cmake
+
+# Install dependencies
+RUN apt-get -qq update \
+  && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y \
+    autoconf \
+    build-essential \
+    ccache \
+    cmake \
+    doxygen \
+    graphviz \
+    libboost-all-dev \
+    libbz2-dev \
+    libeigen3-dev \
+    libtool \
+    ninja-build \
+    ocl-icd-opencl-dev \
+    opencl-headers \
+    zlib1g-dev \
+  && apt-get clean
+
+# set up the build
+RUN cd / \
+  && mkdir -p /ore/build && cd /ore/build \
+  && cmake /ore -GNinja -DCMAKE_BUILD_TYPE=${cmake_build_type} -DORE_BUILD_DOC=OFF -DORE_USE_ZLIB=ON -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=ON -DORE_ENABLE_OPENCL=ON
+
+# build
+RUN cd /ore/build \
+  && cmake --build . -- -j${build_jobs:-$(nproc)} install
+
+RUN ldconfig
+
+# test facility
+# Set up the Python 3.9 venv so nose works.  Migration from nose seems needed
+RUN DEBIAN_FRONTEND=noninteractive apt-get -qq update && apt-get -qq install -y \
+    python3.9 \
+    python3-pip \
+    python3-venv \
+  && apt-get clean
+
+ENV VIRTUAL_ENV=/opt/python3.9-venv
+RUN python3.9 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+RUN pip3 install \
+    datacompy \
+    jsondiff \
+    lxml \
+    matplotlib \
+    pandas \
+    nose \
+    nose_xunitmp \
+    xmldiff
+
+COPY Examples /ore/Examples
+COPY Tools /ore/Tools
+
+# 
+# testing
+#
+FROM builder-ci AS builder-tested
+ENV NOSE_PROCESSES=${build_jobs:-$(nproc)} NOSE_PROCESS_TIMEOUT=600 NOSE_WITH_XUNITMP=true NOSE_XUNITMP_FILE=/ore/test-results/examples.xml
+# This always succeeds - we test for the "failed" status in the downstream builder - allowing us to extract detailed results from this layer in CI
+RUN mkdir -p /ore/test-results && cd /ore/build \
+  && ( \
+    ctest -j${build_jobs:-$(nproc)} --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 5400; \
+    FLAG=$?; \
+    if [ "$FLAG" -eq "0" ]; then echo "Test SUCCESS"; else echo "Test FAILURE"; fi; \
+    if [ "$FLAG" -ne "0" ]; then echo "FAILURE" > /ore/test-results/tests-failed; fi \
+  )
+
+#
+# final "builder"
+# 
+FROM builder-${variant} AS builder
+# assert that we must not have the "tests failed" indicator file from the variant builder
+RUN if [ -f /ore/test-results/tests-failed ]; then echo "Tests failed, cannot continue"; exit 1; fi
+
+#
+# release image
+#
+FROM debian:${debian_tag}-slim AS release
+
+LABEL org.opencontainers.image.authors="Quaternion Risk Management"
+LABEL org.opencontainers.image.description="Open Source Risk Engine"
+
+ARG boostver="1.74.0"
+
+# libs to run
+RUN apt-get -qq update \
+    && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y \
+      ocl-icd-libopencl1 \
+      libboost-atomic${boostver} \
+      libboost-chrono${boostver} \
+      libboost-date-time${boostver} \
+      libboost-filesystem${boostver} \
+      libboost-iostreams${boostver} \
+      libboost-log${boostver} \
+      libboost-regex${boostver} \
+      libboost-serialization${boostver} \
+      libboost-system${boostver} \
+      libboost-thread${boostver} \
+      libboost-timer${boostver} \
+      libboost-test${boostver} \
+    && apt-get clean
+
+# fetch built files from orebuild - we use a bind mount to allow us to copy library symlinks
+RUN mkdir -p /ore/bin /ore/lib
+RUN --mount=type=bind,from=builder,source=/usr/local,target=/orebuild cp -a /orebuild/bin/ore /ore/bin && cp -a /orebuild/lib/lib*.so* /ore/lib
+
+# tell the linker where the libraries are, as the relative directories are no longer valid
+ENV LD_LIBRARY_PATH=/ore/lib
+# ensure ore is on the PATH so that if a interactive terminal is used, it's easily findable
+ENV PATH=/ore/bin:$PATH
+# Adjust the locale so 1,000 comma separators are suppressed
+ENV LC_NUMERIC=C
+
+ENTRYPOINT ["/ore/bin/ore"]

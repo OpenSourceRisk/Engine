@@ -1,0 +1,115 @@
+ARG fedora_tag=40
+# set `variant` to `ci` to omit the test run - useful for CI where we want to run (and extract) results separately
+ARG variant=tested
+
+#
+# orebuild
+#
+FROM registry.fedoraproject.org/fedora:${fedora_tag} AS builder-ci
+
+# Set to override number of build jobs. Will default to number of cores available.
+ARG build_jobs=
+ARG cmake_build_type=Release
+
+COPY CMakeLists.txt /ore/CMakeLists.txt
+COPY QuantLib /ore/QuantLib
+COPY QuantExt /ore/QuantExt
+COPY OREData /ore/OREData
+COPY OREAnalytics /ore/OREAnalytics
+COPY App /ore/App
+COPY ThirdPartyLibs /ore/ThirdPartyLibs
+COPY ORETest /ore/ORETest
+COPY cmake /ore/cmake
+
+# Install dependencies
+RUN yum -q -y clean expire-cache && yum -q -y update && yum -q -y install \
+    boost-devel \
+    bzip2-devel \
+    cmake \
+    # Example_43 requires this https://github.com/OpenSourceRisk/Engine/issues/142
+    eigen3-devel \
+    gcc \
+    gcc-c++ \
+    glibc-devel \
+    ninja-build \
+    ocl-icd-devel \
+    opencl-headers \
+    # zlib is (currently) provided by zlib-ng in fedora40
+    zlib-ng-compat-devel
+
+# set up the build
+RUN cd / \
+  && mkdir -p /ore/build && cd /ore/build \
+  && cmake /ore -GNinja -DCMAKE_BUILD_TYPE=${cmake_build_type} -DORE_BUILD_DOC=OFF -DORE_USE_ZLIB=ON -DQL_BUILD_EXAMPLES=false -DQL_BUILD_TEST_SUITE=false -DQL_BUILD_BENCHMARK=false -DQL_ENABLE_SESSIONS=ON -DORE_ENABLE_OPENCL=ON
+
+# build
+RUN cd /ore/build \
+  && cmake --build . -- -j${build_jobs:-$(nproc)} install
+
+RUN ldconfig
+
+# test facility
+# Set up the Python 3.9 venv so nose works.  Migration from nose seems needed
+RUN yum -q -y install python3.9 python3-pip 
+ENV VIRTUAL_ENV=/opt/python3.9-venv
+RUN python3.9 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+RUN pip3 install \
+    datacompy \
+    jsondiff \
+    lxml \
+    matplotlib \
+    pandas \
+    nose \
+    nose_xunitmp \
+    xmldiff
+
+COPY Examples /ore/Examples
+COPY Tools /ore/Tools
+
+# 
+# testing
+#
+FROM builder-ci AS builder-tested
+ENV NOSE_PROCESSES=${build_jobs:-$(nproc)} NOSE_PROCESS_TIMEOUT=600 NOSE_WITH_XUNITMP=true NOSE_XUNITMP_FILE=/ore/test-results/examples.xml
+# This always succeeds - we test for the "failed" status in the downstream builder - allowing us to extract detailed results from this layer in CI
+RUN mkdir -p /ore/test-results && cd /ore/build \
+  && ( \
+    ctest -j${build_jobs:-$(nproc)} --test-dir . --output-junit /ore/test-results/ctest.xml --timeout 5400; \
+    FLAG=$?; \
+    if [ "$FLAG" -eq "0" ]; then echo "Test SUCCESS"; else echo "Test FAILURE"; fi; \
+    if [ "$FLAG" -ne "0" ]; then echo "FAILURE" > /ore/test-results/tests-failed; fi \
+  )
+
+#
+# final "builder"
+# 
+FROM builder-${variant} AS builder
+# assert that we must not have the "tests failed" indicator file from the variant builder
+RUN if [ -f /ore/test-results/tests-failed ]; then echo "Tests failed, cannot continue"; exit 1; fi
+
+
+#
+# release image
+#
+FROM registry.fedoraproject.org/fedora-minimal:${fedora_tag} AS release
+
+LABEL org.opencontainers.image.authors="Quaternion Risk Management"
+LABEL org.opencontainers.image.description="Open Source Risk Engine"
+
+# libs to run
+RUN microdnf install -y boost ocl-icd --nodocs && \
+    microdnf clean all -y
+
+# fetch built files from orebuild - we use a bind mount to allow us to copy library symlinks
+RUN mkdir -p /ore/bin /ore/lib
+RUN --mount=type=bind,from=builder,source=/usr/local,target=/orebuild cp -a /orebuild/bin/ore /ore/bin && cp -a /orebuild/lib/lib*.so* /ore/lib
+
+# tell the linker where the libraries are, as the relative directories are no longer valid
+ENV LD_LIBRARY_PATH=/ore/lib
+# ensure ore is on the PATH so that if a interactive terminal is used, it's easily findable
+ENV PATH=/ore/bin:$PATH
+# Adjust the locale so 1,000 comma separators are suppressed
+ENV LC_NUMERIC=C
+
+ENTRYPOINT ["/ore/bin/ore"]
