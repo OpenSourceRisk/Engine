@@ -11,7 +11,7 @@
   
   <xs:complexType name="newcalendar">
     <xs:all>
-      <xs:element type="xs:string" name="BaseCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="calendar" name="BaseCalendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="Dates" name="AdditionalHolidays" minOccurs="0"/>
       <xs:element type="Dates" name="AdditionalBusinessDays" minOccurs="0"/>
     </xs:all>

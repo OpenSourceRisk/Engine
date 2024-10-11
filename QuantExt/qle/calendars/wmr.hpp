@@ -17,7 +17,7 @@
 */
 
 /*! \file wmr.hpp
-    \brief WMR calendar - Thomson Reuters QM/Reuters Spot
+    \brief WMR calendar - Thomson Reuters WM/Reuters Spot
 */
 
 #ifndef quantext_wmr_calendar_hpp
@@ -31,7 +31,7 @@ class Wmr : public QuantLib::Calendar {
 private:
     class SetImpl : public Calendar::WesternImpl {
     public:
-        std::string name() const override { return "Thomson Reuters QM/Reuters Spot"; }
+        std::string name() const override { return "Thomson Reuters WM/Reuters Spot"; }
         bool isBusinessDay(const QuantLib::Date&) const override;
     };
 
