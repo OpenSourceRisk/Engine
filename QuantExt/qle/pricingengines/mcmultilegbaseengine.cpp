@@ -709,6 +709,7 @@ void McMultiLegBaseEngine::calculateModels(
     std::vector<RandomVariable> amountCache(cashflowInfo.size());
 
     Size counter = exerciseXvaTimes.size() - 1;
+    auto previousExerciseTime = exerciseTimes.rbegin();
 
     for (auto t = exerciseXvaTimes.rbegin(); t != exerciseXvaTimes.rend(); ++t) {
 
@@ -726,22 +727,25 @@ void McMultiLegBaseEngine::calculateModels(
             */
 
             if (cfStatus[i] == CfStatus::open) {
-                if (cashflowInfo[i].exIntoCriterionTime > *t) {
-                    auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
-                    pathValueUndDirty += tmp;
-                    pathValueUndExInto += tmp;
-                    cfStatus[i] = CfStatus::done;
-                } else if (cashflowInfo[i].payTime > *t - (includeTodaysCashflows_ ? tinyTime : 0.0)) {
-                    auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
-                    pathValueUndDirty += tmp;
-                    amountCache[i] = tmp;
-                    cfStatus[i] = CfStatus::cached;
-                }
-            } else if (cfStatus[i] == CfStatus::cached) {
-                if (cashflowInfo[i].exIntoCriterionTime > *t) {
-                    pathValueUndExInto += amountCache[i];
-                    cfStatus[i] = CfStatus::done;
-                    amountCache[i].clear();
+                if (cashflowInfo[i].payTime > *t - (includeTodaysCashflows_ ? tinyTime : 0.0)) {
+                    if (previousExerciseTime == exerciseTimes.rend() ||
+                        cashflowInfo[i].exIntoCriterionTime > *previousExerciseTime) {
+                        auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
+                        pathValueUndDirty += tmp;
+                        pathValueUndExInto += tmp;
+                        cfStatus[i] = CfStatus::done;
+                    } else {
+                        auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
+                        pathValueUndDirty += tmp;
+                        amountCache[i] = tmp;
+                        cfStatus[i] = CfStatus::cached;
+                    }
+                } else if (cfStatus[i] == CfStatus::cached) {
+                    if (cashflowInfo[i].exIntoCriterionTime > *t) {
+                        pathValueUndExInto += amountCache[i];
+                        cfStatus[i] = CfStatus::done;
+                        amountCache[i].clear();
+                    }
                 }
             }
         }
@@ -800,6 +804,9 @@ void McMultiLegBaseEngine::calculateModels(
                 regressorModel_, regressionVarianceCutoff_);
             regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
         }
+
+        if (isExerciseTime && previousExerciseTime != exerciseTimes.rend())
+            std::advance(previousExerciseTime, 1);
 
         --counter;
     }
@@ -1213,52 +1220,52 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
 
         if (xvaTimes_.find(t) != xvaTimes_.end()) {
 
-                // there is no continuation value on the last exercise date
+            // there is no continuation value on the last exercise date
 
-                RandomVariable futureOptionValue =
-                    exerciseCounter == exerciseTimes_.size()
-                        ? RandomVariable(samples, 0.0)
-                        : regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
+            RandomVariable futureOptionValue =
+                exerciseCounter == exerciseTimes_.size()
+                    ? RandomVariable(samples, 0.0)
+                    : regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
 
-                /* Physical Settlement:
+            /* Physical Settlement:
 
-                   Exercise value is "undExInto" if we are in the period between the date on which the exercise happend
-                   and the next exercise date after that, otherwise it is the full dirty npv. This assumes that two
-                   exercise dates d1, d2 are not so close together that a coupon
+               Exercise value is "undExInto" if we are in the period between the date on which the exercise happend
+               and the next exercise date after that, otherwise it is the full dirty npv. This assumes that two
+               exercise dates d1, d2 are not so close together that a coupon
 
-                   - pays after d1, d2
-                   - but does not belong to the exercise-into underlying for both d1 and d2
+               - pays after d1, d2
+               - but does not belong to the exercise-into underlying for both d1 and d2
 
-                   This assumption seems reasonable, since we would never exercise on d1 but wait until d2 since the
-                   underlying which we exercise into is the same in both cases.
-                   We don't introduce a hard check for this, but we rather assume that the exercise dates are set up
-                   appropriately adjusted to the coupon periods. The worst that can happen is that the exercised value
-                   uses the full dirty npv at a too early time.
+               This assumption seems reasonable, since we would never exercise on d1 but wait until d2 since the
+               underlying which we exercise into is the same in both cases.
+               We don't introduce a hard check for this, but we rather assume that the exercise dates are set up
+               appropriately adjusted to the coupon periods. The worst that can happen is that the exercised value
+               uses the full dirty npv at a too early time.
 
-                   Cash Settlement:
+               Cash Settlement:
 
-                   We use the cashSettlements map constructed on each exercise date.
+               We use the cashSettlements map constructed on each exercise date.
 
-                */
+            */
 
-                RandomVariable exercisedValue(samples, 0.0);
+            RandomVariable exercisedValue(samples, 0.0);
 
-                if (settlement_ == Settlement::Type::Physical) {
-                    exercisedValue = conditionalResult(
-                        exercised_[exerciseCounter],
-                        regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
-                        regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
-                } else {
-                    exercisedValue.setAll(0.0);
-                    for (auto it = cashSettlements.begin(); it != cashSettlements.end();) {
-                        if (t < it->first + (includeTodaysCashflows_ ? tinyTime : -tinyTime)) {
-                            exercisedValue += it->second;
-                            ++it;
-                        } else {
-                            it = cashSettlements.erase(it);
-                        }
+            if (settlement_ == Settlement::Type::Physical) {
+                exercisedValue = conditionalResult(
+                    exercised_[exerciseCounter],
+                    regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
+                    regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
+            } else {
+                exercisedValue.setAll(0.0);
+                for (auto it = cashSettlements.begin(); it != cashSettlements.end();) {
+                    if (t < it->first + (includeTodaysCashflows_ ? tinyTime : -tinyTime)) {
+                        exercisedValue += it->second;
+                        ++it;
+                    } else {
+                        it = cashSettlements.erase(it);
                     }
                 }
+            }
 
             result[xvaCounter + 1] =
                 max(RandomVariable(samples, 0.0), conditionalResult(wasExercised, exercisedValue, futureOptionValue));
@@ -1361,7 +1368,8 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
 
     } else {
 
-        // an empty regressor is possible if there are no relevant cashflows, but then the regressand has to be zero too
+        /* an empty regressor is possible if there are no relevant cashflows, but then the regressand
+           has to be zero too */
 
         QL_REQUIRE(close_enough_all(regressand, RandomVariable(regressand.size(), 0.0)),
                    "McMultiLegBaseEngine::RegressionModel::train(): internal error: regressand is not identically "
