@@ -740,12 +740,13 @@ void McMultiLegBaseEngine::calculateModels(
                         amountCache[i] = tmp;
                         cfStatus[i] = CfStatus::cached;
                     }
-                } else if (cfStatus[i] == CfStatus::cached) {
-                    if (cashflowInfo[i].exIntoCriterionTime > *t) {
-                        pathValueUndExInto += amountCache[i];
-                        cfStatus[i] = CfStatus::done;
-                        amountCache[i].clear();
-                    }
+                }
+            } else if (cfStatus[i] == CfStatus::cached) {
+                if (previousExerciseTime == exerciseTimes.rend() ||
+                    cashflowInfo[i].exIntoCriterionTime > *previousExerciseTime) {
+                    pathValueUndExInto += amountCache[i];
+                    cfStatus[i] = CfStatus::done;
+                    amountCache[i].clear();
                 }
             }
         }
