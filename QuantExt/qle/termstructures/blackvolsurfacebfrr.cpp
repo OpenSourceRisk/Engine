@@ -600,11 +600,11 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
 
     /* Choose a consistent set of smile conventions for all maturities, we follow Clark, 4.2.3 and set
        delta type = forward delta, with pa if the original (short term) delta convention has pa.
-       The atm type ist set to delta neutral. */
+       The atm type ist set to ATMF as simple delta is used. */
 
     DeltaVolQuote::DeltaType dt_c =
         dt_ == (DeltaVolQuote::Spot || dt_ == DeltaVolQuote::Fwd) ? DeltaVolQuote::Fwd : DeltaVolQuote::PaFwd;
-    DeltaVolQuote::AtmType at_c = DeltaVolQuote::AtmDeltaNeutral;
+    DeltaVolQuote::AtmType at_c = DeltaVolQuote::AtmFwd;
 
     /* find the vols on both smiles for the artificial smile conventions */
 
