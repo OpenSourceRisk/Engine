@@ -93,7 +93,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
     if (cpn && cpn->accrualStartDate() < flow->date()) {
         info.exIntoCriterionTime = time(cpn->accrualStartDate()) + tinyTime;
     } else {
-        info.exIntoCriterionTime = info.payTime;
+        info.exIntoCriterionTime = info.payTime + (exerciseIntoIncludeSameDayFlows_ ? tinyTime : 0.0);
     }
 
     // Handle SimpleCashflow
@@ -709,6 +709,7 @@ void McMultiLegBaseEngine::calculateModels(
     std::vector<RandomVariable> amountCache(cashflowInfo.size());
 
     Size counter = exerciseXvaTimes.size() - 1;
+    auto previousExerciseTime = exerciseTimes.rbegin();
 
     for (auto t = exerciseXvaTimes.rbegin(); t != exerciseXvaTimes.rend(); ++t) {
 
@@ -717,23 +718,39 @@ void McMultiLegBaseEngine::calculateModels(
 
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
 
-            /* we assume here that exIntoCriterionTime > t implies payTime > t, this must be ensured by the
-               createCashflowInfo method */
+            if(cfStatus[i] == CfStatus::done)
+                continue;
+
+            /* We assume here that for each time t below the following condition holds: If a cashflow belongs to the
+              "exercise into" part of the underlying, it also belongs to the underlying itself on each time t.
+
+              Apart from that we allow for the possibility that a cashflow belongs to the underlying npv without
+              belonging to the exercise into underlying at a time t. Such a cashflow would be marked as "cached" at time
+              t and transferred to the exercise-into value at the appropriate time t' < t.
+            */
+
+            bool isPartOfExercise =
+                cashflowInfo[i].payTime >
+                    *t - (includeTodaysCashflows_ || exerciseIntoIncludeSameDayFlows_ ? tinyTime : 0.0) &&
+                (previousExerciseTime == exerciseTimes.rend() ||
+                 cashflowInfo[i].exIntoCriterionTime > *previousExerciseTime);
+
+            bool isPartOfUnderlying = cashflowInfo[i].payTime > *t - (includeTodaysCashflows_ ? tinyTime : 0.0);
 
             if (cfStatus[i] == CfStatus::open) {
-                if (cashflowInfo[i].exIntoCriterionTime > *t) {
+                if (isPartOfExercise) {
                     auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
                     pathValueUndDirty += tmp;
                     pathValueUndExInto += tmp;
                     cfStatus[i] = CfStatus::done;
-                } else if (cashflowInfo[i].payTime > *t - (includeSettlementDateFlows_ ? tinyTime : 0.0)) {
+                } else if (isPartOfUnderlying) {
                     auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
                     pathValueUndDirty += tmp;
                     amountCache[i] = tmp;
                     cfStatus[i] = CfStatus::cached;
                 }
             } else if (cfStatus[i] == CfStatus::cached) {
-                if (cashflowInfo[i].exIntoCriterionTime > *t) {
+                if (isPartOfExercise) {
                     pathValueUndExInto += amountCache[i];
                     cfStatus[i] = CfStatus::done;
                     amountCache[i].clear();
@@ -796,6 +813,9 @@ void McMultiLegBaseEngine::calculateModels(
             regModelOption[counter].train(polynomOrder_, polynomType_, pathValueOption, pathValuesRef, simulationTimes);
         }
 
+        if (isExerciseTime && previousExerciseTime != exerciseTimes.rend())
+            std::advance(previousExerciseTime, 1);
+
         --counter;
     }
 
@@ -843,9 +863,10 @@ void McMultiLegBaseEngine::generatePathValues(const std::vector<Real>& simulatio
 
 void McMultiLegBaseEngine::calculate() const {
 
-    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
-    if (includeToday)
-        includeSettlementDateFlows_ = *includeToday;
+    includeReferenceDateEvents_ = Settings::instance().includeReferenceDateEvents();
+    includeTodaysCashflows_ = Settings::instance().includeTodaysCashFlows()
+                                  ? *Settings::instance().includeTodaysCashFlows()
+                                  : includeReferenceDateEvents_;
 
     McEngineStats::instance().other_timer.resume();
 
@@ -857,6 +878,12 @@ void McMultiLegBaseEngine::calculate() const {
     QL_REQUIRE(payer_.size() == leg_.size(), "McMultiLegBaseEngine: number of legs ("
                                                  << leg_.size() << ") does not match payer flag (" << payer_.size()
                                                  << ")");
+    QL_REQUIRE(exercise_ == nullptr || optionSettlement_ != Settlement::Cash ||
+                   cashSettlementDates_.size() == exercise_->dates().size(),
+               "McMultiLegBaseEngine: cash settled exercise is given but cash settlement dates size ("
+                   << cashSettlementDates_.size() << ") does not match exercise dates size ("
+                   << exercise_->dates().size()
+                   << ". Check derived engine and make sure the settlement date is set for cash settled options.");
 
     // set today's date
 
@@ -881,7 +908,7 @@ void McMultiLegBaseEngine::calculate() const {
         Size cashflowNo = 0;
         for (auto const& cashflow : leg) {
             // we can skip cashflows that are paid
-            if (cashflow->date() < today_ || (!includeSettlementDateFlows_ && cashflow->date() == today_))
+            if (cashflow->date() < today_ || (!includeTodaysCashflows_ && cashflow->date() == today_))
                 continue;
             // for an alive cashflow, populate the data
             cashflowInfo.push_back(createCashflowInfo(cashflow, currency, payer, legNo, cashflowNo));
@@ -894,6 +921,7 @@ void McMultiLegBaseEngine::calculate() const {
     /* build exercise times, xva times and sticky close-out path times (if relevant) */
 
     std::set<Real> exerciseTimes;
+    std::vector<Real> cashSettlementTimes;
     std::set<Real> xvaTimes;
 
     if (exercise_ != nullptr) {
@@ -901,10 +929,13 @@ void McMultiLegBaseEngine::calculate() const {
         QL_REQUIRE(exercise_->type() != Exercise::American,
                    "McMultiLegBaseEngine::calculate(): exercise style American is not supported yet.");
 
+        Size counter = 0;
         for (auto const& d : exercise_->dates()) {
-            if (d <= today_)
+            if (d < today_ || (!includeReferenceDateEvents_ && d == today_))
                 continue;
             exerciseTimes.insert(time(d));
+            if (optionSettlement_ == Settlement::Type::Cash)
+                cashSettlementTimes.push_back(time(cashSettlementDates_[counter++]));
         }
     }
 
@@ -1036,31 +1067,40 @@ void McMultiLegBaseEngine::calculate() const {
     // construct the amc calculator
 
     amcCalculator_ = QuantLib::ext::make_shared<MultiLegBaseAmcCalculator>(
-        externalModelIndices_, optionSettlement_, exerciseXvaTimes, exerciseTimes, xvaTimes,
+        externalModelIndices_, optionSettlement_, cashSettlementTimes, exerciseXvaTimes, exerciseTimes, xvaTimes,
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelUndDirty, regModelUndDirtyCloseOut},
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelUndExInto, regModelUndExIntoCloseOut},
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelContinuationValue,
                                                                           regModelContinuationValueCloseOut},
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>{regModelOption, regModelOptionCloseOut},
         resultValue_, model_->stateProcess()->initialValues(), model_->irlgm1f(0)->currency(),
-        reevaluateExerciseInStickyRun_);
+        reevaluateExerciseInStickyRun_, includeTodaysCashflows_, includeReferenceDateEvents_);
 }
 
 QuantLib::ext::shared_ptr<AmcCalculator> McMultiLegBaseEngine::amcCalculator() const { return amcCalculator_; }
 
 McMultiLegBaseEngine::MultiLegBaseAmcCalculator::MultiLegBaseAmcCalculator(
     const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
-    const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
+    const std::vector<Time>& cashSettlementTimes, const std::set<Real>& exerciseXvaTimes,
+    const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
     const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndDirty,
     const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndExInto,
     const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelContinuationValue,
     const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelOption, const Real resultValue,
-    const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun)
-    : externalModelIndices_(externalModelIndices), settlement_(settlement), exerciseXvaTimes_(exerciseXvaTimes),
-      exerciseTimes_(exerciseTimes), xvaTimes_(xvaTimes), regModelUndDirty_(regModelUndDirty),
-      regModelUndExInto_(regModelUndExInto), regModelContinuationValue_(regModelContinuationValue),
-      regModelOption_(regModelOption), resultValue_(resultValue), initialState_(initialState),
-      baseCurrency_(baseCurrency), reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun) {}
+    const Array& initialState, const Currency& baseCurrency, const bool reevaluateExerciseInStickyRun,
+    const bool includeTodaysCashflows, const bool includeReferenceDateEvents)
+    : externalModelIndices_(externalModelIndices), settlement_(settlement), cashSettlementTimes_(cashSettlementTimes),
+      exerciseXvaTimes_(exerciseXvaTimes), exerciseTimes_(exerciseTimes), xvaTimes_(xvaTimes),
+      regModelUndDirty_(regModelUndDirty), regModelUndExInto_(regModelUndExInto),
+      regModelContinuationValue_(regModelContinuationValue), regModelOption_(regModelOption), resultValue_(resultValue),
+      initialState_(initialState), baseCurrency_(baseCurrency),
+      reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun), includeTodaysCashflows_(includeTodaysCashflows),
+      includeReferenceDateEvents_(includeReferenceDateEvents) {
+
+    QL_REQUIRE(settlement_ != Settlement::Type::Cash || cashSettlementTimes.size() == exerciseTimes.size(),
+               "MultiLegBaseAmcCalculator: settlement type is cash, but cash settlement times ("
+                   << cashSettlementTimes.size() << ") does not match exercise times (" << exerciseTimes.size() << ")");
+}
 
 std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalculator::simulatePath(
     const std::vector<QuantLib::Real>& pathTimes, const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
@@ -1132,6 +1172,8 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
         exercised_ = std::vector<Filter>(exerciseTimes_.size() + 1, Filter(samples, false));
         Size counter = 0;
 
+        Filter wasExercised(samples, false);
+
         for (auto t : exerciseTimes_) {
 
             // find the time in the exerciseXvaTimes vector
@@ -1147,9 +1189,9 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
             RandomVariable continuationValue =
                 regModelContinuationValue_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
 
-            exercised_[counter + 1] = !exercised_[counter] && exerciseValue > continuationValue &&
-                                      exerciseValue > RandomVariable(samples, 0.0);
-
+            exercised_[counter + 1] =
+                !wasExercised && exerciseValue > continuationValue && exerciseValue > RandomVariable(samples, 0.0);
+            wasExercised = wasExercised || exercised_[counter + 1];
 
             ++counter;
         }
@@ -1161,24 +1203,43 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
     Size xvaCounter = 0;
     Size exerciseCounter = 0;
 
-    Filter cashExerciseValueWasAccountedForOnXvaTime(samples, false);
     Filter wasExercised(samples, false);
+    RandomVariable cashExerciseValue(samples, 0.0);
+    std::map<Real, RandomVariable> cashSettlements;
 
     for (auto t : exerciseXvaTimes_) {
 
         if (auto it = exerciseTimes_.find(t); it != exerciseTimes_.end()) {
+
+            // update was exercised based on exercise at the exercise time
+
             ++exerciseCounter;
             wasExercised = wasExercised || exercised_[exerciseCounter];
+
+            // if cash settled, determine the amount on exercise and until when it is to be included in exposure
+
+            if (settlement_ == Settlement::Type::Cash) {
+                RandomVariable cashPayment =
+                    regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
+                cashPayment = applyFilter(cashPayment, exercised_[exerciseCounter]);
+                cashSettlements[cashSettlementTimes_[exerciseCounter - 1]] = cashPayment;
+            }
         }
 
         if (xvaTimes_.find(t) != xvaTimes_.end()) {
 
-            RandomVariable optionValue =
-                regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
+            // there is no continuation value on the last exercise date
 
-            /* Exercise value is "undExInto" if we are in the period between the date on which the exercise happend and
-               the next exercise date after that, otherwise it is the full dirty npv. This assumes that two exercise
-               dates d1, d2 are not so close together that a coupon
+            RandomVariable futureOptionValue =
+                exerciseCounter == exerciseTimes_.size()
+                    ? RandomVariable(samples, 0.0)
+                    : regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
+
+            /* Physical Settlement:
+
+               Exercise value is "undExInto" if we are in the period between the date on which the exercise happend
+               and the next exercise date after that, otherwise it is the full dirty npv. This assumes that two
+               exercise dates d1, d2 are not so close together that a coupon
 
                - pays after d1, d2
                - but does not belong to the exercise-into underlying for both d1 and d2
@@ -1187,20 +1248,36 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
                underlying which we exercise into is the same in both cases.
                We don't introduce a hard check for this, but we rather assume that the exercise dates are set up
                appropriately adjusted to the coupon periods. The worst that can happen is that the exercised value
-               uses the full dirty npv at a too early time. */
+               uses the full dirty npv at a too early time.
 
-            RandomVariable exercisedValue =
-                conditionalResult(exercised_[exerciseCounter],
-                                  regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
-                                  regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
+               Cash Settlement:
 
-            if (settlement_ == Settlement::Type::Cash) {
-                exercisedValue = applyInverseFilter(exercisedValue, cashExerciseValueWasAccountedForOnXvaTime);
-                cashExerciseValueWasAccountedForOnXvaTime = cashExerciseValueWasAccountedForOnXvaTime || wasExercised;
+               We use the cashSettlements map constructed on each exercise date.
+
+            */
+
+            RandomVariable exercisedValue(samples, 0.0);
+
+            if (settlement_ == Settlement::Type::Physical) {
+                exercisedValue = conditionalResult(
+                    exercised_[exerciseCounter],
+                    regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
+                    regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
+            } else {
+                exercisedValue.setAll(0.0);
+                for (auto it = cashSettlements.begin(); it != cashSettlements.end();) {
+                    if (t < it->first + (includeTodaysCashflows_ ? tinyTime : -tinyTime)) {
+                        exercisedValue += it->second;
+                        ++it;
+                    } else {
+                        it = cashSettlements.erase(it);
+                    }
+                }
             }
 
             result[xvaCounter + 1] =
-                max(RandomVariable(samples, 0.0), conditionalResult(wasExercised, exercisedValue, optionValue));
+                max(RandomVariable(samples, 0.0), conditionalResult(wasExercised, exercisedValue, futureOptionValue));
+
             ++xvaCounter;
         }
 
@@ -1299,7 +1376,8 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
 
     } else {
 
-        // an empty regressor is possible if there are no relevant cashflows, but then the regressand has to be zero too
+        /* an empty regressor is possible if there are no relevant cashflows, but then the regressand
+           has to be zero too */
 
         QL_REQUIRE(close_enough_all(regressand, RandomVariable(regressand.size(), 0.0)),
                    "McMultiLegBaseEngine::RegressionModel::train(): internal error: regressand is not identically "

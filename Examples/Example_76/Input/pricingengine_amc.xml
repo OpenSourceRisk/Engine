@@ -344,11 +344,22 @@
     </EngineParameters>
   </Product>
   <Product type="FxOptionEuropeanCS">
-    <Model>GarmanKohlhagen</Model>
+    <Model>CrossAssetModel</Model>
     <ModelParameters/>
-    <Engine>AnalyticCashSettledEuropeanEngine</Engine>
+    <Engine>AMC</Engine>
     <EngineParameters>
-      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+      <Parameter name="Training.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Training.Seed">42</Parameter>
+      <Parameter name="Training.Samples">10000</Parameter>
+      <Parameter name="Pricing.Sequence">SobolBrownianBridge</Parameter>
+      <Parameter name="Pricing.Seed">17</Parameter>
+      <Parameter name="Pricing.Samples">0</Parameter>
+      <Parameter name="Training.BasisFunction">Monomial</Parameter>
+      <Parameter name="Training.BasisFunctionOrder">2</Parameter>
+      <Parameter name="BrownianBridgeOrdering">Steps</Parameter>
+      <Parameter name="SobolDirectionIntegers">JoeKuoD7</Parameter>
+      <Parameter name="MinObsDate">true</Parameter>
+      <Parameter name="RegressionOnExerciseOnly">false</Parameter>
     </EngineParameters>
   </Product>
   <!-- Global Parameters -->
