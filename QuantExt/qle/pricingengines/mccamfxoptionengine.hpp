@@ -50,6 +50,7 @@ public:
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
         const bool reevaluateExerciseInStickyRun = false);
 
+    void setupLegs() const;
     void calculateFxOptionBase() const;
     const Handle<CrossAssetModel>& model() const { return model_; }
 
