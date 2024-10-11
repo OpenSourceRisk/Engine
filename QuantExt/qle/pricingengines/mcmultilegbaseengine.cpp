@@ -718,6 +718,9 @@ void McMultiLegBaseEngine::calculateModels(
 
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
 
+            if(cfStatus[i] == CfStatus::done)
+                continue;
+
             /* We assume here that for each time t below the following condition holds: If a cashflow belongs to the
               "exercise into" part of the underlying, it also belongs to the underlying itself on each time t.
 
@@ -726,24 +729,28 @@ void McMultiLegBaseEngine::calculateModels(
               t and transferred to the exercise-into value at the appropriate time t' < t.
             */
 
+            bool isPartOfExercise =
+                cashflowInfo[i].payTime >
+                    *t - (includeTodaysCashflows_ || exerciseIntoIncludeSameDayFlows_ ? tinyTime : 0.0) &&
+                (previousExerciseTime == exerciseTimes.rend() ||
+                 cashflowInfo[i].exIntoCriterionTime > *previousExerciseTime);
+
+            bool isPartOfUnderlying = cashflowInfo[i].payTime > *t - (includeTodaysCashflows_ ? tinyTime : 0.0);
+
             if (cfStatus[i] == CfStatus::open) {
-                if (cashflowInfo[i].payTime > *t - (includeTodaysCashflows_ ? tinyTime : 0.0)) {
-                    if (previousExerciseTime == exerciseTimes.rend() ||
-                        cashflowInfo[i].exIntoCriterionTime > *previousExerciseTime) {
-                        auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
-                        pathValueUndDirty += tmp;
-                        pathValueUndExInto += tmp;
-                        cfStatus[i] = CfStatus::done;
-                    } else {
-                        auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
-                        pathValueUndDirty += tmp;
-                        amountCache[i] = tmp;
-                        cfStatus[i] = CfStatus::cached;
-                    }
+                if (isPartOfExercise) {
+                    auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
+                    pathValueUndDirty += tmp;
+                    pathValueUndExInto += tmp;
+                    cfStatus[i] = CfStatus::done;
+                } else if (isPartOfUnderlying) {
+                    auto tmp = cashflowPathValue(cashflowInfo[i], pathValues, simulationTimes);
+                    pathValueUndDirty += tmp;
+                    amountCache[i] = tmp;
+                    cfStatus[i] = CfStatus::cached;
                 }
             } else if (cfStatus[i] == CfStatus::cached) {
-                if (previousExerciseTime == exerciseTimes.rend() ||
-                    cashflowInfo[i].exIntoCriterionTime > *previousExerciseTime) {
+                if (isPartOfExercise) {
                     pathValueUndExInto += amountCache[i];
                     cfStatus[i] = CfStatus::done;
                     amountCache[i].clear();
