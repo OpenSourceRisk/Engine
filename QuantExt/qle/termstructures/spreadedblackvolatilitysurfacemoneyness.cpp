@@ -141,7 +141,7 @@ Real SpreadedBlackVolatilitySurfaceMoneyness::blackVolImpl(Time t, Real strike) 
     QL_REQUIRE(std::isfinite(m2),
                "SpreadedBlackVolatilitySurfaceMoneyness: got invalid moneyness (sticky reference) at t = "
                    << t << ", strike = " << strike << ": " << m2);
-    return referenceVol_->blackVol(t, effStrike) + volSpreadSurface_(t, m2);
+    return std::max(0.0, referenceVol_->blackVol(t, effStrike) + volSpreadSurface_(t, m2));
 }
 
 Real SpreadedBlackVolatilitySurfaceMoneynessSpot::moneynessFromStrike(Time t, Real strike,
