@@ -40,18 +40,20 @@ In the following sections, we describe six XML configurations separately for cla
 \item Optionlet volatility surface.
 \end{enumerate}
 
-+Before describing the different configurations we summarize the usage of the various interpolation fields:
-+
-+\begin{enumerate}
-+\item If \lstinline!InterpolateOn\lstinline! is set to \lstinline!TermVolatilities!, \lstinline!InterpolationMethod! is used to interpolate the term volatilities during the bootstrap and to interpolate the optionlet volatlities of the final optionlet surface. Allowed values are \lstinline!Bilinear! and \lstinline!BicubicSpline!. If not given, the field defaults to \lstinline!BicubicSpline!. The fields \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are ignored in this case.
-+\item If \lstinline!InterpolateOn\lstinline! is set to \lstinline!OptionletVolatilities!, \listinline!TimeInterpolation! and \lstline!StrikeInterpolation! are used to interpolate optionlet volatilities both during the bootstrap and on the final optionlet surface. \lstinline!InterpolationMethod! is ignored in this case.
-+\end{enumerate}
+Before describing the different configurations we summarize the usage of the various interpolation fields:
+
+\begin{enumerate}
+\item If \lstinline!InterpolateOn\lstinline! is set to \lstinline!TermVolatilities!, \lstinline!InterpolationMethod! is used to interpolate the term volatilities during the bootstrap and to interpolate the optionlet volatlities of the final optionlet surface. The fields \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are ignored in this case.
+\item If \lstinline!InterpolateOn\lstinline! is set to \lstinline!OptionletVolatilities!, \listinline!TimeInterpolation! and \lstline!StrikeInterpolation! are used to interpolate optionlet volatilities both during the bootstrap and on the final optionlet surface. \lstinline!InterpolationMethod! is ignored in this case.
+\end{enumerate}
 
 % ===========================================================================
 % Term vol ATM, interpolation on term vols
 % ===========================================================================
 
-Listing \ref{lst:capfloorvol_atm_configuration_term} shows the layout for parameterising an ATM cap volatility curve with interpolation on term volatilities. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
+Listing \ref{lst:capfloorvol_atm_configuration_term} shows the layout for parameterising an ATM cap volatility curve
+with interpolation on term volatilities. Nodes that have no effect for this parameterisation but that are allowed by the
+schema are not referenced. The meaning of each of the nodes is as follows:
 
 \begin{itemize}
 \item
