@@ -344,7 +344,7 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
     return recastScenario(scenario, oldCoordinates, newCoordinatesMap);
 }
 
-QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const Real rawValue) {
+QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const bool isPar, const Real rawValue) {
     switch (keyType) {
     case RiskFactorKey::KeyType::CPR:
     case RiskFactorKey::KeyType::SecuritySpread:
@@ -365,16 +365,18 @@ QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const
     case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
     case RiskFactorKey::KeyType::CommodityVolatility:
     case RiskFactorKey::KeyType::FXSpot:
-    case RiskFactorKey::KeyType::DiscountCurve:
-    case RiskFactorKey::KeyType::YieldCurve:
-    case RiskFactorKey::KeyType::IndexCurve:
     case RiskFactorKey::KeyType::EquitySpot:
-    case RiskFactorKey::KeyType::DividendYield:
     case RiskFactorKey::KeyType::SurvivalProbability:
     case RiskFactorKey::KeyType::RecoveryRate:
     case RiskFactorKey::KeyType::CPIIndex:
     case RiskFactorKey::KeyType::SurvivalWeight:
         return std::max(0.0, rawValue);
+
+    case RiskFactorKey::KeyType::DiscountCurve:
+    case RiskFactorKey::KeyType::YieldCurve:
+    case RiskFactorKey::KeyType::IndexCurve:
+    case RiskFactorKey::KeyType::DividendYield:
+        return isPar ? rawValue : std::max(0.0, rawValue);
 
     case RiskFactorKey::KeyType::Correlation:
     case RiskFactorKey::KeyType::BaseCorrelation:

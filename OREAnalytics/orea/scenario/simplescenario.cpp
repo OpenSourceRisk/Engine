@@ -57,7 +57,7 @@ void SimpleScenario::add(const RiskFactorKey& key, Real value) {
 Real SimpleScenario::get(const RiskFactorKey& key) const {
     auto i = sharedData_->keyIndex.find(key);
     QL_REQUIRE(i != sharedData_->keyIndex.end(), "SimpleScenario does not provide data for key " << key);
-    return isAbsolute() ? sanitizeScenarioValue(key.keytype, data_[i->second]) : data_[i->second];
+    return isAbsolute() ? sanitizeScenarioValue(key.keytype, isPar(), data_[i->second]) : data_[i->second];
 }
 
 QuantLib::ext::shared_ptr<Scenario> SimpleScenario::clone() const {
