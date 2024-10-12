@@ -344,5 +344,49 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
     return recastScenario(scenario, oldCoordinates, newCoordinatesMap);
 }
 
+QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const bool isPar, const Real rawValue) {
+    switch (keyType) {
+    case RiskFactorKey::KeyType::CPR:
+    case RiskFactorKey::KeyType::SecuritySpread:
+    case RiskFactorKey::KeyType::CommodityCurve:
+    case RiskFactorKey::KeyType::ZeroInflationCurve:
+    case RiskFactorKey::KeyType::YoYInflationCurve:
+    case RiskFactorKey::KeyType::CreditState:
+    case RiskFactorKey::KeyType::None:
+        return rawValue;
+
+    case RiskFactorKey::KeyType::SwaptionVolatility:
+    case RiskFactorKey::KeyType::YieldVolatility:
+    case RiskFactorKey::KeyType::OptionletVolatility:
+    case RiskFactorKey::KeyType::FXVolatility:
+    case RiskFactorKey::KeyType::EquityVolatility:
+    case RiskFactorKey::KeyType::CDSVolatility:
+    case RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility:
+    case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
+    case RiskFactorKey::KeyType::CommodityVolatility:
+    case RiskFactorKey::KeyType::FXSpot:
+    case RiskFactorKey::KeyType::EquitySpot:
+    case RiskFactorKey::KeyType::SurvivalProbability:
+    case RiskFactorKey::KeyType::RecoveryRate:
+    case RiskFactorKey::KeyType::CPIIndex:
+    case RiskFactorKey::KeyType::SurvivalWeight:
+        return std::max(0.0, rawValue);
+
+    case RiskFactorKey::KeyType::DiscountCurve:
+    case RiskFactorKey::KeyType::YieldCurve:
+    case RiskFactorKey::KeyType::IndexCurve:
+    case RiskFactorKey::KeyType::DividendYield:
+        return isPar ? rawValue : std::max(0.0, rawValue);
+
+    case RiskFactorKey::KeyType::Correlation:
+    case RiskFactorKey::KeyType::BaseCorrelation:
+        return std::max(std::min(rawValue, 1.0), -1.0);
+
+    default:
+        QL_FAIL("sanitizeScenarioValue(): key type "
+                << keyType << " not expected, and not covered. This is an internal error, contact dev.");
+    };
+}
+
 } // namespace analytics
 } // namespace ore
