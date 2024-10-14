@@ -123,6 +123,7 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
             // We also allow for an effective fixing date > payDate in order not to break trades that were preivously
             // pricing - this should be an error as well. If this is the case we assume that the current FX Spot
             // rate is used to determine the settlement amount as above.
+            // TODO copy that functionality
             fixingDate = fxIndex->fixingCalendar().adjust(maturityDate);
             if (fixingDate <= payDate) {
                 requiredFixings_.addFixingDate(fixingDate, fxIndex_, payDate);
