@@ -22,6 +22,7 @@
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/pricingengines/mclgmswapengine.hpp>
 
 #include <set>
@@ -58,16 +59,17 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(con
     DLOG("Building AMC Swap engine for ccy " << ccy << " (from externally given CAM)");
 
     QL_REQUIRE(cam_ != nullptr, "LgmAmcSwapEngineBuilder::engineImpl: cam is null");
-    Size currIdx = cam_->ccyIndex(ccy);
-    auto lgm = cam_->lgm(currIdx);
-    std::vector<Size> modelIndex(1, cam_->pIdx(CrossAssetModel::AssetType::IR, currIdx));
+
+    std::vector<Size> externalModelIndices;
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(
+        cam_, {std::make_pair(CrossAssetModel::AssetType::IR, cam_->ccyIndex(ccy))}, externalModelIndices));
 
     Handle<YieldTermStructure> discountCurve =
         discountCurveName.empty()
             ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
             : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
 
-    return buildMcEngine(lgm, discountCurve, modelIndex);
+    return buildMcEngine(model->lgm(0), discountCurve, externalModelIndices);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwapEngineBuilder::engineImpl(const Currency& ccy,

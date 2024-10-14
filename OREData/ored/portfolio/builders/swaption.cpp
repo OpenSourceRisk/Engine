@@ -24,6 +24,7 @@
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/pricingengines/blackmultilegoptionengine.hpp>
 #include <qle/pricingengines/mcmultilegoptionengine.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
@@ -330,10 +331,9 @@ LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, con
     DLOG("Building AMC Bermudan/American Swaption engine for key " << key << ", ccy " << ccy
                                                                    << " (from externally given CAM)");
 
-    QL_REQUIRE(cam_ != nullptr, "LgmCamBermudanAmericanSwaptionEngineBuilder::engineImpl: cam is null");
-    Size currIdx = cam_->ccyIndex(curr);
-    auto lgm = cam_->lgm(currIdx);
-    std::vector<Size> modelIndex(1, cam_->pIdx(CrossAssetModel::AssetType::IR, currIdx));
+    std::vector<Size> externalModelIndices;
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(
+        cam_, {std::make_pair(CrossAssetModel::AssetType::IR, cam_->ccyIndex(curr))}, externalModelIndices));
 
     // Build engine
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
@@ -345,7 +345,7 @@ LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, con
             yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
     return buildMcEngine([this](const std::string& p, const std::vector<std::string>& q, const bool m,
                                 const std::string& d) { return this->engineParameter(p, q, m, d); },
-                         lgm, yts, modelIndex, simulationDates_, stickyCloseOutDates_);
+                         model->lgm(0), yts, externalModelIndices, simulationDates_, stickyCloseOutDates_);
 } // LgmCam engineImpl
 
 } // namespace data
