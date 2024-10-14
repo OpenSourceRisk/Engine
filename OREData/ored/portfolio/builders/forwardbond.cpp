@@ -28,66 +28,73 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
-void FwdBondEngineBuilder::setCurves(const string& id, const Currency& ccy, const std::string& discountCurveName,
-                                     const string& creditCurveId, const string& securityId,
-                                     const string& referenceCurveId, const string& incomeCurveId, const bool dirty) {
-
+FwdBondEngineBuilder::Curves FwdBondEngineBuilder::getCurves(const string& id, const Currency& ccy,
+                                                             const std::string& discountCurveName,
+                                                             const string& creditCurveId, const string& securityId,
+                                                             const string& referenceCurveId,
+                                                             const string& incomeCurveId, const bool dirty) {
+    FwdBondEngineBuilder::Curves curves;
     // for discounting underlying bond make use of reference curve
-    referenceCurve_ = referenceCurveId.empty()
+    curves.referenceCurve_ = referenceCurveId.empty()
                           ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                           : indexOrYieldCurve(market_, referenceCurveId, configuration(MarketContext::pricing));
 
     // include bond spread, if any
     try {
-        bondSpread_ = market_->securitySpread(securityId, configuration(MarketContext::pricing));
+        curves.bondSpread_ = market_->securitySpread(securityId, configuration(MarketContext::pricing));
     } catch (...) {
-        bondSpread_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
+        curves.bondSpread_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.0));
     }
 
     // include spread
-    spreadedReferenceCurve_ =
-        Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(referenceCurve_, bondSpread_));
+    curves.spreadedReferenceCurve_ = Handle<YieldTermStructure>(
+        QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(curves.referenceCurve_, curves.bondSpread_));
 
     // income curve, fallback reference curve (w/o spread)
-    incomeCurve_ = market_->yieldCurve(incomeCurveId.empty() ? referenceCurveId : incomeCurveId,
-                                       configuration(MarketContext::pricing));
+    curves.incomeCurve_ = market_->yieldCurve(incomeCurveId.empty() ? referenceCurveId : incomeCurveId,
+                                             configuration(MarketContext::pricing));
 
     bool spreadOnIncome = parseBool(engineParameter("SpreadOnIncomeCurve", {}, false, "false"));
 
     if (spreadOnIncome) {
-        incomeCurve_ = Handle<YieldTermStructure>(
-            QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(incomeCurve_, bondSpread_));
+        curves.incomeCurve_ = Handle<YieldTermStructure>(
+            QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(curves.incomeCurve_, curves.bondSpread_));
     }
 
     // to discount the forward contract, might be a OIS curve
-    discountCurve_ = discountCurveName.empty()
-                         ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
-                         : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
+    curves.discountCurve_ = discountCurveName.empty()
+                               ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
+                               : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
 
     try {
-        conversionFactor_ = market_->conversionFactor(securityId, configuration(MarketContext::pricing));
+        curves.conversionFactor_ = market_->conversionFactor(securityId, configuration(MarketContext::pricing));
     } catch (...) {
-        conversionFactor_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+        curves.conversionFactor_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
     }
-    if (dirty && conversionFactor_->value() != 1.0) {
+    if (dirty && curves.conversionFactor_->value() != 1.0) {
         WLOG("conversionFactor for " << securityId << " is overwritten to 1.0, settlement is dirty")
-        conversionFactor_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
+        curves.conversionFactor_ = Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(1.0));
     }
 
     // credit curve may not always be used. If credit curve ID is empty proceed without it
-    if (!creditCurveId.empty())
-        dpts_ = securitySpecificCreditCurve(market_, securityId, creditCurveId, configuration(MarketContext::pricing))
-                    ->curve();
+    if (!creditCurveId.empty()){
+        curves.dpts_ =
+            securitySpecificCreditCurve(market_, securityId, creditCurveId, configuration(MarketContext::pricing))
+                ->curve();
+    } else {
+        curves.dpts_ = Handle<DefaultProbabilityTermStructure>();
+    }
 
     try {
-        recovery_ = market_->recoveryRate(securityId, configuration(MarketContext::pricing));
+        curves.recovery_ = market_->recoveryRate(securityId, configuration(MarketContext::pricing));
     } catch (...) {
         // otherwise fall back on curve recovery
         WLOG("security specific recovery rate not found for security ID "
              << securityId << ", falling back on the recovery rate for credit curve Id " << creditCurveId);
         if (!creditCurveId.empty())
-            recovery_ = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
+            curves.recovery_ = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
     }
+    return curves;
 };
 
 QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngine(
@@ -123,10 +130,11 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
     Handle<CrossAssetModel> model(getProjectedCrossAssetModel(
         cam_, {std::make_pair(CrossAssetModel::AssetType::IR, cam_->ccyIndex(ccy))}, externalModelIndices));
 
-    setCurves(id, ccy, discountCurveName, creditCurveId, securityId, referenceCurveId, incomeCurveId, dirty);
+    auto curves =
+        getCurves(id, ccy, discountCurveName, creditCurveId, securityId, referenceCurveId, incomeCurveId, dirty);
 
-    return buildMcEngine(model->lgm(0), spreadedReferenceCurve_, simulationDates_, externalModelIndices, incomeCurve_,
-                         discountCurve_, referenceCurve_, conversionFactor_);
+    return buildMcEngine(model->lgm(0), curves.spreadedReferenceCurve_, simulationDates_, externalModelIndices,
+                         curves.incomeCurve_, curves.discountCurve_, curves.referenceCurve_, curves.conversionFactor_);
 }
 
 } // namespace data
