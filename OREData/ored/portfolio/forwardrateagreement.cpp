@@ -72,8 +72,8 @@ void ForwardRateAgreement::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
         QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
     QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-    swap->setPricingEngine(
-        swapBuilder->engine(npvCcy, envelope().additionalField("discount_curve", false, std::string()), std::string()));
+    swap->setPricingEngine(swapBuilder->engine(
+        this, npvCcy, envelope().additionalField("discount_curve", false, std::string()), std::string()));
     setSensitivityTemplate(*swapBuilder);
     instrument_.reset(new VanillaInstrument(swap));
     maturity_ = endDate;

@@ -171,7 +171,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         auto builder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         QL_REQUIRE(builder, "could not get swap builder to build exercised swaption instrument.");
         auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
-        swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_),
+        swap->setPricingEngine(builder->engine(underlying_.get(), parseCurrency(npvCurrency_),
                                                envelope().additionalField("discount_curve", false),
                                                envelope().additionalField("security_spread", false)));
         setSensitivityTemplate(*builder);
@@ -202,7 +202,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         auto builder = QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(engineFactory->builder("Swap"));
         QL_REQUIRE(builder, "could not get swap builder to build expired swaption instrument.");
         auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
-        swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_),
+        swap->setPricingEngine(builder->engine(underlying_.get(), parseCurrency(npvCurrency_),
                                                envelope().additionalField("discount_curve", false),
                                                envelope().additionalField("security_spread", false)));
         instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
@@ -393,9 +393,9 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     // 9.4 build underlying swaps, add premiums, build option wrapper
 
-    auto swapEngine =
-        swapBuilder->engine(parseCurrency(npvCurrency_), envelope().additionalField("discount_curve", false),
-                            envelope().additionalField("security_spread", false));
+    auto swapEngine = swapBuilder->engine(underlying_.get(), parseCurrency(npvCurrency_),
+                                          envelope().additionalField("discount_curve", false),
+                                          envelope().additionalField("security_spread", false));
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps =
         buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());

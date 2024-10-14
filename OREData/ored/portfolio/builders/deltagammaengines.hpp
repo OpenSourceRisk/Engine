@@ -54,8 +54,9 @@ public:
     SwapEngineBuilderDeltaGamma() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngineDeltaGamma") {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
-                                                        const std::string& securitySpread) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const ore::data::Swap*, const Currency& ccy,
+                                                                const std::string& discountCurve,
+                                                                const std::string& securitySpread) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
         bool computeDelta = parseBool(engineParameter("ComputeDelta"));
@@ -82,8 +83,9 @@ public:
         : CrossCurrencySwapEngineBuilderBase("DiscountedCashflows", "DiscountingCrossCurrencySwapEngineDeltaGamma") {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys,
-                                                        const Currency& base, bool useXccyYieldCurves) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const ore::data::Swap*,
+                                                                const std::vector<Currency>& ccys, const Currency& base,
+                                                                bool useXccyYieldCurves) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
         bool computeDelta = parseBool(engineParameter("ComputeDelta"));
@@ -120,8 +122,8 @@ public:
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClassUnderlying,
-                                                        const Date& expiryDate, const bool useFxSpot) override {
+                                                                const AssetClass& assetClassUnderlying,
+                                                                const Date& expiryDate, const bool useFxSpot) override {
         std::vector<Time> bucketTimesDeltaGamma =
             parseListOfValues<Time>(engineParameter("BucketTimesDeltaGamma"), &parseReal);
         std::vector<Time> bucketTimesVega = parseListOfValues<Time>(engineParameter("BucketTimesVega"), &parseReal);
@@ -166,7 +168,8 @@ public:
         : FxForwardEngineBuilderBase("DiscountedCashflows", "DiscountingFxForwardEngineDeltaGamma") {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy,
+                                                                const Currency& domCcy) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
         bool computeDelta = parseBool(engineParameter("ComputeDelta"));

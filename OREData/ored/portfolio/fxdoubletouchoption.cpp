@@ -14,7 +14,6 @@
   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/fxdoubletouchoption.hpp>
 #include <ored/portfolio/barrieroptionwrapper.hpp>
@@ -25,13 +24,17 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
+
+#include <qle/indexes/fxindex.hpp>
+
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/barrieroption.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/swap.hpp>
 #include <ql/instruments/vanillaoption.hpp>
-#include <qle/indexes/fxindex.hpp>
+
+#include <boost/make_shared.hpp>
 
 using namespace QuantLib;
 
@@ -146,7 +149,7 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
 
     QuantLib::ext::shared_ptr<Instrument> doubleTouch =
         QuantLib::ext::make_shared<DoubleBarrierOption>(barrierType, levelLow, levelHigh, 0.0, payoff, exercise);
-    QuantLib::ext::shared_ptr<Instrument> underlying = QuantLib::ext::make_shared<Swap>(Leg(), leg);
+    QuantLib::ext::shared_ptr<Instrument> underlying = QuantLib::ext::make_shared<QuantLib::Swap>(Leg(), leg);
 
     QuantLib::ext::shared_ptr<QuantExt::FxIndex> fxIndex;
     if (!fxIndex_.empty())
@@ -167,7 +170,9 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     QL_REQUIRE(builder, "No builder found for Swap");
     QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
         QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-    underlying->setPricingEngine(swapBuilder->engine(parseCurrency(payoffCurrency_), std::string(), std::string()));
+    ore::data::Swap dummySwap;
+    underlying->setPricingEngine(
+        swapBuilder->engine(&dummySwap, parseCurrency(payoffCurrency_), std::string(), std::string()));
 
     bool isLong = (positionType == Position::Long) ? true : false;
 

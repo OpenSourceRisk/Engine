@@ -77,8 +77,6 @@ public:
     const std::map<std::string,boost::any>& additionalData() const override;
 
 protected:
-    virtual QuantLib::ext::shared_ptr<LegData> createLegData() const;
-
     vector<LegData> legData_;
     string settlement_;
     bool isXCCY_ = false;

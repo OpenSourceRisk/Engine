@@ -103,7 +103,7 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<AmericanExercise>(expiryDate, payoffAtExpiry);
 
     QuantLib::ext::shared_ptr<Instrument> barrier = QuantLib::ext::make_shared<VanillaOption>(payoff, exercise);
-    QuantLib::ext::shared_ptr<Instrument> underlying = QuantLib::ext::make_shared<Swap>(Leg(), leg);
+    QuantLib::ext::shared_ptr<Instrument> underlying = QuantLib::ext::make_shared<QuantLib::Swap>(Leg(), leg);
 
     QL_REQUIRE(eqIndex_ != "", "No eqIndex provided");
     QL_REQUIRE(calendar_ != "", "No calendar provided");
@@ -146,7 +146,8 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         QL_REQUIRE(builder, "No builder found for Swap");
         QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        underlying->setPricingEngine(swapBuilder->engine(ccy, std::string(), std::string()));
+        ore::data::Swap dummySwap;
+        underlying->setPricingEngine(swapBuilder->engine(&dummySwap, ccy, std::string(), std::string()));
     }
 
     bool isLong = (positionType == Position::Long) ? true : false;
