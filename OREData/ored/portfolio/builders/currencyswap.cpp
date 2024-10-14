@@ -60,7 +60,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engine
         if ((i == 0 && needBaseCcy) || std::find(allCurrencies.begin(), allCurrencies.end(),
                                                  cam_->irlgm1f(i)->currency()) != allCurrencies.end()) {
             selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, i));
-            if (i > 1)
+            if (i > 0)
                 selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, i - 1));
         }
     }
