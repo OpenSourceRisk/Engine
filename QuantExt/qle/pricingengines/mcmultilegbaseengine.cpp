@@ -25,6 +25,7 @@
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/indexes/equityindex.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
@@ -139,24 +140,75 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
     }
 
     // handle some wrapped coupon types: extract the wrapper info and continue with underlying flow
+    // we can have multiple nested wrappers, e.g. fx and eq for eq swap funding legs
+
     bool isFxLinked = false;
     bool isFxIndexed = false;
+    bool isEqIndexed = false;
     Size fxLinkedSourceCcyIdx = Null<Size>();
     Size fxLinkedTargetCcyIdx = Null<Size>();
     Real fxLinkedFixedFxRate = Null<Real>();
     Real fxLinkedSimTime = Null<Real>(); // if fx fixing date > today
     Real fxLinkedForeignNominal = Null<Real>();
+    Size eqLinkedIdx = Null<Size>();
+    Real eqLinkedFixedPrice = Null<Real>();
+    Real eqLinkedSimTime = Null<Real>(); // if eq fixing date > today
     std::vector<Size> fxLinkedModelIndices;
+    std::vector<Size> eqLinkedModelIndices;
 
-    // A Coupon could be wrapped in a FxLinkedCoupon or IndexedCoupon but not both at the same time
-    if (auto indexCpn = QuantLib::ext::dynamic_pointer_cast<IndexedCoupon>(flow)) {
-        if (auto fxIndex = QuantLib::ext::dynamic_pointer_cast<FxIndex>(indexCpn->index())) {
-            isFxIndexed = true;
-            auto fixingDate = indexCpn->fixingDate();
-            fxLinkedSourceCcyIdx = model_->ccyIndex(fxIndex->sourceCurrency());
-            fxLinkedTargetCcyIdx = model_->ccyIndex(fxIndex->targetCurrency());
+    bool foundWrapper;
+    do {
+        foundWrapper = false;
+        if (auto indexCpn = QuantLib::ext::dynamic_pointer_cast<IndexedCoupon>(flow)) {
+            if (auto fxIndex = QuantLib::ext::dynamic_pointer_cast<FxIndex>(indexCpn->index())) {
+                QL_REQUIRE(!isFxIndexed,
+                           "McMultiLegBaseEngine::createCashflowInfo(): multiple fx indexings found for coupon at leg "
+                               << legNo << " cashflow " << cfNo << ". Only one fx indexing is allowed.");
+                isFxIndexed = true;
+                auto fixingDate = indexCpn->fixingDate();
+                fxLinkedSourceCcyIdx = model_->ccyIndex(fxIndex->sourceCurrency());
+                fxLinkedTargetCcyIdx = model_->ccyIndex(fxIndex->targetCurrency());
+                if (fixingDate <= today_) {
+                    fxLinkedFixedFxRate = fxIndex->fixing(fixingDate);
+                } else {
+                    fxLinkedSimTime = time(fixingDate);
+                    if (fxLinkedSourceCcyIdx > 0) {
+                        fxLinkedModelIndices.push_back(
+                            model_->pIdx(CrossAssetModel::AssetType::FX, fxLinkedSourceCcyIdx - 1));
+                    }
+                    if (fxLinkedTargetCcyIdx > 0) {
+                        fxLinkedModelIndices.push_back(
+                            model_->pIdx(CrossAssetModel::AssetType::FX, fxLinkedTargetCcyIdx - 1));
+                    }
+                }
+                flow = indexCpn->underlying();
+                foundWrapper = true;
+            } else if (auto eqIndex = QuantLib::ext::dynamic_pointer_cast<EquityIndex2>(indexCpn->index())) {
+                QL_REQUIRE(!isEqIndexed,
+                           "McMultiLegBaseEngine::createCashflowInfo(): multiple eq indexings found for coupon at leg "
+                               << legNo << " cashflow " << cfNo << ". Only one eq indexing is allowed.");
+                isEqIndexed = true;
+                auto fixingDate = indexCpn->fixingDate();
+                eqLinkedIdx = model_->eqIndex(eqIndex->name());
+                if (fixingDate <= today_) {
+                    eqLinkedFixedPrice = eqIndex->fixing(fixingDate);
+                } else {
+                    eqLinkedSimTime = time(fixingDate);
+                    eqLinkedModelIndices.push_back(model_->pIdx(CrossAssetModel::AssetType::EQ, eqLinkedIdx));
+                }
+                flow = indexCpn->underlying();
+                foundWrapper = true;
+            } else {
+                QL_FAIL("McMultiLegBaseEngine::createCashflowInfo(): unhandled indexing for coupon at leg "
+                        << legNo << " cashflow " << cfNo << ": supported indexings are fx, eq");
+            }
+        } else if (auto fxl = QuantLib::ext::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(flow)) {
+            isFxLinked = true;
+            auto fixingDate = fxl->fxFixingDate();
+            fxLinkedSourceCcyIdx = model_->ccyIndex(fxl->fxIndex()->sourceCurrency());
+            fxLinkedTargetCcyIdx = model_->ccyIndex(fxl->fxIndex()->targetCurrency());
             if (fixingDate <= today_) {
-                fxLinkedFixedFxRate = fxIndex->fixing(fixingDate);
+                fxLinkedFixedFxRate = fxl->fxIndex()->fixing(fixingDate);
             } else {
                 fxLinkedSimTime = time(fixingDate);
                 if (fxLinkedSourceCcyIdx > 0) {
@@ -168,27 +220,16 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                         model_->pIdx(CrossAssetModel::AssetType::FX, fxLinkedTargetCcyIdx - 1));
                 }
             }
-            flow = indexCpn->underlying();
+            flow = fxl->underlying();
+            fxLinkedForeignNominal = fxl->foreignAmount();
+            foundWrapper = true;
         }
-    } else if (auto fxl = QuantLib::ext::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(flow)) {
-        isFxLinked = true;
-        auto fixingDate = fxl->fxFixingDate();
-        fxLinkedSourceCcyIdx = model_->ccyIndex(fxl->fxIndex()->sourceCurrency());
-        fxLinkedTargetCcyIdx = model_->ccyIndex(fxl->fxIndex()->targetCurrency());
-        if (fixingDate <= today_) {
-            fxLinkedFixedFxRate = fxl->fxIndex()->fixing(fixingDate);
-        } else {
-            fxLinkedSimTime = time(fixingDate);
-            if (fxLinkedSourceCcyIdx > 0) {
-                fxLinkedModelIndices.push_back(model_->pIdx(CrossAssetModel::AssetType::FX, fxLinkedSourceCcyIdx - 1));
-            }
-            if (fxLinkedTargetCcyIdx > 0) {
-                fxLinkedModelIndices.push_back(model_->pIdx(CrossAssetModel::AssetType::FX, fxLinkedTargetCcyIdx - 1));
-            }
-        }
-        flow = fxl->underlying();
-        fxLinkedForeignNominal = fxl->foreignAmount();
-    }
+    } while (foundWrapper);
+
+    eqLinkedFixedPrice;
+    eqLinkedSimTime;
+
+    // handle cap / floored coupons
 
     bool isCapFloored = false;
     bool isNakedOption = false;
