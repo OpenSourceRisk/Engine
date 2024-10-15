@@ -33,6 +33,12 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
+namespace {
+struct CcyComp {
+    bool operator()(const Currency& c1, const Currency& c2) const { return c1.code() < c2.code(); }
+};
+} // namespace
+
 QuantLib::ext::shared_ptr<PricingEngine>
 CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm,
                                        const Handle<YieldTermStructure>& discountCurve,
@@ -63,9 +69,9 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(con
 
     // collect currencies from equities from indexing and from equity legs
 
-    std::set<std::string> allCurrencies{ccy.code()};
+    std::set<Currency, CcyComp> allCurrencies{ccy};
     for (auto const& eq : eqNames) {
-        allCurrencies.insert(market_->equityCurve(eq, configuration(MarketContext::pricing))->currency().code());
+        allCurrencies.insert(market_->equityCurve(eq, configuration(MarketContext::pricing))->currency());
     }
 
     // get projected model
@@ -73,13 +79,13 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(con
     bool needBaseCcy = allCurrencies.size() > 1;
 
     std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
-    for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::IR); ++i) {
-        if ((i == 0 && needBaseCcy) || std::find(allCurrencies.begin(), allCurrencies.end(),
-                                                 cam_->irlgm1f(i)->currency().code()) != allCurrencies.end()) {
-            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, i));
-            if (i > 0)
-                selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, i - 1));
-        }
+    if(needBaseCcy)
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
+    for(auto const& c: allCurrencies) {
+        Size ccyIdx = cam_->ccyIndex(c);
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
+        if (ccyIdx > 0 && needBaseCcy)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX,ccyIdx-1));
     }
     for (auto const& eq : eqNames) {
         selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, cam_->eqIndex(eq)));

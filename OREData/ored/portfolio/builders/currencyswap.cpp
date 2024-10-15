@@ -62,14 +62,15 @@ CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, c
     QL_REQUIRE(!ccys.empty(), "CamMcMultiLegOptionEngineBuilder: no currencies given");
 
     bool needBaseCcy = allCurrencies.size() > 1;
-    std::set<std::pair<CrossAssetModel::AssetType,Size>> selectedComponents;
-    for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::IR); ++i) {
-        if ((i == 0 && needBaseCcy) || std::find(allCurrencies.begin(), allCurrencies.end(),
-                                                 cam_->irlgm1f(i)->currency()) != allCurrencies.end()) {
-            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, i));
-            if (i > 0)
-                selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, i - 1));
-        }
+
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    if(needBaseCcy)
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
+    for(auto const& c: allCurrencies) {
+        Size ccyIdx = cam_->ccyIndex(c);
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
+        if(ccyIdx > 0 && needBaseCcy)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX,ccyIdx-1));
     }
     for (auto const& eq : eqNames) {
         selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, cam_->eqIndex(eq)));
