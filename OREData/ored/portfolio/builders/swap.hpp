@@ -25,7 +25,6 @@
 
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 
@@ -45,15 +44,15 @@ namespace data {
 /*! Pricing engines are cached by currency
     \ingroup builders
 */
-class SwapEngineBuilderBase : public CachingPricingEngineBuilder<string, const ore::data::Swap*, const Currency&,
-                                                                 const std::string&, const std::string&> {
+class SwapEngineBuilderBase
+    : public CachingPricingEngineBuilder<string, const Currency&, const std::string&, const std::string&> {
 public:
     SwapEngineBuilderBase(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"Swap"}) {}
 
 protected:
-    string keyImpl(const ore::data::Swap* swap, const Currency& ccy, const std::string& discountCurve,
-                   const std::string& securitySpread) override {
+    virtual string keyImpl(const Currency& ccy, const std::string& discountCurve,
+                           const std::string& securitySpread) override {
         return ccy.code() + discountCurve + securitySpread;
     }
 };
@@ -67,9 +66,8 @@ public:
     SwapEngineBuilder() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngine") {}
 
 protected:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const ore::data::Swap* swap, const Currency& ccy,
-                                                        const std::string& discountCurve,
-                                                        const std::string& securitySpread) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
+                                                                const std::string& securitySpread) override {
         Handle<YieldTermStructure> yts =
             discountCurve.empty() ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
                                   : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
@@ -89,9 +87,8 @@ public:
     SwapEngineBuilderOptimised() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngineOptimised") {}
 
 protected:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const ore::data::Swap* swap, const Currency& ccy,
-                                                        const std::string& discountCurve,
-                                                        const std::string& securitySpread) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
+                                                                const std::string& securitySpread) override {
 
         Handle<YieldTermStructure> yts =
             discountCurve.empty() ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
@@ -109,15 +106,13 @@ protected:
     \ingroup builders
 */
 class CrossCurrencySwapEngineBuilderBase
-    : public CachingPricingEngineBuilder<string, const ore::data::Swap*, const std::vector<Currency>&, const Currency&,
-                                         bool> {
+    : public CachingPricingEngineBuilder<string, const std::vector<Currency>&, const Currency&, bool> {
 public:
     CrossCurrencySwapEngineBuilderBase(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"CrossCurrencySwap"}) {}
 
 protected:
-    string keyImpl(const ore::data::Swap* swap, const std::vector<Currency>& ccys, const Currency& base,
-                   bool useXccyYieldCurves) override {
+    virtual string keyImpl(const std::vector<Currency>& ccys, const Currency& base, bool useXccyYieldCurves) override {
         std::ostringstream ccyskey;
         ccyskey << base << "/";
         for (Size i = 0; i < ccys.size(); ++i)
@@ -134,8 +129,8 @@ public:
         : CrossCurrencySwapEngineBuilderBase("DiscountedCashflows", "DiscountingCrossCurrencySwapEngine") {}
 
 protected:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const ore::data::Swap* swap, const std::vector<Currency>& ccys,
-                                                        const Currency& base, bool useXccyYieldCurves) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base,
+                                                                bool useXccyYieldCurves) override {
 
         std::vector<Handle<YieldTermStructure>> discountCurves;
         std::vector<Handle<Quote>> fxQuotes;
@@ -168,16 +163,9 @@ public:
           stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
-    // everything entering the forwarding will require a different engine!
-    string keyImpl(const ore::data::Swap* swap, const Currency& ccy, const std::string& discountCurve,
-                   const std::string& securitySpread) override {
-        return swap->id();
-    }
-
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const ore::data::Swap* swap, const Currency& ccy,
-                                                        const std::string& discountCurve,
-                                                        const std::string& securitySpread) override;
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
+                                                                const std::string& securitySpread) override;
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::ext::shared_ptr<QuantExt::LGM>& lgm,
@@ -200,9 +188,8 @@ public:
 
 protected:
     // the pricing engine depends on the ccy only, can use the caching from SwapEngineBuilderBase
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const ore::data::Swap* swap, const Currency& ccy,
-                                                        const std::string& discountCurve,
-                                                        const std::string& securitySpread) override;
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
+                                                                const std::string& securitySpread) override;
 
 private:
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;

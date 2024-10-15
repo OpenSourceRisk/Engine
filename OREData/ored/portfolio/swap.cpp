@@ -57,6 +57,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     Size numLegs = legData_.size();
     legPayers_ = vector<bool>(numLegs);
     std::vector<QuantLib::Currency> currencies(numLegs);
+    std::vector<QuantLib::Currency> currenciesForMcSimulation;
     legs_.resize(numLegs);
 
     isXCCY_ = false;
@@ -81,6 +82,30 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         }
     }
 
+    
+    // Check if there is indexing is used, need to collect all underlying currrencies
+    // for AMC simulations, such a trade needs to be treated a x-ccy swap with both leg paying
+    // one currency.
+    auto addUnique = [](vector<Currency>& currencies, Currency ccy) {
+        if (std::find(currencies.begin(), currencies.end(), ccy) ==
+            currencies.end()) {
+            currencies.push_back(ccy);
+        }
+    };
+    
+    for (Size i = 0; i < numLegs; ++i) {
+        addUnique(currenciesForMcSimulation, currencies[i]);
+        vector<Indexing> indexings = legData_[i].indexing();
+        if (!indexings.empty() && indexings.front().hasData()) {
+            Indexing indexing = indexings.front();
+            if (boost::starts_with(indexing.index(), "FX-")) {
+                auto index = parseFxIndex(indexing.index());
+                addUnique(currenciesForMcSimulation, index->targetCurrency());
+                addUnique(currenciesForMcSimulation, index->sourceCurrency());
+            }
+        }
+    }
+    isXCCY_ = isXCCY_ || currenciesForMcSimulation.size() > 1;
     static std::set<std::string> eligibleForXbs = {"Fixed", "Floating"};
     bool useXbsCurves = true;
     for(Size i=0;i<numLegs;++i) {
@@ -161,7 +186,8 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             QuantLib::ext::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
         bool useXccyYieldCurvesForDiscounting = allLegsAreSimmPlainVanillaIrLegs_;
-        swap->setPricingEngine(swapBuilder->engine(this, currencies, npvCcy, useXccyYieldCurvesForDiscounting));
+        swap->setPricingEngine(
+            swapBuilder->engine(currenciesForMcSimulation, npvCcy, useXccyYieldCurvesForDiscounting));
         setSensitivityTemplate(*swapBuilder);
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
@@ -170,7 +196,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-        swap->setPricingEngine(swapBuilder->engine(this, npvCcy, envelope().additionalField("discount_curve", false),
+        swap->setPricingEngine(swapBuilder->engine(npvCcy, envelope().additionalField("discount_curve", false),
                                                    envelope().additionalField("security_spread", false)));
         setSensitivityTemplate(*swapBuilder);
         instrument_.reset(new VanillaInstrument(swap));
@@ -359,11 +385,13 @@ void Swap::fromXML(XMLNode* node) {
 
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(swapNode, "LegData");
     for (Size i = 0; i < nodes.size(); i++) {
-        auto ld = QuantLib::ext::make_shared<LegData>();
+        auto ld = createLegData();
         ld->fromXML(nodes[i]);
         legData_.push_back(*QuantLib::ext::static_pointer_cast<LegData>(ld));
     }
 }
+
+QuantLib::ext::shared_ptr<LegData> Swap::createLegData() const { return QuantLib::ext::make_shared<LegData>(); }
 
 XMLNode* Swap::toXML(XMLDocument& doc) const {
     XMLNode* node = Trade::toXML(doc);

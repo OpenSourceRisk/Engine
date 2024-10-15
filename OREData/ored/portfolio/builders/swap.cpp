@@ -53,60 +53,16 @@ CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm
         parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
-QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(const ore::data::Swap* swap,
-                                                                             const Currency& ccy,
+QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(const Currency& ccy,
                                                                              const std::string& discountCurveName,
                                                                              const std::string& securitySpread) {
     DLOG("Building AMC Swap engine for ccy " << ccy << " (from externally given CAM)");
 
     QL_REQUIRE(cam_ != nullptr, "LgmAmcSwapEngineBuilder::engineImpl: cam is null");
 
-    // collect currencies and equities from indexing and from equity legs
-
-    std::set<std::string> allCurrencies{ccy.code()};
-    std::set<std::string> allEquities;
-
-    for (auto const& ld : swap->legData()) {
-        for (auto const& ind : ld.indexing()) {
-            if (ind.hasData()) {
-                if (boost::starts_with(ind.index(), "FX-")) {
-                    auto index = parseFxIndex(ind.index());
-                    allCurrencies.insert(index->targetCurrency().code());
-                    allCurrencies.insert(index->sourceCurrency().code());
-                } else if (boost::starts_with(ind.index(), "EQ-")) {
-                    auto index = parseEquityIndex(ind.index());
-                    allCurrencies.insert(
-                        market_->equityCurve(index->name(), configuration(MarketContext::pricing))->currency().code());
-                    allEquities.insert(index->name());
-                }
-            }
-        }
-        if (ld.legType() == "Equity") {
-            allEquities.insert(
-                parseEquityIndex(boost::dynamic_pointer_cast<EquityLegData>(ld.concreteLegData())->eqName())->name());
-        }
-    }
-
-    // get projected model
-
-    bool needBaseCcy = allCurrencies.size() > 1;
-
-    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
-    for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::IR); ++i) {
-        if ((i == 0 && needBaseCcy) || std::find(allCurrencies.begin(), allCurrencies.end(),
-                                                 cam_->irlgm1f(i)->currency().code()) != allCurrencies.end()) {
-            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, i));
-            if (i > 0)
-                selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, i - 1));
-        }
-    }
-    for (auto const& eqName : allEquities) {
-        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, cam_->eqIndex(eqName)));
-    }
     std::vector<Size> externalModelIndices;
-    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
-
-    // build mc engine
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(
+        cam_, {std::make_pair(CrossAssetModel::AssetType::IR, cam_->ccyIndex(ccy))}, externalModelIndices));
 
     Handle<YieldTermStructure> discountCurve =
         discountCurveName.empty()
@@ -116,8 +72,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(con
     return buildMcEngine(model->lgm(0), discountCurve, externalModelIndices);
 }
 
-QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwapEngineBuilder::engineImpl(const ore::data::Swap* swap,
-                                                                            const Currency& ccy,
+QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwapEngineBuilder::engineImpl(const Currency& ccy,
                                                                             const std::string& discountCurveName,
                                                                             const std::string& securitySpread) {
     DLOG("Building AMCCG Swap engine for ccy " << ccy << " (from externally given modelcg)");

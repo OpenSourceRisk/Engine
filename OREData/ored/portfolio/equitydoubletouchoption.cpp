@@ -106,7 +106,7 @@ void EquityDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactor
 
     QuantLib::ext::shared_ptr<Instrument> doubleTouch =
         QuantLib::ext::make_shared<DoubleBarrierOption>(barrierType, levelLow, levelHigh, 0.0, payoff, exercise);
-    QuantLib::ext::shared_ptr<Instrument> underlying = QuantLib::ext::make_shared<QuantLib::Swap>(Leg(), leg);
+    QuantLib::ext::shared_ptr<Instrument> underlying = QuantLib::ext::make_shared<Swap>(Leg(), leg);
 
     
 
@@ -126,9 +126,7 @@ void EquityDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         QL_REQUIRE(builder, "No builder found for Swap");
         QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        ore::data::Swap dummySwap;
-        underlying->setPricingEngine(
-            swapBuilder->engine(&dummySwap, parseCurrency(payoffCurrency_), std::string(), std::string()));
+        underlying->setPricingEngine(swapBuilder->engine(parseCurrency(payoffCurrency_), std::string(), std::string()));
     }
 
     bool isLong = (positionType == Position::Long) ? true : false;
