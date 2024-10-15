@@ -113,9 +113,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
 
     for (Size i = 0; i < numLegs; ++i) {
         if (legData_[i].legType() == "Equity") {
-            eqNames.insert(
-                parseEquityIndex(boost::dynamic_pointer_cast<EquityLegData>(legData_[i].concreteLegData())->eqName())
-                    ->name());
+            eqNames.insert(QuantLib::ext::dynamic_pointer_cast<EquityLegData>(legData_[i].concreteLegData())->eqName());
         }
     }
 
