@@ -417,6 +417,7 @@
 #include <qle/pricingengines/intrinsicascotengine.hpp>
 #include <qle/pricingengines/lgmconvolutionsolver.hpp>
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
+#include <qle/pricingengines/mccamequityforwardengine.hpp>
 #include <qle/pricingengines/mccamfxforwardengine.hpp>
 #include <qle/pricingengines/mccamfxoptionengine.hpp>
 #include <qle/pricingengines/mclgmbondengine.hpp>

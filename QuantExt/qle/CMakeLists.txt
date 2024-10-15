@@ -294,6 +294,7 @@ pricingengines/inflationcapfloorengines.cpp
 pricingengines/intrinsicascotengine.cpp
 pricingengines/lgmconvolutionsolver.cpp
 pricingengines/mccamcurrencyswapengine.cpp
+pricingengines/mccamequityforwardengine.cpp
 pricingengines/mccamfxforwardengine.cpp
 pricingengines/mccamfxoptionengine.cpp
 pricingengines/mclgmbondengine.cpp
@@ -833,6 +834,7 @@ pricingengines/inflationcapfloorengines.hpp
 pricingengines/intrinsicascotengine.hpp
 pricingengines/lgmconvolutionsolver.hpp
 pricingengines/mccamcurrencyswapengine.hpp
+pricingengines/mccamequityforwardengine.hpp
 pricingengines/mccamfxforwardengine.hpp
 pricingengines/mccamfxoptionengine.hpp
 pricingengines/mclgmbondengine.hpp

@@ -32,13 +32,16 @@ class EquityCashFlow : public CashFlow, public Observer {
 public:
     EquityCashFlow(const Date& paymentDate, Real quantity, const Date& fixingDate,
                    const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve)
-        : paymentDate_(paymentDate), quantity_(quantity), fixingDate_(fixingDate), equityCurve_(equityCurve) {}
+        : paymentDate_(paymentDate), quantity_(quantity), fixingDate_(fixingDate), equityCurve_(equityCurve) {
+        registerWith(equityCurve_);
+    }
 
     Date date() const override { return paymentDate_; }
     Real amount() const override { return quantity_ * equityCurve_->fixing(fixingDate_); }
     Date fixingDate() const { return fixingDate_; }
     Real quantity() const { return quantity_; }
     const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equityCurve() const { return equityCurve_; }
+    void update() override { notifyObservers(); }
 
 private:
     Date paymentDate_;
