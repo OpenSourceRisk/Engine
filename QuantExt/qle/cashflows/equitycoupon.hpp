@@ -95,6 +95,10 @@ public:
     bool notionalReset() const { return notionalReset_; }
     //! input quantity
     Real inputQuantity() const { return quantity_; }
+    //! input initial price
+    Real inputInitialPrice() const { return initialPrice_; }
+    //! input nominal
+    Real inputNominal() const { return nominal_; }
     //! return both fixing dates
     std::vector<Date> fixingDates() const;
     //! initial price
