@@ -1022,6 +1022,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             return eq->fixingDate() <= today_ ? RandomVariable(n, eq->amount())
                                               : RandomVariable(n, eq->quantity()) * exp(*states.at(0).at(0));
         };
+        return info;
     }
 
     QL_FAIL("McMultiLegBaseEngine::createCashflowInfo(): unhandled coupon leg " << legNo << " cashflow " << cfNo);

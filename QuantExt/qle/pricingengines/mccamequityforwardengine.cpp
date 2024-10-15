@@ -43,12 +43,11 @@ void McCamEquityForwardEngine::calculate() const {
     Leg eqLeg{QuantLib::ext::make_shared<EquityCashFlow>(arguments_.payDate, arguments_.quantity,
                                                          arguments_.maturityDate, *equityIndex_)};
     Leg strikeLeg{
-        QuantLib::ext::make_shared<SimpleCashFlow>(arguments_.quantity * arguments_.strike, arguments_.payDate
-)};
+        QuantLib::ext::make_shared<SimpleCashFlow>(arguments_.quantity * arguments_.strike, arguments_.payDate)};
 
     leg_ = {eqLeg, strikeLeg};
     currency_ = {model_->ir(0)->currency(), model_->ir(0)->currency()};
-    payer_ = {arguments_.longShort == Position::Long, arguments_.longShort != Position::Long};
+    payer_ = {arguments_.longShort != Position::Long, arguments_.longShort == Position::Long};
 
     McMultiLegBaseEngine::calculate();
 
