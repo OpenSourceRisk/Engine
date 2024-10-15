@@ -52,6 +52,7 @@
 #include <qle/cashflows/cpicouponpricer.hpp>
 #include <qle/cashflows/durationadjustedcmscoupon.hpp>
 #include <qle/cashflows/durationadjustedcmscoupontsrpricer.hpp>
+#include <qle/cashflows/equitycashflow.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/equitymargincoupon.hpp>

@@ -468,6 +468,7 @@ cashflows/cpicoupon.hpp
 cashflows/cpicouponpricer.hpp
 cashflows/durationadjustedcmscoupon.hpp
 cashflows/durationadjustedcmscoupontsrpricer.hpp
+cashflows/equitycashflow.hpp
 cashflows/equitycoupon.hpp
 cashflows/equitycouponpricer.hpp
 cashflows/equitymargincoupon.hpp

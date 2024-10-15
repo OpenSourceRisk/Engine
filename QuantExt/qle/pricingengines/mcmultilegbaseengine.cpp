@@ -19,6 +19,7 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
+#include <qle/cashflows/equitycashflow.hpp>
 #include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
@@ -1000,6 +1001,28 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
         };
         return info;
     } // end of equity coupon handling
+
+    if (auto eq = QuantLib::ext::dynamic_pointer_cast<EquityCashFlow>(flow)) {
+        QL_REQUIRE(!isFxLinked, "McMultiLegBaseEngine::createCashflowInfo(): equity cashflow at leg "
+                                    << legNo << " cashflow "
+                                    << " is fx linked, this is not allowed");
+        QL_REQUIRE(!isFxIndexed, "McMultiLegBaseEngine::createCashflowInfo(): equity cashflow at leg "
+                                     << legNo << " cashflow "
+                                     << " is fx indexed, this is not allowed");
+        QL_REQUIRE(!isEqIndexed, "McMultiLegBaseEngine::createCashflowInfo(): equity cashflow at leg "
+                                     << legNo << " cashflow "
+                                     << " is eq indexed, this is not allowed");
+        if (eq->fixingDate() > today_) {
+            info.simulationTimes.push_back(time(eq->fixingDate()));
+            info.modelIndices.push_back(
+                {model_->pIdx(CrossAssetModel::AssetType::EQ, model_->eqIndex(eq->equityCurve()->name()))});
+        }
+        info.amountCalculator = [this, eq](const Size n,
+                                           const std::vector<std::vector<const RandomVariable*>>& states) {
+            return eq->fixingDate() <= today_ ? RandomVariable(n, eq->amount())
+                                              : RandomVariable(n, eq->quantity()) * exp(*states.at(0).at(0));
+        };
+    }
 
     QL_FAIL("McMultiLegBaseEngine::createCashflowInfo(): unhandled coupon leg " << legNo << " cashflow " << cfNo);
 } // createCashflowInfo()
