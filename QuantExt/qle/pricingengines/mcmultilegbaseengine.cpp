@@ -18,6 +18,7 @@
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
@@ -859,6 +860,146 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
 
         return info;
     }
+
+    if (auto eq = QuantLib::ext::dynamic_pointer_cast<EquityCoupon>(flow)) {
+
+        QL_REQUIRE(!isFxLinked, "McMultiLegBaseEngine::createCashflowInfo(): equity coupon at leg "
+                                    << legNo << " cashflow "
+                                    << " is fx linked, this is not allowed");
+        QL_REQUIRE(!isFxIndexed, "McMultiLegBaseEngine::createCashflowInfo(): equity coupon at leg "
+                                     << legNo << " cashflow "
+                                     << " is fx indexed, this is not allowed");
+        QL_REQUIRE(!isEqIndexed, "McMultiLegBaseEngine::createCashflowInfo(): equity coupon at leg "
+                                     << legNo << " cashflow "
+                                     << " is eq indexed, this is not allowed");
+
+        Size simTimeCounter = 0;
+        Size eqStartFixingIdx = Null<Size>();
+        if (eq->fixingStartDate() != Date() && eq->fixingStartDate() > today_ && eq->inputInitialPrice() == Null<Real>()) {
+            info.simulationTimes.push_back(time(eq->fixingStartDate()));
+            info.modelIndices.push_back(
+                {model_->pIdx(CrossAssetModel::AssetType::EQ, model_->eqIndex(eq->equityCurve()->name()))});
+            eqStartFixingIdx = simTimeCounter++;
+        }
+        Size eqEndFixingIdx = Null<Size>();
+        if (eq->fixingEndDate() != Date() && eq->fixingEndDate() > today_) {
+            info.simulationTimes.push_back(time(eq->fixingEndDate()));
+            info.modelIndices.push_back(
+                {model_->pIdx(CrossAssetModel::AssetType::EQ, model_->eqIndex(eq->equityCurve()->name()))});
+            eqEndFixingIdx = simTimeCounter++;
+        }
+
+        Size fxStartFixingIdx = Null<Size>();
+        Size fxEndFixingIdx = Null<Size>();
+        Size fxSourceCcyIdx = Null<Size>();
+        Size fxTargetCcyIdx = Null<Size>();
+        if (eq->fxIndex()) {
+            fxSourceCcyIdx = model_->ccyIndex(eq->fxIndex()->sourceCurrency());
+            fxTargetCcyIdx = model_->ccyIndex(eq->fxIndex()->targetCurrency());
+            std::vector<Size> fxModelIndices;
+            if (fxSourceCcyIdx > 0) {
+                fxModelIndices.push_back(model_->pIdx(CrossAssetModel::AssetType::FX, fxLinkedSourceCcyIdx - 1));
+            }
+            if (fxTargetCcyIdx > 0) {
+                fxModelIndices.push_back(model_->pIdx(CrossAssetModel::AssetType::FX, fxLinkedTargetCcyIdx - 1));
+            }
+            if (!eq->initialPriceIsInTargetCcy() && eq->fixingStartDate() > today_) {
+                info.simulationTimes.push_back(time(eq->fixingStartDate()));
+                info.modelIndices.push_back(fxModelIndices);
+                fxStartFixingIdx = simTimeCounter++;
+            }
+            if (eq->fixingEndDate() > today_) {
+                info.simulationTimes.push_back(time(eq->fixingEndDate()));
+                info.modelIndices.push_back(fxModelIndices);
+                fxEndFixingIdx = simTimeCounter++;
+            }
+        }
+
+        info.amountCalculator = [this, eq, eqStartFixingIdx, eqEndFixingIdx, fxStartFixingIdx, fxEndFixingIdx,
+                                 fxSourceCcyIdx, fxTargetCcyIdx](
+                                    const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+
+            RandomVariable initialPrice;
+            if (eq->inputInitialPrice() != Null<Real>() || eq->fixingStartDate() <= today_) {
+                initialPrice = RandomVariable(n, eq->initialPrice());
+            } else {
+                initialPrice = exp(*states.at(eqStartFixingIdx).at(0));
+            }
+
+            RandomVariable endFixing;
+            if(eq->fixingEndDate() <= today_) {
+                endFixing = RandomVariable(n, eq->equityCurve()->fixing(eq->fixingEndDate(), false, false));
+            } else {
+                endFixing = exp(*states.at(eqEndFixingIdx).at(0));
+            }
+
+            RandomVariable startFxFixing(n, 1.0);
+            RandomVariable endFxFixing(n, 1.0);
+            if(eq->fxIndex()) {
+                if(!eq->initialPriceIsInTargetCcy()) {
+                    if(eq->fixingStartDate() <= today_) {
+                        startFxFixing = RandomVariable(n, eq->fxIndex()->fixing(eq->fixingStartDate()));
+                    } else {
+                        RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
+                        Size fxIdx = 0;
+                        if (fxSourceCcyIdx > 0)
+                            fxSource = exp(*states.at(fxStartFixingIdx).at(fxIdx++));
+                        if (fxTargetCcyIdx > 0)
+                            fxTarget = exp(*states.at(fxStartFixingIdx).at(fxIdx));
+                        startFxFixing = fxSource / fxTarget;
+                    }
+                }
+                if(eq->fixingEndDate() <= today_) {
+                    endFxFixing = RandomVariable(n, eq->fxIndex()->fixing(eq->fixingEndDate()));
+                } else {
+                    RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
+                    Size fxIdx = 0;
+                    if (fxSourceCcyIdx > 0)
+                        fxSource = exp(*states.at(fxEndFixingIdx).at(fxIdx++));
+                    if (fxTargetCcyIdx > 0)
+                        fxTarget = exp(*states.at(fxEndFixingIdx).at(fxIdx));
+                    endFxFixing = fxSource / fxTarget;
+                }
+            }
+
+            // deterministic approximation! see equity coupon pricer for details
+            Real dividends = eq->equityCurve()->fixing(eq->fixingEndDate(), false, true) -
+                             eq->equityCurve()->fixing(eq->fixingEndDate(), false, false);
+            if(eq->fixingStartDate() > today_)
+                dividends -= eq->equityCurve()->fixing(eq->fixingEndDate(), false, true) -
+                             eq->equityCurve()->fixing(eq->fixingEndDate(), false, false);
+            dividends += eq->equityCurve()->dividendsBetweenDates(eq->fixingStartDate(), eq->fixingEndDate());
+
+            // again, see equity coupon pricer for details of the following logic
+            RandomVariable swapletRate;
+            if (eq->returnType() == EquityReturnType::Total) {
+                swapletRate = RandomVariable(n, dividends);
+            } else if (eq->inputInitialPrice() == 0.0) {
+                return (endFixing + RandomVariable(n, dividends * eq->dividendFactor())) * endFxFixing;
+            } else if (eq->returnType() == EquityReturnType::Absolute) {
+                return (endFixing + RandomVariable(n, dividends * eq->dividendFactor())) * endFxFixing -
+                       initialPrice * startFxFixing;
+            } else {
+                return ((endFixing + RandomVariable(n, dividends * eq->dividendFactor())) * endFxFixing -
+                        initialPrice * startFxFixing) /
+                       (initialPrice * startFxFixing);
+            }
+
+            RandomVariable nominal;
+            if(eq->returnType() == EquityReturnType::Dividend) {
+                nominal = RandomVariable(n, eq->quantity());
+            } else if(eq->notionalReset()) {
+                nominal = startFxFixing * RandomVariable(n, eq->quantity());
+                if(eq->inputInitialPrice() != 0.0)
+                    nominal *= initialPrice;
+            } else {
+                nominal = RandomVariable(n, eq->inputNominal());
+            }
+
+            return swapletRate * nominal;
+        };
+        return info;
+    } // end of equity coupon handling
 
     QL_FAIL("McMultiLegBaseEngine::createCashflowInfo(): unhandled coupon leg " << legNo << " cashflow " << cfNo);
 } // createCashflowInfo()
