@@ -39,8 +39,9 @@ struct CcyComp {
 };
 } // namespace
 
-QuantLib::ext::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys,
-                                                                             const Currency& base, bool) {
+QuantLib::ext::shared_ptr<PricingEngine>
+CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, const Currency& base,
+                                            bool useXccyYieldCurves, const std::set<std::string>& eqNames) {
 
     std::set<Currency, CcyComp> allCurrencies(ccys.begin(), ccys.end());
     allCurrencies.insert(base);
@@ -48,6 +49,12 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engine
     std::string ccysStr = base.code();
     for (auto const& c : ccys) {
         ccysStr += "_" + c.code();
+    }
+
+    // add currencies from equities
+
+    for (auto const& eq : eqNames) {
+        allCurrencies.insert(market_->equityCurve(eq, configuration(MarketContext::pricing))->currency());
     }
 
     DLOG("Building multi leg option engine for ccys " << ccysStr << " (from externally given CAM)");
@@ -63,6 +70,9 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcCurrencySwapEngineBuilder::engine
             if (i > 0)
                 selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, i - 1));
         }
+    }
+    for (auto const& eq : eqNames) {
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, cam_->eqIndex(eq)));
     }
     std::vector<Size> externalModelIndices;
     Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));

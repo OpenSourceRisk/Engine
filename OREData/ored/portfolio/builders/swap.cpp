@@ -55,14 +55,39 @@ CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm
 
 QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(const Currency& ccy,
                                                                              const std::string& discountCurveName,
-                                                                             const std::string& securitySpread) {
+                                                                             const std::string& securitySpread,
+                                                                             const std::set<std::string>& eqNames) {
     DLOG("Building AMC Swap engine for ccy " << ccy << " (from externally given CAM)");
 
     QL_REQUIRE(cam_ != nullptr, "LgmAmcSwapEngineBuilder::engineImpl: cam is null");
 
+    // collect currencies from equities from indexing and from equity legs
+
+    std::set<std::string> allCurrencies{ccy.code()};
+    for (auto const& eq : eqNames) {
+        allCurrencies.insert(market_->equityCurve(eq, configuration(MarketContext::pricing))->currency().code());
+    }
+
+    // get projected model
+
+    bool needBaseCcy = allCurrencies.size() > 1;
+
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::IR); ++i) {
+        if ((i == 0 && needBaseCcy) || std::find(allCurrencies.begin(), allCurrencies.end(),
+                                                 cam_->irlgm1f(i)->currency().code()) != allCurrencies.end()) {
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, i));
+            if (i > 0)
+                selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, i - 1));
+        }
+    }
+    for (auto const& eq : eqNames) {
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, cam_->eqIndex(eq)));
+    }
     std::vector<Size> externalModelIndices;
-    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(
-        cam_, {std::make_pair(CrossAssetModel::AssetType::IR, cam_->ccyIndex(ccy))}, externalModelIndices));
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
+
+    // build engine
 
     Handle<YieldTermStructure> discountCurve =
         discountCurveName.empty()
@@ -74,7 +99,8 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(con
 
 QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwapEngineBuilder::engineImpl(const Currency& ccy,
                                                                             const std::string& discountCurveName,
-                                                                            const std::string& securitySpread) {
+                                                                            const std::string& securitySpread,
+                                                                            const std::set<std::string>& eqNames) {
     DLOG("Building AMCCG Swap engine for ccy " << ccy << " (from externally given modelcg)");
     QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
     return QuantLib::ext::make_shared<AmcCgSwapEngine>(

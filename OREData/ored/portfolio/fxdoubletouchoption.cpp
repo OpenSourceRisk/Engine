@@ -167,7 +167,7 @@ void FxDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     QL_REQUIRE(builder, "No builder found for Swap");
     QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
         QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-    underlying->setPricingEngine(swapBuilder->engine(parseCurrency(payoffCurrency_), std::string(), std::string()));
+    underlying->setPricingEngine(swapBuilder->engine(parseCurrency(payoffCurrency_), std::string(), std::string(), {}));
 
     bool isLong = (positionType == Position::Long) ? true : false;
 
