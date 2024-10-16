@@ -40,12 +40,12 @@ struct CcyComp {
 } // namespace
 
 QuantLib::ext::shared_ptr<PricingEngine>
-CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm,
+CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::Handle<CrossAssetModel>& model,
                                        const Handle<YieldTermStructure>& discountCurve,
                                        const std::vector<Size>& externalModelIndices) {
 
     return QuantLib::ext::make_shared<QuantExt::McLgmSwapEngine>(
-        lgm, parseSequenceType(engineParameter("Training.Sequence")),
+        model, parseSequenceType(engineParameter("Training.Sequence")),
         parseSequenceType(engineParameter("Pricing.Sequence")), parseInteger(engineParameter("Training.Samples")),
         parseInteger(engineParameter("Pricing.Samples")), parseInteger(engineParameter("Training.Seed")),
         parseInteger(engineParameter("Pricing.Seed")), parseInteger(engineParameter("Training.BasisFunctionOrder")),
@@ -100,7 +100,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(con
             ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
             : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
 
-    return buildMcEngine(model->lgm(0), discountCurve, externalModelIndices);
+    return buildMcEngine(model, discountCurve, externalModelIndices);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwapEngineBuilder::engineImpl(const Currency& ccy,

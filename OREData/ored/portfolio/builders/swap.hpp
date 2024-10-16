@@ -175,7 +175,7 @@ protected:
                                                                 const std::set<std::string>& eqNames) override;
 
 private:
-    QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::ext::shared_ptr<QuantExt::LGM>& lgm,
+    QuantLib::ext::shared_ptr<PricingEngine> buildMcEngine(const QuantLib::Handle<QuantExt::CrossAssetModel>& lgm,
                                                            const Handle<YieldTermStructure>& discountCurve,
                                                            const std::vector<Size>& externalModelIndices);
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
