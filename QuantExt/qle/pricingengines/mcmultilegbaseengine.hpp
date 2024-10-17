@@ -128,7 +128,6 @@ protected:
     // results, these are read from derived engines
     mutable Real resultUnderlyingNpv_, resultValue_;
 
-
     static constexpr Real tinyTime = 1E-10;
 
     // data structure storing info needed to generate the amount for a cashflow

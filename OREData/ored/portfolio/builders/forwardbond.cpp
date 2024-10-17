@@ -17,8 +17,10 @@
 */
 
 #include <ored/portfolio/builders/forwardbond.hpp>
-#include <qle/pricingengines/mclgmfwdbondengine.hpp>
 #include <ored/utilities/parsers.hpp>
+
+#include <qle/pricingengines/mclgmfwdbondengine.hpp>
+#include <qle/models/projectedcrossassetmodel.hpp>
 
 namespace ore {
 namespace data {
@@ -124,18 +126,15 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
 
     DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");
 
-    QL_REQUIRE(cam_ != nullptr, "CamAmcFwdBondEngineBuilder::engineImpl: cam is null");
-    Size currIdx = cam_->ccyIndex(ccy);
-    auto lgm = cam_->lgm(currIdx);
-    std::vector<Size> modelIndex(1, cam_->pIdx(CrossAssetModel::AssetType::IR, currIdx));
-
-    WLOG("CamAmcFwdBondEngineBuilder : creditCurveId not used at present");
+    std::vector<Size> externalModelIndices;
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(
+        cam_, {std::make_pair(CrossAssetModel::AssetType::IR, cam_->ccyIndex(ccy))}, externalModelIndices));
 
     auto curves =
         getCurves(id, ccy, discountCurveName, creditCurveId, securityId, referenceCurveId, incomeCurveId, dirty);
 
-    return buildMcEngine(lgm, curves.spreadedReferenceCurve_, simulationDates_, modelIndex, curves.incomeCurve_,
-                         curves.discountCurve_, curves.referenceCurve_, curves.conversionFactor_);
+    return buildMcEngine(model->lgm(0), curves.spreadedReferenceCurve_, simulationDates_, externalModelIndices,
+                         curves.incomeCurve_, curves.discountCurve_, curves.referenceCurve_, curves.conversionFactor_);
 }
 
 } // namespace data

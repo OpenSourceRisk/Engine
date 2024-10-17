@@ -255,7 +255,6 @@ engine/multistatenpvcalculator.hpp
 engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp
 engine/observationmode.hpp
-engine/pathdata.hpp
 engine/parametricvar.hpp
 engine/parsensitivityanalysis.hpp
 engine/parsensitivitycubestream.hpp
@@ -263,6 +262,7 @@ engine/parsensitivityinstrumentbuilder.hpp
 engine/parsensitivityutilities.hpp
 engine/parstressconverter.hpp
 engine/parstressscenarioconverter.hpp
+engine/pathdata.hpp
 engine/pnlexplainreport.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp

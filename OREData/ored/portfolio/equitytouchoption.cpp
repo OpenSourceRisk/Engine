@@ -146,7 +146,7 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         QL_REQUIRE(builder, "No builder found for Swap");
         QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        underlying->setPricingEngine(swapBuilder->engine(ccy, std::string(), std::string()));
+        underlying->setPricingEngine(swapBuilder->engine(ccy, std::string(), std::string(), {}));
     }
 
     bool isLong = (positionType == Position::Long) ? true : false;
