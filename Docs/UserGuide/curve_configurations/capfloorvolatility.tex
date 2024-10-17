@@ -21,7 +21,7 @@ If optionlet volatilities are given, no bootstrapping will be performed on the i
 
 The input volatilities may be normal, lognormal or shifted lognormal. The structure of the market quotes is provided in Table \ref{tab:capfloor_implvol_quote}.
 
-Whether the input market data are term cap volatilities or optionlet volatilities depends on the value of the \lstinline!InputType! node. This node may be set to \lstinline!TermVolatilities! for term cap volatilites or \lstinline!OptionletVolatilities! for optionlet volatilities.
+Whether the input market data are term cap volatilities or optionlet volatilities depends on the value of the \lstinline!InputType! node. This node may be set to \lstinline!TermVolatilities! for term cap volatilities or \lstinline!OptionletVolatilities! for optionlet volatilities.
 
 For term cap volatilities, the structure of the XML, i.e.\ the nodes that are necessary, used and ignored, and the way that the optionlet volatilities are stripped hinges on the value of the \lstinline!InterpolateOn! node. This node may be set to \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. This node will be ignored if the inputs are optionlet volatilities.
 
@@ -43,7 +43,7 @@ In the following sections, we describe six XML configurations separately for cla
 Before describing the different configurations we summarize the usage of the various interpolation fields:
 
 \begin{enumerate}
-\item If \lstinline!InterpolateOn! is set to \lstinline!TermVolatilities!, \lstinline!InterpolationMethod! is used to interpolate the term volatilities during the bootstrap and to interpolate the optionlet volatlities of the final optionlet surface. The fields \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are ignored in this case.
+\item If \lstinline!InterpolateOn! is set to \lstinline!TermVolatilities!, \lstinline!InterpolationMethod! is used to interpolate the term volatilities during the bootstrap and to interpolate the optionlet volatilities of the final optionlet surface. The fields \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are ignored in this case.
 \item If \lstinline!InterpolateOn! is set to \lstinline!OptionletVolatilities!, \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are used to interpolate optionlet volatilities both during the bootstrap and on the final optionlet surface. \lstinline!InterpolationMethod! is ignored in this case.
 \end{enumerate}
 
