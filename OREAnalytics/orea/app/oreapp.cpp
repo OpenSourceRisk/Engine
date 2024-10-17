@@ -1599,6 +1599,14 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setAmcPathDataOutput(tmp);
 
+    tmp = params_->get("simulation", "amcIndividualTrainingInput", false);
+    if (tmp != "")
+        setAmcIndividualTrainingInput(parseBool(tmp));
+
+    tmp = params_->get("simulation", "amcIndividualTrainingOutput", false);
+    if (tmp != "")
+        setAmcIndividualTrainingOutput(parseBool(tmp));
+
     tmp = params_->get("simulation", "scenarioFile", false);
     if (tmp != "")
         setScenarioReader((inputPath / tmp).generic_string());

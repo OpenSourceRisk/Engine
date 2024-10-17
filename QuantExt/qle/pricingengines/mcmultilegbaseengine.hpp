@@ -33,6 +33,16 @@
 #include <ql/instruments/swaption.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
+//#include <boost/archive/binary_iarchive.hpp>
+//#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/export.hpp>
+
 namespace QuantExt {
 
 // statistics
@@ -167,6 +177,9 @@ protected:
         Matrix coordinateTransform_;
         std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
         Array regressionCoeffs_;
+
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive& ar, const unsigned int version);
     };
 
     // the implementation of the amc calculator interface used by the amc valuation engine
@@ -212,6 +225,11 @@ protected:
         bool includeReferenceDateEvents_;
 
         std::vector<Filter> exercised_;
+
+        // used for serialisation of amc trianing
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive& ar, const unsigned int version);
+
     };
 
     // generate the mc path values of the model process
@@ -250,5 +268,11 @@ protected:
     // lgm vectorised instances for each ccy
     mutable std::vector<LgmVectorised> lgmVectorised_;
 };
+
+// FIXME: the below generates a 'guid_defined is not a template' error
+// the IDE suggests adding a hint.cpp file, the official documentation requires that the macros be included in "the same source module that includes any of the archive class headers
+// however that did not solve the issue.
+//BOOST_CLASS_EXPORT_KEY(QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator)
+//BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator)
 
 } // namespace QuantExt

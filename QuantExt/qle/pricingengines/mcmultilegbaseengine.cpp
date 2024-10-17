@@ -1287,6 +1287,28 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
     return result;
 }
 
+template <class Archive> void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<AmcCalculator>(*this);
+
+    ar& externalModelIndices_;
+    ar& settlement_;
+    ar& cashSettlementTimes_;
+    ar& exerciseXvaTimes_;
+    ar& xvaTimes_;
+
+    ar& regModelUndDirty_;
+    ar& regModelUndExInto_;
+    ar& regModelContinuationValue_;
+    ar& regModelOption_;
+    ar& resultValue_;
+    ar& initialState_;
+    ar& baseCurrency_;
+    ar& reevaluateExerciseInStickyRun_;
+    ar& includeTodaysCashflows_;
+    ar& includeReferenceDateEvents_;
+    ar& exercised_;
+}
+
 McMultiLegBaseEngine::RegressionModel::RegressionModel(const Real observationTime,
                                                        const std::vector<CashflowInfo>& cashflowInfo,
                                                        const std::function<bool(std::size_t)>& cashflowRelevant,
@@ -1485,4 +1507,24 @@ McMultiLegBaseEngine::RegressionModel::apply(const Array& initialState,
     return conditionalExpectation(regressor, basisFns_, regressionCoeffs_);
 }
 
+template <class Archive>
+void McMultiLegBaseEngine::RegressionModel::serialize(Archive& ar, const unsigned int version) {
+    ar& observationTime_;
+    ar& regressionVarianceCutoff_;
+    ar& isTrained_;
+    ar& regressorTimesModelIndices_;
+    ar& coordinateTransform_;
+    ar& regressionCoeffs_;
+
+    // serialise the function by serialising the paramters needed
+    ar& basisDim_;
+    ar& basisOrder_;
+    ar& basisType_;
+    ar& basisSystemSizeBound_;
+
+    // if deserialising, recreate the basisFns_ by passing the individual parameters to the function
+    if (Archive::is_loading::value) {
+        basisFns_ = multiPathBasisSystem(basisDim_, basisOrder_, basisType_, basisSystemSizeBound_);
+    }
+}
 } // namespace QuantExt

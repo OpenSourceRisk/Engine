@@ -223,6 +223,8 @@ public:
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
     void setAmcPathDataInput(const std::string& s);
     void setAmcPathDataOutput(const std::string& s);
+    void setAmcIndividualTrainingInput(bool b) { amcIndividualTrainingInput_ = b; }
+    void setAmcIndividualTrainingOutput(bool b) { amcIndividualTrainingOutput_ = b; }
     void setExposureBaseCurrency(const std::string& s) { exposureBaseCurrency_ = s; } 
     void setExposureObservationModel(const std::string& s) { exposureObservationModel_ = s; }
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
@@ -625,6 +627,8 @@ public:
     const std::set<std::string>& amcTradeTypes() const { return amcTradeTypes_; }
     const std::string& amcPathDataInput() const { return amcPathDataInput_; }
     const std::string& amcPathDataOutput() const { return amcPathDataOutput_; }
+    bool amcIndividualTrainingInput() const { return amcIndividualTrainingInput_; }
+    bool amcIndividualTrainingOutput() const { return amcIndividualTrainingOutput_; }
     const std::string& exposureBaseCurrency() const { return exposureBaseCurrency_; }
     const std::string& exposureObservationModel() const { return exposureObservationModel_; }
     const std::string& nettingSetId() const { return nettingSetId_; }
@@ -995,6 +999,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string amcPathDataInput_, amcPathDataOutput_;
+    bool amcIndividualTrainingInput_, amcIndividualTrainingOutput_;
     std::string exposureBaseCurrency_ = "";
     std::string exposureObservationModel_ = "Disable";
     std::string nettingSetId_ = "";

@@ -53,6 +53,8 @@
       <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
       <Parameter name="aggregationScenarioDataDump">scenariodata.csv</Parameter>
       <Parameter name="amcPathDataInput">amcBuffer.dat</Parameter>
+      <Parameter name="amcIndividualTrainingOutput">Y</Parameter>
+      <Parameter name="amcIndividualTrainingInput">Y</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>

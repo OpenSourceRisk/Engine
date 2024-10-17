@@ -29,6 +29,9 @@
 #include <ql/math/array.hpp>
 #include <ql/methods/montecarlo/multipath.hpp>
 
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/assume_abstract.hpp>
+
 namespace QuantExt {
 
 /*! amc interface */
@@ -48,6 +51,11 @@ public:
     simulatePath(const std::vector<QuantLib::Real>& pathTimes,
                  const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
                  const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) = 0;
+
+    //friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version) {};
 };
+
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(AmcCalculator)
 
 } // namespace QuantExt
