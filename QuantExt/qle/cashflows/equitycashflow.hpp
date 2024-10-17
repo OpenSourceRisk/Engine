@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <qle/indexes/equityindex.hpp>
+
 #include <ql/cashflow.hpp>
 
 namespace QuantExt {
