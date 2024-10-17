@@ -87,7 +87,8 @@ public:
 class NPVCalculator : public ValuationCalculator {
 public:
     //! base ccy and index to write to
-    NPVCalculator(const std::string& baseCcyCode, Size index = 0) : baseCcyCode_(baseCcyCode), index_(index) {}
+    NPVCalculator(const std::string& baseCcyCode, Size index = 0, bool laxFxConversion = false)
+        : baseCcyCode_(baseCcyCode), index_(index), laxFxConversion_(laxFxConversion) {}
 
     virtual void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
                            const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
@@ -107,6 +108,7 @@ public:
 protected:
     std::string baseCcyCode_;
     Size index_;
+    bool laxFxConversion_;
 
     std::vector<Handle<Quote>> ccyQuotes_;
     std::vector<double> fxRates_;
@@ -158,8 +160,9 @@ private:
 class NPVCalculatorFXT0 : public ValuationCalculator {
 public:
     //! base ccy and index to write to
-    NPVCalculatorFXT0(const std::string& baseCcyCode, const QuantLib::ext::shared_ptr<Market>& t0Market, Size index = 0)
-        : baseCcyCode_(baseCcyCode), t0Market_(t0Market), index_(index) {}
+    NPVCalculatorFXT0(const std::string& baseCcyCode, const QuantLib::ext::shared_ptr<Market>& t0Market, Size index = 0,
+                      bool laxFxConversion = false)
+        : baseCcyCode_(baseCcyCode), t0Market_(t0Market), index_(index), laxFxConversion_(laxFxConversion) {}
 
     virtual void calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,
                            const QuantLib::ext::shared_ptr<SimMarket>& simMarket, QuantLib::ext::shared_ptr<NPVCube>& outputCube,
@@ -179,6 +182,7 @@ private:
     std::string baseCcyCode_;
     QuantLib::ext::shared_ptr<Market> t0Market_;
     Size index_;
+    bool laxFxConversion_;
 
     std::vector<double> fxRates_;
     std::vector<Size> tradeCcyIndex_;
