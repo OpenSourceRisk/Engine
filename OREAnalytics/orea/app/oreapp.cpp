@@ -941,6 +941,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("sensitivity", "recalibrateModels", false);
         if (tmp != "")
             setSensiRecalibrateModels(parseBool(tmp));
+
+        tmp = params_->get("sensitivity", "laxFxConversion", false);
+        if (tmp != "")
+            setSensiLaxFxConversion(parseBool(tmp));
     }
 
     /************

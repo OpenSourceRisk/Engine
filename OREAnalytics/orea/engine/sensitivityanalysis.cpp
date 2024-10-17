@@ -43,34 +43,36 @@ namespace ore {
 namespace analytics {
 
 SensitivityAnalysis::SensitivityAnalysis(
-    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const QuantLib::ext::shared_ptr<ore::data::Market>& market,
-    const string& marketConfiguration, const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+    const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+    const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+    const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
     const QuantLib::ext::shared_ptr<SensitivityScenarioData>& sensitivityData, const bool recalibrateModels,
-    const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+    const bool laxFxConversion, const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const bool nonShiftedBaseCurrencyConversion, const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
     const IborFallbackConfig& iborFallbackConfig, const bool continueOnError, bool dryRun)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market ? market->asofDate() : Date()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels),
-      curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
-      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
-      iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
-      portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(true) {}
+      laxFxConversion_(laxFxConversion), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
+      overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
+      referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError),
+      engineData_(engineData), portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(true) {}
 
 SensitivityAnalysis::SensitivityAnalysis(
     const Size nThreads, const Date& asof, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const string& marketConfiguration,
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
-    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData, const bool recalibrateModels,
+    const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
+    const bool recalibrateModels, const bool laxFxConversion,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
     const bool nonShiftedBaseCurrencyConversion, const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
     const IborFallbackConfig& iborFallbackConfig, const bool continueOnError, bool dryRun, const std::string& context)
     : marketConfiguration_(marketConfiguration), asof_(asof), simMarketData_(simMarketData),
-      sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs),
-      todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
+      sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels), laxFxConversion_(laxFxConversion),
+      curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
       nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
       portfolio_(portfolio), dryRun_(dryRun), useSingleThreadedEngine_(false), nThreads_(nThreads), loader_(loader),
@@ -166,10 +168,12 @@ void SensitivityAnalysis::generateSensitivities() {
         vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
         if (nonShiftedBaseCurrencyConversion_)
             // use "original" FX rates to convert sensi to base currency
-            calculators.push_back(QuantLib::ext::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(), market_));
+            calculators.push_back(
+                QuantLib::ext::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(), market_, 0, laxFxConversion_));
         else
             // use the scenario FX rate when converting sensi to base currency
-            calculators.push_back(QuantLib::ext::make_shared<NPVCalculator>(simMarketData_->baseCcy()));
+            calculators.push_back(
+                QuantLib::ext::make_shared<NPVCalculator>(simMarketData_->baseCcy(), 0, laxFxConversion_));
 
         sensiCubes_.clear();
         for (auto const& [pf, scenGen] :
@@ -248,8 +252,8 @@ void SensitivityAnalysis::generateSensitivities() {
             auto baseCcy = simMarketData_->baseCcy();
             engine.buildCube(
                 pf,
-                [&baseCcy]() -> std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> {
-                    return {QuantLib::ext::make_shared<NPVCalculator>(baseCcy)};
+                [&baseCcy, this]() -> std::vector<QuantLib::ext::shared_ptr<ValuationCalculator>> {
+                    return {QuantLib::ext::make_shared<NPVCalculator>(baseCcy, 0, laxFxConversion_)};
                 },
                 ValuationEngine::ErrorPolicy::RemoveAll, {}, true, dryRun_);
             std::vector<QuantLib::ext::shared_ptr<NPVSensiCube>> miniCubes;

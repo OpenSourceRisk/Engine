@@ -43,7 +43,8 @@ void NPVCalculator::init(const QuantLib::ext::shared_ptr<Portfolio>& portfolio, 
     
     ccyQuotes_.resize(ccys.size());
     for (Size i = 0; i < ccys.size(); ++i)
-        ccyQuotes_[i] = (simMarket->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_));
+        ccyQuotes_[i] = laxFxConversion_ ? (simMarket->fxSpot(*std::next(ccys.begin(), i) + baseCcyCode_))
+                                         : (simMarket->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_));
     fxRates_.resize(ccys.size());
 }
 
@@ -188,7 +189,8 @@ void NPVCalculatorFXT0::init(const QuantLib::ext::shared_ptr<Portfolio>& portfol
     }
     fxRates_.resize(ccys.size());
     for (Size i = 0; i < ccys.size(); ++i)
-        fxRates_[i] = t0Market_->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_)->value();
+        fxRates_[i] = laxFxConversion_ ? t0Market_->fxSpot(*std::next(ccys.begin(), i) + baseCcyCode_)->value()
+                                       : t0Market_->fxRate(*std::next(ccys.begin(), i) + baseCcyCode_)->value();
 }
 
 void NPVCalculatorFXT0::calculate(const QuantLib::ext::shared_ptr<Trade>& trade, Size tradeIndex,

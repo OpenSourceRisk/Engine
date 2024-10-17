@@ -145,9 +145,9 @@ void PricingAnalyticImpl::runAnalytic(
                 sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
                     analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
-                    inputs_->sensiRecalibrateModels(), analytic()->configurations().curveConfig,
-                    analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
-                    *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
+                    inputs_->sensiRecalibrateModels(), inputs_->sensiLaxFxConversion(),
+                    analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
+                    inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Single-threaded sensi analysis created");
             }
             else {
@@ -156,8 +156,9 @@ void PricingAnalyticImpl::runAnalytic(
                     inputs_->nThreads(), inputs_->asof(), analytic()->loader(), analytic()->portfolio(), marketConfig,
                     inputs_->pricingEngine(), analytic()->configurations().simMarketParams,
                     analytic()->configurations().sensiScenarioData, inputs_->sensiRecalibrateModels(),
-                    analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
-                    inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
+                    inputs_->sensiLaxFxConversion(), analytic()->configurations().curveConfig,
+                    analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
+                    *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
             // FIXME: Why are these disabled?
