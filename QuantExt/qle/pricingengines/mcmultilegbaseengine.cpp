@@ -18,8 +18,8 @@
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/cappedflooredaveragebmacoupon.hpp>
-#include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycashflow.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
@@ -283,9 +283,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                     fxFixing = fxSource / fxTarget;
                 }
             }
-            RandomVariable eqFixing(n ,1.0);
-            if(isEqIndexed) {
-                if(eqLinkedFixedPrice != Null<Real>()) {
+            RandomVariable eqFixing(n, 1.0);
+            if (isEqIndexed) {
+                if (eqLinkedFixedPrice != Null<Real>()) {
                     eqFixing = RandomVariable(n, eqLinkedFixedPrice);
                 } else {
                     eqFixing = exp(*states.at(statesEqIdx).at(0));
@@ -344,9 +344,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                     fxFixing = fxSource / fxTarget;
                 }
             }
-            RandomVariable eqFixing(n ,1.0);
-            if(isEqIndexed) {
-                if(eqLinkedFixedPrice != Null<Real>()) {
+            RandomVariable eqFixing(n, 1.0);
+            if (isEqIndexed) {
+                if (eqLinkedFixedPrice != Null<Real>()) {
                     eqFixing = RandomVariable(n, eqLinkedFixedPrice);
                 } else {
                     eqFixing = exp(*states.at(statesEqIdx).at(0));
@@ -425,9 +425,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                     fxFixing = fxSource / fxTarget;
                 }
             }
-            RandomVariable eqFixing(n ,1.0);
-            if(isEqIndexed) {
-                if(eqLinkedFixedPrice != Null<Real>()) {
+            RandomVariable eqFixing(n, 1.0);
+            if (isEqIndexed) {
+                if (eqLinkedFixedPrice != Null<Real>()) {
                     eqFixing = RandomVariable(n, eqLinkedFixedPrice);
                 } else {
                     eqFixing = exp(*states.at(statesEqIdx).at(0));
@@ -481,40 +481,40 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             statesEqIdx = simTimeCounter++;
         }
 
-        info.amountCalculator = [this, indexCcyIdx, on, simTime, isFxLinked, fxLinkedForeignNominal,
-                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed,
-                                 isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx](
-                                    const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
-            RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].compoundedOnRate(
-                on->overnightIndex(), on->fixingDates(), on->valueDates(), on->dt(), on->rateCutoff(),
-                on->includeSpread(), on->spread(), on->gearing(), on->lookback(), Null<Real>(), Null<Real>(), false,
-                false, simTime, *states.at(0).at(0));
-            RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked || isFxIndexed) {
-                if (fxLinkedFixedFxRate != Null<Real>()) {
-                    fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
-                } else {
-                    RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
-                    Size fxIdx = 0;
-                    if (fxLinkedSourceCcyIdx > 0)
-                        fxSource = exp(*states.at(statesFxIdx).at(fxIdx++));
-                    if (fxLinkedTargetCcyIdx > 0)
-                        fxTarget = exp(*states.at(statesFxIdx).at(fxIdx));
-                    fxFixing = fxSource / fxTarget;
+        info.amountCalculator =
+            [this, indexCcyIdx, on, simTime, isFxLinked, fxLinkedForeignNominal, fxLinkedSourceCcyIdx,
+             fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed, isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity,
+             statesFxIdx, statesEqIdx](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].compoundedOnRate(
+                    on->overnightIndex(), on->fixingDates(), on->valueDates(), on->dt(), on->rateCutoff(),
+                    on->includeSpread(), on->spread(), on->gearing(), on->lookback(), Null<Real>(), Null<Real>(), false,
+                    false, simTime, *states.at(0).at(0));
+                RandomVariable fxFixing(n, 1.0);
+                if (isFxLinked || isFxIndexed) {
+                    if (fxLinkedFixedFxRate != Null<Real>()) {
+                        fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
+                    } else {
+                        RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
+                        Size fxIdx = 0;
+                        if (fxLinkedSourceCcyIdx > 0)
+                            fxSource = exp(*states.at(statesFxIdx).at(fxIdx++));
+                        if (fxLinkedTargetCcyIdx > 0)
+                            fxTarget = exp(*states.at(statesFxIdx).at(fxIdx));
+                        fxFixing = fxSource / fxTarget;
+                    }
                 }
-            }
-            RandomVariable eqFixing(n ,1.0);
-            if(isEqIndexed) {
-                if(eqLinkedFixedPrice != Null<Real>()) {
-                    eqFixing = RandomVariable(n, eqLinkedFixedPrice);
-                } else {
-                    eqFixing = exp(*states.at(statesEqIdx).at(0));
+                RandomVariable eqFixing(n, 1.0);
+                if (isEqIndexed) {
+                    if (eqLinkedFixedPrice != Null<Real>()) {
+                        eqFixing = RandomVariable(n, eqLinkedFixedPrice);
+                    } else {
+                        eqFixing = exp(*states.at(statesEqIdx).at(0));
+                    }
+                    eqFixing *= RandomVariable(n, eqLinkedQuantity);
                 }
-                eqFixing *= RandomVariable(n, eqLinkedQuantity);
-            }
-            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : on->nominal()) * on->accrualPeriod()) *
-                   effectiveRate * fxFixing * eqFixing;
-        };
+                return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : on->nominal()) * on->accrualPeriod()) *
+                       effectiveRate * fxFixing * eqFixing;
+            };
 
         return info;
     }
@@ -563,9 +563,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                     fxFixing = fxSource / fxTarget;
                 }
             }
-            RandomVariable eqFixing(n ,1.0);
-            if(isEqIndexed) {
-                if(eqLinkedFixedPrice != Null<Real>()) {
+            RandomVariable eqFixing(n, 1.0);
+            if (isEqIndexed) {
+                if (eqLinkedFixedPrice != Null<Real>()) {
                     eqFixing = RandomVariable(n, eqLinkedFixedPrice);
                 } else {
                     eqFixing = exp(*states.at(statesEqIdx).at(0));
@@ -599,40 +599,40 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             statesEqIdx = simTimeCounter++;
         }
 
-        info.amountCalculator = [this, indexCcyIdx, av, simTime, isFxLinked, fxLinkedForeignNominal,
-                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed,
-                                 isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx](
-                                    const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
-            RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedOnRate(
-                av->overnightIndex(), av->fixingDates(), av->valueDates(), av->dt(), av->rateCutoff(), false,
-                av->spread(), av->gearing(), av->lookback(), Null<Real>(), Null<Real>(), false, false, simTime,
-                *states.at(0).at(0));
-            RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked || isFxIndexed) {
-                if (fxLinkedFixedFxRate != Null<Real>()) {
-                    fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
-                } else {
-                    RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
-                    Size fxIdx = 0;
-                    if (fxLinkedSourceCcyIdx > 0)
-                        fxSource = exp(*states.at(statesFxIdx).at(fxIdx++));
-                    if (fxLinkedTargetCcyIdx > 0)
-                        fxTarget = exp(*states.at(statesFxIdx).at(fxIdx));
-                    fxFixing = fxSource / fxTarget;
+        info.amountCalculator =
+            [this, indexCcyIdx, av, simTime, isFxLinked, fxLinkedForeignNominal, fxLinkedSourceCcyIdx,
+             fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed, isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity,
+             statesFxIdx, statesEqIdx](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedOnRate(
+                    av->overnightIndex(), av->fixingDates(), av->valueDates(), av->dt(), av->rateCutoff(), false,
+                    av->spread(), av->gearing(), av->lookback(), Null<Real>(), Null<Real>(), false, false, simTime,
+                    *states.at(0).at(0));
+                RandomVariable fxFixing(n, 1.0);
+                if (isFxLinked || isFxIndexed) {
+                    if (fxLinkedFixedFxRate != Null<Real>()) {
+                        fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
+                    } else {
+                        RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
+                        Size fxIdx = 0;
+                        if (fxLinkedSourceCcyIdx > 0)
+                            fxSource = exp(*states.at(statesFxIdx).at(fxIdx++));
+                        if (fxLinkedTargetCcyIdx > 0)
+                            fxTarget = exp(*states.at(statesFxIdx).at(fxIdx));
+                        fxFixing = fxSource / fxTarget;
+                    }
                 }
-            }
-            RandomVariable eqFixing(n ,1.0);
-            if(isEqIndexed) {
-                if(eqLinkedFixedPrice != Null<Real>()) {
-                    eqFixing = RandomVariable(n, eqLinkedFixedPrice);
-                } else {
-                    eqFixing = exp(*states.at(statesEqIdx).at(0));
+                RandomVariable eqFixing(n, 1.0);
+                if (isEqIndexed) {
+                    if (eqLinkedFixedPrice != Null<Real>()) {
+                        eqFixing = RandomVariable(n, eqLinkedFixedPrice);
+                    } else {
+                        eqFixing = exp(*states.at(statesEqIdx).at(0));
+                    }
+                    eqFixing *= RandomVariable(n, eqLinkedQuantity);
                 }
-                eqFixing *= RandomVariable(n, eqLinkedQuantity);
-            }
-            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : av->nominal()) * av->accrualPeriod()) *
-                   effectiveRate * fxFixing * eqFixing;
-        };
+                return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : av->nominal()) * av->accrualPeriod()) *
+                       effectiveRate * fxFixing * eqFixing;
+            };
 
         return info;
     }
@@ -681,9 +681,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                     fxFixing = fxSource / fxTarget;
                 }
             }
-            RandomVariable eqFixing(n ,1.0);
-            if(isEqIndexed) {
-                if(eqLinkedFixedPrice != Null<Real>()) {
+            RandomVariable eqFixing(n, 1.0);
+            if (isEqIndexed) {
+                if (eqLinkedFixedPrice != Null<Real>()) {
                     eqFixing = RandomVariable(n, eqLinkedFixedPrice);
                 } else {
                     eqFixing = exp(*states.at(statesEqIdx).at(0));
@@ -775,43 +775,43 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             statesEqIdx = simTimeCounter++;
         }
 
-        info.amountCalculator = [this, indexCcyIdx, cfbma, simTime, isFxLinked, fxLinkedForeignNominal,
-                                 fxLinkedSourceCcyIdx, fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed,
-                                 isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity, statesFxIdx, statesEqIdx](
-                                    const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
-            RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedBmaRate(
-                QuantLib::ext::dynamic_pointer_cast<BMAIndex>(cfbma->underlying()->index()),
-                cfbma->underlying()->fixingDates(), cfbma->underlying()->accrualStartDate(),
-                cfbma->underlying()->accrualEndDate(), cfbma->includeSpread(), cfbma->underlying()->spread(),
-                cfbma->underlying()->gearing(), cfbma->cap(), cfbma->floor(), cfbma->nakedOption(), simTime,
-                *states.at(0).at(0));
-            RandomVariable fxFixing(n, 1.0);
-            if (isFxLinked || isFxIndexed) {
-                if (fxLinkedFixedFxRate != Null<Real>()) {
-                    fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
-                } else {
-                    RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
-                    Size fxIdx = 0;
-                    if (fxLinkedSourceCcyIdx > 0)
-                        fxSource = exp(*states.at(statesFxIdx).at(fxIdx++));
-                    if (fxLinkedTargetCcyIdx > 0)
-                        fxTarget = exp(*states.at(statesFxIdx).at(fxIdx));
-                    fxFixing = fxSource / fxTarget;
+        info.amountCalculator =
+            [this, indexCcyIdx, cfbma, simTime, isFxLinked, fxLinkedForeignNominal, fxLinkedSourceCcyIdx,
+             fxLinkedTargetCcyIdx, fxLinkedFixedFxRate, isFxIndexed, isEqIndexed, eqLinkedFixedPrice, eqLinkedQuantity,
+             statesFxIdx, statesEqIdx](const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
+                RandomVariable effectiveRate = lgmVectorised_[indexCcyIdx].averagedBmaRate(
+                    QuantLib::ext::dynamic_pointer_cast<BMAIndex>(cfbma->underlying()->index()),
+                    cfbma->underlying()->fixingDates(), cfbma->underlying()->accrualStartDate(),
+                    cfbma->underlying()->accrualEndDate(), cfbma->includeSpread(), cfbma->underlying()->spread(),
+                    cfbma->underlying()->gearing(), cfbma->cap(), cfbma->floor(), cfbma->nakedOption(), simTime,
+                    *states.at(0).at(0));
+                RandomVariable fxFixing(n, 1.0);
+                if (isFxLinked || isFxIndexed) {
+                    if (fxLinkedFixedFxRate != Null<Real>()) {
+                        fxFixing = RandomVariable(n, fxLinkedFixedFxRate);
+                    } else {
+                        RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
+                        Size fxIdx = 0;
+                        if (fxLinkedSourceCcyIdx > 0)
+                            fxSource = exp(*states.at(statesFxIdx).at(fxIdx++));
+                        if (fxLinkedTargetCcyIdx > 0)
+                            fxTarget = exp(*states.at(statesFxIdx).at(fxIdx));
+                        fxFixing = fxSource / fxTarget;
+                    }
                 }
-            }
-            RandomVariable eqFixing(n ,1.0);
-            if(isEqIndexed) {
-                if(eqLinkedFixedPrice != Null<Real>()) {
-                    eqFixing = RandomVariable(n, eqLinkedFixedPrice);
-                } else {
-                    eqFixing = exp(*states.at(statesEqIdx).at(0));
+                RandomVariable eqFixing(n, 1.0);
+                if (isEqIndexed) {
+                    if (eqLinkedFixedPrice != Null<Real>()) {
+                        eqFixing = RandomVariable(n, eqLinkedFixedPrice);
+                    } else {
+                        eqFixing = exp(*states.at(statesEqIdx).at(0));
+                    }
+                    eqFixing *= RandomVariable(n, eqLinkedQuantity);
                 }
-                eqFixing *= RandomVariable(n, eqLinkedQuantity);
-            }
-            return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : cfbma->underlying()->nominal()) *
-                                         cfbma->underlying()->accrualPeriod()) *
-                   effectiveRate * fxFixing * eqFixing;
-        };
+                return RandomVariable(n, (isFxLinked ? fxLinkedForeignNominal : cfbma->underlying()->nominal()) *
+                                             cfbma->underlying()->accrualPeriod()) *
+                       effectiveRate * fxFixing * eqFixing;
+            };
 
         return info;
     }
@@ -857,9 +857,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                     fxFixing = fxSource / fxTarget;
                 }
             }
-            RandomVariable eqFixing(n ,1.0);
-            if(isEqIndexed) {
-                if(eqLinkedFixedPrice != Null<Real>()) {
+            RandomVariable eqFixing(n, 1.0);
+            if (isEqIndexed) {
+                if (eqLinkedFixedPrice != Null<Real>()) {
                     eqFixing = RandomVariable(n, eqLinkedFixedPrice);
                 } else {
                     eqFixing = exp(*states.at(statesEqIdx).at(0));
@@ -887,9 +887,18 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                                      << legNo << " cashflow "
                                      << " is eq indexed, this is not allowed");
 
+        Size eqCcyIndex = model_->ccyIndex(eq->equityCurve()->currency());
+
         Size simTimeCounter = 0;
+        Size irStartFixingIdx = Null<Size>();
+        if (eq->fixingStartDate() != Date() && eq->fixingStartDate() > today_) {
+            info.simulationTimes.push_back(time(eq->fixingStartDate()));
+            info.modelIndices.push_back({model_->pIdx(CrossAssetModel::AssetType::IR, eqCcyIndex)});
+            irStartFixingIdx = simTimeCounter++;
+        }
         Size eqStartFixingIdx = Null<Size>();
-        if (eq->fixingStartDate() != Date() && eq->fixingStartDate() > today_ && eq->inputInitialPrice() == Null<Real>()) {
+        if (eq->fixingStartDate() != Date() && eq->fixingStartDate() > today_ &&
+            eq->inputInitialPrice() == Null<Real>()) {
             info.simulationTimes.push_back(time(eq->fixingStartDate()));
             info.modelIndices.push_back(
                 {model_->pIdx(CrossAssetModel::AssetType::EQ, model_->eqIndex(eq->equityCurve()->name()))});
@@ -929,10 +938,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             }
         }
 
-        info.amountCalculator = [this, eq, eqStartFixingIdx, eqEndFixingIdx, fxStartFixingIdx, fxEndFixingIdx,
-                                 fxSourceCcyIdx, fxTargetCcyIdx](
+        info.amountCalculator = [this, eq, irStartFixingIdx, eqStartFixingIdx, eqEndFixingIdx, fxStartFixingIdx,
+                                 fxEndFixingIdx, fxSourceCcyIdx, fxTargetCcyIdx, eqCcyIndex](
                                     const Size n, const std::vector<std::vector<const RandomVariable*>>& states) {
-
             RandomVariable initialPrice;
             if (eq->inputInitialPrice() != Null<Real>() || eq->fixingStartDate() <= today_) {
                 initialPrice = RandomVariable(n, eq->initialPrice());
@@ -941,7 +949,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
             }
 
             RandomVariable endFixing;
-            if(eq->fixingEndDate() <= today_) {
+            if (eq->fixingEndDate() <= today_) {
                 endFixing = RandomVariable(n, eq->equityCurve()->fixing(eq->fixingEndDate(), false, false));
             } else {
                 endFixing = exp(*states.at(eqEndFixingIdx).at(0));
@@ -949,9 +957,9 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
 
             RandomVariable startFxFixing(n, 1.0);
             RandomVariable endFxFixing(n, 1.0);
-            if(eq->fxIndex()) {
-                if(!eq->initialPriceIsInTargetCcy()) {
-                    if(eq->fixingStartDate() <= today_) {
+            if (eq->fxIndex()) {
+                if (!eq->initialPriceIsInTargetCcy()) {
+                    if (eq->fixingStartDate() <= today_) {
                         startFxFixing = RandomVariable(n, eq->fxIndex()->fixing(eq->fixingStartDate()));
                     } else {
                         RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
@@ -963,7 +971,7 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                         startFxFixing = fxSource / fxTarget;
                     }
                 }
-                if(eq->fixingEndDate() <= today_) {
+                if (eq->fixingEndDate() <= today_) {
                     endFxFixing = RandomVariable(n, eq->fxIndex()->fixing(eq->fixingEndDate()));
                 } else {
                     RandomVariable fxSource(n, 1.0), fxTarget(n, 1.0);
@@ -976,25 +984,59 @@ McMultiLegBaseEngine::CashflowInfo McMultiLegBaseEngine::createCashflowInfo(Quan
                 }
             }
 
-            // deterministic approximation! see equity coupon pricer for details
-            Real dividends = eq->equityCurve()->fixing(eq->fixingEndDate(), false, true) -
-                             eq->equityCurve()->fixing(eq->fixingEndDate(), false, false);
-            if (eq->fixingStartDate() > today_)
-                dividends -= eq->equityCurve()->fixing(eq->fixingStartDate(), false, true) -
-                             eq->equityCurve()->fixing(eq->fixingStartDate(), false, false);
-            dividends += eq->equityCurve()->dividendsBetweenDates(eq->fixingStartDate(), eq->fixingEndDate());
+            /* Dividends: We support
 
-            // again, see equity coupon pricer for details of the following logic
+               a) non-simulated dividend yields
+               b) simulated diviend yields
+
+               However, since b) is not yet supported in MC (cross asset scenario generator), we disable this part
+               of the code for now. The eq forecast curve is always simulated. */
+
+            // pick up historical dividends in the return period for both a) and b)
+
+            RandomVariable dividends(
+                n, eq->equityCurve()->dividendsBetweenDates(eq->fixingStartDate(), eq->fixingEndDate()));
+
+            /* We approximate the calculation by compounding the equity price with the deterministic zero bond
+               as seen from the fixing start date. The more precise calculation would require the stochastic bank
+               account at fixing start and end date, which is not available through the standard lgm interface. */
+
+            if (eq->fixingEndDate() > today_) {
+                RandomVariable dividendBasePrice;
+                RandomVariable irState;
+                if (eq->fixingStartDate() == Date() || eq->fixingStartDate() <= today_) {
+                    dividendBasePrice = RandomVariable(n, eq->equityCurve()->equitySpot()->value());
+                    irState = RandomVariable(n, 0.0);
+                } else {
+                    dividendBasePrice = exp(*states.at(eqStartFixingIdx).at(0));
+                    irState = *states.at(irStartFixingIdx).at(0);
+                }
+                Real fixingStartTime =
+                    std::max(0.0, eq->fixingStartDate() == Date() ? 0.0 : time(eq->fixingStartDate()));
+                Real fixingEndTime = time(eq->fixingEndDate());
+                // a) non-simulated dividend yield curve
+                RandomVariable divComp(n, eq->equityCurve()->equityDividendCurve()->discount(fixingEndTime) /
+                                              eq->equityCurve()->equityDividendCurve()->discount(fixingStartTime));
+                // b) simulated dividend yield curve
+                // RandomVariable divComp = lgmVectorised_[eqCcyIndex].discountBond(fixingStartTime, fixingEndTime,
+                // irState,
+                //                                                       eq->equityCurve()->equityDividendCurve());
+                // forecast curve is always simulated
+                RandomVariable forecastComp = lgmVectorised_[eqCcyIndex].discountBond(
+                    fixingStartTime, fixingEndTime, irState, eq->equityCurve()->equityForecastCurve());
+                dividends += dividendBasePrice * (RandomVariable(n, 1.0) - divComp) / forecastComp;
+            }
+
             RandomVariable swapletRate;
             if (eq->returnType() == EquityReturnType::Dividend) {
-                swapletRate = RandomVariable(n, dividends);
+                swapletRate = dividends;
             } else if (eq->inputInitialPrice() == 0.0) {
-                swapletRate = (endFixing + RandomVariable(n, dividends * eq->dividendFactor())) * endFxFixing;
+                swapletRate = (endFixing + dividends * RandomVariable(n, eq->dividendFactor())) * endFxFixing;
             } else if (eq->returnType() == EquityReturnType::Absolute) {
-                swapletRate = (endFixing + RandomVariable(n, dividends * eq->dividendFactor())) * endFxFixing -
+                swapletRate = (endFixing + dividends * RandomVariable(n, eq->dividendFactor())) * endFxFixing -
                               initialPrice * startFxFixing;
             } else {
-                swapletRate = ((endFixing + RandomVariable(n, dividends * eq->dividendFactor())) * endFxFixing -
+                swapletRate = ((endFixing + dividends * RandomVariable(n, eq->dividendFactor())) * endFxFixing -
                                initialPrice * startFxFixing) /
                               (initialPrice * startFxFixing);
             }
@@ -1111,7 +1153,7 @@ void McMultiLegBaseEngine::calculateModels(
 
         for (Size i = 0; i < cashflowInfo.size(); ++i) {
 
-            if(cfStatus[i] == CfStatus::done)
+            if (cfStatus[i] == CfStatus::done)
                 continue;
 
             /* We assume here that for each time t below the following condition holds: If a cashflow belongs to the
