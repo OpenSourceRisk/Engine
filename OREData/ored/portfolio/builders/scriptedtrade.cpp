@@ -1826,29 +1826,29 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
 
     QL_REQUIRE(!useCg_, "building gaussian cam from external amc cam, useCg must be set to false in this case.");
 
-    std::vector<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
 
     // IR configs
     for (Size i = 0; i < modelCcys_.size(); ++i) {
-        selectedComponents.push_back(
+        selectedComponents.insert(
             std::make_pair(CrossAssetModel::AssetType::IR, amcCam_->ccyIndex(parseCurrency(modelCcys_[i]))));
     }
 
     // INF configs
     for (Size i = 0; i < modelInfIndices_.size(); ++i) {
-        selectedComponents.push_back(std::make_pair(CrossAssetModel::AssetType::INF,
-                                                    amcCam_->infIndex(IndexInfo(modelInfIndices_[i].first).infName())));
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::INF,
+                                                 amcCam_->infIndex(IndexInfo(modelInfIndices_[i].first).infName())));
     }
 
     // FX configs
     for (Size i = 1; i < modelCcys_.size(); ++i) {
-        selectedComponents.push_back(
+        selectedComponents.insert(
             std::make_pair(CrossAssetModel::AssetType::FX, amcCam_->ccyIndex(parseCurrency(modelCcys_[i])) - 1));
     }
 
     // EQ configs
     for (auto const& eq : eqIndices_) {
-        selectedComponents.push_back(std::make_pair(CrossAssetModel::AssetType::EQ, amcCam_->eqIndex(eq.eq()->name())));
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, amcCam_->eqIndex(eq.eq()->name())));
     }
 
     // COMM configs, not supported at this point

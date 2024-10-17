@@ -173,7 +173,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
         swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_),
                                                envelope().additionalField("discount_curve", false),
-                                               envelope().additionalField("security_spread", false)));
+                                               envelope().additionalField("security_spread", false), {}));
         setSensitivityTemplate(*builder);
         instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
@@ -204,7 +204,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
         swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_),
                                                envelope().additionalField("discount_curve", false),
-                                               envelope().additionalField("security_spread", false)));
+                                               envelope().additionalField("security_spread", false), {}));
         instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
         setSensitivityTemplate(*builder);
@@ -395,7 +395,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
     auto swapEngine =
         swapBuilder->engine(parseCurrency(npvCurrency_), envelope().additionalField("discount_curve", false),
-                            envelope().additionalField("security_spread", false));
+                            envelope().additionalField("security_spread", false), {});
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps =
         buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());

@@ -22,6 +22,7 @@
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/pricingengines/mclgmswapengine.hpp>
 
 #include <set>
@@ -32,13 +33,19 @@ namespace data {
 using namespace QuantLib;
 using namespace QuantExt;
 
+namespace {
+struct CcyComp {
+    bool operator()(const Currency& c1, const Currency& c2) const { return c1.code() < c2.code(); }
+};
+} // namespace
+
 QuantLib::ext::shared_ptr<PricingEngine>
-CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm,
+CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::Handle<CrossAssetModel>& model,
                                        const Handle<YieldTermStructure>& discountCurve,
                                        const std::vector<Size>& externalModelIndices) {
 
     return QuantLib::ext::make_shared<QuantExt::McLgmSwapEngine>(
-        lgm, parseSequenceType(engineParameter("Training.Sequence")),
+        model, parseSequenceType(engineParameter("Training.Sequence")),
         parseSequenceType(engineParameter("Pricing.Sequence")), parseInteger(engineParameter("Training.Samples")),
         parseInteger(engineParameter("Pricing.Samples")), parseInteger(engineParameter("Training.Seed")),
         parseInteger(engineParameter("Pricing.Seed")), parseInteger(engineParameter("Training.BasisFunctionOrder")),
@@ -54,25 +61,52 @@ CamAmcSwapEngineBuilder::buildMcEngine(const QuantLib::ext::shared_ptr<LGM>& lgm
 
 QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(const Currency& ccy,
                                                                              const std::string& discountCurveName,
-                                                                             const std::string& securitySpread) {
+                                                                             const std::string& securitySpread,
+                                                                             const std::set<std::string>& eqNames) {
     DLOG("Building AMC Swap engine for ccy " << ccy << " (from externally given CAM)");
 
     QL_REQUIRE(cam_ != nullptr, "LgmAmcSwapEngineBuilder::engineImpl: cam is null");
-    Size currIdx = cam_->ccyIndex(ccy);
-    auto lgm = cam_->lgm(currIdx);
-    std::vector<Size> modelIndex(1, cam_->pIdx(CrossAssetModel::AssetType::IR, currIdx));
+
+    // collect currencies from equities from indexing and from equity legs
+
+    std::set<Currency, CcyComp> allCurrencies{ccy};
+    for (auto const& eq : eqNames) {
+        allCurrencies.insert(market_->equityCurve(eq, configuration(MarketContext::pricing))->currency());
+    }
+
+    // get projected model
+
+    bool needBaseCcy = allCurrencies.size() > 1;
+
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    if(needBaseCcy)
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
+    for(auto const& c: allCurrencies) {
+        Size ccyIdx = cam_->ccyIndex(c);
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
+        if (ccyIdx > 0 && needBaseCcy)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX,ccyIdx-1));
+    }
+    for (auto const& eq : eqNames) {
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, cam_->eqIndex(eq)));
+    }
+    std::vector<Size> externalModelIndices;
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
+
+    // build engine
 
     Handle<YieldTermStructure> discountCurve =
         discountCurveName.empty()
             ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
             : indexOrYieldCurve(market_, discountCurveName, configuration(MarketContext::pricing));
 
-    return buildMcEngine(lgm, discountCurve, modelIndex);
+    return buildMcEngine(model, discountCurve, externalModelIndices);
 }
 
 QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwapEngineBuilder::engineImpl(const Currency& ccy,
                                                                             const std::string& discountCurveName,
-                                                                            const std::string& securitySpread) {
+                                                                            const std::string& securitySpread,
+                                                                            const std::set<std::string>& eqNames) {
     DLOG("Building AMCCG Swap engine for ccy " << ccy << " (from externally given modelcg)");
     QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
     return QuantLib::ext::make_shared<AmcCgSwapEngine>(

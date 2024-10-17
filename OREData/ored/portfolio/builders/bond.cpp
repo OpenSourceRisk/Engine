@@ -24,6 +24,7 @@
 #include <ored/portfolio/builders/bond.hpp>
 
 #include <qle/pricingengines/mclgmbondengine.hpp>
+#include <qle/models/projectedcrossassetmodel.hpp>
 
 #include <ored/utilities/parsers.hpp>
 
@@ -60,13 +61,9 @@ CamAmcBondEngineBuilder::engineImpl(const Currency& ccy, const string& creditCur
 
     DLOG("Building AMC Fwd Bond engine for ccy " << ccy << " (from externally given CAM)");
 
-    QL_REQUIRE(cam_ != nullptr, "CamAmcBondEngineBuilder::engineImpl: cam is null");
-    Size currIdx = cam_->ccyIndex(ccy);
-    auto lgm = cam_->lgm(currIdx);
-    std::vector<Size> modelIndex(1, cam_->pIdx(CrossAssetModel::AssetType::IR, currIdx));
-
-    // at present, use reference curve and security spread only
-    WLOG("CamAmcBondEngineBuilder : incomeCurveId and creditCurveId not used at present");
+    std::vector<Size> externalModelIndices;
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(
+        cam_, {std::make_pair(CrossAssetModel::AssetType::IR, cam_->ccyIndex(ccy))}, externalModelIndices));
 
     // for discounting underlying bond make use of reference curve
     Handle<YieldTermStructure> yts =
@@ -77,8 +74,7 @@ CamAmcBondEngineBuilder::engineImpl(const Currency& ccy, const string& creditCur
         yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
             yts, market_->securitySpread(securityId, configuration(MarketContext::pricing))));
 
-    //yts registering done in qle/pricingengines/mclgmbondengine.hpp
-    return buildMcEngine(lgm, yts, modelIndex);
+    return buildMcEngine(model->lgm(0), yts, externalModelIndices);
 }
 
 } // namespace data
