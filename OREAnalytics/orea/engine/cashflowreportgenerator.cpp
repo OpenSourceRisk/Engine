@@ -38,9 +38,12 @@
 #include <ql/errors.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 
+#include <vector>
+
 namespace ore {
 namespace analytics {
 
+using namespace ore::data;
 using namespace QuantLib;
 using namespace QuantExt;
 
