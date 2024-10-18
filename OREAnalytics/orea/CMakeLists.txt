@@ -61,6 +61,7 @@ cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
+engine/cashflowreportgenerator.cpp
 engine/cptycalculator.cpp
 engine/decomposedsensitivitystream.cpp
 engine/dependencymarket.cpp
@@ -241,6 +242,7 @@ cube/sensitivitycube.hpp
 cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
+engine/cashflowreportgenerator.hpp
 engine/cptycalculator.hpp
 engine/decomposedsensitivitystream.hpp
 engine/dependencymarket.hpp
