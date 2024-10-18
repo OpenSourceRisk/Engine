@@ -25,22 +25,24 @@
 
 #include <ored/portfolio/trade.hpp>
 
+#include <ql/types.hpp>
+
 namespace ore {
 namespace analytics {
 
 struct TradeCashflowReportData {
-    Size cashflowNo;
-    Size legNo;
-    Date payDate;
+    QuantLib::Size cashflowNo;
+    QuantLib::Size legNo;
+    QuantLib::Date payDate;
     std::string flowType;
     double amount;
     std::string currency;
     double coupon;
     double accrual;
-    Date accrualStartDate;
-    Date accrualEndDate;
+    QuantLib::Date accrualStartDate;
+    QuantLib::Date accrualEndDate;
     double accruedAmount;
-    Date fixingDate;
+    QuantLib::Date fixingDate;
     double fixingValue;
     double notional;
     double discountFactor;
