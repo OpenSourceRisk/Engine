@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -37,6 +36,7 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
+
 #include <ored/model/lgmdata.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
@@ -48,12 +48,19 @@
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
+#include <ored/report/inmemoryreport.hpp>
+
 #include <oret/toplevelfixture.hpp>
+
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+
 #include <test/oreatoplevelfixture.hpp>
+
+#include <boost/test/unit_test.hpp>
+
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
 
@@ -61,7 +68,6 @@ using namespace std;
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
-using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
