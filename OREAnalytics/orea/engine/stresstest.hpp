@@ -57,7 +57,7 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressData,
                    const boost::shared_ptr<ore::data::Report>& report,
                    const boost::shared_ptr<ore::data::Report>& cfReport = nullptr, const double threshold = 0.0,
-                   const Size precision = 2,
+                   const Size precision = 2, const bool includePastCashflows = false,
                    const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                    const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory = {},

@@ -43,7 +43,8 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressData,
                    const boost::shared_ptr<ore::data::Report>& report,
                    const boost::shared_ptr<ore::data::Report>& cfReport, const double threshold, const Size precision,
-                   const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams,
+                   const bool includePastCashflows, const CurveConfigurations& curveConfigs,
+                   const TodaysMarketParameters& todaysMarketParams,
                    QuantLib::ext::shared_ptr<ScenarioFactory> scenarioFactory,
                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                    const IborFallbackConfig& iborFallbackConfig, bool continueOnError) {
@@ -79,13 +80,15 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
     std::vector<std::vector<std::vector<TradeCashflowReportData>>> cfCube;
     if (cfReport)
         cfCube = std::vector<std::vector<std::vector<TradeCashflowReportData>>>(
-            portfolio->ids().size(), std::vector<std::vector<TradeCashflowReportData>>(scenarioGenerator->samples()));
+            portfolio->ids().size(),
+            std::vector<std::vector<TradeCashflowReportData>>(scenarioGenerator->samples() + 1));
 
     QuantLib::ext::shared_ptr<DateGrid> dg = QuantLib::ext::make_shared<DateGrid>("1,0W", NullCalendar());
     vector<QuantLib::ext::shared_ptr<ValuationCalculator>> calculators;
     calculators.push_back(QuantLib::ext::make_shared<NPVCalculator>(simMarketData->baseCcy()));
     if (cfReport) {
-        // calculators.push_back(QuantLib::ext::make_shared<CashflowReportCalculator>(simMarketData->baseCcy(), cfCube));
+        calculators.push_back(QuantLib::ext::make_shared<CashflowReportCalculator>(simMarketData->baseCcy(),
+                                                                                   includePastCashflows, cfCube));
     }
     ValuationEngine engine(asof, dg, simMarket, factory->modelBuilders());
 
@@ -113,7 +116,6 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
         Real npv0 = cube->getT0(index->second, 0);
         for (Size j = 0; j < scenarioGenerator->samples(); ++j) {
             const string& label = scenarioGenerator->scenarios()[j]->label();
-            std::cout << "stress scenario #" << j << " " << label << std::endl;
             TLOG("Adding stress test result for trade '" << tradeId << "' and scenario #" << j << " '" << label << "'");
             Real npv = cube->get(index->second, 0, j, 0);
             Real sensi = npv - npv0;
@@ -124,6 +126,22 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 report->add(npv0);
                 report->add(npv);
                 report->add(sensi);
+            }
+            if(cfReport) {
+                for (Size k = 0; k < cfCube[index->second][0].size(); ++k) {
+                    Real amount0 = cfCube[index->second][0][k].amount;
+                    Real amount = Null<Real>(), amountd = Null<Real>();
+                    if (cfCube[index->second][j + 1].size() > k) {
+                        amount = cfCube[index->second][j + 1][k].amount;
+                        amountd = amount - amount0;
+                    }
+                    cfReport->next();
+                    cfReport->add(tradeId);
+                    cfReport->add(label);
+                    cfReport->add(amount0);
+                    cfReport->add(amount);
+                    cfReport->add(amountd);
+                }
             }
         }
     }
