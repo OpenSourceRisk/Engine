@@ -68,6 +68,7 @@ using namespace std;
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
+using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
