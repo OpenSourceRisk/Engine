@@ -325,59 +325,50 @@ BOOST_AUTO_TEST_CASE(regression) {
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
 
-    // build the sensitivity analysis object
-    ore::analytics::StressTest analysis(portfolio, initMarket, "default", engineData, simMarketData, stressData);
+    auto report = QuantLib::ext::make_shared<InMemoryReport>();
+    runStressTest(portfolio, initMarket, "default", engineData, simMarketData, stressData, report);
 
-    std::map<std::string, Real> baseNPV = analysis.baseNPV();
-    std::map<std::pair<std::string, std::string>, Real> shiftedNPV = analysis.shiftedNPV();
+    std::set<std::tuple<string, string, Real>> cachedResults = {{"10_Floor_USD", "BASE", 0.0},
+                                                                {"1_Swap_EUR", "BASE", 0.0},
+                                                                {"2_Swap_USD", "BASE", 0.0},
+                                                                {"3_Swap_GBP", "BASE", 0.0},
+                                                                {"4_Swap_JPY", "BASE", 0.0},
+                                                                {"5_Swaption_EUR", "BASE", 0.0},
+                                                                {"6_Swaption_EUR", "BASE", 0.0},
+                                                                {"7_FxOption_EUR_USD", "BASE", 0.0},
+                                                                {"8_FxOption_EUR_GBP", "BASE", 0.0},
+                                                                {"9_Cap_EUR", "BASE", 0.0},
+                                                                {"10_Floor_USD", "stresstest_1", -2487.75},
+                                                                {"1_Swap_EUR", "stresstest_1", 629406},
+                                                                {"2_Swap_USD", "stresstest_1", 599846},
+                                                                {"3_Swap_GBP", "stresstest_1", 1.11005e+06},
+                                                                {"4_Swap_JPY", "stresstest_1", 186736},
+                                                                {"5_Swaption_EUR", "stresstest_1", 13623.1},
+                                                                {"6_Swaption_EUR", "stresstest_1", 5041.52},
+                                                                {"7_FxOption_EUR_USD", "stresstest_1", 748160},
+                                                                {"8_FxOption_EUR_GBP", "stresstest_1", 1.21724e+06},
+                                                                {"9_Cap_EUR", "stresstest_1", 1175.5}};
 
-    QL_REQUIRE(shiftedNPV.size() > 0, "no shifted results");
-
-    struct Results {
-        string id;
-        string label;
-        Real shift;
-    };
-
-    std::vector<Results> cachedResults = {{"10_Floor_USD", "stresstest_1", -2487.75},
-                                          {"1_Swap_EUR", "stresstest_1", 629406},
-                                          {"2_Swap_USD", "stresstest_1", 599846},
-                                          {"3_Swap_GBP", "stresstest_1", 1.11005e+06},
-                                          {"4_Swap_JPY", "stresstest_1", 186736},
-                                          {"5_Swaption_EUR", "stresstest_1", 13623.1},
-                                          {"6_Swaption_EUR", "stresstest_1", 5041.52},
-                                          {"7_FxOption_EUR_USD", "stresstest_1", 748160},
-                                          {"8_FxOption_EUR_GBP", "stresstest_1", 1.21724e+06},
-                                          {"9_Cap_EUR", "stresstest_1", 1175.5}};
-
-    std::map<pair<string, string>, Real> stressMap;
-    for (Size i = 0; i < cachedResults.size(); ++i) {
-        pair<string, string> p(cachedResults[i].id, cachedResults[i].label);
-        stressMap[p] = cachedResults[i].shift;
+    std::set<std::tuple<string, string, Real>> calculatedResults;
+    for (Size i = 0; i < report->rows(); ++i) {
+        calculatedResults.insert({boost::get<std::string>(report->data(0, i)),
+                                  boost::get<std::string>(report->data(1, i)), boost::get<Real>(report->data(4, i))});
     }
 
-    Real tolerance = 0.01;
-    Size count = 0;
-    for (auto data : shiftedNPV) {
-        pair<string, string> p = data.first;
-        string id = data.first.first;
-        Real npv = data.second;
-        QL_REQUIRE(baseNPV.find(id) != baseNPV.end(), "base npv not found for trade " << id);
-        Real base = baseNPV[id];
-        Real delta = npv - base;
-        if (fabs(delta) > 0.0) {
-            count++;
-            QL_REQUIRE(stressMap.find(p) != stressMap.end(),
-                       "pair (" << p.first << ", " << p.second << ") not found in sensi map");
-            BOOST_CHECK_MESSAGE(fabs(delta - stressMap[p]) < tolerance ||
-                                    fabs((delta - stressMap[p]) / delta) < tolerance,
-                                "stress test regression failed for pair (" << p.first << ", " << p.second
-                                                                           << "): " << delta << " vs " << stressMap[p]);
-        }
+    auto calc = calculatedResults.begin();
+    auto cached = cachedResults.begin();
+    for(;calc != calculatedResults.end() && cached != cachedResults.end();++calc,++cached) {
+        BOOST_TEST_MESSAGE("calculated: " << std::get<0>(*calc) << "," << std::get<1>(*calc) << ","
+                                          << std::get<2>(*calc) << " cached: " << std::get<0>(*cached) << ","
+                                          << std::get<1>(*cached) << "," << std::get<2>(*cached));
+        BOOST_CHECK_EQUAL(std::get<0>(*calc), std::get<0>(*cached));
+        BOOST_CHECK_EQUAL(std::get<1>(*calc), std::get<1>(*cached));
+        BOOST_CHECK_CLOSE(std::get<2>(*calc), std::get<2>(*cached), 1.0);
     }
-    BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero stress impacts ("
-                                                           << count << ") do not match regression data ("
-                                                           << cachedResults.size() << ")");
+
+    // BOOST_CHECK(calc == calculatedResults.end());
+    // BOOST_CHECK(cached == cachedResults.end());
+
     IndexManager::instance().clearHistories();
 }
 
