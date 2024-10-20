@@ -1203,8 +1203,7 @@
         "optional_cols": [
           "PresentValue",
           "DiscountFactor",
-          "FXRate(Local-Base)",
-          "PresentValue(Base)",
+          "fxRateBase",
           "BaseCurrency",
           "PresentValueBase",
           "EffectiveFloorVolatility",
