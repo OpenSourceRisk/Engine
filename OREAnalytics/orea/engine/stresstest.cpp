@@ -49,6 +49,8 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                    const IborFallbackConfig& iborFallbackConfig, bool continueOnError) {
 
+    // run stress simulation
+
     LOG("Run Stress Test");
 
     QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
@@ -96,19 +98,13 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
         QuantLib::ext::make_shared<ProgressLog>("stress scenarios", 100, oreSeverity::notice));
     engine.buildCube(portfolio, cube, calculators, ValuationEngine::ErrorPolicy::RemoveSample);
 
+    // write stressed npv report
+
     report->addColumn("TradeId", string());
     report->addColumn("ScenarioLabel", string());
     report->addColumn("Base NPV", double(), precision);
     report->addColumn("Scenario NPV", double(), precision);
     report->addColumn("Sensitivity", double(), precision);
-
-    if (cfReport) {
-        cfReport->addColumn("TradeId", string());
-        cfReport->addColumn("ScenarioLabel", string());
-        cfReport->addColumn("Base Amount", double(), precision);
-        cfReport->addColumn("Scenario Amount", double(), precision);
-        cfReport->addColumn("Sensitivity Amount", double(), precision);
-    }
 
     for (auto const& [tradeId, trade] : portfolio->trades()) {
         auto index = cube->idsAndIndexes().find(tradeId);
@@ -127,28 +123,179 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 report->add(npv);
                 report->add(sensi);
             }
-            if(cfReport) {
-                for (Size k = 0; k < cfCube[index->second][0].size(); ++k) {
-                    Real amount0 = cfCube[index->second][0][k].amount;
-                    Real amount = Null<Real>(), amountd = Null<Real>();
-                    if (cfCube[index->second][j + 1].size() > k) {
-                        amount = cfCube[index->second][j + 1][k].amount;
-                        amountd = amount - amount0;
-                    }
-                    cfReport->next();
-                    cfReport->add(tradeId);
-                    cfReport->add(label);
-                    cfReport->add(amount0);
-                    cfReport->add(amount);
-                    cfReport->add(amountd);
-                }
-            }
         }
     }
 
     report->end();
-    if (cfReport)
+
+    // write stressed cashflow report
+
+    if (cfReport) {
+
+        cfReport->addColumn("TradeId", string());
+        cfReport->addColumn("ScenarioLabel", string());
+        cfReport->addColumn("Type", string());
+        cfReport->addColumn("CashflowNo", Size());
+        cfReport->addColumn("LegNo", Size());
+        cfReport->addColumn("PayDate", Date());
+        cfReport->addColumn("FlowType", string());
+        cfReport->addColumn("Amount_Base", double(), precision);
+        cfReport->addColumn("Amount_Scen", double(), precision);
+        cfReport->addColumn("Amount_Diff", double(), precision);
+        cfReport->addColumn("Currency", string());
+        cfReport->addColumn("Coupon_Base", double(), 10);
+        cfReport->addColumn("Coupon_Scen", double(), 10);
+        cfReport->addColumn("Coupon_Diff", double(), 10);
+        cfReport->addColumn("Accrual", double(), 10);
+        cfReport->addColumn("AccrualStartDate", Date(), 4);
+        cfReport->addColumn("AccrualEndDate", Date(), 4);
+        cfReport->addColumn("AccruedAmount_Base", double(), 4);
+        cfReport->addColumn("AccruedAmount_Scen", double(), 4);
+        cfReport->addColumn("AccruedAmount_Diff", double(), 4);
+        cfReport->addColumn("fixingDate", Date());
+        cfReport->addColumn("fixingValue_Base", double(), 10);
+        cfReport->addColumn("fixingValue_Scen", double(), 10);
+        cfReport->addColumn("fixingValue_Diff", double(), 10);
+        cfReport->addColumn("Notional_Base", double(), 4);
+        cfReport->addColumn("Notional_Scen", double(), 4);
+        cfReport->addColumn("Notional_Diff", double(), 4);
+        cfReport->addColumn("DiscountFactor_Base", double(), 10);
+        cfReport->addColumn("DiscountFactor_Scen", double(), 10);
+        cfReport->addColumn("PresentValue_Base", double(), 10);
+        cfReport->addColumn("PresentValue_Scen", double(), 10);
+        cfReport->addColumn("PresentValue_Diff", double(), 10);
+        cfReport->addColumn("FXRate(Local-Base)_Base", double(), 10);
+        cfReport->addColumn("FXRate(Local-Base)_Scen", double(), 10);
+        cfReport->addColumn("PresentValue(Base)_Base", double(), 10);
+        cfReport->addColumn("PresentValue(Base)_Scen", double(), 10);
+        cfReport->addColumn("PresentValue(Base)_Diff", double(), 10);
+        cfReport->addColumn("BaseCurrency", string());
+        cfReport->addColumn("FloorStrike", double(), 6);
+        cfReport->addColumn("CapStrike", double(), 6);
+        cfReport->addColumn("FloorVolatility_Base", double(), 6);
+        cfReport->addColumn("FloorVolatility_Scen", double(), 6);
+        cfReport->addColumn("CapVolatility_Base", double(), 6);
+        cfReport->addColumn("CapVolatility_Scen", double(), 6);
+        cfReport->addColumn("EffectiveFloorVolatility_Base", double(), 6);
+        cfReport->addColumn("EffectiveFloorVolatility_Scen", double(), 6);
+        cfReport->addColumn("EffectiveCapVolatility_Base", double(), 6);
+        cfReport->addColumn("EffectiveCapVolatility_Scen", double(), 6);
+
+        for (auto const& [tradeId, trade] : portfolio->trades()) {
+            auto index = cube->idsAndIndexes().find(tradeId);
+            QL_REQUIRE(index != cube->idsAndIndexes().end(),
+                       "runStressTest(): tradeId not found in cube, internal error.");
+
+            std::map<std::pair<Size, Size>, TradeCashflowReportData> baseCf;
+            for (auto const& t : cfCube[index->second][0])
+                baseCf[std::make_pair(t.legNo, t.cashflowNo)] = t;
+
+            for (Size j = 0; j < scenarioGenerator->samples(); ++j) {
+
+                const string& label = scenarioGenerator->scenarios()[j]->label();
+                TLOG("Adding stress test cashflow result for trade '" << tradeId << "' and scenario #" << j << " '"
+                                                                      << label << "'");
+
+                std::map<std::pair<Size, Size>, TradeCashflowReportData> scenCf;
+                for (auto const& t : cfCube[index->second][j + 1])
+                    scenCf[std::make_pair(t.legNo, t.cashflowNo)] = t;
+
+                for (auto const& [idx, t0] : baseCf) {
+
+                    Real amount0 = t0.amount, amount1 = Null<Real>(), amountd = Null<Real>();
+                    Real coupon0 = t0.coupon, coupon1 = Null<Real>(), coupond = Null<Real>();
+                    Real accruedAmount0 = t0.accruedAmount, accruedAmount1 = Null<Real>(),
+                         accruedAmountd = Null<Real>();
+                    Real fixingValue0 = t0.fixingValue, fixingValue1 = Null<Real>(), fixingValued = Null<Real>();
+                    Real notional0 = t0.notional, notional1 = Null<Real>(), notionald = Null<Real>();
+                    Real discountFactor0 = t0.discountFactor, discountFactor1 = Null<Real>();
+                    Real presentValue0 = t0.presentValue, presentValue1 = Null<Real>(), presentValued = Null<Real>();
+                    Real fxRateLocalBase0 = t0.fxRateLocalBase, fxRateLocalBase1 = Null<Real>();
+                    Real presentValueBase0 = t0.presentValueBase, presentValueBase1 = Null<Real>(),
+                         presentValueBased = Null<Real>();
+                    Real floorVolatility0 = t0.floorVolatility, floorVolatility1 = Null<Real>();
+                    Real capVolatility0 = t0.capVolatility, capVolatility1 = Null<Real>();
+                    Real effectiveFloorVolatility0 = t0.effectiveFloorVolatility,
+                         effectiveFloorVolatility1 = Null<Real>();
+                    Real effectiveCapVolatility0 = t0.effectiveCapVolatility, effectiveCapVolatility1 = Null<Real>();
+
+                    if (auto scen = scenCf.find(idx); scen != scenCf.end()) {
+                        amount1 = scen->second.amount;
+                        amountd = amount1 - amount0;
+                        coupon1 = scen->second.coupon;
+                        coupond = coupon1 - coupon0;
+                        accruedAmount1 = scen->second.accruedAmount;
+                        accruedAmountd = accruedAmount1 - accruedAmount0;
+                        fixingValue1 = scen->second.fixingValue;
+                        fixingValued = fixingValue1 - fixingValue0;
+                        notional1 = scen->second.notional;
+                        notionald = notional1 - notional0;
+                        discountFactor1 = scen->second.discountFactor;
+                        presentValue1 = scen->second.presentValue;
+                        presentValued = presentValue1 - presentValue0;
+                        fxRateLocalBase1 = scen->second.fxRateLocalBase;
+                        presentValueBase1 = scen->second.presentValueBase;
+                        presentValueBased = presentValueBase1 - presentValueBase0;
+                        floorVolatility1 = scen->second.floorVolatility;
+                        capVolatility1 = scen->second.capVolatility;
+                        effectiveFloorVolatility1 = scen->second.effectiveFloorVolatility;
+                        effectiveCapVolatility1 = scen->second.effectiveCapVolatility;
+                    }
+
+                    cfReport->next();
+                    cfReport->add(tradeId);
+                    cfReport->add(label);
+                    cfReport->add(trade->tradeType());
+                    cfReport->add(idx.second);
+                    cfReport->add(idx.first);
+                    cfReport->add(t0.payDate);
+                    cfReport->add(t0.flowType);
+                    cfReport->add(amount0);
+                    cfReport->add(amount1);
+                    cfReport->add(amountd);
+                    cfReport->add(t0.currency);
+                    cfReport->add(coupon0);
+                    cfReport->add(coupon1);
+                    cfReport->add(coupond);
+                    cfReport->add(t0.accrual);
+                    cfReport->add(t0.accrualStartDate);
+                    cfReport->add(t0.accrualEndDate);
+                    cfReport->add(accruedAmount0);
+                    cfReport->add(accruedAmount1);
+                    cfReport->add(accruedAmountd);
+                    cfReport->add(t0.fixingDate);
+                    cfReport->add(fixingValue0);
+                    cfReport->add(fixingValue1);
+                    cfReport->add(fixingValued);
+                    cfReport->add(notional0);
+                    cfReport->add(notional1);
+                    cfReport->add(notionald);
+                    cfReport->add(discountFactor0);
+                    cfReport->add(discountFactor1);
+                    cfReport->add(presentValue0);
+                    cfReport->add(presentValue1);
+                    cfReport->add(presentValued);
+                    cfReport->add(fxRateLocalBase0);
+                    cfReport->add(fxRateLocalBase1);
+                    cfReport->add(presentValueBase0);
+                    cfReport->add(presentValueBase1);
+                    cfReport->add(presentValueBased);
+                    cfReport->add(t0.baseCurrency);
+                    cfReport->add(t0.floorStrike);
+                    cfReport->add(t0.capStrike);
+                    cfReport->add(floorVolatility0);
+                    cfReport->add(floorVolatility1);
+                    cfReport->add(capVolatility0);
+                    cfReport->add(capVolatility1);
+                    cfReport->add(effectiveFloorVolatility0);
+                    cfReport->add(effectiveFloorVolatility1);
+                    cfReport->add(effectiveCapVolatility0);
+                    cfReport->add(effectiveCapVolatility1);
+                }
+            }
+        }
         cfReport->end();
+    }
 
     LOG("Stress testing done");
 }
