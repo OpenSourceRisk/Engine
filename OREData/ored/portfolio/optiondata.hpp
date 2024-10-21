@@ -30,7 +30,10 @@
 
 #include <ql/cashflow.hpp>
 #include <ql/exercise.hpp>
+#include <ql/time/businessdayconvention.hpp>
+#include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
+#include <ql/time/period.hpp>
 
 namespace ore {
 namespace data {
@@ -173,9 +176,9 @@ public:
     // only for exercised options: exercise fee amount or null
     QuantLib::ext::shared_ptr<QuantLib::CashFlow> feeSettlement() const { return feeSettlement_; }
 
-    const Period& noticePeriod() const { return noticePeriod_; }
-    const Calendar& noticeCalendar() const { return noticeCalendar_; }
-    const BusinessDayConvention& noticeConvention() const { return noticeConvention_; }
+    const QuantLib::Period& noticePeriod() const { return noticePeriod_; }
+    const QuantLib::Calendar& noticeCalendar() const { return noticeCalendar_; }
+    const QuantLib::BusinessDayConvention& noticeConvention() const { return noticeConvention_; }
 
 private:
     QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise_;
@@ -183,9 +186,9 @@ private:
     std::vector<QuantLib::Date> exerciseDates_;
     std::vector<QuantLib::Date> noticeDates_;
     std::vector<QuantLib::Date> settlementDates_;
-    Period noticePeriod_;
-    Calendar noticeCalendar_;
-    BusinessDayConvention noticeConvention_;
+    QuantLib::Period noticePeriod_;
+    QuantLib::Calendar noticeCalendar_;
+    QuantLib::BusinessDayConvention noticeConvention_;
 
     bool isExercised_ = false;
     QuantLib::Date exerciseDate_;
