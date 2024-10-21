@@ -122,7 +122,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                                                               exerciseDate, exerciseBuilder_->noticePeriod(),
                                                               exerciseBuilder_->noticeConvention())
                                                         : cpn->accrualStartDate();
-                        if (exerciseDate <= exerciseAccrualStart) {
+                        if (exerciseDate <= exerciseAccrualStart && exerciseAccrualStart < cpn->accrualEndDate()) {
                             if(optionData_.midCouponExercise()) {
                                 Real midCouponMultiplier =
                                     cpn->dayCounter().yearFraction(exerciseAccrualStart, cpn->accrualEndDate()) /
@@ -270,8 +270,8 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         ccys.push_back(parseCurrency(c));
     auto swaption = QuantLib::ext::make_shared<QuantExt::MultiLegOption>(
         underlying_->legs(), underlying_->legPayers(), ccys, exerciseBuilder_->exercise(), settlementType_,
-        settlementMethod_, exerciseBuilder_->settlementDates(), exerciseBuilder_->noticePeriod(),
-        exerciseBuilder_->noticeCalendar(), exerciseBuilder_->noticeConvention());
+        settlementMethod_, exerciseBuilder_->settlementDates(), optionData_.midCouponExercise(),
+        exerciseBuilder_->noticePeriod(), exerciseBuilder_->noticeCalendar(), exerciseBuilder_->noticeConvention());
 
     std::string builderType;
     std::vector<std::string> builderPrecheckMessages;

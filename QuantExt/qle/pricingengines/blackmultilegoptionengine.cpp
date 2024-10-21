@@ -396,6 +396,7 @@ void BlackMultiLegOptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
+    midCouponExercise_ = arguments_.midCouponExercise;
     noticePeriod_ = arguments_.noticePeriod;
     noticeCalendar_ = arguments_.noticeCalendar;
     noticeConvention_ = arguments_.noticeConvention;
@@ -425,6 +426,7 @@ void BlackSwaptionFromMultilegOptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
+    midCouponExercise_ = false;
     noticePeriod_ = 0 * Days;
     noticeCalendar_ = NullCalendar();
     noticeConvention_ = Following;
@@ -453,6 +455,7 @@ void BlackNonstandardSwaptionFromMultilegOptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
+    midCouponExercise_ = false;
     noticePeriod_ = 0 * Days;
     noticeCalendar_ = NullCalendar();
     noticeConvention_ = Following;
