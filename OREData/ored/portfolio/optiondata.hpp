@@ -45,7 +45,7 @@ namespace data {
 class OptionData : public XMLSerializable {
 public:
     //! Default constructor
-    OptionData() : payoffAtExpiry_(true), automaticExercise_(false) {}
+    OptionData() : payoffAtExpiry_(true), automaticExercise_(false), midCouponExercise_(false) {}
     //! Constructor
     OptionData(string longShort, string callPut, string style, bool payoffAtExpiry, vector<string> exerciseDates,
                string settlement = "Cash", string settlementMethod = "", const PremiumData& premiumData = {},
@@ -57,7 +57,8 @@ public:
                string payoffType = "", string payoffType2 = "",
                const boost::optional<bool>& automaticExercise = boost::none,
                const boost::optional<OptionExerciseData>& exerciseData = boost::none,
-               const boost::optional<OptionPaymentData>& paymentData = boost::none)
+               const boost::optional<OptionPaymentData>& paymentData = boost::none,
+               const bool midCouponExercise = false)
         : longShort_(longShort), callPut_(callPut), payoffType_(payoffType), payoffType2_(payoffType2), style_(style),
           payoffAtExpiry_(payoffAtExpiry), exerciseDates_(exerciseDates), noticePeriod_(noticePeriod),
           noticeCalendar_(noticeCalendar), noticeConvention_(noticeConvention), settlement_(settlement),
@@ -66,7 +67,8 @@ public:
           exerciseFeeSettlementPeriod_(exerciseFeeSettlementPeriod),
           exerciseFeeSettlementCalendar_(exerciseFeeSettlementCalendar),
           exerciseFeeSettlementConvention_(exerciseFeeSettlementConvention), exercisePrices_(exercisePrices),
-          automaticExercise_(automaticExercise), exerciseData_(exerciseData), paymentData_(paymentData) {}
+          automaticExercise_(automaticExercise), exerciseData_(exerciseData), paymentData_(paymentData),
+          midCouponExercise_(midCouponExercise) {}
 
     //! \name Inspectors
     //@{
