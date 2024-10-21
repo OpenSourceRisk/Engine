@@ -36,6 +36,14 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
+namespace {
+Real diffWithNull(const Real x, const Real y) {
+    if (x == Null<Real>() || y == Null<Real>())
+        return Null<Real>();
+    return x - y;
+}
+} // namespace
+
 void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
                    const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
                    const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
@@ -202,17 +210,15 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
                 for (auto const& [idx, t0] : baseCf) {
 
-                    Real amount0 = t0.amount, amount1 = Null<Real>(), amountd = Null<Real>();
-                    Real coupon0 = t0.coupon, coupon1 = Null<Real>(), coupond = Null<Real>();
-                    Real accruedAmount0 = t0.accruedAmount, accruedAmount1 = Null<Real>(),
-                         accruedAmountd = Null<Real>();
-                    Real fixingValue0 = t0.fixingValue, fixingValue1 = Null<Real>(), fixingValued = Null<Real>();
-                    Real notional0 = t0.notional, notional1 = Null<Real>(), notionald = Null<Real>();
+                    Real amount0 = t0.amount, amount1 = Null<Real>();
+                    Real coupon0 = t0.coupon, coupon1 = Null<Real>();
+                    Real accruedAmount0 = t0.accruedAmount, accruedAmount1 = Null<Real>();
+                    Real fixingValue0 = t0.fixingValue, fixingValue1 = Null<Real>();
+                    Real notional0 = t0.notional, notional1 = Null<Real>();
                     Real discountFactor0 = t0.discountFactor, discountFactor1 = Null<Real>();
-                    Real presentValue0 = t0.presentValue, presentValue1 = Null<Real>(), presentValued = Null<Real>();
+                    Real presentValue0 = t0.presentValue, presentValue1 = Null<Real>();
                     Real fxRateLocalBase0 = t0.fxRateLocalBase, fxRateLocalBase1 = Null<Real>();
-                    Real presentValueBase0 = t0.presentValueBase, presentValueBase1 = Null<Real>(),
-                         presentValueBased = Null<Real>();
+                    Real presentValueBase0 = t0.presentValueBase, presentValueBase1 = Null<Real>();
                     Real floorVolatility0 = t0.floorVolatility, floorVolatility1 = Null<Real>();
                     Real capVolatility0 = t0.capVolatility, capVolatility1 = Null<Real>();
                     Real effectiveFloorVolatility0 = t0.effectiveFloorVolatility,
@@ -221,21 +227,14 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
                     if (auto scen = scenCf.find(idx); scen != scenCf.end()) {
                         amount1 = scen->second.amount;
-                        amountd = amount1 - amount0;
                         coupon1 = scen->second.coupon;
-                        coupond = coupon1 - coupon0;
                         accruedAmount1 = scen->second.accruedAmount;
-                        accruedAmountd = accruedAmount1 - accruedAmount0;
                         fixingValue1 = scen->second.fixingValue;
-                        fixingValued = fixingValue1 - fixingValue0;
                         notional1 = scen->second.notional;
-                        notionald = notional1 - notional0;
                         discountFactor1 = scen->second.discountFactor;
                         presentValue1 = scen->second.presentValue;
-                        presentValued = presentValue1 - presentValue0;
                         fxRateLocalBase1 = scen->second.fxRateLocalBase;
                         presentValueBase1 = scen->second.presentValueBase;
-                        presentValueBased = presentValueBase1 - presentValueBase0;
                         floorVolatility1 = scen->second.floorVolatility;
                         capVolatility1 = scen->second.capVolatility;
                         effectiveFloorVolatility1 = scen->second.effectiveFloorVolatility;
@@ -252,34 +251,34 @@ void runStressTest(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                     cfReport->add(t0.flowType);
                     cfReport->add(amount0);
                     cfReport->add(amount1);
-                    cfReport->add(amountd);
+                    cfReport->add(diffWithNull(amount1, amount0));
                     cfReport->add(t0.currency);
                     cfReport->add(coupon0);
                     cfReport->add(coupon1);
-                    cfReport->add(coupond);
+                    cfReport->add(diffWithNull(coupon1, coupon0));
                     cfReport->add(t0.accrual);
                     cfReport->add(t0.accrualStartDate);
                     cfReport->add(t0.accrualEndDate);
                     cfReport->add(accruedAmount0);
                     cfReport->add(accruedAmount1);
-                    cfReport->add(accruedAmountd);
+                    cfReport->add(diffWithNull(accruedAmount1, accruedAmount0));
                     cfReport->add(t0.fixingDate);
                     cfReport->add(fixingValue0);
                     cfReport->add(fixingValue1);
-                    cfReport->add(fixingValued);
+                    cfReport->add(diffWithNull(fixingValue1, fixingValue0));
                     cfReport->add(notional0);
                     cfReport->add(notional1);
-                    cfReport->add(notionald);
+                    cfReport->add(diffWithNull(notional1, notional0));
                     cfReport->add(discountFactor0);
                     cfReport->add(discountFactor1);
                     cfReport->add(presentValue0);
                     cfReport->add(presentValue1);
-                    cfReport->add(presentValued);
+                    cfReport->add(diffWithNull(presentValue1, presentValue0));
                     cfReport->add(fxRateLocalBase0);
                     cfReport->add(fxRateLocalBase1);
                     cfReport->add(presentValueBase0);
                     cfReport->add(presentValueBase1);
-                    cfReport->add(presentValueBased);
+                    cfReport->add(diffWithNull(presentValueBase1, presentValueBase0));
                     cfReport->add(t0.baseCurrency);
                     cfReport->add(t0.floorStrike);
                     cfReport->add(t0.capStrike);
