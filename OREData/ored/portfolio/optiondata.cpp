@@ -137,7 +137,9 @@ XMLNode* OptionData::toXML(XMLDocument& doc) const {
         XMLUtils::appendNode(node, paymentData_->toXML(doc));
     }
 
-    XMLUtils::addChild(doc, node, "MidCouponExercise", midCouponExercise_);
+    if ((style_ == "American" && !midCouponExercise_) || (style_ != "American" && midCouponExercise_)) {
+        XMLUtils::addChild(doc, node, "MidCouponExercise", midCouponExercise_);
+    }
 
     return node;
 }
