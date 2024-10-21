@@ -60,7 +60,8 @@ Real NumericLgmMultiLegOptionEngineBase::CashflowInfo::requiredSimulationTime() 
 
 Real NumericLgmMultiLegOptionEngineBase::CashflowInfo::couponRatio(const Real time) const {
     if (couponEndTime_ != Null<Real>() && couponStartTime_ != Null<Real>()) {
-        return std::max(0.0, std::min(1.0, (couponEndTime_ - time) / (couponEndTime_ - couponStartTime_)));
+        return std::max(0.0, std::min(1.0, (couponEndTime_ - time - midCouponExerciseSettlementLag_) /
+                                               (couponEndTime_ - couponStartTime_)));
     }
     return 1.0;
 }
@@ -89,8 +90,12 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
             info.belongsToUnderlyingMaxTime_ = ts->timeFromReference(cpn->accrualEndDate());
         } else {
             // bermudan exercise implies that we always exercise into whole periods
-            info.belongsToUnderlyingMaxTime_ = ts->timeFromReference(cpn->accrualStartDate());
+            info.belongsToUnderlyingMaxTime_ = ts->timeFromReference(
+                midCouponExercise_ ? noticeCalendar_.advance(cpn->accrualEndDate(), -noticePeriod_, noticeConvention_)
+                                   : cpn->accrualStartDate());
         }
+        // approximation
+        info.midCouponExerciseSettlementLag_ = QuantLib::days(noticePeriod_) / 365.25;
         info.couponStartTime_ = ts->timeFromReference(cpn->accrualStartDate());
         info.couponEndTime_ = ts->timeFromReference(cpn->accrualEndDate());
         if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c)) {
@@ -560,6 +565,9 @@ void NumericLgmMultiLegOptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
+    noticePeriod_ = arguments_.noticePeriod;
+    noticeCalendar_ = arguments_.noticeCalendar;
+    noticeConvention_ = arguments_.noticeConvention;
 
     NumericLgmMultiLegOptionEngineBase::calculate();
 
@@ -602,6 +610,9 @@ void NumericLgmSwaptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
+    noticePeriod_ = 0 * Days;
+    noticeCalendar_ = NullCalendar();
+    noticeConvention_ = Following;
 
     NumericLgmMultiLegOptionEngineBase::calculate();
 
@@ -640,6 +651,9 @@ void NumericLgmNonstandardSwaptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
+    noticePeriod_ = 0 * Days;
+    noticeCalendar_ = NullCalendar();
+    noticeConvention_ = Following;
 
     NumericLgmMultiLegOptionEngineBase::calculate();
 

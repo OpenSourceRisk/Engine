@@ -91,6 +91,7 @@ public:
     boost::optional<bool> automaticExercise() const { return automaticExercise_; }
     const boost::optional<OptionExerciseData>& exerciseData() const { return exerciseData_; }
     const boost::optional<OptionPaymentData>& paymentData() const { return paymentData_; }
+    const bool midCouponExercise() const { return midCouponExercise_; }
     //@}
 
     //! \name Setters
@@ -141,6 +142,7 @@ private:
     boost::optional<bool> automaticExercise_;
     boost::optional<OptionExerciseData> exerciseData_;
     boost::optional<OptionPaymentData> paymentData_;
+    bool midCouponExercise_;
 };
 
 // Helper class to build an exercise instance for Bermudan swaptions and related instruments from given option data.
@@ -171,12 +173,19 @@ public:
     // only for exercised options: exercise fee amount or null
     QuantLib::ext::shared_ptr<QuantLib::CashFlow> feeSettlement() const { return feeSettlement_; }
 
+    const Period& noticePeriod() const { return noticePeriod_; }
+    const Calendar& noticeCalendar() const { return noticeCalendar_; }
+    const BusinessDayConvention& noticeConvention() const { return noticeConvention_; }
+
 private:
     QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise_;
 
     std::vector<QuantLib::Date> exerciseDates_;
     std::vector<QuantLib::Date> noticeDates_;
     std::vector<QuantLib::Date> settlementDates_;
+    Period noticePeriod_;
+    Calendar noticeCalendar_;
+    BusinessDayConvention noticeConvention_;
 
     bool isExercised_ = false;
     QuantLib::Date exerciseDate_;
