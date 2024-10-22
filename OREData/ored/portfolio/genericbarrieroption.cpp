@@ -508,6 +508,8 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
         {{"currentNotional", "currentNotional"},
          {"notionalCurrency", "PayCurrency"},
          {"Active", "Active"},
+         {"TriggerProbability", "Active"},
+         {"ExerciseProbability", "Active"},
          {"TransatlanticActive", "TransatlanticActive"}},
         {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlyings", {"Strike", "BarrierLevels"})});
     script_["FD"] = ScriptedTradeScriptData(
