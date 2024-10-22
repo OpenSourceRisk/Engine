@@ -1387,8 +1387,6 @@ void McMultiLegBaseEngine::calculate() const {
         cashflowGenTimes.insert(info.payTime);
     }
 
-    cashflowGenTimes.erase(0.0); // handled separately, if it is set by a cashflow
-
     /* build combined time sets */
 
     std::set<Real> exerciseXvaTimes; // = exercise + xva times
