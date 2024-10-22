@@ -49,18 +49,12 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
     Real exerciseTime = volatility_->timeFromReference(exerciseDate);
     const auto& cds = *arguments_.swap;
     const Real& strike = arguments_.strike;
-    results_.additionalResults["strikeSpread"] = strike;
     Real runningSpread = cds.runningSpread();
-    results_.additionalResults["runningSpread"] = runningSpread;
-
     DiscountFactor discTradeCollToExercise = discountTradeCollateral_->discount(exerciseDate);
     DiscountFactor discSwapCurrToExercise = discountSwapCurrency_->discount(exerciseDate);
-    results_.additionalResults["discountToExerciseTradeCollateral"] = discTradeCollToExercise;
-    results_.additionalResults["discountToExerciseSwapCurrency"] = discSwapCurrToExercise;
 
     // Calculate the risky annuity
     Real rpv01 = std::abs(cds.couponLegNPV() + cds.accrualRebateNPV()) / (cds.notional() * cds.runningSpread());
-    results_.additionalResults["riskyAnnuity"] = rpv01;
     QL_REQUIRE(cds.notional() > 0.0 || close_enough(cds.notional(), 0.0),
                "BlackIndexCdsOptionEngine: notional must not be negative (" << cds.notional() << ")");
     QL_REQUIRE(rpv01 > 0.0, "BlackIndexCdsOptionEngine: risky annuity must be positive (couponLegNPV="
@@ -68,12 +62,10 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
                                 << ", notional=" << cds.notional() << ", runningSpread=" << cds.runningSpread() << ")");
 
     Real fairSpread = cds.fairSpreadClean();
-    results_.additionalResults["forwardSpread"] = fairSpread;
 
     // FEP adjusted forward spread. F^{Adjusted} in O'Kane 2008, Section 11.7. F' in ICE paper (notation is poor).
     Real Fp = fairSpread + fep * (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise) / rpv01 /
                                discTradeCollToExercise / cds.notional();
-    results_.additionalResults["fepAdjustedForwardSpread"] = Fp;
 
     // Adjusted strike spread. K' in O'Kane 2008, Section 11.7. K' in ICE paper (notation is poor).
     Real Kp = close_enough(strike, 0.0)
@@ -81,22 +73,15 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
                   : runningSpread + arguments_.tradeDateNtl / cds.notional() * forwardRiskyAnnuityStrike() *
                                         (strike - runningSpread) *
                                         (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise) / rpv01;
-    results_.additionalResults["adjustedStrikeSpread"] = Kp;
 
     // Read the volatility from the volatility surface
     Real volatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm), strike,
                                               CreditVolCurve::Type::Spread);
     Real stdDev = volatility * std::sqrt(exerciseTime);
-    results_.additionalResults["volatility"] = volatility;
-    results_.additionalResults["standardDeviation"] = stdDev;
 
     // Option type
     Option::Type callPut = cds.side() == Protection::Buyer ? Option::Call : Option::Put;
     results_.additionalResults["callPut"] = callPut == Option::Call ? string("Call") : string("Put");
-
-    // NPV. Add the relevant notionals to the additional results also.
-    results_.additionalResults["valuationDateNotional"] = cds.notional();
-    results_.additionalResults["tradeDateNotional"] = arguments_.tradeDateNtl;
 
     // Check the forward before plugging it into the black formula
     QL_REQUIRE(Fp > 0.0 || close_enough(stdDev, 0.0),
@@ -108,6 +93,21 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
 
     results_.value = discTradeCollToExercise / (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise) *
                      rpv01 * cds.notional() * blackFormula(callPut, Kp, Fp, stdDev, 1.0);
+
+    if (generateAdditionalResults_) {
+        results_.additionalResults["strikeSpread"] = strike;
+        results_.additionalResults["riskyAnnuity"] = rpv01;
+        results_.additionalResults["adjustedStrikeSpread"] = Kp;
+        results_.additionalResults["runningSpread"] = runningSpread;
+        results_.additionalResults["forwardSpread"] = fairSpread;
+        results_.additionalResults["fepAdjustedForwardSpread"] = Fp;
+        results_.additionalResults["discountToExerciseTradeCollateral"] = discTradeCollToExercise;
+        results_.additionalResults["discountToExerciseSwapCurrency"] = discSwapCurrToExercise;
+        results_.additionalResults["volatility"] = volatility;
+        results_.additionalResults["standardDeviation"] = stdDev;
+        results_.additionalResults["valuationDateNotional"] = cds.notional();
+        results_.additionalResults["tradeDateNotional"] = arguments_.tradeDateNtl;
+    }
 }
 
 void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
@@ -115,48 +115,33 @@ void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
     // Underlying index CDS.
     const auto& cds = *arguments_.swap;
 
-    // Add some additional entries to additional results.
-    results_.additionalResults["strikePrice"] = arguments_.strike;
-
     const Real& tradeDateNtl = arguments_.tradeDateNtl;
-    results_.additionalResults["valuationDateNotional"] = cds.notional();
-    results_.additionalResults["tradeDateNotional"] = tradeDateNtl;
 
     // effective strike (strike is expressed w.r.t. trade date notional by market convention)
     Real effStrike = 1.0 - tradeDateNtl / cds.notional() * (1.0 - arguments_.strike);
-    results_.additionalResults["strikePriceDefaultAdjusted"] = effStrike;
 
     // Discount factor to exercise
     const Date& exerciseDate = arguments_.exercise->dates().front();
     Real exerciseTime = volatility_->timeFromReference(exerciseDate);
     DiscountFactor discTradeCollToExercise = discountTradeCollateral_->discount(exerciseDate);
     DiscountFactor discSwapCurrToExercise = discountSwapCurrency_->discount(exerciseDate);
-    results_.additionalResults["discountToExerciseTradeCollateral"] = discTradeCollToExercise;
-    results_.additionalResults["discountToExerciseSwapCurrency"] = discSwapCurrToExercise;
 
     // NPV from buyer's perspective gives upfront, as of valuation date, with correct sign.
     Real npv = cds.side() == Protection::Buyer ? cds.NPV() : -cds.NPV();
-    results_.additionalResults["upfront"] =
-        npv * (arguments_.settlementType == Settlement::Cash ? discTradeCollToExercise / discSwapCurrToExercise : 1.0);
 
     Real forwardPrice =
         1 - npv / cds.notional() / (Settlement::Cash ? discSwapCurrToExercise : discTradeCollToExercise);
-    results_.additionalResults["forwardPrice"] = forwardPrice;
 
     // Front end protection adjusted forward price.
     Real Fp = forwardPrice - fep / cds.notional() / discTradeCollToExercise;
-    results_.additionalResults["fepAdjustedForwardPrice"] = Fp;
 
     // Read the volatility from the volatility surface
     Real volatility = volatility_->volatility(exerciseDate, QuantExt::periodToTime(arguments_.indexTerm), effStrike,
                                               CreditVolCurve::Type::Price);
     Real stdDev = volatility * std::sqrt(exerciseTime);
-    results_.additionalResults["volatility"] = volatility;
-    results_.additionalResults["standardDeviation"] = stdDev;
 
     // If protection buyer, put on price.
     Option::Type cp = cds.side() == Protection::Buyer ? Option::Put : Option::Call;
-    results_.additionalResults["callPut"] = cp == Option::Put ? string("Put") : string("Call");
 
     // Check the inputs to the black formula before applying it
     QL_REQUIRE(Fp > 0.0 || close_enough(stdDev, 0.0),
@@ -167,6 +152,23 @@ void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
                    << effStrike << ") is not positive, can not calculate a reasonable option price");
 
     results_.value = cds.notional() * blackFormula(cp, effStrike, Fp, stdDev, discTradeCollToExercise);
+
+    if (generateAdditionalResults_) {
+        results_.additionalResults["valuationDateNotional"] = cds.notional();
+        results_.additionalResults["tradeDateNotional"] = tradeDateNtl;
+        results_.additionalResults["strikePrice"] = arguments_.strike;
+        results_.additionalResults["strikePriceDefaultAdjusted"] = effStrike;
+        results_.additionalResults["discountToExerciseTradeCollateral"] = discTradeCollToExercise;
+        results_.additionalResults["discountToExerciseSwapCurrency"] = discSwapCurrToExercise;
+        results_.additionalResults["upfront"] =
+            npv *
+            (arguments_.settlementType == Settlement::Cash ? discTradeCollToExercise / discSwapCurrToExercise : 1.0);
+        results_.additionalResults["forwardPrice"] = forwardPrice;
+        results_.additionalResults["fepAdjustedForwardPrice"] = Fp;
+        results_.additionalResults["volatility"] = volatility;
+        results_.additionalResults["standardDeviation"] = stdDev;
+        results_.additionalResults["callPut"] = cp == Option::Put ? string("Put") : string("Call");
+    }
 }
 
 Real BlackIndexCdsOptionEngine::forwardRiskyAnnuityStrike() const {
@@ -220,18 +222,21 @@ Real BlackIndexCdsOptionEngine::forwardRiskyAnnuityStrike() const {
         QuantLib::ext::make_shared<QuantExt::MidPointCdsEngine>(dph, indexRecovery_, discountSwapCurrency_));
     Real rpv01_K = std::abs(strikeCds->couponLegNPV() + strikeCds->accrualRebateNPV()) /
                    (strikeCds->notional() * strikeCds->runningSpread());
-    results_.additionalResults["riskyAnnuityStrike"] = rpv01_K;
     QL_REQUIRE(rpv01_K > 0.0, "BlackIndexCdsOptionEngine: strike based risky annuity must be positive.");
 
     // Survival to exercise
     const Date& exerciseDate = arguments_.exercise->dates().front();
     Probability spToExercise = dph->survivalProbability(exerciseDate);
     Real discToExercise = discountSwapCurrency_->discount(exerciseDate);
-    results_.additionalResults["strikeBasedSurvivalToExercise"] = spToExercise;
 
     // Forward risky annuity strike (divides out the survival probability and discount to exercise)
     Real rpv01_K_fwd = rpv01_K / spToExercise / discToExercise;
-    results_.additionalResults["forwardRiskyAnnuityStrike"] = rpv01_K_fwd;
+
+    if (generateAdditionalResults_) {
+        results_.additionalResults["riskyAnnuityStrike"] = rpv01_K;
+        results_.additionalResults["strikeBasedSurvivalToExercise"] = spToExercise;
+        results_.additionalResults["forwardRiskyAnnuityStrike"] = rpv01_K_fwd;
+    }
 
     return rpv01_K_fwd;
 }
