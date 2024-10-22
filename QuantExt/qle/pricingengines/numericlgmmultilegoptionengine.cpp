@@ -94,8 +94,7 @@ NumericLgmMultiLegOptionEngineBase::buildCashflowInfo(const Size i, const Size j
                 midCouponExercise_ ? noticeCalendar_.advance(cpn->accrualEndDate(), -noticePeriod_, noticeConvention_)
                                    : cpn->accrualStartDate());
         }
-        // approximation
-        info.midCouponExerciseSettlementLag_ = QuantLib::days(noticePeriod_) / 365.25;
+        info.midCouponExerciseSettlementLag_ = QuantLib::days(noticePeriod_) / 365.25; // approximation
         info.couponStartTime_ = ts->timeFromReference(cpn->accrualStartDate());
         info.couponEndTime_ = ts->timeFromReference(cpn->accrualEndDate());
         if (auto ibor = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c)) {

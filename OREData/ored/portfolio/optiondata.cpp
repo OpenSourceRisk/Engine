@@ -147,9 +147,9 @@ XMLNode* OptionData::toXML(XMLDocument& doc) const {
 ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector<Leg> legs,
                                  bool removeNoticeDatesAfterLastAccrualStart) {
 
-    // for american style exercise, never remove notice dates after last accrual start
+    // never remove notice dates if mid coupon exercise is active
 
-    if (optionData.style() == "American")
+    if (optionData.midCouponExercise())
         removeNoticeDatesAfterLastAccrualStart = false;
 
     // only keep a) future exercise dates and b) exercise dates that exercise into a whole

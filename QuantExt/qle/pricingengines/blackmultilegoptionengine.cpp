@@ -189,8 +189,9 @@ void BlackMultiLegOptionEngineBase::calculate() const {
                         ++numFloat;
                     }
                     cfInfo.back().accrual =
-                        midCouponExercise_ ? c->dayCounter().yearFraction(exerciseAccrualStart, c->accrualEndDate())
-                                           : c->accrualPeriod();
+                        midCouponExercise_ && c->accrualStartDate() < exerciseDate
+                            ? c->dayCounter().yearFraction(exerciseAccrualStart, c->accrualEndDate())
+                            : c->accrualPeriod();
                     cfInfo.back().discountFactor = discountCurve_->discount(c->date());
                     // mid cpn exercise assumes short coupon is paid
                     cfInfo.back().amount =
