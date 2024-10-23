@@ -95,6 +95,7 @@ void BlackIndexCdsOptionEngine::spreadStrikeCalculate(Real fep) const {
                      rpv01 * cds.notional() * blackFormula(callPut, Kp, Fp, stdDev, 1.0);
 
     if (generateAdditionalResults_) {
+        results_.additionalResults["Model"] = std::string("LognormalStrikeVolatility");
         results_.additionalResults["strikeSpread"] = strike;
         results_.additionalResults["riskyAnnuity"] = rpv01;
         results_.additionalResults["adjustedStrikeSpread"] = Kp;
@@ -154,6 +155,7 @@ void BlackIndexCdsOptionEngine::priceStrikeCalculate(Real fep) const {
     results_.value = cds.notional() * blackFormula(cp, effStrike, Fp, stdDev, discTradeCollToExercise);
 
     if (generateAdditionalResults_) {
+        results_.additionalResults["Model"] = std::string("LognormalPriceVolatility");
         results_.additionalResults["valuationDateNotional"] = cds.notional();
         results_.additionalResults["tradeDateNotional"] = tradeDateNtl;
         results_.additionalResults["strikePrice"] = arguments_.strike;
