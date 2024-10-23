@@ -38,6 +38,7 @@ namespace data {
       "        REQUIRE ExpiryDate >= BarrierMonitoringDates[SIZE(BarrierMonitoringDates)];\n"
       "\n"
       "        NUMBER KnockedIn, KnockedOut, Active, rebate, TransatlanticActive;\n"
+      "        NUMBER Exercised, Triggered;\n"
       "        NUMBER U, i, k, d, currentNotional, levelIndex;\n"
       "\n"
       "        FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO\n"
@@ -108,6 +109,11 @@ namespace data {
       "	         value = Active * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +\n"
       "                  rebate;\n"
       "	       END;\n"
+      "\n"
+      "        Exercised=0;\n"    //European Case
+      "        IF value>0 THEN\n"
+      "          Exercised=1;\n"
+      "        END;\n"
       "\n"
       "        IF PayoffType == 0 THEN\n"
       "          currentNotional = Quantity * Strike;\n"
@@ -508,8 +514,8 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
         {{"currentNotional", "currentNotional"},
          {"notionalCurrency", "PayCurrency"},
          {"Active", "Active"},
-         {"TriggerProbability", "Active"},
-         {"ExerciseProbability", "Active"},
+         {"TriggerProbability", "Exercised"},
+         {"ExerciseProbability", "Exercised"},
          {"TransatlanticActive", "TransatlanticActive"}},
         {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlyings", {"Strike", "BarrierLevels"})});
     script_["FD"] = ScriptedTradeScriptData(
