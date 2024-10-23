@@ -311,7 +311,7 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="xs:string" name="Qualifier"/>
-		<xs:element type="dimensionType" name="Dimension" minOccurs="0"/>
+        <xs:element type="dimensionType" name="Dimension" minOccurs="0"/>
       <xs:element type="volatilityType" name="VolatilityType"/>
       <xs:element type="extrapolationType" name="Extrapolation"/>
       <xs:element type="dayCounter" name="DayCounter"/>
@@ -887,7 +887,7 @@
       <xs:element type="commVolQuoteSuffix" name="QuoteSuffix" minOccurs="0" maxOccurs="1"/>
       <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
-		<xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+        <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -1301,6 +1301,13 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+      <xs:element name="DefaultCurves" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+    </xs:element>
     </xs:all>
   </xs:complexType>
 
