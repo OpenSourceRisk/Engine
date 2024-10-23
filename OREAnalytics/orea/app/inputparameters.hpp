@@ -190,6 +190,7 @@ public:
     void setStressUpperBoundRatesDiscountFactor(const double value) { stressUpperBoundRatesDiscountFactor_ = value; }
     void setStressAccurary(const double value) { stressAccurary_ = value; };
     void setStressPrecision(const Size value) { stressPrecision_ = value; };
+    void setStressGenerateCashflows(const bool b) { stressGenerateCashflows_ = b; }
     // Setters for VaR
     void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
@@ -591,6 +592,7 @@ public:
     }
     double stressAccurary() const { return stressAccurary_; };
     Size stressPrecision() const { return stressPrecision_; };
+    bool stressGenerateCashflows() const { return stressGenerateCashflows_; }
     
     /*****************
      * Getters for VaR
@@ -965,6 +967,7 @@ protected:
     double stressUpperBoundRatesDiscountFactor_;
     double stressAccurary_;
     Size stressPrecision_ = 2;
+    bool stressGenerateCashflows_ = false;
 
     /*****************
      * VAR analytics
@@ -1209,6 +1212,7 @@ private:
     std::string jacobiFileName_;
     std::string jacobiInverseFileName_;
     std::string stressTestFileName_;
+    std::string stressTestCashflowFileName_;
     std::string xvaStressTestFileName_;
     std::string stressZeroScenarioDataFileName_;
     std::string varFileName_;
@@ -1228,3 +1232,4 @@ void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);
 
 } // namespace analytics
 } // namespace ore
+
