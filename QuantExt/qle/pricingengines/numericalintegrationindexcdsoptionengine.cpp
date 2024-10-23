@@ -115,7 +115,8 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
 
         if (generateAdditionalResults_) {
             results_.additionalResults["Model"] = std::string("LognormalPriceVolatility");
-            results_.additionalResults["strikePrice"] = strikePrice;
+            results_.additionalResults["strikePrice"] = arguments_.strike;
+            results_.additionalResults["strikePriceDefaultAdjusted"] = strikePrice;
             results_.additionalResults["volatility"] = volatility;
             results_.additionalResults["standardDeviation"] = stdDev;
             results_.additionalResults["fepAdjustedForwardPrice"] = forwardPrice;
@@ -284,8 +285,22 @@ void NumericalIntegrationIndexCdsOptionEngine::doCalc() const {
             results_.additionalResults["forwardPrice"] = forwardPriceExclFep;
             results_.additionalResults["fepAdjustedForwardSpread"] = fepAdjustedForwardSpread;
             results_.additionalResults["forwardSpread"] = arguments_.swap->fairSpreadClean();
+            results_.additionalResults["avgRate_te_tm"] = averageInterestRate;
             results_.additionalResults["exerciseBoundary"] =
                 fepAdjustedForwardSpread * std::exp(-0.5 * stdDev * stdDev + stdDev * exerciseBoundary);
+
+            constexpr Size gridPoints = 100;
+            std::vector<Real> integrationGrid(gridPoints), defaultAdjustedIndexValue(gridPoints);
+            for (Size i = 0; i < gridPoints; ++i) {
+                integrationGrid[i] = lowerIntegrationBound + (upperIntegrationBound - lowerIntegrationBound) /
+                                                                 static_cast<Real>(gridPoints - 1) *
+                                                                 static_cast<Real>(i);
+                defaultAdjustedIndexValue[i] =
+                    Vc(exerciseTime, maturityTime, averageInterestRate, indexRecovery_,
+                       arguments_.swap->runningSpread(), stdDev, fepAdjustedForwardSpread, integrationGrid[i]);
+            }
+            results_.additionalResults["integrationGrid"] = integrationGrid;
+            results_.additionalResults["defaultAdjustedIndexValue"] = defaultAdjustedIndexValue;
         }
 
     } // handle 2 spread vol model type
@@ -354,7 +369,9 @@ Real NumericalIntegrationIndexCdsOptionEngine::forwardRiskyAnnuityStrike(const R
 
     // Forward risky annuity strike
     Real rpv01_K_fwd = rpv01_K / spToExercise / discToExercise;
-    results_.additionalResults["forwardRiskyAnnuityStrike"] = rpv01_K_fwd;
+    if(generateAdditionalResults_) {
+        results_.additionalResults["forwardRiskyAnnuityStrike"] = rpv01_K_fwd;
+    }
 
     return rpv01_K_fwd;
 }

@@ -123,7 +123,7 @@ Real IndexCdsOptionBaseEngine::fep() const {
         fep += (1 - recoveries_[i]) * probabilities_[i]->defaultProbability(exerciseDate) * notionals_[i];
     }
     if (generateAdditionalResults_)
-        results_.additionalResults["UnrealisedFEP"] = fep;
+        results_.additionalResults["unrealisedFEP"] = fep;
 
     // Total FEP
     fep += arguments_.realisedFep;
