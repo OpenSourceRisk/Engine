@@ -17,6 +17,7 @@
 */
 
 #include <ql/event.hpp>
+#include <ql/settings.hpp>
 
 #include <qle/instruments/fxforward.hpp>
 
@@ -27,12 +28,10 @@ namespace QuantExt {
 FxForward::FxForward(const Real& nominal1, const Currency& currency1, const Real& nominal2, const Currency& currency2,
                      const Date& maturityDate, const bool& payCurrency1, const bool isPhysicallySettled,
                      const Date& payDate, const Currency& payCcy, const Date& fixingDate,
-                     const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex,
-                     bool includeSettlementDateFlows)
+                     const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex)
     : nominal1_(nominal1), currency1_(currency1), nominal2_(nominal2), currency2_(currency2),
       maturityDate_(maturityDate), payCurrency1_(payCurrency1), isPhysicallySettled_(isPhysicallySettled),
-      payDate_(payDate), payCcy_(payCcy), fxIndex_(fxIndex), fixingDate_(fixingDate),
-      includeSettlementDateFlows_(includeSettlementDateFlows) {
+      payDate_(payDate), payCcy_(payCcy), fxIndex_(fxIndex), fixingDate_(fixingDate) {
 
     if (payDate_ == Date())
         payDate_ = maturityDate_;
@@ -49,11 +48,10 @@ FxForward::FxForward(const Real& nominal1, const Currency& currency1, const Real
 
 FxForward::FxForward(const Money& nominal1, const ExchangeRate& forwardRate, const Date& maturityDate,
                      bool sellingNominal, const bool isPhysicallySettled, const Date& payDate, const Currency& payCcy,
-                     const Date& fixingDate, const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex,
-                     bool includeSettlementDateFlows)
+                     const Date& fixingDate, const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex)
     : nominal1_(nominal1.value()), currency1_(nominal1.currency()), maturityDate_(maturityDate),
       payCurrency1_(sellingNominal), isPhysicallySettled_(isPhysicallySettled), payDate_(payDate), payCcy_(payCcy),
-      fxIndex_(fxIndex), fixingDate_(fixingDate), includeSettlementDateFlows_(includeSettlementDateFlows) {
+      fxIndex_(fxIndex), fixingDate_(fixingDate) {
 
     QL_REQUIRE(currency1_ == forwardRate.target(), "Currency of nominal1 does not match target (domestic) "
                                                    "currency in the exchange rate.");
@@ -78,11 +76,10 @@ FxForward::FxForward(const Money& nominal1, const ExchangeRate& forwardRate, con
 FxForward::FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote, const Currency& currency2,
                      const Date& maturityDate, bool sellingNominal, const bool isPhysicallySettled, const Date& payDate,
                      const Currency& payCcy, const Date& fixingDate,
-                     const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex,
-                     bool includeSettlementDateFlows)
+                     const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex)
     : nominal1_(nominal1.value()), currency1_(nominal1.currency()), currency2_(currency2), maturityDate_(maturityDate),
       payCurrency1_(sellingNominal), isPhysicallySettled_(isPhysicallySettled), payDate_(payDate), payCcy_(payCcy),
-      fxIndex_(fxIndex), fixingDate_(fixingDate), includeSettlementDateFlows_(includeSettlementDateFlows) {
+      fxIndex_(fxIndex), fixingDate_(fixingDate) {
 
     QL_REQUIRE(fxForwardQuote->isValid(), "The FX Forward quote is not valid.");
 
@@ -102,8 +99,9 @@ FxForward::FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote,
 }
 
 bool FxForward::isExpired() const {
-    Date p = includeSettlementDateFlows_ ? payDate_ + 1*Days : payDate_;
-    return detail::simple_event(p).hasOccurred();
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    Date refDate = Settings::instance().evaluationDate();
+    return detail::simple_event(payDate_).hasOccurred(refDate, includeToday);
 }
 
 void FxForward::setupExpired() const {
@@ -129,7 +127,6 @@ void FxForward::setupArguments(PricingEngine::arguments* args) const {
     arguments->payCcy = payCcy_;
     arguments->fxIndex = fxIndex_;
     arguments->fixingDate = fixingDate_;
-    arguments->includeSettlementDateFlows = includeSettlementDateFlows_;
 }
 
 void FxForward::fetchResults(const PricingEngine::results* r) const {

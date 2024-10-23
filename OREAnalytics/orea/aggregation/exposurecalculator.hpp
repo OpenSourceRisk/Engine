@@ -67,7 +67,8 @@ public:
 	    //! Flag to indicate exposure evaluation with dynamic credit
         const bool multiPath,
         //! Flag to indicate flipped xva calculation
-        const bool flipViewXVA
+        const bool flipViewXVA,
+	const bool exposureProfilesUseCloseOutValues_ = false
     );
 
     virtual ~ExposureCalculator() {}
@@ -118,6 +119,8 @@ public:
     vector<Real>& pfe(const string& tid) { return pfe_[tid]; }
     Real& epe_b(const string& tid) { return epe_b_[tid]; }
     Real& eepe_b(const string& tid) { return eepe_b_[tid]; }
+    vector<Real>& epe_b_timeWeighted(const string& tid) { return epe_bTimeWeighted_[tid]; }
+    vector<Real>& eepe_b_timeWeighted(const string& tid) { return eepe_bTimeWeighted_[tid]; }
 
 protected:
     const QuantLib::ext::shared_ptr<Portfolio> portfolio_;
@@ -149,8 +152,11 @@ protected:
     map<string, std::vector<Real>> pfe_;
     map<string, Real> epe_b_;
     map<string, Real> eepe_b_;
+    map<string, std::vector<Real>> epe_bTimeWeighted_;
+    map<string, std::vector<Real>> eepe_bTimeWeighted_;
     vector<Real> getMeanExposure(const string& tid, ExposureIndex index);
     bool flipViewXVA_;
+    bool exposureProfilesUseCloseOutValues_ = false;
 };
 
 } // namespace analytics

@@ -240,6 +240,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     legs_ = {fixLeg, fltLeg};
     legPayers_ = {swap_[fixedLegIndex].isPayer(), swap_[floatingLegIndex].isPayer()};
     maturity_ = flexiSwap->maturityDate();
+    maturityType_ = "FlexiSwap Leg Maturity Date";
     addToRequiredFixings(fltLeg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_));
 }
 

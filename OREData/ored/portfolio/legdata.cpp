@@ -2870,6 +2870,7 @@ getCmbLegCreditQualifierMapping(const CMBLegData& ld, const QuantLib::ext::share
         source = ore::data::securitySpecificCreditCurveName(security, bondRefData->bondData().creditCurveId);
         target.targetQualifier = security;
         target.creditGroup = bondRefData->bondData().creditGroup;
+        target.hasCreditRisk = ld.hasCreditRisk();
     }
     if (source.empty() || target.targetQualifier.empty()) {
         ore::data::StructuredTradeErrorMessage(tradeId, tradeType, "getCmbLegCreditQualifierMapping()",

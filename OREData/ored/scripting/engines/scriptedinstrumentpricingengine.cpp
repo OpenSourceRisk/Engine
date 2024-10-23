@@ -88,7 +88,8 @@ void ScriptedInstrumentPricingEngine::calculate() const {
 
     // clear NPVMem() regression coefficients
 
-    model_->resetNPVMem();
+    if(!staticNpvMem_)
+        model_->resetNPVMem();
 
     // if the model uses a separate training phase for NPV(), run this
 
@@ -203,6 +204,7 @@ void ScriptedInstrumentPricingEngine::calculate() const {
                 discount = model_->discount(referenceDate, paylog->dates().at(i), paylog->currencies().at(i)).at(0);
                 cashFlowResults[i].amount /= fx * discount;
             }
+            cashFlowResults[i].fixingDate = paylog->obsDates().at(i);
             cashFlowResults[i].payDate = paylog->dates().at(i);
             cashFlowResults[i].currency = paylog->currencies().at(i);
             cashFlowResults[i].legNumber = paylog->legNos().at(i);

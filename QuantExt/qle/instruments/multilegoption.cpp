@@ -23,10 +23,15 @@
 namespace QuantExt {
 
 MultiLegOption::MultiLegOption(const std::vector<Leg>& legs, const std::vector<bool>& payer,
-                               const std::vector<Currency>& currency, const QuantLib::ext::shared_ptr<Exercise>& exercise,
-                               const Settlement::Type settlementType, Settlement::Method settlementMethod)
+                               const std::vector<Currency>& currency,
+                               const QuantLib::ext::shared_ptr<Exercise>& exercise,
+                               const Settlement::Type settlementType, Settlement::Method settlementMethod,
+                               const std::vector<Date>& settlementDates, const bool midCouponExercise,
+                               const Period& noticePeriod, const Calendar& noticeCalendar,
+                               const BusinessDayConvention noticeConvention)
     : legs_(legs), payer_(payer), currency_(currency), exercise_(exercise), settlementType_(settlementType),
-      settlementMethod_(settlementMethod) {
+      settlementMethod_(settlementMethod), settlementDates_(settlementDates), midCouponExercise_(midCouponExercise),
+      noticePeriod_(noticePeriod), noticeCalendar_(noticeCalendar), noticeConvention_(noticeConvention) {
 
     QL_REQUIRE(legs_.size() > 0, "MultiLegOption: No legs are given");
     QL_REQUIRE(payer_.size() == legs_.size(),
@@ -67,10 +72,11 @@ void MultiLegOption::deepUpdate() {
 bool MultiLegOption::isExpired() const {
     Date today = Settings::instance().evaluationDate();
     if (exercise_ == nullptr || exercise_->dates().empty()) {
-        return today >= maturityDate();
+        ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+        return detail::simple_event(maturityDate()).hasOccurred(today, inc);
     } else {
         // only the option itself is represented, not something we exercised into
-        return today >= exercise_->dates().back();
+        return detail::simple_event(exercise_->dates().back()).hasOccurred(today);
     }
 }
 
@@ -89,6 +95,11 @@ void MultiLegOption::setupArguments(PricingEngine::arguments* args) const {
     tmp->exercise = exercise_;
     tmp->settlementType = settlementType_;
     tmp->settlementMethod = settlementMethod_;
+    tmp->settlementDates = settlementDates_;
+    tmp->midCouponExercise = midCouponExercise_;
+    tmp->noticePeriod = noticePeriod_;
+    tmp->noticeCalendar = noticeCalendar_;
+    tmp->noticeConvention = noticeConvention_;
 }
 
 void MultiLegOption::fetchResults(const PricingEngine::results* r) const {

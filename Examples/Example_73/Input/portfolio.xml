@@ -9,7 +9,7 @@
     </Envelope>
     <ForwardBondData>
       <BondData>
-        <SecurityId>SECURITY_FWDEXP_20251220</SecurityId>
+        <SecurityId>SECURITY_1_FWDEXP_20251220</SecurityId>
         <BondNotional>10000000.00</BondNotional>
       </BondData>
       <SettlementData>
@@ -29,7 +29,7 @@
       <AdditionalFields/>
     </Envelope>
     <BondData>
-      <SecurityId>SECURITY_cutted</SecurityId>
+      <SecurityId>SECURITY_1_cutted</SecurityId>
       <BondNotional>8000000.00</BondNotional>
     </BondData>
   </Trade>

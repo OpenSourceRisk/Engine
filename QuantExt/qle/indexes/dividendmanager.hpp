@@ -20,12 +20,16 @@
     \brief Dividend manager
 */
 
-#ifndef quantext_divdendmanager_hpp
-#define quantext_divdendmanager_hpp
+#ifndef quantext_dividendmanager_hpp
+#define quantext_dividendmanager_hpp
 
 #include <ql/patterns/singleton.hpp>
+#include <ql/patterns/observable.hpp>
 #include <ql/timeseries.hpp>
 #include <ql/utilities/observablevalue.hpp>
+#include <qle/utilities/serializationdate.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/export.hpp>
 
 namespace QuantExt {
 
@@ -38,15 +42,20 @@ struct Dividend {
     QuantLib::Real rate = QuantLib::Null<QuantLib::Real>();
     //! Dividend Payment date
     QuantLib::Date payDate = QuantLib::Date();
+    //! Dividend Announcement date
+    QuantLib::Date announcementDate = QuantLib::Date();
 
     //! Constructor
     Dividend() {}
-    Dividend(const QuantLib::Date& ed, const std::string& s, const QuantLib::Real r, const QuantLib::Date& pd)
-        : exDate(ed), name(s), rate(r), payDate(pd) {}
+    Dividend(const QuantLib::Date& ed, const std::string& s, const QuantLib::Real r, const QuantLib::Date& pd,
+             const QuantLib::Date& ad)
+        : exDate(ed), name(s), rate(r), payDate(pd), announcementDate(ad) {}
     bool empty() {
         return name.empty() && exDate == QuantLib::Date() && rate == QuantLib::Null<QuantLib::Real>() &&
-               payDate == QuantLib::Date();
+               payDate == QuantLib::Date() && announcementDate == QuantLib::Date();
     }
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Compare dividends
@@ -64,6 +73,9 @@ class DividendManager : public QuantLib::Singleton<DividendManager> {
 
 private:
     DividendManager() = default;
+    friend class EquityIndex2;
+    //! add dividend
+    void addDividend(const std::string& name, const Dividend& dividend, bool forceOverwrite);
 
 public:
     //! returns whether historical fixings were stored for the index
@@ -78,10 +90,12 @@ public:
     void clearHistories();
 
 private:
-    typedef std::map<std::string, QuantLib::ObservableValue<std::set<Dividend>>> history_map;
-    history_map data_;
+    mutable std::map<std::string, std::set<Dividend>> data_;
+    mutable std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::Observable>> notifiers_;
 };
 
 } // namespace QuantExt
+
+BOOST_CLASS_EXPORT_KEY(QuantExt::Dividend);
 
 #endif

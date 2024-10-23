@@ -111,21 +111,20 @@ void TodaysMarket::initialise(const Date& asof) {
     // Fixings
 
     if (loadFixings_) {
-        // Apply them now in case a curve builder needs them
+        // Index fixings - apply them now in case a curve builder needs them
         LOG("Todays Market Loading Fixings");
         timer.start();
         applyFixings(loader_->loadFixings());
         timings["1 load fixings"] = timer.elapsed().wall;
         LOG("Todays Market Loading Fixing done.");
+
+        // Dividends - apply them now in case a curve builder needs them
+        LOG("Todays Market Loading Dividends");
+        timer.start();
+        applyDividends(loader_->loadDividends());
+        timings["2 load dividends"] = timer.elapsed().wall;
+        LOG("Todays Market Loading Dividends done.");
     }
-
-    // Dividends - apply them now in case a curve builder needs them
-
-    LOG("Todays Market Loading Dividends");
-    timer.start();
-    applyDividends(loader_->loadDividends());
-    timings["2 load dividends"] = timer.elapsed().wall;
-    LOG("Todays Market Loading Dividends done.");
 
     // Add all FX quotes from the loader to Triangulation
     timer.start();
@@ -614,6 +613,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 QuantLib::ext::shared_ptr<InflationCapFloorVolCurve> inflationCapFloorVolCurve =
                     QuantLib::ext::make_shared<InflationCapFloorVolCurve>(asof_, *infcapfloorspec, *loader_, *curveConfigs_,
                                                                   requiredYieldCurves_, requiredInflationCurves_);
+                calibrationInfo_->cpiVolCalibrationInfo[infcapfloorspec->name()] = inflationCapFloorVolCurve->calibrationInfo();
                 itr = requiredInflationCapFloorVolCurves_
                           .insert(make_pair(infcapfloorspec->name(), inflationCapFloorVolCurve))
                           .first;
@@ -721,6 +721,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 recoveryRates_[make_pair(configuration, node.name)] = itr->second->recoveryRate();
             if (!itr->second->cpr().empty())
                 cprs_[make_pair(configuration, node.name)] = itr->second->cpr();
+            if (!itr->second->conversionFactor().empty())
+                conversionFactors_[make_pair(configuration, node.name)] = itr->second->conversionFactor();
             break;
         }
 

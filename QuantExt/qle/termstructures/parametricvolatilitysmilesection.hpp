@@ -43,10 +43,9 @@ public:
 
 private:
     Volatility volatilityImpl(Rate strike) const override;
-    Real optionTime_, swapLength_, atmLevel_;
+    Real swapLength_, atmLevel_;
     boost::shared_ptr<ParametricVolatility> parametricVolatility_;
     ParametricVolatility::MarketQuoteType outputMarketQuoteType_;
-    Real outputLognormalShift_;
     mutable std::map<Real, Real> cache_;
 };
 

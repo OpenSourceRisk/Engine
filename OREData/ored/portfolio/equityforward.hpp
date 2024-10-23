@@ -38,10 +38,14 @@ using std::string;
 class EquityForward : public Trade {
 public:
     EquityForward() : Trade("EquityForward"), quantity_(0.0), strike_(0.0) {}
-    EquityForward(Envelope& env, string longShort, EquityUnderlying equityUnderlying, string currency,
-                  QuantLib::Real quantity, string maturityDate, QuantLib::Real strike, string strikeCurrency = "")
+    EquityForward(Envelope& env, const string& longShort, EquityUnderlying equityUnderlying, const string& currency,
+                  QuantLib::Real quantity, const string& maturityDate, QuantLib::Real strike,
+                  const string& strikeCurrency = "", const std::string& fxIndex = "", const std::string& payDate = "",
+                  std::string payLag = "", const std::string& payCalendar = "" , const std::string& payConvention = "")
         : Trade("EquityForward", env), longShort_(longShort), equityUnderlying_(equityUnderlying), currency_(currency),
-          quantity_(quantity), maturityDate_(maturityDate), strike_(strike), strikeCurrency_(strikeCurrency) {}
+          quantity_(quantity), maturityDate_(maturityDate), strike_(strike), strikeCurrency_(strikeCurrency),
+          fxIndex_(fxIndex), payDate_(payDate), payLag_(payLag), payCalendar_(payCalendar),
+          payConvention_(payConvention) {}
 
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
 
@@ -56,6 +60,8 @@ public:
     string maturityDate() { return maturityDate_; }
     double strike() { return strike_; }
     string strikeCurrency() { return strikeCurrency_; }
+    const string& fxIndex() const { return fxIndex_; }
+    const string& paymentDate() const { return payDate_; }
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
@@ -68,6 +74,11 @@ private:
     string maturityDate_;
     QuantLib::Real strike_;
     string strikeCurrency_;
+    string fxIndex_;
+    string payDate_;
+    string payLag_;
+    string payCalendar_;
+    string payConvention_;
 };
 } // namespace data
 } // namespace ore

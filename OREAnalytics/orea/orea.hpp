@@ -43,9 +43,11 @@
 #include <orea/app/analytics/zerotoparshiftanalytic.hpp>
 #include <orea/app/analyticsmanager.hpp>
 #include <orea/app/cleanupsingletons.hpp>
+#include <orea/app/dummymarketdataloader.hpp>
 #include <orea/app/initbuilders.hpp>
 #include <orea/app/inputparameters.hpp>
 #include <orea/app/marketcalibrationreport.hpp>
+#include <orea/app/marketdatabinaryloader.hpp>
 #include <orea/app/marketdatacsvloader.hpp>
 #include <orea/app/marketdatainmemoryloader.hpp>
 #include <orea/app/marketdataloader.hpp>
@@ -73,6 +75,7 @@
 #include <orea/cube/sparsenpvcube.hpp>
 #include <orea/engine/amcvaluationengine.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
+#include <orea/engine/cashflowreportgenerator.hpp>
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
 #include <orea/engine/dependencymarket.hpp>
@@ -94,6 +97,7 @@
 #include <orea/engine/parsensitivityutilities.hpp>
 #include <orea/engine/parstressconverter.hpp>
 #include <orea/engine/parstressscenarioconverter.hpp>
+#include <orea/engine/pathdata.hpp>
 #include <orea/engine/pnlexplainreport.hpp>
 #include <orea/engine/riskfilter.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
@@ -119,18 +123,18 @@
 #include <orea/scenario/csvscenariogenerator.hpp>
 #include <orea/scenario/deltascenario.hpp>
 #include <orea/scenario/deltascenariofactory.hpp>
-#include <orea/scenario/historicalscenariofilereader.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
-#include <orea/scenario/historicalscenarioloader.hpp>
-#include <orea/scenario/historicalscenarioreader.hpp>
 #include <orea/scenario/lgmscenariogenerator.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <orea/scenario/scenariofactory.hpp>
+#include <orea/scenario/scenariofilereader.hpp>
 #include <orea/scenario/scenariofilter.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariogeneratordata.hpp>
 #include <orea/scenario/scenariogeneratortransform.hpp>
+#include <orea/scenario/scenarioloader.hpp>
+#include <orea/scenario/scenarioreader.hpp>
 #include <orea/scenario/scenarioshiftcalculator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
@@ -167,6 +171,7 @@
 #include <orea/simm/simmconcentrationisdav2_5.hpp>
 #include <orea/simm/simmconcentrationisdav2_5a.hpp>
 #include <orea/simm/simmconcentrationisdav2_6.hpp>
+#include <orea/simm/simmconcentrationisdav2_6_5.hpp>
 #include <orea/simm/simmconfiguration.hpp>
 #include <orea/simm/simmconfigurationbase.hpp>
 #include <orea/simm/simmconfigurationcalibration.hpp>
@@ -181,6 +186,7 @@
 #include <orea/simm/simmconfigurationisdav2_5.hpp>
 #include <orea/simm/simmconfigurationisdav2_5a.hpp>
 #include <orea/simm/simmconfigurationisdav2_6.hpp>
+#include <orea/simm/simmconfigurationisdav2_6_5.hpp>
 #include <orea/simm/simmnamemapper.hpp>
 #include <orea/simm/simmresults.hpp>
 #include <orea/simm/utilities.hpp>

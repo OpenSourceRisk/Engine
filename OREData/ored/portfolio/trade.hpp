@@ -156,7 +156,12 @@ public:
 
     const Date& maturity() const { return maturity_; }
 
-    virtual bool isExpired(const Date& d) const { return d >= maturity_; }
+    const string& maturityType() const { return maturityType_; }
+
+    virtual bool isExpired(const Date& d) const {
+        ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+	return detail::simple_event(maturity_).hasOccurred(d, inc);
+    }
 
     const string& issuer() const { return issuer_; }
 
@@ -202,6 +207,7 @@ protected:
     QuantLib::Real notional_;
     string notionalCurrency_;
     Date maturity_;
+    string maturityType_;
     string issuer_;
     string sensitivityTemplate_;
     bool sensitivityTemplateSet_ = false;

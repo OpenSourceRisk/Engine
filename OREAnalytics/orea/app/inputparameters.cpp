@@ -21,7 +21,7 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
-#include <orea/scenario/historicalscenariofilereader.hpp>
+#include <orea/scenario/scenariofilereader.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/simm/simmbucketmapperbase.hpp>
@@ -172,6 +172,11 @@ void InputParameters::setTodaysMarketParams(const std::string& xml) {
 void InputParameters::setTodaysMarketParamsFromFile(const std::string& fileName) {
     todaysMarketParams_ = QuantLib::ext::make_shared<TodaysMarketParameters>();
     todaysMarketParams_->fromFile(fileName);
+}
+
+void InputParameters::setPortfolio(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) {
+    portfolio_ = portfolio;
+    scaleUpPortfolio(portfolio_);
 }
 
 void InputParameters::setPortfolio(const std::string& xml) {
@@ -349,6 +354,11 @@ void InputParameters::setAmcPricingEngine(const std::string& xml) {
     amcPricingEngine_->fromXMLString(xml);
 }
 
+void InputParameters::setAmcCgPricingEngine(const std::string& xml) {
+    amcCgPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    amcCgPricingEngine_->fromXMLString(xml);
+}
+
 void InputParameters::setXvaCgSensiScenarioData(const std::string& xml) {
     xvaCgSensiScenarioData_ = QuantLib::ext::make_shared<SensitivityScenarioData>();
     xvaCgSensiScenarioData_->fromXMLString(xml);
@@ -439,6 +449,11 @@ void InputParameters::setXvaExplainSensitivityScenarioDataFromFile(const std::st
 void InputParameters::setAmcPricingEngineFromFile(const std::string& fileName) {
     amcPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
     amcPricingEngine_->fromFile(fileName);
+}
+
+void InputParameters::setAmcCgPricingEngineFromFile(const std::string& fileName) {
+    amcCgPricingEngine_ = QuantLib::ext::make_shared<EngineData>();
+    amcCgPricingEngine_->fromFile(fileName);
 }
 
 void InputParameters::setNettingSetManager(const std::string& xml) {
@@ -533,12 +548,12 @@ void InputParameters::setBenchmarkVarPeriod(const std::string& period) {
     benchmarkVarPeriod_ = period;
 }
 
-void InputParameters::setHistoricalScenarioReader(const std::string& fileName) {
+void InputParameters::setScenarioReader(const std::string& fileName) {
     boost::filesystem::path baseScenarioPath(fileName);
     QL_REQUIRE(exists(baseScenarioPath), "The provided base scenario file, " << baseScenarioPath << ", does not exist");
     QL_REQUIRE(is_regular_file(baseScenarioPath),
                "The provided base scenario file, " << baseScenarioPath << ", is not a file");
-    historicalScenarioReader_ = QuantLib::ext::make_shared<HistoricalScenarioFileReader>(
+    scenarioReader_ = QuantLib::ext::make_shared<ScenarioFileReader>(
         fileName, QuantLib::ext::make_shared<SimpleScenarioFactory>(false));
 }
 
@@ -624,17 +639,19 @@ void InputParameters::setCreditSimulationParametersFromBuffer(const std::string&
 void InputParameters::setCrifFromFile(const std::string& fileName, char eol, char delim, char quoteChar, char escapeChar) {
     bool updateMappings = true;
     bool aggregateTrades = false;
+    bool allowUseCounterpartyTrade = true;
     auto crifLoader = CsvFileCrifLoader(fileName, getSimmConfiguration(), CrifRecord::additionalHeaders, updateMappings,
-                                        aggregateTrades, eol, delim, quoteChar, escapeChar, reportNaString());
+                                        aggregateTrades, allowUseCounterpartyTrade, eol, delim, quoteChar, escapeChar, reportNaString());
     crif_ = crifLoader.loadCrif();
 }
 
 void InputParameters::setCrifFromBuffer(const std::string& csvBuffer, char eol, char delim, char quoteChar, char escapeChar) {
     bool updateMappings = true;
     bool aggregateTrades = false;
+    bool allowUseCounterpartyTrade = true;
     auto crifLoader =
         CsvBufferCrifLoader(csvBuffer, getSimmConfiguration(), CrifRecord::additionalHeaders, updateMappings,
-                            aggregateTrades, eol, delim, quoteChar, escapeChar, reportNaString());
+                            aggregateTrades, allowUseCounterpartyTrade, eol, delim, quoteChar, escapeChar, reportNaString());
     crif_ = crifLoader.loadCrif();
 }
 
@@ -678,6 +695,8 @@ void InputParameters::insertAnalytic(const std::string& s) {
     analytics_.insert(s);
 }
 
+void InputParameters::removeAnalytic(const std::string& s) { analytics_.erase(s); }
+
 OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& params) {
     LOG("OutputFileNameMap called");
     npvOutputFileName_ = params->get("npv", "outputFileName", false);
@@ -685,6 +704,8 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     curvesOutputFileName_ = params->get("curves", "outputFileName", false);
     scenarioDumpFileName_ = params->get("simulation", "scenariodump", false);
     scenarioOutputName_ = params->get("scenario", "scenarioOutputFile", false);
+    if (scenarioOutputName_.empty())
+        scenarioOutputName_ = params->get("scenarioStatistics", "scenarioOutputFile", false);
     cubeFileName_ = params->get("simulation", "cubeFile", false);
     mktCubeFileName_ = params->get("simulation", "aggregationScenarioDataFileName", false);
     rawCubeFileName_ = params->get("xva", "rawCubeOutputFile", false);
@@ -699,6 +720,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     jacobiInverseFileName_ = params->get("sensitivity", "jacobiInverseOutputFile", false);    
     sensitivityScenarioFileName_ = params->get("sensitivity", "scenarioOutputFile", false);    
     stressTestFileName_ = params->get("stress", "scenarioOutputFile", false);
+    stressTestCashflowFileName_ = params->get("stress", "scenarioCashflowOutputFile", false);
     stressZeroScenarioDataFileName_ = params->get("stress", "stressZeroScenarioDataFile", false);
     xvaStressTestFileName_ = params->get("xvaStress", "scenarioOutputFile", false);
     varFileName_ = params->get("parametricVar", "outputFile", false);
@@ -730,6 +752,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["jacobi"] = jacobiFileName_;
     fileNameMap_["jacobi_inverse"] = jacobiInverseFileName_;
     fileNameMap_["stress"] = stressTestFileName_;
+    fileNameMap_["stress_cashflows"] = stressTestCashflowFileName_;
     fileNameMap_["stress_ZeroStressData"] = stressZeroScenarioDataFileName_;
     fileNameMap_["xva_stress"] = xvaStressTestFileName_;
     fileNameMap_["var"] = varFileName_;

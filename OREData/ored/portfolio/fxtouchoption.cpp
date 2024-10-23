@@ -197,7 +197,7 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             QL_REQUIRE(builder, "No builder found for Swap");
             QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
                 QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-            underlying->setPricingEngine(swapBuilder->engine(domCcy, std::string(), std::string()));
+            underlying->setPricingEngine(swapBuilder->engine(domCcy, std::string(), std::string(), {}));
         }
 
         bool isLong = (positionType == Position::Long) ? true : false;
@@ -212,10 +212,11 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
         Handle<Quote> spot = market->fxRate(fgnCcy.code() + domCcy.code());
 
         auto barrierOptionWrapper = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
-            barrier, isLong, expiryDate, false, underlying, barrierType, spot, level, rebate, domCcy, start, fxIndex,
+            barrier, isLong, expiryDate, payDate, false, underlying, barrierType, spot, level, rebate, domCcy, start, fxIndex,
             cal, payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
         
         maturity_ = std::max(lastPremiumDate, payDate);
+        maturityType_ = maturity_ == lastPremiumDate ? "Last Premium Date" : "Pay Date";
 
         return barrierOptionWrapper;
     };

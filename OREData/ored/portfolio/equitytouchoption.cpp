@@ -146,7 +146,7 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         QL_REQUIRE(builder, "No builder found for Swap");
         QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        underlying->setPricingEngine(swapBuilder->engine(ccy, std::string(), std::string()));
+        underlying->setPricingEngine(swapBuilder->engine(ccy, std::string(), std::string(), {}));
     }
 
     bool isLong = (positionType == Position::Long) ? true : false;
@@ -158,13 +158,15 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         isLong ? -1.0 : 1.0, ccy, engineFactory, builder->configuration(MarketContext::pricing));
 
     Handle<Quote> spot = market->equitySpot(assetName);
+    Date settlementDate = expiryDate;
     instrument_ = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
-        barrier, isLong, expiryDate, false, underlying, barrierType, spot, level, rebate, ccy, start, eqIndex, cal, payoffAmount_,
+        barrier, isLong, expiryDate, settlementDate, false, underlying, barrierType, spot, level, rebate, ccy, start, eqIndex, cal, payoffAmount_,
         payoffAmount_, additionalInstruments, additionalMultipliers);
     npvCurrency_ = payoffCurrency_;
     notional_ = payoffAmount_;
     notionalCurrency_ = payoffCurrency_;
     maturity_ = std::max(lastPremiumDate, expiryDate);
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Last Premium Date";
 
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = cal.advance(d, 1 * Days))

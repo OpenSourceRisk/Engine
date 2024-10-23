@@ -125,7 +125,7 @@
     <xs:all>
       <xs:element type="xs:string" name="Name"/>
       <xs:element type="xs:string" name="InitialValue"/>
-      <xs:element type="xs:boolean" name="IsFixed"/>
+      <xs:element type="parametricVolatilityParameterCalibration" name="Calibration"/>
     </xs:all>
   </xs:complexType>
 
@@ -192,6 +192,7 @@
       <xs:element type="extrapolationType" name="SmileExtrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="TimeInterpolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="TimeWeighting" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:float" name="ButterflyErrorTolerance" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -667,6 +668,8 @@
       <xs:element type="xs:string" name="QuoteIndex" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="UseLastFixingDate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+      <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -708,6 +711,7 @@
       <xs:element type="xs:string" name="RecoveryRateQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="CPRQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceQuote" minOccurs="0"/>
+      <xs:element type="xs:string" name="ConversionFactor" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -1291,6 +1295,13 @@
                 </xs:all>
             </xs:complexType>
         </xs:element>
+      <xs:element name="InflationCapFloorVolatilities" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
     </xs:all>
   </xs:complexType>
 

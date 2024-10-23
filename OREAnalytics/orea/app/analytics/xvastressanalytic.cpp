@@ -88,6 +88,19 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
 
     LOG("Running XVA Stress analytic.");
 
+    SavedSettings settings;
+    
+    optional<bool> localIncTodaysCashFlows = inputs_->exposureIncludeTodaysCashFlows();
+    Settings::instance().includeTodaysCashFlows() = localIncTodaysCashFlows;
+    LOG("Simulation IncludeTodaysCashFlows is defined: " << (localIncTodaysCashFlows ? "true" : "false"));
+    if (localIncTodaysCashFlows) {
+        LOG("Exposure IncludeTodaysCashFlows is set to " << (*localIncTodaysCashFlows ? "true" : "false"));
+    }
+    
+    bool localIncRefDateEvents = inputs_->exposureIncludeReferenceDateEvents();
+    Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
+    LOG("Simulation IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
+    
     Settings::instance().evaluationDate() = inputs_->asof();
 
     QL_REQUIRE(inputs_->portfolio(), "XvaStressAnalytic::run: No portfolio loaded.");

@@ -33,8 +33,8 @@
 		<Securities>
 			<Simulate>false</Simulate>
 			<Names>
-				<Name>SECURITY_FWDEXP_20251220</Name>
-				<Name>SECURITY_cutted</Name>
+				<Name>SECURITY_1_FWDEXP_20251220</Name>
+				<Name>SECURITY_1_cutted</Name>
 			</Names>
 		</Securities>
 		<CreditStates>

@@ -76,6 +76,7 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     
     // set the maturity
     maturity_ = std::max(option_.premiumData().latestPremiumDate(), payDate);
+    maturityType_ = maturity_ == payDate ? "Pay Date" : "Option's Latest Premium Date";
 
     // fx base
     // Payoff
@@ -146,13 +147,13 @@ void BarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     const QuantLib::Handle<QuantLib::Quote>& spot = spotQuote();
     if (barrier_.levels().size() < 2)
         instWrapper = QuantLib::ext::make_shared<SingleBarrierOptionWrapper>(
-            barrier, positionType == Position::Long ? true : false, expiryDate,
+	    barrier, positionType == Position::Long ? true : false, expiryDate, payDate, 
             settleType == Settlement::Physical ? true : false, vanilla, QuantLib::ext::get<Barrier::Type>(barrierType),
             spot, barrier_.levels()[0].value(), rebate, tradeCurrency(), startDate_, index, calendar_,
             tradeMultiplier(), tradeMultiplier(), additionalInstruments, additionalMultipliers);
     else
         instWrapper = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
-            barrier, positionType == Position::Long ? true : false, expiryDate,
+            barrier, positionType == Position::Long ? true : false, expiryDate, payDate, 
             settleType == Settlement::Physical ? true : false, vanilla, QuantLib::ext::get<DoubleBarrier::Type>(barrierType),
             spot, barrier_.levels()[0].value(), barrier_.levels()[1].value(), rebate, tradeCurrency(), startDate_, index, calendar_,
             tradeMultiplier(), tradeMultiplier(), additionalInstruments, additionalMultipliers);
@@ -228,6 +229,7 @@ void FxOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::Engin
 
     QuantLib::Date expiryDate = parseDate(option().exerciseDates().front());
     maturity_ = std::max(option().premiumData().latestPremiumDate(), expiryDate);
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Option's Latest Premium Date";
 
     spotQuote_ = ef->market()->fxSpot(boughtCurrency_ + soldCurrency_);
     fxIndex_ = ef->market()->fxIndex(indexFixingName(), ef->configuration(MarketContext::pricing)).currentLink();
@@ -266,6 +268,7 @@ void EquityOptionWithBarrier::build(const QuantLib::ext::shared_ptr<ore::data::E
 
     QuantLib::Date expiryDate = parseDate(option().exerciseDates().front());
     maturity_ = std::max(option().premiumData().latestPremiumDate(), expiryDate);
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Option's Latest Premium Date";
 
     if (tradeStrike_.currency().empty())
         tradeStrike_.setCurrency(currencyStr_);

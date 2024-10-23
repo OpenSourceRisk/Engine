@@ -237,6 +237,7 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     // Copying here what is done for the index CDS option. The comment there is:
     // Align option product maturities with ISDA AANA/GRID guidance as of November 2020.
     maturity_ = std::max(cds->coupons().back()->date(), option_.premiumData().latestPremiumDate());
+    maturityType_ = maturity_ == cds->coupons().back()->date() ? "Last CDS Coupon Date" : "Option's Latest Premium Date";
 
     // Set engine on the underlying CDS.
     auto cdsBuilder = QuantLib::ext::dynamic_pointer_cast<CreditDefaultSwapEngineBuilder>(
@@ -304,7 +305,7 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     } else {
         bool isLong = positionType == Position::Long;
         bool isPhysical = settleType == Settlement::Physical;
-        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(cdsOption, isLong, exerciseDate,
+        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(cdsOption, isLong, exerciseDate, exerciseDate, 
             isPhysical, cds, 1.0, 1.0, additionalInstruments, additionalMultipliers);
     }
 }
@@ -343,6 +344,7 @@ void CreditDefaultSwapOption::buildDefaulted(const QuantLib::ext::shared_ptr<Eng
     auto qlInst = additionalInstruments.back();
     QL_REQUIRE(qlInst, "Expected a FEP payment to have been added for CDS option " << id() << ".");
     maturity_ = std::max(paymentDate, premiumPayDate);
+    maturityType_ = maturity_ == paymentDate ? "Payment Date" : "Premium Pay Date";
     additionalInstruments.clear();
     additionalMultipliers.clear();
 

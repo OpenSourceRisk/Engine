@@ -90,6 +90,7 @@ void PairwiseVarSwap::build(const QuantLib::ext::shared_ptr<ore::data::EngineFac
     npvCurrency_ = currency_;
     notionalCurrency_ = currency_;
     maturity_ = settlementDate;
+    maturityType_ = "Settlement Date";
 
     // add required fixings
     requiredFixings_.addFixingDates(valuationSchedule.dates(), indexNames_[0], maturity_);

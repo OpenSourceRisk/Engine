@@ -50,7 +50,7 @@ indices.
   types (see the trade type specific sections), or structures with the Derivative or PortfolioIndexTradeData subnode. 
     \begin{itemize}
   \item Bond: See \ref{ss:bond}, the trade data is given in a BondData sub node for a single Bond.
-  \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node.
+  \item ForwardBond: See \ref{ss:BondForward_refdata}, the trade data is given in a ForwardBondData sub node. To represent a TRS on a Bond Futures position a ForwardBond underlying is used.
   \item CBO: See \ref{ss:CBOData}, the trade data is given in a CBOData sub node.
   \item CommodityPosition: See \ref{ss:commodity_position}, the trade data is given in a CommodityPositionData sub node.
   \item ConvertibleBond: See \ref{ss:convertible_bond}, the trade data is given in a ConvertibleBondData sub
@@ -59,7 +59,8 @@ indices.
     out which underlying to set up based on the type of reference data that is set up for the ISIN referenced in the
     security id field.
   \item EquityPosition: See \ref{ss:equity_position}, the trade data is given in a EquityPositionData sub
-    node. Notice that the equities given in the basket must be available as quoted market data.
+    node. Notice that the equities given in the basket must be available as quoted market data. To represent a TRS on an Equity Futures position, one or multiple EquityPosition underlyings are used, where the equity positions cover the underlying equity of the futures position.
+
   \item EquityOptionPosition: See \ref{ss:equity_option_position}, the trade data is given in a EquityOptionPositionData
     sub node.
   \item BondPosition: See \ref{ss:bond_position}, the trade data is given in a BondBasketData sub node for multiple underlying Bonds.

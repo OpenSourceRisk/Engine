@@ -202,9 +202,12 @@ Table \ref{tab:commodity_data} lists the allowable values for \lstinline!Name! a
 \item \lstinline!Weight! [Optional]:
 The relative weight of the underlying if part of a basket. For a single underlying this can be omitted or set to 1. 
 
-Allowable values: A real number. Defaults to 1 if left blank or omitted. \\
-Notes on negative weights in the \emph{TotalReturnSwap} trade type: \\
-Negative weights for EquityOptionPositions are allowed, but not recommended. A negative weight for an EquityOptionPosition is equivalent to inverting the LongShort flag in the respective OptionData node.   \\
+Allowable values: A real number. Defaults to 1 if left blank or omitted.  A value of zero means that the underlying is excluded from the basket.
+
+Notes on negative weights in the \emph{TotalReturnSwap} trade type: 
+
+Negative weights for EquityOptionPositions are allowed, but not recommended. A negative weight for an EquityOptionPosition is equivalent to inverting the LongShort flag in the respective OptionData node. 
+
 For EquityPositions a negative weight means that flows are in the opposite direction of the Payer flag on the return leg. A use case for negative weights is for a basket of EquityPositions that include both long and short positions.
 
 \item \lstinline!IdentifierType! [Optional]:

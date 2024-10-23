@@ -104,7 +104,7 @@ public:
         string referenceCurveId;
         string incomeCurveId;
         string volatilityCurveId;
-	string priceQuoteMethod;
+	    string priceQuoteMethod;
         string priceQuoteBaseValue;
         std::vector<LegData> legData;
         string subType;
@@ -415,10 +415,10 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
 
-    const vector<QuantLib::ext::shared_ptr<Trade>>& getTrades() const { return tradecomponents_; }
+    vector<QuantLib::ext::shared_ptr<Trade>> getTrades() const;
 
 private:
-    vector<QuantLib::ext::shared_ptr<Trade>> tradecomponents_;
+    std::string tradecomponents_;
 };
 
 

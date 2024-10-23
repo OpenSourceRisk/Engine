@@ -65,6 +65,14 @@ XMLNode* NettingSetDetails::toXML(XMLDocument& doc) const {
     return nettingSetDetailsNode;
 }
 
+void NettingSetDetails::clear() {
+    nettingSetId_.clear();
+    agreementType_.clear();
+    callType_.clear();
+    initialMarginType_.clear();
+    legalEntityId_.clear();
+}
+
 const vector<string> NettingSetDetails::fieldNames(bool includeOptionalFields) {
     vector<string> fieldNames;
     if (includeOptionalFields)

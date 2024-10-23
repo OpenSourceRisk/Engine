@@ -48,22 +48,22 @@ Listing \ref{lst:swaptionvol_configuration} shows an example of a Swaption volat
         <Parameter>
           <Name>alpha</Name>
           <InitialValue>0.0050</InitialValue>
-          <IsFixed>false</IsFixed>
+          <Calibration>Implied</Calibration>
         </Parameter>
         <Parameter>
           <Name>beta</Name>
           <InitialValue>0.0</InitialValue>
-          <IsFixed>true</IsFixed>
+          <Calibration>Fixed</Calibration>
         </Parameter>
         <Parameter>
           <Name>nu</Name>
           <InitialValue>0.30</InitialValue>
-          <IsFixed>false</IsFixed>
+          <Calibration>Calibrated</Calibration>
         </Parameter>
         <Parameter>
           <Name>rho</Name>
           <InitialValue>0.0</InitialValue>
-          <IsFixed>false</IsFixed>
+          <Calibration>Calibrated</Calibration>
         </Parameter>
       </Parameters>
       <Calibration>
@@ -111,7 +111,7 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
   Antonov2015FreeBoundaryNormal, KienitzLawsonSwaynePde, FlochKennedy. If not given, defaults to Linear.
 \item ParametricSmileConfiguration: Optional. Applies to SABR only. If not given, default values are used. Allows to
   specify initial values for calibrated parameters, to exclude single parameters from calibration and to set calibration
-  parameters. See Example 60 for how to configure single value and termstructures of sabr parameters for swaption and cap curve configs.
+  parameters. See Example 59 for how to configure single value and termstructures of sabr parameters for swaption and cap curve configs.
 \item Extrapolation: Specifies the extrapolation behaviour in all dimensions. \\ Allowable values: {\tt Linear, Flat,
   None}
 \item OutputVolatilityType: Optional, defaults to input volatility type. Possible values: Normal, Lognormal (alias for
@@ -232,6 +232,7 @@ Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configura
     <DayCounter>A365</DayCounter>
     <Calendar>US,JP</Calendar>
     <Conventions>USD-JPY-FXOPTION</Conventions>
+    <ButterflyErrorTolerance>0.01</ButterflyErrorTolerance>
   </FXVolatility>
 \end{minted}
 \caption{FX option volatility configuration Smile / BFRR with 10 and 25 BF and RR}
@@ -299,6 +300,8 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
 \end{itemize}
 \item TimeInterpolation [Optional]: specifies whether time interpolation is done in volatility ({\tt V}, default) or
   variance ({\tt V2T})
+\item ButterflyErrorTolerance [Optional]: max allowed error for broker butterfly match, defaults to 0.01 relative rmse
+  of broker butterfly market premiums vs theoretical premiums
 \item TimeWeighting [Optional]: if given, a time weighting scheme is applied for time interpolation, see the
   documentation of FxOptionTimeWeighting convention for more details
 \item Expiries: Option expiries in period form. A wildcard may also be used. In the wildcard case, it will look for any
@@ -1022,6 +1025,8 @@ Listing \ref{lst:security_configuration} shows the configuration of the Securiti
 \item an optional RecoveryRateQuote. Usually a pricer will fall back on the recovery rate associated to the credit curve
   involved in the pricing if no security specific recovery rate is given. If no credit curve is given either, a zero
   recovery rate will be assumed.
+\item an optional ConversionFactor. In case of a bond future, a conversion factor might be applied. The application requires
+  a clean price settlement. Otherwise the default value of 1.0 for the conversion factor will be used.
 \item an optional PriceQuote. If the bond spread imply analytics is available, this is used to imply a SpreadQuote to
   match a given bond price. Notice that if a SpreadQuote is given explicitly in the market data, this will override an
   implied spread. Also see \ref{example:70}.
@@ -1043,6 +1048,7 @@ Note: in case of a forward bond, the convention for security specification requi
     <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
     <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
     <PriceQuote>BOND/PRICE/SECURITY_1</PriceQuote>
+    <ConversionFactor>BOND/CONVERSION_FACTOR/SECURITY_1</ConversionFactor>
   </Security>
 </Securities>
 \end{minted}

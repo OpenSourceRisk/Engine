@@ -138,6 +138,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     legPayers_ = {firstLegIsPayer};
     Currency currency = parseCurrency(currency_);
     maturity_ = bond->cashflows().back()->date();
+    maturityType_ = "Bond Cashflow Date";
     notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
 
     // first ctor is for vanilla fwd bonds, second for tlocks with a lock rate specifying the payoff
@@ -150,13 +151,14 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
                                                            settlementDirty, compensationPayment,
                                                            compensationPaymentDate, bondData_.bondNotional(), dv01);
 
-    QuantLib::ext::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
-        QuantLib::ext::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
+    QuantLib::ext::shared_ptr<FwdBondEngineBuilder> fwdBondBuilder =
+        QuantLib::ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
 
-    fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData_.creditCurveId(),
-                                                     bondData_.hasCreditRisk(), bondData_.securityId(),
-                                                     bondData_.referenceCurveId(), bondData_.incomeCurveId()));
+    fwdBond->setPricingEngine(fwdBondBuilder->engine(
+        id(), currency, envelope().additionalField("discount_curve", false, std::string()), bondData_.creditCurveId(),
+        bondData_.securityId(), bondData_.referenceCurveId(), bondData_.incomeCurveId(), settlementDirty));
+
     setSensitivityTemplate(*fwdBondBuilder);
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
 

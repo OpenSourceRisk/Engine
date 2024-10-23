@@ -30,7 +30,12 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
     std::vector<RandomVariableOp> ops;
 
     // None = 0
-    ops.push_back([](const std::vector<const RandomVariable*>& args) { return RandomVariable(); });
+    ops.push_back([](const std::vector<const RandomVariable*>& args) {
+        if (args.size() == 1)
+            return *args[0];
+        else
+            return RandomVariable();
+    });
 
     // Add = 1
     ops.push_back([](const std::vector<const RandomVariable*>& args) {
@@ -141,7 +146,7 @@ std::vector<RandomVariableGrad> getRandomVariableGradients(const Size size, cons
     // Add = 1
     grads.push_back(
         [size](const std::vector<const RandomVariable*>& args, const RandomVariable* v) -> std::vector<RandomVariable> {
-            return {RandomVariable(size, 1.0), RandomVariable(size, 1.0)};
+            return std::vector<RandomVariable>(args.size(), RandomVariable(size, 1.0));
         });
 
     // Subtract = 2

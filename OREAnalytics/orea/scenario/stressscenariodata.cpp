@@ -66,7 +66,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 SpotShiftData data;
                 data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
                 data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
-                test.recoveryRateShifts[isin] = data;
+                test.recoveryRateShifts[isin] = ext::make_shared<SpotShiftData>(data);
             }
         }
         LOG("Get survival probability shift parameters");
@@ -84,7 +84,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             QL_REQUIRE(data.shifts.size() == data.shiftTenors.size(),
                        "number of tenors and shifts does not match in survival probability stress data");
             QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in survival probability stress data");
-            test.survivalProbabilityShifts[name] = data;
+            test.survivalProbabilityShifts[name] = ext::make_shared<CurveShiftData>(data);
         }
 
         LOG("Get discount curve shift parameters");
@@ -103,7 +103,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                        "number of tenors (" << data.shiftTenors.size() << ")and shifts (" << data.shifts.size()
                                             << ") does not match in discount curve stress data for ccy = " << ccy);
             QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in discount curve stress data for ccy = " << ccy);
-            test.discountCurveShifts[ccy] = data;
+            test.discountCurveShifts[ccy] = ext::make_shared<CurveShiftData>(data);
         }
 
         LOG("Get index curve stress parameters");
@@ -123,7 +123,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                        "number of tenors (" << data.shiftTenors.size() << ")and shifts (" << data.shifts.size()
                                             << ") does not match in index curve stress data curve = " << index);
             QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in index curve stress data curve = " << index);
-            test.indexCurveShifts[index] = data;
+            test.indexCurveShifts[index] = ext::make_shared<CurveShiftData>(data);
         }
 
         LOG("Get yield curve stress parameters");
@@ -143,7 +143,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                        "number of tenors (" << data.shiftTenors.size() << ")and shifts (" << data.shifts.size()
                                             << ") does not match in yield curve stress data curve = " << name);
             QL_REQUIRE(data.shifts.size() > 0, "no shifts provided in yield curve stress data curve = " << name);
-            test.yieldCurveShifts[name] = data;
+            test.yieldCurveShifts[name] = ext::make_shared<CurveShiftData>(data);
         }
 
         LOG("Get FX spot stress parameters");
@@ -157,7 +157,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             SpotShiftData data;
             data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-            test.fxShifts[ccypair] = data;
+            test.fxShifts[ccypair] = ext::make_shared<SpotShiftData>(data);
         }
 
         LOG("Get fx vol stress parameters");
@@ -168,11 +168,57 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                  child = XMLUtils::getNextSibling(child)) {
                 string ccypair = XMLUtils::getAttribute(child, "ccypair");
                 LOG("Loading stress parameters for FX vols " << ccypair);
-                VolShiftData data;
-                data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType"));
-                data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
-                data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
-                test.fxVolShifts[ccypair] = data;
+                auto shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType"));
+                XMLNode* shiftsNode = XMLUtils::getChildNode(child, "Shifts");
+                XMLNode* shiftExpiriesNode = XMLUtils::getChildNode(child, "ShiftExpiries");
+                XMLNode* weightedShiftsNode = XMLUtils::getChildNode(child, "WeightedShifts");
+                if ((shiftsNode != nullptr) && (shiftExpiriesNode != nullptr)) {
+                    FXVolShiftData data;
+                    data.mode = FXVolShiftData::AtmShiftMode::Explicit;
+                    data.shiftType = shiftType;
+                    data.shifts = XMLUtils::getNodeValueAsDoublesCompact(shiftsNode);
+                    data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+                    QL_REQUIRE(data.shifts.size() == data.shiftExpiries.size(),
+                               "Length of shifts " << data.shifts.size() << " does not match length of shiftExpiries "
+                                                   << data.shiftExpiries.size()
+                                                   << ". Please check stresstest config for FxVol " << ccypair);
+                    test.fxVolShifts[ccypair] = ext::make_shared<FXVolShiftData>(data);
+                } else if (weightedShiftsNode != nullptr) {
+                    std::string weightingSchema = XMLUtils::getChildValue(weightedShiftsNode, "WeightingSchema", true);
+                    boost::to_lower(weightingSchema);
+                    FXVolShiftData data;
+                    data.shiftType = shiftType;
+                    if (weightingSchema == "unadjusted"){
+                        data.mode = FXVolShiftData::AtmShiftMode::Unadjusted;
+                        data.shifts = std::vector<Real>(1, XMLUtils::getChildValueAsDouble(weightedShiftsNode, "Shift", true));
+                        data.shiftExpiries =
+                            std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(weightedShiftsNode, "Tenor", true));
+                    } else if(weightingSchema == "weighted"){
+                        data.mode = FXVolShiftData::AtmShiftMode::Weighted;
+                        data.shifts =
+                            std::vector<Real>(1, XMLUtils::getChildValueAsDouble(weightedShiftsNode, "Shift", true));
+                        data.shiftExpiries =
+                            std::vector<Period>(1, XMLUtils::getChildValueAsPeriod(weightedShiftsNode, "Tenor", true));
+                        data.weights =
+                            XMLUtils::getChildrenValuesAsDoublesCompact(weightedShiftsNode, "ShiftWeights", true);
+                        data.weightTenors =
+                            XMLUtils::getChildrenValuesAsPeriods(weightedShiftsNode, "WeightTenors", true);
+                        QL_REQUIRE(data.weights.size() == data.weightTenors.size(),
+                                   "Length of weights "
+                                       << data.weights.size() << " does not match length of weightTenors "
+                                       << data.weightTenors.size() << ". Please check stresstest config for FxVol "
+                                       << ccypair);
+                        
+                    } else{
+                        QL_FAIL("FxVolStressTestData: unexpected weighting scheme, got "
+                                << weightingSchema << " expected 'unadjusted' or 'weighted', please check config for "<< ccypair);
+                    }
+                    test.fxVolShifts[ccypair] = ext::make_shared<FXVolShiftData>(data);
+                } else{
+                    QL_FAIL("Expect either Shifts and Shiftsexpiries nodes or a WeightedShifts node, please check config "
+                         "for FxVolStressScenario "
+                         << ccypair);
+                }
             }
         }
         LOG("Get Equity spot stress parameters");
@@ -186,7 +232,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                 SpotShiftData data;
                 data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
                 data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-                test.equityShifts[equity] = data;
+                test.equityShifts[equity] = ext::make_shared<SpotShiftData>(data);
             }
         }
         LOG("Get equity vol stress parameters");
@@ -201,7 +247,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType"));
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
-            test.equityVolShifts[equity] = data;
+            test.equityVolShifts[equity] = ext::make_shared<VolShiftData>(data);
         }
 
         LOG("Get swaption vol stress parameters");
@@ -242,7 +288,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                     data.shifts[shiftKey] = value;
                 }
             }
-            test.swaptionVolShifts[key] = data;
+            test.swaptionVolShifts[key] = ext::make_shared<SwaptionVolShiftData>(data);
         }
 
         LOG("Get cap/floor vol stress parameters");
@@ -280,7 +326,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
                        "StressScenarioData: CapFloor " << key << ": Mismatch between size of expiries ("
                                                        << data.shiftExpiries.size() << ") and shifts("
                                                        << data.shifts.size() << ")");
-            test.capVolShifts[key] = data;
+            test.capVolShifts[key] = ext::make_shared<CapFloorVolShiftData>(data);
         }
         LOG("Get Security spread stress parameters");
         XMLNode* securitySpreads = XMLUtils::getChildNode(testCase, "SecuritySpreads");
@@ -293,7 +339,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             SpotShiftData data;
             data.shiftType = parseShiftType(XMLUtils::getChildValue(child, "ShiftType", true));
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-            test.securitySpreadShifts[bond] = data;
+            test.securitySpreadShifts[bond] = ext::make_shared<SpotShiftData>(data);
         }
         data_.push_back(test);
         LOG("Loading stress test label " << test.label << " done");
@@ -302,7 +348,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 }
 
 void curveShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
-                         const std::map<std::string, StressTestScenarioData::CurveShiftData>& data,
+                         const std::map<std::string, ext::shared_ptr<StressTestScenarioData::CurveShiftData>>& data,
                          const std::string& identifier, const std::string& nodeName,
                          const std::string& parentNodeName = std::string()) {
     std::string name = parentNodeName.empty() ? nodeName + "s" : parentNodeName;
@@ -310,34 +356,74 @@ void curveShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
     for (const auto& [key, data] : data) {
         auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
         XMLUtils::addAttribute(doc, childNode, identifier, key);
-        XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data.shiftType));
-        XMLUtils::addGenericChildAsList(doc, childNode, "Shifts", data.shifts);
-        XMLUtils::addGenericChildAsList(doc, childNode, "ShiftTenors", data.shiftTenors);
+        XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data->shiftType));
+        XMLUtils::addGenericChildAsList(doc, childNode, "Shifts", data->shifts);
+        XMLUtils::addGenericChildAsList(doc, childNode, "ShiftTenors", data->shiftTenors);
     }
 }
 
-void volShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
-                       const std::map<std::string, StressTestScenarioData::VolShiftData>& data,
+void volShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node, const std::map<std::string, ext::shared_ptr<StressTestScenarioData::VolShiftData>>& data,
                        const std::string& identifier, const std::string& nodeName, const std::string& parentNodeName) {
     auto parentNode = XMLUtils::addChild(doc, node, parentNodeName);
     for (const auto& [key, data] : data) {
         auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
         XMLUtils::addAttribute(doc, childNode, identifier, key);
-        XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data.shiftType));
-        XMLUtils::addGenericChildAsList(doc, childNode, "Shifts", data.shifts);
-        XMLUtils::addGenericChildAsList(doc, childNode, "ShiftExpiries", data.shiftExpiries);
+        XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data->shiftType));
+        XMLUtils::addGenericChildAsList(doc, childNode, "Shifts", data->shifts);
+        XMLUtils::addGenericChildAsList(doc, childNode, "ShiftExpiries", data->shiftExpiries);
     }
 }
 
+
+void fxVolDataToXml(ore::data::XMLDocument& doc, XMLNode* node, const std::map < std::string, ext::shared_ptr<StressTestScenarioData::FXVolShiftData>>& shiftdata,
+                       const std::string& identifier, const std::string& nodeName, const std::string& parentNodeName) {
+    auto parentNode = XMLUtils::addChild(doc, node, parentNodeName);
+    for (const auto& [key, data] : shiftdata) {
+        if (data->mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit) {
+            auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
+            XMLUtils::addAttribute(doc, childNode, identifier, key);
+            XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data->shiftType));
+            XMLUtils::addGenericChildAsList(doc, childNode, "Shifts", data->shifts);
+            XMLUtils::addGenericChildAsList(doc, childNode, "ShiftExpiries", data->shiftExpiries);
+        } else if (data->mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Unadjusted) {
+            auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
+            XMLUtils::addAttribute(doc, childNode, identifier, key);
+            auto weightedShiftsNode = XMLUtils::addChild(doc, childNode, "WeightedShifts");
+            XMLUtils::addChild(doc, weightedShiftsNode, "WeightingSchema", "Unadjusted");
+            XMLUtils::addChild(doc, weightedShiftsNode, "Shift", data->shifts.front());
+            XMLUtils::addChild(doc, weightedShiftsNode, "Tenor", data->shiftExpiries.front());
+        } else if (data->mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Weighted) {
+            QL_REQUIRE(data->shifts.size() == 1, "Internal Error: WeightedShift should have only one shift, please check construction of FxVolShiftData");
+            QL_REQUIRE(
+                data->shiftExpiries.size() == 1,
+                "Internal Error: WeightedShift should have only one shift, please check construction of FxVolShiftData");
+            auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
+            XMLUtils::addAttribute(doc, childNode, identifier, key);
+            auto weightedShiftsNode = XMLUtils::addChild(doc, childNode, "WeightedShifts");
+            XMLUtils::addChild(doc, weightedShiftsNode, "WeightingSchema", "Weighted");
+            XMLUtils::addChild(doc, weightedShiftsNode, "Shift", data->shifts.front());
+            XMLUtils::addChild(doc, weightedShiftsNode, "Tenor", data->shiftExpiries.front());
+            XMLUtils::addGenericChildAsList(doc, weightedShiftsNode, "ShiftWeights", data->weights);
+            XMLUtils::addGenericChildAsList(doc, weightedShiftsNode, "WeightTenors", data->weightTenors);
+        } else {
+            QL_FAIL("internal error: unexpected FxVolShiftData, expected Explicit Shifts, Unadjusted or weighted shifts, contact dev");
+        }
+    }
+}
+
+
+
+
+
 void spotShiftDataToXml(ore::data::XMLDocument& doc, XMLNode* node,
-                        const std::map<std::string, StressTestScenarioData::SpotShiftData>& data,
+                        const std::map<std::string, ext::shared_ptr<StressTestScenarioData::SpotShiftData>>& data,
                         const std::string& identifier, const std::string& nodeName) {
     auto parentNode = XMLUtils::addChild(doc, node, nodeName + "s");
     for (const auto& [key, data] : data) {
         auto childNode = XMLUtils::addChild(doc, parentNode, nodeName);
         XMLUtils::addAttribute(doc, childNode, identifier, key);
-        XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data.shiftType));
-        XMLUtils::addChild(doc, childNode, "ShiftSize", data.shiftSize);
+        XMLUtils::addChild(doc, childNode, "ShiftType", ore::data::to_string(data->shiftType));
+        XMLUtils::addChild(doc, childNode, "ShiftSize", data->shiftSize);
     }
 }
 
@@ -364,14 +450,14 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
         for (const auto& [key, data] : test.capVolShifts) {
             XMLNode* capFloorVolNode = XMLUtils::addChild(doc, capFloorVolsNode, "CapFloorVolatility");
             XMLUtils::addAttribute(doc, capFloorVolNode, "key", key);
-            XMLUtils::addChild(doc, capFloorVolNode, "ShiftType", ore::data::to_string(data.shiftType));
+            XMLUtils::addChild(doc, capFloorVolNode, "ShiftType", ore::data::to_string(data->shiftType));
             XMLNode* shiftSizesNode = XMLUtils::addChild(doc, capFloorVolNode, "Shifts");
-            for (const auto& [tenor, shifts] : data.shifts) {
+            for (const auto& [tenor, shifts] : data->shifts) {
                 XMLUtils::addGenericChildAsList(doc, shiftSizesNode, "Shift", shifts, "tenor",
                                                 ore::data::to_string(tenor));
             }
-            XMLUtils::addGenericChildAsList(doc, capFloorVolNode, "ShiftExpiries", data.shiftExpiries);
-            XMLUtils::addGenericChildAsList(doc, capFloorVolNode, "ShiftStrikes", data.shiftStrikes);
+            XMLUtils::addGenericChildAsList(doc, capFloorVolNode, "ShiftExpiries", data->shiftExpiries);
+            XMLUtils::addGenericChildAsList(doc, capFloorVolNode, "ShiftStrikes", data->shiftStrikes);
         }
         // SwaptionVolData
         // TODO: SwaptionVolData Missing
@@ -381,15 +467,15 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
         for (const auto& [key, data] : test.swaptionVolShifts) {
             XMLNode* swaptionVolNode = XMLUtils::addChild(doc, swaptionVolsNode, "SwaptionVolatility");
             XMLUtils::addAttribute(doc, swaptionVolNode, "key", key);
-            XMLUtils::addChild(doc, swaptionVolNode, "ShiftType", ore::data::to_string(data.shiftType));
+            XMLUtils::addChild(doc, swaptionVolNode, "ShiftType", ore::data::to_string(data->shiftType));
             
             XMLNode* shiftSizesNode = XMLUtils::addChild(doc, swaptionVolNode, "Shifts");
 
-            if (data.shifts.empty()) {
-                XMLUtils::addChild(doc, shiftSizesNode, "Shift", ore::data::to_string(data.parallelShiftSize),
+            if (data->shifts.empty()) {
+                XMLUtils::addChild(doc, shiftSizesNode, "Shift", ore::data::to_string(data->parallelShiftSize),
                                    swaptionAttributeNames, {"", ""});
             } else {
-                for (const auto& [key, shift] : data.shifts) {
+                for (const auto& [key, shift] : data->shifts) {
                     const auto& [expiry, term] = key;
                     std::vector<std::string> attributeValues = {ore::data::to_string(expiry),
                                                                 ore::data::to_string(term)};
@@ -397,8 +483,8 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
                                        swaptionAttributeNames, attributeValues);
                 }
             }
-            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftExpiries", data.shiftExpiries);
-            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftTerms", data.shiftTerms);
+            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftExpiries", data->shiftExpiries);
+            XMLUtils::addGenericChildAsList(doc, swaptionVolNode, "ShiftTerms", data->shiftTerms);
             
         }
         // Credit
@@ -411,7 +497,7 @@ XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) const {
         volShiftDataToXml(doc, testNode, test.equityVolShifts, "equity", "EquityVolatility", "EquityVolatilities");
         // FX
         spotShiftDataToXml(doc, testNode, test.fxShifts, "ccypair", "FxSpot");
-        volShiftDataToXml(doc, testNode, test.fxVolShifts, "ccypair", "FxVolatility", "FxVolatilities");
+        fxVolDataToXml(doc, testNode, test.fxVolShifts, "ccypair", "FxVolatility", "FxVolatilities");
     }
     return node;
 }

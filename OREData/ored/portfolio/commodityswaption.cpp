@@ -100,11 +100,12 @@ void CommoditySwaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         Real multiplier = positionType == Position::Long ? 1.0 : -1.0;
         instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swaption, multiplier);
     } else {
-        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(swaption, positionType == Position::Long, exDate,
+        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(swaption, positionType == Position::Long, exDate, exDate,
                                                                 settleType == Settlement::Physical, swap);
     }
     // use underlying maturity independent of settlement type, following ISDA GRID/AANA guidance
     maturity_ = swap->maturityDate();
+    maturityType_ = "Underlying Maturity Date";
 }
 
 QuantLib::Real CommoditySwaption::notional() const {

@@ -21,7 +21,7 @@ If optionlet volatilities are given, no bootstrapping will be performed on the i
 
 The input volatilities may be normal, lognormal or shifted lognormal. The structure of the market quotes is provided in Table \ref{tab:capfloor_implvol_quote}.
 
-Whether the input market data are term cap volatilities or optionlet volatilities depends on the value of the \lstinline!InputType! node. This node may be set to \lstinline!TermVolatilities! for term cap volatilites or \lstinline!OptionletVolatilities! for optionlet volatilities.
+Whether the input market data are term cap volatilities or optionlet volatilities depends on the value of the \lstinline!InputType! node. This node may be set to \lstinline!TermVolatilities! for term cap volatilities or \lstinline!OptionletVolatilities! for optionlet volatilities.
 
 For term cap volatilities, the structure of the XML, i.e.\ the nodes that are necessary, used and ignored, and the way that the optionlet volatilities are stripped hinges on the value of the \lstinline!InterpolateOn! node. This node may be set to \lstinline!TermVolatilities! or \lstinline!OptionletVolatilities!. This node will be ignored if the inputs are optionlet volatilities.
 
@@ -40,7 +40,20 @@ In the following sections, we describe six XML configurations separately for cla
 \item Optionlet volatility surface.
 \end{enumerate}
 
-Listing \ref{lst:capfloorvol_atm_configuration_term} shows the layout for parameterising an ATM cap volatility curve with interpolation on term volatilities. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
+Before describing the different configurations we summarize the usage of the various interpolation fields:
+
+\begin{enumerate}
+\item If \lstinline!InterpolateOn! is set to \lstinline!TermVolatilities!, \lstinline!InterpolationMethod! is used to interpolate the term volatilities during the bootstrap and to interpolate the optionlet volatilities of the final optionlet surface. The fields \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are ignored in this case.
+\item If \lstinline!InterpolateOn! is set to \lstinline!OptionletVolatilities!, \lstinline!TimeInterpolation! and \lstinline!StrikeInterpolation! are used to interpolate optionlet volatilities both during the bootstrap and on the final optionlet surface. \lstinline!InterpolationMethod! is ignored in this case.
+\end{enumerate}
+
+% ===========================================================================
+% Term vol ATM, interpolation on term vols
+% ===========================================================================
+
+Listing \ref{lst:capfloorvol_atm_configuration_term} shows the layout for parameterising an ATM cap volatility curve
+with interpolation on term volatilities. Nodes that have no effect for this parameterisation but that are allowed by the
+schema are not referenced. The meaning of each of the nodes is as follows:
 
 \begin{itemize}
 \item
@@ -136,6 +149,10 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \caption{ATM cap floor configuration with interpolation on term volatilities.}
 \label{lst:capfloorvol_atm_configuration_term}
 \end{longlisting}
+
+% ===========================================================================
+% Term vol ATM, interpolation on optionlet vols
+% ===========================================================================
 
 Listing \ref{lst:capfloorvol_atm_configuration_opt} shows the layout for parameterising an ATM cap volatility curve with interpolation on optionlet volatilities. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
 
@@ -234,6 +251,10 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \label{lst:capfloorvol_atm_configuration_opt}
 \end{longlisting}
 
+% ===========================================================================
+% Term vol surface, interpolation on term vols
+% ===========================================================================
+
 Listing \ref{lst:capfloorvol_surface_configuration_term} shows the layout for parameterising a cap tenor by absolute cap strike volatility surface with interpolation on term volatilities. This parameterisation also allows for the inclusion of a cap floor ATM curve in combination with the surface. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
 
 \begin{itemize}
@@ -331,6 +352,10 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \label{lst:capfloorvol_surface_configuration_term}
 \end{longlisting}
 
+% ===========================================================================
+% Term vol surface, interpolation on optionlet vols
+% ===========================================================================
+
 Listing \ref{lst:capfloorvol_surface_configuration_opt} shows the layout for parameterising a cap tenor by absolute cap strike volatility surface with interpolation on optionlet volatilities. This parameterisation also allows for the inclusion of a cap floor ATM curve in combination with the surface. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
 
 \begin{itemize}
@@ -401,7 +426,8 @@ Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extr
 
 \item ParametricSmileConfiguration: Optional. Applies to SABR only. If not given, default values are used. Allows to specify initial values
   for calibrated parameters, to exclude single parameters from calibration and to set calibration parameters. See
-  listing \ref{lst:capfloorvol_parametric_smile_config}.
+  listing \ref{lst:capfloorvol_parametric_smile_config}. See Example 59 for how to configure single value and
+  termstructures of sabr parameters for swaption and cap curve configs.
 
 \item \lstinline!QuoteIncludesIndexName! [Optional]:
 If true, the quote labels that are looked up in the market data to build the surface include the index name as e.g. in \lstinline!CAPFLOOR/RATE_NVOL/USD/USD-LIBOR-3M/1Y/3M/0/0/0.01!. If false, the index name is not include as in \lstinline!CAPFLOOR/RATE_NVOL/USD/1Y/3M/0/0/0.01!. If the flag is not given, it defaults to false. Including the index name in the market quotes allows to build cap surfaces on different underlying indices with the same tenor. The flag also affects shift quotes as e.g. \lstinline!CAPFLOOR/SHIFT/USD/USD-LIBOR-3M/5Y! (index included in quote) vs. \lstinline!CAPFLOOR/SHIFT/USD/5Y! (index not included in quote).
@@ -446,6 +472,10 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \caption{Cap floor surface with interpolation on optionlet volatilities.}
 \label{lst:capfloorvol_surface_configuration_opt}
 \end{longlisting}
+
+% ===========================================================================
+% Opt vol ATM
+% ===========================================================================
 
 Listing \ref{lst:capfloorvol_optionlet_atm_configuration} shows the layout for parameterising an ATM optionlet volatility curve. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
 
@@ -536,6 +566,10 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
 \caption{ATM cap floor configuration with optionlet volatilities input.}
 \label{lst:capfloorvol_optionlet_atm_configuration}
 \end{longlisting}
+
+% ===========================================================================
+% Opt vol surface
+% ===========================================================================
 
 Listing \ref{lst:capfloorvol_optionlet_surface_configuration} shows the layout for parameterising an optionlet tenor by absolute optionlet strike volatility surface. This parameterisation also allows for the inclusion of an optionlet ATM curve in combination with the surface. Nodes that have no effect for this parameterisation but that are allowed by the schema are not referenced. The meaning of each of the nodes is as follows:
 
@@ -642,22 +676,22 @@ The type of the marketdata input. Allowable values are \lstinline!TermVolatiliti
     <Parameter>
       <Name>alpha</Name>
       <InitialValue>0.0050</InitialValue>
-      <IsFixed>false</IsFixed>
+      <Calibration>Implied</Calibration>
     </Parameter>
     <Parameter>
       <Name>beta</Name>
       <InitialValue>0.0</InitialValue>
-      <IsFixed>true</IsFixed>
+      <Calibration>Fixed</Calibration>
     </Parameter>
     <Parameter>
       <Name>nu</Name>
       <InitialValue>0.30</InitialValue>
-      <IsFixed>false</IsFixed>
+      <Calibration>Calibrated</Calibration>
     </Parameter>
     <Parameter>
       <Name>rho</Name>
       <InitialValue>0.0</InitialValue>
-      <IsFixed>false</IsFixed>
+      <Calibration>Calibrated</Calibration>
     </Parameter>
   </Parameters>
   <Calibration>

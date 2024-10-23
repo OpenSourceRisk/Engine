@@ -22,17 +22,13 @@
 
 namespace QuantExt {
 
-DiscountingEquityForwardEngine::DiscountingEquityForwardEngine(
-    const Handle<YieldTermStructure>& equityInterestRateCurve, const Handle<YieldTermStructure>& dividendYieldCurve,
-    const Handle<Quote>& equitySpot, const Handle<YieldTermStructure>& discountCurve,
-    boost::optional<bool> includeSettlementDateFlows, const Date& settlementDate, const Date& npvDate)
-    : equityRefRateCurve_(equityInterestRateCurve), divYieldCurve_(dividendYieldCurve), equitySpot_(equitySpot),
-      discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),
+DiscountingEquityForwardEngine::DiscountingEquityForwardEngine(const Handle<EquityIndex2>& equityIndex,
+    const Handle<YieldTermStructure>& discountCurve, boost::optional<bool> includeSettlementDateFlows, 
+    const Date& settlementDate, const Date& npvDate)
+    : equityIndex_(equityIndex), discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),
       settlementDate_(settlementDate), npvDate_(npvDate) {
 
-    registerWith(equityRefRateCurve_);
-    registerWith(divYieldCurve_);
-    registerWith(equitySpot_);
+    registerWith(equityIndex_);
     registerWith(discountCurve_);
 }
 
@@ -40,7 +36,7 @@ void DiscountingEquityForwardEngine::calculate() const {
 
     Date npvDate = npvDate_;
     if (npvDate == Null<Date>()) {
-        npvDate = divYieldCurve_->referenceDate();
+        npvDate = equityIndex_->equityDividendCurve()->referenceDate();
     }
     Date settlementDate = settlementDate_;
     if (settlementDate == Null<Date>()) {
@@ -49,18 +45,45 @@ void DiscountingEquityForwardEngine::calculate() const {
 
     results_.value = 0.0;
 
-    if (!detail::simple_event(arguments_.maturityDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeToday)) {
         Real lsInd = ((arguments_.longShort == Position::Long) ? 1.0 : -1.0);
         Real qty = arguments_.quantity;
         Date maturity = arguments_.maturityDate;
         Real strike = arguments_.strike;
-        Real forwardPrice =
-            equitySpot_->value() * divYieldCurve_->discount(maturity) / equityRefRateCurve_->discount(maturity);
-        DiscountFactor df = discountCurve_->discount(maturity);
+        Real forwardPrice = equityIndex_->fixing(maturity);
+        DiscountFactor df = discountCurve_->discount(arguments_.payDate);
         results_.value = (lsInd * qty) * (forwardPrice - strike) * df;
-
+        Real fxRate = 1.0;
+        if (arguments_.payCurrency != arguments_.currency) {
+            QL_REQUIRE(arguments_.fxIndex != nullptr, "DiscountingEquityForwardEngine requires an FxIndex to convert "
+                                                      "from underyling currency ("
+                                                          << arguments_.currency << ") to payCurrency ("
+                                                          << arguments_.payCurrency << ")");
+            QL_REQUIRE(arguments_.fixingDate != Date(),
+                       "DiscountingEquityForwardEngine: Payment and Underlying currency don't match, require an fx "
+                       "fixing date for settlement conversion");
+            QL_REQUIRE(arguments_.currency == arguments_.fxIndex->sourceCurrency(),
+                       "DiscountingEquityForwardEngine: Source currency of the FX Index ("
+                           << arguments_.fxIndex->sourceCurrency() << ") doesnt match underlying currency ("
+                           << arguments_.currency << ")");
+            QL_REQUIRE(arguments_.payCurrency == arguments_.fxIndex->targetCurrency(),
+                       "DiscountingEquityForwardEngine: Target currency of the FX Index ("
+                           << arguments_.fxIndex->targetCurrency() << ") doesnt match pay currency ("
+                           << arguments_.payCurrency << ")");
+            fxRate = arguments_.fxIndex->fixing(arguments_.fixingDate);
+            results_.value *= fxRate;
+        }
+        results_.additionalResults["valueDate"] = arguments_.maturityDate;
+        results_.additionalResults["paymentDate"] = arguments_.payDate;
+        results_.additionalResults["discountFactor"] = df;
         results_.additionalResults["forwardPrice"] = forwardPrice;
-        results_.additionalResults["currentNotional"] = forwardPrice * strike;
+        results_.additionalResults["underlyingCcy"] = arguments_.currency;
+        results_.additionalResults["currentNotional"] = qty * forwardPrice * fxRate;
+        results_.additionalResults["currentNotionalCurrency"] = arguments_.payCurrency;
+        results_.additionalResults["fxRate"] = fxRate;
+        results_.additionalResults["fxFixingDate"] = arguments_.fixingDate;
+        results_.additionalResults["payCcy"] = arguments_.payCurrency;
     }
 } // calculate
 
