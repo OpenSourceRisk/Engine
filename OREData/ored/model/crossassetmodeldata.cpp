@@ -790,7 +790,7 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, crossAssetModelNode, "Measure", measure_);
     XMLUtils::addChild(doc, crossAssetModelNode, "Discretization",
                        discretization_ == CrossAssetModel::Discretization::Exact ? "Exact" : "Euler");
-    XMLUtils::addChild(doc, crossAssetModelNode, "SalvagingAlgorithm", salvagingAlgorithmToString(salvagingAlgorithm_));
+    XMLUtils::addChild(doc, crossAssetModelNode, "SalvagingAlgorithm", ore::data::to_string(salvagingAlgorithm_));
     XMLNode* interestRateModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InterestRateModels");
     for (Size irConfigs_Iterator = 0; irConfigs_Iterator < irConfigs_.size(); irConfigs_Iterator++) {
         XMLNode* lgmNode = irConfigs_[irConfigs_Iterator]->toXML(doc);
@@ -850,20 +850,6 @@ QuantExt::CrossAssetModel::Discretization parseDiscretization(const string& s) {
         return it->second;
     } else {
         QL_FAIL("Cannot convert \"" << s << "\" to QuantExt::CrossAssetStateProcess::discretization");
-    }
-}
-
-string salvagingAlgorithmToString(const QuantLib::SalvagingAlgorithm::Type& alg) {
-    static map<SalvagingAlgorithm::Type, string> m = {{SalvagingAlgorithm::None, "None"},
-                                                      {SalvagingAlgorithm::Spectral, "Spectral"},
-                                                      {SalvagingAlgorithm::Hypersphere, "Hypersphere"},
-                                                      {SalvagingAlgorithm::LowerDiagonal, "LowerDiagonal"},
-                                                      {SalvagingAlgorithm::Higham, "Higham"}};
-    auto it = m.find(alg);
-    if (it != m.end()) {
-        return it->second;
-    } else {
-        QL_FAIL("Cannot convert \"" << alg << "\" to string");
     }
 }
 

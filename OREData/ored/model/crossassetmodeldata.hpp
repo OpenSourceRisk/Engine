@@ -330,7 +330,6 @@ private:
 };
 
 CrossAssetModel::Discretization parseDiscretization(const string& s);
-string salvagingAlgorithmToString(const QuantLib::SalvagingAlgorithm::Type& alg);
 
 } // namespace data
 } // namespace ore
