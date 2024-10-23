@@ -16,7 +16,7 @@
       <xs:element type="xs:string" name="Name"/>
       <xs:element type="xs:string" name="ISOCode"/>
       <xs:element type="xs:string" name="MinorUnitCodes" minOccurs="0"/>
-      <xs:element type="xs:integer" name="NumericCode"/>
+      <xs:element type="xs:integer" name="NumericCode" minOccurs="0"/>
       <xs:element type="xs:string" name="Symbol"/>
       <xs:element type="xs:string" name="FractionSymbol"/>
       <xs:element type="xs:integer" name="FractionsPerUnit"/>
