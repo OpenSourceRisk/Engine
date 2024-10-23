@@ -53,6 +53,7 @@ namespace data {
       "                 {BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN\n"
       "    	           IF KnockedOut == 0 THEN\n"
       "                  KnockedIn = 1;\n"
+      "                  Triggered = 1;\n"
       "  	           END;\n"
       "              END;\n"
       "\n"  
@@ -67,6 +68,7 @@ namespace data {
       "                     END;\n"
       "                   END;\n"
       "                   KnockedOut = 1;\n"
+      "                   Triggered = 1;\n"
       "                 END;\n"
       "              END;\n"
       "\n"
@@ -514,7 +516,7 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
         {{"currentNotional", "currentNotional"},
          {"notionalCurrency", "PayCurrency"},
          {"Active", "Active"},
-         {"TriggerProbability", "Exercised"},
+         {"TriggerProbability", "Triggered"},
          {"ExerciseProbability", "Exercised"},
          {"TransatlanticActive", "TransatlanticActive"}},
         {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlyings", {"Strike", "BarrierLevels"})});
