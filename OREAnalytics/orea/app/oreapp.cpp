@@ -322,7 +322,6 @@ void OREApp::analytics() {
         }
 
         CONSOLE("OK");
-
     }
     catch (std::exception& e) {
         ostringstream oss;
@@ -1052,6 +1051,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("stress", "precision", false);
         if (tmp != "") {
             setStressPrecision((Size)parseReal(tmp));
+        }
+        tmp = params_->get("stress", "generateCashflows", false);
+        if (tmp != "") {
+            setStressGenerateCashflows(parseBool(tmp));
         }
     }
 
