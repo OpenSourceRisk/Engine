@@ -30,7 +30,10 @@
 
 #include <ql/cashflow.hpp>
 #include <ql/exercise.hpp>
+#include <ql/time/businessdayconvention.hpp>
+#include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
+#include <ql/time/period.hpp>
 
 namespace ore {
 namespace data {
@@ -42,7 +45,7 @@ namespace data {
 class OptionData : public XMLSerializable {
 public:
     //! Default constructor
-    OptionData() : payoffAtExpiry_(true), automaticExercise_(false) {}
+    OptionData() : payoffAtExpiry_(true), automaticExercise_(false), midCouponExercise_(false) {}
     //! Constructor
     OptionData(string longShort, string callPut, string style, bool payoffAtExpiry, vector<string> exerciseDates,
                string settlement = "Cash", string settlementMethod = "", const PremiumData& premiumData = {},
@@ -54,7 +57,8 @@ public:
                string payoffType = "", string payoffType2 = "",
                const boost::optional<bool>& automaticExercise = boost::none,
                const boost::optional<OptionExerciseData>& exerciseData = boost::none,
-               const boost::optional<OptionPaymentData>& paymentData = boost::none)
+               const boost::optional<OptionPaymentData>& paymentData = boost::none,
+               const bool midCouponExercise = false)
         : longShort_(longShort), callPut_(callPut), payoffType_(payoffType), payoffType2_(payoffType2), style_(style),
           payoffAtExpiry_(payoffAtExpiry), exerciseDates_(exerciseDates), noticePeriod_(noticePeriod),
           noticeCalendar_(noticeCalendar), noticeConvention_(noticeConvention), settlement_(settlement),
@@ -63,7 +67,8 @@ public:
           exerciseFeeSettlementPeriod_(exerciseFeeSettlementPeriod),
           exerciseFeeSettlementCalendar_(exerciseFeeSettlementCalendar),
           exerciseFeeSettlementConvention_(exerciseFeeSettlementConvention), exercisePrices_(exercisePrices),
-          automaticExercise_(automaticExercise), exerciseData_(exerciseData), paymentData_(paymentData) {}
+          automaticExercise_(automaticExercise), exerciseData_(exerciseData), paymentData_(paymentData),
+          midCouponExercise_(midCouponExercise) {}
 
     //! \name Inspectors
     //@{
@@ -91,6 +96,7 @@ public:
     boost::optional<bool> automaticExercise() const { return automaticExercise_; }
     const boost::optional<OptionExerciseData>& exerciseData() const { return exerciseData_; }
     const boost::optional<OptionPaymentData>& paymentData() const { return paymentData_; }
+    const bool midCouponExercise() const { return midCouponExercise_; }
     //@}
 
     //! \name Setters
@@ -141,6 +147,7 @@ private:
     boost::optional<bool> automaticExercise_;
     boost::optional<OptionExerciseData> exerciseData_;
     boost::optional<OptionPaymentData> paymentData_;
+    bool midCouponExercise_;
 };
 
 // Helper class to build an exercise instance for Bermudan swaptions and related instruments from given option data.
@@ -171,12 +178,19 @@ public:
     // only for exercised options: exercise fee amount or null
     QuantLib::ext::shared_ptr<QuantLib::CashFlow> feeSettlement() const { return feeSettlement_; }
 
+    const QuantLib::Period& noticePeriod() const { return noticePeriod_; }
+    const QuantLib::Calendar& noticeCalendar() const { return noticeCalendar_; }
+    const QuantLib::BusinessDayConvention& noticeConvention() const { return noticeConvention_; }
+
 private:
     QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise_;
 
     std::vector<QuantLib::Date> exerciseDates_;
     std::vector<QuantLib::Date> noticeDates_;
     std::vector<QuantLib::Date> settlementDates_;
+    QuantLib::Period noticePeriod_;
+    QuantLib::Calendar noticeCalendar_;
+    QuantLib::BusinessDayConvention noticeConvention_;
 
     bool isExercised_ = false;
     QuantLib::Date exerciseDate_;
