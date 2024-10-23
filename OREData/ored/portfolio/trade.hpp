@@ -173,6 +173,10 @@ public:
     /*! returns the sensi template, e.g. "IR_Analytical" for this trade,
         this is only available after build() has been called */
     const std::string& sensitivityTemplate() const;
+
+    /*! return the product(s),model,engine triplet(s) of the engine builders of this trade,
+       this is only available after build() has been called */
+    const std::set<std::tuple<std::set<std::string>, std::string, std::string>>& productModelEngine() const;
     //@}
 
     //! \name Utility
@@ -197,6 +201,15 @@ public:
         return savedNumberOfPricings_ + (instrument_ != nullptr ? instrument_->getNumberOfPricings() : 0);
     }
 
+    /* add additional data on product types, model, engine from builder */
+    void addProductModelEngine(const EngineBuilder& builder);
+    void addProductModelEngine(
+        const std::set<std::tuple<std::set<std::string>, std::string, std::string>>& productModelEngine);
+
+    /* sets the sensitivity template for this trade */
+    void setSensitivityTemplate(const EngineBuilder& builder);
+    void setSensitivityTemplate(const std::string& id);
+
 protected:
     string tradeType_; // class name of the derived class
     QuantLib::ext::shared_ptr<InstrumentWrapper> instrument_;
@@ -211,6 +224,7 @@ protected:
     string issuer_;
     string sensitivityTemplate_;
     bool sensitivityTemplateSet_ = false;
+    std::set<std::tuple<std::set<std::string>, std::string, std::string>> productModelEngine_;
 
     std::size_t savedNumberOfPricings_ = 0;
     boost::timer::nanosecond_type savedCumulativePricingTime_ = 0;
@@ -234,9 +248,8 @@ protected:
        parameter resultLegId. */
     void setLegBasedAdditionalData(const Size legNo, Size resultLegId = Null<Size>()) const;
 
-    /* sets the sensitivity template for this trade */
-    void setSensitivityTemplate(const EngineBuilder& builder);
-    void setSensitivityTemplate(const std::string& id);
+    // update additional data based on stored product, model, engine
+    void updateProductModelEngineAdditionalData();
 
 private:
     string id_;

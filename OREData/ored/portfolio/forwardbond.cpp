@@ -160,6 +160,7 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
         bondData_.securityId(), bondData_.referenceCurveId(), bondData_.incomeCurveId(), settlementDirty));
 
     setSensitivityTemplate(*fwdBondBuilder);
+    addProductModelEngine(*fwdBondBuilder);
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
 
     additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData_.bondNotional();

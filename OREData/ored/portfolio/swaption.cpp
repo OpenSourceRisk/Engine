@@ -175,6 +175,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                                                envelope().additionalField("discount_curve", false),
                                                envelope().additionalField("security_spread", false), {}));
         setSensitivityTemplate(*builder);
+        addProductModelEngine(*builder);
         instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
         maturity_ = std::max(maturity_, lastPremiumDate);
@@ -208,6 +209,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
         setSensitivityTemplate(*builder);
+        addProductModelEngine(*builder);
         maturity_ = std::max(maturity_, lastPremiumDate);
         if (maturity_ == lastPremiumDate)
             maturityType_ = "Last Premium Date";
@@ -390,6 +392,7 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
     swaption->setPricingEngine(swaptionEngine);
     setSensitivityTemplate(*swaptionBuilder);
+    addProductModelEngine(*swaptionBuilder);
 
     // 9.4 build underlying swaps, add premiums, build option wrapper
 

@@ -368,6 +368,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         if (sensitivityTemplate_.empty()) {
             setSensitivityTemplate(underlying_[i]->sensitivityTemplate());
         }
+        addProductModelEngine(underlying_[i]->productModelEngine());
     }
 
     // propagate additional data from underlyings to trs trade

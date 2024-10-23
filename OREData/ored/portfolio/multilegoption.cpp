@@ -146,6 +146,7 @@ void MultiLegOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
                                   underlyingIndices);
     multiLegOption->setPricingEngine(engine);
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     DLOG("Pricing engine set.")
 
