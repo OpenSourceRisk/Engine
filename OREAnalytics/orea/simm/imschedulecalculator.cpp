@@ -511,11 +511,9 @@ void IMScheduleCalculator::populateResults(const NettingSetDetails& nettingSetDe
     Real scheduleMarginCalc = grossMarginCalc * (0.4 + 0.6 * netToGrossCalc);
 
     // Populate higher level results
-    imScheduleResults_.at(side)
-        .at(nettingSetDetails)
-        .at(regulation)
-        .add(ProductClass::All, calculationCcy_, grossMarginCalc, grossRCCalc, netRCCalc, netToGrossCalc,
-             scheduleMarginCalc);
+    imScheduleResults_[side][nettingSetDetails][regulation].add(ProductClass::All, calculationCcy_, grossMarginCalc,
+                                                                grossRCCalc, netRCCalc, netToGrossCalc,
+                                                                scheduleMarginCalc);
 }
 
 void IMScheduleCalculator::populateFinalResults(const map<SimmSide, map<NettingSetDetails, CrifRecord::Regulation>>& winningRegs) {
