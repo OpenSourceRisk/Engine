@@ -57,10 +57,7 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
         std::set<std::string> minorUnitCodes(tmp.begin(), tmp.end());
         try {
             DLOG("Loading external currency configuration for " << isoCode);
-            Integer numericCode = parseInteger("999");
-            if (XMLUtils::getChildValue(node, "NumericCode", false) != "") {
-                numericCode = parseInteger(XMLUtils::getChildValue(node, "NumericCode", false));
-            } 
+            Integer numericCode = parseInteger(XMLUtils::getChildValue(node, "NumericCode", false, "999"));
             string symbol = XMLUtils::getChildValue(node, "Symbol", false);
             string fractionSymbol = XMLUtils::getChildValue(node, "Symbol", false);
             Integer fractionsPerUnit = parseInteger(XMLUtils::getChildValue(node, "FractionsPerUnit", false));
