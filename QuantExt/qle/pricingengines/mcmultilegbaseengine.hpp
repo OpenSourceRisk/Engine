@@ -72,7 +72,7 @@ class McMultiLegBaseEngine {
 public:
     enum RegressorModel { Simple, LaggedFX };
 
-protected:
+//protected:
     /*! The npv is computed in the model's base currency, discounting curves are taken from the model. simulationDates
         are additional simulation dates. The cross asset model here must be consistent with the multi path that is the
         input to AmcCalculator::simulatePath().
@@ -178,6 +178,11 @@ protected:
         std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
         Array regressionCoeffs_;
 
+        Size basisDim_;
+        Size basisOrder_;
+        LsmBasisSystem::PolynomialType basisType_;
+        Size basisSystemSizeBound_;
+
         friend class boost::serialization::access;
         template <class Archive> void serialize(Archive& ar, const unsigned int version);
     };
@@ -185,6 +190,7 @@ protected:
     // the implementation of the amc calculator interface used by the amc valuation engine
     class MultiLegBaseAmcCalculator : public AmcCalculator {
     public:
+        MultiLegBaseAmcCalculator() = default;
         MultiLegBaseAmcCalculator(
             const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
             const std::vector<Real>& cashSettlementTimes, const std::set<Real>& exerciseXvaTimes,
@@ -273,6 +279,6 @@ protected:
 // the IDE suggests adding a hint.cpp file, the official documentation requires that the macros be included in "the same source module that includes any of the archive class headers
 // however that did not solve the issue.
 //BOOST_CLASS_EXPORT_KEY(QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator)
-//BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator)
+//BOOST_CLASS_EXPORT_KEY(QuantExt::McMultiLegBaseEngine::RegressionModel)
 
 } // namespace QuantExt

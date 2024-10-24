@@ -41,6 +41,10 @@
 #include <ql/indexes/swapindex.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/array.hpp>
+
 namespace QuantExt {
 
 McMultiLegBaseEngine::McMultiLegBaseEngine(
@@ -1288,6 +1292,7 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
 }
 
 template <class Archive> void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(Archive& ar, const unsigned int version) {
+    ar.template register_type<McMultiLegBaseEngine::MultiLegBaseAmcCalculator>();
     ar& boost::serialization::base_object<AmcCalculator>(*this);
 
     ar& externalModelIndices_;
@@ -1388,6 +1393,10 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
     if (!regressor.empty()) {
 
         // get the basis functions
+        basisDim_ = regressor.size();
+        basisOrder_ = polynomOrder;
+        basisType_ = polynomType;
+        basisSystemSizeBound_ = Null<Size>();
 
         basisFns_ = multiPathBasisSystem(regressor.size(), polynomOrder, polynomType, Null<Size>());
 
@@ -1507,8 +1516,7 @@ McMultiLegBaseEngine::RegressionModel::apply(const Array& initialState,
     return conditionalExpectation(regressor, basisFns_, regressionCoeffs_);
 }
 
-template <class Archive>
-void McMultiLegBaseEngine::RegressionModel::serialize(Archive& ar, const unsigned int version) {
+template <class Archive> void McMultiLegBaseEngine::RegressionModel::serialize(Archive& ar, const unsigned int version) {
     ar& observationTime_;
     ar& regressionVarianceCutoff_;
     ar& isTrained_;
@@ -1527,4 +1535,21 @@ void McMultiLegBaseEngine::RegressionModel::serialize(Archive& ar, const unsigne
         basisFns_ = multiPathBasisSystem(basisDim_, basisOrder_, basisType_, basisSystemSizeBound_);
     }
 }
+
+//template void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(boost::archive::binary_oarchive& ar,
+//                                                                         const unsigned int version);
+//template void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(boost::archive::binary_iarchive& ar,
+//                                                                         const unsigned int version);
+template void QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(boost::archive::binary_iarchive& ar,
+                                                                         const unsigned int version);
+template void QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(boost::archive::binary_oarchive& ar,
+                                                                         const unsigned int version);
+template void QuantExt::McMultiLegBaseEngine::RegressionModel::serialize(boost::archive::binary_iarchive& ar,
+                                                                         const unsigned int version);
+template void QuantExt::McMultiLegBaseEngine::RegressionModel::serialize(boost::archive::binary_oarchive& ar,
+                                                                         const unsigned int version);
+
 } // namespace QuantExt
+
+BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator)
+BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::McMultiLegBaseEngine::RegressionModel)

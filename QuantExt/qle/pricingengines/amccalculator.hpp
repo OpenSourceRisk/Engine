@@ -31,6 +31,8 @@
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/assume_abstract.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 namespace QuantExt {
 
@@ -52,9 +54,12 @@ public:
                  const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
                  const std::vector<size_t>& relevantPathIndex, const std::vector<size_t>& relevantTimeIndex) = 0;
 
-    //friend class boost::serialization::access;
+    friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version) {};
 };
+
+template void AmcCalculator::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void AmcCalculator::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(AmcCalculator)
 

@@ -430,7 +430,9 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                     LOG("Deserialising AMC calculator from file for trade " << trade.first);
                     std::ifstream is(filename, std::ios::binary);
                     boost::archive::binary_iarchive ia(is, boost::archive::no_header);
-                    ia >> amcCalc;
+                    auto tmp = QuantLib::ext::dynamic_pointer_cast<McMultiLegBaseEngine::MultiLegBaseAmcCalculator>(amcCalc);
+                    
+                    ia >> tmp;
                     is.close();
                 } catch (const std::exception& e) {
                     StructuredTradeErrorMessage(trade.second, "Error extracting AMC calculator from file", e.what()).log();
@@ -446,7 +448,9 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 LOG("Serialising AMC calculator for trade " << trade.first);
                 std::ofstream os(filename, std::ios::binary);
                 boost::archive::binary_oarchive oa(os, boost::archive::no_header);
-                oa << amcCalc;
+
+                auto tmp = QuantLib::ext::dynamic_pointer_cast<McMultiLegBaseEngine::MultiLegBaseAmcCalculator>(amcCalc);
+                oa << tmp;
                 os.close();
             }
 
