@@ -574,6 +574,7 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
 
         Size n_swvol_term = simMarketData_->swapVolTerms(key).size();
         Size n_swvol_exp = simMarketData_->swapVolExpiries(key).size();
+        Size n_swvol_strike = simMarketData_->swapVolStrikeSpreads(key).size();
 
         vector<vector<Real>> volData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
         vector<Real> volExpiryTimes(n_swvol_exp, 0.0);
@@ -639,14 +640,16 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
         }
 
         // add shifted vol data to the scenario
-        for (Size jj = 0; jj < n_swvol_exp; ++jj) {
-            for (Size kk = 0; kk < n_swvol_term; ++kk) {
-                Size idx = jj * n_swvol_term + kk;
-                RiskFactorKey rfkey(RiskFactorKey::KeyType::SwaptionVolatility, key, idx);
-                if (stressData_->useSpreadedTermStructures()) {
-                    scenario->add(rfkey, shiftedVolData[jj][kk] - volData[jj][kk]);
-                } else {
-                    scenario->add(rfkey, shiftedVolData[jj][kk]);
+        for (Size ii = 0; ii < n_swvol_strike; ++ii) {
+            for (Size jj = 0; jj < n_swvol_exp; ++jj) {
+                for (Size kk = 0; kk < n_swvol_term; ++kk) {
+                    Size idx = jj * n_swvol_term * n_swvol_strike + kk * n_swvol_strike + ii;
+                    RiskFactorKey rfkey(RiskFactorKey::KeyType::SwaptionVolatility, key, idx);
+                    if (stressData_->useSpreadedTermStructures()) {
+                        scenario->add(rfkey, shiftedVolData[jj][kk] - volData[jj][kk]);
+                    } else {
+                        scenario->add(rfkey, shiftedVolData[jj][kk]);
+                    }
                 }
             }
         }
