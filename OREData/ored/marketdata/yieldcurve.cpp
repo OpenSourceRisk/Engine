@@ -1118,7 +1118,7 @@ void YieldCurve::buildDiscountCurve() {
         marketData = loader_.get(*wildcard, asofDate_);
     } else {
         std::ostringstream ss;
-        ss << MarketDatum::InstrumentType::DISCOUNT << "/" << MarketDatum::QuoteType::RATE << "/" << currency_ << "/*";
+        ss << MarketDatum::InstrumentType::DISCOUNT << "/" << MarketDatum::QuoteType::RATE << "/" << currency_ << "/" << curveConfig_->curveID() << "/*";
         Wildcard w(ss.str());
         marketData = loader_.get(w, asofDate_);
     }
