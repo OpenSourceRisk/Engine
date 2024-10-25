@@ -5146,7 +5146,7 @@ There are two methods in ORE for equity volatility simulation:
   explicit moneyness levels for simulation should be provided.
 \end{itemize}
 
-Swaption volatilities are taken to be a surface by default. To simulate a swaption volatility cube with smile the xml node {\tt <Cube> } must be supplied.
+Swaption volatilities are taken to be a surface by default.
 There are two methods in ORE for swaption volatility cube simulation: 
 \begin{itemize}
 \item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
@@ -5234,9 +5234,7 @@ StickyStrike.
     <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
     <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
     <SimulateATMOnly>false</SimulateATMOnly>
-    <Cube>
-     <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
-    </Cube>
+    <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
     <!-- Sets a new daycounter for just the EUR swaptionVolatility surface -->
     <DayCounter ccy="EUR">ACT/ACT</DayCounter> 
   </SwaptionVolatilities> 
