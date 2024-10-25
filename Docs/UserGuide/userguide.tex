@@ -3788,6 +3788,9 @@ manipulate the market data input into ORE and re-run the entire ORE process mult
 
 The generated outputs are the xva and exposure reports under each scenario.
 
+When running XVA stress its recommended to enable the SwaptionVolatilities simulation (see \ref{sec:simulation}), otherwise only ATM volatilities will be used for 
+calibrating the Cross-Asset-Model and one will observe a offset between the BASE SCENARIO value and a normal XVA Analytic run.
+
 %--------------------------------------------------------------------
 \subsection{XVA Bump \& Revalue Sensitivities}% Example 68
 \label{example:68}
@@ -3800,6 +3803,9 @@ computes the xva and exposure measures under each shifted market condition.
 The aggregation of the results to sensitivites need to handled outside of ORE. 
 These external computed sensitivites can be converted to par sensitivities with the 
 zero-to-par conversion analytic (see \ref{example:50}).
+
+When running XVA Bump \& Revalue Sensitivities its recommended to enable the SwaptionVolatilities simulation, otherwise only ATM volatilities will be used for 
+calibrating the Cross-Asset-Model and one will observe a offset between the BASE SCENARIO value and a normal XVA Analytic run.
 
 %--------------------------------------------------------------------
 \subsection{Zero Rate Shifts To Par Shifts}% Example 69
