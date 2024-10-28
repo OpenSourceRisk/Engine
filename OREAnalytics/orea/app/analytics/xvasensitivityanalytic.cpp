@@ -140,8 +140,8 @@ void XvaSensitivityAnalyticImpl::runSensitivity(
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
             auto newAnalytic = ext::make_shared<XvaAnalytic>(
-                inputs_, (label == "BASE" ? nullptr : scenario),
-                (label == "BASE" ? nullptr : analytic()->configurations().simMarketParams));
+                inputs_, scenario,
+                analytic()->configurations().simMarketParams);
             CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
