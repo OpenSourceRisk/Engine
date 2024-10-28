@@ -502,6 +502,17 @@ void RandomVariable::expand() {
     stopDataStats(n_);
 }
 
+bool RandomVariable::isfinite() const {
+    if (deterministic_)
+        return std::isfinite(constantData_);
+    for (Size i = 0; i < n_; ++i) {
+        if (!std::isfinite(data_[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void RandomVariable::checkTimeConsistencyAndUpdate(const Real t) {
     QL_REQUIRE((time_ == Null<Real>() || t == Null<Real>()) || QuantLib::close_enough(time_, t),
                "RandomVariable: inconsistent times " << time_ << " and " << t);
