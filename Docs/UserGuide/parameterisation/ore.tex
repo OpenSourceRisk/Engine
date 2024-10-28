@@ -636,12 +636,11 @@ shows an example.
 \label{lst:ore_xva_sensi}
 \end{listing}
 
-For both analytics ORE reuses the parameterisations of the exposure and XVA analtyic. One need to setup those analytics as usual but one can deactivate them. See listings 
-see listings \ref{lst:ore_xva} and \ref{lst:ore_simulation}. If set to active, ORE will run the 
+For both analytics ORE reuses the parameterisations of the exposure and XVA analtyic. One need to setup those analytics as usual but one can deactivate them. See listings \ref{lst:ore_xva} and \ref{lst:ore_simulation}. If set to active, ORE will run the 
 regular XVA analytic and the XVA sensitivity or XVA stress analytic respectively.
 
-\medskip The {\tt XVA explain} 'analytic' provide the computation of the market implied changes of the value adjustment 
-changes $XVA(t_0, marketdata(t_1)) - XVA(t_0, marketdata(t_0))$ between to evaluation dates. Listing \ref{lst:ore_xva_explain}
+\medskip The {\tt XVA explain} 'analytic' provide the computation of the market implied changes of the value adjustments 
+between to evaluation dates $XVA(t_0, marketdata(t_1)) - XVA(t_0, marketdata(t_0))$. Listing \ref{lst:ore_xva_explain}
 shows a typical configuration for XVA explain calculation.
 
 \begin{listing}[H]
@@ -678,6 +677,6 @@ The parameters have the following interpretation:
   \item {\tt mporCalendar:} Calendar used to ensure that $t_1$ is a valid business day. 
 \end{itemize}
 
-ORE reuses the parameterisations of the exposure and XVA analtyic. One need to setup those analytics as usual but one can deactivate them. See listings see listings 
+ORE reuses the parameterisations of the exposure and XVA analtyic. One need to setup those analytics as usual but one can deactivate them. See listings 
 \ref{lst:ore_xva} and \ref{lst:ore_simulation}. If set to active, ORE will run the 
 regular XVA analytic and the XVA sensitivity or XVA stress analytic respectively.
