@@ -3788,6 +3788,11 @@ manipulate the market data input into ORE and re-run the entire ORE process mult
 
 The generated outputs are the xva and exposure reports under each scenario.
 
+The XVA stress analytic replaces the todaysMarket with a SimulationMarket during the XVA calculation. For some risk factors the simulationMarket behaves 
+different as the todaysMarket. Depending on the simulation and stress scenario settings it could use different tenors when building curves 
+or use only the ATM volatilities. It is recommended to activate UseSpreadedTermStructures and simulate SwaptionVolatilities for the 
+XVA stress run.
+
 %--------------------------------------------------------------------
 \subsection{XVA Bump \& Revalue Sensitivities}% Example 68
 \label{example:68}
@@ -3801,6 +3806,12 @@ The aggregation of the results to sensitivites need to handled outside of ORE.
 These external computed sensitivites can be converted to par sensitivities with the 
 zero-to-par conversion analytic (see \ref{example:50}).
 
+The XVA sensitivity analytic replaces the todaysMarket with a SimulationMarket during the XVA calculation. For some risk factors the simulationMarket behaves 
+different as the todaysMarket. Depending on the simulation and sensitivity settings it could use different tenors when building curves 
+or use only the ATM volatilities. It is recommended to activate UseSpreadedTermStructures and simulate SwaptionVolatilities for the 
+XVA Sensitivity run.
+
+
 %--------------------------------------------------------------------
 \subsection{Zero Rate Shifts To Par Shifts}% Example 69
 \label{example:69}
@@ -3811,9 +3822,19 @@ ORE applies the zero rate shifts to the zero curves and computes the resulting s
 The zero rate shifts are defined as stresstests and the par instruments are defined in the usual sensitivity configuration.
 
 %--------------------------------------------------------------------
-\subsection{TODO: XVA Explain}% Example 70
+\subsection{XVA Explain}% Example 70
 \label{example:70}
 %--------------------------------------------------------------------
+
+The example in folder {\\ Examples/Example\_70} demonstrates the XVA Explain Analytic. 
+ORE can compute the market implied XVA change between two evaluation dates. For each risk factor defined in the sensitivity 
+config ORE computes the par rate change between t0 and t0 + mporDays. 
+ORE derives for each risk factor a shift scenario ($ParRate(t_1) - ParRate(t_0)$) and computes the CVA change implied by those risk factors shifts at t0.
+
+The XVA explain analytic replaces the todaysMarket with a SimulationMarket during the XVA calculation. For some risk factors the simulationMarket behaves 
+different as the todaysMarket. Depending on the simulation and sensitivity settings it could use different tenors when building curves 
+or use only the ATM volatilities. It is recommended to activate UseSpreadedTermStructures and simulate SwaptionVolatilities for the 
+XVA explain run.
 
 %--------------------------------------------------------------------
 \subsection{TODO: FX NDF}% Example 71
@@ -5783,6 +5804,87 @@ improve the alignment of the scenario sim market and t0 curves.
 \caption{Stress configuration}
 \label{lst:stress_config}
 \end{longlisting}
+
+%--------------------------------------------------------
+\subsection{XVA Stress Analytic}\label{sec:xva_stress}
+%--------------------------------------------------------
+
+Stress Tests can be used to computed stressed value adjustments. The stress tests for the XVA stress test analytic are defined in the regular NPV stress test format (see \ref{sec:stress}).
+
+The XVA stress analytic builds a stress scenario generator and a scenario simulation market. The simulation market replaces the todaysMarket in the XVA analytic to compute 
+the value adjustments under a stress scenario.
+
+For performance reasons it is recommended to use AMC simulation if possible. 
+
+For some risk factors the simulation market behaves a different to the todays market. For example it could use different tenor structure for the curves or it uses only the swaption ATM vols if 
+the volatilites aren't simulated. Therefore it is recommended to activate {\\t UseSpreadedTermStructures} in the stress tests scenarios 
+and activate the swaption volatility simulation for the stress test run.
+
+There is no dedicated parametrisations for the xva and exposure settings for the stress test, ORE reuses the existing ones for the regular exposure and xva analytics. But the xva and exposure analytic
+themselves can be deactivated.
+
+For an example see \label{example:67}.
+
+%--------------------------------------------------------
+\subsection{XVA Sensitivity Analytic}\label{sec:xva_bumpandrevalsensi}
+%--------------------------------------------------------
+
+Similar to the XVA Stress Analytic ORE can compute bump and revaluation sensitivites for value adjustments.
+
+The XVA Sensitivitiy Analytic uses the same sensitivity scenario input as the regular sensitivity analytic (see \ref{sec:sensitivity}).
+
+At the moment only zero sensitivities are supported. ORE computes the XVA and exposure measures under each sensitivity scenario. 
+
+The aggregation of the results to sensitivites need to handled outside of ORE. 
+
+These external computed sensitivites can be converted to par sensitivities with the 
+zero-to-par conversion analytic.
+
+The XVA Sensitivity Analytic replaces the todaysMarket in the exposure simulation with a ScenarioSimMarket. 
+For some risk factors the simulation market behaves a different to the todays market, e.g. uses different tenor structure for building the curves or uses only the swaption ATM vols if 
+the volatilites aren't simulated. To minimize some of the effects, it is recommended to activate {\\t UseSpreadedTermStructures} in the stress tests scenarios 
+and activate the swaption volatility simulation for the stress test run (see also \ref{sec:xva_stress}).
+
+There is no dedicated parametrisations for the xva and exposure settings for XVA Sensitivity Analytic, ORE reuses the existing ones for the regular exposure and xva analytics.
+
+For an example see \label{example:68}.
+
+%--------------------------------------------------------
+\subsection{XVA Explain Analytic}\label{sec:xva_explain}
+%--------------------------------------------------------
+
+ORE can compute the market implied XVA change between two evaluation dates. For each risk factor defined in the sensitivity 
+config ORE computes the par rate change between t0 and t0 + mporDays. 
+ORE derives for each risk factor a shift scenario ($ParRate(t_1) - ParRate(t_0)$) and computes the CVA change implied by those risk factors shifts at t0.
+
+The output is a csv file with the all the value adjustments under each scenario similar the regular XVA outputs, added with an extra column for the scenario name (shifted risk factor).
+Further ORE generate the CVA explain output, which contains the name of the shifted risk factor the base and scenario CVA value and the change between base and 
+scenario CVA value (see \ref{table:cvaexplain}).
+
+The XVA Explain Analytic replaces the todaysMarket in the exposure simulation with a ScenarioSimMarket. 
+For some risk factors the simulation market behaves a different to the todays market, e.g. uses different tenor structure for building the curves or uses only the swaption ATM vols if 
+the volatilites aren't simulated. To minimize some of the effects, it is recommended to activate {\\t UseSpreadedTermStructures} in the stress tests scenarios 
+and activate the swaption volatility simulation for the stress test run (see also \ref{sec:xva_stress}).
+
+For an example see \label{example:70}.
+
+\begin{table}
+  \scriptsize
+\begin{center}
+\begin{tabular}{l|l|l|l|l|l|l}
+\hline      
+ & RiskFacto&rTradeId&NettingSetId&CVA\_Base&CVA&Change \\
+\hline      
+0 & ALL&&&91876.7431&81990.9740&-9885.7691 \\
+1 & ALL&Swap\_20y&Swap\_20y&159509.2148&150278.8754&-9230.3394 \\
+2 & ALL&Swap\_20y\_USD&Swap\_20y\_USD&42065.8853&45831.0601&3765.1748 \\
+3 & IndexCurve/EUR-EURIBOR-6M/19&&&91876.7431&92953.7582&1077.0151 \\
+4 & IndexCurve/EUR-EURIBOR-6M/19&Swap\_20y&Swap\_20y&159509.2148&161063.8061&1554.5913 \\
+\hline      
+\end{tabular}
+\caption{CVA Explain results}\label{table:cvaexplain}
+\end{center}
+\end{table}
 
 %--------------------------------------------------------
 \subsection{Calendar Adjustment: {\tt calendaradjustment.xml}}\label{sec:calendaradjustment}
