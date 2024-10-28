@@ -1096,6 +1096,7 @@ void YieldCurve::buildDiscountCurve() {
 
     // Create the (date, discount) pairs.
     map<Date, DiscountFactor> data;
+    int dv = 0;
     QuantLib::ext::shared_ptr<DirectYieldCurveSegment> discountCurveSegment =
         QuantLib::ext::dynamic_pointer_cast<DirectYieldCurveSegment>(curveSegments_[0]);
     auto discountQuoteIDs = discountCurveSegment->quotes();
@@ -1118,7 +1119,7 @@ void YieldCurve::buildDiscountCurve() {
         marketData = loader_.get(*wildcard, asofDate_);
     } else {
         std::ostringstream ss;
-        ss << MarketDatum::InstrumentType::DISCOUNT << "/" << MarketDatum::QuoteType::RATE << "/" << currency_ << "/" << curveConfig_->curveID() << "/*";
+        ss << MarketDatum::InstrumentType::DISCOUNT << "/" << MarketDatum::QuoteType::RATE << "/" << currency_ << "/*";
         Wildcard w(ss.str());
         marketData = loader_.get(w, asofDate_);
     }
@@ -1152,6 +1153,15 @@ void YieldCurve::buildDiscountCurve() {
             Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
             DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date "
                                                             << io::iso_date(date));
+                                                            
+            // Check if the date is already in the map
+            // This may have happened because of shifting tenors according to a calendar and roll convention.
+            if (data.find(date) != data.end()) {
+                WLOG("Discount factor for date " << io::iso_date(date) << " is already available. Updating using " << discountQuote->tenor() << " tenor.");
+                // increase counter for later comparison of the aliases and quotes
+                dv++;
+            }
+
             data[date] = discountQuote->quote()->value();
 
         } else {
@@ -1159,11 +1169,16 @@ void YieldCurve::buildDiscountCurve() {
         }
     }
 
+    // logging the total number of dublicate values for the same date
+    if (dv != 0) WLOG(dv << " duplicate values were replaced.");
+
     // Some logging and checks
     QL_REQUIRE(data.size() > 0, "No market data found for curve spec " << curveSpec_.name() << " with as of date "
                                                                        << io::iso_date(asofDate_));
     if (!wildcard) {
-        QL_REQUIRE(data.size() == quotes.size(), "Found " << data.size() << " quotes, but "
+        // substract duplicated quotes from the whole size as these was replaced due to calendar convention
+        // later in the code it does not damage anything as we only work with dates vs. values and no quotes anymore
+        QL_REQUIRE(data.size() == quotes.size() - dv, "Found " << data.size() << " quotes, but "
                                                           << quotes.size()
                                                           << " quotes given in config " << curveConfig_->curveID());
     }
