@@ -5871,18 +5871,21 @@ and activate the swaption volatility simulation for the stress test run (see als
 For an example see \label{example:70}.
 
 \begin{table}
-\begin{tabular}{ll}
-\toprule
- & RiskFactor,TradeId,NettingSetId,CVA_Base,CVA,Change \\
-\midrule
-0 & ALL,,,91876.7431,81990.9740,-9885.7691 \\
-1 & ALL,Swap_20y,Swap_20y,159509.2148,150278.8754,-9230.3394 \\
-2 & ALL,Swap_20y_USD,Swap_20y_USD,42065.8853,45831.0601,3765.1748 \\
-3 & IndexCurve/EUR-EURIBOR-6M/19,,,91876.7431,92953.7582,1077.0151 \\
-4 & IndexCurve/EUR-EURIBOR-6M/19,Swap_20y,Swap_20y,159509.2148,161063.8061,1554.5913 \\
-\bottomrule
+  \scriptsize
+\begin{center}
+\begin{tabular}{l|l|l|l|l|l|l}
+\hline      
+ & RiskFacto&rTradeId&NettingSetId&CVA\_Base&CVA&Change \\
+\hline      
+0 & ALL&&&91876.7431&81990.9740&-9885.7691 \\
+1 & ALL&Swap\_20y&Swap\_20y&159509.2148&150278.8754&-9230.3394 \\
+2 & ALL&Swap\_20y\_USD&Swap\_20y\_USD&42065.8853&45831.0601&3765.1748 \\
+3 & IndexCurve/EUR-EURIBOR-6M/19&&&91876.7431&92953.7582&1077.0151 \\
+4 & IndexCurve/EUR-EURIBOR-6M/19&Swap\_20y&Swap\_20y&159509.2148&161063.8061&1554.5913 \\
+\hline      
 \end{tabular}
 \caption{CVA Explain results}\label{table:cvaexplain}
+\end{center}
 \end{table}
 
 %--------------------------------------------------------
