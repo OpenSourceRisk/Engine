@@ -142,6 +142,9 @@ type can be (so far) in
 \item xva
 \item sensitivity
 \item stress
+\item xva stress
+\item xva bump and revaluation sensitivities
+\item xva explain
 \end{itemize}
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
@@ -581,3 +584,100 @@ The parameters have the following interpretation:
 \item {\tt outputZeroRate:} Determine whether the statistics report and distribution report will use zero rate or discount factors. If set to Y, the reports will use zero rates. If set to N, they will use discount factors.
 \item {\tt scenariodump:} File containing all the scenarios generated through simulation market. If the node is not given, this file will not be outputted.
 \end{itemize}
+
+\medskip The {\tt XVA stress} and {\tt XVA sensitivity} 'analytics' provide computation of bump and revalue 
+XVA sensitivities and XVA changes under user defined stress scenarios. Listing \ref{lst:ore_xva_stress}
+shows a typical configuration for XVA stress calculation.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+ <Analytic type="xvaStress">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="marketConfigFile">simulation.xml</Parameter>
+    <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+    <Parameter name="sensitivityConfigFile">sensitivity_stress.xml</Parameter>
+    <Parameter name="writeCubes">N</Parameter>
+  </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: XVA stress}
+\label{lst:ore_xva_stress}
+\end{listing}
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\tt marketConfigFile:} Configuration file defining the simulation market under which sensitivities are computed,
+  see \ref{sec:simulation}. Only a subset of the specification is needed (the one given under {\tt Market}, see
+  \ref{sec:sim_market} for a detailed description).
+  \item {\tt stressConfigFile:} Stress Scenario definition, see section \ref{sec:stress}
+  \item {\tt sensitivityConfigFile:} Configuration file  for the sensitivity calculation, see section \ref{sec:sensitivity}.
+  \item {\tt writeCubes:} Boolean flag, if true ORE outputs the raw and net cube under each scenario, defaults to false.
+\end{itemize}
+
+
+The XVA sensitivity analytics configuration is similar to the one of the XVA stress calculation. Listing \ref{lst:lst:ore_xva_sensi}
+shows an example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+    <Analytic type="xvaSensitivity">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+    </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: stress}
+\label{lst:ore_xva_sensi}
+\end{listing}
+
+For both analytics ORE reuses the parameterisations of the exposure and XVA analtyic. One need to setup those analytics as usual but one can deactivate them. See listings 
+see listings \ref{lst:ore_xva} and \ref{lst:ore_simulation}. If set to active, ORE will run the 
+regular XVA analytic and the XVA sensitivity or XVA stress analytic respectively.
+
+\medskip The {\tt XVA explain} 'analytic' provide the computation of the market implied changes of the value adjustment 
+changes $XVA(t_0, marketdata(t_1)) - XVA(t_0, marketdata(t_0))$ between to evaluation dates. Listing \ref{lst:ore_xva_explain}
+shows a typical configuration for XVA explain calculation.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+ <Analytic type="xvaExplain">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity_stress.xml</Parameter>
+      <Parameter name="writeCubes">N</Parameter>
+      <Parameter name="shiftThreshold">1e-4</Parameter>
+      <Parameter name="mporDays">1</Parameter>
+      <Parameter name="mporCalendar">EUR</Parameter>
+    </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: XVA stress}
+\label{lst:ore_xva_stress}
+\end{listing}
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\tt marketConfigFile:} Configuration file defining the simulation market under which sensitivities are computed,
+  see \ref{sec:simulation}. Only a subset of the specification is needed (the one given under {\tt Market}, see
+  \ref{sec:sim_market} for a detailed description).
+  \item {\tt stressConfigFile:} Stress Scenario definition, see section \ref{sec:stress}
+  \item {\tt sensitivityConfigFile:} Configuration file  for the sensitivity calculation, see section \ref{sec:sensitivity}.
+  \item {\tt writeCubes:} Boolean flag, if true ORE outputs the raw and net cube under each scenario, defaults to false.
+  \item {\tt shiftThreshold:} Par Rate shifts below this threshold are ignored.
+  \item {\tt mporDays:} Derives the 2nd evaluation date $t_1$ from $t_0 + mporDates$.
+  \item {\tt mporCalendar:} Calendar used to ensure that $t_1$ is a valid business day. 
+\end{itemize}
+
+ORE reuses the parameterisations of the exposure and XVA analtyic. One need to setup those analytics as usual but one can deactivate them. See listings see listings 
+\ref{lst:ore_xva} and \ref{lst:ore_simulation}. If set to active, ORE will run the 
+regular XVA analytic and the XVA sensitivity or XVA stress analytic respectively.
