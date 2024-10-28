@@ -476,7 +476,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                                                                               << baseModelParams_[i].first);
             Real tmp = sensis_[i] * (modelParams[i].second - baseModelParams_[i].second);
             npv += tmp;
-            DLOG("node " << modelParams[i].first << ": [" << modelParams[i].second << " (current) - "
+            TLOG("node " << modelParams[i].first << ": [" << modelParams[i].second << " (current) - "
                          << baseModelParams_[i].second << " (base) ] * " << sensis_[i] << " (delta) => " << tmp);
         }
 
