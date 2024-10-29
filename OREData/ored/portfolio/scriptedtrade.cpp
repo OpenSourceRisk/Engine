@@ -608,23 +608,26 @@ XMLNode* ScriptedTradeScriptData::toXML(XMLDocument& doc) const {
     XMLNode* condExp = doc.allocNode("ConditionalExpectation");
     XMLUtils::appendNode(n, condExp);
     XMLUtils::addChildren(doc, condExp, "ModelStates", "ModelState", conditionalExpectationModelStates_);
-    XMLNode* peOverwrite = doc.allocNode("PricingEngineConfigOverwrite");
-    XMLUtils::appendNode(n,peOverwrite);
-    {
-        std::vector<std::string> keys, values;
-        for (auto const& [k, v] : engineParameterOverwrite_) {
-            keys.push_back(k);
-            values.push_back(v);
+    if (!engineParameterOverwrite_.empty() || !modelParameterOverwrite_.empty()) {
+        XMLNode* peOverwrite = doc.allocNode("PricingEngineConfigOverwrite");
+        XMLUtils::appendNode(n, peOverwrite);
+        {
+            std::vector<std::string> keys, values;
+            for (auto const& [k, v] : engineParameterOverwrite_) {
+                keys.push_back(k);
+                values.push_back(v);
+            }
+            XMLUtils::addChildrenWithAttributes(doc, peOverwrite, "EngineParameters", "Parameter", keys, "name",
+                                                values);
         }
-        XMLUtils::addChildrenWithAttributes(doc, peOverwrite, "EngineParameters", "Parameter", keys, "name", values);
-    }
-    {
-        std::vector<std::string> keys, values;
-        for (auto const& [k, v] : modelParameterOverwrite_) {
-            keys.push_back(k);
-            values.push_back(v);
+        {
+            std::vector<std::string> keys, values;
+            for (auto const& [k, v] : modelParameterOverwrite_) {
+                keys.push_back(k);
+                values.push_back(v);
+            }
+            XMLUtils::addChildrenWithAttributes(doc, peOverwrite, "ModelParameters", "Parameter", keys, "name", values);
         }
-        XMLUtils::addChildrenWithAttributes(doc, peOverwrite, "ModelParameters", "Parameter", keys, "name", values);
     }
     return n;
 }
