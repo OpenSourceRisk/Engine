@@ -281,6 +281,7 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     bond->setPricingEngine(
         bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId()));
     setSensitivityTemplate(*bondBuilder);
+    addProductModelEngine(*bondBuilder);
     instrument_.reset(new VanillaInstrument(bond, mult));
 
     npvCurrency_ = bondData_.currency();

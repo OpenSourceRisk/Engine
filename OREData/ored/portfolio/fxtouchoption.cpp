@@ -190,6 +190,7 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             QuantLib::ext::dynamic_pointer_cast<FxTouchOptionEngineBuilder>(builder);
         barrier->setPricingEngine(fxTouchOptBuilder->engine(fgnCcy, domCcy, type_, payDate, flipResults));
         setSensitivityTemplate(*fxTouchOptBuilder);
+        addProductModelEngine(*fxTouchOptBuilder);
         if (type_ == "One-Touch") {
             // if a one-touch option is triggered it becomes a simple forward cashflow
             // which we price as a swap

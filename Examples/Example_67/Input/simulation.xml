@@ -289,7 +289,7 @@
 	   surfaces, so we need to specify here how we propagate the
 	   vol structure and what its composition will be -->
     <SwaptionVolatilities>
-      <Simulate>false</Simulate>
+      <Simulate>true</Simulate>
       <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
@@ -301,6 +301,7 @@
       </Currencies>
       <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
+      <SimulateATMOnly>true</SimulateATMOnly>
     </SwaptionVolatilities>
     <FxVolatilities>
       <Simulate>false</Simulate>

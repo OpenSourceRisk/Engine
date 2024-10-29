@@ -611,6 +611,7 @@ void ConvertibleBond::build(const QuantLib::ext::shared_ptr<ore::data::EngineFac
         data_.bondData().securityId(), data_.bondData().referenceCurveId(), exchangeableData.isExchangeable, equity, fx,
         data_.conversionData().exchangeableData().equityCreditCurve(), qlUnderlyingBond->startDate(), lastDate));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     // set up other trade member variables
 

@@ -206,6 +206,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         swap->setPricingEngine(
             swapBuilder->engine(currenciesWithIndexing, npvCcy, useXccyYieldCurvesForDiscounting, eqNames));
         setSensitivityTemplate(*swapBuilder);
+        addProductModelEngine(*swapBuilder);
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
     } else {
@@ -216,6 +217,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         swap->setPricingEngine(swapBuilder->engine(npvCcy, envelope().additionalField("discount_curve", false),
                                                    envelope().additionalField("security_spread", false), eqNames));
         setSensitivityTemplate(*swapBuilder);
+        addProductModelEngine(*swapBuilder);
         instrument_.reset(new VanillaInstrument(swap));
     }
 

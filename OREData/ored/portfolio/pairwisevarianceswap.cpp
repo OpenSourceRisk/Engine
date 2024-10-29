@@ -83,6 +83,7 @@ void PairwiseVarSwap::build(const QuantLib::ext::shared_ptr<ore::data::EngineFac
     pairwiseVarSwap->setPricingEngine(pairwiseVarSwapBuilder->engine(
         name(0), name(1), ccy, laggedValuationSchedule.dates().back(), assetClassUnderlyings()));
     setSensitivityTemplate(*pairwiseVarSwapBuilder);
+    addProductModelEngine(*pairwiseVarSwapBuilder);
 
     // set up other Trade details
     instrument_ = QuantLib::ext::shared_ptr<ore::data::InstrumentWrapper>(new ore::data::VanillaInstrument(pairwiseVarSwap));

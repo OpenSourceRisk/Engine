@@ -73,6 +73,7 @@ void FxAverageForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
     swap->setPricingEngine(swapBuilder->engine(payCcy, std::string(), std::string(), {}));
     setSensitivityTemplate(*swapBuilder);
+    addProductModelEngine(*swapBuilder);
     instrument_.reset(new VanillaInstrument(swap));
     
     npvCurrency_ = settlementCurrency_;

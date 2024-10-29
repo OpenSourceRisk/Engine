@@ -568,6 +568,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         cdoDetach->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, {}, calibrationFactor, fixedRecovery));
         setSensitivityTemplate(*cdoEngineBuilder);
+        addProductModelEngine(*cdoEngineBuilder);
         cdoD = cdoDetach;
 
         DLOG("Detachment tranche [0," << adjDetachPoint << "] built.");
@@ -587,6 +588,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         cds->setPricingEngine(
             cdoEngineBuilder->engine(ccy, true, creditCurves, calibrationFactor, fixedRecovery));
         setSensitivityTemplate(*cdoEngineBuilder);
+        addProductModelEngine(*cdoEngineBuilder);
         cdoD = cds;
 
         DLOG("Index CDS for [0,1.0] 'tranche' built.");
@@ -615,6 +617,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         cdoA->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, {}, calibrationFactor, fixedRecovery));
         setSensitivityTemplate(*cdoEngineBuilder);
+        addProductModelEngine(*cdoEngineBuilder);
 
         DLOG("Attachment tranche [0," << adjAttachPoint << "] built.");
 
