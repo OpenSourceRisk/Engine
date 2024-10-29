@@ -1094,6 +1094,9 @@ void YieldCurve::buildDiscountCurve() {
     QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::Discount,
                "The curve segment is not of type Discount.");
 
+    QL_REQUIRE(curveSegments_[0]->quotes().size() > 0,
+           "The curve segment has no quotes. This is unexpected");
+
     // Create the (date, discount) pairs.
     map<Date, DiscountFactor> data;
     int dv = 0;
@@ -1118,8 +1121,12 @@ void YieldCurve::buildDiscountCurve() {
     if (wildcard) {
         marketData = loader_.get(*wildcard, asofDate_);
     } else {
+        // read the curve id string used in the quote names as these may be different to the curve id
+        // we know that there is at least one quote and assume that all quotes have the same id so we can take the first one
+        std::vector<std::string> tokens;
         std::ostringstream ss;
-        ss << MarketDatum::InstrumentType::DISCOUNT << "/" << MarketDatum::QuoteType::RATE << "/" << currency_ << "/*";
+        boost::split(tokens, discountQuoteIDs[0].first, boost::is_any_of("/"));
+        ss << MarketDatum::InstrumentType::DISCOUNT << "/" << MarketDatum::QuoteType::RATE << "/" << currency_ << "/" << tokens[3] << "/*";
         Wildcard w(ss.str());
         marketData = loader_.get(w, asofDate_);
     }
@@ -1129,7 +1136,7 @@ void YieldCurve::buildDiscountCurve() {
                     "Market quote not of type Discount.");
         QuantLib::ext::shared_ptr<DiscountQuote> discountQuote = QuantLib::ext::dynamic_pointer_cast<DiscountQuote>(marketQuote);
 
-        // filtering
+        // filtering of all quotes to the available only
         if (!wildcard) {
             vector<string>::const_iterator it = find(quotes.begin(), quotes.end(), discountQuote->name());
             if (it == quotes.end())
@@ -1153,7 +1160,7 @@ void YieldCurve::buildDiscountCurve() {
             Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
             DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date "
                                                             << io::iso_date(date));
-                                                            
+
             // Check if the date is already in the map
             // This may have happened because of shifting tenors according to a calendar and roll convention.
             if (data.find(date) != data.end()) {
@@ -1170,7 +1177,7 @@ void YieldCurve::buildDiscountCurve() {
     }
 
     // logging the total number of dublicate values for the same date
-    if (dv != 0) WLOG(dv << " duplicate values were replaced.");
+    if (dv != 0) WLOG(dv << "duplicate values were replaced.");
 
     // Some logging and checks
     QL_REQUIRE(data.size() > 0, "No market data found for curve spec " << curveSpec_.name() << " with as of date "
