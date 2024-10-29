@@ -131,6 +131,7 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     auto eqFwdBuilder = QuantLib::ext::dynamic_pointer_cast<EquityForwardEngineBuilderBase>(builder);
     inst->setPricingEngine(eqFwdBuilder->engine(eqName(), ccy));
     setSensitivityTemplate(*eqFwdBuilder);
+    addProductModelEngine(*eqFwdBuilder);
 }
     
 void EquityForward::fromXML(XMLNode* node) {

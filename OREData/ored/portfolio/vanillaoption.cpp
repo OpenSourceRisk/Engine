@@ -223,6 +223,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
             vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_, true));
         }
         setSensitivityTemplate(*vanillaOptionBuilder);
+        addProductModelEngine(*vanillaOptionBuilder);
 
         configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
     } else {
@@ -233,6 +234,7 @@ void VanillaOptionTrade::build(const QuantLib::ext::shared_ptr<ore::data::Engine
 
         vanilla->setPricingEngine(quantoVanillaOptionBuilder->engine(assetName_, underlyingCurrency, ccy, expiryDate_));
         setSensitivityTemplate(*quantoVanillaOptionBuilder);
+        addProductModelEngine(*quantoVanillaOptionBuilder);
 
         configuration = quantoVanillaOptionBuilder->configuration(MarketContext::pricing);
     }

@@ -149,6 +149,7 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilder> fxOptBuilder =
         QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     barrier->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
     vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, flipResults));

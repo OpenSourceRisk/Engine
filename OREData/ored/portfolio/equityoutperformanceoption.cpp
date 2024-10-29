@@ -110,6 +110,7 @@ void EquityOutperformanceOption::build(const QuantLib::ext::shared_ptr<EngineFac
 
     inst->setPricingEngine(eqOptBuilder->engine(name1(), name2(), ccy));
     setSensitivityTemplate(*eqOptBuilder);
+    addProductModelEngine(*eqOptBuilder);
     
     // Add additional premium payments
     Position::Type positionType = parsePositionType(option_.longShort());

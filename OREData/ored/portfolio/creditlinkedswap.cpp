@@ -188,6 +188,7 @@ void CreditLinkedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
 
     qlInstr->setPricingEngine(builder->engine(npvCurrency_, creditCurveId_));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     // log
 

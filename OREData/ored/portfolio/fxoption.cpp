@@ -138,6 +138,7 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
             notionalCurrency_ = npvCurrency_ = soldCcy.code();
             notional_ = soldAmount();
             setSensitivityTemplate(*builder);
+            addProductModelEngine(*builder);
             return;
         }
     }

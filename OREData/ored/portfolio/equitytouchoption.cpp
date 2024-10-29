@@ -139,6 +139,7 @@ void EquityTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
         QuantLib::ext::dynamic_pointer_cast<EquityTouchOptionEngineBuilder>(builder);
     barrier->setPricingEngine(eqTouchOptBuilder->engine(assetName, ccy, type_));
     setSensitivityTemplate(*eqTouchOptBuilder);
+    addProductModelEngine(*eqTouchOptBuilder);
     if (type_ == "One-Touch") {
         // if a one-touch option is triggered it becomes a simple forward cashflow
         // which we price as a swap
