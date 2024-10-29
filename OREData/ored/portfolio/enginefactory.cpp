@@ -28,9 +28,9 @@
 namespace ore {
 namespace data {
 
-namespace {
-std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p,
-                         const std::vector<std::string>& qs, const bool mandatory, const std::string& defaultValue) {
+std::string EngineBuilder::getParameter(const std::map<std::string, std::string>& m, const std::string& p,
+                                        const std::vector<std::string>& qs, const bool mandatory,
+                                        const std::string& defaultValue) const {
     // first look for p_q if one or several qualifiers are given
     for (auto const& q : qs) {
         if (!q.empty()) {
@@ -50,7 +50,6 @@ std::string getParameter(const std::map<std::string, std::string>& m, const std:
     }
     return defaultValue;
 }
-} // namespace
 
 std::string EngineBuilder::engineParameter(const std::string& p, const std::vector<std::string>& qualifiers,
                                            const bool mandatory, const std::string& defaultValue) const {

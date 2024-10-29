@@ -563,6 +563,23 @@ void ScriptedTradeScriptData::fromXML(XMLNode* node) {
     if (XMLNode* ns = XMLUtils::getChildNode(node, "ConditionalExpectation")) {
         conditionalExpectationModelStates_ = XMLUtils::getChildrenValues(ns, "ModelStates", "ModelState", false);
     }
+    if (XMLNode* peOverwrite = XMLUtils::getChildNode(node, "PricingEngineConfigOverwrite")) {
+        {
+        std::vector<std::string> keys;
+        auto values =
+            XMLUtils::getChildrenValuesWithAttributes(peOverwrite, "EngineParameters", "Parameter", "name", keys, true);
+        for (Size i = 0; i < keys.size(); ++i) {
+            engineParameterOverwrite_[keys[i]] = values[i];
+        }
+        }
+        {
+        std::vector<std::string> keys;
+        auto values =
+            XMLUtils::getChildrenValuesWithAttributes(peOverwrite, "ModelParameters", "Parameter", "name", keys, true);
+        for (Size i = 0; i < keys.size(); ++i)
+            modelParameterOverwrite_[keys[i]] = values[i];
+        }
+    }
 }
 
 XMLNode* ScriptedTradeScriptData::toXML(XMLDocument& doc) const {
@@ -590,6 +607,24 @@ XMLNode* ScriptedTradeScriptData::toXML(XMLDocument& doc) const {
     XMLNode* condExp = doc.allocNode("ConditionalExpectation");
     XMLUtils::appendNode(n, condExp);
     XMLUtils::addChildren(doc, condExp, "ModelStates", "ModelState", conditionalExpectationModelStates_);
+    XMLNode* peOverwrite = doc.allocNode("PricingEngineConfigOverwrite");
+    XMLUtils::appendNode(n,peOverwrite);
+    {
+        std::vector<std::string> keys, values;
+        for (auto const& [k, v] : engineParameterOverwrite_) {
+            keys.push_back(k);
+            values.push_back(v);
+        }
+        XMLUtils::addChildrenWithAttributes(doc, peOverwrite, "EngineParameters", "Parameter", keys, "name", values);
+    }
+    {
+        std::vector<std::string> keys, values;
+        for (auto const& [k, v] : modelParameterOverwrite_) {
+            keys.push_back(k);
+            values.push_back(v);
+        }
+        XMLUtils::addChildrenWithAttributes(doc, peOverwrite, "ModelParameters", "Parameter", keys, "name", values);
+    }
     return n;
 }
 

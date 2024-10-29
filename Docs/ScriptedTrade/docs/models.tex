@@ -53,6 +53,8 @@ An example pricing engine configuration looks as follows.
       <Parameter name="StaticNpvMem">false</Parameter>
       <Parameter name="RegressionVarianceCutoff">1E-5</Parameter>
       <Parameter name="SalvagingAlgorithm">Spectral</Parameter>
+      <Parameter name="IndicatorSmoothingForValues">0.0</Parameter>
+      <Parameter name="IndicatorSmoothingForDerivatives">0.0</Parameter>
       <!-- product specific parameters -->
       <Parameter name="RegressionOrder_SingleAssetOption(EQ)">6</Parameter>
       <Parameter name="RegressionOrder_SingleAssetOption(FX)">6</Parameter>
@@ -166,7 +168,9 @@ The engine parameters have the following meaning:
 \item ExternalComputeDevice: The external compute device to use if UseExternalComputingDevice is effective.
 \item SalvagingAlgorithm: If the correlation matrix is not positive semi definite, an approximation of the pseudo square root using asalvaging algorithm can be used.
  The SalvagingAlgorithm tag chooses this algorithm with the following allowable values: None, Spectral, Hypersphere, LowerDiagonal or Highham.
-
+\item IndicatorSmoothingForValues: smoothing parameter (according to Fries methodology, 2017, ``epsilon'') applied to
+  indicator functions in cg-based runs for values calculation
+\item IndicatorSmoothingForDerivatives: as above, smoothing parameter for derivatives calculation
 \end{itemize}
 
 \subsection{Product Tags und pricing engine configuration}\label{producttags_engineconfig}
