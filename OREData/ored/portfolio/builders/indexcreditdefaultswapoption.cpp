@@ -57,7 +57,7 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 genericEngineImpl(const std::string& curve, const QuantLib::ext::shared_ptr<Market> market,
                   const std::string& configurationInCcy, const std::string& configurationPricing,
                   const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
-                  const std::vector<std::string>& creditCurveIds) {
+                  const std::vector<std::string>& creditCurveIds, const bool generateAdditionalResults) {
 
     QuantLib::Handle<QuantLib::YieldTermStructure> ytsInCcy = market->discountCurve(ccy.code(), configurationInCcy);
     QuantLib::Handle<QuantLib::YieldTermStructure> ytsPricing = market->discountCurve(ccy.code(), configurationPricing);
@@ -66,7 +66,8 @@ genericEngineImpl(const std::string& curve, const QuantLib::ext::shared_ptr<Mark
     if (curve == "Index") {
         auto creditCurve = market->defaultCurve(creditCurveId, configurationPricing);
         QuantLib::Handle<QuantLib::Quote> recovery = market->recoveryRate(creditCurveId, configurationPricing);
-        return QuantLib::ext::make_shared<ENGINE>(creditCurve->curve(), recovery->value(), ytsInCcy, ytsPricing, vol);
+        return QuantLib::ext::make_shared<ENGINE>(creditCurve->curve(), recovery->value(), ytsInCcy, ytsPricing, vol,
+                                                  generateAdditionalResults);
     } else if (curve == "Underlying") {
         std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>> dpts;
         std::vector<QuantLib::Real> recovery;
@@ -80,7 +81,8 @@ genericEngineImpl(const std::string& curve, const QuantLib::ext::shared_ptr<Mark
             indexRecovery = market->recoveryRate(creditCurveId, configurationPricing)->value();
         } catch (...) {
         }
-        return QuantLib::ext::make_shared<ENGINE>(dpts, recovery, ytsInCcy, ytsPricing, vol, indexRecovery);
+        return QuantLib::ext::make_shared<ENGINE>(dpts, recovery, ytsInCcy, ytsPricing, vol, indexRecovery,
+                                                  generateAdditionalResults);
     } else {
         QL_FAIL("IndexCdsOptionEngineBuilder: Curve Parameter value \""
                 << curve << "\" not recognised, expected Underlying or Index");
@@ -92,19 +94,35 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine>
 BlackIndexCdsOptionEngineBuilder::engineImpl(const QuantLib::Currency& ccy, const std::string& creditCurveId,
                                              const std::string& volCurveId,
                                              const std::vector<std::string>& creditCurveIds) {
+
+    bool generateAdditionalResults = false;
+    if (auto genAddParam = globalParameters_.find("GenerateAdditionalResults");
+        genAddParam != globalParameters_.end()) {
+        generateAdditionalResults = parseBool(genAddParam->second);
+    }
+
     std::string curve = engineParameter("FepCurve", {}, false, "Underlying");
     return genericEngineImpl<QuantExt::BlackIndexCdsOptionEngine>(
         curve, market_, configuration(ore::data::MarketContext::irCalibration),
-        configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds);
+        configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds,
+        generateAdditionalResults);
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine> NumericalIntegrationIndexCdsOptionEngineBuilder::engineImpl(
     const QuantLib::Currency& ccy, const std::string& creditCurveId, const std::string& volCurveId,
     const std::vector<std::string>& creditCurveIds) {
+
+    bool generateAdditionalResults = false;
+    if (auto genAddParam = globalParameters_.find("GenerateAdditionalResults");
+        genAddParam != globalParameters_.end()) {
+        generateAdditionalResults = parseBool(genAddParam->second);
+    }
+
     std::string curve = engineParameter("FepCurve", {}, false, "Underlying");
     return genericEngineImpl<QuantExt::NumericalIntegrationIndexCdsOptionEngine>(
         curve, market_, configuration(ore::data::MarketContext::irCalibration),
-        configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds);
+        configuration(ore::data::MarketContext::pricing), ccy, creditCurveId, volCurveId, creditCurveIds,
+        generateAdditionalResults);
 }
 
 } // namespace data

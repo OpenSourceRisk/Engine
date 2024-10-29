@@ -133,6 +133,7 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
                                       bondData_.referenceCurveId(), bondData_.volatilityCurveId()));
     bondoption->setPricingEngine(blackEngine);
     setSensitivityTemplate(*bondOptionBuilder);
+    addProductModelEngine(*bondOptionBuilder);
 
     Real multiplier =
         bondData_.bondNotional() * (parsePositionType(optionData_.longShort()) == Position::Long ? 1.0 : -1.0);
