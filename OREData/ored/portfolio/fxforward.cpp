@@ -158,6 +158,7 @@ void FxForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     // set pricing engine
     instrument_->qlInstrument()->setPricingEngine(fxBuilder->engine(boughtCcy, soldCcy));
     setSensitivityTemplate(*fxBuilder);
+    addProductModelEngine(*fxBuilder);
 
     // Set up Legs
     legs_ = {{QuantLib::ext::make_shared<SimpleCashFlow>(boughtAmount_, payDate)},

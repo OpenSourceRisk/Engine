@@ -75,6 +75,7 @@ void ForwardRateAgreement::build(const QuantLib::ext::shared_ptr<EngineFactory>&
     swap->setPricingEngine(swapBuilder->engine(
         npvCcy, envelope().additionalField("discount_curve", false, std::string()), std::string(), {}));
     setSensitivityTemplate(*swapBuilder);
+    addProductModelEngine(*swapBuilder);
     instrument_.reset(new VanillaInstrument(swap));
     maturity_ = endDate;
     maturityType_ = "End Date";

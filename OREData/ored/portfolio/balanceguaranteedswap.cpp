@@ -198,6 +198,7 @@ void BalanceGuaranteedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>
     bgSwap->setPricingEngine(
         builder->engine(id(), referenceSecurity(), ccy_str, expiryDates, bgSwap->maturityDate(), strikes));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     // add required fixings
     addToRequiredFixings(fltLeg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_));

@@ -247,7 +247,6 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
     npvCurrency_ = legData.currency();
     auto ccy = parseCurrency(npvCurrency_);
     cds->setPricingEngine(cdsBuilder->engine(ccy, swap_.creditCurveId(), swap_.recoveryRate()));
-    setSensitivityTemplate(*cdsBuilder);
 
     // Check option data
     QL_REQUIRE(option_.style() == "European", "CreditDefaultSwapOption option style must" <<
@@ -279,6 +278,7 @@ void CreditDefaultSwapOption::buildNoDefault(const QuantLib::ext::shared_ptr<Eng
         " builder for underlying while building trade " << id() << ".");
     cdsOption->setPricingEngine(cdsOptionEngineBuilder->engine(ccy, swap_.creditCurveId(), term_));
     setSensitivityTemplate(*cdsOptionEngineBuilder);
+    addProductModelEngine(*cdsOptionEngineBuilder);
 
     // Set Trade members.
     legs_ = { cds->coupons() };
