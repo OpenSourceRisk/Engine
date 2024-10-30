@@ -24,14 +24,14 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
-#include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/sensitivityscenariogenerator.hpp>
+
+
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <ored/report/utilities.hpp>
 namespace ore {
 namespace analytics {
 
-XvaSensitivityAnalyticImpl::XvaResults::XvaResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaReport) {
+XvaResults::XvaResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaReport) {
     size_t tradeIdColumn = xvaReport->columnPosition("TradeId");
     size_t nettingSetIdColumn = xvaReport->columnPosition("NettingSetId");
     size_t cvaColumn = xvaReport->columnPosition("CVA");
@@ -46,19 +46,48 @@ XvaSensitivityAnalyticImpl::XvaResults::XvaResults(const QuantLib::ext::shared_p
         const double dva = boost::get<double>(xvaReport->data(dvaColumn, i));
         const double fba = boost::get<double>(xvaReport->data(fbaColumn, i));
         const double fca = boost::get<double>(xvaReport->data(fcaColumn, i));
-        data_[{nettingset, tradeId}] = {cva, dva, fba, fca};
+        nettingSetIds_.insert(nettingset);
+        tradeIds_.insert(tradeId);
+        tradeNettingSetMapping_[tradeId] = nettingset;
+        if (tradeId.empty()) {
+            nettingSetValueAdjustments_[nettingset][Adjustment::CVA] = cva;
+            nettingSetValueAdjustments_[nettingset][Adjustment::DVA] = dva;
+            nettingSetValueAdjustments_[nettingset][Adjustment::FBA] = fba;
+            nettingSetValueAdjustments_[nettingset][Adjustment::FCA] = fca;
+        } else {
+            tradeValueAdjustments_[tradeId][Adjustment::CVA] = cva;
+            tradeValueAdjustments_[tradeId][Adjustment::DVA] = dva;
+            tradeValueAdjustments_[tradeId][Adjustment::FBA] = fba;
+            tradeValueAdjustments_[tradeId][Adjustment::FCA] = fca;
+        }
     }
-}
-
-bool operator<(const XvaSensitivityAnalyticImpl::XvaResults::Key& lhs,
-               const XvaSensitivityAnalyticImpl::XvaResults::Key& rhs) {
-    return std::tie(lhs.nettingSetId, lhs.tradeId) < std::tie(rhs.nettingSetId, rhs.tradeId);
 }
 
 XvaSensitivityAnalyticImpl::XvaSensitivityAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
     : Analytic::Impl(inputs) {
     setLabel(LABEL);
 }
+
+QuantLib::ext::shared_ptr<ScenarioSimMarket> XvaSensitivityAnalyticImpl::buildSimMarket(bool overrideTenors){
+    LOG("XvaSensitivityAnalytic: Build SimMarket")
+    auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
+        analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
+        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
+        inputs_->continueOnError(), analytic()->configurations().sensiScenarioData->useSpreadedTermStructures(), false,
+        overrideTenors, *inputs_->iborFallbackConfig(), true);
+    return simMarket;
+}
+
+QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> XvaSensitivityAnalyticImpl::buildScenarioGenerator(QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket, bool overrideTenors){
+    LOG("XvaSensitivityAnalytic: Build SensitivityScenarioGenerator")
+    auto baseScenario = simMarket->baseScenario();
+    auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
+    auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
+        analytic()->configurations().sensiScenarioData, baseScenario, analytic()->configurations().simMarketParams,
+
+    void runSimulations(std::vector<XvaResults>& results,
+                        const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
+
 
 void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                              const std::set<std::string>& runTypes) {
@@ -90,25 +119,9 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     // build t0, sim market, stress scenario generator
 
-    CONSOLEW("XVA_SENSI: Build T0 and Sim Markets and Stress Scenario Generator");
+    CONSOLEW("XVA_SENSI: Build T0");
 
     analytic()->buildMarket(loader);
-
-    LOG("XvaSensitivityAnalytic: Build SimMarket")
-    simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-        analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
-        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-        inputs_->continueOnError(), analytic()->configurations().sensiScenarioData->useSpreadedTermStructures(), false,
-        true, *inputs_->iborFallbackConfig(), true);
-
-    LOG("XvaSensitivityAnalytic: Build SensitivityScenarioGenerator")
-
-    auto baseScenario = simMarket_->baseScenario();
-    auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
-    auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
-        analytic()->configurations().sensiScenarioData, baseScenario, analytic()->configurations().simMarketParams,
-        simMarket_, scenarioFactory, true);
-    simMarket_->scenarioGenerator() = scenarioGenerator;
 
     CONSOLE("OK");
 
@@ -118,25 +131,32 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     // run stress test
     LOG("Run XVA Zero Sensitivity Sensitivity")
-    runSensitivity(scenarioGenerator, loader);
+    auto zeroCubes = runXvaZeroSensitivitySimulation(loader);
+    createZeroReports(zeroCubes);
     LOG("Run Par Conversion")
-
+    auto parCubes = parConversion(zeroCubes);
+    createParReports(parCubes);
     LOG("Running XVA Sensitivity analytic finished.");
 }
 
-void XvaSensitivityAnalyticImpl::runSensitivity(
-    const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator,
-    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZeroSensitivitySimulation(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+    // Run Simulations 
+    auto simMarket = buildSimMarket(false);
+    auto scenarioGenerator = buildScenarioGenerator(simMarket, false);
+    std::vector<XvaResults> xvaResults;
+    runSimulations(xvaResults, loader, scenarioGenerator);
+    // Create sensi from xva simulation results cubes
+    return ZeroSenisResults();
+}
 
-    std::map<std::string, std::map<std::string, QuantLib::ext::shared_ptr<ore::data::InMemoryReport>>> xvaReports;
-    std::map<std::string, XvaResults> xvaResults;
-    std::map<std::string, size_t> scenarioIdx;
-
+void XvaSensitivityAnalyticImpl::runSimulations(std::vector<XvaResults>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
+    // Used for the raw report
+    std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>> xvaReports;
+    
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         auto desc = scenarioGenerator->scenarioDescriptions()[i];
         const auto label = scenario->label();
-        scenarioIdx[label] = i;
         try {
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
@@ -148,15 +168,13 @@ void XvaSensitivityAnalyticImpl::runSensitivity(
             for (auto& [name, rpt] : newAnalytic->reports()["XVA"]) {
                 // add scenario column to report and copy it, concat it later
                 if (boost::starts_with(name, "exposure") || boost::starts_with(name, "xva")) {
-                    xvaReports[name][label] = rpt;
+                    xvaReports[name].push_back(rpt);
                     if (name == "xva") {
-                        xvaResults[label] = XvaResults(rpt);
+                        xvaResults.push_back(XvaResults(rpt));
                     }
                 }
             }
             createDetailReport(scenarioGenerator, scenarioIdx, xvaReports);
-            createZeroSensiReport(scenarioGenerator, scenarioIdx, xvaResults);
-
         } catch (const std::exception& e) {
             StructuredAnalyticsErrorMessage("XvaSensitivity", "XVACalc",
                                             "Error during XVA calc under scenario " + label + ", got " + e.what() +
@@ -165,21 +183,15 @@ void XvaSensitivityAnalyticImpl::runSensitivity(
         }
     }
 
-    // Create CVA, DVA, FBA, FCA zero sensi reports;
-
-    // Run Par Sensitivity Analysis for each of the reports
-}
-
 void XvaSensitivityAnalyticImpl::createDetailReport(
     const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator,
-    const std::map<std::string, size_t>& scenarioIdx,
-    const std::map<std::string, std::map<std::string, ext::shared_ptr<InMemoryReport>>>& xvaReports) {
+    const std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>>>& xvaReports) {
     for (auto& [reportName, reports] : xvaReports) {
         std::vector<ext::shared_ptr<InMemoryReport>> extendedReports;
-        for (const auto& [scenarioName, rpt] : reports) {
+        for (size_t idx = 0; idx < reports.size(); idx++) {
             QuantLib::ext::shared_ptr<ore::data::InMemoryReport> descReport =
                 QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-            auto desc = scenarioGenerator->scenarioDescriptions()[scenarioIdx.at(scenarioName)];
+            auto desc = scenarioGenerator->scenarioDescriptions()[idx];
             double shiftSize1 = 0.0;
             auto itShiftSize1 = scenarioGenerator->shiftSizes().find(desc.key1());
             if (itShiftSize1 != scenarioGenerator->shiftSizes().end()) {
@@ -206,7 +218,7 @@ void XvaSensitivityAnalyticImpl::createDetailReport(
             descReport->add(shiftSize2);
             descReport->add(inputs_->baseCurrency());
             descReport->end();
-            extendedReports.push_back(addColumnsToExisitingReport(descReport, rpt));
+            extendedReports.push_back(addColumnsToExisitingReport(descReport, reports[idx]));
         }
         auto report = concatenateReports(extendedReports);
         if (report != nullptr) {
