@@ -364,7 +364,8 @@ std::vector<double> decorrelateOverlappingPnls(const std::vector<double>& pnl, c
     for (Size i = 0; i < pnl.size(); ++i) {
         for (Size j = i - std::min<Size>(i, numberOfDays - 1);
              j <= i + std::min<Size>(numberOfDays - 1, pnl.size() - i - 1); ++j) {
-            correlation.insert(i, j) = 1.0 - 0.1 * static_cast<double>(std::abs((int)i - (int)j));
+            correlation.insert(i, j) =
+                1.0 - static_cast<double>(std::abs((int)i - (int)j)) / static_cast<double>(numberOfDays);
         }
     }
 
@@ -393,7 +394,8 @@ std::vector<double> decorrelateOverlappingPnls(const std::vector<double>& pnl, c
     for (Size i = 0; i < pnl.size(); ++i) {
         for (Size j = i - std::min<Size>(i, numberOfDays - 1);
              j <= i + std::min<Size>(numberOfDays - 1, pnl.size() - i - 1); ++j) {
-            correlation(i, j) = 1.0 - 0.1 * static_cast<double>(std::abs((int)i - (int)j));
+            correlation(i, j) =
+                1.0 - static_cast<double>(std::abs((int)i - (int)j)) / static_cast<double>(numberOfDays);
         }
     }
 
