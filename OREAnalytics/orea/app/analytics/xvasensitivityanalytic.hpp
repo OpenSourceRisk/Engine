@@ -85,7 +85,7 @@ private:
     // level and build sensicubes for each value adjustment.
     ZeroSenisResults runXvaZeroSensitivitySimulation(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
     
-    void runSimulations(std::vector<XvaResults>& results, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
+    void runSimulations(std::vector<QuantLib::ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator);
 
 
     //! Convert the sensitivity cubes into sensistreams and create a report 

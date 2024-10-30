@@ -70,6 +70,7 @@ XvaSensitivityAnalyticImpl::XvaSensitivityAnalyticImpl(const QuantLib::ext::shar
 
 QuantLib::ext::shared_ptr<ScenarioSimMarket> XvaSensitivityAnalyticImpl::buildSimMarket(bool overrideTenors){
     LOG("XvaSensitivityAnalytic: Build SimMarket")
+    std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
@@ -79,15 +80,14 @@ QuantLib::ext::shared_ptr<ScenarioSimMarket> XvaSensitivityAnalyticImpl::buildSi
 }
 
 QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> XvaSensitivityAnalyticImpl::buildScenarioGenerator(QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket, bool overrideTenors){
-    LOG("XvaSensitivityAnalytic: Build SensitivityScenarioGenerator")
     auto baseScenario = simMarket->baseScenario();
     auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
     auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
         analytic()->configurations().sensiScenarioData, baseScenario, analytic()->configurations().simMarketParams,
-
-    void runSimulations(std::vector<XvaResults>& results,
-                        const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
-
+        simMarket_, scenarioFactory, true);
+    simMarket_->scenarioGenerator() = scenarioGenerator;
+    return scenarioGenerator;
+}
 
 void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                              const std::set<std::string>& runTypes) {
@@ -139,19 +139,72 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
     LOG("Running XVA Sensitivity analytic finished.");
 }
 
-ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZeroSensitivitySimulation(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+XvaSensitivityAnalyticImpl::ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZeroSensitivitySimulation(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     // Run Simulations 
     auto simMarket = buildSimMarket(false);
     auto scenarioGenerator = buildScenarioGenerator(simMarket, false);
-    std::vector<XvaResults> xvaResults;
+    std::vector<ext::shared_ptr<XvaResults>> xvaResults;
     runSimulations(xvaResults, loader, scenarioGenerator);
-    // Create sensi from xva simulation results cubes
-    return ZeroSenisResults();
+    // Create sensi cubes from xva simulation results
+    QL_REQUIRE(!xvaResults.empty(),
+               "XVA Sensitivity Run ended without any results, there should be at least the base scenario");
+    
+    auto& baseResults = xvaResults.front();
+    std::map<XvaResults::Adjustment, ext::shared_ptr<NPVSensiCube>> nettingZeroCubes, tradeZeroCubes;
+    for (const auto& valueAdjustment : {XvaResults::Adjustment::CVA, XvaResults::Adjustment::DVA}) {
+        nettingZeroCubes[valueAdjustment] = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(baseResults->nettingSetIds(), inputs_->asof(),
+                                                                                          scenarioGenerator->samples());
+        tradeZeroCubes[valueAdjustment] = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(
+            baseResults->tradeIds(), inputs_->asof(), scenarioGenerator->samples());
+    }
+
+    for (size_t i = 0; i < xvaResults.size(); ++i) {
+        if (i == 0) {
+            for (const auto& tradeId : baseResults->tradeIds()) {
+                tradeZeroCubes[XvaResults::Adjustment::CVA]->setT0(
+                    baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId);
+                tradeZeroCubes[XvaResults::Adjustment::DVA]->setT0(
+                    baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::DVA), tradeId);
+            }
+            for (const auto& nettingSetId : baseResults->nettingSetIds()) {
+                nettingZeroCubes[XvaResults::Adjustment::CVA]->setT0(
+                    baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::CVA), nettingSetId);
+                nettingZeroCubes[XvaResults::Adjustment::DVA]->setT0(
+                    baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::DVA), nettingSetId);
+            }
+        }
+        for (const auto& tradeId : baseResults->tradeIds()) {
+            tradeZeroCubes[XvaResults::Adjustment::CVA]->set(
+                baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId, i);
+            tradeZeroCubes[XvaResults::Adjustment::DVA]->set(
+                baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::DVA), tradeId, i);
+        }
+        for (const auto& nettingSetId : baseResults->nettingSetIds()) {
+            nettingZeroCubes[XvaResults::Adjustment::CVA]->set(
+                baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::CVA), nettingSetId, i);
+            nettingZeroCubes[XvaResults::Adjustment::DVA]->set(
+                baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::DVA), nettingSetId, i);
+        }
+    }
+    ZeroSenisResults results;
+
+    for(const auto& [valueAdjustment, cube] : nettingZeroCubes){
+        results.nettingCubes_[valueAdjustment] = QuantLib::ext::make_shared<SensitivityCube>(
+            cube, scenarioGenerator->scenarioDescriptions(), scenarioGenerator->shiftSizes(),
+            scenarioGenerator->shiftSizes(), scenarioGenerator->shiftSchemes());
+    }
+    for(const auto& [valueAdjustment, cube] : tradeZeroCubes){
+        results.tradeCubes_[valueAdjustment] = QuantLib::ext::make_shared<SensitivityCube>(
+            cube, scenarioGenerator->scenarioDescriptions(), scenarioGenerator->shiftSizes(),
+            scenarioGenerator->shiftSizes(), scenarioGenerator->shiftSchemes());
+    }
+    
+    return results;
 }
 
-void XvaSensitivityAnalyticImpl::runSimulations(std::vector<XvaResults>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
+void XvaSensitivityAnalyticImpl::runSimulations(std::vector<ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
     // Used for the raw report
-    std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>> xvaReports;
+    std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>>> xvaReports;
     
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
@@ -170,11 +223,11 @@ void XvaSensitivityAnalyticImpl::runSimulations(std::vector<XvaResults>& xvaResu
                 if (boost::starts_with(name, "exposure") || boost::starts_with(name, "xva")) {
                     xvaReports[name].push_back(rpt);
                     if (name == "xva") {
-                        xvaResults.push_back(XvaResults(rpt));
+                        xvaResults.push_back(ext::make_shared<XvaResults>(rpt));
                     }
                 }
             }
-            createDetailReport(scenarioGenerator, scenarioIdx, xvaReports);
+            createDetailReport(scenarioGenerator, xvaReports);
         } catch (const std::exception& e) {
             StructuredAnalyticsErrorMessage("XvaSensitivity", "XVACalc",
                                             "Error during XVA calc under scenario " + label + ", got " + e.what() +
@@ -182,6 +235,22 @@ void XvaSensitivityAnalyticImpl::runSimulations(std::vector<XvaResults>& xvaResu
                 .log();
         }
     }
+}
+
+void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSenisResults& xvaZeroSeniCubes){
+    auto ssTrade = QuantLib::ext::make_shared<SensitivityCubeStream>(cvaTradeSensiCube, inputs_->baseCurrency());
+    auto ssNetting = QuantLib::ext::make_shared<SensitivityCubeStream>(cvaNettingSetSensiCube, inputs_->baseCurrency());
+    QuantLib::ext::shared_ptr<ore::data::InMemoryReport> cvaTradeReport =
+        QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
+    QuantLib::ext::shared_ptr<ore::data::InMemoryReport> cvaNettingReport =
+        QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
+    ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*cvaTradeReport, ssTrade, inputs_->sensiThreshold());
+    ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*cvaNettingReport, ssNetting, inputs_->sensiThreshold());
+    
+    analytic()->reports()[label()]["cva_trade_zero_sensitivity"] = cvaTradeReport;
+    analytic()->reports()[label()]["cva_netting_zero_sensitivity"] = cvaNettingReport;
+    analytic()->reports()[label()]["cva_zero_sensitivity"] = cvaReport;
+}
 
 void XvaSensitivityAnalyticImpl::createDetailReport(
     const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator,
@@ -227,6 +296,7 @@ void XvaSensitivityAnalyticImpl::createDetailReport(
     }
 }
 
+/*
 void XvaSensitivityAnalyticImpl::createZeroSensiReport(
     const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator,
     const std::map<std::string, size_t>& scenarioIdx,
@@ -242,11 +312,7 @@ void XvaSensitivityAnalyticImpl::createZeroSensiReport(
         nettingSetIds.insert(key.nettingSetId);
     }
 
-    QuantLib::ext::shared_ptr<NPVSensiCube> cvaTradeCube =
-        QuantLib::ext::make_shared<DoublePrecisionSensiCube>(tradeIds, inputs_->asof(), scenarioGenerator->samples());
-
-    QuantLib::ext::shared_ptr<NPVSensiCube> cvaNettingSetCube =
-        QuantLib::ext::make_shared<DoublePrecisionSensiCube>(nettingSetIds, inputs_->asof(), scenarioGenerator->samples());
+    
 
     for (const auto& [scenarioLabel, results] : xvaResults) {
         size_t idx = scenarioIdx.at(scenarioLabel);
@@ -292,23 +358,10 @@ void XvaSensitivityAnalyticImpl::createZeroSensiReport(
         cvaTradeCube, scenarioGenerator->scenarioDescriptions(), scenarioGenerator->shiftSizes(),
         scenarioGenerator->shiftSizes(), scenarioGenerator->shiftSchemes());
 
-    auto cvaNettingSetSensiCube = QuantLib::ext::make_shared<SensitivityCube>(cvaNettingSetCube, scenarioGenerator->scenarioDescriptions(),
-                                                                      scenarioGenerator->shiftSizes(),
-                                                                      scenarioGenerator->shiftSizes(), scenarioGenerator->shiftSchemes());
+    auto cvaNettingSetSensiCube = 
 
 
-    auto ssTrade = QuantLib::ext::make_shared<SensitivityCubeStream>(cvaTradeSensiCube, inputs_->baseCurrency());
-    auto ssNetting = QuantLib::ext::make_shared<SensitivityCubeStream>(cvaNettingSetSensiCube, inputs_->baseCurrency());
-    QuantLib::ext::shared_ptr<ore::data::InMemoryReport> cvaTradeReport =
-        QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-    QuantLib::ext::shared_ptr<ore::data::InMemoryReport> cvaNettingReport =
-        QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*cvaTradeReport, ssTrade, inputs_->sensiThreshold());
-    ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*cvaNettingReport, ssNetting, inputs_->sensiThreshold());
     
-    analytic()->reports()[label()]["cva_trade_zero_sensitivity"] = cvaTradeReport;
-    analytic()->reports()[label()]["cva_netting_zero_sensitivity"] = cvaNettingReport;
-    analytic()->reports()[label()]["cva_zero_sensitivity"] = cvaReport;
 
     // Par Conversion
     set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
@@ -348,13 +401,14 @@ void XvaSensitivityAnalyticImpl::createZeroSensiReport(
         QuantLib::ext::make_shared<ZeroToParCube>(cvaTradeSensiCube, parConverter, typesDisabled, true);
     QuantLib::ext::shared_ptr<ParSensitivityCubeStream> pss =
         QuantLib::ext::make_shared<ParSensitivityCubeStream>(parCvaTradeCube, inputs_->baseCurrency());
-    // If the stream is going to be reused - wrap it into a buffered stream to gain some
-    // performance. The cost for this is the memory footpring of the buffer.
+    
     QuantLib::ext::shared_ptr<InMemoryReport> parSensiReport =
         QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold());
     analytic()->reports()[label()]["par_cva_trade_sensitivity"] = parSensiReport;
 }
+
+
 
 ext::shared_ptr<InMemoryReport> XvaSensitivityAnalyticImpl::createEmptySensitivityReport() {
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
@@ -404,7 +458,7 @@ void XvaSensitivityAnalyticImpl::addZeroSensitivityToReport(
     report->add(delta);
     report->add(0.0);
 }
-
+*/
 void XvaSensitivityAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->xvaSensiSimMarketParams();
