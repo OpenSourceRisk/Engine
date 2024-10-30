@@ -16,9 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/math/stoplightbounds.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/math/matrixutilities/choleskydecomposition.hpp>
 #include <ql/math/randomnumbers/rngtraits.hpp>
+#include <qle/math/stoplightbounds.hpp>
 
 // fix for boost 1.64, see https://lists.boost.org/Archives/boost/2016/11/231756.php
 #if BOOST_VERSION >= 106400
@@ -33,6 +34,25 @@
 #include <boost/range/adaptor/transformed.hpp>
 
 #include <algorithm>
+
+#ifdef ORE_USE_EIGEN
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
+#endif
+#include <Eigen/Sparse>
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+#else
+#include <ql/math/matrixutilities/qrdecomposition.hpp>
+#endif
 
 using namespace QuantLib;
 using namespace boost::accumulators;
@@ -333,6 +353,56 @@ std::vector<std::pair<Size, std::vector<Size>>> generateStopLightBoundTable(cons
     }
 
     return result;
+}
+
+std::vector<double> decorrelateOverlappingPnls(const std::vector<double>& pnl, const Size numberOfDays) {
+
+#ifdef ORE_USE_EIGEN
+
+    Eigen::SparseMatrix<double> correlation(pnl.size(), pnl.size());
+
+    for (Size i = 0; i < pnl.size(); ++i) {
+        for (Size j = i - std::min<Size>(i, numberOfDays - 1);
+             j <= i + std::min<Size>(numberOfDays - 1, pnl.size() - i - 1); ++j) {
+            correlation.insert(i, j) = 1.0 - 0.1 * static_cast<double>(std::abs((int)i - (int)j));
+        }
+    }
+
+    Eigen::VectorXd b(pnl.size());
+
+    for (Size i = 0; i < pnl.size(); ++i)
+        b[i] = pnl[i];
+
+    Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> root(correlation);
+    Eigen::SparseMatrix<double> L = root.matrixL();
+    Eigen::SparseLU<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> solver;
+    solver.analyzePattern(L);
+    solver.factorize(L);
+    Eigen::VectorXd x = solver.solve(b);
+
+    std::vector<double> res(pnl.size());
+    for (Size i = 0; i < pnl.size(); ++i)
+        res[i] = x[i];
+
+    return res;
+
+#else
+
+    Matrix correlation(pnl.size(), pnl.size(), 0.0);
+
+    for (Size i = 0; i < pnl.size(); ++i) {
+        for (Size j = i - std::min<Size>(i, numberOfDays - 1);
+             j <= i + std::min<Size>(numberOfDays - 1, pnl.size() - i - 1); ++j) {
+            correlation(i, j) = 1.0 - 0.1 * static_cast<double>(std::abs((int)i - (int)j));
+        }
+    }
+
+    Array b(pnl.begin(), pnl.end());
+    Matrix L = CholeskyDecomposition(correlation);
+    Array x = QuantLib::qrSolve(L, b);
+    return std::vector<double>(x.begin(), x.end());
+
+#endif
 }
 
 } // namespace QuantExt
