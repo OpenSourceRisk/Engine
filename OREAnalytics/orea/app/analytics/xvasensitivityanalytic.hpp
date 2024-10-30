@@ -31,6 +31,33 @@ namespace analytics {
 
 class XvaSensitivityAnalyticImpl : public Analytic::Impl {
 public:
+    class XvaResults {
+    public:
+        struct Key {
+            std::string nettingSetId;
+            std::string tradeId;
+        };
+
+        struct ValueAdjustments {
+            double cva;
+            double dva;
+            double fba;
+            double fca;
+        };
+
+        XvaResults() {}
+
+        XvaResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaReport);
+        
+        const std::map<Key, ValueAdjustments>& data() const { return data_; }
+
+    private:
+        std::map<Key, ValueAdjustments> data_;        
+    };
+
+
+
+
     static constexpr const char* LABEL = "XVA_SENSITIVITY";
     explicit XvaSensitivityAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -40,6 +67,23 @@ public:
 private:
     void runSensitivity(const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator,
                         const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
+
+    void
+    createDetailReport(const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator,
+                       const std::map<std::string, size_t>& scenarioIdx,
+                       const std::map<std::string, std::map<std::string, ext::shared_ptr<InMemoryReport>>>& xvaReports);
+    void createZeroSensiReport(const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator,
+                               const std::map<std::string, size_t>& scenarioIdx,
+                               const std::map<std::string, XvaResults>& xvaResults);
+
+    QuantLib::ext::shared_ptr<InMemoryReport> createEmptySensitivityReport();
+
+    void addZeroSensitivityToReport(
+        ext::shared_ptr<InMemoryReport>& report, const std::string& scenarioLabel,
+        const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator,
+        const std::map<std::string, size_t>& scenarioIdx, const std::string& nettingSetId, const std::string& tradeId,
+        double baseValue, double delta);
+    void runParAnalysis();
 };
 
 class XvaSensitivityAnalytic : public Analytic {
