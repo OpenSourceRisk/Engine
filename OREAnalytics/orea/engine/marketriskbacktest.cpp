@@ -221,94 +221,96 @@ MarketRiskBacktest::SummaryResults MarketRiskBacktest::calculateSummary(
         }
     }
 
-    Real callScenPnl;
-    Real postScenPnl;
-    vector<Real> scenTradePnls;
-    string cPassFail;
-    string pPassFail;
+    // populate call and post pnls
     vector<Real> callScenPnls;
     vector<Real> postScenPnls;
+    for (Size i = 0; i < pnls.size(); i++) {
+        callScenPnls.push_back(pnls[i]);
+        if (!callTradesToSkip.empty()) {
+            for (const Size t : callTradesToSkip) {
+                callScenPnls.back() -= tradePnls[i][t];
+            }
+        }
+        postScenPnls.push_back(pnls[i]);
+        if (!postTradesToSkip.empty()) {
+            for (const Size t : postTradesToSkip) {
+                postScenPnls.back() -= tradePnls[i][t];
+            }
+        }
+    }
+
+    // populate decorrelated pnls
+    vector<Real> callScenPnlsDecorrelated =
+        hisScenGen_->overlapping() ? QuantExt::decorrelateOverlappingPnls(callScenPnls, hisScenGen_->mporDays())
+        : callScenPnls;
+    vector<Real> postScenPnlsDecorrelated =
+        hisScenGen_->overlapping() ? QuantExt::decorrelateOverlappingPnls(postScenPnls, hisScenGen_->mporDays())
+        : postScenPnls;
+
+    // run exceedance test and write detail rows
     for (Size i = 0; i < pnls.size(); i++) {
         const auto& start = pnlScenDates[i].first;
         const auto& end = pnlScenDates[i].second;
 
-        // Deal with call and write report row
-        callScenPnl = pnls[i];
-        if (!callTradesToSkip.empty()) {
-            scenTradePnls = tradePnls[i];
-            for (const Size& t : callTradesToSkip) {
-                callScenPnl -= scenTradePnls[t];
-            }
-        }
-        if (callScenPnl > std::max(sr.callValue, btArgs_->exceptionThreshold_))
+        if (callScenPnls[i] > std::max(sr.callValue, btArgs_->exceptionThreshold_))
             sr.callExceptions++;
-
-        cPassFail = callScenPnl > std::max(sr.callValue, btArgs_->exceptionThreshold_) ? "fail" : "pass";
-        addDetailRow(reports, data, true, sr.callValue, start, end, isFull, callScenPnl, cPassFail);
-
-        // Deal with post and write report row
-        postScenPnl = pnls[i];
-        if (!postTradesToSkip.empty()) {
-            scenTradePnls = tradePnls[i];
-            for (const Size& t : postTradesToSkip) {
-                postScenPnl -= scenTradePnls[t];
-            }
-        }
-        if (-postScenPnl > std::max(sr.postValue, btArgs_->exceptionThreshold_))
+        if (-postScenPnls[i] > std::max(sr.postValue, btArgs_->exceptionThreshold_))
             sr.postExceptions++;
-        pPassFail = -postScenPnl > std::max(sr.postValue, btArgs_->exceptionThreshold_) ? "fail" : "pass";
-        addDetailRow(reports, data, false, sr.postValue, start, end, isFull, -postScenPnl, pPassFail);
+        if (callScenPnlsDecorrelated[i] > std::max(sr.callValue, btArgs_->exceptionThreshold_))
+            sr.callExceptionsDecorrelated++;
+        if (-postScenPnlsDecorrelated[i] > std::max(sr.postValue, btArgs_->exceptionThreshold_))
+            sr.postExceptionsDecorrelated++;
 
-        // populate pnls for decorrelated tests
-        callScenPnls.push_back(callScenPnl);
-        postScenPnls.push_back(postScenPnl);
+        string cPassFail = callScenPnls[i] > std::max(sr.callValue, btArgs_->exceptionThreshold_) ? "fail" : "pass";
+        string pPassFail = -postScenPnls[i] > std::max(sr.postValue, btArgs_->exceptionThreshold_) ? "fail" : "pass";
+        string cPassFailDecorrelated =
+            callScenPnlsDecorrelated[i] > std::max(sr.callValue, btArgs_->exceptionThreshold_) ? "fail" : "pass";
+        string pPassFailDecorrelated =
+            -postScenPnlsDecorrelated[i] > std::max(sr.postValue, btArgs_->exceptionThreshold_) ? "fail" : "pass";
+
+        addDetailRow(reports, data, true, sr.callValue, start, end, isFull, callScenPnls[i], cPassFail,
+                     callScenPnlsDecorrelated[i], cPassFailDecorrelated);
+        addDetailRow(reports, data, false, sr.postValue, start, end, isFull, -postScenPnls[i], pPassFail,
+                     -postScenPnlsDecorrelated[i], pPassFailDecorrelated);
 
         // Add the trade level breakdown if requested. Note that we are clearly not recomputing the IM for the
         // trade - all we are doing is adding the P&L for each trade and the trade ID.
         if (detailTrd && !data.tradeGroup->allLevel()) {
             const auto& scenTradePnls = tradePnls[i];
-            QL_REQUIRE(tradeIds.size() == scenTradePnls.size(), "For trade level backtest detail report,"
-                                                                    << " the number of trades (" << tradeIds.size()
-                                                                    << ") does not equal the size of the trade level P&L"
-                                                                    << " container (" << scenTradePnls.size()
-                                                                    << ") on scenario date " << io::iso_date(start)
-                                                                    << ".");
+            QL_REQUIRE(tradeIds.size() == scenTradePnls.size(),
+                       "For trade level backtest detail report,"
+                           << " the number of trades (" << tradeIds.size()
+                           << ") does not equal the size of the trade level P&L"
+                           << " container (" << scenTradePnls.size() << ") on scenario date " << io::iso_date(start)
+                           << ".");
             for (Size j = 0; j < scenTradePnls.size(); ++j) {
                 if (std::find(callTradesToSkip.begin(), callTradesToSkip.end(), j) == callTradesToSkip.end())
-                    addDetailRow(reports, data, true, sr.callValue, start, end, isFull, scenTradePnls[j], cPassFail, tradeIds[j]);
+                    addDetailRow(reports, data, true, sr.callValue, start, end, isFull, scenTradePnls[j], cPassFail,
+                                 Null<Real>(), "na", tradeIds[j]);
                 if (std::find(postTradesToSkip.begin(), postTradesToSkip.end(), j) == postTradesToSkip.end())
-                    addDetailRow(reports, data, false, sr.postValue, start, end, isFull, -scenTradePnls[j], pPassFail, tradeIds[j]);
+                    addDetailRow(reports, data, false, sr.postValue, start, end, isFull, -scenTradePnls[j], pPassFail,
+                                 Null<Real>(), "na", tradeIds[j]);
             }
         }
     }
 
     LOG("Got " << sr.callExceptions << " Call exceptions from " << sr.observations << " observations.");
     LOG("Got " << sr.postExceptions << " Post exceptions from " << sr.observations << " observations.");
+    LOG("Got " << sr.callExceptionsDecorrelated << " Call exceptions from " << sr.observations << " observations (decorrelated).");
+    LOG("Got " << sr.postExceptionsDecorrelated << " Post exceptions from " << sr.observations << " observations (decorrelated).");
 
     // Now calculate the [red, amber] and [amber, green] bounds
-    if (hisScenGen_->mporDays() != 10) {
-        ALOG("SimmBacktest: MPOR days is " << hisScenGen_->mporDays());
-    } else {
-        sr.bounds = hisScenGen_->overlapping() ? QuantExt::stopLightBoundsTabulated(btArgs_->ragLevels_, sr.observations,
-                                                   hisScenGen_->mporDays(), btArgs_->confidence_)
-                        : QuantExt::stopLightBounds(btArgs_->ragLevels_, sr.observations, btArgs_->confidence_);
-    }
-
-    // Run decorrelated test
     if (hisScenGen_->overlapping()) {
-        for (auto const& p : QuantExt::decorrelateOverlappingPnls(callScenPnls, hisScenGen_->mporDays())) {
-            if (p > std::max(sr.callValue, btArgs_->exceptionThreshold_))
-                sr.callExceptionsDecorrelated++;
-        }
-        for (auto const& p : QuantExt::decorrelateOverlappingPnls(postScenPnls, hisScenGen_->mporDays())) {
-            if (-p > std::max(sr.postValue, btArgs_->exceptionThreshold_))
-                sr.postExceptionsDecorrelated++;
+        try {
+            sr.bounds = QuantExt::stopLightBoundsTabulated(btArgs_->ragLevels_, sr.observations,
+                                                           hisScenGen_->mporDays(), btArgs_->confidence_);
+        } catch (const std::exception& e) {
+            ALOG("error while retrieving tabulated stop light bounds: " << e.what());
         }
         sr.boundsDecorrelated = QuantExt::stopLightBounds(btArgs_->ragLevels_, sr.observations, btArgs_->confidence_);
     } else {
-        sr.callExceptionsDecorrelated = sr.callExceptions;
-        sr.postExceptionsDecorrelated = sr.postExceptions;
-        sr.boundsDecorrelated = sr.bounds;
+        sr.bounds = sr.boundsDecorrelated =
+            QuantExt::stopLightBounds(btArgs_->ragLevels_, sr.observations, btArgs_->confidence_);
     }
 
     return sr;

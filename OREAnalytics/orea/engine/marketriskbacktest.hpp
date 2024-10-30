@@ -199,8 +199,9 @@ protected:
     
     //! Add a row to the detail report
     virtual void addDetailRow(const QuantLib::ext::shared_ptr<BacktestReports>& reports, const Data& data, bool isCall,
-        QuantLib::Real im, const QuantLib::Date& start, const QuantLib::Date& end, bool isFull, QuantLib::Real pnl, 
-        const std::string& result, const std::string& tradeId = "") const = 0;
+                              QuantLib::Real im, const QuantLib::Date& start, const QuantLib::Date& end, bool isFull,
+                              QuantLib::Real pnl, const std::string& result, QuantLib::Real pnlDecoorelated,
+                              const std::string& resultDecorrelated, const std::string& tradeId = "") const = 0;
 
     //! Add a row to the summary report
     virtual void addSummaryRow(const QuantLib::ext::shared_ptr<BacktestReports>& reports, const Data& data, bool isCall,
