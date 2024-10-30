@@ -25,7 +25,7 @@
 #include <orea/app/analytic.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/report/inmemoryreport.hpp>
-
+#include <orea/engine/parsensitivityanalysis.hpp>
 namespace ore {
 namespace analytics {
 
@@ -84,6 +84,10 @@ private:
         const std::map<std::string, size_t>& scenarioIdx, const std::string& nettingSetId, const std::string& tradeId,
         double baseValue, double delta);
     void runParAnalysis();
+
+
+    QuantLib::ext::shared_ptr<ParSensitivityAnalysis> parAnalysis_;
+    QuantLib::ext::shared_ptr<ScenarioSimMarket> simMarket_;
 };
 
 class XvaSensitivityAnalytic : public Analytic {
