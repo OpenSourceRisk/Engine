@@ -304,7 +304,7 @@ MarketRiskBacktest::SummaryResults MarketRiskBacktest::calculateSummary(
             if (-p > std::max(sr.postValue, btArgs_->exceptionThreshold_))
                 sr.postExceptionsDecorrelated++;
         }
-        sr.boundsDecorrelated = stopLightBounds(btArgs_->ragLevels_, sr.observations, btArgs_->confidence_);
+        sr.boundsDecorrelated = QuantExt::stopLightBounds(btArgs_->ragLevels_, sr.observations, btArgs_->confidence_);
     } else {
         sr.callExceptionsDecorrelated = sr.callExceptions;
         sr.postExceptionsDecorrelated = sr.postExceptions;
