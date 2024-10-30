@@ -357,6 +357,9 @@ std::vector<std::pair<Size, std::vector<Size>>> generateStopLightBoundTable(cons
 
 std::vector<double> decorrelateOverlappingPnls(const std::vector<double>& pnl, const Size numberOfDays) {
 
+    if (numberOfDays == 1)
+        return pnl;
+
 #ifdef ORE_USE_EIGEN
 
     Eigen::SparseMatrix<double> correlation(pnl.size(), pnl.size());
