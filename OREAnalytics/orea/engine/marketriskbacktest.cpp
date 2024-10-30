@@ -296,11 +296,11 @@ MarketRiskBacktest::SummaryResults MarketRiskBacktest::calculateSummary(
 
     // Run decorrelated test
     if (hisScenGen_->overlapping()) {
-        for (auto const& p : decorrelateOverlappingPnls(callScenPnls, hisScenGen_->mporDays())) {
+        for (auto const& p : QuantExt::decorrelateOverlappingPnls(callScenPnls, hisScenGen_->mporDays())) {
             if (p > std::max(sr.callValue, btArgs_->exceptionThreshold_))
                 sr.callExceptionsDecorrelated++;
         }
-        for (auto const& p : decorrelateOverlappingPnls(postScenPnls, hisScenGen_->mporDays())) {
+        for (auto const& p : QuantExt::decorrelateOverlappingPnls(postScenPnls, hisScenGen_->mporDays())) {
             if (-p > std::max(sr.postValue, btArgs_->exceptionThreshold_))
                 sr.postExceptionsDecorrelated++;
         }
