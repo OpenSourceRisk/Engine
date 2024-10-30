@@ -157,16 +157,20 @@ void MarketRiskBacktest::writeReports(const QuantLib::ext::shared_ptr<MarketRisk
 
         // Write the rows in the summary report
         addSummaryRow(backtestRpts, data, true, srFull.callValue, srFull.observations, true, srFull.callExceptions,
-                      srFull.bounds, sensiCallBenchmarks_, fullRevalCallBenchmarks_);
+                      srFull.bounds, srFull.callExceptionsDecorrelated, srFull.boundsDecorrelated, sensiCallBenchmarks_,
+                      fullRevalCallBenchmarks_);
         addSummaryRow(backtestRpts, data, false, srFull.postValue, srFull.observations, true, srFull.postExceptions,
-                      srFull.bounds, sensiPostBenchmarks_, fullRevalPostBenchmarks_);
+                      srFull.bounds, srFull.postExceptionsDecorrelated, srFull.boundsDecorrelated, sensiPostBenchmarks_,
+                      fullRevalPostBenchmarks_);
     }
 
      if (runSensi) {
-        addSummaryRow(backtestRpts, data, true, srSensi.callValue, srSensi.observations, false, srSensi.callExceptions,
-                      srSensi.bounds, sensiCallBenchmarks_, fullRevalCallBenchmarks_);
-        addSummaryRow(backtestRpts, data, false, srSensi.postValue, srSensi.observations, false, srSensi.postExceptions,
-                      srSensi.bounds, sensiPostBenchmarks_, fullRevalPostBenchmarks_);
+         addSummaryRow(backtestRpts, data, true, srSensi.callValue, srSensi.observations, false, srSensi.callExceptions,
+                       srSensi.bounds, srSensi.callExceptionsDecorrelated, srSensi.boundsDecorrelated,
+                       sensiCallBenchmarks_, fullRevalCallBenchmarks_);
+         addSummaryRow(backtestRpts, data, false, srSensi.postValue, srSensi.observations, false,
+                       srSensi.postExceptions, srSensi.bounds, srSensi.postExceptionsDecorrelated,
+                       srSensi.boundsDecorrelated, sensiPostBenchmarks_, fullRevalPostBenchmarks_);
     }
 }
 
@@ -185,7 +189,7 @@ MarketRiskBacktest::SummaryResults MarketRiskBacktest::calculateSummary(
     const ext::shared_ptr<BacktestReports>& reports, const Data& data, bool isFull, const vector<Real>& pnls, 
     const vector<string>& tradeIds, const PNLCalculator::TradePnLStore& tradePnls) {
 
-    SummaryResults sr = {pnls.size(), 0.0, 0, 0.0, 0, {}};
+    SummaryResults sr = {pnls.size(), 0.0, 0, 0.0, 0, {}, 0, 0, {}};
 
     sr.callValue = callValue(data);
     sr.postValue = postValue(data);    
@@ -222,6 +226,8 @@ MarketRiskBacktest::SummaryResults MarketRiskBacktest::calculateSummary(
     vector<Real> scenTradePnls;
     string cPassFail;
     string pPassFail;
+    vector<Real> callScenPnls;
+    vector<Real> postScenPnls;
     for (Size i = 0; i < pnls.size(); i++) {
         const auto& start = pnlScenDates[i].first;
         const auto& end = pnlScenDates[i].second;
@@ -253,6 +259,10 @@ MarketRiskBacktest::SummaryResults MarketRiskBacktest::calculateSummary(
         pPassFail = -postScenPnl > std::max(sr.postValue, btArgs_->exceptionThreshold_) ? "fail" : "pass";
         addDetailRow(reports, data, false, sr.postValue, start, end, isFull, -postScenPnl, pPassFail);
 
+        // populate pnls for decorrelated tests
+        callScenPnls.push_back(callScenPnl);
+        postScenPnls.push_back(postScenPnl);
+
         // Add the trade level breakdown if requested. Note that we are clearly not recomputing the IM for the
         // trade - all we are doing is adding the P&L for each trade and the trade ID.
         if (detailTrd && !data.tradeGroup->allLevel()) {
@@ -282,6 +292,23 @@ MarketRiskBacktest::SummaryResults MarketRiskBacktest::calculateSummary(
         sr.bounds = hisScenGen_->overlapping() ? QuantExt::stopLightBoundsTabulated(btArgs_->ragLevels_, sr.observations,
                                                    hisScenGen_->mporDays(), btArgs_->confidence_)
                         : QuantExt::stopLightBounds(btArgs_->ragLevels_, sr.observations, btArgs_->confidence_);
+    }
+
+    // Run decorrelated test
+    if (hisScenGen_->overlapping()) {
+        for (auto const& p : decorrelateOverlappingPnls(callScenPnls, hisScenGen_->mporDays())) {
+            if (p > std::max(sr.callValue, btArgs_->exceptionThreshold_))
+                sr.callExceptionsDecorrelated++;
+        }
+        for (auto const& p : decorrelateOverlappingPnls(postScenPnls, hisScenGen_->mporDays())) {
+            if (-p > std::max(sr.postValue, btArgs_->exceptionThreshold_))
+                sr.postExceptionsDecorrelated++;
+        }
+        sr.boundsDecorrelated = stopLightBounds(btArgs_->ragLevels_, sr.observations, btArgs_->confidence_);
+    } else {
+        sr.callExceptionsDecorrelated = sr.callExceptions;
+        sr.postExceptionsDecorrelated = sr.postExceptions;
+        sr.boundsDecorrelated = sr.bounds;
     }
 
     return sr;
