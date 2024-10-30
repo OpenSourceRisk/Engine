@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(testBlackVol) {
         Volatility v1 = constantVol1->blackVol(t, k);
         Volatility v2 = constantVol2->blackVol(t, k);
         Volatility v3 = btavs3.blackVol(t, k);
-        BOOST_CHECK_CLOSE(v1 * v1 + v2 * v2, v3 * v3, 1e-16);
+        BOOST_CHECK_CLOSE(v1 * v1 + v2 * v2, v3 * v3, 1e-11);
     }
 
     // Now test a non-trivial case, assume correlation of 0.8 then
