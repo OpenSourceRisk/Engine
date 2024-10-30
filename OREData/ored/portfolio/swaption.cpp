@@ -23,6 +23,7 @@
 #include <ql/instruments/swaption.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
+#include <qle/cashflows/scaledcoupon.hpp>
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/instruments/rebatedexercise.hpp>
 #include <qle/pricingengines/blackmultilegoptionengine.hpp>
@@ -116,8 +117,21 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
                 legPayers_.push_back(underlying_->legPayers()[i]);
                 for (auto const& c : underlying_->legs()[i]) {
                     if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(c)) {
-                        if (exerciseDate <= cpn->accrualStartDate()) {
-                            legs_.back().push_back(c);
+                        Date exerciseAccrualStart = optionData_.midCouponExercise()
+                                                        ? exerciseBuilder_->noticeCalendar().advance(
+                                                              exerciseDate, exerciseBuilder_->noticePeriod(),
+                                                              exerciseBuilder_->noticeConvention())
+                                                        : cpn->accrualStartDate();
+                        if (exerciseDate <= exerciseAccrualStart && exerciseAccrualStart < cpn->accrualEndDate()) {
+                            if(optionData_.midCouponExercise()) {
+                                Real midCouponMultiplier =
+                                    cpn->dayCounter().yearFraction(exerciseAccrualStart, cpn->accrualEndDate()) /
+                                    cpn->dayCounter().yearFraction(cpn->accrualStartDate(), cpn->accrualEndDate());
+                                legs_.back().push_back(
+                                    QuantLib::ext::make_shared<QuantExt::ScaledCoupon>(midCouponMultiplier, cpn));
+                            } else {
+                                legs_.back().push_back(c);
+                            }
                             maturity_ = std::max(maturity_, c->date());
                             if (maturity_ == c->date())
                                 maturityType_ = "Coupon Date";
@@ -173,8 +187,9 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
         swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_),
                                                envelope().additionalField("discount_curve", false),
-                                               envelope().additionalField("security_spread", false)));
+                                               envelope().additionalField("security_spread", false), {}));
         setSensitivityTemplate(*builder);
+        addProductModelEngine(*builder);
         instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
         maturity_ = std::max(maturity_, lastPremiumDate);
@@ -204,10 +219,11 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         auto swap = QuantLib::ext::make_shared<QuantLib::Swap>(legs_, legPayers_);
         swap->setPricingEngine(builder->engine(parseCurrency(npvCurrency_),
                                                envelope().additionalField("discount_curve", false),
-                                               envelope().additionalField("security_spread", false)));
+                                               envelope().additionalField("security_spread", false), {}));
         instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap, positionType_ == Position::Long ? 1.0 : -1.0,
                                                             additionalInstruments, additionalMultipliers);
         setSensitivityTemplate(*builder);
+        addProductModelEngine(*builder);
         maturity_ = std::max(maturity_, lastPremiumDate);
         if (maturity_ == lastPremiumDate)
             maturityType_ = "Last Premium Date";
@@ -254,9 +270,10 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     std::vector<QuantLib::Currency> ccys;
     for (auto const& c : underlying_->legCurrencies())
         ccys.push_back(parseCurrency(c));
-    auto swaption =
-        QuantLib::ext::make_shared<QuantExt::MultiLegOption>(underlying_->legs(), underlying_->legPayers(), ccys,
-	    exerciseBuilder_->exercise(), settlementType_, settlementMethod_, exerciseBuilder_->settlementDates());
+    auto swaption = QuantLib::ext::make_shared<QuantExt::MultiLegOption>(
+        underlying_->legs(), underlying_->legPayers(), ccys, exerciseBuilder_->exercise(), settlementType_,
+        settlementMethod_, exerciseBuilder_->settlementDates(), optionData_.midCouponExercise(),
+        exerciseBuilder_->noticePeriod(), exerciseBuilder_->noticeCalendar(), exerciseBuilder_->noticeConvention());
 
     std::string builderType;
     std::vector<std::string> builderPrecheckMessages;
@@ -390,12 +407,13 @@ void Swaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
     swaption->setPricingEngine(swaptionEngine);
     setSensitivityTemplate(*swaptionBuilder);
+    addProductModelEngine(*swaptionBuilder);
 
     // 9.4 build underlying swaps, add premiums, build option wrapper
 
     auto swapEngine =
         swapBuilder->engine(parseCurrency(npvCurrency_), envelope().additionalField("discount_curve", false),
-                            envelope().additionalField("security_spread", false));
+                            envelope().additionalField("security_spread", false), {});
 
     std::vector<QuantLib::ext::shared_ptr<Instrument>> underlyingSwaps =
         buildUnderlyingSwaps(swapEngine, exerciseBuilder_->noticeDates());

@@ -4467,7 +4467,7 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -4504,12 +4504,46 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>AnalyticCashSettledEuropeanEngine</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
 \caption{Configuration for Product FxOptionEuropeanCS, Model GarmanKohlhagen, Engine AnalyticCashSettledEuropeanEngine}
 \label{lst:peconfig_FxOptionEuropeanCS_GarmanKohlhagen_AnalyticCashSettledEuropeanEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: FxOptionForward}
+%--------------------------------------------------------
+
+Used by trade type: FxOption if physically settled and payment date is later than option expiry date
+
+Available Model/Engine pairs: GarmanKohlhagen/AnalyticEuropeanForwardEngine
+
+Engine description:
+
+GarmanKohlhagen/AnalyticEuropeanForwardEngine builds a AnalyticEuropeanForwardEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_FxOptionForward_GarmanKohlhagen_AnalyticEuropeanForwardEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxOptionForward">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanForwardEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxOptionForward, Model GarmanKohlhagen, Engine AnalyticEuropeanForwardEngine}
+\label{lst:peconfig_FxOptionForward_GarmanKohlhagen_AnalyticEuropeanForwardEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -4554,7 +4588,7 @@ The parameters have the following meaning:
         <Parameter name="XGrid">100</Parameter>
         <Parameter name="DampingSteps">0</Parameter>
         <Parameter name="EnforceMonotoneVariance">true</Parameter>
-        <Parameter name="SensitivityTemplate">COMM_FD</Parameter>
+        <Parameter name="SensitivityTemplate">FX_FD</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -4578,7 +4612,7 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>BaroneAdesiWhaleyApproximationEngine</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}

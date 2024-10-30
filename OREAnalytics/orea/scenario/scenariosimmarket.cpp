@@ -575,9 +575,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         string forecastCurve;
                         if (curveConfigs.hasEquityCurveConfig(name)) {
                             // From the equity config, get the currency and forecast curve of the equity
-                            auto eqVolConfig = curveConfigs.equityCurveConfig(name);
-                            string forecastName = eqVolConfig->forecastingCurve();
-                            string eqCcy = eqVolConfig->currency();
+                            auto eqConfig = curveConfigs.equityCurveConfig(name);
+                            string forecastName = eqConfig->forecastingCurve();
+                            string eqCcy = eqConfig->currency();
                             // Build a YieldCurveSpec and extract the yieldCurveSpec name
                             YieldCurveSpec ycspec(eqCcy, forecastName);
                             forecastCurve = ycspec.name();

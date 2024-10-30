@@ -152,6 +152,7 @@ public:
     void setUseSensiSpreadedTermStructures(bool b) { useSensiSpreadedTermStructures_ = b; }
     void setSensiThreshold(Real r) { sensiThreshold_ = r; }
     void setSensiRecalibrateModels(bool b) { sensiRecalibrateModels_ = b; }
+    void setSensiLaxFxConversion(bool b) { sensiLaxFxConversion_ = b; }
     void setSensiSimMarketParams(const std::string& xml);
     void setSensiSimMarketParamsFromFile(const std::string& fileName);
     void setSensiScenarioData(const std::string& xml);
@@ -188,6 +189,8 @@ public:
     void setStressLowerBoundRatesDiscountFactor(const double value) { stressLowerBoundRatesDiscountFactor_ = value; }
     void setStressUpperBoundRatesDiscountFactor(const double value) { stressUpperBoundRatesDiscountFactor_ = value; }
     void setStressAccurary(const double value) { stressAccurary_ = value; };
+    void setStressPrecision(const Size value) { stressPrecision_ = value; };
+    void setStressGenerateCashflows(const bool b) { stressGenerateCashflows_ = b; }
     // Setters for VaR
     void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
@@ -461,6 +464,7 @@ public:
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
     void insertAnalytic(const std::string& s); 
+    void removeAnalytic(const std::string& s);
 
 
 
@@ -550,6 +554,7 @@ public:
     bool useSensiSpreadedTermStructures() const { return useSensiSpreadedTermStructures_; }
     QuantLib::Real sensiThreshold() const { return sensiThreshold_; }
     bool sensiRecalibrateModels() const { return sensiRecalibrateModels_; }
+    bool sensiLaxFxConversion() const { return sensiLaxFxConversion_; }
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& sensiSimMarketParams() const { return sensiSimMarketParams_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() const { return sensiScenarioData_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& sensiPricingEngine() const { return sensiPricingEngine_; }
@@ -587,6 +592,9 @@ public:
         return stressUpperBoundRatesDiscountFactor_;
     }
     double stressAccurary() const { return stressAccurary_; };
+    Size stressPrecision() const { return stressPrecision_; };
+    bool stressGenerateCashflows() const { return stressGenerateCashflows_; }
+    
     /*****************
      * Getters for VaR
      *****************/
@@ -932,6 +940,7 @@ protected:
     bool useSensiSpreadedTermStructures_ = true;
     QuantLib::Real sensiThreshold_ = 1e-6;
     bool sensiRecalibrateModels_ = true;
+    bool sensiLaxFxConversion_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
@@ -959,6 +968,8 @@ protected:
     double stressLowerBoundRatesDiscountFactor_;
     double stressUpperBoundRatesDiscountFactor_;
     double stressAccurary_;
+    Size stressPrecision_ = 2;
+    bool stressGenerateCashflows_ = false;
 
     /*****************
      * VAR analytics
@@ -1204,6 +1215,7 @@ private:
     std::string jacobiFileName_;
     std::string jacobiInverseFileName_;
     std::string stressTestFileName_;
+    std::string stressTestCashflowFileName_;
     std::string xvaStressTestFileName_;
     std::string stressZeroScenarioDataFileName_;
     std::string varFileName_;
@@ -1223,3 +1235,4 @@ void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);
 
 } // namespace analytics
 } // namespace ore
+

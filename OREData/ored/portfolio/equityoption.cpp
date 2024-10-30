@@ -153,6 +153,7 @@ void EquityOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         vanilla->setPricingEngine(compositeBuilder->engine(assetName_, underlyingCurrency_, 
             parseCurrency(strike_.currency()), expiryDate_));
         setSensitivityTemplate(*compositeBuilder);
+        addProductModelEngine(*compositeBuilder);
 
         string configuration = Market::defaultConfiguration;
         Position::Type positionType = parsePositionType(option_.longShort());

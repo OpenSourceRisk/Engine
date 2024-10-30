@@ -190,6 +190,7 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             QuantLib::ext::dynamic_pointer_cast<FxTouchOptionEngineBuilder>(builder);
         barrier->setPricingEngine(fxTouchOptBuilder->engine(fgnCcy, domCcy, type_, payDate, flipResults));
         setSensitivityTemplate(*fxTouchOptBuilder);
+        addProductModelEngine(*fxTouchOptBuilder);
         if (type_ == "One-Touch") {
             // if a one-touch option is triggered it becomes a simple forward cashflow
             // which we price as a swap
@@ -197,7 +198,7 @@ void FxTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
             QL_REQUIRE(builder, "No builder found for Swap");
             QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
                 QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-            underlying->setPricingEngine(swapBuilder->engine(domCcy, std::string(), std::string()));
+            underlying->setPricingEngine(swapBuilder->engine(domCcy, std::string(), std::string(), {}));
         }
 
         bool isLong = (positionType == Position::Long) ? true : false;

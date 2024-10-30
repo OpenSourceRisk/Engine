@@ -53,8 +53,7 @@ EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
     std::string fxCcyPair = ccy.code() + baseCcy_.code();
     eqSpot_ = market_->equitySpot(eqName, configuration_);
     fxSpot_ = market_->fxRate(fxCcyPair, configuration_);
-    // FIXME using the "discount curve" here instead of the equityReferenceRateCurve?
-    ytsRate_ = market_->discountCurve(ccy.code(), configuration_);
+    ytsRate_ = market_->equityForecastCurve(eqName, configuration_);
     ytsDiv_ = market_->equityDividendCurve(eqName, configuration_);
     eqVol_ = market_->equityVol(eqName, configuration_);
 

@@ -1377,8 +1377,8 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     bool recalibrateModels = true;           // nothing to calibrate here
     bool useOriginalFxForBaseCcyConv = true; // convert sensi to EUR using original FX rate (not the shifted rate)
     QuantLib::ext::shared_ptr<SensitivityAnalysis> sa = QuantLib::ext::make_shared<SensitivityAnalysis>(
-        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, recalibrateModels, nullptr,
-        nullptr, useOriginalFxForBaseCcyConv);
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, recalibrateModels, false,
+        nullptr, nullptr, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap;

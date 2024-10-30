@@ -82,7 +82,6 @@ private:
     string payLag_;
     string payCalendar_;
     string payConvention_;
-    bool includeSettlementDateFlows_;
 };
 } // namespace data
 } // namespace ore

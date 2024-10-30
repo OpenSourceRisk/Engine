@@ -39,6 +39,7 @@ void CallableSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     swaption_.build(engineFactory);
 
     setSensitivityTemplate(swaption_.sensitivityTemplate());
+    swap_.addProductModelEngine(swaption_.productModelEngine());
 
     instrument_ = QuantLib::ext::make_shared<CompositeInstrumentWrapper>(
         std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>>{swap_.instrument(), swaption_.instrument()});

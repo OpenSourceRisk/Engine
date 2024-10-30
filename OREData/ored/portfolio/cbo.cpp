@@ -117,6 +117,7 @@ void CBO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(cboBuilder, "No Builder found for CBO: " << id());
     cbo->setPricingEngine(cboBuilder->engine(bondbasket_->pool()));
     setSensitivityTemplate(*cboBuilder);
+    addProductModelEngine(*cboBuilder);
     instrument_.reset(new VanillaInstrument(cbo, multiplier_));
 
     maturity_ = schedule.endDate();
