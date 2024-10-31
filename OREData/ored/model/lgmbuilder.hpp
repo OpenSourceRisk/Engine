@@ -30,7 +30,6 @@
 #include <qle/models/lgm.hpp>
 
 #include <ored/model/irlgmdata.hpp>
-#include <ored/model/crossassetmodeldata.hpp>
 #include <qle/models/marketobserver.hpp>
 #include <qle/models/modelbuilder.hpp>
 

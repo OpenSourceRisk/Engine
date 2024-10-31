@@ -89,8 +89,7 @@ void ScenarioStatisticsAnalyticImpl::buildCrossAssetModel(const bool continueOnC
         << std::boolalpha << continueOnCalibrationError << ")");
 
     CrossAssetModelBuilder modelBuilder(
-        analytic()->market(), analytic()->configurations().crossAssetModelData,
-	inputs_->marketConfig("lgmcalibration"),
+        analytic()->market(), analytic()->configurations().crossAssetModelData,	inputs_->marketConfig("lgmcalibration"),
         inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
         inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
         inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "",

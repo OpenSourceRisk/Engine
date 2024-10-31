@@ -29,7 +29,6 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/fxbsdata.hpp>
-#include <ored/model/crossassetmodeldata.hpp>
 #include <qle/models/marketobserver.hpp>
 #include <qle/models/modelbuilder.hpp>
 #include <qle/models/crossassetmodel.hpp>

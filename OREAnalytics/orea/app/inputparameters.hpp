@@ -260,7 +260,6 @@ public:
     void setCollateralBalances(const std::string& xml); 
     void setCollateralBalancesFromFile(const std::string& fileName);
     void setReportBufferSize(Size s) { reportBufferSize_ = s; }
-    void setCalibrationFromFile(const std::string& fileName);
     // TODO: load from XML
     // void setCounterpartyManager(const std::string& xml);
 
@@ -1103,6 +1102,7 @@ protected:
      ***************/
     std::string simmVersion_;
     QuantLib::ext::shared_ptr<ore::analytics::Crif> crif_;
+  
     QuantLib::ext::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;

@@ -111,7 +111,6 @@ private:
     QuantLib::Size nSamples_;
     QuantLib::ext::shared_ptr<ore::data::Loader> loader_;
     QuantLib::ext::shared_ptr<CrossAssetModelData> crossAssetModelData_;
-    CalibrationData calibrationData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> engineData_;
     QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
     QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;

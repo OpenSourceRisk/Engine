@@ -424,17 +424,6 @@ void InputParameters::setXvaSensiPricingEngineFromFile(const std::string& fileNa
     xvaSensiPricingEngine_->fromFile(fileName);
 }
 
-void logParametrizationData(const ext::shared_ptr<ParametrizationData>& data) {
-    DLOG("AssetType: " << data->assetType);
-    DLOG("SequenceNumber: " << data->sequenceNumber);
-    DLOG("ParametrizationType: " << data->parametrizationType);
-    DLOG("Currency: " << data->currency);
-    DLOG("VolTimes: " << to_string(data->volTimes));
-    DLOG("VolValues: " << to_string(data->volValues));
-    DLOG("RevTimes: " << to_string(data->revTimes));
-    DLOG("RevValues: " << to_string(data->revValues));
-}
-
 // XVA Explain
 
 void InputParameters::setXvaExplainSimMarketParams(const std::string& xml) {

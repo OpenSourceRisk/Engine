@@ -77,14 +77,12 @@ namespace data {
 
 CrossAssetModelBuilder::CrossAssetModelBuilder(
     const QuantLib::ObservableValue<QuantLib::ext::shared_ptr<Market>>& market,
-    const QuantLib::ext::shared_ptr<CrossAssetModelData>& config,
-    const std::string& configurationLgmCalibration,
+    const QuantLib::ext::shared_ptr<CrossAssetModelData>& config, const std::string& configurationLgmCalibration,
     const std::string& configurationFxCalibration, const std::string& configurationEqCalibration,
     const std::string& configurationInfCalibration, const std::string& configurationCrCalibration,
     const std::string& configurationFinalModel, const bool dontCalibrate, const bool continueOnError,
     const std::string& referenceCalibrationGrid, const SalvagingAlgorithm::Type salvaging, const std::string& id)
-: market_(market), config_(config), 
-      configurationLgmCalibration_(configurationLgmCalibration),
+: market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
       configurationCrCalibration_(configurationCrCalibration),

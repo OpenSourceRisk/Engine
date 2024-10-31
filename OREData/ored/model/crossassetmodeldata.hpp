@@ -330,33 +330,6 @@ private:
 };
 
 CrossAssetModel::Discretization parseDiscretization(const string& s);
-
-/*! Class to hold the data (including calibration) for reconstructing
-    parametrizations of Cross Asset Model components
-    TODO: Move this outside crossassetmodeldata eventually
-*/
-class ParametrizationData {
-public:
-    ParametrizationData() {}
-    // IR, FX, EQ, INF, CR, COM
-    string assetType;
-    // Sequence number of the model component within the asset type (IR 0, IR 1, IR 2, FX 0, FX 1 etc)
-    Size sequenceNumber;
-    // Corresponds to the representation of the concrete parametrization class name:
-    // - IR: Lgm1fConstant, Lgm1fPiecewiseConstant, Lgm1fPiecewiseLinear, Lgm1fPiecewiseConstantHullWhite
-    // - FX: FxBsConstant, FxBsPiecewiseConstant
-    // - EQ: EqBsConstant, EqBsPiecewiseConstant
-    // - CR: CrLgm1fConstant, CrLgm1fPiecewiseConstant, CrLgm1fPiecewiseConstantHullWhiteAdaptor
-    // - INF: InfDkConstant, InfDkPiecewiseConstant, InfPiecewiseLinear, InfDkfPiecewiseConstantHullWhiteAdaptor, InfJy
-    // - COM: CommoditySchwartz
-    string parametrizationType;
-    string currency;
-    vector<Real> volTimes, volValues, revTimes, revValues;
-};
-
-// Parametrization data by AssetType (IR, FX, ...) and SequenceNumber withn the asset type
-typedef std::map<string, std::map<QuantLib::Size, QuantLib::ext::shared_ptr<ParametrizationData>>> CalibrationData;
-
   
 } // namespace data
 } // namespace ore
