@@ -59,6 +59,9 @@ private:
     std::map<std::string, std::string> tradeNettingSetMapping_;
 };
 
+//! Write FrtbCorrelationScenario to stream
+std::ostream& operator<<(std::ostream& os, const XvaResults::Adjustment adjustment);
+
 class XvaSensitivityAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "XVA_SENSITIVITY";

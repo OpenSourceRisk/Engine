@@ -63,6 +63,20 @@ XvaResults::XvaResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaRepor
     }
 }
 
+ostream& operator<<(std::ostream& os, XvaResults::Adjustment adjustment) {
+    if (adjustment == XvaResults::Adjustment::CVA) {
+        return os << "cva";
+    } else if (adjustment == XvaResults::Adjustment::DVA) {
+        return os << "dva";
+    } else if (adjustment == XvaResults::Adjustment::FBA) {
+        return os << "fba";
+    } else if (adjustment == XvaResults::Adjustment::FCA) {
+        return os << "fca";
+    } else {
+        QL_FAIL("Internal error not recognise XvaResults::Adjustment " << static_cast<int>(adjustment));
+    }
+}
+
 XvaSensitivityAnalyticImpl::XvaSensitivityAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
     : Analytic::Impl(inputs) {
     setLabel(LABEL);
@@ -79,7 +93,9 @@ QuantLib::ext::shared_ptr<ScenarioSimMarket> XvaSensitivityAnalyticImpl::buildSi
     return simMarket;
 }
 
-QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> XvaSensitivityAnalyticImpl::buildScenarioGenerator(QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket, bool overrideTenors){
+QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>
+XvaSensitivityAnalyticImpl::buildScenarioGenerator(QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
+                                                   bool overrideTenors) {
     auto baseScenario = simMarket->baseScenario();
     auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
     auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
@@ -238,18 +254,24 @@ void XvaSensitivityAnalyticImpl::runSimulations(std::vector<ext::shared_ptr<XvaR
 }
 
 void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSenisResults& xvaZeroSeniCubes){
-    auto ssTrade = QuantLib::ext::make_shared<SensitivityCubeStream>(cvaTradeSensiCube, inputs_->baseCurrency());
-    auto ssNetting = QuantLib::ext::make_shared<SensitivityCubeStream>(cvaNettingSetSensiCube, inputs_->baseCurrency());
-    QuantLib::ext::shared_ptr<ore::data::InMemoryReport> cvaTradeReport =
-        QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-    QuantLib::ext::shared_ptr<ore::data::InMemoryReport> cvaNettingReport =
-        QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*cvaTradeReport, ssTrade, inputs_->sensiThreshold());
-    ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*cvaNettingReport, ssNetting, inputs_->sensiThreshold());
+
+
+
+    for(const auto& [valueAdjustment, cube] : xvaZeroSeniCubes.tradeCubes_){
+        auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(cube, inputs_->baseCurrency());
+        QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
+            QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
+        ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
+        analytic()->reports()[label()][to_string(valueAdjustment) + "_trade_zero_sensitivity"] = report;
+    }
     
-    analytic()->reports()[label()]["cva_trade_zero_sensitivity"] = cvaTradeReport;
-    analytic()->reports()[label()]["cva_netting_zero_sensitivity"] = cvaNettingReport;
-    analytic()->reports()[label()]["cva_zero_sensitivity"] = cvaReport;
+    for(const auto& [valueAdjustment, cube] : xvaZeroSeniCubes.nettingCubes_){
+        auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(cube, inputs_->baseCurrency());
+        QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
+            QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
+        ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
+        analytic()->reports()[label()][to_string(valueAdjustment) + "_netting_zero_sensitivity"] = report;
+    }
 }
 
 void XvaSensitivityAnalyticImpl::createDetailReport(
