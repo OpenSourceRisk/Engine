@@ -254,9 +254,6 @@ void XvaSensitivityAnalyticImpl::runSimulations(std::vector<ext::shared_ptr<XvaR
 }
 
 void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSenisResults& xvaZeroSeniCubes){
-
-
-
     for(const auto& [valueAdjustment, cube] : xvaZeroSeniCubes.tradeCubes_){
         auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(cube, inputs_->baseCurrency());
         QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
@@ -264,12 +261,61 @@ void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSenisResults& xvaZeroSeni
         ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
         analytic()->reports()[label()][to_string(valueAdjustment) + "_trade_zero_sensitivity"] = report;
     }
-    
     for(const auto& [valueAdjustment, cube] : xvaZeroSeniCubes.nettingCubes_){
         auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(cube, inputs_->baseCurrency());
         QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
+        analytic()->reports()[label()][to_string(valueAdjustment) + "_netting_zero_sensitivity"] = report;
+    }
+}
+
+XvaSensitivityAnalyticImpl::ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSenisResults& zeroResults) {
+    set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
+
+    auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
+        inputs_->asof(), analytic()->configurations().simMarketParams, *analytic()->configurations().sensiScenarioData,
+        "", true, typesDisabled);
+
+    LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
+    parAnalysis->alignPillars();
+
+    auto simMarket = buildSimMarket(true);
+    auto scenarioGenerator = buildScenarioGenerator(simMarket, true);
+
+    parAnalysis->computeParInstrumentSensitivities(simMarket);
+
+    QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
+        QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
+
+    ParSensiResults results;
+
+    for(const auto& [valueAdjustment, zeroCube] : zeroResults.tradeCubes_){
+        results.tradeParSensiCube_[valueAdjustment] =
+            QuantLib::ext::make_shared<ZeroToParCube>(zeroCube, parConverter, typesDisabled, true);
+    }
+
+    for(const auto& [valueAdjustment, zeroCube] : zeroResults.nettingCubes_){
+        results.nettingParSensiCube_[valueAdjustment] =
+            QuantLib::ext::make_shared<ZeroToParCube>(zeroCube, parConverter, typesDisabled, true);
+    }
+
+    return results;
+}
+
+void XvaSensitivityAnalyticImpl::createParReports(ParSensiResults& xvaParSensiCubes){
+    for(const auto& [valueAdjustment, cube] : xvaParSensiCubes.tradeCubes_){
+        auto pss = QuantLib::ext::make_shared<ParSensitivityCubeStream>(cube, inputs_->baseCurrency());
+        QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
+            QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
+        ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, pss, inputs_->sensiThreshold());
+        analytic()->reports()[label()][to_string(valueAdjustment) + "_trade_zero_sensitivity"] = report;
+    }
+    for (const auto& [valueAdjustment, cube] : xvaParSensiCubes.nettingCubes_) {
+        auto pss = QuantLib::ext::make_shared<ParSensitivityCubeStream>(cube, inputs_->baseCurrency());
+        QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
+            QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
+        ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, pss, inputs_->sensiThreshold());
         analytic()->reports()[label()][to_string(valueAdjustment) + "_netting_zero_sensitivity"] = report;
     }
 }
@@ -318,169 +364,6 @@ void XvaSensitivityAnalyticImpl::createDetailReport(
     }
 }
 
-/*
-void XvaSensitivityAnalyticImpl::createZeroSensiReport(
-    const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator,
-    const std::map<std::string, size_t>& scenarioIdx,
-    const std::map<std::string, XvaSensitivityAnalyticImpl::XvaResults>& xvaResults) {
-    auto baseIt = xvaResults.find("BASE");
-    QL_REQUIRE(baseIt != xvaResults.end(), "No base scenario found");
-    auto base = baseIt->second;
-    auto cvaReport = createEmptySensitivityReport();
-    std::set<std::string> tradeIds;
-    std::set<std::string> nettingSetIds;
-    for (const auto& [key, _] : base.data()) {
-        tradeIds.insert(key.tradeId);
-        nettingSetIds.insert(key.nettingSetId);
-    }
-
-    
-
-    for (const auto& [scenarioLabel, results] : xvaResults) {
-        size_t idx = scenarioIdx.at(scenarioLabel);
-        
-        if (scenarioLabel == "BASE") {
-            for(const auto& [baseKey, baseValues] : base.data()){
-                if(baseKey.tradeId.empty()){
-                    cvaNettingSetCube->setT0(baseValues.cva, baseKey.nettingSetId);
-                } else{
-                    cvaTradeCube->setT0(baseValues.cva, baseKey.tradeId);
-                }
-            }
-        }
-
-        for (const auto& [baseKey, baseValues] : base.data()) {
-            auto scenarioIt = results.data().find(baseKey);
-            if (scenarioIt != results.data().end()) {
-                auto baseCVA = baseValues.cva;
-                auto scenarioCVA = scenarioIt->second.cva;
-                auto delta = scenarioCVA - baseCVA;
-                if (baseKey.tradeId.empty()) {
-                    cvaNettingSetCube->set(scenarioCVA, baseKey.nettingSetId, idx);
-                } else {
-                    cvaTradeCube->set(scenarioCVA, baseKey.tradeId, idx);
-                }
-                addZeroSensitivityToReport(cvaReport, scenarioLabel, scenarioGenerator, scenarioIdx,
-                                           baseKey.nettingSetId, baseKey.tradeId, baseCVA, delta);
-
-            } else {
-                // todo handle missing case
-            }
-        }
-        for (const auto& [scenarioKey, scenarioValues] : results.data()) {
-            auto baseValueIt = base.data().find(scenarioKey);
-            if (baseValueIt == base.data().end()) {
-                // todo error handling scenario key but no base key
-            }
-        }
-    }
-    cvaReport->end();
-
-    auto cvaTradeSensiCube = QuantLib::ext::make_shared<SensitivityCube>(
-        cvaTradeCube, scenarioGenerator->scenarioDescriptions(), scenarioGenerator->shiftSizes(),
-        scenarioGenerator->shiftSizes(), scenarioGenerator->shiftSchemes());
-
-    auto cvaNettingSetSensiCube = 
-
-
-    
-
-    // Par Conversion
-    set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
-   
-    parAnalysis_ = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
-        inputs_->asof(), analytic()->configurations().simMarketParams, *analytic()->configurations().sensiScenarioData,
-        "", true, typesDisabled);
-   
-        LOG("Sensi analysis - align pillars (for the par conversion or because alignPillars is enabled)");
-        parAnalysis_->alignPillars();
-   
-    std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
-
-    LOG("XvaSensitivityAnalytic: Build SimMarket")
-    simMarket_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-        analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
-        *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
-        inputs_->continueOnError(), analytic()->configurations().sensiScenarioData->useSpreadedTermStructures(), false,
-        true, *inputs_->iborFallbackConfig(), true);
-
-    LOG("XvaSensitivityAnalytic: Build SensitivityScenarioGenerator")
-
-    auto baseScenario = simMarket_->baseScenario();
-    auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
-    auto scenarioGeneratorParConversion = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
-        analytic()->configurations().sensiScenarioData, baseScenario, analytic()->configurations().simMarketParams,
-        simMarket_, scenarioFactory, true);
-    simMarket_->scenarioGenerator() = scenarioGeneratorParConversion;
-
-    parAnalysis_->computeParInstrumentSensitivities(simMarket_);
-    
-    QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
-        QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis_->parSensitivities(),
-                                                            parAnalysis_->shiftSizes());
-
-    auto parCvaTradeCube =
-        QuantLib::ext::make_shared<ZeroToParCube>(cvaTradeSensiCube, parConverter, typesDisabled, true);
-    QuantLib::ext::shared_ptr<ParSensitivityCubeStream> pss =
-        QuantLib::ext::make_shared<ParSensitivityCubeStream>(parCvaTradeCube, inputs_->baseCurrency());
-    
-    QuantLib::ext::shared_ptr<InMemoryReport> parSensiReport =
-        QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*parSensiReport, pss, inputs_->sensiThreshold());
-    analytic()->reports()[label()]["par_cva_trade_sensitivity"] = parSensiReport;
-}
-
-
-
-ext::shared_ptr<InMemoryReport> XvaSensitivityAnalyticImpl::createEmptySensitivityReport() {
-    QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
-        QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-
-    report->addColumn("NettingSet", string());
-    report->addColumn("TradeId", string());
-    report->addColumn("IsPar", string());
-    report->addColumn("Factor_1", string());
-    report->addColumn("ShiftSize_1", double(), 6);
-    report->addColumn("Factor_2", string());
-    report->addColumn("ShiftSize_2", double(), 6);
-    report->addColumn("Currency", string());
-    report->addColumn("BaseValue", double(), 2);
-    report->addColumn("Delta", double(), 2);
-    report->addColumn("Gamma", double(), 2);
-    return report;
-}
-
-void XvaSensitivityAnalyticImpl::addZeroSensitivityToReport(
-    ext::shared_ptr<InMemoryReport>& report, const std::string& scenarioLabel,
-    const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator,
-    const std::map<std::string, size_t>& scenarioIdx, const std::string& nettingSetId, const std::string& tradeId,
-    double baseValue, double delta) {
-    auto desc = scenarioGenerator->scenarioDescriptions()[scenarioIdx.at(scenarioLabel)];
-    double shiftSize1 = 0.0;
-    auto itShiftSize1 = scenarioGenerator->shiftSizes().find(desc.key1());
-    if (itShiftSize1 != scenarioGenerator->shiftSizes().end()) {
-        shiftSize1 = (itShiftSize1->second);
-    }
-    double shiftSize2 = 0.0;
-    auto itShiftSize2 = scenarioGenerator->shiftSizes().find(desc.key2());
-    if (itShiftSize2 != scenarioGenerator->shiftSizes().end()) {
-        shiftSize2 = (itShiftSize2->second);
-    }
-
-    report->next();
-    report->add(nettingSetId);
-    report->add(tradeId);
-    report->add("false");
-    report->add(desc.factor1());
-    report->add(shiftSize1);
-    report->add(desc.factor2());
-    report->add(shiftSize2);
-    report->add(inputs_->baseCurrency());
-    report->add(baseValue);
-    report->add(delta);
-    report->add(0.0);
-}
-*/
 void XvaSensitivityAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->xvaSensiSimMarketParams();
