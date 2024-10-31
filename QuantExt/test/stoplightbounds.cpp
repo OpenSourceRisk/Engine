@@ -18,8 +18,17 @@
 
 #include "toplevelfixture.hpp"
 
-#include <boost/test/unit_test.hpp>
+#include <ql/math/randomnumbers/rngtraits.hpp>
+
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/framework/accumulator_set.hpp>
+#include <boost/accumulators/statistics.hpp>
+#include <boost/accumulators/statistics/tail_quantile.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/math/distributions/binomial.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <qle/math/stoplightbounds.hpp>
 
@@ -161,6 +170,64 @@ BOOST_AUTO_TEST_CASE(testGenerateStopLightBoundTable, *boost::unit_test::disable
                                       << (std::to_string(table[i].second[1]) + " / " + std::to_string(tab[1])));
         BOOST_CHECK_EQUAL(table[i].second[0], tab[0]);
         BOOST_CHECK_EQUAL(table[i].second[1], tab[1]);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testDecorrelateOverlappingPnl) {
+
+    BOOST_TEST_MESSAGE("Testing decorrelation of overlapping pnl");
+
+    Size numberOfDays = 5;
+    Size seed = 42;
+    Size observations = 20;
+    Size samples = 1E5;
+
+    std::vector<std::vector<boost::accumulators::accumulator_set<
+        double,
+        boost::accumulators::stats<boost::accumulators::tag::covariance<double, boost::accumulators::tag::covariate1>,
+                                   boost::accumulators::tag::variance>>>>
+        cov(observations,
+            std::vector<boost::accumulators::accumulator_set<
+                double, boost::accumulators::stats<
+                            boost::accumulators::tag::covariance<double, boost::accumulators::tag::covariate1>,
+                            boost::accumulators::tag::variance>>>(observations));
+
+    auto sgen = PseudoRandom::make_sequence_generator(observations + numberOfDays, seed);
+
+    std::vector<Real> tenDayPls(observations, 0.0);
+
+    for (Size i = 0; i < samples; ++i) {
+
+        const auto& seq = sgen.nextSequence().value;
+
+        // compute the 10d PL only once ...
+        tenDayPls[0] = 0.0;
+        for (Size dd = 0; dd < numberOfDays; ++dd) {
+            tenDayPls[0] += seq[dd];
+        }
+
+        for (Size l = 0; l < observations - 1; ++l) {
+            // and only correct for the tail and head
+            tenDayPls[l + 1] = tenDayPls[l] + seq[l + numberOfDays] - seq[l];
+        }
+
+        auto decorrelatedPnl = decorrelateOverlappingPnls(tenDayPls, numberOfDays);
+
+        for (Size k = 0; k < observations; ++k) {
+            for (Size l = 0; l <= k; ++l) {
+                cov[k][l](decorrelatedPnl[k], boost::accumulators::covariate1 = decorrelatedPnl[l]);
+            }
+        }
+
+    } // for samples
+
+    for (Size k = 0; k < observations; ++k) {
+        for (Size l = 0; l < k; ++l) {
+            Real corr = boost::accumulators::covariance(cov[k][l]) /
+                             std::sqrt(boost::accumulators::variance(cov[k][k]) *
+                                       boost::accumulators::variance(cov[l][l]));
+            BOOST_CHECK_SMALL(corr, 0.01);
+        }
     }
 }
 
