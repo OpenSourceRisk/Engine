@@ -47,7 +47,8 @@ XvaResults::XvaResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaRepor
         const double fba = boost::get<double>(xvaReport->data(fbaColumn, i));
         const double fca = boost::get<double>(xvaReport->data(fcaColumn, i));
         nettingSetIds_.insert(nettingset);
-        tradeIds_.insert(tradeId);
+        if(!tradeId.empty()) 
+            tradeIds_.insert(tradeId);
         tradeNettingSetMapping_[tradeId] = nettingset;
         if (tradeId.empty()) {
             nettingSetValueAdjustments_[nettingset][Adjustment::CVA] = cva;
@@ -167,7 +168,12 @@ XvaSensitivityAnalyticImpl::ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZ
     
     auto& baseResults = xvaResults.front();
     std::map<XvaResults::Adjustment, ext::shared_ptr<NPVSensiCube>> nettingZeroCubes, tradeZeroCubes;
-    for (const auto& valueAdjustment : {XvaResults::Adjustment::CVA, XvaResults::Adjustment::DVA}) {
+    for (const auto& valueAdjustment : {
+             XvaResults::Adjustment::CVA,
+             XvaResults::Adjustment::DVA,
+             XvaResults::Adjustment::FBA,
+             XvaResults::Adjustment::FCA
+         }) {
         nettingZeroCubes[valueAdjustment] = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(baseResults->nettingSetIds(), inputs_->asof(),
                                                                                           scenarioGenerator->samples());
         tradeZeroCubes[valueAdjustment] = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(
@@ -181,25 +187,45 @@ XvaSensitivityAnalyticImpl::ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZ
                     baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId);
                 tradeZeroCubes[XvaResults::Adjustment::DVA]->setT0(
                     baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::DVA), tradeId);
+                tradeZeroCubes[XvaResults::Adjustment::FBA]->setT0(
+                    baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FBA), tradeId);
+                tradeZeroCubes[XvaResults::Adjustment::FCA]->setT0(
+                    baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FCA), tradeId);
             }
             for (const auto& nettingSetId : baseResults->nettingSetIds()) {
                 nettingZeroCubes[XvaResults::Adjustment::CVA]->setT0(
                     baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::CVA), nettingSetId);
                 nettingZeroCubes[XvaResults::Adjustment::DVA]->setT0(
                     baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::DVA), nettingSetId);
+                nettingZeroCubes[XvaResults::Adjustment::FBA]->setT0(
+                    baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FBA), nettingSetId);
+                nettingZeroCubes[XvaResults::Adjustment::FCA]->setT0(
+                    baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FCA), nettingSetId);
             }
         }
         for (const auto& tradeId : baseResults->tradeIds()) {
             tradeZeroCubes[XvaResults::Adjustment::CVA]->set(
-                baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId, i);
+                xvaResults[i]->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId, i);
             tradeZeroCubes[XvaResults::Adjustment::DVA]->set(
-                baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::DVA), tradeId, i);
+                xvaResults[i]->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::DVA), tradeId, i);
+            tradeZeroCubes[XvaResults::Adjustment::FBA]->set(
+                xvaResults[i]->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FBA), tradeId, i);
+            tradeZeroCubes[XvaResults::Adjustment::FCA]->set(
+                xvaResults[i]->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FCA), tradeId, i);
         }
         for (const auto& nettingSetId : baseResults->nettingSetIds()) {
             nettingZeroCubes[XvaResults::Adjustment::CVA]->set(
-                baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::CVA), nettingSetId, i);
+                xvaResults[i]->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::CVA), nettingSetId,
+                i);
             nettingZeroCubes[XvaResults::Adjustment::DVA]->set(
-                baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::DVA), nettingSetId, i);
+                xvaResults[i]->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::DVA), nettingSetId,
+                i);
+            nettingZeroCubes[XvaResults::Adjustment::FBA]->set(
+                xvaResults[i]->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FBA), nettingSetId,
+                i);
+            nettingZeroCubes[XvaResults::Adjustment::FBA]->set(
+                xvaResults[i]->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FBA), nettingSetId,
+                i);
         }
     }
     ZeroSenisResults results;
