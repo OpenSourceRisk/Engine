@@ -166,7 +166,6 @@ namespace ore {
 namespace data {
 
 LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<IrLgmData>& data,
-		       const ext::shared_ptr<ParametrizationData>& cachedCalibration,
                        const std::string& configuration, const Real bootstrapTolerance, const bool continueOnError,
                        const std::string& referenceCalibrationGrid, const bool setCalibrationInfo,
                        const std::string& id)
@@ -255,19 +254,6 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
     Array hTimes(data_->hTimes().begin(), data_->hTimes().end());
     Array alpha(data_->aValues().begin(), data_->aValues().end());
     Array h(data_->hValues().begin(), data_->hValues().end());
-
-    if (cachedCalibration) {
-        Array volTimes(cachedCalibration->volTimes.begin(), cachedCalibration->volTimes.end());
-        Array volValues(cachedCalibration->volValues.begin(), cachedCalibration->volValues.end());
-	Array revTimes(cachedCalibration->revTimes.begin(), cachedCalibration->revTimes.end());
-	Array revValues(cachedCalibration->revValues.begin(), cachedCalibration->revValues.end());
-
-	// and overwrite the initial values above
-	aTimes = volTimes;
-	hTimes = revTimes;
-	alpha = volValues;
-	h = revValues;
-    }
     
     if (data_->aParamType() == ParamType::Constant) {
         QL_REQUIRE(data_->aTimes().size() == 0,

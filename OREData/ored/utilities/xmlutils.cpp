@@ -129,6 +129,13 @@ string XMLDocument::toString() const {
     return oss.str();
 }
 
+string XMLDocument::toStringUnformatted() const {
+    std::stringstream stream;
+    std::ostream_iterator<char> iter(stream);
+    rapidxml::print(iter, *_doc, rapidxml::print_no_indenting);
+    return stream.str();
+}
+
 XMLNode* XMLDocument::allocNode(const string& nodeName) {
     XMLNode* n = _doc->allocate_node(node_element, allocString(nodeName));
     QL_REQUIRE(n, "Failed to allocate XMLNode for " << nodeName);
@@ -170,6 +177,13 @@ string XMLSerializable::toXMLString() const {
     XMLNode* node = toXML(doc);
     doc.appendNode(node);
     return doc.toString();
+}
+
+string XMLSerializable::toXMLStringUnformatted() const {
+    XMLDocument doc;
+    XMLNode* node = toXML(doc);
+    doc.appendNode(node);
+    return doc.toStringUnformatted();
 }
 
 void XMLUtils::checkNode(XMLNode* node, const string& expectedName) {

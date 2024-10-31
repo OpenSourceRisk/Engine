@@ -55,7 +55,7 @@ public:
         const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
         const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
         const std::vector<string>& aggDataIndices, const std::vector<string>& aggDataCurrencies,
-        const Size aggDataNumberCreditStates, const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData, const CalibrationData& calibrationData,
+        const Size aggDataNumberCreditStates, const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData,
         const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
         const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
         const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,

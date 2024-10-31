@@ -24,6 +24,7 @@
 
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <iostream>
 
 using namespace ore::data;
 using namespace boost::filesystem;
@@ -67,7 +68,7 @@ void CalibrationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrat
     QL_REQUIRE(market != nullptr, "Internal error, buildCrossAssetModel needs to be called after the market is built.");
 
     builder_ = ext::make_shared<CrossAssetModelBuilder>(
-	market, analytic()->configurations().crossAssetModelData, inputs_->calibrationData(),
+	market, analytic()->configurations().crossAssetModelData, 
 	inputs_->marketConfig("lgmcalibration"),
         inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
         inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
@@ -77,6 +78,16 @@ void CalibrationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrat
     model_ = *builder_->model();
 }
 
+void arrayToVector(std::vector<Real>& v, const Array a) {
+    if (a.size() == 0)
+        v = std::vector<Real>();
+    else {
+        v = std::vector<Real>(a.size(), 0.0);
+	for (Size j = 0; j < a.size(); ++j)
+	    v[j] = a[j];
+    }
+}
+  
 void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
 					  const std::set<std::string>& runTypes) {
 
@@ -105,16 +116,74 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
     CONSOLE("OK");
     ProgressMessage(msg, 1, 1).log();
 
-    msg = "Calibration: Write Report";
+    msg = "Calibration: Write Modified Model Data";
     LOG(msg);
     CONSOLEW(msg);
     ProgressMessage(msg, 0, 1).log();
-    CONSOLE("OK");
 
+    // Update Cross Asset Model Data: IR
+    QuantLib::ext::shared_ptr<CrossAssetModelData> data = builder_->modelData();
+    for (Size i = 0; i < data->irConfigs().size(); ++i) {
+        ext::shared_ptr<IrModelData> irData = data->irConfigs()[i];
+	ext::shared_ptr<Parametrization> irPara = model_->ir(i);
+	if (auto lgmPara = ext::dynamic_pointer_cast<IrLgm1fParametrization>(irPara)) {
+	    // LGM flavours including HW adaptor
+	    LOG("CamData, updating IrLgm1fParametrization:"
+		<< " name="  << irData->name() << " qualifier=" << irData->qualifier());
+	    QL_REQUIRE(lgmPara->numberOfParameters() == 2, "2 lgm1f parameters expected");
+	    ext::shared_ptr<LgmData> lgmData = boost::dynamic_pointer_cast<LgmData>(irData);
+	    QL_REQUIRE(lgmData, "Failed to cast IrModelData to LgmData");
+	    // overwrite initial values with calibration results
+	    arrayToVector(lgmData->aTimes(), lgmPara->parameterTimes(0));
+	    arrayToVector(lgmData->aValues(), lgmPara->parameterValues(0));
+	    arrayToVector(lgmData->hTimes(), lgmPara->parameterTimes(1));
+	    arrayToVector(lgmData->hValues(), lgmPara->parameterValues(1));
+	    // set calibration flags to false to ensure we reuse the calibration when loading this version
+	    lgmData->calibrateA() = false;
+	    lgmData->calibrateH() = false;
+	} else if (auto hwPara = ext::dynamic_pointer_cast<IrHwParametrization>(irPara)) {
+	    // HW Multi-Factor
+	    ALOG("HW parametrization not covered for IR model"
+		 << " name=" << irData->name() << " qualifier=" << irData->qualifier());
+	} else {
+	    // Any others ?
+	    ALOG("Matching parametrization not found for IR model"
+		 << " name=" << irData->name() << " qualifier=" << irData->qualifier());
+	}
+    }
+
+    // Update Cross Asset Model Data: FX
+    for (Size i = 0; i < data->fxConfigs().size(); ++i) {
+        ext::shared_ptr<FxBsData> fxData = data->fxConfigs()[i];
+	ext::shared_ptr<Parametrization> para = model_->fx(i);
+	if (auto fxPara = ext::dynamic_pointer_cast<FxBsParametrization>(para)) {
+	    LOG("CamData, updating FxBsParametrization:"
+		<< " foreign="  << fxData->foreignCcy() << " domestic=" << fxData->domesticCcy());
+	    QL_REQUIRE(fxPara->numberOfParameters() == 1, "1 fxbs parameter expected");
+	    // overwrite initial values with calibration results
+	    arrayToVector(fxData->sigmaTimes(), fxPara->parameterTimes(0));
+	    arrayToVector(fxData->sigmaValues(), fxPara->parameterValues(0));
+	    // set calibration flags to false to ensure we reuse the calibration when loading this version
+	    fxData->calibrateSigma() = false;
+	} else {
+	    // Any others ?
+	    ALOG("Matching parametrization not found for FX model"
+		 << " foreign=" << fxData->foreignCcy() << " domestic=" << fxData->domesticCcy());
+	}
+    }
+
+    // Write CAM data to an xml file
+    string fileName = inputs_->resultsPath().string() + "/calibration.xml";
+    data->toFile(fileName);
+
+    // Write CAM data as XML string to an in-memory report
+    string xml = data->toXMLStringUnformatted();
     auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-    ReportWriter(inputs_->reportNaString()).writeCalibrationReport(*report, builder_);
+    ReportWriter(inputs_->reportNaString()).writeXmlReport(*report, "CrossAssetModel", xml);
     analytic()->reports()["CALIBRATION"]["calibration"] = report;
     
+    CONSOLE("OK");
+
     ProgressMessage("Running Calibration Analytic", 1, 1).log();
 }
 

@@ -220,8 +220,7 @@ public:
     virtual void writeXvaExplainReport(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData);
     virtual void writeXvaExplainSummary(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData);
 
-    void writeCalibrationReport(ore::data::Report& report,
-				QuantLib::ext::shared_ptr<CrossAssetModelBuilder> modelBuilder);
+    void writeXmlReport(ore::data::Report& report, std::string header, std::string xmlString);
 
 protected:
     std::string nullString_;

@@ -63,8 +63,6 @@ public:
         const ObservableValue<QuantLib::ext::shared_ptr<Market>>& market,
         //! cam configuration
         const QuantLib::ext::shared_ptr<CrossAssetModelData>& config,
-	//! cached calibration data, possibly empty
-	const CalibrationData& calibrationData = CalibrationData(),
         //! Market configuration for interest rate model calibration
         const std::string& configurationLgmCalibration = Market::defaultConfiguration,
         //! Market configuration for FX model calibration
@@ -94,6 +92,9 @@ public:
     //! return the model
     Handle<QuantExt::CrossAssetModel> model() const;
 
+    //! return the model data
+    QuantLib::ext::shared_ptr<CrossAssetModelData> modelData() { return config_; }
+
     //! \name Inspectors
     //@{
     const std::vector<Real>& swaptionCalibrationErrors();
@@ -118,7 +119,6 @@ private:
     void copyModelParams(const CrossAssetModel::AssetType t0, const Size param0, const Size index0, const Size i0,
                          const CrossAssetModel::AssetType t1, const Size param1, const Size index1, const Size i1,
                          const Real mult) const;
-    ext::shared_ptr<ParametrizationData> getParametrizationData(string assetType, Size sequenceNumber) const;
   
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> swaptionBaskets_;
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> fxOptionBaskets_;
@@ -143,7 +143,6 @@ private:
 
     QuantLib::ObservableValue<QuantLib::ext::shared_ptr<ore::data::Market>> market_;
     QuantLib::ext::shared_ptr<CrossAssetModelData> config_;
-    CalibrationData calibrationData_;
     std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_,
         configurationInfCalibration_, configurationCrCalibration_, configurationComCalibration_, configurationFinalModel_;
     bool dontCalibrate_;

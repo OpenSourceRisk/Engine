@@ -87,7 +87,6 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
                          const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
                          const QuantLib::ext::shared_ptr<ore::analytics::CrossAssetModelData>& crossAssetModelData,
-			 const CalibrationData& calibrationData,
 			 const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
                          const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
                          const string& marketConfiguration, const string& marketConfigurationInCcy,
@@ -99,7 +98,7 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const bool continueOnCalibrationError, const bool continueOnError, const std::string& context)
     : mode_(mode), asof_(asof), loader_(loader), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), engineData_(engineData), crossAssetModelData_(crossAssetModelData),
-      calibrationData_(calibrationData), scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
+      scenarioGeneratorData_(scenarioGeneratorData), portfolio_(portfolio), marketConfiguration_(marketConfiguration),
       marketConfigurationInCcy_(marketConfigurationInCcy), sensitivityData_(sensitivityData),
       referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig), bumpCvaSensis_(bumpCvaSensis),
       useExternalComputeDevice_(useExternalComputeDevice),
@@ -141,7 +140,7 @@ void XvaEngineCG::buildCam() {
 
     // note: sim market has one config only, no in-ccy config to calibrate IR components
     camBuilder_ = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
-	simMarketObs_, crossAssetModelData_, calibrationData_, marketConfigurationInCcy_, marketConfiguration_, marketConfiguration_,
+	simMarketObs_, crossAssetModelData_, marketConfigurationInCcy_, marketConfiguration_, marketConfiguration_,
         marketConfiguration_, marketConfiguration_, marketConfiguration_, false, continueOnCalibrationError_,
         std::string(), SalvagingAlgorithm::Spectral, "xva engine cg - cam builder");
 

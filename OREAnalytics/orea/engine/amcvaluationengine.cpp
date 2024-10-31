@@ -638,7 +638,7 @@ AMCValuationEngine::AMCValuationEngine(
     const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
     const QuantLib::ext::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
     const std::vector<string>& aggDataIndices, const std::vector<string>& aggDataCurrencies,
-    const Size aggDataNumberCreditStates, const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData, const CalibrationData& calibrationData,
+    const Size aggDataNumberCreditStates, const QuantLib::ext::shared_ptr<CrossAssetModelData>& crossAssetModelData,
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
     const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
     const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
@@ -656,7 +656,7 @@ AMCValuationEngine::AMCValuationEngine(
     : useMultithreading_(true), aggDataIndices_(aggDataIndices), aggDataCurrencies_(aggDataCurrencies),
       aggDataNumberCreditStates_(aggDataNumberCreditStates), scenarioGeneratorData_(scenarioGeneratorData),
       amcPathDataInput_(amcPathDataInput), amcPathDataOutput_(amcPathDataOutput), nThreads_(nThreads), today_(today),
-      nSamples_(nSamples), loader_(loader), crossAssetModelData_(crossAssetModelData), calibrationData_(calibrationData), engineData_(engineData),
+      nSamples_(nSamples), loader_(loader), crossAssetModelData_(crossAssetModelData), engineData_(engineData),
       curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
@@ -854,8 +854,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
                 offsetScenario_);
         }
         ore::data::CrossAssetModelBuilder modelBuilder(
-	    market, crossAssetModelData_, calibrationData_,
-	    configurationLgmCalibration_, configurationFxCalibration_,
+	    market, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,
             configurationEqCalibration_, configurationInfCalibration_, configurationCrCalibration_,
             configurationFinalModel_, false, true, "", crossAssetModelData_->getSalvagingAlgorithm(),
             "xva/amc cam building");

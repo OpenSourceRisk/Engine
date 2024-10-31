@@ -83,8 +83,7 @@ void XvaRunner::buildCamModel(const QuantLib::ext::shared_ptr<ore::data::Market>
 
     LOG("XvaRunner::buildCamModel() called");
     Settings::instance().evaluationDate() = asof_;
-    CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_,
-					CalibrationData(), Market::defaultConfiguration,
+    CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
                                         Market::defaultConfiguration, Market::defaultConfiguration,
                                         Market::defaultConfiguration, Market::defaultConfiguration,
                                         Market::defaultConfiguration, false, continueOnErr, "",

@@ -46,7 +46,6 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
-      <!--<Parameter name="calibrationInputFile">calibration.csv</Parameter>-->
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->

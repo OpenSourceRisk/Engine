@@ -2329,6 +2329,7 @@ void ReportWriter::writeXvaExplainSummary(ore::data::Report& report, const ore::
     }
 }
 
+  /*
 void ReportWriter::writeCalibrationReport(ore::data::Report& report,
 					  QuantLib::ext::shared_ptr<CrossAssetModelBuilder> modelBuilder) {
     report.addColumn("AssetType", string())
@@ -2460,7 +2461,12 @@ void ReportWriter::writeCalibrationReport(ore::data::Report& report,
         ALOG("Failed to write calibration report, got " << e.what());
     }
 }
-
+  */
+  
+void ReportWriter::writeXmlReport(ore::data::Report& report, std::string header, std::string xml) {
+    report.addColumn(header, string());
+    report.next().add(xml);
+}
 
 } // namespace analytics
 } // namespace ore

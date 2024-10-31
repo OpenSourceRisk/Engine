@@ -78,13 +78,12 @@ namespace data {
 CrossAssetModelBuilder::CrossAssetModelBuilder(
     const QuantLib::ObservableValue<QuantLib::ext::shared_ptr<Market>>& market,
     const QuantLib::ext::shared_ptr<CrossAssetModelData>& config,
-    const CalibrationData& calibrationData,
     const std::string& configurationLgmCalibration,
     const std::string& configurationFxCalibration, const std::string& configurationEqCalibration,
     const std::string& configurationInfCalibration, const std::string& configurationCrCalibration,
     const std::string& configurationFinalModel, const bool dontCalibrate, const bool continueOnError,
     const std::string& referenceCalibrationGrid, const SalvagingAlgorithm::Type salvaging, const std::string& id)
-: market_(market), config_(config), calibrationData_(calibrationData),
+: market_(market), config_(config), 
       configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
@@ -208,27 +207,6 @@ void CrossAssetModelBuilder::copyModelParams(const CrossAssetModel::AssetType t0
         }
     }
 }
-
-ext::shared_ptr<ParametrizationData> CrossAssetModelBuilder::getParametrizationData(string assetType, Size sequenceNumber) const {
-    if (calibrationData_.size() == 0)
-        return nullptr;
-    
-    auto it = calibrationData_.find(assetType);
-    if (it == calibrationData_.end()) {
-        WLOG("calibrationData not found for asset type " << assetType)
-        return nullptr;
-    }
-    DLOG("calibrationData found for asset type " << assetType << " of size " << it->second.size());
-
-    auto it2 = it->second.find(sequenceNumber);
-    if (it2 == it->second.end()) {
-        WLOG("calibrationData not found for asset type " << assetType << " and sequence number " << sequenceNumber)
-        return nullptr;
-    }
-    DLOG("calibrationData found for asset type " << assetType << " and sequenceNumber " << sequenceNumber);
-
-    return it2->second;
-}
   
 void CrossAssetModelBuilder::buildModel() const {
 
@@ -307,19 +285,8 @@ void CrossAssetModelBuilder::buildModel() const {
         DLOG("IR Parametrization " << i << " qualifier " << irConfig->qualifier());
         if (auto ir = QuantLib::ext::dynamic_pointer_cast<IrLgmData>(irConfig)) {
             if (!buildersAreInitialized) {
-
-	        auto it = calibrationData_.find("IR");
-		if (it != calibrationData_.end()) {
-		    LOG("calibrationData IR found");
-		    LOG("calibrationData IR size: " <<  it->second.size());
-		    auto it2 = it->second.find(i);
-		    if (it2 != it->second.end()) {
-		        LOG("calibrationData IR[" << i << "] found");
-		    }
-		}
-		ext::shared_ptr<ParametrizationData> cashedCalibration = getParametrizationData("IR", i);	    
 		subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<LgmBuilder>(
-	             market_.value(), ir, cashedCalibration, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
+	             market_.value(), ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
                     referenceCalibrationGrid_, false, id_);
             }
             auto builder = QuantLib::ext::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
@@ -345,7 +312,6 @@ void CrossAssetModelBuilder::buildModel() const {
             bool setCalibrationInfo = false;
             HwModel::Discretization discr = HwModel::Discretization::Euler;
             if (!buildersAreInitialized) {
-	        const ext::shared_ptr<ParametrizationData>& cashedCalibration = getParametrizationData("IR", i);
                 subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<HwBuilder>(
                     market_.value(), ir, measure, discr, evaluateBankAccount, configurationLgmCalibration_,
                     config_->bootstrapTolerance(), continueOnError_, referenceCalibrationGrid_, setCalibrationInfo);
@@ -392,9 +358,8 @@ void CrossAssetModelBuilder::buildModel() const {
                                                                  << " does not match domestic ccy " << domesticCcy);
 
         if (!buildersAreInitialized) {
-	    ext::shared_ptr<ParametrizationData> cachedCalibration = getParametrizationData("FX", i);
 	    subBuilders_[CrossAssetModel::AssetType::FX][i] =
-                QuantLib::ext::make_shared<FxBsBuilder>(market_.value(), fx, cachedCalibration, configurationFxCalibration_, referenceCalibrationGrid_);
+                QuantLib::ext::make_shared<FxBsBuilder>(market_.value(), fx, configurationFxCalibration_, referenceCalibrationGrid_);
         }
         auto builder = QuantLib::ext::dynamic_pointer_cast<FxBsBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);
         fxBuilder.push_back(builder);
