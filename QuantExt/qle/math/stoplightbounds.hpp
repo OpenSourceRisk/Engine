@@ -65,4 +65,6 @@ generateStopLightBoundTable(const std::vector<Size>& observations, const std::ve
 
 std::vector<double> decorrelateOverlappingPnls(const std::vector<double>& pnl, const Size numberOfDays);
 
+void overlappingPnlCorrelation(const Size numberOfDays, const Size samples, const Size seed);
+
 } // namespace QuantExt

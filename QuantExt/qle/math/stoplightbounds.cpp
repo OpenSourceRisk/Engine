@@ -377,12 +377,12 @@ std::vector<double> decorrelateOverlappingPnls(const std::vector<double>& pnl, c
     for (Size i = 0; i < pnl.size(); ++i)
         b[i] = pnl[i];
 
-    Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> root(correlation);
-    Eigen::SparseMatrix<double> L = root.matrixL();
-    Eigen::SparseLU<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> solver;
+    Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> cholesky(correlation);
+    Eigen::SparseMatrix<double> L = cholesky.matrixL();
+    Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
     solver.analyzePattern(L);
     solver.factorize(L);
-    Eigen::VectorXd x = solver.solve(b);
+    Eigen::VectorXd x = cholesky.permutationP().inverse() * solver.solve(cholesky.permutationP() * b);
 
     std::vector<double> res(pnl.size());
     for (Size i = 0; i < pnl.size(); ++i)
