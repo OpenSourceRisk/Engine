@@ -84,8 +84,8 @@ QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> XvaSensitivityAnalyticIm
     auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
     auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
         analytic()->configurations().sensiScenarioData, baseScenario, analytic()->configurations().simMarketParams,
-        simMarket_, scenarioFactory, true);
-    simMarket_->scenarioGenerator() = scenarioGenerator;
+        simMarket, scenarioFactory, true);
+    simMarket->scenarioGenerator() = scenarioGenerator;
     return scenarioGenerator;
 }
 
