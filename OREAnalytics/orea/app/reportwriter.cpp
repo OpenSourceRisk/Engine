@@ -802,6 +802,77 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
     LOG("Sensitivity report finished");
 }
 
+void ReportWriter::writeXvaSensitivityReport(Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ssTrades,
+        const QuantLib::ext::shared_ptr<SensitivityStream>& ssNettingSets, const std::map<std::string, std::string>& tradeNettingSetMap, Real outputThreshold,
+                                             Size outputPrecision) {
+
+    LOG("Writing XVA Sensitivity report");
+
+    Size shiftSizePrecision = outputPrecision < 6 ? 6 : outputPrecision;
+    Size amountPrecision = outputPrecision < 2 ? 2 : outputPrecision;
+
+    report.addColumn("NettingSetId", string());
+    report.addColumn("TradeId", string());
+    report.addColumn("IsPar", string());
+    report.addColumn("Factor_1", string());
+    report.addColumn("ShiftSize_1", double(), shiftSizePrecision);
+    report.addColumn("Factor_2", string());
+    report.addColumn("ShiftSize_2", double(), shiftSizePrecision);
+    report.addColumn("Currency", string());
+    report.addColumn("Base NPV", double(), amountPrecision);
+    report.addColumn("Delta", double(), amountPrecision);
+    report.addColumn("Gamma", double(), amountPrecision);
+
+    // Make sure that we are starting from the start
+    ssTrades->reset();
+    while (SensitivityRecord sr = ssTrades->next()) {
+        if ((outputThreshold == Null<Real>()) ||
+            (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
+            auto it = tradeNettingSetMap.find(sr.tradeId);
+            report.next();
+            report.add(it != tradeNettingSetMap.end() ? it->second : "");
+            report.add(sr.tradeId);
+            report.add(ore::data::to_string(sr.isPar));
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(sr.shift_1);
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(sr.shift_2);
+            report.add(sr.currency);
+            report.add(sr.baseNpv);
+            report.add(sr.delta);
+            report.add(sr.gamma);
+        } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
+            // TODO: Again, is this needed?
+            ALOG("sensitivity record has infinite values: " << sr);
+        }
+    }
+
+    ssNettingSets->reset();
+    while (SensitivityRecord sr = ssNettingSets->next()) {
+        if ((outputThreshold == Null<Real>()) ||
+            (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
+            report.next();
+            report.add(sr.tradeId);
+            report.add("");
+            report.add(ore::data::to_string(sr.isPar));
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(sr.shift_1);
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(sr.shift_2);
+            report.add(sr.currency);
+            report.add(sr.baseNpv);
+            report.add(sr.delta);
+            report.add(sr.gamma);
+        } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
+            // TODO: Again, is this needed?
+            ALOG("sensitivity record has infinite values: " << sr);
+        }
+    }
+
+    report.end();
+    LOG("Sensitivity report finished");
+}
+
 void ReportWriter::writeSensitivityConfigReport(ore::data::Report& report,
                                                 const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
                                                 const std::map<RiskFactorKey, QuantLib::Real>& baseValues,

@@ -108,6 +108,11 @@ public:
     virtual void writeSensitivityReport(ore::data::Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ss,
                                         QuantLib::Real outputThreshold = 0.0, QuantLib::Size outputPrecision = 2);
 
+    virtual void writeXvaSensitivityReport(
+        Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ssTrades,
+        const QuantLib::ext::shared_ptr<SensitivityStream>& ssNettingSets,
+        const std::map<std::string, std::string>& tradeNettingSetMap, Real outputThreshold = 0.0, Size outputPrecision = 2);
+
     virtual void writeSensitivityConfigReport(ore::data::Report& report,
                                               const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
                                               const std::map<RiskFactorKey, QuantLib::Real>& baseValues,

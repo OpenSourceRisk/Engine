@@ -167,19 +167,16 @@ XvaSensitivityAnalyticImpl::ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZ
                "XVA Sensitivity Run ended without any results, there should be at least the base scenario");
     
     auto& baseResults = xvaResults.front();
+    // Setup cubes
     std::map<XvaResults::Adjustment, ext::shared_ptr<NPVSensiCube>> nettingZeroCubes, tradeZeroCubes;
-    for (const auto& valueAdjustment : {
-             XvaResults::Adjustment::CVA,
-             XvaResults::Adjustment::DVA,
-             XvaResults::Adjustment::FBA,
-             XvaResults::Adjustment::FCA
-         }) {
-        nettingZeroCubes[valueAdjustment] = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(baseResults->nettingSetIds(), inputs_->asof(),
-                                                                                          scenarioGenerator->samples());
+    for (const auto& valueAdjustment : {XvaResults::Adjustment::CVA, XvaResults::Adjustment::DVA,
+                                        XvaResults::Adjustment::FBA, XvaResults::Adjustment::FCA}) {
+        nettingZeroCubes[valueAdjustment] = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(
+            baseResults->nettingSetIds(), inputs_->asof(), scenarioGenerator->samples());
         tradeZeroCubes[valueAdjustment] = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(
             baseResults->tradeIds(), inputs_->asof(), scenarioGenerator->samples());
     }
-
+    // Populate cubes
     for (size_t i = 0; i < xvaResults.size(); ++i) {
         if (i == 0) {
             for (const auto& tradeId : baseResults->tradeIds()) {
