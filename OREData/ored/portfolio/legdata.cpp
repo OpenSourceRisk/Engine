@@ -764,7 +764,7 @@ void LegData::fromXML(XMLNode* node) {
     dayCounter_ = XMLUtils::getChildValue(node, "DayCounter"); // optional
     paymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention");
     paymentLag_ = XMLUtils::getChildValue(node, "PaymentLag");
-    notionalPaymentLag_ = XMLUtils::getChildValue(node, "NotionalPaymentLag");
+    notionalPaymentLag_ = XMLUtils::getChildValue(node, "NotionalPaymentLag", false, paymentLag_);
     paymentCalendar_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
     // if not given, default of getChildValueAsBool is true, which fits our needs here
     notionals_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Notionals", "Notional", "startDate",
