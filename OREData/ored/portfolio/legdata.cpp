@@ -813,6 +813,15 @@ void LegData::fromXML(XMLNode* node) {
     if (auto tmp = XMLUtils::getChildNode(node, "ScheduleData"))
         schedule_.fromXML(tmp);
 
+    // set payment calendar equal to the schedule calendar if the payment calendar not given
+    // otherwise the payment calendar is not set and payments of notional can happen before the interest payments 
+    if (paymentCalendar_.empty()) {
+        auto tmp = schedule_.rules().front().calendar();
+        if (!tmp.empty()) {
+            paymentCalendar_ = tmp;
+        }
+    }
+
     paymentDates_ = XMLUtils::getChildrenValues(node, "PaymentDates", "PaymentDate", false);
     if (!paymentDates_.empty()) {
         WLOG("Usage of PaymentDates is deprecated, use PaymentSchedule instead.");
