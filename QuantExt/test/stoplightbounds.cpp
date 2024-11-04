@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(testExceedanceTestsOverlappingPnl, *boost::unit_test::disab
     Size numberOfDays = 10;
     Size seed = 42;
     Size observations = 250;
-    Size samples = 1E4;
+    Size samples = 1E5;
 
     auto sgen = PseudoRandom::make_sequence_generator(observations + numberOfDays, seed);
 
@@ -259,10 +259,11 @@ BOOST_AUTO_TEST_CASE(testExceedanceTestsOverlappingPnl, *boost::unit_test::disab
     Size errorType1RedDecorrelated = 0, errorType1P1RedDecorrelated = 0;
     Size errorType2RedDecorrelated = 0;
 
-    Real conf1 = 0.95, conf2 = 0.9999;
+    Real conf1 = 0.05, conf2 = 0.0001;
+    std::vector<Real> stoplightP{1.0 - conf1, 1.0 - conf2};
 
-    auto bounds = stopLightBoundsTabulated({conf1, conf2}, observations, numberOfDays, p);
-    auto boundsDecorrelated = stopLightBounds({conf1, conf2}, observations, p);
+    auto bounds = stopLightBoundsTabulated(stoplightP, observations, numberOfDays, p);
+    auto boundsDecorrelated = stopLightBounds(stoplightP, observations, p);
 
     BOOST_TEST_MESSAGE("bounds              = " << bounds[0] << "," << bounds[1]);
     BOOST_TEST_MESSAGE("bounds decorrelated = " << boundsDecorrelated[0] << "," << boundsDecorrelated[1]);
@@ -356,10 +357,16 @@ BOOST_AUTO_TEST_CASE(testExceedanceTestsOverlappingPnl, *boost::unit_test::disab
     BOOST_TEST_MESSAGE("power        red   decorrelated : " << 1.0 - static_cast<double>(errorType2RedDecorrelated) /
                                                                          static_cast<double>(samples));
 
-    BOOST_CHECK(static_cast<double>(errorType1P1Amber) / static_cast<double>(samples) < conf1);
-    BOOST_CHECK(static_cast<double>(errorType1P1Red) / static_cast<double>(samples) < conf2);
-    BOOST_CHECK(static_cast<double>(errorType1P1AmberDecorrelated) / static_cast<double>(samples) < conf1);
-    BOOST_CHECK(static_cast<double>(errorType1P1RedDecorrelated) / static_cast<double>(samples) < conf2);
+    BOOST_CHECK(static_cast<double>(errorType1P1Amber) / static_cast<double>(samples) < conf1 ||
+                QuantLib::close_enough(static_cast<double>(errorType1P1Amber) / static_cast<double>(samples), conf1));
+    BOOST_CHECK(static_cast<double>(errorType1P1Red) / static_cast<double>(samples) < conf2 ||
+                QuantLib::close_enough(static_cast<double>(errorType1P1Red) / static_cast<double>(samples), conf2));
+    BOOST_CHECK(static_cast<double>(errorType1P1AmberDecorrelated) / static_cast<double>(samples) < conf1 ||
+                QuantLib::close_enough(
+                    static_cast<double>(errorType1P1AmberDecorrelated) / static_cast<double>(samples), conf1));
+    BOOST_CHECK(
+        static_cast<double>(errorType1P1RedDecorrelated) / static_cast<double>(samples) < conf2 ||
+        QuantLib::close_enough(static_cast<double>(errorType1P1RedDecorrelated) / static_cast<double>(samples), conf2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

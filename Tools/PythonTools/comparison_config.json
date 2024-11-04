@@ -564,12 +564,30 @@
           "Side",
           "PLMode"
         ],
+        "use_cols": [
+          "InitialMargin",
+          "TimeWindow",
+          "Observations",
+          "OverlappingPL",
+          "Exceptions",
+          "GreenUpTo",
+          "AmberUpTo",
+          "Zone",
+          "HistSimVaR",
+          "HistSimTaylorVaR",
+          "ParametricVaR",
+          "LCHVaR",
+          "DiscountingCurrency",
+          "SIMMResultCurrency",
+          "SIMMCalculationCurrency"
+        ],
         "optional_cols": [
             "ExceptionsDecorrelated",
             "GreenUpToDecorrelated",
             "AmberUpToDecorrelated",
             "ZoneDecorrelated"
         ],
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
@@ -597,6 +615,10 @@
               "GreenUpTo",
               "AmberUpTo",
               "Zone",
+              "ExceptionsDecorrelated",
+              "GreenUpToDecorrelated",
+              "AmberUpToDecorrelated",
+              "ZoneDecorrelated",
               "DiscountingCurrency",
               "SIMMResultCurrency",
               "SIMMCalculationCurrency"
@@ -640,10 +662,17 @@
           "PLDate2",
           "PLType"
         ],
+        "use_cols": [
+          "PLAmount",
+          "Overlap",
+          "Status",
+          "SIMMResultCurrency"
+        ],
         "optional_cols": [
           "PLAmountDecorrelated",
           "StatusDecorrelated"
         ],
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
@@ -654,7 +683,8 @@
           },
           {
             "names": [
-              "PLAmount"
+              "PLAmount",
+              "PLAmountDecorrelated"
             ],
             "abs_tol": 1.0,
             "rel_tol": 1e-12
@@ -662,7 +692,9 @@
           {
             "names": [
               "Overlap",
-              "Status"
+              "Status",
+              "StatusDecorrelated",
+              "SIMMResultCurreny"
             ],
             "abs_tol": null,
             "rel_tol": null
