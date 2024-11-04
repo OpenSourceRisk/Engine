@@ -74,6 +74,7 @@ private:
     struct ZeroSenisResults{
         std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<SensitivityCube>> tradeCubes_;
         std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<SensitivityCube>> nettingCubes_;
+        std::map<std::string, std::string> tradeNettingSetMap_;
     };
     struct ParSensiResults{
         std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<ZeroToParCube>> tradeParSensiCube_;
@@ -96,7 +97,7 @@ private:
     
     //! 
     ParSensiResults parConversion(ZeroSenisResults& zeroResults);
-    void createParReports(ParSensiResults& xvaParSensiCubes);
+    void createParReports(ParSensiResults& xvaParSensiCubes, const std::map<std::string, std::string>& tadeNettingSetMap);
 
     //! Create a report containing all value adjustment values for each scenario
     void createDetailReport(

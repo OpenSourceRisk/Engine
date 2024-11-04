@@ -819,7 +819,7 @@ void ReportWriter::writeXvaSensitivityReport(Report& report, const QuantLib::ext
     report.addColumn("Factor_2", string());
     report.addColumn("ShiftSize_2", double(), shiftSizePrecision);
     report.addColumn("Currency", string());
-    report.addColumn("Base NPV", double(), amountPrecision);
+    report.addColumn("Base XVA", double(), amountPrecision);
     report.addColumn("Delta", double(), amountPrecision);
     report.addColumn("Gamma", double(), amountPrecision);
 

@@ -152,7 +152,7 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
     createZeroReports(zeroCubes);
     LOG("Run Par Conversion")
     auto parCubes = parConversion(zeroCubes);
-    createParReports(parCubes);
+    createParReports(parCubes, zeroCubes.tradeNettingSetMap_);
     LOG("Running XVA Sensitivity analytic finished.");
 }
 
@@ -177,8 +177,10 @@ XvaSensitivityAnalyticImpl::ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZ
             baseResults->tradeIds(), inputs_->asof(), scenarioGenerator->samples());
     }
     // Populate cubes
+
     for (size_t i = 0; i < xvaResults.size(); ++i) {
         if (i == 0) {
+            
             for (const auto& tradeId : baseResults->tradeIds()) {
                 tradeZeroCubes[XvaResults::Adjustment::CVA]->setT0(
                     baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId);
@@ -225,8 +227,9 @@ XvaSensitivityAnalyticImpl::ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZ
                 i);
         }
     }
+    
     ZeroSenisResults results;
-
+    results.tradeNettingSetMap_ = baseResults->tradeNettingSetMapping();
     for(const auto& [valueAdjustment, cube] : nettingZeroCubes){
         results.nettingCubes_[valueAdjustment] = QuantLib::ext::make_shared<SensitivityCube>(
             cube, scenarioGenerator->scenarioDescriptions(), scenarioGenerator->shiftSizes(),
@@ -278,18 +281,15 @@ void XvaSensitivityAnalyticImpl::runSimulations(std::vector<ext::shared_ptr<XvaR
 
 void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSenisResults& xvaZeroSeniCubes){
     for(const auto& [valueAdjustment, cube] : xvaZeroSeniCubes.tradeCubes_){
-        auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(cube, inputs_->baseCurrency());
-        QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
+        auto ssTrade = QuantLib::ext::make_shared<SensitivityCubeStream>(cube, inputs_->baseCurrency());
+        auto nettingCube = xvaZeroSeniCubes.nettingCubes_[valueAdjustment];
+        auto ssNetting = QuantLib::ext::make_shared<SensitivityCubeStream>(nettingCube, inputs_->baseCurrency());
+        QuantLib::ext::shared_ptr<ore::data::InMemoryReport> zeroSensiReport =
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
-        analytic()->reports()[label()][to_string(valueAdjustment) + "_trade_zero_sensitivity"] = report;
-    }
-    for(const auto& [valueAdjustment, cube] : xvaZeroSeniCubes.nettingCubes_){
-        auto ss = QuantLib::ext::make_shared<SensitivityCubeStream>(cube, inputs_->baseCurrency());
-        QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
-            QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->sensiThreshold());
-        analytic()->reports()[label()][to_string(valueAdjustment) + "_netting_zero_sensitivity"] = report;
+        ReportWriter(inputs_->reportNaString())
+            .writeXvaSensitivityReport(*zeroSensiReport, ssTrade, ssNetting, xvaZeroSeniCubes.tradeNettingSetMap_,
+                                       inputs_->sensiThreshold());
+        analytic()->reports()[label()]["xva_zero_sensitivity_" + to_string(valueAdjustment)] = zeroSensiReport;
     }
 }
 
@@ -326,20 +326,18 @@ XvaSensitivityAnalyticImpl::ParSensiResults XvaSensitivityAnalyticImpl::parConve
     return results;
 }
 
-void XvaSensitivityAnalyticImpl::createParReports(ParSensiResults& xvaParSensiCubes){
+void XvaSensitivityAnalyticImpl::createParReports(ParSensiResults& xvaParSensiCubes, const std::map<std::string, std::string>& tradeNettingSetMap){
     for(const auto& [valueAdjustment, cube] : xvaParSensiCubes.tradeParSensiCube_){
-        auto pss = QuantLib::ext::make_shared<ParSensitivityCubeStream>(cube, inputs_->baseCurrency());
+        auto pssTrade = QuantLib::ext::make_shared<ParSensitivityCubeStream>(cube, inputs_->baseCurrency());
+        auto nettingCube = xvaParSensiCubes.nettingParSensiCube_[valueAdjustment];
+        auto pssNetting = QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingCube, inputs_->baseCurrency());
+
         QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, pss, inputs_->sensiThreshold());
-        analytic()->reports()[label()][to_string(valueAdjustment) + "_trade_par_sensitivity"] = report;
-    }
-    for (const auto& [valueAdjustment, cube] : xvaParSensiCubes.nettingParSensiCube_) {
-        auto pss = QuantLib::ext::make_shared<ParSensitivityCubeStream>(cube, inputs_->baseCurrency());
-        QuantLib::ext::shared_ptr<ore::data::InMemoryReport> report =
-            QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
-        ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, pss, inputs_->sensiThreshold());
-        analytic()->reports()[label()][to_string(valueAdjustment) + "_netting_par_sensitivity"] = report;
+        ReportWriter(inputs_->reportNaString())
+            .writeXvaSensitivityReport(*report, pssTrade, pssNetting, tradeNettingSetMap,
+                                       inputs_->sensiThreshold());
+        analytic()->reports()[label()]["xva_par_sensitivity_" + to_string(valueAdjustment)] = report;
     }
 }
 
