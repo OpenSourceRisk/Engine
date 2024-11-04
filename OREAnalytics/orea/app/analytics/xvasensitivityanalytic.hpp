@@ -38,12 +38,12 @@ public:
 
     XvaResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaReport);
 
-    double getTradeValueAdjustment(const std::string& tradeId, Adjustment adjustment) {
-        return tradeValueAdjustments_[tradeId][adjustment];
+    const std::map<std::string, double>& getTradeXVAs(Adjustment adjustment) {
+        return tradeValueAdjustments_[adjustment];
     }
 
-    double getNettingSetValueAdjustment(const std::string& nettingSetId, Adjustment adjustment) {
-        return nettingSetValueAdjustments_[nettingSetId][adjustment];
+     const std::map<std::string, double>& getNettingSetXVAs(Adjustment adjustment) {
+        return nettingSetValueAdjustments_[adjustment];
     }
 
     const std::set<std::string>& nettingSetIds() const { return nettingSetIds_; };
@@ -52,8 +52,8 @@ public:
     const std::map<std::string, std::string>& tradeNettingSetMapping() const { return tradeNettingSetMapping_; }
 
 private:
-    std::map<std::string, std::map<Adjustment, double>> tradeValueAdjustments_;
-    std::map<std::string, std::map<Adjustment, double>> nettingSetValueAdjustments_;
+    std::map<Adjustment, std::map<std::string, double>> tradeValueAdjustments_;
+    std::map<Adjustment, std::map<std::string, double>> nettingSetValueAdjustments_;
     std::set<std::string> nettingSetIds_;
     std::set<std::string> tradeIds_;
     std::map<std::string, std::string> tradeNettingSetMapping_;
@@ -71,7 +71,7 @@ public:
     void setUpConfigurations() override;
 
 private:
-    struct ZeroSenisResults{
+    struct ZeroSensiResults{
         std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<SensitivityCube>> tradeCubes_;
         std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<SensitivityCube>> nettingCubes_;
         std::map<std::string, std::string> tradeNettingSetMap_;
@@ -87,16 +87,19 @@ private:
     
     //! Build a simMarket, scenarioGenerator, loop through all scenarios and compute xva under each scenario and collect the valueadjustments on trade and nettingset
     // level and build sensicubes for each value adjustment.
-    ZeroSenisResults runXvaZeroSensitivitySimulation(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
+    ZeroSensiResults computeZeroXvaSensitivity(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
     
-    void runSimulations(std::map<size_t, QuantLib::ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator);
+    void computeXvaUnderScenarios(std::map<size_t, QuantLib::ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator);
 
+    ZeroSensiResults
+    convertXvaResultsToSensiCubes(const std::map<size_t, QuantLib::ext::shared_ptr<XvaResults>>& xvaResults,
+                                  const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator);
 
     //! Convert the sensitivity cubes into sensistreams and create a report 
-    void createZeroReports(ZeroSenisResults& xvaZeroSeniCubes);
+    void createZeroReports(ZeroSensiResults& xvaZeroSeniCubes);
     
     //! 
-    ParSensiResults parConversion(ZeroSenisResults& zeroResults);
+    ParSensiResults parConversion(ZeroSensiResults& zeroResults);
     void createParReports(ParSensiResults& xvaParSensiCubes, const std::map<std::string, std::string>& tadeNettingSetMap);
 
     //! Create a report containing all value adjustment values for each scenario

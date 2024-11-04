@@ -55,19 +55,20 @@ XvaResults::XvaResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaRepor
         const double fba = boost::get<double>(xvaReport->data(fbaColumn, i));
         const double fca = boost::get<double>(xvaReport->data(fcaColumn, i));
         nettingSetIds_.insert(nettingset);
-        if(!tradeId.empty()) 
+        if(!tradeId.empty()){
             tradeIds_.insert(tradeId);
-        tradeNettingSetMapping_[tradeId] = nettingset;
+            tradeNettingSetMapping_[tradeId] = nettingset;
+        }
         if (tradeId.empty()) {
-            nettingSetValueAdjustments_[nettingset][Adjustment::CVA] = cva;
-            nettingSetValueAdjustments_[nettingset][Adjustment::DVA] = dva;
-            nettingSetValueAdjustments_[nettingset][Adjustment::FBA] = fba;
-            nettingSetValueAdjustments_[nettingset][Adjustment::FCA] = fca;
+            nettingSetValueAdjustments_[Adjustment::CVA][nettingset] = cva;
+            nettingSetValueAdjustments_[Adjustment::DVA][nettingset] = dva;
+            nettingSetValueAdjustments_[Adjustment::FBA][nettingset] = fba;
+            nettingSetValueAdjustments_[Adjustment::FCA][nettingset] = fca;
         } else {
-            tradeValueAdjustments_[tradeId][Adjustment::CVA] = cva;
-            tradeValueAdjustments_[tradeId][Adjustment::DVA] = dva;
-            tradeValueAdjustments_[tradeId][Adjustment::FBA] = fba;
-            tradeValueAdjustments_[tradeId][Adjustment::FCA] = fca;
+            tradeValueAdjustments_[Adjustment::CVA][tradeId] = cva;
+            tradeValueAdjustments_[Adjustment::DVA][tradeId] = dva;
+            tradeValueAdjustments_[Adjustment::FBA][tradeId] = fba;
+            tradeValueAdjustments_[Adjustment::FCA][tradeId] = fca;
         }
     }
 }
@@ -91,9 +92,11 @@ XvaSensitivityAnalyticImpl::XvaSensitivityAnalyticImpl(const QuantLib::ext::shar
     setLabel(LABEL);
 }
 
+   
 QuantLib::ext::shared_ptr<ScenarioSimMarket> XvaSensitivityAnalyticImpl::buildSimMarket(bool overrideTenors){
+                                 
     LOG("XvaSensitivityAnalytic: Build SimMarket")
-    std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
+    std::string marketConfig = inputs_->marketConfig("pricing");
     auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
         analytic()->market(), analytic()->configurations().simMarketParams, marketConfig,
         *analytic()->configurations().curveConfig, *analytic()->configurations().todaysMarketParams,
@@ -118,7 +121,6 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
                                              const std::set<std::string>& runTypes) {
 
     // basic setup
-
     LOG("Running XVA_SENSITIVITY analytic.");
 
     SavedSettings settings;
@@ -156,7 +158,7 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     // run stress test
     LOG("Run XVA Zero Sensitivity Sensitivity")
-    auto zeroCubes = runXvaZeroSensitivitySimulation(loader);
+    auto zeroCubes = computeZeroXvaSensitivity(loader);
     createZeroReports(zeroCubes);
     if (inputs_->xvaSensiParSensi()) {
         LOG("Run Par Conversion")
@@ -167,94 +169,134 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
     }
 }
 
-XvaSensitivityAnalyticImpl::ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZeroSensitivitySimulation(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
-    // Run Simulations 
+XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::computeZeroXvaSensitivity(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     auto simMarket = buildSimMarket(false);
     auto scenarioGenerator = buildScenarioGenerator(simMarket, false);
     std::map<size_t, ext::shared_ptr<XvaResults>> xvaResults;
-    runSimulations(xvaResults, loader, scenarioGenerator);
-    // Create sensi cubes from xva simulation results
-    auto baseIt = xvaResults.find(0);
+    computeXvaUnderScenarios(xvaResults, loader, scenarioGenerator);
+    // Create sensi cubes from xva simulation results   
+    return convertXvaResultsToSensiCubes(xvaResults, scenarioGenerator);
+}
 
+XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::convertXvaResultsToSensiCubes(
+    const std::map<size_t, QuantLib::ext::shared_ptr<XvaResults>>& xvaResults,
+    const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
+    static const std::vector<XvaResults::Adjustment> adjustments = {
+        XvaResults::Adjustment::CVA, XvaResults::Adjustment::DVA, XvaResults::Adjustment::FBA,
+        XvaResults::Adjustment::FCA};
+
+    // Initialze cubes
+    auto baseIt = xvaResults.find(0);
     QL_REQUIRE(baseIt != xvaResults.end(),
                "XVA Sensitivity Run ended without a base scenario");
-
     auto& baseResults = baseIt->second;
-    // Setup cubes
+    // Initializx Zero Cubes
     std::map<XvaResults::Adjustment, ext::shared_ptr<NPVSensiCube>> nettingZeroCubes, tradeZeroCubes;
-    for (const auto& valueAdjustment : {XvaResults::Adjustment::CVA, XvaResults::Adjustment::DVA,
-                                        XvaResults::Adjustment::FBA, XvaResults::Adjustment::FCA}) {
+    
+    for (const auto& valueAdjustment : adjustments) {
         nettingZeroCubes[valueAdjustment] = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(
             baseResults->nettingSetIds(), inputs_->asof(), scenarioGenerator->samples());
         tradeZeroCubes[valueAdjustment] = QuantLib::ext::make_shared<DoublePrecisionSensiCube>(
             baseResults->tradeIds(), inputs_->asof(), scenarioGenerator->samples());
     }
+
     // Populate cubes
+    auto populateCube = [](ext::shared_ptr<NPVSensiCube>& cube, const std::string& tradeId, const size_t& scenarioIdx,
+                           const std::map<std::string, double>& xvas) {
+        auto it = xvas.find(tradeId);
+        QL_REQUIRE(it != xvas.end(),
+                   "XVA values for trade id " << tradeId << " under scenario " << scenarioIdx << " not found ");
+        auto& value = it->second;
+        if (scenarioIdx == 0) {
+            cube->setT0(value, tradeId);
+        }
+        cube->set(value, tradeId, scenarioIdx);
+    };
+
+    std::map<std::string, std::set<size_t>> tradeHasScenarioError;
+    std::map<std::string, std::set<size_t>> nettingSetHasScenarioError;
 
     for (const auto& [i, results] : xvaResults) {
-        if (i == 0) {
-            for (const auto& tradeId : baseResults->tradeIds()) {
-                tradeZeroCubes[XvaResults::Adjustment::CVA]->setT0(
-                    results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId);
-                tradeZeroCubes[XvaResults::Adjustment::DVA]->setT0(
-                    results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::DVA), tradeId);
-                tradeZeroCubes[XvaResults::Adjustment::FBA]->setT0(
-                    results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FBA), tradeId);
-                tradeZeroCubes[XvaResults::Adjustment::FCA]->setT0(
-                    results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FCA), tradeId);
-            }
-            for (const auto& nettingSetId : baseResults->nettingSetIds()) {
-                nettingZeroCubes[XvaResults::Adjustment::CVA]->setT0(
-                    results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::CVA), nettingSetId);
-                nettingZeroCubes[XvaResults::Adjustment::DVA]->setT0(
-                    results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::DVA), nettingSetId);
-                nettingZeroCubes[XvaResults::Adjustment::FBA]->setT0(
-                    results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FBA), nettingSetId);
-                nettingZeroCubes[XvaResults::Adjustment::FCA]->setT0(
-                    results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FCA), nettingSetId);
-            }
-        }
         for (const auto& tradeId : baseResults->tradeIds()) {
-            tradeZeroCubes[XvaResults::Adjustment::CVA]->set(
-                results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId, i);
-            tradeZeroCubes[XvaResults::Adjustment::DVA]->set(
-                results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::DVA), tradeId, i);
-            tradeZeroCubes[XvaResults::Adjustment::FBA]->set(
-                results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FBA), tradeId, i);
-            tradeZeroCubes[XvaResults::Adjustment::FCA]->set(
-                results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FCA), tradeId, i);
+            for (const auto& adjustment : adjustments) {
+                try {
+                    populateCube(tradeZeroCubes[adjustment], tradeId, i, results->getTradeXVAs(adjustment));
+                } catch (const std::exception& e) {
+                    StructuredAnalyticsErrorMessage(
+                        "XvaSensitivity", "XVACalc",
+                        string("Error during populating cubes with xva values for trade " + tradeId + ", got ") +
+                            e.what() + ". Remove it from results.")
+                        .log();
+                    tradeHasScenarioError[tradeId].insert(i);
+                }
+            }
         }
         for (const auto& nettingSetId : baseResults->nettingSetIds()) {
-            nettingZeroCubes[XvaResults::Adjustment::CVA]->set(
-                results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::CVA), nettingSetId,
-                i);
-            nettingZeroCubes[XvaResults::Adjustment::DVA]->set(
-                results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::DVA), nettingSetId,
-                i);
-            nettingZeroCubes[XvaResults::Adjustment::FBA]->set(
-                results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FBA), nettingSetId, i);
-            nettingZeroCubes[XvaResults::Adjustment::FBA]->set(
-                results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FBA), nettingSetId, i);
+            for (const auto& adjustment : adjustments) {
+                try {
+                    populateCube(nettingZeroCubes[adjustment], nettingSetId, i, results->getNettingSetXVAs(adjustment));
+                } catch (const std::exception& e) {
+                    StructuredAnalyticsErrorMessage("XvaSensitivity", "XVACalc",
+                                                    "Error during populating cube with xva values for nettingSet " +
+                                                        nettingSetId + " , got " + e.what() +
+                                                        ". Remove it from results.")
+                        .log();
+                    nettingSetHasScenarioError[nettingSetId].insert(i);
+                }
+            }
         }
     }
-    
-    ZeroSenisResults results;
+
+    // Handle errors
+    for (const auto& [tradeId, scenariosWithErrors] : tradeHasScenarioError) {
+        for (const auto& adjustment : adjustments) {
+            auto idx = tradeZeroCubes[adjustment]->getTradeIndex(tradeId);
+            for (const auto& scenarioId : scenariosWithErrors) {
+                if (scenarioId == 0) {
+                    // Base senario Error and remove all entries
+                    tradeZeroCubes[adjustment]->removeT0(idx);
+                    tradeZeroCubes[adjustment]->remove(idx, Null<Size>(), false);
+                    break;
+                } else {
+                    tradeZeroCubes[adjustment]->remove(idx, scenarioId, true);
+                }
+            }
+        }
+    }
+
+    for (const auto& [nettingSetId, scenariosWithErrors] : nettingSetHasScenarioError) {
+        for (const auto& adjustment : adjustments) {
+            auto idx = tradeZeroCubes[adjustment]->getTradeIndex(nettingSetId);
+            for (const auto& scenarioId : scenariosWithErrors) {
+                if (scenarioId == 0) {
+                    // Base senario Error and remove all entries
+                    nettingZeroCubes[adjustment]->removeT0(idx);
+                    nettingZeroCubes[adjustment]->remove(idx, Null<Size>(), false);
+                    break;
+                } else {
+                    nettingZeroCubes[adjustment]->remove(idx, scenarioId, true);
+                }
+            }
+        }
+    }
+    // Create Results
+    ZeroSensiResults results;
     results.tradeNettingSetMap_ = baseResults->tradeNettingSetMapping();
-    for(const auto& [valueAdjustment, cube] : nettingZeroCubes){
+    for (const auto& [valueAdjustment, cube] : nettingZeroCubes) {
         results.nettingCubes_[valueAdjustment] = QuantLib::ext::make_shared<SensitivityCube>(
             cube, scenarioGenerator->scenarioDescriptions(), scenarioGenerator->shiftSizes(),
             scenarioGenerator->shiftSizes(), scenarioGenerator->shiftSchemes());
     }
-    for(const auto& [valueAdjustment, cube] : tradeZeroCubes){
+    for (const auto& [valueAdjustment, cube] : tradeZeroCubes) {
         results.tradeCubes_[valueAdjustment] = QuantLib::ext::make_shared<SensitivityCube>(
             cube, scenarioGenerator->scenarioDescriptions(), scenarioGenerator->shiftSizes(),
             scenarioGenerator->shiftSizes(), scenarioGenerator->shiftSchemes());
     }
-    
+
     return results;
 }
 
-void XvaSensitivityAnalyticImpl::runSimulations(std::map<size_t, ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
+void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
     // Used for the raw report
     std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>>> xvaReports;
     
@@ -289,7 +331,7 @@ void XvaSensitivityAnalyticImpl::runSimulations(std::map<size_t, ext::shared_ptr
     }
 }
 
-void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSenisResults& xvaZeroSeniCubes){
+void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSensiResults& xvaZeroSeniCubes){
     for(const auto& [valueAdjustment, cube] : xvaZeroSeniCubes.tradeCubes_){
         auto ssTrade = QuantLib::ext::make_shared<SensitivityCubeStream>(cube, inputs_->baseCurrency());
         auto nettingCube = xvaZeroSeniCubes.nettingCubes_[valueAdjustment];
@@ -303,7 +345,7 @@ void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSenisResults& xvaZeroSeni
     }
 }
 
-XvaSensitivityAnalyticImpl::ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSenisResults& zeroResults) {
+XvaSensitivityAnalyticImpl::ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zeroResults) {
     set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
 
     auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
