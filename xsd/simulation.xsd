@@ -2,6 +2,8 @@
 
   <xs:element type="simulation" name="Simulation"/>
 
+  <xs:element type="crossAssetModel" name="CrossAssetModel"/>
+
   <xs:complexType name="simulation">
     <xs:all>
       <xs:element type="parameters" name="Parameters" minOccurs="0" maxOccurs="1"/>
@@ -162,7 +164,7 @@
       <xs:element name="InflationIndexModels" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:choice maxOccurs="unbounded">
+            <xs:choice maxOccurs="unbounded" minOccurs="0">
               <xs:element type="lgm" name="LGM"/>
               <xs:element type="jarrowYildrim" name="JarrowYildirim"/>
             </xs:choice>
@@ -172,7 +174,7 @@
       <xs:element name="CreditModels" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:choice maxOccurs="unbounded">
+            <xs:choice maxOccurs="unbounded" minOccurs="0">
               <xs:element type="crlgm" name="LGM"/>
               <xs:element type="cir" name="CIR"/>
             </xs:choice>
@@ -318,13 +320,23 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+      <xs:element type="floatSpreadMappingType" name="FloatSpreadMapping" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="currencyCodeWithDefault" name="ccy"/>
     <!-- FIXME: currency not ccy -->
     <xs:attribute type="xs:string" name="index" />
     <!-- FIXME: currency not ccy -->
+    <xs:attribute type="xs:string" name="key" />
   </xs:complexType>
-    
+
+  <xs:simpleType name="floatSpreadMappingType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="NextCoupon"/>
+      <xs:enumeration value="ProRata"/>
+      <xs:enumeration value="Simple"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:complexType name="hw">
   <xs:all>
     <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
@@ -562,6 +574,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="LGM"/>
       <xs:enumeration value="BA"/>
+      <xs:enumeration value=""/>
     </xs:restriction>
   </xs:simpleType>
 

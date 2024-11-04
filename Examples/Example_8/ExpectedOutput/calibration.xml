@@ -17,18 +17,18 @@
 	<SalvagingAlgorithm>None</SalvagingAlgorithm>
 	<InterestRateModels>
 		<LGM key="EUR">
-			<CalibrationType>BOOTSTRAP</CalibrationType>
+			<CalibrationType>Bootstrap</CalibrationType>
 			<Volatility>
 				<Calibrate>false</Calibrate>
-				<VolatilityType>HAGAN</VolatilityType>
-				<ParamType>PIECEWISE</ParamType>
+				<VolatilityType>Hagan</VolatilityType>
+				<ParamType>Piecewise</ParamType>
 				<TimeGrid>1.00548, 2.00274, 3.00274, 4.00274, 5.00548, 7.00822, 10.0082, 12.0137, 15.011, 20.0137</TimeGrid>
 				<InitialValue>0.0121795, 0.0119468, 0.0118862, 0.0110916, 0.0111041, 0.0116776, 0.0125519, 0.0139778, 0.0156419, 0.0181743, 0.0177149</InitialValue>
 			</Volatility>
 			<Reversion>
 				<Calibrate>false</Calibrate>
-				<ReversionType>HULLWHITE</ReversionType>
-				<ParamType>CONSTANT</ParamType>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
 				<TimeGrid/>
 				<InitialValue>0.03</InitialValue>
 			</Reversion>
@@ -36,7 +36,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>PRORATA</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
 				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
@@ -44,18 +44,18 @@
 			</CalibrationSwaptions>
 		</LGM>
 		<LGM key="USD">
-			<CalibrationType>BOOTSTRAP</CalibrationType>
+			<CalibrationType>Bootstrap</CalibrationType>
 			<Volatility>
 				<Calibrate>false</Calibrate>
-				<VolatilityType>HAGAN</VolatilityType>
-				<ParamType>PIECEWISE</ParamType>
+				<VolatilityType>Hagan</VolatilityType>
+				<ParamType>Piecewise</ParamType>
 				<TimeGrid>1.00548, 2.00274, 3.00274, 4.00274, 5.00548, 7.00822, 10.0082, 12.0137, 15.011, 20.0137</TimeGrid>
 				<InitialValue>0.0137191, 0.0133843, 0.0126702, 0.0125064, 0.0129345, 0.0131551, 0.0122065, 0.0134528, 0.0125873, 0.0153664, 0.0164329</InitialValue>
 			</Volatility>
 			<Reversion>
 				<Calibrate>false</Calibrate>
-				<ReversionType>HULLWHITE</ReversionType>
-				<ParamType>CONSTANT</ParamType>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
 				<TimeGrid/>
 				<InitialValue>0.03</InitialValue>
 			</Reversion>
@@ -63,7 +63,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>PRORATA</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
 				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
@@ -71,18 +71,18 @@
 			</CalibrationSwaptions>
 		</LGM>
 		<LGM key="GBP">
-			<CalibrationType>BOOTSTRAP</CalibrationType>
+			<CalibrationType>Bootstrap</CalibrationType>
 			<Volatility>
 				<Calibrate>false</Calibrate>
-				<VolatilityType>HAGAN</VolatilityType>
-				<ParamType>PIECEWISE</ParamType>
+				<VolatilityType>Hagan</VolatilityType>
+				<ParamType>Piecewise</ParamType>
 				<TimeGrid>1.00548, 2.00274, 3.00274, 4.00274, 5.00548, 7.00822, 10.0082, 12.0137, 15.011, 20.0137</TimeGrid>
 				<InitialValue>0.0138932, 0.0136826, 0.0130734, 0.0135457, 0.0122669, 0.0115459, 0.0130816, 0.0123411, 0.0112167, 0.0144444, 0.019471</InitialValue>
 			</Volatility>
 			<Reversion>
 				<Calibrate>false</Calibrate>
-				<ReversionType>HULLWHITE</ReversionType>
-				<ParamType>CONSTANT</ParamType>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
 				<TimeGrid/>
 				<InitialValue>0.03</InitialValue>
 			</Reversion>
@@ -90,7 +90,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>PRORATA</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
 				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
@@ -98,18 +98,18 @@
 			</CalibrationSwaptions>
 		</LGM>
 		<LGM key="CHF">
-			<CalibrationType>BOOTSTRAP</CalibrationType>
+			<CalibrationType>Bootstrap</CalibrationType>
 			<Volatility>
 				<Calibrate>false</Calibrate>
-				<VolatilityType>HAGAN</VolatilityType>
-				<ParamType>PIECEWISE</ParamType>
+				<VolatilityType>Hagan</VolatilityType>
+				<ParamType>Piecewise</ParamType>
 				<TimeGrid>1.00548, 2.00274, 3.00274, 4.00274, 5.00548, 7.00822, 10.0082, 12.0137, 15.011, 20.0137</TimeGrid>
 				<InitialValue>0.0116566, 0.0112137, 0.0116345, 0.0134329, 0.0153417, 0.0144256, 0.0140842, 0.0145763, 0.0147497, 0.0103399, 0.0124477</InitialValue>
 			</Volatility>
 			<Reversion>
 				<Calibrate>false</Calibrate>
-				<ReversionType>HULLWHITE</ReversionType>
-				<ParamType>CONSTANT</ParamType>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
 				<TimeGrid/>
 				<InitialValue>0.03</InitialValue>
 			</Reversion>
@@ -117,7 +117,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>PRORATA</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
 				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
@@ -125,18 +125,18 @@
 			</CalibrationSwaptions>
 		</LGM>
 		<LGM key="JPY">
-			<CalibrationType>BOOTSTRAP</CalibrationType>
+			<CalibrationType>Bootstrap</CalibrationType>
 			<Volatility>
 				<Calibrate>false</Calibrate>
-				<VolatilityType>HAGAN</VolatilityType>
-				<ParamType>PIECEWISE</ParamType>
+				<VolatilityType>Hagan</VolatilityType>
+				<ParamType>Piecewise</ParamType>
 				<TimeGrid>1.00548, 2.00274, 3.00274, 4.00274, 5.00548, 7.00822, 10.0082, 12.0137, 15.011, 20.0137</TimeGrid>
 				<InitialValue>0.0116566, 0.0112137, 0.0116345, 0.0134329, 0.0153417, 0.0144256, 0.0140842, 0.0145763, 0.0147497, 0.0103399, 0.0124477</InitialValue>
 			</Volatility>
 			<Reversion>
 				<Calibrate>false</Calibrate>
-				<ReversionType>HULLWHITE</ReversionType>
-				<ParamType>CONSTANT</ParamType>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
 				<TimeGrid/>
 				<InitialValue>0.03</InitialValue>
 			</Reversion>
@@ -144,7 +144,7 @@
 				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 				<Scaling>1</Scaling>
 			</ParameterTransformation>
-			<FloatSpreadMapping>PRORATA</FloatSpreadMapping>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
 			<CalibrationSwaptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
 				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
@@ -155,10 +155,10 @@
 	<ForeignExchangeModels>
 		<CrossCcyLGM foreignCcy="USD">
 			<DomesticCcy>EUR</DomesticCcy>
-			<CalibrationType>BOOTSTRAP</CalibrationType>
+			<CalibrationType>Bootstrap</CalibrationType>
 			<Sigma>
 				<Calibrate>false</Calibrate>
-				<ParamType>PIECEWISE</ParamType>
+				<ParamType>Piecewise</ParamType>
 				<TimeGrid>1.00274, 2.00274, 3.00274, 4.00274, 5.00548</TimeGrid>
 				<InitialValue>0.120512, 0.117968, 0.122742, 0.133003, 0.128095, 0.107083</InitialValue>
 			</Sigma>
@@ -169,10 +169,10 @@
 		</CrossCcyLGM>
 		<CrossCcyLGM foreignCcy="GBP">
 			<DomesticCcy>EUR</DomesticCcy>
-			<CalibrationType>BOOTSTRAP</CalibrationType>
+			<CalibrationType>Bootstrap</CalibrationType>
 			<Sigma>
 				<Calibrate>false</Calibrate>
-				<ParamType>PIECEWISE</ParamType>
+				<ParamType>Piecewise</ParamType>
 				<TimeGrid>1.00274, 2.00274, 3.00274, 4.00274, 5.00548</TimeGrid>
 				<InitialValue>0.129491, 0.126646, 0.127864, 0.123507, 0.118005, 0.095065</InitialValue>
 			</Sigma>
@@ -183,10 +183,10 @@
 		</CrossCcyLGM>
 		<CrossCcyLGM foreignCcy="CHF">
 			<DomesticCcy>EUR</DomesticCcy>
-			<CalibrationType>BOOTSTRAP</CalibrationType>
+			<CalibrationType>Bootstrap</CalibrationType>
 			<Sigma>
 				<Calibrate>false</Calibrate>
-				<ParamType>PIECEWISE</ParamType>
+				<ParamType>Piecewise</ParamType>
 				<TimeGrid>1.00274, 2.00274, 3.00274, 4.00274, 5.00548</TimeGrid>
 				<InitialValue>0.0923999, 0.101474, 0.109347, 0.111792, 0.13178, 0.112133</InitialValue>
 			</Sigma>
@@ -197,10 +197,10 @@
 		</CrossCcyLGM>
 		<CrossCcyLGM foreignCcy="JPY">
 			<DomesticCcy>EUR</DomesticCcy>
-			<CalibrationType>BOOTSTRAP</CalibrationType>
+			<CalibrationType>Bootstrap</CalibrationType>
 			<Sigma>
 				<Calibrate>false</Calibrate>
-				<ParamType>PIECEWISE</ParamType>
+				<ParamType>Piecewise</ParamType>
 				<TimeGrid>1.00274, 2.00274, 3.00274, 4.00274, 5.00548</TimeGrid>
 				<InitialValue>0.137331, 0.137023, 0.133202, 0.128609, 0.140625, 0.128443</InitialValue>
 			</Sigma>
