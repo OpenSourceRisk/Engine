@@ -564,6 +564,12 @@
           "Side",
           "PLMode"
         ],
+        "optional_cols": [
+            "ExceptionsDecorrelated",
+            "GreenUpToDecorrelated",
+            "AmberUpToDecorrelated",
+            "ZoneDecorrelated"
+        ],
         "column_settings": [
           {
             "names": [
@@ -633,6 +639,10 @@
           "PLDate1",
           "PLDate2",
           "PLType"
+        ],
+        "optional_cols": [
+          "PLAmountDecorrelated",
+          "StatusDecorrelated"
         ],
         "column_settings": [
           {
