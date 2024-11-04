@@ -231,6 +231,135 @@ BOOST_AUTO_TEST_CASE(testDecorrelateOverlappingPnl) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testExceedanceTestsOverlappingPnl) {
+
+    BOOST_TEST_MESSAGE("Testing exceedance tests for overlapping pnl");
+
+    Real p = 0.99;
+    Size numberOfDays = 10;
+    Size seed = 42;
+    Size observations = 250;
+    Size samples = 1E4;
+
+    auto sgen = PseudoRandom::make_sequence_generator(observations + numberOfDays, seed);
+
+    std::vector<Real> pnl(observations, 0.0);
+
+    Real im = std::sqrt(numberOfDays) * QuantLib::InverseCumulativeNormal()(p);
+    Real im2 = std::sqrt(numberOfDays) * QuantLib::InverseCumulativeNormal()(p) / 1.1;
+
+    Size errorType1Amber = 0, errorType1P1Amber = 0;
+    Size errorType2Amber = 0;
+    Size errorType1AmberDecorrelated = 0, errorType1P1AmberDecorrelated = 0;
+    Size errorType2AmberDecorrelated = 0;
+    Size errorType1Red = 0, errorType1P1Red = 0;
+    Size errorType2Red = 0;
+    Size errorType1RedDecorrelated = 0, errorType1P1RedDecorrelated = 0;
+    Size errorType2RedDecorrelated = 0;
+
+    Real conf1 = 0.95, conf2 = 0.9999;
+
+    auto bounds = stopLightBoundsTabulated({conf1, conf2}, observations, numberOfDays, p);
+    auto boundsDecorrelated = stopLightBounds({conf1, conf2}, observations, p);
+
+    BOOST_TEST_MESSAGE("bounds              = " << bounds[0] << "," << bounds[1]);
+    BOOST_TEST_MESSAGE("bounds decorrelated = " << boundsDecorrelated[0] << "," << boundsDecorrelated[1]);
+
+    for (Size i = 0; i < samples; ++i) {
+
+        const auto& seq = sgen.nextSequence().value;
+
+        // compute the 10d PL only once ...
+        pnl[0] = 0.0;
+        for (Size dd = 0; dd < numberOfDays; ++dd) {
+            pnl[0] += seq[dd];
+        }
+
+        for (Size l = 0; l < observations - 1; ++l) {
+            // and only correct for the tail and head
+            pnl[l + 1] = pnl[l] + seq[l + numberOfDays] - seq[l];
+        }
+
+        auto pnlDecorrelated = decorrelateOverlappingPnls(pnl, numberOfDays);
+
+        Size numberOfExceedances = 0;
+        Size numberOfExceedancesDecorrelated = 0;
+        Size numberOfExceedances2 = 0;
+        Size numberOfExceedances2Decorrelated = 0;
+
+        for (Size i = 0; i < observations; ++i) {
+            if (pnl[i] > im)
+                numberOfExceedances++;
+            if (pnl[i] > im2)
+                numberOfExceedances2++;
+            if (pnlDecorrelated[i] > im)
+                numberOfExceedancesDecorrelated++;
+            if (pnlDecorrelated[i] > im2)
+                numberOfExceedances2Decorrelated++;
+        }
+
+        if (numberOfExceedances > bounds[0])
+            errorType1Amber++;
+        if (numberOfExceedances > bounds[0] + 1)
+            errorType1P1Amber++;
+        if (numberOfExceedances2 <= bounds[0])
+            errorType2Amber++;
+        if (numberOfExceedances > bounds[1])
+            errorType1Red++;
+        if (numberOfExceedances > bounds[1] + 1)
+            errorType1P1Red++;
+        if (numberOfExceedances2 <= bounds[1])
+            errorType2Red++;
+
+        if (numberOfExceedancesDecorrelated > boundsDecorrelated[0])
+            errorType1AmberDecorrelated++;
+        if (numberOfExceedancesDecorrelated > boundsDecorrelated[0] + 1)
+            errorType1P1AmberDecorrelated++;
+        if (numberOfExceedances2Decorrelated <= boundsDecorrelated[0])
+            errorType2AmberDecorrelated++;
+        if (numberOfExceedancesDecorrelated > boundsDecorrelated[1])
+            errorType1RedDecorrelated++;
+        if (numberOfExceedancesDecorrelated > boundsDecorrelated[1] + 1)
+            errorType1P1RedDecorrelated++;
+        if (numberOfExceedances2Decorrelated <= boundsDecorrelated[1])
+            errorType2RedDecorrelated++;
+
+    } // for samples
+
+    BOOST_TEST_MESSAGE("error type 1 amber : "
+                       << static_cast<double>(errorType1Amber) / static_cast<double>(samples) << " ("
+                       << static_cast<double>(errorType1P1Amber) / static_cast<double>(samples) << ")");
+    BOOST_TEST_MESSAGE("error type 2 amber : " << static_cast<double>(errorType2Amber) / static_cast<double>(samples));
+    BOOST_TEST_MESSAGE("power        amber : " << 1.0 - static_cast<double>(errorType2Amber) /
+                                                            static_cast<double>(samples));
+    BOOST_TEST_MESSAGE("error type 1 red   : "
+                       << static_cast<double>(errorType1Red) / static_cast<double>(samples) << " ("
+                       << static_cast<double>(errorType1P1Red) / static_cast<double>(samples) << ")");
+    BOOST_TEST_MESSAGE("error type 2 red   : " << static_cast<double>(errorType2Red) / static_cast<double>(samples));
+    BOOST_TEST_MESSAGE("power        red   : " << 1.0 - static_cast<double>(errorType2Red) /
+                                                            static_cast<double>(samples));
+
+    BOOST_TEST_MESSAGE("error type 1 amber decorrelated : "
+                       << static_cast<double>(errorType1AmberDecorrelated) / static_cast<double>(samples) << " ("
+                       << static_cast<double>(errorType1P1AmberDecorrelated) / static_cast<double>(samples) << ")");
+    BOOST_TEST_MESSAGE("error type 2 amber decorrelated : " << static_cast<double>(errorType2AmberDecorrelated) /
+                                                                   static_cast<double>(samples));
+    BOOST_TEST_MESSAGE("power        amber decorrelated : " << 1.0 - static_cast<double>(errorType2AmberDecorrelated) /
+                                                                         static_cast<double>(samples));
+    BOOST_TEST_MESSAGE("error type 1 red   decorrelated : "
+                       << static_cast<double>(errorType1RedDecorrelated) / static_cast<double>(samples) << " ("
+                       << static_cast<double>(errorType1P1RedDecorrelated) / static_cast<double>(samples) << ")");
+    BOOST_TEST_MESSAGE("error type 2 red   decorrelated : " << static_cast<double>(errorType2RedDecorrelated) /
+                                                                   static_cast<double>(samples));
+    BOOST_TEST_MESSAGE("power        red   decorrelated : " << 1.0 - static_cast<double>(errorType2RedDecorrelated) /
+                                                                         static_cast<double>(samples));
+
+    BOOST_CHECK(static_cast<double>(errorType1P1Amber) / static_cast<double>(samples) < conf1);
+    BOOST_CHECK(static_cast<double>(errorType1P1Red) / static_cast<double>(samples) < conf2);
+    BOOST_CHECK(static_cast<double>(errorType1P1AmberDecorrelated) / static_cast<double>(samples) < conf1);
+    BOOST_CHECK(static_cast<double>(errorType1P1RedDecorrelated) / static_cast<double>(samples) < conf2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
