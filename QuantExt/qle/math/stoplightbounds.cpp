@@ -246,8 +246,8 @@ std::vector<Size> stopLightBounds(const std::vector<Real>& stopLightP, const Siz
         }
     } // for samples
     std::vector<Size> res;
-    for (auto const p : stopLightP) {
-        Size tmp = static_cast<Size>(quantile(acc, quantile_probability = p));
+    for (auto const s : stopLightP) {
+        Size tmp = static_cast<Size>(quantile(acc, quantile_probability = s));
         res.push_back(tmp > 0 ? tmp - 1 : 0);
     }
     return res;
@@ -264,8 +264,23 @@ std::vector<Size> stopLightBounds(const std::vector<Real>& stopLightP, const Siz
     }
     boost::math::binomial_distribution<Real> b((Real)observations, (Real)(1.0) - p);
     std::vector<Size> res;
-    for (auto const p : stopLightP) {
-        res.push_back(std::max(static_cast<Size>(boost::math::quantile(b, p)), (Size)(1)) - 1);
+    for (auto const s : stopLightP) {
+
+        QL_REQUIRE(s > 0.5, "stopLightBounds: stopLightP (" << s << ") must be greater than 0.5");
+
+        /* According to https://www.boost.org/doc/libs/1_86_0/libs/math/doc/html/math_toolkit/dist_ref/dists/binomial_dist.html
+
+           "the quantile function will by default return an integer result that has been rounded outwards. That is to
+           say lower quantiles (where the probability is less than 0.5) are rounded downward, and upper quantiles (where
+           the probability is greater than 0.5) are rounded upwards. This behaviour ensures that if an X% quantile is
+           requested, then at least the requested coverage will be present in the central region, and no more than the
+           requested coverage will be present in the tails."
+
+           This means that the quantile K we compute for p fulfills P( X <= K ) >= p.
+
+           Note: If the computed K is zero, the end result has to be zero too. */
+
+        res.push_back(std::max(static_cast<Size>(boost::math::quantile(b, s)), (Size)(1)) - 1);
     }
     if (exceptions != Null<Size>()) {
         *cumProb = boost::math::cdf(b, exceptions);
