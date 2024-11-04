@@ -97,8 +97,8 @@
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="parSensitivity">Y</Parameter>
       <Parameter name="outputJacobi">Y</Parameter>
-      <Parameter name="jacobiOutputFile">jacobi.csv</Parameter>
-      <Parameter name="jacobiInverseOutputFile">jacobi_inverse.csv</Parameter>
+      <Parameter name="jacobiOutputFile">xva_sensitivity_jacobi.csv</Parameter>
+      <Parameter name="jacobiInverseOutputFile">xva_sensitivity_jacobi_inverse.csv</Parameter>
     </Analytic>
   </Analytics>
 </ORE>

@@ -150,10 +150,13 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
     LOG("Run XVA Zero Sensitivity Sensitivity")
     auto zeroCubes = runXvaZeroSensitivitySimulation(loader);
     createZeroReports(zeroCubes);
-    LOG("Run Par Conversion")
-    auto parCubes = parConversion(zeroCubes);
-    createParReports(parCubes, zeroCubes.tradeNettingSetMap_);
-    LOG("Running XVA Sensitivity analytic finished.");
+    if (inputs_->xvaSensiParSensi()) {
+        LOG("Run Par Conversion")
+        auto parCubes = parConversion(zeroCubes);
+        createParReports(parCubes, zeroCubes.tradeNettingSetMap_);
+        LOG("Running XVA Sensitivity analytic finished.");
+        
+    }
 }
 
 XvaSensitivityAnalyticImpl::ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZeroSensitivitySimulation(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
@@ -180,7 +183,6 @@ XvaSensitivityAnalyticImpl::ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZ
 
     for (size_t i = 0; i < xvaResults.size(); ++i) {
         if (i == 0) {
-            
             for (const auto& tradeId : baseResults->tradeIds()) {
                 tradeZeroCubes[XvaResults::Adjustment::CVA]->setT0(
                     baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId);
@@ -310,6 +312,18 @@ XvaSensitivityAnalyticImpl::ParSensiResults XvaSensitivityAnalyticImpl::parConve
 
     QuantLib::ext::shared_ptr<ParSensitivityConverter> parConverter =
         QuantLib::ext::make_shared<ParSensitivityConverter>(parAnalysis->parSensitivities(), parAnalysis->shiftSizes());
+
+    if (inputs_->xvaSensiOutputJacobi()){
+        QuantLib::ext::shared_ptr<InMemoryReport> jacobiReport =
+            QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        writeParConversionMatrix(parAnalysis->parSensitivities(), *jacobiReport);
+        analytic()->reports()[label()]["xva_sensi_jacobi"] = jacobiReport;
+
+        QuantLib::ext::shared_ptr<InMemoryReport> jacobiInverseReport =
+            QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        parConverter->writeConversionMatrix(*jacobiInverseReport);
+        analytic()->reports()[label()]["xva_sensi_jacobi_inverse"] = jacobiInverseReport;
+    }
 
     ParSensiResults results;
 
