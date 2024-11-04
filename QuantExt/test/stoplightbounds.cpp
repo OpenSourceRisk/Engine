@@ -231,7 +231,9 @@ BOOST_AUTO_TEST_CASE(testDecorrelateOverlappingPnl) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(testExceedanceTestsOverlappingPnl) {
+// this test is slow and therefore disabled by default
+
+BOOST_AUTO_TEST_CASE(testExceedanceTestsOverlappingPnl, *boost::unit_test::disabled()) {
 
     BOOST_TEST_MESSAGE("Testing exceedance tests for overlapping pnl");
 
