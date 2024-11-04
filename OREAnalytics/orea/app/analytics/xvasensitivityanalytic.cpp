@@ -32,6 +32,14 @@ namespace ore {
 namespace analytics {
 
 XvaResults::XvaResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaReport) {
+
+    QL_REQUIRE(xvaReport->hasHeader("TradeId"), "Expect column 'tradeId' in XVA report.");
+    QL_REQUIRE(xvaReport->hasHeader("NettingSetId"), "Expect column 'NettingSetId' in XVA report.");
+    QL_REQUIRE(xvaReport->hasHeader("CVA"), "Expect column 'CVA' in XVA report.");
+    QL_REQUIRE(xvaReport->hasHeader("DVA"), "Expect column 'DVA' in XVA report.");
+    QL_REQUIRE(xvaReport->hasHeader("FBA"), "Expect column 'FBA' in XVA report.");
+    QL_REQUIRE(xvaReport->hasHeader("FCA"), "Expect column 'FCA' in XVA report.");
+
     size_t tradeIdColumn = xvaReport->columnPosition("TradeId");
     size_t nettingSetIdColumn = xvaReport->columnPosition("NettingSetId");
     size_t cvaColumn = xvaReport->columnPosition("CVA");
@@ -163,13 +171,15 @@ XvaSensitivityAnalyticImpl::ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZ
     // Run Simulations 
     auto simMarket = buildSimMarket(false);
     auto scenarioGenerator = buildScenarioGenerator(simMarket, false);
-    std::vector<ext::shared_ptr<XvaResults>> xvaResults;
+    std::map<size_t, ext::shared_ptr<XvaResults>> xvaResults;
     runSimulations(xvaResults, loader, scenarioGenerator);
     // Create sensi cubes from xva simulation results
-    QL_REQUIRE(!xvaResults.empty(),
-               "XVA Sensitivity Run ended without any results, there should be at least the base scenario");
-    
-    auto& baseResults = xvaResults.front();
+    auto baseIt = xvaResults.find(0);
+
+    QL_REQUIRE(baseIt != xvaResults.end(),
+               "XVA Sensitivity Run ended without a base scenario");
+
+    auto& baseResults = baseIt->second;
     // Setup cubes
     std::map<XvaResults::Adjustment, ext::shared_ptr<NPVSensiCube>> nettingZeroCubes, tradeZeroCubes;
     for (const auto& valueAdjustment : {XvaResults::Adjustment::CVA, XvaResults::Adjustment::DVA,
@@ -181,52 +191,50 @@ XvaSensitivityAnalyticImpl::ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZ
     }
     // Populate cubes
 
-    for (size_t i = 0; i < xvaResults.size(); ++i) {
+    for (const auto& [i, results] : xvaResults) {
         if (i == 0) {
             for (const auto& tradeId : baseResults->tradeIds()) {
                 tradeZeroCubes[XvaResults::Adjustment::CVA]->setT0(
-                    baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId);
+                    results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId);
                 tradeZeroCubes[XvaResults::Adjustment::DVA]->setT0(
-                    baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::DVA), tradeId);
+                    results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::DVA), tradeId);
                 tradeZeroCubes[XvaResults::Adjustment::FBA]->setT0(
-                    baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FBA), tradeId);
+                    results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FBA), tradeId);
                 tradeZeroCubes[XvaResults::Adjustment::FCA]->setT0(
-                    baseResults->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FCA), tradeId);
+                    results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FCA), tradeId);
             }
             for (const auto& nettingSetId : baseResults->nettingSetIds()) {
                 nettingZeroCubes[XvaResults::Adjustment::CVA]->setT0(
-                    baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::CVA), nettingSetId);
+                    results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::CVA), nettingSetId);
                 nettingZeroCubes[XvaResults::Adjustment::DVA]->setT0(
-                    baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::DVA), nettingSetId);
+                    results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::DVA), nettingSetId);
                 nettingZeroCubes[XvaResults::Adjustment::FBA]->setT0(
-                    baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FBA), nettingSetId);
+                    results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FBA), nettingSetId);
                 nettingZeroCubes[XvaResults::Adjustment::FCA]->setT0(
-                    baseResults->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FCA), nettingSetId);
+                    results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FCA), nettingSetId);
             }
         }
         for (const auto& tradeId : baseResults->tradeIds()) {
             tradeZeroCubes[XvaResults::Adjustment::CVA]->set(
-                xvaResults[i]->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId, i);
+                results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::CVA), tradeId, i);
             tradeZeroCubes[XvaResults::Adjustment::DVA]->set(
-                xvaResults[i]->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::DVA), tradeId, i);
+                results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::DVA), tradeId, i);
             tradeZeroCubes[XvaResults::Adjustment::FBA]->set(
-                xvaResults[i]->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FBA), tradeId, i);
+                results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FBA), tradeId, i);
             tradeZeroCubes[XvaResults::Adjustment::FCA]->set(
-                xvaResults[i]->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FCA), tradeId, i);
+                results->getTradeValueAdjustment(tradeId, XvaResults::Adjustment::FCA), tradeId, i);
         }
         for (const auto& nettingSetId : baseResults->nettingSetIds()) {
             nettingZeroCubes[XvaResults::Adjustment::CVA]->set(
-                xvaResults[i]->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::CVA), nettingSetId,
+                results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::CVA), nettingSetId,
                 i);
             nettingZeroCubes[XvaResults::Adjustment::DVA]->set(
-                xvaResults[i]->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::DVA), nettingSetId,
+                results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::DVA), nettingSetId,
                 i);
             nettingZeroCubes[XvaResults::Adjustment::FBA]->set(
-                xvaResults[i]->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FBA), nettingSetId,
-                i);
+                results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FBA), nettingSetId, i);
             nettingZeroCubes[XvaResults::Adjustment::FBA]->set(
-                xvaResults[i]->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FBA), nettingSetId,
-                i);
+                results->getNettingSetValueAdjustment(nettingSetId, XvaResults::Adjustment::FBA), nettingSetId, i);
         }
     }
     
@@ -246,7 +254,7 @@ XvaSensitivityAnalyticImpl::ZeroSenisResults XvaSensitivityAnalyticImpl::runXvaZ
     return results;
 }
 
-void XvaSensitivityAnalyticImpl::runSimulations(std::vector<ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
+void XvaSensitivityAnalyticImpl::runSimulations(std::map<size_t, ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
     // Used for the raw report
     std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>>> xvaReports;
     
@@ -267,7 +275,7 @@ void XvaSensitivityAnalyticImpl::runSimulations(std::vector<ext::shared_ptr<XvaR
                 if (boost::starts_with(name, "exposure") || boost::starts_with(name, "xva")) {
                     xvaReports[name].push_back(rpt);
                     if (name == "xva") {
-                        xvaResults.push_back(ext::make_shared<XvaResults>(rpt));
+                        xvaResults[i] = ext::make_shared<XvaResults>(rpt);
                     }
                 }
             }
