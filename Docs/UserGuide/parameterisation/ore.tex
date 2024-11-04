@@ -139,6 +139,7 @@ type can be (so far) in
 \item todaysMarketCalibration
 \item curves
 \item simulation
+\item calibration
 \item xva
 \item sensitivity
 \item stress
@@ -297,6 +298,35 @@ file. Only those currencies or indices are written here that are stated in the A
 AggregationScenarioDataIndices subsections of the simulation files market section, see also section
 \ref{sec:sim_market}.
  
+\medskip The purpose of the {\tt calibration} 'analytics' is to run a subset of the simulation analytic's functionality,
+i.e. to calibrate the simulation model and output the calibrated model data such that it can be used to initialize
+a subsequent simulation without recalibration.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+    <Analytic type="calibration">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configFile">simulation.xml</Parameter>
+      <Parameter name="outputFileName">calibration.csv</Parameter>
+    </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: calibration}
+\label{lst:ore_simulation}
+\end{listing}
+
+Output is the Cross Asset Model data written to {\tt calibration.xml} in the usual output directory, which contains the calibration
+results in place of the initial values for all parametrizations covered so far (IR and FX). In a subsequent run one could replace
+the {\tt CrossAssetModel} section in {\tt simulation.xml} with the output in {\tt calibration.xml} to re-run without re-calibration.
+Note that the {\tt Calibrate} flags in the IR/FX model sections of {\tt calibration.xml} are set to {\tt false}.
+
+Additionally, the Cross Asset Model XML is written as a single XML string to the calibration report {\tt calibration.csv}, also held in
+memory for further processing e.g. via ORE's Python interface.
+
+See Example\_8 for a demonstration.
+
 \medskip The XVA analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected here
 individually. All XVA calculations depend on a previously generated NPV cube (see above) which is referenced here via
 the {\tt cubeFile} parameter. This means one can re-run the XVA analytics without regenerating the cube each time. The
