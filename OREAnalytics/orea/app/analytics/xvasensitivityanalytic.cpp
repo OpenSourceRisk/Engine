@@ -32,7 +32,7 @@ namespace ore {
 namespace analytics {
 
 XvaResults::XvaResults(const QuantLib::ext::shared_ptr<InMemoryReport>& xvaReport) {
-
+    QL_REQUIRE(xvaReport != nullptr, "Empty xvaReport, can not extract any values");
     QL_REQUIRE(xvaReport->hasHeader("TradeId"), "Expect column 'tradeId' in XVA report.");
     QL_REQUIRE(xvaReport->hasHeader("NettingSetId"), "Expect column 'NettingSetId' in XVA report.");
     QL_REQUIRE(xvaReport->hasHeader("CVA"), "Expect column 'CVA' in XVA report.");
@@ -108,6 +108,7 @@ QuantLib::ext::shared_ptr<ScenarioSimMarket> XvaSensitivityAnalyticImpl::buildSi
 QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>
 XvaSensitivityAnalyticImpl::buildScenarioGenerator(QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket,
                                                    bool overrideTenors) {
+    QL_REQUIRE(simMarket != nullptr, "Can not build scenario generator without a valid sim market");
     auto baseScenario = simMarket->baseScenario();
     auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
     auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
@@ -190,6 +191,7 @@ XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::convert
     QL_REQUIRE(baseIt != xvaResults.end(),
                "XVA Sensitivity Run ended without a base scenario");
     auto& baseResults = baseIt->second;
+    QL_REQUIRE(baseResults != nullptr, "XVA Sensitivity can not computed without valid base scenario results");
     // Initializx Zero Cubes
     std::map<XvaResults::Adjustment, ext::shared_ptr<NPVSensiCube>> nettingZeroCubes, tradeZeroCubes;
     
@@ -215,8 +217,16 @@ XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::convert
 
     std::map<std::string, std::set<size_t>> tradeHasScenarioError;
     std::map<std::string, std::set<size_t>> nettingSetHasScenarioError;
+    std::set<size_t> scenariosWithErrors;
 
     for (const auto& [i, results] : xvaResults) {
+        if (results == nullptr) {
+            StructuredAnalyticsErrorMessage(
+                "XvaSensitivity", "XVACalc",
+                "Error during populating cubes, results for scenario " + to_string(i) + " are missing, removing it from results")
+                .log();
+            continue;
+        }
         for (const auto& tradeId : baseResults->tradeIds()) {
             for (const auto& adjustment : adjustments) {
                 try {
@@ -247,11 +257,10 @@ XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::convert
         }
     }
 
-    // Handle errors
-    for (const auto& [tradeId, scenariosWithErrors] : tradeHasScenarioError) {
+    for (const auto& [tradeId, scenarios] : tradeHasScenarioError) {
         for (const auto& adjustment : adjustments) {
             auto idx = tradeZeroCubes[adjustment]->getTradeIndex(tradeId);
-            for (const auto& scenarioId : scenariosWithErrors) {
+            for (const auto& scenarioId : scenarios) {
                 if (scenarioId == 0) {
                     // Base senario Error and remove all entries
                     tradeZeroCubes[adjustment]->removeT0(idx);
@@ -264,18 +273,33 @@ XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::convert
         }
     }
 
-    for (const auto& [nettingSetId, scenariosWithErrors] : nettingSetHasScenarioError) {
+    for (const auto& [nettingSetId, scenarios] : nettingSetHasScenarioError) {
         for (const auto& adjustment : adjustments) {
-            auto idx = tradeZeroCubes[adjustment]->getTradeIndex(nettingSetId);
-            for (const auto& scenarioId : scenariosWithErrors) {
+            auto nettingCube = nettingZeroCubes[adjustment];
+            auto idx = nettingCube->getTradeIndex(nettingSetId);
+
+            for (const auto& scenarioId : scenarios) {
                 if (scenarioId == 0) {
                     // Base senario Error and remove all entries
-                    nettingZeroCubes[adjustment]->removeT0(idx);
-                    nettingZeroCubes[adjustment]->remove(idx, Null<Size>(), false);
+                    nettingCube->removeT0(idx);
+                    nettingCube->remove(idx, Null<Size>(), false);
                     break;
                 } else {
-                    nettingZeroCubes[adjustment]->remove(idx, scenarioId, true);
+                    nettingCube->remove(idx, scenarioId, true);
                 }
+            }
+        }
+    }
+    
+    for (const auto& scenarioId : scenariosWithErrors){
+        for (const auto& adjustment : adjustments) {
+            auto tradeCube = tradeZeroCubes[adjustment];
+            for (const auto& [_, idx] : tradeCube->idsAndIndexes()){
+                tradeCube->remove(idx, scenarioId, true);
+            }
+            auto nettingCube = nettingZeroCubes[adjustment];
+            for (const auto& [_, idx] : nettingCube->idsAndIndexes()){
+                nettingCube->remove(idx, scenarioId, true);
             }
         }
     }
@@ -298,8 +322,10 @@ XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::convert
 
 void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
     // Used for the raw report
+    QL_REQUIRE(scenarioGenerator != nullptr,
+               "Internal error: Can not compute XVA sensi without valid scenario generator.");
     std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>>> xvaReports;
-    
+
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
         auto desc = scenarioGenerator->scenarioDescriptions()[i];
