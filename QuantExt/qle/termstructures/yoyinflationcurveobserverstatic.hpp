@@ -56,7 +56,7 @@ public:
         calculate();
         QL_REQUIRE(!quotes_.empty(),
                    "YoYInflationCurveObserverStatic: Error while getting base rate, no quotes provided");
-        return quotes_.front().value();
+        return quotes_.front()->value();
     }
     //@}
 
