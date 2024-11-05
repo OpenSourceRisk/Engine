@@ -578,7 +578,7 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
     auto frequency = ii->frequency();
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, obsLag, frequency, ii);
     QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
-        asof_, baseDate, frequency, ActualActual(ActualActual::ISDA), instruments));
+        asof_, baseDate, obsLag, frequency, ActualActual(ActualActual::ISDA), instruments));
     pCPIts->recalculate();
     cpiTS = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
     cpiTS->enableExtrapolation(true);
@@ -604,7 +604,7 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
     Rate baseZeroRate = rates[0] / 100.0;
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, Period(2, Months), ii->frequency(), ii);
     QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>> pYoYts(new PiecewiseYoYInflationCurve<Linear>(
-        asof_, baseDate, baseZeroRate, ii->frequency(), ii->interpolated(), ActualActual(ActualActual::ISDA), instruments));
+        asof_, baseDate, baseZeroRate, Period(2, Months), ii->frequency(), ii->interpolated(), ActualActual(ActualActual::ISDA), instruments));
     pYoYts->recalculate();
     yoyTS = QuantLib::ext::dynamic_pointer_cast<YoYInflationTermStructure>(pYoYts);
     return Handle<YoYInflationIndex>(QuantLib::ext::make_shared<QuantExt::YoYInflationIndexWrapper>(
@@ -1107,7 +1107,7 @@ void TestMarketParCurves::createZeroInflationIndex(const string& idxName, const 
     
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, conv->observationLag(), zii->frequency(), zii);
     zeroCurve = QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(
-        new PiecewiseZeroInflationCurve<Linear>(asof_, baseDate, zii->frequency(), conv->dayCounter(), instruments));
+        new PiecewiseZeroInflationCurve<Linear>(asof_, baseDate, conv->observationLag(), zii->frequency(), conv->dayCounter(), instruments));
     Handle<ZeroInflationTermStructure> its(zeroCurve);
     its->enableExtrapolation();
     QuantLib::ext::shared_ptr<ZeroInflationIndex> i =
@@ -1146,7 +1146,7 @@ void TestMarketParCurves::createYoYInflationIndex(const string& idxName, const v
     Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, conv->observationLag(), zii->frequency(), zii);
 
     yoyCurve = QuantLib::ext::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
-        asof_, baseDate, baseRate, yi->frequency(), conv->interpolated(), conv->dayCounter(), instruments));
+        asof_, baseDate, baseRate, conv->observationLag(), yi->frequency(), conv->interpolated(), conv->dayCounter(), instruments));
     yoyCurve->enableExtrapolation();
     Handle<YoYInflationTermStructure> its(yoyCurve);
     QuantLib::ext::shared_ptr<YoYInflationIndex> i(yi->clone(its));

@@ -41,8 +41,8 @@ class ZeroInflationCurveObserverStatic : public ZeroInflationTermStructure,
                                          public LazyObject {
 public:
     ZeroInflationCurveObserverStatic(
-        const Date& referenceDate, const DayCounter& dayCounter, Frequency frequency, const std::vector<Date>& dates,
-        const std::vector<Handle<Quote>>& rates,
+        const Date& referenceDate, const DayCounter& dayCounter, const Period& lag, Frequency frequency,
+        const std::vector<Date>& dates, const std::vector<Handle<Quote>>& rates,
         const QuantLib::ext::shared_ptr<Seasonality>& seasonality = QuantLib::ext::shared_ptr<Seasonality>(),
         const Interpolator& interpolator = Interpolator());
 
@@ -87,10 +87,10 @@ protected:
 
 template <class Interpolator>
 ZeroInflationCurveObserverStatic<Interpolator>::ZeroInflationCurveObserverStatic(
-    const Date& referenceDate, const DayCounter& dayCounter, Frequency frequency, const std::vector<Date>& dates,
-    const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
-    const Interpolator& interpolator)
-    : ZeroInflationTermStructure(referenceDate, Date(), frequency, dayCounter, seasonality),
+    const Date& referenceDate, const DayCounter& dayCounter, const Period& lag, Frequency frequency,
+    const std::vector<Date>& dates, const std::vector<Handle<Quote>>& rates,
+    const QuantLib::ext::shared_ptr<Seasonality>& seasonality, const Interpolator& interpolator)
+    : ZeroInflationTermStructure(referenceDate, Date(), lag, frequency, dayCounter, seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), dates_(dates),
       quotes_(rates) {
 

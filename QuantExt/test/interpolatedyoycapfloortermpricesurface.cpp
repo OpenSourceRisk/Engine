@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
 
     QuantLib::Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, Period(3, Months), Monthly, ii);
     QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(
-        new PiecewiseZeroInflationCurve<Linear>(asof_, baseDate, Monthly, Actual365Fixed(), instruments));
+        new PiecewiseZeroInflationCurve<Linear>(asof_, baseDate, 3 * Months, Monthly, Actual365Fixed(), instruments));
     pCPIts->recalculate();
     cpiTS = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
 

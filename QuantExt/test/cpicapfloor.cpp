@@ -243,7 +243,7 @@ struct CommonVars {
         Date baseDate =
             QuantExt::ZeroInflation::curveBaseDate(false, evaluationDate, observationLag, ii->frequency(), ii);
         QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(
-            new PiecewiseZeroInflationCurve<Linear>(evaluationDate, baseDate, ii->frequency(), dcZCIIS, helpers));
+            new PiecewiseZeroInflationCurve<Linear>(evaluationDate, baseDate, observationLag, ii->frequency(), dcZCIIS, helpers));
         pCPIts->recalculate();
         cpiUK.linkTo(pCPIts);
         hii.linkTo(ii);
@@ -302,8 +302,8 @@ struct CommonVars {
 class FlatZeroInflationTermStructure : public ZeroInflationTermStructure {
 public:
     FlatZeroInflationTermStructure(const Date& referenceDate, const Date& baseDate, const DayCounter& dayCounter,
-                                   Frequency frequency, const Real& zeroRate)
-        : ZeroInflationTermStructure(referenceDate, baseDate, frequency, dayCounter), zeroRate_(zeroRate) {}
+                                   const Period& observationLag, Frequency frequency, const Real& zeroRate)
+        : ZeroInflationTermStructure(referenceDate, baseDate, observationLag, frequency, dayCounter), zeroRate_(zeroRate) {}
 
     Date maxDate() const override { return Date::maxDate(); }
 
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(testSimpleCapFloor) {
                                                            index->frequency(), *index);
     QuantLib::ext::shared_ptr<ZeroInflationTermStructure> inflationCurvePtr =
         QuantLib::ext::make_shared<FlatZeroInflationTermStructure>(common.evaluationDate, baseDate, dc,
-                                                                   index->frequency(), inflationRate);
+                                                                   observationLag, index->frequency(), inflationRate);
     inflationCurve.linkTo(inflationCurvePtr);
     // Make sure we use the same observation lag as in the inflation curve, and same index publication frequency and
     // interpolation. The vol surface observation lag is used in the engine for lag difference calculations compared to

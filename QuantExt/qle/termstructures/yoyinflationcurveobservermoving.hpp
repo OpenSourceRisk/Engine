@@ -96,9 +96,8 @@ YoYInflationCurveObserverMoving<Interpolator>::YoYInflationCurveObserverMoving(
     Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
     const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)
-    : YoYInflationTermStructure(
-          settlementDays, calendar, Date(),
-          (rates.empty() ? Null<Rate>() : rates[0]->value()), frequency, indexIsInterpolated, dayCounter, seasonality),
+    : YoYInflationTermStructure(settlementDays, calendar, Date(), (rates.empty() ? Null<Rate>() : rates[0]->value()),
+                                lag, frequency, indexIsInterpolated, dayCounter, seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates),
       indexIsInterpolated_(indexIsInterpolated), observationLag_(lag) {
 

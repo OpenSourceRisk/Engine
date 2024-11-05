@@ -94,7 +94,7 @@ ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving
     Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
     const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)
-    : ZeroInflationTermStructure(settlementDays, calendar, Date(), frequency, dayCounter, seasonality),
+    : ZeroInflationTermStructure(settlementDays, calendar, Date(), lag, frequency, dayCounter, seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates),
       indexIsInterpolated_(indexIsInterpolated), observationLag_(lag) {
 

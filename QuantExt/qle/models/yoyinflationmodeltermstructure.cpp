@@ -30,6 +30,7 @@ YoYInflationModelTermStructure::YoYInflationModelTermStructure(const QuantLib::e
                                                                Size index, bool indexIsInterpolated)
     : YoYInflationTermStructure(inflationTermStructure(model, index)->baseDate(),
                                 inflationTermStructure(model, index)->baseRate(),
+                                inflationTermStructure(model, index)->observationLag(),
                                 inflationTermStructure(model, index)->frequency(), indexIsInterpolated,
                                 inflationTermStructure(model, index)->dayCounter()),
       model_(model), index_(index), indexIsInterpolated_(indexIsInterpolated),

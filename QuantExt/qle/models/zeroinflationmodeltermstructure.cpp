@@ -29,6 +29,7 @@ namespace QuantExt {
 ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(
     const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index)
     : ZeroInflationTermStructure(inflationTermStructure(model, index)->baseDate(),
+                                 inflationTermStructure(model, index)->observationLag(),
                                  inflationTermStructure(model, index)->frequency(),
                                  inflationTermStructure(model, index)->dayCounter()),
       model_(model), index_(index), referenceDate_(inflationTermStructure(model_, index_)->referenceDate()),

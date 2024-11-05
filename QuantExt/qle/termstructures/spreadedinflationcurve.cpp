@@ -24,7 +24,7 @@ namespace QuantExt {
 SpreadedZeroInflationCurve::SpreadedZeroInflationCurve(const Handle<ZeroInflationTermStructure>& referenceCurve,
                                                        const std::vector<Time>& times,
                                                        const std::vector<Handle<Quote>>& quotes)
-    : ZeroInflationTermStructure(referenceCurve->baseDate(), referenceCurve->frequency(), referenceCurve->dayCounter(),
+    : ZeroInflationTermStructure(referenceCurve->baseDate(), referenceCurve->observationLag(), referenceCurve->frequency(), referenceCurve->dayCounter(),
                                  referenceCurve->seasonality()),
       referenceCurve_(referenceCurve), times_(times), quotes_(quotes), data_(times_.size(), 1.0) {
     QL_REQUIRE(times_.size() > 1, "SpreadedZeroInflationCurve: at least two times required");
@@ -70,7 +70,8 @@ Real SpreadedZeroInflationCurve::zeroRateImpl(Time t) const {
 SpreadedYoYInflationCurve::SpreadedYoYInflationCurve(const Handle<YoYInflationTermStructure>& referenceCurve,
                                                      const std::vector<Time>& times,
                                                      const std::vector<Handle<Quote>>& quotes)
-    : YoYInflationTermStructure(referenceCurve->baseDate(), referenceCurve->baseRate(), referenceCurve->frequency(),
+    : YoYInflationTermStructure(referenceCurve->baseDate(), referenceCurve->baseRate(),
+                                referenceCurve->observationLag(), referenceCurve->frequency(),
                                 referenceCurve->indexIsInterpolated(), referenceCurve->dayCounter(),
                                 referenceCurve->seasonality()),
       referenceCurve_(referenceCurve), times_(times), quotes_(quotes), data_(times_.size(), 1.0) {

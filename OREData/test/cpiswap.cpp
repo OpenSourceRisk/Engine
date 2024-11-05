@@ -154,7 +154,7 @@ public:
         auto frequency = ii->frequency();
         Date baseDate = QuantExt::ZeroInflation::curveBaseDate(false, asof_, obsLag, frequency, ii);
         QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
-            asof_, baseDate, frequency, ActualActual(ActualActual::ISDA), instruments));
+            asof_, baseDate, obsLag, frequency, ActualActual(ActualActual::ISDA), instruments));
         pCPIts->recalculate();
         cpiTS = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
         hUKRPI = Handle<ZeroInflationIndex>(
