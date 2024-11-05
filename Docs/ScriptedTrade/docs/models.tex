@@ -124,70 +124,73 @@ The engine parameters have the following meaning:
 \item Engine: The engine to be used. Currently MC and FD is supported.
 \item Samples: The number of MC samples used. Only relevant for Engine = MC.
 \item StateGridPoints: The number of grid points in state direction. Only relevant for Engine = FD.
-\item MesherEpsilon: The FD mesher epsilon, optional, defaults to 1E-4.
-\item MesherScaling: The FD mesher scaling factor, optional, defaults tp 1.5.
-\item MesherConcentration: The FD mesher concentration parameter, optional, defaults to 0.1
-\item MesherMaxConcentrationPoints: The maximum number of mesher concentration points to use, optional, defaults to
-  9999, in which all calibration strikes from a script are used. For 1 only the first strike from the list is used, for
-  2 the first two strikes, etc.
-\item MesherIsStatic: If true, the mesher is built only once and reused under scenario / sensitivity computations. If
-  false, the mesher is rebuilt for each repricing. Optional, defaults to false. For sensitivity runs it should be set to
-  true.
+\item MesherEpsilon [Optional]: The FD mesher epsilon, optional, defaults to 1E-4.
+\item MesherScaling [Optional]: The FD mesher scaling factor, optional, defaults tp 1.5.
+\item MesherConcentration [Optional]: The FD mesher concentration parameter, optional, defaults to 0.1
+\item MesherMaxConcentrationPoints [Optional]: The maximum number of mesher concentration points to use, optional,
+  defaults to 9999, in which all calibration strikes from a script are used. For 1 only the first strike from the list
+  is used, for 2 the first two strikes, etc.
+\item MesherIsStatic [Optional]: If true, the mesher is built only once and reused under scenario / sensitivity
+  computations. If false, the mesher is rebuilt for each repricing. Optional, defaults to false. For sensitivity runs it
+  should be set to true. Defaults to false.
 \item RegressionOrder: The order of the polynomial basis to compute conditional expectations via regression
   analysis. Applies to MC only.
-\item SequenceType: The sequence type used for pricing. Defaults to SobolBrownianBridge. Possible values
+\item SequenceType [Optional]: The sequence type used for pricing. Defaults to SobolBrownianBridge. Possible values
   SobolBrownianBridge, Burley2020SobolBrownianBridge, MersenneTwister, MersenneTwisterAnithetic, Sobol,
   Burley2020Sobol. Applies to MC only.
-\item PolynomType: The polynom type used for regression analysis. Defaults to Monomial. Possible values Monomial,
-  Laguerre, Hermite, Hyperbolic, Legendre, Chebyshev, Chebychev2nd. Applies to MC only.
-\item TrainingSamples: If given, pricing and training are separate phases and traning phase is using this number of
-  samples. Notice that NPVMEM() should be used to reuse regression coefficients from the training phase in the pricing
-  phase. Applies to MC only.
-\item TrainingSeed: The seed used for rng in training phase. Only applies if TrainingSamples are given (and thus
-  training and pricing phases are separate). Defaults to 43. Applies to MC only.
-\item TrainingSequenceType: The sequence type used for training. Only applies if TrainingSamples are given (and thus
-  training and pricing phases are separate). See SequenceType for possible values. Defaults to MersenneTwister. Applies
-  to MC only.
-\item SobolOrdering: Sobol sequence ordering for brownian bridge. Defaults to Steps. Possible values Steps, Factors,
-  Diagonal. Applies to MC only.
-\item SobolDirectionIntegers: Sobol direction integers. Defaults to JoeKuoD7. Possible values Unit, Jaeckel,
+\item PolynomType [Optional]: The polynom type used for regression analysis. Defaults to Monomial. Possible values
+  Monomial, Laguerre, Hermite, Hyperbolic, Legendre, Chebyshev, Chebychev2nd. Applies to MC only.
+\item TrainingSamples [Optional]: If given, pricing and training are separate phases and traning phase is using this
+  number of samples. Notice that NPVMEM() should be used to reuse regression coefficients from the training phase in the
+  pricing phase. Applies to MC only.
+\item TrainingSeed [Optional]: The seed used for rng in training phase. Only applies if TrainingSamples are given (and
+  thus training and pricing phases are separate). Defaults to 43. Applies to MC only.
+\item TrainingSequenceType [Optional]: The sequence type used for training. Only applies if TrainingSamples are given
+  (and thus training and pricing phases are separate). See SequenceType for possible values. Defaults to
+  MersenneTwister. Applies to MC only.
+\item SobolOrdering [Optional]: Sobol sequence ordering for brownian bridge. Defaults to Steps. Possible values Steps,
+  Factors, Diagonal. Applies to MC only.
+\item SobolDirectionIntegers [Optional]: Sobol direction integers. Defaults to JoeKuoD7. Possible values Unit, Jaeckel,
   SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo, Kuo2, Kuo3. Applies to MC only.
-\item Seed: The seed for rng in pricing phase. Defaults to 42. Applies to MC only.
+\item Seed [Optional]: The seed for rng in pricing phase. Defaults to 42. Applies to MC only.
 \item TimeStepsPerYear: The number of time steps used to discretise the process. For 0 only the relevant simulation
   times are used. Otherwise at least the given number of step are used in the discretisation grid per year.
 \item CalibrationMoneyness: Moneyness of options used for smile calibration. Applies to the LocalVolAndreasenHuge model
   only. The moneyness is defined as a ``standardised moneyness'' $\ln(K/F) / \sigma\sqrt{t}$ with $K$ strike, $F$ ATMF
   forward, $\sigma$ ATMF market vol, $t$ option time to expiry
 \item BootstrapTolerance: tolerance for calibration bootstrap, only applies to model = GaussianCam
-\item IncludePastCashflows: if true, LOGPAY() will generate cashflow information for pay dates on or before the
-  reference date. Optional, defaults to false.
-\item StaticNpvMem: if true, NPVMEM() will trigger a single calibration for the lifetime of a pricing engine, i.e. the
-  regression model will e.g. be kept constant across sensitivity or stress scenarios. If false (default), the regression
-  model will be retrained on each calculation of the pricing engine. Howoever, notice that an AMC calculation will
-  always use the regression model from the main engine calculation if NPVMEM() is used.
-\item RegressionVarianceCutoff: Optional. Only relevant for MC models. If given, a coordinate transform and (possibly) a
-  factor reduction is applied to the regressors used for conditional expectation calculation, such that $1-\epsilon$ of
-  the total variance of regressors is kept, where $\epsilon$ the given parameter. This helps dealing with collinearity
-  and also reducing the dimnensionality of the regression model.
+\item IncludePastCashflows [Optional]: if true, LOGPAY() will generate cashflow information for pay dates on or before
+  the reference date. Optional, defaults to false.
+\item StaticNpvMem [Optional]: if true, NPVMEM() will trigger a single calibration for the lifetime of a pricing engine,
+  i.e. the regression model will e.g. be kept constant across sensitivity or stress scenarios. If false (default), the
+  regression model will be retrained on each calculation of the pricing engine. Howoever, notice that an AMC calculation
+  will always use the regression model from the main engine calculation if NPVMEM() is used.
+\item RegressionVarianceCutoff [Optional]: Optional. Only relevant for MC models. If given, a coordinate transform and
+  (possibly) a factor reduction is applied to the regressors used for conditional expectation calculation, such that
+  $1-\epsilon$ of the total variance of regressors is kept, where $\epsilon$ the given parameter. This helps dealing
+  with collinearity and also reducing the dimnensionality of the regression model.
 \item Interactive: If true an interactive session is started on script execution for debugging purposes; should be false
   except for debugging purposes
-\item UseAD: If true and RunType in the global pricing engine parameters is SensitivityDelta, a first order pnl
-  expansion using AD sensitivities is used to compute scenario NPVs.
-\item UseCG: If true a computation graph is used to price trades instead of the runtime interpreter . If UseAD or
-  UseExternalComputingDevice is true, this implies that UseCG is true irrespective of how it is configured.
-\item UseExternalComputingDevice: If true and RunType is not NPV (generating additional results) and AD sensitivities
-  are {\em not} used, an external compute device is used for the calculations.
-\item UseDoublePrecisionForExternalCalculation: Use double precision for external computations. Defaults to false.
-\item ExternalDeviceCompatibilityMode: Only applies if UseCG is enabled. Defaults to false. If enabled, random number
-  generation for internal calculations using the CG is aligned as closely as possible with what is usually implemented
-  for external calculations, i.e. if enabled, the MersenneTwister random number generation is done in
+\item UseAD [Optional]: If true and RunType in the global pricing engine parameters is SensitivityDelta, a first order
+  pnl expansion using AD sensitivities is used to compute scenario NPVs. Defaults to false.
+\item UseCG [Optional]: If true a computation graph is used to price trades instead of the runtime interpreter . If
+  UseAD or UseExternalComputingDevice is true, this implies that UseCG is true irrespective of how it is
+  configured. Defaults to false.
+\item UseExternalComputingDevice [Optional]: If true and RunType is not NPV (generating additional results) and AD
+  sensitivities are {\em not} used, an external compute device is used for the calculations. Defaultsto false.
+\item UseDoublePrecisionForExternalCalculation [Optional]: Use double precision for external computations. Defaults to
+  false.
+\item ExternalDeviceCompatibilityMode [Optional]: Only applies if UseCG is enabled. Defaults to false. If enabled,
+  random number generation for internal calculations using the CG is aligned as closely as possible with what is usually
+  implemented for external calculations, i.e. if enabled, the MersenneTwister random number generation is done in
   step-dimension-path order. If disabled, the ``classic'' order path-step-dimension is used.
-\item ExternalComputeDevice: The external compute device to use if UseExternalComputingDevice is effective.
-\item SalvagingAlgorithm: If the correlation matrix is not positive semi definite, an approximation of the pseudo square root using asalvaging algorithm can be used.
- The SalvagingAlgorithm tag chooses this algorithm with the following allowable values: None, Spectral, Hypersphere, LowerDiagonal or Highham.
-\item IndicatorSmoothingForValues: smoothing parameter (according to Fries methodology, 2017, ``epsilon'') applied to
-  indicator functions in cg-based runs for values calculation
-\item IndicatorSmoothingForDerivatives: as above, smoothing parameter for derivatives calculation
+\item ExternalComputeDevice [Optional]: The external compute device to use if UseExternalComputingDevice is effective.
+\item SalvagingAlgorithm [Optional]: If the correlation matrix is not positive semi definite, an approximation of the
+  pseudo square root using asalvaging algorithm can be used.The SalvagingAlgorithm tag chooses this algorithm with the
+  following allowable values: None, Spectral, Hypersphere, LowerDiagonal or Highham. Defaults to Spectral.
+\item IndicatorSmoothingForValues [Optional]: smoothing parameter (according to Fries methodology, 2017, ``epsilon'')
+  applied to indicator functions in cg-based runs for values calculation. Defaults to $0$.
+\item IndicatorSmoothingForDerivatives: as above, smoothing parameter for derivatives calculation. Defaults to $0.2$.
 \item ZeroVolatility [Optional]: enforce zero volatility in model SDEs, default is false
 \end{itemize}
 
