@@ -856,8 +856,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
         ore::data::CrossAssetModelBuilder modelBuilder(
             market, crossAssetModelData_, configurationLgmCalibration_, configurationFxCalibration_,
             configurationEqCalibration_, configurationInfCalibration_, configurationCrCalibration_,
-            configurationFinalModel_, false, true, "", crossAssetModelData_->getSalvagingAlgorithm(),
-            "xva/amc cam building");
+            configurationFinalModel_, false, true, "", "xva/amc cam building");
         return std::make_pair(market, *modelBuilder.model());
     };
 
