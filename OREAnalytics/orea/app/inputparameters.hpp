@@ -368,8 +368,8 @@ public:
         sensiPricingEngine_ = engineData;
     }
     void setXvaSensiParSensi(const bool parSensi){ xvaSensiParSensi_ = parSensi;}
-    bool setXvaSensiOutputJacobi(const bool outputJacobi) { xvaSensiOutputJacobi_ = outputJacobi; };
-    Real setXvaSensiThreshold(const Real threshold) { xvaSensiThreshold_ = threshold; }
+    void setXvaSensiOutputJacobi(const bool outputJacobi) { xvaSensiOutputJacobi_ = outputJacobi; };
+    void setXvaSensiThreshold(const Real threshold) { xvaSensiThreshold_ = threshold; }
 
     // Setters for XVA Explain
     void setXvaExplainSimMarketParams(const std::string& xml);
