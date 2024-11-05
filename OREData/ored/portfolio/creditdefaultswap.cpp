@@ -141,6 +141,7 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     QL_REQUIRE(cdsBuilder, "No Builder found for CreditDefaultSwap: " << id());
     cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveId(), swap_.recoveryRate()));
     setSensitivityTemplate(*cdsBuilder);
+    addProductModelEngine(*cdsBuilder);
 
     instrument_.reset(new VanillaInstrument(cds));
 

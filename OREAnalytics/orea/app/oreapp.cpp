@@ -322,7 +322,6 @@ void OREApp::analytics() {
         }
 
         CONSOLE("OK");
-
     }
     catch (std::exception& e) {
         ostringstream oss;
@@ -941,6 +940,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("sensitivity", "recalibrateModels", false);
         if (tmp != "")
             setSensiRecalibrateModels(parseBool(tmp));
+
+        tmp = params_->get("sensitivity", "laxFxConversion", false);
+        if (tmp != "")
+            setSensiLaxFxConversion(parseBool(tmp));
     }
 
     /************
@@ -1044,6 +1047,14 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("stress", "accuracy", false);
         if (tmp != "") {
             setStressAccurary(parseReal(tmp));
+        }
+        tmp = params_->get("stress", "precision", false);
+        if (tmp != "") {
+            setStressPrecision((Size)parseReal(tmp));
+        }
+        tmp = params_->get("stress", "generateCashflows", false);
+        if (tmp != "") {
+            setStressGenerateCashflows(parseBool(tmp));
         }
     }
 
@@ -1404,17 +1415,17 @@ void OREAppInputParameters::loadParameters() {
         if (tmp != "")
             setMporDays(static_cast<Size>(parseInteger(tmp)));
 
-        tmp = params_->get("simm", "crif", false);
-        if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
-            setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
-        }
-
         tmp = params_->get("simm", "simmCalibration", false);
         if (tmp != "") {
             string file = (inputPath / tmp).generic_string();
             if (boost::filesystem::exists(file))
                 setSimmCalibrationDataFromFile(file);
+        }
+
+        tmp = params_->get("simm", "crif", false);
+        if (tmp != "") {
+            string file = (inputPath / tmp).generic_string();
+            setCrifFromFile(file, csvEolChar(), csvSeparator(), '\"', csvEscapeChar());
         }
 
         tmp = params_->get("simm", "calculationCurrency", false);
@@ -1793,6 +1804,10 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setExposureProfiles(parseBool(tmp));
 
+    tmp = params_->get("xva", "exposureProfilesUseCloseOutValues", false);
+    if (tmp != "")
+        setExposureProfilesUseCloseOutValues(parseBool(tmp));
+    
     tmp = params_->get("xva", "quantile", false);
     if (tmp != "")
         setPfeQuantile(parseReal(tmp));

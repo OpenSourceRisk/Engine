@@ -465,7 +465,7 @@ std::ostream& operator<<(std::ostream& out,
 }
 
 std::ostream& operator<<(std::ostream& out, const RequiredFixings& requiredFixings) {
-    out << "IndexName FixingDate PayDate AlwaysAddIfPaysOnSettlement\n";
+    out << "IndexName FixingDate PayDate AlwaysAddIfPaysOnSettlement Mandatory\n";
     out << requiredFixings.fixingDates_;
     out << requiredFixings.zeroInflationFixingDates_;
     out << requiredFixings.yoyInflationFixingDates_;

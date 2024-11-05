@@ -39,9 +39,11 @@ IndexCdsOptionBaseEngine::IndexCdsOptionBaseEngine(const Handle<DefaultProbabili
                                                    Real recovery,
                                                    const Handle<YieldTermStructure>& discountSwapCurrency,
                                                    const Handle<YieldTermStructure>& discountTradeCollateral,
-                                                   const Handle<QuantExt::CreditVolCurve>& volatility)
+                                                   const Handle<QuantExt::CreditVolCurve>& volatility,
+                                                   const bool generateAdditionalResults)
     : probabilities_({probability}), recoveries_({recovery}), discountSwapCurrency_(discountSwapCurrency),
-      discountTradeCollateral_(discountTradeCollateral), volatility_(volatility), indexRecovery_(recovery) {
+      discountTradeCollateral_(discountTradeCollateral), volatility_(volatility), indexRecovery_(recovery),
+      generateAdditionalResults_(generateAdditionalResults) {
     registerWithMarket();
 }
 
@@ -50,9 +52,10 @@ IndexCdsOptionBaseEngine::IndexCdsOptionBaseEngine(const vector<Handle<DefaultPr
                                                    const Handle<YieldTermStructure>& discountSwapCurrency,
                                                    const Handle<YieldTermStructure>& discountTradeCollateral,
                                                    const Handle<QuantExt::CreditVolCurve>& volatility,
-                                                   Real indexRecovery)
+                                                   Real indexRecovery, const bool generateAdditionalResults)
     : probabilities_(probabilities), recoveries_(recoveries), discountSwapCurrency_(discountSwapCurrency),
-      discountTradeCollateral_(discountTradeCollateral), volatility_(volatility), indexRecovery_(indexRecovery) {
+      discountTradeCollateral_(discountTradeCollateral), volatility_(volatility), indexRecovery_(indexRecovery),
+      generateAdditionalResults_(generateAdditionalResults) {
 
     QL_REQUIRE(!probabilities_.empty(), "IndexCdsOptionBaseEngine: need at least one probability curve.");
     QL_REQUIRE(probabilities_.size() == recoveries_.size(), "IndexCdsOptionBaseEngine: mismatch between size"
@@ -99,7 +102,8 @@ void IndexCdsOptionBaseEngine::calculate() const {
 
     // Get additional results of underlying index CDS.
     cds.NPV();
-    results_.additionalResults = cds.additionalResults();
+    if (generateAdditionalResults_)
+        results_.additionalResults = cds.additionalResults();
 
     // call engine-specific calculation
     doCalc();
@@ -118,15 +122,18 @@ Real IndexCdsOptionBaseEngine::fep() const {
     for (Size i = 0; i < probabilities_.size(); ++i) {
         fep += (1 - recoveries_[i]) * probabilities_[i]->defaultProbability(exerciseDate) * notionals_[i];
     }
-    results_.additionalResults["UnrealisedFEP"] = fep;
+    if (generateAdditionalResults_)
+        results_.additionalResults["unrealisedFEP"] = fep;
 
     // Total FEP
     fep += arguments_.realisedFep;
-    results_.additionalResults["FEP"] = fep;
+    if(generateAdditionalResults_)
+        results_.additionalResults["FEP"] = fep;
 
     // Discounted FEP
     fep *= discountTradeCollateral_->discount(exerciseDate);
-    results_.additionalResults["discountedFEP"] = fep;
+    if (generateAdditionalResults_)
+        results_.additionalResults["discountedFEP"] = fep;
 
     return fep;
 }

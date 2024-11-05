@@ -215,7 +215,7 @@ std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<Bl
 std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
                                   const QuantLib::ext::shared_ptr<EqBsParametrization>& parametrization,
                                   const QuantLib::ext::shared_ptr<Parametrization>& domesticIrModel) {
-    auto lgmParametrization = QuantLib::ext::dynamic_pointer_cast<IrLgm1fParametrization>(parametrization);
+    auto lgmParametrization = QuantLib::ext::dynamic_pointer_cast<IrLgm1fParametrization>(domesticIrModel);
     if (lgmParametrization) {
         return getCalibrationDetails(basket, parametrization, lgmParametrization);
     } else {

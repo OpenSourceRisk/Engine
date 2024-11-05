@@ -24,6 +24,7 @@
 #define quantext_dividendmanager_hpp
 
 #include <ql/patterns/singleton.hpp>
+#include <ql/patterns/observable.hpp>
 #include <ql/timeseries.hpp>
 #include <ql/utilities/observablevalue.hpp>
 #include <qle/utilities/serializationdate.hpp>
@@ -72,6 +73,9 @@ class DividendManager : public QuantLib::Singleton<DividendManager> {
 
 private:
     DividendManager() = default;
+    friend class EquityIndex2;
+    //! add dividend
+    void addDividend(const std::string& name, const Dividend& dividend, bool forceOverwrite);
 
 public:
     //! returns whether historical fixings were stored for the index
@@ -86,8 +90,8 @@ public:
     void clearHistories();
 
 private:
-    typedef std::map<std::string, QuantLib::ObservableValue<std::set<Dividend>>> history_map;
-    history_map data_;
+    mutable std::map<std::string, std::set<Dividend>> data_;
+    mutable std::map<std::string, QuantLib::ext::shared_ptr<QuantLib::Observable>> notifiers_;
 };
 
 } // namespace QuantExt

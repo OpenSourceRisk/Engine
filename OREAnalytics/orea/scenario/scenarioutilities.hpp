@@ -55,5 +55,7 @@ QuantLib::ext::shared_ptr<Scenario> recastScenario(
     const std::map<std::pair<RiskFactorKey::KeyType, std::string>, std::vector<std::vector<Real>>>& oldCoordinates,
     const std::set<std::tuple<RiskFactorKey::KeyType, std::string, std::vector<std::vector<Real>>>>& newCoordinates);
 
+QuantLib::Real sanitizeScenarioValue(const RiskFactorKey::KeyType keyType, const bool isPar, const Real rawValue);
+
 } // namespace analytics
 } // namespace ore

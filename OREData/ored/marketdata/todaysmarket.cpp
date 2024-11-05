@@ -111,21 +111,20 @@ void TodaysMarket::initialise(const Date& asof) {
     // Fixings
 
     if (loadFixings_) {
-        // Apply them now in case a curve builder needs them
+        // Index fixings - apply them now in case a curve builder needs them
         LOG("Todays Market Loading Fixings");
         timer.start();
         applyFixings(loader_->loadFixings());
         timings["1 load fixings"] = timer.elapsed().wall;
         LOG("Todays Market Loading Fixing done.");
+
+        // Dividends - apply them now in case a curve builder needs them
+        LOG("Todays Market Loading Dividends");
+        timer.start();
+        applyDividends(loader_->loadDividends());
+        timings["2 load dividends"] = timer.elapsed().wall;
+        LOG("Todays Market Loading Dividends done.");
     }
-
-    // Dividends - apply them now in case a curve builder needs them
-
-    LOG("Todays Market Loading Dividends");
-    timer.start();
-    applyDividends(loader_->loadDividends());
-    timings["2 load dividends"] = timer.elapsed().wall;
-    LOG("Todays Market Loading Dividends done.");
 
     // Add all FX quotes from the loader to Triangulation
     timer.start();

@@ -284,6 +284,7 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
             engineBuilder->engine(ccy, longFlow->index(), shortFlow->index(), id());
         spreadOption->setPricingEngine(commoditySpreadOptionEngine);
         setSensitivityTemplate(*engineBuilder);
+        addProductModelEngine(*engineBuilder);
         if (i > 0) {
             additionalInstruments.push_back(spreadOption);
             additionalMultipliers.push_back(bsInd);

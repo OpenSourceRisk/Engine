@@ -66,6 +66,7 @@ void McMultiLegOptionEngine::calculate() const {
     payer_ = arguments_.payer;
     exercise_ = arguments_.exercise;
     optionSettlement_ = arguments_.settlementType;
+    cashSettlementDates_ = arguments_.settlementDates;
 
     McMultiLegBaseEngine::calculate();
 

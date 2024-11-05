@@ -66,14 +66,11 @@ public:
                If cash settled, the fixing date
         \param fxIndex
                If cash settled, the FX index from which to take the fixing on the fixing date
-        \param includeSettlementDateFlows
-               If true, we include cash flows on valuation date into the NPV calculation
     */
     FxForward(const Real& nominal1, const Currency& currency1, const Real& nominal2, const Currency& currency2,
               const Date& maturityDate, const bool& payCurrency1, const bool isPhysicallySettled = true,
               const Date& payDate = Date(), const Currency& payCcy = Currency(), const Date& fixingDate = Date(),
-              const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
-              bool includeSettlementDateFlows = false);
+              const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
 
     /*! \param nominal1
                FX forward nominal amount (domestic currency)
@@ -93,13 +90,10 @@ public:
                If cash settled, the fixing date
         \param fxIndex
                If cash settled, the FX index from which to take the fixing on the fixing date
-        \param includeSettlementDateFlows
-               If true, we include cash flows on valuation date into the NPV calculation
     */
     FxForward(const Money& nominal1, const ExchangeRate& forwardRate, const Date& forwardDate, bool sellingNominal,
               const bool isPhysicallySettled = true, const Date& payDate = Date(), const Currency& payCcy = Currency(),
-              const Date& fixingDate = Date(), const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
-              bool includeSettlementDateFlows = false);
+              const Date& fixingDate = Date(), const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
 
     /*! \param nominal1
                FX forward nominal amount 1 (domestic currency)
@@ -122,14 +116,11 @@ public:
                If cash settled, the fixing date
         \param fxIndex
                If cash settled, the FX index from which to take the fixing on the fixing date
-        \param includeSettlementDateFlows
-               If true, we include cash flows on valuation date into the NPV calculation
     */
     FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote, const Currency& currency2,
               const Date& maturityDate, bool sellingNominal, const bool isPhysicallySettled = true,
               const Date& payDate = Date(), const Currency& payCcy = Currency(), const Date& fixingDate = Date(),
-              const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
-              bool includeSettlementDateFlows = false);
+              const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
 
     //@}
 
@@ -184,7 +175,6 @@ private:
     Currency payCcy_;
     QuantLib::ext::shared_ptr<FxIndex> fxIndex_;
     Date fixingDate_;
-    bool includeSettlementDateFlows_;
 
     // results
     mutable Money npv_;
@@ -205,7 +195,6 @@ public:
     Currency payCcy;
     QuantLib::ext::shared_ptr<FxIndex> fxIndex;
     Date fixingDate;
-    bool includeSettlementDateFlows;
     void validate() const override;
 };
 

@@ -99,6 +99,7 @@ void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     // set sensitivity template
     setSensitivityTemplate(builder->sensitivityTemplate());
+    addProductModelEngine(*builder);
 }
 
 void ScriptedTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {

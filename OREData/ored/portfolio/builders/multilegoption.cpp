@@ -26,6 +26,7 @@
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/pricingengines/mcmultilegoptionengine.hpp>
+#include <qle/models/projectedcrossassetmodel.hpp>
 
 namespace ore {
 namespace data {
@@ -280,45 +281,24 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engi
                                                          << fixingDates.size() << ") must match indexes size ("
                                                          << indexes.size() << ")");
 
-    std::vector<Size> externalModelIndices;
-    std::vector<Handle<YieldTermStructure>> discountCurves;
-    std::vector<Size> cIdx;
-    std::vector<QuantLib::ext::shared_ptr<IrModel>> lgm;
-    std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>> fx;
-
     // base ccy is the base ccy of the external cam by definition
     // but in case we only have one currency, we don't need this
     bool needBaseCcy = currencies.size() > 1;
 
-    // add the IR and FX components in the order they appear in the CAM; this way
-    // we can sort the external model indices and be sure that they match up with
-    // the indices 0,1,2,3,... of the projected model we build here
+    std::set<std::pair<CrossAssetModel::AssetType,Size>> selectedComponents;
     for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::IR); ++i) {
         if ((i == 0 && needBaseCcy) ||
             std::find(currencies.begin(), currencies.end(), cam_->irlgm1f(i)->currency()) != currencies.end()) {
-            lgm.push_back(cam_->lgm(i));
-            externalModelIndices.push_back(cam_->pIdx(CrossAssetModel::AssetType::IR, i));
-            cIdx.push_back(cam_->cIdx(CrossAssetModel::AssetType::IR, i));
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, i));
             if (i > 0) {
-                fx.push_back(cam_->fxbs(i - 1));
-                externalModelIndices.push_back(cam_->pIdx(CrossAssetModel::AssetType::FX, i - 1));
-                cIdx.push_back(cam_->cIdx(CrossAssetModel::AssetType::FX, i - 1));
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, i-1));
             }
         }
     }
 
-    std::sort(externalModelIndices.begin(), externalModelIndices.end());
-    std::sort(cIdx.begin(), cIdx.end());
+    std::vector<Size> externalModelIndices;
+    Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
 
-    // build correlation matrix
-    Matrix corr(cIdx.size(), cIdx.size(), 1.0);
-    for (Size i = 0; i < cIdx.size(); ++i) {
-        for (Size j = 0; j < i; ++j) {
-            corr(i, j) = corr(j, i) = cam_->correlation()(cIdx[i], cIdx[j]);
-        }
-    }
-
-    Handle<CrossAssetModel> model(QuantLib::ext::make_shared<CrossAssetModel>(lgm, fx, corr));
     // we assume that the model has the pricing discount curves attached already, so
     // we leave the discountCurves vector empty here
 
@@ -331,8 +311,9 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engi
         parseInteger(engineParameter("Pricing.Seed")), parseInteger(engineParameter("Training.BasisFunctionOrder")),
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
-        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurves, simulationDates_,
-        stickyCloseOutDates_, externalModelIndices, parseBool(engineParameter("MinObsDate")),
+        parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")),
+        std::vector<Handle<YieldTermStructure>>{}, simulationDates_, stickyCloseOutDates_, externalModelIndices,
+        parseBool(engineParameter("MinObsDate")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),

@@ -202,6 +202,7 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
     // set pricing engine
     qleInstr->setPricingEngine(builder->engine(id(), this));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 }
 
 namespace {
@@ -295,6 +296,7 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const QuantLib::ext::s
 
     qleInstr->setPricingEngine(builder->engine(id(), this));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 }
 
 void RiskParticipationAgreement::fromXML(XMLNode* node) {
