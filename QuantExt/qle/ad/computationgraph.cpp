@@ -327,8 +327,33 @@ std::size_t cg_log(ComputationGraph& g, const std::size_t a, const std::string& 
 }
 
 std::size_t cg_pow(ComputationGraph& g, const std::size_t a, const std::size_t b, const std::string& label) {
-    if (g.isConstant(a) && g.isConstant(b))
+    // both inputs are constants, use std function
+    if (g.isConstant(a) && g.isConstant(b)) {
         return cg_const(g, std::pow(g.constantValue(a), g.constantValue(b)));
+    }
+    // more robust handling of constant integer exponents
+    if (g.isConstant(b) && QuantLib::close_enough(std::round(g.constantValue(b)), g.constantValue(b))) {
+        long p = std::lround(g.constantValue(b));
+        if (p == 0) {
+            return cg_const(g, 1.0);
+        }
+        bool isNegative = p < 0;
+        p = std::abs(p);
+        std::size_t p_node = a, r_node = ComputationGraph::nan;
+        while (p > 0) {
+            if (p & 1)
+                r_node = r_node == ComputationGraph::nan
+                             ? p_node
+                             : g.insert({r_node, p_node}, RandomVariableOpCode::Mult, label);
+            p = p >> 1;
+            if (p > 0)
+                p_node = g.insert({p_node, p_node}, RandomVariableOpCode::Mult, label);
+        }
+        if (isNegative)
+            r_node = g.insert({cg_const(g, 1.0), r_node}, RandomVariableOpCode::Div, label);
+        return r_node;
+    }
+    // default handling
     return g.insert({a, b}, RandomVariableOpCode::Pow, label);
 }
 
