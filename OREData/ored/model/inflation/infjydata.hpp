@@ -60,9 +60,9 @@ public:
 
     //! \name Inspectors
     //@{
-    const ReversionParameter& realRateReversion() const;
-    const VolatilityParameter& realRateVolatility() const;
-    const VolatilityParameter& indexVolatility() const;
+    ReversionParameter& realRateReversion();
+    VolatilityParameter& realRateVolatility();
+    VolatilityParameter& indexVolatility();
     const LgmReversionTransformation& reversionTransformation() const;
     const CalibrationConfiguration& calibrationConfiguration() const;
     bool linkRealRateParamsToNominalRateParams() const;

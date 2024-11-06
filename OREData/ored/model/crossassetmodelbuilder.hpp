@@ -167,13 +167,13 @@ private:
     mutable RelinkableHandle<QuantExt::CrossAssetModel> model_;
 
     // Calibrate DK inflation model
-    void calibrateInflation(const InfDkData& data,
+    void calibrateInflation(InfDkData& data,
         QuantLib::Size modelIdx,
         const std::vector<QuantLib::ext::shared_ptr<QuantLib::BlackCalibrationHelper>>& calibrationBasket,
         const QuantLib::ext::shared_ptr<QuantExt::InfDkParametrization>& inflationParam) const;
 
     // Calibrate JY inflation model
-    void calibrateInflation(const InfJyData& data,
+    void calibrateInflation(InfJyData& data,
         QuantLib::Size modelIdx,
         const QuantLib::ext::shared_ptr<InfJyBuilder>& jyBuilder,
         const QuantLib::ext::shared_ptr<QuantExt::InfJyParameterization>& inflationParam) const;

@@ -40,18 +40,6 @@ InfDkData::InfDkData(CalibrationType calibrationType,
       volatility_(volatility),
       reversionTransformation_(reversionTransformation) {}
 
-const ReversionParameter& InfDkData::reversion() const {
-    return reversion_;
-}
-
-const VolatilityParameter& InfDkData::volatility() const {
-    return volatility_;
-}
-
-const LgmReversionTransformation& InfDkData::reversionTransformation() const {
-    return reversionTransformation_;
-}
-
 void InfDkData::fromXML(XMLNode* node) {
     
     // Check the node is not null and that name is LGM or DodgsonKainth. LGM is for backward compatibility.

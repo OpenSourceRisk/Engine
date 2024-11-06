@@ -41,7 +41,7 @@
     <Analytic type="calibration">
       <Parameter name="active">Y</Parameter>
       <Parameter name="configFile">simulation.xml</Parameter>
-      <Parameter name="outputFileName">calibration.csv</Parameter>
+      <Parameter name="outputFile">calibration.csv</Parameter>
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>

@@ -1227,6 +1227,7 @@ private:
     std::string marketObjectsOutputFileName_;
     std::string zeroToParShiftFile_;
     std::string scenarioNpvOutputFileName_;
+    std::string calibrationOutputFileName_;
 };
 
 void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);

@@ -42,15 +42,15 @@ InfJyData::InfJyData(CalibrationType calibrationType, const vector<CalibrationBa
       linkRealToNominalRateParams_(linkRealToNominalRateParams),
       linkedRealRateVolatilityScaling_(linkedRealRateVolatilityScaling) {}
 
-const ReversionParameter& InfJyData::realRateReversion() const {
+ReversionParameter& InfJyData::realRateReversion() {
     return realRateReversion_;
 }
 
-const VolatilityParameter& InfJyData::realRateVolatility() const {
+VolatilityParameter& InfJyData::realRateVolatility() {
     return realRateVolatility_;
 }
 
-const VolatilityParameter& InfJyData::indexVolatility() const {
+VolatilityParameter& InfJyData::indexVolatility() {
     return indexVolatility_;
 }
 

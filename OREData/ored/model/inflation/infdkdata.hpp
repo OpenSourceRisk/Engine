@@ -58,9 +58,12 @@ public:
 
     //! \name Inspectors
     //@{
-    const ReversionParameter& reversion() const;
-    const VolatilityParameter& volatility() const;
-    const LgmReversionTransformation& reversionTransformation() const;
+    // const ReversionParameter& reversion() const;
+    // const VolatilityParameter& volatility() const;
+    // const LgmReversionTransformation& reversionTransformation() const;
+    ReversionParameter& reversion() { return reversion_; }
+    VolatilityParameter& volatility() { return volatility_; }
+    LgmReversionTransformation& reversionTransformation() { return reversionTransformation_; }
     //@}
 
     //! \name Serialisation

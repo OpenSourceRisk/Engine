@@ -318,9 +318,9 @@ a subsequent simulation without recalibration.
 \end{listing}
 
 Output is the Cross Asset Model data written to {\tt calibration.xml} in the usual output directory, which contains the calibration
-results in place of the initial values for all parametrizations covered so far (IR and FX). In a subsequent run one could replace
+results in place of the initial values for all parametrizations covered so far (IR, FX, EQ, INF, COM). In a subsequent run one could replace
 the {\tt CrossAssetModel} section in {\tt simulation.xml} with the output in {\tt calibration.xml} to re-run without re-calibration.
-Note that the {\tt Calibrate} flags in the IR/FX model sections of {\tt calibration.xml} are set to {\tt false}.
+Note that the {\tt Calibrate} flags in the output Cross Asset Model data are set to {\tt false}.
 
 Additionally, the Cross Asset Model XML is written as a single XML string to the calibration report {\tt calibration.csv}, also held in
 memory for further processing e.g. via ORE's Python interface.

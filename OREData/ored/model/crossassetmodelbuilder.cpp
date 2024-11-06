@@ -809,7 +809,7 @@ void CrossAssetModelBuilder::forceRecalculate() {
     forceCalibration_ = false;
 }
 
-void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size modelIdx,
+void CrossAssetModelBuilder::calibrateInflation(InfDkData& data, Size modelIdx,
                                                 const vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& cb,
                                                 const QuantLib::ext::shared_ptr<InfDkParametrization>& inflationParam) const {
 
@@ -872,7 +872,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
     }
 }
 
-void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size modelIdx,
+void CrossAssetModelBuilder::calibrateInflation(InfJyData& data, Size modelIdx,
                                                 const QuantLib::ext::shared_ptr<InfJyBuilder>& jyBuilder,
                                                 const QuantLib::ext::shared_ptr<InfJyParameterization>& inflationParam) const {
 
