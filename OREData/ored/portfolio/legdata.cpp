@@ -1369,15 +1369,14 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
 
     // set pricers
     if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
-        {
+        if (floatData->isAveraged()) {
             auto builder = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponLegEngineBuilder>(
                 engineFactory->builder("CapFlooredAverageONIndexedCouponLeg"));
             QL_REQUIRE(builder, "No builder found for CapFlooredAverageONIndexedCouponLeg");
             cfCouponPricerAvg = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(
                 builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod));
             QL_REQUIRE(cfCouponPricerAvg, "internal error, could not cast to CapFlooredAverageONIndexedCouponPricer");
-        }
-        {
+        } else {
             auto builder = QuantLib::ext::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(
                 engineFactory->builder("CapFlooredOvernightIndexedCouponLeg"));
             QL_REQUIRE(builder, "No builder found for CapFlooredOvernightIndexedCouponLeg");
