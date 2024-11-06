@@ -110,6 +110,7 @@ public:
     virtual void marketCalibration(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& mcr = nullptr);
     virtual void modifyPortfolio() {}
     virtual void replaceTrades() {}
+    virtual bool requiresMarketData() const { return true; }
 
     //! Inspectors
     const std::string label() const;
