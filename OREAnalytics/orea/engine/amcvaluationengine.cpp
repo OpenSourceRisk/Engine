@@ -36,6 +36,7 @@
 #include <qle/methods/multipathvariategenerator.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
+#include <qle/pricingengines/nullamccalculator.hpp>
 
 #include <ql/instruments/compositeinstrument.hpp>
 
@@ -355,11 +356,12 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
     auto extractAmcCalculator =
         [&amcCalculators, &tradeId, &tradeLabel, &tradeType, &effectiveMultiplier, &currencyIndex, &tradeFees, &model,
          &outputCube](const std::pair<std::string, QuantLib::ext::shared_ptr<Trade>>& trade,
-                      QuantLib::ext::shared_ptr<AmcCalculator> amcCalc, Real multiplier, bool addFees) {
+                      QuantLib::ext::shared_ptr<AmcCalculator> amcCalc, Real multiplier, bool addFees,
+                      const std::optional<Size> ccyIndex = std::nullopt) {
             LOG("AMCCalculator extracted for \"" << trade.first << "\"");
             amcCalculators.push_back(amcCalc);
             effectiveMultiplier.push_back(multiplier);
-            currencyIndex.push_back(model->ccyIndex(amcCalc->npvCurrency()));
+            currencyIndex.push_back(ccyIndex ? *ccyIndex : model->ccyIndex(amcCalc->npvCurrency()));
             if (auto id = outputCube->idsAndIndexes().find(trade.first); id != outputCube->idsAndIndexes().end()) {
                 tradeId.push_back(id->second);
             } else {
@@ -388,45 +390,49 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
     for (auto const& trade : portfolio->trades()) {
         QuantLib::ext::shared_ptr<AmcCalculator> amcCalc;
-        try {
-            auto inst = trade.second->instrument()->qlInstrument(true);
-            QL_REQUIRE(inst != nullptr,
-                       "instrument has no ql instrument, this is not supported by the amc valuation engine.");
-            Real multiplier = trade.second->instrument()->multiplier() * trade.second->instrument()->multiplier2();
+        if (trade.second->tradeType() == "Failed") {
+            extractAmcCalculator(trade, QuantLib::ext::make_shared<NullAmcCalculator>(), 1.0, false, 0);
+        } else {
+            try {
+                auto inst = trade.second->instrument()->qlInstrument(true);
+                QL_REQUIRE(inst != nullptr,
+                           "instrument has no ql instrument, this is not supported by the amc valuation engine.");
+                Real multiplier = trade.second->instrument()->multiplier() * trade.second->instrument()->multiplier2();
 
-            // handle composite trades
-            if (auto cInst = QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(inst)) {
-                auto addResults = cInst->additionalResults();
-                std::vector<Real> multipliers;
-                while (true) {
-                    std::stringstream ss;
-                    ss << multipliers.size() + 1 << "_multiplier";
-                    if (addResults.find(ss.str()) == addResults.end())
-                        break;
-                    multipliers.push_back(inst->result<Real>(ss.str()));
-                }
-                std::vector<QuantLib::ext::shared_ptr<AmcCalculator>> amcCalcs;
-                for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
-                    std::stringstream ss;
-                    ss << cmpIdx + 1 << "_amcCalculator";
-                    if (addResults.find(ss.str()) != addResults.end()) {
-                        amcCalcs.push_back(inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str()));
+                // handle composite trades
+                if (auto cInst = QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(inst)) {
+                    auto addResults = cInst->additionalResults();
+                    std::vector<Real> multipliers;
+                    while (true) {
+                        std::stringstream ss;
+                        ss << multipliers.size() + 1 << "_multiplier";
+                        if (addResults.find(ss.str()) == addResults.end())
+                            break;
+                        multipliers.push_back(inst->result<Real>(ss.str()));
                     }
+                    std::vector<QuantLib::ext::shared_ptr<AmcCalculator>> amcCalcs;
+                    for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
+                        std::stringstream ss;
+                        ss << cmpIdx + 1 << "_amcCalculator";
+                        if (addResults.find(ss.str()) != addResults.end()) {
+                            amcCalcs.push_back(inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str()));
+                        }
+                    }
+                    QL_REQUIRE(amcCalcs.size() == multipliers.size(),
+                               "Did not find amc calculators for all components of composite trade.");
+                    for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
+                        extractAmcCalculator(trade, amcCalc, multiplier * multipliers[cmpIdx], cmpIdx == 0);
+                    }
+                    continue;
                 }
-                QL_REQUIRE(amcCalcs.size() == multipliers.size(),
-                           "Did not find amc calculators for all components of composite trade.");
-                for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
-                    extractAmcCalculator(trade, amcCalc, multiplier * multipliers[cmpIdx], cmpIdx == 0);
-                }
-                continue;
+
+                // handle non-composite trades
+                amcCalc = inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>("amcCalculator");
+                extractAmcCalculator(trade, amcCalc, multiplier, true);
+
+            } catch (const std::exception& e) {
+                StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()).log();
             }
-
-            // handle non-composite trades
-            amcCalc = inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>("amcCalculator");
-            extractAmcCalculator(trade, amcCalc, multiplier, true);
-
-        } catch (const std::exception& e) {
-            StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()).log();
         }
     }
 
@@ -460,6 +466,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
             }
         }
     }
+
     // loop over amc calculators, get result and populate cube
 
     timer.start();

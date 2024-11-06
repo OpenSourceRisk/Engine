@@ -479,19 +479,23 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
     amcPortfolio_ = QuantLib::ext::make_shared<Portfolio>();
     for (auto const& [tradeId, trade] : portfolio->trades()) {
         if (inputs_->amcTradeTypes().find(trade->tradeType()) != inputs_->amcTradeTypes().end()) {
-            try {
+            if (inputs_->amcCg() != XvaEngineCG::Mode::CubeGeneration) {
+                auto t = trade;
+                auto [ft, success] =
+                    buildTrade(t, factory, "analytic/" + label(), false, true, true);
+                if(success)
+                    amcPortfolio_->add(trade);
+                else
+                    amcPortfolio_->add(ft);
+            } else {
+                // the amc-cg engine will build the trades itself
                 trade->reset();
-                if(inputs_->amcCg() != XvaEngineCG::Mode::CubeGeneration) {
-                    // the amc-cg engine will build the trades itself
-                    trade->build(factory);
-                }
                 amcPortfolio_->add(trade);
-                DLOG("trade " << tradeId << " is added to amc portfolio");
-            } catch (const std::exception& e) {
-                StructuredTradeErrorMessage(trade, "Error building trade for AMC simulation", e.what()).log();
             }
+            DLOG("trade " << tradeId << " is added to amc portfolio");
         }
     }
+
     LOG("AMC portfolio built, size is " << amcPortfolio_->size());
 
     CONSOLE("OK");
