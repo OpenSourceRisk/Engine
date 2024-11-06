@@ -133,6 +133,7 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     Size failedTrades = 0;
     std::map<std::string, std::pair<std::size_t, boost::timer::nanosecond_type>> buildTimes;
     while (trade != trades_.end()) {
+        std::string tradeType = trade->second->tradeType();
         boost::timer::cpu_timer timer;
         auto [ft, success] = buildTrade((*trade).second, engineFactory, context, ignoreTradeBuildFail(),
                                         buildFailedTrades(), emitStructuredError);
@@ -146,11 +147,11 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
             trade = trades_.erase(trade);
         }
         boost::timer::nanosecond_type t = timer.elapsed().wall;
-        if (auto f = buildTimes.find(trade->second->tradeType()); f != buildTimes.end()) {
+        if (auto f = buildTimes.find(tradeType); f != buildTimes.end()) {
             f->second.first++;
             f->second.second += t;
         } else {
-            buildTimes[trade->second->tradeType()] = std::make_pair(1, t);
+            buildTimes[tradeType] = std::make_pair(1, t);
         }
     }
     LOG("Built Portfolio. Initial size = " << initialSize << ", size now " << trades_.size() << ", built "
