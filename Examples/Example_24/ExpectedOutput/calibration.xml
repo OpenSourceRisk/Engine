@@ -95,7 +95,7 @@
 			<CalibrationType>BestFit</CalibrationType>
 			<Sigma>
 				<Calibrate>false</Calibrate>
-				<InitialValue>0.10776424788612028</InitialValue>
+				<InitialValue>0.10776424788610715</InitialValue>
 			</Sigma>
 			<Kappa>
 				<Calibrate>false</Calibrate>
