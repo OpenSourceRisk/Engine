@@ -51,8 +51,15 @@ public:
 
     //! \name Observer interface
     //@{
-    void update() override;
+    void deepUpdate() override;
     //@}
+
+    //! \name LazyObject interface
+    //@{
+    void alwaysForwardNotifications() override {
+        LazyObject::alwaysForwardNotifications();
+        underlying_->alwaysForwardNotifications();
+    }
 
     //! \name Visitability
     //@{
