@@ -1,0 +1,120 @@
+<CrossAssetModel>
+	<DomesticCcy>USD</DomesticCcy>
+	<Currencies>
+		<Currency>USD</Currency>
+		<Currency>EUR</Currency>
+	</Currencies>
+	<Equities/>
+	<InflationIndices/>
+	<CreditNames/>
+	<Commodities>
+		<Commodity>COMDTY_WTI_USD</Commodity>
+	</Commodities>
+	<BootstrapTolerance>0.0001</BootstrapTolerance>
+	<Measure/>
+	<Discretization>Exact</Discretization>
+	<SalvagingAlgorithm>None</SalvagingAlgorithm>
+	<InterestRateModels>
+		<LGM key="USD">
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Volatility>
+				<Calibrate>false</Calibrate>
+				<VolatilityType>Hagan</VolatilityType>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00548, 2.00274, 4.00274, 6.01096, 8.00548, 10.0082, 12.0137, 14.011, 16.011, 18.0164</TimeGrid>
+				<InitialValue>0.0124353, 0.0124102, 0.0120111, 0.0129591, 0.0135016, 0.0129847, 0.0133644, 0.0121702, 0.011375, 0.0132674, 0.0146488</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>false</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>0.03</InitialValue>
+			</Reversion>
+			<ParameterTransformation>
+				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
+				<Scaling>1</Scaling>
+			</ParameterTransformation>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
+			<CalibrationSwaptions>
+				<Expiries>1Y, 2Y, 4Y, 6Y, 8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+				<Terms>19Y, 18Y, 16Y, 14Y, 12Y, 10Y, 8Y, 6Y, 4Y, 2Y, 1Y</Terms>
+				<Strikes>ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM</Strikes>
+			</CalibrationSwaptions>
+		</LGM>
+		<LGM key="EUR">
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Volatility>
+				<Calibrate>false</Calibrate>
+				<VolatilityType>Hagan</VolatilityType>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00548, 2.00274, 4.00274, 6.01096, 8.00548, 10.0082, 12.0137, 14.011, 16.011, 18.0164</TimeGrid>
+				<InitialValue>0.0106964, 0.0104022, 0.0107478, 0.0112737, 0.0121427, 0.0135112, 0.0140443, 0.0136264, 0.015667, 0.0146883, 0.00895981</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>false</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>0.03</InitialValue>
+			</Reversion>
+			<ParameterTransformation>
+				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
+				<Scaling>1</Scaling>
+			</ParameterTransformation>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
+			<CalibrationSwaptions>
+				<Expiries>1Y, 2Y, 4Y, 6Y, 8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+				<Terms>19Y, 18Y, 16Y, 14Y, 12Y, 10Y, 8Y, 6Y, 4Y, 2Y, 1Y</Terms>
+				<Strikes>ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM</Strikes>
+			</CalibrationSwaptions>
+		</LGM>
+	</InterestRateModels>
+	<ForeignExchangeModels>
+		<CrossCcyLGM foreignCcy="EUR">
+			<DomesticCcy>USD</DomesticCcy>
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Sigma>
+				<Calibrate>false</Calibrate>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00274, 2.00274, 3.00274, 4.00274, 5.00548</TimeGrid>
+				<InitialValue>0.120575, 0.118391, 0.123746, 0.134606, 0.130477, 0.111861</InitialValue>
+			</Sigma>
+			<CalibrationOptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+				<Strikes>ATMF, ATMF, ATMF, ATMF, ATMF, ATMF</Strikes>
+			</CalibrationOptions>
+		</CrossCcyLGM>
+	</ForeignExchangeModels>
+	<EquityModels/>
+	<InflationIndexModels/>
+	<CreditModels/>
+	<CommodityModels>
+		<CommoditySchwartz name="COMDTY_WTI_USD">
+			<Currency>USD</Currency>
+			<CalibrationType>BestFit</CalibrationType>
+			<Sigma>
+				<Calibrate>false</Calibrate>
+				<InitialValue>0.10776424788612028</InitialValue>
+			</Sigma>
+			<Kappa>
+				<Calibrate>false</Calibrate>
+				<InitialValue>0.0000000000000000</InitialValue>
+			</Kappa>
+			<CalibrationOptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+				<Strikes>ATMF, ATMF, ATMF, ATMF, ATMF, ATMF</Strikes>
+			</CalibrationOptions>
+			<DriftFreeState>true</DriftFreeState>
+		</CommoditySchwartz>
+	</CommodityModels>
+	<CreditStates>
+		<NumberOfFactors>0</NumberOfFactors>
+	</CreditStates>
+	<InstantaneousCorrelations>
+		<Correlation factor1="IR:EUR" index1="0" factor2="IR:USD" index2="0">0.3</Correlation>
+		<Correlation factor1="IR:EUR" index1="0" factor2="FX:USDEUR" index2="0">0</Correlation>
+		<Correlation factor1="IR:USD" index1="0" factor2="FX:USDEUR" index2="0">0</Correlation>
+	</InstantaneousCorrelations>
+</CrossAssetModel>
+
