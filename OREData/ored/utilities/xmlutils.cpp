@@ -26,7 +26,6 @@
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/erase.hpp>
 
@@ -635,8 +634,6 @@ string XMLUtils::convertToString(const Real value) {
     return result;
 }
 
-template <class T> string XMLUtils::convertToString(const T& value) { return boost::lexical_cast<std::string>(value); }
-
 /* Instantiate some template functions above for types T we want to support. Add instantiations for more types here,
    if required. This has two advantages over putting the templated version of the functions in the header file:
    - faster compile times
@@ -709,7 +706,6 @@ template vector<bool> XMLUtils::getChildrenValuesWithAttributes(XMLNode* parent,
                                                                 const string& name, const string& attrName,
                                                                 vector<string>& attrs,
                                                                 std::function<bool(string)> parser, bool mandatory);
-
 
 string XMLUtils::toString(XMLNode* node) {
     string xml_as_string;
