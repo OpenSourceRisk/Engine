@@ -25,6 +25,10 @@
 #include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/modelparameter.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+
+#include <qle/models/cirppconstantparametrization.hpp>
+#include <qle/models/cirppconstantfellerparametrization.hpp>
+
 #include <iostream>
 
 using namespace ore::data;
@@ -236,6 +240,68 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 	else {
 	    ALOG("Matching parametrization not found for COM model "
 		 << " ccy=" << comData->currency() << " name=" << comData->name());
+	}
+    }
+
+    // CAM supports two types of CR model data with associated parametrizations (LGM and CIR++)
+    // So we loop over these two types separately
+
+    // Update Cross Asset Model Data: CR LGM
+    for (Size i = 0; i < data->crLgmConfigs().size(); ++i) {
+        ext::shared_ptr<CrLgmData> crData = data->crLgmConfigs()[i];
+	Size crComponentIndex = model_->crName(crData->name()); 
+	ext::shared_ptr<Parametrization> para = model_->cr(crComponentIndex);
+	if (auto crPara = ext::dynamic_pointer_cast<CrLgm1fParametrization>(para)) {
+	    LOG("CamData, updating Credit LGM Config: name=" << crData->name());
+	    QL_REQUIRE(crPara->numberOfParameters() == 2, "2 model parameters for CR LGM");
+	    arrayToVector(crData->aTimes(), crPara->parameterTimes(0));
+	    arrayToVector(crData->aValues(), crPara->parameterValues(0));
+	    crData->calibrateA() = false;
+	    arrayToVector(crData->hTimes(), crPara->parameterTimes(1));
+	    arrayToVector(crData->hValues(), crPara->parameterValues(1));
+	    crData->calibrateH() = false;
+	}
+	else {
+	    ALOG("Matching parametrization not found for CR LGM config, name=" << crData->name());
+	}
+    }
+
+    // Update Cross Asset Model Data: CR CIR++
+    for (Size i = 0; i < data->crCirConfigs().size(); ++i) {
+        ext::shared_ptr<CrCirData> crData = data->crCirConfigs()[i];
+	Size crComponentIndex = model_->crName(crData->name()); 
+	ext::shared_ptr<Parametrization> para = model_->cr(crComponentIndex);
+	if (auto crPara = ext::dynamic_pointer_cast<CrCirppConstantParametrization>(para)) {
+	    LOG("CamData, updating Credit CIR++ Config: name=" << crData->name());
+	    QL_REQUIRE(crPara->numberOfParameters() == 4, "4 model parameters for CR CIR++");
+	    // parameter ordering: kappa, theta, sigma, v0
+	    // kappa:
+	    crData->reversionValue() = crPara->parameterValues(0).front();
+	    // theta:
+	    crData->longTermValue() = crPara->parameterValues(1).front();
+	    // sigma:
+	    crData->volatility() = crPara->parameterValues(2).front();
+	    // v0:
+	    crData->startValue() = crPara->parameterValues(3).front();
+	    crData->calibrationType() = ore::data::CalibrationType::None;
+	}
+	else if (auto crPara = ext::dynamic_pointer_cast<CrCirppConstantWithFellerParametrization>(para)) {
+	    LOG("CamData, updating Credit CIR++ Config: name=" << crData->name());
+	    QL_REQUIRE(crPara->numberOfParameters() == 4, "4 model parameters for CR CIR++");
+	    // parameter ordering as above: kappa, theta, sigma, v0
+	    // kappa:
+	    crData->reversionValue() = crPara->parameterValues(0).front();
+	    // theta:
+	    crData->longTermValue() = crPara->parameterValues(1).front();
+	    // sigma:
+	    crData->volatility() = crPara->parameterValues(2).front();
+	    // v0:
+	    crData->startValue() = crPara->parameterValues(3).front();
+	    // switch off calibration:
+	    crData->calibrationType() = ore::data::CalibrationType::None;
+	}
+	else {
+	    ALOG("Matching parametrization not found for CR CIR++ config, name=" << crData->name());
 	}
     }
 
