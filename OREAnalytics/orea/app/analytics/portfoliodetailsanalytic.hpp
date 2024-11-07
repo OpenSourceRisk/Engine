@@ -46,9 +46,9 @@ protected:
 class PortfolioDetailsAnalytic : public Analytic {
 public:
     PortfolioDetailsAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PortfolioDetailsAnalyticImpl>(inputs), {}, inputs) {}
-
-    bool requiresMarketData() const override { return false; }
+        : Analytic(std::make_unique<PortfolioDetailsAnalyticImpl>(inputs), {}, inputs) {
+        requiresMarketData_ = false;
+}
 };
 
 } // namespace analytics

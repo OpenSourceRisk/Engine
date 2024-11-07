@@ -45,10 +45,10 @@ namespace data {
 void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Swap::build() called for trade " << id());
 
-    // for pf-analyser runs we can optimize the build (to improve performance)
+    // for pf-analyser runs without required fixing recording we can optimize the build (to improve performance)
     bool isPfAnalyserRun = false;
     if (auto r = engineFactory->engineData()->globalParameters().find("RunType");
-        r != engineFactory->engineData()->globalParameters().end() && r->second == "PortfolioAnalyser") {
+        r != engineFactory->engineData()->globalParameters().end() && r->second == "PortfolioAnalyserNoFixings") {
         isPfAnalyserRun = true;
     }
 

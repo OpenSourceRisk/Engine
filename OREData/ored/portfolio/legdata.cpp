@@ -1386,9 +1386,9 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
         }
     }
 
-    // for pf-analyser runs we can exit early (to improve performance)
+    // for pf-analyser runs without required fixings recording we can exit early (to improve performance)
     if (auto r = engineFactory->engineData()->globalParameters().find("RunType");
-        r != engineFactory->engineData()->globalParameters().end() && r->second == "PortfolioAnalyser") {
+        r != engineFactory->engineData()->globalParameters().end() && r->second == "PortfolioAnalyserNoFixings") {
         return Leg();
     }
 
