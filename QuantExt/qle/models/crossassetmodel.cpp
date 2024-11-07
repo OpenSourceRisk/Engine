@@ -156,7 +156,7 @@ Size CrossAssetModel::crName(const std::string& name) const {
     Size i = 0;
     while (i < components(CrossAssetModel::AssetType::CR) && cr(i)->name() != name)
         ++i;
-    QL_REQUIRE(i < components(CrossAssetModel::AssetType::INF),
+    QL_REQUIRE(i < components(CrossAssetModel::AssetType::CR),
                "credit name " << name << " not present in cross asset model");
     return i;
 }
