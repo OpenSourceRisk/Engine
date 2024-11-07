@@ -110,8 +110,8 @@ XMLNode* InfJyData::toXML(XMLDocument& doc) const {
     InflationModelData::append(doc, node);
 
     XMLNode* rrNode = doc.allocNode("RealRate");
-    XMLUtils::appendNode(rrNode, realRateReversion_.toXML(doc));
     XMLUtils::appendNode(rrNode, realRateVolatility_.toXML(doc));
+    XMLUtils::appendNode(rrNode, realRateReversion_.toXML(doc));
     XMLUtils::appendNode(rrNode, reversionTransformation_.toXML(doc));
     XMLUtils::appendNode(node, rrNode);
 

@@ -139,13 +139,6 @@
 				</CalibrationBasket>
 			</CalibrationBaskets>
 			<RealRate>
-				<Reversion>
-					<ReversionType>HullWhite</ReversionType>
-					<Calibrate>false</Calibrate>
-					<ParamType>Constant</ParamType>
-					<TimeGrid/>
-					<InitialValue>0.5</InitialValue>
-				</Reversion>
 				<Volatility>
 					<VolatilityType>Hagan</VolatilityType>
 					<Calibrate>false</Calibrate>
@@ -153,6 +146,13 @@
 					<TimeGrid>1, 4.00274, 6.00274, 9.00548</TimeGrid>
 					<InitialValue>0.0434442, 0.0240055, 0.293271, 0.669278, 6.7163</InitialValue>
 				</Volatility>
+				<Reversion>
+					<ReversionType>HullWhite</ReversionType>
+					<Calibrate>false</Calibrate>
+					<ParamType>Constant</ParamType>
+					<TimeGrid/>
+					<InitialValue>0.5</InitialValue>
+				</Reversion>
 				<ParameterTransformation>
 					<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 					<Scaling>1</Scaling>
@@ -232,13 +232,6 @@
 				</CalibrationBasket>
 			</CalibrationBaskets>
 			<RealRate>
-				<Reversion>
-					<ReversionType>HullWhite</ReversionType>
-					<Calibrate>false</Calibrate>
-					<ParamType>Constant</ParamType>
-					<TimeGrid/>
-					<InitialValue>0.5</InitialValue>
-				</Reversion>
 				<Volatility>
 					<VolatilityType>Hagan</VolatilityType>
 					<Calibrate>false</Calibrate>
@@ -246,6 +239,13 @@
 					<TimeGrid>1, 4.00274, 6.00274, 9.00548</TimeGrid>
 					<InitialValue>0.0816145, 0.0165542, 0.0419569, 0.108157, 5.15809</InitialValue>
 				</Volatility>
+				<Reversion>
+					<ReversionType>HullWhite</ReversionType>
+					<Calibrate>false</Calibrate>
+					<ParamType>Constant</ParamType>
+					<TimeGrid/>
+					<InitialValue>0.5</InitialValue>
+				</Reversion>
 				<ParameterTransformation>
 					<ShiftHorizon>0.0000000000000000</ShiftHorizon>
 					<Scaling>1</Scaling>
