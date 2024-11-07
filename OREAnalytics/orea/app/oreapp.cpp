@@ -2104,6 +2104,18 @@ void OREAppInputParameters::loadParameters() {
         } else {
             WLOG("Xva sensitivity scenario data not loaded");
         }
+
+        tmp = params_->get("xvaSensitivity", "parSensitivity", false);
+        if (tmp != "")
+            setXvaSensiParSensi(parseBool(tmp));
+
+        tmp = params_->get("xvaSensitivity", "outputJacobi", false);
+        if (tmp != "")
+            setXvaSensiOutputJacobi(parseBool(tmp));
+
+        tmp = params_->get("xvaSensitivity", "outputSensitivityThreshold", false);
+        if (tmp != "")
+            setXvaSensiThreshold(parseReal(tmp));
     }
 
     /*************

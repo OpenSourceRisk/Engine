@@ -367,6 +367,9 @@ public:
     void setXvaSensiPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
         sensiPricingEngine_ = engineData;
     }
+    void setXvaSensiParSensi(const bool parSensi){ xvaSensiParSensi_ = parSensi;}
+    void setXvaSensiOutputJacobi(const bool outputJacobi) { xvaSensiOutputJacobi_ = outputJacobi; };
+    void setXvaSensiThreshold(const Real threshold) { xvaSensiThreshold_ = threshold; }
 
     // Setters for XVA Explain
     void setXvaExplainSimMarketParams(const std::string& xml);
@@ -830,6 +833,10 @@ public:
     }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& xvaSensiPricingEngine() const { return xvaSensiPricingEngine_; }
 
+    bool xvaSensiParSensi() const { return xvaSensiParSensi_; }
+    bool xvaSensiOutputJacobi() const { return xvaSensiOutputJacobi_; };
+    Real xvaSensiThreshold() const { return xvaSensiThreshold_;}
+
     /****************************
      * Getters for zero to par shift
      ****************************/
@@ -1171,7 +1178,9 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaSensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaSensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> xvaSensiPricingEngine_;
-
+    bool xvaSensiParSensi_ = false;
+    bool xvaSensiOutputJacobi_ = false;
+    QuantLib::Real xvaSensiThreshold_ = 1e-6;
     /*****************
      * XVA Explain analytic
      *****************/
@@ -1228,6 +1237,8 @@ private:
     std::string zeroToParShiftFile_;
     std::string scenarioNpvOutputFileName_;
     std::string calibrationOutputFileName_;
+    std::string xvaSensiJacobiFileName_;
+    std::string xvaSensiJacobiInverseFileName_;
 };
 
 void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);
