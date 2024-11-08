@@ -32,8 +32,6 @@ public:
 
     // add a market datum
     void add(QuantLib::Date date, const std::string& name, QuantLib::Real value) override;
-    // add a market datum
-    void add(const QuantLib::ext::shared_ptr<MarketDatum>& md) override;
     // add a fixing
     void addFixing(QuantLib::Date date, const std::string& name, QuantLib::Real value) override;
 

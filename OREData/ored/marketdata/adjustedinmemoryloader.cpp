@@ -21,27 +21,19 @@
 namespace ore {
 namespace data {
 
-void AdjustedInMemoryLoader::add(const QuantLib::ext::shared_ptr<MarketDatum>& md) {
-    if (md == nullptr)
-        return;
+void AdjustedInMemoryLoader::add(Date date, const string& name, Real value) {
     Real factor = 1.0;
     try {
-        if (auto eqDatum = QuantLib::ext::dynamic_pointer_cast<EquitySpotQuote>(md))
-            factor = factors_.getFactor(eqDatum->eqName(), md->asofDate());
-        else if (auto eqDatum = QuantLib::ext::dynamic_pointer_cast<EquityForwardQuote>(md))
-            factor = factors_.getFactor(eqDatum->eqName(), md->asofDate());
-    } catch (const std::exception& e) {
-        DLOG("AdjustedInMemoryLoader failure on " << md->name() << ": " << e.what());
-    }
-    md->setValue(md->quote()->value() * factor);
-    InMemoryLoader::add(md);
-}
-
-void AdjustedInMemoryLoader::add(Date date, const string& name, Real value) {
-    try {
-        add(parseMarketDatum(date, name, Null<Real>()));
+        auto datum = parseMarketDatum(date, name, Null<Real>());
+        if (auto eqDatum = QuantLib::ext::dynamic_pointer_cast<EquitySpotQuote>(datum))
+            factor = factors_.getFactor(eqDatum->eqName(), date);
+        else if (auto eqDatum = QuantLib::ext::dynamic_pointer_cast<EquityForwardQuote>(datum))
+            factor = factors_.getFactor(eqDatum->eqName(), date);
+        datum->setValue(value * factor);
+        InMemoryLoader::add(datum);
     } catch (const std::exception& e) {
         DLOG("AdjustedInMemoryLoader failure on " << name << ": " << e.what());
+        InMemoryLoader::add(date, name, value);
     }
 }
 
