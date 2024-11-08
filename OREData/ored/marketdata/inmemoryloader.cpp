@@ -105,32 +105,34 @@ bool InMemoryLoader::hasQuotes(const QuantLib::Date& d) const {
     return it != data_.end();
 }
 
+void InMemoryLoader::add(const QuantLib::ext::shared_ptr<MarketDatum>& md) {
+    if(md == nullptr)
+        return;
+    std::pair<bool, string> addFX = {true, ""};
+    if (md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT &&
+        md->quoteType() == MarketDatum::QuoteType::RATE) {
+        addFX = checkFxDuplicate(md, md->asofDate());
+        if (!addFX.second.empty()) {
+            auto it = data_[md->asofDate()].find(makeDummyMarketDatum(md->asofDate(), addFX.second));
+            TLOG("Replacing MarketDatum " << addFX.second << " with " << md->name() << " due to FX Dominance.");
+            if (it != data_[md->asofDate()].end())
+                data_[md->asofDate()].erase(it);
+        }
+    }
+    if (addFX.first && data_[md->asofDate()].insert(md).second) {
+        TLOG("Added MarketDatum " << md->name());
+    } else if (!addFX.first) {
+        WLOG("Skipped MarketDatum " << md->name() << " - dominant FX already present.")
+    } else {
+        WLOG("Skipped MarketDatum " << md->name() << " - this is already present.");
+    }
+}
+
 void InMemoryLoader::add(QuantLib::Date date, const string& name, QuantLib::Real value) {
-    QuantLib::ext::shared_ptr<MarketDatum> md;
     try {
-        md = parseMarketDatum(date, name, value);
+        add(parseMarketDatum(date, name, value));
     } catch (std::exception& e) {
         WLOG("Failed to parse MarketDatum " << name << ": " << e.what());
-    }
-    if (md != nullptr) {
-        std::pair<bool, string> addFX = {true, ""};
-        if (md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT &&
-            md->quoteType() == MarketDatum::QuoteType::RATE) {
-            addFX = checkFxDuplicate(md, date);
-            if (!addFX.second.empty()) {
-                auto it = data_[date].find(makeDummyMarketDatum(date, addFX.second));
-                TLOG("Replacing MarketDatum " << addFX.second << " with " << name << " due to FX Dominance.");
-                if (it != data_[date].end())
-                    data_[date].erase(it);
-            }
-        }
-        if (addFX.first && data_[date].insert(md).second) {
-            TLOG("Added MarketDatum " << name);
-        } else if (!addFX.first) {
-            WLOG("Skipped MarketDatum " << name << " - dominant FX already present.")
-        } else {
-            WLOG("Skipped MarketDatum " << name << " - this is already present.");
-        }
     }
 }
 

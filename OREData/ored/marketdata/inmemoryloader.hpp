@@ -43,6 +43,9 @@ public:
     // add a market datum
     virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value);
 
+    // add a market datum
+    virtual void add(const QuantLib::ext::shared_ptr<MarketDatum>& md);
+
     // add a fixing
     virtual void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value);
 
