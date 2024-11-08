@@ -54,9 +54,6 @@ void MarketDataCsvLoaderImpl::retrieveMarketData(const QuantLib::ext::shared_ptr
             }
         }
 
-        std::cout << "entire market = " << std::boolalpha << inputs_->entireMarket() << " filter on requested data = " << filterOnRequestedData_ << std::endl;
-        std::cout << "wildcards = " << wildcards.size() << ", names = " << names.size() << std::endl;
-
         for (const auto& md : csvLoader_->loadQuotes(d)) {
             if (!inputs_->entireMarket() && filterOnRequestedData_) {
                 if (names.find(md->name()) != names.end() ||
