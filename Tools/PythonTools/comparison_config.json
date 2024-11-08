@@ -959,6 +959,52 @@
           }
         ]
       },
+      "xva_zero_sensitivity.*\\.csv": {
+        "keys": [
+          "NettingSetId",
+          "TradeId",
+          "IsPar",
+          "Factor_1",
+          "ShiftSize_1",
+          "Factor_2",
+          "ShiftSize_2",
+          "Currency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base XVA",
+              "Delta",
+              "Gamma"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "xva_par_sensitivity.*\\.csv": {
+        "keys": [
+          "NettingSetId",
+          "TradeId",
+          "IsPar",
+          "Factor_1",
+          "ShiftSize_1",
+          "Factor_2",
+          "ShiftSize_2",
+          "Currency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base XVA",
+              "Delta",
+              "Gamma"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       ".*sensitivity.*\\.csv": {
         "keys": [
           "TradeId",

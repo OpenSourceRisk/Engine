@@ -306,6 +306,7 @@ pricingengines/mcmultilegoptionengine.cpp
 pricingengines/midpointcdoengine.cpp
 pricingengines/midpointcdsenginemultistate.cpp
 pricingengines/midpointindexcdsengine.cpp
+pricingengines/nullamccalculator.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
 pricingengines/numericlgmbgsflexiswapengine.cpp
 pricingengines/numericlgmflexiswapengine.cpp
@@ -846,6 +847,7 @@ pricingengines/mcmultilegoptionengine.hpp
 pricingengines/midpointcdoengine.hpp
 pricingengines/midpointcdsenginemultistate.hpp
 pricingengines/midpointindexcdsengine.hpp
+pricingengines/nullamccalculator.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmbgsflexiswapengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp
