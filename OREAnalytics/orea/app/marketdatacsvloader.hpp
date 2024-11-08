@@ -32,10 +32,11 @@ class MarketDataCsvLoaderImpl : public MarketDataLoaderImpl {
 public:
     MarketDataCsvLoaderImpl() {}
 
-    MarketDataCsvLoaderImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs, 
-        const QuantLib::ext::shared_ptr<ore::data::CSVLoader>& csvLoader)
-        : inputs_(inputs), csvLoader_(csvLoader) {}
-    
+    MarketDataCsvLoaderImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                            const QuantLib::ext::shared_ptr<ore::data::CSVLoader>& csvLoader,
+                            const bool filterOnRequestedData)
+        : inputs_(inputs), csvLoader_(csvLoader), filterOnRequestedData_(filterOnRequestedData) {}
+
     void loadCorporateActionData(QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                  const std::map<std::string, std::string>& equities) override;
     
@@ -50,13 +51,16 @@ public:
 private:
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
     QuantLib::ext::shared_ptr<ore::data::CSVLoader> csvLoader_;
+    bool filterOnRequestedData_ = false;
 };
 
 class MarketDataCsvLoader : public MarketDataLoader {
-public: 
+public:
     MarketDataCsvLoader(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                        const QuantLib::ext::shared_ptr<ore::data::CSVLoader>& csvLoader)
-        : MarketDataLoader(inputs, QuantLib::ext::make_shared<MarketDataCsvLoaderImpl>(inputs, csvLoader)) {}
+                        const QuantLib::ext::shared_ptr<ore::data::CSVLoader>& csvLoader,
+                        const bool filterOnRequestedData = false)
+        : MarketDataLoader(
+              inputs, QuantLib::ext::make_shared<MarketDataCsvLoaderImpl>(inputs, csvLoader, filterOnRequestedData)) {}
 };
     
 } // namespace analytics
