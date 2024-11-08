@@ -58,12 +58,15 @@ public:
 
     //! \name Inspectors
     //@{
-    // const ReversionParameter& reversion() const;
-    // const VolatilityParameter& volatility() const;
-    // const LgmReversionTransformation& reversionTransformation() const;
-    ReversionParameter& reversion() { return reversion_; }
-    VolatilityParameter& volatility() { return volatility_; }
-    LgmReversionTransformation& reversionTransformation() { return reversionTransformation_; }
+    const ReversionParameter& reversion() const { return reversion_; }
+    const VolatilityParameter& volatility() const { return volatility_; }
+    const LgmReversionTransformation& reversionTransformation() const { return reversionTransformation_; }
+    //@}
+
+    //! \name Setters
+    //@{
+    void setReversion(ReversionParameter p);
+    void setVolatility(VolatilityParameter p);
     //@}
 
     //! \name Serialisation

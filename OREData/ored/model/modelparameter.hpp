@@ -159,7 +159,5 @@ private:
     LgmData::ReversionType reversionType_;
 };
 
-void arrayToVector(std::vector<Real>& v, const Array& a);
-
 }
 }

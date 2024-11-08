@@ -60,9 +60,9 @@ public:
 
     //! \name Inspectors
     //@{
-    ReversionParameter& realRateReversion();
-    VolatilityParameter& realRateVolatility();
-    VolatilityParameter& indexVolatility();
+    const ReversionParameter& realRateReversion() const;
+    const VolatilityParameter& realRateVolatility() const;
+    const VolatilityParameter& indexVolatility() const;
     const LgmReversionTransformation& reversionTransformation() const;
     const CalibrationConfiguration& calibrationConfiguration() const;
     bool linkRealRateParamsToNominalRateParams() const;
@@ -73,6 +73,7 @@ public:
     //@{
     void setRealRateReversion(ReversionParameter p);
     void setRealRateVolatility(VolatilityParameter p);
+    void setIndexVolatility(VolatilityParameter p);
     //@}
 
     //! \name Serialisation

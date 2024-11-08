@@ -40,6 +40,10 @@ InfDkData::InfDkData(CalibrationType calibrationType,
       volatility_(volatility),
       reversionTransformation_(reversionTransformation) {}
 
+void InfDkData::setReversion(ReversionParameter p) { reversion_ = std::move(p); }
+
+void InfDkData::setVolatility(VolatilityParameter p) { volatility_ = std::move(p); }
+
 void InfDkData::fromXML(XMLNode* node) {
     
     // Check the node is not null and that name is LGM or DodgsonKainth. LGM is for backward compatibility.

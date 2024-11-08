@@ -118,6 +118,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 
     // Update Cross Asset Model Data: IR
     QuantLib::ext::shared_ptr<CrossAssetModelData> data = builder_->modelData();
+    Array times, values;
     for (Size i = 0; i < data->irConfigs().size(); ++i) {
         ext::shared_ptr<IrModelData> irData = data->irConfigs()[i];
 	ext::shared_ptr<Parametrization> irPara = model_->ir(i);
@@ -129,18 +130,22 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 	    ext::shared_ptr<LgmData> lgmData = boost::dynamic_pointer_cast<LgmData>(irData);
 	    QL_REQUIRE(lgmData, "Failed to cast IrModelData to LgmData");
 	    // overwrite initial values with calibration results
-	    arrayToVector(lgmData->aTimes(), lgmPara->parameterTimes(0));
-	    arrayToVector(lgmData->aValues(), lgmPara->parameterValues(0));
+	    times = lgmPara->parameterTimes(0);
+	    values = lgmPara->parameterValues(0);
+	    lgmData->aTimes() = std::vector<Real>(times.begin(), times.end());
+	    lgmData->aValues() = std::vector<Real>(values.begin(), values.end());
 	    lgmData->calibrateA() = false;
-	    arrayToVector(lgmData->hTimes(), lgmPara->parameterTimes(1));
-	    arrayToVector(lgmData->hValues(), lgmPara->parameterValues(1));
+	    times = lgmPara->parameterTimes(1);
+	    values = lgmPara->parameterValues(1);
+	    lgmData->hTimes() = std::vector<Real>(times.begin(), times.end());
+	    lgmData->hValues() = std::vector<Real>(values.begin(), values.end());
 	    lgmData->calibrateH() = false;
 	} else if (auto hwPara = ext::dynamic_pointer_cast<IrHwParametrization>(irPara)) {
 	    // HW Multi-Factor
 	    ALOG("HW parametrization not covered for IR model"
 		 << " name=" << irData->name() << " qualifier=" << irData->qualifier());
 	} else {
-	    ALOG("Matching parametrization not found for IR model"
+	    ALOG("Matching parametrization not found for IR model, model data unchanged:"
 		 << " name=" << irData->name() << " qualifier=" << irData->qualifier());
 	}
     }
@@ -154,12 +159,14 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 		<< " foreign="  << fxData->foreignCcy() << " domestic=" << fxData->domesticCcy());
 	    QL_REQUIRE(fxPara->numberOfParameters() == 1, "1 fx model parameter expected");
 	    // overwrite initial values with calibration results
-	    arrayToVector(fxData->sigmaTimes(), fxPara->parameterTimes(0));
-	    arrayToVector(fxData->sigmaValues(), fxPara->parameterValues(0));
+	    times = fxPara->parameterTimes(0);
+	    values = fxPara->parameterValues(0);
+	    fxData->sigmaTimes() = std::vector<Real>(times.begin(), times.end());
+	    fxData->sigmaValues() = std::vector<Real>(values.begin(), values.end());
 	    // set calibration flags to false to ensure we reuse the calibration when loading this version
 	    fxData->calibrateSigma() = false;
 	} else {
-	    ALOG("Matching parametrization not found for FX model"
+	    ALOG("Matching parametrization not found for FX model, model data not changed:"
 		 << " foreign=" << fxData->foreignCcy() << " domestic=" << fxData->domesticCcy());
 	}
     }
@@ -172,12 +179,15 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 	    LOG("CamData, updating EqBsParametrization:" << " name="  << eqData->eqName());
 	    QL_REQUIRE(eqPara->numberOfParameters() == 1, "1 equity model parameter expected");
 	    // overwrite initial values with calibration results
-	    arrayToVector(eqData->sigmaTimes(), eqPara->parameterTimes(0));
-	    arrayToVector(eqData->sigmaValues(), eqPara->parameterValues(0));
+	    times = eqPara->parameterTimes(0);
+	    values = eqPara->parameterValues(0);
+	    eqData->sigmaTimes() = std::vector<Real>(times.begin(), times.end());
+	    eqData->sigmaValues() = std::vector<Real>(values.begin(), values.end());
 	    // set calibration flags to false to ensure we reuse the calibration when loading this version
 	    eqData->calibrateSigma() = false;
 	} else {
-	    ALOG("Matching parametrization not found for EQ model" << " name="  << eqData->eqName());
+	    ALOG("Matching parametrization not found for EQ model, model data not changed:"
+		 << " name="  << eqData->eqName());
 	}
     }
     
@@ -193,12 +203,20 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 	    ext::shared_ptr<InfDkData> dkData = boost::dynamic_pointer_cast<InfDkData>(infData);
 	    QL_REQUIRE(dkData, "Failed to cast InflationModelData to InfDkData");
 	    // FIXME: Check order or model parameters
-	    dkData->volatility().setTimes(infPara->parameterTimes(0));
-	    dkData->volatility().setValues(infPara->parameterValues(0));
-	    dkData->volatility().setCalibrate(false);
-	    dkData->reversion().setTimes(infPara->parameterTimes(1));
-	    dkData->reversion().setValues(infPara->parameterValues(1));
-	    dkData->reversion().setCalibrate(false);
+	    times = infPara->parameterTimes(0);
+	    values = infPara->parameterValues(0);
+	    VolatilityParameter vp(*dkData->volatility().volatilityType(), false,
+				   dkData->volatility().type(),
+				   std::vector<Real>(times.begin(), times.end()),
+				   std::vector<Real>(values.begin(), values.end()));
+	    times = infPara->parameterTimes(1);
+	    values = infPara->parameterValues(1);
+	    ReversionParameter rp(dkData->reversion().reversionType(), false,
+				  dkData->reversion().type(),
+				   std::vector<Real>(times.begin(), times.end()),
+				   std::vector<Real>(values.begin(), values.end()));	    
+	    dkData->setVolatility(vp);
+	    dkData->setReversion(rp);
 	}
 	else if (auto infPara = ext::dynamic_pointer_cast<InfJyParameterization>(para)) {
 	    // JY
@@ -207,18 +225,30 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 	    QL_REQUIRE(infPara->numberOfParameters() == 3, "3 model parameters expected for INF JY");
 	    ext::shared_ptr<InfJyData> jyData = boost::dynamic_pointer_cast<InfJyData>(infData);
 	    QL_REQUIRE(jyData, "Failed to cast InflationModelData to InfJyData");
-	    jyData->realRateVolatility().setTimes(infPara->realRate()->parameterTimes(0));
-	    jyData->realRateVolatility().setValues(infPara->realRate()->parameterValues(0));
-	    jyData->realRateVolatility().setCalibrate(false);
-	    jyData->realRateReversion().setTimes(infPara->realRate()->parameterTimes(1));
-	    jyData->realRateReversion().setValues(infPara->realRate()->parameterValues(1));
-	    jyData->realRateReversion().setCalibrate(false);
-	    jyData->indexVolatility().setTimes(infPara->index()->parameterTimes(0));
-	    jyData->indexVolatility().setValues(infPara->index()->parameterValues(0));
-	    jyData->indexVolatility().setCalibrate(false);
+	    times = infPara->realRate()->parameterTimes(0);
+	    values = infPara->realRate()->parameterValues(0);
+	    VolatilityParameter rrv(*jyData->realRateVolatility().volatilityType(), false,
+				    jyData->realRateVolatility().type(),
+				    std::vector<Real>(times.begin(), times.end()),
+				    std::vector<Real>(values.begin(), values.end()));
+	    times = infPara->realRate()->parameterTimes(1);
+	    values = infPara->realRate()->parameterValues(1);
+	    ReversionParameter rrr(jyData->realRateReversion().reversionType(), false,
+				   jyData->realRateReversion().type(),
+				   std::vector<Real>(times.begin(), times.end()),
+				   std::vector<Real>(values.begin(), values.end()));	    
+	    times = infPara->index()->parameterTimes(0);
+	    values = infPara->index()->parameterValues(0);
+	    VolatilityParameter iv(*jyData->indexVolatility().volatilityType(), false,
+				   jyData->indexVolatility().type(),
+				   std::vector<Real>(times.begin(), times.end()),
+				   std::vector<Real>(values.begin(), values.end()));
+	    jyData->setRealRateReversion(rrr);
+	    jyData->setRealRateVolatility(rrv);
+	    jyData->setIndexVolatility(iv);
 	} else {
 	    // Any others ?
-	    ALOG("Matching parametrization not found for INF model "
+	    ALOG("Matching parametrization not found for INF model, model data not changed:"
 		 << " ccy=" << infData->currency() << " index=" <<infData->index());
 	}
     }
@@ -238,7 +268,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 	    comData->calibrateKappa() = false;
 	}
 	else {
-	    ALOG("Matching parametrization not found for COM model "
+	    ALOG("Matching parametrization not found for COM model, model data not changed:"
 		 << " ccy=" << comData->currency() << " name=" << comData->name());
 	}
     }
@@ -254,15 +284,20 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 	if (auto crPara = ext::dynamic_pointer_cast<CrLgm1fParametrization>(para)) {
 	    LOG("CamData, updating Credit LGM Config: name=" << crData->name());
 	    QL_REQUIRE(crPara->numberOfParameters() == 2, "2 model parameters for CR LGM");
-	    arrayToVector(crData->aTimes(), crPara->parameterTimes(0));
-	    arrayToVector(crData->aValues(), crPara->parameterValues(0));
+	    times = crPara->parameterTimes(0);
+	    values = crPara->parameterValues(0);
+	    crData->aTimes() = std::vector<Real>(times.begin(), times.end());
+	    crData->aValues() = std::vector<Real>(values.begin(), values.end());
 	    crData->calibrateA() = false;
-	    arrayToVector(crData->hTimes(), crPara->parameterTimes(1));
-	    arrayToVector(crData->hValues(), crPara->parameterValues(1));
+	    times = crPara->parameterTimes(1);
+	    values = crPara->parameterValues(1);
+	    crData->hTimes() = std::vector<Real>(times.begin(), times.end());
+	    crData->hValues() = std::vector<Real>(values.begin(), values.end());
 	    crData->calibrateH() = false;
 	}
 	else {
-	    ALOG("Matching parametrization not found for CR LGM config, name=" << crData->name());
+	    ALOG("Matching parametrization not found for CR LGM config, model data not changed:"
+		 << " name=" << crData->name());
 	}
     }
 
@@ -288,7 +323,7 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 	else if (auto crPara = ext::dynamic_pointer_cast<CrCirppConstantWithFellerParametrization>(para)) {
 	    LOG("CamData, updating Credit CIR++ Config: name=" << crData->name());
 	    QL_REQUIRE(crPara->numberOfParameters() == 4, "4 model parameters for CR CIR++");
-	    // parameter ordering as above: kappa, theta, sigma, v0
+	    // parameter ordering: kappa, theta, sigma, v0 (as above)
 	    // kappa:
 	    crData->reversionValue() = crPara->parameterValues(0).front();
 	    // theta:
@@ -301,7 +336,8 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
 	    crData->calibrationType() = ore::data::CalibrationType::None;
 	}
 	else {
-	    ALOG("Matching parametrization not found for CR CIR++ config, name=" << crData->name());
+	    ALOG("Matching parametrization not found for CR CIR++ config, model data not changed:"
+		 << " name=" << crData->name());
 	}
     }
 

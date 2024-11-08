@@ -93,7 +93,7 @@ public:
     Handle<QuantExt::CrossAssetModel> model() const;
 
     //! return the model data
-    QuantLib::ext::shared_ptr<CrossAssetModelData> modelData() { return config_; }
+    const QuantLib::ext::shared_ptr<CrossAssetModelData>& modelData() { return config_; }
 
     //! \name Inspectors
     //@{
@@ -167,13 +167,13 @@ private:
     mutable RelinkableHandle<QuantExt::CrossAssetModel> model_;
 
     // Calibrate DK inflation model
-    void calibrateInflation(InfDkData& data,
+    void calibrateInflation(const InfDkData& data,
         QuantLib::Size modelIdx,
         const std::vector<QuantLib::ext::shared_ptr<QuantLib::BlackCalibrationHelper>>& calibrationBasket,
         const QuantLib::ext::shared_ptr<QuantExt::InfDkParametrization>& inflationParam) const;
 
     // Calibrate JY inflation model
-    void calibrateInflation(InfJyData& data,
+    void calibrateInflation(const InfJyData& data,
         QuantLib::Size modelIdx,
         const QuantLib::ext::shared_ptr<InfJyBuilder>& jyBuilder,
         const QuantLib::ext::shared_ptr<QuantExt::InfJyParameterization>& inflationParam) const;
