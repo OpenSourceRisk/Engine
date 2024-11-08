@@ -657,6 +657,7 @@ Size getInflationSimulationLag(const QuantLib::ext::shared_ptr<ZeroInflationInde
     // this is consistent with the lag computation in CrossAssetModel::infDki()
     Date d1 = index->zeroInflationTermStructure()->baseDate();
     Date d2 = index->zeroInflationTermStructure()->referenceDate();
+    d2 = inflationPeriod(d2, index->frequency()).first;
     return d2 - d1;
 }
 
