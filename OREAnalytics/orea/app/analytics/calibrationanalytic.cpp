@@ -105,7 +105,9 @@ void CalibrationAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::d
     LOG(msg);
     CONSOLEW(msg);
     ProgressMessage(msg, 0, 1).log();
-    bool continueOnErr = false; // since this is the only thing we do here
+    auto globalParams = inputs_->simulationPricingEngine()->globalParameters();
+    auto continueOnCalErr = globalParams.find("ContinueOnCalibrationError");
+    bool continueOnErr = (continueOnCalErr != globalParams.end()) && parseBool(continueOnCalErr->second);
     buildCrossAssetModel(continueOnErr);
     CONSOLE("OK");
     ProgressMessage(msg, 1, 1).log();
