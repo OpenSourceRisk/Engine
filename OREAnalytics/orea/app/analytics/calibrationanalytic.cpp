@@ -77,8 +77,7 @@ void CalibrationAnalyticImpl::buildCrossAssetModel(const bool continueOnCalibrat
 	inputs_->marketConfig("lgmcalibration"),
         inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
         inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
-        inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "",
-        analytic()->configurations().crossAssetModelData->getSalvagingAlgorithm(), "xva cam building");
+        inputs_->marketConfig("simulation"), false, continueOnCalibrationError, "", "xva cam building");
 
     model_ = *builder_->model();
 }
