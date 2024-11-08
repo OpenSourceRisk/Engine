@@ -22,8 +22,8 @@
 				<Calibrate>false</Calibrate>
 				<VolatilityType>Hagan</VolatilityType>
 				<ParamType>Piecewise</ParamType>
-				<TimeGrid>5.00548, 10.011</TimeGrid>
-				<InitialValue>0.00789493, 0.00948273, 0.0103339</InitialValue>
+				<TimeGrid>5.00548, 10.010958904109589</TimeGrid>
+				<InitialValue>0.00789493, 0.0094827298308696774, 0.010333936647227074</InitialValue>
 			</Volatility>
 			<Reversion>
 				<Calibrate>false</Calibrate>
@@ -49,8 +49,8 @@
 				<Calibrate>false</Calibrate>
 				<VolatilityType>Hagan</VolatilityType>
 				<ParamType>Piecewise</ParamType>
-				<TimeGrid>5.00548, 10.011</TimeGrid>
-				<InitialValue>0.00858347, 0.00941157, 0.0105211</InitialValue>
+				<TimeGrid>5.00548, 10.010958904109589</TimeGrid>
+				<InitialValue>0.00858347, 0.0094115652662496978, 0.010521059409912941</InitialValue>
 			</Volatility>
 			<Reversion>
 				<Calibrate>false</Calibrate>
@@ -78,8 +78,8 @@
 			<Sigma>
 				<Calibrate>false</Calibrate>
 				<ParamType>Piecewise</ParamType>
-				<TimeGrid>2, 5.00274, 7.00274</TimeGrid>
-				<InitialValue>0.0818349, 0.0803846, 0.0988685, 0.0765006</InitialValue>
+				<TimeGrid>2, 5.0027397260273974, 7.0027397260273974</TimeGrid>
+				<InitialValue>0.0818349, 0.080384642340410123, 0.098868453477689563, 0.076500600996576226</InitialValue>
 			</Sigma>
 			<CalibrationOptions>
 				<Expiries>2Y, 5Y, 7Y, 10Y</Expiries>
@@ -143,8 +143,8 @@
 					<VolatilityType>Hagan</VolatilityType>
 					<Calibrate>false</Calibrate>
 					<ParamType>Piecewise</ParamType>
-					<TimeGrid>1, 4.00274, 6.00274, 9.00548</TimeGrid>
-					<InitialValue>0.0434442, 0.0240055, 0.293271, 0.669278, 6.7163</InitialValue>
+					<TimeGrid>1, 4.0027397260273974, 6.0027397260273974, 9.0054794520547947</TimeGrid>
+					<InitialValue>0.0434442, 0.024005533558046778, 0.29327070188090393, 0.66927792694189803, 6.7162963250256889</InitialValue>
 				</Volatility>
 				<Reversion>
 					<ReversionType>HullWhite</ReversionType>
@@ -163,8 +163,8 @@
 					<VolatilityType>Hagan</VolatilityType>
 					<Calibrate>false</Calibrate>
 					<ParamType>Piecewise</ParamType>
-					<TimeGrid>2, 5.00274, 7.00274, 10.0055</TimeGrid>
-					<InitialValue>0.101043, 0.0963918, 0.0879493, 0.0765768, 0.0245114</InitialValue>
+					<TimeGrid>2, 5.0027397260273974, 7.0027397260273974, 10.005479452054795</TimeGrid>
+					<InitialValue>0.101043, 0.096391836254144589, 0.087949337297594035, 0.076576772836710549, 0.024511440963543095</InitialValue>
 				</Volatility>
 			</Index>
 			<CalibrationConfiguration>
@@ -236,8 +236,8 @@
 					<VolatilityType>Hagan</VolatilityType>
 					<Calibrate>false</Calibrate>
 					<ParamType>Piecewise</ParamType>
-					<TimeGrid>1, 4.00274, 6.00274, 9.00548</TimeGrid>
-					<InitialValue>0.0816145, 0.0165542, 0.0419569, 0.108157, 5.15809</InitialValue>
+					<TimeGrid>1, 4.0027397260273974, 6.0027397260273974, 9.0054794520547947</TimeGrid>
+					<InitialValue>0.0816145, 0.01655421383659484, 0.041956949549659235, 0.10815702164708405, 5.158089226046032</InitialValue>
 				</Volatility>
 				<Reversion>
 					<ReversionType>HullWhite</ReversionType>
@@ -256,8 +256,8 @@
 					<VolatilityType>Hagan</VolatilityType>
 					<Calibrate>false</Calibrate>
 					<ParamType>Piecewise</ParamType>
-					<TimeGrid>2, 5.00274, 7.00274, 10.0055</TimeGrid>
-					<InitialValue>0.0915488, 0.0846963, 0.0878793, 0.0811645, 0.0710664</InitialValue>
+					<TimeGrid>2, 5.0027397260273974, 7.0027397260273974, 10.005479452054795</TimeGrid>
+					<InitialValue>0.0915488, 0.084696285529505713, 0.087879258363345467, 0.081164464269468786, 0.071066405377237421</InitialValue>
 				</Volatility>
 			</Index>
 			<CalibrationConfiguration>
