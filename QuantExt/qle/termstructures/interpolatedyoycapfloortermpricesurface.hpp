@@ -171,7 +171,7 @@ template <class I2D, class I1D> void InterpolatedYoYCapFloorTermPriceSurface<I2D
             QuantLib::ext::dynamic_pointer_cast<YoYInflationIndexWrapper>(yoyIndex_);
         QuantLib::ext::shared_ptr<ZeroInflationTermStructure> zeroTs =
             yiiWrapper->zeroIndex()->zeroInflationTermStructure().currentLink();
-        Real fairSwap1Y = zeroTs->zeroRate(yoyOptionDateFromTenor(Period(1, Years)));
+        Real fairSwap1Y = zeroTs->zeroRate(yoyOptionDateFromTenor(Period(1, Years)), zeroTs->observationLag());
 
         Real k = Null<Real>();
         if (fairSwap1Y < overlappingStrikes.back()) {
