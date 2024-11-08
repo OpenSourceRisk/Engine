@@ -62,6 +62,7 @@ public:
     MarketDataLoader();
     MarketDataLoader(vector<string> data);
     vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override;
+    std::set<QuantLib::Date> asofDates() const override { return {}; }
     set<Fixing> loadFixings() const override { return fixings_; }
     set<QuantExt::Dividend> loadDividends() const override { return dividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}

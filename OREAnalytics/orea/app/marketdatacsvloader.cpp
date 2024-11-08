@@ -37,8 +37,9 @@ void MarketDataCsvLoaderImpl::loadCorporateActionData(QuantLib::ext::shared_ptr<
 
 void MarketDataCsvLoaderImpl::retrieveMarketData(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                                  const map<Date, set<string>>& quotes, const Date& requestDate) {
-    for (const auto& md : csvLoader_->loadQuotes(inputs_->asof()))
-        loader->add(md);
+    for (auto const& d : csvLoader_->asofDates())
+        for (const auto& md : csvLoader_->loadQuotes(d))
+            loader->add(md);
 }
 
 void MarketDataCsvLoaderImpl::retrieveFixings(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,

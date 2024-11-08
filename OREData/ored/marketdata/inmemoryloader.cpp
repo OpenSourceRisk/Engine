@@ -231,6 +231,13 @@ void load(InMemoryLoader& loader, const vector<string>& data, bool isMarket, boo
     LOG("MemoryLoader completed");
 }
 
+std::set<QuantLib::Date> InMemoryLoader::asofDates() const {
+    std::set<QuantLib::Date> result;
+    for (auto const& [d, _] : data_)
+        result.insert(d);
+    return result;
+}
+
 void loadDataFromBuffers(InMemoryLoader& loader, const std::vector<std::string>& marketData,
                          const std::vector<std::string>& fixingData, bool implyTodaysFixings) {
     load(loader, marketData, true, implyTodaysFixings);

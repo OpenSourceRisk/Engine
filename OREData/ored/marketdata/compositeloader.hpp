@@ -48,6 +48,15 @@ public:
         return data;
     }
 
+    std::set<QuantLib::Date> asofDates() const override {
+        std::set<QuantLib::Date> result;
+        auto tmp1 = a_->asofDates();
+        auto tmp2 = a_->asofDates();
+        result.insert(tmp1.begin(), tmp1.end());
+        result.insert(tmp2.begin(), tmp2.end());
+        return result;
+    }
+
     QuantLib::ext::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date& d) const override {
         if (a_ && a_->has(name, d))
             return a_->get(name, d);

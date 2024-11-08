@@ -39,6 +39,7 @@ public:
     std::set<Fixing> loadFixings() const override { return fixings_; }
     std::set<QuantExt::Dividend> loadDividends() const override { return dividends_; }
     bool hasQuotes(const QuantLib::Date& d) const override;
+    std::set<QuantLib::Date> asofDates() const override;
 
     // add a market datum
     virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value);
