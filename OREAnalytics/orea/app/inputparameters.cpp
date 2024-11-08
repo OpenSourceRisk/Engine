@@ -734,6 +734,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     pnlExplainOutputFileName_ = params->get("pnlExplain", "outputFileName", false);
     riskFactorsOutputFileName_ = params->get("portfolioDetails", "riskFactorFileName", false);
     marketObjectsOutputFileName_ = params->get("portfolioDetails", "marketObjectFileName", false);
+    calibrationOutputFileName_ = params->get("calibration", "outputFile", false);
 
     zeroToParShiftFile_ = params->get("zeroToParShift", "parShiftsFile", false);
     xvaSensiJacobiFileName_ = params->get("xvaSensitivity", "jacobiOutputFile", false);    
@@ -766,6 +767,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;
     fileNameMap_["risk_factors"] = riskFactorsOutputFileName_;
     fileNameMap_["market_objects"] = marketObjectsOutputFileName_;
+    fileNameMap_["calibration"] = calibrationOutputFileName_;
     fileNameMap_["xva_sensi_jacobi"] = jacobiFileName_;
     fileNameMap_["xva_sensi_jacobi_inverse"] = jacobiInverseFileName_;
     fileNameMap_["parshifts"] = zeroToParShiftFile_;

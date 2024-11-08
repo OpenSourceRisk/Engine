@@ -56,7 +56,9 @@ public:
 
     //@{
     void setTimes(std::vector<Real> times);
+    void setTimes(const Array& times);
     void setValues(std::vector<Real> values);
+    void setValues(const Array& values);
     void mult(const Real f);
     void setCalibrate(const bool b);
    //@}

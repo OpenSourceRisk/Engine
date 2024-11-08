@@ -54,6 +54,14 @@ void ModelParameter::setTimes(std::vector<Real> times) { times_ = std::move(time
 
 void ModelParameter::setValues(std::vector<Real> values) { values_ = std::move(values); }
 
+void ModelParameter::setTimes(const Array& times) {
+    times_ = std::vector<Real>(times.begin(), times.end());
+}
+  
+void ModelParameter::setValues(const Array& values) {
+    values_ = std::vector<Real>(values.begin(), values.end());
+}
+
 void ModelParameter::mult(const Real f) {
     std::transform(values_.begin(), values_.end(), values_.begin(), [&f](const Real v) { return f * v; });
 }

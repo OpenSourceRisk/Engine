@@ -90,6 +90,9 @@ public:
     //! return the model
     Handle<QuantExt::CrossAssetModel> model() const;
 
+    //! return the model data
+    const QuantLib::ext::shared_ptr<CrossAssetModelData>& modelData() { return config_; }
+
     //! \name Inspectors
     //@{
     const std::vector<Real>& swaptionCalibrationErrors();
@@ -114,7 +117,7 @@ private:
     void copyModelParams(const CrossAssetModel::AssetType t0, const Size param0, const Size index0, const Size i0,
                          const CrossAssetModel::AssetType t1, const Size param1, const Size index1, const Size i1,
                          const Real mult) const;
-
+  
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> swaptionBaskets_;
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> fxOptionBaskets_;
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> eqOptionBaskets_;
@@ -144,7 +147,6 @@ private:
     bool continueOnError_;
     std::string referenceCalibrationGrid_;
     std::string id_;
-
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     QuantLib::ext::shared_ptr<OptimizationMethod> optimizationMethod_;

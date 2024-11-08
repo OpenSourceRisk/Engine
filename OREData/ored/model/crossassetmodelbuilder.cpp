@@ -205,7 +205,7 @@ void CrossAssetModelBuilder::copyModelParams(const CrossAssetModel::AssetType t0
         }
     }
 }
-
+  
 void CrossAssetModelBuilder::buildModel() const {
 
     LOG("Start building CrossAssetModel");
@@ -281,11 +281,10 @@ void CrossAssetModelBuilder::buildModel() const {
     for (Size i = 0; i < config_->irConfigs().size(); i++) {
         auto irConfig = config_->irConfigs()[i];
         DLOG("IR Parametrization " << i << " qualifier " << irConfig->qualifier());
-
         if (auto ir = QuantLib::ext::dynamic_pointer_cast<IrLgmData>(irConfig)) {
             if (!buildersAreInitialized) {
-                subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<LgmBuilder>(
-                    market_.value(), ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
+		subBuilders_[CrossAssetModel::AssetType::IR][i] = QuantLib::ext::make_shared<LgmBuilder>(
+	             market_.value(), ir, configurationLgmCalibration_, config_->bootstrapTolerance(), continueOnError_,
                     referenceCalibrationGrid_, false, id_);
             }
             auto builder = QuantLib::ext::dynamic_pointer_cast<LgmBuilder>(subBuilders_[CrossAssetModel::AssetType::IR][i]);
@@ -357,7 +356,7 @@ void CrossAssetModelBuilder::buildModel() const {
                                                                  << " does not match domestic ccy " << domesticCcy);
 
         if (!buildersAreInitialized) {
-            subBuilders_[CrossAssetModel::AssetType::FX][i] =
+	    subBuilders_[CrossAssetModel::AssetType::FX][i] =
                 QuantLib::ext::make_shared<FxBsBuilder>(market_.value(), fx, configurationFxCalibration_, referenceCalibrationGrid_);
         }
         auto builder = QuantLib::ext::dynamic_pointer_cast<FxBsBuilder>(subBuilders_[CrossAssetModel::AssetType::FX][i]);

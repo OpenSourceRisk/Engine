@@ -1536,6 +1536,24 @@ void OREAppInputParameters::loadParameters() {
         }
     }
 
+    /*************
+     * Calibration
+     *************/
+    
+    tmp = params_->get("calibration", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("CALIBRATION");
+    }
+
+    tmp = params_->get("calibration", "configFile", false);
+    if (tmp != "") {
+        string configFile = (inputPath / tmp).generic_string();
+	LOG("Loading model config from file" << configFile);
+	setCrossAssetModelDataFromFile(configFile);
+    } else {
+        ALOG("Simulation model data not loaded");
+    }
+    
     /************
      * Simulation
      ************/
@@ -1715,7 +1733,7 @@ void OREAppInputParameters::loadParameters() {
 	if (!tmp.empty())
 	    setXvaCgBumpSensis(parseBool(tmp));
     }
-
+    
     /**********************
      * XVA specifically
      **********************/

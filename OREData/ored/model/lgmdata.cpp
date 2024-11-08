@@ -70,9 +70,9 @@ LgmData::ReversionType parseReversionType(const string& s) {
 
 std::ostream& operator<<(std::ostream& oss, const LgmData::ReversionType& type) {
     if (type == LgmData::ReversionType::HullWhite)
-        oss << "HULLWHITE";
+        oss << "HullWhite";
     else if (type == LgmData::ReversionType::Hagan)
-        oss << "HAGAN";
+        oss << "Hagan";
     else
         QL_FAIL("Reversion type not covered");
     return oss;
@@ -89,9 +89,9 @@ LgmData::VolatilityType parseVolatilityType(const string& s) {
 
 std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type) {
     if (type == LgmData::VolatilityType::HullWhite)
-        oss << "HULLWHITE";
+        oss << "HullWhite";
     else if (type == LgmData::VolatilityType::Hagan)
-        oss << "HAGAN";
+        oss << "Hagan";
     else
         QL_FAIL("Volatility type not covered");
     return oss;
@@ -110,11 +110,11 @@ QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping parseFloatSpreadMapping(
 
 std::ostream& operator<<(std::ostream& oss, const QuantExt::AnalyticLgmSwaptionEngine::FloatSpreadMapping& m) {
     if (m == QuantExt::AnalyticLgmSwaptionEngine::nextCoupon)
-        oss << "NEXTCOUPON";
+        oss << "NextCoupon";
     else if (m == QuantExt::AnalyticLgmSwaptionEngine::proRata)
-        oss << "PRORATA";
+        oss << "ProRata";
     else if (m == QuantExt::AnalyticLgmSwaptionEngine::simple)
-        oss << "SIMPLE";
+        oss << "Simple";
     else
         QL_FAIL("FloatSpreadMapping type not covered");
     return oss;
