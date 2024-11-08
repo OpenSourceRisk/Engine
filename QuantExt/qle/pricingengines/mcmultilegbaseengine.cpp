@@ -1532,14 +1532,11 @@ template <class Archive> void McMultiLegBaseEngine::RegressionModel::serialize(A
 
     // if deserialising, recreate the basisFns_ by passing the individual parameters to the function
     if (Archive::is_loading::value) {
-        basisFns_ = multiPathBasisSystem(basisDim_, basisOrder_, basisType_, basisSystemSizeBound_);
+        if (basisDim_ > 0)
+            basisFns_ = multiPathBasisSystem(basisDim_, basisOrder_, basisType_, basisSystemSizeBound_);
     }
 }
 
-//template void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(boost::archive::binary_oarchive& ar,
-//                                                                         const unsigned int version);
-//template void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(boost::archive::binary_iarchive& ar,
-//                                                                         const unsigned int version);
 template void QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(boost::archive::binary_iarchive& ar,
                                                                          const unsigned int version);
 template void QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(boost::archive::binary_oarchive& ar,
@@ -1551,5 +1548,5 @@ template void QuantExt::McMultiLegBaseEngine::RegressionModel::serialize(boost::
 
 } // namespace QuantExt
 
-BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator)
-BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::McMultiLegBaseEngine::RegressionModel)
+BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator);
+BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::McMultiLegBaseEngine::RegressionModel);

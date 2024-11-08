@@ -61,6 +61,6 @@ public:
 template void AmcCalculator::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
 template void AmcCalculator::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(AmcCalculator)
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(AmcCalculator);
 
 } // namespace QuantExt

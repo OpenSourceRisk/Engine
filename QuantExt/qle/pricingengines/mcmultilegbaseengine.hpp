@@ -175,13 +175,14 @@ public:
         bool isTrained_ = false;
         std::set<std::pair<Real, Size>> regressorTimesModelIndices_;
         Matrix coordinateTransform_;
-        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
+        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_ =
+            std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>{};
         Array regressionCoeffs_;
 
-        Size basisDim_;
-        Size basisOrder_;
-        LsmBasisSystem::PolynomialType basisType_;
-        Size basisSystemSizeBound_;
+        Size basisDim_ = 0;
+        Size basisOrder_ = 0;
+        LsmBasisSystem::PolynomialType basisType_ = LsmBasisSystem::PolynomialType::Monomial;
+        Size basisSystemSizeBound_ = Null<Size>();
 
         friend class boost::serialization::access;
         template <class Archive> void serialize(Archive& ar, const unsigned int version);
@@ -275,10 +276,5 @@ public:
     mutable std::vector<LgmVectorised> lgmVectorised_;
 };
 
-// FIXME: the below generates a 'guid_defined is not a template' error
-// the IDE suggests adding a hint.cpp file, the official documentation requires that the macros be included in "the same source module that includes any of the archive class headers
-// however that did not solve the issue.
-//BOOST_CLASS_EXPORT_KEY(QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator)
-//BOOST_CLASS_EXPORT_KEY(QuantExt::McMultiLegBaseEngine::RegressionModel)
 
 } // namespace QuantExt

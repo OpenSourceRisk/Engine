@@ -389,6 +389,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
 
     for (auto const& trade : portfolio->trades()) {
         QuantLib::ext::shared_ptr<AmcCalculator> amcCalc;
+        string filename = "amcTraining_" + trade.first;
         try {
             auto inst = trade.second->instrument()->qlInstrument(true);
             QL_REQUIRE(inst != nullptr,
@@ -407,12 +408,40 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                     multipliers.push_back(inst->result<Real>(ss.str()));
                 }
                 std::vector<QuantLib::ext::shared_ptr<AmcCalculator>> amcCalcs;
-                for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
-                    std::stringstream ss;
-                    ss << cmpIdx + 1 << "_amcCalculator";
-                    //TODO: REPLACE THESE LINES
-                    if (addResults.find(ss.str()) != addResults.end()) {
-                        amcCalcs.push_back(inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str()));
+                if (amcIndividualTrainingInput) {
+                    try {
+                        LOG("Deserialising AMC calculator from file for composite trade " << trade.first);
+                        for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
+                            std::ifstream is(filename, std::ios::binary);
+                            boost::archive::binary_iarchive ia(is, boost::archive::no_header);
+                            auto tmp =
+                                QuantLib::ext::make_shared<McMultiLegBaseEngine::MultiLegBaseAmcCalculator>();
+                            ia >> tmp;
+                            amcCalcs.push_back(tmp);
+                        }
+
+                    } catch (const std::exception& e) {
+                        StructuredTradeErrorMessage(trade.second, "Error extracting AMC Calculator from file", e.what())
+                            .log();
+                        LOG("Calculating AMC Calculator manually.");
+                    }
+                } else {
+                    for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
+                        std::stringstream ss;
+                        ss << cmpIdx + 1 << "_amcCalculator";
+                        if (addResults.find(ss.str()) != addResults.end()) {
+                            amcCalcs.push_back(inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str()));
+                            if (amcIndividualTrainingOutput) {
+                                LOG("Serialising AMC calculator for trade " << cmpIdx+1 << " of composite trade " << trade.first);
+                                std::ofstream os(filename, std::ios::binary);
+                                boost::archive::binary_oarchive oa(os, boost::archive::no_header);
+                                auto tmp = inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str());
+                                auto amcCalc = QuantLib::ext::dynamic_pointer_cast<
+                                    McMultiLegBaseEngine::MultiLegBaseAmcCalculator>(tmp);
+                                oa << amcCalc;
+                                os.close();
+                            }
+                        }
                     }
                 }
                 QL_REQUIRE(amcCalcs.size() == multipliers.size(),
@@ -424,7 +453,6 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
             }
 
             // handle non-composite trades
-            string filename = "amcTraining_" + trade.first;
             if (amcIndividualTrainingInput) {
                 try {
                     LOG("Deserialising AMC calculator from file for trade " << trade.first);
@@ -433,6 +461,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                     auto tmp = QuantLib::ext::dynamic_pointer_cast<McMultiLegBaseEngine::MultiLegBaseAmcCalculator>(amcCalc);
                     
                     ia >> tmp;
+                    amcCalc = tmp;
                     is.close();
                 } catch (const std::exception& e) {
                     StructuredTradeErrorMessage(trade.second, "Error extracting AMC calculator from file", e.what()).log();
