@@ -81,8 +81,6 @@ public:
         const bool continueOnError = false,
         //! reference calibration grid
         const std::string& referenceCalibrationGrid_ = "",
-        //! salvaging algorithm to apply to correlation matrix
-        const SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
         //! id of the builder
         const std::string& id = "unknown");
 
@@ -145,7 +143,6 @@ private:
     bool dontCalibrate_;
     bool continueOnError_;
     std::string referenceCalibrationGrid_;
-    SalvagingAlgorithm::Type salvaging_;
     std::string id_;
 
 
