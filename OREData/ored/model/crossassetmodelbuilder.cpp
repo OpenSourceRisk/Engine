@@ -81,14 +81,14 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
     const std::string& configurationFxCalibration, const std::string& configurationEqCalibration,
     const std::string& configurationInfCalibration, const std::string& configurationCrCalibration,
     const std::string& configurationFinalModel, const bool dontCalibrate, const bool continueOnError,
-    const std::string& referenceCalibrationGrid, const SalvagingAlgorithm::Type salvaging, const std::string& id)
-: market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
+    const std::string& referenceCalibrationGrid, const std::string& id)
+    : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
       configurationCrCalibration_(configurationCrCalibration),
       configurationComCalibration_(Market::defaultConfiguration), configurationFinalModel_(configurationFinalModel),
       dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
-      referenceCalibrationGrid_(referenceCalibrationGrid), salvaging_(salvaging), id_(id),
+      referenceCalibrationGrid_(referenceCalibrationGrid), id_(id),
       optimizationMethod_(QuantLib::ext::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
     buildModel();
@@ -557,8 +557,8 @@ void CrossAssetModelBuilder::buildModel() const {
      * Build the cross asset model
      */
 
-    model_.linkTo(QuantLib::ext::make_shared<QuantExt::CrossAssetModel>(parametrizations, corrMatrix, salvaging_, measure,
-                                                                config_->discretization()));
+    model_.linkTo(QuantLib::ext::make_shared<QuantExt::CrossAssetModel>(
+        parametrizations, corrMatrix, config_->getSalvagingAlgorithm(), measure, config_->discretization()));
 
     /* Store initial params to ensure identical start values when recalibrating a component.
        This is only used for fx, eq, inf, cr, com, for ir this is handled in LgmBuilder directly.

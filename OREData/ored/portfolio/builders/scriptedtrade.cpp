@@ -1702,12 +1702,11 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     auto discretization = useCg_ ? CrossAssetModel::Discretization::Euler : CrossAssetModel::Discretization::Exact;
     auto camBuilder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         market_,
-        QuantLib::ext::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs,
-                                                        crCirConfigs, comConfigs, 0, camCorrelations,
-                                                        bootstrapTolerance_, "LGM", discretization),
+        QuantLib::ext::make_shared<CrossAssetModelData>(
+            irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs, comConfigs, 0, camCorrelations,
+            bootstrapTolerance_, "LGM", discretization, salvagingAlgorithm_),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
-        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
-        salvagingAlgorithm_, id);
+        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_, id);
 
     // effective time steps per year: zero for exact evolution, otherwise the pricing engine parameter
     if (useCg_) {
@@ -1814,10 +1813,9 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
             std::vector<QuantLib::ext::shared_ptr<CrLgmData>>{}, std::vector<QuantLib::ext::shared_ptr<CrCirData>>{},
             std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>{}, 0,
             std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>{}, bootstrapTolerance_, "LGM",
-            CrossAssetModel::Discretization::Exact),
+            CrossAssetModel::Discretization::Exact, salvagingAlgorithm_),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
-        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
-        salvagingAlgorithm_, id);
+        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_, id);
 
     model_ = QuantLib::ext::make_shared<FdGaussianCam>(camBuilder->model(), modelCcys_.front(), modelCurves_.front(),
                                                modelIrIndices_, simulationDates_, modelSize_, timeStepsPerYear_,

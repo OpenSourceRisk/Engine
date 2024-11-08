@@ -142,7 +142,7 @@ void XvaEngineCG::buildCam() {
     camBuilder_ = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
 	simMarketObs_, crossAssetModelData_, marketConfigurationInCcy_, marketConfiguration_, marketConfiguration_,
         marketConfiguration_, marketConfiguration_, marketConfiguration_, false, continueOnCalibrationError_,
-        std::string(), SalvagingAlgorithm::Spectral, "xva engine cg - cam builder");
+        std::string(), "xva engine cg - cam builder");
 
     // Set up gaussian cam cg model
 

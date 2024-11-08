@@ -87,8 +87,7 @@ void XvaRunner::buildCamModel(const QuantLib::ext::shared_ptr<ore::data::Market>
     CrossAssetModelBuilder modelBuilder(market, crossAssetModelData_, Market::defaultConfiguration,
                                         Market::defaultConfiguration, Market::defaultConfiguration,
                                         Market::defaultConfiguration, Market::defaultConfiguration,
-                                        Market::defaultConfiguration, false, continueOnErr, "",
-                                        crossAssetModelData_->getSalvagingAlgorithm(), "xva cam building");
+                                        Market::defaultConfiguration, false, continueOnErr, "", "xva cam building");
     model_ = *modelBuilder.model();
 }
 
