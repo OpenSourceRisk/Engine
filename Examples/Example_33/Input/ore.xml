@@ -51,6 +51,11 @@
       <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
       <Parameter name="storeSurvivalProbabilities">Y</Parameter>
     </Analytic>
+    <Analytic type="calibration">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configFile">simulation.xml</Parameter>
+      <Parameter name="outputFile">calibration.csv</Parameter>
+    </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>

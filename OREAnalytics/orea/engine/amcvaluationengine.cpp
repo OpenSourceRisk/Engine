@@ -353,40 +353,40 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
     McEngineStats::instance().calc_timer.start();
     McEngineStats::instance().calc_timer.stop();
 
-    auto extractAmcCalculator =
-        [&amcCalculators, &tradeId, &tradeLabel, &tradeType, &effectiveMultiplier, &currencyIndex, &tradeFees, &model,
-         &outputCube](const std::pair<std::string, QuantLib::ext::shared_ptr<Trade>>& trade,
-                      QuantLib::ext::shared_ptr<AmcCalculator> amcCalc, Real multiplier, bool addFees,
-                      const std::optional<Size> ccyIndex = std::nullopt) {
-            LOG("AMCCalculator extracted for \"" << trade.first << "\"");
-            amcCalculators.push_back(amcCalc);
-            effectiveMultiplier.push_back(multiplier);
-            currencyIndex.push_back(ccyIndex ? *ccyIndex : model->ccyIndex(amcCalc->npvCurrency()));
-            if (auto id = outputCube->idsAndIndexes().find(trade.first); id != outputCube->idsAndIndexes().end()) {
-                tradeId.push_back(id->second);
-            } else {
-                QL_FAIL("AMCValuationEngine: trade id '" << trade.first
-                                                         << "' is not present in output cube - internal error.");
-            }
-            tradeLabel.push_back(trade.first);
-            tradeType.push_back(trade.second->tradeType());
-            tradeFees.push_back({});
-            if (addFees) {
-                for (Size i = 0; i < trade.second->instrument()->additionalInstruments().size(); ++i) {
-                    if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::Payment>(
-                            trade.second->instrument()->additionalInstruments()[i])) {
-                        tradeFees.back().push_back(std::make_tuple(
-                            model->ccyIndex(p->currency()),
-                            p->cashFlow()->amount() * trade.second->instrument()->additionalMultipliers()[i],
-                            p->cashFlow()->date()));
-                    } else {
-                        StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
-                                                    "only QuantExt::Payment is handled as additional instrument.")
-                            .log();
-                    }
+    auto extractAmcCalculator = [&amcCalculators, &tradeId, &tradeLabel, &tradeType, &effectiveMultiplier,
+                                 &currencyIndex, &tradeFees, &model,
+                                 &outputCube](const std::pair<std::string, QuantLib::ext::shared_ptr<Trade>>& trade,
+                                              QuantLib::ext::shared_ptr<AmcCalculator> amcCalc, Real multiplier,
+                                              bool addFees, const std::optional<Size> ccyIndex = std::nullopt) {
+        LOG("AMCCalculator extracted for \"" << trade.first << "\"");
+        amcCalculators.push_back(amcCalc);
+        effectiveMultiplier.push_back(multiplier);
+        currencyIndex.push_back(ccyIndex ? *ccyIndex : model->ccyIndex(amcCalc->npvCurrency()));
+        if (auto id = outputCube->idsAndIndexes().find(trade.first); id != outputCube->idsAndIndexes().end()) {
+            tradeId.push_back(id->second);
+        } else {
+            QL_FAIL("AMCValuationEngine: trade id '" << trade.first
+                                                     << "' is not present in output cube - internal error.");
+        }
+        tradeLabel.push_back(trade.first);
+        tradeType.push_back(trade.second->tradeType());
+        tradeFees.push_back({});
+        if (addFees) {
+            for (Size i = 0; i < trade.second->instrument()->additionalInstruments().size(); ++i) {
+                if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::Payment>(
+                        trade.second->instrument()->additionalInstruments()[i])) {
+                    tradeFees.back().push_back(std::make_tuple(
+                        model->ccyIndex(p->currency()),
+                        p->cashFlow()->amount() * trade.second->instrument()->additionalMultipliers()[i],
+                        p->cashFlow()->date()));
+                } else {
+                    StructuredTradeErrorMessage(trade.second, "Additional instrument is ignored in AMC simulation",
+                                                "only QuantExt::Payment is handled as additional instrument.")
+                        .log();
                 }
             }
-        };
+        }
+    };
 
     for (auto const& trade : portfolio->trades()) {
         QuantLib::ext::shared_ptr<AmcCalculator> amcCalc;

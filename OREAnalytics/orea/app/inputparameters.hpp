@@ -652,7 +652,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
     QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
-
+  
     /*****************
      * Getters for xva
      *****************/
@@ -1040,7 +1040,7 @@ protected:
     Size reportBufferSize_ = 0;
     optional<bool> exposureIncludeTodaysCashFlows_;
     bool exposureIncludeReferenceDateEvents_ = false;
-
+ 
     /**************
      * XVA analytic
      **************/
@@ -1109,6 +1109,7 @@ protected:
      ***************/
     std::string simmVersion_;
     QuantLib::ext::shared_ptr<ore::analytics::Crif> crif_;
+  
     QuantLib::ext::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
@@ -1235,6 +1236,7 @@ private:
     std::string marketObjectsOutputFileName_;
     std::string zeroToParShiftFile_;
     std::string scenarioNpvOutputFileName_;
+    std::string calibrationOutputFileName_;
     std::string xvaSensiJacobiFileName_;
     std::string xvaSensiJacobiInverseFileName_;
 };

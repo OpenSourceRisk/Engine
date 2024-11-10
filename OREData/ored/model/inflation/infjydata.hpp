@@ -73,6 +73,7 @@ public:
     //@{
     void setRealRateReversion(ReversionParameter p);
     void setRealRateVolatility(VolatilityParameter p);
+    void setIndexVolatility(VolatilityParameter p);
     //@}
 
     //! \name Serialisation

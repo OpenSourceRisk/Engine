@@ -245,7 +245,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
     alwaysForwardNotifications();
 
     swaptionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
-
+    
     if (requiresCalibration_) {
         buildSwaptionBasket();
     }
@@ -254,7 +254,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
     Array hTimes(data_->hTimes().begin(), data_->hTimes().end());
     Array alpha(data_->aValues().begin(), data_->aValues().end());
     Array h(data_->hValues().begin(), data_->hValues().end());
-
+    
     if (data_->aParamType() == ParamType::Constant) {
         QL_REQUIRE(data_->aTimes().size() == 0,
                    "LgmBuilder: empty volatility time grid expected for constant parameter type");

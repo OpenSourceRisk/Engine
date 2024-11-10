@@ -40,17 +40,9 @@ InfDkData::InfDkData(CalibrationType calibrationType,
       volatility_(volatility),
       reversionTransformation_(reversionTransformation) {}
 
-const ReversionParameter& InfDkData::reversion() const {
-    return reversion_;
-}
+void InfDkData::setReversion(ReversionParameter p) { reversion_ = std::move(p); }
 
-const VolatilityParameter& InfDkData::volatility() const {
-    return volatility_;
-}
-
-const LgmReversionTransformation& InfDkData::reversionTransformation() const {
-    return reversionTransformation_;
-}
+void InfDkData::setVolatility(VolatilityParameter p) { volatility_ = std::move(p); }
 
 void InfDkData::fromXML(XMLNode* node) {
     

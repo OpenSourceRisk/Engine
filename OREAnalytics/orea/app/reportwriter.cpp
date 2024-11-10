@@ -2391,6 +2391,12 @@ void ReportWriter::writeXvaExplainSummary(ore::data::Report& report, const ore::
         ALOG("Error during xva explain report generation, got " << e.what());
     }
 }
+  
+void ReportWriter::writeXmlReport(ore::data::Report& report, std::string header, std::string xml) {
+    report.addColumn(header, string());
+    report.next().add(xml);
+    report.end();
+}
 
 } // namespace analytics
 } // namespace ore

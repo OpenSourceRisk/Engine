@@ -225,6 +225,8 @@ virtual void writeXvaSensitivityReport(
     virtual void writeXvaExplainReport(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData);
     virtual void writeXvaExplainSummary(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData);
 
+    void writeXmlReport(ore::data::Report& report, std::string header, std::string xmlString);
+
 protected:
     std::string nullString_;
     void addMarketDatum(ore::data::Report& report, const ore::data::MarketDatum& md,
