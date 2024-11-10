@@ -87,7 +87,7 @@ XvaEngineCG::XvaEngineCG(const Mode mode, const Size nThreads, const Date& asof,
                          const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
                          const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
                          const QuantLib::ext::shared_ptr<ore::analytics::CrossAssetModelData>& crossAssetModelData,
-			 const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
+                         const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& scenarioGeneratorData,
                          const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
                          const string& marketConfiguration, const string& marketConfigurationInCcy,
                          const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
@@ -140,7 +140,7 @@ void XvaEngineCG::buildCam() {
 
     // note: sim market has one config only, no in-ccy config to calibrate IR components
     camBuilder_ = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
-	simMarketObs_, crossAssetModelData_, marketConfigurationInCcy_, marketConfiguration_, marketConfiguration_,
+        simMarketObs_, crossAssetModelData_, marketConfigurationInCcy_, marketConfiguration_, marketConfiguration_,
         marketConfiguration_, marketConfiguration_, marketConfiguration_, false, continueOnCalibrationError_,
         std::string(), "xva engine cg - cam builder");
 

@@ -26,41 +26,24 @@ using std::vector;
 namespace ore {
 namespace data {
 
-ModelParameter::ModelParameter()
-    : calibrate_(false), type_(ParamType::Constant) {}
+ModelParameter::ModelParameter() : calibrate_(false), type_(ParamType::Constant) {}
 
 ModelParameter::ModelParameter(bool calibrate, ParamType type, vector<Time> times, vector<Real> values)
     : calibrate_(calibrate), type_(type), times_(std::move(times)), values_(std::move(values)) {
     check();
 }
 
-bool ModelParameter::calibrate() const {
-    return calibrate_;
-}
+bool ModelParameter::calibrate() const { return calibrate_; }
 
-ParamType ModelParameter::type() const {
-    return type_;
-}
+ParamType ModelParameter::type() const { return type_; }
 
-const vector<Time>& ModelParameter::times() const {
-    return times_;
-}
+const vector<Time>& ModelParameter::times() const { return times_; }
 
-const vector<Real>& ModelParameter::values() const {
-    return values_;
-}
+const vector<Real>& ModelParameter::values() const { return values_; }
 
 void ModelParameter::setTimes(std::vector<Real> times) { times_ = std::move(times); }
 
 void ModelParameter::setValues(std::vector<Real> values) { values_ = std::move(values); }
-
-void ModelParameter::setTimes(const Array& times) {
-    times_ = std::vector<Real>(times.begin(), times.end());
-}
-  
-void ModelParameter::setValues(const Array& values) {
-    values_ = std::vector<Real>(values.begin(), values.end());
-}
 
 void ModelParameter::mult(const Real f) {
     std::transform(values_.begin(), values_.end(), values_.begin(), [&f](const Real v) { return f * v; });
@@ -90,14 +73,14 @@ void ModelParameter::check() const {
         QL_REQUIRE(values_.size() == 1, "Parameter type is Constant so expecting a single InitialValue.");
         QL_REQUIRE(times_.empty(), "Parameter type is Constant so expecting an empty time vector.");
     } else if (type_ == ParamType::Piecewise) {
-        QL_REQUIRE(values_.size() == times_.size() + 1, "Parameter type is Piecewise so expecting the size of the " <<
-            "InitialValue vector (" << values_.size() << ") to be one greater than size of time vector (" <<
-            times_.size() << ").");
+        QL_REQUIRE(values_.size() == times_.size() + 1, "Parameter type is Piecewise so expecting the size of the "
+                                                            << "InitialValue vector (" << values_.size()
+                                                            << ") to be one greater than size of time vector ("
+                                                            << times_.size() << ").");
     }
 }
 
-VolatilityParameter::VolatilityParameter()
-    : volatilityType_(LgmData::VolatilityType::Hagan) {}
+VolatilityParameter::VolatilityParameter() : volatilityType_(LgmData::VolatilityType::Hagan) {}
 
 VolatilityParameter::VolatilityParameter(LgmData::VolatilityType volatilityType, bool calibrate, ParamType type,
                                          vector<Time> times, vector<Real> values)
@@ -112,9 +95,7 @@ VolatilityParameter::VolatilityParameter(bool calibrate, ParamType type, vector<
 VolatilityParameter::VolatilityParameter(bool calibrate, QuantLib::Real value)
     : ModelParameter(calibrate, ParamType::Constant, {}, {value}) {}
 
-const boost::optional<LgmData::VolatilityType>& VolatilityParameter::volatilityType() const {
-    return volatilityType_;
-}
+const boost::optional<LgmData::VolatilityType>& VolatilityParameter::volatilityType() const { return volatilityType_; }
 
 void VolatilityParameter::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Volatility");
@@ -132,22 +113,16 @@ XMLNode* VolatilityParameter::toXML(XMLDocument& doc) const {
     return node;
 }
 
-ReversionParameter::ReversionParameter()
-    : reversionType_(LgmData::ReversionType::HullWhite) {}
+ReversionParameter::ReversionParameter() : reversionType_(LgmData::ReversionType::HullWhite) {}
 
 ReversionParameter::ReversionParameter(LgmData::ReversionType reversionType, bool calibrate, ParamType type,
                                        vector<Time> times, vector<Real> values)
     : ModelParameter(calibrate, type, times, values), reversionType_(reversionType) {}
 
-ReversionParameter::ReversionParameter(LgmData::ReversionType reversionType,
-    bool calibrate,
-    Real value)
-    : ModelParameter(calibrate, ParamType::Constant, {}, { value }),
-      reversionType_(reversionType) {}
+ReversionParameter::ReversionParameter(LgmData::ReversionType reversionType, bool calibrate, Real value)
+    : ModelParameter(calibrate, ParamType::Constant, {}, {value}), reversionType_(reversionType) {}
 
-LgmData::ReversionType ReversionParameter::reversionType() const {
-    return reversionType_;
-}
+LgmData::ReversionType ReversionParameter::reversionType() const { return reversionType_; }
 
 void ReversionParameter::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Reversion");
@@ -162,5 +137,5 @@ XMLNode* ReversionParameter::toXML(XMLDocument& doc) const {
     return node;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

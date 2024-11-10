@@ -36,8 +36,8 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/model/inflation/infdkdata.hpp>
-#include <ored/model/inflation/infjydata.hpp>
 #include <ored/model/inflation/infjybuilder.hpp>
+#include <ored/model/inflation/infjydata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 namespace ore {
@@ -91,7 +91,7 @@ public:
     Handle<QuantExt::CrossAssetModel> model() const;
 
     //! return the model data
-    const QuantLib::ext::shared_ptr<CrossAssetModelData>& modelData() { return config_; }
+    const QuantLib::ext::shared_ptr<CrossAssetModelData>& modelData() const { return config_; }
 
     //! \name Inspectors
     //@{
@@ -117,7 +117,7 @@ private:
     void copyModelParams(const CrossAssetModel::AssetType t0, const Size param0, const Size index0, const Size i0,
                          const CrossAssetModel::AssetType t1, const Size param1, const Size index1, const Size i1,
                          const Real mult) const;
-  
+
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> swaptionBaskets_;
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> fxOptionBaskets_;
     mutable std::vector<std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>> eqOptionBaskets_;
@@ -142,7 +142,8 @@ private:
     QuantLib::ObservableValue<QuantLib::ext::shared_ptr<ore::data::Market>> market_;
     QuantLib::ext::shared_ptr<CrossAssetModelData> config_;
     std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_,
-        configurationInfCalibration_, configurationCrCalibration_, configurationComCalibration_, configurationFinalModel_;
+        configurationInfCalibration_, configurationCrCalibration_, configurationComCalibration_,
+        configurationFinalModel_;
     bool dontCalibrate_;
     bool continueOnError_;
     std::string referenceCalibrationGrid_;
@@ -164,21 +165,21 @@ private:
     mutable RelinkableHandle<QuantExt::CrossAssetModel> model_;
 
     // Calibrate DK inflation model
-    void calibrateInflation(const InfDkData& data,
-        QuantLib::Size modelIdx,
+    void calibrateInflation(
+        const InfDkData& data, QuantLib::Size modelIdx,
         const std::vector<QuantLib::ext::shared_ptr<QuantLib::BlackCalibrationHelper>>& calibrationBasket,
         const QuantLib::ext::shared_ptr<QuantExt::InfDkParametrization>& inflationParam) const;
 
     // Calibrate JY inflation model
-    void calibrateInflation(const InfJyData& data,
-        QuantLib::Size modelIdx,
-        const QuantLib::ext::shared_ptr<InfJyBuilder>& jyBuilder,
-        const QuantLib::ext::shared_ptr<QuantExt::InfJyParameterization>& inflationParam) const;
+    void calibrateInflation(const InfJyData& data, QuantLib::Size modelIdx,
+                            const QuantLib::ext::shared_ptr<InfJyBuilder>& jyBuilder,
+                            const QuantLib::ext::shared_ptr<QuantExt::InfJyParameterization>& inflationParam) const;
 
     // Attach JY engines to helpers for JY calibration
-    void setJyPricingEngine(QuantLib::Size modelIdx,
-        const std::vector<QuantLib::ext::shared_ptr<QuantLib::CalibrationHelper>>& calibrationBasket,
-        bool indexIsInterpolated) const;
+    void
+    setJyPricingEngine(QuantLib::Size modelIdx,
+                       const std::vector<QuantLib::ext::shared_ptr<QuantLib::CalibrationHelper>>& calibrationBasket,
+                       bool indexIsInterpolated) const;
 };
 
 } // namespace data

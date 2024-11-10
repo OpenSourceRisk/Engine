@@ -31,8 +31,7 @@ class CalibrationAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "CALIBRATION";
 
-    explicit CalibrationAnalyticImpl(
-        const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    explicit CalibrationAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic::Impl(inputs) {
         setLabel(LABEL);
     }
@@ -54,8 +53,8 @@ static const std::set<std::string> calibrationAnalyticSubAnalytics{};
 class CalibrationAnalytic : public Analytic {
 public:
     explicit CalibrationAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<CalibrationAnalyticImpl>(inputs),
-                   calibrationAnalyticSubAnalytics, inputs, false, false, false, false) {}
+        : Analytic(std::make_unique<CalibrationAnalyticImpl>(inputs), calibrationAnalyticSubAnalytics, inputs, false,
+                   false, false, false) {}
 };
 
 } // namespace analytics
