@@ -23,6 +23,7 @@
 #include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/analytic.hpp>
 #include <orea/app/analytics/analyticfactory.hpp>
+#include <orea/app/analytics/calibrationanalytic.hpp>
 #include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/parscenarioanalytic.hpp>

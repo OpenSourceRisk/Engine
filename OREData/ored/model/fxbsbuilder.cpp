@@ -38,8 +38,9 @@ using namespace std;
 namespace ore {
 namespace data {
 
-FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market, const QuantLib::ext::shared_ptr<FxBsData>& data,
-			 const std::string& configuration, const std::string& referenceCalibrationGrid)
+FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& market,
+                         const QuantLib::ext::shared_ptr<FxBsData>& data, const std::string& configuration,
+                         const std::string& referenceCalibrationGrid)
     : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid) {
 
     optionActive_ = std::vector<bool>(data_->optionExpiries().size(), false);
@@ -78,17 +79,17 @@ FxBsBuilder::FxBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
         QL_REQUIRE(data->sigmaTimes().size() == 0, "empty sigma time grid expected");
         QL_REQUIRE(data->sigmaValues().size() == 1, "initial sigma grid size 1 expected");
         sigmaTimes = Array(0);
-	sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
+        sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
     } else {
         if (data->calibrateSigma() && data->calibrationType() == CalibrationType::Bootstrap) { // override
             QL_REQUIRE(optionExpiries_.size() > 0, "optionExpiries is empty");
-	    sigmaTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
-	    sigma = Array(sigmaTimes.size() + 1, data->sigmaValues()[0]);
-	} else {
+            sigmaTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
+            sigma = Array(sigmaTimes.size() + 1, data->sigmaValues()[0]);
+        } else {
             // use input time grid and input alpha array otherwise
-	    sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
-	    sigmaTimes = Array(data_->sigmaTimes().begin(), data_->sigmaTimes().end());
-	    QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "sigma grids do not match");
+            sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
+            sigmaTimes = Array(data_->sigmaTimes().begin(), data_->sigmaTimes().end());
+            QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "sigma grids do not match");
         }
     }
 
@@ -210,8 +211,9 @@ void FxBsBuilder::buildOptionBasket() const {
             optionActive_[j] = true;
             Real strikeValue = optionStrike(j);
             Handle<Quote> quote(QuantLib::ext::make_shared<SimpleQuote>(fxVol_->blackVol(expiryDate, strikeValue)));
-            QuantLib::ext::shared_ptr<QuantExt::FxEqOptionHelper> helper = QuantLib::ext::make_shared<QuantExt::FxEqOptionHelper>(
-                expiryDate, strikeValue, fxSpot_, quote, ytsDom_, ytsFor_);
+            QuantLib::ext::shared_ptr<QuantExt::FxEqOptionHelper> helper =
+                QuantLib::ext::make_shared<QuantExt::FxEqOptionHelper>(expiryDate, strikeValue, fxSpot_, quote, ytsDom_,
+                                                                       ytsFor_);
             optionBasket_.push_back(helper);
             helper->performCalculations();
             expiryTimes.push_back(ytsDom_->timeFromReference(helper->option()->exercise()->date(0)));
