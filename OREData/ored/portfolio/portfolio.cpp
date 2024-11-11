@@ -131,7 +131,10 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     auto trade = trades_.begin();
     Size initialSize = trades_.size();
     Size failedTrades = 0;
+    std::map<std::string, std::pair<std::size_t, boost::timer::nanosecond_type>> buildTimes;
     while (trade != trades_.end()) {
+        std::string tradeType = trade->second->tradeType();
+        boost::timer::cpu_timer timer;
         auto [ft, success] = buildTrade((*trade).second, engineFactory, context, ignoreTradeBuildFail(),
                                         buildFailedTrades(), emitStructuredError);
         if (success) {
@@ -143,9 +146,22 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         } else {
             trade = trades_.erase(trade);
         }
+        boost::timer::nanosecond_type t = timer.elapsed().wall;
+        if (auto f = buildTimes.find(tradeType); f != buildTimes.end()) {
+            f->second.first++;
+            f->second.second += t;
+        } else {
+            buildTimes[tradeType] = std::make_pair(1, t);
+        }
     }
     LOG("Built Portfolio. Initial size = " << initialSize << ", size now " << trades_.size() << ", built "
                                            << failedTrades << " failed trades, context is " + context);
+    LOG("Build stats:");
+    for (auto const& [type, timing] : buildTimes) {
+        LOG(std::left << std::setw(25) << type << std::right << std::setw(10) << timing.first << std::setprecision(3)
+                      << std::setw(15) << static_cast<double>(timing.second) / 1.0E6 << " ms (avg = "
+                      << static_cast<double>(timing.second) / static_cast<double>(timing.first) / 1.0E6 << ")");
+    }
 
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades, context is '" + context + "'");
 }
