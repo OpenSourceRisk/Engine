@@ -316,15 +316,15 @@ void GaussianCamCG::performCalculations() const {
                 std::size_t fwdj = addModelParameter("__lgm_" + currencies_[j] + "_fwd_" + dateStr, [cam, j, t] {
                     return cam->irlgm1f(j)->termStructure()->forwardRate(t, t, Continuous);
                 });
-                drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0)] =
+                drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)] =
                     cg_add(*g_, {cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), sigma), rhozx0j), fwd0,
                                  cg_negative(*g_, fwdj), cg_mult(*g_, cg_mult(*g_, cg_const(*g_, 0.5), sigma), sigma)});
                 if (cam->measure() == IrModel::Measure::BA) {
-                    drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, i, 0)] =
-                        cg_subtract(*g_, drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, i, 0)],
+                    drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)] =
+                        cg_subtract(*g_, drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)],
                                     cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), alpha), rhozz0j));
-                    drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0)] =
-                        cg_subtract(*g_, drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0)],
+                    drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)] =
+                        cg_subtract(*g_, drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)],
                                     cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), sigma), rhozx0j));
                 }
             }
@@ -377,7 +377,7 @@ void GaussianCamCG::performCalculations() const {
                                                  [cam, t, j] { return cam->irlgm1f(j)->zeta(t); });
             std::size_t zeta0 = addModelParameter("__lgm_" + currencies_[0] + "_zeta_" + dateStr,
                                                   [cam, t] { return cam->irlgm1f(0)->zeta(t); });
-            drift2[cam->pIdx(CrossAssetModel::AssetType::FX, i - 1, 0)] = cg_add(
+            drift2[cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)] = cg_add(
                 *g_, {cg_mult(*g_, state[cam->pIdx(CrossAssetModel::AssetType::IR, 0, 0)], Hprime0),
                       cg_mult(*g_, cg_mult(*g_, zeta0, Hprime0), H0),
                       cg_negative(*g_, cg_mult(*g_, state[cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)], Hprime)),

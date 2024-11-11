@@ -245,8 +245,8 @@ void XvaEngineCG::buildCgPartB() {
     for (auto const& [id, trade] : portfolio_->trades()) {
         auto engine = QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
             trade->instrument()->qlInstrument()->pricingEngine());
-        QL_REQUIRE(engine,
-                   "XvaEngineCG: expected to get AmcCgPricingEngine, trade '" << id << "' has a different engine.");
+        QL_REQUIRE(engine, "XvaEngineCG: expected to get AmcCgPricingEngine, trade '"
+                               << id << "' has a different or no engine attached.");
         g->startRedBlock();
         // trigger setupArguments
         if (!trade->instrument()->qlInstrument()->isCalculated())
