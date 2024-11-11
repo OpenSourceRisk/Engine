@@ -792,6 +792,7 @@ public:
             RandomVariable cashflowResult =
                 pay <= model_->referenceDate() ? boost::get<RandomVariable>(amount) : result;
             if (!log || paylog_ == nullptr) {
+                value.push(result);
                 TRACE("pay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " )", n);
             } else {
                 // cashflow logging
@@ -825,12 +826,11 @@ public:
                 }
                 paylog_->write(cashflowResult, filter.top(), obs, pay, pccy, static_cast<Size>(legno), cftype,
                                static_cast<Size>(slot));
+                value.push(result);
                 TRACE("logpay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " , " << legno
                                  << " , " << cftype << " , " << slot << ")",
                       n);
             }
-            // push result
-            value.push(result);
         }
     }
 
