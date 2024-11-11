@@ -620,7 +620,7 @@ void OREAppInputParameters::loadParameters() {
     LOG("load OREAppInputParameters called");
 
     // switch default for backward compatibility
-    setEntireMarket(false);
+    setEntireMarket(true);
     setAllFixings(true);
     setEomInflationFixings(false);
     setUseMarketDataFixings(false);

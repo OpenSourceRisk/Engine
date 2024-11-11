@@ -42,7 +42,7 @@ void MarketDataCsvLoaderImpl::retrieveMarketData(const QuantLib::ext::shared_ptr
         std::set<Wildcard> wildcards;
         std::set<std::string> names;
 
-        if (!inputs_->entireMarket() && filterOnRequestedData_) {
+        if (!inputs_->entireMarket()) {
             if (auto q = quotes.find(d); q != quotes.end()) {
                 for (auto const& tmp : q->second) {
                     Wildcard wc(tmp);
@@ -55,7 +55,7 @@ void MarketDataCsvLoaderImpl::retrieveMarketData(const QuantLib::ext::shared_ptr
         }
 
         for (const auto& md : csvLoader_->loadQuotes(d)) {
-            if (!inputs_->entireMarket() && filterOnRequestedData_) {
+            if (!inputs_->entireMarket()) {
                 if (names.find(md->name()) != names.end() ||
                     std::any_of(wildcards.begin(), wildcards.end(),
                                 [&md](const Wildcard& w) { return w.matches(md->name()); }))
@@ -73,7 +73,7 @@ void MarketDataCsvLoaderImpl::retrieveFixings(const QuantLib::ext::shared_ptr<or
     LOG("MarketDataCsvLoader::retrieveFixings called: all fixings ? " << (inputs_->allFixings() ? "Y" : "N"));
 
     for (const auto& f : csvLoader_->loadFixings()) {
-        if (!inputs_->allFixings() && filterOnRequestedData_) {
+        if (!inputs_->allFixings()) {
             if (auto n = fixings.find(f.name); n != fixings.end()) {
                 if (n->second.data().find(f.date) != n->second.data().end())
                     loader->addFixing(f.date, f.name, f.fixing);
