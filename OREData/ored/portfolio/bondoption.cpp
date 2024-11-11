@@ -63,6 +63,8 @@ void BondOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFac
     Calendar calendar = parseCalendar(bondData_.calendar());
     QuantLib::ext::shared_ptr<QuantExt::BondOption> bondoption;
 
+    additionalData_["underlyingSecurityId"] = bondData_.securityId();
+
     // FIXME this won't work for zero bonds (but their implementation is incomplete anyhow, see bond.cpp)
     underlying_ = QuantLib::ext::make_shared<ore::data::Bond>(Envelope(), bondData_);
 
