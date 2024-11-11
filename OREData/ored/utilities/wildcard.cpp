@@ -119,5 +119,19 @@ void partitionQuotes(const set<string>& quoteNames, set<string>& names, set<stri
     }
 }
 
+bool operator<(const Wildcard& w1, const Wildcard& w2) {
+    if (w1.pattern() != w2.pattern())
+        return w1.pattern() < w2.pattern();
+    else if (w1.usePrefixes() && !w2.usePrefixes())
+        return true;
+    else if (w1.aggressivePrefixes() && !w2.aggressivePrefixes())
+        return true;
+    return false;
+}
+
+bool Wildcard::usePrefixes() const { return usePrefixes_; }
+
+bool Wildcard::aggressivePrefixes() const { return aggressivePrefixes_; }
+
 } // namespace data
 } // namespace ore
