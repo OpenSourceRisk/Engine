@@ -60,6 +60,7 @@ void BalanceGuaranteedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>
     additionalData_["isdaBaseProduct"] = string("Exotic");
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");  
+    additionalData_["underlyingSecurityId"] = referenceSecurity_;
 
     QuantLib::Schedule schedule = makeSchedule(this->schedule());
 
