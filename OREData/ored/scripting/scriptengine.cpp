@@ -385,11 +385,13 @@ public:
             QL_REQUIRE(right.which() == ValueTypeWhich::Number, "invalid assignment: type "
                                                                     << valueTypeLabels.at(ref.first.which()) << " <- "
                                                                     << valueTypeLabels.at(right.which()));
-            // TODO, better have a RESETTIME() function?
+            Real t = QuantLib::ext::get<RandomVariable>(ref.first).time();
             QuantLib::ext::get<RandomVariable>(ref.first).setTime(Null<Real>());
             ref.first = conditionalResult(filter.top(), QuantLib::ext::get<RandomVariable>(right),
                                           QuantLib::ext::get<RandomVariable>(ref.first));
             QuantLib::ext::get<RandomVariable>(ref.first).updateDeterministic();
+            if (QuantLib::ext::get<RandomVariable>(ref.first).time() == Null<Real>())
+                QuantLib::ext::get<RandomVariable>(ref.first).setTime(t);
         }
         TRACE("assign( " << v->name << "[" << (ref.second + 1) << "] ) := " << ref.first << " ("
                          << valueTypeLabels.at(right.which()) << ") using filter " << filter.top(),
