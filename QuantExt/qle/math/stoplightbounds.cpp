@@ -16,9 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/math/stoplightbounds.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/math/matrixutilities/choleskydecomposition.hpp>
 #include <ql/math/randomnumbers/rngtraits.hpp>
+#include <qle/math/stoplightbounds.hpp>
 
 // fix for boost 1.64, see https://lists.boost.org/Archives/boost/2016/11/231756.php
 #if BOOST_VERSION >= 106400
@@ -33,6 +34,25 @@
 #include <boost/range/adaptor/transformed.hpp>
 
 #include <algorithm>
+
+#ifdef ORE_USE_EIGEN
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
+#endif
+#include <Eigen/Sparse>
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+#else
+#include <ql/math/matrixutilities/qrdecomposition.hpp>
+#endif
 
 using namespace QuantLib;
 using namespace boost::accumulators;
@@ -226,8 +246,8 @@ std::vector<Size> stopLightBounds(const std::vector<Real>& stopLightP, const Siz
         }
     } // for samples
     std::vector<Size> res;
-    for (auto const p : stopLightP) {
-        Size tmp = static_cast<Size>(quantile(acc, quantile_probability = p));
+    for (auto const s : stopLightP) {
+        Size tmp = static_cast<Size>(quantile(acc, quantile_probability = s));
         res.push_back(tmp > 0 ? tmp - 1 : 0);
     }
     return res;
@@ -244,8 +264,23 @@ std::vector<Size> stopLightBounds(const std::vector<Real>& stopLightP, const Siz
     }
     boost::math::binomial_distribution<Real> b((Real)observations, (Real)(1.0) - p);
     std::vector<Size> res;
-    for (auto const p : stopLightP) {
-        res.push_back(std::max(static_cast<Size>(boost::math::quantile(b, p)), (Size)(1)) - 1);
+    for (auto const s : stopLightP) {
+
+        QL_REQUIRE(s > 0.5, "stopLightBounds: stopLightP (" << s << ") must be greater than 0.5");
+
+        /* According to https://www.boost.org/doc/libs/1_86_0/libs/math/doc/html/math_toolkit/dist_ref/dists/binomial_dist.html
+
+           "the quantile function will by default return an integer result that has been rounded outwards. That is to
+           say lower quantiles (where the probability is less than 0.5) are rounded downward, and upper quantiles (where
+           the probability is greater than 0.5) are rounded upwards. This behaviour ensures that if an X% quantile is
+           requested, then at least the requested coverage will be present in the central region, and no more than the
+           requested coverage will be present in the tails."
+
+           This means that the quantile K we compute for p fulfills P( X <= K ) >= p.
+
+           Note: If the computed K is zero, the end result has to be zero too. */
+
+        res.push_back(std::max(static_cast<Size>(boost::math::quantile(b, s)), (Size)(1)) - 1);
     }
     if (exceptions != Null<Size>()) {
         *cumProb = boost::math::cdf(b, exceptions);
@@ -333,6 +368,61 @@ std::vector<std::pair<Size, std::vector<Size>>> generateStopLightBoundTable(cons
     }
 
     return result;
+}
+
+std::vector<double> decorrelateOverlappingPnls(const std::vector<double>& pnl, const Size numberOfDays) {
+
+    if (numberOfDays == 1)
+        return pnl;
+
+#ifdef ORE_USE_EIGEN
+
+    Eigen::SparseMatrix<double> correlation(pnl.size(), pnl.size());
+
+    for (Size i = 0; i < pnl.size(); ++i) {
+        for (Size j = i - std::min<Size>(i, numberOfDays - 1);
+             j <= i + std::min<Size>(numberOfDays - 1, pnl.size() - i - 1); ++j) {
+            correlation.insert(i, j) =
+                1.0 - static_cast<double>(std::abs((int)i - (int)j)) / static_cast<double>(numberOfDays);
+        }
+    }
+
+    Eigen::VectorXd b(pnl.size());
+
+    for (Size i = 0; i < pnl.size(); ++i)
+        b[i] = pnl[i];
+
+    Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> cholesky(correlation);
+    Eigen::SparseMatrix<double> L = cholesky.matrixL();
+    Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
+    solver.analyzePattern(L);
+    solver.factorize(L);
+    Eigen::VectorXd x = cholesky.permutationP().inverse() * solver.solve(cholesky.permutationP() * b);
+
+    std::vector<double> res(pnl.size());
+    for (Size i = 0; i < pnl.size(); ++i)
+        res[i] = x[i];
+
+    return res;
+
+#else
+
+    Matrix correlation(pnl.size(), pnl.size(), 0.0);
+
+    for (Size i = 0; i < pnl.size(); ++i) {
+        for (Size j = i - std::min<Size>(i, numberOfDays - 1);
+             j <= i + std::min<Size>(numberOfDays - 1, pnl.size() - i - 1); ++j) {
+            correlation(i, j) =
+                1.0 - static_cast<double>(std::abs((int)i - (int)j)) / static_cast<double>(numberOfDays);
+        }
+    }
+
+    Array b(pnl.begin(), pnl.end());
+    Matrix L = CholeskyDecomposition(correlation);
+    Array x = QuantLib::qrSolve(L, b);
+    return std::vector<double>(x.begin(), x.end());
+
+#endif
 }
 
 } // namespace QuantExt
