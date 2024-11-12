@@ -158,12 +158,12 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("FXRate(Local-Base)", double(), 10)
         .addColumn("PresentValue(Base)", double(), 10)
         .addColumn("BaseCurrency", string())
-        .addColumn("FloorStrike", double(), 6)
-        .addColumn("CapStrike", double(), 6)
-        .addColumn("FloorVolatility", double(), 6)
-        .addColumn("CapVolatility", double(), 6)
-        .addColumn("EffectiveFloorVolatility", double(), 6)
-        .addColumn("EffectiveCapVolatility", double(), 6);
+        .addColumn("FloorStrike", double(), 10)
+        .addColumn("CapStrike", double(), 10)
+        .addColumn("FloorVolatility", double(), 10)
+        .addColumn("CapVolatility", double(), 10)
+        .addColumn("EffectiveFloorVolatility", double(), 10)
+        .addColumn("EffectiveCapVolatility", double(), 10);
 
     for (auto [tradeId, trade]: portfolio->trades()) {
 
