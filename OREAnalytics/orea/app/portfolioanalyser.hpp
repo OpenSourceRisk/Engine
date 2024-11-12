@@ -34,12 +34,13 @@ namespace analytics {
 class PortfolioAnalyser {
 public:
     //! Constructor
-    PortfolioAnalyser(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& p,
-                      const QuantLib::ext::shared_ptr<ore::data::EngineData>& ed, const std::string& baseCcy,
-                      const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
-                      const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
-                      const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
-                      bool recordSecuritySpecificCreditCurves = false);
+    PortfolioAnalyser(
+        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& p,
+        const QuantLib::ext::shared_ptr<ore::data::EngineData>& ed, const std::string& baseCcy,
+        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+        const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
+        const bool recordSecuritySpecificCreditCurves = false, const bool recordRequiredFixings = true);
 
     //! Check if the portfolio has risk factors of a given type
     bool hasRiskFactorType(const RiskFactorKey::KeyType& riskFactorType) const {
@@ -85,11 +86,15 @@ public:
     //! pointer to portfolio
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; }
 
+    //! return underlying indices of portfolio
+    std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices() const { return underlyingIndices_; }
+
 private:
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
     QuantLib::ext::shared_ptr<DependencyMarket> market_;
     std::set<std::string> counterparties_;
     QuantLib::Date maturity_;
+    std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices_;
 };
 
 } // namespace analytics

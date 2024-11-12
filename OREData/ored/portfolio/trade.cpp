@@ -148,6 +148,7 @@ void Trade::reset() {
     sensitivityTemplate_.clear();
     sensitivityTemplateSet_ = false;
     productModelEngine_.clear();
+    additionalData_.clear();
 }
     
 const std::map<std::string, boost::any>& Trade::additionalData() const { return additionalData_; }

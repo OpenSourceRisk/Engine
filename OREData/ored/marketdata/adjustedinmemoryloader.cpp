@@ -28,11 +28,13 @@ void AdjustedInMemoryLoader::add(Date date, const string& name, Real value) {
         if (auto eqDatum = QuantLib::ext::dynamic_pointer_cast<EquitySpotQuote>(datum))
             factor = factors_.getFactor(eqDatum->eqName(), date);
         else if (auto eqDatum = QuantLib::ext::dynamic_pointer_cast<EquityForwardQuote>(datum))
-            factor = factors_.getFactor(eqDatum->eqName(), date);        
+            factor = factors_.getFactor(eqDatum->eqName(), date);
+        datum->setValue(value * factor);
+        InMemoryLoader::add(datum);
     } catch (const std::exception& e) {
         DLOG("AdjustedInMemoryLoader failure on " << name << ": " << e.what());
+        InMemoryLoader::add(date, name, value);
     }
-    InMemoryLoader::add(date, name, value * factor);
 }
 
 void AdjustedInMemoryLoader::addFixing(Date date, const string& name, Real value) {
