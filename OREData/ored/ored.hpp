@@ -347,6 +347,7 @@
 #include <ored/scripting/computationgraphbuilder.hpp>
 #include <ored/scripting/context.hpp>
 #include <ored/scripting/engines/amccgbaseengine.hpp>
+#include <ored/scripting/engines/amccgcurrencyswapengine.hpp>
 #include <ored/scripting/engines/amccgpricingengine.hpp>
 #include <ored/scripting/engines/amccgswapengine.hpp>
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>

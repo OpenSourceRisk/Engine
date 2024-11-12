@@ -23,6 +23,7 @@
 #include <ored/portfolio/builders/currencyswap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/scripting/engines/amccgcurrencyswapengine.hpp>
 
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
@@ -99,6 +100,18 @@ CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, c
         parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 
     return engine;
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, const Currency& base,
+                                           bool useXccyYieldCurves, const std::set<std::string>& eqNames) {
+    QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
+    std::vector<std::string> ccysStr;
+    std::transform(ccys.begin(), ccys.end(), std::back_inserter(ccysStr), [](const Currency& c) { return c.code(); });
+    return QuantLib::ext::make_shared<AmcCgCurrencySwapEngine>(
+        ccysStr, base.code(), modelCg_, simulationDates_, stickyCloseOutDates_,
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 } // namespace data
