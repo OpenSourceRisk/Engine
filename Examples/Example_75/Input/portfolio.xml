@@ -232,7 +232,7 @@
       </LegData>
     </SwaptionData>
   </Trade>
-  <Trade id="FX_CALL_OPTION">
+ <Trade id="FX_CALL_OPTION">
     <TradeType>FxOption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -343,149 +343,22 @@
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="Composite_Trade">
-      <TradeType>CompositeTrade</TradeType>
-        <Envelope>
-            <CountrParty>CPTY_B</CountrParty>
-            <NettingSetId>CPTY_B</NettingSetId>
-        </Envelope>
-        <CompositeTradeData>
-            <Currency>EUR</Currency>
-            <NotionalCalculation>First</NotionalCalculation>
-            <Components>
-                <Trade>
-                    <TradeType>Swap</TradeType>
-                    <SwapData>
-                        <LegData>
-                            <LegType>Fixed</LegType>
-                            <Payer>true</Payer>
-                            <Currency>EUR</Currency>
-                            <Notionals>
-                                <Notional>10000000.000000</Notional>
-                            </Notionals>
-                            <DayCounter>A360</DayCounter>
-                            <PaymentConvention>MF</PaymentConvention>
-                            <FixedLegData>
-                                <Rates>
-                                    <Rate>0.021</Rate>
-                                </Rates>
-                            </FixedLegData>
-                            <ScheduleData>
-                                <Rules>
-                                    <StartDate>20160301</StartDate>
-                                    <EndDate>20360301</EndDate>
-                                    <Tenor>1Y</Tenor>
-                                    <Calendar>TARGET</Calendar>
-                                    <Convention>F</Convention>
-                                    <TermConvention>F</TermConvention>
-                                    <Rule>Forward</Rule>
-                                    <EndOfMonth/>
-                                    <FirstDate/>
-                                    <LastDate/>
-                                </Rules>
-                            </ScheduleData>
-                        </LegData>
-                        <LegData>
-                            <LegType>Floating</LegType>
-                            <Payer>false</Payer>
-                            <Currency>EUR</Currency>
-                            <Notionals>
-                                <Notional>10000000.000000</Notional>
-                            </Notionals>
-                            <DayCounter>A360</DayCounter>
-                            <PaymentConvention>MF</PaymentConvention>
-                            <FloatingLegData>
-                                <Index>EUR-EURIBOR-6M</Index>
-                                <Spreads>
-                                    <Spread>0.000000</Spread>
-                                </Spreads>
-                                <IsInArrears>false</IsInArrears>
-                                <FixingDays>2</FixingDays>
-                            </FloatingLegData>
-                            <ScheduleData>
-                                <Rules>
-                                    <StartDate>20160301</StartDate>
-                                    <EndDate>20360301</EndDate>
-                                    <Tenor>6M</Tenor>
-                                    <Calendar>TARGET</Calendar>
-                                    <Convention>MF</Convention>
-                                    <TermConvention>MF</TermConvention>
-                                    <Rule>Forward</Rule>
-                                    <EndOfMonth/>
-                                    <FirstDate/>
-                                    <LastDate/>
-                                </Rules>
-                            </ScheduleData>
-                        </LegData>
-                    </SwapData>
-                </Trade>
-                <Trade>
-                    <TradeType>Swap</TradeType>
-                    <SwapData>
-                        <LegData>
-                            <LegType>Fixed</LegType>
-                            <Payer>false</Payer>
-                            <Currency>EUR</Currency>
-                            <Notionals>
-                                <Notional>10000000.000000</Notional>
-                            </Notionals>
-                            <DayCounter>A360</DayCounter>
-                            <PaymentConvention>MF</PaymentConvention>
-                            <FixedLegData>
-                                <Rates>
-                                    <Rate>0.021</Rate>
-                                </Rates>
-                            </FixedLegData>
-                            <ScheduleData>
-                                <Rules>
-                                    <StartDate>20160301</StartDate>
-                                    <EndDate>20360301</EndDate>
-                                    <Tenor>1Y</Tenor>
-                                    <Calendar>TARGET</Calendar>
-                                    <Convention>MF</Convention>
-                                    <TermConvention>MF</TermConvention>
-                                    <Rule>Forward</Rule>
-                                    <EndOfMonth/>
-                                    <FirstDate/>
-                                    <LastDate/>
-                                </Rules>
-                            </ScheduleData>
-                        </LegData>
-                        <LegData>
-                            <LegType>Floating</LegType>
-                            <Payer>true</Payer>
-                            <Currency>EUR</Currency>
-                            <Notionals>
-                                <Notional>10000000.000000</Notional>
-                            </Notionals>
-                            <DayCounter>A360</DayCounter>
-                            <PaymentConvention>MF</PaymentConvention>
-                            <FloatingLegData>
-                                <Index>EUR-EURIBOR-6M</Index>
-                                <Spreads>
-                                    <Spread>0.000000</Spread>
-                                </Spreads>
-                                <IsInArrears>false</IsInArrears>
-                                <FixingDays>2</FixingDays>
-                            </FloatingLegData>
-                            <ScheduleData>
-                                <Rules>
-                                    <StartDate>20160301</StartDate>
-                                    <EndDate>20360301</EndDate>
-                                    <Tenor>6M</Tenor>
-                                    <Calendar>TARGET</Calendar>
-                                    <Convention>MF</Convention>
-                                    <TermConvention>MF</TermConvention>
-                                    <Rule>Forward</Rule>
-                                    <EndOfMonth/>
-                                    <FirstDate/>
-                                    <LastDate/>
-                                </Rules>
-                            </ScheduleData>
-                        </LegData>
-                    </SwapData>
-                </Trade>
-            </Components>
-        </CompositeTradeData>
+  <Trade id="FXSwap">
+    <TradeType>FxSwap</TradeType>
+    <Envelope>
+        <CounterParty>CPTY_A</CounterParty>
+        <NettingSetId>CPTY_A</NettingSetId>
+        <AdditionalFields/>
+    </Envelope>
+    <FxSwapData>
+        <NearDate>2018-09-01</NearDate>
+        <NearBoughtCurrency>EUR</NearBoughtCurrency>
+        <NearBoughtAmount>1000000</NearBoughtAmount>
+        <NearSoldCurrency>USD</NearSoldCurrency>
+        <NearSoldAmount>1100000</NearSoldAmount>
+        <FarDate>2028-09-01</FarDate>
+        <FarBoughtAmount>1300000</FarBoughtAmount>
+        <FarSoldAmount>1000000</FarSoldAmount>
+    </FxSwapData>
   </Trade>
 </Portfolio>
