@@ -18,6 +18,7 @@ aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
 app/analytic.cpp
 app/analytics/analyticfactory.cpp
+app/analytics/calibrationanalytic.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
 app/analytics/parscenarioanalytic.cpp
@@ -61,6 +62,7 @@ cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
+engine/cashflowreportgenerator.cpp
 engine/cptycalculator.cpp
 engine/decomposedsensitivitystream.cpp
 engine/dependencymarket.cpp
@@ -188,6 +190,7 @@ aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
 app/analytic.hpp
 app/analytics/analyticfactory.hpp
+app/analytics/calibrationanalytic.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
 app/analytics/parscenarioanalytic.hpp
@@ -241,6 +244,7 @@ cube/sensitivitycube.hpp
 cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
+engine/cashflowreportgenerator.hpp
 engine/cptycalculator.hpp
 engine/decomposedsensitivitystream.hpp
 engine/dependencymarket.hpp
@@ -255,7 +259,6 @@ engine/multistatenpvcalculator.hpp
 engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp
 engine/observationmode.hpp
-engine/pathdata.hpp
 engine/parametricvar.hpp
 engine/parsensitivityanalysis.hpp
 engine/parsensitivitycubestream.hpp
@@ -263,6 +266,7 @@ engine/parsensitivityinstrumentbuilder.hpp
 engine/parsensitivityutilities.hpp
 engine/parstressconverter.hpp
 engine/parstressscenarioconverter.hpp
+engine/pathdata.hpp
 engine/pnlexplainreport.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp

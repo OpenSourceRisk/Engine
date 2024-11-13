@@ -60,6 +60,7 @@ void BalanceGuaranteedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>
     additionalData_["isdaBaseProduct"] = string("Exotic");
     additionalData_["isdaSubProduct"] = string("");
     additionalData_["isdaTransaction"] = string("");  
+    additionalData_["underlyingSecurityId"] = referenceSecurity_;
 
     QuantLib::Schedule schedule = makeSchedule(this->schedule());
 
@@ -198,6 +199,7 @@ void BalanceGuaranteedSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>
     bgSwap->setPricingEngine(
         builder->engine(id(), referenceSecurity(), ccy_str, expiryDates, bgSwap->maturityDate(), strikes));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     // add required fixings
     addToRequiredFixings(fltLeg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_));

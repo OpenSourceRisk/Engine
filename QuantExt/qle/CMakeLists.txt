@@ -294,6 +294,7 @@ pricingengines/inflationcapfloorengines.cpp
 pricingengines/intrinsicascotengine.cpp
 pricingengines/lgmconvolutionsolver.cpp
 pricingengines/mccamcurrencyswapengine.cpp
+pricingengines/mccamequityforwardengine.cpp
 pricingengines/mccamfxforwardengine.cpp
 pricingengines/mccamfxoptionengine.cpp
 pricingengines/mclgmbondengine.cpp
@@ -305,6 +306,7 @@ pricingengines/mcmultilegoptionengine.cpp
 pricingengines/midpointcdoengine.cpp
 pricingengines/midpointcdsenginemultistate.cpp
 pricingengines/midpointindexcdsengine.cpp
+pricingengines/nullamccalculator.cpp
 pricingengines/numericalintegrationindexcdsoptionengine.cpp
 pricingengines/numericlgmbgsflexiswapengine.cpp
 pricingengines/numericlgmflexiswapengine.cpp
@@ -468,6 +470,7 @@ cashflows/cpicoupon.hpp
 cashflows/cpicouponpricer.hpp
 cashflows/durationadjustedcmscoupon.hpp
 cashflows/durationadjustedcmscoupontsrpricer.hpp
+cashflows/equitycashflow.hpp
 cashflows/equitycoupon.hpp
 cashflows/equitycouponpricer.hpp
 cashflows/equitymargincoupon.hpp
@@ -832,6 +835,7 @@ pricingengines/inflationcapfloorengines.hpp
 pricingengines/intrinsicascotengine.hpp
 pricingengines/lgmconvolutionsolver.hpp
 pricingengines/mccamcurrencyswapengine.hpp
+pricingengines/mccamequityforwardengine.hpp
 pricingengines/mccamfxforwardengine.hpp
 pricingengines/mccamfxoptionengine.hpp
 pricingengines/mclgmbondengine.hpp
@@ -843,6 +847,7 @@ pricingengines/mcmultilegoptionengine.hpp
 pricingengines/midpointcdoengine.hpp
 pricingengines/midpointcdsenginemultistate.hpp
 pricingengines/midpointindexcdsengine.hpp
+pricingengines/nullamccalculator.hpp
 pricingengines/numericalintegrationindexcdsoptionengine.hpp
 pricingengines/numericlgmbgsflexiswapengine.hpp
 pricingengines/numericlgmflexiswapengine.hpp

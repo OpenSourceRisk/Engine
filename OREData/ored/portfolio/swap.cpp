@@ -45,6 +45,13 @@ namespace data {
 void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Swap::build() called for trade " << id());
 
+    // for pf-analyser runs without required fixing recording we can optimize the build (to improve performance)
+    bool isPfAnalyserRun = false;
+    if (auto r = engineFactory->engineData()->globalParameters().find("RunType");
+        r != engineFactory->engineData()->globalParameters().end() && r->second == "PortfolioAnalyserNoFixings") {
+        isPfAnalyserRun = true;
+    }
+
     setIsdaTaxonomyFields();
     
     QL_REQUIRE(legData_.size() >= 1, "Swap must have at least 1 leg");
@@ -57,7 +64,8 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     Size numLegs = legData_.size();
     legPayers_ = vector<bool>(numLegs);
     std::vector<QuantLib::Currency> currencies(numLegs);
-    std::vector<QuantLib::Currency> currenciesForMcSimulation;
+    std::vector<QuantLib::Currency> currenciesWithIndexing;
+    std::set<std::string> eqNames;
     legs_.resize(numLegs);
 
     isXCCY_ = false;
@@ -82,35 +90,51 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         }
     }
 
-    
-    // Check if there is indexing is used, need to collect all underlying currrencies
-    // for AMC simulations, such a trade needs to be treated a x-ccy swap with both leg paying
-    // one currency.
+    /* collect currencies from fx indexing and eq names from eq indexing
+       note: we do not add ccys from eq here, this requires accessing the market and is left to engine builders */
+
     auto addUnique = [](vector<Currency>& currencies, Currency ccy) {
         if (std::find(currencies.begin(), currencies.end(), ccy) ==
             currencies.end()) {
             currencies.push_back(ccy);
         }
     };
-    
+
     for (Size i = 0; i < numLegs; ++i) {
-        addUnique(currenciesForMcSimulation, currencies[i]);
+        addUnique(currenciesWithIndexing, currencies[i]);
         vector<Indexing> indexings = legData_[i].indexing();
         if (!indexings.empty() && indexings.front().hasData()) {
             Indexing indexing = indexings.front();
             if (boost::starts_with(indexing.index(), "FX-")) {
                 auto index = parseFxIndex(indexing.index());
-                addUnique(currenciesForMcSimulation, index->targetCurrency());
-                addUnique(currenciesForMcSimulation, index->sourceCurrency());
+                addUnique(currenciesWithIndexing, index->targetCurrency());
+                addUnique(currenciesWithIndexing, index->sourceCurrency());
+            } else if(boost::starts_with(indexing.index(), "EQ-")) {
+                auto index = parseEquityIndex(indexing.index());
+                eqNames.insert(index->name());
             }
         }
     }
-    isXCCY_ = isXCCY_ || currenciesForMcSimulation.size() > 1;
+
+    // identify equity underlyings
+
+    for (Size i = 0; i < numLegs; ++i) {
+        if (legData_[i].legType() == "Equity") {
+            eqNames.insert(QuantLib::ext::dynamic_pointer_cast<EquityLegData>(legData_[i].concreteLegData())->eqName());
+        }
+    }
+
+    /* determine whether we have a xccy and whether to use the special xbs curves */
+
+    isXCCY_ = isXCCY_ || currenciesWithIndexing.size() > 1;
+
     static std::set<std::string> eligibleForXbs = {"Fixed", "Floating"};
+
     bool useXbsCurves = true;
     for(Size i=0;i<numLegs;++i) {
         useXbsCurves = useXbsCurves && (eligibleForXbs.find(legData_[i].legType()) != eligibleForXbs.end());
     }
+
 
     // The npv currency, notional currency and current notional are taken from the first leg that
     // appears in the XML that has a notional. If no such leg exists the notional currency
@@ -123,7 +147,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             break;
     }
 
-    if (notionalTakenFromLeg_ == legData_.size()) {
+    if (notionalTakenFromLeg_ == legData_.size() || isPfAnalyserRun) {
         ALOG("no suitable leg found to set notional, set to null and notionalCurrency to empty string");
         notional_ = Null<Real>();
         notionalCurrency_ = "";
@@ -177,6 +201,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             legPayers_.push_back(legPayers_[i]);
             currencies.push_back(currencies[i]);
         }
+
     } // for legs
 
     if (isXCCY_) {
@@ -187,8 +212,9 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
         bool useXccyYieldCurvesForDiscounting = allLegsAreSimmPlainVanillaIrLegs_;
         swap->setPricingEngine(
-            swapBuilder->engine(currenciesForMcSimulation, npvCcy, useXccyYieldCurvesForDiscounting));
+            swapBuilder->engine(currenciesWithIndexing, npvCcy, useXccyYieldCurvesForDiscounting, eqNames));
         setSensitivityTemplate(*swapBuilder);
+        addProductModelEngine(*swapBuilder);
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
     } else {
@@ -197,8 +223,9 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
         swap->setPricingEngine(swapBuilder->engine(npvCcy, envelope().additionalField("discount_curve", false),
-                                                   envelope().additionalField("security_spread", false)));
+                                                   envelope().additionalField("security_spread", false), eqNames));
         setSensitivityTemplate(*swapBuilder);
+        addProductModelEngine(*swapBuilder);
         instrument_.reset(new VanillaInstrument(swap));
     }
 

@@ -298,6 +298,7 @@
       <xs:element type="xs:string" name="NoticePeriod" minOccurs="0"/>
       <xs:element type="xs:string" name="NoticeCalendar" minOccurs="0"/>
       <xs:element type="xs:string" name="NoticeConvention" minOccurs="0"/>
+      <xs:element type="xs:string" name="MidCouponExercise" minOccurs="0"/>
       <xs:element type="settlementType" name="Settlement" minOccurs="0"/>
       <xs:element type="settlementMethod" name="SettlementMethod" minOccurs="0"/>
       <xs:element type="xs:string" name="PayOffAtExpiry" minOccurs="0"/>

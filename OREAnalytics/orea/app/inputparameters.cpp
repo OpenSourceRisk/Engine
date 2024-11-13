@@ -720,6 +720,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     jacobiInverseFileName_ = params->get("sensitivity", "jacobiInverseOutputFile", false);    
     sensitivityScenarioFileName_ = params->get("sensitivity", "scenarioOutputFile", false);    
     stressTestFileName_ = params->get("stress", "scenarioOutputFile", false);
+    stressTestCashflowFileName_ = params->get("stress", "scenarioCashflowOutputFile", false);
     stressZeroScenarioDataFileName_ = params->get("stress", "stressZeroScenarioDataFile", false);
     xvaStressTestFileName_ = params->get("xvaStress", "scenarioOutputFile", false);
     varFileName_ = params->get("parametricVar", "outputFile", false);
@@ -733,8 +734,11 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     pnlExplainOutputFileName_ = params->get("pnlExplain", "outputFileName", false);
     riskFactorsOutputFileName_ = params->get("portfolioDetails", "riskFactorFileName", false);
     marketObjectsOutputFileName_ = params->get("portfolioDetails", "marketObjectFileName", false);
+    calibrationOutputFileName_ = params->get("calibration", "outputFile", false);
 
     zeroToParShiftFile_ = params->get("zeroToParShift", "parShiftsFile", false);
+    xvaSensiJacobiFileName_ = params->get("xvaSensitivity", "jacobiOutputFile", false);    
+    xvaSensiJacobiInverseFileName_ = params->get("xvaSensitivity", "jacobiInverseOutputFile", false);    
     // map internal report name to output file name
     fileNameMap_["npv"] = npvOutputFileName_;
     fileNameMap_["cashflow"] = cashflowOutputFileName_;
@@ -751,6 +755,7 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["jacobi"] = jacobiFileName_;
     fileNameMap_["jacobi_inverse"] = jacobiInverseFileName_;
     fileNameMap_["stress"] = stressTestFileName_;
+    fileNameMap_["stress_cashflows"] = stressTestCashflowFileName_;
     fileNameMap_["stress_ZeroStressData"] = stressZeroScenarioDataFileName_;
     fileNameMap_["xva_stress"] = xvaStressTestFileName_;
     fileNameMap_["var"] = varFileName_;
@@ -762,7 +767,9 @@ OutputParameters::OutputParameters(const QuantLib::ext::shared_ptr<Parameters>& 
     fileNameMap_["pnl_explain"] = pnlExplainOutputFileName_;
     fileNameMap_["risk_factors"] = riskFactorsOutputFileName_;
     fileNameMap_["market_objects"] = marketObjectsOutputFileName_;
-    
+    fileNameMap_["calibration"] = calibrationOutputFileName_;
+    fileNameMap_["xva_sensi_jacobi"] = jacobiFileName_;
+    fileNameMap_["xva_sensi_jacobi_inverse"] = jacobiInverseFileName_;
     fileNameMap_["parshifts"] = zeroToParShiftFile_;
     vector<Size> dimOutputGridPoints;
     tmp = params->get("xva", "dimOutputGridPoints", false);

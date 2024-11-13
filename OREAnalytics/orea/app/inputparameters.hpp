@@ -152,6 +152,7 @@ public:
     void setUseSensiSpreadedTermStructures(bool b) { useSensiSpreadedTermStructures_ = b; }
     void setSensiThreshold(Real r) { sensiThreshold_ = r; }
     void setSensiRecalibrateModels(bool b) { sensiRecalibrateModels_ = b; }
+    void setSensiLaxFxConversion(bool b) { sensiLaxFxConversion_ = b; }
     void setSensiSimMarketParams(const std::string& xml);
     void setSensiSimMarketParamsFromFile(const std::string& fileName);
     void setSensiScenarioData(const std::string& xml);
@@ -189,6 +190,7 @@ public:
     void setStressUpperBoundRatesDiscountFactor(const double value) { stressUpperBoundRatesDiscountFactor_ = value; }
     void setStressAccurary(const double value) { stressAccurary_ = value; };
     void setStressPrecision(const Size value) { stressPrecision_ = value; };
+    void setStressGenerateCashflows(const bool b) { stressGenerateCashflows_ = b; }
     // Setters for VaR
     void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
@@ -367,6 +369,9 @@ public:
     void setXvaSensiPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
         sensiPricingEngine_ = engineData;
     }
+    void setXvaSensiParSensi(const bool parSensi){ xvaSensiParSensi_ = parSensi;}
+    void setXvaSensiOutputJacobi(const bool outputJacobi) { xvaSensiOutputJacobi_ = outputJacobi; };
+    void setXvaSensiThreshold(const Real threshold) { xvaSensiThreshold_ = threshold; }
 
     // Setters for XVA Explain
     void setXvaExplainSimMarketParams(const std::string& xml);
@@ -553,6 +558,7 @@ public:
     bool useSensiSpreadedTermStructures() const { return useSensiSpreadedTermStructures_; }
     QuantLib::Real sensiThreshold() const { return sensiThreshold_; }
     bool sensiRecalibrateModels() const { return sensiRecalibrateModels_; }
+    bool sensiLaxFxConversion() const { return sensiLaxFxConversion_; }
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& sensiSimMarketParams() const { return sensiSimMarketParams_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() const { return sensiScenarioData_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& sensiPricingEngine() const { return sensiPricingEngine_; }
@@ -591,6 +597,7 @@ public:
     }
     double stressAccurary() const { return stressAccurary_; };
     Size stressPrecision() const { return stressPrecision_; };
+    bool stressGenerateCashflows() const { return stressGenerateCashflows_; }
     
     /*****************
      * Getters for VaR
@@ -649,7 +656,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
     QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
-
+  
     /*****************
      * Getters for xva
      *****************/
@@ -830,6 +837,10 @@ public:
     }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& xvaSensiPricingEngine() const { return xvaSensiPricingEngine_; }
 
+    bool xvaSensiParSensi() const { return xvaSensiParSensi_; }
+    bool xvaSensiOutputJacobi() const { return xvaSensiOutputJacobi_; };
+    Real xvaSensiThreshold() const { return xvaSensiThreshold_;}
+
     /****************************
      * Getters for zero to par shift
      ****************************/
@@ -938,6 +949,7 @@ protected:
     bool useSensiSpreadedTermStructures_ = true;
     QuantLib::Real sensiThreshold_ = 1e-6;
     bool sensiRecalibrateModels_ = true;
+    bool sensiLaxFxConversion_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
@@ -966,6 +978,7 @@ protected:
     double stressUpperBoundRatesDiscountFactor_;
     double stressAccurary_;
     Size stressPrecision_ = 2;
+    bool stressGenerateCashflows_ = false;
 
     /*****************
      * VAR analytics
@@ -1032,7 +1045,7 @@ protected:
     Size reportBufferSize_ = 0;
     optional<bool> exposureIncludeTodaysCashFlows_;
     bool exposureIncludeReferenceDateEvents_ = false;
-
+ 
     /**************
      * XVA analytic
      **************/
@@ -1101,6 +1114,7 @@ protected:
      ***************/
     std::string simmVersion_;
     QuantLib::ext::shared_ptr<ore::analytics::Crif> crif_;
+  
     QuantLib::ext::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
@@ -1169,7 +1183,9 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaSensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaSensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> xvaSensiPricingEngine_;
-
+    bool xvaSensiParSensi_ = false;
+    bool xvaSensiOutputJacobi_ = false;
+    QuantLib::Real xvaSensiThreshold_ = 1e-6;
     /*****************
      * XVA Explain analytic
      *****************/
@@ -1211,6 +1227,7 @@ private:
     std::string jacobiFileName_;
     std::string jacobiInverseFileName_;
     std::string stressTestFileName_;
+    std::string stressTestCashflowFileName_;
     std::string xvaStressTestFileName_;
     std::string stressZeroScenarioDataFileName_;
     std::string varFileName_;
@@ -1224,9 +1241,13 @@ private:
     std::string marketObjectsOutputFileName_;
     std::string zeroToParShiftFile_;
     std::string scenarioNpvOutputFileName_;
+    std::string calibrationOutputFileName_;
+    std::string xvaSensiJacobiFileName_;
+    std::string xvaSensiJacobiInverseFileName_;
 };
 
 void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);
 
 } // namespace analytics
 } // namespace ore
+

@@ -254,6 +254,8 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     Natural settlementDays = parseInteger(bondData_.settlementDays());
     QuantLib::ext::shared_ptr<QuantLib::Bond> bond;
 
+    additionalData_["underlyingSecurityId"] = bondData_.securityId();
+
     std::string openEndDateStr = builder->modelParameter("OpenEndDateReplacement", {}, false, "");
     Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
     Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);
@@ -281,6 +283,7 @@ void Bond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
     bond->setPricingEngine(
         bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId()));
     setSensitivityTemplate(*bondBuilder);
+    addProductModelEngine(*bondBuilder);
     instrument_.reset(new VanillaInstrument(bond, mult));
 
     npvCurrency_ = bondData_.currency();

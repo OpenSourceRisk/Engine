@@ -269,6 +269,7 @@ public:
     Real& bootstrapTolerance() { return bootstrapTolerance_; }
     std::string& measure() { return measure_; }
     CrossAssetModel::Discretization& discretization() { return discretization_; }
+    QuantLib::SalvagingAlgorithm::Type& getSalvagingAlgorithm() { return salvagingAlgorithm_; }
     void setNumberOfCreditStates(QuantLib::Size n) { numberOfCreditStates_ = n; }
     //@}
 
@@ -329,6 +330,6 @@ private:
 };
 
 CrossAssetModel::Discretization parseDiscretization(const string& s);
-
+  
 } // namespace data
 } // namespace ore

@@ -101,6 +101,7 @@ void AsianOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
         additionalData_ = delegatingBuilderTrade_->additionalData();
 	requiredFixings_ = delegatingBuilderTrade_->requiredFixings();
         setSensitivityTemplate(delegatingBuilderTrade_->sensitivityTemplate());
+        addProductModelEngine(delegatingBuilderTrade_->productModelEngine());
 
         // notional and notional currency are defined in overriden methods!
 
@@ -180,6 +181,7 @@ void AsianOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     if (!asian->isExpired()) {
         asian->setPricingEngine(asianOptionBuilder->engine(assetName_, payCcy, expiryDate));
         setSensitivityTemplate(*asianOptionBuilder);
+        addProductModelEngine(*asianOptionBuilder);
     } else {
         DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate)
                                                        << " because it is expired.");

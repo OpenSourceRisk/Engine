@@ -61,6 +61,8 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     bondData_ = originalBondData_;
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
+    additionalData_["underlyingSecurityId"] = bondData_.securityId();
+
     Schedule schedule = makeSchedule(scheduleData_);
     Calendar calendar = parseCalendar(bondData_.calendar());
 
@@ -196,6 +198,7 @@ void BondTRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactor
     QL_REQUIRE(trsBondBuilder, "No Builder found for BondTRS: " << id());
     bondTRS->setPricingEngine(trsBondBuilder->engine(fundingLegData_.currency()));
     setSensitivityTemplate(*trsBondBuilder);
+    addProductModelEngine(*trsBondBuilder);
     instrument_.reset(new VanillaInstrument(bondTRS));
     // maturity_ = std::max(valuationDates.back(), paymentDates.back());
     maturity_ = bondIndex->bond()->maturityDate();

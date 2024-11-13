@@ -78,7 +78,8 @@ bool BlackMultiLegOptionEngineBase::instrumentIsHandled(const std::vector<Leg>& 
     for (Size i = 0; i < legs.size(); ++i) {
         for (Size j = 0; j < legs[i].size(); ++j) {
             if (auto c = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs[i][j])) {
-                if (!(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c) || QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c) ||
+                if (!(QuantLib::ext::dynamic_pointer_cast<IborCoupon>(c) ||
+                      QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(c) ||
                       QuantLib::ext::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(c) ||
@@ -151,14 +152,31 @@ void BlackMultiLegOptionEngineBase::calculate() const {
 
     for (Size i = 0; i < legs_.size(); ++i) {
         for (Size j = 0; j < legs_[i].size(); ++j) {
+
             Real payer = payer_[i] ? -1.0 : 1.0;
+
+            if (legs_[i][j]->date() <= exerciseDate)
+                continue;
+
             if (auto c = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[i][j])) {
+
+                /* coupon is part of exercise if ...
+                   ... mid coupon exercise true: a coupon with pay date > exercise date + mid cpn settle days
+                                                 is part of the exercise
+                   ... mid coupon exercise false: coupon with accrualStart > exercise date is part of exercise
+                */
+
                 auto fixedCoupon = QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c);
                 if (fixedCoupon)
                     fixedDayCount = c->dayCounter();
-                if (c->accrualStartDate() >= exerciseDate) {
+
+                Date exerciseAccrualStart =
+                    midCouponExercise_ ? noticeCalendar_.advance(exerciseDate, noticePeriod_, noticeConvention_)
+                                       : c->accrualStartDate();
+
+                if (c->accrualEndDate() > exerciseAccrualStart && exerciseAccrualStart >= exerciseDate) {
                     cfInfo.push_back(CfInfo());
-                    earliestAccrualStartDate = std::min(earliestAccrualStartDate, c->accrualStartDate());
+                    earliestAccrualStartDate = std::min(earliestAccrualStartDate, exerciseAccrualStart);
                     latestAccrualEndDate = std::max(latestAccrualEndDate, c->accrualEndDate());
                     if (fixedCoupon) {
                         cfInfo.back().fixedRate = fixedCoupon->rate();
@@ -170,12 +188,21 @@ void BlackMultiLegOptionEngineBase::calculate() const {
                         cfInfo.back().nominal = f->nominal() * payer;
                         ++numFloat;
                     }
-                    cfInfo.back().accrual = c->accrualPeriod();
+                    cfInfo.back().accrual =
+                        midCouponExercise_ && c->accrualStartDate() < exerciseDate
+                            ? c->dayCounter().yearFraction(exerciseAccrualStart, c->accrualEndDate())
+                            : c->accrualPeriod();
                     cfInfo.back().discountFactor = discountCurve_->discount(c->date());
-                    cfInfo.back().amount = c->amount() * payer;
+                    // mid cpn exercise assumes short coupon is paid
+                    cfInfo.back().amount =
+                        c->amount() * payer * (midCouponExercise_ ? cfInfo.back().accrual / c->accrualPeriod() : 1.0);
                     cfInfo.back().payDate = c->date();
                 }
-            } else if (legs_[i][j]->date() > exerciseDate) {
+
+            } else {
+
+                // non-coupon is part of exercise if pay date > exercise date
+
                 cfInfo.push_back(CfInfo());
                 cfInfo.back().discountFactor = discountCurve_->discount(legs_[i][j]->date());
                 cfInfo.back().amount = legs_[i][j]->amount() * payer;
@@ -184,7 +211,7 @@ void BlackMultiLegOptionEngineBase::calculate() const {
         }
     }
 
-    // if there are future floating coupons, but no fixed, we add a dummy fixed with 0 fixed rate to 
+    // if there are future floating coupons, but no fixed, we add a dummy fixed with 0 fixed rate to
     // ensure we can calculate the ATM rate
     if (numFloat > 0 && numFixed == 0) {
         for (auto const& c : cfInfo) {
@@ -308,7 +335,8 @@ void BlackMultiLegOptionEngineBase::calculate() const {
     swapLength = std::max(swapLength, 1.0 / 12.0);
 
     Date today = Settings::instance().evaluationDate();
-    Real variance = exerciseDate == today ? 0.0 : volatility_->blackVariance(exerciseDate, swapLength, effectiveFixedRate);
+    Real variance =
+        exerciseDate == today ? 0.0 : volatility_->blackVariance(exerciseDate, swapLength, effectiveFixedRate);
     Real displacement =
         volatility_->volatilityType() == ShiftedLognormal ? volatility_->shift(exerciseDate, swapLength) : 0.0;
 
@@ -369,6 +397,10 @@ void BlackMultiLegOptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
+    midCouponExercise_ = arguments_.midCouponExercise;
+    noticePeriod_ = arguments_.noticePeriod;
+    noticeCalendar_ = arguments_.noticeCalendar;
+    noticeConvention_ = arguments_.noticeConvention;
 
     BlackMultiLegOptionEngineBase::calculate();
 
@@ -395,6 +427,10 @@ void BlackSwaptionFromMultilegOptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
+    midCouponExercise_ = false;
+    noticePeriod_ = 0 * Days;
+    noticeCalendar_ = NullCalendar();
+    noticeConvention_ = Following;
 
     BlackMultiLegOptionEngineBase::calculate();
 
@@ -420,6 +456,11 @@ void BlackNonstandardSwaptionFromMultilegOptionEngine::calculate() const {
     exercise_ = arguments_.exercise;
     settlementType_ = arguments_.settlementType;
     settlementMethod_ = arguments_.settlementMethod;
+    midCouponExercise_ = false;
+    noticePeriod_ = 0 * Days;
+    noticeCalendar_ = NullCalendar();
+    noticeConvention_ = Following;
+
 
     BlackMultiLegOptionEngineBase::calculate();
 

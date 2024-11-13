@@ -46,14 +46,34 @@ public:
                     const Real regressionVarianceCutoff = Null<Real>(),
                     const bool recalibrateOnStickyCloseOutDates = false,
                     const bool reevaluateExerciseInStickyRun = false)
+        : McLgmSwapEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
+                              std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
+                              std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>>())),
+                          calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
+                          calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
+                          {discountCurve}, simulationDates, stickyCloseOutDates, externalModelIndices, minimalObsDate,
+                          regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
+                          reevaluateExerciseInStickyRun) {}
+
+    McLgmSwapEngine(const QuantLib::Handle<CrossAssetModel>& model, const SequenceType calibrationPathGenerator,
+                    const SequenceType pricingPathGenerator, const Size calibrationSamples, const Size pricingSamples,
+                    const Size calibrationSeed, const Size pricingSeed, const Size polynomOrder,
+                    const LsmBasisSystem::PolynomialType polynomType,
+                    const SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
+                    const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
+                    const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                    const std::vector<Date> simulationDates = std::vector<Date>(),
+                    const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
+                    const std::vector<Size> externalModelIndices = std::vector<Size>(),
+                    const bool minimalObsDate = true, const RegressorModel regressorModel = RegressorModel::Simple,
+                    const Real regressionVarianceCutoff = Null<Real>(),
+                    const bool recalibrateOnStickyCloseOutDates = false,
+                    const bool reevaluateExerciseInStickyRun = false)
         : GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
-          McMultiLegBaseEngine(Handle<CrossAssetModel>(QuantLib::ext::make_shared<CrossAssetModel>(
-                                   std::vector<QuantLib::ext::shared_ptr<IrModel>>(1, model),
-                                   std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>>())),
-                               calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
-                               calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
-                               {discountCurve}, simulationDates, stickyCloseOutDates, externalModelIndices,
-                               minimalObsDate, regressorModel, regressionVarianceCutoff,
+          McMultiLegBaseEngine(model, calibrationPathGenerator, pricingPathGenerator, calibrationSamples,
+                               pricingSamples, calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering,
+                               directionIntegers, {discountCurve}, simulationDates, stickyCloseOutDates,
+                               externalModelIndices, minimalObsDate, regressorModel, regressionVarianceCutoff,
                                recalibrateOnStickyCloseOutDates, reevaluateExerciseInStickyRun) {
         registerWith(model);
     }

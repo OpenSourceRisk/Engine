@@ -116,6 +116,7 @@ public:
     const std::set<std::string>& analyticTypes() const { return types_; }
     const QuantLib::ext::shared_ptr<InputParameters>& inputs() const { return inputs_; }
     const QuantLib::ext::shared_ptr<ore::data::Market>& market() const { return market_; };
+    bool requiresMarketData() const { return requiresMarketData_; }
     // To allow SWIG wrapping
     QuantLib::ext::shared_ptr<MarketImpl> getMarket() const {        
         return QuantLib::ext::dynamic_pointer_cast<MarketImpl>(market_);
@@ -127,6 +128,11 @@ public:
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
     const QuantLib::ext::shared_ptr<ore::data::Loader>& loader() const { return loader_; };
     Configurations& configurations() { return configurations_; }
+    const bool getWriteIntermediateReports() const { return writeIntermediateReports_; }
+
+    //! Setters
+    void setRequiresMarketData(const bool flag) { requiresMarketData_ = flag; }
+    void setWriteIntermediateReports(const bool flag) { writeIntermediateReports_ = flag; }
 
     //! Result reports
     analytic_reports& reports() { return reports_; };
@@ -134,9 +140,6 @@ public:
     analytic_mktcubes& mktCubes() { return mktCubes_; };
     analytic_stresstests& stressTests() { return stressTests_;}
     
-    const bool getWriteIntermediateReports() const { return writeIntermediateReports_; }
-    void setWriteIntermediateReports(const bool flag) { writeIntermediateReports_ = flag; }
-
     //! Check whether any of the requested run types is covered by this analytic
     bool match(const std::set<std::string>& runTypes);
 
@@ -162,6 +165,9 @@ protected:
     std::set<std::string> types_;
     //! contains all the input parameters for the run
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
+
+    //! whether the analytic requires market / fixing data
+    bool requiresMarketData_ = true;
 
     Configurations configurations_;
     QuantLib::ext::shared_ptr<ore::data::Market> market_;

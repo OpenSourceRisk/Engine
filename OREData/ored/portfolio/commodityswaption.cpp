@@ -92,6 +92,7 @@ void CommoditySwaption::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     Currency currency = parseCurrency(ccy_);
     QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(currency, name_);
     setSensitivityTemplate(*engineBuilder);
+    addProductModelEngine(*engineBuilder);
     swaption->setPricingEngine(engine);
 
     // Set the instrument wrapper properly
