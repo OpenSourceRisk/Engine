@@ -468,7 +468,6 @@ std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date
     Date sd = getSloppyDate(s, sloppySimDates_, effectiveSimulationDates_);
     LgmCG lgmcg(
         currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_);
-    std::cout << "GaussianCamCG::getDiscount(" << s << "," << t << ")" << std::endl;
     return lgmcg.discountBond(s, t, irStates_.at(sd)[idx]);
 }
 
