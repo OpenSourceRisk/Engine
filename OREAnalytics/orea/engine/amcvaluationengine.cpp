@@ -412,42 +412,50 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                     try {
                         LOG("Deserialising AMC calculator from file for composite trade " << trade.first);
                         for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
-                            std::ifstream is(filename, std::ios::binary);
+                            string component_filename = filename + "_" + to_string(cmpIdx);
+                            std::ifstream is(component_filename, std::ios::binary);
                             boost::archive::binary_iarchive ia(is, boost::archive::no_header);
                             auto tmp =
                                 QuantLib::ext::make_shared<McMultiLegBaseEngine::MultiLegBaseAmcCalculator>();
                             ia >> tmp;
                             amcCalcs.push_back(tmp);
                         }
-
+                        QL_REQUIRE(amcCalcs.size() == multipliers.size(),
+                                   "Did not find amc calculators for all components of composite trade.");
+                        for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
+                            extractAmcCalculator(trade, amcCalcs[cmpIdx], multiplier * multipliers[cmpIdx],
+                                                 cmpIdx == 0);
+                        }
+                        continue;
                     } catch (const std::exception& e) {
                         StructuredTradeErrorMessage(trade.second, "Error extracting AMC Calculator from file", e.what())
                             .log();
                         LOG("Calculating AMC Calculator manually.");
                     }
-                } else {
-                    for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
-                        std::stringstream ss;
-                        ss << cmpIdx + 1 << "_amcCalculator";
-                        if (addResults.find(ss.str()) != addResults.end()) {
-                            amcCalcs.push_back(inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str()));
-                            if (amcIndividualTrainingOutput) {
-                                LOG("Serialising AMC calculator for trade " << cmpIdx+1 << " of composite trade " << trade.first);
-                                std::ofstream os(filename, std::ios::binary);
-                                boost::archive::binary_oarchive oa(os, boost::archive::no_header);
-                                auto tmp = inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str());
-                                auto amcCalc = QuantLib::ext::dynamic_pointer_cast<
-                                    McMultiLegBaseEngine::MultiLegBaseAmcCalculator>(tmp);
-                                oa << amcCalc;
-                                os.close();
-                            }
+                }
+                for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
+                    std::stringstream ss;
+                    ss << cmpIdx + 1 << "_amcCalculator";
+                    if (addResults.find(ss.str()) != addResults.end()) {
+                        amcCalcs.push_back(inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str()));
+                        if (amcIndividualTrainingOutput) {
+                            LOG("Serialising AMC calculator for trade " << cmpIdx+1 << " of composite trade " << trade.first);
+                            string component_filename = filename + "_" + to_string(cmpIdx);
+                            std::ofstream os(component_filename, std::ios::binary);
+                            boost::archive::binary_oarchive oa(os, boost::archive::no_header);
+                            auto tmp = inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str());
+                            auto amcCalc = QuantLib::ext::dynamic_pointer_cast<
+                                McMultiLegBaseEngine::MultiLegBaseAmcCalculator>(tmp);
+                            oa << amcCalc;
+                            os.close();
                         }
                     }
                 }
+                
                 QL_REQUIRE(amcCalcs.size() == multipliers.size(),
                            "Did not find amc calculators for all components of composite trade.");
                 for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
-                    extractAmcCalculator(trade, amcCalc, multiplier * multipliers[cmpIdx], cmpIdx == 0);
+                    extractAmcCalculator(trade, amcCalcs[cmpIdx], multiplier * multipliers[cmpIdx], cmpIdx == 0);
                 }
                 continue;
             }
