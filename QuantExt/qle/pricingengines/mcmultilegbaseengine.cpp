@@ -1299,6 +1299,7 @@ template <class Archive> void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::s
     ar& settlement_;
     ar& cashSettlementTimes_;
     ar& exerciseXvaTimes_;
+    ar& exerciseTimes_;
     ar& xvaTimes_;
 
     ar& regModelUndDirty_;
@@ -1311,7 +1312,6 @@ template <class Archive> void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::s
     ar& reevaluateExerciseInStickyRun_;
     ar& includeTodaysCashflows_;
     ar& includeReferenceDateEvents_;
-    ar& exercised_;
 }
 
 McMultiLegBaseEngine::RegressionModel::RegressionModel(const Real observationTime,
