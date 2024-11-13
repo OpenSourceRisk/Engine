@@ -29,7 +29,7 @@ void AmcCgCurrencySwapEngine::calculate() const {
     leg_ = arguments_.legs;
     currency_.clear();
     std::transform(arguments_.currency.begin(), arguments_.currency.end(), std::back_inserter(currency_),
-                   [](const Currency& c) { return c.code(); });
+                   [](const QuantLib::Currency& c) { return c.code(); });
     payer_.resize(arguments_.payer.size());
     for (Size i = 0; i < arguments_.payer.size(); ++i) {
         payer_[i] = QuantLib::close_enough(arguments_.payer[i], -1.0);
