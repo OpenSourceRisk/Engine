@@ -309,7 +309,7 @@ void GaussianCamCG::performCalculations() const {
                 drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)] =
                     cg_add(*g_, {cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, H, alpha), alpha)),
                                  cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), alpha), rhozz0j),
-                                 cg_mult(*g_, cg_mult(*g_, sigma, alpha), rhozxjj)});
+                                 cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, sigma, alpha), rhozxjj))});
                 std::size_t fwd0 = addModelParameter("__lgm_" + currencies_[0] + "_fwd_" + dateStr, [cam, t] {
                     return cam->irlgm1f(0)->termStructure()->forwardRate(t, t, Continuous);
                 });
@@ -318,7 +318,8 @@ void GaussianCamCG::performCalculations() const {
                 });
                 drift[i][cam->pIdx(CrossAssetModel::AssetType::FX, j - 1, 0)] =
                     cg_add(*g_, {cg_mult(*g_, cg_mult(*g_, cg_mult(*g_, H0, alpha0), sigma), rhozx0j), fwd0,
-                                 cg_negative(*g_, fwdj), cg_mult(*g_, cg_mult(*g_, cg_const(*g_, 0.5), sigma), sigma)});
+                                 cg_negative(*g_, fwdj),
+                                 cg_negative(*g_, cg_mult(*g_, cg_mult(*g_, cg_const(*g_, 0.5), sigma), sigma))});
                 if (cam->measure() == IrModel::Measure::BA) {
                     drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)] =
                         cg_subtract(*g_, drift[i][cam->pIdx(CrossAssetModel::AssetType::IR, j, 0)],
@@ -430,7 +431,8 @@ void GaussianCamCG::performCalculations() const {
 std::size_t GaussianCamCG::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
     QL_REQUIRE(fwd == Null<Date>(), "GaussianCamCG::getIndexValue(): fwd != null not implemented ("
                                         << indexNo << "," << d << "," << fwd << ")");
-    return underlyingPaths_.at(d).at(indexNo);
+    Date sd = getSloppyDate(d, sloppySimDates_, effectiveSimulationDates_);
+    return underlyingPaths_.at(sd).at(indexNo);
 }
 
 std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
@@ -443,9 +445,8 @@ std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, co
     auto cam(cam_);
     Date sd = getSloppyDate(d, sloppySimDates_, effectiveSimulationDates_);
     LgmCG lgmcg(
-        currencies_[currencyIdx], *g_, [cam, currencyIdx] { return cam->irlgm1f(currencyIdx); }, modelParameters_,
-        sloppySimDates_, effectiveSimulationDates_);
-    return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, sd, irStates_.at(sd).at(currencyIdx));
+        currencies_[currencyIdx], *g_, [cam, currencyIdx] { return cam->irlgm1f(currencyIdx); }, modelParameters_);
+    return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, d, irStates_.at(sd).at(currencyIdx));
 }
 
 std::size_t GaussianCamCG::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
@@ -466,9 +467,9 @@ std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date
     Size cpidx = currencyPositionInCam_[idx];
     Date sd = getSloppyDate(s, sloppySimDates_, effectiveSimulationDates_);
     LgmCG lgmcg(
-        currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, sloppySimDates_,
-        effectiveSimulationDates_);
-    return lgmcg.discountBond(sd, t, irStates_.at(sd)[idx]);
+        currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_);
+    std::cout << "GaussianCamCG::getDiscount(" << s << "," << t << ")" << std::endl;
+    return lgmcg.discountBond(s, t, irStates_.at(sd)[idx]);
 }
 
 std::size_t GaussianCamCG::numeraire(const Date& s) const {
@@ -476,9 +477,8 @@ std::size_t GaussianCamCG::numeraire(const Date& s) const {
     Size cpidx = currencyPositionInCam_[0];
     Date sd = getSloppyDate(s, sloppySimDates_, effectiveSimulationDates_);
     LgmCG lgmcg(
-        currencies_[0], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_, sloppySimDates_,
-        effectiveSimulationDates_);
-    return lgmcg.numeraire(sd, irStates_.at(sd)[0]);
+        currencies_[0], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_);
+    return lgmcg.numeraire(s, irStates_.at(sd)[0]);
 }
 
 std::size_t GaussianCamCG::getFxSpot(const Size idx) const {
