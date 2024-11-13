@@ -204,12 +204,12 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
             effectiveRate = cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), fixing), cg_const(g, ibor->spread()));
         }
 
-        info.flowNode = modelCg_->pay(
-            cg_mult(
-                g,
-                cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) * ibor->accrualPeriod()),
-                cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), effectiveRate), cg_const(g, ibor->spread()))),
-            flow->date(), flow->date(), payCcy);
+        info.flowNode =
+            modelCg_->pay(cg_mult(g,
+                                  cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) *
+                                                  ibor->accrualPeriod()),
+                                  effectiveRate),
+                          flow->date(), flow->date(), payCcy);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -253,7 +253,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         info.flowNode = modelCg_->pay(
             cg_mult(
                 g, cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : cms->nominal()) * cms->accrualPeriod()),
-                cg_add(g, cg_mult(g, cg_const(g, cms->gearing()), effectiveRate), cg_const(g, cms->spread()))),
+                effectiveRate),
             flow->date(), flow->date(), payCcy);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
@@ -351,7 +351,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         info.flowNode = modelCg_->pay(
             cg_mult(
                 g, cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : bma->nominal()) * bma->accrualPeriod()),
-                cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), effectiveRate), cg_const(g, bma->spread()))),
+                effectiveRate),
             flow->date(), flow->date(), payCcy);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
@@ -397,7 +397,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         info.flowNode = modelCg_->pay(
             cg_mult(
                 g, cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : bma->nominal()) * bma->accrualPeriod()),
-                cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), effectiveRate), cg_const(g, bma->spread()))),
+                effectiveRate),
             flow->date(), flow->date(), payCcy);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
@@ -413,7 +413,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         info.flowNode = modelCg_->pay(
             cg_mult(
                 g, cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : sub->nominal()) * sub->accrualPeriod()),
-                cg_add(g, cg_mult(g, cg_const(g, sub->gearing()), effectiveRate), cg_const(g, sub->spread()))),
+                effectiveRate),
             flow->date(), flow->date(), payCcy);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
