@@ -815,7 +815,7 @@ void LegData::fromXML(XMLNode* node) {
 
     // set payment calendar equal to the schedule calendar if the payment calendar not given
     // otherwise the payment calendar is not set and payments of notional can happen before the interest payments 
-    if (paymentCalendar_.empty()) {
+    if (paymentCalendar_.empty()  && !schedule_.rules().empty()) {
         auto tmp = schedule_.rules().front().calendar();
         if (!tmp.empty()) {
             paymentCalendar_ = tmp;
