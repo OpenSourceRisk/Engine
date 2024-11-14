@@ -527,7 +527,17 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
     std::vector<std::size_t> state;
 
     Date sd = getSloppyDate(obsdate, sloppySimDates_, effectiveSimulationDates_);
-    state.push_back(irStates_.at(sd).at(0));
+
+    if(conditionalExpectationUseAsset_ && !underlyingPaths_.empty()) {
+        for(auto const r: underlyingPaths_.at(sd))
+            state.push_back(r);
+    }
+
+    // TODO we include zero vol ir states here, we could exclude them
+    if (conditionalExpectationUseIr_) {
+        for (auto const r : irStates_.at(obsdate))
+            state.push_back(r);
+    }
 
     if (addRegressor1 != ComputationGraph::nan)
         state.push_back(addRegressor1);
