@@ -228,7 +228,8 @@ void CurrencyParser::reset() {
                    {"USD", USDCurrency()}, {"UYU", UYUCurrency()}, {"VND", VNDCurrency()}, {"XOF", XOFCurrency()},
                    {"ZAR", ZARCurrency()}, {"ZMW", ZMWCurrency()}};
 
-    minorCurrencies_ = {{"GBp", GBPCurrency()}, {"GBX", GBPCurrency()}, {"ILa", ILSCurrency()}, {"ILX", ILSCurrency()},
+    minorCurrencies_ = {{"EUc", EURCurrency()}, {"GBp", GBPCurrency()}, {"GBX", GBPCurrency()}, {"ILa", ILSCurrency()},
+                        {"ILX", ILSCurrency()},
                         {"ILs", ILSCurrency()}, {"KWf", KWDCurrency()}, {"ILA", ILSCurrency()}, {"ZAc", ZARCurrency()},
                         {"ZAC", ZARCurrency()}, {"ZAX", ZARCurrency()}, {"USc", USDCurrency()}};
 
