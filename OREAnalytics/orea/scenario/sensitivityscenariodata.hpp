@@ -137,8 +137,9 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData(bool parConversion = true)
-        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion) {};
+    SensitivityScenarioData(bool parConversion = true, set<RiskFactorKey::KeyType> parExcludes = {})
+        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion),
+	  parConversionExcludes_(parExcludes) {};
 
     //! \name Inspectors
     //@{
@@ -308,6 +309,7 @@ public:
     //! Utilities
     //@{
     string getIndexCurrency(string indexName);
+    const set<ore::analytics::RiskFactorKey::KeyType>& parConversionExcludes() { return parConversionExcludes_; }
     //@}
 
 protected:
@@ -352,6 +354,7 @@ protected:
     bool computeGamma_;
     bool useSpreadedTermStructures_;
     bool parConversion_;
+    set<ore::analytics::RiskFactorKey::KeyType> parConversionExcludes_;
 
 private:
     void parDataFromXML(XMLNode* child, CurveShiftParData& data);

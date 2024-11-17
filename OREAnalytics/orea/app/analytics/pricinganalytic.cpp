@@ -161,8 +161,7 @@ void PricingAnalyticImpl::runAnalytic(
                     *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
-            // FIXME: Why are these disabled?
-            set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
+            set<RiskFactorKey::KeyType> typesDisabled = analytic()->configurations().sensiScenarioData->parConversionExcludes();
             if (inputs_->parSensi() || inputs_->alignPillars()) {
                 parAnalysis_= QuantLib::ext::make_shared<ParSensitivityAnalysis>(
                     inputs_->asof(), analytic()->configurations().simMarketParams,
