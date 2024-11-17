@@ -28,6 +28,8 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
+#include <set>
+
 namespace ore {
 namespace analytics {
 using ore::data::XMLNode;
@@ -39,6 +41,7 @@ using std::map;
 using std::pair;
 using std::string;
 using std::vector;
+using std::set;
 
 //! Description of sensitivity shift scenarios
 /*! \ingroup scenario
