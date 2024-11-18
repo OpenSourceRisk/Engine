@@ -140,9 +140,8 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData(bool parConversion = true, set<RiskFactorKey::KeyType> parExcludes = {})
-        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion),
-	  parConversionExcludes_(parExcludes) {};
+    SensitivityScenarioData(bool parConversion = true)
+        : computeGamma_(true), useSpreadedTermStructures_(false), parConversion_(parConversion) {};
 
     //! \name Inspectors
     //@{
@@ -197,6 +196,8 @@ public:
 
     //! Give back the shift data for the given risk factor type, \p keyType, with the given \p name
     const ShiftData& shiftData(const ore::analytics::RiskFactorKey::KeyType& keyType, const std::string& name) const;
+
+    const set<ore::analytics::RiskFactorKey::KeyType>& parConversionExcludes() const { return parConversionExcludes_; }
     //@}
 
     //! \name Setters
@@ -233,6 +234,8 @@ public:
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& commodityVolShiftData() { return commodityVolShiftData_; }
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& correlationShiftData() { return correlationShiftData_; }
     map<string, QuantLib::ext::shared_ptr<SpotShiftData>>& securityShiftData() { return securityShiftData_; }
+
+    set<ore::analytics::RiskFactorKey::KeyType>& parConversionExcludes() { return parConversionExcludes_; }
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
     bool& computeGamma() { return computeGamma_; }
@@ -312,7 +315,6 @@ public:
     //! Utilities
     //@{
     string getIndexCurrency(string indexName);
-    const set<ore::analytics::RiskFactorKey::KeyType>& parConversionExcludes() { return parConversionExcludes_; }
     //@}
 
 protected:

@@ -439,10 +439,6 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             vector<Real> strikes = itr->second->shiftStrikes;
             vector<Period> expiries = itr->second->shiftExpiries;
             QL_REQUIRE(strikes.size() > 0, "Only strike capfloor vols supported");
-            // The following line returns shiftMult=0
-            // shiftMult = simMarket->baseScenario()->get(
-            //     RiskFactorKey(RiskFactorKey::KeyType::OptionletVolatility, ccy, key.index));
-            // Fix this in analogy to YoYInflationCapFloorVolatility by looking up the vol termstructure
             Handle<OptionletVolatilityStructure> vts = simMarket->capFloorVol(ccy, marketConfiguration);
             Size keyIdx = key.index;
             Size expIdx = keyIdx / strikes.size();

@@ -69,7 +69,7 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
     if (!zeroSensis.empty()) {
         auto& configs = analytic()->configurations();
 
-        set<RiskFactorKey::KeyType> typesDisabled = configs.sensiScenarioData->parConversionExcludes();
+        const set<RiskFactorKey::KeyType>& typesDisabled = configs.sensiScenarioData->parConversionExcludes();
 
         auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
             inputs_->asof(), analytic()->configurations().simMarketParams,
