@@ -1720,6 +1720,24 @@
           }
         ]
       },
+      "inflationCurves\\.json": {
+        "keys": {
+          "data/": [
+            "dates"
+          ]
+        },
+        "settings": [
+          {
+            "names": [
+              "data/time",
+              "data/zeroRate",
+              "data/cpi"
+            ],
+            "abs_tol": 1e-15,
+            "rel_tol": 1e-09
+          }
+        ]
+      },
       "simm\\.json": {
         "ignore_keys": [
           "simmResultsPath"
