@@ -652,7 +652,7 @@ void CrossAssetModelBuilder::buildModel() const {
                         getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]));
                     TLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
                 } else {
-                    std::string exceptionMessage = "FX BS " + std::to_string(i) + " calibration error " +
+                    std::string exceptionMessage = "FX BS " + fx->foreignCcy() + " index " + std::to_string(i) + " calibration error " +
                                                    std::to_string(fxOptionCalibrationErrors_[i]) +
                                                    " exceeds tolerance " +
                                                    std::to_string(config_->bootstrapTolerance());
@@ -726,7 +726,7 @@ void CrossAssetModelBuilder::buildModel() const {
                         getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]));
                     TLOGGERSTREAM("rmse = " << eqOptionCalibrationErrors_[i]);
                 } else {
-                    std::string exceptionMessage = "EQ BS " + std::to_string(i) + " calibration error " +
+                    std::string exceptionMessage = "EQ BS " + eq->eqName() + " index " + std::to_string(i) + " calibration error " +
                                                    std::to_string(eqOptionCalibrationErrors_[i]) +
                                                    " exceeds tolerance " +
                                                    std::to_string(config_->bootstrapTolerance());
@@ -867,7 +867,7 @@ void CrossAssetModelBuilder::calibrateInflation(
             TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, false));
             TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
-            string exceptionMessage = "INF (DK) " + std::to_string(modelIdx) + " calibration error " +
+            string exceptionMessage = "INF (DK) " + data.index() + " index " + std::to_string(modelIdx) + " calibration error " +
                                       std::to_string(inflationCalibrationErrors_[modelIdx]) + " exceeds tolerance " +
                                       std::to_string(config_->bootstrapTolerance());
             StructuredModelWarningMessage("Failed to calibrate INF DK Model", exceptionMessage, id_).log();
@@ -1048,7 +1048,7 @@ void CrossAssetModelBuilder::calibrateInflation(
             TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             std::stringstream ss;
-            ss << "INF (JY) " << modelIdx << " calibration error " << std::scientific
+            ss << "INF (JY) " << data.index() << " index " << modelIdx << " calibration error " << std::scientific
                << inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << config_->bootstrapTolerance();
             string exceptionMessage = ss.str();
             StructuredModelWarningMessage("Failed to calibrate INF JY Model", exceptionMessage, id_).log();
