@@ -4,6 +4,7 @@
 
   <xs:complexType name="sensitivityanalysis">
     <xs:all>
+      <xs:element type="parExcludes" name="ParConversionExcludes"/>
       <xs:element type="xs:boolean" name="ParConversion" minOccurs="0"/>
       <xs:element type="discountcurves" name="DiscountCurves"/>
       <xs:element type="indexcurves" name="IndexCurves" minOccurs="0"/>
@@ -54,6 +55,13 @@
             </xs:element>
           </xs:sequence>
         </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="parExcludes">
+    <xs:sequence>
+      <xs:element name="Type" maxOccurs="unbounded" minOccurs="0">
       </xs:element>
     </xs:sequence>
   </xs:complexType>
