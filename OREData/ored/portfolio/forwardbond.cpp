@@ -67,6 +67,8 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     npvCurrency_ = currency_ = bondData_.coupons().front().currency();
     notionalCurrency_ = currency_;
 
+    additionalData_["underlyingSecurityId"] = bondData_.securityId();
+
     QL_REQUIRE(!bondData_.referenceCurveId().empty(), "reference curve id required");
     QL_REQUIRE(!bondData_.settlementDays().empty(), "settlement days required");
 

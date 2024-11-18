@@ -83,6 +83,7 @@ public:
 
     //! return the XML Document as a string.
     std::string toString() const;
+    std::string toStringUnformatted() const;
 
     XMLNode* getFirstNode(const string& name) const;
     void appendNode(XMLNode*);
@@ -115,6 +116,7 @@ public:
     void fromXMLString(const std::string& xml);
     //! Parse from XML string
     std::string toXMLString() const;
+    std::string toXMLStringUnformatted() const;
 };
 
 //! XML Utilities Class

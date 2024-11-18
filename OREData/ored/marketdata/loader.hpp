@@ -71,6 +71,9 @@ public:
     //! check if there are quotes for a date
     virtual bool hasQuotes(const QuantLib::Date& d) const;
 
+    //! get set of dates for which quotes are loaded
+    virtual std::set<QuantLib::Date> asofDates() const = 0;
+
     /*! Default implementation for get that allows for the market data item to be optional. The first element of
         the \p name pair is the name of the market point being sought and the second element of the \p name pair
         is a flag to indicate if the market data point is optional, <code>true</code>, or not, <code>false</code>.

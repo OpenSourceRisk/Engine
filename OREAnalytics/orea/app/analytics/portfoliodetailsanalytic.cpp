@@ -23,12 +23,14 @@ namespace analytics {
 
 void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
 		const std::set<std::string>& runTypes) {
-    
+
+    auto effectivePortfolio = analytic()->portfolio() == nullptr ? inputs_->portfolio() : analytic()->portfolio();
+
     if (!portfolioAnalyser_) {
-        analytic()->buildPortfolio();
         portfolioAnalyser_ = QuantLib::ext::make_shared<PortfolioAnalyser>(
-            analytic()->portfolio(), inputs_->pricingEngine(), inputs_->baseCurrency(),
-            analytic()->configurations().curveConfig, inputs_->refDataManager(), *inputs_->iborFallbackConfig());
+            effectivePortfolio,
+            inputs_->pricingEngine(), inputs_->baseCurrency(), analytic()->configurations().curveConfig,
+            inputs_->refDataManager(), *inputs_->iborFallbackConfig());
     }
 
     // risk factor report
@@ -60,7 +62,7 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
     nsReport->addColumn("NettingSets", string()).addColumn("Count", Size());
     ttReport->addColumn("TradeTypes", string()).addColumn("Count", Size());
     map<string, Size> counterParties, nettingSets, tradeTypes;
-    for (const auto& [_, t] : analytic()->portfolio()->trades()) {
+    for (const auto& [_, t] : effectivePortfolio->trades()) {
         counterParties[t->envelope().counterparty()]++;
         nettingSets[t->envelope().nettingSetId()]++;
         tradeTypes[t->tradeType()]++;
@@ -77,13 +79,12 @@ void PortfolioDetailsAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<o
     analytic()->reports()[label_]["counterparties"] = cpReport;
     analytic()->reports()[label_]["netting_sets"] = nsReport;
     analytic()->reports()[label_]["trade_types"] = ttReport;
-    
+
     // underlying indices report
     QuantLib::ext::shared_ptr<ore::data::InMemoryReport> uiReport =
         QuantLib::ext::make_shared<ore::data::InMemoryReport>();
     uiReport->addColumn("AssetType", string()).addColumn("Indices", string());
-    auto underlyingIndices = analytic()->portfolio()->underlyingIndices();
-    for (const auto& ui : underlyingIndices) {
+    for (const auto& ui : portfolioAnalyser_->underlyingIndices()) {
         string indices;
         for (const auto& s : ui.second)
             indices += indices.empty() ? s : "|" + s;
