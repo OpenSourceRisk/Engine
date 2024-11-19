@@ -1166,8 +1166,8 @@ QuantLib::ext::shared_ptr<CapFloor> ParSensitivityInstrumentBuilder::makeCapFloo
     // if (generatePillar) {
     //     capFloorPillars_[ccy].push_back(term /*(end - asof) * Days*/);
     // }
-
     QL_REQUIRE(inst, "empty cap/floor par instrument pointer");
+    QL_REQUIRE(inst->floatingLeg().size() > 0, "empty cap/floor floating leg");
     return inst;
 }
 
