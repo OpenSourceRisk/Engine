@@ -146,6 +146,7 @@ takes place on specific period end dates for all observation dates in that perio
         </Levels>
       </BarrierData>
     </Barriers>
+    <KnockOutSettlementAtPeriodEnd>false<KnockOutSettlementAtPeriodEnd>
   </EquityAccumulatorData>
 </Trade>
 \end{minted}
@@ -305,7 +306,10 @@ The relevant fields in the \lstinline!OptionData! node for an Accumulator are:
     The barrier \lstinline!Level! for \lstinline!Type!  \emph{FixingFloor}  is a non-negative integer.
 
     Allowable values: For each \lstinline!BarrierData! node, see \ref{ss:barrier_data}. For Accumulators/Decumulators, the following values for \lstinline!Type! are relevant: \emph{UpAndOut}, \emph{DownAndOut} and \emph{FixingFloor}. The barrier \lstinline!Style! can be \emph{European} (monitored on observation dates) or \emph{American} (continuously monitored).
-\end{itemize}
+  \item KnockOutSettlementAtPeriodEnd [Optional]: Only relevant for \emph{type 02 accumulator}. Controlls the settlement behavior in case of an knock out events. 
+    If \emph{true} the settlement of a knock out event takes place at the end of the observation period, otherwise on the knock out event date plus the 
+    defined settlement delay. Defaults to \emph{false}.
+  \end{itemize}
 
 % scripted trade representation type 01
 

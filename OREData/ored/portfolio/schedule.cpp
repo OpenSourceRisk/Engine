@@ -130,6 +130,7 @@ void ScheduleDates::fromXML(XMLNode* node) {
     endOfMonth_ = XMLUtils::getChildValue(node, "EndOfMonth");
     endOfMonthConvention_ = XMLUtils::getChildValue(node, "EndOfMonthConvention");
     dates_ = XMLUtils::getChildrenValues(node, "Dates", "Date");
+    includeDuplicateDates_ = XMLUtils::getChildValueAsBool(node, "IncludeDuplicateDates", false, false);
 }
 
 XMLNode* ScheduleDates::toXML(XMLDocument& doc) const {
@@ -143,6 +144,9 @@ XMLNode* ScheduleDates::toXML(XMLDocument& doc) const {
     if (!endOfMonthConvention_.empty())
         XMLUtils::addChild(doc, node, "EndOfMonthConvention", endOfMonthConvention_);
     XMLUtils::addChildren(doc, node, "Dates", "Date", dates_);
+    if (includeDuplicateDates_){
+        XMLUtils::addChild(doc, node, "IncludeDuplicateDates", includeDuplicateDates_);
+    }
     return node;
 }
 
@@ -283,6 +287,15 @@ Schedule makeSchedule(const ScheduleDates& data) {
         endOfMonthConvention = parseBusinessDayConvention(data.endOfMonthConvention());
 
     // Ensure that Schedule ctor is passed a vector of unique ordered dates.
+    if(data.includeDuplicateDates()){
+        std::vector<Date> dates;
+        for(const auto& d : data.dates()){
+            dates.push_back(calendar.adjust(parseDate(d), convention));
+        }
+        std::sort(dates.begin(),dates.end());
+        return QuantLib::Schedule(dates, calendar, convention, boost::none,
+                              tenor, boost::none, endOfMonth, vector<bool>(0), false, false, endOfMonthConvention);
+    } 
     std::set<Date> uniqueDates;
     for (const string& d : data.dates())
         uniqueDates.insert(calendar.adjust(parseDate(d), convention));

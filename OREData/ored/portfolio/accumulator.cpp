@@ -317,11 +317,26 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
         }
     } else {
         events_.emplace_back("ObservationDates", observationDates_);
-        events_.emplace_back("KnockOutSettlementDates", "ObservationDates",
-                             settlementLag_.empty() ? "0D" : settlementLag_,
-                             settlementCalendar_.empty() ? "NullCalendar" : settlementCalendar_,
-                             settlementConvention_.empty() ? "F" : settlementConvention_);
         events_.emplace_back("ObservationPeriodEndDates", pricingDates_);
+        if (knockOutSettlementAtPeriodEnd_) {
+            auto obsDates = makeSchedule(observationDates_);
+            auto obsEndDates = makeSchedule(pricingDates_);
+            QL_REQUIRE(!obsDates.empty() && !obsEndDates.empty() && obsEndDates.dates().back() >= obsDates.dates().back(),
+                       "Accumulator Type 2 with knockoutSettlment at Period End date, requires non empty "
+                       "observationDates and pricingDates and latest pricingDate after or on latest observationDate");
+            std::vector<std::string> knockOutSettlementDates;
+            for (const auto& obsDate : obsDates) {
+                auto it = std::lower_bound(obsEndDates.begin(), obsEndDates.end(), obsDate);
+                knockOutSettlementDates.push_back(to_string(*it));
+            }
+            auto knockOutSettlementScheduleData = ScheduleData(ScheduleDates("","","", knockOutSettlementDates, "","", true));
+            events_.emplace_back("KnockOutSettlementDates", knockOutSettlementScheduleData);
+        } else {
+            events_.emplace_back("KnockOutSettlementDates", "ObservationDates",
+                                 settlementLag_.empty() ? "0D" : settlementLag_,
+                                 settlementCalendar_.empty() ? "NullCalendar" : settlementCalendar_,
+                                 settlementConvention_.empty() ? "F" : settlementConvention_);
+        }
         if(settlementDates_.hasData()) {
             events_.emplace_back("SettlementDates", settlementDates_);
         } else {
@@ -481,6 +496,8 @@ void Accumulator::fromXML(XMLNode* node) {
         barriers_.push_back(BarrierData());
         barriers_.back().fromXML(n);
     }
+    knockOutSettlementAtPeriodEnd_ =
+        XMLUtils::getChildValueAsBool(dataNode, "KnockOutSettlementAtPeriodEnd", false, false);
     initIndices();
 }
 
@@ -530,6 +547,7 @@ XMLNode* Accumulator::toXML(XMLDocument& doc) const {
         XMLUtils::appendNode(barriers, n.toXML(doc));
     }
     XMLUtils::appendNode(dataNode, barriers);
+    XMLUtils::addChild(doc, dataNode, "KnockOutSettlementAtPeriodEnd", knockOutSettlementAtPeriodEnd_);
     return node;
 }
 

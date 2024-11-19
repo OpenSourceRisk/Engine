@@ -4516,6 +4516,7 @@
       <xs:element type="calendar" name="SettlementCalendar" minOccurs="0"/>
       <xs:element type="businessDayConvention" name="SettlementConvention" minOccurs="0"/>
       <xs:element type="xs:boolean" name="NakedOption" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="KnockOutSettlementAtPeriodEnd" minOccurs="0"/>
       <xs:element name="RangeBounds">
         <xs:complexType>
           <xs:sequence>
