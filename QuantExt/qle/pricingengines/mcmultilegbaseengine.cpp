@@ -1134,7 +1134,9 @@ void McMultiLegBaseEngine::calculateModels(
     const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
     std::vector<RegressionModel>& regModelUndDirty, std::vector<RegressionModel>& regModelUndExInto,
     std::vector<RegressionModel>& regModelContinuationValue, std::vector<RegressionModel>& regModelOption,
-    RandomVariable& pathValueUndDirty, RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const {
+    RandomVariable& pathValueUndDirty, RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption,
+    std::function<RandomVariable(double, RandomVariable&, const std::set<Real>&,
+               const std::vector<std::vector<QuantExt::RandomVariable>>&)>overwriteFunction) const {
 
     // for each xva and exercise time collect the relevant cashflow amounts and train a model on them
 
@@ -1234,10 +1236,15 @@ void McMultiLegBaseEngine::calculateModels(
         }
 
         if (isXvaTime) {
+
+            auto pathValueUndDirtyUsed = pathValueUndDirty;
+            if(overwriteFunction)
+                pathValueUndDirtyUsed = overwriteFunction(*t, pathValueUndDirty, exerciseXvaTimes, pathValues);
+
             regModelUndDirty[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] != CfStatus::open; }, **model_,
                 regressorModel_, regressionVarianceCutoff_);
-            regModelUndDirty[counter].train(polynomOrder_, polynomType_, pathValueUndDirty, pathValuesRef,
+            regModelUndDirty[counter].train(polynomOrder_, polynomType_, pathValueUndDirtyUsed, pathValuesRef,
                                             simulationTimes);
         }
 
@@ -1296,7 +1303,8 @@ void McMultiLegBaseEngine::generatePathValues(const std::vector<Real>& simulatio
     }
 }
 
-void McMultiLegBaseEngine::calculate() const {
+void McMultiLegBaseEngine::calculate(std::function<RandomVariable(double, RandomVariable& , const std::set<Real>& ,
+               const std::vector<std::vector<QuantExt::RandomVariable>>& )>overwriteFunction) const {
 
     includeReferenceDateEvents_ = Settings::instance().includeReferenceDateEvents();
     includeTodaysCashflows_ = Settings::instance().includeTodaysCashFlows()
@@ -1468,7 +1476,7 @@ void McMultiLegBaseEngine::calculate() const {
 
     calculateModels(simulationTimes, exerciseXvaTimes, exerciseTimes, xvaTimes, cashflowInfo, pathValues, pathValuesRef,
                     regModelUndDirty, regModelUndExInto, regModelContinuationValue, regModelOption, pathValueUndDirty,
-                    pathValueUndExInto, pathValueOption);
+                    pathValueUndExInto, pathValueOption, overwriteFunction);
 
     // setup the models on close-out grid if required or else copy them from valuation
 
@@ -1485,7 +1493,7 @@ void McMultiLegBaseEngine::calculate() const {
         calculateModels(simulationTimes, exerciseXvaTimes, exerciseTimes, xvaTimes, cashflowInfo, closeOutPathValues,
                         closeOutPathValuesRef, regModelUndDirtyCloseOut, regModelUndExIntoCloseOut,
                         regModelContinuationValueCloseOut, regModelOptionCloseOut, pathValueUndDirtyCloseOut,
-                        pathValueUndExIntoCloseOut, pathValueOptionCloseOut);
+                        pathValueUndExIntoCloseOut, pathValueOptionCloseOut, overwriteFunction);
     }
 
     // set the result value (= underlying value if no exercise is given, otherwise option value)

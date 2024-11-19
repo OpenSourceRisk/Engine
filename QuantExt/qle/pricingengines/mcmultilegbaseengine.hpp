@@ -86,7 +86,9 @@ protected:
         const bool reevaluateExerciseInStickyRun = false);
 
     // run calibration and pricing (called from derived engines)
-    void calculate() const;
+    void calculate(std::function<RandomVariable(double, RandomVariable&, const std::set<Real>&,
+                                                const std::vector<std::vector<QuantExt::RandomVariable>>&)>
+                       overwriteFunction = {}) const;
 
     // return AmcCalculator instance (called from derived engines, calculate must be called before)
     QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator() const;
@@ -227,7 +229,10 @@ protected:
                          std::vector<RegressionModel>& regModelUndExInto,
                          std::vector<RegressionModel>& regModelContinuationValue,
                          std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
-                         RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
+                         RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption,
+                         std::function<RandomVariable(double, RandomVariable&, const std::set<Real>&,
+                                                      const std::vector<std::vector<QuantExt::RandomVariable>>&)>
+                             overwriteFunction) const;
 
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
