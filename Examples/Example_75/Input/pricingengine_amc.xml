@@ -19,7 +19,7 @@
       <Parameter name="RegressionOnExerciseOnly">false</Parameter>
     </EngineParameters>
   </Product>
-    <Product type="FxForward">
+<!--    <Product type="FxForward">
         <Model>CrossAssetModel</Model>
         <ModelParameters/>
         <Engine>AMC</Engine>
@@ -37,7 +37,7 @@
             <Parameter name="MinObsDate">true</Parameter>
             <Parameter name="RegressionOnExerciseOnly">false</Parameter>
         </EngineParameters>
-    </Product>
+    </Product>-->
   <Product type="CrossCurrencySwap">
     <Model>CrossAssetModel</Model>
     <ModelParameters/>
