@@ -346,8 +346,8 @@
   <Trade id="FXSwap">
     <TradeType>FxSwap</TradeType>
     <Envelope>
-        <CounterParty>CPTY_A</CounterParty>
-        <NettingSetId>CPTY_A</NettingSetId>
+        <CounterParty>CPTY_B</CounterParty>
+        <NettingSetId>CPTY_B</NettingSetId>
         <AdditionalFields/>
     </Envelope>
     <FxSwapData>
