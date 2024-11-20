@@ -561,7 +561,8 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
                 inputs_->exposureSimMarketParams()->additionalScenarioDataIndices(),
                 inputs_->exposureSimMarketParams()->additionalScenarioDataCcys(),
                 inputs_->exposureSimMarketParams()->additionalScenarioDataNumberOfCreditStates(),
-                inputs_->amcPathDataInput(), inputs_->amcPathDataOutput());
+                inputs_->amcPathDataInput(), inputs_->amcPathDataOutput(),
+                inputs_->amcIndividualTrainingInput(), inputs_->amcIndividualTrainingOutput());
             amcEngine.registerProgressIndicator(progressBar);
             amcEngine.registerProgressIndicator(progressLog);
             if (!scenarioData_.empty())
@@ -591,6 +592,7 @@ void XvaAnalyticImpl::amcRun(bool doClassicRun) {
                 inputs_->marketConfig("fxcalibration"), inputs_->marketConfig("eqcalibration"),
                 inputs_->marketConfig("infcalibration"), inputs_->marketConfig("crcalibration"),
                 inputs_->marketConfig("simulation"), inputs_->amcPathDataInput(), inputs_->amcPathDataOutput(),
+                inputs_->amcIndividualTrainingInput(), inputs_->amcIndividualTrainingOutput(),
                 inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, cubeFactory, offsetScenario_,
                 simMarketParams);
 
