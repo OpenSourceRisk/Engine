@@ -86,6 +86,8 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     analytic()->setMarket(t0SimMarket_);
     analytic()->buildPortfolio();
 
+    analytic()->enrichIndexFixings(analytic()->portfolio());
+
     QuantLib::ext::shared_ptr<InMemoryReport> t0NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString())
         .writeNpv(*t0NpvReport, effectiveResultCurrency, analytic()->market(), marketConfig,
@@ -165,6 +167,8 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     // Build the portfolio, linked to the shifted market
     analytic()->buildPortfolio();
 
+    analytic()->enrichIndexFixings(analytic()->portfolio());
+
     // This hook allows modifying the portfolio in derived classes before running the analytics below
     analytic()->modifyPortfolio();
     
@@ -202,6 +206,8 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     simMarket1->update(d1);
     analytic()->buildPortfolio();
 
+    analytic()->enrichIndexFixings(analytic()->portfolio());
+
     QuantLib::ext::shared_ptr<InMemoryReport> t1NpvLaggedReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString())
         .writeNpv(*t1NpvLaggedReport, effectiveResultCurrency, analytic()->market(), marketConfig,
@@ -230,6 +236,8 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
     simMarket1->update(d1);
 
     analytic()->buildPortfolio();
+
+    analytic()->enrichIndexFixings(analytic()->portfolio());
 
     QuantLib::ext::shared_ptr<InMemoryReport> t1Npvt0PortReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
     ReportWriter(inputs_->reportNaString())
@@ -264,6 +272,8 @@ void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
         analytic()->setPortfolio(inputs_->mporPortfolio());
         analytic()->buildPortfolio();
+
+        analytic()->enrichIndexFixings(analytic()->portfolio());
 
         t1NpvReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
