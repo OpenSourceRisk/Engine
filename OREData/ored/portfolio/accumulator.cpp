@@ -547,7 +547,9 @@ XMLNode* Accumulator::toXML(XMLDocument& doc) const {
         XMLUtils::appendNode(barriers, n.toXML(doc));
     }
     XMLUtils::appendNode(dataNode, barriers);
-    XMLUtils::addChild(doc, dataNode, "KnockOutSettlementAtPeriodEnd", knockOutSettlementAtPeriodEnd_);
+    if (knockOutSettlementAtPeriodEnd_) {
+        XMLUtils::addChild(doc, dataNode, "KnockOutSettlementAtPeriodEnd", knockOutSettlementAtPeriodEnd_);
+    }
     return node;
 }
 
