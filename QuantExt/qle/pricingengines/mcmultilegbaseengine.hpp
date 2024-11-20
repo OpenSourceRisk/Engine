@@ -33,6 +33,16 @@
 #include <ql/instruments/swaption.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
+//#include <boost/archive/binary_iarchive.hpp>
+//#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/export.hpp>
+
 namespace QuantExt {
 
 // statistics
@@ -62,7 +72,7 @@ class McMultiLegBaseEngine {
 public:
     enum RegressorModel { Simple, LaggedFX };
 
-protected:
+//protected:
     /*! The npv is computed in the model's base currency, discounting curves are taken from the model. simulationDates
         are additional simulation dates. The cross asset model here must be consistent with the multi path that is the
         input to AmcCalculator::simulatePath().
@@ -164,13 +174,23 @@ protected:
         bool isTrained_ = false;
         std::set<std::pair<Real, Size>> regressorTimesModelIndices_;
         Matrix coordinateTransform_;
-        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
+        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_ =
+            std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>{};
         Array regressionCoeffs_;
+
+        Size basisDim_ = 0;
+        Size basisOrder_ = 0;
+        LsmBasisSystem::PolynomialType basisType_ = LsmBasisSystem::PolynomialType::Monomial;
+        Size basisSystemSizeBound_ = Null<Size>();
+
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive& ar, const unsigned int version);
     };
 
     // the implementation of the amc calculator interface used by the amc valuation engine
     class MultiLegBaseAmcCalculator : public AmcCalculator {
     public:
+        MultiLegBaseAmcCalculator() = default;
         MultiLegBaseAmcCalculator(
             const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
             const std::vector<Real>& cashSettlementTimes, const std::set<Real>& exerciseXvaTimes,
@@ -211,6 +231,11 @@ protected:
         bool includeReferenceDateEvents_;
 
         std::vector<Filter> exercised_;
+
+        // used for serialisation of amc trianing
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive& ar, const unsigned int version);
+
     };
 
     // generate the mc path values of the model process
@@ -249,5 +274,6 @@ protected:
     // lgm vectorised instances for each ccy
     mutable std::vector<LgmVectorised> lgmVectorised_;
 };
+
 
 } // namespace QuantExt
