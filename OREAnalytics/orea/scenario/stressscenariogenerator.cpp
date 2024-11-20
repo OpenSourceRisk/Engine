@@ -15,7 +15,7 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
+#include <ored/portfolio/structuredconfigurationerror.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/time/calendars/target.hpp>
@@ -101,7 +101,7 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
 
         TLOG("Apply stress scenario to fx " << ccypair);
 
-        StressTestScenarioData::SpotShiftData data = d.second;
+        StressTestScenarioData::SpotShiftData data = *d.second;
         ShiftType type = data.shiftType;
         bool relShift = (type == ShiftType::Relative);
         // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
@@ -120,7 +120,7 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
                                               QuantLib::ext::shared_ptr<Scenario>& scenario) {
     for (auto d : std.equityShifts) {
         string equity = d.first;
-        StressTestScenarioData::SpotShiftData data = d.second;
+        StressTestScenarioData::SpotShiftData data = *d.second;
         ShiftType type = data.shiftType;
         bool relShift = (type == ShiftType::Relative);
         // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
@@ -151,7 +151,7 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
 
-        StressTestScenarioData::CurveShiftData data = d.second;
+        StressTestScenarioData::CurveShiftData data = *d.second;
         ShiftType shiftType = data.shiftType;
         //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
 	DayCounter dc;
@@ -211,7 +211,7 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
 
-        StressTestScenarioData::CurveShiftData data = d.second;
+        StressTestScenarioData::CurveShiftData data = *d.second;
         ShiftType shiftType = data.shiftType;
         //DayCounter dc = parseDayCounter(simMarketData_->defaultCurveDayCounter(name));
 	DayCounter dc;
@@ -273,7 +273,7 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
 
-        StressTestScenarioData::CurveShiftData data = d.second;
+        StressTestScenarioData::CurveShiftData data = *d.second;
         ShiftType shiftType = data.shiftType;
         //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(indexName));
 	DayCounter dc;
@@ -334,7 +334,7 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
 
-        StressTestScenarioData::CurveShiftData data = d.second;
+        StressTestScenarioData::CurveShiftData data = *d.second;
         ShiftType shiftType = data.shiftType;
         //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
 	DayCounter dc;
@@ -385,9 +385,16 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestData& std,
                                              QuantLib::ext::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
-
+    
     for (auto d : std.fxVolShifts) {
         string ccypair = d.first;
+        if(simMarketData_->fxVolIsSurface(ccypair)){
+            StructuredConfigurationErrorMessage("Simulation Market", "Fx Volatility",
+                                                "Stresstest support only ATM shifts", "Skip stresstest for " + ccypair)
+                .log();
+            continue;
+        }
+
         TLOG("Apply stress scenario to fx vol structure " << ccypair);
 
         Size n_fxvol_exp = simMarketData_->fxVolExpiries(ccypair).size();
@@ -398,7 +405,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
         // buffer for shifted zero curves
         std::vector<Real> shiftedValues(n_fxvol_exp);
 
-        StressTestScenarioData::VolShiftData data = d.second;
+        StressTestScenarioData::FXVolShiftData data = *d.second;
 
         //DayCounter dc = parseDayCounter(simMarketData_->fxVolDayCounter(ccypair));
         DayCounter dc;
@@ -417,23 +424,74 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
         }
 
         ShiftType shiftType = data.shiftType;
-        std::vector<Period> shiftTenors = data.shiftExpiries;
-        std::vector<Time> shiftTimes(shiftTenors.size());
-        vector<Real> shifts = data.shifts;
-        QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
-        QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
+        vector<Real> shifts;
+        std::vector<Time> shiftTimes;
 
-        for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
+        if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit) {
+            std::vector<Period> shiftTenors = data.shiftExpiries;
+            shifts = data.shifts;
+            QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
+            QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
 
+            for (Size j = 0; j < shiftTenors.size(); ++j){
+                shiftTimes.push_back(dc.yearFraction(asof, asof + shiftTenors[j]));
+            }
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Weighted) {
+            DLOG("FX Vol Stress Scenario with weighted schema")
+            QL_REQUIRE(data.weightTenors.size() == data.weights.size(), "Mismatch between weights and weightTenors");
+            QL_REQUIRE(data.shiftExpiries.size() == 1, "Weighting schema 'Weighted' requires exactly one tenor");
+            QL_REQUIRE(data.shifts.size() == 1, "Weighting schema 'Weighted' requires exactly one shift");
+            Period referenceTenor = data.shiftExpiries.front();
+            Real referenceShift = data.shifts.front();
+            std::vector<Period> shiftTenors = data.weightTenors;
+            auto it = std::find(shiftTenors.begin(), shiftTenors.end(), referenceTenor);
+            QL_REQUIRE(it != shiftTenors.end(), "Couldnt find reference weight for shift expiry");
+            size_t weightPos = std::distance(shiftTenors.begin(), it);
+            double referenceWeight = data.weights[weightPos];
+            QL_REQUIRE(referenceWeight > 0.0 && !QuantLib::close_enough(referenceWeight, 0.0),
+                       "Only strict positive reference weight is allowed");
+            const double weightedRefShift = referenceShift / referenceWeight;
+            DLOG("Compute shifts from weights")
+            DLOG("j,pillar,time,shift")
+            for (Size j = 0; j < shiftTenors.size(); ++j) {
+                QL_REQUIRE(data.weights[j] >= 0, "only positive weights for weighted stresstest allowed");
+                shiftTimes.push_back(dc.yearFraction(asof, asof + shiftTenors[j]));
+                shifts.push_back(weightedRefShift * data.weights[j]);
+                DLOG(j << "," << shiftTenors[j] << "," << shiftTimes.back() << "," << shifts.back());
+            }
+        } else if (data.mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Unadjusted) {
+            QL_REQUIRE(data.shiftExpiries.size() == 1, "Weighting schema 'Unadjusted' requires exactly one tenor");
+            QL_REQUIRE(data.shifts.size() == 1, "Weighting schema 'Unadjusted' requires exactly one shift");
+            Time expiryTime = dc.yearFraction(asof, asof + data.shiftExpiries.front());
+            if (expiryTime >= 1e-6) {
+                shiftTimes.push_back(expiryTime - 1e-6);
+                shiftTimes.push_back(expiryTime);
+                shiftTimes.push_back(expiryTime + 1e-6);
+                shifts.push_back(0.0);
+                shifts.push_back(data.shifts.front());
+                shifts.push_back(0.0);
+            } else {
+                shiftTimes.push_back(expiryTime);
+                shiftTimes.push_back(expiryTime + 1e-6);
+                shifts.push_back(data.shifts.front());
+                shifts.push_back(0.0);
+            }
+        }
+        DLOG("Apply shift with shiftType " << shiftType);
         // FIXME: Apply same shifts to non-ATM vectors if present
-        for (Size j = 0; j < shiftTenors.size(); ++j) {
+        for (Size j = 0; j < shiftTimes.size(); ++j) {
             // apply shift at tenor point j
             applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues, j == 0 ? true : false);
         }
 
+        DLOG("Output generated fx vol stress test scenario " << std.label << " " << ccypair);
+        DLOG("j,rfkey,tenor,time,value,shiftedvalue,shift");
+
+
         for (Size k = 0; k < n_fxvol_exp; ++k) {
             RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, ccypair, k);
+            DLOG(k << "," << key << "," << simMarketData_->fxVolExpiries(ccypair)[k] << "," << times[k] << ","
+                   << values[k] << "," << shiftedValues[k] << "," << shiftedValues[k] - values[k]);
             if (stressData_->useSpreadedTermStructures()) {
                 scenario->add(key, shiftedValues[k] - values[k]);
             } else {
@@ -459,10 +517,10 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
         // buffer for shifted zero curves
         std::vector<Real> shiftedValues(n_eqvol_exp);
 
-        StressTestScenarioData::VolShiftData data = d.second;
+        StressTestScenarioData::VolShiftData data = *d.second;
 
         //DayCounter dc = parseDayCounter(simMarketData_->equityVolDayCounter(equity));
-	DayCounter dc;
+	    DayCounter dc;
         if(auto s = simMarket_.lock()) {
             dc = s->equityVol(equity)->dayCounter();
         } else {
@@ -478,6 +536,7 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
         }
 
         ShiftType shiftType = data.shiftType;
+        
         std::vector<Period> shiftTenors = data.shiftExpiries;
         std::vector<Time> shiftTimes(shiftTenors.size());
         vector<Real> shifts = data.shifts;
@@ -515,13 +574,14 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
 
         Size n_swvol_term = simMarketData_->swapVolTerms(key).size();
         Size n_swvol_exp = simMarketData_->swapVolExpiries(key).size();
+        Size n_swvol_strike = simMarketData_->swapVolStrikeSpreads(key).size();
 
         vector<vector<Real>> volData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
         vector<Real> volExpiryTimes(n_swvol_exp, 0.0);
         vector<Real> volTermTimes(n_swvol_term, 0.0);
         vector<vector<Real>> shiftedVolData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
 
-        StressTestScenarioData::SwaptionVolShiftData data = d.second;
+        StressTestScenarioData::SwaptionVolShiftData data = *d.second;
         ShiftType shiftType = data.shiftType;
         map<pair<Period, Period>, Real> shifts = data.shifts;
 
@@ -580,14 +640,16 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
         }
 
         // add shifted vol data to the scenario
-        for (Size jj = 0; jj < n_swvol_exp; ++jj) {
-            for (Size kk = 0; kk < n_swvol_term; ++kk) {
-                Size idx = jj * n_swvol_term + kk;
-                RiskFactorKey rfkey(RiskFactorKey::KeyType::SwaptionVolatility, key, idx);
-                if (stressData_->useSpreadedTermStructures()) {
-                    scenario->add(rfkey, shiftedVolData[jj][kk] - volData[jj][kk]);
-                } else {
-                    scenario->add(rfkey, shiftedVolData[jj][kk]);
+        for (Size ii = 0; ii < n_swvol_strike; ++ii) {
+            for (Size jj = 0; jj < n_swvol_exp; ++jj) {
+                for (Size kk = 0; kk < n_swvol_term; ++kk) {
+                    Size idx = jj * n_swvol_term * n_swvol_strike + kk * n_swvol_strike + ii;
+                    RiskFactorKey rfkey(RiskFactorKey::KeyType::SwaptionVolatility, key, idx);
+                    if (stressData_->useSpreadedTermStructures()) {
+                        scenario->add(rfkey, shiftedVolData[jj][kk] - volData[jj][kk]);
+                    } else {
+                        scenario->add(rfkey, shiftedVolData[jj][kk]);
+                    }
                 }
             }
         }
@@ -615,7 +677,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
         vector<Real> volExpiryTimes(n_cfvol_exp, 0.0);
         vector<vector<Real>> shiftedVolData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
 
-        StressTestScenarioData::CapFloorVolShiftData data = d.second;
+        StressTestScenarioData::CapFloorVolShiftData data = *d.second;
 
         ShiftType shiftType = data.shiftType;
         
@@ -688,7 +750,7 @@ void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::St
     for (auto d : std.securitySpreadShifts) {
         string bond = d.first;
         TLOG("Apply stress scenario to security spread " << bond);
-        StressTestScenarioData::SpotShiftData data = d.second;
+        StressTestScenarioData::SpotShiftData data = *d.second;
         ShiftType type = data.shiftType;
         bool relShift = (type == ShiftType::Relative);
         Real size = data.shiftSize;
@@ -708,7 +770,7 @@ void StressScenarioGenerator::addRecoveryRateShifts(StressTestScenarioData::Stre
     for (auto d : std.recoveryRateShifts) {
         string isin = d.first;
         TLOG("Apply stress scenario to recovery rate " << isin);
-        StressTestScenarioData::SpotShiftData data = d.second;
+        StressTestScenarioData::SpotShiftData data = *d.second;
         ShiftType type = data.shiftType;
         bool relShift = (type == ShiftType::Relative);
         Real size = data.shiftSize;

@@ -284,6 +284,9 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
 
     discretization_ = parseDiscretization(discString);
 
+    std::string salvString = XMLUtils::getChildValue(modelNode, "SalvagingAlgorithm", false, "None");
+    salvagingAlgorithm_ = parseSalvagingAlgorithmType(salvString);
+
     domesticCurrency_ = XMLUtils::getChildValue(modelNode, "DomesticCcy", true); // mandatory
     LOG("CrossAssetModelData: domesticCcy " << domesticCurrency_);
 
@@ -787,7 +790,7 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, crossAssetModelNode, "Measure", measure_);
     XMLUtils::addChild(doc, crossAssetModelNode, "Discretization",
                        discretization_ == CrossAssetModel::Discretization::Exact ? "Exact" : "Euler");
-
+    XMLUtils::addChild(doc, crossAssetModelNode, "SalvagingAlgorithm", ore::data::to_string(salvagingAlgorithm_));
     XMLNode* interestRateModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InterestRateModels");
     for (Size irConfigs_Iterator = 0; irConfigs_Iterator < irConfigs_.size(); irConfigs_Iterator++) {
         XMLNode* lgmNode = irConfigs_[irConfigs_Iterator]->toXML(doc);

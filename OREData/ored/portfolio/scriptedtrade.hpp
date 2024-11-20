@@ -164,6 +164,8 @@ public:
     const std::vector<std::string>& conditionalExpectationModelStates() const {
         return conditionalExpectationModelStates_;
     }
+    const std::map<std::string, std::string>& engineParameterOverwrite() const { return engineParameterOverwrite_; }
+    const std::map<std::string, std::string>& modelParameterOverwrite() const { return modelParameterOverwrite_; }
 
 private:
     void formatCode();
@@ -175,6 +177,8 @@ private:
     std::vector<CalibrationData> calibrationSpec_;
     std::vector<std::string> stickyCloseOutStates_;
     std::vector<std::string> conditionalExpectationModelStates_;
+    std::map<std::string, std::string> engineParameterOverwrite_;
+    std::map<std::string, std::string> modelParameterOverwrite_;
 };
 
 class ScriptLibraryData : public XMLSerializable {
@@ -233,6 +237,7 @@ public:
     std::string notionalCurrency() const override;
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) const override;
+    bool isExpired(const Date& d) const override;
 
     // build and incorporate provided premium data
     void build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const PremiumData& premiumData,
@@ -276,6 +281,7 @@ protected:
     // set in build()
     std::string simmProductClass_;
     std::string scheduleProductClass_;
+    bool includePastCashflows_ = false;
 };
 
 class ScriptLibraryStorage : public QuantLib::Singleton<ScriptLibraryStorage, std::integral_constant<bool, true>> {

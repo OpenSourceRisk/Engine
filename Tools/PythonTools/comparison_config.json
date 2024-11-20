@@ -3,19 +3,19 @@
     "files": {
       "im_schedule.csv": {
         "keys": [
-            "Portfolio",
-            "ProductClass",
-            "Side",
-            "Currency"
+          "Portfolio",
+          "ProductClass",
+          "Side",
+          "Currency"
         ],
         "column_settings": [
           {
             "names": [
-                "GrossIM",
-                "GrossCurrentRC",
-                "NetCurrentRC",
-                "NetToGrossRatio",
-                "ScheduleIM"
+              "GrossIM",
+              "GrossCurrentRC",
+              "NetCurrentRC",
+              "NetToGrossRatio",
+              "ScheduleIM"
             ],
             "abs_tol": null,
             "rel_tol": 1e-12
@@ -24,27 +24,27 @@
       },
       "im_schedule_trade.csv": {
         "keys": [
-            "TradeId",
-            "Portfolio",
-            "ProductClass",
-            "EndDate",
-            "Label",
-            "NotionalCurrency",
-            "PVCurrency",
-            "BaseCurrency",
-            "CollectRegulations",
-            "PostRegulations"
+          "TradeId",
+          "Portfolio",
+          "ProductClass",
+          "EndDate",
+          "Label",
+          "NotionalCurrency",
+          "PVCurrency",
+          "BaseCurrency",
+          "CollectRegulations",
+          "PostRegulations"
         ],
         "column_settings": [
           {
             "names": [
-                "Maturity",
-                "Multiplier",
-                "Notional",
-                "PV",
-                "Notional(Base)",
-                "PV(Base)",
-                "GrossIM(Base)"
+              "Maturity",
+              "Multiplier",
+              "Notional",
+              "PV",
+              "Notional(Base)",
+              "PV(Base)",
+              "GrossIM(Base)"
             ],
             "abs_tol": null,
             "rel_tol": 1e-12
@@ -65,10 +65,10 @@
           "collect_regulations",
           "post_regulations"
         ],
-        "col_types" : {
+        "col_types": {
           "Bucket": "str"
         },
-        "drop_rows" : {
+        "drop_rows": {
           "cols": [
             "Amount"
           ],
@@ -76,12 +76,14 @@
         },
         "use_cols": [
           "Amount",
-          "IMModel"
+          "AmountUSD",
+          "AmountCurrency"
         ],
         "column_settings": [
           {
             "names": [
-              "Amount"
+              "Amount",
+              "AmountUSD"
             ],
             "abs_tol": 1.0,
             "rel_tol": 1e-12
@@ -90,19 +92,19 @@
       },
       "smrcdetail.csv": {
         "keys": [
-            "TradeId"
+          "TradeId"
         ],
         "column_settings": [
           {
             "names": [
-                "TradeType",
-                "NettingSet",
-                "Asset",
-                "MaturityDate",
-                "Maturity",
-                "NPV",
-                "SignedNotional",
-                "RiskWeight"
+              "TradeType",
+              "NettingSet",
+              "Asset",
+              "MaturityDate",
+              "Maturity",
+              "NPV",
+              "SignedNotional",
+              "RiskWeight"
             ],
             "abs_tol": null,
             "rel_tol": 1e-12
@@ -111,15 +113,15 @@
       },
       "smrc.csv": {
         "keys": [
-            "TradeType",
-            "Asset"
+          "TradeType",
+          "Asset"
         ],
         "column_settings": [
           {
             "names": [
-                "RiskWeight",
-                "SignedNotional",
-                "SMRC"
+              "RiskWeight",
+              "SignedNotional",
+              "SMRC"
             ],
             "abs_tol": null,
             "rel_tol": 1e-12
@@ -142,7 +144,7 @@
               "Base NPV",
               "Delta"
             ],
-            "abs_tol": 1e-2,
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
         ]
@@ -161,7 +163,7 @@
               "BaseCva",
               "Delta"
             ],
-            "abs_tol": 1e-4,
+            "abs_tol": 0.0001,
             "rel_tol": 1e-12
           }
         ]
@@ -173,7 +175,7 @@
         "column_settings": [
           {
             "names": [],
-            "abs_tol": 1e-8,
+            "abs_tol": 1e-08,
             "rel_tol": 1e-12
           }
         ]
@@ -197,144 +199,8 @@
               "Base NPV",
               "Delta"
             ],
-            "abs_tol": 1e-2,
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
-          }
-        ]
-      },
-      "combined_crif\\.csv": {
-        "keys": [
-          "TradeID",
-          "PortfolioID",
-          "ProductClass",
-          "RiskType",
-          "Qualifier",
-          "Bucket",
-          "Label1",
-          "Label2"
-        ],
-        "use_cols": [
-          "AmountCurrency",
-          "Amount",
-          "AmountUSD",
-          "IMModel",
-          "TradeType"
-        ],
-        "require_equal_optional_cols": false,
-        "optional_cols": [
-          "collect_regulations",
-          "post_regulations"
-        ],
-        "col_types" : {
-          "ProductClass" : "str",
-          "RiskType" : "str",
-          "Qualifier" : "str",
-          "Bucket" : "str",
-          "Label1" : "str",
-          "Label2" : "str"
-        },
-        "drop_rows" : {
-          "cols": [
-            "Amount",
-            "AmountUSD"
-          ],
-          "threshold": 0.0
-        },
-        "column_settings": [
-          {
-            "names": [
-              "Amount",
-              "AmountUSD"
-            ],
-            "abs_tol": 1e-2,
-            "rel_tol": 1e-12
-          },
-          {
-            "names": [
-              "IMModel",
-              "TradeType",
-              "collect_regulations",
-              "post_regulations"
-            ],
-            "abs_tol": null,
-            "rel_tol": null
-          }
-        ]
-      },
-      "crif\\.csv": {
-        "keys": [
-          "TradeID",
-          "PortfolioID",
-          "ProductClass",
-          "RiskType",
-          "Qualifier",
-          "Bucket",
-          "Label1",
-          "Label2"
-        ],
-        "use_cols": [
-          "AmountCurrency",
-          "Amount",
-          "AmountUSD",
-          "IMModel",
-          "TradeType"
-        ],
-        "optional_cols": [
-          "BaseCurrency",
-          "end_date",
-          "trade_date",
-          "notional",
-          "trade_currency",
-          "notional2",
-          "trade_currency2",
-          "underlying",
-          "mtm_curr",
-          "mtm_value",
-          "settlement_type",
-          "strike",
-          "call_put",
-          "long_short",
-          "asset_class",
-          "base_product",
-          "sub_product",
-          "xccy_resettable"
-        ],
-        "optional_keys": [
-          "collect_regulations",
-          "post_regulations"
-        ],
-        "col_types" : {
-          "ProductClass" : "str",
-          "RiskType" : "str",
-          "Qualifier" : "str",
-          "Bucket" : "str",
-          "Label1" : "str",
-          "Label2" : "str"
-        },
-        "drop_rows" : {
-          "cols": [
-            "Amount",
-            "AmountUSD"
-          ],
-          "threshold": 0.0
-        },
-        "column_settings": [
-          {
-            "names": [
-              "Amount",
-              "AmountUSD"
-            ],
-            "abs_tol": 1e-2,
-            "rel_tol": 1e-12
-          },
-          {
-            "names": [
-              "BaseCurrency",
-              "IMModel",
-              "TradeType"
-            ],
-            "abs_tol": null,
-            "rel_tol": null
           }
         ]
       },
@@ -349,7 +215,7 @@
             "names": [
               "Value"
             ],
-            "abs_tol": 1E-4,
+            "abs_tol": 0.0001,
             "rel_tol": 1e-12
           }
         ]
@@ -485,22 +351,21 @@
       },
       "crifPlus.csv": {
         "keys": [
-            "TradeID",
-            "PortfolioID",
-            "CapitalRequirement",
-            "RiskClass",
-            "RiskFactor",
-            "Bucket",
-            "Label1",
-            "Label2",
-            "AmountCurrency"
-            
+          "TradeID",
+          "PortfolioID",
+          "CapitalRequirement",
+          "RiskClass",
+          "RiskFactor",
+          "Bucket",
+          "Label1",
+          "Label2",
+          "AmountCurrency"
         ],
         "column_settings": [
           {
             "names": [
-                "Amount",
-                "AmountUSD"
+              "Amount",
+              "AmountUSD"
             ],
             "abs_tol": null,
             "rel_tol": 1e-12
@@ -509,35 +374,116 @@
       },
       "frtbcrif.csv": {
         "keys": [
-            "RiskType",
-            "Qualifier",
-            "Bucket",
-            "Label1",
-            "Label2",
-            "AmountCurrency"
-            
+          "RiskType",
+          "Qualifier",
+          "Bucket",
+          "Label1",
+          "Label2",
+          "AmountCurrency"
         ],
         "column_settings": [
           {
             "names": [
-                "AmountUSD"
+              "AmountUSD"
             ],
             "abs_tol": null,
             "rel_tol": 1e-12
           }
         ]
       },
+      ".*crif.csv": {
+        "keys": [
+          "TradeID",
+          "PortfolioID",
+          "ProductClass",
+          "RiskType",
+          "Qualifier",
+          "Bucket",
+          "Label1",
+          "Label2"
+        ],
+        "use_cols": [
+          "AmountCurrency",
+          "Amount",
+          "AmountUSD",
+          "IMModel",
+          "TradeType"
+        ],
+        "optional_cols": [
+          "BaseCurrency",
+          "end_date",
+          "trade_date",
+          "notional",
+          "trade_currency",
+          "notional2",
+          "trade_currency2",
+          "underlying",
+          "mtm_curr",
+          "mtm_value",
+          "settlement_type",
+          "strike",
+          "call_put",
+          "long_short",
+          "asset_class",
+          "base_product",
+          "sub_product",
+          "xccy_resettable"
+        ],
+        "optional_keys": [
+          "collect_regulations",
+          "post_regulations",
+          "AgreementType",
+          "CallType",
+          "InitialMarginType",
+          "LegalEntityId"
+        ],
+        "col_types": {
+          "ProductClass": "str",
+          "RiskType": "str",
+          "Qualifier": "str",
+          "Bucket": "str",
+          "Label1": "str",
+          "Label2": "str"
+        },
+        "drop_rows": {
+          "cols": [
+            "Amount",
+            "AmountUSD"
+          ],
+          "threshold": 0.0
+        },
+        "column_settings": [
+          {
+            "names": [
+              "Amount",
+              "AmountUSD"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "BaseCurrency",
+              "AmountCurrency",
+              "IMModel",
+              "TradeType"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
       "frtb.csv": {
         "keys": [
-            "CorrelationScenario",
-            "CapitalRequirement",
-            "RiskClass",
-            "Bucket"
+          "CorrelationScenario",
+          "CapitalRequirement",
+          "RiskClass",
+          "Bucket"
         ],
         "column_settings": [
           {
             "names": [
-                "FrtbCharge"
+              "FrtbCharge"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -546,15 +492,15 @@
       },
       "frtb_rrao.csv": {
         "keys": [
-            "CorrelationScenario",
-            "CapitalRequirement",
-            "RiskClass",
-            "Bucket"
+          "CorrelationScenario",
+          "CapitalRequirement",
+          "RiskClass",
+          "Bucket"
         ],
         "column_settings": [
           {
             "names": [
-                "FrtbCharge"
+              "FrtbCharge"
             ],
             "abs_tol": 0.01,
             "rel_tol": 1e-12
@@ -572,7 +518,7 @@
             "names": [
               "Value"
             ],
-            "abs_tol": 1e-6,
+            "abs_tol": 1e-06,
             "rel_tol": 1e-12
           }
         ]
@@ -589,7 +535,7 @@
               "Scenario NPV",
               "Sensitivity"
             ],
-            "abs_tol": 1e-2,
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
         ]
@@ -618,6 +564,30 @@
           "Side",
           "PLMode"
         ],
+        "use_cols": [
+          "InitialMargin",
+          "TimeWindow",
+          "Observations",
+          "OverlappingPL",
+          "Exceptions",
+          "GreenUpTo",
+          "AmberUpTo",
+          "Zone",
+          "HistSimVaR",
+          "HistSimTaylorVaR",
+          "ParametricVaR",
+          "LCHVaR",
+          "DiscountingCurrency",
+          "SIMMResultCurrency",
+          "SIMMCalculationCurrency"
+        ],
+        "optional_cols": [
+            "ExceptionsDecorrelated",
+            "GreenUpToDecorrelated",
+            "AmberUpToDecorrelated",
+            "ZoneDecorrelated"
+        ],
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
@@ -645,6 +615,10 @@
               "GreenUpTo",
               "AmberUpTo",
               "Zone",
+              "ExceptionsDecorrelated",
+              "GreenUpToDecorrelated",
+              "AmberUpToDecorrelated",
+              "ZoneDecorrelated",
               "DiscountingCurrency",
               "SIMMResultCurrency",
               "SIMMCalculationCurrency"
@@ -664,7 +638,7 @@
             "names": [
               "Bound"
             ],
-            "abs_tol": 1e-8,
+            "abs_tol": 1e-08,
             "rel_tol": 1e-12
           },
           {
@@ -688,17 +662,29 @@
           "PLDate2",
           "PLType"
         ],
+        "use_cols": [
+          "PLAmount",
+          "Overlap",
+          "Status",
+          "SIMMResultCurrency"
+        ],
+        "optional_cols": [
+          "PLAmountDecorrelated",
+          "StatusDecorrelated"
+        ],
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
               "InitialMargin"
             ],
-            "abs_tol": 1e-2,
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
           },
           {
             "names": [
-              "PLAmount"
+              "PLAmount",
+              "PLAmountDecorrelated"
             ],
             "abs_tol": 1.0,
             "rel_tol": 1e-12
@@ -706,7 +692,9 @@
           {
             "names": [
               "Overlap",
-              "Status"
+              "Status",
+              "StatusDecorrelated",
+              "SIMMResultCurreny"
             ],
             "abs_tol": null,
             "rel_tol": null
@@ -732,13 +720,15 @@
         },
         "use_cols": [
           "InitialMargin",
-          "Regulation",
           "Currency",
           "CalculationCurrency"
         ],
         "optional_cols": [
           "InitialMargin(Report)",
           "ReportCurrency"
+        ],
+        "optional_keys": [
+          "Regulation"
         ],
         "column_settings": [
           {
@@ -751,7 +741,6 @@
           },
           {
             "names": [
-              "Regulation",
               "Currency",
               "CalculationCurrency",
               "ReportCurrency"
@@ -902,7 +891,7 @@
           "Portfolio",
           "Side"
         ],
-        "optional_cols":[
+        "optional_cols": [
           "InitialMarginBefore(Report)",
           "InitialMarginAfter(Report)",
           "InitialMarginImpact(Report)",
@@ -991,7 +980,7 @@
               "ShiftSize_1",
               "ShiftSize_2"
             ],
-            "abs_tol": 1e-2,
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
         ]
@@ -1008,6 +997,52 @@
               "CvaSpreadSensitivity"
             ],
             "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "xva_zero_sensitivity.*\\.csv": {
+        "keys": [
+          "NettingSetId",
+          "TradeId",
+          "IsPar",
+          "Factor_1",
+          "ShiftSize_1",
+          "Factor_2",
+          "ShiftSize_2",
+          "Currency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base XVA",
+              "Delta",
+              "Gamma"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "xva_par_sensitivity.*\\.csv": {
+        "keys": [
+          "NettingSetId",
+          "TradeId",
+          "IsPar",
+          "Factor_1",
+          "ShiftSize_1",
+          "Factor_2",
+          "ShiftSize_2",
+          "Currency"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Base XVA",
+              "Delta",
+              "Gamma"
+            ],
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
         ]
@@ -1029,7 +1064,30 @@
               "Delta",
               "Gamma"
             ],
-            "abs_tol": 1e-2,
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      ".*todaysmarketcalibration.*\\.csv": {
+        "keys": [
+          "MarketObjectType",
+          "MarketObjectId",
+          "ResultId",
+          "ResultKey1",
+          "ResultKey2",
+          "ResultKey3"
+        ],
+        "use_cols": [
+          "ResultType",
+          "ResultValue"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "ResultValue"
+            ],
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
         ]
@@ -1043,7 +1101,7 @@
             "names": [
               "PresentValue"
             ],
-            "abs_tol": 1e-6,
+            "abs_tol": 1e-06,
             "rel_tol": 1e-12
           }
         ]
@@ -1058,7 +1116,7 @@
               "NPV",
               "NPV(Base)"
             ],
-            "abs_tol": 1e-6,
+            "abs_tol": 1e-06,
             "rel_tol": 1e-12
           }
         ]
@@ -1103,7 +1161,106 @@
           {
             "names": [],
             "abs_tol": null,
-            "rel_tol": 1e-9
+            "rel_tol": 1e-09
+          }
+        ]
+      },
+      "(stresstest_flows|stress_cashflows)\\.csv": {
+        "keys": [
+          "TradeId",
+          "Type",
+          "CashflowNo",
+          "LegNo"
+        ],
+        "use_cols": [
+          "Amount_Base",
+          "Amount_Scen",
+          "Amount_Diff",
+          "Coupon_Base",
+          "Coupon_Scen",
+          "Coupon_Diff",
+          "fixingValue_Base",
+          "fixingValue_Scen",
+          "fixingValue_Diff",
+          "PayDate",
+          "FlowType",
+          "Currency",
+          "AccrualStartDate",
+          "AccrualEndDate",
+          "AccruedAmount_Base",
+          "AccruedAmount_Scen",
+          "AccruedAmount_Diff",
+          "fixingDate",
+          "Notional_Base",
+          "Notional_Scen",
+          "Notional_Diff",
+          "FloorStrike",
+          "CapStrike",
+          "FloorVolatility_Base",
+          "FloorVolatility_Scen",
+          "CapVolatility_Base",
+          "CapVolatility_Scen"
+        ],
+        "optional_cols": [
+          "PresentValue_Base",
+          "PresentValue_Scen",
+          "PresentValue_Diff",
+          "DiscountFactor_Base",
+          "DiscountFactor_Scen",
+          "FXRate(Local-Base)_Base",
+          "FXRate(Local-Base)_Scen",
+          "BaseCurrency",
+          "PresentValue(Base)_Base",
+          "PresentValue(Base)_Scen",
+          "PresentValue(Base)_Diff",
+          "EffectiveFloorVolatility_Base",
+          "EffectiveFloorVolatility_Scen",
+          "EffectiveCapVolatility_Base",
+          "EffectiveCapVolatility_Scen"
+        ],
+        "require_equal_optional_cols": false,
+        "column_settings": [
+          {
+            "names": [
+              "Amount_Base",
+              "Amount_Scen",
+              "Amount_Diff",
+              "Coupon_Base",
+              "Coupon_Scen",
+              "Coupon_Diff",
+              "fixingValue_Base",
+              "fixingValue_Scen",
+              "fixingValue_Diff",
+              "AccrualEndDate",
+              "AccruedAmount_Base",
+              "AccruedAmount_Scen",
+              "AccruedAmount_Diff",
+              "Notional_Base",
+              "Notional_Scen",
+              "Notional_Diff",
+              "FloorStrike",
+              "CapStrike",
+              "FloorVolatility_Base",
+              "FloorVolatility_Scen",
+              "CapVolatility_Base",
+              "CapVolatility_Scen",
+              "PresentValue_Base",
+              "PresentValue_Scen",
+              "PresentValue_Diff",
+              "DiscountFactor_Base",
+              "DiscountFactor_Scen",
+              "FXRate(Local-Base)_Base",
+              "FXRate(Local-Base)_Scen",
+              "PresentValue(Base)_Base",
+              "PresentValue(Base)_Scen",
+              "PresentValue(Base)_Diff",
+              "EffectiveFloorVolatility_Base",
+              "EffectiveFloorVolatility_Scen",
+              "EffectiveCapVolatility_Base",
+              "EffectiveCapVolatility_Scen"
+            ],
+            "abs_tol": 1e-08,
+            "rel_tol": 1e-08
           }
         ]
       },
@@ -1160,8 +1317,8 @@
               "EffectiveFloorVolatility",
               "EffectiveCapVolatility"
             ],
-            "abs_tol": 1e-8,
-            "rel_tol": 1e-8
+            "abs_tol": 1e-08,
+            "rel_tol": 1e-08
           }
         ]
       },
@@ -1193,7 +1350,7 @@
               "CVA",
               "Change"
             ],
-            "abs_tol": 1e-2,
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
         ]
@@ -1216,7 +1373,7 @@
               "FBAexAllSP",
               "FCAexAllSP"
             ],
-            "abs_tol": 1e-2,
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
         ]
@@ -1238,7 +1395,7 @@
               "FBAexAllSP",
               "FCAexAllSP"
             ],
-            "abs_tol": 1e-2,
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
         ]
@@ -1253,7 +1410,7 @@
             "names": [
               "COLVA"
             ],
-            "abs_tol": 1e-2,
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
         ]
@@ -1271,7 +1428,9 @@
               "PFE",
               "ExpectedCollateral",
               "BaselEE",
-              "BaselEEE"
+              "BaselEEE",
+              "TimeWeightedBaselEPE",
+              "TimeWeightedBaselEEPE"
             ],
             "abs_tol": 1.0,
             "rel_tol": 1e-12
@@ -1292,7 +1451,9 @@
               "AllocatedENE",
               "PFE",
               "BaselEE",
-              "BaselEEE"
+              "BaselEEE",
+              "TimeWeightedBaselEPE",
+              "TimeWeightedBaselEEPE"
             ],
             "abs_tol": 1.0,
             "rel_tol": 1e-12
@@ -1339,8 +1500,8 @@
       },
       "dim_evolution.*\\.(txt|csv)": {
         "keys": [
-            "TimeStep",
-            "NettingSet"
+          "TimeStep",
+          "NettingSet"
         ],
         "column_settings": [
           {
@@ -1351,13 +1512,13 @@
               "SimpleDIM"
             ],
             "abs_tol": 0.16,
-            "rel_tol": 1e-7
+            "rel_tol": 1e-07
           }
         ]
       },
       "dim_regression.*\\.(txt|csv)": {
         "keys": [
-            "Sample"
+          "Sample"
         ],
         "column_settings": [
           {
@@ -1369,7 +1530,7 @@
               "DeltaNPV",
               "SimpleDIM"
             ],
-            "abs_tol": 1e-6,
+            "abs_tol": 1e-06,
             "rel_tol": 1e-12
           }
         ]
@@ -1392,7 +1553,7 @@
               "notional2"
             ],
             "abs_tol": 1,
-            "rel_tol": 1e-4
+            "rel_tol": 0.0001
           }
         ]
       },
@@ -1407,8 +1568,8 @@
               "dividendRate",
               "dividendPaymentDate"
             ],
-            "abs_tol": 1e-6,
-            "rel_tol": 1e-6
+            "abs_tol": 1e-06,
+            "rel_tol": 1e-06
           }
         ]
       },
@@ -1422,74 +1583,74 @@
               "pdf",
               "cdf"
             ],
-            "abs_tol": 1e-6,
-            "rel_tol": 1e-6
+            "abs_tol": 1e-06,
+            "rel_tol": 1e-06
           }
         ]
       },
-	  "pnl.csv":{
+      "pnl.csv": {
         "keys": [
           "TradeId"
         ],
         "column_settings": [
           {
             "names": [
-			  "NPV(t0)",
-			  "NPV(asof=t0;mkt=t1)",
-			  "NPV(asof=t1;mkt=t0)",
-			  "NPV(t1)",
-			  "PeriodCashFlow",
-			  "Theta",
-			  "HypotheticalCleanPnL",
-			  "CleanPnL",
-			  "DirtyPnL"
+              "NPV(t0)",
+              "NPV(asof=t0;mkt=t1)",
+              "NPV(asof=t1;mkt=t0)",
+              "NPV(t1)",
+              "PeriodCashFlow",
+              "Theta",
+              "HypotheticalCleanPnL",
+              "CleanPnL",
+              "DirtyPnL"
             ],
-            "abs_tol": 1e-6,
+            "abs_tol": 1e-06,
             "rel_tol": 1e-12
           }
         ]
       },
-	  "pnl_explain.csv":{
+      "pnl_explain.csv": {
         "keys": [
           "TradeId"
         ],
         "column_settings": [
           {
             "names": [
-			  "NPV(t0)",
-			  "NPV(asof=t0;mkt=t1)",
-			  "NPV(asof=t1;mkt=t0)",
-			  "NPV(t1)",
-			  "PeriodCashFlow",
-			  "Theta",
-			  "HypotheticalCleanPnL",
-			  "CleanPnL",
-			  "DirtyPnL",
-			  "ScenarioPnl",
-			  "TotalDelta",
-			  "TotalGamma",
-			  "TotalVega",
-			  "IrDelta",
-			  "IrGamma",
-			  "IrVega",
-			  "EqDelta",
-			  "EqGamma",
-			  "EqVega",
-			  "FxDelta",
-			  "FxGamma",
-			  "FxVega",
-			  "InfDelta",
-			  "InfGamma",
-			  "InfVega",
-			  "CreditDelta",
-			  "CreditGamma",
-			  "CreditVega",
-			  "CommDelta",
-			  "CommGamma",
-			  "CommVega"
+              "NPV(t0)",
+              "NPV(asof=t0;mkt=t1)",
+              "NPV(asof=t1;mkt=t0)",
+              "NPV(t1)",
+              "PeriodCashFlow",
+              "Theta",
+              "HypotheticalCleanPnL",
+              "CleanPnL",
+              "DirtyPnL",
+              "ScenarioPnl",
+              "TotalDelta",
+              "TotalGamma",
+              "TotalVega",
+              "IrDelta",
+              "IrGamma",
+              "IrVega",
+              "EqDelta",
+              "EqGamma",
+              "EqVega",
+              "FxDelta",
+              "FxGamma",
+              "FxVega",
+              "InfDelta",
+              "InfGamma",
+              "InfVega",
+              "CreditDelta",
+              "CreditGamma",
+              "CreditVega",
+              "CommDelta",
+              "CommGamma",
+              "CommVega"
             ],
-            "abs_tol": 1e-4,
-            "rel_tol": 1e-6
+            "abs_tol": 0.0001,
+            "rel_tol": 1e-06
           }
         ]
       },
@@ -1503,8 +1664,8 @@
             "names": [
               "ParShift"
             ],
-            "abs_tol": 1E-8,
-            "rel_tol": 1E-12
+            "abs_tol": 1e-08,
+            "rel_tol": 1e-12
           }
         ]
       }
@@ -1536,7 +1697,7 @@
               "curves/data/zeroRate"
             ],
             "abs_tol": 1e-15,
-            "rel_tol": 1e-8
+            "rel_tol": 1e-08
           }
         ]
       },
@@ -1554,7 +1715,7 @@
               "data/zeroRate"
             ],
             "abs_tol": 1e-15,
-            "rel_tol": 1e-9
+            "rel_tol": 1e-09
           }
         ]
       },
@@ -1923,7 +2084,7 @@
             "names": [
               "presentValue"
             ],
-            "abs_tol": 1e-6,
+            "abs_tol": 1e-06,
             "rel_tol": 1e-12
           },
           {

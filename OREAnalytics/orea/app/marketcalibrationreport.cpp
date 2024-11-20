@@ -85,8 +85,14 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
         if (todaysMarketParams->hasMarketObject(MarketObject::IndexCurve)) {
             for (auto it : todaysMarketParams->mapping(MarketObject::IndexCurve, Market::defaultConfiguration)) {
                 auto yts = calibrationInfo->yieldCurveCalibrationInfo.find(it.second);
-                if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
-                    addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label);
+                try {
+                    auto index = market->iborIndex(it.first);
+                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
+                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label, index);
+                } catch (...) {
+                    if (yts != calibrationInfo->yieldCurveCalibrationInfo.end())
+                        addYieldCurve(calibrationInfo->asof, yts->second, getCurveName(it.second), false, label);
+                }
             }
         }
     }
@@ -132,6 +138,13 @@ void MarketCalibrationReportBase::populateReport(const QuantLib::ext::shared_ptr
             addIrVol(calibrationInfo->asof, c.second, c.first, label);
         }
     }
+
+    if (calibrationFilters_.mdFilterCpiVols) {
+        // cpi vols
+        for (auto const& c : calibrationInfo->cpiVolCalibrationInfo) {
+            addCpiVol(calibrationInfo->asof, c.second, getCurveName(c.first), label);
+        }
+    }
 }
 
 MarketCalibrationReport::MarketCalibrationReport(const std::string& calibrationFilter, 
@@ -171,7 +184,8 @@ const bool MarketCalibrationReport::checkCalibrations(string label, string type,
 
 void MarketCalibrationReport::addYieldCurve(const QuantLib::Date& refdate,
                                             QuantLib::ext::shared_ptr<ore::data::YieldCurveCalibrationInfo> info,
-                                            const std::string& id, bool isDiscount, const std::string& label) {
+                                            const std::string& id, bool isDiscount, const std::string& label,
+                                            QuantLib::Handle<QuantLib::IborIndex> iborIndex) {
     if (info == nullptr)
         return;
 
@@ -179,7 +193,7 @@ void MarketCalibrationReport::addYieldCurve(const QuantLib::Date& refdate,
 
     // check if we have already processed this curve
     if (checkCalibrations(label, yieldStr, id)) {
-        DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
+        LOG("Skipping curve " << id << " for label " << label << " as it has already been added");
         return;
     }
 
@@ -192,6 +206,9 @@ void MarketCalibrationReport::addYieldCurve(const QuantLib::Date& refdate,
         addRowReport(yieldStr, id, "time", key1, "", "", info->times.at(i));
         addRowReport(yieldStr, id, "zeroRate", key1, "", "", info->zeroRates.at(i));
         addRowReport(yieldStr, id, "discountFactor", key1, "", "", info->discountFactors.at(i));
+        if (!iborIndex.empty())
+            addRowReport(yieldStr, id, "forwardRate", key1, "", "",
+                         iborIndex->fixing(iborIndex->fixingCalendar().adjust(info->pillarDates[i], Preceding)));
     }
 
     // fitted bond curve results
@@ -451,6 +468,53 @@ void MarketCalibrationReport::addIrVol(const QuantLib::Date& refdate,
                 addRowReport(type, id, "butterflyArb", tStr, kStr, uStr,
                                    static_cast<bool>(info->strikeSpreadGridButterflyArbitrage.at(i).at(u).at(j)));
             }
+        }
+    }
+
+    calibrations_[label][type].insert(id);
+}
+
+// Add cpi vol curve data to array
+void MarketCalibrationReport::addCpiVol(const QuantLib::Date& refdate,
+    QuantLib::ext::shared_ptr<ore::data::CpiVolCalibrationInfo> info,
+    const std::string& id, const std::string& label) {
+
+    if (info == nullptr)
+        return;
+
+    string type = "cpiVol";
+
+    // check if we have already processed this curve
+    if (checkCalibrations(label, type, id)) {
+        DLOG("Skipping curve " << id << " for label " << label << " as it has already been added");
+        return;
+    }
+
+    addRowReport(type, id, "dayCounter", "", "", "", info->dayCounter);
+    addRowReport(type, id, "calendar", "", "", "", info->calendar);
+    addRowReport(type, id, "isArbitrageFree", "", "", "", info->isArbitrageFree);
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        addRowReport(type, id, "expiry", tStr, "", "", info->expiryDates.at(i));
+        addRowReport(type, id, "optionObservation", tStr, "", "", info->optionObservationDates.at(i));
+        addRowReport(type, id, "optionLifeTime", tStr, "", "", info->optionLifeTimes.at(i));
+        addRowReport(type, id, "forward", tStr, "", "", info->forwards.at(i));
+        addRowReport(type, id, "forwardCPI", tStr, "", "", info->forwardCPI.at(i));
+    }
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        for (Size j = 0; j < info->strikes.size(); ++j) {
+            std::string kStr = std::to_string(info->strikes.at(j));
+            addRowReport(type, id, "forward", tStr, kStr, "", info->forwards.at(i));
+            addRowReport(type, id, "vol", tStr, kStr, "", info->strikeGridImpliedVolatility.at(i).at(j));
+            addRowReport(type, id, "prob", tStr, kStr, "", info->strikeGridProb.at(i).at(j));
+            addRowReport(type, id, "strikeCPI", tStr, kStr, "", info->strikeCPI.at(i).at(j));
+            addRowReport(type, id, "callSpreadArb", tStr, kStr, "",
+                static_cast<bool>(info->strikeGridCallSpreadArbitrage.at(i).at(j)));
+            addRowReport(type, id, "butterflyArb", tStr, kStr, "",
+                static_cast<bool>(info->strikeGridButterflyArbitrage.at(i).at(j)));
         }
     }
 

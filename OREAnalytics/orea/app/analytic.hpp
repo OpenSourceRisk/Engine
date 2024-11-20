@@ -26,6 +26,7 @@
 #include <ored/marketdata/inmemoryloader.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/report/inmemoryreport.hpp>
+#include <ored/utilities/timer.hpp>
 
 #include <orea/aggregation/collateralaccount.hpp>
 #include <orea/aggregation/collatexposurehelper.hpp>
@@ -115,6 +116,7 @@ public:
     const std::set<std::string>& analyticTypes() const { return types_; }
     const QuantLib::ext::shared_ptr<InputParameters>& inputs() const { return inputs_; }
     const QuantLib::ext::shared_ptr<ore::data::Market>& market() const { return market_; };
+    bool requiresMarketData() const { return requiresMarketData_; }
     // To allow SWIG wrapping
     QuantLib::ext::shared_ptr<MarketImpl> getMarket() const {        
         return QuantLib::ext::dynamic_pointer_cast<MarketImpl>(market_);
@@ -126,6 +128,11 @@ public:
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> todaysMarketParams();
     const QuantLib::ext::shared_ptr<ore::data::Loader>& loader() const { return loader_; };
     Configurations& configurations() { return configurations_; }
+    const bool getWriteIntermediateReports() const { return writeIntermediateReports_; }
+
+    //! Setters
+    void setRequiresMarketData(const bool flag) { requiresMarketData_ = flag; }
+    void setWriteIntermediateReports(const bool flag) { writeIntermediateReports_ = flag; }
 
     //! Result reports
     analytic_reports& reports() { return reports_; };
@@ -133,9 +140,6 @@ public:
     analytic_mktcubes& mktCubes() { return mktCubes_; };
     analytic_stresstests& stressTests() { return stressTests_;}
     
-    const bool getWriteIntermediateReports() const { return writeIntermediateReports_; }
-    void setWriteIntermediateReports(const bool flag) { writeIntermediateReports_ = flag; }
-
     //! Check whether any of the requested run types is covered by this analytic
     bool match(const std::set<std::string>& runTypes);
 
@@ -146,6 +150,13 @@ public:
     std::set<QuantLib::Date> marketDates() const;
 
     std::vector<QuantLib::ext::shared_ptr<Analytic>> allDependentAnalytics() const;
+    
+    const Timer& getTimer();
+    void startTimer(const std::string& key) { timer_.start(key); }
+    boost::optional<boost::timer::cpu_timer> stopTimer(const std::string& key, const bool returnTimer = false) {
+        return timer_.stop(key, returnTimer);
+    }
+    void addTimer(const std::string& key, const Timer& timer) { timer_.addTimer(key, timer); }
 
 protected:
     std::unique_ptr<Impl> impl_;
@@ -154,6 +165,9 @@ protected:
     std::set<std::string> types_;
     //! contains all the input parameters for the run
     QuantLib::ext::shared_ptr<InputParameters> inputs_;
+
+    //! whether the analytic requires market / fixing data
+    bool requiresMarketData_ = true;
 
     Configurations configurations_;
     QuantLib::ext::shared_ptr<ore::data::Market> market_;
@@ -169,6 +183,8 @@ protected:
     //! This would typically be used when the analytic is being called by another analytic
     //! and that parent/calling analytic will be writing its own set of intermediate reports
     bool writeIntermediateReports_ = true;
+
+    Timer timer_;
 };
 
 class Analytic::Impl {

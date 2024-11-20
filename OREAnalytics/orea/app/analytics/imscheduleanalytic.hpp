@@ -43,7 +43,7 @@ public:
 class IMScheduleAnalytic : public Analytic {
 public:
     IMScheduleAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                       const Crif& crif = Crif(),
+                       const QuantLib::ext::shared_ptr<Crif>& crif = nullptr,
                        const bool hasNettingSetDetails = false)
         : Analytic(std::make_unique<IMScheduleAnalyticImpl>(inputs), {"IM_SCHEDULE"}, inputs,
                    false, false, false, false),
@@ -55,19 +55,15 @@ public:
     //! Load CRIF from external source, override to generate CRIF from the input portfolio
     virtual void loadCrifRecords(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader);
 
-    const Crif& crif() const { return crif_; }
+    const QuantLib::ext::shared_ptr<Crif>& crif() const { return crif_; }
     bool hasNettingSetDetails() const { return hasNettingSetDetails_; }
     const std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>>& hasSEC() const {
         return hasSEC_;
     }
-    const std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>>& hasCFTC() const {
-        return hasCFTC_;
-    }
  private:
-    Crif crif_;
+    QuantLib::ext::shared_ptr<Crif> crif_;
     bool hasNettingSetDetails_ = false;
     std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>> hasSEC_;
-    std::map<SimmConfiguration::SimmSide, std::set<ore::data::NettingSetDetails>> hasCFTC_;
     QuantLib::ext::shared_ptr<IMScheduleCalculator> imSchedule_;
 };
 

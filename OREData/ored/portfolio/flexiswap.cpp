@@ -229,6 +229,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         builder->engine(id(), "", index.empty() ? ccy_str : IndexNameTranslator::instance().oreName(index->name()),
                         expiryDates, flexiSwap->maturityDate(), strikes));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     // FIXME this won't work for exposure, currently not supported
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(flexiSwap);
@@ -240,6 +241,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     legs_ = {fixLeg, fltLeg};
     legPayers_ = {swap_[fixedLegIndex].isPayer(), swap_[floatingLegIndex].isPayer()};
     maturity_ = flexiSwap->maturityDate();
+    maturityType_ = "FlexiSwap Leg Maturity Date";
     addToRequiredFixings(fltLeg, QuantLib::ext::make_shared<FixingDateGetter>(requiredFixings_));
 }
 

@@ -346,6 +346,9 @@
 #include <ored/scripting/asttoscriptconverter.hpp>
 #include <ored/scripting/computationgraphbuilder.hpp>
 #include <ored/scripting/context.hpp>
+#include <ored/scripting/engines/amccgbaseengine.hpp>
+#include <ored/scripting/engines/amccgpricingengine.hpp>
+#include <ored/scripting/engines/amccgswapengine.hpp>
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/cliquetoptionmcscriptengine.hpp>
@@ -366,7 +369,6 @@
 #include <ored/scripting/models/fdgaussiancam.hpp>
 #include <ored/scripting/models/gaussiancam.hpp>
 #include <ored/scripting/models/gaussiancamcg.hpp>
-#include <ored/scripting/models/hwcg.hpp>
 #include <ored/scripting/models/lgmcg.hpp>
 #include <ored/scripting/models/localvol.hpp>
 #include <ored/scripting/models/model.hpp>
@@ -403,11 +405,10 @@
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
-#include <ored/utilities/serializationdate.hpp>
 #include <ored/utilities/serializationdaycounter.hpp>
-#include <ored/utilities/serializationperiod.hpp>
 #include <ored/utilities/strike.hpp>
 #include <ored/utilities/timeperiod.hpp>
+#include <ored/utilities/timer.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/vectorutils.hpp>
 #include <ored/utilities/wildcard.hpp>

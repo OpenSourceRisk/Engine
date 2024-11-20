@@ -72,12 +72,14 @@ ScriptedInstrumentPricingEngineCG::~ScriptedInstrumentPricingEngineCG() {
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
     const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
-    const QuantLib::ext::shared_ptr<Context>& context, const Model::McParams& mcParams, const std::string& script,
+    const QuantLib::ext::shared_ptr<Context>& context, const Model::McParams& mcParams,
+    const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives, const std::string& script,
     const bool interactive, const bool generateAdditionalResults, const bool includePastCashflows,
     const bool useCachedSensis, const bool useExternalComputeFramework,
     const bool useDoublePrecisionForExternalCalculation)
     : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
-      mcParams_(mcParams), script_(script), interactive_(interactive),
+      mcParams_(mcParams), indicatorSmoothingForValues_(indicatorSmoothingForValues),
+      indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives), script_(script), interactive_(interactive),
       generateAdditionalResults_(generateAdditionalResults), includePastCashflows_(includePastCashflows),
       useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation) {
@@ -93,10 +95,10 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
         opsExternal_ = getExternalRandomVariableOps();
         gradsExternal_ = getExternalRandomVariableGradients();
     } else {
-        ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.0,
-                                    mcParams_.regressionVarianceCutoff);
-        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.2,
-                                            mcParams_.regressionVarianceCutoff);
+        ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                    indicatorSmoothingForValues_, mcParams_.regressionVarianceCutoff);
+        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                            indicatorSmoothingForDerivatives_, mcParams_.regressionVarianceCutoff);
     }
 }
 
@@ -416,12 +418,14 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                 // cashflow is written as expectation of deflated base ccy amount at T0, converted to flow ccy
                 // with the T0 FX Spot and compounded back to the pay date on T0 curves
                 Real fx = 1.0;
-                Real discount = 1.0;
+                Real discount = 0.0;
+                cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i));
                 if (paylog->dates().at(i) > model_->referenceDate()) {
                     fx = model_->getDirectFxSpotT0(paylog->currencies().at(i), model_->baseCcy());
                     discount = model_->getDirectDiscountT0(paylog->dates().at(i), paylog->currencies().at(i));
+                    cashFlowResults[i].amount /= fx * discount;
                 }
-                cashFlowResults[i].amount = model_->extractT0Result(paylog->amounts().at(i)) / fx / discount;
+                cashFlowResults[i].fixingDate = paylog->obsDates().at(i);
                 cashFlowResults[i].payDate = paylog->dates().at(i);
                 cashFlowResults[i].currency = paylog->currencies().at(i);
                 cashFlowResults[i].legNumber = paylog->legNos().at(i);
@@ -474,7 +478,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                                                                               << baseModelParams_[i].first);
             Real tmp = sensis_[i] * (modelParams[i].second - baseModelParams_[i].second);
             npv += tmp;
-            DLOG("node " << modelParams[i].first << ": [" << modelParams[i].second << " (current) - "
+            TLOG("node " << modelParams[i].first << ": [" << modelParams[i].second << " (current) - "
                          << baseModelParams_[i].second << " (base) ] * " << sensis_[i] << " (delta) => " << tmp);
         }
 

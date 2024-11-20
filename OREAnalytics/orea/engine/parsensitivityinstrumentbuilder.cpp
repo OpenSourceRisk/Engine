@@ -1074,17 +1074,14 @@ std::pair<QuantLib::ext::shared_ptr<QuantLib::Instrument>, Date> ParSensitivityI
     auto lastCouponDate = [](QuantLib::ext::shared_ptr<CashFlow> flow, Period freq, Calendar cal) -> Date {
         if (auto c = QuantLib::ext::dynamic_pointer_cast<IborCoupon>(flow))
             return c->fixingEndDate();
-        Date d{};
         if (auto c = QuantLib::ext::dynamic_pointer_cast<SubPeriodsCoupon1>(flow))
-            d = c->valueDates().back();
-        else if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(flow)) {
-            d = c->valueDates().back();
-            freq = 1 * Days;
+            return c->valueDates().back();
+        if (auto c = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(flow)) {
+            return cal.advance(c->valueDates().back(), 1 * Days);
         } else {
             QL_FAIL("makeTenorBasisSwap(): Either IborCoupon, SubPeriodsCoupon1 or OvernightIndexedCoupon cashflow "
                     "expected.");
         }
-        return cal.advance(d, freq);
     };
 
     Date maxDate1 = lastCouponDate(lastPayCoupon, conv->payFrequency(), payIndexCalendar);
@@ -1169,8 +1166,8 @@ QuantLib::ext::shared_ptr<CapFloor> ParSensitivityInstrumentBuilder::makeCapFloo
     // if (generatePillar) {
     //     capFloorPillars_[ccy].push_back(term /*(end - asof) * Days*/);
     // }
-
     QL_REQUIRE(inst, "empty cap/floor par instrument pointer");
+    QL_REQUIRE(inst->floatingLeg().size() > 0, "empty cap/floor floating leg");
     return inst;
 }
 

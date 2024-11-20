@@ -119,6 +119,7 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     Date expiryDate = parseDate(option_.exerciseDates().front());
     QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
     maturity_ = std::max(option_.premiumData().latestPremiumDate(), expiryDate);
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Option's Latest Premium Date";
 
     // Create a CashOrNothing payoff for digital options
     QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff(new CashOrNothingPayoff(type, strike, payoffAmount_));
@@ -148,6 +149,7 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
     QuantLib::ext::shared_ptr<FxDigitalOptionEngineBuilder> fxOptBuilder =
         QuantLib::ext::dynamic_pointer_cast<FxDigitalOptionEngineBuilder>(builder);
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     barrier->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
     vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, flipResults));
@@ -168,7 +170,7 @@ void FxDigitalBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory
 
     Handle<Quote> spot = market->fxSpot(boughtCcy.code() + soldCcy.code());
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
-        barrier, positionType == Position::Long ? true : false, expiryDate,
+        barrier, positionType == Position::Long ? true : false, expiryDate, expiryDate,
         settleType == Settlement::Physical ? true : false, vanilla, barrierType, spot, level, rebate, soldCcy,
         start, fxIndex, cal, 1, 1, additionalInstruments, additionalMultipliers));
 

@@ -184,8 +184,6 @@ class oreApi():
     def setupParametricVar(self, data_dict, params):
         print("Loading parametricVar variables")
         params.insertAnalytic("VAR")
-        self.setSimpleParameter(data_dict["analytics"], "salvageCovarianceMatrix", "parametricVar", params.setSalvageCovariance,
-                                bool)
         self.setSimpleParameter(data_dict["analytics"], "quantiles", "parametricVar", params.setVarQuantiles)
         self.setSimpleParameter(data_dict["analytics"], "breakdown", "parametricVar", params.setVarBreakDown)
         self.setSimpleParameter(data_dict["analytics"], "portfolioFilter", "parametricVar", params.setVarBreakDown)
@@ -241,8 +239,14 @@ class oreApi():
                                 params.setFlipViewBorrowingCurvePostfix)
         self.setSimpleParameter(data_dict["analytics"], "flipViewLendingCurvePostfix", "xva", params.setFlipViewLendingCurvePostfix)
 
+<<<<<<< HEAD
         # DIM variables
         # Fill Time series param
+=======
+
+        # DIM variables
+        #  Fill Time series param
+>>>>>>> origin/master
         self.setUriParameter(data_dict["analytics"], "deterministicInitialMarginUri", "xva", params.setDeterministicInitialMargin)
         self.setSimpleParameter(data_dict["analytics"], "dimQuantile", "xva", params.setDimQuantile, float)
         self.setSimpleParameter(data_dict["analytics"], "dimHorizonCalendarDays", "xva", params.setDimHorizonCalendarDays, int)
@@ -250,8 +254,15 @@ class oreApi():
         self.setSimpleParameter(data_dict["analytics"], "dimRegressors", "xva", params.setDimRegressors, str)
         self.setSimpleParameter(data_dict["analytics"], "dimOutputGridPoints", "xva", params.setDimOutputGridPoints, str)
         self.setSimpleParameter(data_dict["analytics"], "dimOutputNettingSet", "xva", params.setDimOutputNettingSet, str)
+<<<<<<< HEAD
         self.setSimpleParameter(data_dict["analytics"], "dimLocalRegressionEvaluations", "xva", params.setDimLocalRegressionEvaluations, int)
         self.setSimpleParameter(data_dict["analytics"], "dimLocalRegressionBandwidth", "xva", params.setDimLocalRegressionBandwidth, float)
+=======
+        self.setSimpleParameter(data_dict["analytics"], "dimLocalRegressionEvaluations", "xva", params.setDimLocalRegressionEvaluations,
+                           int)
+        self.setSimpleParameter(data_dict["analytics"], "dimLocalRegressionBandwidth", "xva", params.setDimLocalRegressionBandwidth,
+                           float)
+>>>>>>> origin/master
 
         # KVA Variables
         self.setSimpleParameter(data_dict["analytics"], "kvaCapitalDiscountRate", "xva", params.setKvaCapitalDiscountRate, float)
@@ -300,7 +311,10 @@ class oreApi():
         response = urllib.request.urlopen(data_dict["setup"]["pricingEnginesUri"])
         xml_data = response.read().decode('utf-8')
         params.setSimulationPricingEngine(xml_data)
+<<<<<<< HEAD
         self.setSimpleParameter(data_dict["analytics"], "salvageCorrelationMatrix", "simulation", params.setSalvageCovariance, bool)
+=======
+>>>>>>> origin/master
         self.setSimpleParameter(data_dict["analytics"], "amc", "simulation", params.setAmc, bool)
         self.setSimpleParameter(data_dict["analytics"], "amcTradeTypes", "simulation", params.setAmc)
         self.setUriParameter(data_dict["analytics"], "pricingEnginesUri", "simulation", params.setSimulationPricingEngine)
@@ -504,9 +518,14 @@ class oreApi():
         ore_app = ore.OREApp(inputParams, logFile, 63, True)
 
         print("Running ORE process...")
+<<<<<<< HEAD
         # try catch error needed (500 error)
         try:
             ore_app.run(ore.StrVector(market_data), ore.StrVector(fixings_data))  
+=======
+        try:
+            ore_app.run(ore.StrVector(market_data), ore.StrVector(fixings_data))  # try catch error needed (500 error)
+>>>>>>> origin/master
         except Exception as e:
             error_message = "Internal server error from ore app failing"
             error = str(e.args[0])

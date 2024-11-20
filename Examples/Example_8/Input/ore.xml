@@ -5,6 +5,7 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
+    <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -36,6 +37,11 @@
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
+    </Analytic>
+    <Analytic type="calibration">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configFile">simulation.xml</Parameter>
+      <Parameter name="outputFile">calibration.csv</Parameter>
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>

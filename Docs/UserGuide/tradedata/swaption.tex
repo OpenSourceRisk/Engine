@@ -73,7 +73,7 @@ The \lstinline!OptionData! trade component sub-node is outlined in section \ref{
 The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 
 \begin{itemize}
-\item \lstinline!LongShort!: The allowable values are \emph{Long} or \emph{Short}. Note that the payer and receiver legs in the underlying swap are always from the perspective of the party that is \emph{Long}. E.g. for a \emph{Short} swaption with a fixed leg where the Payer flag is set to \emph{false}, it means that the counterparty receives the fixed flows.  
+\item \lstinline!LongShort!: The allowable values are \emph{Long} or \emph{Short}. Note that for Swaptions the payer and receiver legs in the underlying swap are always from the perspective of the party that is \emph{Long}. E.g. for a \emph{Short} swaption with a fixed leg where the Payer flag is set to \emph{false}, it means that the counterparty receives the fixed flows.  
 
 \begin{table}[H]
 \centering
@@ -88,6 +88,7 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
   \label{tab:swaption_setup}
 \end{table}
 
+Note that for CallableSwaps, contrary to the above, the payer and receiver legs in the underlying swap are instead from the perspective of the client, like for a standalone Swap trade.
 
 
 

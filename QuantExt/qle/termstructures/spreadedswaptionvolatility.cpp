@@ -150,7 +150,7 @@ Volatility SpreadedSwaptionVolatility::volatilityImpl(Time optionTime, Time swap
         } else {
             volSpread = volSpreads.front();
         }
-        return base_->volatility(optionTime, swapLength, strike) + volSpread;
+        return std::max(0.0, base_->volatility(optionTime, swapLength, strike) + volSpread);
     } else {
         // if input strike != null, use smile section implementation
         return smileSectionImpl(optionTime, swapLength)->volatility(strike);

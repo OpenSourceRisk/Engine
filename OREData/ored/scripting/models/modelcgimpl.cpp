@@ -143,7 +143,7 @@ std::size_t ModelCGImpl::pay(const std::size_t amount, const Date& obsdate, cons
 
         // discount from pay to obs date on ccy curve, convert to base ccy and divide by the numeraire
 
-        n = cg_mult(*g_, cg_div(*g_, getDiscount(cidx, effectiveDate, paydate), getNumeraire(effectiveDate)), fxSpot);
+        n = cg_mult(*g_, cg_div(*g_, getDiscount(cidx, effectiveDate, paydate), numeraire(effectiveDate)), fxSpot);
         g_->setVariable(id, n);
     }
 

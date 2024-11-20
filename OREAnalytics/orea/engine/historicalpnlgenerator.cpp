@@ -111,7 +111,8 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
         simMarket_->reset();
         simMarket_->scenarioGenerator() = hisScenGen_;
         hisScenGen_->baseScenario() = simMarket_->baseScenario();
-        valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), true, nullptr, nullptr, {}, dryRun_);
+        valuationEngine_->buildCube(portfolio_, cube_, npvCalculator_(), ValuationEngine::ErrorPolicy::RemoveAll, true,
+                                    nullptr, nullptr, {}, dryRun_);
 
     } else {
         MultiThreadedValuationEngine engine(
@@ -122,7 +123,7 @@ void HistoricalPnlGenerator::generateCube(const QuantLib::ext::shared_ptr<Scenar
             i->reset();
             engine.registerProgressIndicator(i);
         }
-        engine.buildCube(portfolio_, npvCalculator_, {}, true, dryRun_);
+        engine.buildCube(portfolio_, npvCalculator_, ValuationEngine::ErrorPolicy::RemoveAll, {}, true, dryRun_);
         cube_ = QuantLib::ext::make_shared<JointNPVCube>(engine.outputCubes(), portfolio_->ids(), true);
     }
 

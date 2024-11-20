@@ -52,15 +52,24 @@ void AnalyticDigitalAmericanEngine::calculate() const {
         auto resToInvert = vector<string>({"spot", "forward", "strike"});
         for (const string& res : resToInvert) {
             auto it = results_.additionalResults.find(res);
+            string resPricing = res + "_pricing";
+            results_.additionalResults[resPricing] = it->second;
             if (it != results_.additionalResults.end())
                 it->second = 1. / boost::any_cast<Real>(it->second);
         }
 
-        // Swap riskFreeDiscount and dividendDiscount
-        auto rfDiscountIt = results_.additionalResults.find("riskFreeDiscount");
-        auto divDiscountIt = results_.additionalResults.find("dividendDiscount");
-        if (rfDiscountIt != results_.additionalResults.end() && divDiscountIt != results_.additionalResults.end())
-            std::swap(rfDiscountIt->second, divDiscountIt->second);
+        // Swap riskFreeDiscount and dividendDiscount, discount factor stays what it is
+        Real rfDiscount = Null<Real>();
+        Real divDiscount = Null<Real>();
+
+        if (auto tmp = results_.additionalResults.find("riskFreeDiscount"); tmp != results_.additionalResults.end())
+            rfDiscount = boost::any_cast<Real>(tmp->second);
+        if (auto tmp = results_.additionalResults.find("dividendDiscount"); tmp != results_.additionalResults.end())
+            divDiscount = boost::any_cast<Real>(tmp->second);
+
+        results_.additionalResults["riskFreeDiscount"] = divDiscount;
+        results_.additionalResults["divDiscount"] = rfDiscount;
+
     }
 }
 

@@ -87,17 +87,19 @@
     </Analytic>
     <Analytic type="stress">
       <Parameter name="active">Y</Parameter>
+      <Parameter name="precision">6</Parameter>
       <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
       <Parameter name="outputThreshold">0.000001</Parameter>
+      <Parameter name="generateCashflows">Y</Parameter>
+      <Parameter name="scenarioCashflowOutputFile">stresstest_flows.csv</Parameter>
     </Analytic>
     <Analytic type="parametricVar">
       <Parameter name="active">N</Parameter>
       <Parameter name="sensitivityInputFile">../Output/sensitivity.csv</Parameter>
       <Parameter name="covarianceInputFile">covariance.csv</Parameter>
-      <Parameter name="salvageCovarianceMatrix">N</Parameter>
       <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
       <!-- Breakdown of risk classes and types -->
       <Parameter name="breakdown">Y</Parameter>

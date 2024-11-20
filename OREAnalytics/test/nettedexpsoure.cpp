@@ -295,7 +295,7 @@ QuantLib::ext::shared_ptr<analytics::ScenarioSimMarket> buildScenarioSimMarket(Q
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
     parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
     parameters->swapVolKeys() = ccys;
-    parameters->swapVolDecayMode() = "ForwardVariance";
+    parameters->setSwapVolDecayMode("ForwardVariance");
 
     parameters->setFxVolExpiries("",
         vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
@@ -364,7 +364,7 @@ QuantLib::ext::shared_ptr<NPVCube> buildNPVCube(QuantLib::ext::shared_ptr<DateGr
     if (withCloseOutGrid)
         calculators.push_back(QuantLib::ext::make_shared<MPORCalculator>(npvCalc));
     BOOST_TEST_MESSAGE("mporStickyDate "<<mporStickyDate);
-    valEngine.buildCube(portfolio, cube, calculators, mporStickyDate);
+    valEngine.buildCube(portfolio, cube, calculators, ValuationEngine::ErrorPolicy::RemoveAll, mporStickyDate);
     t.stop();
     double elapsed = t.elapsed().wall * 1e-9;
     

@@ -64,7 +64,7 @@ public:
 
 class MarketDataLoader {
 public:
-    MarketDataLoader(const QuantLib::ext::shared_ptr<InputParameters>& inputs, QuantLib::ext::shared_ptr<MarketDataLoaderImpl> impl)
+    MarketDataLoader(const QuantLib::ext::shared_ptr<InputParameters>& inputs, QuantLib::ext::shared_ptr<MarketDataLoaderImpl> impl = nullptr)
         : inputs_(inputs), impl_(impl) {
         loader_ = QuantLib::ext::make_shared<ore::data::InMemoryLoader>();
     }
@@ -73,8 +73,16 @@ public:
     /*! Populate a market data \p loader. Gathers all the quotes needed based on the configs provided and calls the
         marketdata and fixing services
     */
-    void populateLoader(const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
+    virtual void populateLoader(const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
         const std::set<QuantLib::Date>& loaderDates);
+    
+    virtual void populateLoader(
+        const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParameters,
+        const std::set<QuantLib::Date>& loaderDates) {
+        std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
+        tmps.push_back(todaysMarketParameters);
+        populateLoader(tmps, loaderDates);
+    }
 
     virtual void
     populateFixings(const std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>>& todaysMarketParameters,
@@ -89,6 +97,7 @@ public:
     //! getters
     const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader() const { return loader_; };
     QuoteMap quotes() { return quotes_; }
+    FixingMap fixings() { return fixings_; }
 
 protected:
     QuantLib::ext::shared_ptr<InputParameters> inputs_;

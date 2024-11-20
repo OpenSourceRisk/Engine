@@ -26,6 +26,7 @@
 #include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <qle/termstructures/swaptionsabrcube.hpp>
+#include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 
@@ -58,9 +59,10 @@ GenericYieldVolCurve::GenericYieldVolCurve(
     const QuantLib::ext::shared_ptr<GenericYieldVolatilityCurveConfig>& config,
     const map<string, QuantLib::ext::shared_ptr<SwapIndex>>& requiredSwapIndices,
     const map<string, QuantLib::ext::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves,
-    const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term)>& matchAtmQuote,
-    const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike)>&
-        matchSmileQuote,
+    const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term)>&
+        matchAtmQuote,
+    const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& expiry, Period& term,
+                             Real& strike)>& matchSmileQuote,
     const std::function<bool(const QuantLib::ext::shared_ptr<MarketDatum>& md, Period& term)>& matchShiftQuote,
     const bool buildCalibrationInfo) {
 
@@ -120,6 +122,17 @@ GenericYieldVolCurve::GenericYieldVolCurve(
         } else {
 
             // Build quote based surface
+
+            if (!config->swapIndexBase().empty()) {
+                auto it = requiredSwapIndices.find(config->swapIndexBase());
+                if (it != requiredSwapIndices.end())
+                    swapIndexBase = it->second;
+            }
+            if (!config->shortSwapIndexBase().empty()) {
+                auto it = requiredSwapIndices.find(config->shortSwapIndexBase());
+                if (it != requiredSwapIndices.end())
+                    shortSwapIndexBase = it->second;
+            }
 
             // We loop over all market data, looking for quotes that match the configuration
             // until we found the whole matrix or do not have more quotes in the market data
@@ -193,15 +206,43 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             }
             QL_REQUIRE(haveAllAtmValues, "Did not find all required quotes to build ATM surface");
 
-            if (!config->swapIndexBase().empty()) {
-                auto it = requiredSwapIndices.find(config->swapIndexBase());
-                if (it != requiredSwapIndices.end())
-                    swapIndexBase = it->second;
-            }
-            if (!config->shortSwapIndexBase().empty()) {
-                auto it = requiredSwapIndices.find(config->shortSwapIndexBase());
-                if (it != requiredSwapIndices.end())
-                    shortSwapIndexBase = it->second;
+            // convert atm vols if specified and we are not building a parametric surface (the latter will handle
+            // conversion to output vol type and shift itself and expects the original input vol type and shift
+            // for the calibration step, there is no advantage of an early conversion, we can only loose information)
+
+            bool earlyConversionToOutputVolTypeAndShift =
+                config->interpolation() == GenericYieldVolatilityCurveConfig::Interpolation::Linear;
+
+            QL_REQUIRE(config->outputShift().empty() ||
+                           config->outputShift().size() == config->underlyingTenors().size(),
+                       "GenericYieldVolCurve: if output shifts are specified, their size ("
+                           << config->outputShift().size() << ") must match the size of underlying tenors ("
+                           << config->underlyingTenors().size());
+
+            if(earlyConversionToOutputVolTypeAndShift)
+            for (Size i = 0; i < config->optionTenors().size(); ++i) {
+                for (Size j = 0; j < config->underlyingTenors().size(); ++j) {
+                    try {
+                        vols[i][j] = QuantExt::convertSwaptionVolatility(
+                            asof, optionTenors[i], underlyingTenors[j], swapIndexBase, shortSwapIndexBase,
+                            config->dayCounter(), 0.0, vols[i][j],
+                            config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                                ? QuantLib::VolatilityType::Normal
+                                : QuantLib::VolatilityType::ShiftedLognormal,
+                            isSln ? shifts[i][j] : 0.0,
+                            config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                                ? QuantLib::VolatilityType::Normal
+                                : QuantLib::VolatilityType::ShiftedLognormal,
+                            config->outputShift().empty() ? (isSln ? shifts[i][j] : 0.0) : config->outputShift()[j]);
+                    } catch (const std::exception& e) {
+                        QL_FAIL("error while converting swaption input market volatility quotes for option tenor "
+                                << optionTenors[i] << ", swap tenor " << underlyingTenors[j]
+                                << ", strike atmf to output vol type / shift: " << e.what());
+                    }
+                    if (isSln)
+                        shifts[i][j] =
+                            config->outputShift().empty() ? (isSln ? shifts[i][j] : 0.0) : config->outputShift()[j];
+                }
             }
 
             QuantLib::ext::shared_ptr<SwaptionVolatilityStructure> atm;
@@ -209,14 +250,16 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             QL_REQUIRE(quotesRead > 0,
                        "GenericYieldVolCurve: did not read any quotes, are option and swap tenors defined?");
             if (quotesRead > 1) {
-                atm = QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
+                atm = QuantLib::ext::make_shared<SwaptionVolatilityMatrix>(
                     asof, config->calendar(), config->businessDayConvention(), optionTenors, underlyingTenors, vols,
                     config->dayCounter(),
                     config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat,
-                    config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                    (earlyConversionToOutputVolTypeAndShift
+                         ? config->outputVolatilityType()
+                         : config->volatilityType()) == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                         ? QuantLib::Normal
                         : QuantLib::ShiftedLognormal,
-                    isSln ? shifts : Matrix(vols.rows(), vols.columns(), 0.0)));
+                    isSln ? shifts : Matrix(vols.rows(), vols.columns(), 0.0));
 
                 atm->enableExtrapolation(config->extrapolation() ==
                                          GenericYieldVolatilityCurveConfig::Extrapolation::Flat);
@@ -230,10 +273,12 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 // Constant volatility
                 atm = QuantLib::ext::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
                     asof, config->calendar(), config->businessDayConvention(), vols[0][0], config->dayCounter(),
-                    config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                    (earlyConversionToOutputVolTypeAndShift
+                         ? config->outputVolatilityType()
+                         : config->volatilityType()) == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                         ? QuantLib::Normal
                         : QuantLib::ShiftedLognormal,
-                    !shifts.empty() ? shifts[0][0] : 0.0));
+                    isSln ? shifts[0][0] : 0.0));
             }
 
             if (config->dimension() == GenericYieldVolatilityCurveConfig::Dimension::ATM) {
@@ -288,21 +333,63 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                                  smileOptionTenors.begin();
                         Size j = std::find(smileUnderlyingTenors.begin(), smileUnderlyingTenors.end(), term) -
                                  smileUnderlyingTenors.begin();
+                        Size iAtm = std::find(optionTenors.begin(), optionTenors.end(), expiry) -
+                                optionTenors.begin();
+                        Size jAtm = std::find(underlyingTenors.begin(), underlyingTenors.end(), term) -
+                                 underlyingTenors.begin();
+
                         // In the MarketDatum we call it a strike, but it's really a spread
                         Size k = std::find(spreads.begin(), spreads.end(), strike) - spreads.begin();
+
                         QL_REQUIRE(i < smileOptionTenors.size(),
-                                   "expiry " << expiry << " not in configuration, this is unexpected");
+                                   "expiry " << expiry << " not in smile configuration, this is unexpected");
                         QL_REQUIRE(j < smileUnderlyingTenors.size(),
-                                   "term " << term << " not in configuration, this is unexpected");
+                                   "term " << term << " not in smile configuration, this is unexpected");
+                        QL_REQUIRE(iAtm < optionTenors.size(),
+                                   "expiry " << expiry << " not in atm configuration, this is unexpected");
+                        QL_REQUIRE(jAtm < underlyingTenors.size(),
+                                   "term " << term << " not in atm configuration, this is unexpected");
                         QL_REQUIRE(k < spreads.size(),
                                    "strike " << strike << " not in configuration, this is unexpected");
 
                         spreadQuotesRead++;
-                        // Assume quotes are absolute vols by strike so construct the vol spreads here
-                        Volatility atmVol = atm->volatility(smileOptionTenors[i], smileUnderlyingTenors[j], 0.0);
-                        volSpreadHandles[i * smileUnderlyingTenors.size() + j][k] =
-                            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(md->quote()->value() - atmVol));
+
                         zero[i * smileUnderlyingTenors.size() + j][k] = close_enough(md->quote()->value(), 0.0);
+
+                        Real vol = 0.0;
+                        if (!zero[i * smileUnderlyingTenors.size() + j][k]) {
+                            if (earlyConversionToOutputVolTypeAndShift) {
+                                try {
+                                    vol = QuantExt::convertSwaptionVolatility(
+                                        asof, smileOptionTenors[i], smileUnderlyingTenors[j], swapIndexBase,
+                                        shortSwapIndexBase, config->dayCounter(), spreads[k], md->quote()->value(),
+                                        config->volatilityType() ==
+                                                GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                                            ? QuantLib::VolatilityType::Normal
+                                            : QuantLib::VolatilityType::ShiftedLognormal,
+                                        isSln ? shifts[iAtm][jAtm] : 0.0,
+                                        config->outputVolatilityType() ==
+                                                GenericYieldVolatilityCurveConfig::VolatilityType::Normal
+                                            ? QuantLib::VolatilityType::Normal
+                                            : QuantLib::VolatilityType::ShiftedLognormal,
+                                        config->outputShift().empty() ? (isSln ? shifts[iAtm][jAtm] : 0.0)
+                                                                      : config->outputShift()[jAtm]);
+                                } catch (const std::exception& e) {
+                                    QL_FAIL("error while converting swaption input market volatility quotes for option "
+                                            "tenor "
+                                            << smileOptionTenors[i] << ", swap tenor " << smileUnderlyingTenors[j]
+                                            << ", smile spread " << spreads[k]
+                                            << " to output vol type / shift: " << e.what());
+                                }
+                            } else {
+                                vol = md->quote()->value();
+                            }
+                        }
+
+                        // vol is absolute vols by strike so construct the vol spreads here
+                        volSpreadHandles[i * smileUnderlyingTenors.size() + j][k] =
+                            Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(
+                                vol - atm->volatility(smileOptionTenors[i], smileUnderlyingTenors[j], 0.0)));
                     }
                 }
                 LOG("Read " << spreadQuotesRead << " quotes for VolCube.");
@@ -359,7 +446,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         config->extrapolation() == GenericYieldVolatilityCurveConfig::Extrapolation::Flat);
                     cube->enableExtrapolation();
                 } else {
-                    std::map<std::pair<QuantLib::Period, QuantLib::Period>, std::vector<std::pair<Real, bool>>>
+                    std::map<std::pair<QuantLib::Period, QuantLib::Period>,
+                             std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>>>
                         initialModelParameters;
                     Size maxCalibrationAttempts = 10;
                     Real exitEarlyErrorThreshold = 0.005;
@@ -384,12 +472,12 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                                        << ") = " << optionTenors.size() * underlyingTenors.size() << ")");
                         for (Size i = 0; i < optionTenors.size(); ++i) {
                             for (Size j = 0; j < underlyingTenors.size(); ++j) {
-                                std::vector<std::pair<Real, bool>> tmp;
+                                std::vector<std::pair<Real, QuantExt::ParametricVolatility::ParameterCalibration>> tmp;
                                 Size idx = alpha.initialValue.size() == 1 ? 0 : i * underlyingTenors.size() + j;
-                                tmp.push_back(std::make_pair(alpha.initialValue[idx], alpha.isFixed));
-                                tmp.push_back(std::make_pair(beta.initialValue[idx], beta.isFixed));
-                                tmp.push_back(std::make_pair(nu.initialValue[idx], nu.isFixed));
-                                tmp.push_back(std::make_pair(rho.initialValue[idx], rho.isFixed));
+                                tmp.push_back(std::make_pair(alpha.initialValue[idx], alpha.calibration));
+                                tmp.push_back(std::make_pair(beta.initialValue[idx], beta.calibration));
+                                tmp.push_back(std::make_pair(nu.initialValue[idx], nu.calibration));
+                                tmp.push_back(std::make_pair(rho.initialValue[idx], rho.calibration));
                                 initialModelParameters[std::make_pair(optionTenors[i], underlyingTenors[j])] = tmp;
                             }
                         }
@@ -406,11 +494,13 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         config->outputVolatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                             ? QuantLib::Normal
                             : QuantLib::ShiftedLognormal,
-                        initialModelParameters, maxCalibrationAttempts, exitEarlyErrorThreshold, maxAcceptableError);
+                        initialModelParameters, config->outputShift(), config->modelShift(), maxCalibrationAttempts,
+                        exitEarlyErrorThreshold, maxAcceptableError);
                 }
 
-                // Wrap it in a SwaptionVolCubeWithATM
-                vol_ = QuantLib::ext::make_shared<QuantExt::SwaptionVolCubeWithATM>(cube);
+                // Wrap it in a SwaptionVolCubeWithATM, disable short-cut for atm vol retrieval
+                vol_ = QuantLib::ext::make_shared<QuantExt::SwaptionVolCubeWithATM>(
+                    cube, config->interpolation() == GenericYieldVolatilityCurveConfig::Interpolation::Linear);
             }
         }
 
@@ -617,33 +707,44 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             }
 
             DLOG("Building calibration info generic yield vols completed.");
+        }
 
-            // output SABR calibration to log, if SABR was used
-
-            if (auto sw = QuantLib::ext::dynamic_pointer_cast<QuantExt::SwaptionVolCubeWithATM>(vol_)) {
-                if (auto sabr = QuantLib::ext::dynamic_pointer_cast<QuantExt::SwaptionSabrCube>(sw->cube())) {
-                    if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::SabrParametricVolatility>(
-                            sabr->parametricVolatility())) {
-                        DLOG("SABR parameters:");
-                        DLOG("alpha (rows = option tenors, cols = underlying lengths):");
-                        DLOGGERSTREAM(transpose(p->alpha()));
-                        DLOG("beta (rows = option tenors, cols = underlying lengths):");
-                        DLOGGERSTREAM(transpose(p->beta()));
-                        DLOG("nu (rows = option tenors, cols = underlying lengths):");
-                        DLOGGERSTREAM(transpose(p->nu()));
-                        DLOG("rho (rows = option tenors, cols = underlying lengths):");
-                        DLOGGERSTREAM(transpose(p->rho()));
-                        DLOG("lognormal shift (rows = option tenors, cols = underlying lengths):");
-                        DLOGGERSTREAM(transpose(p->lognormalShift()));
-                        DLOG("calibration attempts (rows = option tenors, cols = underlying lengths):");
-                        DLOGGERSTREAM(transpose(p->numberOfCalibrationAttempts()));
-                        DLOG("calibration error (rows = option tenors, cols = underlying lengths, rmse of relative "
-                             "errors w.r.t. max of sabr variant's preferred quotation type, i.e. nvol, slnvol, "
-                             "premium:");
-                        DLOGGERSTREAM(transpose(p->calibrationError()));
-                        DLOG("isInterpolated (rows = option tenors, cols = underlying lengths, 1 means calibration "
-                             "failed and point is interpolated):");
-                        DLOGGERSTREAM(transpose(p->isInterpolated()));
+        if (auto sw = QuantLib::ext::dynamic_pointer_cast<QuantExt::SwaptionVolCubeWithATM>(vol_)) {
+            if (auto sabr = QuantLib::ext::dynamic_pointer_cast<QuantExt::SwaptionSabrCube>(sw->cube())) {
+                if (auto p = QuantLib::ext::dynamic_pointer_cast<QuantExt::SabrParametricVolatility>(
+                        sabr->parametricVolatility())) {
+                    DLOG("SABR parameters:");
+                    DLOG("alpha (rows = option tenors, cols = underlying lengths):");
+                    DLOGGERSTREAM(transpose(p->alpha()));
+                    DLOG("beta (rows = option tenors, cols = underlying lengths):");
+                    DLOGGERSTREAM(transpose(p->beta()));
+                    DLOG("nu (rows = option tenors, cols = underlying lengths):");
+                    DLOGGERSTREAM(transpose(p->nu()));
+                    DLOG("rho (rows = option tenors, cols = underlying lengths):");
+                    DLOGGERSTREAM(transpose(p->rho()));
+                    DLOG("lognormal shift (rows = option tenors, cols = underlying lengths):");
+                    DLOGGERSTREAM(transpose(p->lognormalShift()));
+                    DLOG("calibration attempts (rows = option tenors, cols = underlying lengths):");
+                    DLOGGERSTREAM(transpose(p->numberOfCalibrationAttempts()));
+                    DLOG("calibration error (rows = option tenors, cols = underlying lengths, rmse of relative "
+                         "errors w.r.t. max of sabr variant's preferred quotation type, i.e. nvol, slnvol, "
+                         "premium:");
+                    DLOGGERSTREAM(transpose(p->calibrationError()));
+                    DLOG("isInterpolated (rows = option tenors, cols = underlying lengths, 1 means calibration "
+                         "failed and point is interpolated):");
+                    DLOGGERSTREAM(transpose(p->isInterpolated()));
+                    DLOG("SABR calibration results for individual strikes:");
+                    DLOG("timeToExpiry,underlyingLength,forward,strike,marketInput,caibrationTarget,"
+                         "calibrationResult,error,"
+                         "accepted");
+                    for (auto const& c : p->calibrationResults()) {
+                        for (std::size_t i = 0; i < c.strikes.size(); ++i) {
+                            DLOG(c.timeToExpiry
+                                 << "," << (c.underlyingLength == Null<Real>() ? 0.0 : c.underlyingLength) << ","
+                                 << c.forward << "," << c.strikes[i] << "," << c.marketInput[i] << ","
+                                 << c.calibrationTarget[i] << "," << c.calibrationResult[i] << "," << c.error << ","
+                                 << std::boolalpha << c.accepted);
+                        }
                     }
                 }
             }
@@ -656,5 +757,6 @@ GenericYieldVolCurve::GenericYieldVolCurve(
         QL_FAIL("generic yield vol curve building failed: unknown error");
     }
 }
+
 } // namespace data
 } // namespace ore

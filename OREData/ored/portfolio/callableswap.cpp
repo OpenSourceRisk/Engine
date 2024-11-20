@@ -39,6 +39,7 @@ void CallableSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     swaption_.build(engineFactory);
 
     setSensitivityTemplate(swaption_.sensitivityTemplate());
+    swap_.addProductModelEngine(swaption_.productModelEngine());
 
     instrument_ = QuantLib::ext::make_shared<CompositeInstrumentWrapper>(
         std::vector<QuantLib::ext::shared_ptr<InstrumentWrapper>>{swap_.instrument(), swaption_.instrument()});
@@ -59,6 +60,8 @@ void CallableSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     notional_ = swap_.notional();
     notionalCurrency_ = swap_.notionalCurrency();
     maturity_ = swap_.maturity();
+    maturityType_ = "Swap Maturity Date";
+
 
     requiredFixings_.addData(swap_.requiredFixings());
 }

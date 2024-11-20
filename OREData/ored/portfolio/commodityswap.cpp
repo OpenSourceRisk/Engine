@@ -169,6 +169,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(parseCurrency(npvCurrency_));
     swap->setPricingEngine(engine);
     setSensitivityTemplate(*engineBuilder);
+    addProductModelEngine(*engineBuilder);
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap);
 }
 
@@ -378,6 +379,8 @@ void CommoditySwap::buildLeg(const QuantLib::ext::shared_ptr<EngineFactory>& ef,
 
     // Update maturity
     maturity_ = max(CashFlows::maturityDate(leg), maturity_);
+    if (maturity_ == CashFlows::maturityDate(leg))
+        maturityType_ = "Leg Maturity Date";
 
 }
 

@@ -465,7 +465,7 @@ std::ostream& operator<<(std::ostream& out,
 }
 
 std::ostream& operator<<(std::ostream& out, const RequiredFixings& requiredFixings) {
-    out << "IndexName FixingDate PayDate AlwaysAddIfPaysOnSettlement\n";
+    out << "IndexName FixingDate PayDate AlwaysAddIfPaysOnSettlement Mandatory\n";
     out << requiredFixings.fixingDates_;
     out << requiredFixings.zeroInflationFixingDates_;
     out << requiredFixings.yoyInflationFixingDates_;
@@ -549,6 +549,13 @@ void FixingDateGetter::visit(CPICoupon& c) {
 
     requiredFixings_.addZeroInflationFixingDate(
         c.fixingDate(), IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
+        c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), c.observationInterpolation(),
+        c.cpiIndex()->frequency(), c.date());
+
+    Date today = Settings::instance().evaluationDate();
+    Date settlementObservationDate = today - c.observationLag();
+    requiredFixings_.addZeroInflationFixingDate(
+        settlementObservationDate, IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
         c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), c.observationInterpolation(),
         c.cpiIndex()->frequency(), c.date());
 }

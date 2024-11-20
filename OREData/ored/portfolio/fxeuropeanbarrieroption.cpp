@@ -152,6 +152,7 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
 
     // delayed pay date is only affecting the maturity
     maturity_ = std::max({option_.premiumData().latestPremiumDate(), paymentDate});
+    maturityType_ = maturity_ == paymentDate ? "Payment Date" : "Option's Latest Premium Date";
 
     QuantLib::ext::shared_ptr<Instrument> digital;
     QuantLib::ext::shared_ptr<Instrument> vanillaK;
@@ -238,6 +239,7 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy));
         rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy));
         setSensitivityTemplate(*fxDigitalOptBuilder);
+        addProductModelEngine(*fxDigitalOptBuilder);
     } else {
         builder = engineFactory->builder("FxOption");
         QL_REQUIRE(builder, "No builder found for FxOption");
@@ -249,11 +251,13 @@ void FxEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         digital->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
         rebateInstrument->setPricingEngine(fxDigitalOptBuilder->engine(boughtCcy, soldCcy, flipResults));
         setSensitivityTemplate(*fxDigitalOptBuilder);
+        addProductModelEngine(*fxDigitalOptBuilder);
     }
 
     vanillaK->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
     vanillaB->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy, paymentDate));
     setSensitivityTemplate(*fxOptBuilder);
+    addProductModelEngine(*fxOptBuilder);
 
     QuantLib::ext::shared_ptr<CompositeInstrument> qlInstrument = QuantLib::ext::make_shared<CompositeInstrument>();
     qlInstrument->add(rebateInstrument);

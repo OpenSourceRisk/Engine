@@ -35,14 +35,15 @@ class ParametricVolatilitySmileSection : public QuantLib::SmileSection {
 public:
     ParametricVolatilitySmileSection(const Real optionTime, const Real swapLength, const Real atmLevel,
                                      const boost::shared_ptr<ParametricVolatility> parametricVolatility,
-                                     const ParametricVolatility::MarketQuoteType outputMarketQuoteType);
+                                     const ParametricVolatility::MarketQuoteType outputMarketQuoteType,
+                                     const Real outputLognormalShift = Null<Real>());
     Real minStrike() const override { return -QL_MAX_REAL; }
     Real maxStrike() const override { return QL_MAX_REAL; }
     Real atmLevel() const override;
 
 private:
     Volatility volatilityImpl(Rate strike) const override;
-    Real optionTime_, swapLength_, atmLevel_;
+    Real swapLength_, atmLevel_;
     boost::shared_ptr<ParametricVolatility> parametricVolatility_;
     ParametricVolatility::MarketQuoteType outputMarketQuoteType_;
     mutable std::map<Real, Real> cache_;

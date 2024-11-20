@@ -29,6 +29,23 @@ namespace data {
 
 CurrencyConfig::CurrencyConfig() {}
 
+void CurrencyConfig::addCurrencies() {
+    for (auto curr : currencies_) {
+        switch (curr.currencyType()) {
+        case QuantExt::ConfigurableCurrency::Type::Crypto:
+            CurrencyParser::instance().addCrypto(curr.code(), curr);
+            break;
+        case QuantExt::ConfigurableCurrency::Type::Metal:
+            CurrencyParser::instance().addMetal(curr.code(), curr);
+            break;
+        default:
+            CurrencyParser::instance().addCurrency(curr.code(), curr);
+            break;
+        }
+    }
+}
+
+
 void CurrencyConfig::fromXML(XMLNode* baseNode) {
     currencies_.clear();
     XMLUtils::checkNode(baseNode, "CurrencyConfig");
@@ -36,11 +53,11 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
     for (auto node : XMLUtils::getChildrenNodes(baseNode, "Currency")) {
         string name = XMLUtils::getChildValue(node, "Name", false);
         string isoCode = XMLUtils::getChildValue(node, "ISOCode", false);
-	auto tmp = parseListOfValues(XMLUtils::getChildValue(node, "MinorUnitCodes", false));
+        auto tmp = parseListOfValues(XMLUtils::getChildValue(node, "MinorUnitCodes", false));
         std::set<std::string> minorUnitCodes(tmp.begin(), tmp.end());
         try {
             DLOG("Loading external currency configuration for " << isoCode);
-            Integer numericCode = parseInteger(XMLUtils::getChildValue(node, "NumericCode", false));
+            Integer numericCode = parseInteger(XMLUtils::getChildValue(node, "NumericCode", false, "999"));
             string symbol = XMLUtils::getChildValue(node, "Symbol", false);
             string fractionSymbol = XMLUtils::getChildValue(node, "Symbol", false);
             Integer fractionsPerUnit = parseInteger(XMLUtils::getChildValue(node, "FractionsPerUnit", false));
@@ -55,18 +72,9 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
                                              rounding, format, minorUnitCodes, currencyType);
             DLOG("loading configuration for currency code " << isoCode);
 
-            switch (currencyType) { 
-                case QuantExt::ConfigurableCurrency::Type::Crypto:
-                    CurrencyParser::instance().addCrypto(c.code(), c);
-                    break;
-                case QuantExt::ConfigurableCurrency::Type::Metal:
-                    CurrencyParser::instance().addMetal(c.code(), c);
-                    break;
-                default:
-                    CurrencyParser::instance().addCurrency(c.code(), c);
-                    break;
-            }
             currencies_.push_back(c);
+
+            addCurrencies();
 
         } catch (std::exception&) {
             ALOG("error loading currency config for name " << name << " iso code " << isoCode);

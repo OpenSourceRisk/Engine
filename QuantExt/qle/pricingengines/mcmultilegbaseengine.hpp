@@ -33,6 +33,16 @@
 #include <ql/instruments/swaption.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
+//#include <boost/archive/binary_iarchive.hpp>
+//#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/export.hpp>
+
 namespace QuantExt {
 
 // statistics
@@ -62,7 +72,7 @@ class McMultiLegBaseEngine {
 public:
     enum RegressorModel { Simple, LaggedFX };
 
-protected:
+//protected:
     /*! The npv is computed in the model's base currency, discounting curves are taken from the model. simulationDates
         are additional simulation dates. The cross asset model here must be consistent with the multi path that is the
         input to AmcCalculator::simulatePath().
@@ -79,9 +89,11 @@ protected:
         const SobolRsg::DirectionIntegers directionIntegers,
         const std::vector<Handle<YieldTermStructure>>& discountCurves = std::vector<Handle<YieldTermStructure>>(),
         const std::vector<Date>& simulationDates = std::vector<Date>(),
+        const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
         const std::vector<Size>& externalModelIndices = std::vector<Size>(), const bool minimalObsDate = true,
         const RegressorModel regressorModel = RegressorModel::Simple,
-        const Real regressionVarianceCutoff = Null<Real>());
+        const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
+        const bool reevaluateExerciseInStickyRun = false);
 
     // run calibration and pricing (called from derived engines)
     void calculate() const;
@@ -95,7 +107,8 @@ protected:
     mutable std::vector<bool> payer_;
     mutable QuantLib::ext::shared_ptr<Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable Settlement::Type optionSettlement_ = Settlement::Physical;
-    mutable bool includeSettlementDateFlows_ = false;
+    mutable std::vector<QuantLib::Date> cashSettlementDates_;
+    mutable bool exerciseIntoIncludeSameDayFlows_ = false;
 
     // data members
     Handle<CrossAssetModel> model_;
@@ -107,10 +120,17 @@ protected:
     SobolRsg::DirectionIntegers directionIntegers_;
     std::vector<Handle<YieldTermStructure>> discountCurves_;
     std::vector<Date> simulationDates_;
+    std::vector<Date> stickyCloseOutDates_;
     std::vector<Size> externalModelIndices_;
     bool minimalObsDate_;
     RegressorModel regressorModel_;
     Real regressionVarianceCutoff_;
+    bool recalibrateOnStickyCloseOutDates_;
+    bool reevaluateExerciseInStickyRun_;
+
+    // set from global settings
+    mutable bool includeTodaysCashflows_;
+    mutable bool includeReferenceDateEvents_;
 
     // the generated amc calculator
     mutable QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator_;
@@ -118,7 +138,6 @@ protected:
     // results, these are read from derived engines
     mutable Real resultUnderlyingNpv_, resultValue_;
 
-private:
     static constexpr Real tinyTime = 1E-10;
 
     // data structure storing info needed to generate the amount for a cashflow
@@ -155,44 +174,85 @@ private:
         bool isTrained_ = false;
         std::set<std::pair<Real, Size>> regressorTimesModelIndices_;
         Matrix coordinateTransform_;
-        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_;
+        std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>> basisFns_ =
+            std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>{};
         Array regressionCoeffs_;
+
+        Size basisDim_ = 0;
+        Size basisOrder_ = 0;
+        LsmBasisSystem::PolynomialType basisType_ = LsmBasisSystem::PolynomialType::Monomial;
+        Size basisSystemSizeBound_ = Null<Size>();
+
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive& ar, const unsigned int version);
     };
 
     // the implementation of the amc calculator interface used by the amc valuation engine
     class MultiLegBaseAmcCalculator : public AmcCalculator {
     public:
-        MultiLegBaseAmcCalculator(const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
-                                  const std::set<Real>& exerciseXvaTimes, const std::set<Real>& exerciseTimes,
-                                  const std::set<Real>& xvaTimes,
-                                  const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndDirty,
-                                  const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelUndExInto,
-                                  const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelContinuationValue,
-                                  const std::vector<McMultiLegBaseEngine::RegressionModel>& regModelOption,
-                                  const Real resultValue, const Array& initialState, const Currency& baseCurrency);
+        MultiLegBaseAmcCalculator() = default;
+        MultiLegBaseAmcCalculator(
+            const std::vector<Size>& externalModelIndices, const Settlement::Type settlement,
+            const std::vector<Real>& cashSettlementTimes, const std::set<Real>& exerciseXvaTimes,
+            const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
+            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndDirty,
+            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndExInto,
+            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelContinuationValue,
+            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelOption,
+            const Real resultValue, const Array& initialState, const Currency& baseCurrency,
+            const bool reevaluateExerciseInStickyRun, const bool includeTodaysCashflows,
+            const bool includeReferenceDateEvents);
 
         Currency npvCurrency() override { return baseCurrency_; }
-        std::vector<QuantExt::RandomVariable> simulatePath(const std::vector<QuantLib::Real>& pathTimes,
-                                                           std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-                                                           const std::vector<size_t>& relevantPathIndex,
-                                                           const std::vector<size_t>& relevantTimeIndex) override;
+        std::vector<QuantExt::RandomVariable>
+        simulatePath(const std::vector<QuantLib::Real>& pathTimes,
+                     const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
+                     const std::vector<size_t>& relevantPathIndex,
+                     const std::vector<size_t>& relevantTimeIndex) override;
 
-    private:
+    protected:
         std::vector<Size> externalModelIndices_;
         Settlement::Type settlement_;
+        std::vector<Real> cashSettlementTimes_;
         std::set<Real> exerciseXvaTimes_;
         std::set<Real> exerciseTimes_;
         std::set<Real> xvaTimes_;
-        std::vector<McMultiLegBaseEngine::RegressionModel> regModelUndDirty_;
-        std::vector<McMultiLegBaseEngine::RegressionModel> regModelUndExInto_;
-        std::vector<McMultiLegBaseEngine::RegressionModel> regModelContinuationValue_;
-        std::vector<McMultiLegBaseEngine::RegressionModel> regModelOption_;
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelUndDirty_;
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelUndExInto_;
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelContinuationValue_;
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelOption_;
         Real resultValue_;
         Array initialState_;
         Currency baseCurrency_;
+        bool reevaluateExerciseInStickyRun_;
+
+        // set from global settings via base engine
+        bool includeTodaysCashflows_;
+        bool includeReferenceDateEvents_;
 
         std::vector<Filter> exercised_;
+
+        // used for serialisation of amc trianing
+        friend class boost::serialization::access;
+        template <class Archive> void serialize(Archive& ar, const unsigned int version);
+
     };
+
+    // generate the mc path values of the model process
+    void generatePathValues(const std::vector<Real>& simulationTimes,
+                            std::vector<std::vector<RandomVariable>>& pathValues) const;
+
+    // the model training logic
+    void calculateModels(const std::set<Real>& simulationTimes, const std::set<Real>& exerciseXvaTimes,
+                         const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
+                         const std::vector<CashflowInfo>& cashflowInfo,
+                         const std::vector<std::vector<RandomVariable>>& pathValues,
+                         const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
+                         std::vector<RegressionModel>& regModelUndDirty,
+                         std::vector<RegressionModel>& regModelUndExInto,
+                         std::vector<RegressionModel>& regModelContinuationValue,
+                         std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
+                         RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
 
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
@@ -214,5 +274,6 @@ private:
     // lgm vectorised instances for each ccy
     mutable std::vector<LgmVectorised> lgmVectorised_;
 };
+
 
 } // namespace QuantExt

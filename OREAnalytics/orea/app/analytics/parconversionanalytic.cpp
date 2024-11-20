@@ -67,7 +67,9 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
     auto zeroSensis = parConversionAnalytic->loadZeroSensitivities();
 
     if (!zeroSensis.empty()) {
-        set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
+        auto& configs = analytic()->configurations();
+
+        const set<RiskFactorKey::KeyType>& typesDisabled = configs.sensiScenarioData->parConversionExcludes();
 
         auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
             inputs_->asof(), analytic()->configurations().simMarketParams,
@@ -79,8 +81,6 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
         } else {
             LOG("Sensi analysis - skip aligning pillars");
         }
-
-        auto& configs = analytic()->configurations();
 
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), configs.simMarketParams, inputs_->marketConfig("pricing"),
@@ -182,16 +182,16 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
         }
 
         auto ss = QuantLib::ext::make_shared<SensitivityInMemoryStream>(results.begin(), results.end());
-        QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>();
+        QuantLib::ext::shared_ptr<InMemoryReport> report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString()).writeSensitivityReport(*report, ss, inputs_->parConversionThreshold());
         analytic()->reports()["PARCONVERSION"]["parConversionSensitivity"] = report;
 
         if (inputs_->parConversionOutputJacobi()) {
-            QuantLib::ext::shared_ptr<InMemoryReport> jacobiReport = QuantLib::ext::make_shared<InMemoryReport>();
+            QuantLib::ext::shared_ptr<InMemoryReport> jacobiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             writeParConversionMatrix(parAnalysis->parSensitivities(), *jacobiReport);
             analytic()->reports()["PARCONVERSION"]["parConversionJacobi"] = jacobiReport;
 
-            QuantLib::ext::shared_ptr<InMemoryReport> jacobiInverseReport = QuantLib::ext::make_shared<InMemoryReport>();
+            QuantLib::ext::shared_ptr<InMemoryReport> jacobiInverseReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
             parConverter->writeConversionMatrix(*jacobiInverseReport);
             analytic()->reports()["PARCONVERSION"]["parConversionJacobi_inverse"] = jacobiInverseReport;
         }

@@ -37,13 +37,13 @@ class ParametricVolatility {
 public:
     enum class MarketModelType { Black76 };
     enum class MarketQuoteType { Price, NormalVolatility, ShiftedLognormalVolatility };
+    enum class ParameterCalibration { Fixed, Calibrated, Implied };
 
     struct MarketSmile {
         QuantLib::Real timeToExpiry;
         // not mandatory, used e.g. for swaptions, but not cap / floors
         QuantLib::Real underlyingLength = Null<Real>();
         QuantLib::Real forward;
-        // this is also used as output lognormal shift for lnvol - type model variants
         QuantLib::Real lognormalShift = 0.0;
         // if empty, otm strikes are used
         std::vector<QuantLib::Option::Type> optionTypes;
@@ -58,15 +58,16 @@ public:
 
     // if outputOptionType is none, otm strike is used (and call for atm)
     Real convert(const Real inputQuote, const MarketQuoteType inputMarketQuoteType,
-                 const QuantLib::Real inputLognormalShift, const boost::optional<QuantLib::Option::Type> inputOptionType,
-                 const QuantLib::Real timeToExpiry, const QuantLib::Real strike, const QuantLib::Real forward,
-                 const MarketQuoteType outputMarketQuoteType, const QuantLib::Real outputLognormalShift,
+                 const QuantLib::Real inputLognormalShift,
+                 const boost::optional<QuantLib::Option::Type> inputOptionType, const QuantLib::Real timeToExpiry,
+                 const QuantLib::Real strike, const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
+                 const QuantLib::Real outputLognormalShift,
                  const boost::optional<QuantLib::Option::Type> outputOptionType = boost::none) const;
 
     /* - if outputOptionType is none, otm strike is used
        - the outputMarketQuoteType must always be given and can be different from input market quote type
-       - if outputLognormalShift is null, the input data = model's lognormal shift is used (only for
-         outputMarketQuoteType = ShiftedLognormalVolatility) */
+       - if outputLognormalShift is null, the model lognormal shift is used (only for
+         outputMarketQuoteType == ShiftedLognormalVolatility) */
     virtual QuantLib::Real
     evaluate(const QuantLib::Real timeToExpiry, const QuantLib::Real underlyingLength, const QuantLib::Real strike,
              const QuantLib::Real forward, const MarketQuoteType outputMarketQuoteType,
@@ -83,5 +84,8 @@ protected:
 /* strict weak ordering on MarketPoint by lexicographic comparison, i.e.
    (timeToExpiry1, underlyingLength1) < (timeToExpiry2, underlyingLength2)*/
 bool operator<(const ParametricVolatility::MarketSmile& s, const ParametricVolatility::MarketSmile& t);
+
+QuantExt::ParametricVolatility::ParameterCalibration parseParametricSmileParameterCalibration(const std::string& s);
+std::ostream& operator<<(std::ostream& os, QuantExt::ParametricVolatility::ParameterCalibration type);
 
 } // namespace QuantExt

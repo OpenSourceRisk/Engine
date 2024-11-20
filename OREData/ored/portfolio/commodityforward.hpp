@@ -78,7 +78,7 @@ public:
     //! \name Trade interface
     //@{
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
-    QuantLib::Real notional() const override;
+    QuantLib::Real currentNotional() const;
 
     //! Add underlying Commodity names
     std::map<AssetClass, std::set<std::string>>

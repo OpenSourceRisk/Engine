@@ -68,7 +68,8 @@ public:
                              //  in case of a positive mtm keep the undercollateralization (difference between initial
                              //  vm margin and mtm)  constant during first mpor period,
                              //  analog for overcollaterializations in case of negative mtm.
-                             const bool firstMporCollateralAdjustment);
+                             const bool firstMporCollateralAdjustment,
+			     const bool exposureProfilesUseCloseOutValues = false);
 
     virtual ~NettedExposureCalculator() {}
     const QuantLib::ext::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
@@ -90,6 +91,8 @@ public:
     vector<Real>& expectedCollateral(const string& nid) { return expectedCollateral_[nid]; }
     vector<Real>& colvaIncrements(const string& nid) { return colvaInc_[nid]; }
     vector<Real>& collateralFloorIncrements(const string& nid) { return eoniaFloorInc_[nid]; }
+    vector<Real>& epe_b_timeWeighted(const string& nid) { return epe_bTimeWeighted_[nid]; }
+    vector<Real>& eepe_b_timeWeighted(const string& nid) { return eepe_bTimeWeighted_[nid]; }
     Real& epe_b(const string& nid) { return epe_b_[nid]; }
     Real& eepe_b(const string& nid) { return eepe_b_[nid]; }
     Real& colva(const string& nid) { return colva_[nid]; }
@@ -139,6 +142,8 @@ protected:
     map<string, std::vector<Real>> expectedCollateral_;
     map<string, std::vector<Real>> colvaInc_;
     map<string, std::vector<Real>> eoniaFloorInc_;
+    map<string, std::vector<Real>> epe_bTimeWeighted_;
+    map<string, std::vector<Real>> eepe_bTimeWeighted_;
     map<string, Real> epe_b_;
     map<string, Real> eepe_b_;
     map<string, Real> colva_;
@@ -154,6 +159,7 @@ protected:
     bool withMporStickyDate_;
     MporCashFlowMode mporCashFlowMode_;
     bool firstMporCollateralAdjustment_ = false;
+    bool exposureProfilesUseCloseOutValues_ = false;
 };
 
 } // namespace analytics

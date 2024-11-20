@@ -90,6 +90,7 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
     // Exercise
     Date expiryDate = parseDate(option_.exerciseDates().front());
     maturity_ = std::max(expiryDate, option_.premiumData().latestPremiumDate());
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Option's Latest Premium Date";
 
     QuantLib::ext::shared_ptr<Exercise> exercise = QuantLib::ext::make_shared<EuropeanExercise>(expiryDate);
 
@@ -208,11 +209,12 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
         QuantLib::ext::dynamic_pointer_cast<FxBarrierOptionEngineBuilder>(builder);
     barrier->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate, expiryDate));
     setSensitivityTemplate(*fxBarrierOptBuilder);
+    addProductModelEngine(*fxBarrierOptBuilder);
     Settlement::Type settleType = parseSettlementType(option_.settlement());
 
     QuantLib::ext::shared_ptr<InstrumentWrapper> koInstrument =
         QuantLib::ext::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
-            barrier, positionType == Position::Long ? true : false, expiryDate,
+	    barrier, positionType == Position::Long ? true : false, expiryDate, expiryDate, 
             settleType == Settlement::Physical ? true : false, vanilla, knockOutType, spot, knockOutLevel, 0, soldCcy,
             start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, additionalMultipliers));
 
@@ -248,9 +250,10 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
                 QuantLib::ext::make_shared<QuantLib::BarrierOption>(knockOutType, knockInLevel, 0, payoff, exercise);
             barrier2->setPricingEngine(fxBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate, expiryDate));
             setSensitivityTemplate(*fxBarrierOptBuilder);
+            addProductModelEngine(*fxBarrierOptBuilder);
             QuantLib::ext::shared_ptr<InstrumentWrapper> koInstrument2 =
                 QuantLib::ext::shared_ptr<InstrumentWrapper>(new SingleBarrierOptionWrapper(
-                    barrier2, positionType == Position::Long ? false : true, expiryDate,
+		    barrier2, positionType == Position::Long ? false : true, expiryDate, expiryDate,
                     settleType == Settlement::Physical ? true : false, vanilla, knockOutType, spot, knockInLevel, 0,
                     soldCcy, start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, flippedAdditionalMultipliers));
 
@@ -272,10 +275,11 @@ void FxKIKOBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& 
                 std::max(knockInLevel, knockOutLevel), 0, payoff, exercise);
             doubleBarrier->setPricingEngine(fxDoubleBarrierOptBuilder->engine(boughtCcy, soldCcy, expiryDate));
             setSensitivityTemplate(*fxDoubleBarrierOptBuilder);
+            addProductModelEngine(*fxDoubleBarrierOptBuilder);
 
             QuantLib::ext::shared_ptr<InstrumentWrapper> dkoInstrument =
                 QuantLib::ext::shared_ptr<InstrumentWrapper>(new DoubleBarrierOptionWrapper(
-                    doubleBarrier, positionType == Position::Long ? false : true, expiryDate,
+		    doubleBarrier, positionType == Position::Long ? false : true, expiryDate, expiryDate, 
                     settleType == Settlement::Physical ? true : false, vanilla, DoubleBarrier::Type::KnockOut, spot,
                     std::min(knockInLevel, knockOutLevel), std::max(knockInLevel, knockOutLevel), 0, soldCcy,
                     start, fxIndex, cal, boughtAmount_, boughtAmount_, additionalInstruments, flippedAdditionalMultipliers));

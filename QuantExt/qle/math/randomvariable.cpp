@@ -502,6 +502,17 @@ void RandomVariable::expand() {
     stopDataStats(n_);
 }
 
+bool RandomVariable::isfinite() const {
+    if (deterministic_)
+        return std::isfinite(constantData_);
+    for (Size i = 0; i < n_; ++i) {
+        if (!std::isfinite(data_[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void RandomVariable::checkTimeConsistencyAndUpdate(const Real t) {
     QL_REQUIRE((time_ == Null<Real>() || t == Null<Real>()) || QuantLib::close_enough(time_, t),
                "RandomVariable: inconsistent times " << time_ << " and " << t);
@@ -879,8 +890,15 @@ RandomVariable conditionalResult(const Filter& f, RandomVariable x, const Random
     QL_REQUIRE(f.size() == y.size(),
                "conditionalResult(f,x,y): f size (" << f.size() << ") must match y size (" << y.size() << ")");
     x.checkTimeConsistencyAndUpdate(y.time());
-    if (f.deterministic())
-        return f.at(0) ? x : y;
+    if (f.deterministic()) {
+        if (f.at(0))
+            return x;
+        else {
+            RandomVariable tmp(y);
+            tmp.setTime(x.time());
+            return tmp;
+        }
+    }
     resumeCalcStats();
     x.expand();
     for (Size i = 0; i < f.size(); ++i) {
@@ -1193,16 +1211,6 @@ Array regressionCoefficients(
             a.copyToMatrixCol(A, j);
     }
 
-    if (!debugLabel.empty()) {
-        for (Size i = 0; i < r.size(); ++i) {
-            std::cout << debugLabel << "," << r[i] << ",";
-            for (Size j = 0; j < regressor.size(); ++j) {
-                std::cout << regressor[j]->operator[](i) << (j == regressor.size() - 1 ? "\n" : ",");
-            }
-        }
-        std::cout << std::flush;
-    }
-
     if (filter.size() > 0) {
         r = applyFilter(r, filter);
     }
@@ -1233,6 +1241,19 @@ Array regressionCoefficients(
         res = qrSolve(A, b);
     } else {
         QL_FAIL("regressionCoefficients(): unknown regression method, expected SVD or QR");
+    }
+
+    if (!debugLabel.empty()) {
+        RandomVariable y(r.size(), 0.0);
+        for (Size i = 0; i < res.size(); ++i)
+            y += RandomVariable(r.size(), res[i]) * basisFn[i](regressor);
+        for (Size i = 0; i < r.size(); ++i) {
+            std::cout << debugLabel << "," << r[i] << "," << y[i] << ",";
+            for (Size j = 0; j < regressor.size(); ++j) {
+                std::cout << regressor[j]->operator[](i) << (j == regressor.size() - 1 ? "\n" : ",");
+            }
+        }
+        std::cout << std::flush;
     }
 
     // rough estimate, SVD is O(mn min(m,n))
@@ -1346,8 +1367,9 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
 
         // logistic function
         // f(x)  = 1 / (1 + exp(-x / delta))
-        // f'(x) = exp(-x/delta) / (delta * (1 + exp(-x / delta))^2), this is an even function
-        tmp.set(i, std::exp(-1.0 / delta * x[i]) / (delta * std::pow(1.0 + std::exp(-1.0 / delta * x[i]), 2.0)));
+        // f'(x) = exp(-x/delta) / (delta * (1 + exp(-x / delta))^2)
+        //       = 1.0 / (delta * ( 2 + exp(x / delta) + exp(x / delta) )
+        tmp.set(i, 1.0 / (delta * (2.0 + std::exp(1.0 / delta * x[i]) + std::exp(-1.0 / delta * x[i]))));
     }
 
     stopCalcStats(x.size() * 8);

@@ -49,6 +49,21 @@ if (ORE_ENABLE_OPENCL)
   add_compile_definitions(ORE_ENABLE_OPENCL)
 endif()
 
+# set compiler macro if CUDA is enabled
+if (ORE_ENABLE_CUDA)
+  add_compile_definitions(ORE_ENABLE_CUDA)
+endif()
+
+# set compiler macro if zlib is enabled
+if(ORE_USE_ZLIB)
+  add_compile_definitions(ORE_USE_ZLIB)
+endif()
+
+# set compiler macro if cpu affinity
+if(ORE_MULTITHREADING_CPU_AFFINITY)
+  add_compile_definitions(ORE_MULTITHREADING_CPU_AFFINITY)
+endif()
+
 
 # On single-configuration builds, select a default build type that gives the same compilation flags as a default autotools build.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)

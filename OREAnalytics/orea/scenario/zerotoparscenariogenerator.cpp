@@ -40,7 +40,7 @@ ZeroToParScenarioGenerator::ZeroToParScenarioGenerator(
     // build a base par scenario off the zero base scenario, and update with the calculated par rates
     baseParScenario_ = baseScenario_->clone();
     baseParScenario_->setPar(true);
-    for (const auto kv : baseValues)
+    for (const auto& kv : baseValues)
         baseParScenario_->add(kv.first, kv.second);
 }
 
@@ -56,7 +56,7 @@ QuantLib::ext::shared_ptr<Scenario> ZeroToParScenarioGenerator::next(const Date&
     auto parShifts = shiftConverter_->parShifts(zeroScenario);
     auto baseRates = shiftConverter_->baseValues();
 
-    for (const auto kv : parShifts) {
+    for (const auto& kv : parShifts) {
         auto base = baseRates[kv.first];
         parScenario->add(kv.first, base + kv.second);
     }

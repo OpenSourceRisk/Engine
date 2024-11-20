@@ -36,13 +36,14 @@ ExposureCalculator::ExposureCalculator(
     const QuantLib::ext::shared_ptr<Market>& market,
     bool exerciseNextBreak, const string& baseCurrency, const string& configuration,
     const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
-    const bool flipViewXVA)
+    const bool flipViewXVA, const bool exposureProfilesUseCloseOutValues)
     : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation),
        market_(market), exerciseNextBreak_(exerciseNextBreak),
       baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType),
       multiPath_(multiPath), dates_(cube->dates()),
-      today_(market_->asofDate()), dc_(ActualActual(ActualActual::ISDA)), flipViewXVA_(flipViewXVA) {
+      today_(market_->asofDate()), dc_(ActualActual(ActualActual::ISDA)), flipViewXVA_(flipViewXVA),
+      exposureProfilesUseCloseOutValues_(exposureProfilesUseCloseOutValues) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");
 
@@ -71,6 +72,21 @@ ExposureCalculator::ExposureCalculator(
 void ExposureCalculator::build() {
     LOG("Compute trade exposure profiles, " << (flipViewXVA_ ? "inverted (flipViewXVA = Y)" : "regular (flipViewXVA = N)"));
     size_t i = 0;
+    const Date today = market_->asofDate();
+    const DayCounter dc = ActualActual(ActualActual::ISDA);
+
+    vector<Real> times(cube_->dates().size(), 0.0);
+    vector<Real> timeDeltas(cube_->dates().size(), 0.0);
+    for (Size i = 0; i < cube_->dates().size(); i++) {
+        times[i] = dc.yearFraction(today, cube_->dates()[i]);
+        timeDeltas[i] = times[i] - (i > 0 ? times[i - 1] : 0.0);
+    }
+    /*The time average in the EEPE calculation is taken over the first year of the exposure evolution
+        (or until maturity if all positions of the netting set mature before one year).
+        This one year point is actually taken to be today+1Y+4D, so that the 1Y point on the dateGrid is always
+        included.
+        This may effect DateGrids with daily data points*/
+    const Date baselMaxEEPDate = WeekendsOnly().adjust(today + 1 * Years + 4 * Days);
     for (auto tradeIt = portfolio_->trades().begin(); tradeIt != portfolio_->trades().end(); ++tradeIt, ++i) {
         auto trade = tradeIt->second;
         string tradeId = tradeIt->first;
@@ -117,15 +133,21 @@ void ExposureCalculator::build() {
         } else {
             npv0 = cube_->getT0(i);
         }
+        Real epe_b_runningSum = 0.0;
+        Real eepe_b_runningSum = 0.0;
         vector<Real> epe(dates_.size() + 1, 0.0);
         vector<Real> ene(dates_.size() + 1, 0.0);
         vector<Real> ee_b(dates_.size() + 1, 0.0);
         vector<Real> eee_b(dates_.size() + 1, 0.0);
         vector<Real> pfe(dates_.size() + 1, 0.0);
+        vector<Real> epe_b(dates_.size() + 1, 0.0);
+        vector<Real> eepe_b(dates_.size() + 1, 0.0);
         epe[0] = std::max(npv0, 0.0);
         ene[0] = std::max(-npv0, 0.0);
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
+        epe_b[0] = ee_b[0];
+        eepe_b[0] = eee_b[0];
         pfe[0] = std::max(npv0, 0.0);
         exposureCube_->setT0(epe[0], tradeId, ExposureIndex::EPE);
         exposureCube_->setT0(ene[0], tradeId, ExposureIndex::ENE);
@@ -152,8 +174,9 @@ void ExposureCalculator::build() {
 
                 Real positiveCashFlow = cubeInterpretation_->getMporPositiveFlows(cube_, i, j, k);
                 Real negativeCashFlow = cubeInterpretation_->getMporNegativeFlows(cube_, i, j, k);
-                //for single trade exposures, always default value is relevant
-                Real npv = defaultValue;
+                // for single trade exposures, the default value is relevant, unless we force
+		// using the close out value instead
+                Real npv = exposureProfilesUseCloseOutValues_ ? closeOutValue : defaultValue;
                 epe[j + 1] += std::max(npv, 0.0) / cube_->samples();
                 ene[j + 1] += std::max(-npv, 0.0) / cube_->samples();
                 nettingSetDefaultValue_[nettingSetId][j][k] += defaultValue;
@@ -172,6 +195,16 @@ void ExposureCalculator::build() {
             }
             ee_b[j + 1] = epe[j + 1] / curve->discount(cube_->dates()[j]);
             eee_b[j + 1] = std::max(eee_b[j], ee_b[j + 1]);
+            if (d <= trade->maturity()) {
+                epe_b_runningSum += ee_b[j + 1] * timeDeltas[j];
+                eepe_b_runningSum += eee_b[j + 1] * timeDeltas[j];
+                epe_b[j + 1] = epe_b_runningSum / times[j];
+                eepe_b[j + 1] = eepe_b_runningSum / times[j];
+                if(d <= baselMaxEEPDate){
+                    epe_b_[tradeId] = epe_b[j + 1];
+                    eepe_b_[tradeId] = eepe_b[j + 1];
+                }
+            }
             std::sort(distribution.begin(), distribution.end());
             Size index = Size(floor(quantile_ * (cube_->samples() - 1) + 0.5));
             pfe[j + 1] = std::max(distribution[index], 0.0);
@@ -179,39 +212,8 @@ void ExposureCalculator::build() {
         ee_b_[tradeId] = ee_b;
         eee_b_[tradeId] = eee_b;
         pfe_[tradeId] = pfe;
-
-        Real epe_b = 0.0;
-        Real eepe_b = 0.0;
-
-        Size t = 0;
-        Calendar cal = WeekendsOnly();
-        /*The time average in the EEPE calculation is taken over the first year of the exposure evolution
-        (or until maturity if all positions of the netting set mature before one year).
-        This one year point is actually taken to be today+1Y+4D, so that the 1Y point on the dateGrid is always
-        included.
-        This may effect DateGrids with daily data points*/
-        Date maturity = std::min(cal.adjust(today_ + 1 * Years + 4 * Days), trade->maturity());
-        QuantLib::Real maturityTime = dc_.yearFraction(today_, maturity);
-
-        while (t < dates_.size() && times_[t] <= maturityTime)
-            ++t;
-
-        if (t > 0) {
-            vector<double> weights(t);
-            weights[0] = times_[0];
-            for (Size k = 1; k < t; k++)
-                weights[k] = times_[k] - times_[k - 1];
-            double totalWeights = std::accumulate(weights.begin(), weights.end(), 0.0);
-            for (Size k = 0; k < t; k++)
-                weights[k] /= totalWeights;
-
-            for (Size k = 0; k < t; k++) {
-                epe_b += ee_b[k] * weights[k];
-                eepe_b += eee_b[k] * weights[k];
-            }
-        }
-        epe_b_[tradeId] = epe_b;
-        eepe_b_[tradeId] = eepe_b;
+        epe_bTimeWeighted_[tradeId] = epe_b;
+        eepe_bTimeWeighted_[tradeId] = eepe_b;
     }
 }
 

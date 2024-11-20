@@ -119,6 +119,7 @@ void EquityDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         QuantLib::ext::dynamic_pointer_cast<EquityDoubleTouchOptionEngineBuilder>(builder);
     doubleTouch->setPricingEngine(eqDoubleTouchOptBuilder->engine(assetName, ccy));
     setSensitivityTemplate(*eqDoubleTouchOptBuilder);
+    addProductModelEngine(*eqDoubleTouchOptBuilder);
     if (type_ == "KnockIn") {
         // if a knock-in option is triggered it becomes a simple forward cashflow
         // which we price as a swap
@@ -126,7 +127,8 @@ void EquityDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactor
         QL_REQUIRE(builder, "No builder found for Swap");
         QuantLib::ext::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             QuantLib::ext::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        underlying->setPricingEngine(swapBuilder->engine(parseCurrency(payoffCurrency_), std::string(), std::string()));
+        underlying->setPricingEngine(
+            swapBuilder->engine(parseCurrency(payoffCurrency_), std::string(), std::string(), {}));
     }
 
     bool isLong = (positionType == Position::Long) ? true : false;
@@ -139,12 +141,13 @@ void EquityDoubleTouchOption::build(const QuantLib::ext::shared_ptr<EngineFactor
 
     Handle<Quote> spot = market->equitySpot(assetName);
     instrument_ = QuantLib::ext::make_shared<DoubleBarrierOptionWrapper>(
-        doubleTouch, isLong, expiryDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, ccy, start, eqIndex, cal,
+        doubleTouch, isLong, expiryDate, expiryDate, false, underlying, barrierType, spot, levelLow, levelHigh, 0, ccy, start, eqIndex, cal,
         payoffAmount_, payoffAmount_, additionalInstruments, additionalMultipliers);
     npvCurrency_ = payoffCurrency_;
     notional_ = payoffAmount_;
     notionalCurrency_ = payoffCurrency_;
     maturity_ = std::max(lastPremiumDate, expiryDate);
+    maturityType_ = maturity_ == expiryDate ? "Expiry Date" : "Last Premium Date";
 
     if (start != Date()) {
         for (Date d = start; d <= expiryDate; d = eqIndex->fixingCalendar().advance(d, 1 * Days))

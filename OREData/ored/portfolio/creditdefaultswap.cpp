@@ -133,6 +133,7 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     }
 
     maturity_ = cds->coupons().back()->date();
+    maturityType_ = "Last CDS Coupon Date";
 
     QuantLib::ext::shared_ptr<CreditDefaultSwapEngineBuilder> cdsBuilder =
         QuantLib::ext::dynamic_pointer_cast<CreditDefaultSwapEngineBuilder>(builder);
@@ -140,6 +141,7 @@ void CreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& en
     QL_REQUIRE(cdsBuilder, "No Builder found for CreditDefaultSwap: " << id());
     cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveId(), swap_.recoveryRate()));
     setSensitivityTemplate(*cdsBuilder);
+    addProductModelEngine(*cdsBuilder);
 
     instrument_.reset(new VanillaInstrument(cds));
 

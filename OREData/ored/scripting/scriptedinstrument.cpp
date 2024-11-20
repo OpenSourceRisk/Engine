@@ -22,10 +22,12 @@
 
 namespace QuantExt {
 
-ScriptedInstrument::ScriptedInstrument(const QuantLib::Date& lastRelevantDate) : lastRelevantDate_(lastRelevantDate) {
-}
+ScriptedInstrument::ScriptedInstrument(const QuantLib::Date& lastRelevantDate, const bool includePastCashflows)
+    : lastRelevantDate_(lastRelevantDate), includePastCashflows_(includePastCashflows) {}
 
-bool ScriptedInstrument::isExpired() const { return QuantLib::detail::simple_event(lastRelevantDate_).hasOccurred(); }
+bool ScriptedInstrument::isExpired() const {
+    return !includePastCashflows_ && QuantLib::detail::simple_event(lastRelevantDate_).hasOccurred();
+}
 
 bool ScriptedInstrument::lastCalculationWasValid() const {
     if (auto res = QuantLib::ext::dynamic_pointer_cast<ore::data::ScriptedInstrumentPricingEngine>(engine_)) {

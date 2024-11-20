@@ -66,6 +66,7 @@ The parameters have the following meaning:
 \begin{itemize}
 \item TimestepPeriod: discretization interval for zero bond pricing
 \item SensitivityTemplate [optional]: the sensitivity template to use 
+\item IncludePastCashflows [optional]: include past cashflows in the cashflow report, defaults to false (ignored in the DiscountingRiskyBondEngineMultiState)
 \end{itemize}
 
 \begin{longlisting}
@@ -77,6 +78,7 @@ The parameters have the following meaning:
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+        <Parameter name="IncludePastCashflows">true</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -1013,6 +1015,8 @@ DiscountedCashflows/DiscountingBondTRSEngine builds a DisountingBondTRSEngine. A
 The parameters have the following meaning:
 
 \begin{itemize}
+\item TreatSecuritySpreadAsCreditSpread [optional]: defaults to false. If true, the security spread is included in the
+  discounting of intermediate bond cashflows.
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
@@ -1020,7 +1024,9 @@ The parameters have the following meaning:
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Product type="BondTRS">
     <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
+    <ModelParameters>
+        <Parameter name="TreatSecuritySpreadAsCreditSpread">true</Parameter>
+    </ModelParameters>
     <Engine>DiscountingBondTRSEngine</Engine>
     <EngineParameters>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
@@ -3720,7 +3726,8 @@ The parameters have the following meaning:
 
 \begin{itemize}
 \item TimestepPeriod: discretization interval for zero bond pricing
-\item SensitivityTemplate [optional]: the sensitivity template to use 
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\item SpreadOnIncomeCurve [optional]: whether to apply the security spread on the income curve for compounding, default to false
 \end{itemize}
 
 \begin{longlisting}
@@ -3732,6 +3739,7 @@ The parameters have the following meaning:
     <EngineParameters>
         <Parameter name="TimestepPeriod">3M</Parameter>
         <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
+        <Parameter name="SpreadOnIncomeCurve">true</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -4356,7 +4364,7 @@ The parameters have the following meaning:
 \item FXSource: specifies the FX index tag to be used to look up FX-Ibor or FX-CMS correlations
 \item Samples: number of MC samples to use
 \item Sobol: whether to use Sobol numbers for simulation
-\item SalvageCorrelationMatrix: whether to make the input correlation matrix positive definite
+\item SalvagingAlgorithm: whether to make the input correlation matrix positive definite. Compare \cite{corrSalv}.
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
@@ -4372,7 +4380,7 @@ The parameters have the following meaning:
         <Parameter name="Samples">10000</Parameter>
         <Parameter name="Seed">42</Parameter>
         <Parameter name="Sobol">Y</Parameter>
-        <Parameter name="SalvageCorrelationMatrix">Y</Parameter>
+        <Parameter name="SalvagingAlgorithm">Spectral</Parameter>
         <Parameter name="SensitivityTemplate">IR_MC</Parameter>
     </EngineParameters>
 </Product>
@@ -4459,7 +4467,7 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -4496,12 +4504,46 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>AnalyticCashSettledEuropeanEngine</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
 \caption{Configuration for Product FxOptionEuropeanCS, Model GarmanKohlhagen, Engine AnalyticCashSettledEuropeanEngine}
 \label{lst:peconfig_FxOptionEuropeanCS_GarmanKohlhagen_AnalyticCashSettledEuropeanEngine}
+\end{longlisting}
+
+%--------------------------------------------------------
+\subsubsection{Product Type: FxOptionForward}
+%--------------------------------------------------------
+
+Used by trade type: FxOption if physically settled and payment date is later than option expiry date
+
+Available Model/Engine pairs: GarmanKohlhagen/AnalyticEuropeanForwardEngine
+
+Engine description:
+
+GarmanKohlhagen/AnalyticEuropeanForwardEngine builds a AnalyticEuropeanForwardEngine. A sample configuration is shown in listing
+\ref{lst:peconfig_FxOptionForward_GarmanKohlhagen_AnalyticEuropeanForwardEngine}
+
+The parameters have the following meaning:
+
+\begin{itemize}
+\item SensitivityTemplate [optional]: the sensitivity template to use
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Product type="FxOptionForward">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanForwardEngine</Engine>
+    <EngineParameters>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+</Product>
+\end{minted}
+\caption{Configuration for Product FxOptionForward, Model GarmanKohlhagen, Engine AnalyticEuropeanForwardEngine}
+\label{lst:peconfig_FxOptionForward_GarmanKohlhagen_AnalyticEuropeanForwardEngine}
 \end{longlisting}
 
 %--------------------------------------------------------
@@ -4546,7 +4588,7 @@ The parameters have the following meaning:
         <Parameter name="XGrid">100</Parameter>
         <Parameter name="DampingSteps">0</Parameter>
         <Parameter name="EnforceMonotoneVariance">true</Parameter>
-        <Parameter name="SensitivityTemplate">COMM_FD</Parameter>
+        <Parameter name="SensitivityTemplate">FX_FD</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -4570,7 +4612,7 @@ The parameters have the following meaning:
     <ModelParameters/>
     <Engine>BaroneAdesiWhaleyApproximationEngine</Engine>
     <EngineParameters>
-        <Parameter name="SensitivityTemplate">COMM_Analytical</Parameter>
+        <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
@@ -5086,8 +5128,8 @@ In addition to product specific settings there is also a block with global param
   but only used internally to improve the performance for processes which only rely on the NPV as a result from pricing
   engines, e.g. when repricing trades under sensitivity or stress scenarios. Option, defaults to false.
 \item RunType: Set automatically. One of NPV, SensitivityDelta, SensitivityDeltaGamma, Stress, Exposure, Capital,
-  TradeDetails, PortfolioAnalyser, HistoricalPnL, BondSpreadImply, AbsMaturityUpdate depending on the context for which
-  a portfolio was built. Might also be left empty. This is used by some pricing engines to adapt to certain run
-  types. E.g. a first order sensitivity pnl expansion might be used for a SensitivityDelta run by an engine which is
-  able to compute analytical or AAD first order sensitivities.
+  TradeDetails, PortfolioAnalyser, PorfolioAnalyserNoFixings, HistoricalPnL, BondSpreadImply, AbsMaturityUpdate
+  depending on the context for which a portfolio was built. Might also be left empty. This is used by some pricing
+  engines to adapt to certain run types. E.g. a first order sensitivity pnl expansion might be used for a
+  SensitivityDelta run by an engine which is able to compute analytical or AAD first order sensitivities.
 \end{itemize}

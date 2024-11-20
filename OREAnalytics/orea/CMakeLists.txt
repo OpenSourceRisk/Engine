@@ -18,12 +18,14 @@ aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
 app/analytic.cpp
 app/analytics/analyticfactory.cpp
+app/analytics/calibrationanalytic.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
 app/analytics/parscenarioanalytic.cpp
 app/analytics/parstressconversionanalytic.cpp
 app/analytics/pnlanalytic.cpp
 app/analytics/pnlexplainanalytic.cpp
+app/analytics/portfoliodetailsanalytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
@@ -45,6 +47,7 @@ app/marketdatainmemoryloader.cpp
 app/marketdataloader.cpp
 app/oreapp.cpp
 app/parameters.cpp
+app/portfolioanalyser.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
 app/xvarunner.cpp
@@ -59,8 +62,10 @@ cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
+engine/cashflowreportgenerator.cpp
 engine/cptycalculator.cpp
 engine/decomposedsensitivitystream.cpp
+engine/dependencymarket.cpp
 engine/filteredsensitivitystream.cpp
 engine/historicalpnlgenerator.cpp
 engine/historicalsensipnlcalculator.cpp
@@ -101,14 +106,15 @@ scenario/crossassetmodelscenariogenerator.cpp
 scenario/csvscenariogenerator.cpp
 scenario/deltascenario.cpp
 scenario/deltascenariofactory.cpp
-scenario/historicalscenariofilereader.cpp
 scenario/historicalscenariogenerator.cpp
-scenario/historicalscenarioloader.cpp
 scenario/lgmscenariogenerator.cpp
 scenario/scenario.cpp
+scenario/scenariofilereader.cpp
+scenario/scenariogenerator.cpp
 scenario/scenariogeneratorbuilder.cpp
 scenario/scenariogeneratordata.cpp
 scenario/scenariogeneratortransform.cpp
+scenario/scenarioloader.cpp
 scenario/scenarioshiftcalculator.cpp
 scenario/scenariosimmarket.cpp
 scenario/scenariosimmarketparameters.cpp
@@ -143,6 +149,7 @@ simm/simmconcentrationisdav2_3_8.cpp
 simm/simmconcentrationisdav2_5.cpp
 simm/simmconcentrationisdav2_5a.cpp
 simm/simmconcentrationisdav2_6.cpp
+simm/simmconcentrationisdav2_6_5.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
 simm/simmconfigurationcalibration.cpp
@@ -157,6 +164,7 @@ simm/simmconfigurationisdav2_3_8.cpp
 simm/simmconfigurationisdav2_5.cpp
 simm/simmconfigurationisdav2_5a.cpp
 simm/simmconfigurationisdav2_6.cpp
+simm/simmconfigurationisdav2_6_5.cpp
 simm/simmresults.cpp
 simm/utilities.cpp
 simulation/fixingmanager.cpp
@@ -182,12 +190,14 @@ aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
 app/analytic.hpp
 app/analytics/analyticfactory.hpp
+app/analytics/calibrationanalytic.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
 app/analytics/parscenarioanalytic.hpp
 app/analytics/parstressconversionanalytic.hpp
 app/analytics/pnlanalytic.hpp
 app/analytics/pnlexplainanalytic.hpp
+app/analytics/portfoliodetailsanalytic.hpp
 app/analytics/pricinganalytic.hpp
 app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
@@ -201,14 +211,17 @@ app/analytics/xvastressanalytic.hpp
 app/analytics/zerotoparshiftanalytic.hpp
 app/analyticsmanager.hpp
 app/cleanupsingletons.hpp
+app/dummymarketdataloader.hpp
 app/initbuilders.hpp
 app/inputparameters.hpp
 app/marketcalibrationreport.hpp
+app/marketdatabinaryloader.hpp
 app/marketdatacsvloader.hpp
 app/marketdatainmemoryloader.hpp
 app/marketdataloader.hpp
 app/oreapp.hpp
 app/parameters.hpp
+app/portfolioanalyser.hpp
 app/reportwriter.hpp
 app/sensitivityrunner.hpp
 app/structuredanalyticserror.hpp
@@ -231,8 +244,10 @@ cube/sensitivitycube.hpp
 cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
+engine/cashflowreportgenerator.hpp
 engine/cptycalculator.hpp
 engine/decomposedsensitivitystream.hpp
+engine/dependencymarket.hpp
 engine/filteredsensitivitystream.hpp
 engine/historicalpnlgenerator.hpp
 engine/historicalsensipnlcalculator.hpp
@@ -251,6 +266,7 @@ engine/parsensitivityinstrumentbuilder.hpp
 engine/parsensitivityutilities.hpp
 engine/parstressconverter.hpp
 engine/parstressscenarioconverter.hpp
+engine/pathdata.hpp
 engine/pnlexplainreport.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
@@ -276,18 +292,18 @@ scenario/crossassetmodelscenariogenerator.hpp
 scenario/csvscenariogenerator.hpp
 scenario/deltascenario.hpp
 scenario/deltascenariofactory.hpp
-scenario/historicalscenariofilereader.hpp
 scenario/historicalscenariogenerator.hpp
-scenario/historicalscenarioloader.hpp
-scenario/historicalscenarioreader.hpp
 scenario/lgmscenariogenerator.hpp
 scenario/scenario.hpp
 scenario/scenariofactory.hpp
+scenario/scenariofilereader.hpp
 scenario/scenariofilter.hpp
 scenario/scenariogenerator.hpp
 scenario/scenariogeneratorbuilder.hpp
 scenario/scenariogeneratordata.hpp
 scenario/scenariogeneratortransform.hpp
+scenario/scenarioloader.hpp
+scenario/scenarioreader.hpp
 scenario/scenarioshiftcalculator.hpp
 scenario/scenariosimmarket.hpp
 scenario/scenariosimmarketparameters.hpp
@@ -324,6 +340,7 @@ simm/simmconcentrationisdav2_3_8.hpp
 simm/simmconcentrationisdav2_5.hpp
 simm/simmconcentrationisdav2_5a.hpp
 simm/simmconcentrationisdav2_6.hpp
+simm/simmconcentrationisdav2_6_5.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
 simm/simmconfigurationcalibration.hpp
@@ -338,6 +355,7 @@ simm/simmconfigurationisdav2_3_8.hpp
 simm/simmconfigurationisdav2_5.hpp
 simm/simmconfigurationisdav2_5a.hpp
 simm/simmconfigurationisdav2_6.hpp
+simm/simmconfigurationisdav2_6_5.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
 simm/utilities.hpp
@@ -346,14 +364,14 @@ simulation/simmarket.hpp
 version.hpp)
 
 writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
-add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC} "engine/pnlexplainreport.cpp")
+add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
 target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
+
 if(ORE_USE_ZLIB)
     target_link_libraries(${OREA_LIB_NAME} ${ZLIB_LIBRARIES})
-    add_definitions(-DORE_USE_ZLIB)
 endif()
 
 if (QL_USE_PCH)

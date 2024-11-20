@@ -88,6 +88,19 @@ void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::dat
 
     LOG("Running XVA Stress analytic.");
 
+    SavedSettings settings;
+    
+    optional<bool> localIncTodaysCashFlows = inputs_->exposureIncludeTodaysCashFlows();
+    Settings::instance().includeTodaysCashFlows() = localIncTodaysCashFlows;
+    LOG("Simulation IncludeTodaysCashFlows is defined: " << (localIncTodaysCashFlows ? "true" : "false"));
+    if (localIncTodaysCashFlows) {
+        LOG("Exposure IncludeTodaysCashFlows is set to " << (*localIncTodaysCashFlows ? "true" : "false"));
+    }
+    
+    bool localIncRefDateEvents = inputs_->exposureIncludeReferenceDateEvents();
+    Settings::instance().includeReferenceDateEvents() = localIncRefDateEvents;
+    LOG("Simulation IncludeReferenceDateEvents is set to " << (localIncRefDateEvents ? "true" : "false"));
+    
     Settings::instance().evaluationDate() = inputs_->asof();
 
     QL_REQUIRE(inputs_->portfolio(), "XvaStressAnalytic::run: No portfolio loaded.");
@@ -154,8 +167,8 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_STRESS: Apply scenario " << label);
             auto newAnalytic = ext::make_shared<XvaAnalytic>(
-                inputs_, (label == "BASE" ? nullptr : scenario),
-                (label == "BASE" ? nullptr : analytic()->configurations().simMarketParams));
+                inputs_, scenario,
+                analytic()->configurations().simMarketParams);
             CONSOLE("XVA_STRESS: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
@@ -167,6 +180,9 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
                 }
             }
             writeCubes(label, newAnalytic);
+            // FIXME: If the XVA analytic above is a dependent analytic, then we do not have to add this timer,
+            // otherwise we have to manually add the XvaAnalytic::timer
+            analytic()->addTimer("XVA analytic", newAnalytic->getTimer());
         } catch (const std::exception& e) {
             StructuredAnalyticsErrorMessage("XvaStress", "XVACalc",
                                             "Error during XVA calc under scenario " + label + ", got " + e.what() +

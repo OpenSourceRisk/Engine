@@ -44,6 +44,7 @@ void FxSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory
     Date nearDate = data::parseDate(nearDate_);
     Date farDate = data::parseDate(farDate_);
     maturity_ = farDate;
+    maturityType_ = "Far Date";
 
     notional_ = nearBoughtAmount_;
     notionalCurrency_ = nearBoughtCurrency_;
@@ -64,6 +65,7 @@ void FxSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory
             QuantLib::ext::dynamic_pointer_cast<FxForwardEngineBuilderBase>(builder);
         instNear_->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy));
         setSensitivityTemplate(*fxBuilder);
+        addProductModelEngine(*fxBuilder);
         instFar_.reset(
             new QuantExt::FxForward(farBoughtAmount_, nearSoldCcy, farSoldAmount_, nearBoughtCcy, farDate, false));
         instFar_->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy));

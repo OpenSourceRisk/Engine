@@ -130,6 +130,9 @@ public:
       types, no matter whether useSpreadedTermStructures is true or false. */
     virtual QuantLib::ext::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
+    /*! Get offset scenario, or nullptr if none was set */
+    QuantLib::ext::shared_ptr<Scenario> offsetScenario() const { return offsetScenario_; }
+
     /*! Return true if this instance uses spreaded term structures */
     bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
 
@@ -166,8 +169,8 @@ protected:
     getYieldCurve(const std::string& yieldSpecId, const ore::data::TodaysMarketParameters& todaysMarketParams,
                   const std::string& configuration, const QuantLib::ext::shared_ptr<ore::data::Market>& market = nullptr) const;
 
-    /*! add a single swap index to the market, return true if successful */
-    bool addSwapIndexToSsm(const std::string& indexName, const bool continueOnError);
+    /*! add a single swap index to the market */
+    void addSwapIndexToSsm(const std::string& indexName);
 
     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> parameters_;
     QuantLib::ext::shared_ptr<ScenarioGenerator> scenarioGenerator_;

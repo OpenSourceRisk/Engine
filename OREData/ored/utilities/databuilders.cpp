@@ -211,6 +211,7 @@
 
 #include <qle/math/basiccpuenvironment.hpp>
 #include <qle/math/openclenvironment.hpp>
+#include <qle/math/cudaenvironment.hpp>
 
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
@@ -398,12 +399,18 @@ void dataBuilders() {
 
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcCurrencySwapEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(LGMAmcSwaptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcBondEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFwdBondEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcSwapEngineBuilder, false)
-    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxOptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxEuropeanOptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxEuropeanForwardOptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxEuropeanCSOptionEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcFxForwardEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcMultiLegOptionEngineBuilder, false)
+    ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcEquityForwardEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
 
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgSwapEngineBuilder, false)
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
 
     ORE_REGISTER_ENGINE_BUILDER(CommoditySpreadOptionEngineBuilder, false)
@@ -502,6 +509,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredNonStandardYoYLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(QuantoEquityEuropeanOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanOptionEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(FxEuropeanForwardOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanCSOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxAmericanOptionFDEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(FxAmericanOptionBAWEngineBuilder, false)
@@ -546,6 +554,7 @@ void dataBuilders() {
 
     ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR("OpenCL", QuantExt::OpenClFramework, false);
     ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR("BasicCpu", QuantExt::BasicCpuFramework, false);
+    ORE_REGISTER_COMPUTE_FRAMEWORK_CREATOR("CUDA", QuantExt::CudaFramework, false);
 }
 
 } // namespace ore::data

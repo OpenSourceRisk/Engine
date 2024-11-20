@@ -132,7 +132,11 @@ TRSWrapper::TRSWrapper(
         lastDate_ = std::max(lastDate_, c->date());
 }
 
-bool TRSWrapper::isExpired() const { return detail::simple_event(lastDate_).hasOccurred(); }
+bool TRSWrapper::isExpired() const {
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    Date refDate = Settings::instance().evaluationDate();
+    return detail::simple_event(lastDate_).hasOccurred(refDate, includeToday);
+}
 
 void TRSWrapper::setupArguments(PricingEngine::arguments* args) const {
     TRSWrapper::arguments* a = dynamic_cast<TRSWrapper::arguments*>(args);
@@ -295,6 +299,10 @@ Real getFxIndexFixing(const QuantLib::ext::shared_ptr<FxIndex>& fx, const Curren
     return invert ? 1.0 / res : res;
 }
 } // namespace
+
+TRSWrapperAccrualEngine::TRSWrapperAccrualEngine(
+    const Handle<YieldTermStructure>& additionalCashflowCurrencyDiscountCurve)
+    : additionalCashflowCurrencyDiscountCurve_(additionalCashflowCurrencyDiscountCurve) {}
 
 Real TRSWrapperAccrualEngine::getFxConversionRate(const Date& date, const Currency& source, const Currency& target,
                                                   const bool enforceProjection) const {
@@ -755,11 +763,16 @@ void TRSWrapperAccrualEngine::calculate() const {
     Real additionalCashflowLegNpv = 0.0;
     for (auto const& cf : arguments_.additionalCashflowLeg_) {
         if (cf->date() > today) {
+            QL_REQUIRE(!additionalCashflowCurrencyDiscountCurve_.empty(),
+                       "TRSWrapperAccrualEngine::calculate(): additionalCashflowCurrencyDiscountCurve is empty, but "
+                       "additional cashflows are present.");
             Real tmp = cf->amount() * (arguments_.additionalCashflowLegPayer_ ? -1.0 : 1.0);
-            additionalCashflowLegNpv += tmp;
+            Real discountFactor = additionalCashflowCurrencyDiscountCurve_->discount(cf->date());
+            additionalCashflowLegNpv += tmp * discountFactor;
             // add additional cashflows to additional results
             cfResults.emplace_back();
             cfResults.back().amount = tmp;
+            cfResults.back().discountFactor = discountFactor;
             cfResults.back().payDate = cf->date();
             cfResults.back().currency = arguments_.additionalCashflowCurrency_.code();
             cfResults.back().legNumber = 0;

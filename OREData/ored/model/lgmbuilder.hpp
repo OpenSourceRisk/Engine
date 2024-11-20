@@ -75,9 +75,12 @@ public:
     //@{
     void forceRecalculate() override;
     bool requiresRecalibration() const override;
+    void recalibrate() const override;
+    void newCalcWithoutRecalibration() const override;
     //@}
 
 private:
+    void processException(const std::string& s, const std::exception& e);
     void performCalculations() const override;
     void buildSwaptionBasket() const;
     void updateSwaptionBasketVols() const;
@@ -129,6 +132,7 @@ private:
     mutable std::vector<QuantLib::Real> swaptionVolCache_;
 
     bool forceCalibration_ = false;
+    mutable bool suspendCalibration_ = false;
 
     // LGM Observer
     QuantLib::ext::shared_ptr<QuantExt::MarketObserver> marketObserver_;

@@ -81,6 +81,8 @@ void BondPosition::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactor
 
     maturity_ = Date::minDate();
     for (auto const& u : data_.underlyings()) {
+        if (close_enough(u.weight(), 0.0))
+            continue;
         try {
             bonds_.push_back(BondFactory::instance().build(engineFactory, engineFactory->referenceData(), u.name()));
         } catch (const std::exception& e) {
@@ -89,6 +91,8 @@ void BondPosition::build(const QuantLib::ext::shared_ptr<ore::data::EngineFactor
         weights_.push_back(u.weight());
         bidAskAdjustments_.push_back(u.bidAskAdjustment());
         maturity_ = std::max(bonds_.back().bond->maturityDate(), maturity_);
+        if (maturity_ == bonds_.back().bond->maturityDate())
+            maturityType_ = "Bond Maturity Date";
     }
 
     // get fx quotes

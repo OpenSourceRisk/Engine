@@ -181,7 +181,8 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         QuantLib::ext::make_shared<ExposureCalculator>(
             portfolio, cube_, cubeInterpretation_,
             market_, analytics_["exerciseNextBreak"], baseCurrency_, configuration_,
-            quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"]
+            quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"],
+	    analytics_["exposureProfilesUseCloseOutValues"]
         );
     exposureCalculator_->build();
 
@@ -206,7 +207,8 @@ PostProcess::PostProcess(const QuantLib::ext::shared_ptr<Portfolio>& portfolio,
         dimCalculator_, fullInitialCollateralisation_,
         allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,
         exposureCalculator_->exposureCube(), ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
-        analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_, firstMporCollateralAdjustment_);
+        analytics_["flipViewXVA"], withMporStickyDate_, mporCashFlowMode_, firstMporCollateralAdjustment_,
+	analytics_["exposureProfilesUseCloseOutValues"]);
     nettedExposureCalculator_->build();
 
     /********************************************************
@@ -627,6 +629,14 @@ const vector<Real>& PostProcess::tradePFE(const string& tradeId) {
     return exposureCalculator_->pfe(tradeId);
 }
 
+const vector<Real>& PostProcess::tradeEPE_B_timeWeighted(const string& tradeId) {
+    return exposureCalculator_->epe_b_timeWeighted(tradeId);
+}
+
+const vector<Real>& PostProcess::tradeEEPE_B_timeWeighted(const string& tradeId) {
+    return exposureCalculator_->eepe_b_timeWeighted(tradeId);
+}
+
 const vector<Real>& PostProcess::netEPE(const string& nettingSetId) {
     QL_REQUIRE(netEPE_.find(nettingSetId) != netEPE_.end(),
                "Netting set " << nettingSetId << " not found in exposure map");
@@ -671,6 +681,14 @@ const Real& PostProcess::netEEPE_B(const string& nettingSetId) {
 
 const vector<Real>& PostProcess::netPFE(const string& nettingSetId) {
     return nettedExposureCalculator_->pfe(nettingSetId);
+}
+
+const vector<Real>& PostProcess::netEPE_B_timeWeighted(const string& nettingSetId){
+    return nettedExposureCalculator_->epe_b_timeWeighted(nettingSetId);
+}
+
+const vector<Real>& PostProcess::netEEPE_B_timeWeighted(const string& nettingSetId) {
+    return nettedExposureCalculator_->eepe_b_timeWeighted(nettingSetId);
 }
 
 const vector<Real>& PostProcess::expectedCollateral(const string& nettingSetId) {

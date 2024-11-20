@@ -85,6 +85,7 @@ void CommodityDigitalAveragePriceOption::build(const QuantLib::ext::shared_ptr<E
     opt2.build(engineFactory);
 
     setSensitivityTemplate(opt1.sensitivityTemplate());
+    addProductModelEngine(opt1.productModelEngine());
 
     QuantLib::ext::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
     QuantLib::ext::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();
@@ -109,10 +110,11 @@ void CommodityDigitalAveragePriceOption::build(const QuantLib::ext::shared_ptr<E
     // FIXME: Do we need to retrieve the engine builder's configuration
     string configuration = Market::defaultConfiguration;
     Currency ccy = parseCurrencyWithMinors(currency_);
-    
-    maturity_ =
-        std::max(exDate, addPremiums(additionalInstruments, additionalMultipliers, multiplier,
-                                          optionData_.premiumData(), -bsIndicator, ccy, engineFactory, configuration));
+    Date lastPremiumDate =
+        addPremiums(additionalInstruments, additionalMultipliers, multiplier, optionData_.premiumData(), -bsIndicator,
+                    ccy, engineFactory, configuration);
+    maturity_ = std::max(exDate, lastPremiumDate);
+    maturityType_ = maturity_ == exDate ? "Exercise Date" : "Last Premium Date";
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(composite, multiplier, additionalInstruments, additionalMultipliers));
