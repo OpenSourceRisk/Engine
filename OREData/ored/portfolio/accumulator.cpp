@@ -113,6 +113,9 @@ namespace data {
         "                IF {KnockOutType == 4 AND fix >= KnockOutLevel} OR\n"
         "                   {KnockOutType == 3 AND fix <= KnockOutLevel} THEN\n"
         "                   KnockedOut = 1;\n"
+        "                   IF KnockOutFixingAtSettlementDate == 1 THEN\n"
+        "                       fix = Underlying(KnockOutSettlementDates[d]);\n"
+        "                   END;\n"
         "                   Days[DefaultRange] = Days[DefaultRange] + knockOutDays;\n"
         "                   FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
         "                     IF NakedOption == 1 THEN\n"
@@ -161,6 +164,7 @@ namespace data {
         "            REQUIRE ObservationPeriodEndDates[SIZE(ObservationPeriodEndDates)] >= ObservationDates[SIZE(ObservationDates)];\n"
         "\n"
         "            NUMBER currentPeriod, referencePayout, fix, d, r, dd, currentNotional, Fixing[SIZE(ObservationPeriodEndDates)], ThisPayout;\n"
+        "            NUMBER KnockoutPayout\n;"
         "\n"
         "            currentPeriod = DATEINDEX(ObservationDates[SIZE(ObservationDates)], ObservationPeriodEndDates, GEQ);\n"
         "            IF NakedOption == 1 THEN\n"
@@ -168,6 +172,7 @@ namespace data {
         "            ELSE\n"
         "              ThisPayout = Underlying(ObservationDates[SIZE(ObservationDates)]) - Strike;\n"
         "            END;\n"
+        "            KnockoutPayout = ThisPayout;\n"
         "            referencePayout = PAY( LongShort * FixingAmount * ThisPayout, ObservationDates[SIZE(ObservationDates)],\n"
         "                                   SettlementDates[currentPeriod], PayCcy );\n"
         "            value = 0 * referencePayout;\n"
@@ -177,9 +182,11 @@ namespace data {
         "              IF ObservationDates[d] >= TODAY THEN\n"
         "                value = NPV(value, ObservationDates[d]);\n"
         "                referencePayout = NPV(referencePayout, ObservationDates[d]);\n"
+        "                KnockoutPayout = NPV(KnockoutPayout, ObservationDates[d]);\n"
         "              ELSE\n"
         "                value = NPV(value, TODAY);\n"
         "                referencePayout = NPV(referencePayout, TODAY);\n"
+        "                KnockoutPayout = NPV(KnockoutPayout, TODAY);\n"
 	    "              END;\n"
         "\n"
         "              fix = Underlying(ObservationDates[d]);\n"
@@ -193,10 +200,14 @@ namespace data {
         "                referencePayout = PAY( ThisPayout, ObservationDates[d], SettlementDates[currentPeriod], PayCcy );\n"
         "                Fixing[currentPeriod] = fix;\n"
         "                currentPeriod = currentPeriod - 1;\n"
+        "                KnockoutPayout = ThisPayout;\n"
         "              END;\n"
         "\n"
         "              IF {KnockOutType == 4 AND fix >= KnockOutLevel} OR\n"
         "                 {KnockOutType == 3 AND fix <= KnockOutLevel} THEN\n"
+        "                IF KnockOutFixingAtSettlementDate == 1 THEN\n"
+        "                  ThisPayout = KnockoutPayout;\n"
+        "                END;\n"    
         "                IF NakedOption == 1 THEN\n"
         "                  ThisPayout = ThisPayout * abs(RangeLeverages[DefaultRange]);\n"
         "                ELSE\n"
@@ -318,6 +329,7 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
     } else {
         events_.emplace_back("ObservationDates", observationDates_);
         events_.emplace_back("ObservationPeriodEndDates", pricingDates_);
+        numbers_.emplace_back("Number", "KnockOutFixingAtSettlementDate", knockOutFixingAtKOSettlement_ ? "1" : "-1");
         if (knockOutSettlementAtPeriodEnd_) {
             auto obsDates = makeSchedule(observationDates_);
             auto obsEndDates = makeSchedule(pricingDates_);
@@ -498,6 +510,9 @@ void Accumulator::fromXML(XMLNode* node) {
     }
     knockOutSettlementAtPeriodEnd_ =
         XMLUtils::getChildValueAsBool(dataNode, "KnockOutSettlementAtPeriodEnd", false, false);
+
+    knockOutFixingAtKOSettlement_ = 
+        XMLUtils::getChildValueAsBool(dataNode, "KnockOutFixingAtKOSettlement", false, false);
     initIndices();
 }
 
@@ -549,6 +564,9 @@ XMLNode* Accumulator::toXML(XMLDocument& doc) const {
     XMLUtils::appendNode(dataNode, barriers);
     if (knockOutSettlementAtPeriodEnd_) {
         XMLUtils::addChild(doc, dataNode, "KnockOutSettlementAtPeriodEnd", knockOutSettlementAtPeriodEnd_);
+    }
+    if (knockOutFixingAtKOSettlement_) {
+        XMLUtils::addChild(doc, dataNode, "KnockOutFixingAtKOSettlement", knockOutFixingAtKOSettlement_);
     }
     return node;
 }

@@ -44,13 +44,13 @@ public:
                 const ScheduleData& settlementDates, const std::string& settlementLag,
                 const std::string& settlementCalendar, const std::string& settlementConvention,
                 const std::vector<RangeBound>& rangeBounds, const std::vector<BarrierData>& barriers,
-                bool knockOutSettlementAtPeriodEnd)
+                bool knockOutSettlementAtPeriodEnd, bool knockOutFixingAtKOSettlement)
         : currency_(currency), fixingAmount_(fixingAmount), strike_(strike), underlying_(underlying),
           optionData_(optionData), startDate_(startDate), observationDates_(observationDates),
           pricingDates_(pricingDates), settlementDates_(settlementDates), settlementLag_(settlementLag),
           settlementCalendar_(settlementCalendar), settlementConvention_(settlementConvention),
-          knockOutSettlementAtPeriodEnd_(knockOutSettlementAtPeriodEnd), rangeBounds_(rangeBounds),
-          barriers_(barriers) {
+          knockOutSettlementAtPeriodEnd_(knockOutSettlementAtPeriodEnd), knockOutFixingAtKOSettlement_(knockOutFixingAtKOSettlement),
+          rangeBounds_(rangeBounds), barriers_(barriers) {
         initIndices();
     }
     void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
@@ -75,6 +75,7 @@ private:
     bool nakedOption_ = false;
     bool dailyFixingAmount_ = false;
     bool knockOutSettlementAtPeriodEnd_ = false;
+    bool knockOutFixingAtKOSettlement_ = false;
     std::vector<RangeBound> rangeBounds_;
     std::vector<BarrierData> barriers_;
     
