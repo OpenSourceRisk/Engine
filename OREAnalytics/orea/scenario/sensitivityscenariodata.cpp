@@ -202,6 +202,13 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* node = XMLUtils::locateNode(root, "SensitivityAnalysis");
     XMLUtils::checkNode(node, "SensitivityAnalysis");
 
+    DLOG("Get optional set of risk factor key types that are excluded from par conversion");
+    vector<string> types = XMLUtils::getChildrenValues(node, "ParConversionExcludes", "Type", false);
+    if (types.size() > 0) {
+        for (Size i = 0; i < types.size(); ++i)
+	    parConversionExcludes_.insert(parseRiskFactorKeyType(types[i]));
+    }
+
     DLOG("Get discount curve sensitivity parameters");
     XMLNode* discountCurves = XMLUtils::getChildNode(node, "DiscountCurves");
     if (discountCurves) {
@@ -655,6 +662,14 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) const {
 
     XMLNode* root = doc.allocNode("SensitivityAnalysis");
+
+    if (parConversionExcludes_.size() > 0) {
+        DLOG("toXML for parConversionExcludes");
+        vector<string> types;
+	for (auto t : parConversionExcludes_)
+	    types.push_back(to_string(t));
+	XMLUtils::addChildren(doc, root, "ParConversionExcludes", "Type", types);
+    }
 
     if (!discountCurveShiftData_.empty()) {
         DLOG("toXML for DiscountCurves");
