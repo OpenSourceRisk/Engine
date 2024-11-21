@@ -309,6 +309,8 @@ The relevant fields in the \lstinline!OptionData! node for an Accumulator are:
   \item KnockOutSettlementAtPeriodEnd [Optional]: Only relevant for \emph{type 02 accumulator}. Controlls the settlement behavior in case of an knock out events. 
     If \emph{true} the settlement of a knock out event takes place at the end of the observation period, otherwise on the knock out event date plus the 
     defined settlement delay. Defaults to \emph{false}.
+  \item KnockOutFixingAtKOSettlement [Optional]: Only relevant for \emph{type 02 accumulator}. Controlls the settlement behavior in case of an knock out events. 
+    If \emph{true} the fixing at knockout settlement date is used to compute the knockout flow, otherwise the fixing at knockout date. Defaults to \emph{false}.
   \end{itemize}
 
 % scripted trade representation type 01
