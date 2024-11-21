@@ -136,8 +136,8 @@ BOOST_AUTO_TEST_SUITE(CrossAssetModelTest)
 
 namespace {
 
-struct Lgm5fTestData2 {
-    Lgm5fTestData2()
+struct Lgm5fTestDataV {
+    Lgm5fTestDataV()
         : referenceDate(30, July, 2015), eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
           usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
           gbpYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
@@ -247,52 +247,58 @@ BOOST_AUTO_TEST_CASE(testLgmCalibrationVegaBump) {
 
     BOOST_TEST_MESSAGE("Testing full calibration of Ccy LGM 5F model with bump...");
 
-    Lgm5fTestData2 d;
+    Lgm5fTestDataV d1;
+    Lgm5fTestDataV d2;
 
     Real h=0.000001;
 
     // calibration baskets
-    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basketEur, basketEur2, basketGbp, basketEurUsd, basketEurGbp;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basketEur1, basketEur2, basketGbp, basketEurUsd, basketEurGbp;
 
-    QuantLib::ext::shared_ptr<IborIndex> euribor6m = QuantLib::ext::make_shared<Euribor>(6 * Months, d.eurYts);
+    QuantLib::ext::shared_ptr<IborIndex> euribor6m = QuantLib::ext::make_shared<Euribor>(6 * Months, d1.eurYts);
 
-    for (Size i = 0; i <= d.volstepdates.size(); ++i) {
-        Date tmp = i < d.volstepdates.size() ? d.volstepdates[i] : d.volstepdates.back() + 365;
+    for (Size i = 0; i <= d1.volstepdates.size(); ++i) {
+        Date tmp = i < d1.volstepdates.size() ? d1.volstepdates[i] : d1.volstepdates.back() + 365;
         // EUR: atm+200bp, 150bp normal vol
-        basketEur.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.015)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
-            Actual360(), d.eurYts, BlackCalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
+        basketEur1.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.015               )), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
+            Actual360(), d1.eurYts, BlackCalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
 
         basketEur2.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.015+h)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
-            Actual360(), d.eurYts, BlackCalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
+            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.015+(i==3?h:0.0))), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
+            Actual360(), d2.eurYts, BlackCalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
     }
 
-    // pricing engines
-
-    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgmExact, 0);
+    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d1.ccLgmExact, 0);
+    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng2 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d2.ccLgmExact, 0);
 
     // assign engines to calibration instruments
-    for (Size i = 0; i < basketEur.size(); ++i) {
-        basketEur[i]->setPricingEngine(eurSwEng);
+    for (Size i = 0; i < basketEur1.size(); ++i) {
+        basketEur1[i]->setPricingEngine(eurSwEng);
     }
 
-    for (Size i = 0; i < basketEur.size(); ++i) {
-        basketEur2[i]->setPricingEngine(eurSwEng);
+    for (Size i = 0; i < basketEur2.size(); ++i) {
+        basketEur2[i]->setPricingEngine(eurSwEng2);
     }
 
     {
-        // calibrate the model
         LevenbergMarquardt lm(1E-8, 1E-8, 1E-8);
         EndCriteria ec(1000, 500, 1E-8, 1E-8, 1E-8);
-        d.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur, lm, ec);
+        d1.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur1, lm, ec);
+    }
+        
+    {
+        LevenbergMarquardt lm(1E-8, 1E-8, 1E-8);
+        EndCriteria ec(1000, 500, 1E-8, 1E-8, 1E-8);
+        d2.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur2, lm, ec);
+    }
 
-        for (Size i = 0; i < basketEur.size(); ++i) {
-            Real model = basketEur[i]->modelValue();
-            Real model2 = basketEur2[i]->marketValue();
-           
-            BOOST_TEST_MESSAGE("Vega: " << std::abs((model - model2) / h));
-        }
+    for (Size i = 0; i < basketEur1.size(); ++i) {
+        Real model1 = basketEur1[i]->modelValue();
+        Real model2 = basketEur2[i]->modelValue();
+        Real vega=std::abs(model1 - model2) / h;
+        
+        BOOST_TEST_MESSAGE("Vega: " << vega);
     }
 
 }
