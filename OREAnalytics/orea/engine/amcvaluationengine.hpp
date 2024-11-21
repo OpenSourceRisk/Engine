@@ -47,7 +47,7 @@ public:
                        const QuantLib::ext::shared_ptr<ore::data::Market>& market,
                        const std::vector<string>& aggDataIndices, const std::vector<string>& aggDataCurrencies,
                        const Size aggDataNumberCreditStates, const std::string& amcPathDataInput,
-                       const std::string& amcPathDataOutput);
+                       const std::string& amcPathDataOutput, bool amcIndividualTrainingInput, bool amcIndividualTrainingOutput);
 
     //! Constructor for multi threaded runs
     AMCValuationEngine(
@@ -63,6 +63,7 @@ public:
         const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
         const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
         const std::string& amcPathDataInput, const std::string& amcPathDataOutput,
+        bool amcIndividualTrainingInput, bool amcIndividualTrainingOutput,
         const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
         const ore::data::IborFallbackConfig& iborFallbackConfig = ore::data::IborFallbackConfig::defaultConfig(),
         const bool handlePseudoCurrenciesTodaysMarket = true,
@@ -102,6 +103,7 @@ private:
     const Size aggDataNumberCreditStates_;
     QuantLib::ext::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;
     std::string amcPathDataInput_, amcPathDataOutput_;
+    bool amcIndividualTrainingInput_, amcIndividualTrainingOutput_;
 
     // inputs for single-threaded run
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> model_;

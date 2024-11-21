@@ -67,7 +67,9 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
     auto zeroSensis = parConversionAnalytic->loadZeroSensitivities();
 
     if (!zeroSensis.empty()) {
-        set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
+        auto& configs = analytic()->configurations();
+
+        const set<RiskFactorKey::KeyType>& typesDisabled = configs.sensiScenarioData->parConversionExcludes();
 
         auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
             inputs_->asof(), analytic()->configurations().simMarketParams,
@@ -79,8 +81,6 @@ void ParConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore:
         } else {
             LOG("Sensi analysis - skip aligning pillars");
         }
-
-        auto& configs = analytic()->configurations();
 
         auto simMarket = QuantLib::ext::make_shared<ScenarioSimMarket>(
             analytic()->market(), configs.simMarketParams, inputs_->marketConfig("pricing"),
