@@ -291,8 +291,8 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingWithSea
     std::vector<Date> expectedPillarDates{Date(1, July, 2022), Date(1, June, 2023), Date(1, June, 2024),
                                           Date(1, June, 2025), Date(1, June, 2027)};
 
-    std::vector<Real> expectedZeroRates{0.02097086546, 0.02097086546, 0.02068868041, 0.01710609424437, 0.01223686945};
-    std::vector<Real> expectedZeroRatesWithoutSeasonality{0.02097086546, -0.05439424967, -0.01603861959, -0.00711164972,
+    std::vector<Real> expectedZeroRates{-0.0543942497, 0.02097086546, 0.02068868041, 0.01710609424437, 0.01223686945};
+    std::vector<Real> expectedZeroRatesWithoutSeasonality{-0.0543942497, -0.0543942497, -0.01603861959, -0.00711164972,
                                                           -0.00213855283};
     std::vector<Real> expectedCPIs{104, 106., 108.171622850024, 109.281549591561, 110.414070537467};
 
