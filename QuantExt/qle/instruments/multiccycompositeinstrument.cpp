@@ -66,7 +66,7 @@ void MultiCcyCompositeInstrument::updateAdditionalResults() const {
     additionalResults_.clear();
     Size counter = 0;
     for (auto const& [inst, mult, fx] : components_) {
-        std::string postFix = "_" + std::to_string(++counter);
+        std::string postFix = "_" + std::to_string(counter++);
         const auto& cmpResults = inst->additionalResults();
         for (auto const& r : cmpResults) {
             additionalResults_[r.first + postFix] = r.second;

@@ -57,12 +57,12 @@ namespace {
 
 boost::any getAdditionalResult(const std::map<std::string, boost::any>& addResults, const std::string& name,
                                const Size index) {
-    /* There are different conventions to store component additional results in CompositeInstrument and
-       MultiCcyCompositeInstrument, which we both probe here. */
-    std::string altName = name == "multiplier" ? "__multiplier" : name;
-    if (auto g = addResults.find(altName + "_" + std::to_string(index)); g != addResults.end())
-        return g->second;
+    /* CompositeInstrument convention to store component results  */
     if (auto g = addResults.find(std::to_string(index) + "_" + name); g != addResults.end())
+        return g->second;
+    /* MultiCcyCompositeInstrument convention to store component results  */
+    std::string altName = name == "multiplier" ? "__multiplier" : name;
+    if (auto g = addResults.find(altName + "_" + std::to_string(index - 1)); g != addResults.end())
         return g->second;
     return boost::any();
 }
