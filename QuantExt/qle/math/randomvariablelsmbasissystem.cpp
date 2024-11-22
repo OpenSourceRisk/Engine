@@ -207,7 +207,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
 }
 
 VF_A RandomVariableLsmBasisSystem::multiPathBasisSystem(Size dim, Size order,
-                                                        QuantLib::LsmBasisSystem::PolynomialType type) {
+                                                        QuantLib::LsmBasisSystem::PolynomialType type,
+                                                        const std::set<std::set<Size>>& varGroups) {
     QL_REQUIRE(dim > 0, "zero dimension");
     // get single factor basis
     VF_R pathBasis = pathBasisSystem(order, type);
@@ -215,18 +216,37 @@ VF_A RandomVariableLsmBasisSystem::multiPathBasisSystem(Size dim, Size order,
     // 0-th order term
     VF_R term(dim, pathBasis[0]);
     ret.push_back(MultiDimFct(term));
-    // start with all 0 tuple
-    VV tuples(1, std::vector<Size>(dim));
-    // add multi-factor terms
-    for (Size i = 1; i <= order; ++i) {
-        tuples = next_order_tuples(tuples);
-        // now we have all tuples of order i
-        // for each tuple add the corresponding term
-        for (Size j = 0; j < tuples.size(); ++j) {
-            for (Size k = 0; k < dim; ++k)
-                term[k] = pathBasis[tuples[j][k]];
-            ret.push_back(MultiDimFct(term));
+    // set up collection of all tuples
+    std::set<std::vector<Size>> allTuples;
+    if (varGroups.empty()) {
+        VV tuples(1, std::vector<Size>(dim));
+        allTuples.insert(tuples.begin(), tuples.end());
+        for (Size i = 1; i <= order; ++i) {
+            tuples = next_order_tuples(tuples);
+            allTuples.insert(tuples.begin(), tuples.end());
         }
+    } else {
+        for (auto const& g : varGroups) {
+            std::set<std::vector<Size>> tmpTuples;
+            VV tuples(1, std::vector<Size>(g.size()));
+            tmpTuples.insert(tuples.begin(), tuples.end());
+            for (Size i = 1; i <= order; ++i) {
+                tuples = next_order_tuples(tuples);
+                tmpTuples.insert(tuples.begin(), tuples.end());
+            }
+            for (auto const& t : tmpTuples) {
+                std::vector<Size> fullTuple(dim);
+                for (Size k = 0; k < g.size(); ++k)
+                    fullTuple[*std::next(g.begin(), k)] = t[k];
+                allTuples.insert(fullTuple);
+            }
+        }
+    }
+    // add multi-factor terms
+    for (auto const& t : allTuples) {
+        for (Size k = 0; k < dim; ++k)
+            term[k] = pathBasis[t[k]];
+        ret.push_back(MultiDimFct(term));
     }
     return ret;
 }
