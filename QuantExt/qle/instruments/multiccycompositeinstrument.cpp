@@ -45,8 +45,8 @@ void MultiCcyCompositeInstrument::subtract(const ext::shared_ptr<Instrument>& in
 }
 
 bool MultiCcyCompositeInstrument::isExpired() const {
-    return std::any_of(components_.begin(), components_.end(),
-                       [](auto const& c) { return std::get<0>(c)->isExpired(); });
+    return !std::any_of(components_.begin(), components_.end(),
+                        [](auto const& c) { return !std::get<0>(c)->isExpired(); });
 }
 
 void MultiCcyCompositeInstrument::performCalculations() const {
@@ -64,14 +64,15 @@ void MultiCcyCompositeInstrument::deepUpdate() {
 
 void MultiCcyCompositeInstrument::updateAdditionalResults() const {
     additionalResults_.clear();
-    for (const_iterator i = components_.begin(); i != components_.end(); ++i) {
-        std::string postFix = "_" + std::to_string(std::distance(components_.begin(), i) + 1);
-        const auto& cmpResults = std::get<0>(*i)->additionalResults();
+    Size counter = 0;
+    for (auto const& [inst, mult, fx] : components_) {
+        std::string postFix = "_" + std::to_string(counter++);
+        const auto& cmpResults = inst->additionalResults();
         for (auto const& r : cmpResults) {
             additionalResults_[r.first + postFix] = r.second;
         }
-        additionalResults_["__multiplier" + postFix] = std::get<1>(*i);
-        additionalResults_["__fx_conversion" + postFix] = std::get<2>(*i)->value();
+        additionalResults_["__multiplier" + postFix] = mult;
+        additionalResults_["__fx_conversion" + postFix] = fx;
     }
 }
 
