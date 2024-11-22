@@ -4,11 +4,7 @@
 			<ShiftType>Absolute</ShiftType>
 			<ShiftSize>0.0001</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
-			<!--
-			<ShiftTenors>1D, 1W,2W,3W,1M,2M,3M,4M,5M,6M,7M,8M,9M,10M,11M,1Y,15M,18M,21M,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,11Y,12Y,15Y,20Y,25Y,30Y</ShiftTenors>
-			-->
-			<ShiftTenors>1Y, 5Y</ShiftTenors>
-			
+			<ShiftTenors>1Y, 5Y</ShiftTenors>		
 			<ParConversion>
 				<Instruments>OIS, OIS</Instruments>
 				<SingleCurve>true</SingleCurve>
@@ -23,17 +19,6 @@
 			<ShiftType>Absolute</ShiftType>
 			<ShiftSize>0.0001</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
-			<!--
-			<ShiftTenors>3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,20Y,30Y,40Y,50Y</ShiftTenors>
-			<ParConversion>
-				<Instruments>FXF,FXF,FXF,FXF,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
-				<SingleCurve>true</SingleCurve>
-				<Conventions>
-					<Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
-					<Convention id="FXF">EUR-USD-FX-CONVENTIONS</Convention>
-				</Conventions>
-			</ParConversion>
-			-->
 			<ShiftTenors>1Y, 5Y</ShiftTenors>
 			<ParConversion>
 				<Instruments>FXF,XBS</Instruments>
@@ -46,12 +31,91 @@
 		</DiscountCurve>
 	</DiscountCurves>
 	<IndexCurves>
+	  <IndexCurve index="EUR-EURIBOR-6M">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>1Y, 5Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>FRA, IRS</Instruments>
+				<SingleCurve>false</SingleCurve>
+				<DiscountCurve>EUR-EONIA</DiscountCurve>
+				<Conventions>
+					<Convention id="DEP">EUR-DEPOSIT</Convention>
+					<Convention id="FRA">EUR-6M-FRA-CONVENTIONS</Convention>
+					<Convention id="IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
+				</Conventions>
+			</ParConversion>
+	  </IndexCurve>
+		    <IndexCurve index="USD-LIBOR-3M">
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>1Y, 5Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>FRA, IRS</Instruments>
+				<SingleCurve>false</SingleCurve>
+				<DiscountCurve>USD-FedFunds</DiscountCurve>
+				<Conventions>
+					<Convention id="DEP">USD-ON-SOFR-DEPOSIT</Convention>
+					<Convention id="OIS">USD-SOFR-OIS</Convention>
+					<Convention id="FRA">USD-3M-FRA-CONVENTIONS</Convention>
+					<Convention id="IRS">USD-3M-SWAP-CONVENTIONS</Convention>
+				</Conventions>
+			</ParConversion>
+		    </IndexCurve>
 	</IndexCurves>
 	<YieldCurves/>
 	<FxSpots>
+		<FxSpot ccypair="USDEUR">
+			<ShiftType>Relative</ShiftType>
+			<ShiftSize>0.001</ShiftSize>
+			<ShiftScheme>Central</ShiftScheme>
+		</FxSpot>
 	</FxSpots>
 	<CreditCurves>
+		<CreditCurve name="CPTY_A">
+			<Currency>USD</Currency>
+			<ShiftType>Absolute</ShiftType>
+			<ShiftSize>0.0001</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftTenors>1Y, 5Y, 10Y</ShiftTenors>
+			<ParConversion>
+				<Instruments>CDS, CDS, CDS</Instruments>
+				<SingleCurve>false</SingleCurve>
+				<Conventions>
+					<Convention id="CDS">CDS-STANDARD-CONVENTIONS</Convention>
+				</Conventions>
+			</ParConversion>
+		</CreditCurve>
 	</CreditCurves>
+	<SwaptionVolatilities>
+		<SwaptionVolatility ccy="EUR">
+			<ShiftType>Relative</ShiftType>
+			<ShiftSize>0.01</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftExpiries>5Y</ShiftExpiries>
+			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
+			<ShiftTerms>5Y</ShiftTerms>
+		</SwaptionVolatility>
+		<SwaptionVolatility ccy="USD">
+			<ShiftType>Relative</ShiftType>
+			<ShiftSize>0.01</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftExpiries>5Y</ShiftExpiries>
+			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
+			<ShiftTerms>5Y</ShiftTerms>
+		</SwaptionVolatility>
+	</SwaptionVolatilities>	
+	<FxVolatilities>
+		<FxVolatility ccypair="EURUSD">
+			<ShiftType>Relative</ShiftType>
+			<ShiftSize>0.01</ShiftSize>
+			<ShiftScheme>Forward</ShiftScheme>
+			<ShiftExpiries>1Y</ShiftExpiries>
+			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
+		</FxVolatility>
+	</FxVolatilities>
 	<CapFloorVolatilities>
 	</CapFloorVolatilities>
 	<ComputeGamma>false</ComputeGamma>
