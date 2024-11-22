@@ -567,8 +567,8 @@ BOOST_AUTO_TEST_CASE(testSimpleCapFloor) {
     // interpolation. The vol surface observation lag is used in the engine for lag difference calculations compared to
     // the instrument's lag.
     Handle<CPIVolatilitySurface> inflationVol(QuantLib::ext::make_shared<ConstantCPIVolatility>(
-        inflationBlackVol, 0, inflationCurve->calendar(), bdc, dc, inflationCurve->observationLag(),
-        inflationCurve->frequency(), false));
+        inflationBlackVol, 0, index->fixingCalendar(), bdc, dc, inflationCurve->observationLag(), inflationCurve->frequency(),
+        false));
 
     QuantLib::ext::shared_ptr<PricingEngine> engine =
         QuantLib::ext::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, inflationVol);
