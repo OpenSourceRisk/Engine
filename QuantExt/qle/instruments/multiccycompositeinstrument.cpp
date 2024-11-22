@@ -23,6 +23,7 @@ using namespace QuantLib;
 
 void MultiCcyCompositeInstrument::add(const ext::shared_ptr<Instrument>& instrument, Real multiplier,
                                       const Handle<Quote>& fx) {
+    QL_REQUIRE(instrument, "null instrument provided");
     components_.push_back(std::make_tuple(instrument, multiplier, fx));
     registerWith(instrument);
     registerWith(fx);
@@ -44,33 +45,40 @@ void MultiCcyCompositeInstrument::subtract(const ext::shared_ptr<Instrument>& in
 }
 
 bool MultiCcyCompositeInstrument::isExpired() const {
-    for (const_iterator i = components_.cbegin(); i != components_.end(); ++i) {
-        if (!std::get<0>(*i)->isExpired())
-            return false;
-    }
-    return true;
+    return std::any_of(components_.begin(), components_.end(),
+                       [](auto const& c) { return std::get<0>(c)->isExpired(); });
 }
 
 void MultiCcyCompositeInstrument::performCalculations() const {
     NPV_ = 0.0;
     additionalResults_.clear();
     Size counter = 0;
-    for (const_iterator i = components_.cbegin(); i != components_.end(); ++i, ++counter) {
-        // npv += npv * fx * multiplier
-        NPV_ += std::get<1>(*i) * std::get<2>(*i)->value() * std::get<0>(*i)->NPV();
-        for (auto const& k : std::get<0>(*i)->additionalResults()) {
+    for (auto const& [inst, mult, fx] : components_) {
+        NPV_ += mult * fx->value() * inst->NPV();
+        for (auto const& k : inst->additionalResults()) {
             additionalResults_[k.first + "_" + std::to_string(counter)] = k.second;
         }
-        additionalResults_["__multiplier_" + std::to_string(counter)] = std::get<1>(*i);
-        additionalResults_["__fx_conversion_" + std::to_string(counter)] = std::get<2>(*i)->value();
+        ++counter;
     }
+    updateAdditionalResults();
 }
 
 void MultiCcyCompositeInstrument::deepUpdate() {
-    for (const_iterator i = components_.cbegin(); i != components_.end(); ++i) {
-        std::get<0>(*i)->deepUpdate();
-    }
+    std::for_each(components_.begin(), components_.end(), [](component& c) { std::get<0>(c)->deepUpdate(); });
     update();
+}
+
+void MultiCcyCompositeInstrument::updateAdditionalResults() const {
+    additionalResults_.clear();
+    for (const_iterator i = components_.begin(); i != components_.end(); ++i) {
+        std::string prefix = std::to_string(std::distance(components_.begin(), i) + 1) + "_";
+        const auto& cmpResults = std::get<0>(*i)->additionalResults();
+        for (auto const& r : cmpResults) {
+            additionalResults_[prefix + r.first] = r.second;
+        }
+        additionalResults_[prefix + "multiplier"] = std::get<1>(*i);
+        additionalResults_[prefix + "fx_conversion"] = std::get<2>(*i)->value();
+    }
 }
 
 } // namespace QuantExt
