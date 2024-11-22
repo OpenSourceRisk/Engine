@@ -65,13 +65,13 @@ void MultiCcyCompositeInstrument::deepUpdate() {
 void MultiCcyCompositeInstrument::updateAdditionalResults() const {
     additionalResults_.clear();
     for (const_iterator i = components_.begin(); i != components_.end(); ++i) {
-        std::string prefix = std::to_string(std::distance(components_.begin(), i) + 1) + "_";
+        std::string postFix = "_" + std::to_string(std::distance(components_.begin(), i) + 1);
         const auto& cmpResults = std::get<0>(*i)->additionalResults();
         for (auto const& r : cmpResults) {
-            additionalResults_[prefix + r.first] = r.second;
+            additionalResults_[r.first + postFix] = r.second;
         }
-        additionalResults_[prefix + "multiplier"] = std::get<1>(*i);
-        additionalResults_[prefix + "fx_conversion"] = std::get<2>(*i)->value();
+        additionalResults_["__multiplier" + postFix] = std::get<1>(*i);
+        additionalResults_["__fx_conversion" + postFix] = std::get<2>(*i)->value();
     }
 }
 
