@@ -51,14 +51,8 @@ bool MultiCcyCompositeInstrument::isExpired() const {
 
 void MultiCcyCompositeInstrument::performCalculations() const {
     NPV_ = 0.0;
-    additionalResults_.clear();
-    Size counter = 0;
     for (auto const& [inst, mult, fx] : components_) {
         NPV_ += mult * fx->value() * inst->NPV();
-        for (auto const& k : inst->additionalResults()) {
-            additionalResults_[k.first + "_" + std::to_string(counter)] = k.second;
-        }
-        ++counter;
     }
     updateAdditionalResults();
 }
