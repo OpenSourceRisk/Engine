@@ -37,6 +37,7 @@
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/pricingengines/nullamccalculator.hpp>
+#include <qle/instruments/multiccycompositeinstrument.hpp>
 
 #include <ql/instruments/compositeinstrument.hpp>
 
@@ -402,8 +403,9 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 Real multiplier = trade.second->instrument()->multiplier() * trade.second->instrument()->multiplier2();
 
                 // handle composite trades
-                if (auto cInst = QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(inst)) {
-                    auto addResults = cInst->additionalResults();
+                if (QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(inst) != nullptr ||
+                    QuantLib::ext::dynamic_pointer_cast<MultiCcyCompositeInstrument>(inst) != nullptr) {
+                    auto addResults = inst->additionalResults();
                     std::vector<Real> multipliers;
                     while (true) {
                         std::stringstream ss;
