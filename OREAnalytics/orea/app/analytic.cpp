@@ -18,6 +18,7 @@
 
 #include <orea/app/analytic.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <orea/app/marketdataloader.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -37,6 +38,7 @@
 #include <ored/portfolio/builders/multilegoption.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/utilities/indexparser.hpp>
 
 #include <iostream>
 
@@ -304,6 +306,94 @@ QuantLib::ext::shared_ptr<Loader> implyBondSpreads(const Date& asof,
         // no bonds that require a spread imply => return null ptr
         return QuantLib::ext::shared_ptr<Loader>();
     }
+}
+
+void Analytic::enrichIndexFixings(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio) {
+
+    if (!inputs()->enrichIndexFixings())
+        return;
+
+    startTimer("enrichIndexFixings()");
+    QL_REQUIRE(portfolio, "portfolio cannot be empty");
+
+    auto isFallbackFixingDateWithinLimit = [this](Date originalFixingDate, Date fallbackFixingDate) {
+        if (fallbackFixingDate > originalFixingDate) {
+            return (inputs()->ignoreFixingLead() == 0 ||
+                    (fallbackFixingDate - originalFixingDate <= inputs()->ignoreFixingLead()));
+        }
+        if (fallbackFixingDate < originalFixingDate) {
+            return (inputs()->ignoreFixingLag() == 0 ||
+                    (originalFixingDate - fallbackFixingDate <= inputs()->ignoreFixingLag()));
+        }
+        return true;
+    };
+
+    auto compTs = [](const std::pair<Date,Real>& a, const std::pair<Date,Real>& b) {
+        return a.first < b.first;
+    };
+
+    for (const auto& [index_name, dates] : portfolio->fixings(inputs()->asof())) {
+        try {
+            auto index = parseIndex(index_name);
+            const auto& timeSeries = index->timeSeries();
+            if (timeSeries.size() == 0)
+                continue;
+
+            vector<Date> datesToAdd;
+            vector<Real> fixingsToAdd;
+
+            for(const auto& [date, mandatory] : dates) {
+                if (mandatory && date != inputs()->asof()) {
+                    auto tmp = std::pair<Date,Real>(date, Null<Real>());
+
+                    if (timeSeries[date] != Null<Real>())
+                        continue;
+
+                    Date fallbackDate;
+                    Real fallbackFixing = Null<Real>();
+                    if (date < timeSeries.firstDate()) {
+                        fallbackDate = timeSeries.firstDate();
+                    }
+                    else if (date > timeSeries.lastDate()) {
+                        fallbackDate = timeSeries.lastDate();
+                    }
+                    else {
+                        auto iter = std::upper_bound(timeSeries.begin(), timeSeries.end(), tmp, compTs);
+                        if (isFallbackFixingDateWithinLimit(date, (--iter)->first)) {
+                            fallbackDate = iter->first;
+                        } else {
+                            fallbackDate = (++iter)->first;
+                        }
+                    }
+                    if (!isFallbackFixingDateWithinLimit(date, fallbackDate)) {
+                        continue;
+                    }
+                    fallbackFixing = timeSeries[fallbackDate];
+                    if (fallbackFixing == Null<Real>()) {
+                        continue;
+                    }
+                    datesToAdd.push_back(date);
+                    fixingsToAdd.push_back(fallbackFixing);
+                    StructuredFixingWarningMessage(
+                        index->name(), date, "Missing fixing",
+                        "Could not find required fixing ID. "
+                        "Using fallback fixing on " + to_string(fallbackDate)).log();
+                }
+            }
+
+            for(Size i = 0; i < datesToAdd.size(); ++i) {
+                index->addFixing(datesToAdd[i], fixingsToAdd[i], false);
+                DLOG("Added fallback fixing " << index->name() << " "
+                     << datesToAdd[i] << " " << fixingsToAdd[i]);
+            }
+            DLOG("Added " << datesToAdd.size() << " fallback(s) fixing for " << index->name())
+        }
+        catch (const std::exception& e) {
+            WLOG("Failed to enrich historical index fixings: " << e.what());
+        }
+    }
+
+    stopTimer("enrichIndexFixings()");
 }
 
 } // namespace analytics
