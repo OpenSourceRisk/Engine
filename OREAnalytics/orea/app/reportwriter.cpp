@@ -1178,7 +1178,7 @@ void ReportWriter::writeTimeAveragedNettedExposure(
 
     LOG("Writing time averaged netted exposure");
 
-    report.addColumn("NettingSet", string())
+    report.addColumn("NettingSetId", string())
         .addColumn("Sample", Size())
         .addColumn("PosExpNoColl", double(), 4)
         .addColumn("NegExpNoColl", double(), 4)
