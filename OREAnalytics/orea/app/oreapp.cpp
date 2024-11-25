@@ -713,6 +713,18 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "")
         setImplyTodaysFixings(ore::data::parseBool(tmp));
 
+    tmp = params_->get("setup", "enrichIndexFixings", false);
+    if (tmp != "")
+        setEnrichIndexFixings(ore::data::parseBool(tmp));
+
+    tmp = params_->get("setup", "ignoreFixingLead", false);
+    if (tmp != "")
+        setIgnoreFixingLead(ore::data::parseInteger(tmp));
+
+    tmp = params_->get("setup", "ignoreFixingLag", false);
+    if (tmp != "")
+        setIgnoreFixingLag(ore::data::parseInteger(tmp));
+
     tmp = params_->get("setup", "includeTodaysCashFlows", false);
     if (tmp != "")
         setIncludeTodaysCashFlows(ore::data::parseBool(tmp));

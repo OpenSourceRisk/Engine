@@ -1358,6 +1358,11 @@ void YieldCurve::buildBootstrappedCurve() {
 
     /* Set mixed interpolation size using the specified cutoff for the number of segments */
 
+    QL_REQUIRE(curveConfig_->mixedInterpolationCutoff() <= curveSegments_.size(),
+               "mixed interpolation cutoff (" << curveConfig_->mixedInterpolationCutoff()
+                                              << ") can not be greater than the number of curve segments ("
+                                              << curveSegments_.size() << ")");
+
     mixedInterpolationSize_ = 0;
     for (Size i = 0; i < curveConfig_->mixedInterpolationCutoff(); ++i)
         mixedInterpolationSize_ += instrumentsPerSegment[i].size();

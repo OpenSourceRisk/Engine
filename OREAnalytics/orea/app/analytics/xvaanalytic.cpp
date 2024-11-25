@@ -807,10 +807,14 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
             doAmcRun = !amcPortfolio_->trades().empty();
             doClassicRun = !residualPortfolio->trades().empty();
+
+            analytic()->enrichIndexFixings(amcPortfolio_);
         } else {
             for (const auto& [tradeId, trade] : inputs_->portfolio()->trades())
                 residualPortfolio->add(trade);
         }
+
+        analytic()->enrichIndexFixings(residualPortfolio);
 
         /********************************************************************************
          * This is where we build cubes and the "classic" valuation work is done
@@ -864,6 +868,8 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
 
         // build the portfolio linked to today's market
         analytic()->buildPortfolio();
+
+        analytic()->enrichIndexFixings(analytic()->portfolio());
 
         // ... and load a pre-built cube for post-processing
 

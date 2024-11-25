@@ -244,7 +244,7 @@ void GaussianCam::populatePathValues(const Size nSamples, std::map<Date, std::ve
 
     // FX, EQ, COMM indcies
     for (Size k = 0; k < indices_.size(); ++k) {
-        paths[referenceDate_][k].setAll(process->initialValues().at(indexPositionInProcess_[k]));
+        paths[referenceDate_][k].setAll(std::exp(process->initialValues().at(indexPositionInProcess_[k])));
     }
 
     // IR states per currency (they are all just 0)
