@@ -24,7 +24,6 @@ namespace QuantExt {
 
 void McLgmFwdBondEngine::setMember() const {
 
-    // assemble date logic and interim results for both payoff and amc calculator
     Date npvDate = contractCurve_->referenceDate();
 
     Date maturityDate = arguments_.fwdMaturityDate;
@@ -176,10 +175,6 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
     double maturityTime = engine_->time(engine_->arguments_.fwdMaturityDate);
     double contractCurveTime = engine_->time(engine_->contractCurveDate_);
     double cmpPaymentTime = engine_->time(engine_->cmpPaymentDate_);
-
-    boost::shared_ptr<ForwardBondTypePayoff> fwdBndPayOff =
-        boost::dynamic_pointer_cast<ForwardBondTypePayoff>(engine_->arguments_.payoff);
-    QL_REQUIRE(fwdBndPayOff, "not a ForwardBondTypePayoff");
 
     // bool stickyCloseOutRun = false;
     std::size_t regModelIndex = 0;
