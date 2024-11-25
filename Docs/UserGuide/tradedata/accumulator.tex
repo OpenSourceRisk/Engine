@@ -228,7 +228,7 @@ For CommodityAccumulators: The FixingAmount is expressed as number of units of t
 
 For FxAccumulators: The the fx strike rate (global and local) is defined as amount in domestic currency (\lstinline!CCY2!) for one unit of foreign currency (\lstinline!CCY1!). 
 
-For Equity- and CommodityAccumulators: The strike value (global and local) for one unit/share/contract of the underlying equity or commodity, expressed in the currency the equity or commodity is quoted in. For EquityAccumulators, the \lstinline!StrikeData! node (see above) should be used.
+For Equity- and CommodityAccumulators: The strike value (global and local) for one unit/share/contract of the underlying equity or commodity, expressed in the currency the equity or commodity is quoted in or any other currency if a \listinline!FxIndex! for the conversion is specified. For EquityAccumulators, the \lstinline!StrikeData! node (see above) should be used.
 
 The logic for global and local strikes is as follows:
 
@@ -306,12 +306,14 @@ The relevant fields in the \lstinline!OptionData! node for an Accumulator are:
     The barrier \lstinline!Level! for \lstinline!Type!  \emph{FixingFloor}  is a non-negative integer.
 
     Allowable values: For each \lstinline!BarrierData! node, see \ref{ss:barrier_data}. For Accumulators/Decumulators, the following values for \lstinline!Type! are relevant: \emph{UpAndOut}, \emph{DownAndOut} and \emph{FixingFloor}. The barrier \lstinline!Style! can be \emph{European} (monitored on observation dates) or \emph{American} (continuously monitored).
-  \item KnockOutSettlementAtPeriodEnd [Optional]: Only relevant for \emph{type 02 accumulator}. Controlls the settlement behavior in case of an knock out events. 
+\item KnockOutSettlementAtPeriodEnd [Optional]: Only relevant for \emph{type 02 accumulator}. Controlls the settlement behavior in case of an knock out events. 
     If \emph{true} the settlement of a knock out event takes place at the end of the observation period, otherwise on the knock out event date plus the 
     defined settlement delay. Defaults to \emph{false}.
-  \item KnockOutFixingAtKOSettlement [Optional]: Only relevant for \emph{type 02 accumulator}. Controlls the settlement behavior in case of an knock out events. 
+\item KnockOutFixingAtKOSettlement [Optional]: Only relevant for \emph{type 02 accumulator}. Controlls the settlement behavior in case of an knock out events. 
     If \emph{true} the fixing at knockout settlement date is used to compute the knockout flow, otherwise the fixing at knockout date. Defaults to \emph{false}.
-  \end{itemize}
+\item FxIndex [Optional]: Required for composite options, where the strike, knockout barrier and pay currency are different from the underlying quote currency. A node with the underlying of the FX conversion from quote currency to pay currency.
+\lstinline!Type! is set to \emph{FX} and \lstinline!Name! is a string of the form \emph{SOURCE-CCY1-CCY2} where \lstinline!CCY1! is the foreign (quote) currency, \lstinline!CCY2! is the domestic (pay) currency, and \emph{SOURCE} is the fixing source, see Table \ref{tab:fxindex_data} and  \ref{ss:underlying}.
+\end{itemize}
 
 % scripted trade representation type 01
 

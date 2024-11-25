@@ -4518,6 +4518,7 @@
       <xs:element type="xs:boolean" name="NakedOption" minOccurs="0"/>
       <xs:element type="xs:boolean" name="KnockOutSettlementAtPeriodEnd" minOccurs="0"/>
       <xs:element type="xs:boolean" name="KnockOutFixingAtKOSettlement" minOccurs="0" />
+      <xs:element type="underlying" name="FxIndex" minOccurs="0" />
       <xs:element name="RangeBounds">
         <xs:complexType>
           <xs:sequence>
