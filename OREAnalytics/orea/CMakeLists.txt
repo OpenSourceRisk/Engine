@@ -26,6 +26,7 @@ app/analytics/parstressconversionanalytic.cpp
 app/analytics/pnlanalytic.cpp
 app/analytics/pnlexplainanalytic.cpp
 app/analytics/portfoliodetailsanalytic.cpp
+app/analytics/sacvaanalytic.cpp
 app/analytics/pricinganalytic.cpp
 app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
@@ -62,8 +63,11 @@ cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
+engine/bacvacalculator.cpp
 engine/cashflowreportgenerator.cpp
 engine/cptycalculator.cpp
+engine/cvasensitivitycubestream.cpp
+engine/cvasensitivityrecord.cpp
 engine/decomposedsensitivitystream.cpp
 engine/dependencymarket.cpp
 engine/filteredsensitivitystream.cpp
@@ -85,6 +89,9 @@ engine/parstressconverter.cpp
 engine/parstressscenarioconverter.cpp
 engine/pnlexplainreport.cpp
 engine/riskfilter.cpp
+engine/saccr.cpp
+engine/sacvasensitivityloader.cpp
+engine/sacvasensitivityrecord.cpp
 engine/sensitivityaggregator.cpp
 engine/sensitivityanalysis.cpp
 engine/sensitivitycubestream.cpp
@@ -92,6 +99,8 @@ engine/sensitivityfilestream.cpp
 engine/sensitivityinmemorystream.cpp
 engine/sensitivityrecord.cpp
 engine/sensitivityreportstream.cpp
+engine/smrc.cpp
+engine/standardapproachcvacalculator.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
@@ -104,6 +113,8 @@ scenario/clonedscenariogenerator.cpp
 scenario/clonescenariofactory.cpp
 scenario/crossassetmodelscenariogenerator.cpp
 scenario/csvscenariogenerator.cpp
+scenario/cvascenario.cpp
+scenario/cvascenarioloader.cpp
 scenario/deltascenario.cpp
 scenario/deltascenariofactory.cpp
 scenario/historicalscenariogenerator.cpp
@@ -199,6 +210,7 @@ app/analytics/pnlanalytic.hpp
 app/analytics/pnlexplainanalytic.hpp
 app/analytics/portfoliodetailsanalytic.hpp
 app/analytics/pricinganalytic.hpp
+app/analytics/sacvaanalytic.hpp
 app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
 app/analytics/simmanalytic.hpp
@@ -243,9 +255,13 @@ cube/sensicube.hpp
 cube/sensitivitycube.hpp
 cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
+engine/bacvacalculator.hpp
 engine/bufferedsensitivitystream.hpp
 engine/cashflowreportgenerator.hpp
 engine/cptycalculator.hpp
+engine/cvacalculator.hpp
+engine/cvasensitivitycubestream.hpp
+engine/cvasensitivityrecord.hpp
 engine/decomposedsensitivitystream.hpp
 engine/dependencymarket.hpp
 engine/filteredsensitivitystream.hpp
@@ -269,6 +285,9 @@ engine/parstressscenarioconverter.hpp
 engine/pathdata.hpp
 engine/pnlexplainreport.hpp
 engine/riskfilter.hpp
+engine/saccr.hpp
+engine/sacvasensitivityloader.hpp
+engine/sacvasensitivityrecord.hpp
 engine/sensitivityaggregator.hpp
 engine/sensitivityanalysis.hpp
 engine/sensitivitycubestream.hpp
@@ -277,6 +296,8 @@ engine/sensitivityinmemorystream.hpp
 engine/sensitivityrecord.hpp
 engine/sensitivityreportstream.hpp
 engine/sensitivitystream.hpp
+engine/smrc.hpp
+engine/standardapproachcvacalculator.hpp
 engine/stresstest.hpp
 engine/valuationcalculator.hpp
 engine/valuationengine.hpp
@@ -290,6 +311,8 @@ scenario/clonedscenariogenerator.hpp
 scenario/clonescenariofactory.hpp
 scenario/crossassetmodelscenariogenerator.hpp
 scenario/csvscenariogenerator.hpp
+scenario/cvascenario.hpp
+scenario/cvascenarioloader.hpp
 scenario/deltascenario.hpp
 scenario/deltascenariofactory.hpp
 scenario/historicalscenariogenerator.hpp

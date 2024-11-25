@@ -622,5 +622,7 @@ SalvagingAlgorithm::Type parseSalvagingAlgorithmType(const std::string& s);
 */
 std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type);
 
+std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p);
+
 } // namespace data
 } // namespace ore
