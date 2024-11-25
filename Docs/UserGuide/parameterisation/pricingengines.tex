@@ -5128,8 +5128,8 @@ In addition to product specific settings there is also a block with global param
   but only used internally to improve the performance for processes which only rely on the NPV as a result from pricing
   engines, e.g. when repricing trades under sensitivity or stress scenarios. Option, defaults to false.
 \item RunType: Set automatically. One of NPV, SensitivityDelta, SensitivityDeltaGamma, Stress, Exposure, Capital,
-  TradeDetails, PortfolioAnalyser, PorfolioAnalyserNoFixings, HistoricalPnL, BondSpreadImply, AbsMaturityUpdate
-  depending on the context for which a portfolio was built. Might also be left empty. This is used by some pricing
-  engines to adapt to certain run types. E.g. a first order sensitivity pnl expansion might be used for a
-  SensitivityDelta run by an engine which is able to compute analytical or AAD first order sensitivities.
+  TradeDetails, PortfolioAnalyser, HistoricalPnL, BondSpreadImply, AbsMaturityUpdate depending on the context for which
+  a portfolio was built. Might also be left empty. This is used by some pricing engines to adapt to certain run
+  types. E.g. a first order sensitivity pnl expansion might be used for a SensitivityDelta run by an engine which is
+  able to compute analytical or AAD first order sensitivities.
 \end{itemize}
