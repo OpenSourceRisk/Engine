@@ -1535,6 +1535,24 @@
           }
         ]
       },
+      "timeaveragedexposure.csv": {
+        "keys": [
+          "NettingSetId",
+          "Sample"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "PosExpNoColl",
+              "NegExpNoColl",
+              "PosExpWithColl",
+              "NegExpWithColl"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "criftotrade_trade_summary.csv": {
         "keys": [
           "trade_id",
