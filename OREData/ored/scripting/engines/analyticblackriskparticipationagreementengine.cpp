@@ -31,9 +31,10 @@ AnalyticBlackRiskParticipationAgreementEngine::AnalyticBlackRiskParticipationAgr
     const std::map<std::string, Handle<Quote>>& fxSpots, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
     const Handle<Quote>& recoveryRate, const Handle<SwaptionVolatilityStructure>& volatility,
     const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase, const bool matchUnderlyingTenor, const Real reversion,
-    const bool alwaysRecomputeOptionRepresentation, const Size maxGapDays, const Size maxDiscretisationPoints)
+    const bool alwaysRecomputeOptionRepresentation, const Size maxGapDays, const Size maxDiscretisationPoints,
+    const OptionExpiryPosition optionExpiryPosition)
     : RiskParticipationAgreementBaseEngine(baseCcy, discountCurves, fxSpots, defaultCurve, recoveryRate, maxGapDays,
-                                           maxDiscretisationPoints),
+                                           maxDiscretisationPoints, optionExpiryPosition),
       volatility_(volatility), swapIndexBase_(swapIndexBase), matchUnderlyingTenor_(matchUnderlyingTenor),
       reversion_(reversion), alwaysRecomputeOptionRepresentation_(alwaysRecomputeOptionRepresentation) {
     registerWith(volatility_);
@@ -60,7 +61,7 @@ Real AnalyticBlackRiskParticipationAgreementEngine::protectionLegNpv() const {
         for (Size i = 0; i < gridDates_.size() - 1; ++i) {
             Date start = gridDates_[i];
             Date end = gridDates_[i + 1];
-            Date mid = start + (end - start) / 2;
+            Date mid = optionExpiryPosition_ == OptionExpiryPosition::Mid ? start + (end - start) / 2 : start + 1;
             // mid might be = reference date degenerate cases where the first two discretisation points
             // are only one day apart from each other
             if (mid + 1 * Months <= arguments_.underlyingMaturity && mid > discountCurves_[baseCcy_]->referenceDate())
