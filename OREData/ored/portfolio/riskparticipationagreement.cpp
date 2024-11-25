@@ -104,7 +104,8 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
         if (auto c = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(l.concreteLegData())) {
             hasCapFloors = hasCapFloors || !c->caps().empty();
             hasCapFloors = hasCapFloors || !c->floors().empty();
-            hasIborInArrears = hasIborInArrears || (c->isInArrears() && !isOvernightIndex(c->index()));
+            hasIborInArrears =
+                hasIborInArrears || ((c->isInArrears() && *c->isInArrears()) && !isOvernightIndex(c->index()));
         }
     }
 
