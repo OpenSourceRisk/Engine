@@ -402,7 +402,7 @@ void NettedExposureCalculator::build() {
                     }
                 }
 
-                // expressions exposure - dim_epe and -exposure - dim_ene are taken from above
+                // expressions "exposure - dim_epe" and "-exposure - dim_ene" are taken from above
                 timeAveragedNettedExposure[k].positiveExposureBeforeCollateral +=
                     std::max(0.0, data[j][k]) * timeDeltas[j];
                 timeAveragedNettedExposure[k].negativeExposureBeforeCollateral +=
