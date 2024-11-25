@@ -37,6 +37,7 @@
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/pricingengines/nullamccalculator.hpp>
+#include <qle/instruments/multiccycompositeinstrument.hpp>
 
 #include <ql/instruments/compositeinstrument.hpp>
 
@@ -53,6 +54,18 @@ namespace ore {
 namespace analytics {
 
 namespace {
+
+boost::any getAdditionalResult(const std::map<std::string, boost::any>& addResults, const std::string& name,
+                               const Size index) {
+    /* CompositeInstrument convention to store component results  */
+    if (auto g = addResults.find(std::to_string(index) + "_" + name); g != addResults.end())
+        return g->second;
+    /* MultiCcyCompositeInstrument convention to store component results  */
+    std::string altName = name == "multiplier" ? "__multiplier" : name;
+    if (auto g = addResults.find(altName + "_" + std::to_string(index - 1)); g != addResults.end())
+        return g->second;
+    return boost::any();
+}
 
 Real fx(const std::vector<std::vector<std::vector<Real>>>& fxBuffer, const Size ccyIndex, const Size timeIndex,
         const Size sample) {
@@ -402,15 +415,15 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 Real multiplier = trade.second->instrument()->multiplier() * trade.second->instrument()->multiplier2();
 
                 // handle composite trades
-                if (auto cInst = QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(inst)) {
-                    auto addResults = cInst->additionalResults();
+                if (QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(inst) != nullptr ||
+                    QuantLib::ext::dynamic_pointer_cast<MultiCcyCompositeInstrument>(inst) != nullptr) {
+                    auto addResults = inst->additionalResults();
                     std::vector<Real> multipliers;
                     while (true) {
-                        std::stringstream ss;
-                        ss << multipliers.size() + 1 << "_multiplier";
-                        if (addResults.find(ss.str()) == addResults.end())
+                        auto v = getAdditionalResult(addResults, "multiplier", multipliers.size() + 1);
+                        if (v.empty())
                             break;
-                        multipliers.push_back(inst->result<Real>(ss.str()));
+                        multipliers.push_back(boost::any_cast<Real>(v));
                     }
                     std::vector<QuantLib::ext::shared_ptr<AmcCalculator>> amcCalcs;
                     if (amcIndividualTrainingInput) {
@@ -439,16 +452,15 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                         }
                     }
                     for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
-                        std::stringstream ss;
-                        ss << cmpIdx + 1 << "_amcCalculator";
-                        if (addResults.find(ss.str()) != addResults.end()) {
-                            amcCalcs.push_back(inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str()));
+                        auto v = getAdditionalResult(addResults, "amcCalculator", cmpIdx + 1);
+                        if (!v.empty()) {
+                            amcCalcs.push_back(boost::any_cast<QuantLib::ext::shared_ptr<AmcCalculator>>(v));
                             if (amcIndividualTrainingOutput) {
                                 LOG("Serialising AMC calculator for trade " << cmpIdx+1 << " of composite trade " << trade.first);
                                 string component_filename = filename + "_" + to_string(cmpIdx);
                                 std::ofstream os(component_filename, std::ios::binary);
                                 boost::archive::binary_oarchive oa(os, boost::archive::no_header);
-                                auto tmp = inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str());
+                                auto tmp = boost::any_cast<QuantLib::ext::shared_ptr<AmcCalculator>>(v);
                                 auto amcCalc = QuantLib::ext::dynamic_pointer_cast<
                                     McMultiLegBaseEngine::MultiLegBaseAmcCalculator>(tmp);
                                 oa << amcCalc;
