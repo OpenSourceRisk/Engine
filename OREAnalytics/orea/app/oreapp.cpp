@@ -1930,6 +1930,12 @@ void OREAppInputParameters::loadParameters() {
         setNetCubeOutput(true);
     }
 
+    tmp = params_->get("xva", "timeAveragedNettedExposureOutputFile", false);
+    if (tmp != "") {
+        setTimeAveragedNettedExposureOutputFile(tmp);
+        setTimeAveragedNettedExposureOutput(true);
+    }
+
     // FVA
 
     tmp = params_->get("xva", "fvaBorrowingCurve", false);
