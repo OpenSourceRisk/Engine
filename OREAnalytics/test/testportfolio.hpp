@@ -54,8 +54,12 @@ QuantLib::ext::shared_ptr<Trade> buildBermudanSwaption(string id, string longSho
                                                string premiumCcy = "", string premiumDate = "");
 
 QuantLib::ext::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
-                                       Real boughtAmount, string soldCcy, Real soldAmount, Real premium = 0.0,
-                                       string premiumCcy = "", string premiumDate = "");
+					       Real boughtAmount, string soldCcy, Real soldAmount, Real premium = 0.0,
+					       string premiumCcy = "", string premiumDate = "", string nettingSet = "");
+
+QuantLib::ext::shared_ptr<Trade> buildFxForward(string id, Size expiry,
+						string boughtCcy, Real boughtAmount, string soldCcy, Real soldAmount,
+						string nettingSet = "");
 
 QuantLib::ext::shared_ptr<Trade> buildEquityOption(string id, string longShort, string putCall, Size expiry, string equityName,
                                            string currency, Real strike, Real quantity, Real premium = 0.0,
@@ -85,7 +89,8 @@ QuantLib::ext::shared_ptr<Trade> buildCrossCcyBasisSwap(
         Real recLegSpread, Real payLegSpread, string recFreq, string recDC, string recIndex, Calendar recCalendar,
         string payFreq, string payDC, string payIndex, Calendar payCalendar, QuantLib::Natural spotDays = 2,
         bool spotStartLag = false, bool notionalInitialExchange = false, bool notionalFinalExchange = false,
-        bool notionalAmortizingExchange = false, bool isRecLegFXResettable = false, bool isPayLegFXResettable = false);
+        bool notionalAmortizingExchange = false, bool isRecLegFXResettable = false, bool isPayLegFXResettable = false,
+	string nettingSet = "", bool amortizingNotional = false, string amortizingTerm = "");
     
 QuantLib::ext::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term, string suffix = "1");
 
@@ -121,11 +126,34 @@ QuantLib::ext::shared_ptr<Trade> buildCommodityForward(const std::string& id, co
                                                const std::string& commodityName, const std::string& currency,
                                                Real strike, Real quantity);
 
+QuantLib::ext::shared_ptr<Trade> buildCommodityForward(string id, string ccy, string commodityName, Real quantity, Size term,
+						       Real strike, string position, string nettingSet, Calendar calendar);
+
+QuantLib::ext::shared_ptr<Trade> buildCommoditySwap(string id, string ccy, bool isPayer, Real quantity, int start,
+						    Size term, Real price, string fixedFreq,
+						    string fixedDC, string floatFreq, string floatDC, string index,
+						    Calendar calendar, Size spotDays, bool spotStartLag,
+						    string nettingSet, Real fixedPrice);
+
+QuantLib::ext::shared_ptr<Trade> buildCommodityBasisSwap(string id, string ccy, bool isPayer, Real quantity, int start,
+							 Size term, string floatFreq, string floatDC, string index_1,
+							 string index_2,
+							 Calendar calendar, Size spotDays, bool spotStartLag,
+							 string nettingSet);
+
 QuantLib::ext::shared_ptr<Trade> buildCommodityOption(const std::string& id, const std::string& longShort,
                                               const std::string& putCall, QuantLib::Size term,
                                               const std::string& commodityName, const std::string& currency,
                                               QuantLib::Real strike, QuantLib::Real quantity,
                                               QuantLib::Real premium = 0.0, const std::string& premiumCcy = "",
                                               const std::string& premiumDate = "");
+
+QuantLib::ext::shared_ptr<Trade> buildFxBarrierOption(string id, string longShort, string putCall, Size expiry,
+						      string boughtCcy, Real boughtAmount, string soldCcy, Real soldAmount,
+						      string nettingSet, string barrierType, Real barrier);
+
+QuantLib::ext::shared_ptr<Trade> buildFxTouchOption(string id, string longShort, Size expiry,
+						    string boughtCcy, string soldCcy,Real payoffAmount, 
+						    string nettingSet, string barrierType, Real barrier);
 
 } // namespace testsuite
