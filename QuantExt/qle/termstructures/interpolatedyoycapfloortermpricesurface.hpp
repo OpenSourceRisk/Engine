@@ -230,7 +230,7 @@ template <class I2D, class I1D> void InterpolatedYoYCapFloorTermPriceSurface<I2D
         for (Size k = 0; k < numYears; ++k)
             sumDiscount += nominalTS_->discount(k + 1.0);
 
-        Real S = yoy_->yoyRate(yoyOptionDateFromTenor(mat));
+        Real S = yoy_->yoyRate(yoyOptionDateFromTenor(mat), observationLag());
         for (Size i = 0; i < cfStrikes_.size(); ++i) {
             Real K = cfStrikes_[i];
             // Real K = std::pow(1.0 + K_quote, mat.length());
