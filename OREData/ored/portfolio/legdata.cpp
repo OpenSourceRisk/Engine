@@ -1347,50 +1347,10 @@ Leg makeIborLeg(const LegData& data, const QuantLib::ext::shared_ptr<IborIndex>&
 Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightIndex>& index,
                const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer,
                const QuantLib::Date& openEndDateReplacement) {
-
     QuantLib::ext::shared_ptr<FloatingLegData> floatData = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(data.concreteLegData());
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
 
-    QuantLib::ext::shared_ptr<QuantExt::AverageONIndexedCouponPricer> couponPricerAvg =
-        QuantLib::ext::make_shared<QuantExt::AverageONIndexedCouponPricer>();
-    QuantLib::ext::shared_ptr<QuantExt::OvernightIndexedCouponPricer> couponPricerOn =
-        QuantLib::ext::make_shared<QuantExt::OvernightIndexedCouponPricer>();
-
-    QuantLib::ext::shared_ptr<QuantExt::CapFlooredAverageONIndexedCouponPricer> cfCouponPricerAvg;
-    QuantLib::ext::shared_ptr<QuantExt::CappedFlooredOvernightIndexedCouponPricer> cfCouponPricerOn;
-
-    // try to set the rate computation period based on the schedule tenor
     auto tmp = data.schedule();
-    Period rateComputationPeriod = 0 * Days;
-    if (!tmp.rules().empty() && !tmp.rules().front().tenor().empty())
-        rateComputationPeriod = parsePeriod(tmp.rules().front().tenor());
-    else if (!tmp.dates().empty() && !tmp.dates().front().tenor().empty())
-        rateComputationPeriod = parsePeriod(tmp.dates().front().tenor());
-
-    // set pricers
-    if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
-        if (floatData->isAveraged()) {
-            auto builder = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponLegEngineBuilder>(
-                engineFactory->builder("CapFlooredAverageONIndexedCouponLeg"));
-            QL_REQUIRE(builder, "No builder found for CapFlooredAverageONIndexedCouponLeg");
-            cfCouponPricerAvg = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(
-                builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod));
-            QL_REQUIRE(cfCouponPricerAvg, "internal error, could not cast to CapFlooredAverageONIndexedCouponPricer");
-        } else {
-            auto builder = QuantLib::ext::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(
-                engineFactory->builder("CapFlooredOvernightIndexedCouponLeg"));
-            QL_REQUIRE(builder, "No builder found for CapFlooredOvernightIndexedCouponLeg");
-            cfCouponPricerOn = QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCouponPricer>(
-                builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod));
-            QL_REQUIRE(cfCouponPricerOn, "internal error, could not cast to CapFlooredAverageONIndexedCouponPricer");
-        }
-    }
-
-    // for pf-analyser runs without required fixings recording we can exit early (to improve performance)
-    if (auto r = engineFactory->engineData()->globalParameters().find("RunType");
-        r != engineFactory->engineData()->globalParameters().end() && r->second == "PortfolioAnalyserNoFixings") {
-        return Leg();
-    }
 
     /* For schedules with 1D tenor, this ensures that the index calendar supersedes the calendar provided
      in the trade XML and using "following" rolling conventions to avoid differing calendars and subsequent
@@ -1424,6 +1384,13 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
             paymentDates[i] = paymentDatesCalendar.adjust(paymentDates[i], paymentDatesConvention);
     }
 
+    // try to set the rate computation period based on the schedule tenor
+    Period rateComputationPeriod = 0 * Days;
+    if (!tmp.rules().empty() && !tmp.rules().front().tenor().empty())
+        rateComputationPeriod = parsePeriod(tmp.rules().front().tenor());
+    else if (!tmp.dates().empty() && !tmp.dates().front().tenor().empty())
+        rateComputationPeriod = parsePeriod(tmp.dates().front().tenor());
+
     Calendar paymentCalendar;
     if (data.paymentCalendar().empty())
         paymentCalendar = index->fixingCalendar();
@@ -1440,6 +1407,19 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
     applyAmortization(notionals, data, schedule, false);
 
     if (floatData->isAveraged()) {
+
+        QuantLib::ext::shared_ptr<QuantExt::AverageONIndexedCouponPricer> couponPricer =
+            QuantLib::ext::make_shared<QuantExt::AverageONIndexedCouponPricer>();
+
+        QuantLib::ext::shared_ptr<QuantExt::CapFlooredAverageONIndexedCouponPricer> cfCouponPricer;
+        if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
+            auto builder = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponLegEngineBuilder>(
+                engineFactory->builder("CapFlooredAverageONIndexedCouponLeg"));
+            QL_REQUIRE(builder, "No builder found for CapFlooredAverageONIndexedCouponLeg");
+            cfCouponPricer = QuantLib::ext::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(
+                builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod));
+            QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageONIndexedCouponPricer");
+        }
 
         QuantExt::AverageONLeg leg =
             QuantExt::AverageONLeg(schedule, index)
@@ -1465,13 +1445,26 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                 .withNakedOption(floatData->nakedOption())
                 .includeSpreadInCapFloors(floatData->includeSpread())
                 .withLocalCapFloor(floatData->localCapFloor())
-                .withAverageONIndexedCouponPricer(couponPricerAvg)
-                .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricerAvg)
+                .withAverageONIndexedCouponPricer(couponPricer)
+                .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricer)
                 .withTelescopicValueDates(floatData->telescopicValueDates())
                 .withPaymentDates(paymentDates);
         return leg;
 
     } else {
+
+        QuantLib::ext::shared_ptr<QuantExt::OvernightIndexedCouponPricer> couponPricer =
+            QuantLib::ext::make_shared<QuantExt::OvernightIndexedCouponPricer>();
+
+        QuantLib::ext::shared_ptr<QuantExt::CappedFlooredOvernightIndexedCouponPricer> cfCouponPricer;
+        if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
+            auto builder = QuantLib::ext::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(
+                engineFactory->builder("CapFlooredOvernightIndexedCouponLeg"));
+            QL_REQUIRE(builder, "No builder found for CapFlooredOvernightIndexedCouponLeg");
+            cfCouponPricer = QuantLib::ext::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCouponPricer>(
+                builder->engine(IndexNameTranslator::instance().oreName(index->name()), rateComputationPeriod));
+            QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageONIndexedCouponPricer");
+        }
 
         Leg leg = QuantExt::OvernightLeg(schedule, index)
                       .withNotionals(notionals)
@@ -1496,8 +1489,8 @@ Leg makeOISLeg(const LegData& data, const QuantLib::ext::shared_ptr<OvernightInd
                                                                        schedule, Null<Real>()))
                       .withNakedOption(floatData->nakedOption())
                       .withLocalCapFloor(floatData->localCapFloor())
-                      .withOvernightIndexedCouponPricer(couponPricerOn)
-                      .withCapFlooredOvernightIndexedCouponPricer(cfCouponPricerOn)
+                      .withOvernightIndexedCouponPricer(couponPricer)
+                      .withCapFlooredOvernightIndexedCouponPricer(cfCouponPricer)
                       .withTelescopicValueDates(floatData->telescopicValueDates())
                       .withPaymentDates(paymentDates);
 
