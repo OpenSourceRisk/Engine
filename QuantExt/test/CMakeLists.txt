@@ -31,6 +31,7 @@ crcirpp.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
 crossassetmodelvega.cpp
+crossassetmodelpricing.cpp
 crossassetmodelparametrizations.cpp
 crossccybasismtmresetswap.cpp
 crossccybasismtmresetswaphelper.cpp
