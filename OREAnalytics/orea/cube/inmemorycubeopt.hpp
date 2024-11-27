@@ -27,11 +27,9 @@
 
 #include <ql/errors.hpp>
 
-#include <vector>
-
 #include <boost/make_shared.hpp>
 
-#include <set>
+#include <vector>
 
 namespace ore {
 namespace analytics {
@@ -69,8 +67,6 @@ public:
             for (auto p : v)
                 if (p)
                     delete[] p;
-
-        std::cout << std::endl;
     }
 
     Size numIds() const override { return idIdx_.size(); }
