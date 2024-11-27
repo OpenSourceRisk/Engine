@@ -494,6 +494,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(CapFlooredIborLegEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(LinearTsrDurationAdjustedCmsCouponPricerBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(GaussCopulaBucketingCdoEngineBuilder, false)
+    ORE_REGISTER_ENGINE_BUILDER(GaussCopulaMonteCarloCdoEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BondDiscountingEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(BondMultiStateDiscountingEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CreditLinkedSwapEngineBuilder, false)

@@ -338,6 +338,7 @@
 #include <qle/models/linearannuitymapping.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 #include <qle/models/marketobserver.hpp>
+#include <qle/models/mcdefaultlossmodel.hpp>
 #include <qle/models/modelbuilder.hpp>
 #include <qle/models/modelimpliedpricetermstructure.hpp>
 #include <qle/models/modelimpliedyieldtermstructure.hpp>

@@ -80,10 +80,10 @@ std::vector<Handle<DefaultProbabilityTermStructure>> buildPerformanceOptimizedDe
     return dpts;
 }
 
-QuantLib::ext::shared_ptr<PricingEngine> GaussCopulaBucketingCdoEngineBuilder::engineImpl(
-    const Currency& ccy, bool isIndexCDS, const vector<string>& creditCurves,
-    const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor,
-    const QuantLib::Real fixedRecovery) {
+QuantLib::ext::shared_ptr<PricingEngine>
+CdoEngineBuilder::engineImpl(const Currency& ccy, bool isIndexCDS, const vector<string>& creditCurves,
+                             const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor,
+                             const QuantLib::Real fixedRecovery) {
     if (isIndexCDS) {
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
         std::vector<Handle<DefaultProbabilityTermStructure>> dpts;

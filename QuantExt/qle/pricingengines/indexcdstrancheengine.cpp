@@ -23,6 +23,7 @@
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <boost/timer/timer.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 
 using namespace QuantLib;
 using boost::timer::cpu_timer;
@@ -86,7 +87,9 @@ void IndexCdsTrancheEngine::calculate() const {
     results_.premiumValue = 0.0;
     results_.protectionValue = 0.0;
     Real inceptionTrancheNotional = arguments_.basket->trancheNotional();
-
+    std::vector<double> effectiveNotionals;
+    std::vector<Date> defaultDates;
+    std::vector<CashFlowResults> cashflowResults;
     // Value the premium and protection leg.
     for (Size i = 0; i < arguments_.normalizedLeg.size(); i++) {
 
@@ -106,6 +109,7 @@ void IndexCdsTrancheEngine::calculate() const {
         Date endDate = coupon->accrualEndDate();
         Date defaultDate = startDate + (endDate - startDate) / 2;
 
+        defaultDates.push_back(defaultDate);
         // Expected loss on the tranche up to the end of the current period.
         Real etl = basket->expectedTrancheLoss(endDate, arguments_.recoveryRate);
 
@@ -121,9 +125,33 @@ void IndexCdsTrancheEngine::calculate() const {
         } else {
             effNtl = inceptionTrancheNotional - etl;
         }
-        results_.premiumValue += (coupon->amount() / inceptionTrancheNotional) *
-            effNtl * discountCurve_->discount(paymentDate);
+        effectiveNotionals.push_back(effNtl);
+        results_.premiumValue +=
+            (coupon->amount() / inceptionTrancheNotional) * effNtl * discountCurve_->discount(paymentDate);
 
+        double side = arguments_.side == Protection::Buyer ? 1.0 : -1.0;
+
+        CashFlowResults premiumFlow;
+        premiumFlow.amount = -side * (coupon->amount() / inceptionTrancheNotional) * effNtl;
+        premiumFlow.accrualStartDate = coupon->accrualStartDate();
+        premiumFlow.accrualEndDate = coupon->accrualEndDate();
+        premiumFlow.discountFactor = discountCurve_->discount(paymentDate);
+        premiumFlow.payDate = paymentDate;
+        premiumFlow.legNumber = 0;
+        premiumFlow.presentValue = premiumFlow.amount * premiumFlow.discountFactor;
+        premiumFlow.notional = effNtl;
+        premiumFlow.rate = (coupon->amount() / inceptionTrancheNotional);
+        premiumFlow.type = "PremiumFlow";
+        cashflowResults.push_back(premiumFlow);
+
+        CashFlowResults protectionFlow;
+        protectionFlow.type = "ProtectionFlow";
+        protectionFlow.legNumber = 1;
+        protectionFlow.payDate = paymentDate;
+        protectionFlow.amount = side * (etl - etls.back());
+        protectionFlow.discountFactor = discountCurve_->discount(defaultDate);
+        protectionFlow.presentValue = premiumFlow.amount * premiumFlow.discountFactor;
+        cashflowResults.push_back(protectionFlow);
         // Update the expected tranche loss results vector.
         etls.push_back(etl);
     }
@@ -153,6 +181,11 @@ void IndexCdsTrancheEngine::calculate() const {
     timer.stop();
 
     // Populate the additional results.
+    results_.additionalResults["cashFlowResults"] = cashflowResults;
+    results_.additionalResults["inceptionTrancheNotional"] = inceptionTrancheNotional;
+    results_.additionalResults["effectiveNotionals"] = effectiveNotionals;
+    results_.additionalResults["expectedTrancheLoss"] = etls;
+    results_.additionalResults["defaultDates"] = defaultDates;
     results_.additionalResults["attachment"] = arguments_.basket->attachmentRatio();
     results_.additionalResults["detachment"] = arguments_.basket->detachmentRatio();
     results_.additionalResults["fixedRate"] = arguments_.runningRate;
