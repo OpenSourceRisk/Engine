@@ -1021,7 +1021,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string amcPathDataInput_, amcPathDataOutput_;
-    bool amcIndividualTrainingInput_, amcIndividualTrainingOutput_;
+    bool amcIndividualTrainingInput_ = false, amcIndividualTrainingOutput_ = false;
     std::string exposureBaseCurrency_ = "";
     std::string exposureObservationModel_ = "Disable";
     std::string nettingSetId_ = "";
