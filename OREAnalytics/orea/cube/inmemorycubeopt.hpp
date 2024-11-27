@@ -29,10 +29,14 @@
 
 #include <boost/make_shared.hpp>
 
+#include <map>
 #include <vector>
 
 namespace ore {
 namespace analytics {
+
+using QuantLib::Date;
+using QuantLib::Size;
 
 template <typename T> class InMemoryCubeOpt : public NPVCube {
 private:
@@ -40,14 +44,14 @@ private:
     static constexpr Size N = 5;
 
 public:
-    InMemoryCubeOpt(const Date& asof, const std::set<std::string>& ids, const vector<Date>& dates, Size samples,
+    InMemoryCubeOpt(const Date& asof, const std::set<std::string>& ids, const std::vector<Date>& dates, Size samples,
                     const T& t = T())
         : InMemoryCubeOpt(asof, ids, dates, samples, 1, t) {}
 
-    InMemoryCubeOpt(const Date& asof, const std::set<std::string>& ids, const vector<Date>& dates, Size samples,
+    InMemoryCubeOpt(const Date& asof, const std::set<std::string>& ids, const std::vector<Date>& dates, Size samples,
                     Size depth, const T& t = T())
         : asof_(asof), dates_(dates), samples_(samples), depth_(depth), t0data_(new T[depth_ * samples_]),
-          data_(dates_.size() / N + (dates_.size() % N == 0 ? 0 : 1), vector<T*>(ids.size())) {
+          data_(dates_.size() / N + (dates_.size() % N == 0 ? 0 : 1), std::vector<T*>(ids.size())) {
 
         Size pos = 0;
         for (const auto& id : ids) {
@@ -119,7 +123,7 @@ private:
     }
 
     QuantLib::Date asof_;
-    vector<QuantLib::Date> dates_;
+    std::vector<QuantLib::Date> dates_;
     Size samples_;
     Size depth_;
 
