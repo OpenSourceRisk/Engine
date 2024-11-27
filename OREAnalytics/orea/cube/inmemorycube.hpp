@@ -32,6 +32,8 @@
 #include <orea/cube/npvcube.hpp>
 #include <set>
 
+#include <orea/cube/inmemorycubeopt.hpp>
+
 namespace ore {
 namespace analytics {
 using QuantLib::Date;
@@ -151,15 +153,15 @@ public:
 };
 
 //! InMemoryCube of depth 1 with single precision floating point numbers.
-using SinglePrecisionInMemoryCube = InMemoryCube1<float>;
+// using SinglePrecisionInMemoryCube = InMemoryCube1<float>;
 
 //! InMemoryCube of depth 1 with double precision floating point numbers.
-using DoublePrecisionInMemoryCube = InMemoryCube1<double>;
+// using DoublePrecisionInMemoryCube = InMemoryCube1<double>;
 
 //! InMemoryCube of depth N with single precision floating point numbers.
-using SinglePrecisionInMemoryCubeN = InMemoryCubeN<float>;
+// using SinglePrecisionInMemoryCubeN = InMemoryCubeN<float>;
 
 //! InMemoryCube of depth N with double precision floating point numbers.
-using DoublePrecisionInMemoryCubeN = InMemoryCubeN<double>;
+// using DoublePrecisionInMemoryCubeN = InMemoryCubeN<double>;
 } // namespace analytics
 } // namespace ore
