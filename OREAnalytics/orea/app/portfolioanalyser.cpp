@@ -27,12 +27,12 @@ using std::vector;
 namespace ore {
 namespace analytics {
 
-PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>& p,
-                                     const QuantLib::ext::shared_ptr<EngineData>& ed, const string& baseCcy,
+PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>& p, const QuantLib::ext::shared_ptr<EngineData>& ed,
+                                     const string& baseCcy,
                                      const QuantLib::ext::shared_ptr<CurveConfigurations>& curveConfigs,
                                      const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                      const IborFallbackConfig& iborFallbackConfig,
-                                     const bool recordSecuritySpecificCreditCurves, const bool recordRequiredFixings)
+                                     bool recordSecuritySpecificCreditCurves)
     : portfolio_(p) {
 
     QL_REQUIRE(portfolio_ != nullptr, "PortfolioAnalyser: portfolio is null");
@@ -48,7 +48,7 @@ PortfolioAnalyser::PortfolioAnalyser(const QuantLib::ext::shared_ptr<Portfolio>&
     // attempt to avoid EngineBuilders doing calibrations on DependencyMarket which can lead to failures.
     QuantLib::ext::shared_ptr<EngineData> edCopy = QuantLib::ext::make_shared<EngineData>(*ed);
     edCopy->globalParameters()["Calibrate"] = "false";
-    edCopy->globalParameters()["RunType"] = recordRequiredFixings ? "PortfolioAnalyser" : "PortfolioAnalyserNoFixings";
+    edCopy->globalParameters()["RunType"] = "PortfolioAnalyser";
     QuantLib::ext::shared_ptr<EngineFactory> factory = QuantLib::ext::make_shared<EngineFactory>(
         edCopy, market_, std::map<MarketContext, string>(), referenceData, iborFallbackConfig);
 
