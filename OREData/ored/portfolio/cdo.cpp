@@ -325,15 +325,23 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     Real adjDetachPoint = (currEquityNtl + currTrancheNtl) / currTotalNtl;
     notional_ = currTrancheNtl;
 
-    DLOG("Current tranche notional: " << currTrancheNtl);
-    DLOG("Current equity notional:  " << currEquityNtl);
-    DLOG("Current senior notional:  " << currSeniorNtl);
-    DLOG("Current attachment point: " << adjAttachPoint);
-    DLOG("Current detachment point: " << adjDetachPoint);
-    DLOG("Current total notional:   " << currTotalNtl);
+    DLOG("Original tranche notional: " << std::fixed << std::setprecision(4) << origTrancheNtl);
+    DLOG("Original equity notional:  " << std::fixed << std::setprecision(4) << origEquityNtl);
+    DLOG("Original senior notional:  " << std::fixed << std::setprecision(4) << origSeniorNtl);
+    DLOG("Original attachment point: " << std::fixed << std::setprecision(4) << attachmentPoint_);
+    DLOG("Original detachment point: " << std::fixed << std::setprecision(4) << detachmentPoint_);
+    DLOG("Original total notional:   " << std::fixed << std::setprecision(4) << origTotalNtl);
 
-    
-    const auto& market = engineFactory->market();
+    DLOG("Lost notional : " << std::fixed << std::setprecision(4) << lostNotional);
+    DLOG("recovered notional : " << std::fixed << std::setprecision(4) << recoveredNotional);
+    DLOG("Current tranche notional: " << std::fixed << std::setprecision(4) << currTrancheNtl);
+    DLOG("Current equity notional:  " << std::fixed << std::setprecision(2) << currEquityNtl);
+    DLOG("Current senior notional:  " << std::fixed << std::setprecision(2) << currSeniorNtl);
+    DLOG("Current attachment point: " << std::fixed << std::setprecision(2) << adjAttachPoint);
+    DLOG("Current detachment point: " << std::fixed << std::setprecision(2) << adjDetachPoint);
+    DLOG("Current total notional:   " << std::fixed << std::setprecision(2) << currTotalNtl);
+
+        const auto& market = engineFactory->market();
     auto cdoEngineBuilder = QuantLib::ext::dynamic_pointer_cast<CdoEngineBuilder>(engineFactory->builder("SyntheticCDO"));
     QL_REQUIRE(cdoEngineBuilder, "Trade " << id() << " needs a valid CdoEngineBuilder.");
     const string& config = cdoEngineBuilder->configuration(MarketContext::pricing);
@@ -557,9 +565,13 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         // Set up the basket loss model.
         auto basket =
             QuantLib::ext::make_shared<QuantExt::Basket>(schedule[0], creditCurves, basketNotionals, pool, 0.0, adjDetachPoint);
+            
         basket->setLossModel(
             cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjDetachPoint,
                                                          maturity_, homogeneous));
+
+        DLOG("Basket Notional (" << adjDetachPoint << ")" << basket->basketNotional());
+        DLOG("Tranche Notional (" << adjDetachPoint << ")" << basket->trancheNotional());
 
         auto cdoDetach =
             QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(basket, side, schedule, 0.0, runningRate, dayCounter, bdc,
