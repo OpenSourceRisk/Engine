@@ -37,6 +37,7 @@
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 #include <qle/pricingengines/mcmultilegbaseengine.hpp>
 #include <qle/pricingengines/nullamccalculator.hpp>
+#include <qle/instruments/multiccycompositeinstrument.hpp>
 
 #include <ql/instruments/compositeinstrument.hpp>
 
@@ -53,6 +54,18 @@ namespace ore {
 namespace analytics {
 
 namespace {
+
+boost::any getAdditionalResult(const std::map<std::string, boost::any>& addResults, const std::string& name,
+                               const Size index) {
+    /* CompositeInstrument convention to store component results  */
+    if (auto g = addResults.find(std::to_string(index) + "_" + name); g != addResults.end())
+        return g->second;
+    /* MultiCcyCompositeInstrument convention to store component results  */
+    std::string altName = name == "multiplier" ? "__multiplier" : name;
+    if (auto g = addResults.find(altName + "_" + std::to_string(index - 1)); g != addResults.end())
+        return g->second;
+    return boost::any();
+}
 
 Real fx(const std::vector<std::vector<std::vector<Real>>>& fxBuffer, const Size ccyIndex, const Size timeIndex,
         const Size sample) {
@@ -308,7 +321,8 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                    const QuantLib::ext::shared_ptr<ore::data::Market>& market,
                    const QuantLib::ext::shared_ptr<ore::analytics::ScenarioGeneratorData>& sgd,
                    QuantLib::ext::shared_ptr<NPVCube> outputCube,
-                   QuantLib::ext::shared_ptr<ProgressIndicator> progressIndicator, const PathData& pathData) {
+                   QuantLib::ext::shared_ptr<ProgressIndicator> progressIndicator, const PathData& pathData,
+                   bool amcIndividualTrainingInput, bool amcIndividualTrainingOutput) {
 
     LOG("Run amc core engine...");
 
@@ -393,6 +407,7 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
         if (trade.second->tradeType() == "Failed") {
             extractAmcCalculator(trade, QuantLib::ext::make_shared<NullAmcCalculator>(), 1.0, false, 0);
         } else {
+            string filename = "amcTraining_" + trade.first;
             try {
                 auto inst = trade.second->instrument()->qlInstrument(true);
                 QL_REQUIRE(inst != nullptr,
@@ -400,35 +415,98 @@ void runCoreEngine(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfo
                 Real multiplier = trade.second->instrument()->multiplier() * trade.second->instrument()->multiplier2();
 
                 // handle composite trades
-                if (auto cInst = QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(inst)) {
-                    auto addResults = cInst->additionalResults();
+                if (QuantLib::ext::dynamic_pointer_cast<CompositeInstrument>(inst) != nullptr ||
+                    QuantLib::ext::dynamic_pointer_cast<MultiCcyCompositeInstrument>(inst) != nullptr) {
+                    auto addResults = inst->additionalResults();
                     std::vector<Real> multipliers;
                     while (true) {
-                        std::stringstream ss;
-                        ss << multipliers.size() + 1 << "_multiplier";
-                        if (addResults.find(ss.str()) == addResults.end())
+                        auto v = getAdditionalResult(addResults, "multiplier", multipliers.size() + 1);
+                        if (v.empty())
                             break;
-                        multipliers.push_back(inst->result<Real>(ss.str()));
+                        multipliers.push_back(boost::any_cast<Real>(v));
                     }
                     std::vector<QuantLib::ext::shared_ptr<AmcCalculator>> amcCalcs;
-                    for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
-                        std::stringstream ss;
-                        ss << cmpIdx + 1 << "_amcCalculator";
-                        if (addResults.find(ss.str()) != addResults.end()) {
-                            amcCalcs.push_back(inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>(ss.str()));
+                    if (amcIndividualTrainingInput) {
+                        try {
+                            LOG("Deserialising AMC calculator from file for composite trade " << trade.first);
+                            for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
+                                string component_filename = filename + "_" + to_string(cmpIdx);
+                                std::ifstream is(component_filename, std::ios::binary);
+                                boost::archive::binary_iarchive ia(is, boost::archive::no_header);
+                                auto tmp =
+                                    QuantLib::ext::make_shared<McMultiLegBaseEngine::MultiLegBaseAmcCalculator>();
+                                ia >> tmp;
+                                amcCalcs.push_back(tmp);
+                            }
+                            QL_REQUIRE(amcCalcs.size() == multipliers.size(),
+                                       "Did not find amc calculators for all components of composite trade.");
+                            for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
+                                extractAmcCalculator(trade, amcCalcs[cmpIdx], multiplier * multipliers[cmpIdx],
+                                                     cmpIdx == 0);
+                            }
+                            continue;
+                        } catch (const std::exception& e) {
+                            StructuredTradeErrorMessage(trade.second, "Error extracting AMC Calculator from file", e.what())
+                                .log();
+                            LOG("Calculating AMC Calculator manually.");
                         }
                     }
+                    for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
+                        auto v = getAdditionalResult(addResults, "amcCalculator", cmpIdx + 1);
+                        if (!v.empty()) {
+                            amcCalcs.push_back(boost::any_cast<QuantLib::ext::shared_ptr<AmcCalculator>>(v));
+                            if (amcIndividualTrainingOutput) {
+                                LOG("Serialising AMC calculator for trade " << cmpIdx+1 << " of composite trade " << trade.first);
+                                string component_filename = filename + "_" + to_string(cmpIdx);
+                                std::ofstream os(component_filename, std::ios::binary);
+                                boost::archive::binary_oarchive oa(os, boost::archive::no_header);
+                                auto tmp = boost::any_cast<QuantLib::ext::shared_ptr<AmcCalculator>>(v);
+                                auto amcCalc = QuantLib::ext::dynamic_pointer_cast<
+                                    McMultiLegBaseEngine::MultiLegBaseAmcCalculator>(tmp);
+                                oa << amcCalc;
+                                os.close();
+                            }
+                        }
+                    }
+                
                     QL_REQUIRE(amcCalcs.size() == multipliers.size(),
                                "Did not find amc calculators for all components of composite trade.");
                     for (Size cmpIdx = 0; cmpIdx < multipliers.size(); ++cmpIdx) {
-                        extractAmcCalculator(trade, amcCalc, multiplier * multipliers[cmpIdx], cmpIdx == 0);
+                        extractAmcCalculator(trade, amcCalcs[cmpIdx], multiplier * multipliers[cmpIdx], cmpIdx == 0);
                     }
                     continue;
                 }
 
                 // handle non-composite trades
-                amcCalc = inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>("amcCalculator");
+                if (amcIndividualTrainingInput) {
+                    try {
+                        LOG("Deserialising AMC calculator from file for trade " << trade.first);
+                        std::ifstream is(filename, std::ios::binary);
+                        boost::archive::binary_iarchive ia(is, boost::archive::no_header);
+                        auto tmp = QuantLib::ext::dynamic_pointer_cast<McMultiLegBaseEngine::MultiLegBaseAmcCalculator>(amcCalc);
+                    
+                        ia >> tmp;
+                        amcCalc = tmp;
+                        is.close();
+                    } catch (const std::exception& e) {
+                        StructuredTradeErrorMessage(trade.second, "Error extracting AMC calculator from file", e.what()).log();
+                        LOG("Calculating AMC calculator manually");
+                        amcCalc = inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>("amcCalculator");
+                    }
+                } else {
+                    amcCalc = inst->result<QuantLib::ext::shared_ptr<AmcCalculator>>("amcCalculator");
+                }
+
                 extractAmcCalculator(trade, amcCalc, multiplier, true);
+                if (amcIndividualTrainingOutput) {
+                    LOG("Serialising AMC calculator for trade " << trade.first);
+                    std::ofstream os(filename, std::ios::binary);
+                    boost::archive::binary_oarchive oa(os, boost::archive::no_header);
+
+                    auto tmp = QuantLib::ext::dynamic_pointer_cast<McMultiLegBaseEngine::MultiLegBaseAmcCalculator>(amcCalc);
+                    oa << tmp;
+                    os.close();
+                }
 
             } catch (const std::exception& e) {
                 StructuredTradeErrorMessage(trade.second, "Error building trade for AMC simulation", e.what()).log();
@@ -653,6 +731,7 @@ AMCValuationEngine::AMCValuationEngine(
     const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
     const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
     const std::string& amcPathDataInput, const std::string& amcPathDataOutput,
+    bool amcIndividualTrainingInput, bool amcIndividualTrainingOutput,
     const QuantLib::ext::shared_ptr<ore::data::ReferenceDataManager>& referenceData,
     const ore::data::IborFallbackConfig& iborFallbackConfig, const bool handlePseudoCurrenciesTodaysMarket,
     const std::function<QuantLib::ext::shared_ptr<ore::analytics::NPVCube>(
@@ -662,10 +741,11 @@ AMCValuationEngine::AMCValuationEngine(
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketParams)
     : useMultithreading_(true), aggDataIndices_(aggDataIndices), aggDataCurrencies_(aggDataCurrencies),
       aggDataNumberCreditStates_(aggDataNumberCreditStates), scenarioGeneratorData_(scenarioGeneratorData),
-      amcPathDataInput_(amcPathDataInput), amcPathDataOutput_(amcPathDataOutput), nThreads_(nThreads), today_(today),
-      nSamples_(nSamples), loader_(loader), crossAssetModelData_(crossAssetModelData), engineData_(engineData),
-      curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
-      configurationLgmCalibration_(configurationLgmCalibration),
+      amcPathDataInput_(amcPathDataInput), amcPathDataOutput_(amcPathDataOutput),
+      amcIndividualTrainingInput_(amcIndividualTrainingInput), amcIndividualTrainingOutput_(amcIndividualTrainingOutput), 
+      nThreads_(nThreads), today_(today), nSamples_(nSamples), loader_(loader), 
+      crossAssetModelData_(crossAssetModelData), engineData_(engineData), curveConfigs_(curveConfigs), 
+      todaysMarketParams_(todaysMarketParams), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
       configurationCrCalibration_(configurationCrCalibration), configurationFinalModel_(configurationFinalModel),
@@ -692,10 +772,13 @@ AMCValuationEngine::AMCValuationEngine(const QuantLib::ext::shared_ptr<QuantExt:
                                        const std::vector<string>& aggDataIndices,
                                        const std::vector<string>& aggDataCurrencies,
                                        const Size aggDataNumberCreditStates, const std::string& amcPathDataInput,
-                                       const std::string& amcPathDataOutput)
+                                       const std::string& amcPathDataOutput, bool amcIndividualTrainingInput, 
+                                       bool amcIndividualTrainingOutput)
     : useMultithreading_(false), aggDataIndices_(aggDataIndices), aggDataCurrencies_(aggDataCurrencies),
       aggDataNumberCreditStates_(aggDataNumberCreditStates), scenarioGeneratorData_(scenarioGeneratorData),
-      amcPathDataInput_(amcPathDataInput), amcPathDataOutput_(amcPathDataOutput), model_(model), market_(market) {
+      amcPathDataInput_(amcPathDataInput), amcPathDataOutput_(amcPathDataOutput), 
+      amcIndividualTrainingInput_(amcIndividualTrainingInput), amcIndividualTrainingOutput_(amcIndividualTrainingOutput),
+      model_(model), market_(market) {
 
     QL_REQUIRE((aggDataIndices.empty() && aggDataCurrencies.empty()) || market != nullptr,
                "AMCValuationEngine: market is required for asd generation");
@@ -740,7 +823,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<Portfolio>& p
         runCoreEngine(
             portfolio, model_, market_, scenarioGeneratorData_, outputCube,
             QuantLib::ext::make_shared<ore::analytics::MultiThreadedProgressIndicator>(this->progressIndicators()),
-            pathData);
+            pathData, amcIndividualTrainingInput_, amcIndividualTrainingOutput_);
     } catch (const std::exception& e) {
         QL_FAIL("Error during amc val engine run: " << e.what());
     }
@@ -919,7 +1002,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
                 // run core engine code (asd is written for thread id 0 only)
 
                 runCoreEngine(portfolio, model, market, scenarioGeneratorData_, miniCubes_[id], progressIndicator,
-                              pathData);
+                              pathData, amcIndividualTrainingInput_, amcIndividualTrainingOutput_);
 
                 // return code 0 = ok
 

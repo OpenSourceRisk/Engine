@@ -28,6 +28,8 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
+#include <set>
+
 namespace ore {
 namespace analytics {
 using ore::data::XMLNode;
@@ -39,6 +41,7 @@ using std::map;
 using std::pair;
 using std::string;
 using std::vector;
+using std::set;
 
 //! Description of sensitivity shift scenarios
 /*! \ingroup scenario
@@ -193,6 +196,8 @@ public:
 
     //! Give back the shift data for the given risk factor type, \p keyType, with the given \p name
     const ShiftData& shiftData(const ore::analytics::RiskFactorKey::KeyType& keyType, const std::string& name) const;
+
+    const set<ore::analytics::RiskFactorKey::KeyType>& parConversionExcludes() const { return parConversionExcludes_; }
     //@}
 
     //! \name Setters
@@ -229,6 +234,8 @@ public:
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& commodityVolShiftData() { return commodityVolShiftData_; }
     map<string, QuantLib::ext::shared_ptr<VolShiftData>>& correlationShiftData() { return correlationShiftData_; }
     map<string, QuantLib::ext::shared_ptr<SpotShiftData>>& securityShiftData() { return securityShiftData_; }
+
+    set<ore::analytics::RiskFactorKey::KeyType>& parConversionExcludes() { return parConversionExcludes_; }
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
     bool& computeGamma() { return computeGamma_; }
@@ -352,6 +359,7 @@ protected:
     bool computeGamma_;
     bool useSpreadedTermStructures_;
     bool parConversion_;
+    set<ore::analytics::RiskFactorKey::KeyType> parConversionExcludes_;
 
 private:
     void parDataFromXML(XMLNode* child, CurveShiftParData& data);

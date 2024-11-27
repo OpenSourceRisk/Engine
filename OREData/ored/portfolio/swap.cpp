@@ -45,13 +45,6 @@ namespace data {
 void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Swap::build() called for trade " << id());
 
-    // for pf-analyser runs without required fixing recording we can optimize the build (to improve performance)
-    bool isPfAnalyserRun = false;
-    if (auto r = engineFactory->engineData()->globalParameters().find("RunType");
-        r != engineFactory->engineData()->globalParameters().end() && r->second == "PortfolioAnalyserNoFixings") {
-        isPfAnalyserRun = true;
-    }
-
     setIsdaTaxonomyFields();
     
     QL_REQUIRE(legData_.size() >= 1, "Swap must have at least 1 leg");
@@ -147,7 +140,7 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             break;
     }
 
-    if (notionalTakenFromLeg_ == legData_.size() || isPfAnalyserRun) {
+    if (notionalTakenFromLeg_ == legData_.size()) {
         ALOG("no suitable leg found to set notional, set to null and notionalCurrency to empty string");
         notional_ = Null<Real>();
         notionalCurrency_ = "";
@@ -201,7 +194,6 @@ void Swap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) 
             legPayers_.push_back(legPayers_[i]);
             currencies.push_back(currencies[i]);
         }
-
     } // for legs
 
     if (isXCCY_) {

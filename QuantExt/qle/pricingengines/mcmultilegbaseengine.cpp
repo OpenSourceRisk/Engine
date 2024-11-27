@@ -44,6 +44,10 @@
 #include <ql/indexes/swapindex.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/array.hpp>
+
 namespace QuantExt {
 
 McMultiLegBaseEngine::McMultiLegBaseEngine(
@@ -1720,6 +1724,29 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
     return result;
 }
 
+template <class Archive> void McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(Archive& ar, const unsigned int version) {
+    ar.template register_type<McMultiLegBaseEngine::MultiLegBaseAmcCalculator>();
+    ar& boost::serialization::base_object<AmcCalculator>(*this);
+
+    ar& externalModelIndices_;
+    ar& settlement_;
+    ar& cashSettlementTimes_;
+    ar& exerciseXvaTimes_;
+    ar& exerciseTimes_;
+    ar& xvaTimes_;
+
+    ar& regModelUndDirty_;
+    ar& regModelUndExInto_;
+    ar& regModelContinuationValue_;
+    ar& regModelOption_;
+    ar& resultValue_;
+    ar& initialState_;
+    ar& baseCurrency_;
+    ar& reevaluateExerciseInStickyRun_;
+    ar& includeTodaysCashflows_;
+    ar& includeReferenceDateEvents_;
+}
+
 McMultiLegBaseEngine::RegressionModel::RegressionModel(const Real observationTime,
                                                        const std::vector<CashflowInfo>& cashflowInfo,
                                                        const std::function<bool(std::size_t)>& cashflowRelevant,
@@ -1799,6 +1826,10 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
     if (!regressor.empty()) {
 
         // get the basis functions
+        basisDim_ = regressor.size();
+        basisOrder_ = polynomOrder;
+        basisType_ = polynomType;
+        basisSystemSizeBound_ = Null<Size>();
 
         basisFns_ = multiPathBasisSystem(regressor.size(), polynomOrder, polynomType, Null<Size>());
 
@@ -1918,4 +1949,37 @@ McMultiLegBaseEngine::RegressionModel::apply(const Array& initialState,
     return conditionalExpectation(regressor, basisFns_, regressionCoeffs_);
 }
 
+template <class Archive> void McMultiLegBaseEngine::RegressionModel::serialize(Archive& ar, const unsigned int version) {
+    ar& observationTime_;
+    ar& regressionVarianceCutoff_;
+    ar& isTrained_;
+    ar& regressorTimesModelIndices_;
+    ar& coordinateTransform_;
+    ar& regressionCoeffs_;
+
+    // serialise the function by serialising the paramters needed
+    ar& basisDim_;
+    ar& basisOrder_;
+    ar& basisType_;
+    ar& basisSystemSizeBound_;
+
+    // if deserialising, recreate the basisFns_ by passing the individual parameters to the function
+    if (Archive::is_loading::value) {
+        if (basisDim_ > 0)
+            basisFns_ = multiPathBasisSystem(basisDim_, basisOrder_, basisType_, basisSystemSizeBound_);
+    }
+}
+
+template void QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(boost::archive::binary_iarchive& ar,
+                                                                         const unsigned int version);
+template void QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator::serialize(boost::archive::binary_oarchive& ar,
+                                                                         const unsigned int version);
+template void QuantExt::McMultiLegBaseEngine::RegressionModel::serialize(boost::archive::binary_iarchive& ar,
+                                                                         const unsigned int version);
+template void QuantExt::McMultiLegBaseEngine::RegressionModel::serialize(boost::archive::binary_oarchive& ar,
+                                                                         const unsigned int version);
+
 } // namespace QuantExt
+
+BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::McMultiLegBaseEngine::MultiLegBaseAmcCalculator);
+BOOST_CLASS_EXPORT_IMPLEMENT(QuantExt::McMultiLegBaseEngine::RegressionModel);

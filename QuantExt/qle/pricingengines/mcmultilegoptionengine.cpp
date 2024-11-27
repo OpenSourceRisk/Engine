@@ -57,7 +57,8 @@ McMultiLegOptionEngine::McMultiLegOptionEngine(
                              calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                              calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
                              {discountCurve}, simulationDates, stickyCloseOutDates, externalModelIndices,
-                             minimalObsDate, regressorModel, regressionVarianceCutoff) {}
+                             minimalObsDate, regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
+                             reevaluateExerciseInStickyRun) {}
 
 void McMultiLegOptionEngine::calculate() const {
 
