@@ -30,7 +30,7 @@
 			</ParConversion>
 		</DiscountCurve>
 	</DiscountCurves>
-	<!--
+	<YieldCurves/>
 	<IndexCurves>
 	  <IndexCurve index="EUR-EURIBOR-6M">
 			<ShiftType>Absolute</ShiftType>
@@ -66,9 +66,6 @@
 			</ParConversion>
 		    </IndexCurve>
 		    </IndexCurves>
-	-->
-	<YieldCurves/>
-	<!--
 	    <FxSpots>
 		<FxSpot ccypair="USDEUR">
 			<ShiftType>Relative</ShiftType>
@@ -119,7 +116,6 @@
 			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
 		</FxVolatility>
 	</FxVolatilities>
-	-->
 	<CapFloorVolatilities>
 	</CapFloorVolatilities>
 	<ComputeGamma>false</ComputeGamma>

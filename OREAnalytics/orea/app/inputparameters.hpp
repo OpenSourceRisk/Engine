@@ -26,6 +26,8 @@
 #include <orea/aggregation/creditsimulationparameters.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
+#include <orea/engine/sacvasensitivityrecord.hpp>
+#include <orea/engine/cvasensitivityrecord.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/engine/xvaenginecg.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
@@ -36,7 +38,6 @@
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
-#include <orea/engine/sensitivitystream.hpp>
 #include <orea/scenario/historicalscenariogenerator.hpp>
 #include <orea/simm/crifloader.hpp>
 #include <orea/simm/simmcalibration.hpp>
@@ -53,6 +54,7 @@
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/portfolio/counterpartymanager.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/configuration/currencyconfig.hpp>
 #include <ored/utilities/csvfilereader.hpp>
@@ -265,8 +267,8 @@ public:
     void setCollateralBalances(const std::string& xml); 
     void setCollateralBalancesFromFile(const std::string& fileName);
     void setReportBufferSize(Size s) { reportBufferSize_ = s; }
-    // TODO: load from XML
-    // void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManager(const std::string& xml);
+    void setCounterpartyManagerFromFile(const std::string& fileName);
 
     // Setters for xva
     void setXvaBaseCurrency(const std::string& s) { xvaBaseCurrency_ = s; }
@@ -376,6 +378,12 @@ public:
     void setXvaSensiOutputJacobi(const bool outputJacobi) { xvaSensiOutputJacobi_ = outputJacobi; };
     void setXvaSensiThreshold(const Real threshold) { xvaSensiThreshold_ = threshold; }
 
+    // Setters for SA-CVA
+    // input file matches the required format for SA-CVA calcs, aggregated per CvaRiskFactorKey
+    void setSaCvaNetSensitivitiesFromFile(const std::string& fileName);
+    // input file is the CVA par sensitivity from ORE's XVA Sensitivity Analytic
+    void setCvaSensitivitiesFromFile(const std::string& fileName);
+  
     // Setters for XVA Explain
     void setXvaExplainSimMarketParams(const std::string& xml);
     void setXvaExplainSimMarketParamsFromFile(const std::string& f);
@@ -658,7 +666,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& amcPricingEngine() const { return amcPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& amcCgPricingEngine() const { return amcCgPricingEngine_; }
     const QuantLib::ext::shared_ptr<ore::data::NettingSetManager>& nettingSetManager() const { return nettingSetManager_; }
-    // const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
+    const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager() const { return counterpartyManager_; }
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
     QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
@@ -846,6 +854,12 @@ public:
     bool xvaSensiParSensi() const { return xvaSensiParSensi_; }
     bool xvaSensiOutputJacobi() const { return xvaSensiOutputJacobi_; };
     Real xvaSensiThreshold() const { return xvaSensiThreshold_;}
+
+    /*************************************
+     * SA-CVA 
+     *************************************/
+    const QuantLib::ext::shared_ptr<SaCvaNetSensitivities>& saCvaNetSensitivities() const { return saCvaNetSensitivities_; }
+    const vector<CvaSensitivityRecord>& cvaSensitivities() const { return cvaSensitivities_; }
 
     /****************************
      * Getters for zero to par shift
@@ -1195,6 +1209,14 @@ protected:
     bool xvaSensiParSensi_ = false;
     bool xvaSensiOutputJacobi_ = false;
     QuantLib::Real xvaSensiThreshold_ = 1e-6;
+
+    /*****************
+     * SA-CVA 
+     *****************/
+    QuantLib::ext::shared_ptr<SaCvaNetSensitivities> saCvaNetSensitivities_; 
+    vector<CvaSensitivityRecord> cvaSensitivities_;
+    QuantLib::ext::shared_ptr<ore::data::CounterpartyManager> counterpartyManager_;
+
     /*****************
      * XVA Explain analytic
      *****************/

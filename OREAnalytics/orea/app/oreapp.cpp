@@ -803,6 +803,14 @@ void OREAppInputParameters::loadParameters() {
         WLOG("Portfolio data not provided");
     }
 
+    if (params_->has("setup", "counterpartyFile") && params_->get("setup", "counterpartyFile") != "") {
+        filesystem::path counterpartyFile = inputPath / params_->get("setup", "counterpartyFile");
+        LOG("Loading counterparty manager from file: " << counterpartyFile);
+        setCounterpartyManagerFromFile(counterpartyFile.generic_string());
+    } else {
+        WLOG("CounterpartyManager not found");
+    }
+
     tmp = params_->get("setup", "reportBufferSize", false);
     if (tmp != "")
         setReportBufferSize(parseInteger(tmp));
@@ -1139,7 +1147,7 @@ void OREAppInputParameters::loadParameters() {
 
     /****************
      * ZERO TO PAR SHIFT CONVERSION
-     ****************/
+     *****************/
 
     tmp = params_->get("zeroToParShift", "active", false);
     if (!tmp.empty() && parseBool(tmp)) {
@@ -2174,7 +2182,36 @@ void OREAppInputParameters::loadParameters() {
             setMporCalendar(tmp);
     }
 
-    /*************
+     /*********************
+      * CVA Capital: SA-CVA
+      *********************/
+
+     tmp = params_->get("sacva", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("SA_CVA");
+
+     tmp = params_->get("sacva", "saCvaNetSensitivitiesFile", false);
+     if (!tmp.empty()) {
+         string file = (inputPath / tmp).generic_string();
+         LOG("Loading aggregated SA-CVA sensitivity input from file" << file);
+	 setSaCvaNetSensitivitiesFromFile(file);
+     } else {
+         tmp = params_->get("sacva", "cvaSensitivitiesFile", false);
+         if (!tmp.empty()) {
+             string file = (inputPath / tmp).generic_string();
+             LOG("Loading granular cva sensitivity input from file" << file);
+             setCvaSensitivitiesFromFile(file);
+         } else {
+             // Ensure that we have the XVA Sensitivity analytic configured, see above
+             QL_REQUIRE(
+                 analytics().find("XVA_SENSITIVITY") != analytics().end(),
+                 "SA-CVA needs the XVA Sensitivity analytic configured unless sensitivities are provided as an input");
+             // XVA Sensitivity will be run as a sub analytic of SA-CVA so that we can drop it here
+             removeAnalytic("XVA_SENSITIVITY");
+         }
+     }
+
+     /*************
      * cashflow npv and dynamic backtesting
      *************/
 

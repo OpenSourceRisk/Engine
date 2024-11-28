@@ -14,6 +14,7 @@
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="counterpartyFile">counterparty.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
     <Parameter name="nThreads">2</Parameter>
   </Setup>
@@ -99,6 +100,10 @@
       <Parameter name="outputJacobi">Y</Parameter>
       <Parameter name="jacobiOutputFile">xva_sensitivity_jacobi.csv</Parameter>
       <Parameter name="jacobiInverseOutputFile">xva_sensitivity_jacobi_inverse.csv</Parameter>
+    </Analytic>
+    <Analytic type="sacva">
+      <Parameter name="active">N</Parameter>
+      <Parameter name="cvaSensitivitiesFile">../Output/xva_par_sensitivity_cva.csv</Parameter>
     </Analytic>
   </Analytics>
 </ORE>
