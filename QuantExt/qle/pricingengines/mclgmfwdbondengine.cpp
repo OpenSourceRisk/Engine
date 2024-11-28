@@ -127,8 +127,8 @@ McLgmFwdBondEngine::overwritePathValueUndDirty(double t, const RandomVariable& p
         auto numeraire_bonddiscount = lgmVectorised_[0].numeraire(
             t, paths[ind][model_->pIdx(CrossAssetModel::AssetType::IR, 0)], discountCurves_[0]);
 
-        auto numeraire_currency = lgmVectorised_[0].numeraire(
-            t, paths[ind][model_->pIdx(CrossAssetModel::AssetType::IR, 0)], numeraireCcyCurve_);
+        auto numeraire_contract = lgmVectorised_[0].numeraire(
+            t, paths[ind][model_->pIdx(CrossAssetModel::AssetType::IR, 0)], contractCurve_);
 
         // compounding with income curve from t to fwd_maturity T
         double compoundingTime = time(incomeCurveDate_);
@@ -152,7 +152,7 @@ McLgmFwdBondEngine::overwritePathValueUndDirty(double t, const RandomVariable& p
             forwardContractForwardValueRV =
                 strikePayment - (forwardBondValue - RandomVariable(samples, accruedAmount_));
 
-        return forwardContractForwardValueRV / numeraire_currency;
+        return forwardContractForwardValueRV / numeraire_contract;
 
     } else
         return pathValueUndDirty;

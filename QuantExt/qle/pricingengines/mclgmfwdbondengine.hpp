@@ -41,7 +41,6 @@ public:
                        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                        const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
                        const Handle<YieldTermStructure>& contractCurve = Handle<YieldTermStructure>(),
-                       const Handle<YieldTermStructure>& numeraireCcyCurve = Handle<YieldTermStructure>(),
                        const Handle<Quote>& conversionFactor = Handle<Quote>(),
                        const std::vector<Date> simulationDates = std::vector<Date>(),
                        const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
@@ -62,7 +61,6 @@ public:
 
         incomeCurve_ = incomeCurve;
         contractCurve_ = contractCurve;
-        numeraireCcyCurve_ = numeraireCcyCurve;
         conversionFactor_ = conversionFactor;
 
         registerWith(model);
@@ -70,7 +68,6 @@ public:
             registerWith(h);
         registerWith(incomeCurve_);
         registerWith(contractCurve_);
-        registerWith(numeraireCcyCurve_);
         registerWith(conversionFactor_);
     }
 
@@ -107,7 +104,6 @@ public:
 private:
     Handle<YieldTermStructure> incomeCurve_;
     Handle<YieldTermStructure> contractCurve_;
-    Handle<YieldTermStructure> numeraireCcyCurve_;
     Handle<Quote> conversionFactor_;
 
     mutable Real accruedAmount_;

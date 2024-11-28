@@ -66,7 +66,6 @@ protected:
             Handle<YieldTermStructure> spreadedReferenceCurve_;
             Handle<YieldTermStructure> discountCurve_;
             Handle<YieldTermStructure> incomeCurve_;
-            Handle<YieldTermStructure> numeraireCcyCurve_;
             Handle<Quote> conversionFactor_;
             // not used in AMC yet
             Handle<DefaultProbabilityTermStructure> dpts_;
@@ -124,7 +123,6 @@ private:
                                                            const std::vector<Size>& externalModelIndices,
                                                            const Handle<YieldTermStructure>& incomeCurve,
                                                            const Handle<YieldTermStructure>& discountContractCurve,
-                                                           const Handle<YieldTermStructure>& numeraireCcyCurve,
                                                            const Handle<Quote>& conversionFactor);
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
