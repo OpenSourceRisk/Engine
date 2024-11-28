@@ -41,7 +41,7 @@ using QuantLib::Size;
 template <typename T> class InMemoryCubeOpt : public NPVCube {
 private:
     // number of dates in a block
-    static constexpr Size N = 5;
+    static constexpr Size N = 1;
 
 public:
     InMemoryCubeOpt(const Date& asof, const std::set<std::string>& ids, const std::vector<Date>& dates, Size samples,
@@ -132,14 +132,6 @@ private:
 
     std::map<std::string, Size> idIdx_;
 };
-
-// using SinglePrecisionInMemoryCubeOpt = InMemoryCubeOpt<float>;
-// using DoublePrecisionInMemoryCubeOpt = InMemoryCubeOpt<double>;
-
-using SinglePrecisionInMemoryCube = InMemoryCubeOpt<float>;
-using SinglePrecisionInMemoryCubeN = InMemoryCubeOpt<float>;
-using DoublePrecisionInMemoryCube = InMemoryCubeOpt<double>;
-using DoublePrecisionInMemoryCubeN = InMemoryCubeOpt<double>;
 
 } // namespace analytics
 } // namespace ore
