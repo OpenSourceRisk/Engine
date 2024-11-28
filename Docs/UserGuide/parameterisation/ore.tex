@@ -40,6 +40,9 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="lazyMarketBuilding">false</Parameter>
   <Parameter name="continueOnError">false</Parameter>
   <Parameter name="buildFailedTrades">true</Parameter>
+  <Parameter name="enrichIndexFixings">false</Parameter>
+  <Parameter name="ignoreFixingLead">0</Parameter>
+  <Parameter name="ignoreFixingLag">0</Parameter>
 </Setup>
 \end{minted}
 %\hrule
@@ -99,6 +102,18 @@ continue the processing. If not given, the parameter defaults to {\tt false}.
 \medskip If the parameter {\tt buildFailedTrades} is set to true, the application will build a dummy trade if loading or
 building the original trade fails. The dummy trade has trade type ``Failed'', zero notional and NPV.
 If not given, the parameter defaults to {\tt false}.
+
+\medskip If the parameter {\tt enrichIndexFixings} is set to true, the application will fill the gaps in index fixings, 
+by fallback fixings, which are the previous fixings (priority) or the next fixings.
+If not given, the parameter defaults to {\tt false}.
+
+\medskip If the next fixing date leads by more than Parameter {\tt ignoreFixingLead}, the fixing would not be used as the fallback.
+A {\tt 0} {\tt ignoreFixingLead} disables the check.
+If not given, the parameter defaults to {\tt 0}.
+
+\medskip If the previous fixing date lags by more than Parameter {\tt ignoreFixingLag}, the fixing would not be used as the fallback.
+A {\tt 0} {\tt ignoreFixingLag} disables the check.
+If not given, the parameter defaults to {\tt 0}.
 
 \subsubsection{Markets}\label{sec:master_input_markets}
 

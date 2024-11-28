@@ -81,6 +81,9 @@ public:
     void setBuildFailedTrades(bool b) { buildFailedTrades_ = b; }
     void setObservationModel(const std::string& s) { observationModel_ = s; }
     void setImplyTodaysFixings(bool b) { implyTodaysFixings_ = b; }
+    void setEnrichIndexFixings(bool b) { enrichIndexFixings_ = b; }
+    void setIgnoreFixingLead(Size i) { ignoreFixingLead_ = i; }
+    void setIgnoreFixingLag(Size i) { ignoreFixingLag_ = i; }
     void setIncludeTodaysCashFlows(bool b) {
         Settings::instance().includeTodaysCashFlows() = b;
     }
@@ -225,6 +228,8 @@ public:
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
     void setAmcPathDataInput(const std::string& s);
     void setAmcPathDataOutput(const std::string& s);
+    void setAmcIndividualTrainingInput(bool b) { amcIndividualTrainingInput_ = b; }
+    void setAmcIndividualTrainingOutput(bool b) { amcIndividualTrainingOutput_ = b; }
     void setExposureBaseCurrency(const std::string& s) { exposureBaseCurrency_ = s; } 
     void setExposureObservationModel(const std::string& s) { exposureObservationModel_ = s; }
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
@@ -482,6 +487,9 @@ public:
     bool buildFailedTrades() const { return buildFailedTrades_; }
     const std::string& observationModel() const { return observationModel_; }
     bool implyTodaysFixings() const { return implyTodaysFixings_; }
+    bool enrichIndexFixings() const { return enrichIndexFixings_; }
+    Size ignoreFixingLead() const { return ignoreFixingLead_; }
+    Size ignoreFixingLag() const { return ignoreFixingLag_; }
     const std::map<std::string, std::string>&  marketConfigs() const { return marketConfigs_; }
     const std::string& marketConfig(const std::string& context);
     const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() const { return refDataManager_; }
@@ -632,6 +640,8 @@ public:
     const std::set<std::string>& amcTradeTypes() const { return amcTradeTypes_; }
     const std::string& amcPathDataInput() const { return amcPathDataInput_; }
     const std::string& amcPathDataOutput() const { return amcPathDataOutput_; }
+    bool amcIndividualTrainingInput() const { return amcIndividualTrainingInput_; }
+    bool amcIndividualTrainingOutput() const { return amcIndividualTrainingOutput_; }
     const std::string& exposureBaseCurrency() const { return exposureBaseCurrency_; }
     const std::string& exposureObservationModel() const { return exposureObservationModel_; }
     const std::string& nettingSetId() const { return nettingSetId_; }
@@ -881,6 +891,9 @@ protected:
     bool buildFailedTrades_ = true;
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
+    bool enrichIndexFixings_ = false;
+    Size ignoreFixingLead_ = 0;
+    Size ignoreFixingLag_ = 0;
     optional<bool> includeTodaysCashFlows_;
     bool includeReferenceDateEvents_ = false;
   
@@ -1008,6 +1021,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string amcPathDataInput_, amcPathDataOutput_;
+    bool amcIndividualTrainingInput_ = false, amcIndividualTrainingOutput_ = false;
     std::string exposureBaseCurrency_ = "";
     std::string exposureObservationModel_ = "Disable";
     std::string nettingSetId_ = "";

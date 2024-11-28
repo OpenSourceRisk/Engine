@@ -4898,6 +4898,7 @@ The parameters have the following meaning:
 \item AlwaysRecomputeOptionRepresentation: whether to recompute underlying representation on each scenario or keep the initial representation across all scenarios
 \item MaxGapDays: the maximum gap between option expiry dates used for the underlying representation
 \item MaxDiscretizationPoints: the maximum number of discretization points used for underlying representation
+\item OptionExpiryPosition: optional, defaults to Mid, can be Left or Mid
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
@@ -4914,6 +4915,7 @@ The parameters have the following meaning:
         <Parameter name="AlwaysRecomputeOptionRepresentation">false</Parameter>
         <Parameter name="MaxGapDays">400</Parameter>
         <Parameter name="MaxDiscretisationPoints">20</Parameter>
+        <Parameter name="OptionExpiryPosition">Mid</Parameter>
         <Parameter name="SensitivityTemplate">IR_Semianalytical</Parameter>
     </EngineParameters>
 </Product>
@@ -4946,6 +4948,7 @@ The parameters have the following meaning:
 \item AlwaysRecomputeOptionRepresentation: whether to recompute underlying representation on each scenario or keep the initial representation across all scenarios
 \item MaxGapDays: the maximum gap between option expiry dates used for the underlying representation
 \item MaxDiscretizationPoints: the maximum number of discretization points used for underlying representation
+\item OptionExpiryPosition: optional, defaults to Mid, can be Left or Mid
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
@@ -4959,6 +4962,7 @@ The parameters have the following meaning:
         <Parameter name="AlwaysRecomputeOptionRepresentation">false</Parameter>
         <Parameter name="MaxGapDays">400</Parameter>
         <Parameter name="MaxDiscretisationPoints">20</Parameter>
+        <Parameter name="OptionExpiryPosition">Mid</Parameter>
         <Parameter name="SensitivityTemplate">FX_Semianalytical</Parameter>
     </EngineParameters>
 </Product>
@@ -5001,6 +5005,9 @@ The parameters have the following meaning:
 \item Tolerance: Error tolerance for calibration
 \item sy, sx: Number of covered standard deviations (notation as in Hagan's paper)
 \item ny, nx: Number of grid points for numerical integration (notation as in Hagan's paper)
+\item MaxGapDays: the maximum gap between option expiry dates used for the underlying representation
+\item MaxDiscretizationPoints: the maximum number of discretization points used for underlying representation
+\item OptionExpiryPosition: optional, defaults to Mid, can be Left or Mid
 \item SensitivityTemplate [optional]: the sensitivity template to use 
 \end{itemize}
 
@@ -5027,6 +5034,7 @@ The parameters have the following meaning:
         <Parameter name="nx">30</Parameter>
         <Parameter name="MaxGapDays">400</Parameter>
         <Parameter name="MaxDiscretisationPoints">20</Parameter>
+        <Parameter name="OptionExpiryPosition">Mid</Parameter>
         <Parameter name="SensitivityTemplate">IR_FD</Parameter>
     </EngineParameters>
 </Product>
@@ -5128,8 +5136,8 @@ In addition to product specific settings there is also a block with global param
   but only used internally to improve the performance for processes which only rely on the NPV as a result from pricing
   engines, e.g. when repricing trades under sensitivity or stress scenarios. Option, defaults to false.
 \item RunType: Set automatically. One of NPV, SensitivityDelta, SensitivityDeltaGamma, Stress, Exposure, Capital,
-  TradeDetails, PortfolioAnalyser, PorfolioAnalyserNoFixings, HistoricalPnL, BondSpreadImply, AbsMaturityUpdate
-  depending on the context for which a portfolio was built. Might also be left empty. This is used by some pricing
-  engines to adapt to certain run types. E.g. a first order sensitivity pnl expansion might be used for a
-  SensitivityDelta run by an engine which is able to compute analytical or AAD first order sensitivities.
+  TradeDetails, PortfolioAnalyser, HistoricalPnL, BondSpreadImply, AbsMaturityUpdate depending on the context for which
+  a portfolio was built. Might also be left empty. This is used by some pricing engines to adapt to certain run
+  types. E.g. a first order sensitivity pnl expansion might be used for a SensitivityDelta run by an engine which is
+  able to compute analytical or AAD first order sensitivities.
 \end{itemize}
