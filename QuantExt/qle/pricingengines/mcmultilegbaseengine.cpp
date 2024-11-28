@@ -1134,9 +1134,7 @@ void McMultiLegBaseEngine::calculateModels(
     const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
     std::vector<RegressionModel>& regModelUndDirty, std::vector<RegressionModel>& regModelUndExInto,
     std::vector<RegressionModel>& regModelContinuationValue, std::vector<RegressionModel>& regModelOption,
-    RandomVariable& pathValueUndDirty, RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption,
-    std::function<RandomVariable(double, RandomVariable&, const std::set<Real>&,
-               const std::vector<std::vector<QuantExt::RandomVariable>>&)>overwriteFunction) const {
+    RandomVariable& pathValueUndDirty, RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const {
 
     // for each xva and exercise time collect the relevant cashflow amounts and train a model on them
 
@@ -1237,9 +1235,7 @@ void McMultiLegBaseEngine::calculateModels(
 
         if (isXvaTime) {
 
-            auto pathValueUndDirtyUsed = pathValueUndDirty;
-            if(overwriteFunction)
-                pathValueUndDirtyUsed = overwriteFunction(*t, pathValueUndDirty, exerciseXvaTimes, pathValues);
+            auto pathValueUndDirtyUsed = overwritePathValueUndDirty(*t, pathValueUndDirty, exerciseXvaTimes, pathValues);
 
             regModelUndDirty[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] != CfStatus::open; }, **model_,
@@ -1303,8 +1299,7 @@ void McMultiLegBaseEngine::generatePathValues(const std::vector<Real>& simulatio
     }
 }
 
-void McMultiLegBaseEngine::calculate(std::function<RandomVariable(double, RandomVariable& , const std::set<Real>& ,
-               const std::vector<std::vector<QuantExt::RandomVariable>>& )>overwriteFunction) const {
+void McMultiLegBaseEngine::calculate() const {
 
     includeReferenceDateEvents_ = Settings::instance().includeReferenceDateEvents();
     includeTodaysCashflows_ = Settings::instance().includeTodaysCashFlows()
@@ -1476,7 +1471,7 @@ void McMultiLegBaseEngine::calculate(std::function<RandomVariable(double, Random
 
     calculateModels(simulationTimes, exerciseXvaTimes, exerciseTimes, xvaTimes, cashflowInfo, pathValues, pathValuesRef,
                     regModelUndDirty, regModelUndExInto, regModelContinuationValue, regModelOption, pathValueUndDirty,
-                    pathValueUndExInto, pathValueOption, overwriteFunction);
+                    pathValueUndExInto, pathValueOption);
 
     // setup the models on close-out grid if required or else copy them from valuation
 
@@ -1493,7 +1488,7 @@ void McMultiLegBaseEngine::calculate(std::function<RandomVariable(double, Random
         calculateModels(simulationTimes, exerciseXvaTimes, exerciseTimes, xvaTimes, cashflowInfo, closeOutPathValues,
                         closeOutPathValuesRef, regModelUndDirtyCloseOut, regModelUndExIntoCloseOut,
                         regModelContinuationValueCloseOut, regModelOptionCloseOut, pathValueUndDirtyCloseOut,
-                        pathValueUndExIntoCloseOut, pathValueOptionCloseOut, overwriteFunction);
+                        pathValueUndExIntoCloseOut, pathValueOptionCloseOut);
     }
 
     // set the result value (= underlying value if no exercise is given, otherwise option value)

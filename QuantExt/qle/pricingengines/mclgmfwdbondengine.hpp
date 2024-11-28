@@ -78,6 +78,11 @@ public:
     void setMember() const;
     double conversionFactor() const { return conversionFactor_->value(); } ;
 
+    RandomVariable
+    overwritePathValueUndDirty(double t, const RandomVariable& pathValueUndDirty,
+                               const std::set<Real>& exerciseXvaTimes,
+                               const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const override;
+
     class FwdBondAmcCalculator : public McMultiLegBaseEngine::MultiLegBaseAmcCalculator {
     public:
         FwdBondAmcCalculator(McMultiLegBaseEngine::MultiLegBaseAmcCalculator c)

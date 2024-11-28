@@ -85,10 +85,11 @@ protected:
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
         const bool reevaluateExerciseInStickyRun = false);
 
+    //! Destructor
+    virtual ~McMultiLegBaseEngine() {}
+
     // run calibration and pricing (called from derived engines)
-    void calculate(std::function<RandomVariable(double, RandomVariable&, const std::set<Real>&,
-                                                const std::vector<std::vector<QuantExt::RandomVariable>>&)>
-                       overwriteFunction = {}) const;
+    void calculate() const;
 
     // return AmcCalculator instance (called from derived engines, calculate must be called before)
     QuantLib::ext::shared_ptr<AmcCalculator> amcCalculator() const;
@@ -143,6 +144,14 @@ protected:
         std::vector<std::vector<Size>> modelIndices;
         std::function<RandomVariable(const Size n, const std::vector<std::vector<const RandomVariable*>>&)>
             amountCalculator;
+    };
+
+    // overwrite function to transform values going into regression
+    // current usage in the fwd bond case
+    virtual RandomVariable overwritePathValueUndDirty(double t, const RandomVariable& pathValueUndDirty,
+                                                      const std::set<Real>& exerciseXvaTimes,
+                                                      const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const {
+        return pathValueUndDirty;
     };
 
     // class representing a regression model for a certain observation (= xva, exercise) time
@@ -229,10 +238,7 @@ protected:
                          std::vector<RegressionModel>& regModelUndExInto,
                          std::vector<RegressionModel>& regModelContinuationValue,
                          std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
-                         RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption,
-                         std::function<RandomVariable(double, RandomVariable&, const std::set<Real>&,
-                                                      const std::vector<std::vector<QuantExt::RandomVariable>>&)>
-                             overwriteFunction) const;
+                         RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
 
     // convert a date to a time w.r.t. the valuation date
     Real time(const Date& d) const;
