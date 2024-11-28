@@ -51,13 +51,15 @@ public:
         QL_REQUIRE(recoveryRates_.empty() || recoveryRates_.front().size() == recoveryProbabilities_.size(),
                    "Error mismatch vector size, between recoveryRates and their respective probability");
 
-        std::partial_sum(recoveryProbabilities_.begin(), recoveryProbabilities_.end(),
-                         cumRecoveryProbabilities_.begin());
+        
+
+            std::partial_sum(recoveryProbabilities_.begin(), recoveryProbabilities_.end(),
+                             cumRecoveryProbabilities_.begin());
 
         QL_REQUIRE(QuantLib::close_enough(cumRecoveryProbabilities_.back(), 1.0),
                    "Recovery Rate probs doesnt add up to 1.");
 
-        cumRecoveryProbabilities_.back() = 1.0 + 1e-12;
+        cumRecoveryProbabilities_.back() = 1.0 + 1e-11;
 
         for (size_t i = 0; i < recoveryRates_.size(); ++i) {
             QL_REQUIRE(recoveryRates_[i].size() == recoveryProbabilities_.size(),
@@ -90,24 +92,35 @@ protected:
             TLOG(i << "," << names[i] << "," << notionals[i] << "," << pds[i]);
         }
         auto it = expectedTrancheLoss_.find(d);
-        if(it != expectedTrancheLoss_.end()){
+        if (it != expectedTrancheLoss_.end()) {
             return it->second;
         }
         QuantLib::MersenneTwisterUniformRng urng(42);
         QuantLib::InverseCumulativeRng<QuantLib::MersenneTwisterUniformRng, QuantLib::InverseCumulativeNormal> rng(
             urng);
 
-        
         // Compute determistic LGD case
         // if(recoveryRates_.front().size() == 1){
-        
-        std::vector<double> thresholds(basket_->size(), 0.0);
+
         InverseCumulativeNormal ICN;
+        std::vector<std::vector<double>> thresholds(basket_->size(),
+                                                    std::vector<double>(recoveryProbabilities_.size(), 0.0));
         for (size_t id = 0; id < pds.size(); id++) {
-            thresholds[id] = ICN(pds[id]);
+            thresholds[id][0]=(ICN(pds[id]));
+            double cumRecoveryProb = 0.0;
+            for (size_t j = 0; j < recoveryProbabilities_.size() - 1; ++j) {
+                cumRecoveryProb += recoveryProbabilities_[j];
+                thresholds[id][j+1]= (ICN(pds[id] * (1.0 - cumRecoveryProb)));
+            }
+            thresholds[id].push_back(QL_MIN_REAL);
+            /*
+            for(auto & t : thresholds[id]){
+                std::cout << t << ",";
+            }
+            std::cout << std::endl;
+            */
         }
-        
-        
+
         const double sqrtRho = std::sqrt(baseCorrelation_->value());
         const double sqrtOneMinusRho = std::sqrt(1.0 - baseCorrelation_->value());
         const double n = static_cast<double>(nSamples_);
@@ -115,45 +128,43 @@ protected:
         double expectedLossIndex = 0.0;
         const size_t nConstituents = pds.size();
         std::vector<double> xs(nConstituents * nSamples_, 0.0);
-        std::vector<double> ys(nConstituents * nSamples_, 0.0);
+        // std::vector<double> ys(nConstituents * nSamples_, 0.0);
         for (size_t i = 0; i < nSamples_; i++) {
             const double marketFactor = rng.next().value * sqrtRho;
             for (size_t id = 0; id < nConstituents; id++) {
                 xs[i * nConstituents + id] = marketFactor + sqrtOneMinusRho * rng.next().value;
-                ys[i * nConstituents + id] = urng.next().value;
             }
         }
 
-            std::vector<double> simPD(pds.size(), 0.0);
-            for (size_t i = 0; i < nSamples_; i++) {
-                double loss = 0.0;
-                for (size_t id = 0; id < pds.size(); id++) {
-                    if (xs[i * nConstituents + id]  <= thresholds[id]) {
+        std::vector<double> simPD(pds.size(), 0.0);
+        for (size_t i = 0; i < nSamples_; i++) {
+            double loss = 0.0;
+            for (size_t id = 0; id < pds.size(); id++) {
+                const double x = xs[i * nConstituents + id];
+                //TLOG("Sim " << i << " x= " << x);
+                for (size_t lgd = 1; lgd < thresholds[id].size(); lgd++) {
+                    
+                    //TLOG("Threshold " << lgd << " rrThreshold= " << thresholds[id][lgd - 1] << " RecoveryRate "
+                    //                  << recoveryRates_[id][lgd - 1]);
+                    if (x > thresholds[id][lgd] && x <= thresholds[id][lgd - 1]) {
+                        // default reovery rate
                         simPD[id] += 1;
-                        expectedLossIndex += notionals[id] * 0.6;
-                        // TLOG("LGD calculation");
-                        // TLOG(cumRecoveryProbabilities_[0] << "," << cumRecoveryProbabilities_[1] << "," <<
-                        // cumRecoveryProbabilities_[2]);
-                        auto rrIt =
-                            std::lower_bound(cumRecoveryProbabilities_.begin(), cumRecoveryProbabilities_.end(), ys[i * nConstituents + id]);
-                        // TLOG("rrIt=" << *rrIt);
-                        size_t rrId = rrIt - cumRecoveryProbabilities_.begin();
-                        // TLOG("index = " << rrId);
-                        loss += notionals[id] * (1.0 - recoveryRates_[id][rrId]);
+                        loss += notionals[id] * (1.0 - recoveryRates_[id][lgd - 1]);
                     }
                 }
-                trancheLoss += std::max(loss - basket_->attachmentAmount(), 0.0) -
-                               std::max(loss - basket_->detachmentAmount(), 0.0);
-            }
-            TLOG("Valid")
-            for (size_t i = 0; i < pds.size(); ++i) {
-                TLOG(i << "," << std::fixed << std::setprecision(8) << pds[i] << "," << simPD[i] / n);
-            }
-            TLOG("Expected Tranche Loss = " << trancheLoss / n);
-            TLOG("Expected Index Loss " << expectedLossIndex / n);
-            expectedTrancheLoss_[d] = trancheLoss / n;
-            return trancheLoss / n;
+                        }
+            trancheLoss +=
+                std::max(loss - basket_->attachmentAmount(), 0.0) - std::max(loss - basket_->detachmentAmount(), 0.0);
         }
+        TLOG("Valid")
+        for (size_t i = 0; i < pds.size(); ++i) {
+            TLOG(i << "," << std::fixed << std::setprecision(8) << pds[i] << "," << simPD[i] / n);
+        }
+        TLOG("Expected Tranche Loss = " << trancheLoss / n);
+        TLOG("Expected Index Loss " << expectedLossIndex / n);
+        expectedTrancheLoss_[d] = trancheLoss / n;
+        return trancheLoss / n;
+    }
 
     QuantLib::Real correlation() const override { return baseCorrelation_->value(); }
     // the call order matters, which is the reason for the parent to be the

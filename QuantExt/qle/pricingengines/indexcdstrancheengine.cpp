@@ -149,8 +149,9 @@ void IndexCdsTrancheEngine::calculate() const {
         protectionFlow.legNumber = 1;
         protectionFlow.payDate = paymentDate;
         protectionFlow.amount = side * (etl - etls.back());
+        protectionFlow.notional = etl;
         protectionFlow.discountFactor = discountCurve_->discount(defaultDate);
-        protectionFlow.presentValue = premiumFlow.amount * premiumFlow.discountFactor;
+        protectionFlow.presentValue = protectionFlow.amount * protectionFlow.discountFactor;
         cashflowResults.push_back(protectionFlow);
         // Update the expected tranche loss results vector.
         etls.push_back(etl);
