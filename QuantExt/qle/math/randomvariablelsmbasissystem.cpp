@@ -213,9 +213,8 @@ VF_A RandomVariableLsmBasisSystem::multiPathBasisSystem(Size dim, Size order,
     // get single factor basis
     VF_R pathBasis = pathBasisSystem(order, type);
     VF_A ret;
-    // 0-th order term
-    VF_R term(dim, pathBasis[0]);
-    ret.push_back(MultiDimFct(term));
+    VF_R term(dim);
+
     // set up collection of all tuples
     std::set<std::vector<Size>> allTuples;
     if (varGroups.empty()) {
