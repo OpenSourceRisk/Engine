@@ -287,21 +287,21 @@ Schedule makeSchedule(const ScheduleDates& data) {
         endOfMonthConvention = parseBusinessDayConvention(data.endOfMonthConvention());
 
     // Ensure that Schedule ctor is passed a vector of unique ordered dates.
-    if(data.includeDuplicateDates()){
-        std::vector<Date> dates;
-        for(const auto& d : data.dates()){
-            dates.push_back(calendar.adjust(parseDate(d), convention));
-        }
-        std::sort(dates.begin(),dates.end());
-        return QuantLib::Schedule(dates, calendar, convention, boost::none,
-                              tenor, boost::none, endOfMonth, vector<bool>(0), false, false, endOfMonthConvention);
-    } 
-    std::set<Date> uniqueDates;
-    for (const string& d : data.dates())
-        uniqueDates.insert(calendar.adjust(parseDate(d), convention));
 
-    return QuantLib::Schedule(vector<Date>(uniqueDates.begin(), uniqueDates.end()), calendar, convention, boost::none,
-                              tenor, boost::none, endOfMonth, vector<bool>(0), false, false, endOfMonthConvention);
+    std::vector<Date> dates;
+    for (const auto& d : data.dates()) {
+        dates.push_back(calendar.adjust(parseDate(d), convention));
+    }
+    std::sort(dates.begin(), dates.end());
+
+    if (!data.includeDuplicateDates()) {
+        std::set<Date> uniqueDates;
+        for (const string& d : data.dates())
+            uniqueDates.insert(calendar.adjust(parseDate(d), convention));
+        dates = std::vector<Date>(uniqueDates.begin(), uniqueDates.end());
+    }
+    return QuantLib::Schedule(dates, calendar, convention, boost::none, tenor, boost::none, endOfMonth, vector<bool>(0),
+                              false, false, endOfMonthConvention);
 }
 
 Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule) {
