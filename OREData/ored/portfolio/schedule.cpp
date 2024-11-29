@@ -295,11 +295,10 @@ Schedule makeSchedule(const ScheduleDates& data) {
     std::sort(dates.begin(), dates.end());
 
     if (!data.includeDuplicateDates()) {
-        std::set<Date> uniqueDates;
-        for (const string& d : data.dates())
-            uniqueDates.insert(calendar.adjust(parseDate(d), convention));
-        dates = std::vector<Date>(uniqueDates.begin(), uniqueDates.end());
+        auto last = std::unique(dates.begin(), dates.end());
+        dates.erase(last, dates.end());
     }
+    
     return QuantLib::Schedule(dates, calendar, convention, boost::none, tenor, boost::none, endOfMonth, vector<bool>(0),
                               false, false, endOfMonthConvention);
 }
