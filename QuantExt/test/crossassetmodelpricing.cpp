@@ -133,188 +133,274 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CrossAssetModelTest)
 
-
 namespace {
 
-struct Lgm5fTestDataV {
-    Lgm5fTestDataV()
-        : referenceDate(30, July, 2015), eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
-          usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
-          gbpYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
-          fxEurUsd(QuantLib::ext::make_shared<SimpleQuote>(0.90)), fxEurGbp(QuantLib::ext::make_shared<SimpleQuote>(1.35)), c(5, 5) {
+    struct Lgm5fTestDataV {
+        Lgm5fTestDataV()
+            : referenceDate(30, July, 2015), eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
+            usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
+            gbpYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
+            fxEurUsd(QuantLib::ext::make_shared<SimpleQuote>(0.90)), fxEurGbp(QuantLib::ext::make_shared<SimpleQuote>(1.35)), c(5, 5) {
 
-        Settings::instance().evaluationDate() = referenceDate;
-        volstepdates.push_back(Date(15, July, 2016));
-        volstepdates.push_back(Date(15, July, 2017));
-        volstepdates.push_back(Date(15, July, 2018));
-        volstepdates.push_back(Date(15, July, 2019));
-        volstepdates.push_back(Date(15, July, 2020));
+            Settings::instance().evaluationDate() = referenceDate;
+            volstepdates.push_back(Date(15, July, 2016));
+            volstepdates.push_back(Date(15, July, 2017));
+            volstepdates.push_back(Date(15, July, 2018));
+            volstepdates.push_back(Date(15, July, 2019));
+            volstepdates.push_back(Date(15, July, 2020));
 
-        volstepdatesFx.push_back(Date(15, July, 2016));
-        volstepdatesFx.push_back(Date(15, October, 2016));
-        volstepdatesFx.push_back(Date(15, May, 2017));
-        volstepdatesFx.push_back(Date(13, September, 2017));
-        volstepdatesFx.push_back(Date(15, July, 2018));
+            volstepdatesFx.push_back(Date(15, July, 2016));
+            volstepdatesFx.push_back(Date(15, October, 2016));
+            volstepdatesFx.push_back(Date(15, May, 2017));
+            volstepdatesFx.push_back(Date(13, September, 2017));
+            volstepdatesFx.push_back(Date(15, July, 2018));
 
-        volsteptimes_a = Array(volstepdates.size());
-        volsteptimesFx_a = Array(volstepdatesFx.size());
-        for (Size i = 0; i < volstepdates.size(); ++i) {
-            volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
+            volsteptimes_a = Array(volstepdates.size());
+            volsteptimesFx_a = Array(volstepdatesFx.size());
+            for (Size i = 0; i < volstepdates.size(); ++i) {
+                volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
+            }
+            for (Size i = 0; i < volstepdatesFx.size(); ++i) {
+                volsteptimesFx_a[i] = eurYts->timeFromReference(volstepdatesFx[i]);
+            }
+
+            for (Size i = 0; i < volstepdates.size() + 1; ++i) {
+                eurVols.push_back(0.0050 + (0.0080 - 0.0050) * std::exp(-0.3 * static_cast<double>(i)));
+            }
+            for (Size i = 0; i < volstepdates.size() + 1; ++i) {
+                usdVols.push_back(0.0030 + (0.0110 - 0.0030) * std::exp(-0.3 * static_cast<double>(i)));
+            }
+            for (Size i = 0; i < volstepdates.size() + 1; ++i) {
+                gbpVols.push_back(0.0070 + (0.0095 - 0.0070) * std::exp(-0.3 * static_cast<double>(i)));
+            }
+            for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
+                fxSigmasUsd.push_back(0.15 + (0.20 - 0.15) * std::exp(-0.3 * static_cast<double>(i)));
+            }
+            for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
+                fxSigmasGbp.push_back(0.10 + (0.15 - 0.10) * std::exp(-0.3 * static_cast<double>(i)));
+            }
+            eurVols_a = Array(eurVols.begin(), eurVols.end());
+            usdVols_a = Array(usdVols.begin(), usdVols.end());
+            gbpVols_a = Array(gbpVols.begin(), gbpVols.end());
+            fxSigmasUsd_a = Array(fxSigmasUsd.begin(), fxSigmasUsd.end());
+            fxSigmasGbp_a = Array(fxSigmasGbp.begin(), fxSigmasGbp.end());
+
+            notimes_a = Array(0);
+            eurKappa_a = Array(1, 0.02);
+            usdKappa_a = Array(1, 0.03);
+            gbpKappa_a = Array(1, 0.04);
+
+            eurLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, volsteptimes_a,
+                                                                                eurVols_a, notimes_a, eurKappa_a);
+
+            usdLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, volsteptimes_a,
+                                                                                usdVols_a, notimes_a, usdKappa_a);
+
+            gbpLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(GBPCurrency(), gbpYts, volsteptimes_a,
+                                                                                gbpVols_a, notimes_a, gbpKappa_a);
+
+            fxUsd_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), fxEurUsd, volsteptimesFx_a,
+                                                                            fxSigmasUsd_a);
+            fxGbp_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), fxEurGbp, volsteptimesFx_a,
+                                                                            fxSigmasGbp_a);
+
+            singleModels.push_back(eurLgm_p);
+            singleModels.push_back(usdLgm_p);
+            singleModels.push_back(gbpLgm_p);
+            singleModels.push_back(fxUsd_p);
+            singleModels.push_back(fxGbp_p);
+
+            // clang-format off
+            //     EUR           USD           GBP         FX USD-EUR      FX GBP-EUR
+            c[0][0] = 1.0; c[0][1] = 0.6;  c[0][2] = 0.3; c[0][3] = 0.2;  c[0][4] = 0.3;  // EUR
+            c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1; c[1][3] = -0.2; c[1][4] = -0.1; // USD
+            c[2][0] = 0.3; c[2][1] = 0.1;  c[2][2] = 1.0; c[2][3] = 0.0;  c[2][4] = 0.1;  // GBP
+            c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0; c[3][3] = 1.0;  c[3][4] = 0.3;  // FX USD-EUR
+            c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1; c[4][3] = 0.3;  c[4][4] = 1.0;  // FX GBP-EUR
+
+            // clang-format on
+            ccLgmExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
+                                                            IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
+            ccLgmEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
+                                                            IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
         }
-        for (Size i = 0; i < volstepdatesFx.size(); ++i) {
-            volsteptimesFx_a[i] = eurYts->timeFromReference(volstepdatesFx[i]);
+
+        SavedSettings backup;
+        Date referenceDate;
+        Handle<YieldTermStructure> eurYts, usdYts, gbpYts;
+        std::vector<Date> volstepdates, volstepdatesFx;
+        Array volsteptimes_a, volsteptimesFx_a;
+        std::vector<Real> eurVols, usdVols, gbpVols, fxSigmasUsd, fxSigmasGbp;
+        Handle<Quote> fxEurUsd, fxEurGbp;
+        Array eurVols_a, usdVols_a, gbpVols_a, fxSigmasUsd_a, fxSigmasGbp_a;
+        Array notimes_a, eurKappa_a, usdKappa_a, gbpKappa_a;
+        QuantLib::ext::shared_ptr<IrLgm1fParametrization> eurLgm_p, usdLgm_p, gbpLgm_p;
+        QuantLib::ext::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
+        std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
+        Matrix c;
+        QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact, ccLgmEuler;
+    };
+
+    struct Lgm5fTestDataW {
+        Lgm5fTestDataW()
+            : referenceDate(30, July, 2015), eurYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
+            usdYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
+            gbpYts(QuantLib::ext::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
+            fxEurUsd(QuantLib::ext::make_shared<SimpleQuote>(0.90)), fxEurGbp(QuantLib::ext::make_shared<SimpleQuote>(1.35)), c(5, 5) {
+
+            Settings::instance().evaluationDate() = referenceDate;
+            volstepdates.push_back(Date(15, July, 2016));
+            volstepdates.push_back(Date(15, July, 2017));
+            volstepdates.push_back(Date(15, July, 2018));
+            volstepdates.push_back(Date(15, July, 2019));
+            volstepdates.push_back(Date(15, July, 2020));
+
+            volstepdatesFx.push_back(Date(15, July, 2016));
+            volstepdatesFx.push_back(Date(15, October, 2016));
+            volstepdatesFx.push_back(Date(15, May, 2017));
+            volstepdatesFx.push_back(Date(13, September, 2017));
+            volstepdatesFx.push_back(Date(15, July, 2018));
+
+            volsteptimes_a = Array(volstepdates.size());
+            volsteptimesFx_a = Array(volstepdatesFx.size());
+            for (Size i = 0; i < volstepdates.size(); ++i) {
+                volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
+            }
+            for (Size i = 0; i < volstepdatesFx.size(); ++i) {
+                volsteptimesFx_a[i] = eurYts->timeFromReference(volstepdatesFx[i]);
+            }
+
+            for (Size i = 0; i < volstepdates.size() + 1; ++i) {
+                eurVols.push_back(0.0060 + (0.0080 - 0.0050) * std::exp(-0.3 * static_cast<double>(i)));
+            }
+            for (Size i = 0; i < volstepdates.size() + 1; ++i) {
+                usdVols.push_back(0.0030 + (0.0110 - 0.0030) * std::exp(-0.3 * static_cast<double>(i)));
+            }
+            for (Size i = 0; i < volstepdates.size() + 1; ++i) {
+                gbpVols.push_back(0.0070 + (0.0095 - 0.0070) * std::exp(-0.3 * static_cast<double>(i)));
+            }
+            for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
+                fxSigmasUsd.push_back(0.15 + (0.20 - 0.15) * std::exp(-0.3 * static_cast<double>(i)));
+            }
+            for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
+                fxSigmasGbp.push_back(0.10 + (0.15 - 0.10) * std::exp(-0.3 * static_cast<double>(i)));
+            }
+            eurVols_a = Array(eurVols.begin(), eurVols.end());
+            usdVols_a = Array(usdVols.begin(), usdVols.end());
+            gbpVols_a = Array(gbpVols.begin(), gbpVols.end());
+            fxSigmasUsd_a = Array(fxSigmasUsd.begin(), fxSigmasUsd.end());
+            fxSigmasGbp_a = Array(fxSigmasGbp.begin(), fxSigmasGbp.end());
+
+            notimes_a = Array(0);
+            eurKappa_a = Array(1, 0.02);
+            usdKappa_a = Array(1, 0.03);
+            gbpKappa_a = Array(1, 0.04);
+
+            eurLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, volsteptimes_a,
+                                                                                eurVols_a, notimes_a, eurKappa_a);
+
+            usdLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, volsteptimes_a,
+                                                                                usdVols_a, notimes_a, usdKappa_a);
+
+            gbpLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(GBPCurrency(), gbpYts, volsteptimes_a,
+                                                                                gbpVols_a, notimes_a, gbpKappa_a);
+
+            fxUsd_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), fxEurUsd, volsteptimesFx_a,
+                                                                            fxSigmasUsd_a);
+            fxGbp_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), fxEurGbp, volsteptimesFx_a,
+                                                                            fxSigmasGbp_a);
+
+            singleModels.push_back(eurLgm_p);
+            singleModels.push_back(usdLgm_p);
+            singleModels.push_back(gbpLgm_p);
+            singleModels.push_back(fxUsd_p);
+            singleModels.push_back(fxGbp_p);
+
+            // clang-format off
+            //     EUR           USD           GBP         FX USD-EUR      FX GBP-EUR
+            c[0][0] = 1.0; c[0][1] = 0.6;  c[0][2] = 0.3; c[0][3] = 0.2;  c[0][4] = 0.3;  // EUR
+            c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1; c[1][3] = -0.2; c[1][4] = -0.1; // USD
+            c[2][0] = 0.3; c[2][1] = 0.1;  c[2][2] = 1.0; c[2][3] = 0.0;  c[2][4] = 0.1;  // GBP
+            c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0; c[3][3] = 1.0;  c[3][4] = 0.3;  // FX USD-EUR
+            c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1; c[4][3] = 0.3;  c[4][4] = 1.0;  // FX GBP-EUR
+
+            // clang-format on
+            ccLgmExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
+                                                            IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
+            ccLgmEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
+                                                            IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
         }
 
-        for (Size i = 0; i < volstepdates.size() + 1; ++i) {
-            eurVols.push_back(0.0050 + (0.0080 - 0.0050) * std::exp(-0.3 * static_cast<double>(i)));
-        }
-        for (Size i = 0; i < volstepdates.size() + 1; ++i) {
-            usdVols.push_back(0.0030 + (0.0110 - 0.0030) * std::exp(-0.3 * static_cast<double>(i)));
-        }
-        for (Size i = 0; i < volstepdates.size() + 1; ++i) {
-            gbpVols.push_back(0.0070 + (0.0095 - 0.0070) * std::exp(-0.3 * static_cast<double>(i)));
-        }
-        for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
-            fxSigmasUsd.push_back(0.15 + (0.20 - 0.15) * std::exp(-0.3 * static_cast<double>(i)));
-        }
-        for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
-            fxSigmasGbp.push_back(0.10 + (0.15 - 0.10) * std::exp(-0.3 * static_cast<double>(i)));
-        }
-        eurVols_a = Array(eurVols.begin(), eurVols.end());
-        usdVols_a = Array(usdVols.begin(), usdVols.end());
-        gbpVols_a = Array(gbpVols.begin(), gbpVols.end());
-        fxSigmasUsd_a = Array(fxSigmasUsd.begin(), fxSigmasUsd.end());
-        fxSigmasGbp_a = Array(fxSigmasGbp.begin(), fxSigmasGbp.end());
-
-        notimes_a = Array(0);
-        eurKappa_a = Array(1, 0.02);
-        usdKappa_a = Array(1, 0.03);
-        gbpKappa_a = Array(1, 0.04);
-
-        eurLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, volsteptimes_a,
-                                                                               eurVols_a, notimes_a, eurKappa_a);
-        usdLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, volsteptimes_a,
-                                                                               usdVols_a, notimes_a, usdKappa_a);
-        gbpLgm_p = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(GBPCurrency(), gbpYts, volsteptimes_a,
-                                                                               gbpVols_a, notimes_a, gbpKappa_a);
-
-        fxUsd_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), fxEurUsd, volsteptimesFx_a,
-                                                                           fxSigmasUsd_a);
-        fxGbp_p = QuantLib::ext::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), fxEurGbp, volsteptimesFx_a,
-                                                                           fxSigmasGbp_a);
-
-        singleModels.push_back(eurLgm_p);
-        singleModels.push_back(usdLgm_p);
-        singleModels.push_back(gbpLgm_p);
-        singleModels.push_back(fxUsd_p);
-        singleModels.push_back(fxGbp_p);
-
-        // clang-format off
-        //     EUR           USD           GBP         FX USD-EUR      FX GBP-EUR
-        c[0][0] = 1.0; c[0][1] = 0.6;  c[0][2] = 0.3; c[0][3] = 0.2;  c[0][4] = 0.3;  // EUR
-        c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1; c[1][3] = -0.2; c[1][4] = -0.1; // USD
-        c[2][0] = 0.3; c[2][1] = 0.1;  c[2][2] = 1.0; c[2][3] = 0.0;  c[2][4] = 0.1;  // GBP
-        c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0; c[3][3] = 1.0;  c[3][4] = 0.3;  // FX USD-EUR
-        c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1; c[4][3] = 0.3;  c[4][4] = 1.0;  // FX GBP-EUR
-        // clang-format on
-
-        ccLgmExact = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
-                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Exact);
-        ccLgmEuler = QuantLib::ext::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None,
-                                                         IrModel::Measure::LGM, CrossAssetModel::Discretization::Euler);
-    }
-
-    SavedSettings backup;
-    Date referenceDate;
-    Handle<YieldTermStructure> eurYts, usdYts, gbpYts;
-    std::vector<Date> volstepdates, volstepdatesFx;
-    Array volsteptimes_a, volsteptimesFx_a;
-    std::vector<Real> eurVols, usdVols, gbpVols, fxSigmasUsd, fxSigmasGbp;
-    Handle<Quote> fxEurUsd, fxEurGbp;
-    Array eurVols_a, usdVols_a, gbpVols_a, fxSigmasUsd_a, fxSigmasGbp_a;
-    Array notimes_a, eurKappa_a, usdKappa_a, gbpKappa_a;
-    QuantLib::ext::shared_ptr<IrLgm1fParametrization> eurLgm_p, usdLgm_p, gbpLgm_p;
-    QuantLib::ext::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
-    std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
-    Matrix c;
-    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact, ccLgmEuler;
-}; // LGM5FTestData
-
+        SavedSettings backup;
+        Date referenceDate;
+        Handle<YieldTermStructure> eurYts, usdYts, gbpYts;
+        std::vector<Date> volstepdates, volstepdatesFx;
+        Array volsteptimes_a, volsteptimesFx_a;
+        std::vector<Real> eurVols, usdVols, gbpVols, fxSigmasUsd, fxSigmasGbp;
+        Handle<Quote> fxEurUsd, fxEurGbp;
+        Array eurVols_a, usdVols_a, gbpVols_a, fxSigmasUsd_a, fxSigmasGbp_a;
+        Array notimes_a, eurKappa_a, usdKappa_a, gbpKappa_a;
+        QuantLib::ext::shared_ptr<IrLgm1fParametrization> eurLgm_p, usdLgm_p, gbpLgm_p;
+        QuantLib::ext::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
+        std::vector<QuantLib::ext::shared_ptr<Parametrization> > singleModels;
+        Matrix c;
+        QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact, ccLgmEuler;
+    }; 
 
 } // anonymous namespace
 
 BOOST_AUTO_TEST_CASE(testLgmCalibrationPricing) {
 
-    BOOST_TEST_MESSAGE("Testing full calibration of Ccy LGM 5F model pricing ...");
+    BOOST_TEST_MESSAGE("Testing pricing impact of calibrated volatility ...");
 
-    Lgm5fTestDataV d1;
-    Lgm5fTestDataV d2;
-    Lgm5fTestDataV d3;
-    Lgm5fTestDataV d4;
+    Lgm5fTestDataV d1; // These environments differ in the EUR volatility only.
+    Lgm5fTestDataW d2;
 
-    // calibration baskets
-    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basketEur1, basketEur2, basketEur3, basketEur4, basketEurGbp;
-
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basketEur3, basketEur4;
     QuantLib::ext::shared_ptr<IborIndex> euribor6m = QuantLib::ext::make_shared<Euribor>(6 * Months, d1.eurYts);
-
-    for (Size i = 0; i <= d1.volstepdates.size(); ++i) {
-        Date tmp = i < d1.volstepdates.size() ? d1.volstepdates[i] : d1.volstepdates.back() + 365;
-        // EUR: atm+200bp, 150bp normal vol
-
-        BOOST_TEST_MESSAGE("Input Swaption " << i << ": From " << tmp << " to " << "10Y");
-
-        basketEur1.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.015)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
-            Actual360(), d1.eurYts, BlackCalibrationHelper::RelativePriceError, 0.02, 1.0, Normal)));
-
-        basketEur2.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.025)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
-            Actual360(), d2.eurYts, BlackCalibrationHelper::RelativePriceError, 0.02, 1.0, Normal)));
-
-        basketEur3.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.035)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
-            Actual360(), d3.eurYts, BlackCalibrationHelper::RelativePriceError, 0.0000008, 1.0, Normal)));
-
-        basketEur4.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.035)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
-            Actual360(), d4.eurYts, BlackCalibrationHelper::RelativePriceError, 0.0000008, 1.0, Normal)));
-    }
 
     QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d1.ccLgmExact, 0);
     QuantLib::ext::shared_ptr<PricingEngine> eurSwEng2 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d2.ccLgmExact, 0);
 
-    // assign engines to calibration instruments
-    for (Size i = 0; i < basketEur1.size(); ++i) {
-        basketEur1[i]->setPricingEngine(eurSwEng1);
+    for (double strike = 0.00; strike <=0.06;strike+=0.02)
+    {
+        BOOST_TEST_MESSAGE("Strike: "<< strike);
+
+        for (Size i = 0; i < d1.volstepdates.size(); ++i) 
+        {
+            Date tmp = i < d1.volstepdates.size() ? d1.volstepdates[i] : d1.volstepdates.back() + 365;
+
+            auto sw=QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+                tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.35)), 
+                euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
+                Actual360(), d1.eurYts, BlackCalibrationHelper::RelativePriceError, 
+                strike, 1.0, Normal));
+
+            sw->setPricingEngine(eurSwEng1);
+            Real model2 = sw->modelValue();
+
+            sw->setPricingEngine(eurSwEng2);
+            Real model3 = sw->modelValue();
+            
+            BOOST_TEST_MESSAGE("Swaption "<<i<<": " << model2 * 10000.00 << " bp. " << ", " << model3 * 10000.00 << " bp. " << " diff: " << (model3 - model2) * 10000.00 << " bp. ");
+        }
+
+        BOOST_TEST_MESSAGE(" ");
     }
 
-    for (Size i = 0; i < basketEur2.size(); ++i) {
-        basketEur2[i]->setPricingEngine(eurSwEng2);
+    {
+        QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm1 = QuantLib::ext::static_pointer_cast<LinearGaussMarkovModel>(d1.ccLgmExact->irModel(0));
+        BOOST_TEST_MESSAGE(" T = 1: Model1 - "<< (*lgm1).parametrization()->printParameters(1));
+        QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm2 = QuantLib::ext::static_pointer_cast<LinearGaussMarkovModel>(d2.ccLgmExact->irModel(0));
+        BOOST_TEST_MESSAGE(" T = 1: Model2 - "<< (*lgm2).parametrization()->printParameters(1));
     }
 
-    LevenbergMarquardt lm1(1E-14, 1E-14, 1E-14);
-    EndCriteria ec1(1000, 500, 1E-14, 1E-14, 1E-14);
-    d1.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur1, lm1, ec1);
-
-    LevenbergMarquardt lm2(1E-14, 1E-14, 1E-14);
-    EndCriteria ec2(1000, 500, 1E-14, 1E-14, 1E-14);
-    d2.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur2, lm2, ec2);
-
-    for (Size i = 0; i < basketEur3.size(); ++i) {
-        basketEur3[i]->setPricingEngine(eurSwEng1);
+    {
+        QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm1 = QuantLib::ext::static_pointer_cast<LinearGaussMarkovModel>(d1.ccLgmExact->irModel(0));
+        BOOST_TEST_MESSAGE(" T = 2: Model1 - "<< (*lgm1).parametrization()->printParameters(2));
+        QuantLib::ext::shared_ptr<LinearGaussMarkovModel> lgm2 = QuantLib::ext::static_pointer_cast<LinearGaussMarkovModel>(d2.ccLgmExact->irModel(0));
+        BOOST_TEST_MESSAGE(" T = 2: Model2 - "<< (*lgm2).parametrization()->printParameters(2));
     }
-
-    for (Size i = 0; i < basketEur4.size(); ++i) {
-        basketEur4[i]->setPricingEngine(eurSwEng2);
-    }
-
-    for (Size i = 0; i < basketEur1.size(); ++i) {
-        Real model2 = basketEur3[i]->modelValue();
-        Real model3 = basketEur4[i]->modelValue();
-        
-        BOOST_TEST_MESSAGE("Swaption "<<i<<": " << model2 << ", " << model3 << " diff: " << (model3 - model2) * 10000.00 <<" bp.");
-    }
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()
