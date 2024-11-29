@@ -2187,119 +2187,120 @@ void OREAppInputParameters::loadParameters() {
       *********************/
 
      tmp = params_->get("sacva", "active", false);
-     if (!tmp.empty() && parseBool(tmp))
+     if (!tmp.empty() && parseBool(tmp)) {
          insertAnalytic("SA_CVA");
 
-     tmp = params_->get("sacva", "saCvaNetSensitivitiesFile", false);
-     if (!tmp.empty()) {
-         string file = (inputPath / tmp).generic_string();
-         LOG("Loading aggregated SA-CVA sensitivity input from file" << file);
-	 setSaCvaNetSensitivitiesFromFile(file);
-     } else {
-         tmp = params_->get("sacva", "cvaSensitivitiesFile", false);
+         tmp = params_->get("sacva", "saCvaNetSensitivitiesFile", false);
          if (!tmp.empty()) {
              string file = (inputPath / tmp).generic_string();
-             LOG("Loading granular cva sensitivity input from file" << file);
-             setCvaSensitivitiesFromFile(file);
+             LOG("Loading aggregated SA-CVA sensitivity input from file" << file);
+             setSaCvaNetSensitivitiesFromFile(file);
          } else {
-             // Ensure that we have the XVA Sensitivity analytic configured, see above
-             QL_REQUIRE(
-                 analytics().find("XVA_SENSITIVITY") != analytics().end(),
-                 "SA-CVA needs the XVA Sensitivity analytic configured unless sensitivities are provided as an input");
-             // XVA Sensitivity will be run as a sub analytic of SA-CVA so that we can drop it here
-             removeAnalytic("XVA_SENSITIVITY");
+             tmp = params_->get("sacva", "cvaSensitivitiesFile", false);
+             if (!tmp.empty()) {
+                 string file = (inputPath / tmp).generic_string();
+                 LOG("Loading granular cva sensitivity input from file" << file);
+                 setCvaSensitivitiesFromFile(file);
+             } else {
+                 // Ensure that we have the XVA Sensitivity analytic configured, see above
+                 QL_REQUIRE(analytics().find("XVA_SENSITIVITY") != analytics().end(),
+                            "SA-CVA needs the XVA Sensitivity analytic configured unless sensitivities are provided as "
+                            "an input");
+                 // XVA Sensitivity will be run as a sub analytic of SA-CVA so that we can drop it here
+                 removeAnalytic("XVA_SENSITIVITY");
+             }
          }
      }
 
      /*************
-     * cashflow npv and dynamic backtesting
-     *************/
+      * cashflow npv and dynamic backtesting
+      *************/
 
-    tmp = params_->get("cashflow", "cashFlowHorizon", false);
-    if (tmp != "")
-        setCashflowHorizon(tmp);
+     tmp = params_->get("cashflow", "cashFlowHorizon", false);
+     if (tmp != "")
+         setCashflowHorizon(tmp);
 
-    tmp = params_->get("cashflow", "portfolioFilterDate", false);
-    if (tmp != "")
-        setPortfolioFilterDate(tmp);
+     tmp = params_->get("cashflow", "portfolioFilterDate", false);
+     if (tmp != "")
+         setPortfolioFilterDate(tmp);
 
-    /*************
-     * ZERO TO PAR SENSI CONVERSION
-     *************/
+     /*************
+      * ZERO TO PAR SENSI CONVERSION
+      *************/
 
-    tmp = params_->get("zeroToParSensiConversion", "active", false);
-    if (!tmp.empty() && parseBool(tmp)) {
-        insertAnalytic("PARCONVERSION");
+     tmp = params_->get("zeroToParSensiConversion", "active", false);
+     if (!tmp.empty() && parseBool(tmp)) {
+         insertAnalytic("PARCONVERSION");
 
-        tmp = params_->get("zeroToParSensiConversion", "sensitivityInputFile", false);
-        if (tmp != "") {
-            setParConversionInputFile((inputPath / tmp).generic_string());
-        }
+         tmp = params_->get("zeroToParSensiConversion", "sensitivityInputFile", false);
+         if (tmp != "") {
+             setParConversionInputFile((inputPath / tmp).generic_string());
+         }
 
-        tmp = params_->get("zeroToParSensiConversion", "idColumn", false);
-        if (tmp != "") {
-            setParConversionInputIdColumn(tmp);
-        }
+         tmp = params_->get("zeroToParSensiConversion", "idColumn", false);
+         if (tmp != "") {
+             setParConversionInputIdColumn(tmp);
+         }
 
-        tmp = params_->get("zeroToParSensiConversion", "riskFactorColumn", false);
-        if (tmp != "") {
-            setParConversionInputRiskFactorColumn(tmp);
-        }
+         tmp = params_->get("zeroToParSensiConversion", "riskFactorColumn", false);
+         if (tmp != "") {
+             setParConversionInputRiskFactorColumn(tmp);
+         }
 
-        tmp = params_->get("zeroToParSensiConversion", "deltaColumn", false);
-        if (tmp != "") {
-            setParConversionInputDeltaColumn(tmp);
-        }
+         tmp = params_->get("zeroToParSensiConversion", "deltaColumn", false);
+         if (tmp != "") {
+             setParConversionInputDeltaColumn(tmp);
+         }
 
-        tmp = params_->get("zeroToParSensiConversion", "currencyColumn", false);
-        if (tmp != "") {
-            setParConversionInputCurrencyColumn(tmp);
-        }
+         tmp = params_->get("zeroToParSensiConversion", "currencyColumn", false);
+         if (tmp != "") {
+             setParConversionInputCurrencyColumn(tmp);
+         }
 
-        tmp = params_->get("zeroToParSensiConversion", "baseNpvColumn", false);
-        if (tmp != "") {
-            setParConversionInputBaseNpvColumn(tmp);
-        }
+         tmp = params_->get("zeroToParSensiConversion", "baseNpvColumn", false);
+         if (tmp != "") {
+             setParConversionInputBaseNpvColumn(tmp);
+         }
 
-        tmp = params_->get("zeroToParSensiConversion", "shiftSizeColumn", false);
-        if (tmp != "") {
-            setParConversionInputShiftSizeColumn(tmp);
-        }
+         tmp = params_->get("zeroToParSensiConversion", "shiftSizeColumn", false);
+         if (tmp != "") {
+             setParConversionInputShiftSizeColumn(tmp);
+         }
 
-        tmp = params_->get("zeroToParSensiConversion", "marketConfigFile", false);
-        if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
-            LOG("Loading par converions scenario sim market parameters from file" << file);
-            setParConversionSimMarketParamsFromFile(file);
-        } else {
-            WLOG("ScenarioSimMarket parameters for par conversion testing not loaded");
-        }
+         tmp = params_->get("zeroToParSensiConversion", "marketConfigFile", false);
+         if (tmp != "") {
+             string file = (inputPath / tmp).generic_string();
+             LOG("Loading par converions scenario sim market parameters from file" << file);
+             setParConversionSimMarketParamsFromFile(file);
+         } else {
+             WLOG("ScenarioSimMarket parameters for par conversion testing not loaded");
+         }
 
-        tmp = params_->get("zeroToParSensiConversion", "sensitivityConfigFile", false);
-        if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
-            LOG("Load par conversion scenario data from file" << file);
-            setParConversionScenarioDataFromFile(file);
-        } else {
-            WLOG("Par conversion scenario data not loaded");
-        }
+         tmp = params_->get("zeroToParSensiConversion", "sensitivityConfigFile", false);
+         if (tmp != "") {
+             string file = (inputPath / tmp).generic_string();
+             LOG("Load par conversion scenario data from file" << file);
+             setParConversionScenarioDataFromFile(file);
+         } else {
+             WLOG("Par conversion scenario data not loaded");
+         }
 
-        tmp = params_->get("zeroToParSensiConversion", "pricingEnginesFile", false);
-        if (tmp != "") {
-            string file = (inputPath / tmp).generic_string();
-            LOG("Load pricing engine data from file: " << file);
-            setParConversionPricingEngineFromFile(file);
-        } else {
-            WLOG("Pricing engine data not found for par conversion, using global");
-        }
+         tmp = params_->get("zeroToParSensiConversion", "pricingEnginesFile", false);
+         if (tmp != "") {
+             string file = (inputPath / tmp).generic_string();
+             LOG("Load pricing engine data from file: " << file);
+             setParConversionPricingEngineFromFile(file);
+         } else {
+             WLOG("Pricing engine data not found for par conversion, using global");
+         }
 
-        tmp = params_->get("zeroToParSensiConversion", "outputThreshold", false);
-        if (tmp != "")
-            setParConversionThreshold(parseReal(tmp));
+         tmp = params_->get("zeroToParSensiConversion", "outputThreshold", false);
+         if (tmp != "")
+             setParConversionThreshold(parseReal(tmp));
 
-        tmp = params_->get("zeroToParSensiConversion", "outputJacobi", false);
-        if (tmp != "")
-            setParConversionOutputJacobi(parseBool(tmp));
+         tmp = params_->get("zeroToParSensiConversion", "outputJacobi", false);
+         if (tmp != "")
+             setParConversionOutputJacobi(parseBool(tmp));
     }
 
     /**********************
