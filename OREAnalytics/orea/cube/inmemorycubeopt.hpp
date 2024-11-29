@@ -39,10 +39,6 @@ using QuantLib::Date;
 using QuantLib::Size;
 
 template <typename T> class InMemoryCubeOpt : public NPVCube {
-private:
-    // number of dates in a block
-    static constexpr Size N = 1;
-
 public:
     InMemoryCubeOpt(const Date& asof, const std::set<std::string>& ids, const std::vector<Date>& dates, Size samples,
                     const T& t = T())
@@ -51,7 +47,7 @@ public:
     InMemoryCubeOpt(const Date& asof, const std::set<std::string>& ids, const std::vector<Date>& dates, Size samples,
                     Size depth, const T& t = T())
         : asof_(asof), dates_(dates), samples_(samples), depth_(depth), t0data_(new T[depth_ * samples_]),
-          data_(dates_.size() / N + (dates_.size() % N == 0 ? 0 : 1), std::vector<T*>(ids.size())) {
+          data_(dates_.size(), std::vector<T*>(ids.size())) {
 
         Size pos = 0;
         for (const auto& id : ids) {
@@ -93,25 +89,21 @@ public:
 
     Real get(Size i, Size j, Size k, Size d) const override {
         this->check(i, j, k, d);
-        Size n = j / N;
-        Size m = j % N;
-        if (data_[n][i] == nullptr)
+        if (data_[j][i] == nullptr)
             return 0.0;
         else
-            return static_cast<Real>(data_[n][i][d * N * samples_ + m * samples_ + k]);
+            return static_cast<Real>(data_[j][i][d * samples_ + k]);
     }
 
     void set(Real value, Size i, Size j, Size k, Size d) override {
         this->check(i, j, k, d);
         if (value == 0.0)
             return;
-        Size n = j / N;
-        Size m = j % N;
-        if (data_[n][i] == nullptr) {
-            data_[n][i] = new T[N * depth_ * samples_];
-            std::fill(data_[n][i], data_[n][i] + N * depth_ * samples_, 0.0);
+        if (data_[j][i] == nullptr) {
+            data_[j][i] = new T[depth_ * samples_];
+            std::fill(data_[j][i], data_[j][i] + depth_ * samples_, 0.0);
         }
-        data_[n][i][d * N * samples_ + m * samples_ + k] = static_cast<T>(value);
+        data_[n][i][d * samples_ + k] = static_cast<T>(value);
     }
 
 private:
