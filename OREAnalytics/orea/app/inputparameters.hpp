@@ -1278,6 +1278,8 @@ private:
 };
 
 void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);
+  
+CvaRiskFactorKey mapRiskFactorKeyToCvaRiskFactorKey(string s);
 
 } // namespace analytics
 } // namespace ore

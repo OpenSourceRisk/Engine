@@ -64,13 +64,6 @@ std::ostream& operator<<(std::ostream& os, const XvaResults::Adjustment adjustme
 
 class XvaSensitivityAnalyticImpl : public Analytic::Impl {
 public:
-    static constexpr const char* LABEL = "XVA_SENSITIVITY";
-    explicit XvaSensitivityAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
-    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
-                     const std::set<std::string>& runTypes = {}) override;
-    void setUpConfigurations() override;
-
-private:
     struct ZeroSensiResults{
         std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<SensitivityCube>> tradeCubes_;
         std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<SensitivityCube>> nettingCubes_;
@@ -81,6 +74,13 @@ private:
         std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<ZeroToParCube>> nettingParSensiCube_;
     };
 
+    static constexpr const char* LABEL = "XVA_SENSITIVITY";
+    explicit XvaSensitivityAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
+                     const std::set<std::string>& runTypes = {}) override;
+    void setUpConfigurations() override;
+  
+private:
     QuantLib::ext::shared_ptr<ScenarioSimMarket> buildSimMarket(bool overrideTenors);
     
     QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> buildScenarioGenerator(QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket, bool overrideTenors);
@@ -113,8 +113,16 @@ class XvaSensitivityAnalytic : public Analytic {
 public:
     explicit XvaSensitivityAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
 
-};
+    void setParResults(const XvaSensitivityAnalyticImpl::ParSensiResults& results) { parResults_ = results; }
+    void setZeroResults(const XvaSensitivityAnalyticImpl::ZeroSensiResults& results) { zeroResults_ = results; }
 
+    const XvaSensitivityAnalyticImpl::ParSensiResults& getParResults() const { return parResults_; }
+    const XvaSensitivityAnalyticImpl::ZeroSensiResults& getZeroResults() const { return zeroResults_; }
+
+private:
+    XvaSensitivityAnalyticImpl::ZeroSensiResults zeroResults_;
+    XvaSensitivityAnalyticImpl::ParSensiResults parResults_;
+};
 
 } // namespace analytics
 } // namespace ore

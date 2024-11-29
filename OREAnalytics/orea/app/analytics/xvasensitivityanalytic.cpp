@@ -155,18 +155,22 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     // generate the stress scenarios and run dependent xva analytic under each of them
 
+    auto xvaSensiAnalytic = static_cast<XvaSensitivityAnalytic*>(analytic());
+
     CONSOLE("XVA_SENSI: Running sensi scenarios");
 
     // run stress test
     LOG("Run XVA Zero Sensitivity Sensitivity")
     auto zeroCubes = computeZeroXvaSensitivity(loader);
+    xvaSensiAnalytic->setZeroResults(zeroCubes);
     createZeroReports(zeroCubes);
+    
     if (inputs_->xvaSensiParSensi()) {
         LOG("Run Par Conversion")
         auto parCubes = parConversion(zeroCubes);
+	xvaSensiAnalytic->setParResults(parCubes);
         createParReports(parCubes, zeroCubes.tradeNettingSetMap_);
-        LOG("Running XVA Sensitivity analytic finished.");
-        
+        LOG("Running XVA Sensitivity analytic finished.");        
     }
 }
 
