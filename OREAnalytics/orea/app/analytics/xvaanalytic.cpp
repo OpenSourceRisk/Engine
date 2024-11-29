@@ -995,6 +995,13 @@ void XvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InM
             analytic()->reports()["XVA"]["netcube"] = report;
         }
 
+        if (inputs_->timeAveragedNettedExposureOutput()) {
+            auto report = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+            ReportWriter(inputs_->reportNaString())
+                .writeTimeAveragedNettedExposure(*report, postProcess_->timeAveragedNettedExposure());
+            analytic()->reports()["XVA"]["timeAveragedNettedExposure"] = report;
+        }
+
         if (inputs_->dimAnalytic() || inputs_->mvaAnalytic()) {
             // Generate DIM evolution report
             auto dimEvolutionReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());

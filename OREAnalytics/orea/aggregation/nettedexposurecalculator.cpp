@@ -135,6 +135,7 @@ void NettedExposureCalculator::build() {
     vector<vector<Real>> averagePositiveAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
     vector<vector<Real>> averageNegativeAllocation(portfolio_->size(), vector<Real>(cube_->dates().size(), 0.0));
     const Date baselMaxEEPDate = WeekendsOnly().adjust(today + 1 * Years + 4 * Days);
+
     Size nettingSetCount = 0;
     for (auto n : nettingSetDefaultValue_) {
         string nettingSetId = n.first;
@@ -232,6 +233,7 @@ void NettedExposureCalculator::build() {
         vector<Real> pfe(cube_->dates().size() + 1, 0.0);
         vector<Real> colvaInc(cube_->dates().size() + 1, 0.0);
         vector<Real> eoniaFloorInc(cube_->dates().size() + 1, 0.0);
+        vector<TimeAveragedExposure> timeAveragedNettedExposure(cube_->samples());
         Real npv = nettingSetValueToday[nettingSetId];
         Real initalVmCollateralMismatch = 0.0;
         Date endFirstMpor = netting->activeCsaFlag() ? today + netting->csaDetails()->marginPeriodOfRisk() : today;
@@ -399,7 +401,18 @@ void NettedExposureCalculator::build() {
                         }
                     }
                 }
-            }
+
+                // expressions "exposure - dim_epe" and "-exposure - dim_ene" are taken from above
+                timeAveragedNettedExposure[k].positiveExposureBeforeCollateral +=
+                    std::max(0.0, data[j][k]) * timeDeltas[j];
+                timeAveragedNettedExposure[k].negativeExposureBeforeCollateral +=
+                    -std::max(0.0, -data[j][k]) * timeDeltas[j];
+                timeAveragedNettedExposure[k].positiveExposureAfterCollateral +=
+                    std::max(0.0, exposure - dim_epe) * timeDeltas[j];
+                timeAveragedNettedExposure[k].negativeExposureAfterCollateral +=
+                    -std::max(0.0, -exposure - dim_ene) * timeDeltas[j];
+
+            } // for k cube->samples()
             if (!multiPath_) {
                 exposureCube_->set(epe[j + 1], nettingSetCount, j, 0, ExposureIndex::EPE);
                 exposureCube_->set(ene[j + 1], nettingSetCount, j, 0, ExposureIndex::ENE);
@@ -428,6 +441,16 @@ void NettedExposureCalculator::build() {
         eoniaFloorInc_[nettingSetId] = eoniaFloorInc;
         epe_bTimeWeighted_[nettingSetId] = epe_b;
         eepe_bTimeWeighted_[nettingSetId] = eepe_b;
+
+        Real nsT = dc.yearFraction(today, nettingSetMaturity[nettingSetId]);
+        for (Size k = 0; k < cube_->samples(); ++k) {
+            timeAveragedNettedExposure[k].positiveExposureBeforeCollateral /= nsT;
+            timeAveragedNettedExposure[k].negativeExposureBeforeCollateral /= nsT;
+            timeAveragedNettedExposure[k].positiveExposureAfterCollateral /= nsT;
+            timeAveragedNettedExposure[k].negativeExposureAfterCollateral /= nsT;
+        }
+        timeAveragedNettedExposure_[nettingSetId] = timeAveragedNettedExposure;
+
         nettingSetCount++;
     }
 
@@ -545,6 +568,11 @@ const string& NettedExposureCalculator::counterparty(const string nettingSetId) 
     QL_REQUIRE(it != counterpartyMap_.end(),
 	       "counterparty not found for netting set id " << nettingSetId);
     return it->second;
+}
+
+const std::map<std::string, std::vector<NettedExposureCalculator::TimeAveragedExposure>>&
+NettedExposureCalculator::timeAveragedNettedExposure() const {
+    return timeAveragedNettedExposure_;
 }
 
 } // namespace analytics
