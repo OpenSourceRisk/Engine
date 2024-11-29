@@ -138,6 +138,10 @@ virtual void writeXvaSensitivityReport(
     virtual void writeCube(ore::data::Report& report, const QuantLib::ext::shared_ptr<NPVCube>& cube,
                            const std::map<std::string, std::string>& nettingSetMap = std::map<std::string, std::string>());
 
+    virtual void writeTimeAveragedNettedExposure(
+        ore::data::Report& report,
+        const std::map<std::string, std::vector<NettedExposureCalculator::TimeAveragedExposure>>&);
+
     const std::string& nullString() const { return nullString_; }
 
     /*! Write out the SIMM results contained in the \p resultsMap and \p additionalMargin.
