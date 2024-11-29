@@ -103,7 +103,7 @@ public:
             data_[j][i] = new T[depth_ * samples_];
             std::fill(data_[j][i], data_[j][i] + depth_ * samples_, 0.0);
         }
-        data_[n][i][d * samples_ + k] = static_cast<T>(value);
+        data_[j][i][d * samples_ + k] = static_cast<T>(value);
     }
 
 private:
