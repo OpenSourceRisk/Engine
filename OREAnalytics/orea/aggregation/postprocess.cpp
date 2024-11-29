@@ -844,5 +844,10 @@ void PostProcess::exportDimRegression(const std::string& nettingSet, const std::
         regCalc->exportDimRegression(nettingSet, timeSteps, dimRegReports);
 }
 
+const std::map<std::string, std::vector<NettedExposureCalculator::TimeAveragedExposure>>&
+PostProcess::timeAveragedNettedExposure() const {
+    return nettedExposureCalculator_->timeAveragedNettedExposure();
+}
+
 } // namespace analytics
 } // namespace ore

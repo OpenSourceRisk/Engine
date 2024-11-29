@@ -104,6 +104,16 @@ public:
     map<string, vector<vector<Real>>> nettingSetDefaultValue() { return nettingSetDefaultValue_; }
     map<string, vector<vector<Real>>> nettingSetMporPositiveFlow() { return nettingSetMporPositiveFlow_; }
     map<string, vector<vector<Real>>> nettingSetMporNegativeFlow() { return nettingSetMporNegativeFlow_; }
+
+    //! nettingSetId -> { +- 1/T int_0^T max(+- V(t), 0) dt } before and after collateral
+    struct TimeAveragedExposure {
+        Real positiveExposureBeforeCollateral = 0.0;
+        Real negativeExposureBeforeCollateral = 0.0;
+        Real positiveExposureAfterCollateral = 0.0;
+        Real negativeExposureAfterCollateral = 0.0;
+    };
+    const std::map<std::string, std::vector<TimeAveragedExposure>>& timeAveragedNettedExposure() const;
+
 protected:
     QuantLib::ext::shared_ptr<Portfolio> portfolio_;
     QuantLib::ext::shared_ptr<Market> market_;
@@ -148,6 +158,7 @@ protected:
     map<string, Real> eepe_b_;
     map<string, Real> colva_;
     map<string, Real> collateralFloor_;
+    std::map<string, std::vector<TimeAveragedExposure>> timeAveragedNettedExposure_;
     vector<Real> getMeanExposure(const string& tid, ExposureIndex index);
 
     QuantLib::ext::shared_ptr<vector<QuantLib::ext::shared_ptr<CollateralAccount>>>

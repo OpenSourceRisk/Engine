@@ -79,7 +79,7 @@ void DiscountingEquityForwardEngine::calculate() const {
         results_.additionalResults["discountFactor"] = df;
         results_.additionalResults["forwardPrice"] = forwardPrice;
         results_.additionalResults["underlyingCcy"] = arguments_.currency;
-        results_.additionalResults["currentNotional"] = qty * forwardPrice * fxRate;
+        results_.additionalResults["currentNotional"] = qty * strike * fxRate;
         results_.additionalResults["currentNotionalCurrency"] = arguments_.payCurrency;
         results_.additionalResults["fxRate"] = fxRate;
         results_.additionalResults["fxFixingDate"] = arguments_.fixingDate;

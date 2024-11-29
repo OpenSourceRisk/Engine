@@ -246,6 +246,7 @@ cube/cubecsvreader.hpp
 cube/cubeinterpretation.hpp
 cube/cubewriter.hpp
 cube/inmemorycube.hpp
+cube/inmemorycubeopt.hpp
 cube/jaggedcube.hpp
 cube/jointnpvcube.hpp
 cube/jointnpvsensicube.hpp
