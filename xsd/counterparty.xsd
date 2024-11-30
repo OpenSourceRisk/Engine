@@ -1,0 +1,52 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element type="counterpartyInformation" name="CounterpartyInformation"/>
+
+  <xs:complexType name="counterpartyInformation">
+    <xs:all>
+      <xs:element type="counterparties" name="Counterparties" minOccurs="0" />
+      <xs:element type="counterPartyCorrelations" name="Correlations" minOccurs="0" />
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="counterparties">
+    <xs:sequence>
+      <xs:element type="counterparty" name="Counterparty" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="counterparty">
+    <xs:all>
+      <xs:element type="xs:string" name="CounterpartyId"/>
+      <xs:element type="xs:boolean" name="ClearingCounterparty" minOccurs="0"/>
+      <xs:element type="creditQualityType" name="CreditQuality" minOccurs="0"/>
+      <xs:element type="xs:decimal" name="BaCvaRiskWeight" minOccurs="0"/>
+      <xs:element type="xs:decimal" name="SaCcrRiskWeight" minOccurs="0"/>
+      <xs:element type="xs:decimal" name="SaCvaRiskBucket" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="counterPartyCorrelations">
+    <xs:sequence>
+      <xs:element name="Correlation" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="correlationValue">
+              <xs:attribute type="xs:string" name="cpty1" use="required"/>
+              <xs:attribute type="xs:string" name="cpty2" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="creditQualityType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="HY"/>
+      <xs:enumeration value="IG"/>
+      <xs:enumeration value="NR"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

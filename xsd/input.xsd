@@ -18,6 +18,7 @@
   <xs:include schemaLocation="iborfallbackconfig.xsd"/>
   <xs:include schemaLocation="scriptlibrary.xsd"/>
   <xs:include schemaLocation="simmcalibration.xsd"/>
+  <xs:include schemaLocation="counterparty.xsd"/>
   <!--<xs:include schemaLocation="collateralbalance.xsd"/>-->
 
   <xs:element type="portfolio" name="Portfolio"/>
