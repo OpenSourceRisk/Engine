@@ -33,6 +33,7 @@
 
 #include <initializer_list>
 #include <vector>
+#include <set>
 
 namespace QuantExt {
 
