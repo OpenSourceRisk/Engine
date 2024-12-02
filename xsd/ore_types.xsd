@@ -853,6 +853,7 @@
             <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
             <xs:element type="xs:string" name="Tenor" minOccurs="0"/>
             <xs:element type="bool" name="EndOfMonth" minOccurs="0"/>
+            <xs:element type="bool" name="IncludeDuplicateDates" minOccurs="0" />
             <xs:element name="Dates">
               <xs:complexType>
                 <xs:sequence>
