@@ -237,34 +237,49 @@ public:
         // Recovery rate grids have three pillars, centered around market recovery, DECREASING order : [ 2*RR - 0.1, RR,
         // 0.1 ] Probabilities for the three pillars are symmetric around the center of the distribution and independent
         // of the concrete rate grid
+        bool useStochasticRecovery = parseBool(modelParameter("useStochasticRecovery", {}, false, "false"));
         std::vector<std::vector<Real>> recoveryGrids;
-        string rrProbString = modelParameter("recoveryRateProbabilities");
-        string rrGridString = modelParameter("recoveryRateGrid");
-        vector<string> rrProbStringTokens;
-        boost::split(rrProbStringTokens, rrProbString, boost::is_any_of(","));
-        vector<Real> rrProb = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
-        QL_REQUIRE(rrProb.size() == 3, "Expect three recoveryrate proabilites");
-        for(Size i = 0; i < recoveryRates.size(); ++i) {
-            // recovery rate grid dependent on market recovery rate
-            std::vector<Real> rrGrid(3.0, recoveryRates[i]); // constant recovery by default
-            QL_REQUIRE(rrProb.size() == rrGrid.size(), "recovery grid size mismatch");
-            if (recoveryRates[i] >= 0.1 && recoveryRates[i] <= 0.55) {
-                        rrGrid[0] = 2.0 * recoveryRates[i] - 0.1;
-                        rrGrid[1] = recoveryRates[i];
-                        rrGrid[2] = 0.1;
-                        LOG("Using recovery rate grid for entity " << i << ": " << rrGrid[0] << " " << rrGrid[1] << " " << rrGrid[2]);
-            } else
-                ALOG("Market recovery rate " << recoveryRates[i] << " for entity " << i
-                                             << " out of range [0.1, 0.55], using constant recovery");
-            recoveryGrids.push_back(rrGrid);
-        }
+        vector<Real> rrProb;
+        if (useStochasticRecovery) {
+            string rrProbString = modelParameter("recoveryRateProbabilities");
+            string rrGridString = modelParameter("recoveryRateGrid");
+            vector<string> rrProbStringTokens;
+            boost::split(rrProbStringTokens, rrProbString, boost::is_any_of(","));
 
-        DLOG("Build MonteCarloModel");
-        Size nSimulations = parseInteger(engineParameter("nSimulations"));
-        auto model = ext::make_shared<QuantExt::GaussianOneFactorMonteCarloLossModel>(correlation, recoveryGrids,
-                                                                                      rrProb, nSimulations);
-        return model;
-    }
+            rrProb = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
+
+            QL_REQUIRE(rrProb.size() == 3, "Expect three recoveryrate proabilites");
+            for (Size i = 0; i < recoveryRates.size(); ++i) {
+                // recovery rate grid dependent on market recovery rate
+                std::vector<Real> rrGrid(3.0, recoveryRates[i]); // constant recovery by default
+                QL_REQUIRE(rrProb.size() == rrGrid.size(), "recovery grid size mismatch");
+
+                /*
+                if (recoveryRates[i] >= 0.1 && recoveryRates[i] <= 0.55) {
+                            rrGrid[0] = 2.0 * recoveryRates[i] - 0.1;
+                            rrGrid[1] = recoveryRates[i];
+                            rrGrid[2] = 0.1;
+                            LOG("Using recovery rate grid for entity " << i << ": " << rrGrid[0] << " " << rrGrid[1] <<
+                " " << rrGrid[2]); } else ALOG("Market recovery rate " << recoveryRates[i] << " for entity " << i
+                                                 << " out of range [0.1, 0.55], using constant recovery");
+                */
+                rrGrid[0] = 0.7;
+                rrGrid[1] = 0.4;
+                rrGrid[2] = 0.1;
+                recoveryGrids.push_back(rrGrid);
+            }
+        } else{
+            rrProb = {1.0};
+            for (Size i = 0; i < recoveryRates.size(); ++i) {
+                recoveryGrids.push_back({recoveryRates[i]});
+            }
+        }
+            DLOG("Build MonteCarloModel");
+            Size nSimulations = parseInteger(engineParameter("nSimulations"));
+            auto model = ext::make_shared<QuantExt::GaussianOneFactorMonteCarloLossModel>(correlation, recoveryGrids,
+                                                                                          rrProb, nSimulations);
+            return model;
+        }
 };
 
 } // namespace data
