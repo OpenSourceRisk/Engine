@@ -467,6 +467,8 @@ void ConvertibleBond::build(const QuantLib::ext::shared_ptr<ore::data::EngineFac
 
     // build converible underlying bond, add to required fixings
 
+    additionalData_["underlyingSecurityId"] = data_.bondData().securityId();
+
     ore::data::Bond underlyingBond(Envelope(), data_.bondData());
     underlyingBond.build(engineFactory);
     requiredFixings_.addData(underlyingBond.requiredFixings());

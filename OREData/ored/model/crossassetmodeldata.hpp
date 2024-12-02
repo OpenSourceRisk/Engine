@@ -330,6 +330,6 @@ private:
 };
 
 CrossAssetModel::Discretization parseDiscretization(const string& s);
-
+  
 } // namespace data
 } // namespace ore

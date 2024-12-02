@@ -158,12 +158,12 @@ void ReportWriter::writeCashflow(ore::data::Report& report, const std::string& b
         .addColumn("FXRate(Local-Base)", double(), 10)
         .addColumn("PresentValue(Base)", double(), 10)
         .addColumn("BaseCurrency", string())
-        .addColumn("FloorStrike", double(), 6)
-        .addColumn("CapStrike", double(), 6)
-        .addColumn("FloorVolatility", double(), 6)
-        .addColumn("CapVolatility", double(), 6)
-        .addColumn("EffectiveFloorVolatility", double(), 6)
-        .addColumn("EffectiveCapVolatility", double(), 6);
+        .addColumn("FloorStrike", double(), 10)
+        .addColumn("CapStrike", double(), 10)
+        .addColumn("FloorVolatility", double(), 10)
+        .addColumn("CapVolatility", double(), 10)
+        .addColumn("EffectiveFloorVolatility", double(), 10)
+        .addColumn("EffectiveCapVolatility", double(), 10);
 
     for (auto [tradeId, trade]: portfolio->trades()) {
 
@@ -802,6 +802,77 @@ void ReportWriter::writeSensitivityReport(Report& report, const QuantLib::ext::s
     LOG("Sensitivity report finished");
 }
 
+void ReportWriter::writeXvaSensitivityReport(Report& report, const QuantLib::ext::shared_ptr<SensitivityStream>& ssTrades,
+        const QuantLib::ext::shared_ptr<SensitivityStream>& ssNettingSets, const std::map<std::string, std::string>& tradeNettingSetMap, Real outputThreshold,
+                                             Size outputPrecision) {
+
+    LOG("Writing XVA Sensitivity report");
+
+    Size shiftSizePrecision = outputPrecision < 6 ? 6 : outputPrecision;
+    Size amountPrecision = outputPrecision < 2 ? 2 : outputPrecision;
+
+    report.addColumn("NettingSetId", string());
+    report.addColumn("TradeId", string());
+    report.addColumn("IsPar", string());
+    report.addColumn("Factor_1", string());
+    report.addColumn("ShiftSize_1", double(), shiftSizePrecision);
+    report.addColumn("Factor_2", string());
+    report.addColumn("ShiftSize_2", double(), shiftSizePrecision);
+    report.addColumn("Currency", string());
+    report.addColumn("Base XVA", double(), amountPrecision);
+    report.addColumn("Delta", double(), amountPrecision);
+    report.addColumn("Gamma", double(), amountPrecision);
+
+    // Make sure that we are starting from the start
+    ssTrades->reset();
+    while (SensitivityRecord sr = ssTrades->next()) {
+        if ((outputThreshold == Null<Real>()) ||
+            (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
+            auto it = tradeNettingSetMap.find(sr.tradeId);
+            report.next();
+            report.add(it != tradeNettingSetMap.end() ? it->second : "");
+            report.add(sr.tradeId);
+            report.add(ore::data::to_string(sr.isPar));
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(sr.shift_1);
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(sr.shift_2);
+            report.add(sr.currency);
+            report.add(sr.baseNpv);
+            report.add(sr.delta);
+            report.add(sr.gamma);
+        } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
+            // TODO: Again, is this needed?
+            ALOG("sensitivity record has infinite values: " << sr);
+        }
+    }
+
+    ssNettingSets->reset();
+    while (SensitivityRecord sr = ssNettingSets->next()) {
+        if ((outputThreshold == Null<Real>()) ||
+            (fabs(sr.delta) > outputThreshold || (sr.gamma != Null<Real>() && fabs(sr.gamma) > outputThreshold))) {
+            report.next();
+            report.add(sr.tradeId);
+            report.add("");
+            report.add(ore::data::to_string(sr.isPar));
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
+            report.add(sr.shift_1);
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
+            report.add(sr.shift_2);
+            report.add(sr.currency);
+            report.add(sr.baseNpv);
+            report.add(sr.delta);
+            report.add(sr.gamma);
+        } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
+            // TODO: Again, is this needed?
+            ALOG("sensitivity record has infinite values: " << sr);
+        }
+    }
+
+    report.end();
+    LOG("Sensitivity report finished");
+}
+
 void ReportWriter::writeSensitivityConfigReport(ore::data::Report& report,
                                                 const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
                                                 const std::map<RiskFactorKey, QuantLib::Real>& baseValues,
@@ -1099,6 +1170,34 @@ void ReportWriter::writeRunTimes(ore::data::Report& report, const Timer& timer) 
 
     report.end();
     LOG("Finished writing runtimes report")
+}
+
+void ReportWriter::writeTimeAveragedNettedExposure(
+    ore::data::Report& report,
+    const std::map<std::string, std::vector<NettedExposureCalculator::TimeAveragedExposure>>& data) {
+
+    LOG("Writing time averaged netted exposure");
+
+    report.addColumn("NettingSetId", string())
+        .addColumn("Sample", Size())
+        .addColumn("PosExpNoColl", double(), 4)
+        .addColumn("NegExpNoColl", double(), 4)
+        .addColumn("PosExpWithColl", double(), 4)
+        .addColumn("NegExpWithColl", double(), 4);
+
+    for (auto const& [n, avg] : data) {
+        for (Size k = 0; k < avg.size(); ++k) {
+            report.next()
+                .add(n)
+                .add(k)
+                .add(avg[k].positiveExposureBeforeCollateral)
+                .add(avg[k].negativeExposureBeforeCollateral)
+                .add(avg[k].positiveExposureAfterCollateral)
+                .add(avg[k].negativeExposureAfterCollateral);
+        }
+    }
+
+    report.end();
 }
 
 void ReportWriter::writeCube(ore::data::Report& report, const QuantLib::ext::shared_ptr<NPVCube>& cube,
@@ -2319,6 +2418,12 @@ void ReportWriter::writeXvaExplainSummary(ore::data::Report& report, const ore::
     } catch (const std::exception& e) {
         ALOG("Error during xva explain report generation, got " << e.what());
     }
+}
+  
+void ReportWriter::writeXmlReport(ore::data::Report& report, std::string header, std::string xml) {
+    report.addColumn(header, string());
+    report.next().add(xml);
+    report.end();
 }
 
 } // namespace analytics

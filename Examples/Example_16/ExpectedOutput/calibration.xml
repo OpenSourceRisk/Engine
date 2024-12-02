@@ -1,0 +1,266 @@
+<CrossAssetModel>
+	<DomesticCcy>EUR</DomesticCcy>
+	<Currencies>
+		<Currency>EUR</Currency>
+		<Currency>USD</Currency>
+		<Currency>GBP</Currency>
+		<Currency>CHF</Currency>
+		<Currency>JPY</Currency>
+	</Currencies>
+	<Equities>
+		<Equity>SP5</Equity>
+		<Equity>Lufthansa</Equity>
+	</Equities>
+	<InflationIndices/>
+	<CreditNames/>
+	<Commodities/>
+	<BootstrapTolerance>0.0001</BootstrapTolerance>
+	<Measure/>
+	<Discretization>Exact</Discretization>
+	<SalvagingAlgorithm>None</SalvagingAlgorithm>
+	<InterestRateModels>
+		<LGM key="EUR">
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Volatility>
+				<Calibrate>false</Calibrate>
+				<VolatilityType>Hagan</VolatilityType>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00548, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947, 7.0082191780821921, 10.008219178082191, 12.013698630136986, 15.010958904109589, 20.013698630136986</TimeGrid>
+				<InitialValue>0.0121795, 0.011946809367886457, 0.011886179765635585, 0.01109162071482046, 0.011104102735527829, 0.011677632979760811, 0.012551895293347704, 0.013977835275552779, 0.015641916630184487, 0.018174281194797009, 0.017714883452201007</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>false</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>0.03</InitialValue>
+			</Reversion>
+			<ParameterTransformation>
+				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
+				<Scaling>1</Scaling>
+			</ParameterTransformation>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
+			<CalibrationSwaptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
+				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
+				<Strikes>ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM</Strikes>
+			</CalibrationSwaptions>
+		</LGM>
+		<LGM key="USD">
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Volatility>
+				<Calibrate>false</Calibrate>
+				<VolatilityType>Hagan</VolatilityType>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00548, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947, 7.0082191780821921, 10.008219178082191, 12.013698630136986, 15.010958904109589, 20.013698630136986</TimeGrid>
+				<InitialValue>0.0137191, 0.013384277045228505, 0.012670207596357307, 0.012506407314200784, 0.01293449845078801, 0.013155143394468039, 0.012206450538532948, 0.013452833869208439, 0.012587329035597252, 0.015366444539212, 0.016432889437897159</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>false</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>0.03</InitialValue>
+			</Reversion>
+			<ParameterTransformation>
+				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
+				<Scaling>1</Scaling>
+			</ParameterTransformation>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
+			<CalibrationSwaptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
+				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
+				<Strikes>ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM</Strikes>
+			</CalibrationSwaptions>
+		</LGM>
+		<LGM key="GBP">
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Volatility>
+				<Calibrate>false</Calibrate>
+				<VolatilityType>Hagan</VolatilityType>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00548, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947, 7.0082191780821921, 10.008219178082191, 12.013698630136986, 15.010958904109589, 20.013698630136986</TimeGrid>
+				<InitialValue>0.0138932, 0.013682622173018317, 0.013073359346072852, 0.013545731197351123, 0.012266886756937769, 0.011545920001451463, 0.013081637684625806, 0.012341079273702761, 0.011216690459363604, 0.014444448781621818, 0.019470973622685132</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>false</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>0.03</InitialValue>
+			</Reversion>
+			<ParameterTransformation>
+				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
+				<Scaling>1</Scaling>
+			</ParameterTransformation>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
+			<CalibrationSwaptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
+				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
+				<Strikes>ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM</Strikes>
+			</CalibrationSwaptions>
+		</LGM>
+		<LGM key="CHF">
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Volatility>
+				<Calibrate>false</Calibrate>
+				<VolatilityType>Hagan</VolatilityType>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00548, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947, 7.0082191780821921, 10.008219178082191, 12.013698630136986, 15.010958904109589, 20.013698630136986</TimeGrid>
+				<InitialValue>0.0116566, 0.011213650722932669, 0.011634453237151158, 0.013432869773458107, 0.015341741679771606, 0.014425620996578736, 0.014084151811040519, 0.014576275566176496, 0.014749669814596109, 0.010339877141166701, 0.012447704302633774</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>false</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>0.03</InitialValue>
+			</Reversion>
+			<ParameterTransformation>
+				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
+				<Scaling>1</Scaling>
+			</ParameterTransformation>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
+			<CalibrationSwaptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
+				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
+				<Strikes>ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM</Strikes>
+			</CalibrationSwaptions>
+		</LGM>
+		<LGM key="JPY">
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Volatility>
+				<Calibrate>false</Calibrate>
+				<VolatilityType>Hagan</VolatilityType>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00548, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947, 7.0082191780821921, 10.008219178082191, 12.013698630136986, 15.010958904109589, 20.013698630136986</TimeGrid>
+				<InitialValue>0.0116566, 0.011213650722932669, 0.011634453237151158, 0.013432869773458107, 0.015341741679771606, 0.014425620996578736, 0.014084151811040519, 0.014576275566176496, 0.014749669814596109, 0.010339877141166701, 0.012447704302633774</InitialValue>
+			</Volatility>
+			<Reversion>
+				<Calibrate>false</Calibrate>
+				<ReversionType>HullWhite</ReversionType>
+				<ParamType>Constant</ParamType>
+				<TimeGrid/>
+				<InitialValue>0.03</InitialValue>
+			</Reversion>
+			<ParameterTransformation>
+				<ShiftHorizon>0.0000000000000000</ShiftHorizon>
+				<Scaling>1</Scaling>
+			</ParameterTransformation>
+			<FloatSpreadMapping>ProRata</FloatSpreadMapping>
+			<CalibrationSwaptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y</Expiries>
+				<Terms>29Y, 28Y, 27Y, 26Y, 25Y, 23Y, 20Y, 18Y, 15Y, 10Y, 5Y</Terms>
+				<Strikes>ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM, ATM</Strikes>
+			</CalibrationSwaptions>
+		</LGM>
+	</InterestRateModels>
+	<ForeignExchangeModels>
+		<CrossCcyLGM foreignCcy="USD">
+			<DomesticCcy>EUR</DomesticCcy>
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Sigma>
+				<Calibrate>false</Calibrate>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00274, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947</TimeGrid>
+				<InitialValue>0.120512, 0.1179680726858746, 0.12274189319267334, 0.13300258602751627, 0.12809542535662513, 0.1070831989680676</InitialValue>
+			</Sigma>
+			<CalibrationOptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+				<Strikes>ATMF, ATMF, ATMF, ATMF, ATMF, ATMF</Strikes>
+			</CalibrationOptions>
+		</CrossCcyLGM>
+		<CrossCcyLGM foreignCcy="GBP">
+			<DomesticCcy>EUR</DomesticCcy>
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Sigma>
+				<Calibrate>false</Calibrate>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00274, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947</TimeGrid>
+				<InitialValue>0.129491, 0.12664585964758235, 0.12786413636575791, 0.12350666133281542, 0.1180047574363054, 0.095065027568780311</InitialValue>
+			</Sigma>
+			<CalibrationOptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+				<Strikes>ATMF, ATMF, ATMF, ATMF, ATMF, ATMF</Strikes>
+			</CalibrationOptions>
+		</CrossCcyLGM>
+		<CrossCcyLGM foreignCcy="CHF">
+			<DomesticCcy>EUR</DomesticCcy>
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Sigma>
+				<Calibrate>false</Calibrate>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00274, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947</TimeGrid>
+				<InitialValue>0.0923999, 0.10147395216989788, 0.10934672730275992, 0.11179198654739875, 0.13178016389210412, 0.11213258789090218</InitialValue>
+			</Sigma>
+			<CalibrationOptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+				<Strikes>ATMF, ATMF, ATMF, ATMF, ATMF, ATMF</Strikes>
+			</CalibrationOptions>
+		</CrossCcyLGM>
+		<CrossCcyLGM foreignCcy="JPY">
+			<DomesticCcy>EUR</DomesticCcy>
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Sigma>
+				<Calibrate>false</Calibrate>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00274, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947</TimeGrid>
+				<InitialValue>0.137331, 0.13702271244107378, 0.13320159773270826, 0.12860935950154995, 0.14062507106495306, 0.1284434537836063</InitialValue>
+			</Sigma>
+			<CalibrationOptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+				<Strikes>ATMF, ATMF, ATMF, ATMF, ATMF, ATMF</Strikes>
+			</CalibrationOptions>
+		</CrossCcyLGM>
+	</ForeignExchangeModels>
+	<EquityModels>
+		<CrossAssetLGM name="SP5">
+			<Currency>USD</Currency>
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Sigma>
+				<Calibrate>false</Calibrate>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00274, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947</TimeGrid>
+				<InitialValue>0.250951, 0.25498982822083027, 0.25853661684380408, 0.26114365330495504, 0.26302339391217128, 0.2718990383829985</InitialValue>
+			</Sigma>
+			<CalibrationOptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+				<Strikes>ATMF, ATMF, ATMF, ATMF, ATMF, ATMF</Strikes>
+			</CalibrationOptions>
+		</CrossAssetLGM>
+		<CrossAssetLGM name="Lufthansa">
+			<Currency>EUR</Currency>
+			<CalibrationType>Bootstrap</CalibrationType>
+			<Sigma>
+				<Calibrate>false</Calibrate>
+				<ParamType>Piecewise</ParamType>
+				<TimeGrid>1.00274, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947</TimeGrid>
+				<InitialValue>0.29992, 0.299468105900072, 0.29863604135646155, 0.29749293284224654, 0.29611661697090536, 0.29076391549845992</InitialValue>
+			</Sigma>
+			<CalibrationOptions>
+				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
+				<Strikes>ATMF, ATMF, ATMF, ATMF, ATMF, ATMF</Strikes>
+			</CalibrationOptions>
+		</CrossAssetLGM>
+	</EquityModels>
+	<InflationIndexModels/>
+	<CreditModels/>
+	<CommodityModels/>
+	<CreditStates>
+		<NumberOfFactors>0</NumberOfFactors>
+	</CreditStates>
+	<InstantaneousCorrelations>
+		<Correlation factor1="IR:EUR" index1="0" factor2="IR:GBP" index2="0">0.3</Correlation>
+		<Correlation factor1="IR:EUR" index1="0" factor2="IR:USD" index2="0">0.3</Correlation>
+		<Correlation factor1="IR:EUR" index1="0" factor2="FX:GBPEUR" index2="0">0</Correlation>
+		<Correlation factor1="IR:EUR" index1="0" factor2="FX:USDEUR" index2="0">0</Correlation>
+		<Correlation factor1="IR:GBP" index1="0" factor2="IR:USD" index2="0">0.3</Correlation>
+		<Correlation factor1="IR:GBP" index1="0" factor2="FX:GBPEUR" index2="0">0</Correlation>
+		<Correlation factor1="IR:GBP" index1="0" factor2="FX:USDEUR" index2="0">0</Correlation>
+		<Correlation factor1="IR:USD" index1="0" factor2="FX:GBPEUR" index2="0">0</Correlation>
+		<Correlation factor1="IR:USD" index1="0" factor2="FX:USDEUR" index2="0">0</Correlation>
+		<Correlation factor1="FX:GBPEUR" index1="0" factor2="FX:USDEUR" index2="0">0</Correlation>
+		<Correlation factor1="EQ:Lufthansa" index1="0" factor2="EQ:SP5" index2="0">0</Correlation>
+	</InstantaneousCorrelations>
+</CrossAssetModel>
+

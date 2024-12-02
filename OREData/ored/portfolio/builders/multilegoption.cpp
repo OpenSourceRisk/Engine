@@ -243,9 +243,12 @@ QuantLib::ext::shared_ptr<PricingEngine> CamMcMultiLegOptionEngineBuilder::engin
     std::string configurationXois = configuration(MarketContext::pricing);
 
     auto builder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
-        market_, QuantLib::ext::make_shared<CrossAssetModelData>(irData, fxData, corr, tolerance), configurationInCcy,
-        configurationXois, configurationXois, configurationInCcy, configurationInCcy, configurationXois, !calibrate,
-        continueOnCalibrationError, "", SalvagingAlgorithm::Spectral, id);
+        market_,
+        QuantLib::ext::make_shared<CrossAssetModelData>(irData, fxData, corr, tolerance, "LGM",
+                                                        CrossAssetModel::Discretization::Exact,
+                                                        SalvagingAlgorithm::Spectral),
+        configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
+        configurationXois, !calibrate, continueOnCalibrationError, "", id);
 
     modelBuilders_.insert(std::make_pair(id, builder));
 

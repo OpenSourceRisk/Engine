@@ -63,6 +63,8 @@ void PricingAnalyticImpl::runAnalytic(
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
+    analytic()->enrichIndexFixings(analytic()->portfolio());
+
     // Check coverage
     for (const auto& rt : runTypes) {
         if (std::find(analytic()->analyticTypes().begin(), analytic()->analyticTypes().end(), rt) ==
@@ -70,6 +72,8 @@ void PricingAnalyticImpl::runAnalytic(
             DLOG("requested analytic " << rt << " not covered by the PricingAnalytic");
         }
     }
+
+    analytic()->enrichIndexFixings(analytic()->portfolio());
 
     // This hook allows modifying the portfolio in derived classes before running the analytics below,
     // e.g. to apply SIMM exemptions.
@@ -161,8 +165,7 @@ void PricingAnalyticImpl::runAnalytic(
                     *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
-            // FIXME: Why are these disabled?
-            set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
+            const set<RiskFactorKey::KeyType>& typesDisabled = analytic()->configurations().sensiScenarioData->parConversionExcludes();
             if (inputs_->parSensi() || inputs_->alignPillars()) {
                 parAnalysis_= QuantLib::ext::make_shared<ParSensitivityAnalysis>(
                     inputs_->asof(), analytic()->configurations().simMarketParams,

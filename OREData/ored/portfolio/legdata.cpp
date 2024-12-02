@@ -1583,6 +1583,9 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
                     const Natural notionalPaymentLag,  const BusinessDayConvention paymentConvention,
                     const Calendar paymentCalendar, const bool excludeIndexing) {
 
+    if (refLeg.empty())
+        return Leg();
+
     // Assumption - Cashflows on Input Leg are all coupons
     // This is the Leg to be populated
     Leg leg;

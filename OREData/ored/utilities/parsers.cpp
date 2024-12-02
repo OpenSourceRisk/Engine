@@ -612,10 +612,15 @@ Weekday parseWeekday(const string& s) {
 
 Month parseMonth(const string& s) {
 
-    static map<string, Month> m = {{"Jan", Month::January}, {"Feb", Month::February}, {"Mar", Month::March},
-                                   {"Apr", Month::April},   {"May", Month::May},      {"Jun", Month::June},
-                                   {"Jul", Month::July},    {"Aug", Month::August},   {"Sep", Month::September},
-                                   {"Oct", Month::October}, {"Nov", Month::November}, {"Dec", Month::December}};
+    static map<string, Month> m = {
+        {"Jan", Month::January},     {"Feb", Month::February},      {"Mar", Month::March},
+        {"Apr", Month::April},       {"May", Month::May},           {"Jun", Month::June},
+        {"Jul", Month::July},        {"Aug", Month::August},        {"Sep", Month::September},
+        {"Oct", Month::October},     {"Nov", Month::November},      {"Dec", Month::December},
+        {"January", Month::January}, {"February", Month::February}, {"March", Month::March},
+        {"April", Month::April},     {"May", Month::May},           {"June", Month::June},
+        {"July", Month::July},       {"August", Month::August},     {"September", Month::September},
+        {"October", Month::October}, {"November", Month::November}, {"December", Month::December}};
 
     auto it = m.find(s);
     if (it != m.end()) {

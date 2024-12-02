@@ -385,11 +385,13 @@ public:
             QL_REQUIRE(right.which() == ValueTypeWhich::Number, "invalid assignment: type "
                                                                     << valueTypeLabels.at(ref.first.which()) << " <- "
                                                                     << valueTypeLabels.at(right.which()));
-            // TODO, better have a RESETTIME() function?
+            Real t = QuantLib::ext::get<RandomVariable>(ref.first).time();
             QuantLib::ext::get<RandomVariable>(ref.first).setTime(Null<Real>());
             ref.first = conditionalResult(filter.top(), QuantLib::ext::get<RandomVariable>(right),
                                           QuantLib::ext::get<RandomVariable>(ref.first));
             QuantLib::ext::get<RandomVariable>(ref.first).updateDeterministic();
+            if (QuantLib::ext::get<RandomVariable>(ref.first).time() == Null<Real>())
+                QuantLib::ext::get<RandomVariable>(ref.first).setTime(t);
         }
         TRACE("assign( " << v->name << "[" << (ref.second + 1) << "] ) := " << ref.first << " ("
                          << valueTypeLabels.at(right.which()) << ") using filter " << filter.top(),
@@ -792,6 +794,7 @@ public:
             RandomVariable cashflowResult =
                 pay <= model_->referenceDate() ? boost::get<RandomVariable>(amount) : result;
             if (!log || paylog_ == nullptr) {
+                value.push(result);
                 TRACE("pay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " )", n);
             } else {
                 // cashflow logging
@@ -825,12 +828,11 @@ public:
                 }
                 paylog_->write(cashflowResult, filter.top(), obs, pay, pccy, static_cast<Size>(legno), cftype,
                                static_cast<Size>(slot));
+                value.push(result);
                 TRACE("logpay( " << amount << " , " << obsdate << " , " << paydate << " , " << paycurr << " , " << legno
                                  << " , " << cftype << " , " << slot << ")",
                       n);
             }
-            // push result
-            value.push(result);
         }
     }
 

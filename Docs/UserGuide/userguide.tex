@@ -1555,6 +1555,8 @@ figure \ref{fig_6}.
 \label{fig_6}
 \end{figure}
 
+{\tt Examples/Example\_8} also demonstrates the ``serialization'' of the calibrated simulation model, see {\tt Output/calibration.xml} and {\tt Output/calibration.csv}, as well as the brief documentation of the {\tt calibration} analytic in section \ref{sec:analytics}.
+
 %--------------------------------------------------------
 \subsection{Cross Currency Swap Exposure, with FX Reset}
 %--------------------------------------------------------
@@ -5620,6 +5622,32 @@ This additional data is required for:
 \item YYInflationIndexCurves
 \item YYCapFloorVolatilities
 \end{itemize}
+
+By default, par conversion is applied to all risk factor types listed above. However, it is possible to exclude
+selected risk factor types by adding an optional block to the sensitivity configuration as shown in listing \ref{lst:par_conversion_excludes}. Uncomment the risk factor type(s) here that should be excluded from par conversion.
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+<SensitivityAnalysis>
+
+  <ParConversionExcludes>
+    <!--<Type>DiscountCurve</Type>-->
+    <!--<Type>YieldCurve</Type>-->
+    <!--<Type>IndexCurve</Type>-->
+    <!--<Type>OptionletVolatility</Type>-->
+    <!--<Type>SurvivalProbability</Type>-->
+    <!--<Type>ZeroInflationCurve</Type>-->
+    <!--<Type>YearOnYearInflationCurve</Type>-->
+    <!--<Type>YoYInflationCapFloorVolatility</Type>-->
+  </ParConversionExcludes>
+
+  ...
+  
+</SensitivityAnalysis>
+\end{minted}
+\caption{Par conversion excludes}
+\label{lst:par_conversion_excludes}
+\end{longlisting}
 
 Using DiscountCurves as an example, the full sensitivity specification including par conversion data is as follows:
 

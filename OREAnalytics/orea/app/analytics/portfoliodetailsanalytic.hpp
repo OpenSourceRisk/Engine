@@ -48,6 +48,7 @@ public:
     PortfolioDetailsAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic(std::make_unique<PortfolioDetailsAnalyticImpl>(inputs), {}, inputs) {}
 
+    bool requiresMarketData() const override { return false; }
 };
 
 } // namespace analytics

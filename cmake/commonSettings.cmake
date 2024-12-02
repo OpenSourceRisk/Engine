@@ -75,11 +75,15 @@ if(NOT DONT_SET_QL_INCLUDE_DIR_FIRST)
     include_directories("${PROJECT_BINARY_DIR}/QuantLib")
 endif()
 
+
+
 if(MSVC)
     set(BUILD_SHARED_LIBS OFF)
-    add_compile_definitions(_WINVER=0x0601)
-    add_compile_definitions(_WIN32_WINNT=0x0601)
-    add_compile_definitions(BOOST_USE_WINAPI_VERSION=0x0601)
+    if(Boost_VERSION_STRING LESS "1.84.0")
+        add_compile_definitions(_WINVER=0x0601)
+        add_compile_definitions(_WIN32_WINNT=0x0601)
+        add_compile_definitions(BOOST_USE_WINAPI_VERSION=0x0601)
+    endif()
     # build static libs always
     set(CMAKE_MSVC_RUNTIME_LIBRARY
         "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<BOOL:${MSVC_LINK_DYNAMIC_RUNTIME}>:DLL>")
