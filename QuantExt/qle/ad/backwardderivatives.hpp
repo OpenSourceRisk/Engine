@@ -35,15 +35,17 @@ namespace QuantExt {
  * variables. When pushing derivatives backwards we do not need to push from or to non-active variables. */
 
 template <class T>
-void backwardDerivatives(const ComputationGraph& g, std::vector<T>& values, std::vector<T>& derivatives,
-                         const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
-                         std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
-                         const std::vector<std::function<T(const std::vector<const T*>&)>>& fwdOps = {},
-                         const std::vector<std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>>&
-                             fwdOpRequiresNodesForDerivatives = {},
-                         const std::vector<bool>& fwdKeepNodes = {}, const std::size_t conditionalExpectationOpId = 0,
-                         const std::function<T(const std::vector<const T*>&)>& conditionalExpectation = {},
-                         std::function<void(T&)> preDeleter = {}) {
+void backwardDerivatives(
+    const ComputationGraph& g, std::vector<T>& values, std::vector<T>& derivatives,
+    const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*, const QuantLib::Size)>>&
+        grad,
+    std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
+    const std::vector<std::function<T(const std::vector<const T*>&, const QuantLib::Size)>>& fwdOps = {},
+    const std::vector<std::function<std::pair<std::vector<bool>, bool>(const std::size_t)>>&
+        fwdOpRequiresNodesForDerivatives = {},
+    const std::vector<bool>& fwdKeepNodes = {}, const std::size_t conditionalExpectationOpId = 0,
+    const std::function<T(const std::vector<const T*>&, const QuantLib::Size)>& conditionalExpectation = {},
+    std::function<void(T&)> preDeleter = {}) {
 
     if (g.size() == 0)
         return;
@@ -99,11 +101,11 @@ void backwardDerivatives(const ComputationGraph& g, std::vector<T>& values, std:
 
                 // expected stochastic automatic differentiaion, Fries, 2017
                 args[0] = &derivatives[node];
-                derivatives[g.predecessors(node)[0]] += conditionalExpectation(args);
+                derivatives[g.predecessors(node)[0]] += conditionalExpectation(args, node);
 
             } else {
 
-                auto gr = grad[g.opId(node)](args, &values[node]);
+                auto gr = grad[g.opId(node)](args, &values[node], node);
 
                 for (std::size_t p = 0; p < g.predecessors(node).size(); ++p) {
                     QL_REQUIRE(derivatives[g.predecessors(node)[p]].initialised(),

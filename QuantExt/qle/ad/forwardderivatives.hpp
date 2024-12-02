@@ -32,11 +32,13 @@ namespace QuantExt {
    the values and derivatives and apply the deleter to improve memory consumption */
 
 template <class T>
-void forwardDerivatives(const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
-                        const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*)>>& grad,
-                        std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
-                        const std::size_t conditionalExpectationOpId = 0,
-                        const std::function<T(const std::vector<const T*>&)>& conditionalExpectation = {}) {
+void forwardDerivatives(
+    const ComputationGraph& g, const std::vector<T>& values, std::vector<T>& derivatives,
+    const std::vector<std::function<std::vector<T>(const std::vector<const T*>&, const T*, const QuantLib::Size)>>&
+        grad,
+    std::function<void(T&)> deleter = {}, const std::vector<bool>& keepNodes = {},
+    const std::size_t conditionalExpectationOpId = 0,
+    const std::function<T(const std::vector<const T*>&, const QuantLib::Size)>& conditionalExpectation = {}) {
 
     if (g.size() == 0)
         return;
@@ -56,11 +58,11 @@ void forwardDerivatives(const ComputationGraph& g, const std::vector<T>& values,
             if (g.opId(node) == conditionalExpectationOpId && conditionalExpectation) {
 
                 args[0] = &derivatives[g.predecessors(node)[0]];
-                derivatives[node] = conditionalExpectation(args);
+                derivatives[node] = conditionalExpectation(args, node);
 
             } else {
 
-                auto gr = grad[g.opId(node)](args, &values[node]);
+                auto gr = grad[g.opId(node)](args, &values[node], node);
 
                 for (std::size_t p = 0; p < g.predecessors(node).size(); ++p) {
                     derivatives[node] += derivatives[g.predecessors(node)[p]] * gr[p];
