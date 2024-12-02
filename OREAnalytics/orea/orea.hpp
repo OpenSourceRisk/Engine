@@ -66,6 +66,7 @@
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/cubewriter.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/inmemorycubeopt.hpp>
 #include <orea/cube/jaggedcube.hpp>
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/cube/jointnpvsensicube.hpp>
