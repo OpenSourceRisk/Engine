@@ -104,6 +104,7 @@ namespace data {
         "            NUMBER Payoff, fix, d, dd, KnockedOut, currentNotional, Days[SIZE(RangeUpperBounds)], knockOutDays, Fixing[SIZE(ObservationPeriodEndDates)];\n"
         "            NUMBER currentPeriod, r, ThisPayout;\n"
         "            currentPeriod = 1;\n"
+        "\n"
         "            FOR d IN (1, SIZE(ObservationDates), 1) DO\n"
         "              fix = Underlying(ObservationDates[d]);\n"
         "\n"
@@ -113,6 +114,74 @@ namespace data {
         "                IF {KnockOutType == 4 AND fix >= KnockOutLevel} OR\n"
         "                   {KnockOutType == 3 AND fix <= KnockOutLevel} THEN\n"
         "                   KnockedOut = 1;\n"
+        "                   IF KnockOutFixingAtSettlementDate == 1 THEN\n"
+        "                       fix = Underlying(KnockOutSettlementDates[d]);\n"
+        "                   END;\n"
+        "                   Days[DefaultRange] = Days[DefaultRange] + knockOutDays;\n"
+        "                   FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+        "                     IF NakedOption == 1 THEN\n"
+        "                       ThisPayout = LongShort * FixingAmount * abs(RangeLeverages[r]) * Days[r] * max(0, OptionType * (fix - Strike) );\n"
+        "                     ELSE\n"
+        "                       ThisPayout = LongShort * FixingAmount * RangeLeverages[r] * Days[r] * ( fix - Strike );\n"
+        "                     END;\n"
+        "                     value = value + PAY( ThisPayout, ObservationDates[d], KnockOutSettlementDates[d], PayCcy );\n"
+        "                   END;\n"
+        "                END;\n"
+        "              END;\n"
+        "\n"
+        "              IF KnockedOut == 0 THEN\n"
+        "                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+        "                  IF fix > RangeLowerBounds[r] AND fix <= RangeUpperBounds[r] THEN\n"
+        "                    Days[r] = Days[r] + 1;\n"
+        "                  END;\n"
+        "                END;\n"
+        "                IF ObservationDates[d] >= ObservationPeriodEndDates[currentPeriod] THEN\n"
+        "                  FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+        "                    IF NakedOption == 1 THEN\n"
+        "                      ThisPayout = LongShort * FixingAmount * abs(RangeLeverages[r]) * Days[r] * max(0, OptionType * (fix - Strike) );\n"
+        "                    ELSE\n"
+        "                      ThisPayout = LongShort * FixingAmount * RangeLeverages[r] * Days[r] * ( fix - Strike );\n"
+        "                    END;\n"
+        "                    value = value + LOGPAY( ThisPayout, ObservationDates[d], SettlementDates[currentPeriod], PayCcy );\n"
+        "                  END;\n"
+        "                END;\n"
+        "              END;\n"
+        "              IF ObservationDates[d] >= ObservationPeriodEndDates[currentPeriod] THEN\n"
+        "                Fixing[currentPeriod] = fix;\n"
+        "                currentPeriod = currentPeriod + 1;\n"
+        "                FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
+        "                  Days[r] = 0;\n"
+        "                END;\n"
+        "              END;\n"
+        "            END;\n"
+        "            currentNotional = FixingAmount *  Strike;";
+
+    static const std::string accumulator02_compo_script =
+        "            REQUIRE SIZE(ObservationDates) == SIZE(KnockOutSettlementDates);\n"
+        "            REQUIRE SIZE(ObservationPeriodEndDates) == SIZE(SettlementDates);\n"
+        "            REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLowerBounds);\n"
+        "            REQUIRE SIZE(RangeUpperBounds) == SIZE(RangeLeverages);\n"
+        "            REQUIRE ObservationPeriodEndDates[SIZE(ObservationPeriodEndDates)] >= ObservationDates[SIZE(ObservationDates)];\n"
+        "            NUMBER Payoff, fix, d, dd, KnockedOut, currentNotional, Days[SIZE(RangeUpperBounds)], knockOutDays, Fixing[SIZE(ObservationPeriodEndDates)];\n"
+        "            NUMBER fxFixings[SIZE(ObservationDates)], underlyingFixings[SIZE(ObservationDates)];\n"
+        "            NUMBER currentPeriod, r, ThisPayout;\n"
+        "            currentPeriod = 1;\n"
+        "\n"
+        "            FOR d IN (1, SIZE(ObservationDates), 1) DO\n"
+        "              underlyingFixings[d] = Underlying(ObservationDates[d]);\n"
+        "              fxFixings[d] = FxUnderlying(ObservationDates[d]);\n"
+        "              fix = underlyingFixings[d] * fxFixings[d];\n"
+        "\n"
+        "              knockOutDays = max(DATEINDEX(GuaranteedPeriodEndDate, ObservationDates, GT) - 1 - d, 0);\n"
+        "\n"
+        "              IF KnockedOut == 0 THEN\n"
+        "                IF {KnockOutType == 4 AND fix >= KnockOutLevel} OR\n"
+        "                   {KnockOutType == 3 AND fix <= KnockOutLevel} THEN\n"
+        "                   KnockedOut = 1;\n"
+        "                   IF KnockOutFixingAtSettlementDate == 1 THEN\n"
+        "                       fix = Underlying(KnockOutSettlementDates[d]);\n"
+        "                       fix = fix * FxUnderlying(KnockOutSettlementDates[d]);\n"
+        "                   END;\n"
         "                   Days[DefaultRange] = Days[DefaultRange] + knockOutDays;\n"
         "                   FOR r IN (1, SIZE(RangeUpperBounds), 1) DO\n"
         "                     IF NakedOption == 1 THEN\n"
@@ -161,6 +230,7 @@ namespace data {
         "            REQUIRE ObservationPeriodEndDates[SIZE(ObservationPeriodEndDates)] >= ObservationDates[SIZE(ObservationDates)];\n"
         "\n"
         "            NUMBER currentPeriod, referencePayout, fix, d, r, dd, currentNotional, Fixing[SIZE(ObservationPeriodEndDates)], ThisPayout;\n"
+        "            NUMBER KnockoutPayout\n;"
         "\n"
         "            currentPeriod = DATEINDEX(ObservationDates[SIZE(ObservationDates)], ObservationPeriodEndDates, GEQ);\n"
         "            IF NakedOption == 1 THEN\n"
@@ -168,6 +238,7 @@ namespace data {
         "            ELSE\n"
         "              ThisPayout = Underlying(ObservationDates[SIZE(ObservationDates)]) - Strike;\n"
         "            END;\n"
+        "            KnockoutPayout = ThisPayout;\n"
         "            referencePayout = PAY( LongShort * FixingAmount * ThisPayout, ObservationDates[SIZE(ObservationDates)],\n"
         "                                   SettlementDates[currentPeriod], PayCcy );\n"
         "            value = 0 * referencePayout;\n"
@@ -177,9 +248,11 @@ namespace data {
         "              IF ObservationDates[d] >= TODAY THEN\n"
         "                value = NPV(value, ObservationDates[d]);\n"
         "                referencePayout = NPV(referencePayout, ObservationDates[d]);\n"
+        "                KnockoutPayout = NPV(KnockoutPayout, ObservationDates[d]);\n"
         "              ELSE\n"
         "                value = NPV(value, TODAY);\n"
         "                referencePayout = NPV(referencePayout, TODAY);\n"
+        "                KnockoutPayout = NPV(KnockoutPayout, TODAY);\n"
 	    "              END;\n"
         "\n"
         "              fix = Underlying(ObservationDates[d]);\n"
@@ -193,10 +266,14 @@ namespace data {
         "                referencePayout = PAY( ThisPayout, ObservationDates[d], SettlementDates[currentPeriod], PayCcy );\n"
         "                Fixing[currentPeriod] = fix;\n"
         "                currentPeriod = currentPeriod - 1;\n"
+        "                KnockoutPayout = ThisPayout;\n"
         "              END;\n"
         "\n"
         "              IF {KnockOutType == 4 AND fix >= KnockOutLevel} OR\n"
         "                 {KnockOutType == 3 AND fix <= KnockOutLevel} THEN\n"
+        "                IF KnockOutFixingAtSettlementDate == 1 THEN\n"
+        "                  ThisPayout = KnockoutPayout;\n"
+        "                END;\n"    
         "                IF NakedOption == 1 THEN\n"
         "                  ThisPayout = ThisPayout * abs(RangeLeverages[DefaultRange]);\n"
         "                ELSE\n"
@@ -227,11 +304,14 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
     clear();
     initIndices();
 
-    enum class AccumulatorScript { Accumulator01, Accumulator02 };
+    enum class AccumulatorScript { Accumulator01, Accumulator02, Accumulator02Composite };
     AccumulatorScript scriptToUse;
     if (!pricingDates_.hasData()) {
         scriptToUse = AccumulatorScript::Accumulator01;
         DLOG("building scripted trade wrapper using (internal) script Accumulator01");
+    } else if (pricingDates_.hasData()  && compositeOption_) {
+        scriptToUse = AccumulatorScript::Accumulator02Composite;
+        DLOG("building scripted trade wrapper using (internal) script Accumulator02(composite)");
     } else {
         scriptToUse = AccumulatorScript::Accumulator02;
         DLOG("building scripted trade wrapper using (internal) script Accumulator02");
@@ -291,7 +371,7 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
     numbers_.emplace_back("Number", "RangeLowerBounds", rangeLowerBounds);
     numbers_.emplace_back("Number", "RangeUpperBounds", rangeUpperBounds);
     numbers_.emplace_back("Number", "RangeLeverages", rangeLeverages);
-    if (scriptToUse == AccumulatorScript::Accumulator02) {
+    if (scriptToUse == AccumulatorScript::Accumulator02 || scriptToUse == AccumulatorScript::Accumulator02Composite) {
         numbers_.emplace_back("Number", "DefaultRange", "1");
     }
 
@@ -317,11 +397,27 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
         }
     } else {
         events_.emplace_back("ObservationDates", observationDates_);
-        events_.emplace_back("KnockOutSettlementDates", "ObservationDates",
-                             settlementLag_.empty() ? "0D" : settlementLag_,
-                             settlementCalendar_.empty() ? "NullCalendar" : settlementCalendar_,
-                             settlementConvention_.empty() ? "F" : settlementConvention_);
         events_.emplace_back("ObservationPeriodEndDates", pricingDates_);
+        numbers_.emplace_back("Number", "KnockOutFixingAtSettlementDate", knockOutFixingAtKOSettlement_ ? "1" : "-1");
+        if (knockOutSettlementAtPeriodEnd_) {
+            auto obsDates = makeSchedule(observationDates_);
+            auto obsEndDates = makeSchedule(pricingDates_);
+            QL_REQUIRE(!obsDates.empty() && !obsEndDates.empty() && obsEndDates.dates().back() >= obsDates.dates().back(),
+                       "Accumulator Type 2 with knockoutSettlment at Period End date, requires non empty "
+                       "observationDates and pricingDates and latest pricingDate after or on latest observationDate");
+            std::vector<std::string> knockOutSettlementDates;
+            for (const auto& obsDate : obsDates) {
+                auto it = std::lower_bound(obsEndDates.begin(), obsEndDates.end(), obsDate);
+                knockOutSettlementDates.push_back(to_string(*it));
+            }
+            auto knockOutSettlementScheduleData = ScheduleData(ScheduleDates("","","", knockOutSettlementDates, "","", true));
+            events_.emplace_back("KnockOutSettlementDates", knockOutSettlementScheduleData);
+        } else {
+            events_.emplace_back("KnockOutSettlementDates", "ObservationDates",
+                                 settlementLag_.empty() ? "0D" : settlementLag_,
+                                 settlementCalendar_.empty() ? "NullCalendar" : settlementCalendar_,
+                                 settlementConvention_.empty() ? "F" : settlementConvention_);
+        }
         if(settlementDates_.hasData()) {
             events_.emplace_back("SettlementDates", settlementDates_);
         } else {
@@ -381,10 +477,14 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
     }
 
     // set product tag
-
-    productTag_ = scriptToUse == AccumulatorScript::Accumulator01 ? "SingleAssetOptionCG({AssetClass})"
-                                                                  : "SingleAssetOptionBwd({AssetClass})";
-
+    if(scriptToUse == AccumulatorScript::Accumulator01){
+        productTag_ = "SingleAssetOptionCG({AssetClass})";
+    } else if(scriptToUse == AccumulatorScript::Accumulator02Composite){
+        productTag_ = "MultiAssetOption({AssetClass})";
+    } else {
+        productTag_ = "SingleAssetOptionBwd({AssetClass})";
+    }
+    
     // set script
 
     if (scriptToUse == AccumulatorScript::Accumulator01) {
@@ -394,6 +494,16 @@ void Accumulator::build(const QuantLib::ext::shared_ptr<EngineFactory>& factory)
              {"notionalCurrency", "PayCcy"},
              {"Alive", "Alive"},
              {"Fixing", "Fixing"}},
+            {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlying", {"Strike", "KnockOutLevel"})});
+    }  else if(scriptToUse == AccumulatorScript::Accumulator02Composite) {
+        script_[""] = ScriptedTradeScriptData(
+            accumulator02_compo_script, "value",
+            {{"currentNotional", "currentNotional"},
+             {"notionalCurrency", "PayCcy"},
+             {"KnockedOut", "KnockedOut"},
+             {"Fixing", "Fixing"},
+             {"fxFixings", "fxFixings"},
+             {"underlyingFixings", "underlyingFixings"}},
             {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlying", {"Strike", "KnockOutLevel"})});
     } else {
         script_[""] = ScriptedTradeScriptData(
@@ -437,7 +547,11 @@ void Accumulator::setIsdaTaxonomyFields() {
     additionalData_["isdaTransaction"] = string("");
 }
 
-void Accumulator::initIndices() { indices_.emplace_back("Index", "Underlying", scriptedIndexName(underlying_)); }
+void Accumulator::initIndices() { 
+    indices_.emplace_back("Index", "Underlying", scriptedIndexName(underlying_));
+    if(compositeOption_ && fxUnderlying_ != nullptr)
+        indices_.emplace_back("Index", "FxUnderlying", scriptedIndexName(fxUnderlying_));
+}
 
 void Accumulator::fromXML(XMLNode* node) {
     Trade::fromXML(node);
@@ -481,6 +595,22 @@ void Accumulator::fromXML(XMLNode* node) {
         barriers_.push_back(BarrierData());
         barriers_.back().fromXML(n);
     }
+    knockOutSettlementAtPeriodEnd_ =
+        XMLUtils::getChildValueAsBool(dataNode, "KnockOutSettlementAtPeriodEnd", false, false);
+
+    knockOutFixingAtKOSettlement_ = 
+        XMLUtils::getChildValueAsBool(dataNode, "KnockOutFixingAtKOSettlement", false, false);
+
+    
+    compositeOption_ = false;
+    XMLNode* fxIndexNode = XMLUtils::getChildNode(dataNode, "FxIndex");
+    if (fxIndexNode) {
+        UnderlyingBuilder fxUnderlyingBuilder("FxIndex", "FxIndexName");
+        fxUnderlyingBuilder.fromXML(fxIndexNode);
+        fxUnderlying_ = fxUnderlyingBuilder.underlying();
+        QL_REQUIRE(fxUnderlying_->type() == "FX", "Require FX Underlying for FxIndex for a composite accumulator, got type " << fxUnderlying_->type());
+        compositeOption_ = true;
+    } 
     initIndices();
 }
 
@@ -530,6 +660,15 @@ XMLNode* Accumulator::toXML(XMLDocument& doc) const {
         XMLUtils::appendNode(barriers, n.toXML(doc));
     }
     XMLUtils::appendNode(dataNode, barriers);
+    if (knockOutSettlementAtPeriodEnd_) {
+        XMLUtils::addChild(doc, dataNode, "KnockOutSettlementAtPeriodEnd", knockOutSettlementAtPeriodEnd_);
+    }
+    if (knockOutFixingAtKOSettlement_) {
+        XMLUtils::addChild(doc, dataNode, "KnockOutFixingAtKOSettlement", knockOutFixingAtKOSettlement_);
+    }
+    if (compositeOption_ && fxUnderlying_ != nullptr){
+        XMLUtils::appendNode(dataNode, fxUnderlying_->toXML(doc));
+    }
     return node;
 }
 

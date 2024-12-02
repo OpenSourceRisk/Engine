@@ -12,7 +12,7 @@
     <Envelope>
       <CounterParty>CPTY</CounterParty>
       <NettingSetId>CPTY</NettingSetId>
-      <AdditionalFields/>
+      <AdditionalFields />
     </Envelope>
     <EquityOptionData>
       <OptionData>
@@ -39,7 +39,7 @@
     <Envelope>
       <CounterParty>CPTY</CounterParty>
       <NettingSetId>CPTY</NettingSetId>
-      <AdditionalFields/>
+      <AdditionalFields />
     </Envelope>
     <ScriptedTradeData>
       <Script>
@@ -101,7 +101,7 @@
     <Envelope>
       <CounterParty>CPTY</CounterParty>
       <NettingSetId>CPTY</NettingSetId>
-      <AdditionalFields/>
+      <AdditionalFields />
     </Envelope>
     <ScriptedTradeData>
       <ProductTag>SingleAssetOptionBwd({AssetClass})</ProductTag>
@@ -164,7 +164,7 @@
     <Envelope>
       <CounterParty>CPTY</CounterParty>
       <NettingSetId>CPTY</NettingSetId>
-      <AdditionalFields/>
+      <AdditionalFields />
     </Envelope>
     <ScriptedTradeData>
       <ScriptName>EuropeanOption</ScriptName>
@@ -240,7 +240,7 @@
     <Envelope>
       <CounterParty>CPTY</CounterParty>
       <NettingSetId>CPTY</NettingSetId>
-      <AdditionalFields/>
+      <AdditionalFields />
     </Envelope>
     <EquityBarrierOptionData>
       <OptionData>
@@ -278,7 +278,7 @@
     <Envelope>
       <CounterParty>CPTY</CounterParty>
       <NettingSetId>CPTY</NettingSetId>
-      <AdditionalFields/>
+      <AdditionalFields />
     </Envelope>
     <ScriptedTradeData>
       <ScriptName>SingleBarrierOption</ScriptName>
@@ -360,9 +360,9 @@
               <Convention>F</Convention>
               <TermConvention>F</TermConvention>
               <Rule>Forward</Rule>
-              <EndOfMonth/>
-              <FirstDate/>
-              <LastDate/>
+              <EndOfMonth />
+              <FirstDate />
+              <LastDate />
             </Rules>
           </ScheduleData>
         </Event>       
@@ -424,7 +424,7 @@
     <Envelope>
       <CounterParty>CPTY</CounterParty>
       <NettingSetId>CPTY</NettingSetId>
-      <AdditionalFields/>
+      <AdditionalFields />
     </Envelope>
     <ScriptedTradeData>
       <ScriptName>SingleContinuousBarrierOption</ScriptName>
@@ -505,9 +505,9 @@
               <Convention>F</Convention>
               <TermConvention>F</TermConvention>
               <Rule>Forward</Rule>
-              <EndOfMonth/>
-              <FirstDate/>
-              <LastDate/>
+              <EndOfMonth />
+              <FirstDate />
+              <LastDate />
             </Rules>
           </ScheduleData>
         </Event>       
@@ -573,7 +573,7 @@
     <Envelope>
       <CounterParty>CPTY</CounterParty>
       <NettingSetId>CPTY</NettingSetId>
-      <AdditionalFields/>
+      <AdditionalFields />
     </Envelope>
     <ScriptedTradeData>
       <ScriptName>Accumulator</ScriptName>
@@ -666,8 +666,11 @@
     </ScriptedTradeData>
   </Trade>
 
+
+
+
   <!-- Same as trade 8 above, but in compact form -->
-  <!-- Uncomment to try. Note that this form requires a schema update, see folder xsd --> 
+  <!-- Uncomment to try. Note that this form requires a schema update, see folder xsd -->
   <!--
   <Trade id="8b:EquityAccumulator">
     <TradeType>ScriptedTrade</TradeType>
@@ -723,5 +726,156 @@
     </AccumulatorData>
   </Trade>
   -->
-  
+
+  <!-- 
+   Trade 9a and 9b are Type 2 EQ Accumulators using the c++ wrapped trade type using the same script 
+   Knockout barrier is set so that both trades immediatly knock out to show the difference between 
+   both KnockOutBarrierSettlement modes
+  -->
+  <Trade id="9a:EquityAccumulator02Wrapped">
+    <TradeType>EquityAccumulator</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <EquityAccumulatorData>
+      <Currency>EUR</Currency>
+      <FixingAmount>100</FixingAmount>
+      <Strike>4400</Strike>
+      <Underlying>
+        <Type>Equity</Type>
+        <Name>RIC:.STOXX50E</Name>
+      </Underlying>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <PayoffType>Accumulator</PayoffType>
+      </OptionData>
+      <StartDate>2023-06-07</StartDate>
+      <ObservationDates>
+        <Rules>
+          <StartDate>2023-06-07</StartDate>
+          <EndDate>2023-09-07</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Rule>Forward</Rule>
+          <EndOfMonth />
+          <FirstDate />
+          <LastDate />
+        </Rules>
+      </ObservationDates>
+      <PricingDates>
+        <Dates>
+          <Dates>
+            <Date>20230707</Date>
+            <Date>20230807</Date>
+            <Date>20230907</Date>
+          </Dates>
+        </Dates>
+      </PricingDates>
+      <SettlementLag>2D</SettlementLag>
+      <SettlementCalendar>TARGET</SettlementCalendar>
+      <SettlementConvention>F</SettlementConvention>
+      <RangeBounds>
+        <RangeBound>
+          <RangeTo>4000</RangeTo>
+          <Leverage>1</Leverage>
+        </RangeBound>
+        <RangeBound>
+          <RangeFrom>4000</RangeFrom>
+          <Leverage>2</Leverage>
+        </RangeBound>
+      </RangeBounds>
+      <Barriers>
+        <BarrierData>
+          <Type>UpAndOut</Type>
+          <Levels>
+            <Level>3000</Level>
+          </Levels>
+        </BarrierData>
+        <BarrierData>
+          <Type>FixingFloor</Type>
+          <Levels>
+            <Level>2</Level>
+          </Levels>
+        </BarrierData>
+      </Barriers>
+    </EquityAccumulatorData>
+  </Trade>
+
+  <Trade id="9b:EquityAccumulator02WrappedKnockOutAtPeriodEnd">
+    <TradeType>EquityAccumulator</TradeType>
+    <Envelope>
+      <CounterParty>CPTY</CounterParty>
+      <NettingSetId>CPTY</NettingSetId>
+      <AdditionalFields />
+    </Envelope>
+    <EquityAccumulatorData>
+      <Currency>EUR</Currency>
+      <FixingAmount>100</FixingAmount>
+      <Strike>4400</Strike>
+      <Underlying>
+        <Type>Equity</Type>
+        <Name>RIC:.STOXX50E</Name>
+      </Underlying>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <PayoffType>Accumulator</PayoffType>
+      </OptionData>
+      <StartDate>2023-06-07</StartDate>
+      <ObservationDates>
+        <Rules>
+          <StartDate>2023-06-07</StartDate>
+          <EndDate>2023-09-07</EndDate>
+          <Tenor>1D</Tenor>
+          <Calendar>TARGET</Calendar>
+          <Convention>F</Convention>
+          <TermConvention>F</TermConvention>
+          <Rule>Forward</Rule>
+          <EndOfMonth />
+          <FirstDate />
+          <LastDate />
+        </Rules>
+      </ObservationDates>
+      <PricingDates>
+        <Dates>
+          <Dates>
+            <Date>20230707</Date>
+            <Date>20230807</Date>
+            <Date>20230907</Date>
+          </Dates>
+        </Dates>
+      </PricingDates>
+      <SettlementLag>2D</SettlementLag>
+      <SettlementCalendar>TARGET</SettlementCalendar>
+      <SettlementConvention>F</SettlementConvention>
+      <RangeBounds>
+        <RangeBound>
+          <RangeTo>4000</RangeTo>
+          <Leverage>1</Leverage>
+        </RangeBound>
+        <RangeBound>
+          <RangeFrom>4000</RangeFrom>
+          <Leverage>2</Leverage>
+        </RangeBound>
+      </RangeBounds>
+      <Barriers>
+        <BarrierData>
+          <Type>UpAndOut</Type>
+          <Levels>
+            <Level>3000</Level>
+          </Levels>
+        </BarrierData>
+        <BarrierData>
+          <Type>FixingFloor</Type>
+          <Levels>
+            <Level>2</Level>
+          </Levels>
+        </BarrierData>
+      </Barriers>
+      <KnockOutSettlementAtPeriodEnd>true</KnockOutSettlementAtPeriodEnd>
+    </EquityAccumulatorData>
+  </Trade>
 </Portfolio>
