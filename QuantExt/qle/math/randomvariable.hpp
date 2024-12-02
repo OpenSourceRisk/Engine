@@ -385,7 +385,7 @@ inline double* RandomVariable::data() { return data_; }
   the size of the basis system is not greater than the given bound (if this is not null) or the order is 1 */
 std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
 multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type,
-                     Size basisSystemSizeBound = Null<Size>());
+                     const std::set<std::set<Size>>& varGroups = {}, Size basisSystemSizeBound = Null<Size>());
 
 } // namespace QuantExt
 

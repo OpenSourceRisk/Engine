@@ -41,8 +41,9 @@ public:
     multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type,
                          const std::set<std::set<Size>>& varGroups = {});
 
-    // return the size of a basis system (or std::numeric_limits<Real>::infinity() if too big)
-    static Real size(Size dim, Size order);
+    /* return the size of a basis system (or std::numeric_limits<Real>::infinity() if too big),
+       if varGroups is non-empty, the result is an upper bound for the size only */
+    static Real size(Size dim, Size order, const std::set<std::set<Size>>& varGroups = {});
 };
 
 } // namespace QuantExt

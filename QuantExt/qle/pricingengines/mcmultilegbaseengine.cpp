@@ -1850,7 +1850,7 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
         basisType_ = polynomType;
         basisSystemSizeBound_ = Null<Size>();
 
-        basisFns_ = multiPathBasisSystem(regressor.size(), polynomOrder, polynomType, Null<Size>());
+        basisFns_ = multiPathBasisSystem(regressor.size(), polynomOrder, polynomType, {}, Null<Size>());
 
         // compute the regression coefficients
 
@@ -1985,7 +1985,7 @@ template <class Archive> void McMultiLegBaseEngine::RegressionModel::serialize(A
     // if deserialising, recreate the basisFns_ by passing the individual parameters to the function
     if (Archive::is_loading::value) {
         if (basisDim_ > 0)
-            basisFns_ = multiPathBasisSystem(basisDim_, basisOrder_, basisType_, basisSystemSizeBound_);
+            basisFns_ = multiPathBasisSystem(basisDim_, basisOrder_, basisType_, {}, basisSystemSizeBound_);
     }
 }
 

@@ -302,10 +302,11 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
 
         // train coefficients
 
-        coeff = regressionCoefficients(amount, state,
-                                       multiPathBasisSystem(state.size(), mcParams_.regressionOrder,
-                                                            mcParams_.polynomType, std::min(size(), trainingSamples())),
-                                       filter, RandomVariableRegressionMethod::QR);
+        coeff =
+            regressionCoefficients(amount, state,
+                                   multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                                        {}, std::min(size(), trainingSamples())),
+                                   filter, RandomVariableRegressionMethod::QR);
         DLOG("BlackScholesBase::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
                                       << " (got model state size " << nModelStates << " and " << nAddReg
                                       << " additional regressors, coordinate transform "
@@ -331,7 +332,7 @@ RandomVariable BlackScholesBase::npv(const RandomVariable& amount, const Date& o
 
     return conditionalExpectation(state,
                                   multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
-                                                       std::min(size(), trainingSamples())),
+                                                       {}, std::min(size(), trainingSamples())),
                                   coeff);
 }
 

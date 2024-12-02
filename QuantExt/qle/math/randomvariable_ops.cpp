@@ -73,7 +73,7 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
         if (regressor.empty())
             return expectation(*args[0]);
         else {
-            auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType, size);
+            auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType, {}, size);
             return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)));
         }
     });

@@ -250,12 +250,26 @@ VF_A RandomVariableLsmBasisSystem::multiPathBasisSystem(Size dim, Size order,
     return ret;
 }
 
-Real RandomVariableLsmBasisSystem::size(Size dim, Size order) {
+namespace {
+Real basisSystemSize(Size dim, Size order) {
     // see e.g. proposition 3 in https://murphmath.wordpress.com/2012/08/22/counting-monomials/
     return boost::math::binomial_coefficient<Real>(
         dim + order, order,
         boost::math::policies::make_policy(
             boost::math::policies::overflow_error<boost::math::policies::ignore_error>()));
+}
+} // namespace
+
+Real RandomVariableLsmBasisSystem::size(Size dim, Size order, const std::set<std::set<Size>>& varGroups) {
+    if (varGroups.empty()) {
+        return basisSystemSize(dim, order);
+    } else {
+        Real result = 0.0;
+        for (auto const& g : varGroups) {
+            result += basisSystemSize(g.size(), order);
+        }
+        return result;
+    }
 }
 
 } // namespace QuantExt
