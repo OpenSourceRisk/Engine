@@ -58,6 +58,8 @@ public:
         std::fill(t0data_, t0data_ + depth_ * idIdx_.size(), 0.0);
     }
 
+    InMemoryCubeOpt() = default;
+
     ~InMemoryCubeOpt() {
 
         if (t0data_)
@@ -77,12 +79,12 @@ public:
     const std::vector<QuantLib::Date>& dates() const override { return dates_; }
     QuantLib::Date asof() const override { return asof_; }
 
-    virtual Real getT0(Size i, Size d) const override {
+    Real getT0(Size i, Size d) const override {
         this->check(i, 0, 0, d);
         return static_cast<Real>(this->t0data_[d * idIdx_.size() + i]);
     }
 
-    virtual void setT0(Real value, Size i, Size d) override {
+    void setT0(Real value, Size i, Size d) override {
         this->check(i, 0, 0, d);
         this->t0data_[d * idIdx_.size() + i] = static_cast<T>(value);
     }
