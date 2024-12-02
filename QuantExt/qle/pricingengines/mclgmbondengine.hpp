@@ -70,27 +70,6 @@ public:
                                const std::set<Real>& exerciseXvaTimes,
                                const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const override;
 
-    class BondAmcCalculator : public McMultiLegBaseEngine::MultiLegBaseAmcCalculator {
-    public:
-        BondAmcCalculator(McMultiLegBaseEngine::MultiLegBaseAmcCalculator c)
-            : McMultiLegBaseEngine::MultiLegBaseAmcCalculator(c) {};
-
-        std::vector<QuantExt::RandomVariable>
-        simulatePath(const std::vector<QuantLib::Real>& pathTimes,
-                     const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-                     const std::vector<size_t>& relevantPathIndex,
-                     const std::vector<size_t>& relevantTimeIndex) override;
-
-        Currency npvCurrency() override { return baseCurrency_; }
-
-        void addEngine(const QuantExt::McLgmBondEngine& engine) {
-            engine_ = boost::make_shared<QuantExt::McLgmBondEngine>(engine);
-        };
-
-    private:
-        boost::shared_ptr<QuantExt::McLgmBondEngine> engine_;
-    };
-
 private:
     Handle<YieldTermStructure> ccyDiscount_;
 };
