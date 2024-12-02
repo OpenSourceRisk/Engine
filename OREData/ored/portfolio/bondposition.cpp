@@ -170,9 +170,12 @@ void BondPositionInstrumentWrapper::setNpvCurrencyConversion(const Handle<Quote>
 Real BondPositionInstrumentWrapper::NPV() const {
     Real result = 0.0;
     for (Size i = 0; i < bonds_.size(); ++i) {
+        Real notional = bonds_[i]->notional();
+        if (close_enough(notional, 0.0))
+            continue;
         // - divide by current notional, because weights are supposed to include any amortization factors
         // - add bid ask adjustment to relative price in bond ccy
-        Real tmp = quantity_ * (bonds_[i]->NPV() / bonds_[i]->notional() + bidAskAdjustments_[i]);
+        Real tmp = quantity_ * (bonds_[i]->NPV() / notional + bidAskAdjustments_[i]);
         if (!fxConversion_[i].empty()) {
             tmp *= fxConversion_[i]->value();
         }
