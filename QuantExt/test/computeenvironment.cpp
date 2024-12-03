@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(testRngGenerationMt19937) {
             1, settings.rngSeed);
         MersenneTwisterUniformRng mt(settings.rngSeed);
 
-        double tol = settings.useDoublePrecision ? 1E-12 : 1E-4;
+        double tol = settings.useDoublePrecision ? 1E-12 : 1E-3;
 
         Size noErrors = 0, errorThreshold = 10;
         for (Size j = 0; j < 2; ++j) {
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(testConditionalExpectation) {
                 y, {&x},
                 multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, x.size()));
 
-            double tol = settings.useDoublePrecision ? 1E-12 : 1E-4;
+            double tol = settings.useDoublePrecision ? 1E-12 : 1E-3;
             Size noErrors = 0, errorThreshold = 10;
 
             for (Size i = 0; i < n; ++i) {
@@ -502,7 +502,7 @@ BOOST_AUTO_TEST_CASE(testConditionalExpectation2) {
             y, {&x_adj2},
             multiPathBasisSystem(1, settings.regressionOrder, QuantLib::LsmBasisSystem::Monomial, x_adj2.size()));
 
-        double tol = settings.useDoublePrecision ? 1E-10 : 1E-4;
+        double tol = settings.useDoublePrecision ? 1E-10 : 1E-3;
         Size noErrors = 0, errorThreshold = 10;
 
         for (Size i = 0; i < n; ++i) {

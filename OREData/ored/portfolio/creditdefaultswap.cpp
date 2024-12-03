@@ -179,7 +179,7 @@ QuantLib::Real CreditDefaultSwap::notional() const {
     // get the current notional from CDS premium leg
     if (!legs_.empty()) {
         for (Size i = 0; i < legs_[0].size(); ++i) {
-            QuantLib::ext::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[0][i]);
+            QuantLib::ext::shared_ptr<Coupon> coupon = QuantLib::ext::dynamic_pointer_cast<Coupon>(legs_[0][i]);
             if (coupon->date() > asof)
                 return coupon->nominal();
         }

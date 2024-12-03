@@ -120,7 +120,7 @@ void testCalibrationInstrumentRepricing(const std::vector<Date>& expiries, const
             context->scalars["Expiry"] = EventVec{paths, expiries[i]};
             context->scalars["Strike"] = RandomVariable(paths, strike);
             scriptEngine.run();
-            Real scriptPrice = expectation(QuantLib::ext::get<RandomVariable>(context->scalars["Option"])).at(0);
+            Real scriptPrice = expectation(boost::get<RandomVariable>(context->scalars["Option"])).at(0);
             // check the market price and the script price are close
             BOOST_TEST_MESSAGE("expiry=" << QuantLib::io::iso_date(expiries[i]) << " moneyness=" << moneyness[j]
                                          << " marketVol = " << process->blackVolatility()->blackVol(t, strike, true)

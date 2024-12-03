@@ -155,7 +155,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     // Read the necessary YoY rates from the bootstrapped YoY inflation curve
     map<Date, Real> result;
     for (const auto& maturity : dts) {
-        result[maturity] = yoyCurve->yoyRate(maturity);
+        result[maturity] = yoyCurve->yoyRate(maturity, yoyCurve->observationLag());
     }
 
     return result;

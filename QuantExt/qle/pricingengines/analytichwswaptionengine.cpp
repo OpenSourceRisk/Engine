@@ -11,14 +11,14 @@ AnalyticHwSwaptionEngine::AnalyticHwSwaptionEngine(const Array& t,
     model_(model), p_(model->parametrization()),
     c_(discountCurve.empty() ? p_->termStructure() : discountCurve),
     swaption(swaption){
-        const Leg& origFixedLeg = swaption.underlyingSwap()->fixedLeg();
+        const Leg& origFixedLeg = swaption.underlying()->fixedLeg();
         for (const auto& cf : origFixedLeg) {
             ext::shared_ptr<FixedRateCoupon> fixedCoupon = ext::dynamic_pointer_cast<FixedRateCoupon>(cf);
             if (fixedCoupon) {
                 fixedLeg_.push_back(fixedCoupon);
             }
         }
-        const Leg& origFloatingLeg = swaption.underlyingSwap()->floatingLeg();
+        const Leg& origFloatingLeg = swaption.underlying()->floatingLeg();
         for (const auto& cf : origFloatingLeg) {
             ext::shared_ptr<FloatingRateCoupon> coupon = ext::dynamic_pointer_cast<FloatingRateCoupon>(cf);
             if (coupon) {
@@ -64,9 +64,9 @@ Array AnalyticHwSwaptionEngine::q(const Time t, const Array& x) const {
     Size n = p_->n();
     Array q(n, 0.0);
 
-    Date startDate = swaption.underlyingSwap()->fixedSchedule().startDate();
+    Date startDate = swaption.underlying()->fixedSchedule().startDate();
     Time T0 = c_->timeFromReference(startDate);
-    Date endDate = swaption.underlyingSwap()->fixedSchedule().endDate();
+    Date endDate = swaption.underlying()->fixedSchedule().endDate();
     Time TN = c_->timeFromReference(endDate);
 
     Real P_T0 = model_->discountBond(t, T0, x, c_);
@@ -95,7 +95,7 @@ Array AnalyticHwSwaptionEngine::q(const Time t, const Array& x) const {
 
 
 Real AnalyticHwSwaptionEngine::v() const{
-    Date startDate = swaption.underlyingSwap()->fixedSchedule().startDate();
+    Date startDate = swaption.underlying()->fixedSchedule().startDate();
     Time T0 = c_->timeFromReference(startDate);
     
     auto integrand = [this](Real t) -> Real {
@@ -132,7 +132,7 @@ void AnalyticHwSwaptionEngine::calculate() const {
     NormalDistribution pdf;
     CumulativeNormalDistribution cdf;
 
-    const auto& underlyingSwap = swaption.underlyingSwap();
+    const auto& underlyingSwap = swaption.underlying();
     Real strikePrice = underlyingSwap->fixedRate();
 
     Real s0 = s(0, x);

@@ -60,13 +60,17 @@ public:
                               exCouponDate),
           subtractInflationNominal_(subtractInflationNominal){};
 
-    virtual Rate rate() const override;
     bool subtractInflationNotional() { return subtractInflationNominal_; };
+
+    //! \name LazyObject interface
+    //@{
+    void performCalculations() const override;
+    //@}
 
 protected:
     bool subtractInflationNominal_;
+    mutable Real adjustedRate_;
 };
-
 
 //! Capped or floored CPI cashflow.
 /*! Extended QuantLib::CPICashFlow
@@ -76,11 +80,20 @@ public:
     CappedFlooredCPICashFlow(const ext::shared_ptr<CPICashFlow>& underlying, Date startDate = Date(),
                              Period observationLag = 0 * Days, Rate cap = Null<Rate>(), Rate floor = Null<Rate>());
 
-    virtual Real amount() const override;
     void setPricer(const ext::shared_ptr<InflationCashFlowPricer>& pricer);
     bool isCapped() const { return isCapped_; }
     bool isFloored() const { return isFloored_; }
     ext::shared_ptr<CPICashFlow> underlying() const { return underlying_; }
+
+    //! \name Observer interface
+    //@{
+    void deepUpdate() override;
+    //@}
+
+    //! \name LazyObject interface
+    //@{
+    void performCalculations() const override;
+    //@}
 
 private:
     void setCommon(Rate cap, Rate floor);
@@ -100,18 +113,22 @@ class CappedFlooredCPICoupon : public CPICoupon {
 public:
     CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>& underlying, Date startDate = Date(),
                            Rate cap = Null<Rate>(), Rate floor = Null<Rate>());
-    virtual Rate rate() const override;
 
     ext::shared_ptr<CPICoupon> underlying() const { return underlying_; }
 
     //! \name Observer interface
     //@{
-    void update() override;
+    void deepUpdate() override;
     //@}
 
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor& v) override;
+    void accept(AcyclicVisitor& v) override;
+    //@}
+
+    //! \name LazyObject interface
+    //@{
+    void performCalculations() const override;
     //@}
 
     bool isCapped() const { return isCapped_; }

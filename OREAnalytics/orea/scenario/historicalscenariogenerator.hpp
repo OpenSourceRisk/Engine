@@ -124,11 +124,11 @@ public:
     //! Constructor with no mporDays/Calendar, construct historical shift scenario between each scneario
     HistoricalScenarioGenerator(
         //! Historical Scenario Loader containing all scenarios
-        const boost::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
+        const QuantLib::ext::shared_ptr<HistoricalScenarioLoader>& historicalScenarioLoader,
         //! Scenario factory to use
-        const boost::shared_ptr<ScenarioFactory>& scenarioFactory,
+        const QuantLib::ext::shared_ptr<ScenarioFactory>& scenarioFactory,
         //! optional adjustment factors for stock splits etc
-        const boost::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::AdjustmentFactors>& adjFactors = nullptr,
         //! return configuration
         const ReturnConfiguration& returnConfiguration = ReturnConfiguration(),
         //! string prepended to label of all scenarios generated
