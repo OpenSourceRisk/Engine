@@ -211,17 +211,25 @@ Real ir_ir_covariance(const CrossAssetModel& x, const Size i, const Size j, cons
 Real ir_fx_covariance(const CrossAssetModel& x, const Size i, const Size j, const Time t0, const Time dt) {
     const auto lgm0 = x.irlgm1f(0);
     const auto lgmi = x.irlgm1f(i);
-    const auto lgmj1 = x.irlgm1f(j);
+    const auto lgmj1 = x.irlgm1f(j + 1);
     const auto fxj = x.fxbs(j);
     Real rzz0i = x.correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::IR, i, 0, 0);
     Real rzzj1i = x.correlation(CrossAssetModel::AssetType::IR, j + 1, CrossAssetModel::AssetType::IR, i, 0, 0);
     Real rzxij = x.correlation(CrossAssetModel::AssetType::IR, i, CrossAssetModel::AssetType::FX, j, 0, 0);
+
+    Real H0 = lgm0->H(t0 + dt);
+    Real Hj1 = lgmj1->H(t0 + dt);
+
     return x.integrator()->operator()(
-        [&lgm0, &lgmi, &lgmj1, &fxj, rzz0i, rzzj1i, rzxij, t0, dt](const Real t) {
-            return lgm0->H(t0 + dt) * lgm0->alpha(t) * lgmi->alpha(t) * rzz0i -
-                   lgm0->H(t) * lgm0->alpha(0) * lgmi->alpha(t) * rzz0i -
-                   lgmj1->H(t0 + dt) * lgmj1->alpha(t) * lgmi->alpha(t) * rzzj1i +
-                   lgmj1->H(t) * lgmj1->alpha(t) * lgmi->alpha(t) * rzzj1i + lgmi->alpha(t) + fxj->sigma(t) * rzxij;
+        [&lgm0, &lgmi, &lgmj1, &fxj, rzz0i, rzzj1i, rzxij, H0, Hj1](const Real t) {
+            Real a0 = lgm0->alpha(t);
+            Real ai = lgmi->alpha(t);
+            Real aj1 = lgmj1->alpha(t);
+            Real H0t = lgm0->H(t);
+            Real Hj1t = lgmj1->H(t);
+            Real sj = fxj->sigma(t);
+            return H0 * a0 * ai * rzz0i - H0t * a0 * ai * rzz0i - Hj1 * aj1 * ai * rzzj1i + Hj1t * aj1 * ai * rzzj1i +
+                   ai + sj * rzxij;
         },
         t0, t0 + dt);
     // Real res = Hz(0).eval(x, t0 + dt) * integral(x, P(az(0), az(i), rzz(0, i)), t0, t0 + dt) -
@@ -246,46 +254,46 @@ Real fx_fx_covariance(const CrossAssetModel& x, const Size i, const Size j, cons
     Real rzxi1j = x.correlation(CrossAssetModel::AssetType::IR, i + 1, CrossAssetModel::AssetType::FX, j, 0, 0);
     Real rzxj1i = x.correlation(CrossAssetModel::AssetType::IR, j + 1, CrossAssetModel::AssetType::FX, i, 0, 0);
     Real rxxij = x.correlation(CrossAssetModel::AssetType::FX, i, CrossAssetModel::AssetType::FX, j, 0, 0);
+    Real H0 = lgm0->H(t0 + dt);
+    Real Hi1 = lgmi1->H(t0 + dt);
+    Real Hj1 = lgmj1->H(t0 + dt);
 
     return
         // row 1 (pt 1 of 2)
-        lgm0->H(t0 + dt) * lgm0->H(t0 + dt) * (lgm0->zeta(t0 + dt) - lgm0->zeta(t0)) +
+        H0 * H0 * (lgm0->zeta(t0 + dt) - lgm0->zeta(t0)) +
         x.integrator()->operator()(
-            [&lgm0, &lgmi1, &lgmj1, &fxi, &fxj, rzz0i1, rzz0j1, rzzi1j1, rzx0i, rzx0j, rzxi1j, rzxj1i, rxxij, t0,
-             dt](const Real t) {
+            [&lgm0, &lgmi1, &lgmj1, &fxi, &fxj, rzz0i1, rzz0j1, rzzi1j1, rzx0i, rzx0j, rzxi1j, rzxj1i, rxxij, H0, Hi1,
+             Hj1](const Real t) {
+                Real a0 = lgm0->alpha(t);
+                Real ai1 = lgmi1->alpha(t);
+                Real aj1 = lgmj1->alpha(t);
+                Real H0t = lgm0->H(t);
+                Real Hi1t = lgmi1->H(t);
+                Real Hj1t = lgmj1->H(t);
+                Real si = fxi->sigma(t);
+                Real sj = fxj->sigma(t);
                 return
                     // row 1 (pt 2 of 2)
-                    -2.0 * lgm0->H(t0 + dt) * lgm0->H(t) * lgm0->alpha(t) * lgm0->alpha(t) +
-                    lgm0->H(t) * lgm0->H(t) * lgm0->alpha(t) * lgm0->alpha(t) +
+                    -2.0 * H0 * H0t * a0 * a0 + H0t * H0t * a0 * a0 +
                     // row 2
-                    lgm0->H(t0 + dt) * lgmj1->H(t0 + dt) * lgm0->alpha(t) * lgmj1->alpha(t) * rzz0j1 +
-                    lgmj1->H(t0 + dt) * lgm0->H(t) * lgm0->alpha(t) * lgmj1->alpha(t) * rzz0j1 +
-                    lgm0->H(t0 + dt) * lgmj1->H(t) * lgmj1->alpha(t) * lgm0->alpha(0) * rzz0j1 -
-                    lgm0->H(t) * lgmj1->H(t) * lgm0->alpha(t) * lgmj1->alpha(t) * rzz0j1 -
+                    H0 * Hj1 * a0 * aj1 * rzz0j1 + Hj1 * H0t * a0 * aj1 * rzz0j1 + H0 * Hj1t * aj1 * a0 * rzz0j1 -
+                    H0t * Hj1t * a0 * aj1 * rzz0j1 -
                     // row 3
-                    lgm0->H(t0 + dt) * lgmi1->H(t0 + dt) * lgm0->alpha(t) * lgmj1->alpha(t) * rzz0i1 +
-                    lgmi1->H(t0 + dt) * lgm0->H(t) * lgm0->alpha(t) * lgmi1->alpha(t) * rzz0i1 +
-                    lgm0->H(t0 + dt) * lgmi1->H(t) * lgmi1->alpha(t) * lgm0->alpha(t) * rzz0i1 -
-                    lgm0->H(t) * lgmi1->H(t) * lgm0->alpha(t) * lgmi1->alpha(t) * rzz0i1 +
+                    H0 * Hi1 * a0 * aj1 * rzz0i1 + Hi1 * H0t * a0 * ai1 * rzz0i1 + H0 * Hi1t * ai1 * a0 * rzz0i1 -
+                    H0t * Hi1t * a0 * ai1 * rzz0i1 +
                     // row 4
-                    lgm0->H(t0 + dt) * lgm0->alpha(0) * fxj->sigma(t) * rzx0j -
-                    lgm0->H(t) * lgm0->alpha(t) * fxj->sigma(t) * rzx0j +
+                    H0 * a0 * sj * rzx0j - H0t * a0 * sj * rzx0j +
                     // row 5
-                    lgm0->H(t0 + dt) * lgm0->alpha(t) * fxi->sigma(t) * rzx0i -
-                    lgm0->H(t) * lgm0->alpha(t) * fxi->sigma(t) * rzx0i -
+                    H0 * a0 * si * rzx0i - H0t * a0 * si * rzx0i -
                     // row 6
-                    lgmi1->H(t0 + dt) * lgmi1->alpha(t) * fxj->sigma(t) * rzxi1j +
-                    lgmi1->H(t) * lgmi1->alpha(t) * fxj->sigma(t) * rzxi1j -
+                    Hi1 * ai1 * sj * rzxi1j + Hi1t * ai1 * sj * rzxi1j -
                     // row 7
-                    lgmj1->H(t0 + dt) * lgmj1->alpha(t) * fxi->sigma(t) * rzxj1i +
-                    lgmj1->H(t) * lgmj1->alpha(t) * fxi->sigma(t) * rzxj1i +
+                    Hj1 * aj1 * si * rzxj1i + Hj1t * aj1 * si * rzxj1i +
                     // row 8
-                    lgmi1->H(t0 + dt) * lgmj1->H(t0 + dt) * lgmi1->alpha(t) * lgmj1->alpha(t) * rzzi1j1 -
-                    lgmj1->H(t0 + dt) * lgmi1->H(t) * lgmi1->alpha(t) * lgmj1->alpha(t) * rzzi1j1 -
-                    lgmi1->H(t0 + dt) * lgmj1->H(t) * lgmj1->alpha(t) * lgmi1->alpha(t) * rzzi1j1 +
-                    lgmi1->H(t) * lgmj1->H(t) * lgmi1->alpha(t) * lgmj1->alpha(t) * rzzi1j1 +
+                    Hi1 * Hj1 * ai1 * aj1 * rzzi1j1 - Hj1 * Hi1t * ai1 * aj1 * rzzi1j1 -
+                    Hi1 * Hj1t * aj1 * ai1 * rzzi1j1 + Hi1t * Hj1t * ai1 * aj1 * rzzi1j1 +
                     // row 9
-                    fxi->sigma(t) * fxj->sigma(t) * rxxij;
+                    si * sj * rxxij;
             },
             t0, t0 + dt);
 
