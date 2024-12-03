@@ -20,9 +20,6 @@
 #include <orea/engine/standardapproachcvacalculator.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
-
-// FIXME: temporary includes
-#include <ored/utilities/marketdata.hpp>
 #include <orea/engine/sacvasensitivityloader.hpp>
 
 using RFType = ore::analytics::RiskFactorKey::KeyType;
@@ -44,15 +41,10 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
     if (!analytic()->match(runTypes))
         return;
 
-    analytic()->buildPortfolio();
-    analytic()->buildMarket(loader);
+    SaCvaNetSensitivities cvaSensis = inputs_->saCvaNetSensitivities();
 
-    QuantLib::ext::shared_ptr<SaCvaNetSensitivities> saCvaNetSensis = nullptr;
-
-    // Either get sensis from inputs ...
-    if (inputs_->saCvaNetSensitivities()) {
-        saCvaNetSensis = inputs_->saCvaNetSensitivities();
-    } else { // ... or build them here
+    // Generate sensitivities here if not provided
+    if (cvaSensis.size() == 0) {
         auto sacvaAnalytic = static_cast<SaCvaAnalytic*>(analytic());
         QL_REQUIRE(sacvaAnalytic, "Analytic must be of type SaCvaAnalytic");
         auto sensiAnalytic = dependentAnalytic(sensiLookupKey);
@@ -62,31 +54,21 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
         // Get the netting set cva par sensitivity stream from the sub analytic
         auto xvaSensiAnalytic = boost::dynamic_pointer_cast<XvaSensitivityAnalytic>(sensiAnalytic);
         XvaSensitivityAnalyticImpl::ParSensiResults parResults = xvaSensiAnalytic->getParResults();
-        auto nettingCube = parResults.nettingParSensiCube_[XvaResults::Adjustment::CVA];
-        auto pssNetting = QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingCube, inputs_->baseCurrency());
+        auto nettingSetCube = parResults.nettingParSensiCube_[XvaResults::Adjustment::CVA];
+        auto pss = QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingSetCube, inputs_->baseCurrency());
 
-	// FIXME: Consolidate the following with the similar mapping procedure in inputparameters.cpp, reading from file
-	
-        // Scan that stream and map it to CvaSensitivityRecords
-        vector<CvaSensitivityRecord> cvaSensis;
-        pssNetting->reset();
-        while (SensitivityRecord sr = pssNetting->next()) {
-            CvaSensitivityRecord r;
-            r.nettingSetId = sr.tradeId;
-            string rf = prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1));
-            r.key = mapRiskFactorKeyToCvaRiskFactorKey(rf);
-            r.shiftSize = sr.shift_1;
-            r.currency = sr.currency;
-            r.baseCva = sr.baseNpv;
-            r.delta = sr.delta;
-            cvaSensis.push_back(r);
-        }
-
-	// Aggregate into the net sensis we need
+        // Use the loader to map and aggregate the par sensitivity input
         SaCvaSensitivityLoader cvaLoader;
-        cvaLoader.loadFromRawSensis(cvaSensis, inputs_->baseCurrency(), inputs_->counterpartyManager());
-        saCvaNetSensis = QuantLib::ext::make_shared<SaCvaNetSensitivities>(cvaLoader.netRecords());
+        cvaLoader.loadFromRawSensis(pss, inputs_->baseCurrency(), inputs_->counterpartyManager());
+        cvaSensis = cvaLoader.netRecords();
     }
+
+    // Report the net CVA sensis, even if we loaded them from a report
+    CONSOLEW("SA-CVA: Sensitivity Report");
+    auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+    ReportWriter(inputs_->reportNaString()).writeSaCvaSensiReport(cvaSensis, *cvaSensiReport);
+    analytic()->reports()[label()]["sacva_sensitivity"] = cvaSensiReport;
+    CONSOLE("OK");
 
     // Create the SA-CVA result reports we want to be populated by the sacva calculator below
     auto summaryReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
@@ -95,15 +77,13 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
     reports[StandardApproachCvaCalculator::ReportType::Summary] = summaryReport;
     reports[StandardApproachCvaCalculator::ReportType::Detail] = detailReport;
 
-    // FIXME: Review methodology, move settings to inputs if we keep these 
-    bool unhedgedSensitivities = true;
-    std::vector<std::string> perfectHedges = {"ForeignExchange|Delta", "ForeignExchange|Vega"};
-
     // Call the SA-CVA calculator, given CVA sensitivities
-    auto sacva = QuantLib::ext::make_shared<StandardApproachCvaCalculator>(inputs_->baseCurrency(), *saCvaNetSensis,
-                                                                           inputs_->counterpartyManager(), reports,
-                                                                           unhedgedSensitivities, perfectHedges);
+    CONSOLEW("SA-CVA: Capital Reports");
+    auto sacva = QuantLib::ext::make_shared<StandardApproachCvaCalculator>(
+        inputs_->baseCurrency(), cvaSensis, inputs_->counterpartyManager(), reports,
+        inputs_->useUnhedgedCvaSensis(), inputs_->cvaPerfectHedges());
     sacva->calculate();
+    CONSOLE("OK");
 
     analytic()->reports()[label()]["sacva_summary"] = summaryReport;
     analytic()->reports()[label()]["sacva_detail"] = detailReport;

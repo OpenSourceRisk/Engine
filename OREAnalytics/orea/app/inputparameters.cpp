@@ -440,125 +440,22 @@ void InputParameters::setXvaSensiPricingEngineFromFile(const std::string& fileNa
 // SA-CVA
 
 void InputParameters::setSaCvaNetSensitivitiesFromFile(const std::string& fileName) {
-    std::ifstream iss(fileName);
-    std::string line;
     SaCvaSensitivityLoader cvaLoader;
+    cvaLoader.load(fileName, '\n', ',');
+    saCvaNetSensitivities_ = cvaLoader.netRecords();
 
-    while (std::getline(iss, line)) {
-        vector<string> tokens;
-        boost::trim(line);
-        boost::split(tokens, line, boost::is_any_of(",;\t "), boost::token_compress_on);
-
-        ore::analytics::SaCvaSensitivityRecord r;
-        if (tokens[0] != "NettingSet" && line[0] != '#') {
-            QL_REQUIRE(tokens.size() == 7, "7 tokens expected in SA-CVA Net Sensitivities");
-            r.nettingSetId = tokens[0];
-            r.riskType = parseCvaRiskFactorKeyType(tokens[1]);
-            r.cvaType = parseCvaType(tokens[2]);
-            r.marginType = parseCvaRiskFactorMarginType(tokens[3]);
-            r.riskFactor = tokens[4];
-            r.bucket = tokens[5];
-            r.value = ore::data::parseReal(tokens[6]);
-
-            cvaLoader.add(r, false);
-        }
-    }
-    SaCvaNetSensitivities cvaSensis = cvaLoader.netRecords();
-    saCvaNetSensitivities_ = QuantLib::ext::shared_ptr<SaCvaNetSensitivities>(&cvaSensis);
-}
-
-CvaRiskFactorKey mapRiskFactorKeyToCvaRiskFactorKey(string s) {
-    pair<RiskFactorKey, string> keyDesc = deconstructFactor(s);
-    RiskFactorKey rfk = keyDesc.first;
-    string desc = keyDesc.second;
-
-    CvaRiskFactorKey::KeyType keyType = CvaRiskFactorKey::KeyType::None;
-    CvaRiskFactorKey::MarginType marginType = CvaRiskFactorKey::MarginType::None;
-    string name = rfk.name;
-    Period period;
-    try {
-        period = parsePeriod(desc);
-    } catch (...) {
-        period = Period();
-        WLOG("Failed to parse risk factor description '" << desc << "' in risk factor " << s << " into a period");
-    }
-
-    switch (rfk.keytype) {
-    case RiskFactorKey::KeyType::DiscountCurve:
-        keyType = CvaRiskFactorKey::KeyType::InterestRate;
-        marginType = CvaRiskFactorKey::MarginType::Delta;
-        break;
-    case RiskFactorKey::KeyType::IndexCurve: {
-        keyType = CvaRiskFactorKey::KeyType::InterestRate;
-        marginType = CvaRiskFactorKey::MarginType::Delta;
-        // We need currency rather than index name
-        auto idx = parseIborIndex(name);
-        name = idx->currency().code();
-        break;
-    }
-    case RiskFactorKey::KeyType::YieldCurve:
-    case RiskFactorKey::KeyType::ZeroInflationCurve:
-    case RiskFactorKey::KeyType::YoYInflationCurve: {
-        keyType = CvaRiskFactorKey::KeyType::InterestRate;
-        marginType = CvaRiskFactorKey::MarginType::Delta;
-	QL_FAIL("Clarify mapping of risk factor " << s << " to SaCvaRskFactor");
-        break;
-    }
-    case RiskFactorKey::KeyType::SwaptionVolatility:
-    case RiskFactorKey::KeyType::OptionletVolatility:
-    case RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility:
-    case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
-        keyType = CvaRiskFactorKey::KeyType::InterestRate;
-        marginType = CvaRiskFactorKey::MarginType::Vega;
-        break;
-    case RiskFactorKey::KeyType::FXSpot:
-        keyType = CvaRiskFactorKey::KeyType::ForeignExchange;
-        marginType = CvaRiskFactorKey::MarginType::Delta;
-        break;
-    case RiskFactorKey::KeyType::FXVolatility:
-        keyType = CvaRiskFactorKey::KeyType::ForeignExchange;
-        marginType = CvaRiskFactorKey::MarginType::Vega;
-        break;
-    case RiskFactorKey::KeyType::EquitySpot:
-        keyType = CvaRiskFactorKey::KeyType::Equity;
-        marginType = CvaRiskFactorKey::MarginType::Delta;
-        break;
-    case RiskFactorKey::KeyType::EquityVolatility:
-        keyType = CvaRiskFactorKey::KeyType::Equity;
-        marginType = CvaRiskFactorKey::MarginType::Vega;
-        break;
-    case RiskFactorKey::KeyType::CommodityCurve:
-        keyType = CvaRiskFactorKey::KeyType::Commodity;
-        marginType = CvaRiskFactorKey::MarginType::Delta;
-        break;
-    case RiskFactorKey::KeyType::CommodityVolatility:
-        keyType = CvaRiskFactorKey::KeyType::Commodity;
-        marginType = CvaRiskFactorKey::MarginType::Vega;
-        break;
-    case RiskFactorKey::KeyType::SurvivalProbability:
-        // FIXME: Distinguish CreditReference from CreditCounterparty risk
-        keyType = CvaRiskFactorKey::KeyType::CreditCounterparty;
-        marginType = CvaRiskFactorKey::MarginType::Delta;
-	ALOG("Cannot distinguish CreditReference from CreditCounterparty risk for risk factor " << s);
-        break;
-    case RiskFactorKey::KeyType::CDSVolatility:
-        keyType = CvaRiskFactorKey::KeyType::CreditReference;
-        marginType = CvaRiskFactorKey::MarginType::Vega;
-        break;
-    default:
-        keyType = CvaRiskFactorKey::KeyType::None;
-        marginType = CvaRiskFactorKey::MarginType::None;
-	QL_FAIL("Clarify mapping of risk factor " << s << " to SaCvaRskFactor");
-    }
-
-    CvaRiskFactorKey cvaRiskFactorKey(keyType, marginType, name, period);
-
-    LOG("Map RiskFactorKey " << s << " -> " << rfk << " : " << desc << " => " << cvaRiskFactorKey);
-
-    return cvaRiskFactorKey;
+    LOG("InputParameters::setSaCvaNetSensitivitiesFromFile: " << saCvaNetSensitivities_.size() << " records");
 }
 
 void InputParameters::setCvaSensitivitiesFromFile(const std::string& fileName) {
+    // FIXME:
+    // I would prefer to use the SensitivityFileStream here for reading SensitivityRecords, but the XVA sensitivity
+    // file format has an extra column (nettingSetId), to cover both trade-level and nettingSet-level sensitivites.
+    // Is that really necessary?
+    // If we could reuse the SensitivityFileStream here we could pass the SensitivityRecords to the
+    // SaCvaSensitivityLoader to map to CvaSensitivityRecords, very similar to the
+    // SaCvaSensitivityLoader::loadFromRawSensis method that uses a ParSensitivityCubeStream.
+
     cvaSensitivities_.clear();
 
     std::ifstream iss(fileName);
@@ -567,37 +464,39 @@ void InputParameters::setCvaSensitivitiesFromFile(const std::string& fileName) {
     while (std::getline(iss, line)) {
         vector<string> tokens;
         boost::trim(line);
-        boost::split(tokens, line, boost::is_any_of(",;\t "));
+        boost::split(tokens, line, boost::is_any_of(",;\t"));
+
+        // We expect the format of XVA Sensitivity analytic reports with 11 columns:
+        // #NettingSetId,TradeId,IsPar,Factor_1,ShiftSize_1,Factor_2,ShiftSize_2,Currency,Base XVA,Delta,Gamma
+        QL_REQUIRE(tokens.size() == 11,
+                   "11 tokens expected in CVA Sensitivities, found " << tokens.size() << " in: " << to_string(tokens));
+
+        // Skip header, comments and lines with a non-empty tradeId column, since we want nettingSet-level sensi only
+        if (tokens[0] == "NettingSetId" || line[0] == '#' || tokens[1] != "")
+            continue;
+
+        // We expect par sensitivities
+        bool isPar = parseBool(tokens[2]);
+        QL_REQUIRE(isPar == true, "CVA par sensitivity expected as input into SA-CVA");
 
         CvaSensitivityRecord r;
-        if (tokens[0] != "NettingSetId" && line[0] != '#') {
-            // We expect the format of XVA Sensitivity analytic reports with 11 columns
-	    QL_REQUIRE(tokens.size() == 11, "11 tokens expected in CVA Sensitivities, found " << tokens.size()
-		       << " in: " << to_string(tokens));
-            // Load netting set level records only, i.e. skip records containing trade IDs
-            if (tokens[1] != "")
-                continue;
-            r.nettingSetId = tokens[0];
-            // Check that we have par sensis
-            bool isPar = parseBool(tokens[2]);
-            QL_REQUIRE(isPar == true, "CVA par sensitivity expected as input into SA-CVA");
-            // RiskFactorKey needs translation into CvaRiskFactorKey
-            r.key = mapRiskFactorKeyToCvaRiskFactorKey(tokens[3]);
-            // FIXME: shiftType is not used in the sacvasensitivityloader, so remove it from
-            // the CvaSensitivityRecord.
-            // r.shiftType = parseShiftType(tokens[2]);
-            r.shiftSize = parseReal(tokens[4]);
-            r.currency = tokens[7];
-            r.baseCva = parseReal(tokens[8]);
-            r.delta = parseReal(tokens[9]);
+        r.nettingSetId = tokens[0];
+        // RiskFactorKey needs translation into CvaRiskFactorKey
+        r.key = mapRiskFactorKeyToCvaRiskFactorKey(tokens[3]);
+        // shiftType is not in the sensitivity report.
+	// FIXME: Since it is not used in the sacvasensitivityloader- can we remove it from the CvaSensitivityRecord?
+	//r.shiftType = parseShiftType(tokens[2]);
+        r.shiftSize = parseReal(tokens[4]);
+        r.currency = tokens[7];
+        r.baseCva = parseReal(tokens[8]);
+        r.delta = parseReal(tokens[9]);
 
-            cvaSensitivities_.push_back(r);
-        }
+        cvaSensitivities_.push_back(r);
     }
-    
+
     SaCvaSensitivityLoader cvaLoader;
     cvaLoader.loadFromRawSensis(cvaSensitivities_, baseCurrency_, counterpartyManager_);
-    saCvaNetSensitivities_ = QuantLib::ext::make_shared<SaCvaNetSensitivities>(cvaLoader.netRecords());
+    saCvaNetSensitivities_ = cvaLoader.netRecords();
 }
 
 // XVA Explain

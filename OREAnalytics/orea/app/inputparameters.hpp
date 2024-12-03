@@ -862,8 +862,10 @@ public:
     /*************************************
      * SA-CVA 
      *************************************/
-    const QuantLib::ext::shared_ptr<SaCvaNetSensitivities>& saCvaNetSensitivities() const { return saCvaNetSensitivities_; }
+    const SaCvaNetSensitivities& saCvaNetSensitivities() const { return saCvaNetSensitivities_; }
     const vector<CvaSensitivityRecord>& cvaSensitivities() const { return cvaSensitivities_; }
+    bool useUnhedgedCvaSensis() const { return useUnhedgedCvaSensis_; }
+    const std::vector<std::string>& cvaPerfectHedges() const { return cvaPerfectHedges_; }
 
     /****************************
      * Getters for zero to par shift
@@ -1219,9 +1221,11 @@ protected:
     /*****************
      * SA-CVA 
      *****************/
-    QuantLib::ext::shared_ptr<SaCvaNetSensitivities> saCvaNetSensitivities_; 
+    SaCvaNetSensitivities saCvaNetSensitivities_; 
     vector<CvaSensitivityRecord> cvaSensitivities_;
     QuantLib::ext::shared_ptr<ore::data::CounterpartyManager> counterpartyManager_;
+    bool useUnhedgedCvaSensis_ = true;
+    std::vector<std::string> cvaPerfectHedges_ = {"ForeignExchange|Delta", "ForeignExchange|Vega"};
 
     /*****************
      * XVA Explain analytic
@@ -1284,9 +1288,7 @@ private:
     std::string timeAveragedNettedExposureFileName_;
 };
 
-void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);
-  
-CvaRiskFactorKey mapRiskFactorKeyToCvaRiskFactorKey(string s);
+void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);  
 
 } // namespace analytics
 } // namespace ore

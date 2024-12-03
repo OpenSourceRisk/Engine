@@ -28,6 +28,7 @@
 
 #include <orea/engine/sacvasensitivityrecord.hpp>
 #include <orea/engine/cvasensitivitycubestream.hpp>
+#include <orea/engine/parsensitivitycubestream.hpp>
 #include <ored/portfolio/counterpartymanager.hpp>
 #include <ql/types.hpp>
 
@@ -67,6 +68,11 @@ public:
     void loadFromRawSensis(const QuantLib::ext::shared_ptr<CvaSensitivityCubeStream> sensiStream, 
         const std::string& baseCurrency, const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager = nullptr);
 
+    /*! Load SaCvaSensitity records from raw Par Sensitivity cube stream
+    */
+    void loadFromRawSensis(const QuantLib::ext::shared_ptr<ParSensitivityCubeStream> parSensiStream, 
+        const std::string& baseCurrency, const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager = nullptr);
+
     /*! Load SaCvaSensitity records from vector of Cva Sensis
     */
     void loadFromRawSensis(std::vector<CvaSensitivityRecord> cvaSensis,
@@ -104,5 +110,7 @@ protected:
     virtual bool process(const std::vector<std::string>& entries, QuantLib::Size maxIndex, QuantLib::Size currentLine);
 };
 
+CvaRiskFactorKey mapRiskFactorKeyToCvaRiskFactorKey(string s);
+  
 } // namespace analytics
 } // namespace ore

@@ -23,6 +23,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 using namespace ore::data;
 using namespace QuantLib;
@@ -40,6 +41,97 @@ map<Size, string> SaCvaSensitivityLoader::expectedHeaders = {{0, "NettingSet"},
                                                     {5, "Bucket"},
                                                     {6, "Value"}
                                                 };
+
+CvaRiskFactorKey mapRiskFactorKeyToCvaRiskFactorKey(string s) {
+    pair<RiskFactorKey, string> keyDesc = deconstructFactor(s);
+    RiskFactorKey rfk = keyDesc.first;
+    string desc = keyDesc.second;
+
+    CvaRiskFactorKey::KeyType keyType = CvaRiskFactorKey::KeyType::None;
+    CvaRiskFactorKey::MarginType marginType = CvaRiskFactorKey::MarginType::None;
+    string name = rfk.name;
+    Period period;
+    try {
+        period = parsePeriod(desc);
+    } catch (...) {
+        period = Period();
+        WLOG("Failed to parse risk factor description '" << desc << "' in risk factor " << s << " into a period");
+    }
+
+    switch (rfk.keytype) {
+    case RiskFactorKey::KeyType::DiscountCurve:
+        keyType = CvaRiskFactorKey::KeyType::InterestRate;
+        marginType = CvaRiskFactorKey::MarginType::Delta;
+        break;
+    case RiskFactorKey::KeyType::IndexCurve: {
+        keyType = CvaRiskFactorKey::KeyType::InterestRate;
+        marginType = CvaRiskFactorKey::MarginType::Delta;
+        // We need currency rather than index name
+        auto idx = parseIborIndex(name);
+        name = idx->currency().code();
+        break;
+    }
+    case RiskFactorKey::KeyType::YieldCurve:
+    case RiskFactorKey::KeyType::ZeroInflationCurve:
+    case RiskFactorKey::KeyType::YoYInflationCurve: {
+        keyType = CvaRiskFactorKey::KeyType::InterestRate;
+        marginType = CvaRiskFactorKey::MarginType::Delta;
+	QL_FAIL("Clarify mapping of risk factor " << s << " to SaCvaRskFactor");
+        break;
+    }
+    case RiskFactorKey::KeyType::SwaptionVolatility:
+    case RiskFactorKey::KeyType::OptionletVolatility:
+    case RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility:
+    case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
+        keyType = CvaRiskFactorKey::KeyType::InterestRate;
+        marginType = CvaRiskFactorKey::MarginType::Vega;
+        break;
+    case RiskFactorKey::KeyType::FXSpot:
+        keyType = CvaRiskFactorKey::KeyType::ForeignExchange;
+        marginType = CvaRiskFactorKey::MarginType::Delta;
+        break;
+    case RiskFactorKey::KeyType::FXVolatility:
+        keyType = CvaRiskFactorKey::KeyType::ForeignExchange;
+        marginType = CvaRiskFactorKey::MarginType::Vega;
+        break;
+    case RiskFactorKey::KeyType::EquitySpot:
+        keyType = CvaRiskFactorKey::KeyType::Equity;
+        marginType = CvaRiskFactorKey::MarginType::Delta;
+        break;
+    case RiskFactorKey::KeyType::EquityVolatility:
+        keyType = CvaRiskFactorKey::KeyType::Equity;
+        marginType = CvaRiskFactorKey::MarginType::Vega;
+        break;
+    case RiskFactorKey::KeyType::CommodityCurve:
+        keyType = CvaRiskFactorKey::KeyType::Commodity;
+        marginType = CvaRiskFactorKey::MarginType::Delta;
+        break;
+    case RiskFactorKey::KeyType::CommodityVolatility:
+        keyType = CvaRiskFactorKey::KeyType::Commodity;
+        marginType = CvaRiskFactorKey::MarginType::Vega;
+        break;
+    case RiskFactorKey::KeyType::SurvivalProbability:
+        // FIXME: Distinguish CreditReference from CreditCounterparty risk
+        keyType = CvaRiskFactorKey::KeyType::CreditCounterparty;
+        marginType = CvaRiskFactorKey::MarginType::Delta;
+	ALOG("Cannot distinguish CreditReference from CreditCounterparty risk for risk factor " << s);
+        break;
+    case RiskFactorKey::KeyType::CDSVolatility:
+        keyType = CvaRiskFactorKey::KeyType::CreditReference;
+        marginType = CvaRiskFactorKey::MarginType::Vega;
+        break;
+    default:
+        keyType = CvaRiskFactorKey::KeyType::None;
+        marginType = CvaRiskFactorKey::MarginType::None;
+	QL_FAIL("Clarify mapping of risk factor " << s << " to SaCvaRskFactor");
+    }
+
+    CvaRiskFactorKey cvaRiskFactorKey(keyType, marginType, name, period);
+
+    LOG("Map RiskFactorKey " << s << " -> " << rfk << " : " << desc << " => " << cvaRiskFactorKey);
+
+    return cvaRiskFactorKey;
+}
 
 void SaCvaSensitivityLoader::add(const SaCvaSensitivityRecord& record, bool aggregate) {
     SaCvaSensitivityRecord cr = record;
@@ -110,14 +202,14 @@ void SaCvaSensitivityLoader::load(const std::string& fileName, char eol, char de
         }
 
         if (headerProcessed) {
-            // Process a regular line of the CvaSensitivity file
+	    // Process a regular line of the CvaSensitivity file
             if (process(entries, maxIndex, currentLine)) {
                 ++validLines;
             } else {
                 ++invalidLines;
             }
         } else {
-            // Process the header line of the CvaSensitivity file
+	    // Process the header line of the CvaSensitivity file
             processHeader(entries);
             headerProcessed = true;
             auto maxPair = max_element(
@@ -216,6 +308,27 @@ void SaCvaSensitivityLoader::loadFromRawSensis(std::vector<CvaSensitivityRecord>
         loadRawSensi(sr, baseCurrency, counterpartyManager);
 }
 
+void SaCvaSensitivityLoader::loadFromRawSensis(
+    const QuantLib::ext::shared_ptr<ParSensitivityCubeStream> parSensiStream, const std::string& baseCurrency,
+    const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager) {
+
+    vector<CvaSensitivityRecord> cvaSensis;
+    parSensiStream->reset();
+    while (SensitivityRecord sr = parSensiStream->next()) {
+        CvaSensitivityRecord r;
+        r.nettingSetId = sr.tradeId;
+        string rf = prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1));
+        r.key = mapRiskFactorKeyToCvaRiskFactorKey(rf);
+        r.shiftSize = sr.shift_1;
+        r.currency = sr.currency;
+        r.baseCva = sr.baseNpv;
+        r.delta = sr.delta;
+        cvaSensis.push_back(r);
+    }
+
+    loadFromRawSensis(cvaSensis, baseCurrency, counterpartyManager);
+}
+
 //! Give back the set of netting set IDs that have been loaded
 const std::set<std::string>& SaCvaSensitivityLoader::nettingSetIds() const { return nettingSetIds_; }
 
@@ -231,6 +344,7 @@ void SaCvaSensitivityLoader::processHeader(const vector<string>& headers) {
         for (Size i = 0; i < headers.size(); ++i) {
             if (kv.second == headers[i]) {
                 columnIndex_[kv.first] = i;
+		LOG("SaCvaSensitivityLoader::processHeader " << kv.first << " " << i);
             }
         }
 

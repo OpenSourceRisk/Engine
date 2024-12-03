@@ -30,6 +30,8 @@
 #include <orea/app/analytics/xvaexplainanalytic.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
+#include <orea/engine/bacvacalculator.hpp>
+#include <orea/engine/cvasensitivitycubestream.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 #include <orea/simm/crifrecord.hpp>
 #include <orea/simm/simmresults.hpp>
@@ -230,6 +232,13 @@ virtual void writeXvaSensitivityReport(
     virtual void writeXvaExplainSummary(ore::data::Report& report, const ore::analytics::XvaExplainResults& xvaData);
 
     void writeXmlReport(ore::data::Report& report, std::string header, std::string xmlString);
+
+    virtual void writeBaCvaReport(const QuantLib::ext::shared_ptr<BaCvaCalculator>& baCvaCalculator, ore::data::Report& reportOut);
+
+    virtual void writeCvaSensiReport(const QuantLib::ext::shared_ptr<CvaSensitivityCubeStream>& ss, ore::data::Report& reportOut);
+
+    virtual void writeSaCvaSensiReport(const SaCvaNetSensitivities& sensis, ore::data::Report& reportOut);
+
 
 protected:
     std::string nullString_;

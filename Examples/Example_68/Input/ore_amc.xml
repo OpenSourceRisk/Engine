@@ -102,8 +102,12 @@
       <Parameter name="jacobiInverseOutputFile">xva_sensitivity_jacobi_inverse.csv</Parameter>
     </Analytic>
     <Analytic type="sacva">
-      <Parameter name="active">N</Parameter>
-      <Parameter name="cvaSensitivitiesFile">../Output/xva_par_sensitivity_cva.csv</Parameter>
+      <Parameter name="active">Y</Parameter>
+      <!-- If none of the following is provided, ORE uses the on-the-fly sensis above -->
+      <!-- Load net sensitivities that can be passed into the SA-CVA calculator directly -->
+      <!--<Parameter name="saCvaNetSensitivitiesFile">sacva_sensitivity.csv</Parameter>-->
+      <!-- Load CVA sensitivities, output of the xva sensi analytic, that needs mapping and aggregation -->
+      <!--<Parameter name="cvaSensitivitiesFile">xva_par_sensitivity_cva.csv</Parameter>-->
     </Analytic>
   </Analytics>
 </ORE>
