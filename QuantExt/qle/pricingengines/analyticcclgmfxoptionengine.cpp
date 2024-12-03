@@ -92,8 +92,6 @@ Real AnalyticCcLgmFxOptionEngine::value(const Time t0, const Time t,
                         },
                         t0, t);
 
-    std::cout << cachedIntegrals_ << " " << variance-cachedIntegrals_ << std::endl;
-
     BlackCalculator black(payoff, fxForward, std::sqrt(variance), domesticDiscount);
 
     return black.value();
