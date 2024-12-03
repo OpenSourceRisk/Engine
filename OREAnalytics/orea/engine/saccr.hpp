@@ -222,7 +222,7 @@ private:
     void writeReports();
 
     SACCR::AssetClass getAssetClass(const string& tradeType, bool isXCCYSwap);
-    std::pair<std::string, boost::optional<std::string>> getHedgingSet(const QuantLib::ext::shared_ptr<Trade>& trade, TradeData& tradeData);
+    std::pair<std::string, QuantLib::ext::optional<std::string>> getHedgingSet(const QuantLib::ext::shared_ptr<Trade>& trade, TradeData& tradeData);
     Real getCurrentNotional(const QuantLib::ext::shared_ptr<Trade>& trade, SACCR::AssetClass assetClass,
                             const string& baseCcy, const DayCounter& dc, Real& currentPrice1,
                             Real& currentPrice2, const string& hedgingSet = "",

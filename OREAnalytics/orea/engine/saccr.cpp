@@ -784,9 +784,9 @@ Real SACCR::getDelta(const QuantLib::ext::shared_ptr<Trade>& trade, TradeData& t
     return delta;
 }
 
-pair<string, boost::optional<string>> SACCR::getHedgingSet(const QuantLib::ext::shared_ptr<Trade>& trade, TradeData& tradeData) {
+pair<string, QuantLib::ext::optional<string>> SACCR::getHedgingSet(const QuantLib::ext::shared_ptr<Trade>& trade, TradeData& tradeData) {
     string hedgingSet;
-    boost::optional<string> hedgingSubset = boost::none;
+    QuantLib::ext::optional<string> hedgingSubset = QuantLib::ext::nullopt;
 
     const SACCR::AssetClass assetClass = tradeData.assetClass;
     // FX derivatives consist of a separate hedging set for each currency pair;
@@ -885,7 +885,7 @@ pair<string, boost::optional<string>> SACCR::getHedgingSet(const QuantLib::ext::
             hedgingSubset = indices[0];
             // Store information on whether equity underlying is an index
             if (refDataManager_ && refDataManager_->hasData("Equity", *hedgingSubset)) {
-                auto eqRefData = boost::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(
+                auto eqRefData = QuantLib::ext::dynamic_pointer_cast<ore::data::EquityReferenceDatum>(
                     refDataManager_->getData("Equity", *hedgingSubset));
                 tradeData.isEquityIndex = eqRefData->equityData().isIndex;
             }

@@ -90,10 +90,12 @@ void SMRC::tradeDetails() {
             tradeDataBase.id = tradeId;
             tradeDataBase.type = trade->tradeType();
             tradeDataBase.nettingSet = trade->envelope().nettingSetId();
-            tradeDataBase.npv = trade->instrument()->NPV() * getFxRate(trade->npvCurrency());
+            Real npvFxRate = trade->npvCurrency().empty() ? 1.0 : getFxRate(trade->npvCurrency());
+            tradeDataBase.npv = trade->instrument()->NPV() * npvFxRate;
             tradeDataBase.riskWeight = getRiskWeight(trade);
             tradeDataBase.maturityDate = trade->maturity();
-            const Real tradeNotional = trade->notional() * getFxRate(trade->notionalCurrency());
+            Real notionalFxRate = trade->notionalCurrency().empty() ? 1.0 : getFxRate(trade->notionalCurrency());
+            Real tradeNotional = trade->notional() * notionalFxRate;
 
             // asset, signedNotional and id2 (if applicable)
 
@@ -144,19 +146,29 @@ void SMRC::tradeDetails() {
             } else if (tradeDataBase.type == "EquityPosition") {
                 auto tradeEquityPosition = QuantLib::ext::dynamic_pointer_cast<EquityPosition>(trade);
                 QL_REQUIRE(tradeEquityPosition != nullptr, "internal error: EquityPosition null pointer in SMRC aggregation");
-                std::vector<QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>> indices = tradeEquityPosition->indices();
                 
-                for (auto const& index : indices) {
+                std::vector<QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>> indices = tradeEquityPosition->indices();
+
+                auto addFields = tradeEquityPosition->envelope().additionalFields();
+                auto it = addFields.find("smrc_notional");
+                QL_REQUIRE(it != addFields.end(), "EquityPosition requires additional field smrc_notional");
+                tradeNotional = parseReal(it->second);
+                
+                for (const auto& underlying : tradeEquityPosition->data().underlyings()) {
                     TradeData tradeData = tradeDataBase;
-                    const string& indexName = index->name();
+                    const string& indexName = underlying.name();
+
                     if (EquityBuckets_.find(indexName) == EquityBuckets_.end()) // include the weights
                         EquityBuckets_[indexName] = 0;
-                    EquityBuckets_[indexName] += tradeNotional;
-                    
+
+                    Real underlyingNotional = tradeNotional * underlying.weight();
+                    EquityBuckets_[indexName] += underlyingNotional;
+
                     tradeData.asset = indexName;
-                    tradeData.signedNotional = tradeNotional;
+                    tradeData.signedNotional = underlyingNotional;
                     tradeData_.push_back(tradeData);
                 }
+
             } else if (tradeDataBase.type == "EquityOption") {
                 auto tradeEquityOption = QuantLib::ext::dynamic_pointer_cast<EquityOption>(trade);
                 QL_REQUIRE(tradeEquityOption != nullptr, "internal error: EquityOption null pointer in SMRC aggregation");

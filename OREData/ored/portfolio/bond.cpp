@@ -423,7 +423,7 @@ std::pair<Date, std::string> BondBuilder::checkForwardBond(const std::string& se
     return std::make_pair(expiry, strippedId);
 }
 
-void VanillaBondBuilder::modifyToForwardBond(const Date& expiry, boost::shared_ptr<QuantLib::Bond>& bond,
+void VanillaBondBuilder::modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
                                              const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                              const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                              const std::string& securityId) const {

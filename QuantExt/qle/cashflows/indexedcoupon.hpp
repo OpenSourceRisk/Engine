@@ -35,7 +35,7 @@ using namespace QuantLib;
 /*!
     \ingroup cashflows
 */
-class IndexedCoupon : public Coupon, public Observer {
+class IndexedCoupon : public Coupon {
 public:
     /*! pays c->amount() * qty * index(fixingDate) */
     IndexedCoupon(const QuantLib::ext::shared_ptr<Coupon>& c, const Real qty, const QuantLib::ext::shared_ptr<Index>& index,
@@ -84,7 +84,7 @@ private:
 /*!
     \ingroup cashflows
 */
-class IndexWrappedCashFlow : public CashFlow, public Observer {
+class IndexWrappedCashFlow : public CashFlow {
 public:
     /*! pays c->amount() * qty * index(fixingDate) */
     IndexWrappedCashFlow(const QuantLib::ext::shared_ptr<CashFlow>& c, const Real qty, const QuantLib::ext::shared_ptr<Index>& index,

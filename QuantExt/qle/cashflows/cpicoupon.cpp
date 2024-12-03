@@ -31,14 +31,14 @@
 
 namespace QuantExt {
 
-Rate CPICoupon::rate() const {
-    Rate r = QuantLib::CPICoupon::rate() ;
-        if (subtractInflationNominal_) {
-            Rate adjusted_r = r / fixedRate_;
-            r = (adjusted_r - 1) * fixedRate_;
-        }
-        return r;
+void CPICoupon::performCalculations() const {
+    pricer_->initialize(*this);
+    QuantLib::CPICoupon::performCalculations();
+    if (subtractInflationNominal_) {
+        Rate adjusted_r = rate_ / fixedRate_;
+        rate_ = (adjusted_r - 1) * fixedRate_;
     }
+}
 
 void CappedFlooredCPICoupon::setCommon(Rate cap, Rate floor) {
 
@@ -108,12 +108,14 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
     }
 }
 
-Rate CappedFlooredCPICoupon::rate() const {
+void CappedFlooredCPICoupon::performCalculations() const {
     // rate =  fixedRate * capped/floored index
+    pricer_->initialize(*this);
     QuantLib::ext::shared_ptr<CappedFlooredCPICouponPricer> blackPricer =
         QuantLib::ext::dynamic_pointer_cast<CappedFlooredCPICouponPricer>(pricer_);
     QL_REQUIRE(blackPricer, "BlackCPICouponPricer or BachelierCPICouponPricer expected");
     Real capValue = 0.0, floorValue = 0.0;
+
     if (isCapped_) {
         cpiCap_->setPricingEngine(blackPricer->engine());
         capValue = cpiCap_->NPV();
@@ -127,18 +129,19 @@ Rate CappedFlooredCPICoupon::rate() const {
     // normalize, multiplication with nominal, year fraction, discount follows
     Real capAmount = capValue / (nominal * discount);
     Real floorAmount = floorValue / (nominal * discount);
-
     Rate swapletRate = underlying_->rate();
     // apply gearing
     Rate floorletRate = floorAmount * underlying_->fixedRate();
     Rate capletRate = capAmount * underlying_->fixedRate();
     // long floor, short cap
     Rate totalRate = swapletRate + floorletRate - capletRate;
-
-    return totalRate;
+    rate_ =  totalRate;
 }
 
-void CappedFlooredCPICoupon::update() { notifyObservers(); }
+void CappedFlooredCPICoupon::deepUpdate() { 
+    underlying_->update();
+    update();
+}
 
 void CappedFlooredCPICoupon::accept(AcyclicVisitor& v) {
     Visitor<CappedFlooredCPICoupon>* v1 = dynamic_cast<Visitor<CappedFlooredCPICoupon>*>(&v);
@@ -203,7 +206,7 @@ void CappedFlooredCPICashFlow::setPricer(const ext::shared_ptr<InflationCashFlow
     update();
 }
 
-Real CappedFlooredCPICashFlow::amount() const {
+void CappedFlooredCPICashFlow::performCalculations() const {
     QL_REQUIRE(pricer_, "pricer not set for capped/floored CPI cashflow");
     Real capValue = 0.0, floorValue = 0.0;
     if (isCapped_) {
@@ -219,7 +222,12 @@ Real CappedFlooredCPICashFlow::amount() const {
     Real floorAmount = floorValue / discount;
     Real underlyingAmount = underlying_->amount();
     Real totalAmount = underlyingAmount - capAmount + floorAmount;
-    return totalAmount;
+    amount_ = totalAmount;
+}
+
+void CappedFlooredCPICashFlow::deepUpdate() {
+    underlying_->update();
+    update();
 }
 
 CPILeg::CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationIndex>& index,

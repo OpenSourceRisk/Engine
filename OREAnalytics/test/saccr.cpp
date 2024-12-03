@@ -47,21 +47,23 @@
 #include <ored/portfolio/builders/fxtouchoption.hpp>
 #include <test/oreatoplevelfixture.hpp>
 
-#include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
-#include <ql/termstructures/voltermstructure.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/calendars/unitedkingdom.hpp>
-#include <ql/time/date.hpp>
-#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
+#include <ql/currencies/america.hpp>
 #include <ql/indexes/inflation/ukrpi.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
-#include <qle/termstructures/pricecurve.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
+#include <ql/termstructures/voltermstructure.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/calendars/unitedkingdom.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
-#include <ql/currencies/america.hpp>
+#include <qle/termstructures/pricecurve.hpp>
+#include <qle/utilities/inflation.hpp>
+
 
 using ore::test::TopLevelFixture;
 using namespace std;
@@ -197,10 +199,12 @@ public:
         };
         // we can use historical or first ZCIIS for this
         // we know historical is WAY off market-implied, so use market implied flat.
-        Rate baseZeroRate = ratesZCII[0] / 100.0;
-        QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(
-            new PiecewiseZeroInflationCurve<Linear>(asof_, UnitedKingdom(), ActualActual(ActualActual::ISDA), Period(2, Months),
-                                                    ii->frequency(), baseZeroRate, instruments));
+        auto obsLag = Period(2, Months);
+        auto frequency = ii->frequency();
+        Date baseDate =
+            QuantExt::ZeroInflation::curveBaseDate(false, asof_, obsLag, frequency, ii);
+        QuantLib::ext::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
+            asof_, baseDate, obsLag, frequency, ActualActual(ActualActual::ISDA), instruments));
         pCPIts->recalculate();
         cpiTS = QuantLib::ext::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
         Handle<ZeroInflationIndex> hUKRPI = Handle<ZeroInflationIndex>(

@@ -48,10 +48,7 @@ void AnalyticJyCpiCapFloorEngine::calculate() const {
     Size irIdx = model_->ccyIndex(model_->infjy(index_)->currency());
     DiscountFactor df = model_->irlgm1f(irIdx)->termStructure()->discount(arguments_.payDate);
 
-    QL_DEPRECATED_DISABLE_WARNING
-    bool interpolate = arguments_.observationInterpolation == CPI::Linear ||
-                       (arguments_.observationInterpolation == CPI::AsIndex && arguments_.index->interpolated());
-    QL_DEPRECATED_ENABLE_WARNING
+    bool interpolate = arguments_.observationInterpolation == CPI::Linear;
     // Get the time to expiry. This determines if we use the JY model or look for an inflation index fixing.
     auto zts = model_->infjy(index_)->realRate()->termStructure();
     Real t = inflationYearFraction(arguments_.index->frequency(), interpolate, zts->dayCounter(), zts->baseDate(),

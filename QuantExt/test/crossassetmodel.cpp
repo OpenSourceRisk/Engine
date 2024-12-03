@@ -2048,7 +2048,7 @@ struct IrFxInfCrComModelTestData {
         } else {
             Real infEurSigma = 0.15;
             Handle<Quote> baseCpiQuote(QuantLib::ext::make_shared<SimpleQuote>(1.0));
-            auto index = QuantLib::ext::make_shared<EUHICP>(false);
+            auto index = QuantLib::ext::make_shared<EUHICP>();
             auto realRateParam = QuantLib::ext::make_shared<Lgm1fConstantParametrization<ZeroInflationTermStructure>>(
                 EURCurrency(), infEurTs, infEurAlpha, infEurKappa);
             auto indexParam = QuantLib::ext::make_shared<FxBsConstantParametrization>(
@@ -2068,7 +2068,7 @@ struct IrFxInfCrComModelTestData {
         } else {
             Real infGbpSigma = 0.10;
             Handle<Quote> baseCpiQuote(QuantLib::ext::make_shared<SimpleQuote>(1.0));
-            auto index = QuantLib::ext::make_shared<UKRPI>(false);
+            auto index = QuantLib::ext::make_shared<UKRPI>();
             auto realRateParam = QuantLib::ext::make_shared<Lgm1fConstantParametrization<ZeroInflationTermStructure>>(
                 GBPCurrency(), infGbpTs, infGbpAlpha, infGbpKappa);
             auto indexParam = QuantLib::ext::make_shared<FxBsConstantParametrization>(
@@ -4390,7 +4390,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     Handle<ZeroInflationTermStructure> infEurTs(QuantLib::ext::make_shared<ZeroInflationCurve>(
         refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, infDates, infRates));
     infEurTs->enableExtrapolation();
-    Handle<ZeroInflationIndex> infIndex(QuantLib::ext::make_shared<EUHICPXT>(false, infEurTs));
+    Handle<ZeroInflationIndex> infIndex(QuantLib::ext::make_shared<EUHICPXT>(infEurTs));
     
     infIndex->addFixing(Date(1, April, 2015), 100);
 
@@ -4522,7 +4522,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     Handle<ZeroInflationTermStructure> infEurTs(QuantLib::ext::make_shared<ZeroInflationCurve>(
         refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, infDates, infRates));
     infEurTs->enableExtrapolation();
-    Handle<ZeroInflationIndex> infIndex(QuantLib::ext::make_shared<EUHICPXT>(false, infEurTs));
+    Handle<ZeroInflationIndex> infIndex(QuantLib::ext::make_shared<EUHICPXT>(infEurTs));
     infIndex->addFixing(Date(1, April, 2015), 100);
     Size nMat = 14;
     Real premium[] = { 0.000555, 0.000813, 0.000928, 0.00127, 0.001616, 0.0019, 0.0023,

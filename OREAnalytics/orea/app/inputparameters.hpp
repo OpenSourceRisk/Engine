@@ -1288,7 +1288,7 @@ private:
     std::string timeAveragedNettedExposureFileName_;
 };
 
-void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);  
+void scaleUpPortfolio(QuantLib::ext::shared_ptr<ore::data::Portfolio>& p);
 
 } // namespace analytics
 } // namespace ore
