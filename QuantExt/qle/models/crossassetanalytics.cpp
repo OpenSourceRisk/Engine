@@ -204,8 +204,6 @@ Real ir_ir_covariance(const CrossAssetModel& x, const Size i, const Size j, cons
     const auto lgmj = x.irlgm1f(j);
     return x.integrator()->operator()(
         [&lgmi, &lgmj, rzzij](const Real t) { return lgmi->alpha(t) * lgmj->alpha(t) * rzzij; }, t0, t0 + dt);
-    // Real res = integral(x, P(az(i), az(j), rzz(i, j)), t0, t0 + dt);
-    // return res;
 }
 
 Real ir_fx_covariance(const CrossAssetModel& x, const Size i, const Size j, const Time t0, const Time dt) {
@@ -232,12 +230,6 @@ Real ir_fx_covariance(const CrossAssetModel& x, const Size i, const Size j, cons
                    ai * sj * rzxij;
         },
         t0, t0 + dt);
-    // Real res = Hz(0).eval(x, t0 + dt) * integral(x, P(az(0), az(i), rzz(0, i)), t0, t0 + dt) -
-    //            integral(x, P(Hz(0), az(0), az(i), rzz(0, i)), t0, t0 + dt) -
-    //            Hz(j + 1).eval(x, t0 + dt) * integral(x, P(az(j + 1), az(i), rzz(j + 1, i)), t0, t0 + dt) +
-    //            integral(x, P(Hz(j + 1), az(j + 1), az(i), rzz(j + 1, i)), t0, t0 + dt) +
-    //            integral(x, P(az(i), sx(j), rzx(i, j)), t0, t0 + dt);
-    // return res;
 }
 
 Real fx_fx_covariance(const CrossAssetModel& x, const Size i, const Size j, const Time t0, const Time dt) {
@@ -296,45 +288,6 @@ Real fx_fx_covariance(const CrossAssetModel& x, const Size i, const Size j, cons
                     si * sj * rxxij;
             },
             t0, t0 + dt);
-
-    // Real H0 = Hz(0).eval(x, t0 + dt);
-    // Real Hi = Hz(i + 1).eval(x, t0 + dt);
-    // Real Hj = Hz(j + 1).eval(x, t0 + dt);
-    // Real res =
-    //     // row 1
-    //     H0 * H0 * (zetaz(0).eval(x, t0 + dt) - zetaz(0).eval(x, t0)) -
-    //     2.0 * H0 * integral(x, P(Hz(0), az(0), az(0)), t0, t0 + dt) +
-    //     integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t0 + dt) -
-    //     // row 2
-    //     H0 * Hj * integral(x, P(az(0), az(j + 1), rzz(0, j + 1)), t0, t0 + dt) +
-    //     Hj * integral(x, P(Hz(0), az(0), az(j + 1), rzz(0, j + 1)), t0, t0 + dt) +
-    //     H0 * integral(x, P(Hz(j + 1), az(j + 1), az(0), rzz(j + 1, 0)), t0, t0 + dt) -
-    //     integral(x, P(Hz(0), Hz(j + 1), az(0), az(j + 1), rzz(0, j + 1)), t0, t0 + dt) -
-    //     // row 3
-    //     H0 * Hi * integral(x, P(az(0), az(i + 1), rzz(0, i + 1)), t0, t0 + dt) +
-    //     Hi * integral(x, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)), t0, t0 + dt) +
-    //     H0 * integral(x, P(Hz(i + 1), az(i + 1), az(0), rzz(i + 1, 0)), t0, t0 + dt) -
-    //     integral(x, P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)), t0, t0 + dt) +
-    //     // row 4
-    //     H0 * integral(x, P(az(0), sx(j), rzx(0, j)), t0, t0 + dt) -
-    //     integral(x, P(Hz(0), az(0), sx(j), rzx(0, j)), t0, t0 + dt) +
-    //     // row 5
-    //     H0 * integral(x, P(az(0), sx(i), rzx(0, i)), t0, t0 + dt) -
-    //     integral(x, P(Hz(0), az(0), sx(i), rzx(0, i)), t0, t0 + dt) -
-    //     // row 6
-    //     Hi * integral(x, P(az(i + 1), sx(j), rzx(i + 1, j)), t0, t0 + dt) +
-    //     integral(x, P(Hz(i + 1), az(i + 1), sx(j), rzx(i + 1, j)), t0, t0 + dt) -
-    //     // row 7
-    //     Hj * integral(x, P(az(j + 1), sx(i), rzx(j + 1, i)), t0, t0 + dt) +
-    //     integral(x, P(Hz(j + 1), az(j + 1), sx(i), rzx(j + 1, i)), t0, t0 + dt) +
-    //     // row 8
-    //     Hi * Hj * integral(x, P(az(i + 1), az(j + 1), rzz(i + 1, j + 1)), t0, t0 + dt) -
-    //     Hj * integral(x, P(Hz(i + 1), az(i + 1), az(j + 1), rzz(i + 1, j + 1)), t0, t0 + dt) -
-    //     Hi * integral(x, P(Hz(j + 1), az(j + 1), az(i + 1), rzz(j + 1, i + 1)), t0, t0 + dt) +
-    //     integral(x, P(Hz(i + 1), Hz(j + 1), az(i + 1), az(j + 1), rzz(i + 1, j + 1)), t0, t0 + dt) +
-    //     // row 9
-    //     integral(x, P(sx(i), sx(j), rxx(i, j)), t0, t0 + dt);
-    // return res;
 }
 
 Real infz_infz_covariance(const CrossAssetModel& x, const Size i, const Size j, const Time t0, const Time dt) {
