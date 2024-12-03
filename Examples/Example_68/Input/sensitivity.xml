@@ -32,7 +32,7 @@
 	</DiscountCurves>
 	<YieldCurves/>
 	<IndexCurves>
-	  <IndexCurve index="EUR-EURIBOR-6M">
+	        <IndexCurve index="EUR-EURIBOR-6M">
 			<ShiftType>Absolute</ShiftType>
 			<ShiftSize>0.0001</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
@@ -47,8 +47,8 @@
 					<Convention id="IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
 				</Conventions>
 			</ParConversion>
-	  </IndexCurve>
-		    <IndexCurve index="USD-LIBOR-3M">
+		</IndexCurve>
+		<IndexCurve index="USD-LIBOR-3M">
 			<ShiftType>Absolute</ShiftType>
 			<ShiftSize>0.0001</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
@@ -65,8 +65,8 @@
 				</Conventions>
 			</ParConversion>
 		    </IndexCurve>
-		    </IndexCurves>
-	    <FxSpots>
+	</IndexCurves>
+	<FxSpots>
 		<FxSpot ccypair="USDEUR">
 			<ShiftType>Relative</ShiftType>
 			<ShiftSize>0.001</ShiftSize>
@@ -79,7 +79,7 @@
 			<ShiftType>Absolute</ShiftType>
 			<ShiftSize>0.0001</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
-			<ShiftTenors>1Y, 5Y, 10Y</ShiftTenors>
+			<ShiftTenors>1Y, 5Y</ShiftTenors>
 			<ParConversion>
 				<Instruments>CDS, CDS, CDS</Instruments>
 				<SingleCurve>false</SingleCurve>
@@ -91,28 +91,30 @@
 	</CreditCurves>
 	<SwaptionVolatilities>
 		<SwaptionVolatility ccy="EUR">
-			<ShiftType>Relative</ShiftType>
+			<ShiftType>Absolute</ShiftType>
 			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
-			<ShiftExpiries>5Y</ShiftExpiries>
+			<ShiftExpiries>1Y,5Y</ShiftExpiries>
 			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
-			<ShiftTerms>5Y</ShiftTerms>
+			<ShiftTerms>1Y,5Y</ShiftTerms>
 		</SwaptionVolatility>
 		<SwaptionVolatility ccy="USD">
-			<ShiftType>Relative</ShiftType>
+			<!-- We need Relative -->
+			<ShiftType>Absolute</ShiftType>
 			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
-			<ShiftExpiries>5Y</ShiftExpiries>
+			<ShiftExpiries>1Y,5Y</ShiftExpiries>
 			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
-			<ShiftTerms>5Y</ShiftTerms>
+			<ShiftTerms>1Y,5Y</ShiftTerms>
 		</SwaptionVolatility>
 	</SwaptionVolatilities>	
 	<FxVolatilities>
-		<FxVolatility ccypair="EURUSD">
-			<ShiftType>Relative</ShiftType>
+	        <FxVolatility ccypair="EURUSD">
+	                <!-- We need Relative -->
+			<ShiftType>Absolute</ShiftType>
 			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
-			<ShiftExpiries>1Y</ShiftExpiries>
+			<ShiftExpiries>1Y,10Y</ShiftExpiries>
 			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
 		</FxVolatility>
 	</FxVolatilities>

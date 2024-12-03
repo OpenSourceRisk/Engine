@@ -92,7 +92,7 @@
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
     </Analytic>
     <Analytic type="xvaSensitivity">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
