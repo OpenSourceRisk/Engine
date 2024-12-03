@@ -6,6 +6,7 @@
     <Engine>DiscountingForwardBondEngine</Engine>
     <EngineParameters>
       <Parameter name="TimestepPeriod">1M</Parameter>
+      <Parameter name="SpreadOnIncomeCurve">false</Parameter>
     </EngineParameters>
   </Product>
   <Product type="Swap">
