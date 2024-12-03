@@ -229,7 +229,7 @@ Real ir_fx_covariance(const CrossAssetModel& x, const Size i, const Size j, cons
             Real Hj1t = lgmj1->H(t);
             Real sj = fxj->sigma(t);
             return H0 * a0 * ai * rzz0i - H0t * a0 * ai * rzz0i - Hj1 * aj1 * ai * rzzj1i + Hj1t * aj1 * ai * rzzj1i +
-                   ai + sj * rzxij;
+                   ai * sj * rzxij;
         },
         t0, t0 + dt);
     // Real res = Hz(0).eval(x, t0 + dt) * integral(x, P(az(0), az(i), rzz(0, i)), t0, t0 + dt) -
