@@ -274,12 +274,12 @@ Real fx_fx_covariance(const CrossAssetModel& x, const Size i, const Size j, cons
                 Real sj = fxj->sigma(t);
                 return
                     // row 1 (pt 2 of 2)
-                    -2.0 * H0 * H0t * a0 * a0 + H0t * H0t * a0 * a0 +
+                    -2.0 * H0 * H0t * a0 * a0 + H0t * H0t * a0 * a0 -
                     // row 2
                     H0 * Hj1 * a0 * aj1 * rzz0j1 + Hj1 * H0t * a0 * aj1 * rzz0j1 + H0 * Hj1t * aj1 * a0 * rzz0j1 -
                     H0t * Hj1t * a0 * aj1 * rzz0j1 -
                     // row 3
-                    H0 * Hi1 * a0 * aj1 * rzz0i1 + Hi1 * H0t * a0 * ai1 * rzz0i1 + H0 * Hi1t * ai1 * a0 * rzz0i1 -
+                    H0 * Hi1 * a0 * ai1 * rzz0i1 + Hi1 * H0t * a0 * ai1 * rzz0i1 + H0 * Hi1t * ai1 * a0 * rzz0i1 -
                     H0t * Hi1t * a0 * ai1 * rzz0i1 +
                     // row 4
                     H0 * a0 * sj * rzx0j - H0t * a0 * sj * rzx0j +
