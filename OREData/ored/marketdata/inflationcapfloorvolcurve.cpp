@@ -578,7 +578,6 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
             optionletTerms.push_back(optionletTerms.back() + Period(1, Years));
         }
         yoySurface->setMaturities(optionletTerms);
-        surface_ = yoySurface;
 
         // Get configuration values for bootstrap
         Real accuracy = config->bootstrapConfig().accuracy();

@@ -30,7 +30,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-class EquityCashFlow : public CashFlow, public Observer {   
+class EquityCashFlow : public CashFlow {   
 public:
     EquityCashFlow(const Date& paymentDate, Real quantity, const Date& fixingDate,
                    const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve)

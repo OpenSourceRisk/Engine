@@ -91,11 +91,11 @@ void McLgmFwdBondEngine::calculate() const {
     results_.value = payOff();
 
     // get the interim amcCalculator from the base class
-    auto multiLegBaseAmcCalculator = boost::dynamic_pointer_cast<MultiLegBaseAmcCalculator>(amcCalculator());
+    auto multiLegBaseAmcCalculator = QuantLib::ext::dynamic_pointer_cast<MultiLegBaseAmcCalculator>(amcCalculator());
 
     // cast to fwdAMC to gain access to the overwritten simulate path method
     ext::shared_ptr<FwdBondAmcCalculator> fwdBondCalc =
-        boost::make_shared<FwdBondAmcCalculator>(*multiLegBaseAmcCalculator);
+        QuantLib::ext::make_shared<FwdBondAmcCalculator>(*multiLegBaseAmcCalculator);
     fwdBondCalc->addEngine(*this);
     ext::shared_ptr<AmcCalculator> amcCalc = fwdBondCalc;
 
@@ -142,8 +142,8 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
     double contractCurveTime = engine_->time(engine_->contractCurveDate_);
     double cmpPaymentTime = engine_->time(engine_->cmpPaymentDate_);
 
-    boost::shared_ptr<ForwardBondTypePayoff> fwdBndPayOff =
-        boost::dynamic_pointer_cast<ForwardBondTypePayoff>(engine_->arguments_.payoff);
+    QuantLib::ext::shared_ptr<ForwardBondTypePayoff> fwdBndPayOff =
+        QuantLib::ext::dynamic_pointer_cast<ForwardBondTypePayoff>(engine_->arguments_.payoff);
     QL_REQUIRE(fwdBndPayOff, "not a ForwardBondTypePayoff");
 
     // bool stickyCloseOutRun = false;

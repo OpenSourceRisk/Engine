@@ -10,7 +10,6 @@
     <FractionsPerUnit>100</FractionsPerUnit>
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
-    <Format>%3% %1$.2f</Format>
   </Currency>
   <!-- SOS -->
   <Currency>
@@ -23,6 +22,5 @@
     <FractionsPerUnit>100</FractionsPerUnit>
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>2</RoundingPrecision>
-    <Format>%3% %1$.2f</Format>
   </Currency>
 </CurrencyConfig>

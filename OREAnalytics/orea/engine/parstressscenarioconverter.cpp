@@ -46,7 +46,7 @@ double computeTargetRate(const double fairRate, const double shift, const ShiftT
 }
 
 QuantLib::Period getYieldCurvePeriod(const RiskFactorKey& rfKey,
-                                     const boost::shared_ptr<ScenarioSimMarketParameters>& params) {
+                                     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& params) {
     QL_REQUIRE(rfKey.index < params->yieldCurveTenors(rfKey.name).size(), "Please align pillars, internal error");
     return params->yieldCurveTenors(rfKey.name)[rfKey.index];
 }
@@ -95,7 +95,7 @@ double getCurveStressShift(const RiskFactorKey& key, const StressTestScenarioDat
 }
 
 double getCapFloorStressShift(const RiskFactorKey& key, const StressTestScenarioData::StressTestData& stressScenario,
-                              const boost::shared_ptr<ScenarioSimMarketParameters>& params) {
+                              const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& params) {
     double shift = 0.0;
     auto it = stressScenario.capVolShifts.find(key.name);
     if (it != stressScenario.capVolShifts.end()) {
@@ -418,7 +418,7 @@ ParStressScenarioConverter::convertScenario(const StressTestScenarioData::Stress
 }
 
 double ParStressScenarioConverter::maturityTime(const RiskFactorKey& rfKey) const {
-    boost::shared_ptr<QuantLib::TermStructure> ts;
+    QuantLib::ext::shared_ptr<QuantLib::TermStructure> ts;
     QuantLib::Period tenor;
     switch (rfKey.keytype) {
     case RiskFactorKey::KeyType::DiscountCurve:

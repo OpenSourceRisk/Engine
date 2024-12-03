@@ -295,18 +295,18 @@ public:
     //! Constructors
     ProgressLogger();
     ProgressLogger(const bool coutLog) : ProgressLogger() { setCoutLog(coutLog); }
-    const QuantLib::ext::shared_ptr<file_sink>& fileSink() { return fileSink_; }
-    const QuantLib::ext::shared_ptr<text_sink>& coutSink() { return coutSink_; }
-    const QuantLib::ext::shared_ptr<text_sink>& cacheSink() { return cacheSink_; }
+    const boost::shared_ptr<file_sink>& fileSink() { return fileSink_; }
+    const boost::shared_ptr<text_sink>& coutSink() { return coutSink_; }
+    const boost::shared_ptr<text_sink>& cacheSink() { return cacheSink_; }
     //! Destructor
     virtual void removeSinks() override;
     void setCoutLog(bool flag);
     void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize = 0);
 
 private:
-    QuantLib::ext::shared_ptr<file_sink> fileSink_;
-    QuantLib::ext::shared_ptr<text_sink> coutSink_;
-    QuantLib::ext::shared_ptr<text_sink> cacheSink_;
+    boost::shared_ptr<file_sink> fileSink_;
+    boost::shared_ptr<text_sink> coutSink_;
+    boost::shared_ptr<text_sink> cacheSink_;
 };
 
 //! StructuredLogger
@@ -318,15 +318,15 @@ public:
     static const std::string name;
     //! Constructors
     StructuredLogger();
-    const QuantLib::ext::shared_ptr<file_sink>& fileSink() { return fileSink_; }
-    const QuantLib::ext::shared_ptr<text_sink>& cacheSink() { return cacheSink_; }
+    const boost::shared_ptr<file_sink>& fileSink() { return fileSink_; }
+    const boost::shared_ptr<text_sink>& cacheSink() { return cacheSink_; }
     //! Destructor
     virtual void removeSinks() override;
     void setFileLog(const std::string& filepath, const boost::filesystem::path& dir, QuantLib::Size rotationSize = 0);
 
 private:
-    QuantLib::ext::shared_ptr<file_sink> fileSink_;
-    QuantLib::ext::shared_ptr<text_sink> cacheSink_;
+    boost::shared_ptr<file_sink> fileSink_;
+    boost::shared_ptr<text_sink> cacheSink_;
 };
 
 //! EventLogger
@@ -343,13 +343,13 @@ public:
     EventLogger() : IndependentLogger(name) {}
 
     void setFormatter(const std::function<void(const boost::log::record_view&, boost::log::formatting_ostream&)>&);
-    const QuantLib::ext::shared_ptr<file_sink>& fileSink() { return fileSink_; }
+    const boost::shared_ptr<file_sink>& fileSink() { return fileSink_; }
     //! Destructor
     virtual void removeSinks() override;
     void setFileLog(const std::string& filepath);
 
 private:
-    QuantLib::ext::shared_ptr<file_sink> fileSink_;
+    boost::shared_ptr<file_sink> fileSink_;
 };
 
 //! Global static Log class
@@ -365,19 +365,19 @@ private:
   To configure the Log class to log to a file "/tmp/my_log.txt"
   <pre>
       Log::instance().removeAllLoggers();
-      Log::instance().registerLogger(QuantLib::ext::shared_ptr<Logger>(new FileLogger("/tmp/my_log.txt")));
+      Log::instance().registerLogger(boost::shared_ptr<Logger>(new FileLogger("/tmp/my_log.txt")));
   </pre>
 
   To change the Log class to only use a BufferLogger the user must call
   <pre>
       Log::instance().removeAllLoggers();
-      Log::instance().registerLogger(QuantLib::ext::shared_ptr<Logger>(new BufferLogger));
+      Log::instance().registerLogger(boost::shared_ptr<Logger>(new BufferLogger));
   </pre>
   and then to retrieve log messages from the buffer and print them to stdout the user must call:
   <pre>
       std::cout << "Begin Log Messages:" << std::endl;
 
-      QuantLib::ext::shared_ptr<BufferLogger> bl = QuantLib::ext::dynamic_pointer_cast<BufferLogger>
+      boost::shared_ptr<BufferLogger> bl = QuantLib::ext::dynamic_pointer_cast<BufferLogger>
         (Log::instance().logger(BufferLogger::name));
 
       while (bl.hasNext())

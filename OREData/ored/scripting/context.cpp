@@ -79,22 +79,22 @@ namespace {
 void resetSize(ValueType& v, const Size n) {
     switch (v.which()) {
     case ValueTypeWhich::Number:
-        QuantLib::ext::get<RandomVariable>(v).resetSize(n);
+        boost::get<RandomVariable>(v).resetSize(n);
         break;
     case ValueTypeWhich::Filter:
-        QuantLib::ext::get<Filter>(v).resetSize(n);
+        boost::get<Filter>(v).resetSize(n);
         break;
     case ValueTypeWhich::Event:
-        QuantLib::ext::get<EventVec>(v).size = n;
+        boost::get<EventVec>(v).size = n;
         break;
     case ValueTypeWhich::Currency:
-        QuantLib::ext::get<CurrencyVec>(v).size = n;
+        boost::get<CurrencyVec>(v).size = n;
         break;
     case ValueTypeWhich::Index:
-        QuantLib::ext::get<IndexVec>(v).size = n;
+        boost::get<IndexVec>(v).size = n;
         break;
     case ValueTypeWhich::Daycounter:
-        QuantLib::ext::get<DaycounterVec>(v).size = n;
+        boost::get<DaycounterVec>(v).size = n;
         break;
     default:
         QL_FAIL("resetSize(): value type not handled. internal error, contact dev.");

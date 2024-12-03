@@ -35,7 +35,7 @@ using namespace QuantLib;
 /*! %Coupon paying a Libor-type index on a variable nominal such that total flows are constant
     \ingroup cashflows
 */
-class FloatingAnnuityCoupon : public Coupon, public LazyObject {
+class FloatingAnnuityCoupon : public Coupon {
 public:
     FloatingAnnuityCoupon(Real annuity, bool underflow, const QuantLib::ext::shared_ptr<Coupon>& previousCoupon,
                           const Date& paymentDate, const Date& startDate, const Date& endDate, Natural fixingDays,

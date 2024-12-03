@@ -31,10 +31,7 @@ AnalyticDkCpiCapFloorEngine::AnalyticDkCpiCapFloorEngine(const QuantLib::ext::sh
 
 void AnalyticDkCpiCapFloorEngine::calculate() const {
 
-    QL_DEPRECATED_DISABLE_WARNING
-    bool interpolate = arguments_.observationInterpolation == CPI::Linear ||
-                       (arguments_.observationInterpolation == CPI::AsIndex && arguments_.index->interpolated());
-    QL_DEPRECATED_ENABLE_WARNING
+    bool interpolate = arguments_.observationInterpolation == CPI::Linear;
 
     Real t = inflationYearFraction(arguments_.index->frequency(), interpolate,
                                    model_->infdk(index_)->termStructure()->dayCounter(),
