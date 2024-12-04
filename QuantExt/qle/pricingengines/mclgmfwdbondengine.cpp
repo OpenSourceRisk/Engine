@@ -241,6 +241,7 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
         result[++counter] = forwardContractPresentValue * RandomVariable(samples, engine_->arguments_.bondNotional);
 
     }
+    result.resize(relevantPathIndex.size() + 1, RandomVariable(samples, 0.0));
     return result;
 }
 

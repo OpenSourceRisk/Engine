@@ -4657,6 +4657,8 @@ exceptions, but add to the run time of ORE.
   <Measure>LGM</Measure><!-- Choices: LGM, BA -->
   <Discretization>Exact</Discretization>
   <SalvagingAlgorithm>None</SalvagingAlgorithm>
+  <IntegrationPolicy>Simpson,1E-8,100,6</IntegrationPolicy>
+  <PiecewiseIntegration>true</PiecewiseIntegration>
   <!-- ... -->
 </CrossAssetModel>
 \end{minted}
@@ -4678,6 +4680,24 @@ The cross asset model may depend on a correlation structure. If the correlation 
 an approximation of the pseudo square root using a (user selected) salvaging algorithm can be used. The SalvagingAlgorithm
 tag chooses this algorithm. Allowable values are: {\em None}, {\em Spectral}, {\em Hypersphere}, {\em LowerDiagonal} 
 or {\em Highham}. If ommited, it defaults to None. Compare \cite{corrSalv}.
+
+For exact discretization a numerical integration is used to calculate the mean and covariances of the transition
+densities. IntegrationPolicy specifies the numerical method including parameters associated to the method as a comma
+separated list:
+
+\begin{itemize}
+\item Simpson,accuracy,maxIterations,minIterations [default, if not specified]: Simpson integration,
+  e.g. ``Simpson,1E-8,100,6''
+\item Segment,steps: Segment integration, e.g. ``Segment,100''
+\item GaussKronrodNonAdaptive,absAccuracy,maxEvaluations,relAccuracy: Gauss-Kronrod integration,
+  e.g. ``GaussKronrodNonAdaptive,1E-8,100,1E-6''
+\item GaussKronrodAdaptive,tolerance,maxEvaluations: Adaptive Gauss-Kronrod integration,
+  e.g. ``GaussKronrodAdaptive,1E-8,100''
+\end{itemize}
+
+The numerical integration is by default performed on subintervals where the model parameters are smooth
+(PiecewiseIntegration = true). This behavior can be disabled such that the numerical scheme is applied to the whole
+transition interval $[t0, t0+dt]$ (PiecewiseIntegration = false).
 
 \medskip
 
