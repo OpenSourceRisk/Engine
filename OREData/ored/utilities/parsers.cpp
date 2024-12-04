@@ -1560,6 +1560,8 @@ std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type) {
 }
 
 QuantLib::ext::shared_ptr<Integrator> parseIntegrationPolicy(const std::string& s) {
+    if (s.empty())
+        return nullptr;
     vector<string> tokens;
     boost::split(tokens, s, boost::is_any_of(","));
     QL_REQUIRE(!tokens.empty(), "parseIntegrationPolicy(" << s << "): no tokens found.");

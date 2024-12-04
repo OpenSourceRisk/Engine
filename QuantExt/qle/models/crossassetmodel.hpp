@@ -77,16 +77,22 @@ public:
         All IR components must be of type HW _or_ LGM1F, i.e. you can't mix the two types.
     */
     CrossAssetModel(const std::vector<QuantLib::ext::shared_ptr<Parametrization>>& parametrizations,
-                    const Matrix& correlation = Matrix(), const SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
+                    const Matrix& correlation = Matrix(),
+                    const SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
                     const IrModel::Measure measure = IrModel::Measure::LGM,
-                    const Discretization discretization = Discretization::Exact);
+                    const Discretization discretization = Discretization::Exact,
+                    const QuantLib::ext::shared_ptr<Integrator>& integrator = nullptr,
+                    const bool piecewiseIntegrationWrapper = true);
 
     /*! IR-FX model based constructor */
     CrossAssetModel(const std::vector<QuantLib::ext::shared_ptr<IrModel>>& currencyModels,
                     const std::vector<QuantLib::ext::shared_ptr<FxBsParametrization>>& fxParametrizations,
-                    const Matrix& correlation = Matrix(), const SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
+                    const Matrix& correlation = Matrix(),
+                    const SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
                     const IrModel::Measure measure = IrModel::Measure::LGM,
-                    const Discretization discretization = Discretization::Exact);
+                    const Discretization discretization = Discretization::Exact,
+                    const QuantLib::ext::shared_ptr<Integrator>& integrator = nullptr,
+                    const bool piecewiseIntegrationWrapper = true);
 
     /*! returns the state process with a given discretization */
     QuantLib::ext::shared_ptr<CrossAssetStateProcess> stateProcess() const;
@@ -266,10 +272,7 @@ public:
     /*! get salvaging algorithm */
     SalvagingAlgorithm::Type salvagingAlgorithm() const { return salvaging_; }
 
-    /*! analytical moments require numerical integration,
-      which can be customized here */
-    void setIntegrationPolicy(const QuantLib::ext::shared_ptr<Integrator> integrator,
-                              const bool usePiecewiseIntegration = true) const;
+    /*! the integrator used to calculate moments */
     const QuantLib::ext::shared_ptr<Integrator> integrator() const;
 
     /*! return (V(t), V^tilde(t,T)) in the notation of the book */
@@ -444,13 +447,15 @@ protected:
     void updateIndices(const AssetType& t, const Size i, const Size cIdx, const Size wIdx, const Size pIdx,
                        const Size aIdx);
     /* init methods */
-    virtual void initialize();
+    virtual void initialize(const QuantLib::ext::shared_ptr<Integrator>& integrator,
+                            const bool piecewiseIntegrationWrapper);
     virtual void initializeParametrizations();
     virtual void initializeCorrelation();
     virtual void initializeArguments();
     virtual void finalizeArguments();
     virtual void checkModelConsistency() const;
-    virtual void initDefaultIntegrator();
+    virtual void initIntegrator(const QuantLib::ext::shared_ptr<Integrator>& integrator,
+                                const bool piecewiseIntegrationWrapper);
 
     /* helper function for infdkI, crlgm1fS */
     Real infV(const Size idx, const Size ccy, const Time t, const Time T) const;
