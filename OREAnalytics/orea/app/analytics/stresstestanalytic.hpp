@@ -30,11 +30,11 @@ class StressTestAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "STRESS";
 
-    StressTestAnalyticImpl(const boost::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    StressTestAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
         setLabel(LABEL);
     }
 
-    void runAnalytic(const boost::shared_ptr<ore::data::InMemoryLoader>& loader,
+    void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
@@ -42,7 +42,7 @@ public:
 
 class StressTestAnalytic : public Analytic {
 public:
-    StressTestAnalytic(const boost::shared_ptr<InputParameters>& inputs);
+    StressTestAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
 };
 
 } // namespace analytics

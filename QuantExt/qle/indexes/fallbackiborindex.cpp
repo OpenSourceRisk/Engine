@@ -22,7 +22,6 @@
 */
 
 #include <qle/indexes/fallbackiborindex.hpp>
-
 #include <qle/termstructures/iborfallbackcurve.hpp>
 
 namespace QuantExt {
@@ -62,15 +61,16 @@ void FallbackIborIndex::addFixing(const Date& fixingDate, Real fixing, bool forc
 }
 
 QuantLib::ext::shared_ptr<OvernightIndexedCoupon> FallbackIborIndex::onCoupon(const Date& iborFixingDate,
-                                                                      const bool telescopicValueDates) const {
+                                                                              const bool telescopicValueDates) const {
     QL_REQUIRE(iborFixingDate >= switchDate_, "FallbackIborIndex: onCoupon for ibor fixing date "
                                                   << iborFixingDate << " requested, which is before switch date "
                                                   << switchDate_ << " for index '" << name() << "'");
     Date valueDate = originalIndex_->valueDate(iborFixingDate);
     Date maturityDate = originalIndex_->maturityDate(valueDate);
-    return QuantLib::ext::make_shared<OvernightIndexedCoupon>(maturityDate, 1.0, valueDate, maturityDate, rfrIndex_, 1.0, 0.0,
-                                                      Date(), Date(), DayCounter(), telescopicValueDates, false,
-                                                      2 * Days, 0, Null<Size>());
+
+    return QuantLib::ext::make_shared<OvernightIndexedCoupon>(maturityDate, 1.0, valueDate, maturityDate, rfrIndex_,
+                                                              1.0, 0.0, Date(), Date(), DayCounter(),
+                                                              telescopicValueDates, false, 2 * Days, 0, Null<Size>());
 }
 
 Real FallbackIborIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
@@ -81,11 +81,30 @@ Real FallbackIborIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing
     if (fixingDate > today) {
         return IborIndex::forecastFixing(fixingDate);
     } else {
-      if (QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(originalIndex_))
-	  return rfrIndex_->fixing(fixingDate) + spread_;
-      else
-	  return onCoupon(fixingDate, true)->rate() + spread_;
+        if (QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(originalIndex_)) {
+            return rfrIndex_->fixing(fixingDate) + spread_;
+        } else {
+            return onCoupon(fixingDate, true)->rate() + spread_;
+        }
     }
+}
+
+bool FallbackIborIndex::hasHistoricalFixing(const Date& fixingDate) const {
+    Date today = Settings::instance().evaluationDate();
+    if (today < switchDate_) {
+        return originalIndex_->hasHistoricalFixing(fixingDate);
+    } else {
+        if (QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(originalIndex_)) {
+            return rfrIndex_->hasHistoricalFixing(fixingDate);
+        } else {
+            try {
+                return pastFixing(fixingDate) != Null<Rate>();
+            } catch (...) {
+                ; // Fall through and assume no fixing available;
+            }
+        }
+    }
+    return false;
 }
 
 Rate FallbackIborIndex::pastFixing(const Date& fixingDate) const {

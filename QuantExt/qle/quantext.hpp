@@ -519,8 +519,6 @@
 #include <qle/termstructures/inflation/constantcpivolatility.hpp>
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
-#include <qle/termstructures/inflation/inflationtraits.hpp>
-#include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/interpolateddiscountcurve.hpp>

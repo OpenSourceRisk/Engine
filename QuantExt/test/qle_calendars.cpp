@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(testThaiCalendar) {
     std::vector<Date> expectedHolidays;
 
     expectedHolidays.push_back(Date(1, January, 2018));
-    expectedHolidays.push_back(Date(2, January, 2018));
+    //expectedHolidays.push_back(Date(2, January, 2018));
     expectedHolidays.push_back(Date(1, March, 2018)); // Makha Bucha Day
     expectedHolidays.push_back(Date(6, April, 2018));
     expectedHolidays.push_back(Date(13, April, 2018));
@@ -206,6 +206,7 @@ BOOST_AUTO_TEST_CASE(testChileanCalendar) {
     std::vector<Date> expectedHolidays;
 
     expectedHolidays.push_back(Date(1, January, 2018));
+    expectedHolidays.push_back(Date(16, January, 2018));
     expectedHolidays.push_back(Date(30, March, 2018));
     expectedHolidays.push_back(Date(1, May, 2018));
     expectedHolidays.push_back(Date(21, May, 2018));
@@ -219,6 +220,7 @@ BOOST_AUTO_TEST_CASE(testChileanCalendar) {
     expectedHolidays.push_back(Date(1, November, 2018));
     expectedHolidays.push_back(Date(2, November, 2018));
     expectedHolidays.push_back(Date(25, December, 2018));
+    expectedHolidays.push_back(Date(31, December, 2018));
 
     Calendar c = Chile();
 

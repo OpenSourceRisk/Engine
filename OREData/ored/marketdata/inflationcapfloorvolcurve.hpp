@@ -82,7 +82,6 @@ private:
     InflationCapFloorVolatilityCurveSpec spec_;
     QuantLib::ext::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyVolSurface_;
     QuantLib::ext::shared_ptr<QuantExt::CPIVolatilitySurface> cpiVolSurface_;
-    QuantLib::ext::shared_ptr<InflationTermStructure> surface_;
     bool useMarketYoyCurve_;
     QuantLib::ext::shared_ptr<YoYInflationTermStructure> yoyTs_;
     Handle<YieldTermStructure> discountCurve_;

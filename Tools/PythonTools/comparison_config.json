@@ -1730,7 +1730,26 @@
             "names": [
               "data/discountFactor",
               "data/time",
-              "data/zeroRate"
+              "data/zeroRate",
+              "data/cpi"
+            ],
+            "abs_tol": 1e-15,
+            "rel_tol": 1e-09
+          }
+        ]
+      },
+      "inflationCurves\\.json": {
+        "keys": {
+          "data/": [
+            "dates"
+          ]
+        },
+        "settings": [
+          {
+            "names": [
+              "data/time",
+              "data/zeroRate",
+              "data/cpi"
             ],
             "abs_tol": 1e-15,
             "rel_tol": 1e-09
