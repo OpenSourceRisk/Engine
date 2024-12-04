@@ -91,11 +91,11 @@ void McLgmFwdBondEngine::calculate() const {
     results_.value = payOff();
 
     // get the interim amcCalculator from the base class
-    auto multiLegBaseAmcCalculator = boost::dynamic_pointer_cast<MultiLegBaseAmcCalculator>(amcCalculator());
+    auto multiLegBaseAmcCalculator = QuantLib::ext::dynamic_pointer_cast<MultiLegBaseAmcCalculator>(amcCalculator());
 
     // cast to fwdAMC to gain access to the overwritten simulate path method
     ext::shared_ptr<FwdBondAmcCalculator> fwdBondCalc =
-        boost::make_shared<FwdBondAmcCalculator>(*multiLegBaseAmcCalculator);
+        QuantLib::ext::make_shared<FwdBondAmcCalculator>(*multiLegBaseAmcCalculator);
     fwdBondCalc->addEngine(*this);
     ext::shared_ptr<AmcCalculator> amcCalc = fwdBondCalc;
 
@@ -132,9 +132,10 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
     QL_REQUIRE(pathTimes.size() == paths.size(), "FwdBondAmcCalculator::simulatePath(): inconsistent pathTimes size ("
                                                      << pathTimes.size() << ") and paths size (" << paths.size()
                                                      << ") - internal error.");
-    QL_REQUIRE(relevantPathIndex.size() == xvaTimes_.size(),
-               "FwdBondAmcCalculator::simulatePath() inconsistent relevant path indexes ("
-                   << relevantPathIndex.size() << ") and xvaTimes (" << xvaTimes_.size() << ") - internal error.");
+    QL_REQUIRE(relevantPathIndex.size() >= xvaTimes_.size(),
+               "MultiLegBaseAmcCalculator::simulatePath() relevant path indexes ("
+                   << relevantPathIndex.size() << ") >= xvaTimes (" << xvaTimes_.size()
+                   << ") required - internal error.");
 
     // convert dates to times
     double maturityTime = engine_->time(engine_->arguments_.fwdMaturityDate);
@@ -142,8 +143,8 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
     double contractCurveTime = engine_->time(engine_->contractCurveDate_);
     double cmpPaymentTime = engine_->time(engine_->cmpPaymentDate_);
 
-    boost::shared_ptr<ForwardBondTypePayoff> fwdBndPayOff =
-        boost::dynamic_pointer_cast<ForwardBondTypePayoff>(engine_->arguments_.payoff);
+    QuantLib::ext::shared_ptr<ForwardBondTypePayoff> fwdBndPayOff =
+        QuantLib::ext::dynamic_pointer_cast<ForwardBondTypePayoff>(engine_->arguments_.payoff);
     QL_REQUIRE(fwdBndPayOff, "not a ForwardBondTypePayoff");
 
     // bool stickyCloseOutRun = false;
@@ -167,7 +168,7 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
         xvaTimes_.size(), std::vector<const RandomVariable*>(externalModelIndices_.size()));
 
     Size timeIndex = 0;
-    for (Size i = 0; i < relevantPathIndex.size(); ++i) {
+    for (Size i = 0; i < xvaTimes_.size(); ++i) {
         size_t pathIdx = relevantPathIndex[i];
         for (Size j = 0; j < externalModelIndices_.size(); ++j) {
             effPaths[timeIndex][j] = &paths[pathIdx][externalModelIndices_[j]];
@@ -236,6 +237,7 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
         result[++counter] = forwardContractForwardValue * disc_contract -
                             (RandomVariable(samples, engine_->cmpPayment_) * disc_cmpPayment);
     }
+    result.resize(relevantPathIndex.size() + 1, RandomVariable(samples, 0.0));
     return result;
 }
 

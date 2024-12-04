@@ -1535,6 +1535,24 @@
           }
         ]
       },
+      "timeaveragedexposure.csv": {
+        "keys": [
+          "NettingSetId",
+          "Sample"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "PosExpNoColl",
+              "NegExpNoColl",
+              "PosExpWithColl",
+              "NegExpWithColl"
+            ],
+            "abs_tol": 0.01,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "criftotrade_trade_summary.csv": {
         "keys": [
           "trade_id",
@@ -1712,7 +1730,26 @@
             "names": [
               "data/discountFactor",
               "data/time",
-              "data/zeroRate"
+              "data/zeroRate",
+              "data/cpi"
+            ],
+            "abs_tol": 1e-15,
+            "rel_tol": 1e-09
+          }
+        ]
+      },
+      "inflationCurves\\.json": {
+        "keys": {
+          "data/": [
+            "dates"
+          ]
+        },
+        "settings": [
+          {
+            "names": [
+              "data/time",
+              "data/zeroRate",
+              "data/cpi"
             ],
             "abs_tol": 1e-15,
             "rel_tol": 1e-09

@@ -26,23 +26,17 @@ using QuantLib::Time;
 
 namespace QuantExt {
 
-QL_DEPRECATED_DISABLE_WARNING
-ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
-                                                                 Size index)
-    : ZeroInflationModelTermStructure(model, index, false) {}
-
-
-ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(const QuantLib::ext::shared_ptr<CrossAssetModel>& model,
-                                                                 Size index, bool indexIsInterpolated)
-    : ZeroInflationTermStructure(
-          inflationTermStructure(model, index)->dayCounter(), inflationTermStructure(model, index)->baseRate(),
-          inflationTermStructure(model, index)->observationLag(), inflationTermStructure(model, index)->frequency()),
-      model_(model), index_(index), indexIsInterpolated_(indexIsInterpolated),
-      referenceDate_(inflationTermStructure(model_, index_)->referenceDate()), relativeTime_(0.0) {
+ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(
+    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index)
+    : ZeroInflationTermStructure(inflationTermStructure(model, index)->baseDate(),
+                                 inflationTermStructure(model, index)->observationLag(),
+                                 inflationTermStructure(model, index)->frequency(),
+                                 inflationTermStructure(model, index)->dayCounter()),
+      model_(model), index_(index), referenceDate_(inflationTermStructure(model_, index_)->referenceDate()),
+      relativeTime_(0.0) {
     registerWith(model_);
     update();
 }
-QL_DEPRECATED_ENABLE_WARNING
 
 void ZeroInflationModelTermStructure::update() {
     notifyObservers();
@@ -63,13 +57,7 @@ const Date& ZeroInflationModelTermStructure::referenceDate() const {
 }
 
 Date ZeroInflationModelTermStructure::baseDate() const {
-    QL_DEPRECATED_DISABLE_WARNING
-    if (indexIsInterpolated_) {
-        return referenceDate_ - observationLag_;
-    } else {
-        return inflationPeriod(referenceDate_ - observationLag_, frequency()).first;
-    }
-    QL_DEPRECATED_ENABLE_WARNING
+    return inflationPeriod(referenceDate_ - observationLag_, frequency()).first;
 }
 
 void ZeroInflationModelTermStructure::referenceDate(const Date& d) {

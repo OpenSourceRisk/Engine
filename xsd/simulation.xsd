@@ -132,6 +132,8 @@
       <xs:element type="measureType" name="Measure" minOccurs="0" maxOccurs="1" />
       <xs:element type="discretizationType" name="Discretization" minOccurs="0"/>
       <xs:element type="salvagingAlgoType" name="SalvagingAlgorithm" minOccurs="0"/>
+      <xs:element type="xs:string" name="IntegrationPolicy" minOccurs="0"/>
+      <xs:element type="bool" name="PiecewiseIntegration" minOccurs="0"/>
       <xs:element name="InterestRateModels" maxOccurs="1" >
         <xs:complexType>
           <xs:choice>

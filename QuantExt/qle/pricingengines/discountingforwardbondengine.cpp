@@ -30,7 +30,7 @@
 
 #include <boost/date_time.hpp>
 #include <boost/make_shared.hpp>
-
+#include <boost/tuple/tuple.hpp>
 namespace QuantExt {
 
 DiscountingForwardBondEngine::DiscountingForwardBondEngine(
@@ -95,7 +95,7 @@ void DiscountingForwardBondEngine::calculate() const {
 
     results_.underlyingSpotValue = calculateBondNpv(npvDate, maturityDate); // cashflows before maturity will be ignored
 
-    boost::tie(results_.forwardValue, results_.value) = calculateForwardContractPresentValue(
+    QuantLib::ext::tie(results_.forwardValue, results_.value) = calculateForwardContractPresentValue(
         results_.underlyingSpotValue, cmpPayment, npvDate, maturityDate, arguments_.fwdSettlementDate,
         !arguments_.isPhysicallySettled, cmpPaymentDate_use, dirty, conversionFactor_->value());
 }
@@ -334,16 +334,17 @@ QuantLib::ext::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardC
     } else if (arguments_.lockRate != Null<Real>()) {
         // lock rate specified forward bond calculation, use hardcoded conventions (compounded / semi annual) here, from
         // treasury bonds
-        Real price = forwardBondValue / arguments_.bondNotional / bd->notional(bondSettlementDate) * 100.0;
+        Real priceAmount = forwardBondValue / arguments_.bondNotional / bd->notional(bondSettlementDate) * 100.0;
+        Bond::Price price(priceAmount, Bond::Price::Dirty);
         Real yield = BondFunctions::yield(*bd, price, arguments_.lockRateDayCounter, Compounded, Semiannual,
-                                          bondSettlementDate, 1E-10, 100, 0.05, Bond::Price::Dirty);
+                                          bondSettlementDate, 1E-10, 100, 0.05);
         Real dv01, modDur = Null<Real>();
         if (arguments_.dv01 != Null<Real>()) {
             dv01 = arguments_.dv01;
         } else {
             modDur = BondFunctions::duration(*bd, yield, arguments_.lockRateDayCounter, Compounded, Semiannual,
                                              Duration::Modified, bondSettlementDate);
-            dv01 = price / 100.0 * modDur;
+            dv01 = price.amount() / 100.0 * modDur;
         }
 
         QL_REQUIRE(arguments_.longInForward, "DiscountingForwardBondEngine: internal error, longInForward must be "

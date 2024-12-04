@@ -1210,7 +1210,7 @@ void McMultiLegBaseEngine::calculateModels(
             // calculate rebate (exercise fees) if existent
 
             RandomVariable pvRebate(calibrationSamples_, 0.0);
-            if (auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
+            if (auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
                 Size exerciseTimes_idx = std::distance(exerciseTimes.begin(), exerciseTimes.find(*t));
                 if (rebatedExercise->rebate(exerciseTimes_idx) != 0.0) {
                     Size simulationTimes_idx = std::distance(simulationTimes.begin(), simulationTimes.find(*t));
@@ -1357,11 +1357,10 @@ void McMultiLegBaseEngine::calculate() const {
         ++legNo;
     }
 
-    /* build exercise times, xva times and sticky close-out path times (if relevant) */
+    /* build exercise times, cash settlement times */
 
     std::set<Real> exerciseTimes;
     std::vector<Real> cashSettlementTimes;
-    std::set<Real> xvaTimes;
 
     if (exercise_ != nullptr) {
 
@@ -1378,10 +1377,6 @@ void McMultiLegBaseEngine::calculate() const {
         }
     }
 
-    for (auto const& d : simulationDates_) {
-        xvaTimes.insert(time(d));
-    }
-
     /* build cashflow generation times */
 
     std::set<Real> cashflowGenTimes;
@@ -1389,6 +1384,24 @@ void McMultiLegBaseEngine::calculate() const {
     for (auto const& info : cashflowInfo) {
         cashflowGenTimes.insert(info.simulationTimes.begin(), info.simulationTimes.end());
         cashflowGenTimes.insert(info.payTime);
+    }
+
+    /* build xva times, truncate at max time seen so far, but ensure at least two xva times */
+
+    Real maxTime = 0.0;
+    if (auto m = std::max_element(exerciseTimes.begin(), exerciseTimes.end()); m != exerciseTimes.end())
+        maxTime = std::max(maxTime, *m);
+    if (auto m = std::max_element(cashSettlementTimes.begin(), cashSettlementTimes.end());
+        m != cashSettlementTimes.end())
+        maxTime = std::max(maxTime, *m);
+    if (auto m = std::max_element(cashflowGenTimes.begin(), cashflowGenTimes.end()); m != cashflowGenTimes.end())
+        maxTime = std::max(maxTime, *m);
+
+    std::set<Real> xvaTimes;
+
+    for (auto const& d : simulationDates_) {
+        if (auto t = time(d); t < maxTime + tinyTime || xvaTimes.size() < 2)
+            xvaTimes.insert(time(d));
     }
 
     /* build combined time sets */
@@ -1549,9 +1562,10 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
     QL_REQUIRE(pathTimes.size() == paths.size(),
                "MultiLegBaseAmcCalculator::simulatePath(): inconsistent pathTimes size ("
                    << pathTimes.size() << ") and paths size (" << paths.size() << ") - internal error.");
-    QL_REQUIRE(relevantPathIndex.size() == xvaTimes_.size(),
-               "MultiLegBaseAmcCalculator::simulatePath() inconsistent relevant path indexes ("
-                   << relevantPathIndex.size() << ") and xvaTimes (" << xvaTimes_.size() << ") - internal error.");
+    QL_REQUIRE(relevantPathIndex.size() >= xvaTimes_.size(),
+               "MultiLegBaseAmcCalculator::simulatePath() relevant path indexes ("
+                   << relevantPathIndex.size() << ") >= xvaTimes (" << xvaTimes_.size()
+                   << ") required - internal error.");
 
     bool stickyCloseOutRun = false;
     std::size_t regModelIndex = 0;
@@ -1570,7 +1584,7 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
         xvaTimes_.size(), std::vector<const RandomVariable*>(externalModelIndices_.size()));
 
     Size timeIndex = 0;
-    for (Size i = 0; i < relevantPathIndex.size(); ++i) {
+    for (Size i = 0; i < xvaTimes_.size(); ++i) {
         size_t pathIdx = relevantPathIndex[i];
         for (Size j = 0; j < externalModelIndices_.size(); ++j) {
             effPaths[timeIndex][j] = &paths[pathIdx][externalModelIndices_[j]];
@@ -1598,6 +1612,7 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
                            << t << " not found in exerciseXvaTimes vector.");
             result[++counter] = regModelUndDirty_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
         }
+        result.resize(relevantPathIndex.size() + 1, RandomVariable(samples, 0.0));
         return result;
     }
 
@@ -1721,6 +1736,7 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
         ++counter;
     }
 
+    result.resize(relevantPathIndex.size() + 1, RandomVariable(samples, 0.0));
     return result;
 }
 
@@ -1801,15 +1817,18 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
     QL_REQUIRE(!isTrained_, "McMultiLegBaseEngine::RegressionModel::train(): internal error: model is already trained, "
                             "train() should not be called twice on the same model instance.");
 
-    // build the regressor
+    /* build the regressor - if the regressand is identically zero we leave it empty which optimizes
+    out unnecessary calculations below */
 
     std::vector<const RandomVariable*> regressor;
-    for (auto const& [t, modelIdx] : regressorTimesModelIndices_) {
-        auto pt = pathTimes.find(t);
-        QL_REQUIRE(pt != pathTimes.end(),
-                   "McMultiLegBaseEngine::RegressionModel::train(): internal error: did not find regressor time "
-                       << t << " in pathTimes.");
-        regressor.push_back(paths[std::distance(pathTimes.begin(), pt)][modelIdx]);
+    if (!regressand.deterministic() || !QuantLib::close_enough(regressand.at(0), 0.0)) {
+        for (auto const& [t, modelIdx] : regressorTimesModelIndices_) {
+            auto pt = pathTimes.find(t);
+            QL_REQUIRE(pt != pathTimes.end(),
+                       "McMultiLegBaseEngine::RegressionModel::train(): internal error: did not find regressor time "
+                           << t << " in pathTimes.");
+            regressor.push_back(paths[std::distance(pathTimes.begin(), pt)][modelIdx]);
+        }
     }
 
     // factor reduction to reduce dimensionalitty and handle collinearity

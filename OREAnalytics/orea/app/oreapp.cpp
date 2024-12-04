@@ -221,8 +221,8 @@ QuantLib::ext::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const QuantLib::ext:
     else {
         WLOG("fixing cutoff date not set");
     }
-
-    auto loader = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings, cutoff);
+    
+    auto loader = QuantLib::ext::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings, cutoff);
 
     return loader;
 }
@@ -1928,6 +1928,12 @@ void OREAppInputParameters::loadParameters() {
     if (tmp != "") {
         setNetCubeOutputFile(tmp);
         setNetCubeOutput(true);
+    }
+
+    tmp = params_->get("xva", "timeAveragedNettedExposureOutputFile", false);
+    if (tmp != "") {
+        setTimeAveragedNettedExposureOutputFile(tmp);
+        setTimeAveragedNettedExposureOutput(true);
     }
 
     // FVA

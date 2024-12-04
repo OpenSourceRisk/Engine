@@ -926,7 +926,7 @@ void AMCValuationEngine::buildCube(const QuantLib::ext::shared_ptr<ore::data::Po
 
     // set up market and model builder
 
-    auto marketModelBuilder = [this](const boost::shared_ptr<ore::data::Loader>& loader)
+    auto marketModelBuilder = [this](const QuantLib::ext::shared_ptr<ore::data::Loader>& loader)
         -> std::pair<QuantLib::ext::shared_ptr<ore::data::Market>,
                      QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>> {
         auto initMarket = QuantLib::ext::make_shared<ore::data::TodaysMarket>(

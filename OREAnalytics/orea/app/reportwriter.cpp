@@ -243,11 +243,11 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report, const ore::data::
     map<string, Real> npvMap;
     Date asof = Settings::instance().evaluationDate();
     for (Size i = 0; i < cashflowReport.rows(); ++i) {
-        string tradeId = QuantLib::ext::get<string>(cashflowReport.data(tradeIdColumn, i));
-        string tradeType = QuantLib::ext::get<string>(cashflowReport.data(tradeTypeColumn, i));
-        Date payDate = QuantLib::ext::get<Date>(cashflowReport.data(payDateColumn, i));
-        string ccy = QuantLib::ext::get<string>(cashflowReport.data(ccyColumn, i));
-        Real pv = QuantLib::ext::get<Real>(cashflowReport.data(pvColumn, i));
+        string tradeId = boost::get<string>(cashflowReport.data(tradeIdColumn, i));
+        string tradeType = boost::get<string>(cashflowReport.data(tradeTypeColumn, i));
+        Date payDate = boost::get<Date>(cashflowReport.data(payDateColumn, i));
+        string ccy = boost::get<string>(cashflowReport.data(ccyColumn, i));
+        Real pv = boost::get<Real>(cashflowReport.data(pvColumn, i));
         Real fx = 1.0;
     // There shouldn't be entries in the cf report without ccy. We assume ccy = baseCcy in this case and log an error.
         if (ccy.empty()) {
@@ -1170,6 +1170,34 @@ void ReportWriter::writeRunTimes(ore::data::Report& report, const Timer& timer) 
 
     report.end();
     LOG("Finished writing runtimes report")
+}
+
+void ReportWriter::writeTimeAveragedNettedExposure(
+    ore::data::Report& report,
+    const std::map<std::string, std::vector<NettedExposureCalculator::TimeAveragedExposure>>& data) {
+
+    LOG("Writing time averaged netted exposure");
+
+    report.addColumn("NettingSetId", string())
+        .addColumn("Sample", Size())
+        .addColumn("PosExpNoColl", double(), 4)
+        .addColumn("NegExpNoColl", double(), 4)
+        .addColumn("PosExpWithColl", double(), 4)
+        .addColumn("NegExpWithColl", double(), 4);
+
+    for (auto const& [n, avg] : data) {
+        for (Size k = 0; k < avg.size(); ++k) {
+            report.next()
+                .add(n)
+                .add(k)
+                .add(avg[k].positiveExposureBeforeCollateral)
+                .add(avg[k].negativeExposureBeforeCollateral)
+                .add(avg[k].positiveExposureAfterCollateral)
+                .add(avg[k].negativeExposureAfterCollateral);
+        }
+    }
+
+    report.end();
 }
 
 void ReportWriter::writeCube(ore::data::Report& report, const QuantLib::ext::shared_ptr<NPVCube>& cube,

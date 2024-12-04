@@ -309,9 +309,11 @@ public:
     void setDvaName(const std::string& s) { dvaName_ = s; }
     void setRawCubeOutput(bool b) { rawCubeOutput_ = b; }
     void setNetCubeOutput(bool b) { netCubeOutput_ = b; }
+    void setTimeAveragedNettedExposureOutput(bool b) { timeAveragedNettedExposureOutput_ = b; }
     // FIXME: remove this from the base class?
     void setRawCubeOutputFile(const std::string& s) { rawCubeOutputFile_ = s; }
     void setNetCubeOutputFile(const std::string& s) { netCubeOutputFile_ = s; }
+    void setTimeAveragedNettedExposureOutputFile(const std::string& s) { timeAveragedNettedExposureOutputFile_ = s; }
     // funding value adjustment details
     void setFvaBorrowingCurve(const std::string& s) { fvaBorrowingCurve_ = s; }
     void setFvaLendingCurve(const std::string& s) { fvaLendingCurve_ = s; }
@@ -699,8 +701,10 @@ public:
     const std::string& dvaName() const { return dvaName_; }
     bool rawCubeOutput() const { return rawCubeOutput_; }
     bool netCubeOutput() const { return netCubeOutput_; }
+    bool timeAveragedNettedExposureOutput() const { return timeAveragedNettedExposureOutput_; }
     const std::string& rawCubeOutputFile() const { return rawCubeOutputFile_; }
     const std::string& netCubeOutputFile() const { return netCubeOutputFile_; }
+    const std::string& timeAveragedNettedExposureOutputFile() const { return timeAveragedNettedExposureOutputFile_; }
     // funding value adjustment details
     const std::string& fvaBorrowingCurve() const { return fvaBorrowingCurve_; }
     const std::string& fvaLendingCurve() const { return fvaLendingCurve_; }
@@ -1079,8 +1083,10 @@ protected:
     std::string dvaName_ = "";
     bool rawCubeOutput_ = false;
     bool netCubeOutput_ = false;
+    bool timeAveragedNettedExposureOutput_ = false;
     std::string rawCubeOutputFile_ = "";
     std::string netCubeOutputFile_ = "";
+    std::string timeAveragedNettedExposureOutputFile_ = "";
     // funding value adjustment details
     std::string fvaBorrowingCurve_ = "";
     std::string fvaLendingCurve_ = "";    
@@ -1253,9 +1259,10 @@ private:
     std::string calibrationOutputFileName_;
     std::string xvaSensiJacobiFileName_;
     std::string xvaSensiJacobiInverseFileName_;
+    std::string timeAveragedNettedExposureFileName_;
 };
 
-void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);
+void scaleUpPortfolio(QuantLib::ext::shared_ptr<ore::data::Portfolio>& p);
 
 } // namespace analytics
 } // namespace ore
