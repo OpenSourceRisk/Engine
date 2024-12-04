@@ -60,6 +60,7 @@ void FxDigitalOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engi
     bool flipResults = false;
     if (payoffCurrency_ == "") {
         DLOG("PayoffCurrency defaulting to " << domesticCurrency_ << " for FxDigitalOption " << id());
+        payoffCurrency_ = domesticCurrency_;
     } else if (payoffCurrency_ == foreignCurrency_) {
         // Invert the trade, switch dom and for and flip Put/Call
         strike = 1.0 / strike;
