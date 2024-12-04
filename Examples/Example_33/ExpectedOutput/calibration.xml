@@ -19,6 +19,8 @@
 	<Measure/>
 	<Discretization>Exact</Discretization>
 	<SalvagingAlgorithm>None</SalvagingAlgorithm>
+	<IntegrationPolicy/>
+	<PiecewiseIntegration>true</PiecewiseIntegration>
 	<InterestRateModels>
 		<LGM key="EUR">
 			<CalibrationType>Bootstrap</CalibrationType>
