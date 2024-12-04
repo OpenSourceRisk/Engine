@@ -90,8 +90,8 @@ CrossAssetModel::CrossAssetModel(const std::vector<QuantLib::ext::shared_ptr<Par
                                  const QuantLib::ext::shared_ptr<Integrator>& integrator,
                                  const bool piecewiseIntegrationWrapper)
     : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging), measure_(measure),
-      discretization_(discretization) {
-    initialize(integrator, piecewiseIntegrationWrapper);
+      discretization_(discretization), piecewiseIntegrationWrapper_(piecewiseIntegrationWrapper) {
+    initialize(integrator);
 }
 
 CrossAssetModel::CrossAssetModel(const std::vector<QuantLib::ext::shared_ptr<IrModel>>& currencyModels,
@@ -101,14 +101,14 @@ CrossAssetModel::CrossAssetModel(const std::vector<QuantLib::ext::shared_ptr<IrM
                                  const QuantLib::ext::shared_ptr<Integrator>& integrator,
                                  const bool piecewiseIntegrationWrapper)
     : LinkableCalibratedModel(), irModels_(currencyModels), rho_(correlation), salvaging_(salvaging), measure_(measure),
-      discretization_(discretization) {
+      discretization_(discretization), piecewiseIntegrationWrapper_(piecewiseIntegrationWrapper) {
     for (Size i = 0; i < currencyModels.size(); ++i) {
         p_.push_back(currencyModels[i]->parametrizationBase());
     }
     for (Size i = 0; i < fxParametrizations.size(); ++i) {
         p_.push_back(fxParametrizations[i]);
     }
-    initialize(integrator, piecewiseIntegrationWrapper);
+    initialize(integrator);
 }
 
 QuantLib::ext::shared_ptr<CrossAssetStateProcess> CrossAssetModel::stateProcess() const {
@@ -265,23 +265,21 @@ void CrossAssetModel::setCorrelation(const AssetType s, const Size i, const Asse
     update();
 }
 
-void CrossAssetModel::initialize(const QuantLib::ext::shared_ptr<Integrator>& integrator,
-                                 const bool piecewiseIntegrationWrapper) {
+void CrossAssetModel::initialize(const QuantLib::ext::shared_ptr<Integrator>& integrator) {
     initializeParametrizations();
     initializeCorrelation();
     initializeArguments();
     finalizeArguments();
     checkModelConsistency();
-    initIntegrator(integrator, piecewiseIntegrationWrapper);
+    initIntegrator(integrator);
 }
 
-void CrossAssetModel::initIntegrator(const QuantLib::ext::shared_ptr<Integrator>& integrator,
-                                     const bool piecewiseIntegrationWrapper) {
+void CrossAssetModel::initIntegrator(const QuantLib::ext::shared_ptr<Integrator>& integrator) {
     integrator_ = integrator;
     if (integrator_ == nullptr) {
         integrator_ = QuantLib::ext::make_shared<SimpsonIntegral>(1.0E-8, 100);
     }
-    if (piecewiseIntegrationWrapper) {
+    if (piecewiseIntegrationWrapper_) {
 
         // collect relevant times from parametrizations, we don't have to sort them or make them unique,
         // this is all done in PiecewiseIntegral for us

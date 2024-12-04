@@ -273,7 +273,8 @@ public:
     SalvagingAlgorithm::Type salvagingAlgorithm() const { return salvaging_; }
 
     /*! the integrator used to calculate moments */
-    const QuantLib::ext::shared_ptr<Integrator> integrator() const;
+    const QuantLib::ext::shared_ptr<Integrator> integrator() const { return integrator_; }
+    bool piecewiseIntegrationWrapper() const { return piecewiseIntegrationWrapper_; }
 
     /*! return (V(t), V^tilde(t,T)) in the notation of the book */
     std::pair<Real, Real> infdkV(const Size i, const Time t, const Time T);
@@ -447,15 +448,13 @@ protected:
     void updateIndices(const AssetType& t, const Size i, const Size cIdx, const Size wIdx, const Size pIdx,
                        const Size aIdx);
     /* init methods */
-    virtual void initialize(const QuantLib::ext::shared_ptr<Integrator>& integrator,
-                            const bool piecewiseIntegrationWrapper);
+    virtual void initialize(const QuantLib::ext::shared_ptr<Integrator>& integrator);
     virtual void initializeParametrizations();
     virtual void initializeCorrelation();
     virtual void initializeArguments();
     virtual void finalizeArguments();
     virtual void checkModelConsistency() const;
-    virtual void initIntegrator(const QuantLib::ext::shared_ptr<Integrator>& integrator,
-                                const bool piecewiseIntegrationWrapper);
+    virtual void initIntegrator(const QuantLib::ext::shared_ptr<Integrator>& integrator);
 
     /* helper function for infdkI, crlgm1fS */
     Real infV(const Size idx, const Size ccy, const Time t, const Time T) const;
@@ -499,10 +498,11 @@ protected:
     std::vector<QuantLib::ext::shared_ptr<CrCirpp>> crcirppModel_;
     std::vector<QuantLib::ext::shared_ptr<CommodityModel>> comModels_; 
     Matrix rho_;
-    SalvagingAlgorithm::Type salvaging_;
-    IrModel::Measure measure_;
-    Discretization discretization_;
-    mutable QuantLib::ext::shared_ptr<Integrator> integrator_;
+    SalvagingAlgorithm::Type salvaging_ = SalvagingAlgorithm::None;
+    IrModel::Measure measure_ = IrModel::Measure::LGM;
+    Discretization discretization_ = Discretization::Exact;
+    QuantLib::ext::shared_ptr<Integrator> integrator_;
+    bool piecewiseIntegrationWrapper_ = true;
     mutable QuantLib::ext::shared_ptr<CrossAssetStateProcess> stateProcess_;
 
     void appendToFixedParameterVector(const AssetType t, const AssetType v, const Size param, const Size index,
@@ -670,8 +670,6 @@ inline const QuantLib::ext::shared_ptr<FxBsParametrization> CrossAssetModel::fxb
 }
 
 inline const Matrix& CrossAssetModel::correlation() const { return rho_; }
-
-inline const QuantLib::ext::shared_ptr<Integrator> CrossAssetModel::integrator() const { return integrator_; }
 
 inline Handle<DefaultProbabilityTermStructure> CrossAssetModel::crTs(const Size i) const {
     if (modelType(CrossAssetModel::AssetType::CR, i) == CrossAssetModel::ModelType::LGM1F)
