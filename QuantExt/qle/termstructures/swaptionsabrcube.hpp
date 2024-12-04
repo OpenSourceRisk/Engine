@@ -28,7 +28,8 @@
 #include <qle/termstructures/sabrparametricvolatility.hpp>
 
 #include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
-
+#include <ql/shared_ptr.hpp>
+#include <ql/optional.hpp>
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -42,7 +43,7 @@ public:
                      const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase,
                      const QuantLib::ext::shared_ptr<SwapIndex>& shortSwapIndexBase,
                      const QuantExt::SabrParametricVolatility::ModelVariant modelVariant,
-                     const boost::optional<QuantLib::VolatilityType> outputVolatilityType = boost::none,
+                     const QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType = QuantLib::ext::nullopt,
                      const std::map<std::pair<Period, Period>,
                                     std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>&
                          initialModelParameters = {},
@@ -66,7 +67,7 @@ private:
     mutable std::vector<Real> outputShiftX_, outputShiftY_;
     std::vector<Period> atmOptionTenors_, atmSwapTenors_;
     QuantExt::SabrParametricVolatility::ModelVariant modelVariant_;
-    boost::optional<QuantLib::VolatilityType> outputVolatilityType_;
+    QuantLib::ext::optional<QuantLib::VolatilityType> outputVolatilityType_;
     std::map<std::pair<QuantLib::Period, QuantLib::Period>,
              std::vector<std::pair<Real, ParametricVolatility::ParameterCalibration>>>
         initialModelParameters_;

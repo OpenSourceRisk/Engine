@@ -100,11 +100,11 @@ void McLgmFwdBondEngine::calculate() const {
     results_.value = forwardContractPresentValue;
 
     // get the interim amcCalculator from the base class
-    auto multiLegBaseAmcCalculator = boost::dynamic_pointer_cast<MultiLegBaseAmcCalculator>(amcCalculator());
+    auto multiLegBaseAmcCalculator = QuantLib::ext::dynamic_pointer_cast<MultiLegBaseAmcCalculator>(amcCalculator());
 
     // cast to fwdAMC to gain access to the overwritten simulate path method
     ext::shared_ptr<FwdBondAmcCalculator> fwdBondCalc =
-        boost::make_shared<FwdBondAmcCalculator>(*multiLegBaseAmcCalculator);
+        QuantLib::ext::make_shared<FwdBondAmcCalculator>(*multiLegBaseAmcCalculator);
     fwdBondCalc->addEngine(*this);
     ext::shared_ptr<AmcCalculator> amcCalc = fwdBondCalc;
 

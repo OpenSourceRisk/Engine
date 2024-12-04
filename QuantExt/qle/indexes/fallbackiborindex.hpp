@@ -46,6 +46,7 @@ public:
     Rate pastFixing(const Date& fixingDate) const override;
     QuantLib::ext::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& forwarding) const override;
 
+    bool hasHistoricalFixing(const Date& fixingDate) const override;
     QuantLib::ext::shared_ptr<IborIndex> originalIndex() const;
     QuantLib::ext::shared_ptr<OvernightIndex> rfrIndex() const;
     Real spread() const;

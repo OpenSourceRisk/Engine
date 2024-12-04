@@ -31,7 +31,7 @@ QuantLib::ext::shared_ptr<YoYCapFloorTermPriceSurface> YoYPriceSurfaceFromVolati
     QL_REQUIRE(volSurface != nullptr, "YoYPriceSurfaceFromVolatilties: missing vol surfaces");
     QL_REQUIRE(index != nullptr, "YoYPriceSurfaceFromVolatilties: missing yoy index");
     QL_REQUIRE(!nominalTs.empty(), "YoYPriceSurfaceFromVolatilties: missing discount curve");
-    Calendar cal = index->yoyInflationTermStructure()->calendar();
+    Calendar cal = volSurface->calendar();
     Period obsLag = index->yoyInflationTermStructure()->observationLag();
     Size settDays = volSurface->settlementDays();
     DayCounter dc = index->yoyInflationTermStructure()->dayCounter();

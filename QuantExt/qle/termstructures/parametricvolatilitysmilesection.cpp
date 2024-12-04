@@ -22,7 +22,7 @@ namespace QuantExt {
 
 ParametricVolatilitySmileSection::ParametricVolatilitySmileSection(
     const Real optionTime, const Real swapLength, const Real atmLevel,
-    const boost::shared_ptr<ParametricVolatility> parametricVolatility,
+    const QuantLib::ext::shared_ptr<ParametricVolatility> parametricVolatility,
     const ParametricVolatility::MarketQuoteType outputMarketQuoteType, const Real outputLognormalShift)
     : SmileSection(optionTime, DayCounter(),
                    outputMarketQuoteType == ParametricVolatility::MarketQuoteType::NormalVolatility

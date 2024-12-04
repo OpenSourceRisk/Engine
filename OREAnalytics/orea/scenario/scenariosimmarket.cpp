@@ -757,7 +757,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                  << (param.first == RiskFactorKey::KeyType::SwaptionVolatility ? "True" : "False"));
                             DLOG("Will convert to normal vol  : " << (convertToNormal ? "True" : "False"));
 
-                            boost::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
+                            QuantLib::ext::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
                             if (convertToNormal) {
                                 swapIndex = *initMarket->swapIndex(swapIndexBase, configuration);
                                 shortSwapIndex = *initMarket->swapIndex(shortSwapIndexBase, configuration);
@@ -2081,7 +2081,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
 
                         for (Size i = 1; i < zeroCurveTimes.size(); i++) {
-                            Real rate = inflationTs->zeroRate(quoteDates[i - 1]);
+                            Real rate = inflationTs->zeroRate(quoteDates[i - 1], inflationTs->observationLag());
                             if (inflationTs->hasSeasonality()) {
                                 Date fixingDate = quoteDates[i - 1] - inflationTs->observationLag();
                                 rate = inflationTs->seasonality()->deseasonalisedZeroRate(fixingDate,                                 
@@ -2211,7 +2211,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                            "instead of QuantLib::CPIVolatilitySurface");
                                 hCpiVol = Handle<QuantLib::CPIVolatilitySurface>(
                                     QuantLib::ext::make_shared<InterpolatedCPIVolatilitySurface<Bilinear>>(
-                                        optionTenors, strikes, quotes, zeroInflationIndex.currentLink(),
+                                        optionTenors, strikes, quotes, zeroInflationIndex.currentLink(), false,
                                         wrapper->settlementDays(), wrapper->calendar(),
                                         wrapper->businessDayConvention(), wrapper->dayCounter(),
                                         wrapper->observationLag(), surface->capFloorStartDate(), Bilinear(),
@@ -2267,7 +2267,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
 
                         for (Size i = 1; i < yoyCurveTimes.size(); i++) {
-                            Real rate = yoyInflationTs->yoyRate(quoteDates[i - 1]);
+                            Real rate = yoyInflationTs->yoyRate(quoteDates[i - 1], yoyInflationTs->observationLag());
                             auto q = QuantLib::ext::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : rate);
                             if (i == 1) {
                                 // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1
@@ -3339,9 +3339,9 @@ void ScenarioSimMarket::applyCurveAlgebra() {
 
 void ScenarioSimMarket::applyCurveAlgebraSpreadedYieldCurve(const Handle<YieldTermStructure>& target,
                                                            const Handle<YieldTermStructure>& base) {
-    if (auto c = boost::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
+    if (auto c = QuantLib::ext::dynamic_pointer_cast<InterpolatedDiscountCurve2>(*target)) {
         c->makeThisCurveSpreaded(base);
-    } else if (auto c = boost::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
+    } else if (auto c = QuantLib::ext::dynamic_pointer_cast<SpreadedDiscountCurve>(*target)) {
         c->makeThisCurveSpreaded(base);
     } else {
         QL_FAIL("ScenarioSimMarket::applyCurveAlgebraSpreadedRateCurve(): target curve could not be cast to one of the "

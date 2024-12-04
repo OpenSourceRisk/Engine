@@ -64,12 +64,11 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
             Rounding::Type roundingType = parseRoundingType(XMLUtils::getChildValue(node, "RoundingType", false));
             Integer precision = parseInteger(XMLUtils::getChildValue(node, "RoundingPrecision", false));
             // the digit where we switch form roundng down to rounding up, typically 5 and used across all
-            // Integer digit = parseInteger(XMLUtils::getChildValue(node, "Digit", false));
-            string format = XMLUtils::getChildValue(node, "Format", false);
+            // Integer digit = parseInteger(XMLUtils::getChildValue(node, "Digit", false))
             QuantExt::ConfigurableCurrency::Type currencyType = parseCurrencyType(XMLUtils::getChildValue(node, "CurrencyType", false, "Major"));
             Rounding rounding(precision, roundingType);
             QuantExt::ConfigurableCurrency c(name, isoCode, numericCode, symbol, fractionSymbol, fractionsPerUnit,
-                                             rounding, format, minorUnitCodes, currencyType);
+                                             rounding, minorUnitCodes, currencyType);
             DLOG("loading configuration for currency code " << isoCode);
 
             currencies_.push_back(c);
@@ -97,7 +96,6 @@ XMLNode* CurrencyConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, ccyNode, "RoundingType", to_string(ccy.rounding().type()));
         XMLUtils::addChild(doc, ccyNode, "RoundingPrecision", to_string(ccy.rounding().precision()));
         // XMLUtils::addChild(doc, ccyNode, "Digit", to_string(ccy.rounding().roundingDigit()));
-        XMLUtils::addChild(doc, ccyNode, "Format", ccy.format());
         XMLUtils::addChild(doc, ccyNode, "CurrencyType", to_string(ccy.currencyType()));
     }
     return node;

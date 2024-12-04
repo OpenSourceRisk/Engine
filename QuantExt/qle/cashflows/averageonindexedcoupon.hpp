@@ -114,7 +114,6 @@ public:
     //@}
     //! \name Coupon interface
     //@{
-    Rate rate() const override;
     Rate convexityAdjustment() const override;
     //@}
     //! \name FloatingRateCoupon interface
