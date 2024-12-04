@@ -568,6 +568,10 @@ void CrossAssetModelBuilder::buildModel() const {
     model_.linkTo(QuantLib::ext::make_shared<QuantExt::CrossAssetModel>(
         parametrizations, corrMatrix, config_->getSalvagingAlgorithm(), measure, config_->discretization()));
 
+    if (!config_->integrationPolicy().empty())
+        model_->setIntegrationPolicy(parseIntegrationPolicy(config_->integrationPolicy()),
+                                     config_->piecewiseIntegration());
+
     /* Store initial params to ensure identical start values when recalibrating a component.
        This is only used for fx, eq, inf, cr, com, for ir this is handled in LgmBuilder directly.
        Therefore it does not matter that the IR parameters are calibrated at this point already. */

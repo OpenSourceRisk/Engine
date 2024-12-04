@@ -287,6 +287,9 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     std::string salvString = XMLUtils::getChildValue(modelNode, "SalvagingAlgorithm", false, "None");
     salvagingAlgorithm_ = parseSalvagingAlgorithmType(salvString);
 
+    integrationPolicy_ = XMLUtils::getChildValue(modelNode, "IntegrationPolicy", false, std::string());
+    piecewiseIntegration_ = parseBool(XMLUtils::getChildValue(modelNode, "PiecewiseIntegration", false, "true"));
+
     domesticCurrency_ = XMLUtils::getChildValue(modelNode, "DomesticCcy", true); // mandatory
     LOG("CrossAssetModelData: domesticCcy " << domesticCurrency_);
 
@@ -791,6 +794,9 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, crossAssetModelNode, "Discretization",
                        discretization_ == CrossAssetModel::Discretization::Exact ? "Exact" : "Euler");
     XMLUtils::addChild(doc, crossAssetModelNode, "SalvagingAlgorithm", ore::data::to_string(salvagingAlgorithm_));
+    XMLUtils::addChild(doc, crossAssetModelNode, "IntegrationPolicy", integrationPolicy_);
+    XMLUtils::addChild(doc, crossAssetModelNode, "PiecewiseIntegration", piecewiseIntegration_);
+
     XMLNode* interestRateModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InterestRateModels");
     for (Size irConfigs_Iterator = 0; irConfigs_Iterator < irConfigs_.size(); irConfigs_Iterator++) {
         XMLNode* lgmNode = irConfigs_[irConfigs_Iterator]->toXML(doc);

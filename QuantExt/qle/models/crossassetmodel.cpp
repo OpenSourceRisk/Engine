@@ -277,6 +277,8 @@ void CrossAssetModel::initDefaultIntegrator() {
 void CrossAssetModel::setIntegrationPolicy(const QuantLib::ext::shared_ptr<Integrator> integrator,
                                            const bool usePiecewiseIntegration) const {
 
+    std::cout << "setIntegrationPolicy: " << std::boolalpha << usePiecewiseIntegration << std::endl;
+
     if (!usePiecewiseIntegration) {
         integrator_ = integrator;
         return;
