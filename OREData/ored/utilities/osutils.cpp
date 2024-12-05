@@ -26,6 +26,8 @@
 
 #include <boost/version.hpp>
 #include <ql/version.hpp>
+#include <qle/gitversion.hpp>
+#include <qle/version.hpp>
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <intrin.h>
@@ -91,6 +93,7 @@ string getSystemDetails() {
     oss << "  Hostname               : " << os::getHostname() << endl;
     oss << "  Username               : " << os::getUsername() << endl;
     oss << "  ORE Version : " << OPEN_SOURCE_RISK_VERSION << endl;
+    oss << "  Git Hash    : " << GIT_HASH << endl;
     oss << "  QuantLib Version       : " << QL_VERSION << endl;
     oss << "  Boost Version          : " << BOOST_LIB_VERSION << endl;
     return oss.str();
