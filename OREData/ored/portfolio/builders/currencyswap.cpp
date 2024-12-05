@@ -71,7 +71,7 @@ CamAmcCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, c
         Size ccyIdx = cam_->ccyIndex(c);
         if (ccyIdx != 0 || !needBaseCcy)
             selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
-        if (ccyIdx > 0)
+        if (needBaseCcy && ccyIdx > 0)
             selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, ccyIdx - 1));
     }
     for (auto const& eq : eqNames) {
