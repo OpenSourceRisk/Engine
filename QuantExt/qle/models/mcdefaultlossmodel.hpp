@@ -91,6 +91,13 @@ protected:
         for (size_t i = 0; i < pds.size(); ++i) {
             TLOG(i << "," << names[i] << "," << notionals[i] << "," << pds[i]);
         }
+        if (recoveryRate != Null<Real>()){
+            auto it = expectedTrancheLossZeroRecovery_.find(d);
+            if (it != expectedTrancheLossZeroRecovery_.end()) {
+                return it->second;
+            }
+        }
+
         auto it = expectedTrancheLoss_.find(d);
         if (it != expectedTrancheLoss_.end()) {
             return it->second;
@@ -113,6 +120,7 @@ protected:
                 thresholds[id][j+1]= (ICN(pds[id] * (1.0 - cumRecoveryProb)));
             }
             thresholds[id].push_back(QL_MIN_REAL);
+            
             /*
             for(auto & t : thresholds[id]){
                 std::cout << t << ",";
@@ -125,6 +133,7 @@ protected:
         const double sqrtOneMinusRho = std::sqrt(1.0 - baseCorrelation_->value());
         const double n = static_cast<double>(nSamples_);
         double trancheLoss = 0.0;
+        double zeroTrancheLoss = 0.0;
         double expectedLossIndex = 0.0;
         const size_t nConstituents = pds.size();
         std::vector<double> xs(nConstituents * nSamples_, 0.0);
@@ -139,22 +148,29 @@ protected:
         std::vector<double> simPD(pds.size(), 0.0);
         for (size_t i = 0; i < nSamples_; i++) {
             double loss = 0.0;
+            double loss_zero_recovery = 0.0;
             for (size_t id = 0; id < pds.size(); id++) {
                 const double x = xs[i * nConstituents + id];
                 //TLOG("Sim " << i << " x= " << x);
                 for (size_t lgd = 1; lgd < thresholds[id].size(); lgd++) {
                     
                     //TLOG("Threshold " << lgd << " rrThreshold= " << thresholds[id][lgd - 1] << " RecoveryRate "
-                    //                  << recoveryRates_[id][lgd - 1]);
+                     //                 << recoveryRates_[id][lgd - 1]);
                     if (x > thresholds[id][lgd] && x <= thresholds[id][lgd - 1]) {
                         // default reovery rate
                         simPD[id] += 1;
                         loss += notionals[id] * (1.0 - recoveryRates_[id][lgd - 1]);
+                        loss_zero_recovery += notionals[id];
                     }
                 }
-                        }
-            trancheLoss +=
-                std::max(loss - basket_->attachmentAmount(), 0.0) - std::max(loss - basket_->detachmentAmount(), 0.0);
+            }
+            expectedLossIndex += loss;
+            
+            trancheLoss += std::max(loss - basket_->attachmentAmount(), 0.0) -
+                            std::max(loss - basket_->detachmentAmount(), 0.0);
+
+            zeroTrancheLoss += std::max(loss_zero_recovery - basket_->attachmentAmount(), 0.0) -
+                               std::max(loss_zero_recovery - basket_->detachmentAmount(), 0.0);
         }
         TLOG("Valid")
         for (size_t i = 0; i < pds.size(); ++i) {
@@ -163,6 +179,11 @@ protected:
         TLOG("Expected Tranche Loss = " << trancheLoss / n);
         TLOG("Expected Index Loss " << expectedLossIndex / n);
         expectedTrancheLoss_[d] = trancheLoss / n;
+        expectedTrancheLossZeroRecovery_[d] = zeroTrancheLoss / n;
+        if (recoveryRate != Null<Real>()) {
+            return zeroTrancheLoss / n;
+
+        }
         return trancheLoss / n;
     }
 
@@ -173,13 +194,14 @@ protected:
 private:
     void resetModel() override {
         expectedTrancheLoss_.clear();
+        expectedTrancheLossZeroRecovery_.clear();
     };
     Handle<Quote> baseCorrelation_;
     std::vector<std::vector<double>> recoveryRates_;
     std::vector<double> recoveryProbabilities_;
     std::vector<double> cumRecoveryProbabilities_;
     mutable std::map<QuantLib::Date, double> expectedTrancheLoss_;
-
+    mutable std::map<QuantLib::Date, double> expectedTrancheLossZeroRecovery_;
     size_t nSamples_;
 };
 

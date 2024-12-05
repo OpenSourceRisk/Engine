@@ -439,9 +439,9 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                 indexCDS->setPricingEngine(cdsPricingEngineUnderlyingCurves);
 
                 try {
-                    auto targetFunction = [&cdsNpvs, &calibrationFactor, &indexCDS](const double& factor) {
+                    auto targetFunction = [&cdsNpvs, &calibrationFactor, &indexCDS, &currTotalNtl](const double& factor) {
                         calibrationFactor->setValue(factor);
-                        return cdsNpvs - indexCDS->NPV();
+                        return (cdsNpvs - indexCDS->NPV()) / currTotalNtl;
                     };
 
                     Brent solver;
@@ -560,7 +560,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     // Tranche from 0 to detachment point.
     // If detachment point is 1.0, build an index CDS, i.e. [0, 100%] tranche. Otherwise an actual tranche.
     QuantLib::ext::shared_ptr<Instrument> cdoD;
-    if (!close_enough(adjDetachPoint, 1.0)) {
+    //if (!close_enough(adjDetachPoint, 1.0)) {
         DLOG("Building detachment tranche [0," << adjDetachPoint << "].");
         // Set up the basket loss model.
         auto basket =
@@ -585,13 +585,14 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
         DLOG("Detachment tranche [0," << adjDetachPoint << "] built.");
 
+    /*
     } else {
         DLOG("Detachment point is 1.0 so building an index CDS for [0,1.0] 'tranche'.");
 
-        /*auto cdsBuilder = QuantLib::ext::dynamic_pointer_cast<IndexCreditDefaultSwapEngineBuilder>(
-            engineFactory->builder("IndexCreditDefaultSwap"));
-        QL_REQUIRE(cdsBuilder, "Trade " << id() << " needs a IndexCreditDefaultSwapEngineBuilder.");
-        */
+        //auto cdsBuilder = QuantLib::ext::dynamic_pointer_cast<IndexCreditDefaultSwapEngineBuilder>(
+         //   engineFactory->builder("IndexCreditDefaultSwap"));
+        //QL_REQUIRE(cdsBuilder, "Trade " << id() << " needs a IndexCreditDefaultSwapEngineBuilder.");
+        //
         auto cds = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
             side, currTotalNtl, basketNotionals, 0.0, runningRate, schedule, bdc, dayCounter, settlesAccrual_,
             protectionPaymentTime_, protectionStartDate, Date(), QuantLib::ext::shared_ptr<Claim>(),
@@ -605,6 +606,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
         DLOG("Index CDS for [0,1.0] 'tranche' built.");
     }
+    */
 
     // Tranche from 0 to attachment point.
     // If attachment point is 0.0, the instrument is simply the 0 to detachment point CDO built above. If attachment
@@ -691,7 +693,7 @@ void SyntheticCDO::fromXML(XMLNode* node) {
 
     // Recovery rate is Null<Real>() on a standard CDO i.e. if "FixedRecoveryRate" field is not populated.
     recoveryRate_ = Null<Real>();
-    string strRecoveryRate = XMLUtils::getChildValue(node, "FixedRecoveryRate", false);
+    string strRecoveryRate = XMLUtils::getChildValue(cdoNode, "FixedRecoveryRate", false);
     if (!strRecoveryRate.empty()) {
         recoveryRate_ = parseReal(strRecoveryRate);
     }

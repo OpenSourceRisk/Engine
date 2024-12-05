@@ -90,6 +90,9 @@ void IndexCdsTrancheEngine::calculate() const {
     std::vector<double> effectiveNotionals;
     std::vector<Date> defaultDates;
     std::vector<CashFlowResults> cashflowResults;
+    std::vector<double> defaultDiscountFactors;
+    std::vector<double> premiumAccrualPeriods;
+    std::vector<double> premiumDiscountFactors;
     // Value the premium and protection leg.
     for (Size i = 0; i < arguments_.normalizedLeg.size(); i++) {
 
@@ -111,9 +114,12 @@ void IndexCdsTrancheEngine::calculate() const {
 
         defaultDates.push_back(defaultDate);
         // Expected loss on the tranche up to the end of the current period.
-        Real etl = basket->expectedTrancheLoss(endDate, arguments_.recoveryRate);
+        Real etl = basket->expectedTrancheLoss(endDate, Null<Real>());
+        Real etlZR = basket->expectedTrancheLoss(endDate, 0);
 
         // Update protection leg value
+        defaultDiscountFactors.push_back(discountCurve_->discount(defaultDate));
+
         results_.protectionValue += discountCurve_->discount(defaultDate) * (etl - etls.back());
 
         // Update the premium leg value. If settling accruals, which is standard, assume that losses are evenly 
@@ -125,6 +131,11 @@ void IndexCdsTrancheEngine::calculate() const {
         } else {
             effNtl = inceptionTrancheNotional - etl;
         }
+
+        if(QuantLib::close_enough(basket->detachmentRatio(), 1.0)){
+            effNtl += etl - etlZR;
+        }
+
         effectiveNotionals.push_back(effNtl);
         results_.premiumValue +=
             (coupon->amount() / inceptionTrancheNotional) * effNtl * discountCurve_->discount(paymentDate);
@@ -155,6 +166,8 @@ void IndexCdsTrancheEngine::calculate() const {
         cashflowResults.push_back(protectionFlow);
         // Update the expected tranche loss results vector.
         etls.push_back(etl);
+        premiumAccrualPeriods.push_back(coupon->accrualPeriod());
+        premiumDiscountFactors.push_back(premiumFlow.discountFactor);
     }
 
     // Apply correct sign to each PV'ed quantity depending on whether buying or selling protection on the tranche.
@@ -185,6 +198,7 @@ void IndexCdsTrancheEngine::calculate() const {
     results_.additionalResults["cashFlowResults"] = cashflowResults;
     results_.additionalResults["inceptionTrancheNotional"] = inceptionTrancheNotional;
     results_.additionalResults["effectiveNotionals"] = effectiveNotionals;
+    results_.additionalResults["midpointDiscounts"] = defaultDiscountFactors;
     results_.additionalResults["expectedTrancheLoss"] = etls;
     results_.additionalResults["defaultDates"] = defaultDates;
     results_.additionalResults["attachment"] = arguments_.basket->attachmentRatio();
@@ -199,6 +213,8 @@ void IndexCdsTrancheEngine::calculate() const {
     results_.additionalResults["premiumLegNPV"] = results_.premiumValue;
     results_.additionalResults["accrualRebateNPV"] = results_.accrualRebateValue;
     results_.additionalResults["accrualRebateCurrentNPV"] = results_.accrualRebateCurrentValue;
+    results_.additionalResults["premiumAccrualPeriods"] = premiumAccrualPeriods;
+    results_.additionalResults["premiumDiscountFactors"] = premiumDiscountFactors;
 
     results_.additionalResults["protectionLegNPV"] = results_.protectionValue;
     results_.additionalResults["calculationTime"] = timer.elapsed().wall * 1e-9;
