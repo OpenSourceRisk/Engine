@@ -284,21 +284,21 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcMultiLegOptionEngineBuilder::engi
                                                          << fixingDates.size() << ") must match indexes size ("
                                                          << indexes.size() << ")");
 
-    // base ccy is the base ccy of the external cam by definition
-    // but in case we only have one currency, we don't need this
+    // get projected model
+
     bool needBaseCcy = currencies.size() > 1;
 
-    std::set<std::pair<CrossAssetModel::AssetType,Size>> selectedComponents;
-    for (Size i = 0; i < cam_->components(CrossAssetModel::AssetType::IR); ++i) {
-        if ((i == 0 && needBaseCcy) ||
-            std::find(currencies.begin(), currencies.end(), cam_->irlgm1f(i)->currency()) != currencies.end()) {
-            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, i));
-            if (i > 0) {
-            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, i-1));
-            }
-        }
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    if(needBaseCcy) {
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
     }
-
+    for (auto const& c : currencies) {
+        Size ccyIdx = cam_->ccyIndex(c);
+        if (ccyIdx != 0 || !needBaseCcy)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
+        if (needBaseCcy && ccyIdx > 0)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, ccyIdx - 1));
+    }
     std::vector<Size> externalModelIndices;
     Handle<CrossAssetModel> model(getProjectedCrossAssetModel(cam_, selectedComponents, externalModelIndices));
 

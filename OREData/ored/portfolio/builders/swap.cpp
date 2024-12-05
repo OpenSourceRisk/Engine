@@ -79,13 +79,15 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcSwapEngineBuilder::engineImpl(con
     bool needBaseCcy = allCurrencies.size() > 1;
 
     std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
-    if(needBaseCcy)
+    if(needBaseCcy) {
         selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, 0));
-    for(auto const& c: allCurrencies) {
+    }
+    for (auto const& c : allCurrencies) {
         Size ccyIdx = cam_->ccyIndex(c);
-        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
-        if (ccyIdx > 0 && needBaseCcy)
-            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX,ccyIdx-1));
+        if (ccyIdx != 0 || !needBaseCcy)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::IR, ccyIdx));
+        if (needBaseCcy && ccyIdx > 0)
+            selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::FX, ccyIdx - 1));
     }
     for (auto const& eq : eqNames) {
         selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, cam_->eqIndex(eq)));
