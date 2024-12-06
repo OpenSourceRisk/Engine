@@ -26,6 +26,7 @@ COPY App /ore/App
 COPY ThirdPartyLibs /ore/ThirdPartyLibs
 COPY ORETest /ore/ORETest
 COPY cmake /ore/cmake
+COPY ../.git /ore/.git
 
 ENV PATH="/usr/lib/ccache:$PATH"
 ENV CCACHE_DIR="/ccache"
