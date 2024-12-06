@@ -287,7 +287,7 @@ endmacro()
 function(generate_git_hash custom_target_name)
   add_custom_target(
     ${custom_target_name} ALL
-    COMMAND ${CMAKE_COMMAND} -DPROJECT_VERSION=${PROJECT_VERSION} -DIN_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp.in -DOUT_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp
-                             -P${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../cmake/generateGitVersion.cmake
+    COMMAND ${CMAKE_COMMAND} -DIN_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp.in -DOUT_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp
+                             -P${QUANTEXT_SOURCE_DIR}/../cmake/generateGitVersion.cmake
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endfunction()
