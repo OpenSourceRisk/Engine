@@ -678,6 +678,8 @@ std::ostream& operator<<(std::ostream& out, const StructuredMessage::Group& grou
         out << "Logging";
     else if (group == StructuredMessage::Group::ReferenceData)
         out << "Reference Data";
+    else if (group == StructuredMessage::Group::Input)
+        out << "Input";
     else if (group == StructuredMessage::Group::Unknown)
         out << "UnknownType";
     else

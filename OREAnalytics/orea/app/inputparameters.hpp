@@ -884,7 +884,7 @@ protected:
      ***********************************/
     QuantLib::Date asof_;
     boost::filesystem::path resultsPath_;
-    std::string baseCurrency_;
+    std::string baseCurrency_ = "USD";
     std::string resultCurrency_;
     bool continueOnError_ = true;
     bool lazyMarketBuilding_ = true;
