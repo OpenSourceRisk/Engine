@@ -41,6 +41,7 @@
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 
 #include <qle/version.hpp>
+#include <qle/gitversion.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
@@ -609,6 +610,8 @@ void OREApp::setupLog(Size mask, const std::string& path, const std::string& fil
 void OREApp::closeLog() { Log::instance().removeAllLoggers(); }
 
 std::string OREApp::version() { return std::string(OPEN_SOURCE_RISK_VERSION); }
+
+std::string OREApp::gitHash() { return std::string(GIT_HASH); }
 
 void OREAppInputParameters::loadParameters() {
     LOG("load OREAppInputParameters called");
