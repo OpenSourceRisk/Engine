@@ -2218,6 +2218,64 @@ void OREAppInputParameters::loadParameters() {
          }
      }
 
+     /*********************
+      * CCR Capital: SA-CCR
+      *********************/
+
+     tmp = params_->get("saccr", "active", false);
+     if (!tmp.empty() && parseBool(tmp)) {
+         insertAnalytic("SA_CCR");
+
+         if (!nettingSetManager()) {
+             tmp = params_->get("saccr", "csaFile", false);
+             QL_REQUIRE(tmp != "", "Netting set manager is required for SA-CCR");
+             string csaFile = (inputPath / tmp).generic_string();
+             LOG("Loading netting and csa data from file " << csaFile);
+             setNettingSetManagerFromFile(csaFile);
+	 }
+         tmp = params_->get("saccr", "collateralBalancesFile", false);
+         if (tmp != "") {
+             string collBalancesFile = (inputPath / tmp).generic_string();
+             if (!collateralBalances()) {
+                 LOG("Loading collateral balances from file " << collBalancesFile);
+		 setCollateralBalancesFromFile(collBalancesFile);
+             }
+         }
+     }
+
+     /*********************
+      * CVA Capital: BA-CVA
+      *********************/
+
+     tmp = params_->get("bacva", "active", false);
+     if (!tmp.empty() && parseBool(tmp)) {
+         insertAnalytic("BA_CVA");
+
+         if (!nettingSetManager()) {
+             tmp = params_->get("bacva", "csaFile", false);
+             QL_REQUIRE(tmp != "", "Netting set manager is required for BA-CVA");
+             string csaFile = (inputPath / tmp).generic_string();
+             LOG("Loading netting and csa data from file " << csaFile);
+             setNettingSetManagerFromFile(csaFile);
+	 }
+         if (!collateralBalances()) {
+             tmp = params_->get("bacva", "collateralBalancesFile", false);
+             if (tmp != "") {
+                 string collBalancesFile = (inputPath / tmp).generic_string();
+                 LOG("Loading collateral balances from file " << collBalancesFile);
+                 setCollateralBalancesFromFile(collBalancesFile);
+             }
+         }
+     }
+
+     /******************
+      * MR Capital: SMRC
+      ******************/
+
+     tmp = params_->get("smrc", "active", false);
+     if (!tmp.empty() && parseBool(tmp))
+         insertAnalytic("SMRC");
+
      /*************
       * cashflow npv and dynamic backtesting
       *************/

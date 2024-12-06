@@ -170,9 +170,9 @@ else()
     #add_compiler_flag("-Werror=sign-compare" supportsSignCompare)
     add_compiler_flag("-Werror=float-conversion" supportsWfloatConversion)
     add_compiler_flag("-Werror=reorder" supportsReorder)
-    add_compiler_flag("-Werror=unused-variable" supportsUnusedVariable)
+    #add_compiler_flag("-Werror=unused-variable" supportsUnusedVariable)
     add_compiler_flag("-Werror=unused-but-set-variable" supportsUnusedButSetVariable)
-    add_compiler_flag("-Werror=uninitialized" supportsUninitialized)
+    #add_compiler_flag("-Werror=uninitialized" supportsUninitialized)
     add_compiler_flag("-Werror=unused-lambda-capture" supportsUnusedLambdaCapture)
     add_compiler_flag("-Werror=return-type" supportsReturnType)
     add_compiler_flag("-Werror=unused-function" supportsUnusedFunction)
@@ -185,6 +185,9 @@ else()
 
     # disable warnings from boost
     add_compiler_flag("--system-header-prefix=boost/" supportsSystemHeaderPrefixBoost)
+
+    add_compile_options("-Werror=unused-variable")
+    add_compile_options("-Werror=uninitialized")
 
     # add build/QuantLib as first include directory to make sure we include QL's cmake-configured files
     # if QuantLib is build separately
