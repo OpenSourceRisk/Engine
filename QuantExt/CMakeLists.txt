@@ -36,12 +36,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_link_directory_if_exists("${QUANTLIB_SOURCE_DIR}/build/ql")
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib/ql")
 
-# git hash
-
-add_custom_target(
-    generate_version_header ALL
-    COMMAND ${CMAKE_COMMAND} -DPROJECT_VERSION=${PROJECT_VERSION} -DIN_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp.in -DOUT_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp -P ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/generateGitVersion.cmake
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+generate_git_hash(ore_qle)
 
 add_subdirectory("qle")
 if (ORE_BUILD_DOC)
