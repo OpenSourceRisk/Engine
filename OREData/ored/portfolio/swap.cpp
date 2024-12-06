@@ -268,6 +268,8 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
         if (!isXCCY_) {
             if (swap)
                 additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
+                if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == "Fixed")
+                    additionalData_["PV01[" + legID + "]"] = abs(swap->legBPS(i));         
             else
                 ALOG("single currency swap underlying instrument not set, skip leg npv reporting");
         } 
