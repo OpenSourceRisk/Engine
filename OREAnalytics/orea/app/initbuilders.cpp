@@ -40,6 +40,9 @@
 #include <orea/app/analytics/zerotoparshiftanalytic.hpp>
 #include <orea/app/analytics/calibrationanalytic.hpp>
 #include <orea/app/analytics/sacvaanalytic.hpp>
+#include <orea/app/analytics/saccranalytic.hpp>
+#include <orea/app/analytics/bacvaanalytic.hpp>
+#include <orea/app/analytics/smrcanalytic.hpp>
 
 #include <ored/utilities/databuilders.hpp>
 
@@ -80,6 +83,9 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("XVA_EXPLAIN", {}, XvaExplainAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("CALIBRATION", {}, CalibrationAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("SA_CVA", {}, SaCvaAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("SA_CCR", {}, SaCcrAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("BA_CVA", {}, BaCvaAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("SMRC", {}, SmrcAnalytic, false);
     }
 }
 

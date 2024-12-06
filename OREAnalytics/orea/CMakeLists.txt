@@ -18,6 +18,7 @@ aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
 app/analytic.cpp
 app/analytics/analyticfactory.cpp
+app/analytics/bacvaanalytic.cpp
 app/analytics/calibrationanalytic.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
@@ -27,10 +28,12 @@ app/analytics/pnlanalytic.cpp
 app/analytics/pnlexplainanalytic.cpp
 app/analytics/portfoliodetailsanalytic.cpp
 app/analytics/pricinganalytic.cpp
+app/analytics/saccranalytic.cpp
 app/analytics/sacvaanalytic.cpp
 app/analytics/scenarioanalytic.cpp
 app/analytics/scenariostatisticsanalytic.cpp
 app/analytics/simmanalytic.cpp
+app/analytics/smrcanalytic.cpp
 app/analytics/stresstestanalytic.cpp
 app/analytics/varanalytic.cpp
 app/analytics/xvaanalytic.cpp
@@ -201,6 +204,7 @@ aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
 app/analytic.hpp
 app/analytics/analyticfactory.hpp
+app/analytics/bacvaanalytic.hpp
 app/analytics/calibrationanalytic.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
@@ -210,10 +214,12 @@ app/analytics/pnlanalytic.hpp
 app/analytics/pnlexplainanalytic.hpp
 app/analytics/portfoliodetailsanalytic.hpp
 app/analytics/pricinganalytic.hpp
+app/analytics/saccranalytic.hpp
 app/analytics/sacvaanalytic.hpp
 app/analytics/scenarioanalytic.hpp
 app/analytics/scenariostatisticsanalytic.hpp
 app/analytics/simmanalytic.hpp
+app/analytics/smrcanalytic.hpp
 app/analytics/stresstestanalytic.hpp
 app/analytics/varanalytic.hpp
 app/analytics/xvaanalytic.hpp

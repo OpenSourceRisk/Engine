@@ -5,7 +5,7 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">31</Parameter>
+    <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -92,7 +92,7 @@
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
     </Analytic>
     <Analytic type="xvaSensitivity">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
@@ -108,6 +108,19 @@
       <!--<Parameter name="saCvaNetSensitivitiesFile">sacva_sensitivity.csv</Parameter>-->
       <!-- Load CVA sensitivities, output of the xva sensi analytic, that needs mapping and aggregation -->
       <Parameter name="cvaSensitivitiesFile">xva_par_sensitivity_cva.csv</Parameter>
+    </Analytic>
+    <Analytic type="saccr">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
+    </Analytic>
+    <Analytic type="bacva">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
+    </Analytic>
+    <Analytic type="smrc">
+      <Parameter name="active">Y</Parameter>
     </Analytic>
   </Analytics>
 </ORE>
