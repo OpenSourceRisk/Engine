@@ -1019,6 +1019,7 @@ utilities/savedobservablesettings.hpp
 utilities/serializationdate.hpp
 utilities/serializationperiod.hpp
 utilities/time.hpp
+gitversion.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
