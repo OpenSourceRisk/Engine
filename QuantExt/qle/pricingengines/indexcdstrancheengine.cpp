@@ -93,12 +93,15 @@ void IndexCdsTrancheEngine::calculate() const {
     std::vector<double> defaultDiscountFactors;
     std::vector<double> premiumAccrualPeriods;
     std::vector<double> premiumDiscountFactors;
+    std::vector<double> zeroRecoveryExpectedLoss;
+    std::vector<double> accrualsDefault;
     // Value the premium and protection leg.
     for (Size i = 0; i < arguments_.normalizedLeg.size(); i++) {
 
         // Zero expected loss on coupon end dates that have already occured.
         // FD TODO: check again when testing tranches with existing losses.
         if (arguments_.normalizedLeg[i]->hasOccurred(today)) {
+            effectiveNotionals.push_back(inceptionTrancheNotional);
             etls.push_back(0.0);
             continue;
         }
@@ -116,7 +119,7 @@ void IndexCdsTrancheEngine::calculate() const {
         // Expected loss on the tranche up to the end of the current period.
         Real etl = basket->expectedTrancheLoss(endDate, Null<Real>());
         Real etlZR = basket->expectedTrancheLoss(endDate, 0);
-
+        zeroRecoveryExpectedLoss.push_back(etlZR);
         // Update protection leg value
         defaultDiscountFactors.push_back(discountCurve_->discount(defaultDate));
 
@@ -126,19 +129,27 @@ void IndexCdsTrancheEngine::calculate() const {
         // distributed over the coupon period, as per Andersen, Sidenius, Basu Nov 2003 paper for example. If not 
         // settling accruals, just use the tranche notional at period end.
         Real effNtl = 0.0;
-        if (arguments_.settlesAccrual) {
-            effNtl = inceptionTrancheNotional - (etl + etls.back()) / 2.0;
-        } else {
-            effNtl = inceptionTrancheNotional - etl;
-        }
+        
+        effNtl = inceptionTrancheNotional - etl;
 
         if(QuantLib::close_enough(basket->detachmentRatio(), 1.0)){
             effNtl += etl - etlZR;
         }
 
-        effectiveNotionals.push_back(effNtl);
         results_.premiumValue +=
             (coupon->amount() / inceptionTrancheNotional) * effNtl * discountCurve_->discount(paymentDate);
+
+        if (arguments_.settlesAccrual){
+            double expectedPeriodLoss = effectiveNotionals.back() - effNtl;
+            double accruals = (coupon->accruedAmount(defaultDate) / inceptionTrancheNotional) * expectedPeriodLoss *
+                              discountCurve_->discount(paymentDate);
+            results_.premiumValue += accruals;
+            accrualsDefault.push_back(accruals);
+        } else{
+            accrualsDefault.push_back(0.0);
+        }
+
+        effectiveNotionals.push_back(effNtl);
 
         double side = arguments_.side == Protection::Buyer ? 1.0 : -1.0;
 
@@ -215,7 +226,8 @@ void IndexCdsTrancheEngine::calculate() const {
     results_.additionalResults["accrualRebateCurrentNPV"] = results_.accrualRebateCurrentValue;
     results_.additionalResults["premiumAccrualPeriods"] = premiumAccrualPeriods;
     results_.additionalResults["premiumDiscountFactors"] = premiumDiscountFactors;
-
+    results_.additionalResults["zeroRecoveryExpectedLoss"] = zeroRecoveryExpectedLoss;
+    results_.additionalResults["accrualsDefault"] = accrualsDefault;
     results_.additionalResults["protectionLegNPV"] = results_.protectionValue;
     results_.additionalResults["calculationTime"] = timer.elapsed().wall * 1e-9;
 }
