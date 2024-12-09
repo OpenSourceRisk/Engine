@@ -69,7 +69,7 @@
 	<FxSpots>
 		<FxSpot ccypair="USDEUR">
 			<ShiftType>Relative</ShiftType>
-			<ShiftSize>0.001</ShiftSize>
+			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Central</ShiftScheme>
 		</FxSpot>
 	</FxSpots>
@@ -91,7 +91,7 @@
 	</CreditCurves>
 	<SwaptionVolatilities>
 		<SwaptionVolatility ccy="EUR">
-			<ShiftType>Absolute</ShiftType>
+			<ShiftType>Relative</ShiftType>
 			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
 			<ShiftExpiries>1Y,5Y</ShiftExpiries>
@@ -99,8 +99,7 @@
 			<ShiftTerms>1Y,5Y</ShiftTerms>
 		</SwaptionVolatility>
 		<SwaptionVolatility ccy="USD">
-			<!-- We need Relative -->
-			<ShiftType>Absolute</ShiftType>
+			<ShiftType>Relative</ShiftType>
 			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
 			<ShiftExpiries>1Y,5Y</ShiftExpiries>
@@ -110,8 +109,7 @@
 	</SwaptionVolatilities>	
 	<FxVolatilities>
 	        <FxVolatility ccypair="EURUSD">
-	                <!-- We need Relative -->
-			<ShiftType>Absolute</ShiftType>
+			<ShiftType>Relative</ShiftType>
 			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
 			<ShiftExpiries>1Y,10Y</ShiftExpiries>
