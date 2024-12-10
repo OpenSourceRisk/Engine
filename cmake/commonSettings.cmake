@@ -3,6 +3,8 @@ if(CMAKE_MINOR_VERSION GREATER 18 OR CMAKE_MINOR_VERSION EQUAL 18)
     include(CheckLinkerFlag)
 endif()
 
+include(${CMAKE_CURRENT_LIST_DIR}/writeAll.cmake)
+
 option(MSVC_LINK_DYNAMIC_RUNTIME "Link against dynamic runtime" ON)
 option(MSVC_PARALLELBUILD "Use flag /MP" ON)
 
@@ -79,7 +81,8 @@ endif()
 
 if(MSVC)
     set(BUILD_SHARED_LIBS OFF)
-    if(Boost_VERSION_STRING LESS "1.84.0")
+    find_package(boost)
+    if(Boost_VERSION_STRING LESS 1.84.0)
         add_compile_definitions(_WINVER=0x0601)
         add_compile_definitions(_WIN32_WINNT=0x0601)
         add_compile_definitions(BOOST_USE_WINAPI_VERSION=0x0601)
