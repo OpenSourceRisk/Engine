@@ -298,8 +298,9 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
         }
         setLegBasedAdditionalData(i);
     }
-    if (swap && allLegsAreSimmPlainVanillaIrLegs_)
-        additionalData_["atmForward"] = (- floatingNpv / fixedBps) / 1E4;
+    if (swap && allLegsAreSimmPlainVanillaIrLegs_ && fixedBps != 0.0) {
+        additionalData_["atmForward"] = (-floatingNpv / fixedBps) / 1E4;
+    }
     return additionalData_;
 }
 
