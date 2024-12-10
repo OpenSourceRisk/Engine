@@ -219,6 +219,12 @@ if(NOT Boost_USE_STATIC_LIBS)
     add_definitions(-DBOOST_ALL_DYN_LINK)
     add_definitions(-DBOOST_TEST_DYN_LINK)
 endif()
+
+if(ORE_BOOST_AUTO_LINK_SYSTEM)
+    add_definitions(-DBOOST_AUTO_LINK_SYSTEM)
+endif()
+
+set(Boost_NO_WARN_NEW_VERSIONS ON)
 # Boost end #
 
 # workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111
@@ -283,3 +289,12 @@ macro(set_ql_library_name)
     get_library_name("QuantLib" QL_LIB_NAME)
   endif()
 endmacro()
+
+function(generate_git_hash custom_target_name)
+  file(WRITE ${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp)
+  add_custom_target(
+    ${custom_target_name} ALL
+    COMMAND ${CMAKE_COMMAND} -D IN_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp.in -D OUT_FILE=${QUANTEXT_SOURCE_DIR}/qle/gitversion.hpp
+                             -P ${QUANTEXT_SOURCE_DIR}/../cmake/generateGitVersion.cmake
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+endfunction()

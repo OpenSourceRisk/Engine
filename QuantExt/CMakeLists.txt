@@ -23,9 +23,13 @@ endif()
 
 find_package (Eigen3 3.3 NO_MODULE)
 if (TARGET Eigen3::Eigen)
-  add_compile_definitions(ORE_USE_EIGEN)
-  get_target_property(Eigen3_include_dir Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
-  include_directories(${Eigen3_include_dir})
+    add_compile_definitions(ORE_USE_EIGEN)
+    if(MSVC)
+        include_directories(${Eigen3_INCLUDE_DIRS})
+    else()
+        get_target_property(Eigen3_include_dir Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
+        include_directories(${Eigen3_include_dir})
+    endif()
 endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
@@ -35,6 +39,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_link_directory_if_exists("${QUANTLIB_SOURCE_DIR}/build/ql")
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib/ql")
+
+generate_git_hash(ore_qle)
 
 add_subdirectory("qle")
 if (ORE_BUILD_DOC)
