@@ -196,12 +196,20 @@ void IndexCdsTrancheEngine::calculate() const {
     results_.value = results_.premiumValue + results_.protectionValue +
         results_.upfrontPremiumValue + results_.accrualRebateValue;
 
+    Real cleanNPV = results_.premiumValue + results_.protectionValue +
+                    results_.upfrontPremiumValue + results_.accrualRebateCurrentValue;
+
     // Fair tranche spread.
     Real fairSpread = 0.0;
+    Real fairSpreadClean = 0.0;
     if (results_.premiumValue != 0.0) {
         fairSpread = -(results_.protectionValue + results_.upfrontPremiumValue) *
                      arguments_.runningRate / (results_.premiumValue + results_.accrualRebateValue);
+        fairSpreadClean = -(results_.protectionValue + results_.upfrontPremiumValue) * arguments_.runningRate /
+                          (results_.premiumValue + results_.accrualRebateCurrentValue);
     }
+
+    Real fairUpfrontClean = (cleanNPV - results_.upfrontPremiumValue) / inceptionTrancheNotional;
 
     timer.stop();
 
@@ -216,6 +224,7 @@ void IndexCdsTrancheEngine::calculate() const {
     results_.additionalResults["detachment"] = arguments_.basket->detachmentRatio();
     results_.additionalResults["fixedRate"] = arguments_.runningRate;
     results_.additionalResults["fairSpread"] = fairSpread;
+    results_.additionalResults["fairSpreadClean"] = fairSpreadClean;
     results_.additionalResults["upfrontPremium"] = upfrontPremiumAmount;
     Real correlation = arguments_.basket->correlation();
     if (correlation != Null<Real>())
@@ -229,6 +238,9 @@ void IndexCdsTrancheEngine::calculate() const {
     results_.additionalResults["zeroRecoveryExpectedLoss"] = zeroRecoveryExpectedLoss;
     results_.additionalResults["accrualsDefault"] = accrualsDefault;
     results_.additionalResults["protectionLegNPV"] = results_.protectionValue;
+    results_.additionalResults["protectionLegCleanNPV"] = results_.protectionValue + results_.accrualRebateCurrentValue;
+    results_.additionalResults["CleanNPV"] = cleanNPV;
+    results_.additionalResults["FairUpfrontClean"] = fairUpfrontClean;
     results_.additionalResults["calculationTime"] = timer.elapsed().wall * 1e-9;
 }
 
