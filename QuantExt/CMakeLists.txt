@@ -36,6 +36,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_link_directory_if_exists("${QUANTLIB_SOURCE_DIR}/build/ql")
 add_link_directory_if_exists("${CMAKE_BINARY_DIR}/QuantLib/ql")
 
+generate_git_hash(ore_qle)
+
 add_subdirectory("qle")
 if (ORE_BUILD_DOC)
     add_subdirectory("doc")

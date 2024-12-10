@@ -55,7 +55,6 @@ EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
     fxSpot_ = market_->fxRate(fxCcyPair, configuration_);
     ytsRate_ = market_->equityForecastCurve(eqName, configuration_);
     ytsDiv_ = market_->equityDividendCurve(eqName, configuration_);
-    eqVol_ = market_->equityVol(eqName, configuration_);
 
     // register with market observables except vols
     marketObserver_->registerWith(eqSpot_);
@@ -63,16 +62,18 @@ EqBsBuilder::EqBsBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& mar
     marketObserver_->registerWith(ytsRate_);
     marketObserver_->registerWith(ytsDiv_);
 
-    // register the builder with the vol and the market observer
-    registerWith(eqVol_);
+    // register the builder with the market observer
     registerWith(marketObserver_);
 
     // notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
 
     // build option basket and derive parametrization from it
-    if (data->calibrateSigma())
+    if (data->calibrateSigma()) {
+        eqVol_ = market_->equityVol(eqName, configuration_);
+        registerWith(eqVol_);
         buildOptionBasket();
+    }
 
     Array sigmaTimes, sigma;
     if (data->sigmaParamType() == ParamType::Constant) {
