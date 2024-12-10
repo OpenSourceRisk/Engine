@@ -260,17 +260,23 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
     QuantLib::ext::shared_ptr<QuantLib::Swap> swap = QuantLib::ext::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
     QuantLib::ext::shared_ptr<QuantExt::CurrencySwap> cswap = QuantLib::ext::dynamic_pointer_cast<QuantExt::CurrencySwap>(instrument_->qlInstrument());
     std::map<std::string, Real> legNpv; // by currency
+    Real floatingNpv = 0.0;
+    Real fixedBps = 0.0;
     for (Size i = 0; i < numLegs; ++i) {
         string legID = to_string(i+1);
         additionalData_["legType[" + legID + "]"] = legData_[i].legType();
         additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
         additionalData_["notionalCurrency[" + legID + "]"] = legData_[i].currency();
         if (!isXCCY_) {
-            if (swap)
+            if (swap) {
                 additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
-                if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == "Fixed")
-                    additionalData_["PV01[" + legID + "]"] = abs(swap->legBPS(i));         
-            else
+                if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == "Floating")
+                    floatingNpv = swap->legNPV(i);            
+                if (allLegsAreSimmPlainVanillaIrLegs_ && legData_[i].legType() == "Fixed") {
+                    additionalData_["PV01[" + legID + "]"] = abs(swap->legBPS(i));
+                    fixedBps = swap->legBPS(i);
+                }
+            } else
                 ALOG("single currency swap underlying instrument not set, skip leg npv reporting");
         } 
         else {
@@ -292,6 +298,8 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
         }
         setLegBasedAdditionalData(i);
     }
+    if (swap && allLegsAreSimmPlainVanillaIrLegs_)
+        additionalData_["atmForward"] = (- floatingNpv / fixedBps) / 1E4;
     return additionalData_;
 }
 
