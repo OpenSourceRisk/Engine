@@ -266,6 +266,7 @@ LgmBuilder::LgmBuilder(const QuantLib::ext::shared_ptr<ore::data::Market>& marke
                 DLOG("overriding alpha time grid with swaption expiries, set all initial values to first given value");
             }
             QL_REQUIRE(swaptionExpiries_.size() > 0, "empty swaptionExpiries");
+            QL_REQUIRE(!data_->aValues().empty(), "LgmBuilder: LGM volatility has empty initial values, requires one initial value");
             aTimes = Array(swaptionExpiries_.begin(), swaptionExpiries_.end() - 1);
             alpha = Array(aTimes.size() + 1, data_->aValues()[0]);
         } else {

@@ -219,6 +219,12 @@ if(NOT Boost_USE_STATIC_LIBS)
     add_definitions(-DBOOST_ALL_DYN_LINK)
     add_definitions(-DBOOST_TEST_DYN_LINK)
 endif()
+
+if(ORE_BOOST_AUTO_LINK_SYSTEM)
+    add_definitions(-DBOOST_AUTO_LINK_SYSTEM)
+endif()
+
+set(Boost_NO_WARN_NEW_VERSIONS ON)
 # Boost end #
 
 # workaround when building with boost 1.81, see https://github.com/boostorg/phoenix/issues/111
