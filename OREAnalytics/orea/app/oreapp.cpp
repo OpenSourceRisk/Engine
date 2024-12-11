@@ -611,7 +611,13 @@ void OREApp::closeLog() { Log::instance().removeAllLoggers(); }
 
 std::string OREApp::version() { return std::string(OPEN_SOURCE_RISK_VERSION); }
 
-std::string OREApp::gitHash() { return std::string(GIT_HASH); }
+std::string OREApp::gitHash() { 
+    std::string hashStr;
+#ifdef GIT_HASH
+    hashStr = std::string(GIT_HASH)
+#endif
+        return hashStr;
+}
 
 void OREAppInputParameters::loadParameters() {
     LOG("load OREAppInputParameters called");
