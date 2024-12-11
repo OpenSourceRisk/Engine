@@ -24,7 +24,7 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
-
+#include <orea/scenario/deltascenariofactory.hpp>
 
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <ored/report/utilities.hpp>
@@ -110,10 +110,10 @@ XvaSensitivityAnalyticImpl::buildScenarioGenerator(QuantLib::ext::shared_ptr<Sce
                                                    bool overrideTenors) {
     QL_REQUIRE(simMarket != nullptr, "Can not build scenario generator without a valid sim market");
     auto baseScenario = simMarket->baseScenario();
-    auto scenarioFactory = QuantLib::ext::make_shared<CloneScenarioFactory>(baseScenario);
+    auto scenarioFactory = QuantLib::ext::make_shared<DeltaScenarioFactory>(baseScenario);
     auto scenarioGenerator = QuantLib::ext::make_shared<SensitivityScenarioGenerator>(
         analytic()->configurations().sensiScenarioData, baseScenario, analytic()->configurations().simMarketParams,
-        simMarket, scenarioFactory, true);
+        simMarket, scenarioFactory, true, "", inputs_->continueOnError(), simMarket->baseScenarioAbsolute());
     simMarket->scenarioGenerator() = scenarioGenerator;
     return scenarioGenerator;
 }
