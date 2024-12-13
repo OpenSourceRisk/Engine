@@ -81,15 +81,17 @@ protected:
         TLOG("Compute expectedTrancheLoss with MC for " << d);
         TLOG("Basket Information");
         TLOG("Basket attachment amount " << std::fixed << std::setprecision(2) << basket_->attachmentAmount());
-        TLOG("Basket  dettachment Amount " << std::fixed << std::setprecision(2) << basket_->detachmentAmount());
+        TLOG("Basket dettachment Amount " << std::fixed << std::setprecision(2) << basket_->detachmentAmount());
         TLOG("Basket remaining attachment Amount " << std::fixed << std::setprecision(2)
                                                    << basket_->remainingAttachmentAmount(d));
         TLOG("Basket remaining dettachment Amount " << std::fixed << std::setprecision(2)
                                                     << basket_->remainingDetachmentAmount(d));
+        TLOG("BaseCorrelation " << baseCorrelation_->value());
         TLOG("Constituents");
-        TLOG("i,name,notional,pd");
+        TLOG("i,name,notional,pd,recoveryRates");
         for (size_t i = 0; i < pds.size(); ++i) {
-            TLOG(i << "," << names[i] << "," << notionals[i] << "," << pds[i]);
+            TLOG(i << "," << names[i] << "," << io::iso_date(d) << "," << pds[i] << "," << notionals[i] << ","
+                   << recoveryRates_[i][0] << "," << recoveryRates_[i][1] << "," << recoveryRates_[i][2]);
         }
         if (recoveryRate != Null<Real>()){
             auto it = expectedTrancheLossZeroRecovery_.find(d);
@@ -102,9 +104,7 @@ protected:
         if (it != expectedTrancheLoss_.end()) {
             return it->second;
         }
-        QuantLib::MersenneTwisterUniformRng urng(42);
-        QuantLib::InverseCumulativeRng<QuantLib::MersenneTwisterUniformRng, QuantLib::InverseCumulativeNormal> rng(
-            urng);
+        InverseCumulativeRng<MersenneTwisterUniformRng, InverseCumulativeNormal> normal(MersenneTwisterUniformRng(123));
 
         // Compute determistic LGD case
         // if(recoveryRates_.front().size() == 1){
@@ -112,6 +112,7 @@ protected:
         InverseCumulativeNormal ICN;
         std::vector<std::vector<double>> thresholds(basket_->size(),
                                                     std::vector<double>(recoveryProbabilities_.size(), 0.0));
+        TLOG("DefaultThresholdholds");
         for (size_t id = 0; id < pds.size(); id++) {
             thresholds[id][0]=(ICN(pds[id]));
             double cumRecoveryProb = 0.0;
@@ -120,13 +121,8 @@ protected:
                 thresholds[id][j+1]= (ICN(pds[id] * (1.0 - cumRecoveryProb)));
             }
             thresholds[id].push_back(QL_MIN_REAL);
-            
-            /*
-            for(auto & t : thresholds[id]){
-                std::cout << t << ",";
-            }
-            std::cout << std::endl;
-            */
+            TLOG(id << "," << thresholds[id][0] << "," << thresholds[id][1] << "," << thresholds[id][2] << ","
+                    << thresholds[id][3]);
         }
 
         const double sqrtRho = std::sqrt(baseCorrelation_->value());
@@ -138,19 +134,21 @@ protected:
         const size_t nConstituents = pds.size();
         std::vector<double> xs(nConstituents * nSamples_, 0.0);
         // std::vector<double> ys(nConstituents * nSamples_, 0.0);
+        /*
         for (size_t i = 0; i < nSamples_; i++) {
-            const double marketFactor = rng.next().value * sqrtRho;
+            const double marketFactor = normal.next().value * sqrtRho;
             for (size_t id = 0; id < nConstituents; id++) {
-                xs[i * nConstituents + id] = marketFactor + sqrtOneMinusRho * rng.next().value;
+                xs[i * nConstituents + id] = marketFactor + sqrtOneMinusRho * normal.next().value;
             }
         }
-
+        */
         std::vector<double> simPD(pds.size(), 0.0);
         for (size_t i = 0; i < nSamples_; i++) {
             double loss = 0.0;
             double loss_zero_recovery = 0.0;
+            const double marketFactor = normal.next().value * sqrtRho;
             for (size_t id = 0; id < pds.size(); id++) {
-                const double x = xs[i * nConstituents + id];
+                const double x = marketFactor + sqrtOneMinusRho * normal.next().value;
                 //TLOG("Sim " << i << " x= " << x);
                 for (size_t lgd = 1; lgd < thresholds[id].size(); lgd++) {
                     
@@ -161,6 +159,7 @@ protected:
                         simPD[id] += 1;
                         loss += notionals[id] * (1.0 - recoveryRates_[id][lgd - 1]);
                         loss_zero_recovery += notionals[id];
+                        break;
                     }
                 }
             }
