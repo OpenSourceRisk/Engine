@@ -37,6 +37,43 @@ namespace data {
  */
 
 
+
+
+class CreditIndexBasketInformation {
+    
+    CreditIndexBasketInformation(double originalFullNotional, std::vector<std::string> names, std::map<std::string, double> remainingNotionals,
+                 std::map<std::string, double>& loss, std::map<std::string, double>& recoveries){};
+
+    CreditIndexBasketInformation(ore::data::BasketData& basketData);
+
+    CreditIndexBasketInformation()
+
+    double adjustedAttachmentPoint(double attachPoint);
+    double adjustedDetachmentPoint(double dettachPoint);
+    double originalNotional() const;
+    double remainingNotional() const;
+    double lostNotional() const;
+    double recoveredNotional() const;
+    double remainingTrancheNotional(double unAdjAttachPoint, double unAdjDetachPoint);
+    double originalTrancheNotional(double unAdjAttachPoint, double unAdjDetachPoint);
+    double indexFactor();
+    double trancheFactor();
+    const std::vector<std::string>& remainingNames() const { return names_; };
+    const std::vector<double>& remainingNotionals() const { return notionals_; };
+
+private:
+    double originalNotional;
+    double remainingNotional;
+    double lostNotional;
+    double recoveredNotional;
+    double adjAttachPoint;
+    double adjDetachPoint;
+    double currTotalNtl;
+
+    std::vector<std::string> names_;
+    std::vector<double> notionals_;
+};
+
 class SyntheticCDO : public Trade {
 public:
   SyntheticCDO() : Trade("SyntheticCDO"),
@@ -97,6 +134,32 @@ public:
 
     /*! Get the index start date hint, or null if it was never set */
     const QuantLib::Date& indexStartDateHint() const { return indexStartDateHint_; }
+
+    double currentTrancheNotional() const {
+         auto additionalResults = instrument_->additionalResults();
+         auto it = additionalResults.find("CurrentNotional");
+         if(it != additionalResults.end()){
+             return boost::any_cast<double>(it->second);
+         } else{
+            return Null<double>();
+         }
+    }
+
+    double accrualRebateNPVCurrent() const { 
+        auto additionalResults = instrument_->additionalResults(); 
+        
+
+    }
+
+    double fairUpfront(bool clean) const { 
+        auto additionalResults = instrument_->additionalResults();
+        double npv = instrument_->NPV();
+        if (clean){
+
+        } 
+        return npv / currentTrancheNotional();
+
+    }
 
 private:
 

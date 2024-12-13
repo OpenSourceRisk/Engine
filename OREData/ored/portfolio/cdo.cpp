@@ -354,11 +354,16 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         LOG("Set all recovery rates to " << fixedRecovery);
     } 
     for (Size i = 0; i < creditCurves.size(); ++i) {
-        const string& cc = creditCurves[i];
-        Real mktRecoveryRate = market->recoveryRate(cc, config)->value();
-        recoveryRates.push_back(fixedRecovery != Null<Real>() ? fixedRecovery : mktRecoveryRate);
-        auto originalCurve = market->defaultCurve(cc, config)->curve();
-        dpts.push_back(originalCurve);
+        //const string& cc = creditCurves[i];
+        //Real mktRecoveryRate = market->recoveryRate(cc, config)->value();
+        //recoveryRates.push_back(fixedRecovery != Null<Real>() ? fixedRecovery : mktRecoveryRate);
+        //auto originalCurve = market->defaultCurve(cc, config)->curve();
+        //dpts.push_back(originalCurve);
+        Handle<DefaultProbabilityTermStructure> indexCreditCurve =
+            indexCdsDefaultCurve(market, creditCurveIdWithTerm(), config)->curve();
+        Handle<Quote> indexCdsRecovery = market->recoveryRate(creditCurveIdWithTerm(), config);
+        recoveryRates.push_back(indexCdsRecovery->value());
+        dpts.push_back(indexCreditCurve);
     }
 
     // TODO check if underlying is index cds
