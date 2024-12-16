@@ -46,6 +46,8 @@ public:
     void setUpConfigurations() override;
 };
 
+// static const std::set<std::string> sacvaAnalyticSubAnalytics {"SA_CVA", "XVA_SENSITIVITY"};
+
 class SaCvaAnalytic : public Analytic {
 public:
     SaCvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)

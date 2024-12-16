@@ -143,7 +143,7 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
 
-    auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
+    //auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
 
     // build t0, sim market, stress scenario generator
 
@@ -339,7 +339,8 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
             auto newAnalytic =
                 ext::make_shared<XvaAnalytic>(inputs_, scenario, analytic()->configurations().simMarketParams);
-            CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
+
+	    CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
             for (auto& [name, rpt] : newAnalytic->reports()["XVA"]) {
@@ -430,7 +431,7 @@ void XvaSensitivityAnalyticImpl::createParReports(ParSensiResults& xvaParSensiCu
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*report, pssTrade, pssNetting, tradeNettingSetMap,
-                                       inputs_->sensiThreshold());
+                                       inputs_->sensiThreshold(), inputs_->xvaSensiOutputPrecision());
         analytic()->reports()[label()]["xva_par_sensitivity_" + to_string(valueAdjustment)] = report;
     }
 }

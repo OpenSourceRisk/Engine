@@ -70,8 +70,11 @@ public:
 
     /*! Load SaCvaSensitity records from raw Par Sensitivity cube stream
     */
-    void loadFromRawSensis(const QuantLib::ext::shared_ptr<ParSensitivityCubeStream> parSensiStream, 
-        const std::string& baseCurrency, const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager = nullptr);
+    void
+    loadFromRawSensis(const QuantLib::ext::shared_ptr<ParSensitivityCubeStream> parSensiStream,
+                      const std::string& baseCurrency,
+		      const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData,
+                      const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager = nullptr);
 
     /*! Load SaCvaSensitity records from vector of Cva Sensis
     */
@@ -88,6 +91,9 @@ public:
     void clear();
 
     static std::map<QuantLib::Size, std::string> expectedHeaders;
+
+    const std::vector<CvaSensitivityRecord>& cvaSensitivityRecords() const { return cvaSensitivityRecords_; }
+
 protected:
     //! Netted CvaSensitivity records that can subsequently be used in a SIMM calculation
     SaCvaNetSensitivities netRecords_;
@@ -108,6 +114,8 @@ protected:
         or false if an invalid line
     */
     virtual bool process(const std::vector<std::string>& entries, QuantLib::Size maxIndex, QuantLib::Size currentLine);
+
+    std::vector<CvaSensitivityRecord> cvaSensitivityRecords_;
 };
 
 CvaRiskFactorKey mapRiskFactorKeyToCvaRiskFactorKey(string s);

@@ -2,7 +2,7 @@
 <NettingSetDefinitions>
   <NettingSet>
     <NettingSetId>CPTY_A</NettingSetId>
-    <ActiveCSAFlag>false</ActiveCSAFlag>
+    <ActiveCSAFlag>true</ActiveCSAFlag>
     <CSADetails>
       <Bilateral>Bilateral</Bilateral>
       <CSACurrency>EUR</CSACurrency>

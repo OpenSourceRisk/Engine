@@ -1,9 +1,22 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oreap/dim/dimhelper.hpp
+/*! \file orea/dim/dimhelper.hpp
     \brief Dynamic initial margin helper
 
     \ingroup dim
@@ -12,7 +25,7 @@
 #pragma once
 
 #include <orea/cube/npvcube.hpp>
-#include <orepbase/orea/engine/sensitivitystoragemanager.hpp>
+#include <orea/engine/sensitivitystoragemanager.hpp>
 
 #include <ored/portfolio/trade.hpp>
 #include <ored/utilities/log.hpp>
@@ -21,10 +34,9 @@
 
 #include <ql/math/matrix.hpp>
 
-namespace oreplus {
+namespace ore {
 namespace analytics {
 using namespace ore::data;
-using namespace ore::analytics;
 
 using QuantExt::CrossAssetModel;
 using QuantLib::Matrix;
@@ -66,4 +78,4 @@ private:
 };
 
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore

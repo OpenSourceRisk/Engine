@@ -1,9 +1,22 @@
 /*
  Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orepbase/orea/engine/sensitivitystoragemanager.hpp>
+#include <orea/engine/sensitivitystoragemanager.hpp>
 
 #include <orea/app/structuredanalyticserror.hpp>
 
@@ -18,9 +31,8 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace ore::data;
-using namespace ore::analytics;
 
-namespace oreplus {
+namespace ore {
 namespace analytics {
 
 typedef std::map<Currency, Matrix, CurrencyComparator> result_type_matrix;
@@ -37,6 +49,8 @@ CamSensitivityStorageManager::CamSensitivityStorageManager(
     QL_REQUIRE(!camCurrencies_.empty(), "CamSensitivityStorageManager: camCurrencies are empty");
 
     N_ = nCurveSensitivities_ * camCurrencies_.size() + (camCurrencies_.size() - 1);
+
+    LOG("CamSensitivityStorageManager created");
 }
 
 Size CamSensitivityStorageManager::getRequiredSize() const {
@@ -135,6 +149,9 @@ void CamSensitivityStorageManager::addSensitivities(QuantLib::ext::shared_ptr<or
             subFields)
             .log();
     }
+
+    LOG("CamSensitivityStorageManager: Added sensitivities to cube for trade="
+	<< trade->id() << " sample=" << sampleIndex << " date=" << dateIndex);
 }
 
 boost::any CamSensitivityStorageManager::getSensitivities(const QuantLib::ext::shared_ptr<ore::analytics::NPVCube>& cube,
@@ -589,4 +606,4 @@ CamSensitivityStorageManager::processFxForward(QuantLib::ext::shared_ptr<ore::an
 }
 
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore

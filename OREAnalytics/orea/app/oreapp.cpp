@@ -1715,6 +1715,24 @@ void OREAppInputParameters::loadParameters() {
         if (tmp == "Y")
             setStoreFlows(true);
 
+        tmp = params_->get("simulation", "storeSensis", false);
+        if (tmp == "Y")
+            setStoreSensis(true);
+
+        tmp = params_->get("simulation", "allowPartialScenarios", false);
+        if (tmp == "Y") {
+            setAllowPartialScenarios(true);
+	    LOG("AllowPartialScenarios = Y");
+	}
+	
+	tmp = params_->get("simulation", "curveSensiGrid", false);
+        if (tmp != "")
+	    curveSensiGrid_ = parseListOfValues<Real>(tmp, &parseReal);
+
+	tmp = params_->get("simulation", "vegaSensiGrid", false);
+        if (tmp != "")
+	    vegaSensiGrid_ = parseListOfValues<Real>(tmp, &parseReal);
+
         tmp = params_->get("simulation", "storeCreditStateNPVs", false);
         if (!tmp.empty())
             setStoreCreditStateNPVs(parseInteger(tmp));
@@ -1896,8 +1914,10 @@ void OREAppInputParameters::loadParameters() {
 
     tmp = params_->get("xva", "dimModel", false);
     if (tmp != "") {
-        QL_REQUIRE(tmp == "Regression" || tmp == "Flat",
-                   "DIM model " << tmp << " not supported, expected Regression or Flat");
+        QL_REQUIRE(tmp == "Regression" || tmp == "Flat" ||
+		   tmp == "DeltaVaR" || tmp == "DeltaGammaNormalVaR" || tmp == "DeltaGammaVaR",
+                   "DIM model " << tmp << " not supported, "
+		   << "expected Flat, Regression, DeltaVaR, DeltaGammaNormalVaR or DeltaGammaVaR");
         setDimModel(tmp);
     }
 
@@ -2146,6 +2166,10 @@ void OREAppInputParameters::loadParameters() {
         tmp = params_->get("xvaSensitivity", "outputSensitivityThreshold", false);
         if (tmp != "")
             setXvaSensiThreshold(parseReal(tmp));
+
+	tmp = params_->get("xvaSensitivity", "outputPrecision", false);
+        if (tmp != "")
+            setXvaSensiOutputPrecision(parseInteger(tmp));
     }
 
     /*************

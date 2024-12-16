@@ -2478,6 +2478,32 @@ void ReportWriter::writeCvaSensiReport(const QuantLib::ext::shared_ptr<CvaSensit
     reportOut.end();
 }
 
+void ReportWriter::writeCvaSensiReport(const std::vector<CvaSensitivityRecord>& records,
+                                       ore::data::Report& reportOut) {
+
+    LOG("Writing CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("ShiftType", string())
+        .addColumn("ShiftSize", double(), 6)
+        .addColumn("Currency", string())
+        .addColumn("BaseCva", double(), 2)
+        .addColumn("Delta", double(), 4);
+
+    for (auto sr : records) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.key));
+        reportOut.add(to_string(sr.shiftType));
+        reportOut.add(sr.shiftSize);
+        reportOut.add(sr.currency);
+        reportOut.add(sr.baseCva);
+        reportOut.add(sr.delta);
+    }
+
+    reportOut.end();
+}
+
 void ReportWriter::writeSaCvaSensiReport(const SaCvaNetSensitivities& sensis,
                                          ore::data::Report& reportOut) {
 

@@ -1,9 +1,22 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orepbase/orea/dim/dimhelper.hpp>
+#include <orea/aggregation/dimhelper.hpp>
 
 #include <ored/portfolio/fxoption.hpp>
 
@@ -14,7 +27,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace QuantExt::CrossAssetAnalytics;
 
-namespace oreplus {
+namespace ore {
 namespace analytics {
 
 DimHelper::DimHelper(const QuantLib::ext::shared_ptr<CrossAssetModel>& model, const QuantLib::ext::shared_ptr<NPVCube>& cube,
@@ -146,4 +159,4 @@ Real DimHelper::var(const std::string& nettingSetId, const Size order, const Rea
 } // var
 
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore

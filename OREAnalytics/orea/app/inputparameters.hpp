@@ -237,6 +237,8 @@ public:
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
     void setScenarioGenType(const std::string& s) { scenarioGenType_ = s; }
     void setStoreFlows(bool b) { storeFlows_ = b; }
+    void setStoreSensis(bool b) { storeSensis_ = b; }
+    void setAllowPartialScenarios(bool b) { allowPartialScenarios_ = b; }
     void setStoreCreditStateNPVs(Size states) { storeCreditStateNPVs_ = states; }
     void setStoreSurvivalProbabilities(bool b) { storeSurvivalProbabilities_ = b; }
     void setWriteCube(bool b) { writeCube_ = b; }
@@ -379,6 +381,7 @@ public:
     void setXvaSensiParSensi(const bool parSensi){ xvaSensiParSensi_ = parSensi;}
     void setXvaSensiOutputJacobi(const bool outputJacobi) { xvaSensiOutputJacobi_ = outputJacobi; };
     void setXvaSensiThreshold(const Real threshold) { xvaSensiThreshold_ = threshold; }
+    void setXvaSensiOutputPrecision(Size p) { xvaSensiOutputPrecision_ = p; }
 
     // Setters for SA-CVA
     // input file matches the required format for SA-CVA calcs, aggregated per CvaRiskFactorKey
@@ -657,6 +660,10 @@ public:
     const std::string& nettingSetId() const { return nettingSetId_; }
     const std::string& scenarioGenType() const { return scenarioGenType_; }
     bool storeFlows() const { return storeFlows_; }
+    bool storeSensis() const { return storeSensis_; }
+    bool allowPartialScenarios() const { return allowPartialScenarios_; }
+    const vector<Real>& curveSensiGrid() const { return curveSensiGrid_; } 
+    const vector<Real>& vegaSensiGrid() const { return vegaSensiGrid_; } 
     Size storeCreditStateNPVs() const { return storeCreditStateNPVs_; }
     bool storeSurvivalProbabilities() const { return storeSurvivalProbabilities_; }
     bool writeCube() const { return writeCube_; }
@@ -858,6 +865,7 @@ public:
     bool xvaSensiParSensi() const { return xvaSensiParSensi_; }
     bool xvaSensiOutputJacobi() const { return xvaSensiOutputJacobi_; };
     Real xvaSensiThreshold() const { return xvaSensiThreshold_;}
+    QuantLib::Size xvaSensiOutputPrecision() const { return xvaSensiOutputPrecision_; }
 
     /*************************************
      * SA-CVA 
@@ -1047,6 +1055,10 @@ protected:
     std::string nettingSetId_ = "";
     std::string scenarioGenType_ = "";
     bool storeFlows_ = false;
+    bool storeSensis_ = false;
+    bool allowPartialScenarios_ = false;
+    vector<Real> curveSensiGrid_;
+    vector<Real> vegaSensiGrid_;
     Size storeCreditStateNPVs_ = 0;
     bool storeSurvivalProbabilities_ = false;
     bool writeCube_ = false;
@@ -1217,6 +1229,7 @@ protected:
     bool xvaSensiParSensi_ = false;
     bool xvaSensiOutputJacobi_ = false;
     QuantLib::Real xvaSensiThreshold_ = 1e-6;
+    QuantLib::Size xvaSensiOutputPrecision_ = 2;
 
     /*****************
      * SA-CVA 

@@ -230,6 +230,8 @@ void SaCvaSensitivityLoader::loadRawSensi(const CvaSensitivityRecord& cvaSensi,
     if (close_enough(cvaSensi.delta, 0.0))
         return;
 
+    cvaSensitivityRecords_.push_back(cvaSensi);
+    
     // const the cvaSensitivity Record to a SaCvaSensitivityRecord
     SaCvaSensitivityRecord cr;
     cr.nettingSetId = cvaSensi.nettingSetId;
@@ -310,6 +312,7 @@ void SaCvaSensitivityLoader::loadFromRawSensis(std::vector<CvaSensitivityRecord>
 
 void SaCvaSensitivityLoader::loadFromRawSensis(
     const QuantLib::ext::shared_ptr<ParSensitivityCubeStream> parSensiStream, const std::string& baseCurrency,
+    const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData,
     const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager) {
 
     vector<CvaSensitivityRecord> cvaSensis;
@@ -318,12 +321,18 @@ void SaCvaSensitivityLoader::loadFromRawSensis(
         CvaSensitivityRecord r;
         r.nettingSetId = sr.tradeId;
         string rf = prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1));
+	LOG("SaCvaSensitivityLoader: sr.key_1=" << sr.key_1 << " sr.desc_1=" << sr.desc_1 << " keytype=" << sr.key_1.keytype << " name=" << sr.key_1.name << " index=" << sr.key_1.index);
         r.key = mapRiskFactorKeyToCvaRiskFactorKey(rf);
-        r.shiftSize = sr.shift_1;
-        r.currency = sr.currency;
+	// Shift type and size from the sensitivity config is needed here
+	SensitivityScenarioData::ShiftData shiftData = scenarioData->shiftData(sr.key_1.keytype,  sr.key_1.name);
+	r.shiftType = shiftData.shiftType;
+	r.shiftSize = shiftData.shiftSize;
+	LOG("SaCvaSensitivityLoader: sr.key_1=" << sr.key_1 << " shiftType=" << r.shiftType << " shiftSize=" << r.shiftSize);
+	r.currency = sr.currency;
         r.baseCva = sr.baseNpv;
         r.delta = sr.delta;
         cvaSensis.push_back(r);
+	LOG("SaCvaSensitivityLoader " << r.key << " " << r.delta);
     }
 
     loadFromRawSensis(cvaSensis, baseCurrency, counterpartyManager);

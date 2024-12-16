@@ -11,7 +11,8 @@
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>10000</Samples>
+    <!--<Samples>1000</Samples>-->
+    <Samples>75</Samples>
     <CloseOutLag>2W</CloseOutLag>
     <MporMode>StickyDate</MporMode>
     <DayCounter>A365F</DayCounter>
@@ -227,7 +228,7 @@
 	   surfaces, so we need to specify here how we propagate the
 	   vol structure and what its composition will be -->
     <SwaptionVolatilities>
-      <Simulate>true</Simulate>
+      <Simulate>false</Simulate>
       <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
@@ -239,7 +240,7 @@
       <SimulateATMOnly>true</SimulateATMOnly>
     </SwaptionVolatilities>
     <FxVolatilities>
-      <Simulate>true</Simulate>
+      <Simulate>false</Simulate>
       <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <CurrencyPairs>
