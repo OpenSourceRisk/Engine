@@ -46,14 +46,8 @@ class CreditIndexBasketInformation {
 
     CreditIndexBasketInformation(ore::data::BasketData& basketData);
 
-    CreditIndexBasketInformation()
+    CreditIndexBasketInformation();
 
-    double adjustedAttachmentPoint(double attachPoint);
-    double adjustedDetachmentPoint(double dettachPoint);
-    double originalNotional() const;
-    double remainingNotional() const;
-    double lostNotional() const;
-    double recoveredNotional() const;
     double remainingTrancheNotional(double unAdjAttachPoint, double unAdjDetachPoint);
     double originalTrancheNotional(double unAdjAttachPoint, double unAdjDetachPoint);
     double indexFactor();
@@ -143,12 +137,6 @@ public:
          } else{
             return Null<double>();
          }
-    }
-
-    double accrualRebateNPVCurrent() const { 
-        auto additionalResults = instrument_->additionalResults(); 
-        
-
     }
 
     double fairUpfront(bool clean) const { 

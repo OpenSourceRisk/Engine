@@ -27,9 +27,7 @@
 namespace ore {
 namespace analytics {
 
-/*! Pricing-type analytics
-  \todo align pillars for par sensitivity analysis
-*/
+
 class BaseCorrelationImplyAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "BASECORRELATIONIMPLY";

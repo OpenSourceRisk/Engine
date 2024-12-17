@@ -21,6 +21,7 @@
 #include <orea/app/analytic.hpp>
 #include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/imscheduleanalytic.hpp>
+#include <orea/app/analytics/basecorrelationimplyanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/parscenarioanalytic.hpp>
 #include <orea/app/analytics/parstressconversionanalytic.hpp>
@@ -78,6 +79,7 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("XVA_SENSITIVITY", {}, XvaSensitivityAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("XVA_EXPLAIN", {}, XvaExplainAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("CALIBRATION", {}, CalibrationAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("BASECORRELATIONIMPLY", {}, BaseCorrelationImplyAnalytic, false);
     }
 }
 
