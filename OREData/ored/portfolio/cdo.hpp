@@ -36,37 +36,87 @@ namespace data {
 /*! \ingroup tradedata
  */
 
+//! Helper class to compute the index factor for index cds from a given basket and adjusted tranche Notional 
+// and adjustment points
+class IndexTrancheNotionalCalculator {
+    public:
+    //! Constructor using weights, weights plus losses need to sum up to 1
+        IndexTrancheNotionalCalculator(std::vector<std::string>& constituentQualifier, std::vector<double>& weight,
+                                       std::vector<double>& loss, std::vector<double>& recovery,
+                                       double origIndexNotional) {
+            QL_REQUIRE(constituentQualifier.size() == weight.size(),
+                       "weight and constituent vector doesnt have same lenght");
+            QL_REQUIRE(constituentQualifier.size() == loss.size(),
+                       "loss and constituent vector doesnt have same lenght");
+            QL_REQUIRE(constituentQualifier.size() == recovery.size(),
+                       "recovery and constituent vector doesnt have same lenght");
 
+            double totalWeight = 0.0;
+            double totalLoss = 0.0;
+            for (size_t i = 0; i < constituentQualifier.size(); ++i) {
+                std::string& name = constituentQualifier[i];
+                double w = weight[i];
+                double l = loss[i];
+                double r = recovery[i];
+                if(w > 0.0 && !QuantLib::close_enough(w, 0.0)){
+                    remainingConstituents_.push_back(name);
+                    remainingWeights_.push_back(w);
+                    totalWeight += w;
+                } else if (QuantLib::close_enough(w, 0.0)) {
+                    QL_REQUIRE(l > 0.0 && !QuantLib::close_enough(l, 0.0), "default of name " << name << " with zero loss");
+                    defaultedConstituents_.push_back(name);
+                    defaultedWeights_.push_back(l);
+                    defaultedRecoveryRates_.push_back(r);
+                    totalLossBeforeRecoveryWeight_ += l;
+                    totalLossAfterRecoveryWeight_ += l * (1.0 - r);
+                    totalRecoveryWeight_ += l * r;
+                } else{
+                    QL_FAIL("negative weight provided, check basketdata");
+                }
+            }
+            QL_REQUIRE(QuantLib::close_enough(totalLoss + totalLossWeight, 1.0), "weights not adding up to 100%.");
+        }
+    // Alive constitiuents
+        const std::vector<std::string>& remainingConstituents() const { return remainingConstituents_; }
+        std::vector<double>& remainingsWeights() const;
+        std::vector<double>& remainingNotionals(double originalNotional) const;
+        // Inspection of defaulted constituents
+        const std::vector<std::string>& defaultedConstituents() const{ return defaultedConstituents_; }
+        const std::vector<double>& defaultedWeights() const { return defaultedWeights_; }
+        const std::vector<double>& defaultedRecoveryRate() const { return defaultedRecoveryRates_; }
+        // Tranche notionals after defaults
+        double remainingTrancheNotional(double originalNotional, const double attach, const double detach) const;
+        std::pair<double, double> adjustedAttachmentDetachment(double originalNotional, const double attach,
+                                                               const double detach) const;
+        // Index factor
+        double indexFactor() const;
+        double weightCorrectionFactor() const { return weightCorrectionFactor_; }
 
-
-class CreditIndexBasketInformation {
-    
-    CreditIndexBasketInformation(double originalFullNotional, std::vector<std::string> names, std::map<std::string, double> remainingNotionals,
-                 std::map<std::string, double>& loss, std::map<std::string, double>& recoveries){};
-
-    CreditIndexBasketInformation(ore::data::BasketData& basketData);
-
-    CreditIndexBasketInformation();
-
-    double remainingTrancheNotional(double unAdjAttachPoint, double unAdjDetachPoint);
-    double originalTrancheNotional(double unAdjAttachPoint, double unAdjDetachPoint);
-    double indexFactor();
-    double trancheFactor();
-    const std::vector<std::string>& remainingNames() const { return names_; };
-    const std::vector<double>& remainingNotionals() const { return notionals_; };
-
-private:
-    double originalNotional;
-    double remainingNotional;
-    double lostNotional;
-    double recoveredNotional;
-    double adjAttachPoint;
-    double adjDetachPoint;
-    double currTotalNtl;
-
-    std::vector<std::string> names_;
-    std::vector<double> notionals_;
+    private:
+        double originalTrancheNotional_;
+        std::vector<std::string> remainingConstituents_;
+        std::vector<double> remainingWeights_;
+        std::vector<std::string> defaultedConstituents_;
+        std::vector<double> defaultedWeights_;
+        std::vector<double> defaultedRecoveryRates_;
+        double totalLossBeforeRecoveryWeight_;
+        double totalLossAfterRecoveryWeight_;
+        double totalRecoveryWeight_;
+        double weightCorrectionFactor_ = 1.0;
 };
+
+IndexTrancheNotionalCalculator makeIndexTrancheCaclulatorFromBasketData(double origTrancheNtl, double origAttach, double origDetach, const BasketData& basketData){
+    return makeIndexTrancheCaclulatorFromBasketData(origTrancheNtl / (origDetach - origAttach), basketData);
+}
+
+IndexTrancheNotionalCalculator makeIndexTrancheCaclulatorFromBasketData(double origIndexNotional, const BasketData& basketData);
+
+IndexTrancheNotionalCalculator makeIndexTrancheCaclulatorFromReferenceData(double origTrancheNtl, double origAttach, double origDetach, QuantLib::ext::shared_ptr<ReferenceDatum> cird){
+    return makeIndexTrancheCaclulatorFromReferenceData(origTrancheNtl / (origDetach - origAttach), cird);
+}
+
+IndexTrancheNotionalCalculator makeIndexTrancheCaclulatorFromReferenceData(double origIndexNotional, QuantLib::ext::shared_ptr<ReferenceDatum> cird)
+
 
 class SyntheticCDO : public Trade {
 public:

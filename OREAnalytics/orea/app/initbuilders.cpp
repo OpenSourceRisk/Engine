@@ -79,7 +79,7 @@ void initBuilders(const bool registerOREAnalytics) {
         ORE_REGISTER_ANALYTIC_BUILDER("XVA_SENSITIVITY", {}, XvaSensitivityAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("XVA_EXPLAIN", {}, XvaExplainAnalytic, false);
         ORE_REGISTER_ANALYTIC_BUILDER("CALIBRATION", {}, CalibrationAnalytic, false);
-        ORE_REGISTER_ANALYTIC_BUILDER("BASECORRELATIONIMPLY", {}, BaseCorrelationImplyAnalytic, false);
+        ORE_REGISTER_ANALYTIC_BUILDER("BASE_CORRELATION_IMPLY", {}, BaseCorrelationImplyAnalytic, false);
     }
 }
 

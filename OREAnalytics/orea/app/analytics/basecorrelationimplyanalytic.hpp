@@ -30,7 +30,7 @@ namespace analytics {
 
 class BaseCorrelationImplyAnalyticImpl : public Analytic::Impl {
 public:
-    static constexpr const char* LABEL = "BASECORRELATIONIMPLY";
+    static constexpr const char* LABEL = "BASE_CORRELATION_IMPLY";
 
     BaseCorrelationImplyAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic::Impl(inputs) {
@@ -45,7 +45,7 @@ public:
 class BaseCorrelationImplyAnalytic : public Analytic {
 public:
     BaseCorrelationImplyAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<BaseCorrelationImplyAnalyticImpl>(inputs), {"BASECORRELATIONIMPLY"},
+        : Analytic(std::make_unique<BaseCorrelationImplyAnalyticImpl>(inputs), {"BASE_CORRELATION_IMPLY"},
                    inputs) {}
 };
 

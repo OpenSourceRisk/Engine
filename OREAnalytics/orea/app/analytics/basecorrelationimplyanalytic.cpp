@@ -17,14 +17,43 @@
 */
 
 #include <orea/app/analytics/basecorrelationimplyanalytic.hpp>
+#include <ored/portfolio/cdo.hpp>
 #include <map>
+#include <qle/instruments/syntheticcdo.hpp>
 
 namespace ore {
 namespace analytics {
 
-/*******************************************************************
- * PRICING Analytic: NPV, CASHFLOW, CASHFLOWNPV, SENSITIVITY, STRESS
- *******************************************************************/
+class CDOCalibrationHelper {
+
+    CDOCalibrationHelper(const std::string underlying, double attach, double detach, QuantLib::Date& indexMaturity, const Period& indexTerm, ){
+        // build instrument
+
+
+        // build Loss Model
+
+        // build pricing engine
+
+
+    }
+
+    double impliedFairUpfront(double baseCorrelation) const{
+        baseCorrelation_->setValue(baseCorrelation);
+        double cleanNPVDetach = cdoD->cleanNPV() - cdoD->upfrontPremiumValue();
+        double cleanNPVAttach = cdoA ? cdoA->cleanNPV() - cdoA->upfrontPremiumValue() : 0.0;
+        return (cleanNPVDetach - cleanNPVAttach) / currentTrancheNotional_;
+    }
+
+private:
+    QuantLib::ext::shared_ptr<QuantExt::SyntheticCDO> cdoD;
+    QuantLib::ext::shared_ptr<QuantExt::SyntheticCDO> cdoA;
+    QuantLib::ext::shared_ptr<QuantLib::SimpleQuote> baseCorrelation_;
+    QuantLib::ext::shared_ptr<ore::data::Market> market_;
+    double currentTrancheNotional_;
+
+}
+
+
 
 void BaseCorrelationImplyAnalyticImpl::setUpConfigurations() {    
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
@@ -51,13 +80,11 @@ void BaseCorrelationImplyAnalyticImpl::runAnalytic(const QuantLib::ext::shared_p
         "/Users/matthias.groncki/dev/oreplus3/ore/Examples/Example_79/Input/itrax_cdo_prices_20241111.csv", true);
 
     struct CdoPriceData {
-        CdoPriceData(double attachPoint, double detachPoint, double upfront): 
-        attachPoint(attachPoint), detachPoint(detachPoint), upfront(upfront){}
-
-            double attachPoint;
+        double attachPoint;
         double detachPoint;
         double upfront;
-        
+        double spread;
+        Date indexMaturity;
     };
 
     std::map<std::string, std::vector<CdoPriceData>>
@@ -66,16 +93,26 @@ void BaseCorrelationImplyAnalyticImpl::runAnalytic(const QuantLib::ext::shared_p
     while(reader.next())
     {    
         auto redCode = reader.get("RedCode");
-        auto attach = reader.get("Attachment");
-        auto detach = reader.get("Detachment");
-        auto upfront = reader.get("Tranche Upfront Mid");
-        //data[redCode].push_back(CdoPriceData(attach, detach, upfront));
+        auto attach = parseReal(reader.get("Attachment"));
+        auto detach = parseReal(reader.get("Detachment"));
+        auto upfront = parseReal(reader.get("Tranche Upfront Mid"));
+        auto indexMaturity = parseDate(reader.get("Index Maturity"));
+        auto trancheSpread = parseReal(reader.get("Tranche Spread Mid"));
+        data[redCode].push_back({attach, detach, upfront, trancheSpread, indexMaturity});
     }
 
     std::cout << "Loaded Price Data" << std::endl;
+    for(const auto& [redCode, data] : data){
+        for(const auto& pd : data){
+            std::cout << redCode << "," << io::iso_date(pd.indexMaturity) << "," << pd.attachPoint << ","
+                      << pd.detachPoint << "," << pd.spread << "," << pd.upfront << std::endl;
+            // Build Instrument
+        }
+    }
+    
 
 
-    // Build Instrument
+
 
     // Search
 

@@ -196,7 +196,7 @@ void IndexCdsTrancheEngine::calculate() const {
     results_.value = results_.premiumValue + results_.protectionValue +
         results_.upfrontPremiumValue + results_.accrualRebateValue;
 
-    Real cleanNPV = results_.premiumValue + results_.protectionValue +
+    results_.cleanNPV = results_.premiumValue + results_.protectionValue +
                     results_.upfrontPremiumValue + results_.accrualRebateCurrentValue;
 
     // Fair tranche spread.
@@ -209,7 +209,7 @@ void IndexCdsTrancheEngine::calculate() const {
                           (results_.premiumValue + results_.accrualRebateCurrentValue);
     }
 
-    Real fairUpfrontClean = (cleanNPV - results_.upfrontPremiumValue) / inceptionTrancheNotional;
+    Real fairUpfrontClean = (results_.cleanNPV - results_.upfrontPremiumValue) / inceptionTrancheNotional;
 
     timer.stop();
 
@@ -239,7 +239,7 @@ void IndexCdsTrancheEngine::calculate() const {
     results_.additionalResults["accrualsDefault"] = accrualsDefault;
     results_.additionalResults["protectionLegNPV"] = results_.protectionValue;
     results_.additionalResults["protectionLegCleanNPV"] = results_.protectionValue + results_.accrualRebateCurrentValue;
-    results_.additionalResults["CleanNPV"] = cleanNPV;
+    results_.additionalResults["CleanNPV"] = results_.cleanNPV;
     results_.additionalResults["FairUpfrontClean"] = fairUpfrontClean;
     results_.additionalResults["calculationTime"] = timer.elapsed().wall * 1e-9;
 }

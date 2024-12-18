@@ -2307,6 +2307,15 @@ void OREAppInputParameters::loadParameters() {
         }
     }
 
+    /**********************
+     * Base Correlation Imply
+     **********************/
+
+    tmp = params_->get("baseCorrelationImply", "active", false);
+    if (!tmp.empty() && parseBool(tmp)) {
+        insertAnalytic("BASE_CORRELATION_IMPLY");
+    }
+
     tmp = params_->get("portfolioDetails", "active", false);
     if (!tmp.empty() && parseBool(tmp)) {
         insertAnalytic("PORTFOLIO_DETAILS");

@@ -341,7 +341,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     DLOG("Current detachment point: " << std::fixed << std::setprecision(2) << adjDetachPoint);
     DLOG("Current total notional:   " << std::fixed << std::setprecision(2) << currTotalNtl);
 
-        const auto& market = engineFactory->market();
+    const auto& market = engineFactory->market();
     auto cdoEngineBuilder = QuantLib::ext::dynamic_pointer_cast<CdoEngineBuilder>(engineFactory->builder("SyntheticCDO"));
     QL_REQUIRE(cdoEngineBuilder, "Trade " << id() << " needs a valid CdoEngineBuilder.");
     const string& config = cdoEngineBuilder->configuration(MarketContext::pricing);

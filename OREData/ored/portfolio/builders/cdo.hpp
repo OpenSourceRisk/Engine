@@ -114,6 +114,78 @@ protected:
                const QuantLib::Real fixedRecovery = QuantLib::Null<QuantLib::Real>()) override;
 };
 
+class LossModelBuilder {
+public:   
+    virtual QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel> lossModel(const vector<Real>& recoveryRates,
+                                                            bool homogeneous,
+                                                            QuantLib::RelinkableHandle<Quote> baseCorrelation) const = 0;
+};
+
+class GaussCopulaBucketingLossModelBuilder : public LossModelBuilder{
+public:
+    GaussCopulaBucketingLossModelBuilder(double gaussCopulaMin, double gaussCopulaMax, Size gaussCopulaSteps,
+                                  bool useQuadrature, Size nBuckets, bool homogeneousPoolWhenJustified,
+                                  bool useStochasticRecovery,
+                                  const std::vector<double>& rrProbs, const std::string& recoveryRateGrid)
+        : gaussCopulaMin_(gaussCopulaMin), gaussCopulaMax_(gaussCopulaMax), gaussCopulaSteps_(gaussCopulaSteps),
+          useQuadrature_(useQuadrature), nBuckets_(nBuckets), homogeneousPoolWhenJustified_(homogeneousPoolWhenJustified),
+          useStochasticRecovery_(useStochasticRecovery), rrProbs_(rrProbs), recoveryRateGrid_(recoveryRateGrid){}
+
+    QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel> lossModel(
+        const vector<Real>& recoveryRates, bool homogeneous,
+        QuantLib::RelinkableHandle<Quote> baseCorrelation) const override {
+            Size poolSize = recoveryRates.size();
+        std::vector<std::vector<Real>> recoveryProbabilities, recoveryGrids;
+        if (useStochasticRecovery_) {
+            for (Size i = 0; i < recoveryRates.size(); ++i) {
+                // Use the same recovery rate probabilities across all entites
+                recoveryProbabilities.push_back(rrProbs_);                 
+                // recovery rate grid dependent on market recovery rate
+                std::vector<Real> rrGrid(3, recoveryRates[i]); // constant recovery by default
+                QL_REQUIRE(rrProb.size() == rrGrid.size(), "recovery grid size mismatch");
+                if (recoveryRateGrid_ == "Markit2020") {
+                    if (recoveryRates[i] >= 0.1 && recoveryRates[i] <= 0.55) {
+                        rrGrid[0] = 2.0 * recoveryRates[i] - 0.1;
+                        rrGrid[1] = recoveryRates[i];
+                        rrGrid[2] = 0.1;
+                        LOG("Using recovery rate grid for entity " << i << ": " << rrGrid[0] << " " << rrGrid[1] << " " << rrGrid[2]);
+                    }
+                    else
+                        ALOG("Market recovery rate " << recoveryRates[i] << " for entity " << i << " out of range [0.1, 0.55], using constant recovery");
+                    recoveryGrids.push_back(rrGrid);
+                }
+                else if (recoveryRateGrid_ != "Constant") {
+                    QL_FAIL("recovery rate model code " << recoveryRateGrid_ << " not recognized");
+                }
+            }
+        }
+        
+        DLOG("Build ExtendedGaussianConstantLossLM");
+        QuantLib::ext::shared_ptr<QuantExt::ExtendedGaussianConstantLossLM> gaussLM(new QuantExt::ExtendedGaussianConstantLossLM(
+            baseCorrelation, recoveryRates, recoveryProbabilities, recoveryGrids, LatentModelIntegrationType::GaussianQuadrature, poolSize,
+            GaussianCopulaPolicy::initTraits()));
+    
+
+        bool homogeneous = homogeneous && homogeneousPoolWhenJustified_;
+
+        return QuantLib::ext::make_shared<QuantExt::GaussPoolLossModel>(homogeneous, gaussLM, nBuckets_, gaussCopulaMax_,
+                                                                gaussCopulaMin_, gaussCopulaSteps_, useQuadrature_,
+                                                                useStochasticRecovery_);
+    }
+
+private:
+    double gaussCopulaMin_;
+    double gaussCopulaMax_;
+    Size gaussCopulaSteps_;
+    bool useQuadrature_;
+    Size nBuckets_;
+    bool homogeneousPoolWhenJustified_;
+    bool useStochasticRecovery_;
+    std::vector<double> rrProbs_;
+    std::string recoveryRateGrid_;
+    Size poolSize_;
+};
+
 class GaussCopulaBucketingCdoEngineBuilder : public CdoEngineBuilder {
 public:
     GaussCopulaBucketingCdoEngineBuilder() : CdoEngineBuilder("GaussCopula", "Bucketing") {}
@@ -123,12 +195,14 @@ public:
                                                             const QuantLib::Date& trancheMaturity,
                                                             bool homogeneous) override {
 
-        Size poolSize = recoveryRates.size();
-
+        Real gaussCopulaMin = parseReal(modelParameter("min"));
+        Real gaussCopulaMax = parseReal(modelParameter("max"));
+        Size gaussCopulaSteps = parseInteger(modelParameter("steps"));
+        bool useQuadrature = parseBool(modelParameter("useQuadrature", {}, false, "false"));
+        Size nBuckets = parseInteger(engineParameter("buckets"));
+        // Create the base correlation quote.
         Handle<QuantExt::BaseCorrelationTermStructure> bcts =
             market_->baseCorrelation(qualifier, configuration(MarketContext::pricing));
-
-        // Create the base correlation quote.
         RelinkableHandle<Quote> correlation;
         if (detachmentPoint < 1.0) {
             const Date& bctsRd = bcts->referenceDate();
@@ -146,61 +220,21 @@ public:
 
         // Optional flag, set to false if omitted, i.e. we use determinsitic recovery by default
         bool useStochasticRecovery = parseBool(modelParameter("useStochasticRecovery", {}, false, "false"));
-
-        // Compile default recovery rate grids and probabilities for each name:
-        // Recovery rate grids have three pillars, centered around market recovery, DECREASING order : [ 2*RR - 0.1, RR, 0.1 ]
-        // Probabilities for the three pillars are symmetric around the center of the distribution and independent of the concrete rate grid
-        std::vector<std::vector<Real>> recoveryProbabilities, recoveryGrids;
+        vector<Real> rrProb;
+        string rrGridString;
         if (useStochasticRecovery) {
             string rrProbString = modelParameter("recoveryRateProbabilities");
-            string rrGridString = modelParameter("recoveryRateGrid");            
+            rrGridString= modelParameter("recoveryRateGrid");
             vector<string> rrProbStringTokens;
             boost::split(rrProbStringTokens, rrProbString, boost::is_any_of(","));
-            vector<Real> rrProb = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
-            for (Size i = 0; i < recoveryRates.size(); ++i) {
-                // Use the same recovery rate probabilities across all entites
-                recoveryProbabilities.push_back(rrProb);                 
-                // recovery rate grid dependent on market recovery rate
-                std::vector<Real> rrGrid(3, recoveryRates[i]); // constant recovery by default
-                QL_REQUIRE(rrProb.size() == rrGrid.size(), "recovery grid size mismatch");
-                if (rrGridString == "Markit2020") {
-                    if (recoveryRates[i] >= 0.1 && recoveryRates[i] <= 0.55) {
-                        rrGrid[0] = 2.0 * recoveryRates[i] - 0.1;
-                        rrGrid[1] = recoveryRates[i];
-                        rrGrid[2] = 0.1;
-                        LOG("Using recovery rate grid for entity " << i << ": " << rrGrid[0] << " " << rrGrid[1] << " " << rrGrid[2]);
-                    }
-                    else
-                        ALOG("Market recovery rate " << recoveryRates[i] << " for entity " << i << " out of range [0.1, 0.55], using constant recovery");
-                    recoveryGrids.push_back(rrGrid);
-                }
-                else if (rrGridString != "Constant") {
-                    QL_FAIL("recovery rate model code " << rrGridString << " not recognized");
-                }
-            }
+            rrProb = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
         }
-        
-        DLOG("Build ExtendedGaussianConstantLossLM");
-        QuantLib::ext::shared_ptr<QuantExt::ExtendedGaussianConstantLossLM> gaussLM(new QuantExt::ExtendedGaussianConstantLossLM(
-            correlation, recoveryRates, recoveryProbabilities, recoveryGrids, LatentModelIntegrationType::GaussianQuadrature, poolSize,
-            GaussianCopulaPolicy::initTraits()));
-        Real gaussCopulaMin = parseReal(modelParameter("min"));
-        Real gaussCopulaMax = parseReal(modelParameter("max"));
-        Size gaussCopulaSteps = parseInteger(modelParameter("steps"));
-        bool useQuadrature = parseBool(modelParameter("useQuadrature", {}, false, "false"));
-        Size nBuckets = parseInteger(engineParameter("buckets"));
-        bool homogeneousPoolWhenJustified = parseBool(engineParameter("homogeneousPoolWhenJustified"));
-
-        homogeneous = homogeneous && homogeneousPoolWhenJustified;
-        LOG("Use " << (homogeneous ? "" : "in") << "homogeneous pool loss model for qualifier " << qualifier);
-        DLOG("useQuadrature is set to " << std::boolalpha << useQuadrature);
-        return QuantLib::ext::make_shared<QuantExt::GaussPoolLossModel>(homogeneous, gaussLM, nBuckets, gaussCopulaMax,
-                                                                gaussCopulaMin, gaussCopulaSteps, useQuadrature,
-                                                                useStochasticRecovery);
+        GaussCopulaBucketingLossModelBuilder modelbuilder(gaussCopulaMin, gaussCopulaMax, gaussCopulaSteps, 
+            useQuadrature, nBuckets, homogeneous, useStochasticRecovery, rrProb, rrGridString);
+        return modelbuilder.lossModel(recoveryRates, homogeneous, correlation);
     }
-
-
 };
+
 
 class GaussCopulaMonteCarloCdoEngineBuilder : public CdoEngineBuilder {
 public:
