@@ -20,46 +20,71 @@
 #include <ored/portfolio/cdo.hpp>
 #include <map>
 #include <qle/instruments/syntheticcdo.hpp>
+#include <ql/math/solvers1d/brent.hpp>
 
 namespace ore {
 namespace analytics {
 
 class CDOCalibrationHelper {
 
-    CDOCalibrationHelper(const std::string underlying, double attach, double detach, QuantLib::Date& indexMaturity, const Period& indexTerm, ){
+    CDOCalibrationHelper(const Basket& basket, double attach, double detach, QuantLib::Date& indexMaturity, const Period& indexTerm, double spread, double baseCorrAttach){
         // build instrument
+        auto schedule = buildSchedule();
+        if (attach > 0.0 && !QuantLib::close_enough(attach, 0.0)) {
+            cdoA = ext::make_shared<SyntheticCDO>(basket, Protection::Side::Buyer, schedule, 0.0, spread,
+                                                  Actual365Fixed(), ModifiedFollowing);
+            Handle<Quote> baseCorr(ext::make_shared<SimpleQuote>(baseCorrAttach));
+            auto peA = buildPricingEngine(baseCorr, attach);
+            cdoA->setPricingEngine(peA);
+        }
+        cdoD = ext::make_shared<SyntheticCDO>(basket, Protection::Side::Buyer, schedule, 0.0, spread, Actual365Fixed(),
+                                              ModifiedFollowing);
 
-
-        // build Loss Model
-
-        // build pricing engine
-
-
+        auto peD = buildPricingEngine(Handle<Quote>(baseCorrelation_), detach);
+        cdoD->setPricingEngine(peD);
     }
 
-    double impliedFairUpfront(double baseCorrelation) const{
-        baseCorrelation_->setValue(baseCorrelation);
+
+    double impliedFairUpfront(double baseCorrelationD) const{
+        baseCorrelation_->setValue(baseCorrelationD);
         double cleanNPVDetach = cdoD->cleanNPV() - cdoD->upfrontPremiumValue();
         double cleanNPVAttach = cdoA ? cdoA->cleanNPV() - cdoA->upfrontPremiumValue() : 0.0;
         return (cleanNPVDetach - cleanNPVAttach) / currentTrancheNotional_;
     }
 
 private:
+
+    Schedule buildSchedule(const Date& indexMaturity, const Period& term) const {
+        Date startYear = indexMaturity - term;
+        Date startDate(20, Sep, startYear.year());
+        return Schedule(startDate, indexMaturity, 3 * Months, WeekendsOnly(), Unadjusted, Unadjusted,
+                        DateGeneration::CDS2015, false);
+    }
+
+    ext::shared_ptr<DefaultLossModel> buildLossModel() const;
+    ext::shared_ptr<PricingEngine> buildPricingEngine(const Handle<Quote>& baseCorrelation, double detach) const;
+
+
+
+
     QuantLib::ext::shared_ptr<QuantExt::SyntheticCDO> cdoD;
     QuantLib::ext::shared_ptr<QuantExt::SyntheticCDO> cdoA;
     QuantLib::ext::shared_ptr<QuantLib::SimpleQuote> baseCorrelation_;
     QuantLib::ext::shared_ptr<ore::data::Market> market_;
     double currentTrancheNotional_;
-
-}
-
-
+};
 
 void BaseCorrelationImplyAnalyticImpl::setUpConfigurations() {    
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
     setGenerateAdditionalResults(true);
+}
+
+
+Basket buildBasketFromReferenceData(ext::shared_ptr<Market> market, ext::shared_ptr<CreditIndexReferenceDatum> refData) {
+    QL_REQUIRE(refData != nullptr, "No refdata provided, can not build basket");
+
 }
 
 void BaseCorrelationImplyAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -101,14 +126,28 @@ void BaseCorrelationImplyAnalyticImpl::runAnalytic(const QuantLib::ext::shared_p
         data[redCode].push_back({attach, detach, upfront, trancheSpread, indexMaturity});
     }
 
+    
+
     std::cout << "Loaded Price Data" << std::endl;
-    for(const auto& [redCode, data] : data){
+    for(auto [redCode, data] : data){
+
+        std::sort(data.begin(), data.end(), [](auto& a, auto& b) {a.attach < b.attach});
+
         for(const auto& pd : data){
             std::cout << redCode << "," << io::iso_date(pd.indexMaturity) << "," << pd.attachPoint << ","
                       << pd.detachPoint << "," << pd.spread << "," << pd.upfront << std::endl;
             // Build Instrument
+            auto refDataMgr = inputs_->refDataManager();
+            auto crid = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
+                refDataMgr->getData(CreditIndexReferenceDatum::TYPE, redCode));
+
+            CDOCalibrationHelper(redCode, )
         }
     }
+    
+    
+
+    // Optimization loop
     
 
 
