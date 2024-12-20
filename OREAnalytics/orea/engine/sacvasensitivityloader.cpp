@@ -315,6 +315,10 @@ void SaCvaSensitivityLoader::loadFromRawSensis(
     const QuantLib::ext::shared_ptr<SensitivityScenarioData>& scenarioData,
     const QuantLib::ext::shared_ptr<ore::data::CounterpartyManager>& counterpartyManager) {
 
+    QL_REQUIRE(parSensiStream, "SaCvaSensitivityLoader: par sensi cube stream is not provided");
+    QL_REQUIRE(scenarioData, "SaCvaSensitivityLoader: Sensi scenario data not set");
+    QL_REQUIRE(counterpartyManager, "SaCvaSensitivityLoader: Counterparty manager not set");
+
     vector<CvaSensitivityRecord> cvaSensis;
     parSensiStream->reset();
     while (SensitivityRecord sr = parSensiStream->next()) {

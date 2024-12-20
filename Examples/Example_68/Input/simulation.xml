@@ -212,10 +212,7 @@
       </SwapIndex>
     </SwapIndices>
     <DefaultCurves>
-      <Names>
-        <Name>CPTY_A</Name>
-        <Name>BANK</Name>
-      </Names>
+      <Names></Names>
       <Tenors>1Y, 5Y</Tenors>
       <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
       <SimulateRecoveryRates>true</SimulateRecoveryRates>

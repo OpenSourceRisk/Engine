@@ -80,8 +80,8 @@
         <Currency>EUR</Currency>
         <Currency>USD</Currency>
       </Currencies>
-      <Expiries>1Y,5Y</Expiries>
-      <Terms>1Y,5Y</Terms>
+      <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y</Expiries>
+      <Terms>1Y,2Y,3Y,5Y,7Y,10Y</Terms>
       <SimulateATMOnly>true</SimulateATMOnly>
     </SwaptionVolatilities>
     
@@ -92,7 +92,7 @@
       <CurrencyPairs>
         <CurrencyPair>EURUSD</CurrencyPair>
       </CurrencyPairs>
-      <Expiries>1Y,10Y</Expiries>
+      <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y</Expiries>
     </FxVolatilities>
     
     <AggregationScenarioDataCurrencies>

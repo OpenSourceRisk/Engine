@@ -147,7 +147,7 @@ void XvaAnalyticImpl::buildScenarioSimMarket() {
     } else {
         // set useSpreadedTermstructure to true, yield better results in calibration of the CAM
         simMarketCalibration_ = QuantLib::ext::make_shared<ScenarioSimMarket>(
-            analytic()->market(), analytic()->configurations().simMarketParams,
+            analytic()->market(), offsetSimMarketParams_,
             QuantLib::ext::make_shared<FixingManager>(inputs_->asof()), configuration, *inputs_->curveConfigs().get(),
             *analytic()->configurations().todaysMarketParams, inputs_->continueOnError(), true, true,
             inputs_->allowPartialScenarios(), *inputs_->iborFallbackConfig(), false, offsetScenario_);

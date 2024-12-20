@@ -160,9 +160,11 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
     CONSOLE("XVA_SENSI: Running sensi scenarios");
 
     // run stress test
-    LOG("Run XVA Zero Sensitivity Sensitivity")
+    LOG("Run XVA Zero Sensitivity")
     auto zeroCubes = computeZeroXvaSensitivity(loader);
+    LOG("XVA Zero Sensitivity done");
     xvaSensiAnalytic->setZeroResults(zeroCubes);
+    LOG("Create Zero Sensitivity reports");
     createZeroReports(zeroCubes);
     
     if (inputs_->xvaSensiParSensi()) {
@@ -174,7 +176,7 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
     }
 }
 
-XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::computeZeroXvaSensitivity(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+ZeroSensiResults XvaSensitivityAnalyticImpl::computeZeroXvaSensitivity(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     auto simMarket = buildSimMarket(false);
     auto scenarioGenerator = buildScenarioGenerator(simMarket, false);
     std::map<size_t, ext::shared_ptr<XvaResults>> xvaResults;
@@ -183,7 +185,7 @@ XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::compute
     return convertXvaResultsToSensiCubes(xvaResults, scenarioGenerator);
 }
 
-XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::convertXvaResultsToSensiCubes(
+ZeroSensiResults XvaSensitivityAnalyticImpl::convertXvaResultsToSensiCubes(
     const std::map<size_t, QuantLib::ext::shared_ptr<XvaResults>>& xvaResults,
     const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
     static const std::vector<XvaResults::Adjustment> adjustments = {
@@ -339,7 +341,8 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
             auto newAnalytic =
                 ext::make_shared<XvaAnalytic>(inputs_, scenario, analytic()->configurations().simMarketParams);
-
+	    //newAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+	    
 	    CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
@@ -363,6 +366,7 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
 }
 
 void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSensiResults& xvaZeroSeniCubes){
+    LOG("XvaSensitivityAnalyticImpl::createZeroReports called");
     for(const auto& [valueAdjustment, cube] : xvaZeroSeniCubes.tradeCubes_){
         auto ssTrade = QuantLib::ext::make_shared<SensitivityCubeStream>(cube, inputs_->baseCurrency());
         auto nettingCube = xvaZeroSeniCubes.nettingCubes_[valueAdjustment];
@@ -374,9 +378,10 @@ void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSensiResults& xvaZeroSeni
                                        inputs_->sensiThreshold());
         analytic()->reports()[label()]["xva_zero_sensitivity_" + to_string(valueAdjustment)] = zeroSensiReport;
     }
+    LOG("XvaSensitivityAnalyticImpl::createZeroReports done");
 }
 
-XvaSensitivityAnalyticImpl::ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zeroResults) {
+ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zeroResults) {
     set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
 
     auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
@@ -489,7 +494,7 @@ void XvaSensitivityAnalyticImpl::setUpConfigurations() {
 XvaSensitivityAnalytic::XvaSensitivityAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
     : Analytic(std::make_unique<XvaSensitivityAnalyticImpl>(inputs), {"XVA_SENSITIVITY"}, inputs, true, false, false,
                false) {
-    impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
+  //impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
 }
 
 } // namespace analytics

@@ -28,9 +28,9 @@ namespace ore {
 namespace analytics {
 
 void SaCvaAnalyticImpl::setUpConfigurations() {
-
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->scenarioSimMarketParams();
+    analytic()->configurations().sensiScenarioData = inputs_->xvaSensiScenarioData();
 }
 
 void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
@@ -51,9 +51,12 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
         // inputs_->setSensiThreshold(QuantLib::Null<QuantLib::Real>());
         sensiAnalytic->runAnalytic(loader, {"XVA_SENSITIVITY"});
 
+	LOG("Insert the xva sensitivity reports into the sacva analytic");
+	analytic()->reports().insert(sensiAnalytic->reports().begin(), sensiAnalytic->reports().end());
+
         // Get the netting set cva par sensitivity stream from the sub analytic
         auto xvaSensiAnalytic = boost::dynamic_pointer_cast<XvaSensitivityAnalytic>(sensiAnalytic);
-        XvaSensitivityAnalyticImpl::ParSensiResults parResults = xvaSensiAnalytic->getParResults();
+        ParSensiResults parResults = xvaSensiAnalytic->getParResults();
         auto nettingSetCube = parResults.nettingParSensiCube_[XvaResults::Adjustment::CVA];
         auto pss = QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingSetCube, inputs_->baseCurrency());
 
@@ -66,10 +69,11 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
 	//   input into the capital calculator is sensitivity divided by shift size 0.01
 	// See https://www.bis.org/basel_framework/chapter/MAR/50.htm 
         SaCvaSensitivityLoader cvaLoader;
-	cvaLoader.loadFromRawSensis(pss, inputs_->baseCurrency(), inputs_->xvaSensiScenarioData(), inputs_->counterpartyManager());
+        cvaLoader.loadFromRawSensis(pss, inputs_->baseCurrency(), analytic()->configurations().sensiScenarioData,
+                                    inputs_->counterpartyManager());
         cvaSensis = cvaLoader.netRecords();
 
-	CONSOLEW("SA-CVA: Scaled CVA Sensitivity Report");
+        CONSOLEW("SA-CVA: Scaled CVA Sensitivity Report");
 	auto cvaSensiReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
 	ReportWriter(inputs_->reportNaString()).writeCvaSensiReport(cvaLoader.cvaSensitivityRecords(), *cvaSensiReport);
 	analytic()->reports()[label()]["cva_sensitivities"] = cvaSensiReport;

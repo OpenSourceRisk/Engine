@@ -1226,10 +1226,10 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaSensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaSensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> xvaSensiPricingEngine_;
-    bool xvaSensiParSensi_ = false;
+    bool xvaSensiParSensi_ = true;
     bool xvaSensiOutputJacobi_ = false;
     QuantLib::Real xvaSensiThreshold_ = 1e-6;
-    QuantLib::Size xvaSensiOutputPrecision_ = 2;
+    QuantLib::Size xvaSensiOutputPrecision_ = 4;
 
     /*****************
      * SA-CVA 

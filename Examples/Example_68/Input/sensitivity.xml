@@ -94,17 +94,17 @@
 			<ShiftType>Relative</ShiftType>
 			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
-			<ShiftExpiries>1Y,5Y</ShiftExpiries>
+			<ShiftExpiries>5Y</ShiftExpiries>
 			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
-			<ShiftTerms>1Y,5Y</ShiftTerms>
+			<ShiftTerms>5Y</ShiftTerms>
 		</SwaptionVolatility>
 		<SwaptionVolatility ccy="USD">
 			<ShiftType>Relative</ShiftType>
 			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
-			<ShiftExpiries>1Y,5Y</ShiftExpiries>
+			<ShiftExpiries>5Y</ShiftExpiries>
 			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
-			<ShiftTerms>1Y,5Y</ShiftTerms>
+			<ShiftTerms>5Y</ShiftTerms>
 		</SwaptionVolatility>
 	</SwaptionVolatilities>	
 	<FxVolatilities>
@@ -112,7 +112,7 @@
 			<ShiftType>Relative</ShiftType>
 			<ShiftSize>0.01</ShiftSize>
 			<ShiftScheme>Forward</ShiftScheme>
-			<ShiftExpiries>1Y,10Y</ShiftExpiries>
+			<ShiftExpiries>5Y</ShiftExpiries>
 			<ShiftStrikes>0.0000000000000000</ShiftStrikes>
 		</FxVolatility>
 		</FxVolatilities>
