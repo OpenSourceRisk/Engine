@@ -54,13 +54,11 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
 	LOG("Insert the xva sensitivity reports into the sacva analytic");
 	analytic()->reports().insert(sensiAnalytic->reports().begin(), sensiAnalytic->reports().end());
 
-        // Get the netting set cva par sensitivity stream from the sub analytic
-        auto xvaSensiAnalytic = boost::dynamic_pointer_cast<XvaSensitivityAnalytic>(sensiAnalytic);
-        ParSensiResults parResults = xvaSensiAnalytic->getParResults();
-        auto nettingSetCube = parResults.nettingParSensiCube_[XvaResults::Adjustment::CVA];
-        auto pss = QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingSetCube, inputs_->baseCurrency());
+	// Get the par cva sensitivity cube stream that we have just cached after running the sensi analytic
+	auto pss = sensiAnalytic->parCvaSensiCubeStream();
+	QL_REQUIRE(pss, "parCvaSensiCubeStream has not been populated by the xva sensitivity analytic");
 
-	// Below we use the loader to map and aggregate the par sensitivity input.
+	// Use the loader to map and aggregate the par sensitivity input.
 	// We pass scenario data to cvaLoader.loadFromRawSensis(), because the loader needs the original shift types
 	// and especially shift sizes to compute the capital calulator inputs from sensitivities, in particular:
 	// - yield curve sensis have to be calculated using abolsute shifts of 1bp = 0.0001, and the input into the

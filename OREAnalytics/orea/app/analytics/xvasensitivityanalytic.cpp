@@ -155,22 +155,17 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     // generate the stress scenarios and run dependent xva analytic under each of them
 
-    auto xvaSensiAnalytic = static_cast<XvaSensitivityAnalytic*>(analytic());
-
     CONSOLE("XVA_SENSI: Running sensi scenarios");
 
     // run stress test
     LOG("Run XVA Zero Sensitivity")
     auto zeroCubes = computeZeroXvaSensitivity(loader);
-    LOG("XVA Zero Sensitivity done");
-    xvaSensiAnalytic->setZeroResults(zeroCubes);
     LOG("Create Zero Sensitivity reports");
     createZeroReports(zeroCubes);
     
     if (inputs_->xvaSensiParSensi()) {
         LOG("Run Par Conversion")
         auto parCubes = parConversion(zeroCubes);
-	xvaSensiAnalytic->setParResults(parCubes);
         createParReports(parCubes, zeroCubes.tradeNettingSetMap_);
         LOG("Running XVA Sensitivity analytic finished.");        
     }
@@ -341,7 +336,6 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
             auto newAnalytic =
                 ext::make_shared<XvaAnalytic>(inputs_, scenario, analytic()->configurations().simMarketParams);
-	    //newAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
 	    
 	    CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
@@ -422,6 +416,13 @@ ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zero
         results.nettingParSensiCube_[valueAdjustment] =
             QuantLib::ext::make_shared<ZeroToParCube>(zeroCube, parConverter, typesDisabled, true);
     }
+
+    // Store the par sensi stream in the base anlytics class in case we want to post process later (e.g. for SACVA)
+    auto nettingSetCube = results.nettingParSensiCube_[XvaResults::Adjustment::CVA];
+    analytic()->parCvaSensiCubeStream() =
+        QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingSetCube, inputs_->baseCurrency());
+
+    QL_REQUIRE(analytic()->parCvaSensiCubeStream(), "xva sensitivity analytic failed to populate a parCvaSensiCubeStream");
 
     return results;
 }

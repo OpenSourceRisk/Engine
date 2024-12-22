@@ -112,17 +112,8 @@ private:
 class XvaSensitivityAnalytic : public Analytic {
 public:
     explicit XvaSensitivityAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
-
-    void setParResults(const ParSensiResults& results) { parResults_ = results; }
-    void setZeroResults(const ZeroSensiResults& results) { zeroResults_ = results; }
-
-    const ParSensiResults& getParResults() const { return parResults_; }
-    const ZeroSensiResults& getZeroResults() const { return zeroResults_; }
-
-private:
-    ZeroSensiResults zeroResults_;
-    ParSensiResults parResults_;
 };
 
 } // namespace analytics
 } // namespace ore
+
