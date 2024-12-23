@@ -219,6 +219,7 @@ void TRS::fromXML(XMLNode* node) {
             if (auto basketName = XMLUtils::getChildNode(underlyingTradeNodes3, "BasketName")) {
                 portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
                 returnData_.setPortfolioId(portfolioId_);
+                portfolioDeriv_ = false;
             }
         }
         QL_REQUIRE(t != nullptr, "expected 'Trade' node under 'Derivative' node");
