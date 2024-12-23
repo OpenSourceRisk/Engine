@@ -190,6 +190,7 @@ void TRS::fromXML(XMLNode* node) {
     std::vector<XMLNode*> underlyingTradeNodes2 = XMLUtils::getChildrenNodes(underlyingDataNode, "Derivative");
     if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(underlyingDataNode, "PortfolioIndexTradeData")) {
         portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
+        portfolioDeriv_ = true;
         returnData_.setPortfolioId(portfolioId_);
     }
     QL_REQUIRE(!underlyingTradeNodes.empty() || !underlyingTradeNodes2.empty() || !portfolioId_.empty(),
@@ -338,7 +339,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(fundingCurrencies.size() <= 1, "funding leg currencies must match");
     QuantLib::Real portfolioInitialPrice = 0;
 
-    if (!portfolioId_.empty() && underlying_[0]->tradeType() != "CompositeTrade") {
+    if (!portfolioId_.empty() && portfolioDeriv_) {
         populateFromReferenceData(engineFactory->referenceData());
         std::string indexName = "GENERIC-" + portfolioId_;
         RequiredFixings portfolioFixing;
