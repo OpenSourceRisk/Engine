@@ -214,6 +214,12 @@ void TRS::fromXML(XMLNode* node) {
     for (auto const n : underlyingTradeNodes2) {
         underlyingDerivativeId_.push_back(XMLUtils::getChildValue(n, "Id", true));
         auto t = XMLUtils::getChildNode(n, "Trade");
+        if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(t, "CompositeTradeData")) {
+            if (auto basketName = XMLUtils::getChildNode(underlyingTradeNodes3, "BasketName")) {
+                portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
+                returnData_.setPortfolioId(portfolioId_);
+            }
+        }
         QL_REQUIRE(t != nullptr, "expected 'Trade' node under 'Derivative' node");
         std::string tradeType = XMLUtils::getChildValue(t, "TradeType", true);
         auto u = TradeFactory::instance().build(tradeType);
@@ -331,7 +337,8 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(fundingLegPayers.size() <= 1, "funding leg payer flags must match");
     QL_REQUIRE(fundingCurrencies.size() <= 1, "funding leg currencies must match");
     QuantLib::Real portfolioInitialPrice = 0;
-    if (!portfolioId_.empty()) {
+
+    if (!portfolioId_.empty() && underlying_[0]->tradeType() != "CompositeTrade") {
         populateFromReferenceData(engineFactory->referenceData());
         std::string indexName = "GENERIC-" + portfolioId_;
         RequiredFixings portfolioFixing;

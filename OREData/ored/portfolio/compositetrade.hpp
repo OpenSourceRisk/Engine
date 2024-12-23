@@ -98,17 +98,16 @@ public:
     std::map<AssetClass, std::set<std::string>> underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const override;;
     const std::map<std::string,boost::any>& additionalData() const override;
     bool isExpired(const Date& d) const override;
+    void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const;
+    void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const;
     //@}
 
 private:
 
-    void populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager);
-    void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum);
-
     string currency_;
     Real notionalOverride_;
     string notionalCalculation_;
-    vector<QuantLib::ext::shared_ptr<Trade>> trades_;
+    mutable vector<QuantLib::ext::shared_ptr<Trade>> trades_;
     vector<Handle<Quote>> fxRates_, fxRatesNotional_;
     string portfolioId_;
     bool portfolioBasket_;

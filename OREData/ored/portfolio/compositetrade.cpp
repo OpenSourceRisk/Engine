@@ -253,6 +253,7 @@ std::map<AssetClass, std::set<std::string>>
 CompositeTrade::underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
 
     map<AssetClass, std::set<std::string>> result;
+    populateFromReferenceData(referenceDataManager);
     for (const auto& t : trades_) {
         auto underlyings = t->underlyingIndices(referenceDataManager);
         for (const auto& kv : underlyings) {
@@ -274,7 +275,7 @@ const std::map<std::string, boost::any>& CompositeTrade::additionalData() const 
     return additionalData_;
 }
 
-void CompositeTrade::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) {
+void CompositeTrade::populateFromReferenceData(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData) const{
 
     if (!portfolioId_.empty() && referenceData != nullptr &&
         (referenceData->hasData(PortfolioBasketReferenceDatum::TYPE, portfolioId_))) {
@@ -288,7 +289,7 @@ void CompositeTrade::populateFromReferenceData(const QuantLib::ext::shared_ptr<R
 }
 
 void CompositeTrade::getTradesFromReferenceData(
-    const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) {
+    const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const{
 
     DLOG("populating portfolio basket data from reference data");
     QL_REQUIRE(ptfReferenceDatum, "populateFromReferenceData(): empty cbo reference datum given");
