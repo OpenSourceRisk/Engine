@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/sacvaanalytic.hpp>
 #include <orea/engine/standardapproachcvacalculator.hpp>
 #include <orea/app/reportwriter.hpp>
@@ -45,11 +46,10 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
 
     // Generate sensitivities here if not provided
     if (cvaSensis.size() == 0) {
-        auto sacvaAnalytic = static_cast<SaCvaAnalytic*>(analytic());
-        QL_REQUIRE(sacvaAnalytic, "Analytic must be of type SaCvaAnalytic");
-        auto sensiAnalytic = dependentAnalytic(sensiLookupKey);
-        // inputs_->setSensiThreshold(QuantLib::Null<QuantLib::Real>());
-        sensiAnalytic->runAnalytic(loader, {"XVA_SENSITIVITY"});
+        string analyticsLabel = "XVA_SENSITIVITY";
+	auto sensiAnalytic = AnalyticFactory::instance().build(analyticsLabel, inputs_).second;
+        // auto sensiAnalytic = dependentAnalytic(sensiLookupKey);
+        sensiAnalytic->runAnalytic(loader, {analyticsLabel});
 
 	LOG("Insert the xva sensitivity reports into the sacva analytic");
 	analytic()->reports().insert(sensiAnalytic->reports().begin(), sensiAnalytic->reports().end());

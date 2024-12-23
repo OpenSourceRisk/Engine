@@ -50,7 +50,9 @@ public:
 
 class SaCvaAnalytic : public Analytic {
 public:
-    SaCvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    SaCvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                  const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+                  const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : Analytic(std::make_unique<SaCvaAnalyticImpl>(inputs), {"SA_CVA"}, inputs, true, true) {}
 };
 

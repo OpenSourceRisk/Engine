@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analytics/xvasensitivityanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
@@ -326,6 +327,7 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
     QL_REQUIRE(scenarioGenerator != nullptr,
                "Internal error: Can not compute XVA sensi without valid scenario generator.");
     std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>>> xvaReports;
+    auto simMarketParams = analytic()->configurations().simMarketParams;
 
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
@@ -334,8 +336,10 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
         try {
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
-            auto newAnalytic =
-                ext::make_shared<XvaAnalytic>(inputs_, scenario, analytic()->configurations().simMarketParams);
+            // auto newAnalytic =
+            //     ext::make_shared<XvaAnalytic>(inputs_, scenario, analytic()->configurations().simMarketParams);
+	    auto xvaAnalytic = AnalyticFactory::instance().build("XVA", inputs_, scenario, simMarketParams);
+            auto newAnalytic = xvaAnalytic.second;
 	    
 	    CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
@@ -490,12 +494,6 @@ void XvaSensitivityAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->xvaSensiSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->xvaSensiScenarioData();
-}
-
-XvaSensitivityAnalytic::XvaSensitivityAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<XvaSensitivityAnalyticImpl>(inputs), {"XVA_SENSITIVITY"}, inputs, true, false, false,
-               false) {
-  //impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
 }
 
 } // namespace analytics

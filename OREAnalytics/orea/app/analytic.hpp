@@ -259,7 +259,9 @@ public:
 
 class MarketDataAnalytic : public Analytic {
 public:
-    MarketDataAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    MarketDataAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                       const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+                       const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : Analytic(std::make_unique<MarketDataAnalyticImpl>(inputs), {"MARKETDATA"}, inputs) {}
 };
 

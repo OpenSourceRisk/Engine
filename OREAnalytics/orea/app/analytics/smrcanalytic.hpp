@@ -41,8 +41,10 @@ public:
 
 class SmrcAnalytic : public Analytic {
 public:
-    SmrcAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs);
-
+    SmrcAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
+                 const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+                 const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
+        : Analytic(std::make_unique<SmrcAnalyticImpl>(inputs), {"SMRC"}, inputs) {}
 };
 
 } // namespace analytics

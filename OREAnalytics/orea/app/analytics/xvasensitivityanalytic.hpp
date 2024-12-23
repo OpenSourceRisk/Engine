@@ -111,7 +111,14 @@ private:
 
 class XvaSensitivityAnalytic : public Analytic {
 public:
-    explicit XvaSensitivityAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
+    explicit XvaSensitivityAnalytic(
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
+        : Analytic(std::make_unique<XvaSensitivityAnalyticImpl>(inputs), {"XVA_SENSITIVITY"}, inputs, true, false,
+                   false, false) {
+        // impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
+    }
 };
 
 } // namespace analytics

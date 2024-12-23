@@ -27,10 +27,6 @@ void SmrcAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
 }
 
-// SmrcAnalytic
-SmrcAnalytic::SmrcAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs)
-    : Analytic(std::make_unique<SmrcAnalyticImpl>(inputs), {"SMRC"}, inputs) {}
-
 void SmrcAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                    const std::set<std::string>& runTypes) {
 

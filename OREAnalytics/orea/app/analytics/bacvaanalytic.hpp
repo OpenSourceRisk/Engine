@@ -46,7 +46,9 @@ public:
 
 class BaCvaAnalytic : public Analytic {
 public:
-    BaCvaAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs)
+    BaCvaAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
+                  const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+                  const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : Analytic(std::make_unique<BaCvaAnalyticImpl>(inputs), {"BA_CVA"}, inputs) {}
 };
 
