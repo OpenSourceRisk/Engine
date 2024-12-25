@@ -56,7 +56,6 @@ app/parameters.cpp
 app/portfolioanalyser.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
-app/xvarunner.cpp
 app/zerosensitivityloader.cpp
 cube/cube_io.cpp
 cube/cubecsvreader.cpp
@@ -250,7 +249,6 @@ app/reportwriter.hpp
 app/sensitivityrunner.hpp
 app/structuredanalyticserror.hpp
 app/structuredanalyticswarning.hpp
-app/xvarunner.hpp
 app/zerosensitivityloader.hpp
 auto_link.hpp
 cube/cube_io.hpp
