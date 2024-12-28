@@ -93,7 +93,9 @@ string getSystemDetails() {
     oss << "  Hostname               : " << os::getHostname() << endl;
     oss << "  Username               : " << os::getUsername() << endl;
     oss << "  ORE Version : " << OPEN_SOURCE_RISK_VERSION << endl;
+#ifdef GIT_HASH
     oss << "  Git Hash    : " << GIT_HASH << endl;
+#endif
     oss << "  QuantLib Version       : " << QL_VERSION << endl;
     oss << "  Boost Version          : " << BOOST_LIB_VERSION << endl;
     return oss.str();
