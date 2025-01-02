@@ -46,10 +46,9 @@ void SaCvaAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::I
 
     // Generate sensitivities here if not provided
     if (cvaSensis.size() == 0) {
-        string analyticsLabel = "XVA_SENSITIVITY";
-	auto sensiAnalytic = AnalyticFactory::instance().build(analyticsLabel, inputs_).second;
-        // auto sensiAnalytic = dependentAnalytic(sensiLookupKey);
-        sensiAnalytic->runAnalytic(loader, {analyticsLabel});
+	//auto sensiAnalytic = AnalyticFactory::instance().build(analyticsLabel, inputs_).second;
+        auto sensiAnalytic = dependentAnalytic(sensiLookupKey);
+        sensiAnalytic->runAnalytic(loader, {"XVA_SENSITIVITY"});
 
 	LOG("Insert the xva sensitivity reports into the sacva analytic");
 	analytic()->reports().insert(sensiAnalytic->reports().begin(), sensiAnalytic->reports().end());
