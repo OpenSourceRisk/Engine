@@ -743,7 +743,6 @@ void InputParameters::setSimmNameMapperFromFile(const std::string& fileName) {
 void InputParameters::setSimmBucketMapper(const std::string& xml) {
     QL_REQUIRE(simmVersion_ != "", "SIMM version not set");
     QL_REQUIRE(simmBucketMapper_ != nullptr, "SIMMbucket mapper not set");
-    //QuantLib::ext::shared_ptr<SimmBucketMapperBase> sbm = QuantLib::ext::dynamic_pointer_cast<SimmBucketMapperBase>();
     QuantLib::ext::shared_ptr<SimmBucketMapperBase> sbm = QuantLib::ext::dynamic_pointer_cast<SimmBucketMapperBase>(simmBucketMapper_);
     sbm->fromXMLString(xml);
 }

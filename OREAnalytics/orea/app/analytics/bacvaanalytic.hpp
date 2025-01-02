@@ -22,6 +22,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/saccranalytic.hpp>
 
 namespace ore {
@@ -35,8 +36,7 @@ public:
     BaCvaAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs)
         : Analytic::Impl(inputs) {
         setLabel(LABEL);
-
-        dependentAnalytics_[saccrLookupKey] = QuantLib::ext::make_shared<SaCcrAnalytic>(inputs);
+        dependentAnalytics_[saccrLookupKey] = QuantLib::ext::make_shared<SaCcrAnalytic>(inputs_);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;

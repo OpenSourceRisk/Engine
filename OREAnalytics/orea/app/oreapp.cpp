@@ -2274,6 +2274,30 @@ void OREAppInputParameters::loadParameters() {
 		 setCollateralBalancesFromFile(collBalancesFile);
              }
          }
+
+         // Commodity asset class uses SIMM name and bucket mapping for hedging set definitions
+	 // Note that Equities use reference data for that purpose
+         tmp = params_->get("saccr", "simmVersion", false);
+         if (tmp != "")
+             setSimmVersion(tmp);
+         else if (simmVersion_ == "") {
+             setSimmVersion("2.6");
+             WLOG("Setting SIMM version to 2.6 for SACCR");
+         }
+
+         tmp = params_->get("saccr", "simmNameMapping", false);
+         if (tmp != "") {
+             string nameMappingFile = (inputPath / tmp).generic_string();
+             setSimmNameMapperFromFile(nameMappingFile);
+             LOG("Loading SIMM bucket mapping from file " << nameMappingFile);
+         }
+
+         tmp = params_->get("saccr", "simmBucketMapping", false);
+         if (tmp != "") {
+             string bucketMappingFile = (inputPath / tmp).generic_string();
+             setSimmBucketMapperFromFile(bucketMappingFile);
+             LOG("Loading SIMM bucket mapping from file " << bucketMappingFile);
+         }
      }
 
      /*********************
