@@ -148,8 +148,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
         case QuantLib::LsmBasisSystem::Laguerre: {
             GaussLaguerrePolynomial p;
             ret[i] = [=](RandomVariable x) {
-                for (std::size_t i = 0; i < x.size(); ++i) {
-                    x.set(i, p.weightedValue(i, x[i]));
+                for (std::size_t j = 0; j < x.size(); ++j) {
+                    x.set(j, p.weightedValue(i, x[j]));
                 }
                 return x;
             };
@@ -157,8 +157,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
         case QuantLib::LsmBasisSystem::Hermite: {
             GaussHermitePolynomial p;
             ret[i] = [=](RandomVariable x) {
-                for (std::size_t i = 0; i < x.size(); ++i) {
-                    x.set(i, p.weightedValue(i, x[i]));
+                for (std::size_t j = 0; j < x.size(); ++j) {
+                    x.set(j, p.weightedValue(i, x[j]));
                 }
                 return x;
             };
@@ -166,8 +166,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
         case QuantLib::LsmBasisSystem::Hyperbolic: {
             GaussHyperbolicPolynomial p;
             ret[i] = [=](RandomVariable x) {
-                for (std::size_t i = 0; i < x.size(); ++i) {
-                    x.set(i, p.weightedValue(i, x[i]));
+                for (std::size_t j = 0; j < x.size(); ++j) {
+                    x.set(j, p.weightedValue(i, x[j]));
                 }
                 return x;
             };
@@ -175,8 +175,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
         case QuantLib::LsmBasisSystem::Legendre: {
             GaussLegendrePolynomial p;
             ret[i] = [=](RandomVariable x) {
-                for (std::size_t i = 0; i < x.size(); ++i) {
-                    x.set(i, p.weightedValue(i, x[i]));
+                for (std::size_t j = 0; j < x.size(); ++j) {
+                    x.set(j, p.weightedValue(i, x[j]));
                 }
                 return x;
             };
@@ -184,8 +184,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
         case QuantLib::LsmBasisSystem::Chebyshev: {
             GaussChebyshevPolynomial p;
             ret[i] = [=](RandomVariable x) {
-                for (std::size_t i = 0; i < x.size(); ++i) {
-                    x.set(i, p.weightedValue(i, x[i]));
+                for (std::size_t j = 0; j < x.size(); ++j) {
+                    x.set(j, p.weightedValue(i, x[j]));
                 }
                 return x;
             };
@@ -193,8 +193,8 @@ VF_R RandomVariableLsmBasisSystem::pathBasisSystem(Size order, QuantLib::LsmBasi
         case QuantLib::LsmBasisSystem::Chebyshev2nd: {
             GaussChebyshev2ndPolynomial p;
             ret[i] = [=](RandomVariable x) {
-                for (std::size_t i = 0; i < x.size(); ++i) {
-                    x.set(i, p.weightedValue(i, x[i]));
+                for (std::size_t j = 0; j < x.size(); ++j) {
+                    x.set(j, p.weightedValue(i, x[j]));
                 }
                 return x;
             };
