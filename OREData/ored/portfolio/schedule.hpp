@@ -113,9 +113,9 @@ public:
     ScheduleDates() {}
     //! Constructor
     ScheduleDates(const string& calendar, const string& convention, const string& tenor, const vector<string>& dates,
-                  const string& endOfMonth = "", const string& endOfMonthConvention = "")
+                  const string& endOfMonth = "", const string& endOfMonthConvention = "", bool includeDuplicateDates = false)
         : calendar_(calendar), convention_(convention), tenor_(tenor), endOfMonth_(endOfMonth),
-          endOfMonthConvention_(endOfMonthConvention), dates_(dates) {}
+          endOfMonthConvention_(endOfMonthConvention), dates_(dates), includeDuplicateDates_(includeDuplicateDates) {}
 
     //! Check if key attributes are empty
     bool hasData() const { return dates_.size() > 0 && !tenor_.empty(); }
@@ -128,11 +128,14 @@ public:
     const string& endOfMonth() const { return endOfMonth_; }
     const string& endOfMonthConvention() const { return endOfMonthConvention_; }
     const vector<string>& dates() const { return dates_; }
+    const bool includeDuplicateDates() const {return includeDuplicateDates_;} 
     //@}
 
     //! \name Modifiers
     //@{
-    vector<string>& modifyDates() { return dates_; }
+    vector<string>& modifyDates() {
+        return dates_;
+    }
     //@}
 
     //! \name Serialisation
@@ -148,6 +151,7 @@ private:
     string endOfMonthConvention_;
     vector<string> dates_;
     bool was1T_ = false;
+    bool includeDuplicateDates_ = false;
 };
 
 //! Serializable object holding Derived schedule data

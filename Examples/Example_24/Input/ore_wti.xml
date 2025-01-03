@@ -58,6 +58,11 @@
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
     </Analytic>
+    <Analytic type="calibration">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="configFile">simulation_wti.xml</Parameter>
+      <Parameter name="outputFile">calibration.csv</Parameter>
+    </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="useXvaRunner">N</Parameter>

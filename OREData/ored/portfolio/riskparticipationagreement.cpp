@@ -104,7 +104,8 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
         if (auto c = QuantLib::ext::dynamic_pointer_cast<FloatingLegData>(l.concreteLegData())) {
             hasCapFloors = hasCapFloors || !c->caps().empty();
             hasCapFloors = hasCapFloors || !c->floors().empty();
-            hasIborInArrears = hasIborInArrears || (c->isInArrears() && !isOvernightIndex(c->index()));
+            hasIborInArrears =
+                hasIborInArrears || ((c->isInArrears() && *c->isInArrears()) && !isOvernightIndex(c->index()));
         }
     }
 
@@ -202,6 +203,7 @@ void RiskParticipationAgreement::buildWithSwapUnderlying(const QuantLib::ext::sh
     // set pricing engine
     qleInstr->setPricingEngine(builder->engine(id(), this));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 }
 
 namespace {
@@ -295,6 +297,7 @@ void RiskParticipationAgreement::buildWithTlockUnderlying(const QuantLib::ext::s
 
     qleInstr->setPricingEngine(builder->engine(id(), this));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 }
 
 void RiskParticipationAgreement::fromXML(XMLNode* node) {

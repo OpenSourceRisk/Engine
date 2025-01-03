@@ -185,6 +185,7 @@ struct RandomVariable {
     bool deterministic() const { return deterministic_; }
     void updateDeterministic();
     bool initialised() const { return n_ != 0; }
+    bool isfinite() const;
     Size size() const { return n_; }
     Real operator[](const Size i) const; // undefined if uninitialized or i out of bounds
     Real at(const Size i) const;         // with checks for initialized, i within bounds

@@ -104,6 +104,7 @@ void BondRepo::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     qlInstr->setPricingEngine(builder->engine(securityLegData_.incomeCurveId()));
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(qlInstr);
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     // set additionalData
     additionalData_["underlyingSecurityId"] = securityLegData_.securityId();

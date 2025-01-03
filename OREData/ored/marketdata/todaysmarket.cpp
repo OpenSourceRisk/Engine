@@ -111,21 +111,20 @@ void TodaysMarket::initialise(const Date& asof) {
     // Fixings
 
     if (loadFixings_) {
-        // Apply them now in case a curve builder needs them
+        // Index fixings - apply them now in case a curve builder needs them
         LOG("Todays Market Loading Fixings");
         timer.start();
         applyFixings(loader_->loadFixings());
         timings["1 load fixings"] = timer.elapsed().wall;
         LOG("Todays Market Loading Fixing done.");
+
+        // Dividends - apply them now in case a curve builder needs them
+        LOG("Todays Market Loading Dividends");
+        timer.start();
+        applyDividends(loader_->loadDividends());
+        timings["2 load dividends"] = timer.elapsed().wall;
+        LOG("Todays Market Loading Dividends done.");
     }
-
-    // Dividends - apply them now in case a curve builder needs them
-
-    LOG("Todays Market Loading Dividends");
-    timer.start();
-    applyDividends(loader_->loadDividends());
-    timings["2 load dividends"] = timer.elapsed().wall;
-    LOG("Todays Market Loading Dividends done.");
 
     // Add all FX quotes from the loader to Triangulation
     timer.start();
@@ -181,7 +180,7 @@ void TodaysMarket::initialise(const Date& asof) {
 
             timer.start();
             Graph& g = dependencies_[configuration.first];
-            IndexMap index = QuantLib::ext::get(boost::vertex_index, g);
+            IndexMap index = boost::get(boost::vertex_index, g);
             std::vector<Vertex> order;
             try {
                 boost::topological_sort(g, std::back_inserter(order));
@@ -848,7 +847,7 @@ void TodaysMarket::require(const MarketObject o, const string& name, const strin
     Vertex node = nullptr;
 
     Graph& g = tmp->second;
-    IndexMap index = QuantLib::ext::get(boost::vertex_index, g);
+    IndexMap index = boost::get(boost::vertex_index, g);
 
     VertexIterator v, vend;
     bool found = false;

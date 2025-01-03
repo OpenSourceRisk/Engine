@@ -84,7 +84,7 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
     }
 }
 
-void fillIncompleteMatrix(Matrix& mat, bool interpRows = true, Real blank = QL_NULL_REAL) {
+void fillIncompleteMatrix(Matrix& mat, bool interpRows = true, Real blank = QuantLib::Null<Real>()) {
     QL_REQUIRE(mat.columns() > 0 && mat.rows() > 0, "Matrix has no elements.");
 
     // check if already complete

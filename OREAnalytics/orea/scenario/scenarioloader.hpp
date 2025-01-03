@@ -109,7 +109,7 @@ public:
      /*! Constructor that loads scenarios, read from \p scenarioReader, for given dates */
     HistoricalScenarioLoader(
         //! A scenario reader that feeds the loader with scenarios
-        const boost::shared_ptr<ScenarioReader>& scenarioReader,
+        const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader,
         //! The first date to load a scenario for
         const std::set<QuantLib::Date>& dates);
 

@@ -122,7 +122,7 @@ QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> ParStressTestC
             try {
                 LOG("ParStressConverter: Scenario " << scenario.label << " Convert par shifts to zero shifts");
                 auto convertedScenario = converter.convertScenario(scenario);
-                results->data().push_back(std::move(convertedScenario));
+                results->setData(convertedScenario);
             } catch (const std::exception& e) {
                 StructuredAnalyticsWarningMessage("ParStressConversion", "ScenarioConversionFailed",
                                                   "Skip Scenario " + scenario.label + ", got :" + e.what())
@@ -130,7 +130,7 @@ QuantLib::ext::shared_ptr<ore::analytics::StressTestScenarioData> ParStressTestC
             }
         } else {
             LOG("ParStressConverter: Skip scenario " << scenario.label << ", it contains only zero shifts");
-            results->data().push_back(scenario);
+            results->setData(scenario);
         }
     }
     return results;

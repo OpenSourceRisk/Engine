@@ -45,7 +45,7 @@ class EquityMarginCouponPricer;
 /*!
     \ingroup cashflows
 */
-class EquityMarginCoupon : public Coupon, public Observer {
+class EquityMarginCoupon : public Coupon {
 public:
     EquityMarginCoupon(const Date& paymentDate, Real nominal, Rate rate, Real marginFactor, const Date& startDate, const Date& endDate, Natural fixingDays,
                  const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve, const DayCounter& dayCounter,

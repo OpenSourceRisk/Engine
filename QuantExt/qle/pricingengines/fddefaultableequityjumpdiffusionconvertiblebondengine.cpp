@@ -101,7 +101,8 @@ Real FdDefaultableEquityJumpDiffusionConvertibleBondEngine::softCallBarrier(cons
         Date d = today - 1;
         Real triggerPastHit = 0.0;
         for (Real pastDt = static_cast<double>(today - d) / 365.25;
-             pastDt > M - t || QuantLib::close_enough(pastDt, M - t); d = d - 1 * Days) {
+             pastDt < M - t || QuantLib::close_enough(pastDt, M - t);
+             d = d - 1 * Days, pastDt = static_cast<double>(today - d) / 365.25) {
             if (model_->equity()->fixing(model_->equity()->fixingCalendar().adjust(d, Preceding)) > r * n / cr)
                 triggerPastHit += 1.0 / 365.25;
         }

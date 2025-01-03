@@ -296,10 +296,10 @@ BlackStyleSwaptionEngineDeltaGamma<Spec>::BlackStyleSwaptionEngineDeltaGamma(
 
 template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate() const {
     Date exerciseDate = arguments_.exercise->date(0);
-    VanillaSwap swap = *arguments_.swap;
-    Rate strike = swap.fixedRate();
+    FixedVsFloatingSwap* swap = arguments_.swap.get();
+    Rate strike = swap->fixedRate();
 
-    std::vector<Leg> floatLeg(1, swap.leg(1)), fixedLeg(1, swap.leg(0));
+    std::vector<Leg> floatLeg(1, swap->leg(1)), fixedLeg(1, swap->leg(0));
     std::vector<bool> payerFloat(1, false), payerFixed(1, false);
     QuantLib::Swap swapFloatLeg(floatLeg, payerFloat), swapFixedLeg(fixedLeg, payerFixed);
 
@@ -309,20 +309,20 @@ template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate()
     QuantLib::ext::shared_ptr<PricingEngine> engine2 = QuantLib::ext::make_shared<DiscountingSwapEngineDeltaGamma>(
         discountCurve_, bucketTimesDeltaGamma_, computeDeltaVega_, computeGamma_, true, linearInZero_);
 
-    swap.setPricingEngine(engine);
+    swap->setPricingEngine(engine);
     swapFloatLeg.setPricingEngine(engine1);
     swapFixedLeg.setPricingEngine(engine2);
 
     Rate atmForward = swapFloatLeg.NPV() / swapFixedLeg.legBPS(0);
 
     // If we allow for non-zero spreads, more adjustments are needed than below, investigate this later
-    QL_REQUIRE(QuantLib::close_enough(swap.spread(), 0.0), "BlackSwaptionEngineDeltaGamma requires zero spread");
+    QL_REQUIRE(QuantLib::close_enough(swap->spread(), 0.0), "BlackSwaptionEngineDeltaGamma requires zero spread");
 
     // Volatilities are quoted for zero-spreaded swaps.
     // Therefore, any spread on the floating leg must be removed
     // with a corresponding correction on the fixed leg.
-    // if (swap.spread() != 0.0) {
-    //     Spread correction = swap.spread() * std::fabs(swap.floatingLegBPS() / swap.fixedLegBPS());
+    // if (swap->spread() != 0.0) {
+    //     Spread correction = swap->spread() * std::fabs(swap->floatingLegBPS() / swap->fixedLegBPS());
     //     strike -= correction;
     //     atmForward -= correction;
     //     results_.additionalResults["spreadCorrection"] = correction;
@@ -333,13 +333,13 @@ template <class Spec> void BlackStyleSwaptionEngineDeltaGamma<Spec>::calculate()
     results_.additionalResults["strike"] = strike;
     results_.additionalResults["atmForward"] = atmForward;
 
-    swap.setPricingEngine(QuantLib::ext::shared_ptr<PricingEngine>(new DiscountingSwapEngine(discountCurve_, false)));
+    swap->setPricingEngine(QuantLib::ext::shared_ptr<PricingEngine>(new DiscountingSwapEngine(discountCurve_, false)));
 
     // TODO this is for physical settlement only, add pricing + sensitivities for cash settlement
-    Real annuity = std::fabs(swap.fixedLegBPS()) / 1.0E-4;
+    Real annuity = std::fabs(swap->fixedLegBPS()) / 1.0E-4;
     results_.additionalResults["annuity"] = annuity;
 
-    Time swapLength = vol_->swapLength(swap.floatingSchedule().dates().front(), swap.floatingSchedule().dates().back());
+    Time swapLength = vol_->swapLength(swap->floatingSchedule().dates().front(), swap->floatingSchedule().dates().back());
     results_.additionalResults["swapLength"] = swapLength;
 
     Real variance = vol_->blackVariance(exerciseDate, swapLength, strike);

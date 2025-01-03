@@ -74,6 +74,7 @@ private:
     //@{
     void performCalculations() const override;
     //@}
+    void updateBaseDate() const;
 
 protected:
     //! \name YoYInflationTermStructure Interface
@@ -83,6 +84,8 @@ protected:
     std::vector<Handle<Quote> > quotes_;
     bool indexIsInterpolated_;
     mutable Date baseDate_;
+    // Need the observation lag to recompute the new base date when the evaluation date moves.
+    Period observationLag_;
 };
 
 // template definitions
@@ -93,10 +96,13 @@ YoYInflationCurveObserverMoving<Interpolator>::YoYInflationCurveObserverMoving(
     Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
     const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)
-    : YoYInflationTermStructure(settlementDays, calendar, dayCounter, rates[0]->value(), lag, frequency, indexIsInterpolated, seasonality),
-      InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates), indexIsInterpolated_(indexIsInterpolated) {
+    : YoYInflationTermStructure(settlementDays, calendar, Date(), (rates.empty() ? Null<Rate>() : rates[0]->value()),
+                                lag, frequency, indexIsInterpolated, dayCounter, seasonality),
+      InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates),
+      indexIsInterpolated_(indexIsInterpolated), observationLag_(lag) {
 
     QL_REQUIRE(times.size() > 1, "too few times: " << times.size());
+    updateBaseDate();
     this->times_.resize(times.size());
     this->times_[0] = times[0];
     for (Size i = 1; i < times.size(); i++) {
@@ -115,7 +121,6 @@ YoYInflationCurveObserverMoving<Interpolator>::YoYInflationCurveObserverMoving(
     this->interpolation_ =
         this->interpolator_.interpolate(this->times_.begin(), this->times_.end(), this->data_.begin());
     this->interpolation_.update();
-
     // register with each of the quotes
     for (Size i = 0; i < this->quotes_.size(); i++)
         registerWith(this->quotes_[i]);
@@ -156,20 +161,24 @@ template <class T> inline void YoYInflationCurveObserverMoving<T>::update() {
 }
 
 template <class T> inline void YoYInflationCurveObserverMoving<T>::performCalculations() const {
-    Date d = Settings::instance().evaluationDate();
-    Date d0 = d - this->observationLag();
-    if (!indexIsInterpolated_) {
-        baseDate_ = inflationPeriod(d0, this->frequency_).first;
-    } else {
-        baseDate_ = d0;
-    }
-
+    updateBaseDate();
     for (Size i = 0; i < this->times_.size(); ++i)
         this->data_[i] = quotes_[i]->value();
     this->interpolation_ =
         this->interpolator_.interpolate(this->times_.begin(), this->times_.end(), this->data_.begin());
     this->interpolation_.update();
 }
+
+template <class T> inline void YoYInflationCurveObserverMoving<T>::updateBaseDate() const {
+    Date d = Settings::instance().evaluationDate();
+    Date d0 = d - this->observationLag_;
+    if (!indexIsInterpolated_) {
+        baseDate_ = inflationPeriod(d0, this->frequency_).first;
+    } else {
+        baseDate_ = d0;
+    }
+}
+
 } // namespace QuantExt
 
 #endif

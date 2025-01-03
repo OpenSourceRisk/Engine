@@ -72,12 +72,14 @@ ScriptedInstrumentPricingEngineCG::~ScriptedInstrumentPricingEngineCG() {
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
     const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
-    const QuantLib::ext::shared_ptr<Context>& context, const Model::McParams& mcParams, const std::string& script,
+    const QuantLib::ext::shared_ptr<Context>& context, const Model::McParams& mcParams,
+    const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives, const std::string& script,
     const bool interactive, const bool generateAdditionalResults, const bool includePastCashflows,
     const bool useCachedSensis, const bool useExternalComputeFramework,
     const bool useDoublePrecisionForExternalCalculation)
     : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
-      mcParams_(mcParams), script_(script), interactive_(interactive),
+      mcParams_(mcParams), indicatorSmoothingForValues_(indicatorSmoothingForValues),
+      indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives), script_(script), interactive_(interactive),
       generateAdditionalResults_(generateAdditionalResults), includePastCashflows_(includePastCashflows),
       useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework),
       useDoublePrecisionForExternalCalculation_(useDoublePrecisionForExternalCalculation) {
@@ -93,10 +95,10 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
         opsExternal_ = getExternalRandomVariableOps();
         gradsExternal_ = getExternalRandomVariableGradients();
     } else {
-        ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.0,
-                                    mcParams_.regressionVarianceCutoff);
-        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType, 0.2,
-                                            mcParams_.regressionVarianceCutoff);
+        ops_ = getRandomVariableOps(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                    indicatorSmoothingForValues_, mcParams_.regressionVarianceCutoff);
+        grads_ = getRandomVariableGradients(model_->size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                            indicatorSmoothingForDerivatives_, mcParams_.regressionVarianceCutoff);
     }
 }
 
@@ -125,7 +127,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
 
         for (auto const& v : workingContext_->scalars) {
             if (v.second.which() == ValueTypeWhich::Number) {
-                auto r = QuantLib::ext::get<RandomVariable>(v.second);
+                auto r = boost::get<RandomVariable>(v.second);
                 QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
                                                   << v.first << "' from initial context to be deterministic, got "
                                                   << r);
@@ -136,7 +138,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
         for (auto const& a : workingContext_->arrays) {
             for (Size i = 0; i < a.second.size(); ++i) {
                 if (a.second[i].which() == ValueTypeWhich::Number) {
-                    auto r = QuantLib::ext::get<RandomVariable>(a.second[i]);
+                    auto r = boost::get<RandomVariable>(a.second[i]);
                     QL_REQUIRE(r.deterministic(), "ScriptedInstrumentPricingEngineCG::calculate(): expected variable '"
                                                       << a.first << "[" << i
                                                       << "]' from initial context to be deterministic, got " << r);
@@ -423,6 +425,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                     discount = model_->getDirectDiscountT0(paylog->dates().at(i), paylog->currencies().at(i));
                     cashFlowResults[i].amount /= fx * discount;
                 }
+                cashFlowResults[i].fixingDate = paylog->obsDates().at(i);
                 cashFlowResults[i].payDate = paylog->dates().at(i);
                 cashFlowResults[i].currency = paylog->currencies().at(i);
                 cashFlowResults[i].legNumber = paylog->legNos().at(i);
@@ -475,7 +478,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                                                                               << baseModelParams_[i].first);
             Real tmp = sensis_[i] * (modelParams[i].second - baseModelParams_[i].second);
             npv += tmp;
-            DLOG("node " << modelParams[i].first << ": [" << modelParams[i].second << " (current) - "
+            TLOG("node " << modelParams[i].first << ": [" << modelParams[i].second << " (current) - "
                          << baseModelParams_[i].second << " (base) ] * " << sensis_[i] << " (delta) => " << tmp);
         }
 

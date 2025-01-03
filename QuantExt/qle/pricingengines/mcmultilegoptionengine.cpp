@@ -57,7 +57,8 @@ McMultiLegOptionEngine::McMultiLegOptionEngine(
                              calibrationPathGenerator, pricingPathGenerator, calibrationSamples, pricingSamples,
                              calibrationSeed, pricingSeed, polynomOrder, polynomType, ordering, directionIntegers,
                              {discountCurve}, simulationDates, stickyCloseOutDates, externalModelIndices,
-                             minimalObsDate, regressorModel, regressionVarianceCutoff) {}
+                             minimalObsDate, regressorModel, regressionVarianceCutoff, recalibrateOnStickyCloseOutDates,
+                             reevaluateExerciseInStickyRun) {}
 
 void McMultiLegOptionEngine::calculate() const {
 
@@ -66,6 +67,7 @@ void McMultiLegOptionEngine::calculate() const {
     payer_ = arguments_.payer;
     exercise_ = arguments_.exercise;
     optionSettlement_ = arguments_.settlementType;
+    cashSettlementDates_ = arguments_.settlementDates;
 
     McMultiLegBaseEngine::calculate();
 

@@ -34,7 +34,8 @@ public:
     IndexCdsOptionBaseEngine(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
                              QuantLib::Real recovery, const Handle<YieldTermStructure>& discountSwapCurrency,
                              const Handle<YieldTermStructure>& discountTradeCollateral,
-                             const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility);
+                             const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility,
+                             const bool generateAdditionalResults = true);
 
     /*! Constructor taking a vector of default probability term structures bootstrapped from the index constituent
         spread curves and a vector of associated recovery rates.
@@ -44,7 +45,7 @@ public:
         const std::vector<QuantLib::Real>& recoveries, const Handle<YieldTermStructure>& discountSwapCurrency,
         const Handle<YieldTermStructure>& discountTradeCollateral,
         const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility,
-        QuantLib::Real indexRecovery = QuantLib::Null<QuantLib::Real>());
+        QuantLib::Real indexRecovery = QuantLib::Null<QuantLib::Real>(), const bool generateAdditionalResults = true);
 
     //! \name Inspectors
     //@{
@@ -79,6 +80,8 @@ protected:
 
     //! Assumed index recovery used in the flat strike spread curve calculation if provided.
     QuantLib::Real indexRecovery_;
+
+    bool generateAdditionalResults_;
 
     //! Store the underlying index CDS notional(s) during calculation.
     mutable std::vector<QuantLib::Real> notionals_;

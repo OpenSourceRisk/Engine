@@ -5,7 +5,6 @@
     <ModelParameters/>
     <Engine>DiscountingFxForwardEngine</Engine>
     <EngineParameters>
-      <Parameter name="includeSettlementDateFlows">true</Parameter>      
     </EngineParameters>
   </Product>
   <Product type="FxOption">

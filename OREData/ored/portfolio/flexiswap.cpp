@@ -229,6 +229,7 @@ void FlexiSwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
         builder->engine(id(), "", index.empty() ? ccy_str : IndexNameTranslator::instance().oreName(index->name()),
                         expiryDates, flexiSwap->maturityDate(), strikes));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     // FIXME this won't work for exposure, currently not supported
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(flexiSwap);

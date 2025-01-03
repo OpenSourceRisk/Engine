@@ -38,6 +38,7 @@ namespace data {
       "        REQUIRE ExpiryDate >= BarrierMonitoringDates[SIZE(BarrierMonitoringDates)];\n"
       "\n"
       "        NUMBER KnockedIn, KnockedOut, Active, rebate, TransatlanticActive;\n"
+      "        NUMBER Exercised, Triggered, TransatlanticTriggered;\n"
       "        NUMBER U, i, k, d, currentNotional, levelIndex;\n"
       "\n"
       "        FOR d IN (1, SIZE(BarrierMonitoringDates), 1) DO\n"
@@ -52,6 +53,7 @@ namespace data {
       "                 {BarrierTypes[i] == 2 AND U >= BarrierLevels[levelIndex]} THEN\n"
       "    	           IF KnockedOut == 0 THEN\n"
       "                  KnockedIn = 1;\n"
+      "                  Triggered = 1;\n"
       "  	           END;\n"
       "              END;\n"
       "\n"  
@@ -66,6 +68,7 @@ namespace data {
       "                     END;\n"
       "                   END;\n"
       "                   KnockedOut = 1;\n"
+      "                   Triggered = 1;\n"
       "                 END;\n"
       "              END;\n"
       "\n"
@@ -89,6 +92,7 @@ namespace data {
       "	       END;\n"
       "\n"
       "	       TransatlanticActive = 1;\n"
+      "	       TransatlanticTriggered = 0;\n"
       "        FOR k IN (1, SIZE(Underlyings), 1) DO\n"
       "          REQUIRE TransatlanticBarrierType[k] >= 0  AND TransatlanticBarrierType[k] <= 4;\n"
       "          IF { TransatlanticBarrierType[k] == 1 AND Underlyings[k](ExpiryDate) >= TransatlanticBarrierLevel[k]  } OR\n"
@@ -96,6 +100,7 @@ namespace data {
       "             { TransatlanticBarrierType[k] == 3 AND Underlyings[k](ExpiryDate) < TransatlanticBarrierLevel[k] } OR\n"
       "             { TransatlanticBarrierType[k] == 4 AND Underlyings[k](ExpiryDate) > TransatlanticBarrierLevel[k] } THEN\n"
       "            TransatlanticActive = 0;\n"
+      "	           TransatlanticTriggered = 1;\n"
       "          END;\n"
       "        END;\n"
       "\n"
@@ -108,6 +113,10 @@ namespace data {
       "	         value = Active * TransatlanticActive * PAY( LongShort * Amount, ExpiryDate, SettlementDate, PayCurrency ) +\n"
       "                  rebate;\n"
       "	       END;\n"
+      "\n"
+      "        IF value > 0 THEN\n"
+      "          Exercised = 1;\n"
+      "        END;\n"
       "\n"
       "        IF PayoffType == 0 THEN\n"
       "          currentNotional = Quantity * Strike;\n"
@@ -508,7 +517,10 @@ void GenericBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFactory>&
         {{"currentNotional", "currentNotional"},
          {"notionalCurrency", "PayCurrency"},
          {"Active", "Active"},
-         {"TransatlanticActive", "TransatlanticActive"}},
+         {"TriggerProbability", "Triggered"},
+         {"ExerciseProbability", "Exercised"},
+         {"TransatlanticActive", "TransatlanticActive"},
+         {"TransatlanticTriggered", "TransatlanticTriggered"}},
         {}, {}, {ScriptedTradeScriptData::CalibrationData("Underlyings", {"Strike", "BarrierLevels"})});
     script_["FD"] = ScriptedTradeScriptData(
         fdscript, "value", {{"currentNotional", "currentNotional"}, {"notionalCurrency", "PayCurrency"}}, {}, {},

@@ -72,9 +72,9 @@ void AnalyticLgmSwaptionEngine::clearCache() {
 
 Real AnalyticLgmSwaptionEngine::flatAmount(const Size k) const {
     Date reference = p_->termStructure()->referenceDate();
-    QuantLib::ext::shared_ptr<IborIndex> index =
-        arguments_.swap ? arguments_.swap->iborIndex() : arguments_.swapOis->overnightIndex();
-    if (arguments_.swapOis) {
+    QuantLib::ext::shared_ptr<IborIndex> index = arguments_.swap->iborIndex();
+    QuantLib::ext::shared_ptr<OvernightIndex> ois = QuantLib::ext::dynamic_pointer_cast<OvernightIndex>(index);
+    if (ois) {
         auto on = QuantLib::ext::dynamic_pointer_cast<QuantLib::OvernightIndexedCoupon>(floatingLeg_[k]);
         QL_REQUIRE(on, "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to "
                        "QuantLib::OvernightIndexedCoupon.");
@@ -139,29 +139,26 @@ void AnalyticLgmSwaptionEngine::calculate() const {
 
         Option::Type type = arguments_.type == VanillaSwap::Payer ? Option::Call : Option::Put;
 
-        QL_REQUIRE(
-            arguments_.swap || arguments_.swapOis,
-            "AnalyticalLgmSwaptionEngine::calculate(): internal error, expected either swap or swapOis to be set.");
-        const Schedule& fixedSchedule =
-            arguments_.swap ? arguments_.swap->fixedSchedule() : arguments_.swapOis->schedule();
-        const Schedule& floatSchedule =
-            arguments_.swap ? arguments_.swap->floatingSchedule() : arguments_.swapOis->schedule();
+        QL_REQUIRE(arguments_.swap != nullptr,
+                   "AnalyticalLgmSwaptionEngine::calculate(): internal error, expected swap to be set.");
+        const Schedule& fixedSchedule = arguments_.swap->fixedSchedule();
+        const Schedule& floatSchedule = arguments_.swap->floatingSchedule();
 
         j1_ = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry) -
               fixedSchedule.dates().begin();
         k1_ = std::lower_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry) -
               floatSchedule.dates().begin();
 
-        nominal_ = arguments_.swap ? arguments_.swap->nominal() : arguments_.swapOis->nominal();
+        nominal_ = arguments_.swap->nominal();
 
         fixedLeg_.clear();
 	floatingLeg_.clear();
-	for(auto const& c: (arguments_.swap ? arguments_.swap->fixedLeg() : arguments_.swapOis->fixedLeg())) {
+	for(auto const& c: arguments_.swap->fixedLeg()) {
 	    fixedLeg_.push_back(QuantLib::ext::dynamic_pointer_cast<FixedRateCoupon>(c));
             QL_REQUIRE(fixedLeg_.back(),
                        "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to FixedRateCoupon");
         }
-	for(auto const& c: (arguments_.swap ? arguments_.swap->floatingLeg() : arguments_.swapOis->overnightLeg())) {
+	for(auto const& c: arguments_.swap->floatingLeg()) {
 	    floatingLeg_.push_back(QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(c));
             QL_REQUIRE(
                 floatingLeg_.back(),

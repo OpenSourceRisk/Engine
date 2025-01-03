@@ -93,34 +93,6 @@
       <JarrowYildirim index="EUHICPXT">
         <Currency>EUR</Currency>
         <CalibrationType>Bootstrap</CalibrationType>
-        <RealRate>
-          <Volatility>
-            <Calibrate>Y</Calibrate>
-            <VolatilityType>Hagan</VolatilityType>
-            <ParamType>Piecewise</ParamType>
-            <TimeGrid/>
-            <InitialValue>0.0001</InitialValue>
-          </Volatility>
-          <Reversion>
-            <Calibrate>N</Calibrate>
-            <ReversionType>HullWhite</ReversionType>
-            <ParamType>Constant</ParamType>
-            <TimeGrid/>
-            <InitialValue>0.5</InitialValue>
-          </Reversion>
-          <ParameterTransformation>
-            <ShiftHorizon>0.0</ShiftHorizon>
-            <Scaling>1.0</Scaling>
-          </ParameterTransformation>
-        </RealRate>
-        <Index>
-          <Volatility>
-            <Calibrate>Y</Calibrate>
-            <ParamType>Piecewise</ParamType>
-            <TimeGrid/>
-            <InitialValue>0.0001</InitialValue>
-          </Volatility>
-        </Index>
         <CalibrationBaskets>
           <CalibrationBasket parameter="Index">
             <CpiCapFloor>
@@ -167,6 +139,34 @@
             </YoYSwap>
           </CalibrationBasket>
         </CalibrationBaskets>
+        <RealRate>
+          <Volatility>
+            <VolatilityType>Hagan</VolatilityType>
+            <Calibrate>Y</Calibrate>
+            <ParamType>Piecewise</ParamType>
+            <TimeGrid/>
+            <InitialValue>0.0001</InitialValue>
+          </Volatility>
+          <Reversion>
+            <ReversionType>HullWhite</ReversionType>
+            <Calibrate>N</Calibrate>
+            <ParamType>Constant</ParamType>
+            <TimeGrid/>
+            <InitialValue>0.5</InitialValue>
+          </Reversion>
+          <ParameterTransformation>
+            <ShiftHorizon>0.0</ShiftHorizon>
+            <Scaling>1.0</Scaling>
+          </ParameterTransformation>
+        </RealRate>
+        <Index>
+          <Volatility>
+            <Calibrate>Y</Calibrate>
+            <ParamType>Piecewise</ParamType>
+            <TimeGrid/>
+            <InitialValue>0.0001</InitialValue>
+          </Volatility>
+        </Index>
         <CalibrationConfiguration>
           <RmseTolerance>0.00000001</RmseTolerance>
           <MaxIterations>40</MaxIterations>
@@ -185,34 +185,6 @@
       <JarrowYildirim index="UKRPI">
         <Currency>GBP</Currency>
         <CalibrationType>Bootstrap</CalibrationType>
-        <RealRate>
-          <Volatility>
-            <Calibrate>Y</Calibrate>
-            <VolatilityType>Hagan</VolatilityType>
-            <ParamType>Piecewise</ParamType>
-            <TimeGrid/>
-            <InitialValue>0.0001</InitialValue>
-          </Volatility>
-          <Reversion>
-            <Calibrate>N</Calibrate>
-            <ReversionType>HullWhite</ReversionType>
-            <ParamType>Constant</ParamType>
-            <TimeGrid/>
-            <InitialValue>0.5</InitialValue>
-          </Reversion>
-          <ParameterTransformation>
-            <ShiftHorizon>0.0</ShiftHorizon>
-            <Scaling>1.0</Scaling>
-          </ParameterTransformation>
-        </RealRate>
-        <Index>
-          <Volatility>
-            <Calibrate>Y</Calibrate>
-            <ParamType>Piecewise</ParamType>
-            <TimeGrid/>
-            <InitialValue>0.0001</InitialValue>
-          </Volatility>
-        </Index>
         <CalibrationBaskets>
           <CalibrationBasket parameter="Index">
             <CpiCapFloor>
@@ -259,6 +231,34 @@
             </YoYSwap>
           </CalibrationBasket>
         </CalibrationBaskets>
+        <RealRate>
+          <Volatility>
+            <VolatilityType>Hagan</VolatilityType>
+            <Calibrate>Y</Calibrate>
+            <ParamType>Piecewise</ParamType>
+            <TimeGrid/>
+            <InitialValue>0.0001</InitialValue>
+          </Volatility>
+          <Reversion>
+            <ReversionType>HullWhite</ReversionType>
+            <Calibrate>N</Calibrate>
+            <ParamType>Constant</ParamType>
+            <TimeGrid/>
+            <InitialValue>0.5</InitialValue>
+          </Reversion>
+          <ParameterTransformation>
+            <ShiftHorizon>0.0</ShiftHorizon>
+            <Scaling>1.0</Scaling>
+          </ParameterTransformation>
+        </RealRate>
+        <Index>
+          <Volatility>
+            <Calibrate>Y</Calibrate>
+            <ParamType>Piecewise</ParamType>
+            <TimeGrid/>
+            <InitialValue>0.0001</InitialValue>
+          </Volatility>
+        </Index>
         <CalibrationConfiguration>
           <RmseTolerance>0.00000001</RmseTolerance>
           <MaxIterations>40</MaxIterations>

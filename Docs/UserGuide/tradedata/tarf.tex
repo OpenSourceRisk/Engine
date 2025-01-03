@@ -242,7 +242,7 @@ unit/share/contract of the underlying equity or commodity, expressed in the curr
     
 Allowable values: For each range, see \ref{ss:rangebound}. Note that an interval/range can't have both a local \lstinline!Strike!  and a local \lstinline!StrikeAdjustment!. If no global \lstinline!Strike! is given, each interval/range must have a local \lstinline!Strike!.
 
-    \item Barriers[Optional]: Specification of barriers, see \ref{ss:barrier_data}. Multiple \lstinline!BarrierData! sub-nodes can be included within the \lstinline!Barriers! node. Relevant fields for each TaRF \lstinline!BarrierData! sub-node are \lstinline!Type! and \lstinline!Level!.  For a TaRF, \lstinline!Type! can be set to \emph{CumulatedProfitCap}, \emph{CumulatedProfitCapPoints} or \emph{FixingCap}. Notice that \emph{CumulatedProfitCapPoints} can not be combined with the other barrier types.
+    \item Barriers: Specification of barriers, see \ref{ss:barrier_data}. Multiple \lstinline!BarrierData! sub-nodes can be included within the \lstinline!Barriers! node. Relevant fields for each TaRF \lstinline!BarrierData! sub-node are \lstinline!Type! and \lstinline!Level!.  For a TaRF, \lstinline!Type! can be set to \emph{CumulatedProfitCap}, \emph{CumulatedProfitCapPoints} or \emph{FixingCap}. Notice that \emph{CumulatedProfitCapPoints} can not be combined with the other barrier types.
     
     \begin{itemize}
     \item \emph{CumulatedProfitCap}: The TaRF terminates once the generated profit from the long side's view reaches the

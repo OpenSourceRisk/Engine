@@ -102,37 +102,35 @@ void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibr
 
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps = todaysMarketParams();
 
+    // load the market data if at least one analytic requires that and we have non-empty tmps
+    if (std::any_of(analytics_.begin(), analytics_.end(),
+                    [](const std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>& a) {
+                        return a.second->requiresMarketData();
+                    }) &&
+        std::any_of(
+            tmps.begin(), tmps.end(),
+            [](const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& tmp) { return !tmp->empty(); })) {
 
-    std::set<Date> marketDates;
-    for (const auto& a : analytics_) {
-        auto mdates = a.second->marketDates();
-        marketDates.insert(mdates.begin(), mdates.end());
-    }
-
-    // Do we need market data
-    bool requireMarketData = false;
-    for (const auto& tmp : tmps) {
-        if (!tmp->empty())
-            requireMarketData = true;
-    }
-
-    LOG("AnalyticsManager::runAnalytics: requireMarketData " << (requireMarketData ? "Y" : "N"));
-    
-    if (requireMarketData) {
-        // load the market data
-        if (tmps.size() > 0) {
-            LOG("AnalyticsManager::runAnalytics: populate loader for dates: " << to_string(marketDates));
-            marketDataLoader_->populateLoader(tmps, marketDates);
+        std::set<Date> marketDates;
+        for (const auto& a : analytics_) {
+            auto mdates = a.second->marketDates();
+            marketDates.insert(mdates.begin(), mdates.end());
         }
-        
-        QuantLib::ext::shared_ptr<InMemoryReport> mdReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-        QuantLib::ext::shared_ptr<InMemoryReport> fixingReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
-        QuantLib::ext::shared_ptr<InMemoryReport> dividendReport = QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+
+        LOG("AnalyticsManager::runAnalytics: populate loader for dates: " << to_string(marketDates));
+
+        marketDataLoader_->populateLoader(tmps, marketDates);
+
+        QuantLib::ext::shared_ptr<InMemoryReport> mdReport =
+            QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        QuantLib::ext::shared_ptr<InMemoryReport> fixingReport =
+            QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
+        QuantLib::ext::shared_ptr<InMemoryReport> dividendReport =
+            QuantLib::ext::make_shared<InMemoryReport>(inputs_->reportBufferSize());
 
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeMarketData(*mdReport, marketDataLoader_->loader(), inputs_->asof(),
-                             marketDataLoader_->quotes()[inputs_->asof()],
-                             !inputs_->entireMarket());
+                             marketDataLoader_->quotes()[inputs_->asof()], !inputs_->entireMarket());
         ore::analytics::ReportWriter(inputs_->reportNaString())
             .writeFixings(*fixingReport, marketDataLoader_->loader());
         ore::analytics::ReportWriter(inputs_->reportNaString())

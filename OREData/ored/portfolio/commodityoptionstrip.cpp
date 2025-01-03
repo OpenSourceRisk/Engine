@@ -317,6 +317,7 @@ void CommodityOptionStrip::buildAPOs(const Leg& leg, const QuantLib::ext::shared
             commOption->build(engineFactory);
             QuantLib::ext::shared_ptr<InstrumentWrapper> instWrapper = commOption->instrument();
             setSensitivityTemplate(commOption->sensitivityTemplate());
+            addProductModelEngine(commOption->productModelEngine());
             additionalInstruments.push_back(instWrapper->qlInstrument());
             additionalMultipliers.push_back(instWrapper->multiplier());
 
@@ -444,6 +445,7 @@ void CommodityOptionStrip::buildStandardOptions(const Leg& leg, const QuantLib::
             commOption->build(engineFactory);
             QuantLib::ext::shared_ptr<InstrumentWrapper> instWrapper = commOption->instrument();
             setSensitivityTemplate(commOption->sensitivityTemplate());
+            addProductModelEngine(commOption->productModelEngine());
             additionalInstruments.push_back(instWrapper->qlInstrument());
             additionalMultipliers.push_back(instWrapper->multiplier());
 

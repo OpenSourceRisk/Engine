@@ -22,43 +22,15 @@
 
 namespace QuantExt {
 
-QL_DEPRECATED_DISABLE_WARNING
+
 ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> source)
     : ZeroInflationIndex(source->familyName(), source->region(), source->revised(), source->frequency(), source->availabilityLag(), source->currency(),
                          source->zeroInflationTermStructure()),
-      source_(source), interpolation_(QuantLib::CPI::InterpolationType::Flat) {}
-
-ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> source,
-                                                     const CPI::InterpolationType interpolation)
-    : ZeroInflationIndex(source->familyName(), source->region(), source->revised(), source->interpolated(),
-                         source->frequency(), source->availabilityLag(), source->currency(),
-                         source->zeroInflationTermStructure()),
-      source_(source), interpolation_(interpolation) {}
-QL_DEPRECATED_ENABLE_WARNING
+      source_(source) {}
 
 Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTodaysFixing*/) const {
-
-    // duplicated logic from CPICashFlow::amount()
-
-    // what interpolation do we use? Index / flat / linear
-    QL_DEPRECATED_DISABLE_WARNING
-    if (interpolation_ == CPI::AsIndex) {
-        return source_->fixing(fixingDate);
-    } else {
-        std::pair<Date, Date> dd = inflationPeriod(fixingDate, frequency());
-        Real indexStart = source_->fixing(dd.first);
-        if (interpolation_ == CPI::Linear) {
-            Real indexEnd = source_->fixing(dd.second + Period(1, Days));
-            // linear interpolation
-            return indexStart + (indexEnd - indexStart) * (fixingDate - dd.first) /
-                                    ((dd.second + Period(1, Days)) -
-                                     dd.first); // can't get to next period's value within current period
-        } else {
-            // no interpolation, i.e. flat = constant, so use start-of-period value
-            return indexStart;
-        }
-    }
-    QL_DEPRECATED_ENABLE_WARNING
+    std::pair<Date, Date> dd = inflationPeriod(fixingDate, frequency());
+    return source_->fixing(dd.first);
 }
 
 YoYInflationIndexWrapper::YoYInflationIndexWrapper(const QuantLib::ext::shared_ptr<ZeroInflationIndex> zeroIndex,

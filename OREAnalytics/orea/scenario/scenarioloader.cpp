@@ -40,7 +40,7 @@ void ScenarioLoader::add(const QuantLib::Date& date, Size index,
     scenMap[date] = scenario;
 }
 
-SimpleScenarioLoader::SimpleScenarioLoader(const boost::shared_ptr<ScenarioReader>& scenarioReader) {
+SimpleScenarioLoader::SimpleScenarioLoader(const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader) {
     while (scenarioReader->next()) {
         auto scenario = scenarioReader->scenario();
         Date scenarioDate = scenario->asof();
@@ -128,7 +128,7 @@ HistoricalScenarioLoader::HistoricalScenarioLoader(const QuantLib::ext::shared_p
 }
 
 HistoricalScenarioLoader::HistoricalScenarioLoader(
-    const boost::shared_ptr<ScenarioReader>& scenarioReader,
+    const QuantLib::ext::shared_ptr<ScenarioReader>& scenarioReader,
     const std::set<Date>& dates) {
     while (scenarioReader->next()) {
         Date scenarioDate = scenarioReader->date();

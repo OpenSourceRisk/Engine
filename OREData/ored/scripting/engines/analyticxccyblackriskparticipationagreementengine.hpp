@@ -39,7 +39,8 @@ public:
         const std::map<std::string, Handle<Quote>>& fxSpots,
         const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
         const Handle<BlackVolTermStructure>& volatility, const bool alwaysRecomputeOptionRepresentation,
-        const Size maxGapDays = Null<Size>(), const Size maxDiscretisationPoints = Null<Size>());
+        const Size maxGapDays = Null<Size>(), const Size maxDiscretisationPoints = Null<Size>(),
+        const OptionExpiryPosition optionExpiryPosition = OptionExpiryPosition::Mid);
 
 private:
     Real protectionLegNpv() const override;

@@ -102,10 +102,10 @@ void IndependentLogger::clear() { messages_.clear(); }
 
 ProgressLogger::ProgressLogger() : IndependentLogger(name) {
     // Create backend and initialize it with a stream
-    QuantLib::ext::shared_ptr<lsinks::text_ostream_backend> backend = QuantLib::ext::make_shared<lsinks::text_ostream_backend>();
+    boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
 
     // Wrap it into the frontend and register in the core
-    QuantLib::ext::shared_ptr<text_sink> sink(new text_sink(backend));
+    boost::shared_ptr<text_sink> sink(new text_sink(backend));
 
     // This logger should only receive/process logs that were emitted by a ProgressMessage
     sink->set_filter(messageType == ProgressMessage::name);
@@ -165,11 +165,11 @@ void ProgressLogger::setCoutLog(const bool flag) {
     if (flag) {
         if (!coutSink_) {
             // Create backend and initialize it with a stream
-            QuantLib::ext::shared_ptr<lsinks::text_ostream_backend> backend = QuantLib::ext::make_shared<lsinks::text_ostream_backend>();
-            backend->add_stream(QuantLib::ext::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
+            boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
+            backend->add_stream(boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
 
             // Wrap it into the frontend and register in the core
-            QuantLib::ext::shared_ptr<text_sink> sink(new text_sink(backend));
+            boost::shared_ptr<text_sink> sink(new text_sink(backend));
             sink->set_filter(messageType == ProgressMessage::name);
             logging::core::get()->add_sink(sink);
 
@@ -184,10 +184,10 @@ void ProgressLogger::setCoutLog(const bool flag) {
 
 StructuredLogger::StructuredLogger() : IndependentLogger(name) {
     // Create backend and initialize it with a stream
-    QuantLib::ext::shared_ptr<lsinks::text_ostream_backend> backend = QuantLib::ext::make_shared<lsinks::text_ostream_backend>();
+    boost::shared_ptr<lsinks::text_ostream_backend> backend = boost::make_shared<lsinks::text_ostream_backend>();
 
     // Wrap it into the frontend and register in the core
-    QuantLib::ext::shared_ptr<text_sink> sink(new text_sink(backend));
+    boost::shared_ptr<text_sink> sink(new text_sink(backend));
     sink->set_filter(messageType == StructuredMessage::name);
 
     // Use formatter to intercept and store the message.
@@ -678,6 +678,8 @@ std::ostream& operator<<(std::ostream& out, const StructuredMessage::Group& grou
         out << "Logging";
     else if (group == StructuredMessage::Group::ReferenceData)
         out << "Reference Data";
+    else if (group == StructuredMessage::Group::Input)
+        out << "Input";
     else if (group == StructuredMessage::Group::Unknown)
         out << "UnknownType";
     else

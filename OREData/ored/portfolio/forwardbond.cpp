@@ -67,6 +67,8 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
     npvCurrency_ = currency_ = bondData_.coupons().front().currency();
     notionalCurrency_ = currency_;
 
+    additionalData_["underlyingSecurityId"] = bondData_.securityId();
+
     QL_REQUIRE(!bondData_.referenceCurveId().empty(), "reference curve id required");
     QL_REQUIRE(!bondData_.settlementDays().empty(), "settlement days required");
 
@@ -155,12 +157,12 @@ void ForwardBond::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFa
         QuantLib::ext::dynamic_pointer_cast<FwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
 
-    fwdBond->setPricingEngine(
-        fwdBondBuilder->engine(id(), currency, envelope().additionalField("discount_curve", false, std::string()),
-                               bondData_.creditCurveId(), bondData_.hasCreditRisk(), bondData_.securityId(),
-                               bondData_.referenceCurveId(), bondData_.incomeCurveId(), settlementDirty));
+    fwdBond->setPricingEngine(fwdBondBuilder->engine(
+        id(), currency, envelope().additionalField("discount_curve", false, std::string()), bondData_.creditCurveId(),
+        bondData_.securityId(), bondData_.referenceCurveId(), bondData_.incomeCurveId(), settlementDirty));
 
     setSensitivityTemplate(*fwdBondBuilder);
+    addProductModelEngine(*fwdBondBuilder);
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
 
     additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData_.bondNotional();

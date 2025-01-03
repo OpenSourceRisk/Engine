@@ -127,6 +127,7 @@ void EquityOptionPosition::build(const QuantLib::ext::shared_ptr<ore::data::Engi
             QL_REQUIRE(builder, "EquityOptionPosition::build(): no engine builder for '" << tradeTypeBuilder << "'");
             options_.back()->setPricingEngine(builder->engine(u.underlying().name(), eq->currency(), optionExpiry));
             setSensitivityTemplate(*builder);
+            addProductModelEngine(*builder);
         }
 
         // populate index for historical prices

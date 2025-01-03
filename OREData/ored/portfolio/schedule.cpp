@@ -130,6 +130,7 @@ void ScheduleDates::fromXML(XMLNode* node) {
     endOfMonth_ = XMLUtils::getChildValue(node, "EndOfMonth");
     endOfMonthConvention_ = XMLUtils::getChildValue(node, "EndOfMonthConvention");
     dates_ = XMLUtils::getChildrenValues(node, "Dates", "Date");
+    includeDuplicateDates_ = XMLUtils::getChildValueAsBool(node, "IncludeDuplicateDates", false, false);
 }
 
 XMLNode* ScheduleDates::toXML(XMLDocument& doc) const {
@@ -143,6 +144,9 @@ XMLNode* ScheduleDates::toXML(XMLDocument& doc) const {
     if (!endOfMonthConvention_.empty())
         XMLUtils::addChild(doc, node, "EndOfMonthConvention", endOfMonthConvention_);
     XMLUtils::addChildren(doc, node, "Dates", "Date", dates_);
+    if (includeDuplicateDates_){
+        XMLUtils::addChild(doc, node, "IncludeDuplicateDates", includeDuplicateDates_);
+    }
     return node;
 }
 
@@ -283,12 +287,20 @@ Schedule makeSchedule(const ScheduleDates& data) {
         endOfMonthConvention = parseBusinessDayConvention(data.endOfMonthConvention());
 
     // Ensure that Schedule ctor is passed a vector of unique ordered dates.
-    std::set<Date> uniqueDates;
-    for (const string& d : data.dates())
-        uniqueDates.insert(calendar.adjust(parseDate(d), convention));
 
-    return QuantLib::Schedule(vector<Date>(uniqueDates.begin(), uniqueDates.end()), calendar, convention, boost::none,
-                              tenor, boost::none, endOfMonth, vector<bool>(0), false, false, endOfMonthConvention);
+    std::vector<Date> dates;
+    for (const auto& d : data.dates()) {
+        dates.push_back(calendar.adjust(parseDate(d), convention));
+    }
+    std::sort(dates.begin(), dates.end());
+
+    if (!data.includeDuplicateDates()) {
+        auto last = std::unique(dates.begin(), dates.end());
+        dates.erase(last, dates.end());
+    }
+    
+    return QuantLib::Schedule(dates, calendar, convention, boost::none, tenor, boost::none, endOfMonth, vector<bool>(0),
+                              false, false, endOfMonthConvention);
 }
 
 Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule) {
@@ -297,7 +309,7 @@ Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule)
     Calendar calendar;
     if (strCalendar.empty()) {
         calendar = NullCalendar();
-        WLOG("No calendar provided in Schedule, attempting to use a null calendar.");
+        DLOG("No calendar provided in Schedule, attempting to use a null calendar.");
     }
     else
         calendar = parseCalendar(strCalendar);
@@ -342,7 +354,7 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
                "date from the schedule.");
     Calendar calendar = parseCalendar(data.calendar());
     if (calendar == NullCalendar())
-        WLOG("No calendar provided in Schedule, attempting to use a null calendar.");
+        DLOG("No calendar provided in Schedule, attempting to use a null calendar.");
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate().empty() ? openEndDateReplacement : parseDate(data.endDate());
     // Handle trivial case here

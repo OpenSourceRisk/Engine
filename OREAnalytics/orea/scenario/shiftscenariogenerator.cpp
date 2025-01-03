@@ -223,7 +223,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] *= (1.0 + w * shiftSize);
+                shiftedValues[k] += values[k] * (w * shiftSize);
         }
     } else if (j == 0) { // first shift tenor, flat extrapolation to the left
         Time t2 = tenors[j + 1];
@@ -238,7 +238,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] *= (1.0 + w * shiftSize);
+                shiftedValues[k] += values[k] * (w * shiftSize);
         }
     } else if (j == tenors.size() - 1) { // last shift tenor, flat extrapolation to the right
         Time t0 = tenors[j - 1];
@@ -253,7 +253,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] *= (1.0 + w * shiftSize);
+                shiftedValues[k] += values[k] * (w * shiftSize);
         }
     } else { // intermediate shift tenor
         Time t0 = tenors[j - 1];
@@ -269,7 +269,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] *= (1.0 + w * shiftSize);
+                shiftedValues[k] += values[k] * (w * shiftSize);
         }
     }
 }
@@ -299,7 +299,7 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
                 if (shiftType == ShiftType::Absolute)
                     shiftedData[k][l] += w * shiftSize;
                 else
-                    shiftedData[k][l] *= (1.0 + w * shiftSize);
+                    shiftedData[k][l] += data[k][l] * (w * shiftSize);
             }
         }
         return;
@@ -356,7 +356,7 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
             if (shiftType == ShiftType::Absolute)
                 shiftedData[ix][iy] += w * wx * wy * shiftSize;
             else
-                shiftedData[ix][iy] *= (1.0 + w * wx * wy * shiftSize);
+                shiftedData[ix][iy] += data[ix][iy] * (w * wx * wy * shiftSize);
         }
     }
 }

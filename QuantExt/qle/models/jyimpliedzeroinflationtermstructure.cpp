@@ -30,12 +30,6 @@ JyImpliedZeroInflationTermStructure::JyImpliedZeroInflationTermStructure(
     const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index)
     : ZeroInflationModelTermStructure(model, index) {}
 
-QL_DEPRECATED_DISABLE_WARNING
-JyImpliedZeroInflationTermStructure::JyImpliedZeroInflationTermStructure(
-    const QuantLib::ext::shared_ptr<CrossAssetModel>& model, Size index, bool indexIsInterpolated)
-    : ZeroInflationModelTermStructure(model, index, indexIsInterpolated) {}
-QL_DEPRECATED_ENABLE_WARNING
-
 Real JyImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
 
     QL_REQUIRE(t >= 0.0, "JyImpliedZeroInflationTermStructure::zeroRateImpl: negative time (" << t << ") given");
@@ -45,9 +39,7 @@ Real JyImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
     // ratio holds \frac{P_r(S, T)}{P_n(S, T)}.
     auto S = relativeTime_;
     auto T = relativeTime_ + t;
-    QL_DEPRECATED_DISABLE_WARNING
-    auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0], indexIsInterpolated_);
-    QL_DEPRECATED_ENABLE_WARNING
+    auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0], false);
     // Return the desired z(S) = \left( \frac{P_r(S, T)}{P_n(S, T)} \right)^{\frac{1}{t}} - 1
     return std::pow(ratio, 1 / t) - 1;
 }

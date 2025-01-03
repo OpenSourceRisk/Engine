@@ -99,6 +99,7 @@ void CliquetOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
 
     cliquet->setPricingEngine(cliquetOptionBuilder->engine(name(), ccy));
     setSensitivityTemplate(*cliquetOptionBuilder);
+    addProductModelEngine(*cliquetOptionBuilder);
 
     instrument_ = QuantLib::ext::shared_ptr<InstrumentWrapper>(new VanillaInstrument(cliquet));
 

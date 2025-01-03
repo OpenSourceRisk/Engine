@@ -56,6 +56,7 @@ protected:
         Real belongsToUnderlyingMaxTime_ = Null<Real>(); // this is always filled
         Real maxEstimationTime_ = Null<Real>();          // either this or exactEstimationTime is filled
         Real exactEstimationTime_ = Null<Real>();        // ...
+        Real midCouponExerciseSettlementLag_ = 0.0;
         std::function<RandomVariable(const LgmVectorised&, const Real, const RandomVariable&,
                                      const Handle<YieldTermStructure>&)>
             calculator_; // always a valid function
@@ -77,6 +78,10 @@ protected:
     mutable QuantLib::ext::shared_ptr<Exercise> exercise_;
     mutable Settlement::Type settlementType_;
     mutable Settlement::Method settlementMethod_;
+    mutable bool midCouponExercise_;
+    mutable Period noticePeriod_;
+    mutable Calendar noticeCalendar_;
+    mutable BusinessDayConvention noticeConvention_;
 
     // outputs
     mutable Real npv_, underlyingNpv_;

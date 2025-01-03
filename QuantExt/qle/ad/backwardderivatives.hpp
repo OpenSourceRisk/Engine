@@ -114,6 +114,12 @@ void backwardDerivatives(const ComputationGraph& g, std::vector<T>& values, std:
                                "backwardDerivatives: gradient at node "
                                    << node << " (opId " << g.opId(node) << ") not initialized at component " << p
                                    << " but required to push to predecessor " << g.predecessors(node)[p]);
+                    // isfinite() is relatively expensive to evaluate, therefore we disable this check by default
+                    // QL_REQUIRE(gr[p].isfinite(),
+                    //            "backwardDerivatives: gradient at node "
+                    //                << node << " (opId " << g.opId(node) << ") is not finite at component " << p
+                    //                << " but required to push to predecessor " << g.predecessors(node)[p]);
+
                     derivatives[g.predecessors(node)[p]] += derivatives[node] * gr[p];
                 }
             }

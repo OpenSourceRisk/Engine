@@ -1029,6 +1029,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
 
     // add chilean calendar
     expectedHolidays.insert(Date(1, January, 2018));
+    expectedHolidays.insert(Date(16, January, 2018));
     expectedHolidays.insert(Date(30, March, 2018));
     expectedHolidays.insert(Date(1, May, 2018));
     expectedHolidays.insert(Date(21, May, 2018));
@@ -1042,6 +1043,7 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     expectedHolidays.insert(Date(1, November, 2018));
     expectedHolidays.insert(Date(2, November, 2018));
     expectedHolidays.insert(Date(25, December, 2018));
+    expectedHolidays.insert(Date(31, December, 2018));
 
     Calendar chil = Chile();
     cals.push_back(chil);

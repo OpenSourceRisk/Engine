@@ -85,6 +85,8 @@ public:
 
     std::vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const QuantLib::Date&) const override;
 
+    std::set<QuantLib::Date> asofDates() const override;
+
     QuantLib::ext::shared_ptr<MarketDatum> get(const string& name, const QuantLib::Date& d) const override;
     std::set<QuantLib::ext::shared_ptr<MarketDatum>> get(const std::set<std::string>& names,
                                                  const QuantLib::Date& asof) const override;

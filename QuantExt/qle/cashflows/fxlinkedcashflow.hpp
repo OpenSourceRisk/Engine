@@ -98,7 +98,7 @@ protected:
 
      \ingroup cashflows
  */
-class FXLinkedCashFlow : public CashFlow, public FXLinked, public Observer {
+class FXLinkedCashFlow : public CashFlow, public FXLinked {
 public:
     FXLinkedCashFlow(const Date& cashFlowDate, const Date& fixingDate, Real foreignAmount,
                      QuantLib::ext::shared_ptr<FxIndex> fxIndex);
@@ -106,17 +106,21 @@ public:
     //! \name CashFlow interface
     //@{
     Date date() const override { return cashFlowDate_; }
-    Real amount() const override { return foreignAmount() * fxRate(); }
+    Real amount() const override {
+        calculate();
+        return amount_;
+    }
+    //@}
+
+    //@}
+    //! \name LazyObject interface
+    //@{
+    void performCalculations() const override { amount_ = foreignAmount() * fxRate(); }
     //@}
 
     //! \name Visitability
     //@{
     void accept(AcyclicVisitor&) override;
-    //@}
-
-    //! \name Observer interface
-    //@{
-    void update() override { notifyObservers(); }
     //@}
 
     //! \name FXLinked interface
@@ -126,6 +130,7 @@ public:
 
 private:
     Date cashFlowDate_;
+    mutable Real amount_;
 };
 
 // inline definitions
@@ -150,7 +155,7 @@ inline void FXLinkedCashFlow::accept(AcyclicVisitor& v) {
 
  \ingroup cashflows
  */
-class AverageFXLinkedCashFlow : public CashFlow, public AverageFXLinked, public Observer {
+class AverageFXLinkedCashFlow : public CashFlow, public AverageFXLinked {
 public:
     AverageFXLinkedCashFlow(const Date& cashFlowDate, const std::vector<Date>& fixingDates, Real foreignAmount,
                             QuantLib::ext::shared_ptr<FxIndex> fxIndex, const bool inverted = false);
@@ -158,7 +163,10 @@ public:
     //! \name CashFlow interface
     //@{
     Date date() const override { return cashFlowDate_; }
-    Real amount() const override { return foreignAmount() * fxRate(); }
+    Real amount() const override {
+        calculate();
+        return amount_;
+    }
     //@}
 
     //! \name Visitability
@@ -166,9 +174,10 @@ public:
     void accept(AcyclicVisitor&) override;
     //@}
 
-    //! \name Observer interface
+    //@}
+    //! \name LazyObject interface
     //@{
-    void update() override { notifyObservers(); }
+    void performCalculations() const override { amount_ = foreignAmount() * fxRate(); }
     //@}
 
     //! \name FXLinked interface
@@ -181,6 +190,7 @@ public:
 
 private:
     Date cashFlowDate_;
+    mutable Real amount_;
 };
 
 inline void AverageFXLinkedCashFlow::accept(AcyclicVisitor& v) {

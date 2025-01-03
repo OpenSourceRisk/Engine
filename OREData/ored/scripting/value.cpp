@@ -25,7 +25,7 @@ namespace ore {
 namespace data {
 
 std::ostream& operator<<(std::ostream& out, const EventVec& a) {
-    out << a.value;
+    out << QuantLib::io::iso_date(a.value);
     return out;
 }
 

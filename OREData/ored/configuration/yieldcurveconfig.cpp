@@ -239,7 +239,7 @@ const vector<string>& YieldCurveConfig::quotes() {
                     quotes_.push_back(xccySegment->spotRateID());
                     // we add the inverted pair as well, because the original pair might get removed from the market
                     // data loader if both are present in the input market data
-                    if (auto md = boost::dynamic_pointer_cast<FXSpotQuote>(
+                    if (auto md = QuantLib::ext::dynamic_pointer_cast<FXSpotQuote>(
                             parseMarketDatum(Date(), xccySegment->spotRateID(), 1.0))) {
                         quotes_.push_back("FX/RATE/" + md->ccy() + "/" + md->unitCcy());
                     }
@@ -849,8 +849,8 @@ void YieldPlusDefaultYieldCurveSegment::accept(AcyclicVisitor& v) {
 }
 
 IborFallbackCurveSegment::IborFallbackCurveSegment(const string& typeID, const string& iborIndex,
-                                                   const string& rfrCurve, const boost::optional<string>& rfrIndex,
-                                                   const boost::optional<Real>& spread)
+                                                   const string& rfrCurve, const QuantLib::ext::optional<string>& rfrIndex,
+                                                   const QuantLib::ext::optional<Real>& spread)
     : YieldCurveSegment(typeID, "", {}), iborIndex_(iborIndex), rfrCurve_(rfrCurve), rfrIndex_(rfrIndex),
       spread_(spread) {}
 
@@ -859,8 +859,8 @@ void IborFallbackCurveSegment::fromXML(XMLNode* node) {
     YieldCurveSegment::fromXML(node);
     iborIndex_ = XMLUtils::getChildValue(node, "IborIndex", true);
     rfrCurve_ = XMLUtils::getChildValue(node, "RfrCurve", true);
-    rfrIndex_ = boost::none;
-    spread_ = boost::none;
+    rfrIndex_ = QuantLib::ext::nullopt;
+    spread_ = QuantLib::ext::nullopt;
     if (auto n = XMLUtils::getChildNode(node, "RfrIndex"))
         rfrIndex_ = XMLUtils::getNodeValue(n);
     if (auto n = XMLUtils::getChildNode(node, "Spread"))

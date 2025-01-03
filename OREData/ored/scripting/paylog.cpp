@@ -51,6 +51,7 @@ void PayLog::write(RandomVariable value, const Filter& filter, const Date& obs, 
         slots_.push_back(slot);
         amounts_.push_back(RandomVariable(value.size(), 0.0));
         dates_.push_back(pay);
+        obsDates_.push_back(obs);
         currencies_.push_back(ccy);
         legNos_.push_back(legNo);
         cashflowTypes_.push_back(cashflowType);

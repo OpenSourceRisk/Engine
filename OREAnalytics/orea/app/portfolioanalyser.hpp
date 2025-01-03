@@ -85,11 +85,15 @@ public:
     //! pointer to portfolio
     const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio() const { return portfolio_; }
 
+    //! return underlying indices of portfolio
+    std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices() const { return underlyingIndices_; }
+
 private:
     QuantLib::ext::shared_ptr<ore::data::Portfolio> portfolio_;
     QuantLib::ext::shared_ptr<DependencyMarket> market_;
     std::set<std::string> counterparties_;
     QuantLib::Date maturity_;
+    std::map<ore::data::AssetClass, std::set<std::string>> underlyingIndices_;
 };
 
 } // namespace analytics

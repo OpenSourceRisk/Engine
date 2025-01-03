@@ -163,6 +163,12 @@ public:
     InstrumentType instrumentType() const { return instrumentType_; }
     QuoteType quoteType() const { return quoteType_; }
     //@}
+
+    //! \name Inspectors
+    //@{
+    void setValue(const double v);
+    //@}
+
 protected:
     Handle<Quote> quote_;
     Date asofDate_;

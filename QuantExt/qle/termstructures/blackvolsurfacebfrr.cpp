@@ -32,7 +32,7 @@ namespace QuantExt {
 namespace detail {
 
 Real transformVol(const Real v) { return std::log(v); }
-Real untransformVol(const Real w) { return std::exp(w); }
+Real untransformVol(const Real w) { return std::exp(std::min(w, 5.0)); }
 
 SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
     const Real spot, const Real domDisc, const Real forDisc, const Real expiryTime, const std::vector<Real>& deltas,
@@ -201,7 +201,7 @@ Real SimpleDeltaInterpolatedSmile::simpleDeltaFromStrike(const Real strike) cons
     if (close_enough(strike, 0.0))
         return 0.0;
     CumulativeNormalDistribution Phi;
-    return Phi(std::log(strike / forward_) / (std::max(atmVol_, 0.1) * std::sqrt(expiryTime_)));
+    return Phi(std::log(strike / forward_) / (atmVol_ * std::sqrt(expiryTime_)));
 }
 
 BlackVolatilitySurfaceBFRR::SmileInterpolation SimpleDeltaInterpolatedSmile::smileInterpolation() const {

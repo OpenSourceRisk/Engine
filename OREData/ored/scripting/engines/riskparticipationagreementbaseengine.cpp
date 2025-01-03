@@ -29,9 +29,11 @@ namespace data {
 RiskParticipationAgreementBaseEngine::RiskParticipationAgreementBaseEngine(
     const std::string& baseCcy, const std::map<std::string, Handle<YieldTermStructure>>& discountCurves,
     const std::map<std::string, Handle<Quote>>& fxSpots, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-    const Handle<Quote>& recoveryRate, const Size maxGapDays, const Size maxDiscretisationPoints)
+    const Handle<Quote>& recoveryRate, const Size maxGapDays, const Size maxDiscretisationPoints,
+    const OptionExpiryPosition optionExpiryPosition)
     : baseCcy_(baseCcy), discountCurves_(discountCurves), fxSpots_(fxSpots), defaultCurve_(defaultCurve),
-      recoveryRate_(recoveryRate), maxGapDays_(maxGapDays), maxDiscretisationPoints_(maxDiscretisationPoints) {
+      recoveryRate_(recoveryRate), maxGapDays_(maxGapDays), maxDiscretisationPoints_(maxDiscretisationPoints),
+      optionExpiryPosition_(optionExpiryPosition) {
     QL_REQUIRE(maxGapDays == Null<Size>() || maxGapDays >= 1,
                "invalid maxGapDays (" << maxGapDays << "), must be >= 1");
     QL_REQUIRE(maxDiscretisationPoints_ == Null<Size>() || maxDiscretisationPoints_ >= 1,
@@ -296,6 +298,16 @@ void RiskParticipationAgreementBaseEngine::calculate() const {
         results_.additionalResults["FeePeriodPDs"] = feePeriodPDs[l];
         results_.additionalResults["FeeFXSpot"] = feeFXSpot;
         results_.additionalResults["FeeCurrency"] = arguments_.protectionFeeCcys[l];
+    }
+}
+
+RiskParticipationAgreementBaseEngine::OptionExpiryPosition parseRpaOptionExpiryPosition(const std::string& s) {
+    if (s == "Mid")
+        return RiskParticipationAgreementBaseEngine::OptionExpiryPosition::Mid;
+    else if (s == "Left")
+        return RiskParticipationAgreementBaseEngine::OptionExpiryPosition::Left;
+    else {
+        QL_FAIL("parseRpaOptionExpiryPosition(" << s << "): not recognized, expected 'Mid' or 'Left'");
     }
 }
 

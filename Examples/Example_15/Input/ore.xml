@@ -87,11 +87,14 @@
     </Analytic>
     <Analytic type="stress">
       <Parameter name="active">Y</Parameter>
+      <Parameter name="precision">6</Parameter>
       <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
       <Parameter name="outputThreshold">0.000001</Parameter>
+      <Parameter name="generateCashflows">Y</Parameter>
+      <Parameter name="scenarioCashflowOutputFile">stresstest_flows.csv</Parameter>
     </Analytic>
     <Analytic type="parametricVar">
       <Parameter name="active">N</Parameter>

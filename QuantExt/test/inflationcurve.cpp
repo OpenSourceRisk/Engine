@@ -20,7 +20,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ql/termstructures/inflationtermstructure.hpp>
-#include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
@@ -77,21 +77,21 @@ buildZeroInflationCurve(CommonData& cd, bool useLastKnownFixing, const QuantLib:
     QuantLib::ext::shared_ptr<YieldTermStructure> discountTS =
         QuantLib::ext::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(flatZero), dc);
 
-    std::vector<QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper>> helpers;
+    std::vector<QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTraits::helper>> helpers;
     for (size_t i = 0; i < cd.zeroCouponQuotes.size(); ++i) {
         Date maturity = today + cd.zeroCouponPillars[i];
         Rate quote = cd.zeroCouponQuotes[i];
-        QuantLib::ext::shared_ptr<QuantExt::ZeroInflationTraits::helper> instrument =
+        QuantLib::ext::shared_ptr<QuantLib::ZeroInflationTraits::helper> instrument =
             QuantLib::ext::make_shared<ZeroCouponInflationSwapHelper>(
-                Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(quote)), cd.obsLag, maturity, fixingCalendar, bdc, dc,
-                index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(discountTS), today);
+                Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(quote)), cd.obsLag, maturity, fixingCalendar, bdc,
+                dc, index, isInterpolated ? CPI::Linear : CPI::Flat, Handle<YieldTermStructure>(discountTS), today);
         helpers.push_back(instrument);
     }
-    Rate baseRate = QuantExt::ZeroInflation::guessCurveBaseRate(useLastKnownFixing, today, today, cd.zeroCouponPillars[0],
-                                                                cd.dayCounter, cd.obsLag, cd.zeroCouponQuotes[0],
-                                                                cd.obsLag, cd.dayCounter, index, isInterpolated);
-    QuantLib::ext::shared_ptr<ZeroInflationCurve> curve = QuantLib::ext::make_shared<QuantExt::PiecewiseZeroInflationCurve<Linear>>(
-        today, fixingCalendar, dc, cd.obsLag, index->frequency(), baseRate, helpers, 1e-10, index, useLastKnownFixing);
+    Date baseDate =
+        QuantExt::ZeroInflation::curveBaseDate(useLastKnownFixing, today, cd.obsLag, index->frequency(), index);
+    QuantLib::ext::shared_ptr<ZeroInflationCurve> curve =
+        QuantLib::ext::make_shared<QuantLib::PiecewiseZeroInflationCurve<Linear>>(today, baseDate, cd.obsLag, index->frequency(),
+                                                                                  dc, helpers, seasonality, 1e-10);
     if (seasonality) {
         curve->setSeasonality(seasonality);
     }
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingUnknown
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = false;
     // Build Curve and Index
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>();
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated);
 
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixing) {
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = true;
     // Build Curve and Index
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>();
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated);
 
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveInterpolatedLastMonthFixing) {
     bool isInterpolated = true;
     bool useLastKnownFixingDateAsBaseDate = true;
     // Build Curve and Index
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>();
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated);
 
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingUnknown
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = false;
     // Build Curve and Index
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>();
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto seasonalityCurve = buildSeasonalityCurve();
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated,
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingWithSea
     bool isInterpolated = false;
     bool useLastKnownFixingDateAsBaseDate = true;
     // Build Curve and Index
-    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>(false);
+    QuantLib::ext::shared_ptr<ZeroInflationIndex> curveBuildIndex = QuantLib::ext::make_shared<EUHICPXT>();
     addFixings(cd.cpiFixings, *curveBuildIndex);
     auto seasonalityCurve = buildSeasonalityCurve();
     auto curve = buildZeroInflationCurve(cd, useLastKnownFixingDateAsBaseDate, curveBuildIndex, isInterpolated,
@@ -291,8 +291,8 @@ BOOST_AUTO_TEST_CASE(testZeroInflationCurveNonInterpolatedLastMonthFixingWithSea
     std::vector<Date> expectedPillarDates{Date(1, July, 2022), Date(1, June, 2023), Date(1, June, 2024),
                                           Date(1, June, 2025), Date(1, June, 2027)};
 
-    std::vector<Real> expectedZeroRates{0.02097086546, 0.02097086546, 0.02068868041, 0.01710609424437, 0.01223686945};
-    std::vector<Real> expectedZeroRatesWithoutSeasonality{0.02097086546, -0.05439424967, -0.01603861959, -0.00711164972,
+    std::vector<Real> expectedZeroRates{-0.0543942497, 0.02097086546, 0.02068868041, 0.01710609424437, 0.01223686945};
+    std::vector<Real> expectedZeroRatesWithoutSeasonality{-0.0543942497, -0.0543942497, -0.01603861959, -0.00711164972,
                                                           -0.00213855283};
     std::vector<Real> expectedCPIs{104, 106., 108.171622850024, 109.281549591561, 110.414070537467};
 

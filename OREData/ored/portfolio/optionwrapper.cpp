@@ -20,6 +20,10 @@
 #include <ql/option.hpp>
 #include <ql/settings.hpp>
 
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <iostream>
+
 using namespace QuantLib;
 using namespace std;
 
@@ -27,20 +31,26 @@ namespace ore {
 namespace data {
 
 OptionWrapper::OptionWrapper(const QuantLib::ext::shared_ptr<Instrument>& inst, const bool isLongOption,
-                             const std::vector<Date>& exerciseDate, const bool isPhysicalDelivery,
+                             const std::vector<Date>& exerciseDate,
+			     const std::vector<Date>& settlementDate, const bool isPhysicalDelivery,
                              const std::vector<QuantLib::ext::shared_ptr<Instrument>>& undInst, const Real multiplier,
                              const Real undMultiplier,
                              const std::vector<QuantLib::ext::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
                              const std::vector<Real>& additionalMultipliers)
     : InstrumentWrapper(inst, multiplier, additionalInstruments, additionalMultipliers), isLong_(isLongOption),
       isPhysicalDelivery_(isPhysicalDelivery), contractExerciseDates_(exerciseDate),
-      effectiveExerciseDates_(exerciseDate), underlyingInstruments_(undInst),
+      effectiveExerciseDates_(exerciseDate), settlementDates_(settlementDate), underlyingInstruments_(undInst),
       activeUnderlyingInstrument_(undInst.at(0)), undMultiplier_(undMultiplier), exercised_(false), exercisable_(true),
-      exerciseDate_(Date()) {
+      exerciseDate_(Date()), settlementDate_(Date()) {
     QL_REQUIRE(exerciseDate.size() == undInst.size(), "number of exercise dates ("
                                                           << exerciseDate.size()
                                                           << ") must be equal to underlying instrument vector size ("
                                                           << undInst.size() << ")");
+
+    QL_REQUIRE(exerciseDate.size() == settlementDate.size(), "number of exercise dates ("
+                                                          << exerciseDate.size()
+                                                          << ") must be equal to the number of settlement dates ("
+                                                          << settlementDate.size() << ")");
 }
 
 void OptionWrapper::initialise(const vector<Date>& dateGrid) {
@@ -65,6 +75,7 @@ void OptionWrapper::initialise(const vector<Date>& dateGrid) {
 void OptionWrapper::reset() {
     exercised_ = false;
     exerciseDate_ = Date();
+    settlementDate_ = Date();
 }
 
 Real OptionWrapper::NPV() const {
@@ -72,28 +83,49 @@ Real OptionWrapper::NPV() const {
 
     Date today = Settings::instance().evaluationDate();
     if (!exercised_) {
-        for (Size i = 0; i < effectiveExerciseDates_.size(); ++i) {
+
+        bool isExerciseDate = false;
+	for (Size i = 0; i < effectiveExerciseDates_.size(); ++i) {
             if (today == effectiveExerciseDates_[i]) {
-                if (exercise()) {
-                    exercised_ = true;
-                    exerciseDate_ = today;
-                }
-            }
-        }
+	        isExerciseDate = true;
+		break;
+	    }
+	}
+
+	if (!isExerciseDate) {
+	    // Cache NPV along the path for later exercise with cash settlement,
+	    // i.e. as a proxy for the cash settlement amount if the instrument isn't priced on exercise date anymore
+	    cachedNpv_ = multiplier2() * getTimedNPV(instrument_) * multiplier_;
+	}
+	else {
+	    // now exercise if we are one an exercise date
+	    for (Size i = 0; i < effectiveExerciseDates_.size(); ++i) {
+	        if (today == effectiveExerciseDates_[i]) {
+		    if (exercise()) {
+		        exercised_ = true;
+			exerciseDate_ = today;
+			settlementDate_ = settlementDates_[i];
+			// update the cached NPV if available on exercise date
+			if (!instrument_->isExpired())
+			    cachedNpv_ = multiplier2() * getTimedNPV(instrument_) * multiplier_;
+		    }
+		}
+	    }
+	}
     }
+    
     if (exercised_) {
-        // if exercised, return underlying npv for physical settlement and also for
-        // cash settlement if we are still on the exercise date (since the cash
-        // settlement takes place strictly after the exercise date usually)
-        // FIXME: we assume that the settlement date lies strictly after the exercise
-        // date, but before or on the next simulation date. Check this explicitly
-        // by introducing the cash settlement date into the option wrapper (note
-        // that we will probably need an effective cash settlement date then to
-        // maintain the relative position to the effective exercise date).
-        Real npv = (isPhysicalDelivery_ || today == exerciseDate_)
-                       ? multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_
-                       : 0.0;
-        return npv + addNPV;
+        if (isPhysicalDelivery_) {
+	    Real npv = multiplier2() * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_;
+	    return npv + addNPV;
+	}
+	else { // cash settlement
+	    ext::optional<bool> inc = Settings::instance().includeTodaysCashFlows();
+	    if (detail::simple_event(settlementDate_).hasOccurred(today, inc))
+	        return 0.0;
+	    else
+	        return cachedNpv_ + addNPV;
+	}
     } else {
         // if not exercised we just return the original option's NPV
         Real npv = multiplier2() * getTimedNPV(instrument_) * multiplier_;
@@ -145,11 +177,11 @@ bool BermudanOptionWrapper::exercise() const {
     for (Size i = 0; i < effectiveExerciseDates_.size(); ++i) {
         if (today == effectiveExerciseDates_[i]) {
             activeUnderlyingInstrument_ = underlyingInstruments_[i];
-            break;
+	    break;
         }
     }
-    bool exercise = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > getTimedNPV(instrument_) * multiplier_;
-    return exercise;
+
+    return getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > getTimedNPV(instrument_) * multiplier_;
 }
 } // namespace data
 } // namespace ore

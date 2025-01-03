@@ -300,6 +300,7 @@ void CommodityAveragePriceOption::buildStandardOption(const QuantLib::ext::share
                                flow->index()->isFuturesIndex(), flow->pricingDate());
     commOption.build(engineFactory);
     setSensitivityTemplate(commOption.sensitivityTemplate());
+    addProductModelEngine(commOption.productModelEngine());
     instrument_ = commOption.instrument();
     maturity_ = commOption.maturity();
     maturityType_ = "Commodity Option Maturity Date";
@@ -396,6 +397,7 @@ void CommodityAveragePriceOption::buildApo(const QuantLib::ext::shared_ptr<Engin
     QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(ccy, name_, id(), apo);
     apo->setPricingEngine(engine);
     setSensitivityTemplate(*engineBuilder);
+    addProductModelEngine(*engineBuilder);
 
     // position type and trade multiplier
     Position::Type positionType = parsePositionType(optionData_.longShort());

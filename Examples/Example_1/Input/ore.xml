@@ -79,6 +79,7 @@
       <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+      <Parameter name="timeAveragedNettedExposureOutputFile">timeaveragedexposure.csv</Parameter>
     </Analytic>
     <Analytic type="initialMargin">
       <Parameter name="active">N</Parameter>

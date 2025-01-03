@@ -41,11 +41,12 @@ public:
                                     const bool interactive = false, const bool amcEnabled = false,
                                     const std::set<std::string>& amcStickyCloseOutStates = {},
                                     const bool generateAdditionalResults = false,
-                                    const bool includePastCashflows = false)
+                                    const bool includePastCashflows = false,
+                                    const bool staticNpvMem = false)
         : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
           script_(script), interactive_(interactive), amcEnabled_(amcEnabled),
           amcStickyCloseOutStates_(amcStickyCloseOutStates), generateAdditionalResults_(generateAdditionalResults),
-          includePastCashflows_(includePastCashflows) {
+          includePastCashflows_(includePastCashflows), staticNpvMem_(staticNpvMem) {
         registerWith(model_);
     }
 
@@ -69,6 +70,7 @@ private:
     const std::set<std::string> amcStickyCloseOutStates_;
     const bool generateAdditionalResults_;
     const bool includePastCashflows_;
+    const bool staticNpvMem_;
 };
 
 } // namespace data

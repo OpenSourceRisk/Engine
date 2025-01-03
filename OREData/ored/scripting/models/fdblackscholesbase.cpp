@@ -307,7 +307,7 @@ RandomVariable FdBlackScholesBase::getIndexValue(const Size indexNo, const Date&
 
     Date effFwd = fwd;
     if (indices_[indexNo].isComm()) {
-        const Date& expiry = indices_[indexNo].comm(d)->expiryDate();
+        Date expiry = indices_[indexNo].comm(d)->expiryDate();
         // if a future is referenced we set the forward date effectively used below to the future's expiry date
         if (expiry != Date())
             effFwd = expiry;

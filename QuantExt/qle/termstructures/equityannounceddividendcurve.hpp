@@ -40,6 +40,8 @@ public:
         times_.push_back(0.0);
         discountedDivs_.push_back(0.0);
         for (auto& d : dividends) {
+            if (d.payDate <= referenceDate)
+                continue;
             QuantLib::Time time = timeFromReference(d.payDate);
             for (Size i = 0; i < times_.size(); ++i) {
                 discountedDivs_[i] += d.rate * discountCurve->discount(time);

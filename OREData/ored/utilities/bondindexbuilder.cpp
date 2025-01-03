@@ -99,9 +99,6 @@ void BondIndexBuilder::buildIndex(const bool relative, const Calendar& fixingCal
             engineFactory->market()->securitySpread(securityId, engineFactory->configuration(MarketContext::pricing));
     } catch (...) {
     }
-
-    if (!bondData.hasCreditRisk())
-        defaultCurve = Handle<DefaultProbabilityTermStructure>();
    
     // build and return the index
     bondIndex_ = QuantLib::ext::make_shared<QuantExt::BondIndex>(securityId, dirty_, relative, fixingCalendar, qlBond,

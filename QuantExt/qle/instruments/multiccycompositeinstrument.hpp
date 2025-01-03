@@ -68,6 +68,8 @@ protected:
     //@}
 private:
     std::list<component> components_;
+    //! Store the additional results from the underlying components.
+    void updateAdditionalResults() const;
 };
 
 } // namespace QuantExt

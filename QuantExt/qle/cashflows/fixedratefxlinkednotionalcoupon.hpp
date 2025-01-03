@@ -32,7 +32,7 @@ namespace QuantExt {
 
 //! %Coupon paying a Libor-type index on an fx-linked nominal
 //! \ingroup cashflows
-class FixedRateFXLinkedNotionalCoupon : public QuantLib::Observer, public FixedRateCoupon, public FXLinked {
+class FixedRateFXLinkedNotionalCoupon : public FixedRateCoupon, public FXLinked {
 public:
     //! FloatingRateFXLinkedNotionalCoupon
     FixedRateFXLinkedNotionalCoupon(const QuantLib::Date& fxFixingDate, QuantLib::Real foreignAmount,
@@ -51,8 +51,15 @@ public:
 
     //! \name Observer interface
     //@{
-    void update() override;
+    void deepUpdate() override;
     //@}
+
+    //! \name LazyObject interface
+    //@{
+    void alwaysForwardNotifications() override {
+        LazyObject::alwaysForwardNotifications();
+        underlying_->alwaysForwardNotifications();
+    }
 
     //! \name Visitability
     //@{

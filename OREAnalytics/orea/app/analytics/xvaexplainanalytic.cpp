@@ -33,31 +33,33 @@
 namespace ore {
 namespace analytics {
 
-void curveShiftData(std::map<std::string, StressTestScenarioData::CurveShiftData>& data, const RiskFactorKey& key,
+void curveShiftData(std::map<std::string, ext::shared_ptr<StressTestScenarioData::CurveShiftData>>& data, const RiskFactorKey& key,
                     double shift, const std::vector<Period>& tenors) {
     if (data.count(key.name) == 0) {
         StressTestScenarioData::CurveShiftData shiftData;
         shiftData.shiftType = ShiftType::Absolute;
         shiftData.shiftTenors = tenors;
         shiftData.shifts = std::vector<double>(tenors.size(), 0.0);
-        data[key.name] = shiftData;
+        data[key.name] = ext::make_shared<StressTestScenarioData::CurveShiftData>(shiftData);
     }
-    data[key.name].shifts[key.index] = shift;
+    data[key.name]->shifts[key.index] = shift;
 }
 
-void volShiftData(std::map<std::string, StressTestScenarioData::VolShiftData>& volData, const RiskFactorKey& key,
+void volShiftData(std::map<std::string, ext::shared_ptr<StressTestScenarioData::VolShiftData>>& volData,
+                  const RiskFactorKey& key,
                   double shift, const std::vector<QuantLib::Period>& tenors) {
     if (volData.count(key.name) == 0) {
         StressTestScenarioData::VolShiftData shiftData;
         shiftData.shiftType = ShiftType::Absolute;
         shiftData.shiftExpiries = tenors;
         shiftData.shifts = std::vector<double>(shiftData.shiftExpiries.size(), 0.0);
-        volData[key.name] = shiftData;
+        volData[key.name] = ext::make_shared<StressTestScenarioData::VolShiftData>(shiftData);
     }
-    volData[key.name].shifts[key.index] = shift;
+    volData[key.name]->shifts[key.index] = shift;
 }
 
-void fxVolShiftData(std::map<std::string, StressTestScenarioData::FXVolShiftData>& volData, const RiskFactorKey& key,
+void fxVolShiftData(std::map<std::string, ext::shared_ptr<StressTestScenarioData::FXVolShiftData>>& volData,
+                    const RiskFactorKey& key,
                   double shift, const std::vector<QuantLib::Period>& tenors) {
     if (volData.count(key.name) == 0) {
         StressTestScenarioData::FXVolShiftData shiftData;
@@ -65,14 +67,15 @@ void fxVolShiftData(std::map<std::string, StressTestScenarioData::FXVolShiftData
         shiftData.shiftType = ShiftType::Absolute;
         shiftData.shiftExpiries = tenors;
         shiftData.shifts = std::vector<double>(shiftData.shiftExpiries.size(), 0.0);
-        volData[key.name] = shiftData;
+        volData[key.name] = ext::make_shared<StressTestScenarioData::FXVolShiftData>(shiftData);
     }
-    QL_REQUIRE(volData[key.name].mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit,
+    QL_REQUIRE(volData[key.name]->mode == StressTestScenarioData::FXVolShiftData::AtmShiftMode::Explicit,
                "Internal error, for XvA Explain use only explicit fx vol stress data, contact dev");
-    volData[key.name].shifts[key.index] = shift;
+    volData[key.name]->shifts[key.index] = shift;
 }
 
-void swaptionVolShiftData(std::map<std::string, StressTestScenarioData::SwaptionVolShiftData>& volData,
+void swaptionVolShiftData(std::map < std::string,
+                          ext::shared_ptr<StressTestScenarioData::SwaptionVolShiftData>>& volData,
                           const RiskFactorKey& key, double shift,
                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
 
@@ -87,18 +90,19 @@ void swaptionVolShiftData(std::map<std::string, StressTestScenarioData::Swaption
                 shiftData.shifts[std::make_pair(expiry, term)] = 0;
             }
         }
-        volData[key.name] = shiftData;
+        volData[key.name] = ext::make_shared<StressTestScenarioData::SwaptionVolShiftData>(shiftData);
     }
     auto& shiftData = volData[key.name];
 
-    size_t expiryIndex = key.index / shiftData.shiftTerms.size();
-    size_t termIndex = key.index % shiftData.shiftTerms.size();
-    auto expiry = shiftData.shiftExpiries[expiryIndex];
-    auto term = shiftData.shiftTerms[termIndex];
-    shiftData.shifts[std::make_pair(expiry, term)] = shift;
+    size_t expiryIndex = key.index / shiftData->shiftTerms.size();
+    size_t termIndex = key.index % shiftData->shiftTerms.size();
+    auto expiry = shiftData->shiftExpiries[expiryIndex];
+    auto term = shiftData->shiftTerms[termIndex];
+    shiftData->shifts[std::make_pair(expiry, term)] = shift;
 }
 
-void capFloorVolShiftData(std::map<std::string, StressTestScenarioData::CapFloorVolShiftData>& volData,
+void capFloorVolShiftData(std::map < std::string,
+                          ext::shared_ptr<StressTestScenarioData::CapFloorVolShiftData>>& volData,
                           const RiskFactorKey& key, double shift,
                           const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simParameters) {
     if (volData.count(key.name) == 0) {
@@ -110,18 +114,19 @@ void capFloorVolShiftData(std::map<std::string, StressTestScenarioData::CapFloor
         for (const auto& expiry : shiftData.shiftExpiries) {
             shiftData.shifts[expiry] = std::vector<double>(shiftData.shiftStrikes.size(), 0.0);
         }
-        volData[key.name] = shiftData;
+        volData[key.name] = ext::make_shared<StressTestScenarioData::CapFloorVolShiftData>(shiftData);
     }
-    size_t expiryIndex = key.index / volData[key.name].shiftStrikes.size();
-    size_t strikeIndex = key.index % volData[key.name].shiftStrikes.size();
-    auto expiry = volData[key.name].shiftExpiries[expiryIndex];
-    volData[key.name].shifts[expiry][strikeIndex] = shift;
+    size_t expiryIndex = key.index / volData[key.name]->shiftStrikes.size();
+    size_t strikeIndex = key.index % volData[key.name]->shiftStrikes.size();
+    auto expiry = volData[key.name]->shiftExpiries[expiryIndex];
+    volData[key.name]->shifts[expiry][strikeIndex] = shift;
 }
 
-StressTestScenarioData::SpotShiftData spotShiftData(const RiskFactorKey& key, double shift) {
-    StressTestScenarioData::SpotShiftData shiftData;
-    shiftData.shiftType = ShiftType::Absolute;
-    shiftData.shiftSize = shift;
+ext::shared_ptr<StressTestScenarioData::SpotShiftData> spotShiftData(const RiskFactorKey& key, double shift) {
+    ext::shared_ptr<StressTestScenarioData::SpotShiftData> shiftData =
+        ext::make_shared<StressTestScenarioData::SpotShiftData>();
+    shiftData->shiftType = ShiftType::Absolute;
+    shiftData->shiftSize = shift;
     return shiftData;
 }
 
@@ -358,11 +363,11 @@ XvaExplainAnalyticImpl::createStressTestData(const QuantLib::ext::shared_ptr<ore
                 break;
             }
             if (inScope) {
-                scenarioData->data().push_back(scenario);
+                scenarioData->setData(scenario);
             }
         }
     }
-    scenarioData->data().push_back(fullRevalScenario);
+    scenarioData->setData(fullRevalScenario);
     return scenarioData;
 }
 

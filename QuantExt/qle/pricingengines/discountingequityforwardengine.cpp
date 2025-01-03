@@ -45,7 +45,8 @@ void DiscountingEquityForwardEngine::calculate() const {
 
     results_.value = 0.0;
 
-    if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeToday)) {
         Real lsInd = ((arguments_.longShort == Position::Long) ? 1.0 : -1.0);
         Real qty = arguments_.quantity;
         Date maturity = arguments_.maturityDate;
@@ -78,7 +79,7 @@ void DiscountingEquityForwardEngine::calculate() const {
         results_.additionalResults["discountFactor"] = df;
         results_.additionalResults["forwardPrice"] = forwardPrice;
         results_.additionalResults["underlyingCcy"] = arguments_.currency;
-        results_.additionalResults["currentNotional"] = qty * forwardPrice * fxRate;
+        results_.additionalResults["currentNotional"] = qty * strike * fxRate;
         results_.additionalResults["currentNotionalCurrency"] = arguments_.payCurrency;
         results_.additionalResults["fxRate"] = fxRate;
         results_.additionalResults["fxFixingDate"] = arguments_.fixingDate;

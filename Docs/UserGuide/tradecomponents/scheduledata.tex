@@ -39,6 +39,7 @@ respectively.
                   <Tenor>3M</Tenor>
                   <EndOfMonth>false</EndOfMonth>
                   <EndOfMOnthConvention>Following</EndOfMOnthConvention>
+                  <IncludeDuplicateDates>false</IncludeDuplicateDates>
                   <Dates>
                     <Date>2012-01-06</Date>
                     <Date>2012-04-10</Date>
@@ -194,6 +195,8 @@ Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The
 \item \lstinline!EndOfMonthConvention! [Optional]: Whenever the \lstinline!EndOfMonth! logic is applied, this is used as the roll convention along with the \lstinline!Calendar!for any date adjustments.
 
 Allowable values: See Table \ref{tab:convention} Roll Convention. Defaults to \emph{Preceding} if omitted.
+
+\item \lstinline!IncludeDuplicateDates! [Optional]: If set to \emph{false} the resulting schedule will have unqiue set of dates and all duplicates will be removed. Default to \emph{false}.
 
 \item \lstinline!Dates!: This is a sub-sub-node and contains child elements of type
   \lstinline!Date!. In this case the schedule dates are determined

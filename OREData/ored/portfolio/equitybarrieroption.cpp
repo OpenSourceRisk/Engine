@@ -40,6 +40,7 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine> EquityBarrierOption::vanillaP
     QL_REQUIRE(eqOptBuilder, "No eqOptBuilder found");
 
     setSensitivityTemplate(*eqOptBuilder);
+    addProductModelEngine(*eqOptBuilder);
 
     return eqOptBuilder->engine(equityName(), tradeCurrency(), expiryDate);
 }
@@ -56,6 +57,7 @@ EquityBarrierOption::barrierPricingEngine(const QuantLib::ext::shared_ptr<Engine
     QL_REQUIRE(eqBarrierOptBuilder, "No eqBarrierOptBuilder found");
 
     setSensitivityTemplate(*eqBarrierOptBuilder);
+    addProductModelEngine(*eqBarrierOptBuilder);
 
     return eqBarrierOptBuilder->engine(equityName(), tradeCurrency(), expiryDate);
 }

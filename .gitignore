@@ -308,6 +308,7 @@ ipch/
 *log.txt
 *.dat
 
+QuantExt/qle/gitversion.hpp
 
 ##########################
 # Examples output

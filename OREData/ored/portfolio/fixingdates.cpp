@@ -465,7 +465,7 @@ std::ostream& operator<<(std::ostream& out,
 }
 
 std::ostream& operator<<(std::ostream& out, const RequiredFixings& requiredFixings) {
-    out << "IndexName FixingDate PayDate AlwaysAddIfPaysOnSettlement\n";
+    out << "IndexName FixingDate PayDate AlwaysAddIfPaysOnSettlement Mandatory\n";
     out << requiredFixings.fixingDates_;
     out << requiredFixings.zeroInflationFixingDates_;
     out << requiredFixings.yoyInflationFixingDates_;
@@ -519,10 +519,7 @@ void FixingDateGetter::visit(CPICashFlow& c) {
     auto zeroInflationIndex = QuantLib::ext::dynamic_pointer_cast<ZeroInflationIndex>(c.index());
     QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
 
-    QL_DEPRECATED_DISABLE_WARNING
-    bool isInterpolated = c.interpolation() == QuantLib::CPI::Linear ||
-                          (c.interpolation() == QuantLib::CPI::AsIndex && zeroInflationIndex->interpolated());
-    QL_DEPRECATED_ENABLE_WARNING
+    bool isInterpolated = c.interpolation() == QuantLib::CPI::Linear;
 
     requiredFixings_.addZeroInflationFixingDate(
         c.baseDate(), IndexNameTranslator::instance().oreName(c.index()->name()), isInterpolated,
@@ -537,10 +534,7 @@ void FixingDateGetter::visit(CPICashFlow& c) {
 
 void FixingDateGetter::visit(CPICoupon& c) {
 
-    QL_DEPRECATED_DISABLE_WARNING
-    bool isInterpolated = c.observationInterpolation() == QuantLib::CPI::Linear ||
-                          (c.observationInterpolation() == QuantLib::CPI::AsIndex && c.cpiIndex()->interpolated());
-    QL_DEPRECATED_ENABLE_WARNING
+    bool isInterpolated = c.observationInterpolation() == QuantLib::CPI::Linear;
 
     requiredFixings_.addZeroInflationFixingDate(
         c.baseDate(), IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
@@ -549,6 +543,13 @@ void FixingDateGetter::visit(CPICoupon& c) {
 
     requiredFixings_.addZeroInflationFixingDate(
         c.fixingDate(), IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
+        c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), c.observationInterpolation(),
+        c.cpiIndex()->frequency(), c.date());
+
+    Date today = Settings::instance().evaluationDate();
+    Date settlementObservationDate = today - c.observationLag();
+    requiredFixings_.addZeroInflationFixingDate(
+        settlementObservationDate, IndexNameTranslator::instance().oreName(c.cpiIndex()->name()), isInterpolated,
         c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), c.observationInterpolation(),
         c.cpiIndex()->frequency(), c.date());
 }

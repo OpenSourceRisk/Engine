@@ -59,6 +59,7 @@ class MockLoader : public Loader {
 public:
     MockLoader();
     vector<QuantLib::ext::shared_ptr<MarketDatum>> loadQuotes(const Date&) const override { return data_; }
+    std::set<QuantLib::Date> asofDates() const override { return {}; }
     set<Fixing> loadFixings() const override { return dummyFixings_; }
     set<QuantExt::Dividend> loadDividends() const override { return dummyDividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}

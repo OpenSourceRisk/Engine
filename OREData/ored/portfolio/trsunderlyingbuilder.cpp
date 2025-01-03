@@ -117,9 +117,9 @@ void BondTrsUnderlyingBuilder::build(
     if (!t->bondData().creditCurveId().empty())
         creditRiskCurrency = t->bondData().currency();
     creditQualifierMapping[securitySpecificCreditCurveName(t->bondData().securityId(), t->bondData().creditCurveId())] =
-        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup());
+        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(),t->bondData().hasCreditRisk());
     creditQualifierMapping[t->bondData().creditCurveId()] =
-        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup());
+        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(), t->bondData().hasCreditRisk());
 }
 
 void ForwardBondTrsUnderlyingBuilder::build(
@@ -166,9 +166,9 @@ void ForwardBondTrsUnderlyingBuilder::build(
     if (!t->bondData().creditCurveId().empty())
         creditRiskCurrency = t->bondData().currency();
     creditQualifierMapping[securitySpecificCreditCurveName(t->bondData().securityId(), t->bondData().creditCurveId())] =
-        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup());
+        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(), t->bondData().hasCreditRisk());
     creditQualifierMapping[t->bondData().creditCurveId()] =
-        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup());
+        SimmCreditQualifierMapping(t->bondData().securityId(), t->bondData().creditGroup(), t->bondData().hasCreditRisk());
 }
 
 template <class T>
@@ -366,9 +366,9 @@ void BondPositionTrsUnderlyingBuilder::build(
         indexQuantities[bondIndexBuilder.bondIndex()->name()] = t->weights()[i] * t->data().quantity();
         creditQualifierMapping[ore::data::securitySpecificCreditCurveName(t->bonds()[i].securityId,
                                                                           t->bonds()[i].creditCurveId)] =
-            SimmCreditQualifierMapping(t->bonds()[i].securityId, t->bonds()[i].creditGroup);
+            SimmCreditQualifierMapping(t->bonds()[i].securityId, t->bonds()[i].creditGroup, t->bonds()[i].hasCreditRisk);
         creditQualifierMapping[t->bonds()[i].creditCurveId] =
-            SimmCreditQualifierMapping(t->bonds()[i].securityId, t->bonds()[i].creditGroup);
+            SimmCreditQualifierMapping(t->bonds()[i].securityId, t->bonds()[i].creditGroup, t->bonds()[i].hasCreditRisk);
         hasCreditRisk = hasCreditRisk || t->bonds()[i].hasCreditRisk;
     }
     for (Size i = 0; i < t->bonds().size(); ++i) {

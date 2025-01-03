@@ -35,7 +35,7 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! bond trs cashflow
-class TRSCashFlow : public CashFlow, public Observer {
+class TRSCashFlow : public CashFlow {
 public:
     TRSCashFlow(const Date& paymentDate, const Date& fixingStartDate, const Date& fixingEndDate,
                 const Real notional, const QuantLib::ext::shared_ptr<Index>& Index,

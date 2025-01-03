@@ -34,7 +34,7 @@ using ore::data::CachingPricingEngineBuilder;
 
 class ConvertibleBondEngineBuilder
     : public ore::data::CachingPricingEngineBuilder<
-          std::string, const std::string&, const std::string&, const std::string&, const bool, const std::string&,
+          std::string, const std::string&, const std::string&, const std::string&, const std::string&,
           const std::string&, const bool, QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>,
           const QuantLib::ext::shared_ptr<QuantExt::FxIndex>&, const std::string&, const QuantLib::Date&,
           const QuantLib::Date&> {
@@ -43,7 +43,7 @@ protected:
         : CachingEngineBuilder(model, engine, {"ConvertibleBond"}) {}
 
     std::string keyImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
-                        const bool hasCreditRisk, const std::string& securityId, const std::string& referenceCurveId,
+                        const std::string& securityId, const std::string& referenceCurveId,
                         const bool isExchangeable, QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equity,
                         const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fx, const std::string& equityCreditCurveId,
                         const QuantLib::Date& startDate, const QuantLib::Date& maturityDate) override;
@@ -57,7 +57,7 @@ public:
 protected:
     QuantLib::ext::shared_ptr<QuantExt::PricingEngine>
     engineImpl(const std::string& id, const std::string& ccy, const std::string& creditCurveId,
-               const bool hasCreditRisk, const std::string& securityId, const std::string& referenceCurveId,
+               const std::string& securityId, const std::string& referenceCurveId,
                const bool isExchangeable, QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equity,
                const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fx, const std::string& equityCreditCurveId,
                const QuantLib::Date& startDate, const QuantLib::Date& maturityDate) override;

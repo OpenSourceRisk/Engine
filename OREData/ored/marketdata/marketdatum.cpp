@@ -160,6 +160,10 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& t
     }
 }
 
+void MarketDatum::setValue(const double v) {
+    quote_ = QuantLib::Handle< QuantLib::Quote>(QuantLib::ext::make_shared<SimpleQuote>(v));
+}
+
 EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
                                      string equityName, string ccy, string expiry,
                                      const QuantLib::ext::shared_ptr<BaseStrike>& strike, bool isCall)

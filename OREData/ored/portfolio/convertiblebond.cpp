@@ -467,6 +467,8 @@ void ConvertibleBond::build(const QuantLib::ext::shared_ptr<ore::data::EngineFac
 
     // build converible underlying bond, add to required fixings
 
+    additionalData_["underlyingSecurityId"] = data_.bondData().securityId();
+
     ore::data::Bond underlyingBond(Envelope(), data_.bondData());
     underlyingBond.build(engineFactory);
     requiredFixings_.addData(underlyingBond.requiredFixings());
@@ -607,10 +609,11 @@ void ConvertibleBond::build(const QuantLib::ext::shared_ptr<ore::data::EngineFac
         conversionData, mandatoryConversionData, conversionResetData, dividendProtectionData,
         data_.detachable().empty() ? false : parseBool(data_.detachable()), isPerpetual);
     qlConvertible->setPricingEngine(builder->engine(
-        id(), data_.bondData().currency(), data_.bondData().creditCurveId(), data_.bondData().hasCreditRisk(),
+        id(), data_.bondData().currency(), data_.bondData().creditCurveId(),
         data_.bondData().securityId(), data_.bondData().referenceCurveId(), exchangeableData.isExchangeable, equity, fx,
         data_.conversionData().exchangeableData().equityCreditCurve(), qlUnderlyingBond->startDate(), lastDate));
     setSensitivityTemplate(*builder);
+    addProductModelEngine(*builder);
 
     // set up other trade member variables
 
@@ -676,9 +679,9 @@ void ConvertibleBondTrsUnderlyingBuilder::build(
 
     creditRiskCurrency = t->data().bondData().currency();
     creditQualifierMapping[securitySpecificCreditCurveName(t->bondData().securityId(), t->bondData().creditCurveId())] =
-        SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup());
+        SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup(), t->data().bondData().hasCreditRisk());
     creditQualifierMapping[t->bondData().creditCurveId()] =
-        SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup());
+        SimmCreditQualifierMapping(t->data().bondData().securityId(), t->data().bondData().creditGroup(), t->data().bondData().hasCreditRisk());
 }
 
 void ConvertibleBondTrsUnderlyingBuilder::updateUnderlying(
@@ -748,7 +751,7 @@ BondBuilder::Result ConvertibleBondBuilder::build(const QuantLib::ext::shared_pt
     return res;
 }
 
-void ConvertibleBondBuilder::modifyToForwardBond(const Date& expiry, boost::shared_ptr<QuantLib::Bond>& bond,
+void ConvertibleBondBuilder::modifyToForwardBond(const Date& expiry, QuantLib::ext::shared_ptr<QuantLib::Bond>& bond,
                                                  const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory,
                                                  const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData,
                                                  const std::string& securityId) const {

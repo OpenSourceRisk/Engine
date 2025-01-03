@@ -1809,6 +1809,10 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                     maxTime = volatility_->timeFromReference(maxExpiry_);
             }
 
+            Handle<YieldTermStructure> pyts =
+                Handle<YieldTermStructure>(QuantLib::ext::make_shared<PriceTermStructureAdapter>(*pts_, *yts_));
+            pyts->enableExtrapolation();
+
             DeltaVolQuote::AtmType at;
             DeltaVolQuote::DeltaType dt;
             for (Size i = 0; i < times.size(); ++i) {
@@ -1828,13 +1832,13 @@ void CommodityVolCurve::buildVolCalibrationInfo(const Date& asof, QuantLib::ext:
                         Real strike;
                         if (d.isAtm()) {
                             strike =
-                                QuantExt::getAtmStrike(dt, at, pts_->price(asof,true), yts_->discount(t), 1., volatility_, t);
+                                QuantExt::getAtmStrike(dt, at, pts_->price(asof,true), yts_->discount(t), pyts->discount(t), volatility_, t);
                         } else if (d.isCall()) {
-                            strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), dt, pts_->price(asof,true),
-                                                                  yts_->discount(t), 1., volatility_, t);
+                            strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), dt, pts_->price(asof, true),
+                                                                  yts_->discount(t), pyts->discount(t), volatility_, t);
                         } else {
-                            strike = QuantExt::getStrikeFromDelta(Option::Put, d.delta(), dt, pts_->price(asof,true),
-                                                                  yts_->discount(t), 1., volatility_, t);
+                            strike = QuantExt::getStrikeFromDelta(Option::Put, d.delta(), dt, pts_->price(asof, true),
+                                                                  yts_->discount(t), pyts->discount(t), volatility_, t);
                         }
                         Real stddev = std::sqrt(volatility_->blackVariance(t, strike));
                         callPricesDelta[i][j] = QuantExt::blackFormula(Option::Call, strike, forwards[i], stddev);

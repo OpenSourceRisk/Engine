@@ -29,9 +29,9 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/fxbsdata.hpp>
+#include <qle/models/crossassetmodel.hpp>
 #include <qle/models/marketobserver.hpp>
 #include <qle/models/modelbuilder.hpp>
-#include <qle/models/crossassetmodel.hpp>
 
 namespace ore {
 namespace data {
@@ -72,7 +72,7 @@ public:
     void forceRecalculate() override;
     bool requiresRecalibration() const override;
     //@}
-    
+
     void setCalibrationDone() const;
 
 private:

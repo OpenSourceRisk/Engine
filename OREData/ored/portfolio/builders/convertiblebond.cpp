@@ -44,7 +44,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 std::string ConvertibleBondEngineBuilder::keyImpl(
-    const std::string& id, const std::string& ccy, const std::string& creditCurveId, const bool hasCreditRisk,
+    const std::string& id, const std::string& ccy, const std::string& creditCurveId,
     const std::string& securityId, const std::string& referenceCurveId, const bool isExchangeable,
     QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equity, const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fx,
     const std::string& equityCreditCurveId, const QuantLib::Date& startDate, const QuantLib::Date& maturityDate) {
@@ -52,7 +52,7 @@ std::string ConvertibleBondEngineBuilder::keyImpl(
 }
 
 QuantLib::ext::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableEquityJumpDiffusionEngineBuilder::engineImpl(
-    const std::string& id, const std::string& ccy, const std::string& creditCurveId, const bool hasCreditRisk,
+    const std::string& id, const std::string& ccy, const std::string& creditCurveId,
     const std::string& securityId, const std::string& referenceCurveId, const bool isExchangeable,
     QuantLib::ext::shared_ptr<QuantExt::EquityIndex2> equity, const QuantLib::ext::shared_ptr<QuantExt::FxIndex>& fx,
     const std::string& equityCreditCurveId, const QuantLib::Date& startDate, const QuantLib::Date& maturityDate) {
@@ -127,7 +127,7 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableE
 
     Handle<DefaultProbabilityTermStructure> creditCurve;
     Real creditCurveRecovery = 0.0;
-    if (!creditCurveId.empty() && hasCreditRisk) {
+    if (!creditCurveId.empty()) {
         creditCurve = securitySpecificCreditCurve(market_, securityId, creditCurveId, config)->curve();
         creditCurveRecovery = market_->recoveryRate(creditCurveId, config)->value();
     } else {
@@ -146,7 +146,7 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableE
         try {
             recovery = market_->recoveryRate(securityId, config);
         } catch (...) {
-            if (!creditCurveId.empty() && hasCreditRisk) {
+            if (!creditCurveId.empty()) {
                 recovery = market_->recoveryRate(creditCurveId, config);
             } else if (!creditCurveId.empty()) {
                 market_->recoveryRate(creditCurveId, config);
@@ -170,7 +170,7 @@ QuantLib::ext::shared_ptr<QuantLib::PricingEngine> ConvertibleBondFDDefaultableE
     Handle<DefaultProbabilityTermStructure> equityCreditCurve;
     Real equityCreditCurveRecovery = 0.0;
     if (isExchangeable) {
-        if (!equityCreditCurveId.empty() && hasCreditRisk) {
+        if (!equityCreditCurveId.empty()) {
             equityCreditCurve = market_->defaultCurve(equityCreditCurveId, config)->curve();
             equityCreditCurveRecovery = market_->recoveryRate(equityCreditCurveId, config)->value();
         } else {

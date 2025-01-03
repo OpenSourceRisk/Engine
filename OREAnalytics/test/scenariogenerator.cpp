@@ -1231,7 +1231,7 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
 
     QuantLib::ext::shared_ptr<CPICapFloor> cap = QuantLib::ext::make_shared<CPICapFloor>(
         Option::Type::Call, 1.0, today, baseCPI, maturity, infIndex->fixingCalendar(), ModifiedFollowing,
-        infIndex->fixingCalendar(), ModifiedFollowing, 0.0, infIndex, 2 * Months, CPI::Flat);
+        infIndex->fixingCalendar(), ModifiedFollowing, 0.0, infIndex.currentLink(), 2 * Months, CPI::Flat);
     cap->setPricingEngine(modelEngine);
     Real capNpv = cap->NPV();
 

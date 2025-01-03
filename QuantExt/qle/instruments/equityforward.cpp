@@ -41,8 +41,12 @@ EquityForward::EquityForward(const std::string& name, const Currency& currency, 
     }
 }
 
-bool EquityForward::isExpired() const { return detail::simple_event(payDate_).hasOccurred(); }
-
+bool EquityForward::isExpired() const {
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    Date refDate = Settings::instance().evaluationDate();
+    return detail::simple_event(payDate_).hasOccurred(refDate, includeToday);
+}
+  
 void EquityForward::setupArguments(PricingEngine::arguments* args) const {
     EquityForward::arguments* arguments = dynamic_cast<EquityForward::arguments*>(args);
     QL_REQUIRE(arguments != 0, "wrong argument type in equityforward");

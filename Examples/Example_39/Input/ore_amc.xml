@@ -43,7 +43,7 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="amc">Y</Parameter>
-      <Parameter name="amcTradeTypes">Swap,Swaption,FxOption</Parameter>
+      <Parameter name="amcTradeTypes">Swap,Swaption,FxOption,CompositeTrade</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="amcPricingEnginesFile">pricingengine_amc.xml</Parameter>

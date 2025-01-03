@@ -128,11 +128,10 @@ void EquityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     
     // Pricing engine
     QuantLib::ext::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    QuantLib::ext::shared_ptr<EquityForwardEngineBuilder> eqFwdBuilder =
-        QuantLib::ext::dynamic_pointer_cast<EquityForwardEngineBuilder>(builder);
+    auto eqFwdBuilder = QuantLib::ext::dynamic_pointer_cast<EquityForwardEngineBuilderBase>(builder);
     inst->setPricingEngine(eqFwdBuilder->engine(eqName(), ccy));
     setSensitivityTemplate(*eqFwdBuilder);
+    addProductModelEngine(*eqFwdBuilder);
 }
     
 void EquityForward::fromXML(XMLNode* node) {

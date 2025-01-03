@@ -164,6 +164,8 @@ public:
     const std::vector<std::string>& conditionalExpectationModelStates() const {
         return conditionalExpectationModelStates_;
     }
+    const std::map<std::string, std::string>& engineParameterOverwrite() const { return engineParameterOverwrite_; }
+    const std::map<std::string, std::string>& modelParameterOverwrite() const { return modelParameterOverwrite_; }
 
 private:
     void formatCode();
@@ -175,6 +177,8 @@ private:
     std::vector<CalibrationData> calibrationSpec_;
     std::vector<std::string> stickyCloseOutStates_;
     std::vector<std::string> conditionalExpectationModelStates_;
+    std::map<std::string, std::string> engineParameterOverwrite_;
+    std::map<std::string, std::string> modelParameterOverwrite_;
 };
 
 class ScriptLibraryData : public XMLSerializable {

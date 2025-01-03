@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters>
+      <Parameter name="SensitivityTemplate">FX_Analytical</Parameter>
+    </EngineParameters>
+  </Product>
+  <!-- Global Parameters -->
+  <GlobalParameters>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
+    <Parameter name="PseudoCurrency.TreatAsFX">false</Parameter>
+    <Parameter name="PseudoCurrency.BaseCurrency">USD</Parameter>
+    <Parameter name="PseudoCurrency.FXIndexTag">GENERIC</Parameter>
+    <Parameter name="PseudoCurrency.Curve.XAU">PM:XAUUSD</Parameter>
+    <Parameter name="PseudoCurrency.Curve.XAG">PM:XAGUSD</Parameter>
+    <Parameter name="PseudoCurrency.Curve.XPT">PM:XPTUSD</Parameter>
+    <Parameter name="PseudoCurrency.Curve.XPD">PM:XPDUSD</Parameter>
+    <Parameter name="ImplyAbsMaturityForRegex">^RED:[0-9A-Z]{9}$</Parameter>
+  </GlobalParameters>
+</PricingEngines>

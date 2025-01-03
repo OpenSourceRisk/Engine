@@ -43,7 +43,11 @@ ForwardBond::ForwardBond(const QuantLib::ext::shared_ptr<Bond>& underlying, cons
       compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate),
       bondNotional_(bondNotional), dv01_(dv01) {}
 
-bool ForwardBond::isExpired() const { return detail::simple_event(fwdMaturityDate_).hasOccurred(); }
+bool ForwardBond::isExpired() const {
+    ext::optional<bool> includeToday = Settings::instance().includeTodaysCashFlows();
+    Date refDate = Settings::instance().evaluationDate();
+    return detail::simple_event(fwdMaturityDate_).hasOccurred(refDate, includeToday);
+}
 
 void ForwardBond::setupArguments(PricingEngine::arguments* args) const {
     ForwardBond::arguments* arguments = dynamic_cast<ForwardBond::arguments*>(args);

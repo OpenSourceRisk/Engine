@@ -102,11 +102,9 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     resolvedProductTag_ = boost::replace_all_copy(productTag, "{AssetClass}", assetClassReplacement_);
     DLOG("got product tag '" << productTag << "', resolved product tag is '" << resolvedProductTag_);
 
-    // 2 populate model and engine parameters
+    // 2 define purpose, get suitable script and build ast (i.e. parse it or retrieve it from cache)
 
-    populateModelParameters();
-
-    // 3 define purpose, get suitable script and build ast (i.e. parse it or retrieve it from cache)
+    engineParam_ = engineParameter("Engine", {resolvedProductTag_});
 
     std::string purpose = "";
     if (buildingAmc_)
@@ -116,6 +114,9 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
 
     ScriptedTradeScriptData script =
         getScript(scriptedTrade, ScriptLibraryStorage::instance().get(), purpose, true).second;
+
+    modelParameterOverwrite_ = script.modelParameterOverwrite();
+    engineParameterOverwrite_ = script.engineParameterOverwrite();
 
     auto f = astCache_.find(script.code());
 
@@ -127,6 +128,10 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         astCache_[script.code()] = ast_;
         DLOGGERSTREAM("built ast:\n" << to_string(ast_));
     }
+
+    // 3 populate model and engine parameters
+
+    populateModelParameters();
 
     // 4 set up context
 
@@ -320,6 +325,8 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
     } else if (modelParam_ == "LocalVolAndreasenHuge") {
         DLOG("moneyness points = " << calibrationMoneyness_.size());
     }
+    DLOG("indicatorSmoothingForValues      = " << indicatorSmoothingForValues_);
+    DLOG("indicatorSmoothingForDerivatives = " << indicatorSmoothingForDerivatives_);
 
     // 22 build the pricing engine and return it
 
@@ -334,7 +341,7 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngine>(
             script.npv(), script.results(), model_, ast_, context, script.code(), interactive_, amcCam_ != nullptr,
             std::set<std::string>(script.stickyCloseOutStates().begin(), script.stickyCloseOutStates().end()),
-            generateAdditionalResults, includePastCashflows_);
+            generateAdditionalResults, includePastCashflows_, staticNpvMem_);
     } else if (modelCG_) {
         auto rt = globalParameters_.find("RunType");
         std::string runType = rt != globalParameters_.end() ? rt->second : "<<no run type set>>";
@@ -351,9 +358,9 @@ ScriptedTradeEngineBuilder::engine(const std::string& id, const ScriptedTrade& s
                  << generateAdditionalResults << "), both of which do not support external devices at the moment.");
         }
         engine = QuantLib::ext::make_shared<ScriptedInstrumentPricingEngineCG>(
-            script.npv(), script.results(), modelCG_, ast_, context, mcParams_, script.code(), interactive_,
-            generateAdditionalResults, includePastCashflows_, useCachedSensis, useExternalDev,
-            useDoublePrecisionForExternalCalculation_);
+            script.npv(), script.results(), modelCG_, ast_, context, mcParams_, indicatorSmoothingForValues_,
+            indicatorSmoothingForDerivatives_, script.code(), interactive_, generateAdditionalResults,
+            includePastCashflows_, useCachedSensis, useExternalDev, useDoublePrecisionForExternalCalculation_);
         if (useExternalDev) {
             ComputeEnvironment::instance().selectContext(externalComputeDevice_);
         }
@@ -388,6 +395,8 @@ void ScriptedTradeEngineBuilder::clear() {
     calibrationStrikes_.clear();
     model_ = nullptr;
     modelCG_ = nullptr;
+    modelParameterOverwrite_.clear();
+    engineParameterOverwrite_.clear();
 }
 
 void ScriptedTradeEngineBuilder::extractIndices(
@@ -517,8 +526,13 @@ void ScriptedTradeEngineBuilder::populateModelParameters() {
     externalComputeDevice_ = engineParameter("ExternalComputeDevice", {}, false, "");
     externalDeviceCompatibilityMode_ = parseBool(engineParameter("ExternalDeviceCompatibilityMode", {}, false, "false"));
     includePastCashflows_ = parseBool(engineParameter("IncludePastCashflows", {resolvedProductTag_}, false, "false"));
+    staticNpvMem_ = parseBool(engineParameter("StaticNpvMem", {resolvedProductTag_}, false, "false"));
     salvagingAlgorithm_ =
         parseSalvagingAlgorithmType(engineParameter("SalvagingAlgorithm", {resolvedProductTag_}, false, "Spectral"));
+    indicatorSmoothingForValues_ =
+        parseReal(engineParameter("IndicatorSmoothingForValues", {resolvedProductTag_}, false, "0.0"));
+    indicatorSmoothingForDerivatives_ =
+        parseReal(engineParameter("IndicatorSmoothingForDerivatives", {resolvedProductTag_}, false, "0.2"));
 
     // usage of ad or an external device implies usage of cg
     if (useAd_ || useExternalComputeDevice_)
@@ -1082,11 +1096,9 @@ void ScriptedTradeEngineBuilder::compileSimulationAndAddDates() {
                 for (auto const& d : s.second) {
                     auto lim = inflationPeriod(d, info.inf()->frequency());
                     simulationDates_.insert(lim.first + lag);
-                    QL_DEPRECATED_DISABLE_WARNING
-                    // This will be removed in a later release and all inf indices are then flat
-                    if (info.inf()->interpolated())
+                    // Allow interpolation of indices for convencience (avoid interpolation logic in script)
+                    if (info.infIsInterpolated())
                         simulationDates_.insert(d + lag);
-                    QL_DEPRECATED_ENABLE_WARNING
                 }
             } else {
                 // for all other indices we just take the original dates
@@ -1688,12 +1700,11 @@ void ScriptedTradeEngineBuilder::buildGaussianCam(const std::string& id, const I
     auto discretization = useCg_ ? CrossAssetModel::Discretization::Euler : CrossAssetModel::Discretization::Exact;
     auto camBuilder = QuantLib::ext::make_shared<CrossAssetModelBuilder>(
         market_,
-        QuantLib::ext::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs,
-                                                        crCirConfigs, comConfigs, 0, camCorrelations,
-                                                        bootstrapTolerance_, "LGM", discretization),
+        QuantLib::ext::make_shared<CrossAssetModelData>(
+            irConfigs, fxConfigs, eqConfigs, infConfigs, crLgmConfigs, crCirConfigs, comConfigs, 0, camCorrelations,
+            bootstrapTolerance_, "LGM", discretization, salvagingAlgorithm_),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
-        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
-        salvagingAlgorithm_, id);
+        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_, id);
 
     // effective time steps per year: zero for exact evolution, otherwise the pricing engine parameter
     if (useCg_) {
@@ -1800,10 +1811,9 @@ void ScriptedTradeEngineBuilder::buildFdGaussianCam(const std::string& id,
             std::vector<QuantLib::ext::shared_ptr<CrLgmData>>{}, std::vector<QuantLib::ext::shared_ptr<CrCirData>>{},
             std::vector<QuantLib::ext::shared_ptr<CommoditySchwartzData>>{}, 0,
             std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>{}, bootstrapTolerance_, "LGM",
-            CrossAssetModel::Discretization::Exact),
+            CrossAssetModel::Discretization::Exact, salvagingAlgorithm_),
         configurationInCcy, configurationXois, configurationXois, configurationInCcy, configurationInCcy,
-        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_,
-        salvagingAlgorithm_, id);
+        configurationXois, !calibrate_ || zeroVolatility_, continueOnCalibrationError_, referenceCalibrationGrid_, id);
 
     model_ = QuantLib::ext::make_shared<FdGaussianCam>(camBuilder->model(), modelCcys_.front(), modelCurves_.front(),
                                                modelIrIndices_, simulationDates_, modelSize_, timeStepsPerYear_,
@@ -1825,29 +1835,29 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
 
     QL_REQUIRE(!useCg_, "building gaussian cam from external amc cam, useCg must be set to false in this case.");
 
-    std::vector<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
+    std::set<std::pair<CrossAssetModel::AssetType, Size>> selectedComponents;
 
     // IR configs
     for (Size i = 0; i < modelCcys_.size(); ++i) {
-        selectedComponents.push_back(
+        selectedComponents.insert(
             std::make_pair(CrossAssetModel::AssetType::IR, amcCam_->ccyIndex(parseCurrency(modelCcys_[i]))));
     }
 
     // INF configs
     for (Size i = 0; i < modelInfIndices_.size(); ++i) {
-        selectedComponents.push_back(std::make_pair(CrossAssetModel::AssetType::INF,
-                                                    amcCam_->infIndex(IndexInfo(modelInfIndices_[i].first).infName())));
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::INF,
+                                                 amcCam_->infIndex(IndexInfo(modelInfIndices_[i].first).infName())));
     }
 
     // FX configs
     for (Size i = 1; i < modelCcys_.size(); ++i) {
-        selectedComponents.push_back(
+        selectedComponents.insert(
             std::make_pair(CrossAssetModel::AssetType::FX, amcCam_->ccyIndex(parseCurrency(modelCcys_[i])) - 1));
     }
 
     // EQ configs
     for (auto const& eq : eqIndices_) {
-        selectedComponents.push_back(std::make_pair(CrossAssetModel::AssetType::EQ, amcCam_->eqIndex(eq.eq()->name())));
+        selectedComponents.insert(std::make_pair(CrossAssetModel::AssetType::EQ, amcCam_->eqIndex(eq.eq()->name())));
     }
 
     // COMM configs, not supported at this point
@@ -1891,6 +1901,23 @@ void ScriptedTradeEngineBuilder::addAmcGridToContext(QuantLib::ext::shared_ptr<C
 void ScriptedTradeEngineBuilder::setupCalibrationStrikes(const ScriptedTradeScriptData& script,
                                                          const QuantLib::ext::shared_ptr<Context>& context) {
     calibrationStrikes_ = getCalibrationStrikes(script.calibrationSpec(), context);
+}
+
+std::string ScriptedTradeEngineBuilder::engineParameter(const std::string& p,
+                                                        const std::vector<std::string>& qualifiers,
+                                                        const bool mandatory, const std::string& defaultValue) const {
+    auto overwrite = getParameter(engineParameterOverwrite_, p, qualifiers, false, std::string());
+    if (!overwrite.empty())
+        return overwrite;
+    return getParameter(engineParameters_, p, qualifiers, mandatory, defaultValue);
+}
+
+std::string ScriptedTradeEngineBuilder::modelParameter(const std::string& p, const std::vector<std::string>& qualifiers,
+                                                       const bool mandatory, const std::string& defaultValue) const {
+    auto overwrite = getParameter(modelParameterOverwrite_, p, qualifiers, false, std::string());
+    if (!overwrite.empty())
+        return overwrite;
+    return getParameter(modelParameters_, p, qualifiers, mandatory, defaultValue);
 }
 
 } // namespace data

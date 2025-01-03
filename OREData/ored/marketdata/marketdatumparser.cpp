@@ -323,13 +323,13 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
         boost::variant<QuantLib::Date, QuantLib::Period> end = parseDateOrPeriod(tokens[5 + offset]);
 
         if (start.type() == typeid(QuantLib::Period) && end.type() == typeid(QuantLib::Period)) {
-            Period fwdStart = QuantLib::ext::get<QuantLib::Period>(start);
-            Period term = QuantLib::ext::get<QuantLib::Period>(end);
+            Period fwdStart = boost::get<QuantLib::Period>(start);
+            Period term = boost::get<QuantLib::Period>(end);
             return QuantLib::ext::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term, tenor,
                                                  indexName);
         } else if (start.type() == typeid(QuantLib::Date) && end.type() == typeid(QuantLib::Date)) {
-            Date startDate = QuantLib::ext::get<QuantLib::Date>(start);
-            Date maturityDate = QuantLib::ext::get<QuantLib::Date>(end);
+            Date startDate = boost::get<QuantLib::Date>(start);
+            Date maturityDate = boost::get<QuantLib::Date>(end);
             return QuantLib::ext::make_shared<SwapQuote>(value, asof, datumName, quoteType, ccy, startDate, maturityDate, tenor,
                                                  indexName);
         } else {

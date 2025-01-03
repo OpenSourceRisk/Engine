@@ -169,6 +169,7 @@ void CommoditySwap::build(const QuantLib::ext::shared_ptr<EngineFactory>& engine
     QuantLib::ext::shared_ptr<PricingEngine> engine = engineBuilder->engine(parseCurrency(npvCurrency_));
     swap->setPricingEngine(engine);
     setSensitivityTemplate(*engineBuilder);
+    addProductModelEngine(*engineBuilder);
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(swap);
 }
 

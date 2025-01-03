@@ -78,4 +78,28 @@
       <SoldAmount>1100000</SoldAmount>
     </FxForwardData>
   </Trade>
+  <Trade id="FX_CALL_MATURING">
+    <TradeType>FxOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <FxOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2016-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1000000</SoldAmount>
+    </FxOptionData>
+  </Trade>
 </Portfolio>

@@ -52,6 +52,7 @@
 #include <qle/cashflows/cpicouponpricer.hpp>
 #include <qle/cashflows/durationadjustedcmscoupon.hpp>
 #include <qle/cashflows/durationadjustedcmscoupontsrpricer.hpp>
+#include <qle/cashflows/equitycashflow.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/equitymargincoupon.hpp>
@@ -87,6 +88,7 @@
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
+#include <qle/gitversion.hpp>
 #include <qle/indexes/behicp.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/bondindex.hpp>
@@ -228,6 +230,7 @@
 #include <qle/math/computeenvironment.hpp>
 #include <qle/math/constantinterpolation.hpp>
 #include <qle/math/covariancesalvage.hpp>
+#include <qle/math/cudaenvironment.hpp>
 #include <qle/math/deltagammavar.hpp>
 #include <qle/math/differentialevolution_mt.hpp>
 #include <qle/math/discretedistribution.hpp>
@@ -366,6 +369,7 @@
 #include <qle/pricingengines/analyticeuropeanengine.hpp>
 #include <qle/pricingengines/analyticeuropeanenginedeltagamma.hpp>
 #include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
+#include <qle/pricingengines/analytichwswaptionengine.hpp>
 #include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticjyyoycapfloorengine.hpp>
 #include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
@@ -414,6 +418,7 @@
 #include <qle/pricingengines/intrinsicascotengine.hpp>
 #include <qle/pricingengines/lgmconvolutionsolver.hpp>
 #include <qle/pricingengines/mccamcurrencyswapengine.hpp>
+#include <qle/pricingengines/mccamequityforwardengine.hpp>
 #include <qle/pricingengines/mccamfxforwardengine.hpp>
 #include <qle/pricingengines/mccamfxoptionengine.hpp>
 #include <qle/pricingengines/mclgmbondengine.hpp>
@@ -425,6 +430,7 @@
 #include <qle/pricingengines/midpointcdoengine.hpp>
 #include <qle/pricingengines/midpointcdsenginemultistate.hpp>
 #include <qle/pricingengines/midpointindexcdsengine.hpp>
+#include <qle/pricingengines/nullamccalculator.hpp>
 #include <qle/pricingengines/numericalintegrationindexcdsoptionengine.hpp>
 #include <qle/pricingengines/numericlgmbgsflexiswapengine.hpp>
 #include <qle/pricingengines/numericlgmflexiswapengine.hpp>
@@ -514,8 +520,6 @@
 #include <qle/termstructures/inflation/constantcpivolatility.hpp>
 #include <qle/termstructures/inflation/cpipricevolatilitysurface.hpp>
 #include <qle/termstructures/inflation/cpivolatilitystructure.hpp>
-#include <qle/termstructures/inflation/inflationtraits.hpp>
-#include <qle/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 #include <qle/termstructures/interpolateddiscountcurve.hpp>
@@ -582,7 +586,9 @@
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
-#include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
+#include <qle/termstructures/yoyoptionletsolver.hpp>
+#include <qle/termstructures/yoyoptionletsurfacestripper.hpp>
+#include <qle/termstructures/yoypricesurfacefromvols.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 #include <qle/time/dateutilities.hpp>

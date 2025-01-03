@@ -81,6 +81,15 @@ public:
     void setBuildFailedTrades(bool b) { buildFailedTrades_ = b; }
     void setObservationModel(const std::string& s) { observationModel_ = s; }
     void setImplyTodaysFixings(bool b) { implyTodaysFixings_ = b; }
+    void setEnrichIndexFixings(bool b) { enrichIndexFixings_ = b; }
+    void setIgnoreFixingLead(Size i) { ignoreFixingLead_ = i; }
+    void setIgnoreFixingLag(Size i) { ignoreFixingLag_ = i; }
+    void setIncludeTodaysCashFlows(bool b) {
+        Settings::instance().includeTodaysCashFlows() = b;
+    }
+    void setIncludeReferenceDateEvents(bool b) {
+        Settings::instance().includeReferenceDateEvents() = b;
+    }
     void setMarketConfig(const std::string& config, const std::string& context);
     void setRefDataManager(const std::string& xml);
     void setRefDataManagerFromFile(const std::string& fileName);
@@ -146,6 +155,7 @@ public:
     void setUseSensiSpreadedTermStructures(bool b) { useSensiSpreadedTermStructures_ = b; }
     void setSensiThreshold(Real r) { sensiThreshold_ = r; }
     void setSensiRecalibrateModels(bool b) { sensiRecalibrateModels_ = b; }
+    void setSensiLaxFxConversion(bool b) { sensiLaxFxConversion_ = b; }
     void setSensiSimMarketParams(const std::string& xml);
     void setSensiSimMarketParamsFromFile(const std::string& fileName);
     void setSensiScenarioData(const std::string& xml);
@@ -182,6 +192,8 @@ public:
     void setStressLowerBoundRatesDiscountFactor(const double value) { stressLowerBoundRatesDiscountFactor_ = value; }
     void setStressUpperBoundRatesDiscountFactor(const double value) { stressUpperBoundRatesDiscountFactor_ = value; }
     void setStressAccurary(const double value) { stressAccurary_ = value; };
+    void setStressPrecision(const Size value) { stressPrecision_ = value; };
+    void setStressGenerateCashflows(const bool b) { stressGenerateCashflows_ = b; }
     // Setters for VaR
     void setVarSalvagingAlgorithm(SalvagingAlgorithm::Type vsa) { varSalvagingAlgorithm_ = vsa; }
     void setVarQuantiles(const std::string& s); // parse to vector<Real>
@@ -202,6 +214,8 @@ public:
     void setOutputHistoricalScenarios(const bool b) { outputHistoricalScenarios_ = b; }
 
     // Setters for exposure simulation
+    void setExposureIncludeTodaysCashFlows(bool b) { exposureIncludeTodaysCashFlows_ = b; }
+    void setExposureIncludeReferenceDateEvents(bool b) { exposureIncludeReferenceDateEvents_ = b; }
     void setAmc(bool b) { amc_ = b; }
     void setAmcCg(XvaEngineCG::Mode b) { amcCg_ = b; }
     void setXvaCgBumpSensis(bool b) { xvaCgBumpSensis_ = b; }
@@ -214,6 +228,8 @@ public:
     void setAmcTradeTypes(const std::string& s); // parse to set<string>
     void setAmcPathDataInput(const std::string& s);
     void setAmcPathDataOutput(const std::string& s);
+    void setAmcIndividualTrainingInput(bool b) { amcIndividualTrainingInput_ = b; }
+    void setAmcIndividualTrainingOutput(bool b) { amcIndividualTrainingOutput_ = b; }
     void setExposureBaseCurrency(const std::string& s) { exposureBaseCurrency_ = s; } 
     void setExposureObservationModel(const std::string& s) { exposureObservationModel_ = s; }
     void setNettingSetId(const std::string& s) { nettingSetId_ = s; }
@@ -271,6 +287,7 @@ public:
     void setFullInitialCollateralisation(bool b) { fullInitialCollateralisation_ = b; }
     void setExposureProfiles(bool b) { exposureProfiles_ = b; }
     void setExposureProfilesByTrade(bool b) { exposureProfilesByTrade_ = b; }
+    void setExposureProfilesUseCloseOutValues(bool b) { exposureProfilesUseCloseOutValues_ = b; }
     void setPfeQuantile(Real r) { pfeQuantile_ = r; }
     void setCollateralCalculationType(const std::string& s) { collateralCalculationType_ = s; }
     void setExposureAllocationMethod(const std::string& s) { exposureAllocationMethod_ = s; }
@@ -292,9 +309,11 @@ public:
     void setDvaName(const std::string& s) { dvaName_ = s; }
     void setRawCubeOutput(bool b) { rawCubeOutput_ = b; }
     void setNetCubeOutput(bool b) { netCubeOutput_ = b; }
+    void setTimeAveragedNettedExposureOutput(bool b) { timeAveragedNettedExposureOutput_ = b; }
     // FIXME: remove this from the base class?
     void setRawCubeOutputFile(const std::string& s) { rawCubeOutputFile_ = s; }
     void setNetCubeOutputFile(const std::string& s) { netCubeOutputFile_ = s; }
+    void setTimeAveragedNettedExposureOutputFile(const std::string& s) { timeAveragedNettedExposureOutputFile_ = s; }
     // funding value adjustment details
     void setFvaBorrowingCurve(const std::string& s) { fvaBorrowingCurve_ = s; }
     void setFvaLendingCurve(const std::string& s) { fvaLendingCurve_ = s; }
@@ -355,6 +374,9 @@ public:
     void setXvaSensiPricingEngine(const QuantLib::ext::shared_ptr<EngineData>& engineData) {
         sensiPricingEngine_ = engineData;
     }
+    void setXvaSensiParSensi(const bool parSensi){ xvaSensiParSensi_ = parSensi;}
+    void setXvaSensiOutputJacobi(const bool outputJacobi) { xvaSensiOutputJacobi_ = outputJacobi; };
+    void setXvaSensiThreshold(const Real threshold) { xvaSensiThreshold_ = threshold; }
 
     // Setters for XVA Explain
     void setXvaExplainSimMarketParams(const std::string& xml);
@@ -451,6 +473,7 @@ public:
     // Set list of analytics that shall be run
     void setAnalytics(const std::string& s); // parse to set<string>
     void insertAnalytic(const std::string& s); 
+    void removeAnalytic(const std::string& s);
 
 
 
@@ -466,6 +489,9 @@ public:
     bool buildFailedTrades() const { return buildFailedTrades_; }
     const std::string& observationModel() const { return observationModel_; }
     bool implyTodaysFixings() const { return implyTodaysFixings_; }
+    bool enrichIndexFixings() const { return enrichIndexFixings_; }
+    Size ignoreFixingLead() const { return ignoreFixingLead_; }
+    Size ignoreFixingLag() const { return ignoreFixingLag_; }
     const std::map<std::string, std::string>&  marketConfigs() const { return marketConfigs_; }
     const std::string& marketConfig(const std::string& context);
     const QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager>& refDataManager() const { return refDataManager_; }
@@ -540,6 +566,7 @@ public:
     bool useSensiSpreadedTermStructures() const { return useSensiSpreadedTermStructures_; }
     QuantLib::Real sensiThreshold() const { return sensiThreshold_; }
     bool sensiRecalibrateModels() const { return sensiRecalibrateModels_; }
+    bool sensiLaxFxConversion() const { return sensiLaxFxConversion_; }
     const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& sensiSimMarketParams() const { return sensiSimMarketParams_; }
     const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensiScenarioData() const { return sensiScenarioData_; }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& sensiPricingEngine() const { return sensiPricingEngine_; }
@@ -577,6 +604,9 @@ public:
         return stressUpperBoundRatesDiscountFactor_;
     }
     double stressAccurary() const { return stressAccurary_; };
+    Size stressPrecision() const { return stressPrecision_; };
+    bool stressGenerateCashflows() const { return stressGenerateCashflows_; }
+    
     /*****************
      * Getters for VaR
      *****************/
@@ -597,6 +627,8 @@ public:
     /*********************************
      * Getters for exposure simulation 
      *********************************/
+    optional<bool> exposureIncludeTodaysCashFlows() const { return exposureIncludeTodaysCashFlows_; }
+    bool exposureIncludeReferenceDateEvents() const { return exposureIncludeReferenceDateEvents_; }
     bool amc() const { return amc_; }
     XvaEngineCG::Mode amcCg() const { return amcCg_; }
     bool xvaCgBumpSensis() const { return xvaCgBumpSensis_; }
@@ -610,6 +642,8 @@ public:
     const std::set<std::string>& amcTradeTypes() const { return amcTradeTypes_; }
     const std::string& amcPathDataInput() const { return amcPathDataInput_; }
     const std::string& amcPathDataOutput() const { return amcPathDataOutput_; }
+    bool amcIndividualTrainingInput() const { return amcIndividualTrainingInput_; }
+    bool amcIndividualTrainingOutput() const { return amcIndividualTrainingOutput_; }
     const std::string& exposureBaseCurrency() const { return exposureBaseCurrency_; }
     const std::string& exposureObservationModel() const { return exposureObservationModel_; }
     const std::string& nettingSetId() const { return nettingSetId_; }
@@ -630,7 +664,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::CollateralBalances>& collateralBalances() const { return collateralBalances_; }
     const Real& simulationBootstrapTolerance() const { return simulationBootstrapTolerance_; }
     QuantLib::Size reportBufferSize() const { return reportBufferSize_; }
-
+  
     /*****************
      * Getters for xva
      *****************/
@@ -645,6 +679,7 @@ public:
     bool fullInitialCollateralisation() const { return fullInitialCollateralisation_; }
     bool exposureProfiles() const { return exposureProfiles_; }
     bool exposureProfilesByTrade() const { return exposureProfilesByTrade_; }
+    bool exposureProfilesUseCloseOutValues() const { return exposureProfilesUseCloseOutValues_; }
     Real pfeQuantile() const { return pfeQuantile_; }
     const std::string&  collateralCalculationType() const { return collateralCalculationType_; }
     const std::string& exposureAllocationMethod() const { return exposureAllocationMethod_; }
@@ -666,8 +701,10 @@ public:
     const std::string& dvaName() const { return dvaName_; }
     bool rawCubeOutput() const { return rawCubeOutput_; }
     bool netCubeOutput() const { return netCubeOutput_; }
+    bool timeAveragedNettedExposureOutput() const { return timeAveragedNettedExposureOutput_; }
     const std::string& rawCubeOutputFile() const { return rawCubeOutputFile_; }
     const std::string& netCubeOutputFile() const { return netCubeOutputFile_; }
+    const std::string& timeAveragedNettedExposureOutputFile() const { return timeAveragedNettedExposureOutputFile_; }
     // funding value adjustment details
     const std::string& fvaBorrowingCurve() const { return fvaBorrowingCurve_; }
     const std::string& fvaLendingCurve() const { return fvaLendingCurve_; }
@@ -810,6 +847,10 @@ public:
     }
     const QuantLib::ext::shared_ptr<ore::data::EngineData>& xvaSensiPricingEngine() const { return xvaSensiPricingEngine_; }
 
+    bool xvaSensiParSensi() const { return xvaSensiParSensi_; }
+    bool xvaSensiOutputJacobi() const { return xvaSensiOutputJacobi_; };
+    Real xvaSensiThreshold() const { return xvaSensiThreshold_;}
+
     /****************************
      * Getters for zero to par shift
      ****************************/
@@ -847,13 +888,19 @@ protected:
      ***********************************/
     QuantLib::Date asof_;
     boost::filesystem::path resultsPath_;
-    std::string baseCurrency_;
+    std::string baseCurrency_ = "USD";
     std::string resultCurrency_;
     bool continueOnError_ = true;
     bool lazyMarketBuilding_ = true;
     bool buildFailedTrades_ = true;
     std::string observationModel_ = "None";
     bool implyTodaysFixings_ = false;
+    bool enrichIndexFixings_ = false;
+    Size ignoreFixingLead_ = 0;
+    Size ignoreFixingLag_ = 0;
+    optional<bool> includeTodaysCashFlows_;
+    bool includeReferenceDateEvents_ = false;
+  
     std::map<std::string, std::string> marketConfigs_;
     QuantLib::ext::shared_ptr<ore::data::BasicReferenceDataManager> refDataManager_;
     QuantLib::ext::shared_ptr<ore::data::Conventions> conventions_;
@@ -915,6 +962,7 @@ protected:
     bool useSensiSpreadedTermStructures_ = true;
     QuantLib::Real sensiThreshold_ = 1e-6;
     bool sensiRecalibrateModels_ = true;
+    bool sensiLaxFxConversion_ = false;
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> sensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> sensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> sensiPricingEngine_;
@@ -942,6 +990,8 @@ protected:
     double stressLowerBoundRatesDiscountFactor_;
     double stressUpperBoundRatesDiscountFactor_;
     double stressAccurary_;
+    Size stressPrecision_ = 2;
+    bool stressGenerateCashflows_ = false;
 
     /*****************
      * VAR analytics
@@ -975,6 +1025,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaCgSensiScenarioData_;
     std::set<std::string> amcTradeTypes_;
     std::string amcPathDataInput_, amcPathDataOutput_;
+    bool amcIndividualTrainingInput_ = false, amcIndividualTrainingOutput_ = false;
     std::string exposureBaseCurrency_ = "";
     std::string exposureObservationModel_ = "Disable";
     std::string nettingSetId_ = "";
@@ -994,6 +1045,7 @@ protected:
     QuantLib::ext::shared_ptr<ore::data::CollateralBalances> collateralBalances_;
     bool exposureProfiles_ = true;
     bool exposureProfilesByTrade_ = true;
+    bool exposureProfilesUseCloseOutValues_ = false;
     Real pfeQuantile_ = 0.95;
     bool fullInitialCollateralisation_ = false;
     std::string collateralCalculationType_ = "NoLag";
@@ -1004,7 +1056,9 @@ protected:
     QuantLib::ext::shared_ptr<AggregationScenarioData> mktCube_;
     Real simulationBootstrapTolerance_ = 0.0001;
     Size reportBufferSize_ = 0;
-
+    optional<bool> exposureIncludeTodaysCashFlows_;
+    bool exposureIncludeReferenceDateEvents_ = false;
+ 
     /**************
      * XVA analytic
      **************/
@@ -1029,8 +1083,10 @@ protected:
     std::string dvaName_ = "";
     bool rawCubeOutput_ = false;
     bool netCubeOutput_ = false;
+    bool timeAveragedNettedExposureOutput_ = false;
     std::string rawCubeOutputFile_ = "";
     std::string netCubeOutputFile_ = "";
+    std::string timeAveragedNettedExposureOutputFile_ = "";
     // funding value adjustment details
     std::string fvaBorrowingCurve_ = "";
     std::string fvaLendingCurve_ = "";    
@@ -1067,11 +1123,13 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaStressSensitivityScenarioData_;
     bool xvaStressWriteCubes_ = false;
     bool firstMporCollateralAdjustment_ = false;
+
     /***************
      * SIMM analytic
      ***************/
     std::string simmVersion_;
     QuantLib::ext::shared_ptr<ore::analytics::Crif> crif_;
+  
     QuantLib::ext::shared_ptr<ore::analytics::SimmBasicNameMapper> simmNameMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmBucketMapper> simmBucketMapper_;
     QuantLib::ext::shared_ptr<ore::analytics::SimmCalibrationData> simmCalibrationData_;
@@ -1140,7 +1198,9 @@ protected:
     QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters> xvaSensiSimMarketParams_;
     QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData> xvaSensiScenarioData_;
     QuantLib::ext::shared_ptr<ore::data::EngineData> xvaSensiPricingEngine_;
-
+    bool xvaSensiParSensi_ = false;
+    bool xvaSensiOutputJacobi_ = false;
+    QuantLib::Real xvaSensiThreshold_ = 1e-6;
     /*****************
      * XVA Explain analytic
      *****************/
@@ -1182,6 +1242,7 @@ private:
     std::string jacobiFileName_;
     std::string jacobiInverseFileName_;
     std::string stressTestFileName_;
+    std::string stressTestCashflowFileName_;
     std::string xvaStressTestFileName_;
     std::string stressZeroScenarioDataFileName_;
     std::string varFileName_;
@@ -1195,9 +1256,14 @@ private:
     std::string marketObjectsOutputFileName_;
     std::string zeroToParShiftFile_;
     std::string scenarioNpvOutputFileName_;
+    std::string calibrationOutputFileName_;
+    std::string xvaSensiJacobiFileName_;
+    std::string xvaSensiJacobiInverseFileName_;
+    std::string timeAveragedNettedExposureFileName_;
 };
 
-void scaleUpPortfolio(boost::shared_ptr<Portfolio>& p);
+void scaleUpPortfolio(QuantLib::ext::shared_ptr<ore::data::Portfolio>& p);
 
 } // namespace analytics
 } // namespace ore
+

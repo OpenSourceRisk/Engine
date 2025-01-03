@@ -43,7 +43,7 @@ public:
     SimpleScenario() {}
     //! if sharedData is not provided, the instance will create its own shared data block
     SimpleScenario(Date asof, const std::string& label = std::string(), Real numeraire = 0,
-                   const boost::shared_ptr<SharedData>& sharedData = nullptr);
+                   const QuantLib::ext::shared_ptr<SharedData>& sharedData = nullptr);
 
     const Date& asof() const override { return asof_; }
     void setAsof(const Date& d) override { asof_ = d; }
@@ -77,7 +77,7 @@ public:
                         const std::vector<std::vector<Real>>& coordinates);
 
     //! get shared data block (for construction of sister scenarios)
-    const boost::shared_ptr<SharedData>& sharedData() const { return sharedData_; }
+    const QuantLib::ext::shared_ptr<SharedData>& sharedData() const { return sharedData_; }
 
     //! get data, order is the same as in keys()
     const std::vector<Real>& data() const { return data_; }

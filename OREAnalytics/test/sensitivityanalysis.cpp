@@ -1004,8 +1004,8 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
     // collect shifted data at tenors of the underlying 2d grid (different from the grid above)
     // aggregate "observed" shifts
     // compare to expected total shifts
-    vector<Period> expiryShiftTenors = sensiData->swaptionVolShiftData()["EUR"].shiftExpiries;
-    vector<Period> termShiftTenors = sensiData->swaptionVolShiftData()["EUR"].shiftTerms;
+    vector<Period> expiryShiftTenors = sensiData->swaptionVolShiftData()["EUR"]->shiftExpiries;
+    vector<Period> termShiftTenors = sensiData->swaptionVolShiftData()["EUR"]->shiftTerms;
     vector<Real> shiftExpiryTimes(expiryShiftTenors.size());
     vector<Real> shiftTermTimes(termShiftTenors.size());
     for (Size i = 0; i < expiryShiftTenors.size(); ++i)
@@ -1073,13 +1073,13 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
     // sensitivity config
     QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
 
-    map<string, SensitivityScenarioData::VolShiftData>& eqvs = sensiData->equityVolShiftData();
+    map<string, QuantLib::ext::shared_ptr<SensitivityScenarioData::VolShiftData>>& eqvs = sensiData->equityVolShiftData();
     for (auto& it : eqvs) {
-        it.second.shiftSize = 0.0001; // want a smaller shift size than 1.0 to test the analytic sensitivities
+        it.second->shiftSize = 0.0001; // want a smaller shift size than 1.0 to test the analytic sensitivities
     }
-    map<string, SensitivityScenarioData::SpotShiftData>& eqs = sensiData->equityShiftData();
+    map<string, QuantLib::ext::shared_ptr<SensitivityScenarioData::SpotShiftData>>& eqs = sensiData->equityShiftData();
     for (auto& it : eqs) {
-        it.second.shiftSize = 0.0001; // want a smaller shift size to test the analytic sensitivities
+        it.second->shiftSize = 0.0001; // want a smaller shift size to test the analytic sensitivities
     }
 
     // build sim market
@@ -1277,13 +1277,13 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     // sensitivity config
     QuantLib::ext::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
 
-    map<string, SensitivityScenarioData::VolShiftData>& fxvs = sensiData->fxVolShiftData();
+    map<string, QuantLib::ext::shared_ptr<SensitivityScenarioData::VolShiftData>>& fxvs = sensiData->fxVolShiftData();
     for (auto& it : fxvs) {
-        it.second.shiftSize = 0.0001; // want a smaller shift size than 1.0 to test the analytic sensitivities
+        it.second->shiftSize = 0.0001; // want a smaller shift size than 1.0 to test the analytic sensitivities
     }
-    map<string, SensitivityScenarioData::SpotShiftData>& fxs = sensiData->fxShiftData();
+    map<string, QuantLib::ext::shared_ptr<SensitivityScenarioData::SpotShiftData>>& fxs = sensiData->fxShiftData();
     for (auto& it : fxs) {
-        it.second.shiftSize = 0.0001; // want a smaller shift size to test the analytic sensitivities
+        it.second->shiftSize = 0.0001; // want a smaller shift size to test the analytic sensitivities
     }
 
     // build sim market
@@ -1377,8 +1377,8 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     bool recalibrateModels = true;           // nothing to calibrate here
     bool useOriginalFxForBaseCcyConv = true; // convert sensi to EUR using original FX rate (not the shifted rate)
     QuantLib::ext::shared_ptr<SensitivityAnalysis> sa = QuantLib::ext::make_shared<SensitivityAnalysis>(
-        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, recalibrateModels, nullptr,
-        nullptr, useOriginalFxForBaseCcyConv);
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, recalibrateModels, false,
+        nullptr, nullptr, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap;

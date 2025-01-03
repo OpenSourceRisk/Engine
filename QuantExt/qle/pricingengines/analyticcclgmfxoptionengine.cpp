@@ -29,43 +29,68 @@ AnalyticCcLgmFxOptionEngine::AnalyticCcLgmFxOptionEngine(const QuantLib::ext::sh
                                                          const Size foreignCurrency)
     : model_(model), foreignCurrency_(foreignCurrency), cacheEnabled_(false), cacheDirty_(true) {}
 
-Real AnalyticCcLgmFxOptionEngine::value(const Time t0, const Time t, const QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff,
+Real AnalyticCcLgmFxOptionEngine::value(const Time t0, const Time t,
+                                        const QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff,
                                         const Real domesticDiscount, const Real fxForward) const {
-    Real H0 = Hz(0).eval(*model_, t);
-    Real Hi = Hz(foreignCurrency_ + 1).eval(*model_, t);
 
-    // just a shortcut
-    const Size& i = foreignCurrency_;
+    const auto lgm0 = model_->irlgm1f(0);
+    const auto lgmi1 = model_->irlgm1f(foreignCurrency_ + 1);
+
+    Real H0 = lgm0->H(t);
+    Real Hi1 = lgmi1->H(t);
+    Real rzz0i1 = model_->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::IR,
+                                      foreignCurrency_ + 1, 0, 0);
+    Real rzx0i =
+        model_->correlation(CrossAssetModel::AssetType::IR, 0, CrossAssetModel::AssetType::FX, foreignCurrency_, 0, 0);
+    Real rzxi1i = model_->correlation(CrossAssetModel::AssetType::IR, foreignCurrency_ + 1,
+                                      CrossAssetModel::AssetType::FX, foreignCurrency_, 0, 0);
 
     if (cacheDirty_ || !cacheEnabled_ || !(close_enough(cachedT0_, t0) && close_enough(cachedT_, t))) {
+
         cachedIntegrals_ =
-            // first term
-            H0 * H0 * (zetaz(0).eval(*model_, t) - zetaz(0).eval(*model_, t0)) -
-            2.0 * H0 * integral(*model_, P(Hz(0), az(0), az(0)), t0, t) +
-            integral(*model_, P(Hz(0), Hz(0), az(0), az(0)), t0, t) +
-            // second term
-            Hi * Hi * (zetaz(i + 1).eval(*model_, t) - zetaz(i + 1).eval(*model_, t0)) -
-            2.0 * Hi * integral(*model_, P(Hz(i + 1), az(i + 1), az(i + 1)), t0, t) +
-            integral(*model_, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), t0, t) -
-            // third term
-            2.0 * (H0 * Hi * integral(*model_, P(az(0), az(i + 1), rzz(0, i + 1)), t0, t) -
-                   H0 * integral(*model_, P(Hz(i + 1), az(i + 1), az(0), rzz(i + 1, 0)), t0, t) -
-                   Hi * integral(*model_, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)), t0, t) +
-                   integral(*model_, P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)), t0, t));
+            // first term (pt 1 of 2)
+            H0 * H0 * (lgm0->zeta(t) - lgm0->zeta(t0)) +
+            // second term (pt 1 of 2)
+            Hi1 * Hi1 * (lgmi1->zeta(t) - lgmi1->zeta(t0)) +
+            model_->integrator()->operator()(
+                [&lgm0, &lgmi1, rzz0i1, H0, Hi1](const Real t) {
+                    Real a0 = lgm0->alpha(t);
+                    Real ai1 = lgmi1->alpha(t);
+                    Real H0t = lgm0->H(t);
+                    Real Hi1t = lgmi1->H(t);
+                    return
+                        // first term (pt 2 of 2)
+                        -2.0 * H0 * H0t * a0 * a0 + H0t * H0t * a0 * a0 -
+                        // second term (pt 2 of 2)
+                        2.0 * Hi1 * Hi1t * ai1 * ai1 + Hi1t * Hi1t * ai1 * ai1 -
+                        // third term
+                        2.0 * (H0 * Hi1 * a0 * ai1 * rzz0i1 - H0 * Hi1t * ai1 * a0 * rzz0i1 -
+                               Hi1 * H0t * a0 * ai1 * rzz0i1 + H0t * Hi1t * a0 * ai1 * rzz0i1);
+                },
+                t0, t);
+
         cacheDirty_ = false;
         cachedT0_ = t0;
         cachedT_ = t;
     }
 
-    Real variance = cachedIntegrals_ +
-                    // term two three/fourth
-                    (vx(i).eval(*model_, t) - vx(i).eval(*model_, t0)) +
-                    // forth term
-                    2.0 * (H0 * integral(*model_, P(az(0), sx(i), rzx(0, i)), t0, t) -
-                           integral(*model_, P(Hz(0), az(0), sx(i), rzx(0, i)), t0, t)) -
-                    // fifth term
-                    2.0 * (Hi * integral(*model_, P(az(i + 1), sx(i), rzx(i + 1, i)), t0, t) -
-                           integral(*model_, P(Hz(i + 1), az(i + 1), sx(i), rzx(i + 1, i)), t0, t));
+    const auto fxi = model_->fxbs(foreignCurrency_);
+
+    Real variance = cachedIntegrals_ + (fxi->variance(t) - fxi->variance(t0)) +
+                    model_->integrator()->operator()(
+                        [&lgm0, &lgmi1, &fxi, rzx0i, rzxi1i, H0, Hi1](const Real t) {
+                            Real a0 = lgm0->alpha(t);
+                            Real ai1 = lgmi1->alpha(t);
+                            Real si = fxi->sigma(t);
+                            Real H0t = lgm0->H(t);
+                            Real Hi1t = lgmi1->H(t);
+                            return
+                                // forth term
+                                2.0 * (H0 * a0 * si * rzx0i - H0t * a0 * si * rzx0i) -
+                                // fifth term
+                                2.0 * (Hi1 * ai1 * si * rzxi1i - Hi1t * ai1 * si * rzxi1i);
+                        },
+                        t0, t);
 
     BlackCalculator black(payoff, fxForward, std::sqrt(variance), domesticDiscount);
 
@@ -76,7 +101,8 @@ void AnalyticCcLgmFxOptionEngine::calculate() const {
 
     QL_REQUIRE(arguments_.exercise->type() == Exercise::European, "only European options are allowed");
 
-    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff = QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+    QuantLib::ext::shared_ptr<StrikedTypePayoff> payoff =
+        QuantLib::ext::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
     QL_REQUIRE(payoff != NULL, "only striked payoff is allowed");
 
     Date expiry = arguments_.exercise->lastDate();

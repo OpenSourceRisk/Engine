@@ -1837,7 +1837,7 @@ void SimmCalculator::cleanDuplicateRegulations() {
         };
 
     for (auto& [side, nettingSetRegulationCrifMap] : regSensitivities_) {
-        for (auto& [nsd, regulationsCrifMap] : nettingSetRegulationCrifMap) {
+        for (auto& regulationsCrifMap : nettingSetRegulationCrifMap) {
 
             auto createQueue = [&regulationsCrifMap]() {
                 map<Regulation, Size> regCounts;
@@ -1846,7 +1846,7 @@ void SimmCalculator::cleanDuplicateRegulations() {
 
                 // Count occurrences of each value in all containers - we want only one for each, i.e. no duplicates
                 regCounts.clear();
-                for (const auto& [regs, crif] : regulationsCrifMap) {
+                for (const auto& [regs, crif] : regulationsCrifMap.second) {
                     for (const auto& reg : regs) {
                         if (regCounts.find(reg) == regCounts.end())
                             regCounts[reg] = 0;
@@ -1855,7 +1855,7 @@ void SimmCalculator::cleanDuplicateRegulations() {
                 }
 
                 // For each set of regulations, count no. of duplicated regs, and order them based on that
-                for (const auto& [regs, crif] : regulationsCrifMap) {
+                for (const auto& [regs, crif] : regulationsCrifMap.second) {
                     Size duplicateCount = std::count_if(regs.begin(), regs.end(),
                                                         [&](const Regulation& reg) { return regCounts[reg] > 1; });
                     if (duplicateCount > 0 && regs.size() > 1)
@@ -1883,10 +1883,10 @@ void SimmCalculator::cleanDuplicateRegulations() {
                     bool duplicateFound = false;
                     for (const auto& comb : regCombinations) {
                         // Move CRIF records from duplicate regulations
-                        if (regulationsCrifMap.find(comb) != regulationsCrifMap.end()) {
+                        if (regulationsCrifMap.second.find(comb) != regulationsCrifMap.second.end()) {
                             duplicateFound = true;
 
-                            regulationsCrifMap[comb]->addRecords(*regulationsCrifMap[regs]);
+                            regulationsCrifMap.second[comb]->addRecords(*regulationsCrifMap.second[regs]);
 
                             // For the remaining regulations that were not transferred, check if already in the map.
                             // If already exists, move the records there, otherwise we relabel/update the key.
@@ -1896,12 +1896,12 @@ void SimmCalculator::cleanDuplicateRegulations() {
                                     newRegs.insert(reg);
                             }
 
-                            if (regulationsCrifMap.find(newRegs) != regulationsCrifMap.end()) {
-                                regulationsCrifMap[newRegs]->addRecords(*regulationsCrifMap[regs]);
+                            if (regulationsCrifMap.second.find(newRegs) != regulationsCrifMap.second.end()) {
+                                regulationsCrifMap.second[newRegs]->addRecords(*regulationsCrifMap.second[regs]);
                             } else {
-                                regulationsCrifMap[newRegs] = regulationsCrifMap[regs];
+                                regulationsCrifMap.second[newRegs] = regulationsCrifMap.second[regs];
                             }
-                            regulationsCrifMap.erase(regs);
+                            regulationsCrifMap.second.erase(regs);
 
                             break;
                         }

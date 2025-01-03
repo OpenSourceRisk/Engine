@@ -51,6 +51,8 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
+    analytic()->enrichIndexFixings(analytic()->portfolio());
+
     auto pnlexplainAnalytic = static_cast<PnlExplainAnalytic*>(analytic());
     QL_REQUIRE(pnlexplainAnalytic, "Analytic must be of type PnlExplainAnalytic");
 

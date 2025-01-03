@@ -23,6 +23,7 @@
 #include <orea/aggregation/xvacalculator.hpp>
 #include <orea/app/analytic.hpp>
 #include <orea/app/analytics/analyticfactory.hpp>
+#include <orea/app/analytics/calibrationanalytic.hpp>
 #include <orea/app/analytics/imscheduleanalytic.hpp>
 #include <orea/app/analytics/parconversionanalytic.hpp>
 #include <orea/app/analytics/parscenarioanalytic.hpp>
@@ -65,6 +66,7 @@
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/cube/cubewriter.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/inmemorycubeopt.hpp>
 #include <orea/cube/jaggedcube.hpp>
 #include <orea/cube/jointnpvcube.hpp>
 #include <orea/cube/jointnpvsensicube.hpp>
@@ -75,6 +77,7 @@
 #include <orea/cube/sparsenpvcube.hpp>
 #include <orea/engine/amcvaluationengine.hpp>
 #include <orea/engine/bufferedsensitivitystream.hpp>
+#include <orea/engine/cashflowreportgenerator.hpp>
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/decomposedsensitivitystream.hpp>
 #include <orea/engine/dependencymarket.hpp>
@@ -170,6 +173,7 @@
 #include <orea/simm/simmconcentrationisdav2_5.hpp>
 #include <orea/simm/simmconcentrationisdav2_5a.hpp>
 #include <orea/simm/simmconcentrationisdav2_6.hpp>
+#include <orea/simm/simmconcentrationisdav2_6_5.hpp>
 #include <orea/simm/simmconfiguration.hpp>
 #include <orea/simm/simmconfigurationbase.hpp>
 #include <orea/simm/simmconfigurationcalibration.hpp>
@@ -184,6 +188,7 @@
 #include <orea/simm/simmconfigurationisdav2_5.hpp>
 #include <orea/simm/simmconfigurationisdav2_5a.hpp>
 #include <orea/simm/simmconfigurationisdav2_6.hpp>
+#include <orea/simm/simmconfigurationisdav2_6_5.hpp>
 #include <orea/simm/simmnamemapper.hpp>
 #include <orea/simm/simmresults.hpp>
 #include <orea/simm/utilities.hpp>

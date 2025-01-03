@@ -109,6 +109,9 @@ public:
         QuantLib::Real postValue;
         QuantLib::Size postExceptions;
         std::vector<QuantLib::Size> bounds;
+        QuantLib::Size callExceptionsDecorrelated;
+        QuantLib::Size postExceptionsDecorrelated;
+        std::vector<QuantLib::Size> boundsDecorrelated;
     };
 
     struct VarBenchmark {
@@ -196,13 +199,15 @@ protected:
     
     //! Add a row to the detail report
     virtual void addDetailRow(const QuantLib::ext::shared_ptr<BacktestReports>& reports, const Data& data, bool isCall,
-        QuantLib::Real im, const QuantLib::Date& start, const QuantLib::Date& end, bool isFull, QuantLib::Real pnl, 
-        const std::string& result, const std::string& tradeId = "") const = 0;
+                              QuantLib::Real im, const QuantLib::Date& start, const QuantLib::Date& end, bool isFull,
+                              QuantLib::Real pnl, const std::string& result, QuantLib::Real pnlDecoorelated,
+                              const std::string& resultDecorrelated, const std::string& tradeId = "") const = 0;
 
     //! Add a row to the summary report
     virtual void addSummaryRow(const QuantLib::ext::shared_ptr<BacktestReports>& reports, const Data& data, bool isCall,
-                               QuantLib::Real im, QuantLib::Size observations,
-                               bool isFull, QuantLib::Size exceptions, const std::vector<QuantLib::Size>& ragBounds,
+                               QuantLib::Real im, QuantLib::Size observations, bool isFull, QuantLib::Size exceptions,
+                               const std::vector<QuantLib::Size>& ragBounds, QuantLib::Size exceptionsDecorrelated,
+                               const std::vector<QuantLib::Size>& ragBoundsDecorrelated,
                                const VarBenchmarks& sensiBenchmarks, const VarBenchmarks& fullBenchmarks) const = 0;
 
     //! Calculate and update the benchmarks

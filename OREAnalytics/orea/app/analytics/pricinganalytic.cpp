@@ -37,7 +37,7 @@ void PricingAnalyticImpl::setUpConfigurations() {
         end(analytic()->analyticTypes())) {
         analytic()->configurations().simulationConfigRequired = true;
         analytic()->configurations().sensitivityConfigRequired = true;
-    }  
+    } 
 
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->sensiSimMarketParams();
@@ -63,6 +63,8 @@ void PricingAnalyticImpl::runAnalytic(
     analytic()->buildPortfolio();
     CONSOLE("OK");
 
+    analytic()->enrichIndexFixings(analytic()->portfolio());
+
     // Check coverage
     for (const auto& rt : runTypes) {
         if (std::find(analytic()->analyticTypes().begin(), analytic()->analyticTypes().end(), rt) ==
@@ -70,6 +72,8 @@ void PricingAnalyticImpl::runAnalytic(
             DLOG("requested analytic " << rt << " not covered by the PricingAnalytic");
         }
     }
+
+    analytic()->enrichIndexFixings(analytic()->portfolio());
 
     // This hook allows modifying the portfolio in derived classes before running the analytics below,
     // e.g. to apply SIMM exemptions.
@@ -145,23 +149,23 @@ void PricingAnalyticImpl::runAnalytic(
                 sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
                     analytic()->portfolio(), analytic()->market(), marketConfig, inputs_->pricingEngine(),
                     analytic()->configurations().simMarketParams, analytic()->configurations().sensiScenarioData,
-                    inputs_->sensiRecalibrateModels(), analytic()->configurations().curveConfig,
-                    analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
-                    *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
+                    inputs_->sensiRecalibrateModels(), inputs_->sensiLaxFxConversion(),
+                    analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
+                    inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Single-threaded sensi analysis created");
             }
             else {
                 LOG("Multi-threaded sensi analysis");
                 sensiAnalysis_ = QuantLib::ext::make_shared<SensitivityAnalysis>(
-                    inputs_->nThreads(), inputs_->asof(), loader, analytic()->portfolio(), marketConfig,
+                    inputs_->nThreads(), inputs_->asof(), analytic()->loader(), analytic()->portfolio(), marketConfig,
                     inputs_->pricingEngine(), analytic()->configurations().simMarketParams,
                     analytic()->configurations().sensiScenarioData, inputs_->sensiRecalibrateModels(),
-                    analytic()->configurations().curveConfig, analytic()->configurations().todaysMarketParams, ccyConv,
-                    inputs_->refDataManager(), *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
+                    inputs_->sensiLaxFxConversion(), analytic()->configurations().curveConfig,
+                    analytic()->configurations().todaysMarketParams, ccyConv, inputs_->refDataManager(),
+                    *inputs_->iborFallbackConfig(), true, inputs_->dryRun());
                 LOG("Multi-threaded sensi analysis created");
             }
-            // FIXME: Why are these disabled?
-            set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
+            const set<RiskFactorKey::KeyType>& typesDisabled = analytic()->configurations().sensiScenarioData->parConversionExcludes();
             if (inputs_->parSensi() || inputs_->alignPillars()) {
                 parAnalysis_= QuantLib::ext::make_shared<ParSensitivityAnalysis>(
                     inputs_->asof(), analytic()->configurations().simMarketParams,

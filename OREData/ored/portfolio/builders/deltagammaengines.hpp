@@ -55,7 +55,8 @@ public:
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
-                                                        const std::string& securitySpread) override {
+                                                                const std::string& securitySpread,
+                                                                const std::set<std::string>& eqNames) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
         bool computeDelta = parseBool(engineParameter("ComputeDelta"));
@@ -82,8 +83,9 @@ public:
         : CrossCurrencySwapEngineBuilderBase("DiscountedCashflows", "DiscountingCrossCurrencySwapEngineDeltaGamma") {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys,
-                                                        const Currency& base, bool useXccyYieldCurves) override {
+    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base,
+                                                                bool useXccyYieldCurves,
+                                                                const std::set<std::string>& eqNames) override {
 
         std::vector<Time> bucketTimes = parseListOfValues<Time>(engineParameter("BucketTimes"), &parseReal);
         bool computeDelta = parseBool(engineParameter("ComputeDelta"));

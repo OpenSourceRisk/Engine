@@ -153,7 +153,7 @@ extractAllInflationUnderlyingFromBond(const QuantLib::ext::shared_ptr<QuantLib::
 }
 namespace ZeroInflation {
 
-QuantLib::Date lastAvailableFixing(const QuantLib::ZeroInflationIndex& index, const QuantLib::Date& asof) {
+QuantLib::Date lastAvailableFixing(const QuantLib::InflationIndex& index, const QuantLib::Date& asof) {
     Date availbilityLagFixingDate = inflationPeriod(asof - index.availabilityLag(), index.frequency()).first;
     if (index.hasHistoricalFixing(availbilityLagFixingDate)) {
         return availbilityLagFixingDate;
@@ -171,7 +171,7 @@ QuantLib::Rate cpiFixing(const QuantLib::ext::shared_ptr<QuantLib::ZeroInflation
 
 QuantLib::Date curveBaseDate(const bool baseDateLastKnownFixing, const QuantLib::Date& refDate,
                              const QuantLib::Period obsLagCurve, const QuantLib::Frequency curveFreq,
-                             const QuantLib::ext::shared_ptr<QuantLib::ZeroInflationIndex>& index) {
+                             const QuantLib::ext::shared_ptr<QuantLib::InflationIndex>& index) {
     if (baseDateLastKnownFixing) {
         QL_REQUIRE(index, "can not compute curve base date based on the last known index fixing if no index provided");
         return lastAvailableFixing(*index, refDate);

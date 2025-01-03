@@ -18,6 +18,7 @@ aggregation/staticcreditxvacalculator.cpp
 aggregation/xvacalculator.cpp
 app/analytic.cpp
 app/analytics/analyticfactory.cpp
+app/analytics/calibrationanalytic.cpp
 app/analytics/imscheduleanalytic.cpp
 app/analytics/parconversionanalytic.cpp
 app/analytics/parscenarioanalytic.cpp
@@ -61,6 +62,7 @@ cube/sensitivitycube.cpp
 cube/sparsenpvcube.cpp
 engine/amcvaluationengine.cpp
 engine/bufferedsensitivitystream.cpp
+engine/cashflowreportgenerator.cpp
 engine/cptycalculator.cpp
 engine/decomposedsensitivitystream.cpp
 engine/dependencymarket.cpp
@@ -147,6 +149,7 @@ simm/simmconcentrationisdav2_3_8.cpp
 simm/simmconcentrationisdav2_5.cpp
 simm/simmconcentrationisdav2_5a.cpp
 simm/simmconcentrationisdav2_6.cpp
+simm/simmconcentrationisdav2_6_5.cpp
 simm/simmconfiguration.cpp
 simm/simmconfigurationbase.cpp
 simm/simmconfigurationcalibration.cpp
@@ -161,6 +164,7 @@ simm/simmconfigurationisdav2_3_8.cpp
 simm/simmconfigurationisdav2_5.cpp
 simm/simmconfigurationisdav2_5a.cpp
 simm/simmconfigurationisdav2_6.cpp
+simm/simmconfigurationisdav2_6_5.cpp
 simm/simmresults.cpp
 simm/utilities.cpp
 simulation/fixingmanager.cpp
@@ -186,6 +190,7 @@ aggregation/staticcreditxvacalculator.hpp
 aggregation/xvacalculator.hpp
 app/analytic.hpp
 app/analytics/analyticfactory.hpp
+app/analytics/calibrationanalytic.hpp
 app/analytics/imscheduleanalytic.hpp
 app/analytics/parconversionanalytic.hpp
 app/analytics/parscenarioanalytic.hpp
@@ -229,6 +234,7 @@ cube/cubecsvreader.hpp
 cube/cubeinterpretation.hpp
 cube/cubewriter.hpp
 cube/inmemorycube.hpp
+cube/inmemorycubeopt.hpp
 cube/jaggedcube.hpp
 cube/jointnpvcube.hpp
 cube/jointnpvsensicube.hpp
@@ -239,6 +245,7 @@ cube/sensitivitycube.hpp
 cube/sparsenpvcube.hpp
 engine/amcvaluationengine.hpp
 engine/bufferedsensitivitystream.hpp
+engine/cashflowreportgenerator.hpp
 engine/cptycalculator.hpp
 engine/decomposedsensitivitystream.hpp
 engine/dependencymarket.hpp
@@ -253,7 +260,6 @@ engine/multistatenpvcalculator.hpp
 engine/multithreadedvaluationengine.hpp
 engine/npvrecord.hpp
 engine/observationmode.hpp
-engine/pathdata.hpp
 engine/parametricvar.hpp
 engine/parsensitivityanalysis.hpp
 engine/parsensitivitycubestream.hpp
@@ -261,6 +267,7 @@ engine/parsensitivityinstrumentbuilder.hpp
 engine/parsensitivityutilities.hpp
 engine/parstressconverter.hpp
 engine/parstressscenarioconverter.hpp
+engine/pathdata.hpp
 engine/pnlexplainreport.hpp
 engine/riskfilter.hpp
 engine/sensitivityaggregator.hpp
@@ -334,6 +341,7 @@ simm/simmconcentrationisdav2_3_8.hpp
 simm/simmconcentrationisdav2_5.hpp
 simm/simmconcentrationisdav2_5a.hpp
 simm/simmconcentrationisdav2_6.hpp
+simm/simmconcentrationisdav2_6_5.hpp
 simm/simmconfiguration.hpp
 simm/simmconfigurationbase.hpp
 simm/simmconfigurationcalibration.hpp
@@ -348,6 +356,7 @@ simm/simmconfigurationisdav2_3_8.hpp
 simm/simmconfigurationisdav2_5.hpp
 simm/simmconfigurationisdav2_5a.hpp
 simm/simmconfigurationisdav2_6.hpp
+simm/simmconfigurationisdav2_6_5.hpp
 simm/simmnamemapper.hpp
 simm/simmresults.hpp
 simm/utilities.hpp
@@ -361,9 +370,9 @@ target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
 target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})
+
 if(ORE_USE_ZLIB)
     target_link_libraries(${OREA_LIB_NAME} ${ZLIB_LIBRARIES})
-    add_definitions(-DORE_USE_ZLIB)
 endif()
 
 if (QL_USE_PCH)

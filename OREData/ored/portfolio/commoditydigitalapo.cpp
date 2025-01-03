@@ -85,6 +85,7 @@ void CommodityDigitalAveragePriceOption::build(const QuantLib::ext::shared_ptr<E
     opt2.build(engineFactory);
 
     setSensitivityTemplate(opt1.sensitivityTemplate());
+    addProductModelEngine(opt1.productModelEngine());
 
     QuantLib::ext::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
     QuantLib::ext::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();

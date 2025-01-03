@@ -213,9 +213,10 @@ template <class E> inline Real integral_helper(const CrossAssetModel& x, const E
     return e.eval(x, t);
 }
 
-template <class E>
-inline Real integral(const CrossAssetModel& x, const E& e, const Real a, const Real b) {
-    return x.integrator()->operator()(QuantLib::ext::bind(&integral_helper<E>, x, e, QuantLib::ext::placeholders::_1), a, b);
+template <class E> inline Real integral(const CrossAssetModel& x, const E& e, const Real a, const Real b) {
+    return x.integrator()->operator()(QuantLib::ext::bind(&integral_helper<E>, QuantLib::ext::cref(x),
+                                                          QuantLib::ext::cref(e), QuantLib::ext::placeholders::_1),
+                                      a, b);
 }
 
 /*! @} */

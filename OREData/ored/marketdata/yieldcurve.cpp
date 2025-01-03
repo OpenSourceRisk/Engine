@@ -1358,6 +1358,11 @@ void YieldCurve::buildBootstrappedCurve() {
 
     /* Set mixed interpolation size using the specified cutoff for the number of segments */
 
+    QL_REQUIRE(curveConfig_->mixedInterpolationCutoff() <= curveSegments_.size(),
+               "mixed interpolation cutoff (" << curveConfig_->mixedInterpolationCutoff()
+                                              << ") can not be greater than the number of curve segments ("
+                                              << curveSegments_.size() << ")");
+
     mixedInterpolationSize_ = 0;
     for (Size i = 0; i < curveConfig_->mixedInterpolationCutoff(); ++i)
         mixedInterpolationSize_ += instrumentsPerSegment[i].size();
@@ -1488,7 +1493,7 @@ void YieldCurve::buildFittedBondCurve() {
                 lastMaturity = std::max(lastMaturity, thisMaturity);
                 firstMaturity = std::min(firstMaturity, thisMaturity);
                 Real inflationFactor = res.inflationFactor();
-                Real marketYield = qlInstr->yield(rescaledBondQuote->value() * inflationFactor,
+                Real marketYield = qlInstr->yield({rescaledBondQuote->value() * inflationFactor, QuantLib::Bond::Price::Clean},
                                                   ActualActual(ActualActual::ISDA),
                                                   Continuous, NoFrequency);
                 DLOG("added bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
@@ -1620,7 +1625,8 @@ void YieldCurve::buildFittedBondCurve() {
     for (Size i = 0; i < bonds.size(); ++i) {
         bonds[i]->setPricingEngine(engine);
         modelPrices.push_back(bonds[i]->cleanPrice() / 100.0);
-        modelYields.push_back(bonds[i]->yield(bonds[i]->cleanPrice(), ActualActual(ActualActual::ISDA), Continuous, NoFrequency));
+        modelYields.push_back(bonds[i]->yield({bonds[i]->cleanPrice(), QuantLib::Bond::Price::Clean},
+                                              ActualActual(ActualActual::ISDA), Continuous, NoFrequency));
         DLOG("bond " << securityIDs[i] << ", model clean price = " << modelPrices.back()
                      << ", yield (cont,actact) = " << modelYields.back() << ", NPV = " << bonds[i]->NPV());
     }
@@ -1717,7 +1723,7 @@ void YieldCurve::buildBondYieldShiftedCurve() {
         if (qlInstr->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*qlInstr)) {
 
             Date thisMaturity = qlInstr->maturityDate();
-            bondYield = qlInstr->yield(rescaledBondQuote->value() * inflationQuoteFactor,
+            bondYield = qlInstr->yield({rescaledBondQuote->value() * inflationQuoteFactor, QuantLib::Bond::Price::Clean},
                                                       ActualActual(ActualActual::ISDA), Continuous, NoFrequency);
 
             thisDuration = QuantLib::BondFunctions::duration(*qlInstr,InterestRate(bondYield,ActualActual(ActualActual::ISDA),Continuous,NoFrequency)

@@ -111,6 +111,7 @@ void EquityEuropeanBarrierOption::build(const QuantLib::ext::shared_ptr<EngineFa
     vanillaB->setPricingEngine(eqOptBuilder->engine(assetName_, ccy, expiryDate));
     rebateInstrument->setPricingEngine(eqDigitalOptBuilder->engine(assetName_, ccy));
     setSensitivityTemplate(*eqDigitalOptBuilder);
+    addProductModelEngine(*eqDigitalOptBuilder);
 
     QuantLib::ext::shared_ptr<CompositeInstrument> qlInstrument = QuantLib::ext::make_shared<CompositeInstrument>();
     qlInstrument->add(rebateInstrument);

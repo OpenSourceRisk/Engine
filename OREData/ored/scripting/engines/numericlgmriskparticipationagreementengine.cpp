@@ -33,15 +33,15 @@
 namespace ore {
 namespace data {
 using namespace QuantExt;
-    
+
 NumericLgmRiskParticipationAgreementEngine::NumericLgmRiskParticipationAgreementEngine(
     const std::string& baseCcy, const std::map<std::string, Handle<YieldTermStructure>>& discountCurves,
     const std::map<std::string, Handle<Quote>>& fxSpots, const QuantLib::ext::shared_ptr<LinearGaussMarkovModel>& model,
     const Real sy, const Size ny, const Real sx, const Size nx,
     const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
-    const Size maxGapDays, const Size maxDiscretisationPoints)
+    const Size maxGapDays, const Size maxDiscretisationPoints, const OptionExpiryPosition optionExpiryPosition)
     : RiskParticipationAgreementBaseEngine(baseCcy, discountCurves, fxSpots, defaultCurve, recoveryRate, maxGapDays,
-                                           maxDiscretisationPoints),
+                                           maxDiscretisationPoints, optionExpiryPosition),
       LgmConvolutionSolver2(model, sy, ny, sx, nx) {
     registerWith(LgmConvolutionSolver2::model());
 }
@@ -343,7 +343,9 @@ Real NumericLgmRiskParticipationAgreementEngine::protectionLegNpv() const {
 
     std::vector<Date> optionDates;
     for (Size i = 0; i < gridDates_.size() - 1; ++i) {
-        optionDates.push_back(gridDates_[i] + (gridDates_[i + 1] - gridDates_[i]) / 2);
+        optionDates.push_back(optionExpiryPosition_ == OptionExpiryPosition::Mid
+                                  ? gridDates_[i] + (gridDates_[i + 1] - gridDates_[i]) / 2
+                                  : gridDates_[i] + 1);
     }
 
     // collect simulation dates for coupons:

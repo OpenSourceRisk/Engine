@@ -221,6 +221,7 @@ void IndexCreditDefaultSwap::build(const QuantLib::ext::shared_ptr<EngineFactory
     cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveIdWithTerm(),
                                              basketCreditCurves, boost::none, swap_.recoveryRate(), false));
     setSensitivityTemplate(*cdsBuilder);
+    addProductModelEngine(*cdsBuilder);
 
     instrument_.reset(new VanillaInstrument(cds));
 

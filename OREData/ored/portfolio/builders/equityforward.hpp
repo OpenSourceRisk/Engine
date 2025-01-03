@@ -31,26 +31,34 @@
 namespace ore {
 namespace data {
 
-//! Engine Builder for European Equity Forwards
-/*! Pricing engines are cached by equity/currency
-
-    \ingroup builders
- */
-class EquityForwardEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&> {
+class EquityForwardEngineBuilderBase : public CachingPricingEngineBuilder<string, const string&, const Currency&> {
 public:
-    EquityForwardEngineBuilder()
-        : CachingEngineBuilder("DiscountedCashflows", "DiscountingEquityForwardEngine", {"EquityForward"}) {}
+    EquityForwardEngineBuilderBase(const std::string& model, const std::string& engine);
 
 protected:
-    virtual string keyImpl(const string& equityName, const Currency& ccy) override {
-        return equityName + "/" + ccy.code();
-    }
+    string keyImpl(const string& equityName, const Currency& ccy) override;
+};
 
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override {
-        return QuantLib::ext::make_shared<QuantExt::DiscountingEquityForwardEngine>(
-            market_->equityCurve(equityName, configuration(MarketContext::pricing)),
-            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)));
-    }
+class EquityForwardEngineBuilder : public EquityForwardEngineBuilderBase {
+public:
+    EquityForwardEngineBuilder();
+
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override;
+};
+
+class CamAmcEquityForwardEngineBuilder : public EquityForwardEngineBuilderBase {
+public:
+    CamAmcEquityForwardEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
+                                     const std::vector<Date>& simulationDates,
+                                     const std::vector<Date>& stickyCloseOutDates);
+    
+private:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override;
+
+    QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    std::vector<Date> simulationDates_;
+    std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data

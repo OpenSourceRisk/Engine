@@ -214,6 +214,8 @@ To use the AMC engine for an XVA simulation the following parameters can be adde
   <Parameter name="amc">Y</Parameter>
   <Parameter name="amcPathDataInput">amcpathdata.dat</Parameter>
   <Parameter name="amcPathDataOutput">amcpathdata.dat</Parameter>
+  <Parameter name="amcIndividualTrainingOutput">Y</Parameter>
+  <Parameter name="amcIndividualTrainingInput">N</Parameter>
   <Parameter name="amcTradeTypes">Swap,Swaption,CapFloor,ForwardRateAgreement,FxOption,BermudanSwaption</Parameter>
   <Parameter name="amcPricingEnginesFile">pricingengines_amc.xml</Parameter>
 </Analytic>
@@ -234,6 +236,10 @@ The \verb+amcPathDataInput+ and \verb+amcPathDataOutput+ parameters are optional
 generated path data is serialized to disk. The path should be either absolute or relative to the working directory. If
 the input path is given, path generation is suppressed and paths are deserialized from the specified file. This can be
 used to speed up calculations using the same simulation setup.
+
+The \verb+amcIndividualTrainingOutput+ and \verb+amcIndividualTrainingInput+ parameters are optional. If the output is requested, each trade's
+AMC calculator is serialized to disk. If \verb+amcIndividualTrainingInput+ is set to \emph{Y} and the binary files have been previously generated, 
+AMC calculator generation is suppressed and the AMC calculator is deserialized from the appropriate file.
 
 \subsection{Pricing Engine Configuration}\label{sec:pricing_engine_config}
 

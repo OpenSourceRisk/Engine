@@ -111,19 +111,7 @@ Real EquityIndex2::forecastFixing(const Time& fixingTime, bool incDividend) cons
 }
 
 void EquityIndex2::addDividend(const Dividend& dividend, bool forceOverwrite) {
-    std::string tag = name();
-    std::set<Dividend> divs = DividendManager::instance().getHistory(tag);
-    if (!forceOverwrite) {
-        bool duplicateFixing = false;
-        for (const auto& d : divs) {
-            if (d == dividend)
-                duplicateFixing = true;
-        }
-        QL_REQUIRE(!duplicateFixing, "At least one duplicated fixing provided: ("
-            << dividend.name << ", " << dividend.exDate << ", " << dividend.rate << ")");
-    }
-    divs.insert(dividend);
-    DividendManager::instance().setHistory(tag, divs);
+    DividendManager::instance().addDividend(name(), dividend, forceOverwrite);
 }
 
 Real EquityIndex2::dividendsBetweenDates(const Date& startDate, const Date& endDate, const bool historicalOnly) const {

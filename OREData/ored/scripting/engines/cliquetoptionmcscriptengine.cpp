@@ -126,7 +126,7 @@ void CliquetOptionMcScriptEngine::calculate() const {
 
     ScriptEngine engine(ast_, context, model);
     engine.run("", interactive_);
-    results_.value = expectation(QuantLib::ext::get<RandomVariable>(context->scalars.at("Option"))).at(0);
+    results_.value = expectation(boost::get<RandomVariable>(context->scalars.at("Option"))).at(0);
 }
 
 } // namespace data

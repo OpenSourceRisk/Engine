@@ -65,6 +65,7 @@ FxBarrierOption::vanillaPricingEngine(const QuantLib::ext::shared_ptr<EngineFact
         QL_REQUIRE(fxOptBuilder, "No FxEuropeanOptionEngineBuilder found");
 
         setSensitivityTemplate(*fxOptBuilder);
+        addProductModelEngine(*fxOptBuilder);
 
         return fxOptBuilder->engine(parseCurrency(boughtCurrency_), parseCurrency(soldCurrency_), expiryDate);
     }
@@ -82,6 +83,7 @@ FxBarrierOption::barrierPricingEngine(const QuantLib::ext::shared_ptr<EngineFact
     QL_REQUIRE(fxBarrierOptBuilder, "No FxBarrierOptionEngineBuilder found");
 
     setSensitivityTemplate(*fxBarrierOptBuilder);
+    addProductModelEngine(*fxBarrierOptBuilder);
 
     return fxBarrierOptBuilder->engine(parseCurrency(boughtCurrency_), parseCurrency(soldCurrency_), expiryDate, paymentDate);
 }

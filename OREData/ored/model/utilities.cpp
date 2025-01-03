@@ -215,7 +215,7 @@ std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<Bl
 std::string getCalibrationDetails(const std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper>>& basket,
                                   const QuantLib::ext::shared_ptr<EqBsParametrization>& parametrization,
                                   const QuantLib::ext::shared_ptr<Parametrization>& domesticIrModel) {
-    auto lgmParametrization = QuantLib::ext::dynamic_pointer_cast<IrLgm1fParametrization>(parametrization);
+    auto lgmParametrization = QuantLib::ext::dynamic_pointer_cast<IrLgm1fParametrization>(domesticIrModel);
     if (lgmParametrization) {
         return getCalibrationDetails(basket, parametrization, lgmParametrization);
     } else {
@@ -458,7 +458,7 @@ Real cpiCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
     } else if (auto atm = QuantLib::ext::dynamic_pointer_cast<AtmStrike>(strike)) {
         QL_REQUIRE(atm->atmType() == DeltaVolQuote::AtmFwd,
                    "only atm forward allowed as atm strike for cpi cap floors");
-        return curve->zeroRate(optionMaturityDate);
+        return curve->zeroRate(optionMaturityDate, curve->observationLag());
     } else {
         QL_FAIL("cpi cap floor strike type not supported, expected absolute strike or atm fwd strike, got '"
                 << strike->toString());
@@ -473,7 +473,7 @@ Real yoyCapFloorStrikeValue(const QuantLib::ext::shared_ptr<BaseStrike>& strike,
     } else if (auto atm = QuantLib::ext::dynamic_pointer_cast<AtmStrike>(strike)) {
         QL_REQUIRE(atm->atmType() == DeltaVolQuote::AtmFwd,
                    "only atm forward allowed as atm strike for cpi cap floors");
-        return curve->yoyRate(optionMaturityDate);
+        return curve->yoyRate(optionMaturityDate, curve->observationLag());
     } else {
         QL_FAIL("yoy cap floor strike type not supported, expected absolute strike or atm fwd strike, got '"
                 << strike->toString());

@@ -63,7 +63,8 @@ public:
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
-                               Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
+                               Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none,
+                               const bool includePastCashflows = false);
 
     //! alternative constructor (does not require default curve or recovery rate)
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<Quote>& securitySpread,
@@ -96,6 +97,7 @@ protected:
     Handle<Quote> securitySpread_;
     Period timestepPeriod_;
     boost::optional<bool> includeSettlementDateFlows_;
+    bool includePastCashflows_;
 };
 } // namespace QuantExt
 

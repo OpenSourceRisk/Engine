@@ -40,7 +40,9 @@ public:
           stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
-    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base, bool) override;
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base,
+                                                        bool useXccyYieldCurves,
+                                                        const std::set<std::string>& eqNames) override;
 
 private:
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;

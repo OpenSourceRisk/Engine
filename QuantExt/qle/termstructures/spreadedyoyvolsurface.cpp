@@ -48,7 +48,7 @@ Rate SpreadedYoYVolatilitySurface::maxStrike() const { return baseVol_->maxStrik
 
 Volatility SpreadedYoYVolatilitySurface::volatilityImpl(Time length, Rate strike) const {
     calculate();
-    return baseVol_->volatility(length, strike) + volSpreadInterpolation_(length, strike);
+    return std::max(0.0, baseVol_->volatility(length, strike) + volSpreadInterpolation_(length, strike));
 }
 
 void SpreadedYoYVolatilitySurface::performCalculations() const {

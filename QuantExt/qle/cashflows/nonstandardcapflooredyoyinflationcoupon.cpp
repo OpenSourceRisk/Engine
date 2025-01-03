@@ -107,8 +107,10 @@ Rate NonStandardCappedFlooredYoYInflationCoupon::rate() const {
     if (isFloored_ || isCapped_) {
         if (underlying_) {
             QL_REQUIRE(underlying_->pricer(), "pricer not set");
+            underlying_->pricer()->initialize(*underlying_);
         } else {
             QL_REQUIRE(pricer_, "pricer not set");
+            pricer_->initialize(*this);
         }
     }
 
@@ -150,7 +152,10 @@ Rate NonStandardCappedFlooredYoYInflationCoupon::effectiveFloor() const {
     return (floor_ - (addInflationNotional_ ? 1 : 0) - spread()) / gearing();
 }
 
-void NonStandardCappedFlooredYoYInflationCoupon::update() { notifyObservers(); }
+void NonStandardCappedFlooredYoYInflationCoupon::deepUpdate() {
+    update();
+    underlying_->deepUpdate();
+}
 
 void NonStandardCappedFlooredYoYInflationCoupon::accept(AcyclicVisitor& v) {
     Visitor<NonStandardCappedFlooredYoYInflationCoupon>* v1 =
@@ -160,6 +165,11 @@ void NonStandardCappedFlooredYoYInflationCoupon::accept(AcyclicVisitor& v) {
         v1->visit(*this);
     else
         NonStandardYoYInflationCoupon::accept(v);
+}
+
+void NonStandardCappedFlooredYoYInflationCoupon::alwaysForwardNotifications(){
+    LazyObject::alwaysForwardNotifications();
+    underlying_->alwaysForwardNotifications();
 }
 
 NonStandardYoYInflationLeg::NonStandardYoYInflationLeg(const Schedule& schedule, const Calendar& paymentCalendar,

@@ -36,9 +36,11 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
                                                        const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                                        const Handle<Quote>& recoveryRate,
                                                        const Handle<Quote>& securitySpread, Period timestepPeriod,
-                                                       boost::optional<bool> includeSettlementDateFlows)
+                                                       boost::optional<bool> includeSettlementDateFlows,
+                                                       const bool includePastCashflows)
     : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
-      timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows) {
+      timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows),
+      includePastCashflows_(includePastCashflows) {
     discountCurve_ =
         securitySpread_.empty()
             ? discountCurve
@@ -133,8 +135,13 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
     bool hasLiveCashFlow = false;
     for (Size i = 0; i < cashflows.size(); i++) {
         QuantLib::ext::shared_ptr<CashFlow> cf = cashflows[i];
-        if (cf->hasOccurred(npvDate, includeRefDateFlows))
+        if (cf->hasOccurred(npvDate, includeRefDateFlows) && !includePastCashflows_)
             continue;
+        else if(cf->hasOccurred(npvDate, includeRefDateFlows)){
+            CashFlowResults cfRes = populateCashFlowResultsFromCashflow(cf);
+            calculationResults.cashflowResults.push_back(cfRes);
+            continue;
+        }
         hasLiveCashFlow = true;
 
         DiscountFactor df = discountCurve_->discount(cf->date()) / dfNpv;

@@ -4,9 +4,6 @@ project(OREAnalytics CXX)
 
 enable_testing()
 
-include(writeAll)
-include(commonSettings)
-
 get_library_name("OREAnalytics" OREA_LIB_NAME)
 get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantExt" QLE_LIB_NAME)

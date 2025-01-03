@@ -28,7 +28,6 @@
 #include <ored/utilities/log.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/lgm.hpp>
-#include <qle/pricingengines/mclgmswaptionengine.hpp>
 
 #include <boost/make_shared.hpp>
 

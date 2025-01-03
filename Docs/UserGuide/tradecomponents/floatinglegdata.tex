@@ -155,7 +155,7 @@ in Listing \ref{lst:float_zero_coupon_leg_dates}. \begin{listing}[H]
   \item For Ibor coupons, ``in arrears'' means that the fixing gap is calculated in relation to the current period end
     date, while ``in advance'' means that the fixing gap is calculated in relation to the period start date.
   \item For OIS coupons, ``in arrears'' means that the compounding (or averaging) of ON rates is done over the current
-    period, while ``in advance'' means that the compounding (averaging) is done over the previous period. For the first
+    period (with period as defined in ScheduleData), while ``in advance'' means that the compounding (averaging) is done over the previous period. For the first
     period, a virtual previous period will be constructed based on the schedule construction rules. In the context of
     RFRs there are two common ``in advance'' variants:
     \begin{itemize}

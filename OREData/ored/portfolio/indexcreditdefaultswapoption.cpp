@@ -289,7 +289,6 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     Settlement::Type settleType = parseSettlementType(option_.settlement());
     cds->setPricingEngine(iCdsEngineBuilder->engine(ccy, creditCurveId, constituentIds, overrideCurve,
                                                     swap_.recoveryRate(), settleType == Settlement::Cash));
-    setSensitivityTemplate(*iCdsEngineBuilder);
 
     // Strike may be in terms of spread or price
     auto strikeType = parseCdsOptionStrikeType(effectiveStrikeType_);
@@ -315,6 +314,7 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     volCurveId_ = p.first;
     option->setPricingEngine(iCdsOptionEngineBuilder->engine(ccy, creditCurveId, volCurveId_, constituentIds));
     setSensitivityTemplate(*iCdsOptionEngineBuilder);
+    addProductModelEngine(*iCdsOptionEngineBuilder);
 
     // Keep this comment about the maturity date being the underlying maturity instead of the option expiry.
     // [RL] Align option product maturities with ISDA AANA/GRID guidance as of November 2020.
@@ -352,7 +352,7 @@ void IndexCreditDefaultSwapOption::build(const QuantLib::ext::shared_ptr<EngineF
     } else {
         bool isLong = positionType == Position::Long;
         bool isPhysical = settleType == Settlement::Physical;
-        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(option, isLong, exerciseDate, isPhysical, cds, 1.0, 1.0,
+        instrument_ = QuantLib::ext::make_shared<EuropeanOptionWrapper>(option, isLong, exerciseDate, exerciseDate, isPhysical, cds, 1.0, 1.0,
                                                                 additionalInstruments, additionalMultipliers);
     }
 

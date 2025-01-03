@@ -64,25 +64,30 @@ class ValuationCalculator;
 class SensitivityAnalysis : public ore::data::ProgressReporter {
 public:
     //! Constructor using single-threaded engine
-    SensitivityAnalysis(const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
-                        const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
-                        const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
-                        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                        const QuantLib::ext::shared_ptr<SensitivityScenarioData>& sensitivityData, const bool recalibrateModels,
-                        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
-                        const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams = nullptr,
-                        const bool nonShiftedBaseCurrencyConversion = false,
-                        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-                        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                        const bool continueOnError = false, bool dryRun = false);
+    SensitivityAnalysis(
+        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+        const QuantLib::ext::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+        const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+        const QuantLib::ext::shared_ptr<SensitivityScenarioData>& sensitivityData, const bool recalibrateModels,
+        const bool laxFxConversion = false,
+
+        const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+        const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams = nullptr,
+        const bool nonShiftedBaseCurrencyConversion = false,
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        const bool continueOnError = false, bool dryRun = false);
 
     //! Constructor using multi-threaded engine
-    SensitivityAnalysis(const Size nThreads, const Date& asof, const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
-                        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio, const string& marketConfiguration,
+    SensitivityAnalysis(const Size nThreads, const Date& asof,
+                        const QuantLib::ext::shared_ptr<ore::data::Loader>& loader,
+                        const QuantLib::ext::shared_ptr<ore::data::Portfolio>& portfolio,
+                        const string& marketConfiguration,
                         const QuantLib::ext::shared_ptr<ore::data::EngineData>& engineData,
                         const QuantLib::ext::shared_ptr<ore::analytics::ScenarioSimMarketParameters>& simMarketData,
                         const QuantLib::ext::shared_ptr<ore::analytics::SensitivityScenarioData>& sensitivityData,
-                        const bool recalibrateModels,
+                        const bool recalibrateModels, const bool laxFxConversion,
                         const QuantLib::ext::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
                         const QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
                         const bool nonShiftedBaseCurrencyConversion = false,
@@ -139,6 +144,7 @@ private:
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     QuantLib::ext::shared_ptr<SensitivityScenarioData> sensitivityData_;
     bool recalibrateModels_;
+    bool laxFxConversion_;
     //! Optional curve configurations. Used in building the scenario sim market.
     QuantLib::ext::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
     //! Optional todays market parameters. Used in building the scenario sim market.

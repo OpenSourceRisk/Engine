@@ -368,12 +368,16 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
         if (sensitivityTemplate_.empty()) {
             setSensitivityTemplate(underlying_[i]->sensitivityTemplate());
         }
+        addProductModelEngine(underlying_[i]->productModelEngine());
     }
 
     // propagate additional data from underlyings to trs trade
     for (Size i = 0; i < underlying_.size(); ++i) {
         for (auto const& [key, value] : underlying_[i]->additionalData()) {
             additionalData_["und_ad_" + std::to_string(i + 1) + "_" + key] = value;
+            // set underlyingSecurityId to first such id from underlyings
+            if (key == "underlyingSecurityId" && additionalData_.find("underlyingSecurityId") == additionalData_.end())
+                additionalData_["underlyingSecurityId"] = value;
         }
     }
 

@@ -50,7 +50,7 @@ std::ostream& operator<<(std::ostream& out, EquityReturnType t);
 /*!
     \ingroup cashflows
 */
-class EquityCoupon : public Coupon, public Observer {   
+class EquityCoupon : public Coupon {   
 public:
     EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
                  const QuantLib::ext::shared_ptr<QuantExt::EquityIndex2>& equityCurve, const DayCounter& dayCounter,
@@ -91,6 +91,14 @@ public:
     Date fixingStartDate() const { return fixingStartDate_; }
     //! The date at which performance is measured
     Date fixingEndDate() const { return fixingEndDate_; }
+    //! has notional reset
+    bool notionalReset() const { return notionalReset_; }
+    //! input quantity
+    Real inputQuantity() const { return quantity_; }
+    //! input initial price
+    Real inputInitialPrice() const { return initialPrice_; }
+    //! input nominal
+    Real inputNominal() const { return nominal_; }
     //! return both fixing dates
     std::vector<Date> fixingDates() const;
     //! initial price

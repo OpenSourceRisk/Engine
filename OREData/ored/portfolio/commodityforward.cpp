@@ -169,6 +169,7 @@ void CommodityForward::build(const QuantLib::ext::shared_ptr<EngineFactory>& eng
     commodityForward->setPricingEngine(
         commodityForwardEngineBuilder->engine(currency)); // the engine accounts for NDF if settlement data are present
     setSensitivityTemplate(*commodityForwardEngineBuilder);
+    addProductModelEngine(*commodityForwardEngineBuilder);
 
     // set up other Trade details
     instrument_ = QuantLib::ext::make_shared<VanillaInstrument>(commodityForward);

@@ -125,6 +125,8 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
 
     DLOG("CommoditySpreadOption::build() called for trade " << id());
 
+    reset();
+
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = std::string("Commodity");
     additionalData_["isdaBaseProduct"] = std::string("Other");
@@ -132,7 +134,6 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
     // skip the transaction level mapping for now
     additionalData_["isdaTransaction"] = std::string("");
 
-    reset();
     auto legData_ = csoData_.legData();
     auto optionData_ = csoData_.optionData();
     auto strike_ = csoData_.strike();
@@ -284,6 +285,7 @@ void CommoditySpreadOption::build(const QuantLib::ext::shared_ptr<ore::data::Eng
             engineBuilder->engine(ccy, longFlow->index(), shortFlow->index(), id());
         spreadOption->setPricingEngine(commoditySpreadOptionEngine);
         setSensitivityTemplate(*engineBuilder);
+        addProductModelEngine(*engineBuilder);
         if (i > 0) {
             additionalInstruments.push_back(spreadOption);
             additionalMultipliers.push_back(bsInd);

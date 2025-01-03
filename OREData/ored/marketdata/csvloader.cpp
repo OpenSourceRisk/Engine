@@ -253,5 +253,13 @@ std::set<QuantLib::ext::shared_ptr<MarketDatum>> CSVLoader::get(const Wildcard& 
     }
     return result;
 }
+
+std::set<QuantLib::Date> CSVLoader::asofDates() const {
+    std::set<QuantLib::Date> result;
+    for (auto const& [d, _] : data_)
+        result.insert(d);
+    return result;
+}
+
 } // namespace data
 } // namespace ore

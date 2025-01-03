@@ -66,7 +66,7 @@ void SensitivityRunner::runSensitivityAnalysis(QuantLib::ext::shared_ptr<Market>
     }
 
     QuantLib::ext::shared_ptr<SensitivityAnalysis> sensiAnalysis = QuantLib::ext::make_shared<SensitivityAnalysis>(
-        sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData_, recalibrateModels,
+        sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData_, recalibrateModels, false,
         curveConfigs, todaysMarketParams, false, referenceData_, iborFallbackConfig_, continueOnError_,
         analyticFxSensis);
     sensiAnalysis->generateSensitivities();

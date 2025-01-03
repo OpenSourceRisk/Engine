@@ -52,7 +52,7 @@ private:
 /*! %Coupon that returns the scaled results for an underlying coupon
     \ingroup cashflows
 */
-class ScaledCoupon : public Coupon, public Observer {
+class ScaledCoupon : public Coupon {
 public:
     ScaledCoupon(Real multiplier, QuantLib::ext::shared_ptr<Coupon> underlyingCoupon)
         : Coupon(underlyingCoupon->date(), underlyingCoupon->nominal(), underlyingCoupon->accrualStartDate(),

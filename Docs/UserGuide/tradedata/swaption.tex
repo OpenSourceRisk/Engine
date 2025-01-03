@@ -106,7 +106,7 @@ Note that for CallableSwaps, contrary to the above, the payer and receiver legs 
 \item \lstinline!NoticeConvention![Optional]: The roll convention used to compute the notice date from the exercise date. Defaults to
   \emph{Unadjusted} if not given. Allowable values: See Table \ref{tab:convention} Roll Convention.
 
-\item  \lstinline!Settlement!: Delivery Type. The allowable values are \emph{Cash} or \emph{Physical}. Note that for TradeType \emph{CallableSwap} only \emph{Physical} is allowed.
+\item  \lstinline!Settlement!: Delivery Type. The allowable values are \emph{Cash} or \emph{Physical}. Note that for TradeType \emph{CallableSwap} only \emph{Physical} is allowed. Also note that \emph{Cash} means the last Exercise date will be the Maturity date, whereas for \emph{Physical} the Maturity date will be the End date of the underlying Swap.
 
 \item \lstinline!SettlementMethod![Optional]: Specifies the method to calculate the settlement amount for Swaptions and CallableSwaps. Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice}, \emph{ParYieldCurve}. Defaults to \emph{ParYieldCurve} if Settlement is \emph{Cash} and defaults to \emph{PhysicalOTC} if Settlement is \emph{Physical}.
 

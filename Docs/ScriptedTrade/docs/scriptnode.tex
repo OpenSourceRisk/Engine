@@ -21,6 +21,8 @@ A script is described by
   functions. The filter is specified as a subnode ModelStates with one or several ModelState subnodes ``Asset'' (use EQ,
   FX, COMM components), ``IR'' (use interest rate states), ``INF'' (use inflation states). Applies to GaussianCam model
   only. If left empty, the full model state is used for conditional npv calculation.
+\item an optional PricingEngineConfigOverwrite node that allows to overwrite the global pricing engine config with
+  script specific parameters
 \end{itemize}
 
 Several script nodes can be used in parallel and are distinguished by an optional \verb+purpose+ attribute then. There
@@ -89,5 +91,12 @@ The following additional results have a special meaning.
           <ModelState>Asset</ModelState>
         </ModelStates>
       </ConditionalExpectation>
+      <PricingEngineConfigOverwrite>
+        <ModelParameters/>
+        <EngineParameters>
+          <Parameter name="IndicatorSmoothingForValues">0.0</Parameter>
+          <Parameter name="IndicatorSmoothingForDerivatives">0.0</Parameter>
+        </EngineParameters>
+      </PricingEngineConfigOverwrite>
     </Script>
 \end{minted}

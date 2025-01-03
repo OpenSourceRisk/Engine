@@ -89,6 +89,7 @@ public:
     Real getRunTime();
 
     std::string version();
+    std::string gitHash();
 
     //! set up logging
     void setupLog(QuantLib::Size mask = 15, const std::string& path = "", const std::string& file = "",
@@ -147,7 +148,7 @@ public:
     //! write out parameters
     virtual void writeOutParameters() override{};
 
-private:
+protected:
     QuantLib::ext::shared_ptr<Parameters> params_;
 };
 

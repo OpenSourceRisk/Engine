@@ -46,7 +46,7 @@ double computeTargetRate(const double fairRate, const double shift, const ShiftT
 }
 
 QuantLib::Period getYieldCurvePeriod(const RiskFactorKey& rfKey,
-                                     const boost::shared_ptr<ScenarioSimMarketParameters>& params) {
+                                     const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& params) {
     QL_REQUIRE(rfKey.index < params->yieldCurveTenors(rfKey.name).size(), "Please align pillars, internal error");
     return params->yieldCurveTenors(rfKey.name)[rfKey.index];
 }
@@ -59,28 +59,28 @@ double getCurveStressShift(const RiskFactorKey& key, const StressTestScenarioDat
     case RiskFactorKey::KeyType::DiscountCurve: {
         auto it = stressScenario.discountCurveShifts.find(key.name);
         if (it != stressScenario.discountCurveShifts.end()) {
-            shifts = &(it->second.shifts);
+            shifts = &(it->second->shifts);
         }
         break;
     }
     case RiskFactorKey::KeyType::YieldCurve: {
         auto it = stressScenario.yieldCurveShifts.find(key.name);
         if (it != stressScenario.yieldCurveShifts.end()) {
-            shifts = &(it->second.shifts);
+            shifts = &(it->second->shifts);
         }
         break;
     }
     case RiskFactorKey::KeyType::IndexCurve: {
         auto it = stressScenario.indexCurveShifts.find(key.name);
         if (it != stressScenario.indexCurveShifts.end()) {
-            shifts = &(it->second.shifts);
+            shifts = &(it->second->shifts);
         }
         break;
     }
     case RiskFactorKey::KeyType::SurvivalProbability: {
         auto it = stressScenario.survivalProbabilityShifts.find(key.name);
         if (it != stressScenario.survivalProbabilityShifts.end()) {
-            shifts = &(it->second.shifts);
+            shifts = &(it->second->shifts);
         }
         break;
     }
@@ -95,7 +95,7 @@ double getCurveStressShift(const RiskFactorKey& key, const StressTestScenarioDat
 }
 
 double getCapFloorStressShift(const RiskFactorKey& key, const StressTestScenarioData::StressTestData& stressScenario,
-                              const boost::shared_ptr<ScenarioSimMarketParameters>& params) {
+                              const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& params) {
     double shift = 0.0;
     auto it = stressScenario.capVolShifts.find(key.name);
     if (it != stressScenario.capVolShifts.end()) {
@@ -104,11 +104,11 @@ double getCapFloorStressShift(const RiskFactorKey& key, const StressTestScenario
         size_t n = key.index;
         size_t tenorId = n / nStrikes;
         size_t strikeId = n % nStrikes;
-        const Period& tenor = cfData.shiftExpiries[tenorId];
-        if (cfData.shiftStrikes.empty()) {
-            shift = cfData.shifts.at(tenor).front();
+        const Period& tenor = cfData->shiftExpiries[tenorId];
+        if (cfData->shiftStrikes.empty()) {
+            shift = cfData->shifts.at(tenor).front();
         } else {
-            shift = cfData.shifts.at(tenor)[strikeId];
+            shift = cfData->shifts.at(tenor)[strikeId];
         }
     }
     return shift;
@@ -153,7 +153,7 @@ std::set<RiskFactorKey::KeyType> disabledParRates(bool irCurveParRates, bool irC
 }
 
 //! Checks the the tenors for curves in a stresstest scenario are alligned with par sensitivity config
-bool checkCurveShiftData(const std::string& name, const StressTestScenarioData::CurveShiftData& stressShiftData,
+bool checkCurveShiftData(const std::string& name, const ext::shared_ptr<StressTestScenarioData::CurveShiftData>& stressShiftData,
                          const std::map<std::string, QuantLib::ext::shared_ptr<SensitivityScenarioData::CurveShiftData>>& sensiData) {
     auto it = sensiData.find(name);
     if (it == sensiData.end()) {
@@ -170,7 +170,7 @@ bool checkCurveShiftData(const std::string& name, const StressTestScenarioData::
         return false;
     }
     const size_t nParShifts = parShiftData->shiftTenors.size();
-    const size_t nStressShifts = stressShiftData.shiftTenors.size();
+    const size_t nStressShifts = stressShiftData->shiftTenors.size();
     if (nParShifts != nStressShifts) {
         StructuredConfigurationWarningMessage(
             "StressScenario", name, "Par Shift to zero conversion",
@@ -181,12 +181,12 @@ bool checkCurveShiftData(const std::string& name, const StressTestScenarioData::
         return false;
     }
     for (size_t i = 0; i < nParShifts; ++i){
-        if (parShiftData->shiftTenors[i] != stressShiftData.shiftTenors[i]){
+        if (parShiftData->shiftTenors[i] != stressShiftData->shiftTenors[i]){
             StructuredConfigurationWarningMessage("StressScenario", name, "Par Shift to zero conversion",
                                                   "tenors are not aligned, " + to_string(i) + " par Pillar is " +
                                                       to_string(parShiftData->shiftTenors[i]) +
                                                       " vs stress shift piller " +
-                                                      to_string(stressShiftData.shiftTenors[i]) +
+                                                      to_string(stressShiftData->shiftTenors[i]) +
                                                       ". Please align pillars of stress test and par sensi config")
                 .log();
             return false;
@@ -197,7 +197,7 @@ bool checkCurveShiftData(const std::string& name, const StressTestScenarioData::
 
 
 //! Checks the the strikes and expiries of cap floors in stresstest scenario are alligned with par sensitivity config
-bool checkCapFloorShiftData(const std::string& name, const StressTestScenarioData::CapFloorVolShiftData& stressShiftData,
+bool checkCapFloorShiftData(const std::string& name, const ext::shared_ptr<StressTestScenarioData::CapFloorVolShiftData> & stressShiftData,
                          const std::map<std::string, QuantLib::ext::shared_ptr<SensitivityScenarioData::CapFloorVolShiftData>>& sensiData){
 
     auto it = sensiData.find(name);
@@ -217,7 +217,7 @@ bool checkCapFloorShiftData(const std::string& name, const StressTestScenarioDat
         return false;
     }
     const size_t nParShifts = parShiftData->shiftExpiries.size();
-    const size_t nStressShifts = stressShiftData.shiftExpiries.size();
+    const size_t nStressShifts = stressShiftData->shiftExpiries.size();
     if (nParShifts != nStressShifts) {
         StructuredConfigurationWarningMessage(
             "StressScenario", name, "Par Shift to zero conversion",
@@ -228,20 +228,20 @@ bool checkCapFloorShiftData(const std::string& name, const StressTestScenarioDat
         return false;
     }
     for (size_t i = 0; i < nParShifts; ++i) {
-        if (parShiftData->shiftExpiries[i] != stressShiftData.shiftExpiries[i]) {
+        if (parShiftData->shiftExpiries[i] != stressShiftData->shiftExpiries[i]) {
             StructuredConfigurationWarningMessage(
                 "StressScenario", name, "Par Shift to zero conversion",
                 "CapFloor expiries are not aligned, " + to_string(i) + " CapFloor Pillar is " +
                     to_string(parShiftData->shiftExpiries[i]) + " vs stress shift piller " +
-                    to_string(stressShiftData.shiftExpiries[i]) +
+                    to_string(stressShiftData->shiftExpiries[i]) +
                     ". Please align pillars of stress test and par sensi config")
                 .log();
             return false;
         }
     }
-    if(!stressShiftData.shiftStrikes.empty()){
+    if(!stressShiftData->shiftStrikes.empty()){
         const size_t nParStrikes = parShiftData->shiftStrikes.size();
-        const size_t nSressStrikes = stressShiftData.shiftStrikes.size();
+        const size_t nSressStrikes = stressShiftData->shiftStrikes.size();
 
         if (nParStrikes != nSressStrikes) {
             StructuredConfigurationWarningMessage(
@@ -253,12 +253,12 @@ bool checkCapFloorShiftData(const std::string& name, const StressTestScenarioDat
             return false;
         }
         for (size_t i = 0; i < nParStrikes; ++i) {
-            if (parShiftData->shiftStrikes[i] != stressShiftData.shiftStrikes[i]) {
+            if (parShiftData->shiftStrikes[i] != stressShiftData->shiftStrikes[i]) {
                 StructuredConfigurationWarningMessage(
                     "StressScenario", name, "Par Shift to zero conversion",
                     "CapFloor expiries are not aligned, " + to_string(i) + " CapFloor strike is " +
                         to_string(parShiftData->shiftStrikes[i]) + " vs stress shift strike " +
-                        to_string(stressShiftData.shiftStrikes[i]) +
+                        to_string(stressShiftData->shiftStrikes[i]) +
                         ". Please align strikes of stress test and par sensi config")
                     .log();
                 return false;
@@ -418,7 +418,7 @@ ParStressScenarioConverter::convertScenario(const StressTestScenarioData::Stress
 }
 
 double ParStressScenarioConverter::maturityTime(const RiskFactorKey& rfKey) const {
-    boost::shared_ptr<QuantLib::TermStructure> ts;
+    QuantLib::ext::shared_ptr<QuantLib::TermStructure> ts;
     QuantLib::Period tenor;
     switch (rfKey.keytype) {
     case RiskFactorKey::KeyType::DiscountCurve:
@@ -525,9 +525,10 @@ void ParStressScenarioConverter::updateTargetStressTestScenarioData(
             newData.shiftTenors = simMarketParams_->yieldCurveTenors(key.name);
             newData.shifts = std::vector<double>(newData.shiftTenors.size(), 0.0);
             newData.shifts[key.index] = zeroShift;
-            stressScenario.discountCurveShifts.insert({key.name, newData});
+            stressScenario.discountCurveShifts.insert(
+                {key.name, ext::make_shared<StressTestScenarioData::CurveShiftData>(newData)});
         } else {
-            stressScenario.discountCurveShifts.at(key.name).shifts[key.index] = zeroShift;
+            stressScenario.discountCurveShifts.at(key.name)->shifts[key.index] = zeroShift;
         }
     } else if (key.keytype == RiskFactorKey::KeyType::IndexCurve) {
         if (stressScenario.indexCurveShifts.count(key.name) == 0) {
@@ -536,9 +537,9 @@ void ParStressScenarioConverter::updateTargetStressTestScenarioData(
             newData.shiftTenors = simMarketParams_->yieldCurveTenors(key.name);
             newData.shifts = std::vector<double>(newData.shiftTenors.size(), 0.0);
             newData.shifts[key.index] = zeroShift;
-            stressScenario.indexCurveShifts.insert({key.name, newData});
+            stressScenario.indexCurveShifts.insert({key.name, ext::make_shared<StressTestScenarioData::CurveShiftData>(newData)});
         } else {
-            stressScenario.indexCurveShifts.at(key.name).shifts[key.index] = zeroShift;
+            stressScenario.indexCurveShifts.at(key.name)->shifts[key.index] = zeroShift;
         }
     } else if (key.keytype == RiskFactorKey::KeyType::SurvivalProbability) {
         if (stressScenario.survivalProbabilityShifts.count(key.name) == 0) {
@@ -547,9 +548,10 @@ void ParStressScenarioConverter::updateTargetStressTestScenarioData(
             newData.shiftTenors = simMarketParams_->defaultTenors(key.name);
             newData.shifts = std::vector<double>(newData.shiftTenors.size(), 0.0);
             newData.shifts[key.index] = zeroShift;
-            stressScenario.survivalProbabilityShifts.insert({key.name, newData});
+            stressScenario.survivalProbabilityShifts.insert(
+                {key.name, ext::make_shared<StressTestScenarioData::CurveShiftData>(newData)});
         } else {
-            stressScenario.survivalProbabilityShifts.at(key.name).shifts[key.index] = zeroShift;
+            stressScenario.survivalProbabilityShifts.at(key.name)->shifts[key.index] = zeroShift;
         }
     } else if (key.keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         if (stressScenario.capVolShifts.count(key.name) == 0) {
@@ -562,11 +564,12 @@ void ParStressScenarioConverter::updateTargetStressTestScenarioData(
             }
             const auto& [expiryId, strikeId] = getCapFloorTenorAndStrikeIds(key);
             newData.shifts[newData.shiftExpiries[expiryId]][strikeId] = zeroShift;
-            stressScenario.capVolShifts.insert({key.name, newData});
+            stressScenario.capVolShifts.insert(
+                {key.name, ext::make_shared<StressTestScenarioData::CapFloorVolShiftData>(newData)});
         } else {
-            StressTestScenarioData::CapFloorVolShiftData& newData = stressScenario.capVolShifts.at(key.name);
+            ext::shared_ptr<StressTestScenarioData::CapFloorVolShiftData>& newData = stressScenario.capVolShifts.at(key.name);
             const auto& [expiryId, strikeId] = getCapFloorTenorAndStrikeIds(key);
-            newData.shifts[newData.shiftExpiries[expiryId]][strikeId] = zeroShift;
+            newData->shifts[newData->shiftExpiries[expiryId]][strikeId] = zeroShift;
         }
     }
 }

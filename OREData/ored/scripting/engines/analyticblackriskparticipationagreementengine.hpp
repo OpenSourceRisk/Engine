@@ -39,9 +39,11 @@ public:
         const std::string& baseCcy, const std::map<std::string, Handle<YieldTermStructure>>& discountCurves,
         const std::map<std::string, Handle<Quote>>& fxSpots,
         const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
-        const Handle<SwaptionVolatilityStructure>& volatility, const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase,
-        const bool matchUnderlyingTenor, const Real reversion, const bool alwaysRecomputeOptionRepresentation,
-        const Size maxGapDays = Null<Size>(), const Size maxDiscretisationPoints = Null<Size>());
+        const Handle<SwaptionVolatilityStructure>& volatility,
+        const QuantLib::ext::shared_ptr<SwapIndex>& swapIndexBase, const bool matchUnderlyingTenor,
+        const Real reversion, const bool alwaysRecomputeOptionRepresentation, const Size maxGapDays = Null<Size>(),
+        const Size maxDiscretisationPoints = Null<Size>(),
+        const OptionExpiryPosition optionExpiryPosition = OptionExpiryPosition::Mid);
 
 private:
     Real protectionLegNpv() const override;
