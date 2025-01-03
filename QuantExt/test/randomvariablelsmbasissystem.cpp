@@ -19,8 +19,11 @@
 #include <qle/math/randomvariablelsmbasissystem.hpp>
 
 #include <ql/time/date.hpp>
+#include <ql/math/randomnumbers/haltonrsg.hpp>
 
 #include <boost/test/unit_test.hpp>
+
+#include <set>
 
 using namespace QuantExt;
 
@@ -28,17 +31,64 @@ BOOST_AUTO_TEST_SUITE(QuantExtTestSuite)
 
 BOOST_AUTO_TEST_SUITE(RandomVariableLsmBasisSystemTest)
 
-BOOST_AUTO_TEST_CASE(testBasisSystem1d) {
+BOOST_AUTO_TEST_CASE(testBasisSystem) {
 
     BOOST_TEST_MESSAGE("Testing lsm basis system for random variables...");
 
-    constexpr double x0 = -2.0;
-    for (Size order = 0; order < 200; ++order) {
-        auto bs =
-            RandomVariableLsmBasisSystem::pathBasisSystem(order, QuantLib::LsmBasisSystem::PolynomialType::Monomial);
-        BOOST_REQUIRE(bs.size() == order + 1);
-        for (Size i = 0; i <= order; ++i) {
-            BOOST_CHECK_CLOSE(bs[i](RandomVariable(1, x0)).at(0), std::pow(x0, i), 1E-10);
+    std::set<Size> dims = {1, 2, 5};
+    std::set<Size> orders = {0, 1, 2, 3, 4, 5, 10};
+    std::set<QuantLib::LsmBasisSystem::PolynomialType> polynomialTypes = {
+        QuantLib::LsmBasisSystem::PolynomialType::Monomial,    QuantLib::LsmBasisSystem::PolynomialType::Laguerre,
+        QuantLib::LsmBasisSystem::PolynomialType::Hermite,     QuantLib::LsmBasisSystem::PolynomialType::Hyperbolic,
+        QuantLib::LsmBasisSystem::PolynomialType::Legendre,    QuantLib::LsmBasisSystem::PolynomialType::Chebyshev,
+        QuantLib::LsmBasisSystem::PolynomialType::Chebyshev2nd};
+    Size nSamplePoints = 20;
+
+    for (auto const& dim : dims) {
+        for (auto const& order : orders) {
+            for (auto const& polynomialType : polynomialTypes) {
+
+                BOOST_TEST_MESSAGE("Testing dim " << dim << ", order " << order << ", polynomial type "
+                                                  << static_cast<int>(polynomialType));
+
+                auto bsrv = RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order, polynomialType);
+                auto bsref = LsmBasisSystem::multiPathBasisSystem(dim, order, polynomialType);
+
+                BOOST_REQUIRE(bsrv.size() == bsref.size());
+
+                Array samplePoint;
+                std::vector<RandomVariable> samplePointRv(dim);
+                std::vector<const RandomVariable*> samplePointRvPtr(dim);
+
+                HaltonRsg rsg(dim, 42);
+                for (Size i = 0; i < nSamplePoints; ++i) {
+
+                    auto tmp = rsg.nextSequence().value;
+                    samplePoint = Array(tmp.begin(), tmp.end());
+                    for (Size d = 0; d < dim; ++d) {
+                        samplePointRv[d] = RandomVariable(1, samplePoint[d]);
+                        samplePointRvPtr[d] = &samplePointRv[d];
+                    }
+
+                    std::set<Real> valuesRv;
+                    std::set<Real> valuesRef;
+
+                    for (auto const& f : bsrv) {
+                        valuesRv.insert(f(samplePointRvPtr).at(0));
+                    }
+
+                    for (auto const& f : bsref) {
+                        valuesRef.insert(f(samplePoint));
+                    }
+
+                    BOOST_REQUIRE(valuesRv.size() == valuesRef.size());
+                    for (auto itRv = valuesRv.begin(), itRef = valuesRef.begin(); itRv != valuesRv.end();
+                         ++itRv, ++itRef) {
+                        BOOST_CHECK(QuantLib::close_enough(*itRv, *itRef));
+                    }
+
+                }
+            }
         }
     }
 }
