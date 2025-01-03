@@ -178,11 +178,6 @@ Rate CappedFlooredAverageONIndexedCoupon::cap() const { return gearing_ > 0.0 ? 
 
 Rate CappedFlooredAverageONIndexedCoupon::floor() const { return gearing_ > 0.0 ? floor_ : cap_; }
 
-Rate CappedFlooredAverageONIndexedCoupon::rate() const {
-    calculate();
-    return rate_;
-}
-
 Rate CappedFlooredAverageONIndexedCoupon::convexityAdjustment() const { return underlying_->convexityAdjustment(); }
 
 Rate CappedFlooredAverageONIndexedCoupon::effectiveCap() const {

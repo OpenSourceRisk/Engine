@@ -19,6 +19,8 @@
 	<Measure/>
 	<Discretization>Exact</Discretization>
 	<SalvagingAlgorithm>None</SalvagingAlgorithm>
+	<IntegrationPolicy/>
+	<PiecewiseIntegration>true</PiecewiseIntegration>
 	<InterestRateModels>
 		<LGM key="EUR">
 			<CalibrationType>Bootstrap</CalibrationType>
@@ -178,7 +180,7 @@
 				<Calibrate>false</Calibrate>
 				<ParamType>Piecewise</ParamType>
 				<TimeGrid>1.00274, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947</TimeGrid>
-				<InitialValue>0.129551, 0.12705293051761848, 0.12888428131213234, 0.12541029789139779, 0.12101498575219415, 0.10216493411353655</InitialValue>
+				<InitialValue>0.129551, 0.12705293051761848, 0.12888428131213234, 0.12541029789139779, 0.12101498575219345, 0.1021649341135366</InitialValue>
 			</Sigma>
 			<CalibrationOptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
@@ -192,7 +194,7 @@
 				<Calibrate>false</Calibrate>
 				<ParamType>Piecewise</ParamType>
 				<TimeGrid>1.00274, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947</TimeGrid>
-				<InitialValue>0.0925159, 0.10217136247068405, 0.11094454571757319, 0.11449002483725586, 0.13525529400761918, 0.12093272602655143</InitialValue>
+				<InitialValue>0.0925159, 0.10217136247068405, 0.11094454571757319, 0.11449002483725586, 0.13525529400761888, 0.1209327260265514</InitialValue>
 			</Sigma>
 			<CalibrationOptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
@@ -206,7 +208,7 @@
 				<Calibrate>false</Calibrate>
 				<ParamType>Piecewise</ParamType>
 				<TimeGrid>1.00274, 2.0027397260273974, 3.0027397260273974, 4.0027397260273974, 5.0054794520547947</TimeGrid>
-				<InitialValue>0.137409, 0.13753998714863475, 0.13451635993884567, 0.13096138699037793, 0.14388673869981206, 0.13619371416103612</InitialValue>
+				<InitialValue>0.137409, 0.13753998714863475, 0.13451635993884567, 0.13096138699037793, 0.143886738699812, 0.13619371416103609</InitialValue>
 			</Sigma>
 			<CalibrationOptions>
 				<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>

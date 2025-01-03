@@ -488,9 +488,7 @@ RandomVariable GaussianCam::getInfIndexValue(const Size indexNo, const Date& d, 
     Size camIndex = infIndexPositionInCam_[indexNo];
     Real t = infIndices_[indexNo].second->zeroInflationTermStructure()->timeFromReference(obsDate + lag);
     Real T = infIndices_[indexNo].second->zeroInflationTermStructure()->timeFromReference(fixingDate + lag);
-    QL_DEPRECATED_DISABLE_WARNING
-    bool isInterpolated = infIndices_[indexNo].second->interpolated();
-    QL_DEPRECATED_ENABLE_WARNING
+    bool isInterpolated = infIndices_[indexNo].first.infIsInterpolated();
     Real baseFixing =
         infIndices_[indexNo].second->fixing(infIndices_[indexNo].second->zeroInflationTermStructure()->baseDate());
     RandomVariable result(size());

@@ -172,8 +172,8 @@ Real getCleanPrice(const BondBuilder::Result& b, const Date& expiry) {
     // TODO refactor: make this independent of bond type and pricing engine
 
     if (expiry != Date()) { // this is the fwd bond case
-        boost::shared_ptr<QuantExt::DiscountingRiskyBondEngine> drbe =
-            boost::dynamic_pointer_cast<QuantExt::DiscountingRiskyBondEngine>(b.bond->pricingEngine());
+        QuantLib::ext::shared_ptr<QuantExt::DiscountingRiskyBondEngine> drbe =
+            QuantLib::ext::dynamic_pointer_cast<QuantExt::DiscountingRiskyBondEngine>(b.bond->pricingEngine());
         QL_REQUIRE(drbe != nullptr,
                    "fwd bond spread imply not supported for non-vanilla bonds or pe != discountingriskybondrengine");
         return drbe->calculateNpv(expiry, expiry, b.bond->cashflows()).npv - b.bond->accruedAmount(expiry) / 100.0;

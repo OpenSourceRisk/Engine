@@ -41,9 +41,8 @@ class ZeroInflationCurveObserverStatic : public ZeroInflationTermStructure,
                                          public LazyObject {
 public:
     ZeroInflationCurveObserverStatic(
-        const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
-        Frequency frequency, bool indexIsInterpolated, const std::vector<Date>& dates,
-        const std::vector<Handle<Quote>>& rates,
+        const Date& referenceDate, const DayCounter& dayCounter, const Period& lag, Frequency frequency,
+        const std::vector<Date>& dates, const std::vector<Handle<Quote>>& rates,
         const QuantLib::ext::shared_ptr<Seasonality>& seasonality = QuantLib::ext::shared_ptr<Seasonality>(),
         const Interpolator& interpolator = Interpolator());
 
@@ -88,11 +87,10 @@ protected:
 
 template <class Interpolator>
 ZeroInflationCurveObserverStatic<Interpolator>::ZeroInflationCurveObserverStatic(
-    const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
-    Frequency frequency, bool indexIsInterpolated, const std::vector<Date>& dates,
-    const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
-    const Interpolator& interpolator)
-    : ZeroInflationTermStructure(referenceDate, calendar, dayCounter, rates[0]->value(), lag, frequency, seasonality),
+    const Date& referenceDate, const DayCounter& dayCounter, const Period& lag, Frequency frequency,
+    const std::vector<Date>& dates, const std::vector<Handle<Quote>>& rates,
+    const QuantLib::ext::shared_ptr<Seasonality>& seasonality, const Interpolator& interpolator)
+    : ZeroInflationTermStructure(referenceDate, Date(), lag, frequency, dayCounter, seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), dates_(dates),
       quotes_(rates) {
 

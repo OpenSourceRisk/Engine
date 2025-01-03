@@ -937,8 +937,6 @@ termstructures/implieddefaulttermstructure.hpp
 termstructures/inflation/constantcpivolatility.hpp
 termstructures/inflation/cpipricevolatilitysurface.hpp
 termstructures/inflation/cpivolatilitystructure.hpp
-termstructures/inflation/inflationtraits.hpp
-termstructures/inflation/piecewisezeroinflationcurve.hpp
 termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp
 termstructures/interpolateddiscountcurve.hpp
@@ -1021,6 +1019,7 @@ utilities/savedobservablesettings.hpp
 utilities/serializationdate.hpp
 utilities/serializationperiod.hpp
 utilities/time.hpp
+gitversion.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")

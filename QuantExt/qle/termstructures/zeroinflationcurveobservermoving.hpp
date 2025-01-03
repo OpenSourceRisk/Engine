@@ -72,6 +72,7 @@ private:
     //! \name LazyObject interface
     //@{
     void performCalculations() const override;
+    void updateBaseDate() const;
     //@}
 
 protected:
@@ -82,6 +83,7 @@ protected:
     std::vector<Handle<Quote> > quotes_;
     bool indexIsInterpolated_;
     mutable Date baseDate_;
+    Period observationLag_;
 };
 
 // template definitions
@@ -92,10 +94,12 @@ ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving
     Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
     const std::vector<Handle<Quote>>& rates, const QuantLib::ext::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)
-    : ZeroInflationTermStructure(settlementDays, calendar, dayCounter, rates[0]->value(), lag, frequency, seasonality),
-      InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates), indexIsInterpolated_(indexIsInterpolated) {
+    : ZeroInflationTermStructure(settlementDays, calendar, Date(), lag, frequency, dayCounter, seasonality),
+      InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates),
+      indexIsInterpolated_(indexIsInterpolated), observationLag_(lag) {
 
     QL_REQUIRE(times.size() > 1, "too few times: " << times.size());
+    updateBaseDate();
     this->times_.resize(times.size());
     this->times_[0] = times[0];
     for (Size i = 1; i < times.size(); i++) {
@@ -155,21 +159,24 @@ template <class T> inline void ZeroInflationCurveObserverMoving<T>::update() {
 }
 
 template <class T> inline void ZeroInflationCurveObserverMoving<T>::performCalculations() const {
-
-    Date d = Settings::instance().evaluationDate();
-    Date d0 = d - this->observationLag();
-    if (!indexIsInterpolated_) {
-        baseDate_ = inflationPeriod(d0, this->frequency_).first;
-    } else {
-        baseDate_ = d0;
-    }
-
+    updateBaseDate();
     for (Size i = 0; i < this->times_.size(); ++i)
         this->data_[i] = quotes_[i]->value();
     this->interpolation_ =
         this->interpolator_.interpolate(this->times_.begin(), this->times_.end(), this->data_.begin());
     this->interpolation_.update();
 }
+
+template <class T> inline void ZeroInflationCurveObserverMoving<T>::updateBaseDate() const {
+    Date d = Settings::instance().evaluationDate();
+    Date d0 = d - this->observationLag_;
+    if (!indexIsInterpolated_) {
+        baseDate_ = inflationPeriod(d0, this->frequency_).first;
+    } else {
+        baseDate_ = d0;
+    }
+}
+
 } // namespace QuantExt
 
 #endif

@@ -41,6 +41,7 @@
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 
 #include <qle/version.hpp>
+#include <qle/gitversion.hpp>
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
@@ -221,8 +222,8 @@ QuantLib::ext::shared_ptr<CSVLoader> OREApp::buildCsvLoader(const QuantLib::ext:
     else {
         WLOG("fixing cutoff date not set");
     }
-
-    auto loader = boost::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings, cutoff);
+    
+    auto loader = QuantLib::ext::make_shared<CSVLoader>(marketFiles, fixingFiles, dividendFiles, implyTodaysFixings, cutoff);
 
     return loader;
 }
@@ -609,6 +610,14 @@ void OREApp::setupLog(Size mask, const std::string& path, const std::string& fil
 void OREApp::closeLog() { Log::instance().removeAllLoggers(); }
 
 std::string OREApp::version() { return std::string(OPEN_SOURCE_RISK_VERSION); }
+
+std::string OREApp::gitHash() { 
+    std::string hashStr;
+#ifdef GIT_HASH
+    hashStr = std::string(GIT_HASH);
+#endif
+    return hashStr;
+}
 
 void OREAppInputParameters::loadParameters() {
     LOG("load OREAppInputParameters called");
