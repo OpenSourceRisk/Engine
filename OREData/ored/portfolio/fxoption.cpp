@@ -28,17 +28,64 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/termstructures/blackdeltautilities.hpp>
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 
 using namespace QuantLib;
+using namespace QuantExt;
 
 namespace ore {
 namespace data {
 
 void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+
+    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
+
+    auto it = engineFactory->engineData()->globalParameters().find("RunType");
+    if (it != engineFactory->engineData()->globalParameters().end() && it->second != "PortfolioAnalyser" && delta_!=0.0) {
+
+        std::string conventionName = assetName_ + "-" + currency_ + "-FXOPTION";
+        QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        auto fxOptConv = QuantLib::ext::dynamic_pointer_cast<FxOptionConvention>(conventions->get(conventionName));
+        QL_REQUIRE(fxOptConv, "unable to cast convention '" << conventionName << "' into FxOptionConvention");
+
+        auto dt = fxOptConv->deltaType();
+        auto fxConvId = fxOptConv->fxConventionID();
+        auto fxConv = QuantLib::ext::dynamic_pointer_cast<FXConvention>(conventions->get(fxConvId));
+
+        auto pairSpot = market->fxSpot(assetName_ + currency_);
+        auto domYts = market->discountCurve(assetName_).currentLink();
+        auto forYts = market->discountCurve(currency_).currentLink();
+        auto volSurface = market->fxVol(assetName_ + currency_).currentLink();
+
+
+        auto t = volSurface->timeFromReference(parseDate(option_.exerciseDates().front()));
+
+        auto spotCalendar_ = parseCalendar(assetName_ + "," + currency_);
+        Date d = parseDate(option_.exerciseDates().front());
+        auto spotDays_ = fxConv->spotDays();
+        Date settl = spotCalendar_.advance(Settings::instance().evaluationDate(), spotDays_ * Days);
+        Date settlFwd = spotCalendar_.advance(d, spotDays_ * Days);
+
+        auto domDisc = domYts->discount(settlFwd) / domYts->discount(settl);
+        auto forDisc = forYts->discount(settlFwd) / forYts->discount(settl);
+        if (option_.callPut() == "Call"){
+            auto strikeFromDelta = QuantExt::getStrikeFromDelta(Option::Call, delta_, dt, pairSpot->value(), domDisc,
+                                                                forDisc,
+                                         volSurface, t);
+            strike_.setValue(strikeFromDelta);
+
+        } else {
+            auto strikeFromDelta = QuantExt::getStrikeFromDelta(Option::Put, -delta_, dt, pairSpot->value(), domDisc,
+                                                                forDisc,
+                                                       volSurface, t);
+            strike_.setValue(strikeFromDelta);
+        }
+        
+    }
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Foreign Exchange");
@@ -50,9 +97,8 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     additionalData_["boughtAmount"] = quantity_;
     additionalData_["soldCurrency"] = currency_;
     additionalData_["soldAmount"] = quantity_ * strike_.value();
-
+    
     QuantLib::Date today = Settings::instance().evaluationDate();
-    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
 
     // If automatic exercise, check that we have a non-empty FX index string, parse it and attach curves from market.
     if (option_.isAutomaticExercise()) {
@@ -154,12 +200,17 @@ void FxOption::fromXML(XMLNode* node) {
     assetName_ = XMLUtils::getChildValue(fxNode, "BoughtCurrency", true);
     currency_ = XMLUtils::getChildValue(fxNode, "SoldCurrency", true);
     double boughtAmount = XMLUtils::getChildValueAsDouble(fxNode, "BoughtAmount", true);
-    double soldAmount = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", true);
+    double soldAmount = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", false);
+    delta_ = XMLUtils::getChildValueAsDouble(fxNode, "Delta", false);
+    if (soldAmount == 0.0) {
+        QL_REQUIRE(delta_ > 0.0, "Non null or negative delta required");
+    } else {
+        QL_REQUIRE(soldAmount > 0.0, "positive SoldAmount required");
+    }
     strike_ = TradeStrike(soldAmount / boughtAmount, currency_);
     quantity_ = boughtAmount;
     fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", false);
     QL_REQUIRE(boughtAmount > 0.0, "positive BoughtAmount required");
-    QL_REQUIRE(soldAmount > 0.0, "positive SoldAmount required");
 }
 
 XMLNode* FxOption::toXML(XMLDocument& doc) const {
