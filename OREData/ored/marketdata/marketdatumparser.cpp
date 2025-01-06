@@ -89,7 +89,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
     }
 }
 
-static MarketDatum::QuoteType parseQuoteType(const string& s) {
+MarketDatum::QuoteType parseQuoteType(const string& s) {
     static map<string, MarketDatum::QuoteType> b = {
         {"BASIS_SPREAD", MarketDatum::QuoteType::BASIS_SPREAD},
         {"CREDIT_SPREAD", MarketDatum::QuoteType::CREDIT_SPREAD},
@@ -106,6 +106,7 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
         {"TRANSITION_PROBABILITY", MarketDatum::QuoteType::TRANSITION_PROBABILITY},
         {"CONVERSION_FACTOR", MarketDatum::QuoteType::CONVERSION_FACTOR},
+        {"TRANCHE_UPFRONT", MarketDatum::QuoteType::TRANCHE_UPFRONT},
         {"NULL", MarketDatum::QuoteType::NONE}};
 
     if (s == "RATE_GVOL")
@@ -676,7 +677,9 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
 
     case MarketDatum::InstrumentType::CDS_INDEX: {
         QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
-        QL_REQUIRE(quoteType == MarketDatum::QuoteType::BASE_CORRELATION, "Invalid quote type for " << datumName);
+        bool validType = quoteType == MarketDatum::QuoteType::BASE_CORRELATION ||
+                         quoteType == MarketDatum::QuoteType::TRANCHE_UPFRONT;
+        QL_REQUIRE(validType, "Invalid quote type for " << datumName);
         const string& cdsIndexName = tokens[2];
         Period term = parsePeriod(tokens[3]);
         Real detachmentPoint = parseReal(tokens[4]);

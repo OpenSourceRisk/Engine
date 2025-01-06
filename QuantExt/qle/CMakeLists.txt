@@ -417,6 +417,7 @@ time/dateutilities.cpp
 time/yearcounter.cpp
 utilities/cashflows.cpp
 utilities/commodity.cpp
+utilities/creditcurves.cpp
 utilities/inflation.cpp
 utilities/time.cpp)
 
@@ -753,6 +754,7 @@ models/lgmfdsolver.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
 models/lgmvectorised.hpp
+models/mcdefaultlossmodel.hpp
 models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
 models/marketobserver.hpp
@@ -1015,6 +1017,7 @@ time/futureexpirycalculator.hpp
 time/yearcounter.hpp
 utilities/cashflows.hpp
 utilities/commodity.hpp
+utilities/creditcurves.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp

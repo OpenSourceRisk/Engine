@@ -74,7 +74,7 @@ class IndexTrancheNotionalCalculator {
                     QL_FAIL("negative weight provided, check basketdata");
                 }
             }
-            QL_REQUIRE(QuantLib::close_enough(totalLoss + totalLossWeight, 1.0), "weights not adding up to 100%.");
+            QL_REQUIRE(QuantLib::close_enough(totalLoss + totalWeight, 1.0), "weights not adding up to 100%.");
         }
     // Alive constitiuents
         const std::vector<std::string>& remainingConstituents() const { return remainingConstituents_; }
@@ -105,17 +105,6 @@ class IndexTrancheNotionalCalculator {
         double weightCorrectionFactor_ = 1.0;
 };
 
-IndexTrancheNotionalCalculator makeIndexTrancheCaclulatorFromBasketData(double origTrancheNtl, double origAttach, double origDetach, const BasketData& basketData){
-    return makeIndexTrancheCaclulatorFromBasketData(origTrancheNtl / (origDetach - origAttach), basketData);
-}
-
-IndexTrancheNotionalCalculator makeIndexTrancheCaclulatorFromBasketData(double origIndexNotional, const BasketData& basketData);
-
-IndexTrancheNotionalCalculator makeIndexTrancheCaclulatorFromReferenceData(double origTrancheNtl, double origAttach, double origDetach, QuantLib::ext::shared_ptr<ReferenceDatum> cird){
-    return makeIndexTrancheCaclulatorFromReferenceData(origTrancheNtl / (origDetach - origAttach), cird);
-}
-
-IndexTrancheNotionalCalculator makeIndexTrancheCaclulatorFromReferenceData(double origIndexNotional, QuantLib::ext::shared_ptr<ReferenceDatum> cird)
 
 
 class SyntheticCDO : public Trade {

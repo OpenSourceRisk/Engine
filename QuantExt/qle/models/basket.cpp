@@ -34,8 +34,10 @@ Basket::Basket(const Date& refDate, const vector<string>& names, const vector<Re
     : notionals_(notionals), pool_(pool), claim_(claim), attachmentRatio_(attachment), detachmentRatio_(detachment),
       basketNotional_(0.0), attachmentAmount_(0.0), detachmentAmount_(0.0), trancheNotional_(0.0), refDate_(refDate) {
     QL_REQUIRE(!notionals_.empty(), "notionals empty");
-    QL_REQUIRE(attachmentRatio_ >= 0 && attachmentRatio_ <= detachmentRatio_ && detachmentRatio_ <= 1,
+    QL_REQUIRE(attachmentRatio_ >= 0 && attachmentRatio_ <= detachmentRatio_ &&
+                   (detachmentRatio_ < 1 || close_enough(detachmentRatio_, 1.0)),
                "invalid attachment/detachment ratio");
+
     QL_REQUIRE(pool_, "Empty pool pointer.");
     QL_REQUIRE(notionals_.size() == pool_->size(), "unmatched data entry sizes in basket, "
                                                        << notionals_.size() << " notionals, " << pool_->size()

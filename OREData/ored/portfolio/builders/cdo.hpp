@@ -115,10 +115,11 @@ protected:
 };
 
 class LossModelBuilder {
-public:   
-    virtual QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel> lossModel(const vector<Real>& recoveryRates,
-                                                            bool homogeneous,
-                                                            QuantLib::RelinkableHandle<Quote> baseCorrelation) const = 0;
+public:
+    virtual ~LossModelBuilder() {}
+    virtual QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel>
+    lossModel(const vector<Real>& recoveryRates, const QuantLib::RelinkableHandle<Quote>& baseCorrelation,
+              bool poolIsHomogenous) const = 0;
 };
 
 class GaussCopulaBucketingLossModelBuilder : public LossModelBuilder{
@@ -132,8 +133,9 @@ public:
           useStochasticRecovery_(useStochasticRecovery), rrProbs_(rrProbs), recoveryRateGrid_(recoveryRateGrid){}
 
     QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel> lossModel(
-        const vector<Real>& recoveryRates, bool homogeneous,
-        QuantLib::RelinkableHandle<Quote> baseCorrelation) const override {
+        const vector<Real>& recoveryRates,
+        const QuantLib::RelinkableHandle<Quote>& baseCorrelation,
+        bool poolIsHomogenous) const override {
             Size poolSize = recoveryRates.size();
         std::vector<std::vector<Real>> recoveryProbabilities, recoveryGrids;
         if (useStochasticRecovery_) {
@@ -142,7 +144,7 @@ public:
                 recoveryProbabilities.push_back(rrProbs_);                 
                 // recovery rate grid dependent on market recovery rate
                 std::vector<Real> rrGrid(3, recoveryRates[i]); // constant recovery by default
-                QL_REQUIRE(rrProb.size() == rrGrid.size(), "recovery grid size mismatch");
+                QL_REQUIRE(rrProbs_.size() == rrGrid.size(), "recovery grid size mismatch");
                 if (recoveryRateGrid_ == "Markit2020") {
                     if (recoveryRates[i] >= 0.1 && recoveryRates[i] <= 0.55) {
                         rrGrid[0] = 2.0 * recoveryRates[i] - 0.1;
@@ -166,7 +168,7 @@ public:
             GaussianCopulaPolicy::initTraits()));
     
 
-        bool homogeneous = homogeneous && homogeneousPoolWhenJustified_;
+        bool homogeneous = poolIsHomogenous && homogeneousPoolWhenJustified_;
 
         return QuantLib::ext::make_shared<QuantExt::GaussPoolLossModel>(homogeneous, gaussLM, nBuckets_, gaussCopulaMax_,
                                                                 gaussCopulaMin_, gaussCopulaSteps_, useQuadrature_,
@@ -183,7 +185,6 @@ private:
     bool useStochasticRecovery_;
     std::vector<double> rrProbs_;
     std::string recoveryRateGrid_;
-    Size poolSize_;
 };
 
 class GaussCopulaBucketingCdoEngineBuilder : public CdoEngineBuilder {
@@ -199,6 +200,7 @@ public:
         Real gaussCopulaMax = parseReal(modelParameter("max"));
         Size gaussCopulaSteps = parseInteger(modelParameter("steps"));
         bool useQuadrature = parseBool(modelParameter("useQuadrature", {}, false, "false"));
+        bool homogeneousPoolWhenJustified = parseBool(engineParameter("homogeneousPoolWhenJustified", {}, false, "false"));
         Size nBuckets = parseInteger(engineParameter("buckets"));
         // Create the base correlation quote.
         Handle<QuantExt::BaseCorrelationTermStructure> bcts =
@@ -229,9 +231,10 @@ public:
             boost::split(rrProbStringTokens, rrProbString, boost::is_any_of(","));
             rrProb = parseVectorOfValues<Real>(rrProbStringTokens, &parseReal);
         }
-        GaussCopulaBucketingLossModelBuilder modelbuilder(gaussCopulaMin, gaussCopulaMax, gaussCopulaSteps, 
-            useQuadrature, nBuckets, homogeneous, useStochasticRecovery, rrProb, rrGridString);
-        return modelbuilder.lossModel(recoveryRates, homogeneous, correlation);
+        GaussCopulaBucketingLossModelBuilder modelbuilder(gaussCopulaMin, gaussCopulaMax, gaussCopulaSteps,
+                                                          useQuadrature, nBuckets, homogeneousPoolWhenJustified,
+                                                          useStochasticRecovery, rrProb, rrGridString);
+        return modelbuilder.lossModel(recoveryRates, correlation, homogeneous);
     }
 };
 

@@ -139,6 +139,7 @@ public:
         SHIFT,
         TRANSITION_PROBABILITY,
         CONVERSION_FACTOR,
+        TRANCHE_UPFRONT,
         NONE
     };
 

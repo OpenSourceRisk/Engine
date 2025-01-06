@@ -30,6 +30,7 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 #include <boost/optional/optional.hpp>
+#include <ored/marketdata/marketdatum.hpp>
 
 namespace ore {
 namespace data {
@@ -55,20 +56,13 @@ public:
 
     //! Detailed constructor
     BaseCorrelationCurveConfig(
-        const string& curveID,
-        const string& curveDescription,
-        const vector<string>& detachmentPoints,
-        const vector<string>& terms,
-        QuantLib::Size settlementDays,
-        const QuantLib::Calendar& calendar,
-        QuantLib::BusinessDayConvention businessDayConvention,
-        QuantLib::DayCounter dayCounter,
-        bool extrapolate,
-        const std::string& quoteName = "",
-        const QuantLib::Date& startDate = QuantLib::Date(),
+        const string& curveID, const string& curveDescription, const vector<string>& detachmentPoints,
+        const vector<string>& terms, QuantLib::Size settlementDays, const QuantLib::Calendar& calendar,
+        QuantLib::BusinessDayConvention businessDayConvention, QuantLib::DayCounter dayCounter, bool extrapolate,
+        const std::string& quoteName = "", const QuantLib::Date& startDate = QuantLib::Date(),
         const QuantLib::Period& indexTerm = 0 * QuantLib::Days,
         boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none,
-        bool adjustForLosses = true);
+        bool adjustForLosses = true, MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::BASE_CORRELATION);
     //@}
 
     //! \name Serialisation
@@ -119,6 +113,7 @@ private:
     QuantLib::Period indexTerm_;
     boost::optional<QuantLib::DateGeneration::Rule> rule_;
     bool adjustForLosses_;
+    MarketDatum::QuoteType quoteType_;
 };
 } // namespace data
 } // namespace ore

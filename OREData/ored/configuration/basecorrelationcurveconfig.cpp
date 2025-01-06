@@ -20,14 +20,18 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 
 using ore::data::XMLUtils;
 
 namespace ore {
 namespace data {
 
+
+
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig()
-    : settlementDays_(0), businessDayConvention_(Following), extrapolate_(true), adjustForLosses_(true) {}
+    : settlementDays_(0), businessDayConvention_(Following), extrapolate_(true), adjustForLosses_(true),
+    quoteType_(MarketDatum::QuoteType::BASE_CORRELATION) {}
 
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     const string& curveDescription,
@@ -42,7 +46,8 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     const Date& startDate, 
     const Period& indexTerm,
     boost::optional<DateGeneration::Rule> rule,
-    bool adjustForLosses)
+    bool adjustForLosses,
+    MarketDatum::QuoteType quoteType)
     : CurveConfig(curveID, curveDescription),
       detachmentPoints_(detachmentPoints),
       terms_(terms),
@@ -55,11 +60,16 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
       startDate_(startDate), 
       indexTerm_(indexTerm),
       rule_(rule),
-      adjustForLosses_(adjustForLosses) {}
+      adjustForLosses_(adjustForLosses),
+      quoteType_(quoteType) {
+    bool validQuoteType =
+        quoteType_ == MarketDatum::QuoteType::BASE_CORRELATION || quoteType_ == MarketDatum::QuoteType::TRANCHE_UPFRONT;
+    QL_REQUIRE(validQuoteType, "unexpected QuoteType " << quoteType_ << ", allowed values are BASE_CORRELATION or TRANCHE_UPFRONT");
+}
 
 const vector<string>& BaseCorrelationCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        string base = "CDS_INDEX/BASE_CORRELATION/" + quoteName_ + "/";
+        string base = "CDS_INDEX/" + to_string(quoteType_) + "/" + quoteName_ + "/";
         for (auto t : terms_) {
             for (auto dp : detachmentPoints_) {
                 quotes_.push_back(base + t + "/" + dp);
@@ -84,6 +94,13 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     quoteName_ = XMLUtils::getChildValue(node, "QuoteName", false);
     if (quoteName_.empty())
         quoteName_ = curveID_;
+
+    std::string quoteTypeStr = XMLUtils::getChildValue(node, "QuoteType", false);
+    if (quoteTypeStr.empty()) {
+        quoteType_ = MarketDatum::QuoteType::BASE_CORRELATION;
+    } else {
+        quoteType_ = parseQuoteType(quoteTypeStr);
+    }
 
     startDate_ = Date();
     if (auto n = XMLUtils::getChildNode(node, "StartDate"))
@@ -113,7 +130,8 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "Extrapolate", extrapolate_);
     XMLUtils::addChild(doc, node, "QuoteName", quoteName_);
-
+    XMLUtils::addChild(doc, node, "QuoteType", to_string(quoteType_));
+    
     if (startDate_ != Date())
         XMLUtils::addChild(doc, node, "StartDate", to_string(startDate_));
 

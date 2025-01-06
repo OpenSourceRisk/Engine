@@ -66,6 +66,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) 
         return out << "TRANSITION_PROBABILITY";
     case MarketDatum::QuoteType::CONVERSION_FACTOR:
         return out << "CONVERSION_FACTOR";
+    case MarketDatum::QuoteType::TRANCHE_UPFRONT:
+        return out << "TRANCHE_UPFRONT";
     case MarketDatum::QuoteType::NONE:
         return out << "NULL";
     default:
