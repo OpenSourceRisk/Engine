@@ -147,10 +147,6 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         const Schedule& floatSchedule =
             arguments_.swap ? arguments_.swap->floatingSchedule() : arguments_.swapOis->schedule();
 
-        j1_ = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry) -
-              fixedSchedule.dates().begin();
-        k1_ = std::lower_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry) -
-              floatSchedule.dates().begin();
 
         nominal_ = arguments_.swap ? arguments_.swap->nominal() : arguments_.swapOis->nominal();
 
@@ -167,6 +163,16 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 floatingLeg_.back(),
                 "AnalyticalLgmSwaptionEngine::calculate(): internal error, could not cast to FloatingRateRateCoupon");
         }
+
+        j1_ = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry) -
+              fixedSchedule.dates().begin();
+
+        QL_REQUIRE(j1_ < fixedLeg_.size(), "fixed leg's periods are all before expiry.");
+
+        k1_ = std::lower_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry) -
+              floatSchedule.dates().begin();
+
+        QL_REQUIRE(k1_ < floatingLeg_.size(), "floating leg's periods are all before expiry.");
 
         // compute S_i, i.e. equivalent fixed rate spreads compensating for
         // a) a possibly non-zero float spread and
