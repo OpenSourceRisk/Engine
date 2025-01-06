@@ -31,9 +31,49 @@
 #include <ql/instruments/claim.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
-
+#include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/quotes/simplequote.hpp>
 namespace QuantExt {
 using namespace QuantLib;
+
+class IndexConstituentDefaultCurveCalibration {
+public:
+    struct CalibrationResults {
+        bool success = false;
+        std::vector<Handle<DefaultProbabilityTermStructure>> curves;
+        Date cdsMaturity;
+        double marketNpv;
+        double impliedNpv;
+        double calibrationFactor;
+        std::string errorMessage;
+    };
+
+    IndexConstituentDefaultCurveCalibration(const Date& indexStartDate, const Period indexTenor,
+                                            const double indexSpread, const Handle<Quote> indexRecoveryRate,
+                                            const Handle<DefaultProbabilityTermStructure>& indexCurve,
+                                            const Handle<YieldTermStructure>& discountCurve)
+        : indexStartDate_(indexStartDate), indexTenor_(indexTenor), indexSpread_(indexSpread),
+          indexRecoveryRate_(indexRecoveryRate), indexCurve_(indexCurve), discountCurve_(discountCurve) {}
+
+    CalibrationResults calibratedCurves(const std::vector<double>& remainingNotionals,
+                                        const std::vector<Handle<DefaultProbabilityTermStructure>>& creditCurves,
+                                        const std::vector<double>& recoveryRates) const;
+    const Handle<QuantLib::DefaultProbabilityTermStructure>& indexCurve() const { return indexCurve_; }
+    const Handle<QuantLib::YieldTermStructure>& discountCurve() const { return discountCurve_; }
+
+private:
+    double targetNpv(const ext::shared_ptr<Instrument>& indexCds) const;
+
+    QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>
+    buildShiftedCurves(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
+                       const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor) const;
+    Date indexStartDate_;
+    Period indexTenor_;
+    double indexSpread_;
+    Handle<Quote> indexRecoveryRate_;
+    Handle<DefaultProbabilityTermStructure> indexCurve_;
+    Handle<YieldTermStructure> discountCurve_;
+};
 
 // include QuantExt::DefaultLossModel from qle/models/defaultlossmodel.hpp instead
 class DefaultLossModel;
@@ -62,7 +102,9 @@ public:
     */
     Basket(const Date& refDate, const std::vector<std::string>& names, const std::vector<Real>& notionals,
            const QuantLib::ext::shared_ptr<Pool> pool, Real attachmentRatio = 0.0, Real detachmentRatio = 1.0,
-           const QuantLib::ext::shared_ptr<Claim>& claim = QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
+           const QuantLib::ext::shared_ptr<Claim>& claim = QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()),
+           const QuantLib::ext::shared_ptr<IndexConstituentDefaultCurveCalibration>& calibration = nullptr,
+           const std::vector<double>& recoveryRates = std::vector<double>());
     void computeBasket() const {
         Date today = Settings::instance().evaluationDate();
         /* update cache values at the calculation date (work as arguments
@@ -128,7 +170,7 @@ public:
     /*! Vector of cumulative default probability to date d for all
         issuers in the basket.
     */
-    std::vector<Probability> probabilities(const Date& d) const;
+    //std::vector<Probability> probabilities(const Date& d) const;
     /*! Realized basket losses between the reference date and the
         calculation date, taking the actual recovery rates of loss events
         into account.
@@ -312,6 +354,8 @@ private:
     */
     // RL: Use QuantExt version here
     QuantLib::ext::shared_ptr<QuantExt::DefaultLossModel> lossModel_;
+    QuantLib::ext::shared_ptr<IndexConstituentDefaultCurveCalibration> calibration_;
+    std::vector<double> recoveryRates_;
 };
 
 // ------------ Inlines -------------------------------------------------

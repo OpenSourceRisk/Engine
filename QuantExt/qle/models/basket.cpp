@@ -24,15 +24,116 @@
 #include <boost/make_shared.hpp>
 #include <qle/models/defaultlossmodel.hpp>
 
+#include <qle/instruments/indexcreditdefaultswap.hpp>
+#include <qle/pricingengines/midpointindexcdsengine.hpp>
+#include <ql/math/solvers1d/brent.hpp>
+#include <qle/utilities/creditcurves.hpp>
+#include <ql/quotes/compositequote.hpp>
+#include <ql/time/daycounters/actual360.hpp>
+#include <qle/termstructures/spreadedsurvivalprobabilitytermstructure.hpp>
+#include <numeric>
+
 using namespace std;
 
 namespace QuantExt {
 
+IndexConstituentDefaultCurveCalibration::CalibrationResults IndexConstituentDefaultCurveCalibration::calibratedCurves(
+    const std::vector<double>& remainingNotionals,
+    const std::vector<Handle<DefaultProbabilityTermStructure>>& creditCurves,
+    const std::vector<double>& recoveryRates) const {
+    QuantLib::ext::shared_ptr<SimpleQuote> calibrationFactor = ext::make_shared<SimpleQuote>(1.0);
+    CalibrationResults results;
+    results.curves = creditCurves;
+    results.calibrationFactor = 1;
+    try {
+        // Make CDS and pricing Engine and target NPV
+        double totalNotional = std::accumulate(remainingNotionals.begin(), remainingNotionals.end(), 0.0);
+        auto maturity = cdsMaturity(indexStartDate_, indexTenor_, DateGeneration::Rule::CDS2015);
+        Schedule cdsSchedule(indexStartDate_, maturity, 3 * Months, WeekendsOnly(), Following, Unadjusted,
+                             DateGeneration::Rule::CDS2015, false);
+
+        auto indexCDS = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
+            Protection::Buyer, totalNotional, remainingNotionals, 0.0, indexSpread_, cdsSchedule, Following,
+            Actual360(false), true, CreditDefaultSwap::atDefault, Date(), Date(), QuantLib::ext::shared_ptr<Claim>(),
+            Actual360(true), true);
+
+        std::vector<Handle<DefaultProbabilityTermStructure>> calibratedCurves;
+        for (const auto& orgCurve : creditCurves) {
+            calibratedCurves.push_back(buildShiftedCurves(orgCurve, calibrationFactor));
+        }
+
+        double target = targetNpv(indexCDS);
+        auto cdsPricingEngineUnderlyingCurves = QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(
+            calibratedCurves, recoveryRates, discountCurve_);
+
+        indexCDS->setPricingEngine(cdsPricingEngineUnderlyingCurves);
+
+        auto targetFunction = [&](const double& factor) {
+            calibrationFactor->setValue(factor);
+            return (target - indexCDS->NPV());
+        };
+
+        Brent solver;
+        double adjustmentFactor = solver.solve(targetFunction, 1e-8, 0.5, 0.001, 2);
+        calibrationFactor->setValue(adjustmentFactor);
+        results.calibrationFactor = adjustmentFactor;
+        results.curves = calibratedCurves;
+        results.success = true;
+        results.marketNpv = target;
+        results.impliedNpv = targetFunction(results.calibrationFactor);
+        results.cdsMaturity = indexCDS->maturity();
+
+    } catch (const std::exception& e) {
+        results.success = false;
+        results.curves = creditCurves;
+        results.calibrationFactor = 1;
+        results.errorMessage = e.what();
+    }
+    return results;
+}
+
+double IndexConstituentDefaultCurveCalibration::targetNpv(const ext::shared_ptr<Instrument>& indexCDS) const {
+    auto indexPricingEngine = QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(
+        indexCurve_, indexRecoveryRate_->value(), discountCurve_);
+    indexCDS->setPricingEngine(indexPricingEngine);
+    return indexCDS->NPV();
+}
+
+QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> IndexConstituentDefaultCurveCalibration::buildShiftedCurves(
+    const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
+    const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor) const {
+    if (calibrationFactor == nullptr) {
+        return curve;
+    }
+    auto curveTimes = getCreditCurveTimes(curve);
+    if (curveTimes.size() < 2) {
+        return curve;
+    } else {
+        std::vector<Handle<Quote>> spreads;
+        for (size_t timeIdx = 0; timeIdx < curveTimes.size(); ++timeIdx) {
+            auto sp = curve->survivalProbability(curveTimes[timeIdx]);
+            auto compQuote = QuantLib::ext::make_shared<CompositeQuote<std::function<double(double, double)>>>(
+                Handle<Quote>(calibrationFactor), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(sp)),
+                [](const double q1, const double q2) -> double { return std::exp(-(1 - q1) * std::log(q2)); });
+            spreads.push_back(Handle<Quote>(compQuote));
+        }
+        Handle<DefaultProbabilityTermStructure> targetCurve = Handle<DefaultProbabilityTermStructure>(
+            QuantLib::ext::make_shared<SpreadedSurvivalProbabilityTermStructure>(curve, curveTimes, spreads));
+        if (curve->allowsExtrapolation()) {
+            targetCurve->enableExtrapolation();
+        }
+        return targetCurve;
+    }
+}
+
 Basket::Basket(const Date& refDate, const vector<string>& names, const vector<Real>& notionals,
                const QuantLib::ext::shared_ptr<Pool> pool, Real attachment, Real detachment,
-               const QuantLib::ext::shared_ptr<Claim>& claim)
+               const QuantLib::ext::shared_ptr<Claim>& claim,
+               const QuantLib::ext::shared_ptr<IndexConstituentDefaultCurveCalibration>& calibration,
+               const std::vector<double>& recoveryRates)
     : notionals_(notionals), pool_(pool), claim_(claim), attachmentRatio_(attachment), detachmentRatio_(detachment),
-      basketNotional_(0.0), attachmentAmount_(0.0), detachmentAmount_(0.0), trancheNotional_(0.0), refDate_(refDate) {
+      basketNotional_(0.0), attachmentAmount_(0.0), detachmentAmount_(0.0), trancheNotional_(0.0), refDate_(refDate),
+      calibration_(calibration), recoveryRates_(recoveryRates) {
     QL_REQUIRE(!notionals_.empty(), "notionals empty");
     QL_REQUIRE(attachmentRatio_ >= 0 && attachmentRatio_ <= detachmentRatio_ &&
                    (detachmentRatio_ < 1 || close_enough(detachmentRatio_, 1.0)),
@@ -50,6 +151,12 @@ Basket::Basket(const Date& refDate, const vector<string>& names, const vector<Re
     vector<DefaultProbKey> defKeys = defaultKeys();
     for (Size j = 0; j < size(); j++)
         registerWith(pool_->get(pool_->names()[j]).defaultProbability(defKeys[j]));
+    if(calibration_){
+        QL_REQUIRE(!calibration_->indexCurve().empty(), "Can not use calibration without index curve");
+        QL_REQUIRE(!calibration_->discountCurve().empty(), "Can not use calibration without discount curve");
+        registerWith(calibration_->indexCurve());
+        //registerWith(calibration_->discountCurve());
+    }
 }
 
 /*\todo Alternatively send a relinkable handle so it can be changed from
@@ -91,7 +198,7 @@ void Basket::performCalculations() const {
     basket info are still used.*/
     lossModel_->setBasket(const_cast<Basket*>(this));
 }
-
+/*
 vector<Real> Basket::probabilities(const Date& d) const {
     calculate();
     vector<Real> prob(size());
@@ -100,6 +207,7 @@ vector<Real> Basket::probabilities(const Date& d) const {
         prob[j] = pool_->get(pool_->names()[j]).defaultProbability(defKeys[j])->defaultProbability(d);
     return prob;
 }
+*/
 
 Real Basket::cumulatedLoss(const Date& endDate) const {
     calculate();
@@ -194,11 +302,24 @@ std::vector<Probability> Basket::remainingProbabilities(const Date& d) const {
     QL_REQUIRE(d >= refDate_, "remainingProbabilities: Target date "
                                   << io::iso_date(d) << " lies before basket inception " << io::iso_date(refDate_));
     vector<Real> prob;
+    const vector<double> remainingNtls = this->remainingNotionals(d);
     const std::vector<Size>& alive = liveList();
-
+    vector<Handle<DefaultProbabilityTermStructure>> curves;
     for (Size i = 0; i < alive.size(); i++)
-        prob.push_back(
-            pool_->get(pool_->names()[i]).defaultProbability(pool_->defaultKeys()[i])->defaultProbability(d, true));
+        curves.push_back(pool_->get(pool_->names()[i]).defaultProbability(pool_->defaultKeys()[i]));
+    if(calibration_ != nullptr){
+        std::cout << "Calibrate consitutent curves";
+        QL_REQUIRE(recoveryRates_.size() == remainingNtls.size(), "Mismatch between recovery rates and ");
+        auto res = calibration_->calibratedCurves(remainingNtls, curves, recoveryRates_);
+        if(res.success){
+            std::cout << res.cdsMaturity << " " << std::fixed << std::setprecision(6) << res.calibrationFactor << " " << res.marketNpv << " "
+                      << res.impliedNpv << " " << res.marketNpv - res.impliedNpv << std::endl;
+            curves = res.curves;
+        }
+    }
+    for (const auto& curve : curves) {
+        prob.push_back(curve->defaultProbability(d, true));
+    }
     return prob;
 }
 

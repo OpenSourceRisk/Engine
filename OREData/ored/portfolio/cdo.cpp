@@ -73,113 +73,6 @@ void validateWeightRec(Real value, const string& name, const string& varName) {
 namespace ore {
 namespace data {
 
-class IndexConstituentDefaultCurveCalibration {
-public:
-    struct CalibrationResults{
-        bool success = false;
-        std::vector<Handle<DefaultProbabilityTermStructure>> curves;
-        double calibrationFactor;
-        std::string errorMessage;
-    };
-
-    IndexConstituentDefaultCurveCalibration(const Date& indexStartDate, const Period indexTenor, const double indexSpread,
-                                            const Handle<Quote> indexRecoveryRate,
-                                            const Handle<DefaultProbabilityTermStructure>& indexCurve,
-                                            const Handle<YieldTermStructure>& discountCurve)
-    :indexStartDate_(indexStartDate), indexTenor_(indexTenor), indexSpread_(indexSpread), indexRecoveryRate_(indexRecoveryRate),
-    indexCurve_(indexCurve), discountCurve_(discountCurve) {}
-
-    CalibrationResults
-    calibratedCurves(const std::vector<double>& remainingNotionals,
-                     const std::vector<Handle<DefaultProbabilityTermStructure>>& creditCurves,
-                     const std::vector<Handle<Quote>>& recoveryRates) const {
-        QuantLib::ext::shared_ptr<SimpleQuote> calibrationFactor;
-        CalibrationResults results;
-        results.curves = creditCurves;
-        results.calibrationFactor = 1;
-        try{
-            // Make CDS and pricing Engine and target NPV
-            double totalNotional = std::accumulate(remainingNotionals.begin(), remainingNotionals.end(), 0.0);
-            auto maturity = cdsMaturity(indexStartDate_, indexTenor_, DateGeneration::Rule::CDS2015);
-            Schedule cdsSchedule(indexStartDate_, maturity, 3 * Months, WeekendsOnly(), Following, Unadjusted,
-                                 DateGeneration::Rule::CDS2015, false);
-
-            indexCDS_ = QuantLib::ext::make_shared<QuantExt::IndexCreditDefaultSwap>(
-                Protection::Buyer, totalNotional, remainingNotionals, 0.0, indexSpread_, cdsSchedule, Following,
-                Actual360(false), true, CreditDefaultSwap::atDefault, Date(), Date(),
-                QuantLib::ext::shared_ptr<Claim>(), Actual360(true), true);
-
-            std::vector<Handle<DefaultProbabilityTermStructure>> calibratedCurves;
-            for (const auto& orgCurve : creditCurves) {
-                calibratedCurves.push_back(buildShiftedCurves(orgCurve, calibrationFactor));
-            }
-
-            double target = targetNpv();
-
-            auto cdsPricingEngineUnderlyingCurves =
-                QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(calibratedCurves, recoveryRates, discountCurve_);
-
-            indexCDS_->setPricingEngine(cdsPricingEngineUnderlyingCurves);
-
-            auto targetFunction = [&](const double& factor) {
-                calibrationFactor->setValue(factor);
-                return (target - indexCDS_->NPV());
-            };
-
-            Brent solver;
-            double adjustmentFactor =
-                solver.solve(targetFunction, 1e-8, 1.0, 0.001, 2);
-            calibrationFactor->setValue(adjustmentFactor);
-            results.calibrationFactor = adjustmentFactor;
-            results.curves = calibratedCurves;
-            results.success = true;
-        } catch (const std::exception& e) {
-            results.success = false;
-            results.curves = creditCurves;
-            results.calibrationFactor = 1;
-            results.errorMessage = e.what();
-        }
-        return results;
-    }
-
-private:
-    double targetNpv() const {
-        auto indexPricingEngine = QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(
-            indexCurve_, indexRecoveryRate_->value(), discountCurve_);
-        indexCDS_->setPricingEngine(indexPricingEngine);
-        return indexCDS_->NPV();
-    }
-
-        QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>
-    buildShiftedCurves(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
-                       const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor) const {
-        if (!calibrationFactor) {
-            return curve;
-        }
-        auto curveTimes = getCreditCurveTimes(curve);
-        vector<Handle<Quote>> spreads;
-        for (size_t timeIdx = 0; timeIdx < curveTimes.size(); ++timeIdx) {
-            auto sp = curve->survivalProbability(curveTimes[timeIdx]);
-            auto compQuote = QuantLib::ext::make_shared<CompositeQuote<std::function<double(double, double)>>>(
-                Handle<Quote>(calibrationFactor), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(sp)),
-                [](const double q1, const double q2) -> double { return std::exp(-(1 - q1) * std::log(q2)); });
-            spreads.push_back(Handle<Quote>(compQuote));
-        }
-        Handle<DefaultProbabilityTermStructure> targetCurve = Handle<DefaultProbabilityTermStructure>(
-            QuantLib::ext::make_shared<SpreadedSurvivalProbabilityTermStructure>(curve, curveTimes, spreads));
-        if (curve->allowsExtrapolation()) {
-            targetCurve->enableExtrapolation();
-        }
-        return targetCurve;
-    }
-    Date indexStartDate_;
-    Period indexTenor_;
-    double indexSpread_;
-    Handle<DefaultProbabilityTermStructure> indexCurve_;
-    Handle<Quote> indexRecoveryRate_;
-    Handle<YieldTermStructure> discountCurve_;
-    mutable ext::shared_ptr<IndexCreditDefaultSwap> indexCDS_;    
-};
 
 void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
@@ -477,69 +370,59 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         */
     }
 
+    
+
+    if (cdoEngineBuilder->optimizedSensitivityCalculation()) {
+        dpts = buildPerformanceOptimizedDefaultCurves(dpts);
+    }
+
     // TODO check if underlying is index cds
 
     // Calibrate the underlying constituent curves so that the index cds pricing with underlying curves matches the
     // prices of the index cds with flat index curve.
-    
-    
+
+
 
     bool calibrateConstiuentCurves = cdoEngineBuilder->calibrateConstituentCurve() && isIndexTranche();
-
+    
+    
+    ext::shared_ptr<IndexConstituentDefaultCurveCalibration> curveCalibration;
     if (calibrateConstiuentCurves) {
         // Adjustment factor is a simplified version of the O'Kane's Forward Default Probability Multiplier 
         // O'Kane 2008 - Modelling Single-name and Multi-name Credit Derivatives
         // Chapter 10.6
-        LOG("Use calibrated constiuent curves");
-        QuantLib::ext::shared_ptr<IndexCreditDefaultSwap> indexCDS;
-        Real cdsFairSpreads = 0.0;
-        Real cdsNpvs = 0.0;
+        
         try {
             Handle<YieldTermStructure> yts =
                 market->discountCurve(ccy.code(), cdoEngineBuilder->configuration(MarketContext::pricing));
-
             Date cdsStartDate = indexStartDateHint() == Date() ? schedule.dates().front() : indexStartDateHint();
-            
-            
             Handle<DefaultProbabilityTermStructure> indexCreditCurve =
                 indexCdsDefaultCurve(market, creditCurveIdWithTerm(), config)->curve();
             Handle<Quote> indexCdsRecovery = market->recoveryRate(creditCurveIdWithTerm(), config);
-            
+            curveCalibration = ext::make_shared<IndexConstituentDefaultCurveCalibration>(cdsStartDate, 5 * Years, runningRate, indexCdsRecovery, indexCreditCurve, yts);
+
         } catch (const std::exception& e) {
-            indexCDS = nullptr;
-            WLOG("CDO constiuent calibration failed to build index cds.  Got "
-                                                                     << e.what());
+            WLOG("Error building the calibration got " << e.what());
         }
-        if (indexCDS) {
-            cdsFairSpreads = indexCDS->fairSpreadClean();
-            cdsNpvs = indexCDS->NPV();
-        }
-
+        /*
         auto it = engineFactory->engineData()->globalParameters().find("RunType");
-        if (it != engineFactory->engineData()->globalParameters().end() && it->second != "PortfolioAnalyser") {
-            
-            Handle<YieldTermStructure> yts =
-                market->discountCurve(ccy.code(), cdoEngineBuilder->configuration(MarketContext::pricing));
-            
-            
-
-            if (wrapperCurves.size() == dpts.size() && indexCDS) {
-                LOG("Start bootstraping of the calibration factors");
-                dpts.swap(wrapperCurves);
-
-                
-
+        if (it != engineFactory->engineData()->globalParameters().end() && it->second != "PortfolioAnalyser" && curveCalibration != nullptr) {
+            try{
+                auto result = curveCalibration->calibratedCurves(basketNotionals, dpts, recoveryRates);
+                if (result.success){
+                    dpts = std::move(result.curves);
+                }
                 LOG("Calibration results for creditCurve:" << creditCurveIdWithTerm());
-                LOG("Expiry \t CalibrationFactor \t NpvIntrinsic \t NpvIndexCurve \t NpvError \t "
-                    "FairSpreadIntrinsic "
-                    "\t FairSpreadIndexCurve \t FairSreadError");
-
-                LOG(io::iso_date(indexCDS->maturity())
-                    << "\t" << calibrationFactor->value() << "\t" << indexCDS->NPV() << "\t" << cdsNpvs << "\t"
-                    << indexCDS->NPV() - cdsNpvs << "\t" << indexCDS->fairSpreadClean() << "\t" << cdsFairSpreads
-                    << "\t" << indexCDS->fairSpreadClean() - cdsFairSpreads);
+                LOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
+                LOG(io::iso_date(result.cdsMaturity)
+                    << ";" << std::fixed << std::setprecision(8) << result.calibrationFactor << ";" << result.marketNpv
+                    << ";" << result.impliedNpv << ";" << result.marketNpv - result.impliedNpv);
+            } catch(const std::exception& e)
+            {
+                WLOG("Error during calibration, continue without index curve calibration, got " << e.what());
             }
         }
+        */
     }
 
     // Create the instruments.
@@ -552,9 +435,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     vector<Time> baseCurveTimes;
     vector<Real> expLoss;
 
-    if (cdoEngineBuilder->optimizedSensitivityCalculation()) {
-        dpts = buildPerformanceOptimizedDefaultCurves(dpts);
-    }
+    
 
     for (Size i = 0; i < creditCurves.size(); ++i) {
         const string& cc = creditCurves[i];
@@ -633,9 +514,10 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
     //if (!close_enough(adjDetachPoint, 1.0)) {
         DLOG("Building detachment tranche [0," << adjDetachPoint << "].");
         // Set up the basket loss model.
-        auto basket =
-            QuantLib::ext::make_shared<QuantExt::Basket>(schedule[0], creditCurves, basketNotionals, pool, 0.0, adjDetachPoint);
-            
+        auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
+            schedule[0], creditCurves, basketNotionals, pool, 0.0, adjDetachPoint,
+            QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()), curveCalibration, recoveryRates);
+
         basket->setLossModel(
             cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjDetachPoint,
                                                          maturity_, homogeneous));
@@ -648,7 +530,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                                                        settlesAccrual_, protectionPaymentTime_, protectionStartDate, parseDate(upfrontDate_), boost::none, Null<Real>(), lastPeriodDayCounter);
 
         cdoDetach->setPricingEngine(
-            cdoEngineBuilder->engine(ccy, false, {}, calibrationFactor, fixedRecovery));
+            cdoEngineBuilder->engine(ccy, false, {}, ext::make_shared<SimpleQuote>(1.0), fixedRecovery));
         setSensitivityTemplate(*cdoEngineBuilder);
         addProductModelEngine(*cdoEngineBuilder);
         cdoD = cdoDetach;
@@ -689,8 +571,9 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         DLOG("Building attachment tranche [0," << adjAttachPoint << "].");
 
         // Set up the basket loss model.
-        auto basket =
-            QuantLib::ext::make_shared<QuantExt::Basket>(schedule[0], creditCurves, basketNotionals, pool, 0.0, adjAttachPoint);
+        auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
+            schedule[0], creditCurves, basketNotionals, pool, 0.0, adjAttachPoint,
+            QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()), curveCalibration, recoveryRates);
         basket->setLossModel(cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjAttachPoint,
                                                          maturity_, homogeneous));
 
@@ -699,7 +582,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             protectionStartDate, parseDate(upfrontDate_), boost::none, fixedRecovery, lastPeriodDayCounter);
 
         cdoA->setPricingEngine(
-            cdoEngineBuilder->engine(ccy, false, {}, calibrationFactor, fixedRecovery));
+            cdoEngineBuilder->engine(ccy, false, {}, ext::make_shared<SimpleQuote>(1.0), fixedRecovery));
         setSensitivityTemplate(*cdoEngineBuilder);
         addProductModelEngine(*cdoEngineBuilder);
 

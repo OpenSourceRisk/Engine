@@ -149,13 +149,7 @@ public:
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) const override;
-
-    static vector<Time>
-    extractTimeGridDefaultCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& dpts);
-    QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> static buildCalibratedConstiuentCurve(
-        const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
-        const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor);
-    
+   
     /*! Get credit curve id with term suffix "_5Y". If the creditCurveId contains such a suffix already
        this is used. Otherwise we try to imply it from the schedule. If that is not possible, the
        creditCurveId without tenor is returned. */
