@@ -80,7 +80,6 @@
 #include <qle/processes/crossassetstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 #include <qle/termstructures/pricecurve.hpp>
-
 #include <ql/currencies/america.hpp>
 #include <ql/currencies/europe.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
@@ -108,6 +107,9 @@
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 
+//#include <ored/model/lgmbuilder.hpp>
+//#include <OREData/ored/model/lgmbuilder.hpp>
+
 #include <boost/make_shared.hpp>
 // fix for boost 1.64, see https://lists.boost.org/Archives/boost/2016/11/231756.php
 #if BOOST_VERSION >= 106400
@@ -124,6 +126,9 @@
 using namespace QuantLib;
 using namespace QuantExt;
 
+#include "iostream"
+using namespace  std;
+
 using boost::unit_test_framework::test_suite;
 using namespace boost::accumulators;
 namespace bdata = boost::unit_test::data;
@@ -132,7 +137,6 @@ using std::vector;
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CrossAssetModelTest)
-
 
 namespace {
 
@@ -240,12 +244,14 @@ struct Lgm5fTestDataV {
     QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact, ccLgmEuler;
 }; // LGM5FTestData
 
-
 } // anonymous namespace
 
+// Issue #1 from the validation report.
 BOOST_AUTO_TEST_CASE(testLgmCalibrationVegaBump) {
 
     BOOST_TEST_MESSAGE("Testing full calibration of Ccy LGM 5F model with bump...");
+
+    cout<< "345 Test";
 
     Lgm5fTestDataV d1;
     Lgm5fTestDataV d2;
@@ -264,7 +270,7 @@ BOOST_AUTO_TEST_CASE(testLgmCalibrationVegaBump) {
         BOOST_TEST_MESSAGE("Input Swaption " << i << ": From " << tmp << " to " << "10Y");
 
         basketEur1.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.015               )), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
+            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.015)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
             Actual360(), d1.eurYts, BlackCalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
 
         basketEur2.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
@@ -288,6 +294,8 @@ BOOST_AUTO_TEST_CASE(testLgmCalibrationVegaBump) {
     EndCriteria ec1(1000, 500, 1E-14, 1E-14, 1E-14);
     d1.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur1, lm1, ec1);
 
+    BOOST_TEST_MESSAGE("--------------------" );
+
     LevenbergMarquardt lm2(1E-14, 1E-14, 1E-14);
     EndCriteria ec2(1000, 500, 1E-14, 1E-14, 1E-14);
     d2.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur2, lm2, ec2);
@@ -299,8 +307,79 @@ BOOST_AUTO_TEST_CASE(testLgmCalibrationVegaBump) {
         
         BOOST_TEST_MESSAGE("Vega Swaption "<<i<<": " << vega);
     }
-
 }
+
+// Issue #5 from the validation report.
+BOOST_AUTO_TEST_CASE(testLgmCalibrationWings) {
+
+    BOOST_TEST_MESSAGE("The LGM deal strike smile calibration can have a discontinuity at the smile wings where the calibration may jump back to ATM vol.");
+
+    Lgm5fTestDataV d1;
+    Lgm5fTestDataV d2;
+
+    // calibration baskets
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basketEur1, basketEur2, basketGbp, basketEurUsd, basketEurGbp;
+
+    QuantLib::ext::shared_ptr<IborIndex> euribor6m = QuantLib::ext::make_shared<Euribor>(6 * Months, d1.eurYts);
+
+    for (Size i = 0; i <= d1.volstepdates.size(); ++i) {
+        Date tmp = i < d1.volstepdates.size() ? d1.volstepdates[i] : d1.volstepdates.back() + 365;
+   
+        BOOST_TEST_MESSAGE("Input Swaption " << i << ": From " << tmp << " to " << "10Y");
+
+        basketEur1.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
+            Actual360(), d1.eurYts, BlackCalibrationHelper::RelativePriceError, 0.02, 1.0, Normal)));
+            BOOST_TEST_MESSAGE("Input Swaption a" << i << ": From " << tmp << " to " << "10Y");
+
+        /*basketEur1.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.021)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
+            Actual360(), d1.eurYts, BlackCalibrationHelper::RelativePriceError, 0.03, 1.0, Normal)));
+            BOOST_TEST_MESSAGE("Input Swaption b" << i << ": From " << tmp << " to " << "10Y");*/
+
+        basketEur2.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
+            Actual360(), d2.eurYts, BlackCalibrationHelper::PriceError, 0.001, 1.0, Normal)));
+            BOOST_TEST_MESSAGE("Input Swaption c" << i << ": From " << tmp << " to " << "10Y");
+            
+        /*basketEur2.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
+            Actual360(), d2.eurYts, BlackCalibrationHelper::PriceError, 0.01, 1.0, Normal)));*/
+    }
+
+    BOOST_TEST_MESSAGE("InYc");
+    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d1.ccLgmExact, 0);
+    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng2 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d2.ccLgmExact, 0);
+
+    // assign engines to calibration instruments
+    for (Size i = 0; i < basketEur1.size(); ++i) {
+        basketEur1[i]->setPricingEngine(eurSwEng);
+    }
+
+    BOOST_TEST_MESSAGE("InYd");
+    for (Size i = 0; i < basketEur2.size(); ++i) {
+        basketEur2[i]->setPricingEngine(eurSwEng2);
+    }
+
+    BOOST_TEST_MESSAGE("InYdd");
+    LevenbergMarquardt lm1(1E-14, 1E-14, 1E-14);
+    EndCriteria ec1(1000, 500, 1E-14, 1E-14, 1E-14);
+    d1.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur1, lm1, ec1);
+
+    BOOST_TEST_MESSAGE("InYe");
+    LevenbergMarquardt lm2(1E-14, 1E-14, 1E-14);
+    EndCriteria ec2(1000, 500, 1E-14, 1E-14, 1E-14);
+    d2.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur2, lm2, ec2);
+
+    for (Size i = 0; i < basketEur1.size(); ++i) {
+        Real model1 = basketEur1[i]->modelValue();
+        Real model2 = basketEur2[i]->modelValue();
+        Real diff=std::abs(model1 - model2);
+        
+        BOOST_TEST_MESSAGE("Diff Swaption "<<i<<": " << diff*10000.00<< " bp.");
+    }
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
