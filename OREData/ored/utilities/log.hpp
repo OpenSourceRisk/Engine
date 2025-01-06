@@ -681,7 +681,7 @@ class StructuredMessage : public JSONMessage {
 public:
     enum class Category { Error, Warning, Unknown };
 
-    enum class Group { Analytics, Configuration, Model, Curve, Trade, Fixing, Logging, ReferenceData, Unknown };
+    enum class Group { Analytics, Configuration, Model, Curve, Trade, Fixing, Logging, ReferenceData, Input, Unknown };
 
     StructuredMessage(const Category& category, const Group& group, const std::string& message,
                       const std::map<std::string, std::string>& subFields = std::map<std::string, std::string>());

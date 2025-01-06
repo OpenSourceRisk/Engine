@@ -1293,11 +1293,14 @@ void McMultiLegBaseEngine::generatePathValues(const std::vector<Real>& simulatio
     auto pathGenerator = makeMultiPathGenerator(calibrationPathGenerator_, process, timeGrid, calibrationSeed_,
                                                 ordering_, directionIntegers_);
 
+    // generated paths always contain t = 0 but simulationTimes might or might not contain t = 0
+    Size offset = QuantLib::close_enough(simulationTimes.front(), 0.0) ? 0 : 1;
+
     for (Size i = 0; i < calibrationSamples_; ++i) {
         const MultiPath& path = pathGenerator->next().value;
         for (Size j = 0; j < simulationTimes.size(); ++j) {
             for (Size k = 0; k < model_->stateProcess()->size(); ++k) {
-                pathValues[j][k].data()[i] = path[k][j + 1];
+                pathValues[j][k].data()[i] = path[k][j + offset];
             }
         }
     }
@@ -1403,8 +1406,9 @@ void McMultiLegBaseEngine::calculate() const {
     std::set<Real> xvaTimes;
 
     for (auto const& d : simulationDates_) {
-        if (auto t = time(d); t < maxTime + tinyTime || xvaTimes.size() < 2)
+        if (auto t = time(d); t < maxTime + tinyTime) {
             xvaTimes.insert(time(d));
+        }
     }
 
     /* build combined time sets */
@@ -1425,11 +1429,12 @@ void McMultiLegBaseEngine::calculate() const {
 
     std::vector<Real> simulationTimesWithCloseOutLag;
     if (recalibrateOnStickyCloseOutDates_ && !stickyCloseOutDates_.empty()) {
-        std::vector<Real> xvaTimesWithCloseOutLag;
+        std::vector<Real> xvaTimesWithCloseOutLag(1, 0.0);
         for (auto const& d : stickyCloseOutDates_) {
             xvaTimesWithCloseOutLag.push_back(time(d));
         }
-        std::vector<Real> xvaTimesVec(xvaTimes.begin(), xvaTimes.end());
+        std::vector<Real> xvaTimesVec(1, 0.0);
+        xvaTimesVec.insert(xvaTimesVec.end(), xvaTimes.begin(), xvaTimes.end());
         Interpolation l = Linear().interpolate(xvaTimesVec.begin(), xvaTimesVec.end(), xvaTimesWithCloseOutLag.begin());
         l.enableExtrapolation();
         std::transform(simulationTimes.begin(), simulationTimes.end(),
