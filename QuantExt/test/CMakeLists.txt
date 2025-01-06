@@ -65,6 +65,8 @@ inflationvol.cpp
 interpolatedyoycapfloortermpricesurface.cpp
 lgmbgsflexiswapengine.cpp
 lgmflexiswapengine.cpp
+lgmpricingedgecases.cpp
+lgmpricing.cpp
 logquote.cpp
 mclgmswaptionengine.cpp
 multilegoption.cpp
