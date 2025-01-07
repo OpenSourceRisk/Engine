@@ -55,7 +55,7 @@ public:
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
                const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
                const bool setCalibrationInfo = false, const std::string& id = "unknwon", 
-               BlackCalibrationHelper::CalibrationErrorType calibrationErrorType=BlackCalibrationHelper::PriceError);
+               BlackCalibrationHelper::CalibrationErrorType calibrationErrorType=BlackCalibrationHelper::RelativePriceError);
     //! Return calibration error
     Real error() const;
 
