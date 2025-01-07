@@ -87,7 +87,7 @@ Allowable values: Any positive real number.
 
 \item Delta [Optional]: The fx option delta. The SoldAmount is computed by deriving the strike from the delta.
 
-Allowable values: Any positive real number.
+Allowable values: Any non null real number. A SoldAmount or a Delta node is required.
 
 \item FXIndex [Optional]: If the option \textit{European}, has cash settlement and is subject to \textit{Automatic Exercise}, as indicated by the \lstinline!AutomaticExercise! node under \lstinline!OptionData!, this node must be populated with a valid FX index. The FX index is used to retrieve an FX rate on the expiry date that is in turn used to determine the payoff on the cash settlement date. The payoff is in the \lstinline!SoldCurrency! i.e.\ the domestic currency.
 
