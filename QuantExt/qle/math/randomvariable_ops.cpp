@@ -32,6 +32,11 @@ getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmB
     QL_REQUIRE(regressionVarianceCutoff != Null<Real>() || regressorGroups.empty(),
                "getRandomVariableOps(): regressionVarianceCutoff can not be combined with regressorGroups");
 
+    // note: a possible way to combine regressionVarianceCutoff and regressorGroups would be to perform the pca
+    // transform on each regressor group separately and then build new groups from the resuting variables before
+    // performing the regression analysis (TODO think about this a bit more before implementation and removal of the
+    // above restriction)
+
     std::vector<RandomVariableOp> ops;
 
     // None = 0
