@@ -227,7 +227,11 @@ XMLNode* FxOption::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, fxNode, "BoughtCurrency", boughtCurrency());
     XMLUtils::addChild(doc, fxNode, "BoughtAmount", boughtAmount());
     XMLUtils::addChild(doc, fxNode, "SoldCurrency", soldCurrency());
-    XMLUtils::addChild(doc, fxNode, "SoldAmount", soldAmount());
+    if (deltaAmount() != 0) {
+        XMLUtils::addChild(doc, fxNode, "Delta", deltaAmount());
+    } else {
+        XMLUtils::addChild(doc, fxNode, "SoldAmount", soldAmount());
+    }  
 
     if (!fxIndex_.empty())
         XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
