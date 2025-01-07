@@ -41,7 +41,7 @@ public:
     FxOption() : VanillaOptionTrade(AssetClass::FX) { tradeType_ = "FxOption"; }
     //! Constructor
     FxOption(const Envelope& env, const OptionData& option, const string& boughtCurrency, double boughtAmount,
-             const string& soldCurrency, double soldAmount, const std::string& fxIndex = "", const Real& delta = 0.0)
+             const string& soldCurrency, double soldAmount, const std::string& fxIndex = "", double delta = 0.0)
         : VanillaOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, boughtAmount,
                              TradeStrike(soldAmount / boughtAmount, soldCurrency)), fxIndex_(fxIndex), delta_(delta) {
         tradeType_ = "FxOption";
@@ -57,7 +57,7 @@ public:
     const string& soldCurrency() const { return currency_; }
     double soldAmount() const { return strike_.value() * quantity_; }
     const std::string& fxIndex() const { return fxIndex_; }
-    const Real& deltaAmount() const { return delta_; }
+    double deltaAmount() const { return delta_; }
     //@}
 
     //! \name Serialisation
@@ -69,7 +69,7 @@ public:
 private:
     //! If the option has automatic exercise, need an FX index for settlement.
     std::string fxIndex_;
-    Real delta_;
+    double delta_;
 };
 } // namespace data
 } // namespace ore

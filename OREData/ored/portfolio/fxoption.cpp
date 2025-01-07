@@ -52,36 +52,44 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         auto fxOptConv = QuantLib::ext::dynamic_pointer_cast<FxOptionConvention>(conventions->get(conventionName));
         QL_REQUIRE(fxOptConv, "unable to cast convention '" << conventionName << "' into FxOptionConvention");
 
-        auto dt = fxOptConv->deltaType();
-        auto fxConvId = fxOptConv->fxConventionID();
+        DeltaVolQuote::DeltaType dt = fxOptConv->deltaType();
+        std::string fxConvId = fxOptConv->fxConventionID();
         auto fxConv = QuantLib::ext::dynamic_pointer_cast<FXConvention>(conventions->get(fxConvId));
+        QL_REQUIRE(fxConv, "unable to cast convention '" << fxConvId << "' into FxConvention");
 
-        auto pairSpot = market->fxSpot(assetName_ + currency_);
-        auto domYts = market->discountCurve(assetName_).currentLink();
-        auto forYts = market->discountCurve(currency_).currentLink();
-        auto volSurface = market->fxVol(assetName_ + currency_).currentLink();
+        std::string engineConfiguration = engineFactory->configuration(MarketContext::pricing);
+        Handle<Quote> pairSpot = market->fxSpot(assetName_ + currency_, engineConfiguration);
+        auto domYts = market->discountCurve(assetName_, engineConfiguration).currentLink();
+        auto forYts = market->discountCurve(currency_, engineConfiguration).currentLink();
+        auto volSurface = market->fxVol(assetName_ + currency_, engineConfiguration).currentLink();
 
 
-        auto t = volSurface->timeFromReference(parseDate(option_.exerciseDates().front()));
+        Time t = volSurface->timeFromReference(parseDate(option_.exerciseDates().front()));
 
-        auto spotCalendar_ = parseCalendar(assetName_ + "," + currency_);
+        Calendar spotCalendar_ = parseCalendar(assetName_ + "," + currency_);
         Date d = parseDate(option_.exerciseDates().front());
-        auto spotDays_ = fxConv->spotDays();
+        Natural spotDays_ = fxConv->spotDays();
         Date settl = spotCalendar_.advance(Settings::instance().evaluationDate(), spotDays_ * Days);
         Date settlFwd = spotCalendar_.advance(d, spotDays_ * Days);
+        double domDisc = domYts->discount(settlFwd) / domYts->discount(settl);
+        double forDisc = forYts->discount(settlFwd) / forYts->discount(settl);
 
-        auto domDisc = domYts->discount(settlFwd) / domYts->discount(settl);
-        auto forDisc = forYts->discount(settlFwd) / forYts->discount(settl);
         if (option_.callPut() == "Call"){
-            auto strikeFromDelta = QuantExt::getStrikeFromDelta(Option::Call, delta_, dt, pairSpot->value(), domDisc,
-                                                                forDisc,
-                                         volSurface, t);
+            // If delta is negative but it is a call option, we switch sign.
+            if (delta_ < 0) {
+                delta_ = -delta_;
+            }
+            Real strikeFromDelta = QuantExt::getStrikeFromDelta(Option::Call, delta_, dt, pairSpot->value(), domDisc,
+                                                                forDisc, volSurface, t);
             strike_.setValue(strikeFromDelta);
 
         } else {
-            auto strikeFromDelta = QuantExt::getStrikeFromDelta(Option::Put, -delta_, dt, pairSpot->value(), domDisc,
-                                                                forDisc,
-                                                       volSurface, t);
+            // If delta is positive but it is a put option, we switch sign. 
+            if (delta_ > 0) {
+                delta_ = -delta_;
+            }    
+            Real strikeFromDelta = QuantExt::getStrikeFromDelta(Option::Put, delta_, dt, pairSpot->value(), domDisc,
+                                                                forDisc, volSurface, t);
             strike_.setValue(strikeFromDelta);
         }
         
@@ -97,7 +105,7 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     additionalData_["boughtAmount"] = quantity_;
     additionalData_["soldCurrency"] = currency_;
     additionalData_["soldAmount"] = quantity_ * strike_.value();
-    
+
     QuantLib::Date today = Settings::instance().evaluationDate();
 
     // If automatic exercise, check that we have a non-empty FX index string, parse it and attach curves from market.
@@ -202,11 +210,7 @@ void FxOption::fromXML(XMLNode* node) {
     double boughtAmount = XMLUtils::getChildValueAsDouble(fxNode, "BoughtAmount", true);
     double soldAmount = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", false);
     delta_ = XMLUtils::getChildValueAsDouble(fxNode, "Delta", false);
-    if (soldAmount == 0.0) {
-        QL_REQUIRE(delta_ > 0.0, "Non null or negative delta required");
-    } else {
-        QL_REQUIRE(soldAmount > 0.0, "positive SoldAmount required");
-    }
+    QL_REQUIRE(delta_ != 0.0 || soldAmount != 0.0, "Either a non zero delta or soldAmount must be given.");
     strike_ = TradeStrike(soldAmount / boughtAmount, currency_);
     quantity_ = boughtAmount;
     fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", false);
