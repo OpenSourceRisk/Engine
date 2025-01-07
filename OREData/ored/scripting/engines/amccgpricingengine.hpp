@@ -31,6 +31,7 @@ class AmcCgPricingEngine {
 public:
     virtual ~AmcCgPricingEngine() {}
     virtual std::string npvName() const = 0;
+    virtual std::set<std::string> relevantCurrencies() const = 0;
     virtual void buildComputationGraph() const = 0;
 };
 

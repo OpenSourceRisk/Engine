@@ -259,6 +259,7 @@ void XvaEngineCG::buildCgPartB() {
         }
         amcNpvNodes_.push_back(tmp);
         g->endRedBlock();
+        tradeCurrencyGroup_.push_back(engine->relevantCurrencies());
     }
 
     timing_partb_ = timer.elapsed().wall;
@@ -278,23 +279,38 @@ void XvaEngineCG::buildCgPartC() {
     boost::timer::cpu_timer timer;
     auto g = model_->computationGraph();
 
-    std::vector<std::size_t> tradeSum(portfolio_->trades().size());
-    for (Size i = 0; i < simulationDates_.size() + 1; ++i) {
-        for (Size j = 0; j < portfolio_->trades().size(); ++j) {
-            tradeSum[j] = amcNpvNodes_[j][i];
+    if (mode_ == Mode::Full || !generateTradeLevelExposure_) {
+        std::vector<std::size_t> tradeSum(portfolio_->trades().size());
+        for (Size i = 0; i < simulationDates_.size() + 1; ++i) {
+            std::set<std::set<std::size_t>> pfRegressorGroups;
+            std::set<std::size_t> pfRegressors;
+            Date simDate = i == 0 ? model_->referenceDate() : *std::next(simulationDates_.begin(), i - 1);
+            for (Size j = 0; j < portfolio_->trades().size(); ++j) {
+                tradeSum[j] = amcNpvNodes_[j][i];
+                std::set<std::size_t> tradeRegressors = model_->npvRegressors(simDate, tradeCurrencyGroup_[j]);
+                pfRegressorGroups.insert(tradeRegressors);
+                pfRegressors.insert(tradeRegressors.begin(), tradeRegressors.end());
+            }
+            std::set<std::set<std::size_t>> pfRegressorPosGroups;
+            for (const auto& g : pfRegressorGroups) {
+                std::set<std::size_t> group;
+                std::transform(g.begin(), g.end(), std::inserter(group, group.end()),
+                               [&g](std::size_t v) { return std::distance(g.begin(), g.find(v)); });
+                pfRegressorPosGroups.insert(group);
+            }
+            pfExposureNodes_.push_back(
+                model_->npv(cg_add(*g, tradeSum), simDate, cg_const(*g, 1.0), boost::none, {}, pfRegressors));
+            pfRegressorPosGroups_[pfExposureNodes_.back()] = pfRegressorPosGroups;
         }
-        pfExposureNodes_.push_back(model_->npv(
-            cg_add(*g, tradeSum), i == 0 ? model_->referenceDate() : *std::next(simulationDates_.begin(), i - 1),
-            cg_const(*g, 1.0), boost::none, ComputationGraph::nan, ComputationGraph::nan));
     }
 
     if (generateTradeLevelExposure_) {
         for (Size i = 0; i < simulationDates_.size() + 1; ++i) {
             tradeExposureNodes_.push_back(std::vector<std::size_t>(portfolio_->trades().size()));
+            Date simDate = i == 0 ? model_->referenceDate() : *std::next(simulationDates_.begin(), i - 1);
             for (Size j = 0; j < portfolio_->trades().size(); ++j) {
-                tradeExposureNodes_.back()[j] = model_->npv(
-                    amcNpvNodes_[j][i], i == 0 ? model_->referenceDate() : *std::next(simulationDates_.begin(), i - 1),
-                    cg_const(*g, 1.0), boost::none, ComputationGraph::nan, ComputationGraph::nan);
+                tradeExposureNodes_.back()[j] = model_->npv(amcNpvNodes_[j][i], simDate, cg_const(*g, 1.0), {}, {},
+                                                            model_->npvRegressors(simDate, tradeCurrencyGroup_[j]));
             }
         }
     }
@@ -407,9 +423,10 @@ void XvaEngineCG::doForwardEvaluation() {
         opsExternal_ = getExternalRandomVariableOps();
         gradsExternal_ = getExternalRandomVariableGradients();
     } else {
-        ops_ = getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial,
-                                    (sensitivityData_ && bumpCvaSensis_) ? eps : 0.0,
-                                    Null<Real>()); // todo set regression variance cutoff
+        // todo set regression variance cutoff
+        ops_ =
+            getRandomVariableOps(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial,
+                                 (sensitivityData_ && bumpCvaSensis_) ? eps : 0.0, Null<Real>(), pfRegressorPosGroups_);
         grads_ = getRandomVariableGradients(model_->size(), 4, QuantLib::LsmBasisSystem::Monomial, eps);
     }
 
@@ -547,6 +564,8 @@ void XvaEngineCG::populateAsd() {
     if (asd_ == nullptr)
         return;
 
+    boost::timer::cpu_timer timer;
+
     for (Size k = 1; k < scenarioGeneratorData_->getGrid()->timeGrid().size(); ++k) {
         // only write asd on valuation dates
         if (!scenarioGeneratorData_->getGrid()->isValuationDate()[k - 1])
@@ -574,6 +593,8 @@ void XvaEngineCG::populateAsd() {
         }
     }
 
+    timing_asd_ = timer.elapsed().wall;
+
     DLOG("XvaEngineCG: populate asd done.");
 }
 
@@ -582,6 +603,8 @@ void XvaEngineCG::populateNpvOutputCube() {
 
     if (npvOutputCube_ == nullptr)
         return;
+
+    boost::timer::cpu_timer timer;
 
     QL_REQUIRE(npvOutputCube_->samples() == model_->size(),
                "populateNpvOutputCube(): cube sample size ("
@@ -612,6 +635,8 @@ void XvaEngineCG::populateNpvOutputCube() {
         }
         ++tradePos;
     }
+
+    timing_outcube_ = timer.elapsed().wall;
 
     DLOG("XvaEngineCG: populate npv output cube done.");
 }
@@ -831,6 +856,10 @@ void XvaEngineCG::outputTimings() {
     LOG("XvaEngineCG: Backward deriv           : " << std::fixed << std::setprecision(1) << timing_bwd_ / 1E6 << " ms");
     LOG("XvaEngineCG: Sensi Cube Gen           : " << std::fixed << std::setprecision(1) << timing_sensi_ / 1E6
                                                    << " ms");
+    LOG("XvaEngineCG: Populate ASD           : " << std::fixed << std::setprecision(1) << timing_asd_ / 1E6
+                                                   << " ms");
+    LOG("XvaEngineCG: Populate NPV Outcube   : " << std::fixed << std::setprecision(1) << timing_outcube_ / 1E6
+                                                   << " ms");
     LOG("XvaEngineCG: total                    : " << std::fixed << std::setprecision(1) << timing_total_ / 1E6
                                                    << " ms");
     LOG("XvaEngineCG: all done.");
@@ -894,6 +923,7 @@ void XvaEngineCG::run() {
 
     updateProgress(4, 4);
 
+    timing_total_ = timer.elapsed().wall;
     outputTimings();
 
     cleanUpAfterCalcs();

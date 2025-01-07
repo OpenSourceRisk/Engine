@@ -257,9 +257,32 @@ Real BlackScholesCGBase::getDirectDiscountT0(const Date& paydate, const std::str
     return curves_.at(cidx)->discount(paydate);
 }
 
+std::set<std::size_t>
+BlackScholesCGBase::npvRegressors(const Date& obsdate,
+                                  const std::optional<std::set<std::string>>& relevantCurrencies) const {
+
+    std::set<std::size_t> state;
+
+    if (obsdate == referenceDate()) {
+        return state;
+    }
+
+    if (!underlyingPaths_.empty()) {
+        for (Size i = 0; i < indices_.size(); ++i) {
+            if (relevantCurrencies && indices_[i].isFx()) {
+                if (relevantCurrencies->find(indices_[i].fx()->sourceCurrency().code()) == relevantCurrencies->end())
+                    continue;
+            }
+            state.insert(underlyingPaths_.at(obsdate).at(i));
+        }
+    }
+
+    return state;
+}
+
 std::size_t BlackScholesCGBase::npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
-                                    const boost::optional<long>& memSlot, const std::size_t addRegressor1,
-                                    const std::size_t addRegressor2) const {
+                                    const boost::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
+                                    const std::optional<std::set<std::size_t>>& overwriteRegressors) const {
 
     calculate();
 
@@ -275,15 +298,16 @@ std::size_t BlackScholesCGBase::npv(const std::size_t amount, const Date& obsdat
 
     std::vector<std::size_t> state;
 
-    if (!underlyingPaths_.empty()) {
-        for (auto const& r : underlyingPaths_.at(obsdate))
-            state.push_back(r);
+    if (overwriteRegressors) {
+        state.insert(state.end(), overwriteRegressors->begin(), overwriteRegressors->end());
+    } else {
+        std::set<std::size_t> r = npvRegressors(obsdate, std::nullopt);
+        state.insert(state.end(), r.begin(), r.end());
     }
 
-    if (addRegressor1 != ComputationGraph::nan)
-        state.push_back(addRegressor1);
-    if (addRegressor2 != ComputationGraph::nan)
-        state.push_back(addRegressor2);
+    for (auto const& r : addRegressors)
+        if (r != ComputationGraph::nan)
+            state.push_back(r);
 
     // if the state is empty, return the plain expectation (no conditioning)
 

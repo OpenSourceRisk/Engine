@@ -24,9 +24,14 @@
 
 namespace QuantExt {
 
-std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size regressionOrder,
-                                                   QuantLib::LsmBasisSystem::PolynomialType polynomType,
-                                                   const double eps, QuantLib::Real regressionVarianceCutoff) {
+std::vector<RandomVariableOp>
+getRandomVariableOps(const Size size, const Size regressionOrder, QuantLib::LsmBasisSystem::PolynomialType polynomType,
+                     const double eps, QuantLib::Real regressionVarianceCutoff,
+                     const std::map<std::size_t, std::set<std::set<std::size_t>>>& regressorGroups) {
+
+    QL_REQUIRE(regressionVarianceCutoff != Null<Real>() || regressorGroups.empty(),
+               "getRandomVariableOps(): regressionVarianceCutoff can not be combined with regressorGroups");
+
     std::vector<RandomVariableOp> ops;
 
     // None = 0
@@ -59,8 +64,8 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
         [](const std::vector<const RandomVariable*>& args, const Size node) { return *args[0] / (*args[1]); });
 
     // ConditionalExpectation = 6
-    ops.push_back([size, regressionOrder, polynomType,
-                   regressionVarianceCutoff](const std::vector<const RandomVariable*>& args, const Size node) {
+    ops.push_back([size, regressionOrder, polynomType, regressionVarianceCutoff,
+                   regressorGroups](const std::vector<const RandomVariable*>& args, const Size node) {
         std::vector<const RandomVariable*> regressor;
         for (auto r = std::next(args.begin(), 2); r != args.end(); ++r) {
             if ((*r)->initialised() && !(*r)->deterministic())
@@ -76,7 +81,10 @@ std::vector<RandomVariableOp> getRandomVariableOps(const Size size, const Size r
         if (regressor.empty())
             return expectation(*args[0]);
         else {
-            auto tmp = multiPathBasisSystem(regressor.size(), regressionOrder, polynomType, {}, size);
+            auto g = regressorGroups.find(node);
+            auto tmp =
+                multiPathBasisSystem(regressor.size(), regressionOrder, polynomType,
+                                     g == regressorGroups.end() ? std::set<std::set<size_t>>{} : g->second, size);
             return conditionalExpectation(*args[0], regressor, tmp, !close_enough(*args[1], RandomVariable(size, 0.0)));
         }
     });

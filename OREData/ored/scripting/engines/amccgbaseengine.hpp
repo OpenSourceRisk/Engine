@@ -45,6 +45,7 @@ public:
                     const bool recalibrateOnStickyCloseOutDates = false,
                     const bool reevaluateExerciseInStickyRun = false);
     std::string npvName() const override;
+    std::set<std::string> relevantCurrencies() const override;
     void buildComputationGraph() const override;
     void calculate() const;
 
@@ -65,6 +66,7 @@ protected:
 
     // set by engine
     std::string npvName_;
+    mutable std::set<std::string> relevantCurrencies_;
 
 private:
     static constexpr Real tinyTime = 1E-10;
@@ -75,6 +77,7 @@ private:
         Real payTime = Null<Real>();
         Real exIntoCriterionTime = Null<Real>();
         std::string payCcy;
+        std::set<std::string> addCcys; // from index, fx linked etc.
         bool payer = false;
         std::size_t flowNode;
     };

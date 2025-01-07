@@ -38,8 +38,10 @@ public:
     Type type() const override { return Type::MC; }
     const Date& referenceDate() const override;
     std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
-                    const boost::optional<long>& memSlot, const std::size_t addRegressor1,
-                    const std::size_t addRegressor2) const override;
+                    const boost::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
+                    const std::optional<std::set<std::size_t>>& overwriteRegressors) const override;
+    std::set<std::size_t> npvRegressors(const Date& obsdate,
+                                        const std::optional<std::set<std::string>>& relevantCurrencies) const override;
     std::size_t numeraire(const Date& s) const override;
     std::size_t fwdCompAvg(const bool isAvg, const std::string& indexInput, const Date& obsdate, const Date& start,
                            const Date& end, const Real spread, const Real gearing, const Integer lookback,

@@ -508,9 +508,42 @@ Real GaussianCamCG::getDirectDiscountT0(const Date& paydate, const std::string& 
     return curves_.at(cidx)->discount(paydate);
 }
 
+std::set<std::size_t>
+GaussianCamCG::npvRegressors(const Date& obsdate,
+                             const std::optional<std::set<std::string>>& relevantCurrencies) const {
+
+    std::set<std::size_t> state;
+
+    if (obsdate == referenceDate()) {
+        return state;
+    }
+
+    Date sd = getSloppyDate(obsdate, sloppySimDates_, effectiveSimulationDates_);
+
+    if (conditionalExpectationUseAsset_ && !underlyingPaths_.empty()) {
+        for (Size i = 0; i < indices_.size(); ++i) {
+            if (relevantCurrencies && indices_[i].isFx()) {
+                if (relevantCurrencies->find(indices_[i].fx()->sourceCurrency().code()) == relevantCurrencies->end())
+                    continue;
+            }
+            state.insert(underlyingPaths_.at(sd).at(i));
+        }
+    }
+
+    // TODO we include zero vol ir states here, we could exclude them
+    if (conditionalExpectationUseIr_) {
+        for (Size ccy = 0; ccy < currencies_.size(); ++ccy) {
+            if (!relevantCurrencies || relevantCurrencies->find(currencies_[ccy]) != relevantCurrencies->end())
+                state.insert(irStates_.at(sd)[ccy]);
+        }
+    }
+
+    return state;
+}
+
 std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
-                               const boost::optional<long>& memSlot, const std::size_t addRegressor1,
-                               const std::size_t addRegressor2) const {
+                               const boost::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
+                               const std::optional<std::set<std::size_t>>& overwriteRegressors) const {
 
     calculate();
 
@@ -526,23 +559,16 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
 
     std::vector<std::size_t> state;
 
-    Date sd = getSloppyDate(obsdate, sloppySimDates_, effectiveSimulationDates_);
-
-    if(conditionalExpectationUseAsset_ && !underlyingPaths_.empty()) {
-        for(auto const r: underlyingPaths_.at(sd))
-            state.push_back(r);
+    if (overwriteRegressors) {
+        state.insert(state.end(), overwriteRegressors->begin(), overwriteRegressors->end());
+    } else {
+        std::set<std::size_t> r = npvRegressors(obsdate, std::nullopt);
+        state.insert(state.end(), r.begin(), r.end());
     }
 
-    // TODO we include zero vol ir states here, we could exclude them
-    if (conditionalExpectationUseIr_) {
-        for (auto const r : irStates_.at(obsdate))
+    for (auto const& r : addRegressors)
+        if (r != ComputationGraph::nan)
             state.push_back(r);
-    }
-
-    if (addRegressor1 != ComputationGraph::nan)
-        state.push_back(addRegressor1);
-    if (addRegressor2 != ComputationGraph::nan)
-        state.push_back(addRegressor2);
 
     // if the state is empty, return the plain expectation (no conditioning)
 
