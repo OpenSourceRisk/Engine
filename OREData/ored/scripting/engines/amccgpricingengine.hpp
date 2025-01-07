@@ -23,6 +23,7 @@
 #pragma once
 
 #include <string>
+#include <set>
 
 namespace ore {
 namespace data {
