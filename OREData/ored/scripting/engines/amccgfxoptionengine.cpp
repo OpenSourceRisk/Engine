@@ -21,6 +21,8 @@
 namespace ore {
 namespace data {
 
+using namespace QuantLib;
+
 void AmcCgFxOptionEngineBase::buildComputationGraph() const { AmcCgBaseEngine::buildComputationGraph(); }
 
 void AmcCgFxOptionEngineBase::setupLegs() const {
