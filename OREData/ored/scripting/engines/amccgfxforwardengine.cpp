@@ -18,6 +18,8 @@
 
 #include <ored/scripting/engines/amccgfxforwardengine.hpp>
 
+#include <ql/cashflows/simplecashflow.hpp>
+
 namespace ore {
 namespace data {
 
