@@ -456,6 +456,11 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 
 void AmcCgBaseEngine::buildComputationGraph() const {
 
+    includeReferenceDateEvents_ = Settings::instance().includeReferenceDateEvents();
+    includeTodaysCashflows_ = Settings::instance().includeTodaysCashFlows()
+                                  ? *Settings::instance().includeTodaysCashFlows()
+                                  : includeReferenceDateEvents_;
+
     relevantCurrencies_.clear();
 
     // check data set by derived engines
@@ -477,7 +482,7 @@ void AmcCgBaseEngine::buildComputationGraph() const {
         for (auto const& cashflow : leg) {
             // we can skip cashflows that are paid
             if (cashflow->date() < modelCg_->referenceDate() ||
-                (!includeSettlementDateFlows_ && cashflow->date() == modelCg_->referenceDate()))
+                (!includeTodaysCashflows_ && cashflow->date() == modelCg_->referenceDate()))
                 continue;
             // for an alive cashflow, populate the data
             cashflowInfo.push_back(createCashflowInfo(cashflow, currency_[legNo], payer_[legNo], legNo, cashflowNo));
@@ -518,7 +523,7 @@ void AmcCgBaseEngine::buildComputationGraph() const {
                 if (cashflowInfo[j].exIntoCriterionTime > t) {
                     pathValueUndDirtyContribution.push_back(cashflowInfo[j].flowNode);
                     cfStatus[j] = CfStatus::done;
-                } else if (cashflowInfo[j].payTime > t - (includeSettlementDateFlows_ ? tinyTime : 0.0)) {
+                } else if (cashflowInfo[j].payTime > t - (includeTodaysCashflows_ ? tinyTime : 0.0)) {
                     pathValueUndDirtyContribution.push_back(cashflowInfo[j].flowNode);
                     cfStatus[j] = CfStatus::cached;
                 }
