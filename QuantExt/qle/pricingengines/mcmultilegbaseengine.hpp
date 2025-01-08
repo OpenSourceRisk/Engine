@@ -164,6 +164,8 @@ public:
         return pathValueUndDirty;
     };
 
+    virtual bool useOverwritePathValueUndDirty() const { return false; };
+
     // class representing a regression model for a certain observation (= xva, exercise) time
     class RegressionModel {
     public:

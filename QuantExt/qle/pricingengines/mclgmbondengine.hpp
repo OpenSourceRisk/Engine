@@ -70,6 +70,8 @@ public:
                                const std::set<Real>& exerciseXvaTimes,
                                const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const override;
 
+    bool useOverwritePathValueUndDirty() const override { return true; };
+
 private:
     Handle<YieldTermStructure> ccyDiscount_;
 };
