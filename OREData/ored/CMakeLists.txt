@@ -326,7 +326,6 @@ scripting/engines/amccgfxforwardengine.cpp
 scripting/engines/amccgfxoptionengine.cpp
 scripting/engines/amccgmultilegoptionengine.cpp
 scripting/engines/amccgswapengine.cpp
-scripting/engines/amccgswaptionengine.cpp
 scripting/engines/analyticblackriskparticipationagreementengine.cpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.cpp
 scripting/engines/cliquetoptionmcscriptengine.cpp
@@ -737,7 +736,6 @@ scripting/engines/amccgfxoptionengine.hpp
 scripting/engines/amccgmultilegoptionengine.hpp
 scripting/engines/amccgpricingengine.hpp
 scripting/engines/amccgswapengine.hpp
-scripting/engines/amccgswaptionengine.hpp
 scripting/engines/analyticblackriskparticipationagreementengine.hpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp
 scripting/engines/cliquetoptionmcscriptengine.hpp
