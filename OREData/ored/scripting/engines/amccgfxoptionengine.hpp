@@ -45,8 +45,14 @@ public:
 
     void buildComputationGraph() const override;
 
-private:
+    void setupLegs() const;
+    void calculateFxOptionBase() const;
+
+protected:
     std::string domCcy_, forCcy_;
+
+    mutable QuantLib::ext::shared_ptr<QuantLib::StrikedTypePayoff> payoff_;
+    mutable Date payDate_;
 };
 
 class AmcCgFxOptionEngine : public AmcCgFxOptionEngineBase, public VanillaOption::engine {
