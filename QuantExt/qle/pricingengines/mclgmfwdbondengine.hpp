@@ -41,7 +41,6 @@ public:
                        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
                        const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
                        const Handle<YieldTermStructure>& contractCurve = Handle<YieldTermStructure>(),
-                       const Handle<YieldTermStructure>& referenceCurve = Handle<YieldTermStructure>(),
                        const Handle<Quote>& conversionFactor = Handle<Quote>(),
                        const std::vector<Date> simulationDates = std::vector<Date>(),
                        const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
@@ -62,7 +61,6 @@ public:
 
         incomeCurve_ = incomeCurve;
         contractCurve_ = contractCurve;
-        referenceCurve_ = referenceCurve;
         conversionFactor_ = conversionFactor;
 
         registerWith(model);
@@ -70,14 +68,19 @@ public:
             registerWith(h);
         registerWith(incomeCurve_);
         registerWith(contractCurve_);
-        registerWith(referenceCurve_);
         registerWith(conversionFactor_);
     }
 
     void calculate() const override;
     void setMember() const;
-    double payOff() const;
     double conversionFactor() const { return conversionFactor_->value(); } ;
+
+    RandomVariable
+    overwritePathValueUndDirty(double t, const RandomVariable& pathValueUndDirty,
+                               const std::set<Real>& exerciseXvaTimes,
+                               const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const override;
+
+    bool useOverwritePathValueUndDirty() const override { return true; };
 
     class FwdBondAmcCalculator : public McMultiLegBaseEngine::MultiLegBaseAmcCalculator {
     public:
@@ -103,7 +106,6 @@ public:
 private:
     Handle<YieldTermStructure> incomeCurve_;
     Handle<YieldTermStructure> contractCurve_;
-    Handle<YieldTermStructure> referenceCurve_;
     Handle<Quote> conversionFactor_;
 
     mutable Real accruedAmount_;
