@@ -42,7 +42,7 @@ public:
         : CachingEngineBuilder(model, engine, {"FxForward"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
+    string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
         return forCcy.code() + domCcy.code();
     }
 };
@@ -56,7 +56,7 @@ public:
     FxForwardEngineBuilder() : FxForwardEngineBuilderBase("DiscountedCashflows", "DiscountingFxForwardEngine") {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
         string pair = keyImpl(forCcy, domCcy);
         return QuantLib::ext::make_shared<QuantExt::DiscountingFxForwardEngine>(
             domCcy, market_->discountCurve(domCcy.code(), configuration(MarketContext::pricing)), forCcy,
@@ -75,10 +75,28 @@ public:
           stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override;
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override;
 
 private:
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
+};
+
+//! FX forward engine builder(AMC-CG)
+class AmcCgFxForwardEngineBuilder : public FxForwardEngineBuilderBase {
+public:
+    // for external cam, with additional simulation dates (AMC)
+    AmcCgFxForwardEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
+                                const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
+        : FxForwardEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates),
+          stickyCloseOutDates_(stickyCloseOutDates) {}
+
+protected:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override;
+
+private:
+    const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
     const std::vector<Date> stickyCloseOutDates_;
 };

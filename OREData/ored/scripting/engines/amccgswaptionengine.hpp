@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file amccgcurrencyswapengine.hpp
-    \brief AMC CG currency swap engine
+/*! \file amccgswaptionengine.hpp
+    \brief AMC CG swaption engine
     \ingroup engines
 */
 
@@ -25,22 +25,24 @@
 
 #include <ored/scripting/engines/amccgbaseengine.hpp>
 
-#include <qle/instruments/currencyswap.hpp>
+#include <qle/instruments/multilegoption.hpp>
 
 #include <ql/instruments/swap.hpp>
 
 namespace ore {
 namespace data {
 
-class AmcCgCurrencySwapEngine : public QuantExt::CurrencySwap::engine, public AmcCgBaseEngine {
+class AmcCgSwaptionEngine
+    : public GenericEngine<QuantExt::MultiLegOption::arguments, QuantExt::MultiLegOption::results>,
+      public AmcCgBaseEngine {
 public:
-    AmcCgCurrencySwapEngine(const std::vector<std::string>& ccys, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                            const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
-                            const bool recalibrateOnStickyCloseOutDates = false,
-                            const bool reevaluateExerciseInStickyRun = false)
+    AmcCgSwaptionEngine(const std::string& ccy, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
+                        const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
+                        const bool recalibrateOnStickyCloseOutDates = false,
+                        const bool reevaluateExerciseInStickyRun = false)
         : AmcCgBaseEngine(modelCg, simulationDates, stickyCloseOutDates, recalibrateOnStickyCloseOutDates,
                           reevaluateExerciseInStickyRun),
-          ccys_(ccys) {
+          ccy_(ccy) {
         registerWith(modelCg);
     }
 
@@ -48,7 +50,7 @@ public:
     void calculate() const override;
 
 private:
-    std::vector<std::string> ccys_;
+    std::string ccy_;
 };
 
 } // namespace data

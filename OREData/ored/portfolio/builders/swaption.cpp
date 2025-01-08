@@ -22,6 +22,7 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/scripting/engines/amccgswaptionengine.hpp>
 
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
@@ -347,6 +348,19 @@ LGMAmcSwaptionEngineBuilder::engineImpl(const string& id, const string& key, con
                                 const std::string& d) { return this->engineParameter(p, q, m, d); },
                          model->lgm(0), yts, externalModelIndices, simulationDates_, stickyCloseOutDates_);
 } // LgmCam engineImpl
+
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgSwaptionEngineBuilder::engineImpl(const string& id, const string& key, const std::vector<Date>& dates,
+                                       const Date& maturity, const std::vector<Real>& strikes, const bool isAmerican,
+                                       const std::string& discountCurve, const std::string& securitySpread) {
+    QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
+    QuantLib::ext::shared_ptr<IborIndex> index;
+    std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
+    return QuantLib::ext::make_shared<AmcCgSwaptionEngine>(
+        ccy, modelCg_, simulationDates_, stickyCloseOutDates_,
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+}
 
 } // namespace data
 } // namespace ore

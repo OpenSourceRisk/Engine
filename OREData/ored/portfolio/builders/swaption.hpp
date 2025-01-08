@@ -113,7 +113,7 @@ private:
                                                 const std::string& securitySpread) override;
 };
 
-// Implementation of BermudanAmericanSwaptionEngineBuilder for external cam, with additional simulation dates (AMC)
+//! Implementation of BermudanAmericanSwaptionEngineBuilder for external cam, with additional simulation dates (AMC)
 class LGMAmcSwaptionEngineBuilder final : public LGMSwaptionEngineBuilder {
 public:
     LGMAmcSwaptionEngineBuilder(const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel>& cam,
@@ -133,6 +133,32 @@ private:
                                                 const std::string& securitySpread) override;
 
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
+    const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
+};
+
+//! Implementation of BermudanAmericanSwaptionEngineBuilder (AMC-CG)
+class AmcCgSwaptionEngineBuilder final : public LGMSwaptionEngineBuilder {
+public:
+    AmcCgSwaptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
+                               const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
+        : LGMSwaptionEngineBuilder("AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates),
+          stickyCloseOutDates_(stickyCloseOutDates) {}
+
+private:
+    string keyImpl(const string& id, const string& ccy, const std::vector<Date>& dates, const Date& maturity,
+                   const std::vector<Real>& strikes, const bool isAmerican, const std::string& discountCurve,
+                   const std::string& securitySpread) override {
+        return ccy + "_" + std::to_string(isAmerican) + discountCurve + securitySpread;
+    }
+
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& id, const string& key,
+                                                        const std::vector<Date>& dates, const Date& maturity,
+                                                        const std::vector<Real>& strikes, const bool isAmerican,
+                                                        const std::string& discountCurve,
+                                                        const std::string& securitySpread) override;
+
+    const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
     const std::vector<Date> stickyCloseOutDates_;
 };

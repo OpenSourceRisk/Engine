@@ -348,8 +348,12 @@
 #include <ored/scripting/context.hpp>
 #include <ored/scripting/engines/amccgbaseengine.hpp>
 #include <ored/scripting/engines/amccgcurrencyswapengine.hpp>
+#include <ored/scripting/engines/amccgfxforwardengine.hpp>
+#include <ored/scripting/engines/amccgfxoptionengine.hpp>
+#include <ored/scripting/engines/amccgmultilegoptionengine.hpp>
 #include <ored/scripting/engines/amccgpricingengine.hpp>
 #include <ored/scripting/engines/amccgswapengine.hpp>
+#include <ored/scripting/engines/amccgswaptionengine.hpp>
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/analyticxccyblackriskparticipationagreementengine.hpp>
 #include <ored/scripting/engines/cliquetoptionmcscriptengine.hpp>

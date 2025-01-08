@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/builders/fxforward.hpp>
+#include <ored/scripting/engines/amccgfxforwardengine.hpp>
 
 #include <qle/pricingengines/mccamfxforwardengine.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
@@ -64,6 +65,17 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcFxForwardEngineBuilder::engineImp
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
         parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+
+    return engine;
+}
+
+QuantLib::ext::shared_ptr<PricingEngine> AmcCgFxForwardEngineBuilder::engineImpl(const Currency& forCcy,
+                                                                                 const Currency& domCcy) {
+
+    QL_REQUIRE(domCcy != forCcy, "AmcCgFxForwardEngineBuilder: domCcy = forCcy = " << domCcy.code());
+
+    auto engine = QuantLib::ext::make_shared<AmcCgFxForwardEngine>(domCcy.code(), forCcy.code(), modelCg_,
+                                                                   simulationDates_, stickyCloseOutDates_);
 
     return engine;
 }

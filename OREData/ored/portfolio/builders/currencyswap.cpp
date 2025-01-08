@@ -111,7 +111,7 @@ AmcCgCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, co
     std::vector<std::string> ccysStr;
     std::transform(ccys.begin(), ccys.end(), std::back_inserter(ccysStr), [](const Currency& c) { return c.code(); });
     return QuantLib::ext::make_shared<AmcCgCurrencySwapEngine>(
-        ccysStr, base.code(), modelCg_, simulationDates_, stickyCloseOutDates_,
+        ccysStr, modelCg_, simulationDates_, stickyCloseOutDates_,
         parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
         parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
