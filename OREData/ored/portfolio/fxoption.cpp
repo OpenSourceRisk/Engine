@@ -51,12 +51,13 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
         QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
         auto fxOptConv = QuantLib::ext::dynamic_pointer_cast<FxOptionConvention>(conventions->get(conventionName));
         QL_REQUIRE(fxOptConv, "unable to cast convention '" << conventionName << "' into FxOptionConvention");
+        Period switchTenor = fxOptConv->switchTenor();
 
-        DeltaVolQuote::DeltaType dt = fxOptConv->deltaType();
+        
         std::string fxConvId = fxOptConv->fxConventionID();
         auto fxConv = QuantLib::ext::dynamic_pointer_cast<FXConvention>(conventions->get(fxConvId));
         QL_REQUIRE(fxConv, "unable to cast convention '" << fxConvId << "' into FxConvention");
-
+        
         std::string engineConfiguration = engineFactory->configuration(MarketContext::pricing);
         Handle<Quote> pairSpot = market->fxSpot(assetName_ + currency_, engineConfiguration);
         auto domYts = market->discountCurve(assetName_, engineConfiguration).currentLink();
@@ -65,12 +66,17 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
 
 
         Time t = volSurface->timeFromReference(parseDate(option_.exerciseDates().front()));
-
-        Calendar spotCalendar_ = parseCalendar(assetName_ + "," + currency_);
-        Date d = parseDate(option_.exerciseDates().front());
+        
+        Calendar spotCalendar_ = fxConv->advanceCalendar();
+        QuantLib::BusinessDayConvention bDayConvention=fxConv->convention();
+        Date maturity = parseDate(option_.exerciseDates().front());
         Natural spotDays_ = fxConv->spotDays();
+        Date switchDate = spotCalendar_.advance(Settings::instance().evaluationDate(), switchTenor, bDayConvention);
+
+        DeltaVolQuote::DeltaType dt = maturity < switchDate ? fxOptConv->deltaType() : fxOptConv->longTermDeltaType();
+
         Date settl = spotCalendar_.advance(Settings::instance().evaluationDate(), spotDays_ * Days);
-        Date settlFwd = spotCalendar_.advance(d, spotDays_ * Days);
+        Date settlFwd = spotCalendar_.advance(maturity, spotDays_ * Days);
         double domDisc = domYts->discount(settlFwd) / domYts->discount(settl);
         double forDisc = forYts->discount(settlFwd) / forYts->discount(settl);
 
