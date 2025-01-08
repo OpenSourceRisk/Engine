@@ -62,7 +62,12 @@ protected:
     mutable std::vector<bool> payer_;
     mutable QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable QuantLib::Settlement::Type optionSettlement_ = QuantLib::Settlement::Physical;
-    mutable bool includeSettlementDateFlows_ = false;
+    mutable std::vector<QuantLib::Date> cashSettlementDates_;
+    mutable bool exerciseIntoIncludeSameDayFlows_ = false;
+
+    // set from global settings
+    mutable bool includeTodaysCashflows_;
+    mutable bool includeReferenceDateEvents_;
 
     // set by engine
     std::string npvName_;
