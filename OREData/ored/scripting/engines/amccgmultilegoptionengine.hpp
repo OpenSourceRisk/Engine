@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file amccgmultlegoptionengine.hpp
+/*! \file amccgmultilegoptionengine.hpp
     \brief AMC CG multileg option engine
     \ingroup engines
 */
@@ -31,7 +31,7 @@ namespace ore {
 namespace data {
 
 class AmcCgMultiLegOptionEngine
-    : public GenericEngine<QuantExt::MultiLegOption::arguments, QuantExt::MultiLegOption::results>,
+    : public QuantLib::GenericEngine<QuantExt::MultiLegOption::arguments, QuantExt::MultiLegOption::results>,
       public AmcCgBaseEngine {
 public:
     AmcCgMultiLegOptionEngine(const std::vector<std::string>& ccys, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,

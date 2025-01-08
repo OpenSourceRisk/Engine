@@ -37,7 +37,7 @@ public:
                     const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
                     const bool recalibrateOnStickyCloseOutDates = false,
                     const bool reevaluateExerciseInStickyRun = false)
-        : GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
+        : QuantLib::GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
           AmcCgBaseEngine(modelCg, simulationDates, stickyCloseOutDates, recalibrateOnStickyCloseOutDates,
                           reevaluateExerciseInStickyRun),
           ccy_(ccy) {
