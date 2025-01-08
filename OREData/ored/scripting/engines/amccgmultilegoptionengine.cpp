@@ -27,7 +27,7 @@ void AmcCgMultiLegOptionEngine::calculate() const {
     leg_ = arguments_.legs;
     currency_.clear();
     std::transform(arguments_.currency.begin(), arguments_.currency.end(), std::back_inserter(currency_),
-                   [](const Currency& c) { return c.code(); });
+                   [](const QuantLib::Currency& c) { return c.code(); });
     payer_ = arguments_.payer;
     exercise_ = arguments_.exercise;
     optionSettlement_ = arguments_.settlementType;

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file mclgmswapengine.hpp
+/*! \file amccgswapengine.hpp
     \brief MC LGM swap engines
     \ingroup engines
 */
