@@ -39,7 +39,7 @@ public:
                     const SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                     const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
                     const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                    const Handle<YieldTermStructure>& referenceCurve = Handle<YieldTermStructure>(),
+                    const Handle<YieldTermStructure>& ccyDiscount = Handle<YieldTermStructure>(),
                     const std::vector<Date> simulationDates = std::vector<Date>(),
                     const std::vector<Date>& stickyCloseOutDates = std::vector<Date>(),
                     const std::vector<Size> externalModelIndices = std::vector<Size>(),
@@ -59,35 +59,21 @@ public:
         registerWith(model);
         for (auto& h : discountCurves_)
             registerWith(h);
-        referenceCurve_ = referenceCurve;
-        registerWith(referenceCurve_);
+        ccyDiscount_ = ccyDiscount;
+        registerWith(ccyDiscount_);
     }
 
     void calculate() const override;
 
-    class BondAmcCalculator : public McMultiLegBaseEngine::MultiLegBaseAmcCalculator {
-    public:
-        BondAmcCalculator(McMultiLegBaseEngine::MultiLegBaseAmcCalculator c)
-            : McMultiLegBaseEngine::MultiLegBaseAmcCalculator(c){};
+    RandomVariable
+    overwritePathValueUndDirty(double t, const RandomVariable& pathValueUndDirty,
+                               const std::set<Real>& exerciseXvaTimes,
+                               const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const override;
 
-        std::vector<QuantExt::RandomVariable>
-        simulatePath(const std::vector<QuantLib::Real>& pathTimes,
-                     const std::vector<std::vector<QuantExt::RandomVariable>>& paths,
-                     const std::vector<size_t>& relevantPathIndex,
-                     const std::vector<size_t>& relevantTimeIndex) override;
-
-        Currency npvCurrency() override { return baseCurrency_; }
-
-        void addEngine(const QuantExt::McLgmBondEngine& engine) {
-            engine_ = boost::make_shared<QuantExt::McLgmBondEngine>(engine);
-        };
-
-    private:
-        boost::shared_ptr<QuantExt::McLgmBondEngine> engine_;
-    };
+    bool useOverwritePathValueUndDirty() const override { return true; };
 
 private:
-    Handle<YieldTermStructure> referenceCurve_;
+    Handle<YieldTermStructure> ccyDiscount_;
 };
 
 } // namespace QuantExt
