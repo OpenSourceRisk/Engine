@@ -33,6 +33,7 @@
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/cube/cubeinterpretation.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
+#include <orea/engine/parsensitivitycubestream.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 
 #include <orea/app/inputparameters.hpp>
@@ -130,12 +131,13 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::Loader>& loader() const { return loader_; };
     Configurations& configurations() { return configurations_; }
 
-    //! Result reports
+    //! Analytic results
     analytic_reports& reports() { return reports_; };
     analytic_npvcubes& npvCubes() { return npvCubes_; };
     analytic_mktcubes& mktCubes() { return mktCubes_; };
     analytic_stresstests& stressTests() { return stressTests_;}
-    
+    QuantLib::ext::shared_ptr<ParSensitivityCubeStream>& parCvaSensiCubeStream() { return parCvaSensiCubeStream_; }
+
     const bool getWriteIntermediateReports() const { return writeIntermediateReports_; }
     void setWriteIntermediateReports(const bool flag) { writeIntermediateReports_ = flag; }
 
@@ -174,7 +176,8 @@ protected:
     analytic_npvcubes npvCubes_;
     analytic_mktcubes mktCubes_;
     analytic_stresstests stressTests_;
-
+    QuantLib::ext::shared_ptr<ParSensitivityCubeStream> parCvaSensiCubeStream_;
+  
     //! Whether to write intermediate reports or not.
     //! This would typically be used when the analytic is being called by another analytic
     //! and that parent/calling analytic will be writing its own set of intermediate reports
@@ -256,7 +259,9 @@ public:
 
 class MarketDataAnalytic : public Analytic {
 public:
-    MarketDataAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    MarketDataAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                       const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+                       const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : Analytic(std::make_unique<MarketDataAnalyticImpl>(inputs), {"MARKETDATA"}, inputs) {}
 };
 

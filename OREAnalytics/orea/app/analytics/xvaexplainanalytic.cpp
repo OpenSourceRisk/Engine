@@ -212,7 +212,7 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     analytic()->stressTests()[label()]["xvaExplain_zeroStressTest"] = zeroScenarioData;
     CONSOLE("OK");
     
-    auto stressAnalytic = QuantLib::ext::make_shared<XvaStressAnalytic>(inputs_, zeroScenarioData);
+    auto stressAnalytic = QuantLib::ext::make_shared<XvaStressAnalytic>(inputs_, nullptr, nullptr, zeroScenarioData);
     stressAnalytic->configurations().asofDate = inputs_->asof();
     stressAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
     stressAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
@@ -370,9 +370,6 @@ XvaExplainAnalyticImpl::createStressTestData(const QuantLib::ext::shared_ptr<ore
     scenarioData->setData(fullRevalScenario);
     return scenarioData;
 }
-
-XvaExplainAnalytic::XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<XvaExplainAnalyticImpl>(inputs), {"XVA_EXPLAIN"}, inputs, true, false, false, false) {}
 
 } // namespace analytics
 } // namespace ore

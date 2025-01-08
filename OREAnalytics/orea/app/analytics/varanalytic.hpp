@@ -72,9 +72,10 @@ protected:
 
 class ParametricVarAnalytic : public VarAnalytic {
 public:
-    ParametricVarAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    ParametricVarAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                          const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+                          const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : VarAnalytic(std::make_unique<ParametricVarAnalyticImpl>(inputs), {"PARAMETRIC_VAR"}, inputs) {}
-
 };
 
 class HistoricalSimulationVarAnalyticImpl : public VarAnalyticImpl {
@@ -91,7 +92,10 @@ protected:
 
 class HistoricalSimulationVarAnalytic : public VarAnalytic {
 public:
-    HistoricalSimulationVarAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    HistoricalSimulationVarAnalytic(
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : VarAnalytic(std::make_unique<HistoricalSimulationVarAnalyticImpl>(inputs), {"HISTSIM_VAR"}, inputs, true) {}
 };
 
