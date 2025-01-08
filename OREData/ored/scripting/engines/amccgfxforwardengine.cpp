@@ -24,7 +24,13 @@ namespace data {
 void AmcCgFxForwardEngine::buildComputationGraph() const { AmcCgBaseEngine::buildComputationGraph(); }
 
 void AmcCgFxForwardEngine::calculate() const {
-    /* ... */
+    Leg foreignLeg{QuantLib::ext::make_shared<SimpleCashFlow>(arguments_.nominal1, arguments_.payDate)};
+    Leg domesticLeg{QuantLib::ext::make_shared<SimpleCashFlow>(arguments_.nominal2, arguments_.payDate)};
+
+    leg_ = {foreignLeg, domesticLeg};
+    currency_ = {forCcy_, domCcy_};
+    payer_ = {false, true};
+    exercise_ = nullptr;
 
     AmcCgBaseEngine::calculate();
 }
