@@ -21,6 +21,7 @@
 #include <orea/cube/cube_io.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityfilestream.hpp>
+#include <orea/engine/sacvasensitivityloader.hpp>
 #include <orea/scenario/scenariofilereader.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
@@ -105,11 +106,13 @@ void InputParameters::setScriptLibraryFromFile(const std::string& fileName) {
 void InputParameters::setConventions(const std::string& xml) {
     conventions_ = QuantLib::ext::make_shared<Conventions>();
     conventions_->fromXMLString(xml);
+    InstrumentConventions::instance().setConventions(conventions_);
 }
     
 void InputParameters::setConventionsFromFile(const std::string& fileName) {
     conventions_ = QuantLib::ext::make_shared<Conventions>();
     conventions_->fromFile(fileName);
+    InstrumentConventions::instance().setConventions(conventions_);
 }
 
 void InputParameters::setCurveConfigs(const std::string& xml) {
@@ -142,6 +145,16 @@ void InputParameters::setCurrencyConfig(const std::string& xml) {
 void InputParameters::setCurrencyConfigFromFile(const std::string& fileName) {
     currencyConfig_ = QuantLib::ext::make_shared<CurrencyConfig>();
     currencyConfig_->fromFile(fileName);
+}
+
+void InputParameters::setCounterpartyManager(const std::string& xml) {
+    counterpartyManager_ = QuantLib::ext::make_shared<CounterpartyManager>();
+    counterpartyManager_->fromXMLString(xml);
+}
+
+void InputParameters::setCounterpartyManagerFromFile(const std::string& fileName) {
+    counterpartyManager_ = QuantLib::ext::make_shared<CounterpartyManager>();
+    counterpartyManager_->fromFile(fileName);
 }
 
 void InputParameters::setIborFallbackConfig(const std::string& xml) {
@@ -424,6 +437,68 @@ void InputParameters::setXvaSensiPricingEngineFromFile(const std::string& fileNa
     xvaSensiPricingEngine_->fromFile(fileName);
 }
 
+// SA-CVA
+
+void InputParameters::setSaCvaNetSensitivitiesFromFile(const std::string& fileName) {
+    SaCvaSensitivityLoader cvaLoader;
+    cvaLoader.load(fileName, '\n', ',');
+    saCvaNetSensitivities_ = cvaLoader.netRecords();
+
+    LOG("InputParameters::setSaCvaNetSensitivitiesFromFile: " << saCvaNetSensitivities_.size() << " records");
+}
+
+void InputParameters::setCvaSensitivitiesFromFile(const std::string& fileName) {
+    // FIXME:
+    // I would prefer to use the SensitivityFileStream here for reading SensitivityRecords, but the XVA sensitivity
+    // file format has an extra column (nettingSetId), to cover both trade-level and nettingSet-level sensitivites.
+    // Is that really necessary?
+    // If we could reuse the SensitivityFileStream here we could pass the SensitivityRecords to the
+    // SaCvaSensitivityLoader to map to CvaSensitivityRecords, very similar to the
+    // SaCvaSensitivityLoader::loadFromRawSensis method that uses a ParSensitivityCubeStream.
+
+    cvaSensitivities_.clear();
+
+    std::ifstream iss(fileName);
+    std::string line;
+
+    while (std::getline(iss, line)) {
+        vector<string> tokens;
+        boost::trim(line);
+        boost::split(tokens, line, boost::is_any_of(",;\t"));
+
+        // We expect the format of XVA Sensitivity analytic reports with 11 columns:
+        // #NettingSetId,TradeId,IsPar,Factor_1,ShiftSize_1,Factor_2,ShiftSize_2,Currency,Base XVA,Delta,Gamma
+        QL_REQUIRE(tokens.size() == 11,
+                   "11 tokens expected in CVA Sensitivities, found " << tokens.size() << " in: " << to_string(tokens));
+
+        // Skip header, comments and lines with a non-empty tradeId column, since we want nettingSet-level sensi only
+        if (tokens[0] == "NettingSetId" || line[0] == '#' || tokens[1] != "")
+            continue;
+
+        // We expect par sensitivities
+        bool isPar = parseBool(tokens[2]);
+        QL_REQUIRE(isPar == true, "CVA par sensitivity expected as input into SA-CVA");
+
+        CvaSensitivityRecord r;
+        r.nettingSetId = tokens[0];
+        // RiskFactorKey needs translation into CvaRiskFactorKey
+        r.key = mapRiskFactorKeyToCvaRiskFactorKey(tokens[3]);
+        // shiftType is not in the sensitivity report.
+	// FIXME: Since it is not used in the sacvasensitivityloader- can we remove it from the CvaSensitivityRecord?
+	//r.shiftType = parseShiftType(tokens[2]);
+        r.shiftSize = parseReal(tokens[4]);
+        r.currency = tokens[7];
+        r.baseCva = parseReal(tokens[8]);
+        r.delta = parseReal(tokens[9]);
+
+        cvaSensitivities_.push_back(r);
+    }
+
+    SaCvaSensitivityLoader cvaLoader;
+    cvaLoader.loadFromRawSensis(cvaSensitivities_, baseCurrency_, counterpartyManager_);
+    saCvaNetSensitivities_ = cvaLoader.netRecords();
+}
+
 // XVA Explain
 
 void InputParameters::setXvaExplainSimMarketParams(const std::string& xml) {
@@ -668,7 +743,6 @@ void InputParameters::setSimmNameMapperFromFile(const std::string& fileName) {
 void InputParameters::setSimmBucketMapper(const std::string& xml) {
     QL_REQUIRE(simmVersion_ != "", "SIMM version not set");
     QL_REQUIRE(simmBucketMapper_ != nullptr, "SIMMbucket mapper not set");
-    //QuantLib::ext::shared_ptr<SimmBucketMapperBase> sbm = QuantLib::ext::dynamic_pointer_cast<SimmBucketMapperBase>();
     QuantLib::ext::shared_ptr<SimmBucketMapperBase> sbm = QuantLib::ext::dynamic_pointer_cast<SimmBucketMapperBase>(simmBucketMapper_);
     sbm->fromXMLString(xml);
 }
