@@ -55,7 +55,7 @@ protected:
     mutable Date payDate_;
 };
 
-class AmcCgFxOptionEngine : public AmcCgFxOptionEngineBase, public VanillaOption::engine {
+class AmcCgFxOptionEngine : public AmcCgFxOptionEngineBase, public QuantLib::VanillaOption::engine {
 public:
     AmcCgFxOptionEngine(const std::string& domCcy, const std::string& forCcy,
                         const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates,
