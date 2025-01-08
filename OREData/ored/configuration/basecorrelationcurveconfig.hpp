@@ -86,6 +86,7 @@ public:
     const boost::optional<QuantLib::DateGeneration::Rule>& rule() const { return rule_; }
     const bool& adjustForLosses() const { return adjustForLosses_; }
     const vector<string>& quotes() override;
+    MarketDatum::QuoteType quoteType() const { return quoteType_; }
     //@}
 
     //! \name Setters

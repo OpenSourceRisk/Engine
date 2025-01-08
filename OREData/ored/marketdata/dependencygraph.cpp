@@ -40,7 +40,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
     LOG("Build dependency graph for TodaysMarket configuration " << configuration);
 
     Graph& g = dependencies_[configuration];
-    IndexMap index = QuantLib::ext::get(boost::vertex_index, g);
+    IndexMap index = boost::get(boost::vertex_index, g);
     QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 
     // add the vertices
@@ -49,6 +49,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
     for (auto const& o : t) {
         auto mapping = params_->mapping(o, configuration);
         for (auto const& m : mapping) {
+            std::cout << m.first << " " << m.second << std::endl;
             Vertex v = boost::add_vertex(g);
             QuantLib::ext::shared_ptr<CurveSpec> spec;
             // swap index curves do not have a spec
@@ -432,6 +433,44 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                 buildErrors[g[*v].mapping] = "did not find required discount curve " + ccy2 + " (required from " +
                                              ore::data::to_string(g[*v]) + ") in dependency graph for configuration " +
                                              configuration;
+        }
+
+        // 9 Base correlation depends on credit curves and discount curves
+
+        if (g[*v].obj == MarketObject::BaseCorrelation){
+            const auto underlying = g[*v].name;
+            DLOG("Building dependency graph for base correlation" << underlying);
+            if (referenceData_ != nullptr && referenceData_->hasData(CreditIndexReferenceDatum::TYPE, underlying)){
+            auto crd = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
+                referenceData_->getData(CreditIndexReferenceDatum::TYPE, underlying));
+            
+            //TODO Discount Curves??, actually the discount curves should be dependencies of the creditCurves
+            //TODO: revisit later, indec curve with index (how to get it? curveconfig or extend the spec?)
+            std::set<std::string> constituentCurves {underlying}; // Add the index curve itself
+            for (const auto& c : crd->constituents()) {
+                const double weight = c.weight();
+                if (weight > 0.0 && !QuantLib::close_enough(weight, 0.0)) {
+                    constituentCurves.insert(c.name());
+                } else {
+                    DLOG("Skipping curve " << c.name() << ", having zero weight");
+                }
+                }
+                for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
+                    if (*w != *v && g[*w].obj == MarketObject::DefaultCurve &&
+                        constituentCurves.count(g[*w].name) > 0) {
+                        DLOG("Adding edge between baseCorrelation " << underlying << " and creditCurve " << g[*w].name);
+                        g.add_edge(*v, *w);
+                        constituentCurves.erase(g[*w].name);
+                    }
+                }
+                for (const auto& creditCurve : constituentCurves) {
+                    WLOG("couldn't find required creditCurve " << creditCurve << ". This can be ignored if base correlation are given and not bootstrapped from upfronts");
+                }
+            }
+            else{
+                WLOG("No reference data manager or data found for index, this could be an error, if base correlation "
+                     "are bootstrapped from upfronts");
+            }
         }
     }
 

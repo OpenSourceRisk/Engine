@@ -28,6 +28,8 @@
 #include <ored/marketdata/loader.hpp>
 
 #include <qle/termstructures/credit/basecorrelationstructure.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
+#include <ored/marketdata/defaultcurve.hpp>
 
 namespace ore {
 namespace data {
@@ -39,9 +41,13 @@ class ReferenceDataManager;
 class BaseCorrelationCurve {
 public:
     BaseCorrelationCurve() {}
-    BaseCorrelationCurve(QuantLib::Date asof, BaseCorrelationCurveSpec spec, const Loader& loader,
-                         const CurveConfigurations& curveConfigs,
-        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
+    BaseCorrelationCurve(
+        QuantLib::Date asof, BaseCorrelationCurveSpec spec, const Loader& loader,
+        const CurveConfigurations& curveConfigs,
+        const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        const std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>>& yieldCurves = {},
+        const std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>>& creditCurves = {},
+        const std::map<std::string, std::string>& creditNameMapping = {});
 
     //! \name Inspectors
     //@{
@@ -52,10 +58,15 @@ public:
     }
     //@}
 private:
-    BaseCorrelationCurveSpec spec_;
-    QuantLib::ext::shared_ptr<QuantExt::BaseCorrelationTermStructure> baseCorrelation_;
-    QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
+    void buildFromCorrelations(const Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const;
+    void buildFromUpfronts(const Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const;
 
+    BaseCorrelationCurveSpec spec_;
+    std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>> yieldCurves_;
+    std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>> creditCurves_;
+    std::map<std::string, std::string> creditNameMapping_;
+    QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
+    mutable QuantLib::ext::shared_ptr<QuantExt::BaseCorrelationTermStructure> baseCorrelation_;
     /*! Use the reference data to adjust the detachment points, \p detachPoints, for existing losses if requested.
     */
     std::vector<QuantLib::Real> adjustForLosses(const std::vector<QuantLib::Real>& detachPoints) const;
