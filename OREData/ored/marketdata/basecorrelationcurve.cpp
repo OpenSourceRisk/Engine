@@ -29,6 +29,7 @@
 #include <qle/math/flatextrapolation2d.hpp>
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/time.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -181,6 +182,8 @@ BaseCorrelationCurve::BaseCorrelationCurve(
 
     DLOG("BaseCorrelationCurve: finished building base correlation structure with ID " << spec_.curveConfigID());
 }
+
+
 
 vector<Real> BaseCorrelationCurve::adjustForLosses(const vector<Real>& detachPoints) const {
 
@@ -419,7 +422,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             if (yieldCurves_.count("Yield/EUR/EUR-EONIA") == 0) {
                 std::cout << "missing discount curve" << std::endl;
             }
-            std::string indexNameWithTerm = config.curveID() + "_" + to_string(config.indexTerm());
+            std::string indexNameWithTerm = config.curveID() + "_" + to_string(term);
             if (auto it = creditNameMapping_.find(indexNameWithTerm); it != creditNameMapping_.end()) {
                 std::cout << indexNameWithTerm << " " << it->second << std::endl;
                 indexNameWithTerm = it->second;
@@ -440,6 +443,9 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                 }
             }
         }
+    
+
+    
     }
 
     QL_FAIL("Not implemented yet");

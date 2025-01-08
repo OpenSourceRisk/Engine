@@ -58,6 +58,11 @@ public:
     }
     //@}
 private:
+    struct AdjustForLossResults {
+        double indexFactor;
+        std::vector<Real> adjDetachmentPoints;
+    }
+
     void buildFromCorrelations(const Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const;
     void buildFromUpfronts(const Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const;
 
@@ -69,7 +74,7 @@ private:
     mutable QuantLib::ext::shared_ptr<QuantExt::BaseCorrelationTermStructure> baseCorrelation_;
     /*! Use the reference data to adjust the detachment points, \p detachPoints, for existing losses if requested.
     */
-    std::vector<QuantLib::Real> adjustForLosses(const std::vector<QuantLib::Real>& detachPoints) const;
+    AdjustForLossResults adjustForLosses(const std::vector<QuantLib::Real>& detachPoints) const;
 };
 } // namespace data
 } // namespace ore
