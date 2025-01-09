@@ -33,14 +33,27 @@ oreex.save_output_to_subdir(
     "case_A_eur_swap",
     ["log_4.txt", "dim_evolution_4.csv", "exposure_nettingset_CPTY_A.csv"]
 )
+oreex.print_headline("Run ORE (case A (swap eur), Dynamic Delta VaR)")
+oreex.run("Input/ore_A5.xml")
+oreex.save_output_to_subdir(
+    "case_A_eur_swap",
+    ["log_5.txt", "dim_evolution_5.csv", "exposure_nettingset_CPTY_A.csv"]
+)
 
 oreex.print_headline("Plot results")
 
 oreex.setup_plot("dim_evolution_A_swap_eur")
-oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_1.csv"), 0, 3, 'y', "Zero Order Regression")
+oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_0.csv"), 0, 6, 'y', "Simple")
+oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_0.csv"), 0, 4, 'y', "Zero Order Regression")
 oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_1.csv"), 0, 4, 'c', "First Order Regression")
 oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_2.csv"), 0, 4, 'm', "Second Order Regression")
-#oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_2.csv"), 0, 6, 'r', "Simple DIM")
+oreex.decorate_plot(title="Example 13 (A) - DIM Evolution Swap EUR", xlabel="Timestep", ylabel="DIM")
+oreex.save_plot_to_file()
+
+oreex.setup_plot("dim_evolution_A_swap_eur_ddv")
+oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_1.csv"), 0, 6, 'y', "Simple")
+oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_1.csv"), 0, 4, 'r', "Regression")
+oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_5.csv"), 0, 3, 'b', "Dynamic Delta VaR")
 oreex.decorate_plot(title="Example 13 (A) - DIM Evolution Swap EUR", xlabel="Timestep", ylabel="DIM")
 oreex.save_plot_to_file()
 
@@ -92,6 +105,12 @@ oreex.save_output_to_subdir(
     "case_B_eur_swaption",
     ["log_0b.txt", "dim_evolution_0b.csv", "dim_regression_0b.csv"]
 )
+#oreex.print_headline("Run ORE (case B (swaption eur), Dynamic Delta VaR)")
+#oreex.run("Input/ore_B3.xml")
+#oreex.save_output_to_subdir(
+#    "case_B_eur_swaption",
+#    ["log_B3.txt", "dim_evolution_B3.csv", "dim_regression_B3.csv"]
+#)
 
 oreex.print_headline("Plot results")
 
@@ -99,6 +118,7 @@ oreex.setup_plot("dim_evolution_B_swaption_eur")
 oreex.plot(os.path.join("case_B_eur_swaption", "dim_evolution_1.csv"), 0, 3, 'y', "Zero Order Regression")
 oreex.plot(os.path.join("case_B_eur_swaption", "dim_evolution_1.csv"), 0, 4, 'c', "First Order Regression")
 oreex.plot(os.path.join("case_B_eur_swaption", "dim_evolution_2.csv"), 0, 4, 'm', "Second Order Regression")
+#oreex.plot(os.path.join("case_B_eur_swaption", "dim_evolution_B3.csv"), 0, 4, 'b', "Dynamic Delta VaR")
 oreex.decorate_plot(title="Example 13 (B) - DIM Evolution Swaption (physical delivery) EUR", xlabel="Timestep", ylabel="DIM")
 oreex.save_plot_to_file()
 
@@ -164,4 +184,48 @@ oreex.plot(os.path.join("case_D_eurusd_swap", "dim_evolution_1.csv"), 0, 3, 'y',
 oreex.plot(os.path.join("case_D_eurusd_swap", "dim_evolution_1.csv"), 0, 4, 'c', "First Order Regression")
 oreex.plot(os.path.join("case_D_eurusd_swap", "dim_evolution_2.csv"), 0, 4, 'm', "Second Order Regression")
 oreex.decorate_plot(title="Example 13 (D) - DIM Evolution Swap EUR-USD", xlabel="Timestep", ylabel="DIM")
+oreex.save_plot_to_file()
+
+
+oreex.print_headline("Run ORE: Case E, FX Option, zero order regression")
+oreex.run("Input/ore_E0.xml")
+oreex.get_times("Output/log_E0.txt")
+oreex.save_output_to_subdir(
+    "case_E_fxopt",
+    ["log_E0.txt", "dim_evolution_E0.csv", "dim_regression_E0.csv"]
+)
+
+oreex.print_headline("Run ORE: case E, FX Option, first order regression")
+oreex.run("Input/ore_E1.xml")
+oreex.get_times("Output/log_E1.txt")
+oreex.save_output_to_subdir(
+    "case_E_fxopt",
+    ["log_E1.txt", "dim_evolution_E1.csv", "dim_regression_E1.csv"]
+)
+
+oreex.print_headline("Run ORE: Case E, FX Option, second order regression")
+oreex.run("Input/ore_E2.xml")
+oreex.get_times("Output/log_E2.txt")
+oreex.save_output_to_subdir(
+    "case_E_fxopt",
+    ["log_E2.txt", "dim_evolution_E2.csv", "dim_regression_E2.csv"]
+)
+
+oreex.print_headline("Run ORE: Case E, FX Option, Dynamic Delta VaR")
+oreex.run("Input/ore_E3.xml")
+oreex.get_times("Output/log_E3.txt")
+oreex.save_output_to_subdir(
+    "case_E_fxopt",
+    ["log_E3.txt", "dim_evolution_E3.csv", "dim_regression_E3.csv"]
+)
+
+oreex.print_headline("Plot results")
+
+oreex.setup_plot("dim_evolution_E_fxopt")
+oreex.plot(os.path.join("case_E_fxopt", "dim_evolution_E0.csv"), 0, 6, 'y', "Simple")
+oreex.plot(os.path.join("case_E_fxopt", "dim_evolution_E0.csv"), 0, 4, 'c', "Zero Order Regression")
+oreex.plot(os.path.join("case_E_fxopt", "dim_evolution_E1.csv"), 0, 4, 'm', "First Order Regression")
+oreex.plot(os.path.join("case_E_fxopt", "dim_evolution_E2.csv"), 0, 4, 'r', "Second Order Regression")
+oreex.plot(os.path.join("case_E_fxopt", "dim_evolution_E3.csv"), 0, 3, 'b', "Dynamic Delta VaR")
+oreex.decorate_plot(title="Example 13 (E) - DIM Evolution FX Option EUR/USD", xlabel="Timestep", ylabel="DIM", legend_loc="lower left")
 oreex.save_plot_to_file()
