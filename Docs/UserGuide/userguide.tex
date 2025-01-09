@@ -1860,8 +1860,9 @@ This example in folder {\tt Examples/Example\_13} demonstrates Dynamic Initial M
 \begin{itemize}
 \item A single currency Swap in EUR (case A), 
 \item a European Swaption in EUR with physical delivery (case B), 
-\item a single currency Swap in USD (case C), and 
-\item a EUR/USD cross currency Swap (case D).
+\item a single currency Swap in USD (case C),
+\item a EUR/USD cross currency Swap (case D),
+\item a EUR/USD FX Option (case E).
 \end{itemize}
 
 The examples can be run as before with 
@@ -1870,21 +1871,20 @@ The examples can be run as before with
 \centerline{\tt python run\_A.py} 
 
 \medskip
-and likewise for cases B, C and D. The essential results of each run are are visualised in the form of 
+and likewise for cases B--E. The essential results of each run are visualised in the form of 
 \begin{itemize}
 \item evolution of expected DIM
 \item regression plots at selected future times 
 \end{itemize}
-illustrated for cases A and B in figures \ref{fig_ex13a_evolution} - \ref{fig_ex13b_regression}. 
-In the three swap cases, the regression orders do make a noticeable difference in the respective expected DIM evolution. In the Swaption case B, first and second order polynomial choice makes a difference before option expiry. More details on this DIM model and its performance can be found in \cite{Anfuso2016,LichtersEtAl}.
- 
+illustrated for cases A, B and E in figures \ref{fig_ex13a_evolution} - \ref{fig_ex13c_evolution}. 
+
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_dim_evolution_A_swap_eur.pdf}
 \end{center}
-\caption{Evolution of expected Dynamic Initial Margin (DIM) for the EUR Swap of Example 13 A. DIM is evaluated using
+\caption{Evolution of expected Dynamic Initial Margin (DIM) for the EUR Swap of Example 13 A. Regression DIM is evaluated using
   regression of NPV change variances versus the simulated 3M Euribor fixing; regression polynomials are zero, first and
-  second order (first and second order curves are not distinguishable here). The simulation uses 1000 samples and a time
+  second order (first and second order curves are not noticebly different in this case). The simulation uses 1000 samples and a time
   grid with bi-weekly steps in line with the Margin Period of Risk.}
 \label{fig_ex13a_evolution}
 \end{figure}
@@ -1897,14 +1897,24 @@ In the three swap cases, the regression orders do make a noticeable difference i
 \label{fig_ex13a_regression}
 \end{figure}
 
+The DIM evolution graphs compare a subset of the following Initial Margin projections methods in ORE
+\begin{itemize}
+\item Simple: 99\% quantile of NPV changes ($\Delta$) over the Margin Period of Risk across all paths, i.e. same IM applied across paths
+\item Zero Order ``Regression'': Standard deviation of $\Delta$s scaled to the 99\% quantile with factor 2.33 (normal distribution assumption); same IM applied across paths
+\item First/Second Order Regression: Conditional standard deviation of $\Delta$ computed by polynomial first/second order regression of $\Delta$ variances, scaled to the 99\% quantile as avove; different IM amounts applied across paths, graphs show the expected DIM i.e. avergae across paths
+\item Dynamic Delta VaR: 99\% quantile VaR based on analytic deltas and vegas computed under scenarios; different IM amounts applied across paths, graphs show the expected DIM i.e. avergae across paths
+\end{itemize}
+
+For a discussion of the regression model performance see \cite{Anfuso2016,LichtersEtAl}. The cases A--E are associated with
+various ORE master input files {\tt Input/ore\_A*.xml},  {\tt Input/ore\_B*.xml}, ..., which demonstrate the required simulation
+and xva analytic configurations.
+ 
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_dim_evolution_B_swaption_eur.pdf}
 \end{center}
 \caption{Evolution of expected Dynamic Initial Margin (DIM) for the EUR Swaption of Example 13 B with expiry in 10Y
-  around time step 100. DIM is evaluated using regression of NPV change variances versus the simulated 3M Euribor
-  fixing; regression polynomials are zero, first and second order. The simulation uses 1000 samples and a time grid with
-  bi-weekly steps in line with the Margin Period of Risk.}
+  around time step 100.}
 \label{fig_ex13b_evolution}
 \end{figure}
 
@@ -1914,6 +1924,15 @@ In the three swap cases, the regression orders do make a noticeable difference i
 \end{center}
 \caption{Regression snapshot at time step 100 (before expiry) for the EUR Swaption of Example 13 B.}
 \label{fig_ex13b_regression}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_dim_evolution_E_fxopt.pdf}
+\end{center}
+\caption{Evolution of expected Dynamic Initial Margin (DIM) for the EUR/USD FX Option of Example 13 (case E) with expiry in 10Y
+  around time step 100.}
+\label{fig_ex13c_evolution}
 \end{figure}
 
 %--------------------------------------------------------
@@ -7014,7 +7033,11 @@ To quantify these two effects one needs to model Initial Margin under future mar
 \item ISDA's Standard Initial Margin (SIMM) under scenarios
 \end{itemize} 
 
-We skip the first option as too computationally expensive for ORE. In the current ORE release we focus on a relatively
+We skip the first option as too computationally expensive for ORE.
+
+\subsubsection{Regression Approach}
+
+In ORE releases up to version 12 we have focussed on a relatively
 simple regression approach as in \cite{Anfuso2016,LichtersEtAl}. Consider the netting set values $\NPV(t)$ and $\NPV(t+\Delta)$ that
 are spaced one margin period of risk $\Delta$ apart. Moreover, let $F(t,t+\Delta)$ denote cumulative netting set cash
 flows between time $t$ and $t+\Delta$, converted into the NPV currency. Let $X(t)$ then denote the netting set value
@@ -7054,6 +7077,32 @@ Given the DIM estimate along all paths, we can next work out the Margin Value Ad
 %}
 with borrowing spread $f_b$ as in the FVA section \ref{sec:fva} and spread $s_I$ received on initial margin, both
 spreads relative to the cash collateral rate.
+
+\subsubsection{VaR under Scenarios: Dynamic Parametric VaR}
+
+Because of the limitations of the regression approach, it needs benchmarking/validation.
+In \cite{LichtersEtAl} we have applied a dynamic parametric VaR method for that purpose covering
+\begin{itemize}
+\item Delta VaR
+\item Delta Gamma Normal VaR
+\item Delta Gamma VaR (Cornish-Fisher)
+\end{itemize}
+This has been added to ORE with release 13 and is implemented for the small range of products that are discussed
+in \cite{LichtersEtAl}, i.e.
+\begin{itemize}
+\item Swaps
+\item Cross Currency Swaps
+\item European Swaptions
+\item FX Forwards
+\item FX Options
+\end{itemize}
+where relevant sensitivities can be computed analytically under scenarios which feed into the parametric VaR
+calculation. The covariance structure of the VaR model is implied from the calibrated cross asset model (rather than
+externally provided), because the primary motivation of the method was benchmarking of the regression approach, in particular
+to check the performance of regression methods in option portfolios.
+
+The usage of Dynamic Parametric VaR as Initial Margin proxy is demonstrated in Example section \ref{sec:dim}, compared to
+Regression IM. 
 
 \subsection{KVA (CCR)}\label{sec:app_kva}
 
