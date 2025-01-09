@@ -30,6 +30,11 @@
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/time.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <qle/models/basket.hpp>
+#include <qle/pricingengines/indexcdstrancheengine.hpp>
+#include <ored/portfolio/builders/cdo.hpp>
+#include <qle/instruments/syntheticcdo.hpp>
+#include <qle/instruments/makecds.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -183,10 +188,10 @@ BaseCorrelationCurve::BaseCorrelationCurve(
     DLOG("BaseCorrelationCurve: finished building base correlation structure with ID " << spec_.curveConfigID());
 }
 
+BaseCorrelationCurve::AdjustForLossResults
+BaseCorrelationCurve::adjustForLosses(const vector<Real>& detachPoints) const {
 
-
-vector<Real> BaseCorrelationCurve::adjustForLosses(const vector<Real>& detachPoints) const {
-
+    AdjustForLossResults results;
     const auto& cId = spec_.curveConfigID();
 
     const auto& [qualifier, period] = splitCurveIdWithTenor(cId);
@@ -195,20 +200,26 @@ vector<Real> BaseCorrelationCurve::adjustForLosses(const vector<Real>& detachPoi
 
     if (!referenceData_) {
         DLOG("Reference data manager is null so cannot adjust for losses.");
-        return detachPoints;
+        results.indexFactor = 1;
+        results.adjDetachmentPoints = detachPoints;
+        return results;
     }
 
     if (!referenceData_->hasData(CreditIndexReferenceDatum::TYPE, qualifier)) {
         DLOG("Reference data manager does not have index credit data for " << qualifier
                                                                            << " so cannot adjust for losses.");
-        return detachPoints;
+        results.indexFactor = 1;
+        results.adjDetachmentPoints = detachPoints;
+        return results;
     }
 
     auto crd = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
         referenceData_->getData(CreditIndexReferenceDatum::TYPE, qualifier));
     if (!crd) {
         DLOG("Index credit data for " << qualifier << " is not of correct type so cannot adjust for losses.");
-        return detachPoints;
+        results.indexFactor = 1;
+        results.adjDetachmentPoints = detachPoints;
+        return results;
     }
 
     // Process the credit index reference data
@@ -225,6 +236,8 @@ vector<Real> BaseCorrelationCurve::adjustForLosses(const vector<Real>& detachPoi
 
         if (!close(0.0, weight)) {
             totalRemainingWeight += weight;
+            results.remainingNames.push_back(name);
+            results.remainingWeights.push_back(weight);
         } else {
             auto priorWeight = c.priorWeight();
             QL_REQUIRE(priorWeight != Null<Real>(), "Expecting a valid prior weight for name " << name << ".");
@@ -243,6 +256,9 @@ vector<Real> BaseCorrelationCurve::adjustForLosses(const vector<Real>& detachPoi
     TLOG("Total prior weight = " << totalPriorWeight);
     TLOG("Total weight = " << totalWeight);
 
+    results.indexFactor = totalRemainingWeight;
+    results.adjDetachmentPoints = detachPoints;
+
     if (!close(totalRemainingWeight, 1.0) && totalRemainingWeight > 1.0) {
         ALOG("Total remaining weight is greater than 1, possible error in CreditIndexReferenceDatum for " << qualifier);
     }
@@ -255,16 +271,16 @@ vector<Real> BaseCorrelationCurve::adjustForLosses(const vector<Real>& detachPoi
 
     if (close(totalRemainingWeight, 0.0)) {
         ALOG("The total remaining weight is 0 so cannot adjust for losses.");
-        return detachPoints;
+        return results;
     }
 
     if (close(totalRemainingWeight, 1.0)) {
         DLOG("Index factor for " << qualifier << " is 1 so adjustment for losses not required.");
-        return detachPoints;
+        return results;
     }
 
     // Index factor is less than 1 so need to adjust each of the detachment points.
-    vector<Real> result;
+    vector<Real> adjDetachmentPoints;
     for (Size i = 0; i < detachPoints.size(); ++i) {
 
         // Amounts below, for tranche and above for original (quoted) attachment and detachment points.
@@ -277,18 +293,19 @@ vector<Real> BaseCorrelationCurve::adjustForLosses(const vector<Real>& detachPoi
 
         TLOG("Quoted detachment point " << detachPoints[i] << " adjusted to " << newDetach << ".");
 
-        if (i > 0 && (newDetach < result.back() || close(newDetach, result.back()))) {
+        if (i > 0 && (newDetach < adjDetachmentPoints.back() || close(newDetach, adjDetachmentPoints.back()))) {
             ALOG("The " << io::ordinal(i + 1) << " adjusted detachment point is not greater than the previous "
                         << "adjusted detachment point so cannot adjust for losses.");
-            return detachPoints;
+            return results;
         }
 
-        result.push_back(newDetach);
+        adjDetachmentPoints.push_back(newDetach);
     }
+    results.adjDetachmentPoints = adjDetachmentPoints;
 
     DLOG("BaseCorrelationCurve::adjustForLosses: finished adjusting for losses for base correlation " << qualifier);
 
-    return result;
+    return results;
 }
 
 void BaseCorrelationCurve::buildFromCorrelations(
@@ -363,7 +380,8 @@ void BaseCorrelationCurve::buildFromCorrelations(
     if (config.adjustForLosses()) {
         DLOG("Adjust for losses is true for base correlation " << spec_.curveConfigID());
         DLOG("Detachment points before: " << Array(tmpDps.begin(), tmpDps.end()));
-        tmpDps = adjustForLosses(tmpDps);
+        auto res = adjustForLosses(tmpDps);
+        tmpDps = res.adjDetachmentPoints;
         DLOG("Detachment points after: " << Array(tmpDps.begin(), tmpDps.end()));
     }
 
@@ -390,6 +408,12 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
 
     DLOG("After processing the quotes, we have " << terms.size() << " unique term(s), " << dps.size()
                                                  << " unique detachment points and " << data.size() << " quotes.");
+    QL_REQUIRE(referenceData_ != nullptr,
+               "can not imply base correlations from upfront, no reference data manager found");
+    QL_REQUIRE(config.indexSpread() != Null<Real>(),
+               "can not imply base correlations from upfronts, missing index spread in curve config");
+    QL_REQUIRE(config.startDate() != Null<Date>(),
+               "can not imply base correlations from upfronts, missing index start date in curve config");
     QL_REQUIRE(dps.size() > 1, "BaseCorrelationCurve: need at least 2 unique detachment points.");
     QL_REQUIRE(dps.size() * terms.size() == data.size(),
                "BaseCorrelationCurve: number of quotes ("
@@ -398,54 +422,105 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
 
     for (const auto& term : terms) {
         std::cout << "Term " << term << std::endl;
-        std::vector<double> attachPoints = {0.0};
-        std::vector<double> detachPoints;
-        for (const auto& dp : dps) {
-            attachPoints.push_back(dp);
-            detachPoints.push_back(dp);
+        vector<Real> tmpDps(dps.begin(), dps.end());
+        auto basketData = adjustForLosses(tmpDps);
+        std::vector<std::pair<double, double>> attachPoints = {{0.0, 0.0}};
+        std::vector<std::pair<double, double>> detachPoints;
+        for (size_t i = 0; i < tmpDps.size(); ++i) {
+            attachPoints.push_back(std::make_pair(tmpDps[i], basketData.adjDetachmentPoints[i]));
+            detachPoints.push_back(std::make_pair(tmpDps[i], basketData.adjDetachmentPoints[i]));
         }
         attachPoints.pop_back();
         QL_REQUIRE(attachPoints.size() == dps.size(), "Mismatch size");
         QL_REQUIRE(detachPoints.size() == dps.size(), "Mismatch size");
 
-        std::cout << "CreditCurves" << std::endl;
-        for(const auto& [k, _] : creditCurves_){
-            std::cout << k << std::endl;
+        std::vector<double> trancheNpvs;
+        if (yieldCurves_.count("Yield/EUR/EUR-EONIA") == 0) {
+            std::cout << "missing discount curve" << std::endl;
         }
 
+        Handle<YieldTermStructure> discountCurve;
+        Handle<DefaultProbabilityTermStructure> indexCurve;
+        double indexRecovery;
+        std::string indexNameWithTerm = config.curveID() + "_" + to_string(term);
+        if (auto it = creditNameMapping_.find(indexNameWithTerm); it != creditNameMapping_.end()) {
+            std::cout << indexNameWithTerm << " " << it->second << std::endl;
+            indexNameWithTerm = it->second;
+        }
+        auto mappedIndexCurveName = creditCurveNameMapping(indexNameWithTerm);
+        auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
+        
+        QL_REQUIRE(indexCreditCurve != nullptr, "can not imply base correlation from upfront, index cds curve for "
+                                            << indexNameWithTerm << " missing");
+
+        discountCurve = indexCreditCurve->rateCurve();
+        indexCurve = indexCreditCurve->curve();
+        indexRecovery = indexCreditCurve->recovery()->value();
+
+        auto pool = QuantLib::ext::make_shared<Pool>();
+        std::vector<double> recoveryRates;
+        // TODO get from curveconfig
+        Currency ccy = parseCurrency(config.currency());
+        for (const auto& name : basketData.remainingNames) {
+            auto mappedName = creditCurveNameMapping(name);
+            const auto creditCurve = getDefaultProbCurveAndRecovery(mappedName);
+            QL_REQUIRE(creditCurve != nullptr,
+                       "can not imply base correlations from upfronts, credit curve for " << name << " missing");
+            
+            recoveryRates.push_back(creditCurve->recovery()->value());
+            DefaultProbKey key = NorthAmericaCorpDefaultKey(ccy, SeniorSec, Period(), 1.0);
+            std::pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>> p(key, creditCurve->curve());
+            vector<pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>>> probabilities(1, p);
+            // Empty default set. Adjustments have been made above to account for existing credit events.
+            Issuer issuer(probabilities, DefaultEventSet());
+            pool->add(name, issuer, key);
+        }
+
+        auto curveCalibration = ext::make_shared<QuantExt::IndexConstituentDefaultCurveCalibration>(
+            config.startDate(), term, config.indexSpread(), indexRecovery, indexCreditCurve, discountCurve);
+
+        std::vector<double> trancheNPV;
+        std::vector<ext::shared_ptr<Quote>> baseCorrelations;
         for (size_t i = 0; i < dps.size(); i++) {
+            std::cout << "Build CDO and price with attach " << attachPoints[i].first << " and detach "
+                        << detachPoints[i].first << std::endl;
+            std::cout << "Build CDO and price with attach adjusted for loss " << attachPoints[i].first
+                        << " and detach adjusted for loss " << detachPoints[i].first << std::endl;
+            double previousTrancheCleanNPV = (i == 0) ? 0 : trancheNPV.back();
+            // Build Tranche
+            RelinkableHandle<Quote> baseCorrelation =
+                RelinkableHandle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.5));
+            GaussCopulaBucketingLossModelBuilder modelBuilder{
+                -5., 5, 64, false, 372, false, true, {0.35, 0.3, 0.35}, "Markit2020"};
+            auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false);
 
-            std::cout << "Build CDO and price " << attachPoints[i] << "," << detachPoints[i] << std::endl;
-            auto crd = QuantLib::ext::dynamic_pointer_cast<CreditIndexReferenceDatum>(
-                referenceData_->getData(CreditIndexReferenceDatum::TYPE, "RED:2I667KKU1"));
+            auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
+                config.startDate(), basketData.remainingNames, basketData.remainingWeights, pool, 0.0,
+                detachPoints[i].first, QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()), curveCalibration,
+                recoveryRates);
+            // Build model with model builder
+            basket->setLossModel(lossModel);
 
-            if (yieldCurves_.count("Yield/EUR/EUR-EONIA") == 0) {
-                std::cout << "missing discount curve" << std::endl;
-            }
-            std::string indexNameWithTerm = config.curveID() + "_" + to_string(term);
-            if (auto it = creditNameMapping_.find(indexNameWithTerm); it != creditNameMapping_.end()) {
-                std::cout << indexNameWithTerm << " " << it->second << std::endl;
-                indexNameWithTerm = it->second;
-            }
+            Schedule schedule = MakeSchedule()
+                                    .from(config.startDate())
+                                    .to(cdsMaturity(config.startDate(), config.indexTerm(), DateGeneration::CDS2015))
+                                    .withTenor(3 * Months)
+                                    .withCalendar(WeekendsOnly())
+                                    .withConvention(Unadjusted)
+                                    .withTerminationDateConvention(Unadjusted)
+                                    .withRule(DateGeneration::CDS2015);
 
-            if (creditCurves_.count(indexNameWithTerm) == 0) {
-                std::cout << "Missing curve " << indexNameWithTerm << std::endl;
-            }
+            auto cdo = ext::make_shared<QuantExt::SyntheticCDO>(
+                basket, Protection::Side::Buyer, schedule, 0.0, config.indexSpread(), Actual360(), Following, true,
+                QuantLib::CreditDefaultSwap::ProtectionPaymentTime::atDefault, asof, Date(), boost::none, Null<Real>(),
+                Actual360(true));
 
-            for (const auto& constituent : crd->constituents()) {
-                auto name = constituent.name();
-                if (auto it = creditNameMapping_.find(name);  it != creditNameMapping_.end()) {
-                    std::cout << name << " " << it->second << std::endl;
-                    name = it->second;
-                }
-                if (creditCurves_.count(name) == 0) {
-                    std::cout << "Missing curve " << name <<  std::endl;
-                }
-            }
+            auto pricingEngine = QuantLib::ext::make_shared<QuantExt::IndexCdsTrancheEngine>(discountCurve);
+            cdo->setPricingEngine(pricingEngine);
+
+
+            
         }
-    
-
-    
     }
 
     QL_FAIL("Not implemented yet");

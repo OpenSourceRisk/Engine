@@ -31,7 +31,7 @@ namespace data {
 
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig()
     : settlementDays_(0), businessDayConvention_(Following), extrapolate_(true), adjustForLosses_(true),
-    quoteType_(MarketDatum::QuoteType::BASE_CORRELATION) {}
+    quoteType_(MarketDatum::QuoteType::BASE_CORRELATION), indexSpread_(Null<Real>()) {}
 
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     const string& curveDescription,
@@ -47,7 +47,8 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     const Period& indexTerm,
     boost::optional<DateGeneration::Rule> rule,
     bool adjustForLosses,
-    MarketDatum::QuoteType quoteType)
+    MarketDatum::QuoteType quoteType,
+    double indexSpread)
     : CurveConfig(curveID, curveDescription),
       detachmentPoints_(detachmentPoints),
       terms_(terms),
@@ -61,7 +62,8 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
       indexTerm_(indexTerm),
       rule_(rule),
       adjustForLosses_(adjustForLosses),
-      quoteType_(quoteType) {
+      quoteType_(quoteType),
+      indexSpread_(indexSpread) {
     bool validQuoteType =
         quoteType_ == MarketDatum::QuoteType::BASE_CORRELATION || quoteType_ == MarketDatum::QuoteType::TRANCHE_UPFRONT;
     QL_REQUIRE(validQuoteType, "unexpected QuoteType " << quoteType_ << ", allowed values are BASE_CORRELATION or TRANCHE_UPFRONT");
@@ -112,6 +114,10 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     if (auto n = XMLUtils::getChildNode(node, "Rule"))
         rule_ = parseDateGenerationRule(XMLUtils::getNodeValue(n));
 
+    indexSpread_ = XMLUtils::getChildValueAsDouble(node, "IndexSpread", false, Null<Real>());
+
+    currency_ = XMLUtils::getChildValue(node, "Currency", false);
+
     adjustForLosses_ = true;
     if (auto n = XMLUtils::getChildNode(node, "AdjustForLosses"))
         adjustForLosses_ = parseBool(XMLUtils::getNodeValue(n));
@@ -140,6 +146,14 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
 
     if (indexTerm_ != 0 * Days) {
         XMLUtils::addChild(doc, node, "IndexTerm", indexTerm_);
+    }
+
+    if (indexSpread_ != Null<Real>()){
+        XMLUtils::addChild(doc, node, "IndexSpread", indexSpread_);
+    }
+
+    if (!currency.empty()){
+        XMLUtils::addChild(doc, node, "Currency", currency_);
     }
 
     XMLUtils::addChild(doc, node, "AdjustForLosses", adjustForLosses_);

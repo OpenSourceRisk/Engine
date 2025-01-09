@@ -30,6 +30,8 @@
 #include <qle/termstructures/credit/basecorrelationstructure.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
+#include <string_view>
+#include <qle/termstructures/creditcurve.hpp>
 
 namespace ore {
 namespace data {
@@ -60,16 +62,35 @@ public:
 private:
     struct AdjustForLossResults {
         double indexFactor;
-        std::vector<Real> adjDetachmentPoints;
-    }
+        std::vector<double> adjDetachmentPoints;
+        std::vector<double> remainingWeights;
+        std::vector<std::string> remainingNames;
+    };
 
     void buildFromCorrelations(const Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const;
     void buildFromUpfronts(const Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const;
 
+    std::string_view creditCurveNameMapping(std::string_view name) const {
+        const auto& it = creditNameMapping_.find(name);
+        if (it != creditNameMapping_.end()) {
+            return it->second;
+        }
+        return name;
+    }
+
+    ext::shared_ptr<QuantExt::CreditCurve> getDefaultProbCurveAndRecovery(std::string_view name) const {
+        const auto& it = creditCurves_.find(name);
+        if (it != creditCurves_.end() && it->second->creditCurve() != nullptr) {
+            const auto& creditCurve = it->second->creditCurve();
+            return creditCurve;
+        }
+        return nullptr;
+    }
+
     BaseCorrelationCurveSpec spec_;
-    std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>> yieldCurves_;
-    std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>> creditCurves_;
-    std::map<std::string, std::string> creditNameMapping_;
+    std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>, std::less<>> yieldCurves_;
+    std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>, std::less<>> creditCurves_;
+    std::map<std::string, std::string, std::less<>> creditNameMapping_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     mutable QuantLib::ext::shared_ptr<QuantExt::BaseCorrelationTermStructure> baseCorrelation_;
     /*! Use the reference data to adjust the detachment points, \p detachPoints, for existing losses if requested.
