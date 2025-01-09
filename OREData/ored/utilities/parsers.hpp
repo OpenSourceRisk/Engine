@@ -625,5 +625,7 @@ std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type);
 //! parse integration policy
 QuantLib::ext::shared_ptr<Integrator> parseIntegrationPolicy(const std::string& s);
 
+std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p);
+
 } // namespace data
 } // namespace ore

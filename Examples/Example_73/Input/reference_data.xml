@@ -7,7 +7,7 @@
       <CreditCurveId></CreditCurveId>
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
-      <SettlementDays>0</SettlementDays> <!-- to exactly match the forward price -->
+      <SettlementDays>0</SettlementDays>
       <Calendar>TARGET</Calendar>
       <IssueDate>20230203</IssueDate>
       <LegData>
@@ -57,7 +57,7 @@
       <CreditCurveId></CreditCurveId>
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <IncomeCurveId>EUR-EURIBOR-6M</IncomeCurveId>
-      <SettlementDays>0</SettlementDays> <!-- to exactly match the forward price -->
+      <SettlementDays>0</SettlementDays>
       <Calendar>TARGET</Calendar>
       <IssueDate>20230203</IssueDate>
       <LegData>

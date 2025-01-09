@@ -1,11 +1,1 @@
 #NettingSetId,TradeId,IsPar,Factor_1,ShiftSize_1,Factor_2,ShiftSize_2,Currency,Base XVA,Delta,Gamma
-CPTY_A,Swap_EUR,true,DiscountCurve/EUR/0/1Y,0.000100,,0.000000,EUR,69071.19,16.76,#N/A
-CPTY_A,Swap_EUR,true,DiscountCurve/EUR/1/5Y,0.000100,,0.000000,EUR,69071.19,-114.29,#N/A
-CPTY_A,Swap_USD,true,DiscountCurve/EUR/0/1Y,0.000100,,0.000000,EUR,55194.33,14.59,#N/A
-CPTY_A,Swap_USD,true,DiscountCurve/EUR/1/5Y,0.000100,,0.000000,EUR,55194.33,-73.75,#N/A
-CPTY_A,Swap_USD,true,DiscountCurve/USD/0/1Y,0.000100,,0.000000,EUR,55194.33,-20.39,#N/A
-CPTY_A,Swap_USD,true,DiscountCurve/USD/1/5Y,0.000100,,0.000000,EUR,55194.33,81.14,#N/A
-CPTY_A,,true,DiscountCurve/EUR/0/1Y,0.000100,,0.000000,EUR,87536.30,21.83,#N/A
-CPTY_A,,true,DiscountCurve/EUR/1/5Y,0.000100,,0.000000,EUR,87536.30,-132.85,#N/A
-CPTY_A,,true,DiscountCurve/USD/0/1Y,0.000100,,0.000000,EUR,87536.30,-12.59,#N/A
-CPTY_A,,true,DiscountCurve/USD/1/5Y,0.000100,,0.000000,EUR,87536.30,51.50,#N/A

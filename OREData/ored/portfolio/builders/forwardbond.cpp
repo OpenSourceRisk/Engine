@@ -100,8 +100,7 @@ FwdBondEngineBuilder::Curves FwdBondEngineBuilder::getCurves(const string& id, c
 QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngine(
     const QuantLib::ext::shared_ptr<LGM>& lgm, const Handle<YieldTermStructure>& discountCurve,
     const std::vector<Date>& simulationDates, const std::vector<Size>& externalModelIndices,
-    const Handle<YieldTermStructure>& incomeCurve, const Handle<YieldTermStructure>& contractCurve,
-    const Handle<YieldTermStructure>& referenceCurve, const Handle<Quote>& conversionFactor) {
+    const Handle<YieldTermStructure>& incomeCurve, const Handle<YieldTermStructure>& contractCurve, const Handle<Quote>& conversionFactor) {
 
     return QuantLib::ext::make_shared<QuantExt::McLgmFwdBondEngine>(
         lgm, parseSequenceType(engineParameter("Training.Sequence")),
@@ -111,7 +110,7 @@ QuantLib::ext::shared_ptr<PricingEngine> CamAmcFwdBondEngineBuilder::buildMcEngi
         parsePolynomType(engineParameter("Training.BasisFunction")),
         parseSobolBrownianGeneratorOrdering(engineParameter("BrownianBridgeOrdering")),
         parseSobolRsgDirectionIntegers(engineParameter("SobolDirectionIntegers")), discountCurve, incomeCurve,
-        contractCurve, referenceCurve, conversionFactor, simulationDates, stickyCloseOutDates_, externalModelIndices,
+        contractCurve, conversionFactor, simulationDates, stickyCloseOutDates_, externalModelIndices,
         parseBool(engineParameter("MinObsDate")),
         parseRegressorModel(engineParameter("RegressorModel", {}, false, "Simple")),
         parseRealOrNull(engineParameter("RegressionVarianceCutoff", {}, false, std::string())),
@@ -134,7 +133,7 @@ CamAmcFwdBondEngineBuilder::engineImpl(const string& id, const Currency& ccy, co
         getCurves(id, ccy, discountCurveName, creditCurveId, securityId, referenceCurveId, incomeCurveId, dirty);
 
     return buildMcEngine(model->lgm(0), curves.spreadedReferenceCurve_, simulationDates_, externalModelIndices,
-                         curves.incomeCurve_, curves.discountCurve_, curves.referenceCurve_, curves.conversionFactor_);
+                         curves.incomeCurve_, curves.discountCurve_, curves.conversionFactor_);
 }
 
 } // namespace data

@@ -65,8 +65,5 @@ void ParStressConversionAnalyticImpl::runAnalytic(const QuantLib::ext::shared_pt
     CONSOLE("OK");
 }
 
-ParStressConversionAnalytic::ParStressConversionAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<ParStressConversionAnalyticImpl>(inputs), {"PARSTRESSCONVERSION"}, inputs, false, false,
-               false, false) {}
 } // namespace analytics
 } // namespace ore

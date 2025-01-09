@@ -5,7 +5,7 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">31</Parameter>
+    <Parameter name="logMask">255</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -14,8 +14,9 @@
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="counterpartyFile">counterparty.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
-    <Parameter name="nThreads">2</Parameter>
+    <Parameter name="nThreads">1</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">xois_eur</Parameter>
@@ -42,7 +43,7 @@
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">N</Parameter>
-      <Parameter name="amc">Y</Parameter>
+      <Parameter name="amc">N</Parameter>
       <Parameter name="amcTradeTypes">Swap,Swaption,FxOption</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
@@ -52,6 +53,14 @@
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
       <Parameter name="aggregationScenarioDataDump">scenariodata.csv</Parameter>
+      <!-- The following is needed to feed the dynamic delta var DIM model, limitations:
+	   - works with classic single-threaded simulation only
+	   - covers only Swaps, Swaptions, FxOptions, FxForwards -->
+      <Parameter name="storeSensis">Y</Parameter>
+      <Parameter name="curveSensiGrid">10</Parameter>
+      <!--<Parameter name="curveSensiGrid">1,3,5,7,10,15,20</Parameter>-->
+      <Parameter name="vegaSensiGrid">10</Parameter><!-- XVARunnerPlus hard coded setting -->
+      <Parameter name="allowPartialScenarios">N</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">N</Parameter>
@@ -62,43 +71,50 @@
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="exposureProfilesByTrade">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>
-      <Parameter name="calculationType">Symmetric</Parameter>
+      <Parameter name="calculationType">NoLag</Parameter>
       <Parameter name="allocationMethod">None</Parameter>
       <Parameter name="marginalAllocationLimit">1.0</Parameter>
       <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
-      <Parameter name="dva">N</Parameter>
-      <Parameter name="dvaName">BANK</Parameter>
-      <Parameter name="fva">N</Parameter>
-      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
-      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
-      <Parameter name="colva">N</Parameter>
-      <Parameter name="collateralSpread">0.0000</Parameter>
-      <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="dim">Y</Parameter>
+      <Parameter name="dimModel">DeltaVaR</Parameter>
       <Parameter name="dimQuantile">0.99</Parameter>
       <Parameter name="dimHorizonCalendarDays">14</Parameter>
       <Parameter name="dimRegressionOrder">2</Parameter>
       <Parameter name="dimRegressors"/>
-      <Parameter name="dimScaling">1.0</Parameter>
-      <Parameter name="dimEvolutionFile">dim_evolution.csv</Parameter>
-      <Parameter name="dimRegressionFiles">dim_regression.csv</Parameter>
-      <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
-      <Parameter name="dimOutputGridPoints">0</Parameter>
-      <Parameter name="dimLocalRegressionEvaluations">0</Parameter>
-      <Parameter name="dimLocalRegressionBandwidth">1.0</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
     </Analytic>
     <Analytic type="xvaSensitivity">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="marketConfigFile">xvasensimarket.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="parSensitivity">Y</Parameter>
       <Parameter name="outputJacobi">Y</Parameter>
       <Parameter name="jacobiOutputFile">xva_sensitivity_jacobi.csv</Parameter>
       <Parameter name="jacobiInverseOutputFile">xva_sensitivity_jacobi_inverse.csv</Parameter>
+    </Analytic>
+    <Analytic type="sacva">
+      <Parameter name="active">N</Parameter>
+      <!-- If none of the following is provided, ORE builds on-the-fly sensis using the configuration above -->
+      <!-- Load net sensitivities that can be passed into the SA-CVA calculator directly -->
+      <!--<Parameter name="saCvaNetSensitivitiesFile">sacva_sensitivity.csv</Parameter>-->
+      <!-- Load CVA sensitivities, output of the xva sensi analytic, that needs mapping and aggregation -->
+      <!--<Parameter name="cvaSensitivitiesFile">xva_par_sensitivity_cva.csv</Parameter>-->
+    </Analytic>
+    <Analytic type="saccr">
+      <Parameter name="active">N</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
+    </Analytic>
+    <Analytic type="bacva">
+      <Parameter name="active">N</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
+    </Analytic>
+    <Analytic type="smrc">
+      <Parameter name="active">Y</Parameter>
     </Analytic>
   </Analytics>
 </ORE>

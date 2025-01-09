@@ -11,7 +11,8 @@
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>10000</Samples>
+    <!--<Samples>1000</Samples>-->
+    <Samples>75</Samples>
     <CloseOutLag>2W</CloseOutLag>
     <MporMode>StickyDate</MporMode>
     <DayCounter>A365F</DayCounter>
@@ -211,11 +212,8 @@
       </SwapIndex>
     </SwapIndices>
     <DefaultCurves>
-      <Names>
-        <Name>CPTY_A</Name>
-        <Name>BANK</Name>
-      </Names>
-      <Tenors>1Y, 2Y, 3Y, 5Y, 10Y</Tenors>
+      <Names></Names>
+      <Tenors>1Y, 5Y</Tenors>
       <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
       <SimulateRecoveryRates>true</SimulateRecoveryRates>
       <Calendars>
@@ -227,15 +225,15 @@
 	   surfaces, so we need to specify here how we propagate the
 	   vol structure and what its composition will be -->
     <SwaptionVolatilities>
-      <Simulate>true</Simulate>
+      <Simulate>false</Simulate>
       <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
         <Currency>EUR</Currency>
         <Currency>USD</Currency>
       </Currencies>
-      <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
-      <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
+      <Expiries>1Y,5Y</Expiries>
+      <Terms>1Y,5Y</Terms>
       <SimulateATMOnly>true</SimulateATMOnly>
     </SwaptionVolatilities>
     <FxVolatilities>
@@ -243,11 +241,10 @@
       <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <CurrencyPairs>
-        <CurrencyPair>USDEUR</CurrencyPair>
+        <CurrencyPair>EURUSD</CurrencyPair>
       </CurrencyPairs>
-      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+      <Expiries>1Y,10Y</Expiries>
     </FxVolatilities>
-
     
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->

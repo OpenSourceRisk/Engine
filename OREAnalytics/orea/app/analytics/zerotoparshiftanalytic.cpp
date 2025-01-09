@@ -106,8 +106,5 @@ void ZeroToParShiftAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
     CONSOLE("OK");
 }
 
-ZeroToParShiftAnalytic::ZeroToParShiftAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<ZeroToParShiftAnalyticImpl>(inputs), {"ZEROTOPARSHIFT"}, inputs, false, false, false,
-               false) {}
 } // namespace analytics
 } // namespace ore

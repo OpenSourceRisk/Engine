@@ -34,7 +34,9 @@ public:
     static constexpr const char* LABEL = "PNL";
     static constexpr const char* mporLookupKey = "MPOR";
 
-    PnlAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    PnlAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                    const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+                    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : Analytic::Impl(inputs), useSpreadedTermStructures_(true) {
         setLabel(LABEL);
         mporDate_ = inputs_->mporDate();
@@ -93,9 +95,10 @@ private:
 */
 class PnlAnalytic : public Analytic {
 public:
-    PnlAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    PnlAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+                const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : Analytic(std::make_unique<PnlAnalyticImpl>(inputs), {"PNL"}, inputs, false, false, false, false) {}
-
 };
 
 } // namespace analytics

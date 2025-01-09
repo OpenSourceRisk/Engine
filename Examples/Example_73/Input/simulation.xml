@@ -91,7 +91,6 @@
 				<CalibrationOptions>
 					<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
 					<Strikes/>
-					<!-- ATMF, +25D, -25D, 1.2345 -->
 				</CalibrationOptions>
 			</CrossCcyLGM>
 		</ForeignExchangeModels>

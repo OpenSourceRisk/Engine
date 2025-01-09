@@ -1238,11 +1238,16 @@ void McMultiLegBaseEngine::calculateModels(
         }
 
         if (isXvaTime) {
+
             regModelUndDirty[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] != CfStatus::open; }, **model_,
                 regressorModel_, regressionVarianceCutoff_);
-            regModelUndDirty[counter].train(polynomOrder_, polynomType_, pathValueUndDirty, pathValuesRef,
-                                            simulationTimes);
+            regModelUndDirty[counter].train(
+                polynomOrder_, polynomType_,
+                useOverwritePathValueUndDirty()
+                    ? overwritePathValueUndDirty(*t, pathValueUndDirty, exerciseXvaTimes, pathValues)
+                    : pathValueUndDirty,
+                pathValuesRef, simulationTimes);
         }
 
         if (exercise_ != nullptr) {

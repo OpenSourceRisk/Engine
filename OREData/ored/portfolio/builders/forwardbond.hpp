@@ -123,7 +123,6 @@ private:
                                                            const std::vector<Size>& externalModelIndices,
                                                            const Handle<YieldTermStructure>& incomeCurve,
                                                            const Handle<YieldTermStructure>& discountContractCurve,
-                                                           const Handle<YieldTermStructure>& referenceCurve,
                                                            const Handle<Quote>& conversionFactor);
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;

@@ -300,6 +300,39 @@
 				<DontThrowSteps>10</DontThrowSteps>
 			</BootstrapConfig>
 		</YieldCurve>
+		<YieldCurve>
+			<CurveId>EUR-NoDiscount</CurveId>
+			<CurveDescription>EUR-NoDiscount with zero discounting</CurveDescription>
+			<Currency>EUR</Currency>
+			<DiscountCurve>EUR-ESTER</DiscountCurve>
+			<Segments>
+				<Simple>
+					<Type>OIS</Type>
+					<Quotes>
+						<Quote optional="true">IR_SWAP/RATE/EUR/NoDiscount/2D/1D/1Y</Quote>
+					</Quotes>
+					<Conventions>EUR-ESTER-OIS</Conventions>
+					<PillarChoice>LastRelevantPillarDate</PillarChoice>
+					<Priority>0</Priority>
+					<MinDistance>1</MinDistance>
+				</Simple>
+			</Segments>
+			<InterpolationVariable>Discount</InterpolationVariable>
+			<InterpolationMethod>LogLinear</InterpolationMethod>
+			<MixedInterpolationCutoff>1</MixedInterpolationCutoff>
+			<YieldCurveDayCounter>A365</YieldCurveDayCounter>
+			<Tolerance>0.0000000000010000</Tolerance>
+			<Extrapolation>true</Extrapolation>
+			<BootstrapConfig>
+				<Accuracy>0.0000000000010000</Accuracy>
+				<GlobalAccuracy>0.0000000000010000</GlobalAccuracy>
+				<DontThrow>false</DontThrow>
+				<MaxAttempts>5</MaxAttempts>
+				<MaxFactor>2</MaxFactor>
+				<MinFactor>2</MinFactor>
+				<DontThrowSteps>10</DontThrowSteps>
+			</BootstrapConfig>
+		</YieldCurve>
 	</YieldCurves>
 	<SwaptionVolatilities>
 		<SwaptionVolatility>
@@ -328,6 +361,7 @@
 			<SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1_FWDEXP_20251220</SpreadQuote>
 			<RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1_FWDEXP_20251220</RecoveryRateQuote>
 			<PriceQuote>BOND/PRICE/SECURITY_1_FWDEXP_20251220</PriceQuote>
+			<ConversionFactor>BOND/CONVERSION_FACTOR/SECURITY_1_FWDEXP_20251220</ConversionFactor>
 		</Security>
 		<Security>
 			<CurveId>SECURITY_1_cutted</CurveId>

@@ -29,11 +29,16 @@
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
+#include <ored/portfolio/commodityswap.hpp>
+#include <ored/portfolio/commoditylegdata.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
+#include <ored/portfolio/fxbarrieroption.hpp>
+#include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/fxtouchoption.hpp>
 #include <ored/portfolio/indexcreditdefaultswapdata.hpp>
 #include <ored/portfolio/indexcreditdefaultswapoption.hpp>
 #include <ored/portfolio/swap.hpp>
@@ -183,8 +188,8 @@ QuantLib::ext::shared_ptr<Trade> buildBermudanSwaption(string id, string longSho
 }
 
 QuantLib::ext::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
-                                       Real boughtAmount, string soldCcy, Real soldAmount, Real premium,
-                                       string premiumCcy, string premiumDate) {
+					       Real boughtAmount, string soldCcy, Real soldAmount, Real premium,
+					       string premiumCcy, string premiumDate, string nettingSet) {
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
     string cal = "TARGET";
@@ -195,12 +200,32 @@ QuantLib::ext::shared_ptr<Trade> buildFxOption(string id, string longShort, stri
     string expiryDate = ore::data::to_string(qlExpiry);
 
     // envelope
-    Envelope env("CP");
+    Envelope env("CP", nettingSet);
     // option data
     OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash", "",
                       premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
     // trade
     QuantLib::ext::shared_ptr<Trade> trade(new ore::data::FxOption(env, option, boughtCcy, boughtAmount, soldCcy, soldAmount));
+    trade->id() = id;
+
+    return trade;
+}
+
+QuantLib::ext::shared_ptr<Trade> buildFxForward(string id, Size expiry,
+						string boughtCcy, Real boughtAmount, string soldCcy, Real soldAmount, string nettingSet) {
+    Date today = Settings::instance().evaluationDate();
+    Calendar calendar = TARGET();
+    string cal = "TARGET";
+    string conv = "MF";
+    string rule = "Forward";
+
+    Date qlExpiry = calendar.adjust(today + expiry * Years);
+    string expiryDate = ore::data::to_string(qlExpiry);
+
+    // envelope
+    Envelope env("CP", nettingSet);
+    // trade
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::FxForward(env, expiryDate, boughtCcy, boughtAmount, soldCcy, soldAmount));
     trade->id() = id;
 
     return trade;
@@ -308,7 +333,7 @@ QuantLib::ext::shared_ptr<Trade> buildCrossCcyBasisSwap(
     Real recLegSpread, Real payLegSpread, string recFreq, string recDC, string recIndex, Calendar recCalendar,
     string payFreq, string payDC, string payIndex, Calendar payCalendar, Natural spotDays, bool spotStartLag,
     bool notionalInitialExchange, bool notionalFinalExchange, bool notionalAmortizingExchange,
-    bool isRecLegFXResettable, bool isPayLegFXResettable) {
+    bool isRecLegFXResettable, bool isPayLegFXResettable, string nettingSet, bool amortizingNotional, string amortizingTerm) {
     Date today = Settings::instance().evaluationDate();
 
     string payCal = to_string(payCalendar);
@@ -329,10 +354,17 @@ QuantLib::ext::shared_ptr<Trade> buildCrossCcyBasisSwap(
     string endDate = ore::data::to_string(qlEndDate);
 
     // envelope
-    Envelope env("CP");
+    Envelope env("CP", nettingSet);
     // schedules
     ScheduleData recSchedule(ScheduleRules(startDate, endDate, recFreq, recCal, conv, conv, rule));
     ScheduleData paySchedule(ScheduleRules(startDate, endDate, payFreq, payCal, conv, conv, rule));
+
+    // amortizing
+    std::vector<AmortizationData> amortizationData = std::vector<AmortizationData>();
+    if (amortizingNotional) {
+        AmortizationData ad("FixedAmount", 10000, startDate, endDate, amortizingTerm, false);
+        amortizationData.push_back(ad);
+    }
     // rec float leg
     auto recFloatingLegData = QuantLib::ext::make_shared<FloatingLegData>(recIndex, spotDays, false, recSpreads);
     LegData recFloatingLeg;
@@ -340,10 +372,11 @@ QuantLib::ext::shared_ptr<Trade> buildCrossCcyBasisSwap(
         string fxIndex = "FX-ECB-" + recCcy + "-" + payCcy;
         recFloatingLeg = LegData(recFloatingLegData, false, recCcy, recSchedule, recDC, recNotionals, vector<string>(),
                                  conv, notionalInitialExchange, notionalFinalExchange, notionalAmortizingExchange,
-                                 isRecLegFXResettable, payCcy, payNotional, fxIndex);
+                                 isRecLegFXResettable, payCcy, payNotional, fxIndex, amortizationData);
     } else {
         recFloatingLeg = LegData(recFloatingLegData, false, recCcy, recSchedule, recDC, recNotionals, vector<string>(),
-                                 conv, notionalInitialExchange, notionalFinalExchange, notionalAmortizingExchange);
+                                 conv, notionalInitialExchange, notionalFinalExchange, notionalAmortizingExchange,
+				 true, "", 0, "", amortizationData);
     }
     // pay float leg
     auto payFloatingLegData = QuantLib::ext::make_shared<FloatingLegData>(payIndex, spotDays, false, recSpreads);
@@ -656,6 +689,111 @@ QuantLib::ext::shared_ptr<Trade> buildCommodityForward(const std::string& id, co
     return trade;
 }
 
+QuantLib::ext::shared_ptr<Trade> buildCommodityForward(string id, string ccy, string commodityName, Real quantity, Size term, 
+						       Real strike, string position, string nettingSet, Calendar calendar) {
+    Envelope env("CP", nettingSet);
+
+    Date today = Settings::instance().evaluationDate();
+    Date qlEndDate = calendar.adjust(today + term * Years);
+    string endDate = ore::data::to_string(qlEndDate);
+
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::CommodityForward(env, position, commodityName, ccy, quantity, endDate, strike));
+    trade->id() = id;
+
+    return trade;
+}
+
+QuantLib::ext::shared_ptr<Trade> buildCommoditySwap(string id, string ccy, bool isPayer, Real quantity, int start,
+						    Size term, Real price, string fixedFreq,
+						    string fixedDC, string floatFreq, string floatDC, string index,
+						    Calendar calendar, Size spotDays, bool spotStartLag,
+						    string nettingSet, Real fixedPrice) {
+    Date today = Settings::instance().evaluationDate();
+    ostringstream o;
+    o << calendar;
+    string cal = o.str();
+    string conv = "MF";
+    string rule = "Forward";
+    ore::data::CommodityPriceType priceType = ore::data::CommodityPriceType::Spot;
+
+    vector<Real> quantities(1, quantity);
+    vector<std::string> quantityDates;
+    vector<Real> prices(1, price);
+    vector<Real> fixedPrices(1, fixedPrice);
+    vector<std::string> priceDates;
+
+    ore::data::CommodityPayRelativeTo commodityPayRelativeTo = ore::data::CommodityPayRelativeTo::CalculationPeriodEndDate;
+
+    Period spotStartLagTenor = spotStartLag ? spotDays * Days : 0 * Days;
+
+    Date qlStartDate = calendar.adjust(today + spotStartLagTenor + start * Years);
+    Date qlEndDate = calendar.adjust(qlStartDate + term * Years);
+    string startDate = ore::data::to_string(qlStartDate);
+    string endDate = ore::data::to_string(qlEndDate);
+
+    // envelope
+    Envelope env("CP", nettingSet);
+    // schedules
+    ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
+    ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, fixedFreq, cal, conv, conv, rule));
+    // fixed leg
+    LegData fixedLeg(QuantLib::ext::make_shared<ore::data::CommodityFixedLegData>
+        (quantities, quantityDates, fixedPrices, priceDates, commodityPayRelativeTo), isPayer, ccy, fixedSchedule, fixedDC);
+    // float leg
+    LegData floatingLeg(QuantLib::ext::make_shared<ore::data::CommodityFloatingLegData>(index, priceType, quantities, quantityDates), !isPayer, ccy,
+                        floatSchedule, floatDC) ;
+    // trade
+    std::vector<ore::data::LegData> legs;
+    legs.push_back(fixedLeg);
+    legs.push_back(floatingLeg);
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::CommoditySwap(env, legs));
+    trade->id() = id;
+
+    return trade;
+}
+
+QuantLib::ext::shared_ptr<Trade> buildCommodityBasisSwap(string id, string ccy, bool isPayer, Real quantity, int start,
+							 Size term, string floatFreq, string floatDC, string index_1,
+							 string index_2,
+							 Calendar calendar, Size spotDays, bool spotStartLag,
+							 string nettingSet) {
+    Date today = Settings::instance().evaluationDate();
+    ostringstream o;
+    o << calendar;
+    string cal = o.str();
+    string conv = "MF";
+    string rule = "Forward";
+    ore::data::CommodityPriceType priceType = ore::data::CommodityPriceType::Spot;
+
+    vector<Real> quantities(1, quantity);
+    vector<std::string> quantityDates;
+    Period spotStartLagTenor = spotStartLag ? spotDays * Days : 0 * Days;
+
+    Date qlStartDate = calendar.adjust(today + spotStartLagTenor + start * Years);
+    Date qlEndDate = calendar.adjust(qlStartDate + term * Years);
+    string startDate = ore::data::to_string(qlStartDate);
+    string endDate = ore::data::to_string(qlEndDate);
+
+    // envelope
+    Envelope env("CP", nettingSet);
+    // schedules
+    ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
+    // float leg
+    LegData floatingLeg_1(QuantLib::ext::make_shared<ore::data::CommodityFloatingLegData>(index_1, priceType, quantities, quantityDates), isPayer, ccy,
+                        floatSchedule, floatDC) ;
+    // float leg
+    LegData floatingLeg_2(QuantLib::ext::make_shared<ore::data::CommodityFloatingLegData>(index_2, priceType, quantities, quantityDates), !isPayer, ccy,
+                        floatSchedule, floatDC) ;
+    std::vector<ore::data::LegData> legs;
+    legs.push_back(floatingLeg_1);
+    legs.push_back(floatingLeg_2);
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::CommoditySwap(env, legs));
+    trade->id() = id;
+
+    return trade;
+
+}
+
 QuantLib::ext::shared_ptr<Trade> buildCommodityOption(const string& id, const string& longShort, const string& putCall,
                                               Size term, const string& commodityName, const string& currency,
                                               Real strike, Real quantity, Real premium, const string& premiumCcy,
@@ -674,5 +812,65 @@ QuantLib::ext::shared_ptr<Trade> buildCommodityOption(const string& id, const st
 
     return trade;
 }
+
+QuantLib::ext::shared_ptr<Trade> buildFxBarrierOption(string id, string longShort, string putCall, Size expiry,
+						      string boughtCcy, Real boughtAmount, string soldCcy,
+						      Real soldAmount, string nettingSet, string barrierType, Real barrierLevel) {
+    Date today = Settings::instance().evaluationDate();
+    Calendar calendar = TARGET();
+    string cal = "TARGET";
+    string conv = "MF";
+    string rule = "Forward";
+
+    Date qlExpiry = calendar.adjust(today + expiry * Years);
+    string expiryDate = ore::data::to_string(qlExpiry);
+
+    // envelope
+    Envelope env("CP", nettingSet);
+    // option data
+    OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash");
+    // barrier data
+    vector<double> barrierLevels = {barrierLevel};
+    double rebate = 0;
+    vector<TradeBarrier> tradeBarrier = {TradeBarrier(barrierLevel, "")};
+    ore::data::BarrierData barrier(barrierType, barrierLevels, rebate, tradeBarrier);
+
+    // trade
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::FxBarrierOption(env, option, barrier, Date(), "", boughtCcy,
+                                                                      boughtAmount, soldCcy, soldAmount));
+    trade->id() = id;
+
+    return trade;
+}
+
+QuantLib::ext::shared_ptr<Trade> buildFxTouchOption(string id, string longShort, Size expiry,
+						    string boughtCcy, string soldCcy, Real payoffAmount,
+						    string nettingSet, string barrierType, Real barrierLevel) {
+    Date today = Settings::instance().evaluationDate();
+    Calendar calendar = TARGET();
+    string cal = "TARGET";
+    string conv = "MF";
+    string rule = "Forward";
+
+    Date qlExpiry = calendar.adjust(today + expiry * Years);
+    string expiryDate = ore::data::to_string(qlExpiry);
+
+    // envelope
+    Envelope env("CP", nettingSet);
+    // option data
+    OptionData option(longShort, "", "European", false, vector<string>(1, expiryDate), "Cash");
+    // barrier data
+    vector<double> barrierLevels = {barrierLevel};
+    double rebate = 0;
+    vector<TradeBarrier> tradeBarrier = {TradeBarrier(barrierLevel, "")};
+    ore::data::BarrierData barrier(barrierType, barrierLevels, rebate, tradeBarrier);
+
+    // trade
+    QuantLib::ext::shared_ptr<Trade> trade(new ore::data::FxTouchOption(env, option, barrier, boughtCcy, soldCcy, boughtCcy, payoffAmount));
+    trade->id() = id;
+
+    return trade;
+}
+
 
 } // namespace testsuite

@@ -1,0 +1,15 @@
+NettingSet,RiskType,CvaType,MarginType,RiskFactor,Bucket,Value
+CPTY_A,ForeignExchange,CvaAggregate,Delta,FXSpot,BRL, 143.75 
+CPTY_A,ForeignExchange,CvaAggregate,Delta,FXSpot,EUR, 96.48 
+CPTY_A,ForeignExchange,CvaAggregate,Delta,FXSpot,GBP, 42.41 
+CPTY_A,ForeignExchange,CvaAggregate,Delta,FXSpot,HKD, 102.72 
+CPTY_A,ForeignExchange,CvaAggregate,Delta,FXSpot,HUF, 237.06 
+CPTY_A,ForeignExchange,CvaAggregate,Delta,FXSpot,IND, 240.85 
+CPTY_A,ForeignExchange,CvaAggregate,Delta,FXSpot,JPY, 194.92 
+CPTY_A,ForeignExchange,CvaHedge,Delta,FXSpot,BRL, 100.63 
+CPTY_A,ForeignExchange,CvaHedge,Delta,FXSpot,EUR, 67.54 
+CPTY_A,ForeignExchange,CvaHedge,Delta,FXSpot,GBP, 29.69 
+CPTY_A,ForeignExchange,CvaHedge,Delta,FXSpot,HKD, 71.90 
+CPTY_A,ForeignExchange,CvaHedge,Delta,FXSpot,HUF, 165.94 
+CPTY_A,ForeignExchange,CvaHedge,Delta,FXSpot,IND, 168.60 
+CPTY_A,ForeignExchange,CvaHedge,Delta,FXSpot,JPY, 136.44 

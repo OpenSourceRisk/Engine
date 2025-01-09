@@ -210,13 +210,5 @@ void XvaStressAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().sensiScenarioData = inputs_->xvaStressSensitivityScenarioData();
 }
 
-XvaStressAnalytic::XvaStressAnalytic(
-    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-    const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic(std::make_unique<XvaStressAnalyticImpl>(inputs, scenarios), {"XVA_STRESS"}, inputs, true, false, false,
-               false) {
-    impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
-}
-
 } // namespace analytics
 } // namespace ore

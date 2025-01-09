@@ -1,10 +1,22 @@
 <?xml version="1.0"?>
 <PricingEngines>
+  <!--
   <Product type="Swap">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
     <Engine>DiscountingSwapEngineOptimised</Engine>
     <EngineParameters/>
+  </Product>
+  -->
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngineDeltaGamma</Engine>
+    <EngineParameters>
+      <Parameter name="ComputeDelta">Y</Parameter>
+      <Parameter name="ComputeGamma">Y</Parameter>
+      <Parameter name="BucketTimes">1.0,3.0,5.0,7.0,10.0,15.0,20.0</Parameter>
+     </EngineParameters>
   </Product>
   <Product type="CrossCurrencySwap">
     <Model>DiscountedCashflows</Model>
