@@ -33,9 +33,10 @@
 namespace ore {
 namespace data {
 
+using QuantLib::Date;
+using QuantLib::Null;
 using QuantLib::Real;
 using QuantLib::Size;
-using QuantLib::Null;
 
 class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
@@ -50,6 +51,7 @@ public:
     void calculate() const;
 
 protected:
+    // input to this class via ctor
     QuantLib::ext::shared_ptr<ModelCG> modelCg_;
     std::vector<QuantLib::Date> simulationDates_;
     std::vector<QuantLib::Date> stickyCloseOutDates_;
@@ -74,13 +76,11 @@ protected:
     mutable std::set<std::string> relevantCurrencies_;
 
 private:
-    static constexpr Real tinyTime = 1E-10;
-
     // data structure storing info needed to generate the amount for a cashflow
     struct CashflowInfo {
         Size legNo = Null<Size>(), cfNo = Null<Size>();
-        Real payTime = Null<Real>();
-        Real exIntoCriterionTime = Null<Real>();
+        Date payDate = Null<Date>();
+        Date exIntoCriterionDate = Null<Date>();
         std::string payCcy;
         std::set<std::string> addCcys; // from index, fx linked etc.
         bool payer = false;
@@ -93,6 +93,12 @@ private:
     // create the info for a given flow
     CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow, const std::string& payCcy,
                                     bool payer, Size legNo, Size cfNo) const;
+
+    // create a regression model (i.e. an npv - node in the graph)
+    std::size_t createRegressionModel(const std::size_t amount, const Date& d,
+                                      const std::vector<CashflowInfo>& cashflowInfo,
+                                      const std::function<bool(std::size_t)>& cashflowRelevant,
+                                      const std::size_t filter) const;
 };
 
 } // namespace data
