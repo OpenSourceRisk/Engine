@@ -652,7 +652,7 @@ void LgmBuilder::buildSwaptionBasket() const {
         Real updatedStrike;
 
         if (expiryDateBased && termDateBased) {
-            double v= svts_->volatility(expiryDb, termT, strikeValue);
+            double v = svts_->volatility(expiryDb, termT, strikeValue);
             volQuote->setValue(v);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termT) : 0.0;
             std::tie(helper, updatedStrike) = createSwaptionHelper(
@@ -660,7 +660,7 @@ void LgmBuilder::buildSwaptionBasket() const {
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
         }
         if (expiryDateBased && !termDateBased) {
-            double v= svts_->volatility(expiryDb, termPb, strikeValue);
+            double v = svts_->volatility(expiryDb, termPb, strikeValue);
             volQuote->setValue(v);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryDb, termPb) : 0.0;
             std::tie(helper, updatedStrike) = createSwaptionHelper(
@@ -668,7 +668,7 @@ void LgmBuilder::buildSwaptionBasket() const {
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
         }
         if (!expiryDateBased && termDateBased) {
-            double v= svts_->volatility(expiryPb, termT, strikeValue);
+            double v = svts_->volatility(expiryPb, termT, strikeValue);
             volQuote->setValue(v);
             Date expiry = svts_->optionDateFromTenor(expiryPb);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryPb, termT) : 0.0;
@@ -677,7 +677,7 @@ void LgmBuilder::buildSwaptionBasket() const {
                 calibrationDiscountCurve_, calibrationErrorType_, strikeValue, shift, settlementDays, averagingMethod);
         }
         if (!expiryDateBased && !termDateBased) {
-            double v= svts_->volatility(expiryPb, termPb, strikeValue);
+            double v = svts_->volatility(expiryPb, termPb, strikeValue);
             volQuote->setValue(v);
             Real shift = svts_->volatilityType() == ShiftedLognormal ? svts_->shift(expiryPb, termPb) : 0.0;
             std::tie(helper, updatedStrike) = createSwaptionHelper(
