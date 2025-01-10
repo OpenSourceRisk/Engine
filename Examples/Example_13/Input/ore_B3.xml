@@ -39,7 +39,7 @@
       <Parameter name="outputFileName">curves.csv</Parameter>
     </Analytic>
     <Analytic type="simulation">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation_B.xml</Parameter>
       <!-- The following engine configuration is needed to generate and store sensitivities
 	   under simulation, see below -->
@@ -57,7 +57,7 @@
       <Parameter name="vegaSensiGrid">1,2,3,5,7,10,15,20</Parameter>
     </Analytic>
     <Analytic type="xva">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube_B3.csv.gz</Parameter>
       <Parameter name="scenarioFile">scenariodata_B3.csv.gz</Parameter>

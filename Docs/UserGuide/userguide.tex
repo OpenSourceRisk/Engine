@@ -1873,7 +1873,7 @@ The examples can be run as before with
 \medskip
 and likewise for cases B--E. The essential results of each run are visualised in the form of 
 \begin{itemize}
-\item evolution of expected DIM
+\item evolution of expected DIM which feeds into the MVA calculation
 \item regression plots at selected future times 
 \end{itemize}
 illustrated for cases A, B and E in figures \ref{fig_ex13a_evolution} - \ref{fig_ex13c_evolution}. 
@@ -1902,7 +1902,7 @@ The DIM evolution graphs compare a subset of the following Initial Margin projec
 \item Simple: 99\% quantile of NPV changes ($\Delta$) over the Margin Period of Risk across all paths, i.e. same IM applied across paths
 \item Zero Order ``Regression'': Standard deviation of $\Delta$s scaled to the 99\% quantile with factor 2.33 (normal distribution assumption); same IM applied across paths
 \item First/Second Order Regression: Conditional standard deviation of $\Delta$ computed by polynomial first/second order regression of $\Delta$ variances, scaled to the 99\% quantile as avove; different IM amounts applied across paths, graphs show the expected DIM i.e. avergae across paths
-\item Dynamic Delta VaR: 99\% quantile VaR based on analytic deltas and vegas computed under scenarios; different IM amounts applied across paths, graphs show the expected DIM i.e. avergae across paths
+\item Dynamic Delta VaR: 99\% quantile VaR based on analytic deltas and vegas computed under scenarios; different IM amounts applied across paths, graphs show the expected DIM i.e. average across paths
 \end{itemize}
 
 For a discussion of the regression model performance see \cite{Anfuso2016,LichtersEtAl}. The cases A--E are associated with
@@ -2368,7 +2368,7 @@ yields the USD-Prime curve in {\tt Examples/Example\_30/Output/curves.csv.}
 \label{example:31}
 %--------------------------------------------------------
 
-In the previous examples we have used a ``lagged'' approach, described at the end of appendix \ref{sec:app_collateral}, to take the Margin Period of Risk into account in exposure modelling. This has the disadvantage in ORE that we need to use equally-spaced time grids with time steps that match the MPoR, e.g. 2W, out to final portfolio maturity. 
+In the previous examples we have used a ``lagged'' approach, described at the end of appendix \ref{sec:app_collateral}, to take the Margin Period of Risk into account in exposure modelling. This used to have the disadvantage in ORE that we need to use equally-spaced time grids with time steps that match the MPoR, e.g. 2W, out to final portfolio maturity. 
 
 In this example we demonstrate an alternative approach supported by ORE since release 6. In this approach we use two nested grids: The (almost) arbitrary main simulation grid is used to compute ``default values'' which feed into the collateral balance $C(t)$ filtered by MTA and Threshold etc; an auxiliary ``close-out'' grid, offset from the main grid by the MPoR, is used to compute the delayed close-out values $V(t)$ associated with time default time $t$. The difference between $V(t)$ and $C(t)$ causes a residual exposure $[V(t)-C(t)]^+$ even if minimum transfer amounts and thresholds are zero.
 
@@ -2417,7 +2417,38 @@ and moreover in the XVA analytics section of {\tt ore\_mpor.xml} as shown in Lis
 \label{lst:calctype_nolag}
 \end{listing}
 
-Run as usual calling {\tt python run.py}.
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_closeout_mpor_epe.pdf}
+\end{center}
+\caption{Uncollateralized Swap exposure vs exposure with Variation Margin, zero threshold and MTA.
+  The simulation uses a variable grid with an auxiliary grid for closeout value calculation which is offset by the MPOR.}
+\label{fig_31_a}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_closeout_dim_epe.pdf}
+\end{center}
+\caption{Comparison of Swap exposure with VM only as above vs VM+IM using first-order regression.}
+\label{fig_31_b}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_closeout_dim_evolution.pdf}
+\end{center}
+\caption{Evolution of expected IM from the regression model vs Delta VaR benchmark.}
+\label{fig_31_c}
+\end{figure}
+
+Run as usual calling {\tt python run.py}. The resulting exposure graphs, with comparison of the uncollateralised to the collateralised
+case (with Variation Margin only) is shown in figure \ref{fig_31_a}.
+
+In figure \ref{fig_31_b} we have added Initial Margin based on ORE's regression model, and we compare the exposure with VM only to
+the exposure with both VM and IM. This graph is also generated in this {\tt Example\_31}. Figure \ref{fig_31_c} shows the
+related evolution of expected DIM, benchmarked against the Delta VaR DIM model, mentioned in {\tt Example\_13} and described in
+appendix \ref{sec:app_collateral}.
 
 %--------------------------------------------------------------------
 \subsection{Inflation Swap Exposure under Jarrow-Yildrim}% Example 32

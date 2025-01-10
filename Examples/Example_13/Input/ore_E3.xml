@@ -69,7 +69,11 @@
       <Parameter name="marginalAllocationLimit">1.0</Parameter>
       <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
+      <Parameter name="dvaName">BANK</Parameter>
+      <Parameter name="dva">N</Parameter>
       <Parameter name="dim">Y</Parameter>
+      <Parameter name="fva">N</Parameter>
+      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
       <Parameter name="mva">Y</Parameter>
       <Parameter name="dimQuantile">0.99</Parameter>
       <Parameter name="dimModel">DeltaVaR</Parameter>      

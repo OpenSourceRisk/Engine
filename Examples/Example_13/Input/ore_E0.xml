@@ -57,6 +57,10 @@
       <Parameter name="quantile">0.95</Parameter>
       <Parameter name="calculationType">NoLag</Parameter>
       <Parameter name="cva">Y</Parameter>
+      <Parameter name="dvaName">BANK</Parameter>
+      <Parameter name="dva">N</Parameter>
+      <Parameter name="fva">N</Parameter>
+      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
       <Parameter name="dim">Y</Parameter>
       <Parameter name="mva">Y</Parameter>
       <Parameter name="dimQuantile">0.99</Parameter>
