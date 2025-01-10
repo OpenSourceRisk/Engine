@@ -70,7 +70,7 @@ private:
     void buildFromCorrelations(const Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const;
     void buildFromUpfronts(const Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const;
 
-    std::string_view creditCurveNameMapping(std::string_view name) const {
+    std::string creditCurveNameMapping(const std::string& name) const {
         const auto& it = creditNameMapping_.find(name);
         if (it != creditNameMapping_.end()) {
             return it->second;
@@ -78,7 +78,7 @@ private:
         return name;
     }
 
-    ext::shared_ptr<QuantExt::CreditCurve> getDefaultProbCurveAndRecovery(std::string_view name) const {
+    ext::shared_ptr<QuantExt::CreditCurve> getDefaultProbCurveAndRecovery(const std::string& name) const {
         const auto& it = creditCurves_.find(name);
         if (it != creditCurves_.end() && it->second->creditCurve() != nullptr) {
             const auto& creditCurve = it->second->creditCurve();
@@ -88,9 +88,9 @@ private:
     }
 
     BaseCorrelationCurveSpec spec_;
-    std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>, std::less<>> yieldCurves_;
-    std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>, std::less<>> creditCurves_;
-    std::map<std::string, std::string, std::less<>> creditNameMapping_;
+    std::map<std::string, QuantLib::ext::shared_ptr<YieldCurve>> yieldCurves_;
+    std::map<std::string, QuantLib::ext::shared_ptr<DefaultCurve>> creditCurves_;
+    std::map<std::string, std::string> creditNameMapping_;
     QuantLib::ext::shared_ptr<ReferenceDataManager> referenceData_;
     mutable QuantLib::ext::shared_ptr<QuantExt::BaseCorrelationTermStructure> baseCorrelation_;
     /*! Use the reference data to adjust the detachment points, \p detachPoints, for existing losses if requested.

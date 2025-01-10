@@ -61,13 +61,12 @@ IndexConstituentDefaultCurveCalibration::CalibrationResults IndexConstituentDefa
         for (const auto& orgCurve : creditCurves) {
             calibratedCurves.push_back(buildShiftedCurves(orgCurve, calibrationFactor));
         }
-
         double target = targetNpv(indexCDS);
         auto cdsPricingEngineUnderlyingCurves = QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(
             calibratedCurves, recoveryRates, discountCurve_);
 
         indexCDS->setPricingEngine(cdsPricingEngineUnderlyingCurves);
-
+        std::cout << "Check with calibration factor =1 , both npv shouldnt be the same " << target << " "  << indexCDS->NPV() << std::endl;
         auto targetFunction = [&](const double& factor) {
             calibrationFactor->setValue(factor);
             return (target - indexCDS->NPV());
@@ -75,12 +74,13 @@ IndexConstituentDefaultCurveCalibration::CalibrationResults IndexConstituentDefa
 
         Brent solver;
         double adjustmentFactor = solver.solve(targetFunction, 1e-8, 0.5, 0.001, 2);
+        std::cout << "targetFunction(" << adjustmentFactor<<") " << targetFunction(adjustmentFactor) << std::endl;
         calibrationFactor->setValue(adjustmentFactor);
         results.calibrationFactor = adjustmentFactor;
         results.curves = calibratedCurves;
         results.success = true;
         results.marketNpv = target;
-        results.impliedNpv = targetFunction(results.calibrationFactor);
+        results.impliedNpv = indexCDS->NPV();
         results.cdsMaturity = indexCDS->maturity();
 
     } catch (const std::exception& e) {

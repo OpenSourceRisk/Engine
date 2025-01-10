@@ -152,7 +152,7 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
         XMLUtils::addChild(doc, node, "IndexSpread", indexSpread_);
     }
 
-    if (!currency.empty()){
+    if (!currency_.empty()){
         XMLUtils::addChild(doc, node, "Currency", currency_);
     }
 

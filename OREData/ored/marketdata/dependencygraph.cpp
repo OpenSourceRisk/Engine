@@ -49,7 +49,6 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
     for (auto const& o : t) {
         auto mapping = params_->mapping(o, configuration);
         for (auto const& m : mapping) {
-            std::cout << m.first << " " << m.second << std::endl;
             Vertex v = boost::add_vertex(g);
             QuantLib::ext::shared_ptr<CurveSpec> spec;
             // swap index curves do not have a spec

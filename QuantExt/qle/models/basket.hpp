@@ -49,7 +49,7 @@ public:
     };
 
     IndexConstituentDefaultCurveCalibration(const Date& indexStartDate, const Period indexTenor,
-                                            const double indexSpread, const Handle<Quote> indexRecoveryRate,
+                                            const double indexSpread, const Handle<Quote>& indexRecoveryRate,
                                             const Handle<DefaultProbabilityTermStructure>& indexCurve,
                                             const Handle<YieldTermStructure>& discountCurve)
         : indexStartDate_(indexStartDate), indexTenor_(indexTenor), indexSpread_(indexSpread),
