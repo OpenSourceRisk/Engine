@@ -42,6 +42,9 @@ class ReferenceDataManager;
 //! \ingroup curves
 class BaseCorrelationCurve {
 public:
+
+    
+
     BaseCorrelationCurve() {}
     BaseCorrelationCurve(
         QuantLib::Date asof, BaseCorrelationCurveSpec spec, const Loader& loader,
@@ -67,8 +70,32 @@ private:
         std::vector<std::string> remainingNames;
     };
 
-    void buildFromCorrelations(const Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const;
-    void buildFromUpfronts(const Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const;
+    struct QuoteData {
+            struct LessSetKey {
+                bool operator()(const Real& lhs, const Real& rhs) const {
+                return !close_enough(lhs, rhs) && lhs < rhs;
+                }
+            };
+
+            struct LessDataKey {
+                bool operator()(pair<Period, Real> k_1, pair<Period, Real> k_2) const {
+                    if (k_1.first != k_2.first)
+                        return k_1.first < k_2.first;
+                    else
+                        return !close_enough(k_1.second, k_2.second) && k_1.second < k_2.second;
+                }
+            }; 
+            std::set<Period> terms;        
+            set<Real, LessSetKey> dps;
+            map<pair<Period, Real>, Handle<Quote>, LessDataKey> data;
+    };
+
+    QuoteData loadQuotes(const QuantLib::Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const;
+
+    
+
+    void buildFromCorrelations(const BaseCorrelationCurveConfig& config, const QuoteData& qdata) const;
+    void buildFromUpfronts(const Date& asof, const BaseCorrelationCurveConfig& config, const QuoteData& qdata) const;
 
     std::string creditCurveNameMapping(const std::string& name) const {
         const auto& it = creditNameMapping_.find(name);

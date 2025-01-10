@@ -66,7 +66,7 @@ IndexConstituentDefaultCurveCalibration::CalibrationResults IndexConstituentDefa
             calibratedCurves, recoveryRates, discountCurve_);
 
         indexCDS->setPricingEngine(cdsPricingEngineUnderlyingCurves);
-        std::cout << "Check with calibration factor =1 , both npv shouldnt be the same " << target << " "  << indexCDS->NPV() << std::endl;
+        
         auto targetFunction = [&](const double& factor) {
             calibrationFactor->setValue(factor);
             return (target - indexCDS->NPV());
@@ -74,7 +74,7 @@ IndexConstituentDefaultCurveCalibration::CalibrationResults IndexConstituentDefa
 
         Brent solver;
         double adjustmentFactor = solver.solve(targetFunction, 1e-8, 0.5, 0.001, 2);
-        std::cout << "targetFunction(" << adjustmentFactor<<") " << targetFunction(adjustmentFactor) << std::endl;
+        
         calibrationFactor->setValue(adjustmentFactor);
         results.calibrationFactor = adjustmentFactor;
         results.curves = calibratedCurves;
@@ -308,12 +308,9 @@ std::vector<Probability> Basket::remainingProbabilities(const Date& d) const {
     for (Size i = 0; i < alive.size(); i++)
         curves.push_back(pool_->get(pool_->names()[i]).defaultProbability(pool_->defaultKeys()[i]));
     if(calibration_ != nullptr){
-        std::cout << "Calibrate consitutent curves";
         QL_REQUIRE(recoveryRates_.size() == remainingNtls.size(), "Mismatch between recovery rates and ");
         auto res = calibration_->calibratedCurves(remainingNtls, curves, recoveryRates_);
         if(res.success){
-            std::cout << res.cdsMaturity << " " << std::fixed << std::setprecision(6) << res.calibrationFactor << " " << res.marketNpv << " "
-                      << res.impliedNpv << " " << res.marketNpv - res.impliedNpv << std::endl;
             curves = res.curves;
         }
     }

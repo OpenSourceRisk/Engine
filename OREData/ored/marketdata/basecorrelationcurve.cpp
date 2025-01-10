@@ -51,27 +51,15 @@ void validateWeightRec(Real value, const string& name, const string& varName) {
                "The " << varName << " value (" << value << ") for name " << name << " should not be less than 0.0.");
 }
 
-struct QuoteData {
-    std::set<Period> terms;
-    std::function<bool(Real, Real)> setComp = [](Real d1, Real d2) -> bool { return !close_enough(d1, d2) && d1 < d2; };
-    set<Real, decltype(setComp)> dps{setComp};
-    std::function<bool(pair<Period, Real>, pair<Period, Real>)> mpCmp = [](pair<Period, Real> k_1,
-                                                                           pair<Period, Real> k_2) {
-        if (k_1.first != k_2.first)
-            return k_1.first < k_2.first;
-        else
-            return !close_enough(k_1.second, k_2.second) && k_1.second < k_2.second;
-    };
-    map<pair<Period, Real>, Handle<Quote>, decltype(mpCmp)> data{mpCmp};
-};
+
 
 } // namespace
 
 namespace ore {
 namespace data {
 
-QuoteData loadQuotes(const Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) {
-    QuoteData res;
+BaseCorrelationCurve::QuoteData BaseCorrelationCurve::loadQuotes(const Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const {
+    BaseCorrelationCurve::QuoteData res;
     const auto& termStrs = config.terms();
     QL_REQUIRE(!termStrs.empty(), "BaseCorrelationCurve: need at least one term.");
 
@@ -172,10 +160,13 @@ BaseCorrelationCurve::BaseCorrelationCurve(
 
     try {
         const auto& config = *curveConfigs.baseCorrelationCurveConfig(spec_.curveConfigID());
+        const auto qData = loadQuotes(asof, config, loader);
+        
+
         if (config.quoteType() == MarketDatum::QuoteType::BASE_CORRELATION) {
-            buildFromCorrelations(asof, config, loader);
+            buildFromCorrelations(config, qData);
         } else if (config.quoteType() == MarketDatum::QuoteType::TRANCHE_UPFRONT) {
-            buildFromUpfronts(asof, config, loader);
+            buildFromUpfronts(asof, config, qData);
         } else {
             QL_FAIL("Unexpected quoteType, expect BASE_CORRELATION or TRANCHE_UPFRONT");
         }
@@ -309,14 +300,12 @@ BaseCorrelationCurve::adjustForLosses(const vector<Real>& detachPoints) const {
 }
 
 void BaseCorrelationCurve::buildFromCorrelations(
-    const Date& asof, const BaseCorrelationCurveConfig& config,
-    const Loader& loader) const { // The base correlation surface is of the form term x
+    const BaseCorrelationCurveConfig& config,
+    const QuoteData& qData) const { // The base correlation surface is of the form term x
                                   // detachment point. We need at least two
                                   // detachment points
     // and at least one term. The list of terms may be explicit or contain a single wildcard character '*'.
     // Similarly, the list of detachment points may be explicit or contain a single wildcard character '*'.
-
-    const auto qData = loadQuotes(asof, config, loader);
     const auto& terms = qData.terms;
     const auto& dps = qData.dps;
     const auto& data = qData.data;
@@ -400,9 +389,8 @@ void BaseCorrelationCurve::buildFromCorrelations(
 }
 
 void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrelationCurveConfig& config,
-                                             const Loader& loader) const {
+                                             const QuoteData& qData) const {
     std::cout << "Building from upfronts" << std::endl;
-    const auto qData = loadQuotes(asof, config, loader);
     const auto& terms = qData.terms;
     const auto& dps = qData.dps;
     const auto& data = qData.data;
@@ -421,6 +409,9 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                    << data.size() << ") should equal number of detachment points (" << dps.size()
                    << ") times the number of terms (" << terms.size() << ").");
 
+
+    QuoteData newQuoteData = qData;
+    newQuoteData.data.clear();
     for (const auto& term : terms) {
         std::cout << "Term " << term << std::endl;
         vector<Real> tmpDps(dps.begin(), dps.end());
@@ -493,7 +484,17 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
         }
 
         std::vector<double> trancheNPV;
-        std::vector<ext::shared_ptr<Quote>> baseCorrelations;
+        std::vector<double> baseCorrelations;
+
+        Schedule schedule = MakeSchedule()
+                                .from(config.startDate())
+                                .to(cdsMaturity(config.startDate(), term, DateGeneration::CDS2015))
+                                .withTenor(3 * Months)
+                                .withCalendar(WeekendsOnly())
+                                .withConvention(Unadjusted)
+                                .withTerminationDateConvention(Unadjusted)
+                                .withRule(DateGeneration::CDS2015);
+
         for (size_t i = 0; i < dps.size(); i++) {
             double inceptionAttachPoint = attachPoints[i].first;
             double adjustedAttachPoint = attachPoints[i].second;
@@ -524,14 +525,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
 
             std::cout << "Building schedule from " << config.startDate() << " to " << cdsMaturity(config.startDate(), term, DateGeneration::CDS2015) << std::endl;
 
-            Schedule schedule = MakeSchedule()
-                                    .from(config.startDate())
-                                    .to(cdsMaturity(config.startDate(), term, DateGeneration::CDS2015))
-                                    .withTenor(3 * Months)
-                                    .withCalendar(WeekendsOnly())
-                                    .withConvention(Unadjusted)
-                                    .withTerminationDateConvention(Unadjusted)
-                                    .withRule(DateGeneration::CDS2015);
+            
 
             auto cdo = ext::make_shared<QuantExt::SyntheticCDO>(
                 basket, Protection::Side::Buyer, schedule, 0.0, config.indexSpread(), Actual360(), Following, true,
@@ -555,7 +549,13 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             };
 
             Brent solver;
-            auto targetCorrelation = solver.solve(targetFunction, 0.0001, 0.5, 0.0001, 0.999);
+
+            double targetCorrelation = baseCorrelations.empty() ? 0.5 : baseCorrelations.back();
+            if(inceptionDetachPoint < 1.0 || !close_enough(inceptionDetachPoint, 1.0)) {
+                std::cout << "Optimize" << std::endl;
+                targetCorrelation = solver.solve(targetFunction, 0.000001, 0.5, 0+QL_EPSILON, 1-QL_EPSILON);
+                baseCorrelations.push_back(targetCorrelation);
+            }
             double error = targetFunction(targetCorrelation);
             double impliedUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
             std::cout << "Upfront for tranche " << inceptionAttachPoint << " to " << inceptionDetachPoint << " is " << mktUpfront << std::endl;
@@ -564,9 +564,12 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                       << " is " << impliedUpfront << std::endl;
             std::cout << "Error " << error << std::endl;
             trancheNPV.push_back(cdo->cleanNPV());
+            newQuoteData.data[key] = Handle<Quote>(ext::make_shared<SimpleQuote>(targetCorrelation));
         }
+        baseCorrelations.push_back(1.0);
     }
-    QL_FAIL("Not implemented yet");
+
+    buildFromCorrelations(config, newQuoteData);
 }
 
 } // namespace data
