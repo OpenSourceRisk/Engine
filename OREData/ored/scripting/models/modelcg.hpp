@@ -87,7 +87,7 @@ public:
     // refdate <= obsdate required
     // overwriteRegressors - if given - replaces the automatically generated regressor node set
     virtual std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
-                            const boost::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
+                            const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
                             const std::optional<std::set<std::size_t>>& overwriteRegressors) const = 0;
 
     // default regressors used in npv()

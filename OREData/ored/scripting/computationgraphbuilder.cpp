@@ -1167,7 +1167,7 @@ public:
         Date obs = boost::get<EventVec>(obsdate).value;
 	// roll back to past dates is treated as roll back to TODAY for convenience
         obs = std::max(obs, model_->referenceDate());
-        boost::optional<long> mem(boost::none);
+        std::optional<long> mem(std::nullopt);
         if (hasMemSlot) {
             RandomVariable v = boost::get<RandomVariable>(memSlot);
             QL_REQUIRE(v.deterministic(), "memory slot must be deterministic");

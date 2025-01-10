@@ -281,7 +281,7 @@ BlackScholesCGBase::npvRegressors(const Date& obsdate,
 }
 
 std::size_t BlackScholesCGBase::npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
-                                    const boost::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
+                                    const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
                                     const std::optional<std::set<std::size_t>>& overwriteRegressors) const {
 
     calculate();
