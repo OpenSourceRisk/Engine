@@ -1661,7 +1661,6 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
     Size exerciseCounter = 0;
 
     Filter wasExercised(samples, false);
-    RandomVariable cashExerciseValue(samples, 0.0);
     std::map<Real, RandomVariable> cashSettlements;
 
     for (auto t : exerciseXvaTimes_) {
