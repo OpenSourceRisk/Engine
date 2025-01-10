@@ -55,10 +55,10 @@ public:
 
 class PnlExplainAnalytic : public Analytic {
 public:
-    PnlExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PnlExplainAnalyticImpl>(inputs), {"PNL_EXPLAIN"}, inputs, true, true) {
-
-    }
+    PnlExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                       const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+                       const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
+        : Analytic(std::make_unique<PnlExplainAnalyticImpl>(inputs), {"PNL_EXPLAIN"}, inputs, true, true) {}
 };
 
 } // namespace analytics

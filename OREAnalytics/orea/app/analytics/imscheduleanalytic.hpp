@@ -43,6 +43,8 @@ public:
 class IMScheduleAnalytic : public Analytic {
 public:
     IMScheduleAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+		       const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+		       const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr,
                        const QuantLib::ext::shared_ptr<Crif>& crif = nullptr,
                        const bool hasNettingSetDetails = false)
         : Analytic(std::make_unique<IMScheduleAnalyticImpl>(inputs), {"IM_SCHEDULE"}, inputs,

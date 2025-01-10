@@ -245,11 +245,6 @@ void CrossAssetModelData::validate() {
     }
 }
 
-std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p) {
-    std::vector<std::string> pair = {p.first, p.second};
-    return pair;
-}
-
 void CrossAssetModelData::fromXML(XMLNode* root) {
     clear();
 

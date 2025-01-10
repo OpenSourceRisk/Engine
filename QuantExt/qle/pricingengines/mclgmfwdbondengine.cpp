@@ -24,7 +24,6 @@ namespace QuantExt {
 
 void McLgmFwdBondEngine::setMember() const {
 
-    // assemble date logic and interim results for both payoff and amc calculator
     Date npvDate = contractCurve_->referenceDate();
 
     Date maturityDate = arguments_.fwdMaturityDate;
@@ -48,7 +47,7 @@ void McLgmFwdBondEngine::setMember() const {
     accruedAmount_ = arguments_.settlementDirty
                          ? 0.0
                          : arguments_.underlying->accruedAmount(bondSettlementDate) *
-                               arguments_.underlying->notional(bondSettlementDate) / 100.0 * arguments_.bondNotional;
+                               arguments_.underlying->notional(bondSettlementDate) / 100.0;
 
     if (!arguments_.isPhysicallySettled)
         incomeCurveDate_ = bondSettlementDate;
@@ -84,11 +83,21 @@ void McLgmFwdBondEngine::calculate() const {
 
     McMultiLegBaseEngine::calculate();
 
-    // take result from base engine, akin to calculateBondNpv in DiscountingForwardBondEngine
-    results_.underlyingSpotValue = resultUnderlyingNpv_ * arguments_.bondNotional;
+    // take result from base engine, this depends on the pathvaluedirty only (i.e. no regression model -> no
+    // compounding) the raw (untouched) pathvaluedirty is the underlying bond value at disounted to t0
+    double forwardBondValue = resultUnderlyingNpv_ / incomeCurve_->discount(incomeCurveDate_);
 
-    // calculation of contract value, akin to calculateForwardContractPresentValue in DiscountingForwardBondEngine
-    results_.value = payOff();
+    // vanilla forward bond calculation
+    double forwardContractForwardValue = (*arguments_.payoff)((forwardBondValue - accruedAmount_) * arguments_.bondNotional);
+
+    // builder ensures we calculate with a clean price or we divide by one
+    forwardContractForwardValue /= conversionFactor();
+
+    // include compensation payments
+    double forwardContractPresentValue = forwardContractForwardValue * contractCurve_->discount(contractCurveDate_) -
+                                         cmpPayment_ * contractCurve_->discount(cmpPaymentDate_);
+
+    results_.value = forwardContractPresentValue;
 
     // get the interim amcCalculator from the base class
     auto multiLegBaseAmcCalculator = QuantLib::ext::dynamic_pointer_cast<MultiLegBaseAmcCalculator>(amcCalculator());
@@ -103,25 +112,50 @@ void McLgmFwdBondEngine::calculate() const {
 
 } // McLgmSwaptionEngine::calculate
 
-double McLgmFwdBondEngine::payOff() const {
+RandomVariable
+McLgmFwdBondEngine::overwritePathValueUndDirty(double t, const RandomVariable& pathValueUndDirty,
+                                               const std::set<Real>& exerciseXvaTimes,
+                                               const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const {
 
-    // engine ignores credit curve and uses the spread on discount only ...
-    // ignores T-lock feature
+    double fwdMaturity = time(arguments_.fwdMaturityDate);
+    if (t < fwdMaturity) {
 
-    double forwardBondValue = results_.underlyingSpotValue / incomeCurve_->discount(incomeCurveDate_);
+        Size ind = std::distance(exerciseXvaTimes.begin(), exerciseXvaTimes.find(t));
+        Size samples = paths.front().front().size();
 
-    // vanilla forward bond calculation
-    double forwardContractForwardValue = (*arguments_.payoff)(forwardBondValue - accruedAmount_);
+        // numeraire adjustment {ref + spread} (t) / ois (t) ... ois below with return ...
+        auto numeraire_bonddiscount = lgmVectorised_[0].numeraire(
+            t, paths[ind][model_->pIdx(CrossAssetModel::AssetType::IR, 0)], discountCurves_[0]);
 
-    // builder ensures we calculate with a clean price or we divide by one
-    forwardContractForwardValue /= conversionFactor();
+        auto numeraire_contract = lgmVectorised_[0].numeraire(
+            t, paths[ind][model_->pIdx(CrossAssetModel::AssetType::IR, 0)], contractCurve_);
 
-    // include compensation payments
-    double forwardContractPresentValue =
-        forwardContractForwardValue * contractCurve_->discount(contractCurveDate_) -
-        cmpPayment_ * contractCurve_->discount(cmpPaymentDate_);
+        // compounding with income curve from t to fwd_maturity T
+        double compoundingTime = time(incomeCurveDate_);
+        auto incomeCompounding = lgmVectorised_[0].discountBond(
+            t, compoundingTime, paths[ind][model_->pIdx(CrossAssetModel::AssetType::IR, 0)], incomeCurve_);
 
-    return forwardContractPresentValue;
+        RandomVariable forwardBondValue = pathValueUndDirty * numeraire_bonddiscount / incomeCompounding;
+
+        // vanilla forward bond calculation at fwdMaturity : differentiate between long/short
+        boost::shared_ptr<ForwardBondTypePayoff> fwdBndPayOff =
+            boost::dynamic_pointer_cast<ForwardBondTypePayoff>(arguments_.payoff);
+        QL_REQUIRE(fwdBndPayOff, "not a ForwardBondTypePayoff");
+
+        RandomVariable strikePayment = RandomVariable(samples, fwdBndPayOff->strike() / arguments_.bondNotional);
+
+        RandomVariable forwardContractForwardValueRV;
+        if (fwdBndPayOff->forwardType() == Position::Type::Long)
+            forwardContractForwardValueRV =
+                (forwardBondValue - RandomVariable(samples, accruedAmount_)) - strikePayment;
+        else
+            forwardContractForwardValueRV =
+                strikePayment - (forwardBondValue - RandomVariable(samples, accruedAmount_));
+
+        return forwardContractForwardValueRV / numeraire_contract;
+
+    } else
+        return pathValueUndDirty;
 }
 
 std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::simulatePath(
@@ -139,13 +173,8 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
 
     // convert dates to times
     double maturityTime = engine_->time(engine_->arguments_.fwdMaturityDate);
-    double incomeCurveTime = engine_->time(engine_->incomeCurveDate_);
     double contractCurveTime = engine_->time(engine_->contractCurveDate_);
     double cmpPaymentTime = engine_->time(engine_->cmpPaymentDate_);
-
-    QuantLib::ext::shared_ptr<ForwardBondTypePayoff> fwdBndPayOff =
-        QuantLib::ext::dynamic_pointer_cast<ForwardBondTypePayoff>(engine_->arguments_.payoff);
-    QL_REQUIRE(fwdBndPayOff, "not a ForwardBondTypePayoff");
 
     // bool stickyCloseOutRun = false;
     std::size_t regModelIndex = 0;
@@ -191,51 +220,26 @@ std::vector<QuantExt::RandomVariable> McLgmFwdBondEngine::FwdBondAmcCalculator::
         QL_REQUIRE(ind < exerciseXvaTimes_.size(), "FwdBondAmcCalculator::simulatePath(): internal error, xva time "
                                                        << t << " not found in exerciseXvaTimes vector.");
 
-        RandomVariable underylingSpotRV =
-            regModelUndDirty_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_) *
-            RandomVariable(samples, engine_->arguments_.bondNotional);
-
-        // numeraire multiplication (incl and excl security spread), required as the base engine uses the numeraire
-        // incl. the spread
-        auto numeraire_inclSpread = engine_->lgmVectorised_[0].numeraire(
-            t, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)], engine_->discountCurves_[0]);
-
-        auto numeraire_exclSpread = engine_->lgmVectorised_[0].numeraire(
-            t, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)], engine_->referenceCurve_);
-
-        RandomVariable spotNumeraireAdjusted = underylingSpotRV * numeraire_inclSpread / numeraire_exclSpread;
-
-        // compounding
-        auto disc_income = engine_->lgmVectorised_[0].discountBond(
-            0.0, incomeCurveTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
-            engine_->incomeCurve_);
-
-        RandomVariable forwardBondValue = spotNumeraireAdjusted / disc_income;
-
-        // vanilla forward bond calculation : differentiate between long/short
-        RandomVariable forwardContractForwardValue;
-        if (fwdBndPayOff->forwardType() == Position::Type::Long)
-            forwardContractForwardValue = (forwardBondValue - RandomVariable(samples, engine_->accruedAmount_)) -
-                                          RandomVariable(samples, fwdBndPayOff->strike());
-        else
-            forwardContractForwardValue = RandomVariable(samples, fwdBndPayOff->strike()) -
-                                          (forwardBondValue - RandomVariable(samples, engine_->accruedAmount_));
+        RandomVariable forwardContractForwardValue =
+            regModelUndDirty_[regModelIndex][ind].apply(initialState_, effPaths, xvaTimes_);
 
         // builder ensures we have a clean price or we divide by one.
         forwardContractForwardValue /= RandomVariable(samples, engine_->conversionFactor());
 
         // Present value and compensation payment...
         auto disc_contract = engine_->lgmVectorised_[0].discountBond(
-            0.0, contractCurveTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
+            t, contractCurveTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
             engine_->contractCurve_);
 
         auto disc_cmpPayment = engine_->lgmVectorised_[0].discountBond(
-            0.0, cmpPaymentTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
+            t, cmpPaymentTime, paths[ind][engine_->model_->pIdx(CrossAssetModel::AssetType::IR, 0)],
             engine_->contractCurve_);
 
-        // forwardContractPresentValue
-        result[++counter] = forwardContractForwardValue * disc_contract -
+        auto forwardContractPresentValue = forwardContractForwardValue * disc_contract -
                             (RandomVariable(samples, engine_->cmpPayment_) * disc_cmpPayment);
+
+        result[++counter] = forwardContractPresentValue * RandomVariable(samples, engine_->arguments_.bondNotional);
+
     }
     result.resize(relevantPathIndex.size() + 1, RandomVariable(samples, 0.0));
     return result;

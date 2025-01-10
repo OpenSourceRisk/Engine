@@ -52,7 +52,10 @@ static const std::set<std::string> calibrationAnalyticSubAnalytics{};
 
 class CalibrationAnalytic : public Analytic {
 public:
-    explicit CalibrationAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    explicit CalibrationAnalytic(
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : Analytic(std::make_unique<CalibrationAnalyticImpl>(inputs), calibrationAnalyticSubAnalytics, inputs, false,
                    false, false, false) {}
 };

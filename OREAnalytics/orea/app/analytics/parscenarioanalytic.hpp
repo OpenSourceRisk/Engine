@@ -31,7 +31,11 @@ class ParScenarioAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PAR_SCENARIO";
 
-    ParScenarioAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    ParScenarioAnalyticImpl(
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
+        : Analytic::Impl(inputs) {
         setLabel(LABEL);
     }
 
@@ -48,7 +52,9 @@ private:
 
 class ParScenarioAnalytic : public Analytic {
 public:
-    ParScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+    ParScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+                        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
         : Analytic(std::make_unique<ParScenarioAnalyticImpl>(inputs), {"PAR_SCENARIO"}, inputs, true, false, false,
                    false) {}
 };
