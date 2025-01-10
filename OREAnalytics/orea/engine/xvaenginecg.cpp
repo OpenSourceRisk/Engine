@@ -299,7 +299,7 @@ void XvaEngineCG::buildCgPartC() {
                 pfRegressorPosGroups.insert(group);
             }
             pfExposureNodes_.push_back(
-                model_->npv(cg_add(*g, tradeSum), simDate, cg_const(*g, 1.0), boost::none, {}, pfRegressors));
+                model_->npv(cg_add(*g, tradeSum), simDate, cg_const(*g, 1.0), std::nullopt, {}, pfRegressors));
             pfRegressorPosGroups_[pfExposureNodes_.back()] = pfRegressorPosGroups;
         }
     }
