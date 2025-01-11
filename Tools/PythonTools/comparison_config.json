@@ -1506,10 +1506,8 @@
         "column_settings": [
           {
             "names": [
-              "ZeroOrderDIM",
               "AverageDIM",
               "AverageFLOW",
-              "SimpleDIM"
             ],
             "abs_tol": 0.16,
             "rel_tol": 1e-07
