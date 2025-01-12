@@ -900,6 +900,7 @@ void ReportWriter::writeSensitivityConfigReport(ore::data::Report& report,
     LOG("Sensitivity Config report finished.");
 }
 
+namespace {
 template <class T>
 void addMapResults(boost::any resultMap, const std::string& tradeId, const std::string& resultName, Report& report) {
     T map = boost::any_cast<T>(resultMap);
@@ -910,6 +911,24 @@ void addMapResults(boost::any resultMap, const std::string& tradeId, const std::
         report.next().add(tradeId).add(name).add(p.first).add(p.second);
     }
 }
+
+void addToReport(Report& report, const std::string& tradeId, const std::string& field, const boost::any& result,
+                 const std::size_t precision) {
+    auto p = parseBoostAny(result, precision);
+    if (boost::starts_with(p.first, "vector")) {
+        vector<std::string> tokens;
+        string vect = p.second;
+        vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
+        boost::split(tokens, vect, boost::is_any_of(","));
+        for (Size i = 0; i < tokens.size(); ++i) {
+            boost::trim(tokens[i]);
+            report.next().add(tradeId).add(field + "[" + std::to_string(i) + "]").add(p.first.substr(7)).add(tokens[i]);
+        }
+    } else {
+        report.next().add(tradeId).add(field).add(p.first).add(p.second);
+    }
+}
+} // namespace
 
 void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::shared_ptr<Portfolio> portfolio,
                                                 QuantLib::ext::shared_ptr<Market> market,
@@ -933,22 +952,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
             // Get the additional data for the current instrument.
             auto additionalData = trade->additionalData();
             for (const auto& kv : additionalData) {
-                auto p = parseBoostAny(kv.second, precision);
-                if (boost::starts_with(p.first, "vector")) {
-                    vector<std::string> tokens;
-                    string vect = p.second;
-                    vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
-                    boost::split(tokens, vect, boost::is_any_of(","));
-                    for (Size i = 0; i < tokens.size(); i++) {
-                        boost::trim(tokens[i]);
-                        report.next()
-                            .add(tradeId)
-                            .add(kv.first + "[" + std::to_string(i) + "]")
-                            .add(p.first.substr(7))
-                            .add(tokens[i]);
-                    }
-                } else
-                    report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                addToReport(report, tradeId, kv.first, kv.second, precision);
             }
             // if the 'notional[2]' has been provided convert it to base currency
             if (additionalData.count("notional[2]") != 0 && additionalData.count("notionalCurrency[2]") != 0) {
@@ -1010,22 +1014,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
                     } else if (kv.second.type() == typeid(result_type_scalar)) {
                         addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
                     } else {
-                        auto p = parseBoostAny(kv.second, precision);
-                        if (boost::starts_with(p.first, "vector")) {
-                            vector<std::string> tokens;
-                            string vect = p.second;
-                            vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
-                            boost::split(tokens, vect, boost::is_any_of(","));
-                            for (Size i = 0; i < tokens.size(); i++) {
-                                boost::trim(tokens[i]);
-                                report.next()
-                                    .add(tradeId)
-                                    .add(kv.first + "[" + std::to_string(i) + "]")
-                                    .add(p.first.substr(7))
-                                    .add(tokens[i]);
-                            }
-                        } else
-                            report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                        addToReport(report, tradeId, kv.first, kv.second, precision);
                     }
                 }
             }
