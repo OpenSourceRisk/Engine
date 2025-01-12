@@ -1507,7 +1507,7 @@
           {
             "names": [
               "AverageDIM",
-              "AverageFLOW",
+              "AverageFLOW"
             ],
             "abs_tol": 0.16,
             "rel_tol": 1e-07
