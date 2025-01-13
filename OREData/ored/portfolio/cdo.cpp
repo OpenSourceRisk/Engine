@@ -404,7 +404,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         } catch (const std::exception& e) {
             WLOG("Error building the calibration got " << e.what());
         }
-        /*
+        
         auto it = engineFactory->engineData()->globalParameters().find("RunType");
         if (it != engineFactory->engineData()->globalParameters().end() && it->second != "PortfolioAnalyser" && curveCalibration != nullptr) {
             try{
@@ -417,12 +417,18 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                 LOG(io::iso_date(result.cdsMaturity)
                     << ";" << std::fixed << std::setprecision(8) << result.calibrationFactor << ";" << result.marketNpv
                     << ";" << result.impliedNpv << ";" << result.marketNpv - result.impliedNpv);
+                std::cout << "CDO Pricing calibration" << std::endl;
+                std::cout << "Maturity CalibrationFacotr MarketNPV ImpliedNPV Error" << std::endl;
+                std::cout << result.cdsMaturity << " " << std::fixed << std::setprecision(6) << result.calibrationFactor
+                          << " " << result.marketNpv << " " << result.impliedNpv << " "
+                          << result.marketNpv - result.impliedNpv << std::endl;
             } catch(const std::exception& e)
             {
                 WLOG("Error during calibration, continue without index curve calibration, got " << e.what());
             }
+           
         }
-        */
+        
     }
 
     // Create the instruments.
@@ -516,7 +522,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         // Set up the basket loss model.
         auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
             schedule[0], creditCurves, basketNotionals, pool, 0.0, adjDetachPoint,
-            QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()), curveCalibration, recoveryRates);
+            QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()), nullptr, recoveryRates);
 
         basket->setLossModel(
             cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjDetachPoint,
@@ -528,6 +534,17 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         auto cdoDetach =
             QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(basket, side, schedule, 0.0, runningRate, dayCounter, bdc,
                                                        settlesAccrual_, protectionPaymentTime_, protectionStartDate, parseDate(upfrontDate_), boost::none, Null<Real>(), lastPeriodDayCounter);
+
+        std::cout << "side " << side << std::endl;
+        std::cout << "running rate" << runningRate << std::endl;
+        std::cout << "day counter" << dayCounter << std::endl;
+        std::cout << "bdc" << bdc << std::endl;
+        std::cout << "settles accrual" << settlesAccrual_ << std::endl;
+        std::cout << "protection payment time" << protectionPaymentTime_ << std::endl;
+        std::cout << "protection start date" << protectionStartDate << std::endl;
+        std::cout << "upfront date" << upfrontDate << std::endl;
+        std::cout << "fixed recovery" << fixedRecovery << std::endl;
+        std::cout << "last period day counter" << lastPeriodDayCounter << std::endl;
 
         cdoDetach->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, {}, ext::make_shared<SimpleQuote>(1.0), fixedRecovery));
@@ -573,13 +590,26 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         // Set up the basket loss model.
         auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
             schedule[0], creditCurves, basketNotionals, pool, 0.0, adjAttachPoint,
-            QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()), curveCalibration, recoveryRates);
+            QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()), nullptr, recoveryRates);
         basket->setLossModel(cdoEngineBuilder->lossModel(qualifier(), recoveryRates, adjAttachPoint,
                                                          maturity_, homogeneous));
 
         auto cdoA =
             QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(basket, side, schedule, 0.0, runningRate, dayCounter, bdc, settlesAccrual_, protectionPaymentTime_,
             protectionStartDate, parseDate(upfrontDate_), boost::none, fixedRecovery, lastPeriodDayCounter);
+
+        std::cout << "side " << side << std::endl;
+        std::cout << "running rate" << runningRate << std::endl;
+        std::cout << "day counter" << dayCounter << std::endl;
+        std::cout << "bdc" << bdc << std::endl;
+        std::cout << "settles accrual" << settlesAccrual_ << std::endl;
+        std::cout << "protection payment time" << protectionPaymentTime_ << std::endl;
+        std::cout << "protection start date" << protectionStartDate << std::endl;
+        std::cout << "upfront date" << upfrontDate << std::endl;
+        std::cout << "fixed recovery" << fixedRecovery << std::endl;
+        std::cout << "last period day counter" << lastPeriodDayCounter << std::endl;
+
+
 
         cdoA->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, {}, ext::make_shared<SimpleQuote>(1.0), fixedRecovery));

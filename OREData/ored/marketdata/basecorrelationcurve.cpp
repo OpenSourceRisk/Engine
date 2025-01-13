@@ -491,7 +491,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                                 .to(cdsMaturity(config.startDate(), term, DateGeneration::CDS2015))
                                 .withTenor(3 * Months)
                                 .withCalendar(WeekendsOnly())
-                                .withConvention(Unadjusted)
+                                .withConvention(Following)
                                 .withTerminationDateConvention(Unadjusted)
                                 .withRule(DateGeneration::CDS2015);
 
@@ -519,7 +519,7 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
 
             auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
                 config.startDate(), basketData.remainingNames, basketData.remainingWeights, pool, 0.0,
-                detachPoints[i].first, QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
+                adjustedDetachPoint, QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
             // Build model with model builder
             basket->setLossModel(lossModel);
 
