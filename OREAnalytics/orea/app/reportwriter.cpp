@@ -1026,13 +1026,14 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
             for (Size i = 0; i < trade->legs().size(); ++i) {
                 for (Size j = 0; j < trade->legs()[i].size(); ++j) {
                     if (auto c = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(trade->legs()[i][j])) {
-                        std::cout << "got frc at " << i << " " << j << " and " << c->additionalResults().size()
-                                  << " results" << std::endl;
-                        c->rate(); // ensure the additional results results are available
-                        for (auto const& kv : c->additionalResults()) {
-                            addAnyResults(report, tradeId,
-                                          kv.first + "[" + std::to_string(i) + "][" + std::to_string(j) + "]",
-                                          kv.second, precision);
+                        try {
+                            c->rate(); // ensure the additional results results are available
+                            for (auto const& kv : c->additionalResults()) {
+                                addAnyResults(report, tradeId,
+                                              kv.first + "[" + std::to_string(i) + "][" + std::to_string(j) + "]",
+                                              kv.second, precision);
+                            }
+                        } catch (...) {
                         }
                     }
                 }
