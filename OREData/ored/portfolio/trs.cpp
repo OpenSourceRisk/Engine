@@ -191,6 +191,11 @@ void TRS::fromXML(XMLNode* node) {
     if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(underlyingDataNode, "PortfolioIndexTradeData")) {
         portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
         portfolioDeriv_ = true;
+        if (XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexShares")) {
+            indexShares_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexShares");
+        } else {
+            indexShares_ = 1;
+        }
         returnData_.setPortfolioId(portfolioId_);
     }
     QL_REQUIRE(!underlyingTradeNodes.empty() || !underlyingTradeNodes2.empty() || !portfolioId_.empty(),
@@ -218,6 +223,11 @@ void TRS::fromXML(XMLNode* node) {
         if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(t, "CompositeTradeData")) {
             if (XMLUtils::getChildNode(underlyingTradeNodes3, "BasketName")) {
                 portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
+                if (XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexShares")) {
+                    indexShares_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexShares");
+                } else {
+                    indexShares_ = 1;
+                }
                 returnData_.setPortfolioId(portfolioId_);
                 portfolioDeriv_ = false;
             }
@@ -338,7 +348,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     QL_REQUIRE(fundingLegPayers.size() <= 1, "funding leg payer flags must match");
     QL_REQUIRE(fundingCurrencies.size() <= 1, "funding leg currencies must match");
-    QuantLib::Real portfolioInitialPrice = 0;
+    QuantLib::Real portfolioInitialPrice = Null<Real>();
 
     if (!portfolioId_.empty() && portfolioDeriv_) {
         populateFromReferenceData(engineFactory->referenceData());
@@ -460,6 +470,15 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     std::vector<QuantLib::ext::shared_ptr<QuantLib::Index>> underlyingIndex(underlying_.size(), nullptr);
     std::vector<Real> underlyingMultiplier(underlying_.size(), Null<Real>());
+
+    for (int i = 0; i < underlyingMultiplier.size(); i++) {
+        if (!portfolioId_.empty()) {
+            underlyingMultiplier[i] = indexShares_;
+        } else {
+            underlyingMultiplier[i] = 1;
+        }
+    }
+
     std::vector<std::string> assetCurrency(underlying_.size(), fundingCurrency);
     std::vector<QuantLib::ext::shared_ptr<QuantExt::FxIndex>> fxIndexAsset(underlying_.size(), nullptr);
 

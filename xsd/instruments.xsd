@@ -2890,6 +2890,7 @@
       <xs:element type="xs:float" name="NotionalOverride" minOccurs="0"/>
       <xs:element type="xs:boolean" name="PortfolioBasket" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BasketName" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:double" name="IndexShares" minOccurs="0"/>
       <xs:element type="compositeTradeComponents" name="Components" minOccurs="0"/>
     </xs:all>
   </xs:complexType>

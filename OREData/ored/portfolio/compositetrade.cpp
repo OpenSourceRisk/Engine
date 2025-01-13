@@ -70,7 +70,7 @@ void CompositeTrade::build(const QuantLib::ext::shared_ptr<EngineFactory>& engin
             fxRatesNotional_[i] = engineFactory->market()->fxRate(trade->notionalCurrency() + npvCurrency_);
 
         QuantLib::ext::shared_ptr<InstrumentWrapper> instrumentWrapper = trade->instrument();
-        Real effectiveMultiplier = instrumentWrapper->multiplier();
+        Real effectiveMultiplier = (indexShares_ == Null<Real>() ? instrumentWrapper->multiplier() : indexShares_);
         if (auto optionWrapper = QuantLib::ext::dynamic_pointer_cast<ore::data::OptionWrapper>(instrumentWrapper)) {
             effectiveMultiplier *= optionWrapper->isLong() ? 1.0 : -1.0;
         }
@@ -152,10 +152,15 @@ void CompositeTrade::fromXML(XMLNode* node) {
     }
 
     portfolioId_ = XMLUtils::getChildValue(compNode, "BasketName", false);
+    indexShares_ = Null<Real>();
 
     XMLNode* tradesNode = XMLUtils::getChildNode(compNode, "Components");
     if (portfolioBasket_ && portfolioId_.empty()) {
         QL_REQUIRE(tradesNode, "Required a Portfolio Id or a Components Node.");
+    } else if (portfolioBasket_) {
+        if (XMLUtils::getChildValueAsDouble(compNode, "IndexShares")) {
+            indexShares_ = XMLUtils::getChildValueAsDouble(compNode, "IndexShares");
+        }
     }
     if ((portfolioBasket_ && portfolioId_.empty()) || (!portfolioBasket_)) {
 

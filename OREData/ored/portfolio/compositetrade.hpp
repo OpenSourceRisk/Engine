@@ -111,6 +111,7 @@ private:
     vector<Handle<Quote>> fxRates_, fxRatesNotional_;
     string portfolioId_;
     bool portfolioBasket_;
+    double indexShares_;
 };
 
 } // namespace data
