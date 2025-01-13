@@ -37,7 +37,7 @@ oreex.run("Input/ore_E3.xml")
 oreex.get_times("Output/log_E3.txt")
 oreex.save_output_to_subdir(
     "case_E_fxopt",
-    ["log_E3.txt", "dim_evolution_E3.csv", "dim_regression_E3.csv", "xva.csv"]
+    ["log_E3.txt", "dim_evolution_E3.csv", "xva.csv"]
 )
 
 oreex.print_headline("Plot results")

@@ -1503,11 +1503,22 @@
           "TimeStep",
           "NettingSet"
         ],
+        "use_cols": [
+          "AverageDIM",
+          "AverageFLOW"
+        ],
+        "optional_cols": [
+          "ZeroOrderDIM",
+          "SimpleDIM"
+        ],
+        "require_equal_optional_cols": false,
         "column_settings": [
           {
             "names": [
+              "ZeroOrderDIM",
               "AverageDIM",
-              "AverageFLOW"
+              "AverageFLOW",
+              "SimpleDIM"
             ],
             "abs_tol": 0.16,
             "rel_tol": 1e-07
