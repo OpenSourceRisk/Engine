@@ -30,6 +30,8 @@
 
 #include <qle/currencies/currencycomparator.hpp>
 
+#include <ql/cashflows/floatingratecoupon.hpp>
+
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/framework/accumulator_set.hpp>
 #include <boost/accumulators/statistics.hpp>
@@ -912,7 +914,7 @@ void addMapResults(boost::any resultMap, const std::string& tradeId, const std::
     }
 }
 
-void addToReport(Report& report, const std::string& tradeId, const std::string& field, const boost::any& result,
+void addAnyResults(Report& report, const std::string& tradeId, const std::string& field, const boost::any& result,
                  const std::size_t precision) {
     auto p = parseBoostAny(result, precision);
     if (boost::starts_with(p.first, "vector")) {
@@ -952,7 +954,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
             // Get the additional data for the current instrument.
             auto additionalData = trade->additionalData();
             for (const auto& kv : additionalData) {
-                addToReport(report, tradeId, kv.first, kv.second, precision);
+                addAnyResults(report, tradeId, kv.first, kv.second, precision);
             }
             // if the 'notional[2]' has been provided convert it to base currency
             if (additionalData.count("notional[2]") != 0 && additionalData.count("notionalCurrency[2]") != 0) {
@@ -1014,7 +1016,24 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
                     } else if (kv.second.type() == typeid(result_type_scalar)) {
                         addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
                     } else {
-                        addToReport(report, tradeId, kv.first, kv.second, precision);
+                        addAnyResults(report, tradeId, kv.first, kv.second, precision);
+                    }
+                }
+            }
+
+            // add coupon additional results
+
+            for (Size i = 0; i < trade->legs().size(); ++i) {
+                for (Size j = 0; j < trade->legs()[i].size(); ++j) {
+                    if (auto c = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(trade->legs()[i][j])) {
+                        std::cout << "got frc at " << i << " " << j << " and " << c->additionalResults().size()
+                                  << " results" << std::endl;
+                        c->rate(); // ensure the additional results results are available
+                        for (auto const& kv : c->additionalResults()) {
+                            addAnyResults(report, tradeId,
+                                          kv.first + "[" + std::to_string(i) + "][" + std::to_string(j) + "]",
+                                          kv.second, precision);
+                        }
                     }
                 }
             }
