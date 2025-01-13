@@ -216,7 +216,7 @@ void TRS::fromXML(XMLNode* node) {
         underlyingDerivativeId_.push_back(XMLUtils::getChildValue(n, "Id", true));
         auto t = XMLUtils::getChildNode(n, "Trade");
         if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(t, "CompositeTradeData")) {
-            if (auto basketName = XMLUtils::getChildNode(underlyingTradeNodes3, "BasketName")) {
+            if (XMLUtils::getChildNode(underlyingTradeNodes3, "BasketName")) {
                 portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
                 returnData_.setPortfolioId(portfolioId_);
                 portfolioDeriv_ = false;
