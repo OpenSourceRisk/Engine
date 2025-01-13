@@ -40,41 +40,45 @@
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation_dim.xml</Parameter>
+      <!-- The following engine configuration is needed to generate and store sensitivities
+	   under simulation, see below -->
+      <Parameter name="pricingEnginesFile">pricingengine_dg.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="storeFlows">Y</Parameter>
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="aggregationScenarioDataFileName">scenariodata.csv.gz</Parameter>
+      <!-- The following is needed to feed the dynamic delta var DIM model,
+	   limitations:
+	   - works with classic single-threaded simulation only
+	   - covers only Swaps, Swaptions, FxOptions, FxForwards -->
+      <Parameter name="storeSensis">Y</Parameter>
+      <Parameter name="curveSensiGrid">1,2,3,5,7,10,15,20</Parameter>
+      <Parameter name="vegaSensiGrid">1,2,3,5,7,10,15,20</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="csaFile">netting_dim.xml</Parameter>
       <Parameter name="cubeFile">cube.csv.gz</Parameter>
       <Parameter name="scenarioFile">scenariodata.csv.gz</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="exposureProfilesByTrade">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>
-      <Parameter name="calculationType">Symmetric</Parameter>
-      <Parameter name="allocationMethod">Marginal</Parameter>
-      <Parameter name="marginalAllocationLimit">1.0</Parameter>
-      <Parameter name="exerciseNextBreak">N</Parameter>
+      <Parameter name="calculationType">NoLag</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
       <Parameter name="fva">N</Parameter>
       <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
-      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
-      <Parameter name="colva">N</Parameter>
-      <Parameter name="collateralFloor">N</Parameter>
+      <Parameter name="dim">Y</Parameter>
+      <Parameter name="mva">Y</Parameter>
+      <Parameter name="dimQuantile">0.99</Parameter>
+      <Parameter name="dimModel">DeltaVaR</Parameter>
+      <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>
+      <Parameter name="dimEvolutionFile">dim_evolution.csv</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-    </Analytic>
-    <Analytic type="initialMargin">
-      <Parameter name="active">N</Parameter>
-      <Parameter name="method"/>
     </Analytic>
   </Analytics>
 </ORE>
