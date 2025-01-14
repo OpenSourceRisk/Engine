@@ -311,7 +311,7 @@ void MultiThreadedValuationEngine::buildCube(
 #ifdef ORE_MULTITHREADING_CPU_AFFINITY
                     &cpuIds,
 #endif
-                    obsMode, dryRun, &calculators, errorPolicy,&cptyCalculators, mporStickyDate, &portfoliosAsString,
+                    obsMode, dryRun, &calculators, errorPolicy, &cptyCalculators, mporStickyDate, &portfoliosAsString,
                     &scenarioGenerators, &loaders, &workerPricingStats, &progressIndicator](int id) -> resultType {
 
 #ifdef ORE_MULTITHREADING_CPU_AFFINITY
@@ -320,8 +320,8 @@ void MultiThreadedValuationEngine::buildCube(
             CPU_ZERO(&cpuset);
             CPU_SET(cpuIds[id], &cpuset);
             if (int rc = pthread_setaffinity_np(self, sizeof(cpu_set_t), &cpuset)) {
-                WLOG("[MULTITHREADING] Error while setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]
-                                                                    << ": got return code " << rc);
+                WLOG("[MULTITHREADING] Error while setting cpu affinity for thread "
+                     << id << " to cpu id " << cpuIds[id] << ": got return code " << rc);
             } else {
                 WLOG("[MULTITHREADING] Setting cpu affinity for thread " << id << " to cpu id " << cpuIds[id]
                                                                          << ", running on cpu " << sched_getcpu());
