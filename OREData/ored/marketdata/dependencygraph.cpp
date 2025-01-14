@@ -445,7 +445,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
             
             //TODO Discount Curves??, actually the discount curves should be dependencies of the creditCurves
             //TODO: revisit later, indec curve with index (how to get it? curveconfig or extend the spec?)
-            std::set<std::string> constituentCurves {underlying}; // Add the index curve itself
+            std::set<std::string> constituentCurves {underlying, underlying + "_5Y", underlying + "_3Y"}; // Add the index curve itself
             for (const auto& c : crd->constituents()) {
                 const double weight = c.weight();
                 if (weight > 0.0 && !QuantLib::close_enough(weight, 0.0)) {

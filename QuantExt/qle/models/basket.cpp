@@ -148,6 +148,7 @@ Basket::Basket(const Date& refDate, const vector<string>& names, const vector<Re
     // loss values; those are through models.
     registerWith(Settings::instance().evaluationDate());
     registerWith(claim_);
+    /*
     vector<DefaultProbKey> defKeys = defaultKeys();
     for (Size j = 0; j < size(); j++)
         registerWith(pool_->get(pool_->names()[j]).defaultProbability(defKeys[j]));
@@ -157,6 +158,7 @@ Basket::Basket(const Date& refDate, const vector<string>& names, const vector<Re
         registerWith(calibration_->indexCurve());
         //registerWith(calibration_->discountCurve());
     }
+    */
 }
 
 /*\todo Alternatively send a relinkable handle so it can be changed from
@@ -302,21 +304,27 @@ std::vector<Probability> Basket::remainingProbabilities(const Date& d) const {
     QL_REQUIRE(d >= refDate_, "remainingProbabilities: Target date "
                                   << io::iso_date(d) << " lies before basket inception " << io::iso_date(refDate_));
     vector<Real> prob;
-    const vector<double> remainingNtls = this->remainingNotionals(d);
+    
     const std::vector<Size>& alive = liveList();
-    vector<Handle<DefaultProbabilityTermStructure>> curves;
-    for (Size i = 0; i < alive.size(); i++)
-        curves.push_back(pool_->get(pool_->names()[i]).defaultProbability(pool_->defaultKeys()[i]));
-    if(calibration_ != nullptr){
+    if (calibration_ != nullptr) {
+        vector<Handle<DefaultProbabilityTermStructure>> curves;
+        for (Size i = 0; i < alive.size(); i++)
+            curves.push_back(pool_->get(pool_->names()[i]).defaultProbability(pool_->defaultKeys()[i]));
+    
+        const vector<double> remainingNtls = this->remainingNotionals(d);
         QL_REQUIRE(recoveryRates_.size() == remainingNtls.size(), "Mismatch between recovery rates and ");
         auto res = calibration_->calibratedCurves(remainingNtls, curves, recoveryRates_);
         if(res.success){
             curves = res.curves;
         }
+        for (const auto& curve : curves) {
+            prob.push_back(curve->defaultProbability(d, true));
+        }
+    } else {
+        for (Size i = 0; i < alive.size(); i++)
+            prob.push_back(pool_->get(pool_->names()[i]).defaultProbability(pool_->defaultKeys()[i])->defaultProbability(d));
     }
-    for (const auto& curve : curves) {
-        prob.push_back(curve->defaultProbability(d, true));
-    }
+    
     return prob;
 }
 

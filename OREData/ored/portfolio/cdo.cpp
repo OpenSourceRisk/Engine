@@ -393,6 +393,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         // Chapter 10.6
         
         try {
+            LOG("Build index calibration for " << creditCurveIdWithTerm());
             Handle<YieldTermStructure> yts =
                 market->discountCurve(ccy.code(), cdoEngineBuilder->configuration(MarketContext::pricing));
             Date cdsStartDate = indexStartDateHint() == Date() ? schedule.dates().front() : indexStartDateHint();
@@ -417,11 +418,6 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                 LOG(io::iso_date(result.cdsMaturity)
                     << ";" << std::fixed << std::setprecision(8) << result.calibrationFactor << ";" << result.marketNpv
                     << ";" << result.impliedNpv << ";" << result.marketNpv - result.impliedNpv);
-                std::cout << "CDO Pricing calibration" << std::endl;
-                std::cout << "Maturity CalibrationFacotr MarketNPV ImpliedNPV Error" << std::endl;
-                std::cout << result.cdsMaturity << " " << std::fixed << std::setprecision(6) << result.calibrationFactor
-                          << " " << result.marketNpv << " " << result.impliedNpv << " "
-                          << result.marketNpv - result.impliedNpv << std::endl;
             } catch(const std::exception& e)
             {
                 WLOG("Error during calibration, continue without index curve calibration, got " << e.what());
@@ -535,17 +531,6 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(basket, side, schedule, 0.0, runningRate, dayCounter, bdc,
                                                        settlesAccrual_, protectionPaymentTime_, protectionStartDate, parseDate(upfrontDate_), boost::none, Null<Real>(), lastPeriodDayCounter);
 
-        std::cout << "side " << side << std::endl;
-        std::cout << "running rate" << runningRate << std::endl;
-        std::cout << "day counter" << dayCounter << std::endl;
-        std::cout << "bdc" << bdc << std::endl;
-        std::cout << "settles accrual" << settlesAccrual_ << std::endl;
-        std::cout << "protection payment time" << protectionPaymentTime_ << std::endl;
-        std::cout << "protection start date" << protectionStartDate << std::endl;
-        std::cout << "upfront date" << upfrontDate << std::endl;
-        std::cout << "fixed recovery" << fixedRecovery << std::endl;
-        std::cout << "last period day counter" << lastPeriodDayCounter << std::endl;
-
         cdoDetach->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, {}, ext::make_shared<SimpleQuote>(1.0), fixedRecovery));
         setSensitivityTemplate(*cdoEngineBuilder);
@@ -597,19 +582,6 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         auto cdoA =
             QuantLib::ext::make_shared<QuantExt::SyntheticCDO>(basket, side, schedule, 0.0, runningRate, dayCounter, bdc, settlesAccrual_, protectionPaymentTime_,
             protectionStartDate, parseDate(upfrontDate_), boost::none, fixedRecovery, lastPeriodDayCounter);
-
-        std::cout << "side " << side << std::endl;
-        std::cout << "running rate" << runningRate << std::endl;
-        std::cout << "day counter" << dayCounter << std::endl;
-        std::cout << "bdc" << bdc << std::endl;
-        std::cout << "settles accrual" << settlesAccrual_ << std::endl;
-        std::cout << "protection payment time" << protectionPaymentTime_ << std::endl;
-        std::cout << "protection start date" << protectionStartDate << std::endl;
-        std::cout << "upfront date" << upfrontDate << std::endl;
-        std::cout << "fixed recovery" << fixedRecovery << std::endl;
-        std::cout << "last period day counter" << lastPeriodDayCounter << std::endl;
-
-
 
         cdoA->setPricingEngine(
             cdoEngineBuilder->engine(ccy, false, {}, ext::make_shared<SimpleQuote>(1.0), fixedRecovery));
@@ -749,7 +721,7 @@ std::string SyntheticCDO::creditCurveIdWithTerm() const {
 
     QuantLib::Schedule s = makeSchedule(leg().schedule());
     if (s.dates().empty())
-        return p.first;
+        return p.first;    
     QuantLib::Period t = QuantExt::implyIndexTerm(
         indexStartDateHint_ == Date() ? s.dates().front() : indexStartDateHint_, s.dates().back());
     if (t != 0 * Days)

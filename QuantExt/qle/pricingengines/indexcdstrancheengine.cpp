@@ -118,8 +118,8 @@ void IndexCdsTrancheEngine::calculate() const {
         defaultDates.push_back(defaultDate);
         // Expected loss on the tranche up to the end of the current period.
         Real etl = basket->expectedTrancheLoss(endDate, Null<Real>());
-        Real etlZR = basket->expectedTrancheLoss(endDate, 0);
-        zeroRecoveryExpectedLoss.push_back(etlZR);
+        
+        
         // Update protection leg value
         defaultDiscountFactors.push_back(discountCurve_->discount(defaultDate));
 
@@ -133,6 +133,8 @@ void IndexCdsTrancheEngine::calculate() const {
         effNtl = inceptionTrancheNotional - etl;
 
         if(QuantLib::close_enough(basket->detachmentRatio(), 1.0)){
+            Real etlZR = basket->expectedTrancheLoss(endDate, 0);
+            zeroRecoveryExpectedLoss.push_back(etlZR);
             effNtl += etl - etlZR;
         }
 
@@ -235,7 +237,8 @@ void IndexCdsTrancheEngine::calculate() const {
     results_.additionalResults["accrualRebateCurrentNPV"] = results_.accrualRebateCurrentValue;
     results_.additionalResults["premiumAccrualPeriods"] = premiumAccrualPeriods;
     results_.additionalResults["premiumDiscountFactors"] = premiumDiscountFactors;
-    results_.additionalResults["zeroRecoveryExpectedLoss"] = zeroRecoveryExpectedLoss;
+    if (!zeroRecoveryExpectedLoss.empty())
+        results_.additionalResults["zeroRecoveryExpectedLoss"] = zeroRecoveryExpectedLoss;
     results_.additionalResults["accrualsDefault"] = accrualsDefault;
     results_.additionalResults["protectionLegNPV"] = results_.protectionValue;
     results_.additionalResults["protectionLegCleanNPV"] = results_.protectionValue + results_.accrualRebateCurrentValue;
