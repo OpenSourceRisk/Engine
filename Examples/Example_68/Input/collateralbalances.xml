@@ -2,9 +2,7 @@
     <CollateralBalance>
         <NettingSetId>CPTY_A</NettingSetId>
         <Currency>EUR</Currency>
-        <VariationMargin>75000</VariationMargin>
         <InitialMargin>1000000</InitialMargin>
-        <VariationMargin>0</VariationMargin>
-        <InitialMargin>0</InitialMargin>
+        <VariationMargin>75000</VariationMargin>
     </CollateralBalance>
 </CollateralBalances>
