@@ -35,12 +35,9 @@ namespace data {
 class AmcCgCurrencySwapEngine : public QuantExt::CurrencySwap::engine, public AmcCgBaseEngine {
 public:
     AmcCgCurrencySwapEngine(const std::vector<std::string>& ccys, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                            const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
-                            const bool recalibrateOnStickyCloseOutDates = false,
-                            const bool reevaluateExerciseInStickyRun = false)
-        : AmcCgBaseEngine(modelCg, simulationDates, stickyCloseOutDates, recalibrateOnStickyCloseOutDates,
-                          reevaluateExerciseInStickyRun),
-          ccys_(ccys) {
+                            const std::set<Date>& simulationDates, const std::vector<Date>& closeOutDates,
+                            const bool useStickyCloseOutDates)
+        : AmcCgBaseEngine(modelCg, simulationDates, closeOutDates, useStickyCloseOutDates), ccys_(ccys) {
         registerWith(modelCg);
     }
 

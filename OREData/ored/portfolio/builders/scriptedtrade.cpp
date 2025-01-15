@@ -1889,6 +1889,10 @@ void ScriptedTradeEngineBuilder::buildGaussianCamAMC(
 }
 
 void ScriptedTradeEngineBuilder::addAmcGridToContext(QuantLib::ext::shared_ptr<Context>& context) const {
+
+    QL_REQUIRE(!amcSimDates_.empty(), "ScriptedTradeEngineBuilder::addAmcGridToContext(): expected non-empty "
+                                      "amcSimDates. Note: The amc-cg context is not yet supported.");
+
     // the amc grid might be empty, but we add the _AMC_SimDates variable to the context anyway, since
     // a script might rely on its existence
     DLOG("adding amc date grid with " << amcSimDates_.size() << " sim dates and " << amcStickyCloseOutDates_.size()

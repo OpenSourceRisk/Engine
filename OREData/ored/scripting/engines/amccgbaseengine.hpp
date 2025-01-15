@@ -40,11 +40,8 @@ using QuantLib::Size;
 
 class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
-    AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                    const std::vector<QuantLib::Date>& simulationDates,
-                    const std::vector<QuantLib::Date>& stickyCloseOutDates,
-                    const bool recalibrateOnStickyCloseOutDates = false,
-                    const bool reevaluateExerciseInStickyRun = false);
+    AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::set<QuantLib::Date>& valuationDates,
+                    const std::vector<QuantLib::Date>& closeOutDates, const bool useStickyCloseOutDates);
     std::string npvName() const override;
     std::set<std::string> relevantCurrencies() const override;
     void buildComputationGraph() const override;
@@ -53,10 +50,9 @@ public:
 protected:
     // input to this class via ctor
     QuantLib::ext::shared_ptr<ModelCG> modelCg_;
-    std::vector<QuantLib::Date> simulationDates_;
-    std::vector<QuantLib::Date> stickyCloseOutDates_;
-    bool recalibrateOnStickyCloseOutDates_;
-    bool reevaluateExerciseInStickyRun_;
+    std::set<QuantLib::Date> valuationDates_;
+    std::vector<QuantLib::Date> closeOutDates_;
+    bool useStickyCloseOutDates_;
 
     // input data from the derived pricing engines, to be set in these engines
     mutable std::vector<QuantLib::Leg> leg_;

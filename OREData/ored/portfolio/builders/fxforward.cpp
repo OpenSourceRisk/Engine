@@ -74,8 +74,8 @@ QuantLib::ext::shared_ptr<PricingEngine> AmcCgFxForwardEngineBuilder::engineImpl
 
     QL_REQUIRE(domCcy != forCcy, "AmcCgFxForwardEngineBuilder: domCcy = forCcy = " << domCcy.code());
 
-    auto engine = QuantLib::ext::make_shared<AmcCgFxForwardEngine>(domCcy.code(), forCcy.code(), modelCg_,
-                                                                   simulationDates_, stickyCloseOutDates_);
+    auto engine = QuantLib::ext::make_shared<AmcCgFxForwardEngine>(
+        domCcy.code(), forCcy.code(), modelCg_, valuationDates_, closeOutDates_, useStickyCloseOutDates_);
 
     return engine;
 }

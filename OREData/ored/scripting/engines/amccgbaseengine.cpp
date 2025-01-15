@@ -54,12 +54,10 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                                 const std::vector<QuantLib::Date>& simulationDates,
-                                 const std::vector<QuantLib::Date>& stickyCloseOutDates,
-                                 const bool recalibrateOnStickyCloseOutDates, const bool reevaluateExerciseInStickyRun)
-    : modelCg_(modelCg), simulationDates_(simulationDates), stickyCloseOutDates_(stickyCloseOutDates),
-      recalibrateOnStickyCloseOutDates_(recalibrateOnStickyCloseOutDates),
-      reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun) {
+                                 const std::set<Date>& valuationDates, const std::vector<Date>& closeOutDates,
+                                 const bool useStickyCloseOutDates)
+    : modelCg_(modelCg), valuationDates_(valuationDates), closeOutDates_(closeOutDates),
+      useStickyCloseOutDates_(useStickyCloseOutDates) {
 
     // determine name of npv node, we can use anything that is not yet taken
 
@@ -520,7 +518,7 @@ void AmcCgBaseEngine::buildComputationGraph() const {
 
     // build the set of simulation dates and union of simulation and exercise dates
 
-    std::set<Date> simDates(simulationDates_.begin(), simulationDates_.end());
+    std::set<Date> simDates(valuationDates_.begin(), valuationDates_.end());
     std::set<Date> simExDates;
     std::set_union(simDates.begin(), simDates.end(), exerciseDates.begin(), exerciseDates.end(),
                    std::inserter(simExDates, simExDates.end()));

@@ -342,8 +342,8 @@ QuantLib::ext::shared_ptr<PricingEngine> AmcCgMultiLegOptionEngineBuilder::engin
                                                          << fixingDates.size() << ") must match indexes size ("
                                                          << indexes.size() << ")");
 
-    return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(ccys, modelCg_, simulationDates_,
-                                                                 stickyCloseOutDates_);
+    return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(ccys, modelCg_, valuationDates_, closeOutDates_,
+                                                                 useStickyCloseOutDates_);
 }
 
 } // namespace data

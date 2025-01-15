@@ -105,18 +105,18 @@ void EngineBuilderFactory::addAmcEngineBuilder(
 
 void EngineBuilderFactory::addAmcCgEngineBuilder(
     const std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
-        const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates,
-        const std::vector<Date>& stickyCloseOutDates)>& builder,
+        const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::set<Date>& simDates,
+        const std::vector<Date>& stickyCloseOutDates, const bool useStickyCloseOutDates)>& builder,
     const bool allowOverwrite) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    auto tmp = builder(nullptr, {}, {});
+    auto tmp = builder(nullptr, {}, {}, false);
     auto key = make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
     auto it = std::remove_if(
         amcCgEngineBuilderBuilders_.begin(), amcCgEngineBuilderBuilders_.end(),
         [&key](std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
-                   const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates,
-                   const std::vector<Date>& stickyCloseOutDates)>& b) {
-            auto tmp = b(nullptr, {}, {});
+                   const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::set<Date>& valuationDates,
+                   const std::vector<Date>& stickyCloseOutDates, const bool useStickyCloseOutDate)>& b) {
+            auto tmp = b(nullptr, {}, {}, false);
             return key == std::make_tuple(tmp->model(), tmp->engine(), tmp->tradeTypes());
         });
     QL_REQUIRE(it == amcCgEngineBuilderBuilders_.end() || allowOverwrite,
@@ -159,14 +159,13 @@ EngineBuilderFactory::generateAmcEngineBuilders(const QuantLib::ext::shared_ptr<
     return result;
 }
 
-std::vector<QuantLib::ext::shared_ptr<EngineBuilder>>
-EngineBuilderFactory::generateAmcCgEngineBuilders(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model,
-                                                  const std::vector<Date>& simDates,
-                                                  const std::vector<Date>& stickyCloseOutDates) const {
+std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> EngineBuilderFactory::generateAmcCgEngineBuilders(
+    const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::set<Date>& valuationDates,
+    const std::vector<Date>& closeOutDates, const bool useStickyCloseOutDates) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     std::vector<QuantLib::ext::shared_ptr<EngineBuilder>> result;
     for (auto const& b : amcCgEngineBuilderBuilders_)
-        result.push_back(b(model, simDates, stickyCloseOutDates));
+        result.push_back(b(model, valuationDates, closeOutDates, useStickyCloseOutDates));
     return result;
 }
 

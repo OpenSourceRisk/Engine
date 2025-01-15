@@ -35,12 +35,9 @@ class AmcCgMultiLegOptionEngine
       public AmcCgBaseEngine {
 public:
     AmcCgMultiLegOptionEngine(const std::vector<std::string>& ccys, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                              const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
-                              const bool recalibrateOnStickyCloseOutDates = false,
-                              const bool reevaluateExerciseInStickyRun = false)
-        : AmcCgBaseEngine(modelCg, simulationDates, stickyCloseOutDates, recalibrateOnStickyCloseOutDates,
-                          reevaluateExerciseInStickyRun),
-          ccys_(ccys) {
+                              const std::set<Date>& valuationDates, const std::vector<Date>& closeOutDates,
+                              const bool useStickyCloseOutDates)
+        : AmcCgBaseEngine(modelCg, valuationDates, closeOutDates, useStickyCloseOutDates), ccys_(ccys) {
         registerWith(modelCg);
     }
 

@@ -35,13 +35,10 @@ namespace data {
 class AmcCgFxOptionEngineBase : public AmcCgBaseEngine {
 public:
     AmcCgFxOptionEngineBase(const std::string& domCcy, const std::string& forCcy,
-                            const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates,
-                            const std::vector<Date>& stickyCloseOutDates,
-                            const bool recalibrateOnStickyCloseOutDates = false,
-                            const bool reevaluateExerciseInStickyRun = false)
-        : AmcCgBaseEngine(modelCg, simulationDates, stickyCloseOutDates, recalibrateOnStickyCloseOutDates,
-                          reevaluateExerciseInStickyRun),
-          domCcy_(domCcy), forCcy_(forCcy) {}
+                            const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::set<Date>& valuationDates,
+                            const std::vector<Date>& closeOutDates, const bool useStickyCloseOutDates)
+        : AmcCgBaseEngine(modelCg, valuationDates, closeOutDates, useStickyCloseOutDates), domCcy_(domCcy),
+          forCcy_(forCcy) {}
 
     void buildComputationGraph() const override;
 
@@ -58,12 +55,9 @@ protected:
 class AmcCgFxOptionEngine : public AmcCgFxOptionEngineBase, public QuantLib::VanillaOption::engine {
 public:
     AmcCgFxOptionEngine(const std::string& domCcy, const std::string& forCcy,
-                        const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates,
-                        const std::vector<Date>& stickyCloseOutDates,
-                        const bool recalibrateOnStickyCloseOutDates = false,
-                        const bool reevaluateExerciseInStickyRun = false)
-        : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, simulationDates, stickyCloseOutDates,
-                                  recalibrateOnStickyCloseOutDates, reevaluateExerciseInStickyRun) {
+                        const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::set<Date>& valuationDates,
+                        const std::vector<Date>& closeOutDates, const bool useStickyCloseOutDates)
+        : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, valuationDates, closeOutDates, useStickyCloseOutDates) {
         registerWith(modelCg_);
     }
     void calculate() const override;
@@ -74,12 +68,9 @@ class AmcCgFxEuropeanForwardOptionEngine : public AmcCgFxOptionEngineBase,
 public:
     AmcCgFxEuropeanForwardOptionEngine(const std::string& domCcy, const std::string& forCcy,
                                        const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                                       const std::vector<Date>& simulationDates,
-                                       const std::vector<Date>& stickyCloseOutDates,
-                                       const bool recalibrateOnStickyCloseOutDates = false,
-                                       const bool reevaluateExerciseInStickyRun = false)
-        : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, simulationDates, stickyCloseOutDates,
-                                  recalibrateOnStickyCloseOutDates, reevaluateExerciseInStickyRun) {
+                                       const std::set<Date>& valuationDates, const std::vector<Date>& closeOutDates,
+                                       const bool useStickyCloseOutDates)
+        : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, valuationDates, closeOutDates, useStickyCloseOutDates) {
         registerWith(modelCg_);
     }
     void calculate() const override;
@@ -90,12 +81,9 @@ class AmcCgFxEuropeanCSOptionEngine : public AmcCgFxOptionEngineBase,
 public:
     AmcCgFxEuropeanCSOptionEngine(const std::string& domCcy, const std::string& forCcy,
                                   const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                                  const std::vector<Date>& simulationDates,
-                                  const std::vector<Date>& stickyCloseOutDates,
-                                  const bool recalibrateOnStickyCloseOutDates = false,
-                                  const bool reevaluateExerciseInStickyRun = false)
-        : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, simulationDates, stickyCloseOutDates,
-                                  recalibrateOnStickyCloseOutDates, reevaluateExerciseInStickyRun) {
+                                  const std::set<Date>& valuationDates, const std::vector<Date>& closeOutDates,
+                                  const bool useStickyCloseOutDates)
+        : AmcCgFxOptionEngineBase(domCcy, forCcy, modelCg, valuationDates, closeOutDates, useStickyCloseOutDates) {
         registerWith(modelCg_);
     }
     void calculate() const override;

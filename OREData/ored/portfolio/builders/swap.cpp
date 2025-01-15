@@ -111,10 +111,8 @@ QuantLib::ext::shared_ptr<PricingEngine> AmcCgSwapEngineBuilder::engineImpl(cons
                                                                             const std::set<std::string>& eqNames) {
     DLOG("Building AMCCG Swap engine for ccy " << ccy << " (from externally given modelcg)");
     QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
-    return QuantLib::ext::make_shared<AmcCgSwapEngine>(
-        ccy.code(), modelCg_, simulationDates_, stickyCloseOutDates_,
-        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
-        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+    return QuantLib::ext::make_shared<AmcCgSwapEngine>(ccy.code(), modelCg_, valuationDates_, closeOutDates_,
+                                                       useStickyCloseOutDates_);
 }
 
 } // namespace data
