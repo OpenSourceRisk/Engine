@@ -2426,5 +2426,109 @@ void ReportWriter::writeXmlReport(ore::data::Report& report, std::string header,
     report.end();
 }
 
+void ReportWriter::writeBaCvaReport(const QuantLib::ext::shared_ptr<BaCvaCalculator>& baCvaCalculator,
+                                    ore::data::Report& reportOut) {
+
+    reportOut.addColumn("Counterparty", string())
+        .addColumn("NettingSet", string())
+        .addColumn("Analytic", string())
+        .addColumn("Value", double(), 6);
+
+    std::map<std::string, std::set<std::string>> counterpartyNettingSets = baCvaCalculator->counterpartyNettingSets();
+
+    reportOut.next().add("All").add("All").add("BA_CVA_CAPITAL").add(baCvaCalculator->cvaResult());
+
+    for (auto it = counterpartyNettingSets.begin(); it != counterpartyNettingSets.end(); it++) {
+        reportOut.next().add(it->first).add("All").add("sCVA").add(baCvaCalculator->counterpartySCVA(it->first));
+        reportOut.next().add(it->first).add("All").add("RiskWeight").add(baCvaCalculator->riskWeight(it->first));
+        for (auto n : it->second) {
+            reportOut.next().add(it->first).add(n).add("EAD").add(baCvaCalculator->EAD(n));
+            reportOut.next().add(it->first).add(n).add("EffMaturity").add(baCvaCalculator->effectiveMaturity(n));
+            reportOut.next().add(it->first).add(n).add("DiscountFactor").add(baCvaCalculator->discountFactor(n));
+        }
+    }
+
+    reportOut.end();
+}
+
+void ReportWriter::writeCvaSensiReport(const QuantLib::ext::shared_ptr<CvaSensitivityCubeStream>& ss,
+                                       ore::data::Report& reportOut) {
+
+    LOG("Writing CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("ShiftType", string())
+        .addColumn("ShiftSize", double(), 6)
+        .addColumn("Currency", string())
+        .addColumn("BaseCva", double(), 2)
+        .addColumn("Delta", double(), 4);
+
+    ss->reset();
+    while (CvaSensitivityRecord sr = ss->next()) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.key));
+        reportOut.add(to_string(sr.shiftType));
+        reportOut.add(sr.shiftSize);
+        reportOut.add(sr.currency);
+        reportOut.add(sr.baseCva);
+        reportOut.add(sr.delta);
+    }
+
+    reportOut.end();
+}
+
+void ReportWriter::writeCvaSensiReport(const std::vector<CvaSensitivityRecord>& records,
+                                       ore::data::Report& reportOut) {
+
+    LOG("Writing CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("ShiftType", string())
+        .addColumn("ShiftSize", double(), 6)
+        .addColumn("Currency", string())
+        .addColumn("BaseCva", double(), 2)
+        .addColumn("Delta", double(), 4);
+
+    for (auto sr : records) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.key));
+        reportOut.add(to_string(sr.shiftType));
+        reportOut.add(sr.shiftSize);
+        reportOut.add(sr.currency);
+        reportOut.add(sr.baseCva);
+        reportOut.add(sr.delta);
+    }
+
+    reportOut.end();
+}
+
+void ReportWriter::writeSaCvaSensiReport(const SaCvaNetSensitivities& sensis,
+                                         ore::data::Report& reportOut) {
+
+    LOG("Writing SA CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskType", string())
+        .addColumn("CvaType", string())
+        .addColumn("MarginType", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("Bucket", string())
+        .addColumn("Value", double(), 4);
+
+    for (auto sr : sensis) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.riskType));
+        reportOut.add(to_string(sr.cvaType));
+        reportOut.add(to_string(sr.marginType));
+        reportOut.add(sr.riskFactor);
+        reportOut.add(sr.bucket);
+        reportOut.add(sr.value);
+    }
+
+    reportOut.end();
+}
+  
 } // namespace analytics
 } // namespace ore

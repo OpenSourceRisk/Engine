@@ -52,9 +52,10 @@ static const std::set<std::string> pricingAnalyticSubAnalytics {"NPV", "CASHFLOW
 
 class PricingAnalytic : public Analytic {
 public:
-    PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics,
-                   inputs) {}
+    PricingAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                    const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+                    const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr)
+        : Analytic(std::make_unique<PricingAnalyticImpl>(inputs), pricingAnalyticSubAnalytics, inputs) {}
 };
  
 } // namespace analytics

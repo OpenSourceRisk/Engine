@@ -37,7 +37,7 @@ namespace analytics {
 
 class Analytic;
 
-//! TradeBuilder base class
+//! AnalyticBuilder base class
 /*! All derived classes have to be stateless. It should not be necessary to derive classes
   other than TradeBuilder from this class anyway.
 
@@ -47,7 +47,9 @@ class AbstractAnalyticBuilder {
 public:
     virtual ~AbstractAnalyticBuilder() {}
     virtual QuantLib::ext::shared_ptr<Analytic>
-    build(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) const = 0;
+    build(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
+	  const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+          const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr) const = 0;
 };
 
 //! Template AnalyticBuilder class
@@ -56,9 +58,11 @@ public:
 */
 template <class T> class AnalyticBuilder : public AbstractAnalyticBuilder {
 public:
-    virtual QuantLib::ext::shared_ptr<Analytic>
-    build(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) const override {
-        return QuantLib::ext::make_shared<T>(inputs);
+    virtual QuantLib::ext::shared_ptr<Analytic> build(
+        const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
+        const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+        const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr) const override {
+        return QuantLib::ext::make_shared<T>(inputs, offSetScenario, offsetSimMarketParams);
     }
 };
 
@@ -81,8 +85,11 @@ public:
                     const bool allowOverwrite = false);
 
     //! Build, throws for unknown className
-    std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>> build(const std::string& subAnalytic, 
-        const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) const;
+    std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>
+    build(const std::string& subAnalytic, const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
+          const QuantLib::ext::shared_ptr<Scenario>& offSetScenario = nullptr,
+          const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams = nullptr) const;
+
 };
 
 } // namespace analytics

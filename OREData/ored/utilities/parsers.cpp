@@ -1559,6 +1559,11 @@ std::ostream& operator<<(std::ostream& os, SalvagingAlgorithm::Type type) {
     return os;
 }
 
+std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p) {
+    std::vector<std::string> pair = {p.first, p.second};
+    return pair;
+}
+
 QuantLib::ext::shared_ptr<Integrator> parseIntegrationPolicy(const std::string& s) {
     if (s.empty())
         return nullptr;

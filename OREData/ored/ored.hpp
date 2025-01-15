@@ -231,6 +231,9 @@
 #include <ored/portfolio/convertiblebond.hpp>
 #include <ored/portfolio/convertiblebonddata.hpp>
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
+#include <ored/portfolio/counterpartycorrelationmatrix.hpp>
+#include <ored/portfolio/counterpartyinformation.hpp>
+#include <ored/portfolio/counterpartymanager.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>

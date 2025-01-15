@@ -95,6 +95,9 @@ public:
         const Real regressionVarianceCutoff = Null<Real>(), const bool recalibrateOnStickyCloseOutDates = false,
         const bool reevaluateExerciseInStickyRun = false);
 
+    //! Destructor
+    virtual ~McMultiLegBaseEngine() {}
+
     // run calibration and pricing (called from derived engines)
     void calculate() const;
 
@@ -152,6 +155,16 @@ public:
         std::function<RandomVariable(const Size n, const std::vector<std::vector<const RandomVariable*>>&)>
             amountCalculator;
     };
+
+    // overwrite function to transform values going into regression
+    // current usage in the fwd bond case
+    virtual RandomVariable overwritePathValueUndDirty(double t, const RandomVariable& pathValueUndDirty,
+                                                      const std::set<Real>& exerciseXvaTimes,
+                                                      const std::vector<std::vector<QuantExt::RandomVariable>>& paths) const {
+        return pathValueUndDirty;
+    };
+
+    virtual bool useOverwritePathValueUndDirty() const { return false; };
 
     // class representing a regression model for a certain observation (= xva, exercise) time
     class RegressionModel {

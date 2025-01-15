@@ -214,6 +214,9 @@ portfolio/compositetrade.cpp
 portfolio/convertiblebond.cpp
 portfolio/convertiblebonddata.cpp
 portfolio/convertiblebondreferencedata.cpp
+portfolio/counterpartycorrelationmatrix.cpp
+portfolio/counterpartyinformation.cpp
+portfolio/counterpartymanager.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
 portfolio/creditdefaultswapoption.cpp
@@ -614,6 +617,9 @@ portfolio/compositetrade.hpp
 portfolio/convertiblebond.hpp
 portfolio/convertiblebonddata.hpp
 portfolio/convertiblebondreferencedata.hpp
+portfolio/counterpartycorrelationmatrix.hpp
+portfolio/counterpartyinformation.hpp
+portfolio/counterpartymanager.hpp
 portfolio/creditdefaultswap.hpp
 portfolio/creditdefaultswapdata.hpp
 portfolio/creditdefaultswapoption.hpp

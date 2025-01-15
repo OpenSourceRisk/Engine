@@ -58,12 +58,16 @@ void AnalyticFactory::addBuilder(const std::string& className, const std::set<st
                "AnalyticFactory: duplicate builder for className '" << className << "'.");
 }
 
-std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>> AnalyticFactory::build(const string& subAnalytic,
-    const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) const {
+std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>
+AnalyticFactory::build(const string& subAnalytic,
+                       const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
+                       const QuantLib::ext::shared_ptr<Scenario>& offSetScenario,
+                       const QuantLib::ext::shared_ptr<ScenarioSimMarketParameters>& offsetSimMarketParams) const {
     auto builder = getBuilder(subAnalytic);
     QuantLib::ext::shared_ptr<Analytic> a;
     if (builder.second)
-        a = builder.second->build(inputs);
+        a = builder.second->build(inputs, offSetScenario, offsetSimMarketParams);
+
     return std::make_pair(builder.first, a);
 }
 
