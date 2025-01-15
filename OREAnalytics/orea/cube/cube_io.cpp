@@ -227,11 +227,11 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, cons
         for (Size j = 0; j < cube.cube->numDates(); ++j) {
             len1 = snprintf(buf + len0, maxLen, "%u,", (unsigned int)(j + 1));
             for (Size k = 0; k < cube.cube->samples(); ++k) {
-                len2 = snprintf(buf + len1, maxLen, "%u,", (unsigned int)k);
+                len2 = snprintf(buf + len0 + len1, maxLen, "%u,", (unsigned int)k);
                 for (Size d = 0; d < cube.cube->depth(); ++d) {
                     double value = cube.cube->get(i, j, k, d);
                     if (value != 0.0) {
-                        snprintf(buf + len2, maxLen, "%u,", (unsigned int)d);
+                        snprintf(buf + len0 + len1 + len2, maxLen, "%u,", (unsigned int)d);
                         out << buf << value << "\n";
                     }
                 }
