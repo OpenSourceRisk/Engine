@@ -99,7 +99,7 @@ private:
     // Log the constructed DateGrid
     void log();
 
-    Date today_;
+    QuantLib::Date today_;
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
     std::vector<QuantLib::Date> dates_;
