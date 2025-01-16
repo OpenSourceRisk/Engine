@@ -183,27 +183,16 @@ void XvaEngineCG::buildCam() {
         irIndices.push_back(std::make_pair(ind, *simMarket_->iborIndex(ind)));
     }
 
-    // note: - these must be fine enough for Euler, e.g. weekly over the whole simulation period
-    //       - these include valuation dates and close-out dates
-    modelSimulationDates_ = std::set<Date>(scenarioGeneratorData_->getGrid()->dates().begin(),
-                                           scenarioGeneratorData_->getGrid()->dates().end());
-
-    valuationDates_ = std::set<Date>(scenarioGeneratorData_->getGrid()->valuationDates().begin(),
-                                     scenarioGeneratorData_->getGrid()->valuationDates().end());
-    closeOutDates_ = scenarioGeneratorData_->getGrid()->closeOutDates();
-    useStickyCloseOutDates_ = scenarioGeneratorData_->withMporStickyDate();
-
-    QL_REQUIRE(valuationDates_.size() == closeOutDates_.size() || closeOutDates_.empty(),
-               "XvaEngineCG: valuation dates (" << valuationDates_.size() << ") do not match close out dates ("
-                                                << closeOutDates_.size() << ")");
-
+    // note: these must be fine enough for Euler, e.g. weekly over the whole simulation period
+    simulationDates_ = std::set<Date>(scenarioGeneratorData_->getGrid()->dates().begin(),
+                                      scenarioGeneratorData_->getGrid()->dates().end());
     // note: this should be added to CrossAssetModelData
     Size timeStepsPerYear = 1;
 
     // note: projectedStateProcessIndices can be removed from GaussianCamCG constructor most probably?
     model_ = QuantLib::ext::make_shared<GaussianCamCG>(
         camBuilder_->model(), scenarioGeneratorData_->samples(), currencies, curves, fxSpots, irIndices, infIndices,
-        indices, indexCurrencies, modelSimulationDates_, timeStepsPerYear, iborFallbackConfig_, std::vector<Size>(),
+        indices, indexCurrencies, simulationDates_, timeStepsPerYear, iborFallbackConfig_, std::vector<Size>(),
         std::vector<std::string>(), true);
     // this is actually necessary, FIXME why? There is a calculate() missing in the model impl. then?
     model_->calculate();
@@ -226,11 +215,17 @@ void XvaEngineCG::buildPortfolio() {
     configurations[MarketContext::fxCalibration] = marketConfiguration_;
     configurations[MarketContext::pricing] = marketConfiguration_;
 
+    std::vector<Date> simDates, stickyCloseOutDates;
+    if (scenarioGeneratorData_->withMporStickyDate()) {
+        simDates = scenarioGeneratorData_->getGrid()->valuationDates();
+        stickyCloseOutDates = scenarioGeneratorData_->getGrid()->closeOutDates();
+    } else {
+        simDates = scenarioGeneratorData_->getGrid()->dates();
+    }
+
     auto factory = QuantLib::ext::make_shared<EngineFactory>(
         edCopy, simMarket_, configurations, referenceData_, iborFallbackConfig_,
-        EngineBuilderFactory::instance().generateAmcCgEngineBuilders(model_, valuationDates_, closeOutDates_,
-                                                                     useStickyCloseOutDates_),
-        true);
+        EngineBuilderFactory::instance().generateAmcCgEngineBuilders(model_, simDates, stickyCloseOutDates), true);
 
     portfolio_->build(factory, "xva engine cg", true);
 
@@ -253,28 +248,16 @@ void XvaEngineCG::buildCgPartB() {
         QL_REQUIRE(engine, "XvaEngineCG: expected to get AmcCgPricingEngine, trade '"
                                << id << "' has a different or no engine attached.");
         g->startRedBlock();
+        // trigger setupArguments
         if (!trade->instrument()->qlInstrument()->isCalculated())
-            trade->instrument()->qlInstrument()->recalculate(); // trigger setupArguments
+            trade->instrument()->qlInstrument()->recalculate();
         engine->buildComputationGraph();
-
-        {
-            std::vector<std::size_t> tmp;
-            tmp.push_back(g->variable(engine->npvName() + "_0"));
-            for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
-                tmp.push_back(g->variable("_AMC_NPV_" + std::to_string(i)));
-            }
-            amcNpvNodes_.push_back(tmp);
+        std::vector<std::size_t> tmp;
+        tmp.push_back(g->variable(engine->npvName() + "_0"));
+        for (std::size_t i = 0; i < simulationDates_.size(); ++i) {
+            tmp.push_back(g->variable("_AMC_NPV_" + std::to_string(i)));
         }
-
-        {
-            std::vector<std::size_t> tmp;
-            tmp.push_back(g->variable(engine->npvName() + "_0"));
-            for (std::size_t i = 0; i < closeOutDates_.size(); ++i) {
-                tmp.push_back(g->variable("_AMC_NPV_C_" + std::to_string(i)));
-            }
-            amcNpvCloseOutNodes_.push_back(tmp);
-        }
-
+        amcNpvNodes_.push_back(tmp);
         g->endRedBlock();
         tradeCurrencyGroup_.push_back(engine->relevantCurrencies());
     }
@@ -282,63 +265,6 @@ void XvaEngineCG::buildCgPartB() {
     timing_partb_ = timer.elapsed().wall;
     DLOG("XvaEngineCG: build computation graph for all trades done - graph size is "
          << model_->computationGraph()->size());
-}
-
-std::size_t XvaEngineCG::createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate) {
-
-    auto g = model_->computationGraph();
-
-    Date valuationDate = dateIndex == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), dateIndex - 1);
-    Date closeOutDate;
-    if (!isValuationDate) {
-        closeOutDate = dateIndex == 0 ? model_->referenceDate() : closeOutDates_[dateIndex];
-    }
-    Date obsDate = valuationDate;
-    if (!useStickyCloseOutDates_ && !isValuationDate)
-        obsDate = closeOutDate;
-
-    std::set<std::set<std::size_t>> pfRegressorGroups;
-    std::set<std::size_t> pfRegressors;
-    std::vector<std::size_t> tradeSum(portfolio_->trades().size());
-    for (Size j = 0; j < portfolio_->trades().size(); ++j) {
-        tradeSum[j] = isValuationDate ? amcNpvNodes_[j][dateIndex] : amcNpvCloseOutNodes_[j][dateIndex];
-        std::set<std::size_t> tradeRegressors =
-            model_->npvRegressors(isValuationDate ? valuationDate : closeOutDate, tradeCurrencyGroup_[j]);
-        pfRegressorGroups.insert(tradeRegressors);
-        pfRegressors.insert(tradeRegressors.begin(), tradeRegressors.end());
-    }
-    std::set<std::set<std::size_t>> pfRegressorPosGroups;
-    for (const auto& g : pfRegressorGroups) {
-        std::set<std::size_t> group;
-        std::transform(g.begin(), g.end(), std::inserter(group, group.end()),
-                       [&g](std::size_t v) { return std::distance(g.begin(), g.find(v)); });
-        pfRegressorPosGroups.insert(group);
-    }
-    std::size_t pfExposureNodeTmp =
-        model_->npv(cg_add(*g, tradeSum), !useStickyCloseOutDates_ && !isValuationDate ? closeOutDate : valuationDate,
-                    cg_const(*g, 1.0), std::nullopt, {}, pfRegressors);
-    pfRegressorPosGroups_[pfExposureNodeTmp] = pfRegressorPosGroups;
-    return pfExposureNodeTmp;
-}
-
-std::size_t XvaEngineCG::createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
-                                          const bool isValuationDate) {
-
-    auto g = model_->computationGraph();
-
-    Date valuationDate = dateIndex == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), dateIndex - 1);
-    Date closeOutDate;
-    if (!isValuationDate) {
-        closeOutDate = dateIndex == 0 ? model_->referenceDate() : closeOutDates_[dateIndex];
-    }
-    Date obsDate = valuationDate;
-    if (!useStickyCloseOutDates_ && !isValuationDate)
-        obsDate = closeOutDate;
-
-    return model_->npv(
-        isValuationDate ? amcNpvNodes_[tradeIndex][dateIndex] : amcNpvCloseOutNodes_[tradeIndex][dateIndex],
-        !useStickyCloseOutDates_ && !isValuationDate ? closeOutDate : valuationDate, cg_const(*g, 1.0), {}, {},
-        model_->npvRegressors(isValuationDate ? valuationDate : closeOutDate, tradeCurrencyGroup_[tradeIndex]));
 }
 
 void XvaEngineCG::buildCgPartC() {
@@ -354,22 +280,37 @@ void XvaEngineCG::buildCgPartC() {
     auto g = model_->computationGraph();
 
     if (mode_ == Mode::Full || !generateTradeLevelExposure_) {
-        for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
-            pfExposureNodes_.push_back(createPortfolioExposureNode(i, true));
-            if (!closeOutDates_.empty())
-                pfExposureCloseOutNodes_.push_back(createPortfolioExposureNode(i, false));
+        std::vector<std::size_t> tradeSum(portfolio_->trades().size());
+        for (Size i = 0; i < simulationDates_.size() + 1; ++i) {
+            std::set<std::set<std::size_t>> pfRegressorGroups;
+            std::set<std::size_t> pfRegressors;
+            Date simDate = i == 0 ? model_->referenceDate() : *std::next(simulationDates_.begin(), i - 1);
+            for (Size j = 0; j < portfolio_->trades().size(); ++j) {
+                tradeSum[j] = amcNpvNodes_[j][i];
+                std::set<std::size_t> tradeRegressors = model_->npvRegressors(simDate, tradeCurrencyGroup_[j]);
+                pfRegressorGroups.insert(tradeRegressors);
+                pfRegressors.insert(tradeRegressors.begin(), tradeRegressors.end());
+            }
+            std::set<std::set<std::size_t>> pfRegressorPosGroups;
+            for (const auto& g : pfRegressorGroups) {
+                std::set<std::size_t> group;
+                std::transform(g.begin(), g.end(), std::inserter(group, group.end()),
+                               [&g](std::size_t v) { return std::distance(g.begin(), g.find(v)); });
+                pfRegressorPosGroups.insert(group);
+            }
+            pfExposureNodes_.push_back(
+                model_->npv(cg_add(*g, tradeSum), simDate, cg_const(*g, 1.0), std::nullopt, {}, pfRegressors));
+            pfRegressorPosGroups_[pfExposureNodes_.back()] = pfRegressorPosGroups;
         }
     }
 
     if (generateTradeLevelExposure_) {
-        for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
+        for (Size i = 0; i < simulationDates_.size() + 1; ++i) {
             tradeExposureNodes_.push_back(std::vector<std::size_t>(portfolio_->trades().size()));
-            if (!closeOutDates_.empty())
-                tradeExposureCloseOutNodes_.push_back(std::vector<std::size_t>(portfolio_->trades().size()));
+            Date simDate = i == 0 ? model_->referenceDate() : *std::next(simulationDates_.begin(), i - 1);
             for (Size j = 0; j < portfolio_->trades().size(); ++j) {
-                tradeExposureNodes_.back()[j] = createTradeExposureNode(i, j, true);
-                if (!closeOutDates_.empty())
-                    tradeExposureCloseOutNodes_.back()[j] = createTradeExposureNode(i, j, false);
+                tradeExposureNodes_.back()[j] = model_->npv(amcNpvNodes_[j][i], simDate, cg_const(*g, 1.0), {}, {},
+                                                            model_->npvRegressors(simDate, tradeCurrencyGroup_[j]));
             }
         }
     }
@@ -393,9 +334,9 @@ void XvaEngineCG::buildCgPP() {
     auto defaultCurve = simMarket_->defaultCurve("BANK")->curve();
     model_->registerWith(defaultCurve);
     cvaNode_ = cg_const(*g, 0.0);
-    for (Size i = 0; i < valuationDates_.size(); ++i) {
-        Date d = i == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), i - 1);
-        Date e = *std::next(valuationDates_.begin(), i);
+    for (Size i = 0; i < simulationDates_.size(); ++i) {
+        Date d = i == 0 ? model_->referenceDate() : *std::next(simulationDates_.begin(), i - 1);
+        Date e = *std::next(simulationDates_.begin(), i);
         std::size_t defaultProb =
             addModelParameter(*g, model_->modelParameterFunctors(), "__defaultprob_" + std::to_string(i),
                               [defaultCurve, d, e]() { return defaultCurve->defaultProbability(d, e); });
@@ -687,7 +628,7 @@ void XvaEngineCG::populateNpvOutputCube() {
                        << id << "' from portfolio is not present in output cube - internal error.");
 
         npvOutputCube_->setT0(values_[getNode(0)][0] * multiplier, cubeTradeIdx->second);
-        for (Size i = 0; i < valuationDates_.size(); ++i) {
+        for (Size i = 0; i < simulationDates_.size(); ++i) {
             for (Size j = 0; j < npvOutputCube_->samples(); ++j) {
                 npvOutputCube_->set(values_[getNode(i + 1)][j] * multiplier, cubeTradeIdx->second, i, j);
             }
@@ -705,9 +646,9 @@ void XvaEngineCG::generateXvaReports() {
     epeReport_ = QuantLib::ext::make_shared<InMemoryReport>();
     epeReport_->addColumn("Date", Date()).addColumn("EPE", double(), 4).addColumn("ENE", double(), 4);
 
-    for (Size i = 0; i < valuationDates_.size() + 1; ++i) {
+    for (Size i = 0; i < simulationDates_.size() + 1; ++i) {
         epeReport_->next();
-        epeReport_->add(i == 0 ? model_->referenceDate() : *std::next(valuationDates_.begin(), i - 1))
+        epeReport_->add(i == 0 ? model_->referenceDate() : *std::next(simulationDates_.begin(), i - 1))
             .add(expectation(max(values_[pfExposureNodes_[i]], RandomVariable(model_->size(), 0.0))).at(0))
             .add(expectation(max(-values_[pfExposureNodes_[i]], RandomVariable(model_->size(), 0.0))).at(0));
     }

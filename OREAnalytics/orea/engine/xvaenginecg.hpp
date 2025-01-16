@@ -118,9 +118,6 @@ private:
     void populateModelParameters(const std::vector<std::pair<std::size_t, double>>& modelParameters,
                                  std::vector<RandomVariable>& values,
                                  std::vector<ExternalRandomVariable>& valuesExternal) const;
-    std::size_t createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate);
-    std::size_t createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
-                                        const bool isValuationDate);
 
     // set via additional methods
 
@@ -165,10 +162,7 @@ private:
     QuantLib::ext::shared_ptr<CrossAssetModelBuilder> camBuilder_;
     QuantLib::ext::shared_ptr<GaussianCamCG> model_;
 
-    std::set<Date> modelSimulationDates_;
-    std::set<Date> valuationDates_;
-    std::vector<Date> closeOutDates_;
-    bool useStickyCloseOutDates_;
+    std::set<Date> simulationDates_;
 
     std::vector<std::pair<std::size_t, double>> baseModelParams_;
     std::vector<RandomVariableOpNodeRequirements> opNodeRequirements_;
@@ -180,15 +174,10 @@ private:
     QuantExt::ComputeContext::Settings externalComputeDeviceSettings_;
 
     bool generateTradeLevelExposure_ = false;
-    // FIXME: we don't have a close-out time for the time zero valuation
-    //        we set this to the time zero npv itself for the time being
-    std::vector<std::vector<std::size_t>> amcNpvNodes_;                // includes time zero npv
-    std::vector<std::vector<std::size_t>> amcNpvCloseOutNodes_;        // includes time zero npv (FIXME)
-    std::vector<std::vector<std::size_t>> tradeExposureNodes_;         // includes time zero npv
-    std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_; // includes time zero npv (FIXME)
-    std::vector<std::set<std::string>> tradeCurrencyGroup_;            // relevant ccys per trade
+    std::vector<std::vector<std::size_t>> amcNpvNodes_;        // includes time zero npv
+    std::vector<std::vector<std::size_t>> tradeExposureNodes_; // includes time zero npv
+    std::vector<std::set<std::string>> tradeCurrencyGroup_;    // relevant ccys per trade
     std::vector<std::size_t> pfExposureNodes_;
-    std::vector<std::size_t> pfExposureCloseOutNodes_;
     std::size_t cvaNode_ = QuantExt::ComputationGraph::nan;
     std::vector<std::size_t> asdNumeraire_, asdFx_, asdIndex_;
     std::vector<bool> keepNodes_;
