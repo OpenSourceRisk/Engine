@@ -372,9 +372,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
 
     
 
-    if (cdoEngineBuilder->optimizedSensitivityCalculation()) {
-        dpts = buildPerformanceOptimizedDefaultCurves(dpts);
-    }
+   
 
     // TODO check if underlying is index cds
 
@@ -393,15 +391,23 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         // Chapter 10.6
         
         try {
-            LOG("Build index calibration for " << creditCurveIdWithTerm());
-            Handle<YieldTermStructure> yts =
-                market->discountCurve(ccy.code(), cdoEngineBuilder->configuration(MarketContext::pricing));
             Date cdsStartDate = indexStartDateHint() == Date() ? schedule.dates().front() : indexStartDateHint();
-            Handle<DefaultProbabilityTermStructure> indexCreditCurve =
-                indexCdsDefaultCurve(market, creditCurveIdWithTerm(), config)->curve();
-            Handle<Quote> indexCdsRecovery = market->recoveryRate(creditCurveIdWithTerm(), config);
-            curveCalibration = ext::make_shared<IndexConstituentDefaultCurveCalibration>(cdsStartDate, 5 * Years, runningRate, indexCdsRecovery, indexCreditCurve, yts);
-
+            
+            const auto& [_, indexTerm] = ore::data::splitCurveIdWithTenor(creditCurveIdWithTerm());
+            std::vector<Period> indexTerms = {3 * Years, 5 * Years}; //{indexTerm};
+            std::vector<Handle<DefaultProbabilityTermStructure>> indexCurves;
+            std::vector<Handle<Quote>> indexRecoveries;
+            Handle<YieldTermStructure> yts =
+                    market->discountCurve(ccy.code(), cdoEngineBuilder->configuration(MarketContext::pricing));
+            for (const auto& period : indexTerms) {
+                auto indexCurveName = qualifier() + "_" + to_string(period);
+                LOG("Build index calibration for " <<indexCurveName);
+                
+                indexCurves.push_back(indexCdsDefaultCurve(market, indexCurveName, config)->curve());
+                indexRecoveries.push_back(market->recoveryRate(indexCurveName, config));
+            }
+            curveCalibration = ext::make_shared<IndexConstituentDefaultCurveCalibration>(
+                cdsStartDate, indexTerms, runningRate, indexRecoveries, indexCurves, yts);
         } catch (const std::exception& e) {
             WLOG("Error building the calibration got " << e.what());
         }
@@ -411,13 +417,35 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
             try{
                 auto result = curveCalibration->calibratedCurves(basketNotionals, dpts, recoveryRates);
                 if (result.success){
+                    auto uncalibratedCurve = dpts.front();
+                    auto calibratedCurve = result.curves.front();
                     dpts = std::move(result.curves);
+
+                    LOG("Calibration results for creditCurve:" << creditCurveIdWithTerm());
+                    LOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
+                    for (size_t i = 0; i < result.cdsMaturity.size(); ++i) {
+                        LOG(io::iso_date(result.cdsMaturity[i])
+                            << ";" << std::fixed << std::setprecision(8) << result.calibrationFactor[i] << ";"
+                            << result.marketNpv[i] << ";" << result.impliedNpv[i] << ";"
+                            << result.marketNpv[i] - result.impliedNpv[i]);
+                    }
+                    std::set<double> times{0.5, 1., 1.5, 2., 3.5, 4., 5., 6.};
+                    for(auto& maturity : result.cdsMaturity){
+                        times.insert(uncalibratedCurve->timeFromReference(maturity-1));
+                        times.insert(uncalibratedCurve->timeFromReference(maturity));
+                        times.insert(uncalibratedCurve->timeFromReference(maturity+1));
+                    }
+
+                    for (const auto& time : times) {
+                        LOG("Time: " << time << " Uncalibrated: " << uncalibratedCurve->defaultProbability(time, true)
+                                     << " Calibrated: " << calibratedCurve->defaultProbability(time, true));
+                        auto hazardRateUncalibrated = uncalibratedCurve->hazardRate(time, true);
+                        auto hazardRateCalibrated = calibratedCurve->hazardRate(time, true);
+                        LOG("Time: " << time << " Uncalibrated: " << hazardRateUncalibrated
+                                     << " Calibrated: " << hazardRateCalibrated << " alpha "
+                                     << hazardRateCalibrated / hazardRateUncalibrated);
+                    }
                 }
-                LOG("Calibration results for creditCurve:" << creditCurveIdWithTerm());
-                LOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
-                LOG(io::iso_date(result.cdsMaturity)
-                    << ";" << std::fixed << std::setprecision(8) << result.calibrationFactor << ";" << result.marketNpv
-                    << ";" << result.impliedNpv << ";" << result.marketNpv - result.impliedNpv);
             } catch(const std::exception& e)
             {
                 WLOG("Error during calibration, continue without index curve calibration, got " << e.what());
@@ -425,6 +453,10 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
            
         }
         
+    }
+
+    if (cdoEngineBuilder->optimizedSensitivityCalculation()) {
+        dpts = buildPerformanceOptimizedDefaultCurves(dpts);
     }
 
     // Create the instruments.

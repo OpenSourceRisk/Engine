@@ -41,10 +41,10 @@ public:
     struct CalibrationResults {
         bool success = false;
         std::vector<Handle<DefaultProbabilityTermStructure>> curves;
-        Date cdsMaturity;
-        double marketNpv;
-        double impliedNpv;
-        double calibrationFactor;
+        std::vector<Date> cdsMaturity;
+        std::vector<double> marketNpv;
+        std::vector<double> impliedNpv;
+        std::vector<double> calibrationFactor;
         std::string errorMessage;
     };
 
@@ -52,28 +52,39 @@ public:
                                             const double indexSpread, const Handle<Quote>& indexRecoveryRate,
                                             const Handle<DefaultProbabilityTermStructure>& indexCurve,
                                             const Handle<YieldTermStructure>& discountCurve)
-        : indexStartDate_(indexStartDate), indexTenor_(indexTenor), indexSpread_(indexSpread),
-          indexRecoveryRate_(indexRecoveryRate), indexCurve_(indexCurve), discountCurve_(discountCurve) {}
+        : indexStartDate_(indexStartDate), indexTenors_({indexTenor}), indexSpread_(indexSpread),
+          indexRecoveryRates_({indexRecoveryRate}), indexCurves_({indexCurve}), discountCurve_(discountCurve) {}
+
+    IndexConstituentDefaultCurveCalibration(const Date& indexStartDate, const std::vector<Period> indexTenors,
+                                            const double indexSpread, const std::vector<Handle<Quote>>& indexRecoveryRates,
+                                            const std::vector<Handle<DefaultProbabilityTermStructure>>& indexCurves,
+                                            const Handle<YieldTermStructure>& discountCurve)
+        : indexStartDate_(indexStartDate), indexTenors_(indexTenors), indexSpread_(indexSpread),
+          indexRecoveryRates_(indexRecoveryRates), indexCurves_(indexCurves), discountCurve_(discountCurve) {}
+
 
     CalibrationResults calibratedCurves(const std::vector<double>& remainingNotionals,
                                         const std::vector<Handle<DefaultProbabilityTermStructure>>& creditCurves,
                                         const std::vector<double>& recoveryRates) const;
-    const Handle<QuantLib::DefaultProbabilityTermStructure>& indexCurve() const { return indexCurve_; }
+    const std::vector<Handle<QuantLib::DefaultProbabilityTermStructure>>& indexCurve() const { return indexCurves_; }
     const Handle<QuantLib::YieldTermStructure>& discountCurve() const { return discountCurve_; }
 
-private:
-    double targetNpv(const ext::shared_ptr<Instrument>& indexCds) const;
+protected:
+    double targetNpv(const ext::shared_ptr<Instrument>& indexCds, size_t i) const;
 
+private:
     QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>
-    buildShiftedCurves(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
-                       const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor) const;
+    buildShiftedCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
+                      const std::vector<QuantLib::Date>& maturities,
+                      const std::vector<QuantLib::ext::shared_ptr<SimpleQuote>>& calibrationFactors) const;
     Date indexStartDate_;
-    Period indexTenor_;
+    std::vector<Period> indexTenors_;
     double indexSpread_;
-    Handle<Quote> indexRecoveryRate_;
-    Handle<DefaultProbabilityTermStructure> indexCurve_;
+    std::vector<Handle<Quote>>indexRecoveryRates_;
+    std::vector<Handle<DefaultProbabilityTermStructure>> indexCurves_;
     Handle<YieldTermStructure> discountCurve_;
 };
+
 
 // include QuantExt::DefaultLossModel from qle/models/defaultlossmodel.hpp instead
 class DefaultLossModel;
@@ -270,6 +281,8 @@ public:
     */
     //@{
     Real expectedTrancheLoss(const Date& d, Real recoveryRate = Null<Real>()) const;
+
+    Real expectedTrancheRecovery(const Date& d) const;
     /*! The lossFraction is the fraction of losses expressed in
         inception (no losses) tranche units (e.g. 'attach level'=0%,
         'detach level'=100%)

@@ -408,9 +408,10 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
                    << data.size() << ") should equal number of detachment points (" << dps.size()
                    << ") times the number of terms (" << terms.size() << ").");
 
-    QuoteData newQuoteData = qData;
-    newQuoteData.data.clear();
-    for (const auto& term : terms){
+    QuoteData newQuoteData;
+    newQuoteData.dps = dps;
+    for (const auto& term : terms) {
+        try{
         vector<Real> tmpDps(dps.begin(), dps.end());
         auto basketData = adjustForLosses(tmpDps);
         std::vector<std::pair<double, double>> attachPoints = {{0.0, 0.0}};
@@ -445,7 +446,6 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
         Currency ccy = parseCurrency(config.currency());
         auto curveCalibration = ext::make_shared<QuantExt::IndexConstituentDefaultCurveCalibration>(
             config.startDate(), term, config.indexSpread(), indexRecovery, indexCurve, discountCurve);
-
         std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
         for (const auto& name : basketData.remainingNames) {
             auto mappedName = creditCurveNameMapping(name);
@@ -458,10 +458,25 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
         auto calibrationResults = curveCalibration->calibratedCurves(basketData.remainingWeights, dpts, recoveryRates);
 
         LOG("Maturity CalibrationFacotr MarketNPV ImpliedNPV Error");
-        LOG(calibrationResults.cdsMaturity
-            << " " << std::fixed << std::setprecision(6) << calibrationResults.calibrationFactor << " "
-            << calibrationResults.marketNpv << " " << calibrationResults.impliedNpv << " "
-            << calibrationResults.marketNpv - calibrationResults.impliedNpv);
+        LOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
+        for (size_t i = 0; i < calibrationResults.cdsMaturity.size(); ++i) {
+            LOG(io::iso_date(calibrationResults.cdsMaturity[i])
+                << ";" << std::fixed << std::setprecision(8) << calibrationResults.calibrationFactor[i] << ";"
+                << calibrationResults.marketNpv[i] << ";" << calibrationResults.impliedNpv[i] << ";"
+                << calibrationResults.marketNpv[i] - calibrationResults.impliedNpv[i]);
+        }
+        auto uncalibratedCurve = dpts.front();
+        auto debugCurve = calibrationResults.curves.front();
+        
+        for(const auto& time : {0.5, 1., 1.5, 2., 3.5, 4., 5., 6.}){
+            LOG("Time: " << time << " Uncalibrated: " << uncalibratedCurve->defaultProbability(time, true) << " Calibrated: " << debugCurve->defaultProbability(time, true));
+            auto hazardRateUncalibrated = uncalibratedCurve->hazardRate(time, true);
+            auto hazardRateCalibrated = debugCurve->hazardRate(time, true);
+            LOG("Time: " << time << " Uncalibrated: " << hazardRateUncalibrated << " Calibrated: " << hazardRateCalibrated << " alpha " << hazardRateCalibrated / hazardRateUncalibrated);
+        }
+
+
+        
 
         for (size_t i = 0; i < basketData.remainingNames.size(); i++) {
             std::string name = basketData.remainingNames[i];
@@ -545,7 +560,15 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             trancheNPV.push_back(cdo->cleanNPV());
             newQuoteData.data[key] = Handle<Quote>(ext::make_shared<SimpleQuote>(targetCorrelation));
         }
+        newQuoteData.terms.insert(term);
+        
+        
         baseCorrelations.push_back(1.0);
+        } catch (std::exception& e) {
+            ALOG("Error building base correlation curve from upfronts for term " << term << ": " << e.what());
+        } catch (...) {
+            ALOG("Error building base correlation curve from upfronts for term " << term << ": unknown error");
+        }
     }
 
     buildFromCorrelations(config, newQuoteData);
