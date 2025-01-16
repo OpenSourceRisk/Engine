@@ -191,11 +191,7 @@ void TRS::fromXML(XMLNode* node) {
     if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(underlyingDataNode, "PortfolioIndexTradeData")) {
         portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
         portfolioDeriv_ = true;
-        if (XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexShares")) {
-            indexShares_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexShares");
-        } else {
-            indexShares_ = 1;
-        }
+        indexShares_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexShares", false, 1);
         returnData_.setPortfolioId(portfolioId_);
     }
     QL_REQUIRE(!underlyingTradeNodes.empty() || !underlyingTradeNodes2.empty() || !portfolioId_.empty(),
@@ -223,11 +219,7 @@ void TRS::fromXML(XMLNode* node) {
         if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(t, "CompositeTradeData")) {
             if (XMLUtils::getChildNode(underlyingTradeNodes3, "BasketName")) {
                 portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
-                if (XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexShares")) {
-                    indexShares_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexShares");
-                } else {
-                    indexShares_ = 1;
-                }
+                indexShares_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexShares", false, 1);
                 returnData_.setPortfolioId(portfolioId_);
                 portfolioDeriv_ = false;
             }
