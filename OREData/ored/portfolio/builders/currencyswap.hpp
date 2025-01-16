@@ -53,11 +53,10 @@ class AmcCgCurrencySwapEngineBuilder : public CrossCurrencySwapEngineBuilderBase
 public:
     // for external cam, with additional simulation dates (AMC)
     AmcCgCurrencySwapEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
-                                   const std::set<Date>& valuationDates, const std::vector<Date>& closeOutDates,
-                                   const bool useStickyCloseOutDates)
+                                   const std::vector<Date>& simulationDates,
+                                   const std::vector<Date>& stickyCloseOutDates)
         : CrossCurrencySwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg),
-          valuationDates_(valuationDates), closeOutDates_(closeOutDates),
-          useStickyCloseOutDates_(useStickyCloseOutDates) {}
+          simulationDates_(simulationDates), stickyCloseOutDates_(stickyCloseOutDates) {}
 
 protected:
     QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base,
@@ -65,10 +64,9 @@ protected:
                                                         const std::set<std::string>& eqNames) override;
 
 private:
-    QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
-    std::set<Date> valuationDates_;
-    std::vector<Date> closeOutDates_;
-    bool useStickyCloseOutDates_;
+    const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
+    const std::vector<Date> simulationDates_;
+    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data

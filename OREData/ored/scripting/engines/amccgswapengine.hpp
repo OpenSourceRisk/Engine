@@ -34,10 +34,13 @@ class AmcCgSwapEngine : public QuantLib::GenericEngine<QuantLib::Swap::arguments
                         public AmcCgBaseEngine {
 public:
     AmcCgSwapEngine(const std::string& ccy, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                    const std::set<Date>& valuationDates, const std::vector<Date>& stickyCloseOutDates,
-                    const bool useStickyCloseOutDates)
+                    const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates,
+                    const bool recalibrateOnStickyCloseOutDates = false,
+                    const bool reevaluateExerciseInStickyRun = false)
         : QuantLib::GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
-          AmcCgBaseEngine(modelCg, valuationDates, stickyCloseOutDates, useStickyCloseOutDates), ccy_(ccy) {
+          AmcCgBaseEngine(modelCg, simulationDates, stickyCloseOutDates, recalibrateOnStickyCloseOutDates,
+                          reevaluateExerciseInStickyRun),
+          ccy_(ccy) {
         registerWith(modelCg);
     }
 

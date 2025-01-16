@@ -357,7 +357,9 @@ AmcCgSwaptionEngineBuilder::engineImpl(const string& id, const string& key, cons
     QuantLib::ext::shared_ptr<IborIndex> index;
     std::string ccy = tryParseIborIndex(key, index) ? index->currency().code() : key;
     return QuantLib::ext::make_shared<AmcCgMultiLegOptionEngine>(
-        std::vector<std::string>{ccy}, modelCg_, valuationDates_, closeOutDates_, useStickyCloseOutDates_);
+        std::vector<std::string>{ccy}, modelCg_, simulationDates_, stickyCloseOutDates_,
+        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
+        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
 }
 
 } // namespace data

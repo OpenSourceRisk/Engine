@@ -33,10 +33,13 @@ namespace data {
 class AmcCgFxForwardEngine : public QuantExt::FxForward::engine, public AmcCgBaseEngine {
 public:
     AmcCgFxForwardEngine(const std::string& domCcy, const std::string& forCcy,
-                         const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::set<Date>& valuationDates,
-                         const std::vector<Date>& closeOutDates, const bool useStickyCloseOutDates)
-        : AmcCgBaseEngine(modelCg, valuationDates, closeOutDates, useStickyCloseOutDates), domCcy_(domCcy),
-          forCcy_(forCcy) {
+                         const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates,
+                         const std::vector<Date>& stickyCloseOutDates,
+                         const bool recalibrateOnStickyCloseOutDates = false,
+                         const bool reevaluateExerciseInStickyRun = false)
+        : AmcCgBaseEngine(modelCg, simulationDates, stickyCloseOutDates, recalibrateOnStickyCloseOutDates,
+                          reevaluateExerciseInStickyRun),
+          domCcy_(domCcy), forCcy_(forCcy) {
         registerWith(modelCg);
     }
 
