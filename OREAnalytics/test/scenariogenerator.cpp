@@ -44,7 +44,6 @@
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/currencies/america.hpp>
@@ -57,6 +56,7 @@
 #include <ql/instruments/makevanillaswap.hpp>
 #include <ql/math/statistics/incrementalstatistics.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
@@ -863,11 +863,11 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
             // i.e. set a settlement lag that kills this payment
             Date settlementDate = date + 10;
             QuantLib::ext::shared_ptr<PricingEngine> swapEngine_eur =
-                QuantLib::ext::make_shared<QuantExt::DiscountingSwapEngineMultiCurve>(simMarket->discountCurve("EUR"), true,
+                QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(simMarket->discountCurve("EUR"),
                                                                               boost::none, settlementDate, date);
             swap_eur->setPricingEngine(swapEngine_eur);
             QuantLib::ext::shared_ptr<PricingEngine> swapEngine_usd =
-                QuantLib::ext::make_shared<QuantExt::DiscountingSwapEngineMultiCurve>(simMarket->discountCurve("USD"), true,
+                QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(simMarket->discountCurve("USD"),
                                                                               boost::none, settlementDate, date);
             swap_usd->setPricingEngine(swapEngine_usd);
             // we do not use the valuation engine, so in case updates are disabled we need to
