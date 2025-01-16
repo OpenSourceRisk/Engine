@@ -132,7 +132,7 @@ using std::vector;
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-BOOST_AUTO_TEST_SUITE(CrossAssetModelTest)
+BOOST_AUTO_TEST_SUITE(LgmPricingTest)
  
 BOOST_AUTO_TEST_CASE(testLgmEdgeCases1) {
 
@@ -407,6 +407,93 @@ BOOST_AUTO_TEST_CASE(testLgmEdgeCases4) {
 
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
 }
+
+
+BOOST_AUTO_TEST_CASE(testLowVolatility) {
+
+    BOOST_TEST_MESSAGE("Testing pricing in edge cases with very low volatility...");
+
+    Calendar calendar = TARGET();
+    Date settlementDate(15, July, 2015);
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(5, July, 2016));
+    Date startDate(15, July, 2016);
+    Settings::instance().evaluationDate() = settlementDate;    
+    Date maturityDate = calendar.advance(settlementDate, 2, Years);
+    Real notional = 1.0;
+    Rate fixedRate = 0.02;
+
+    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+   
+    std::vector<Date> volstepdates;
+    volstepdates.push_back(Date(15, July, 2016));
+    volstepdates.push_back(Date(15, July, 2017));
+    volstepdates.push_back(Date(15, July, 2018));
+    volstepdates.push_back(Date(15, July, 2019));
+    volstepdates.push_back(Date(15, July, 2020));
+
+    std::vector<Real> eurVols;
+
+    auto  volsteptimes_a = Array(volstepdates.size());
+
+    for (Size i = 0; i < volstepdates.size(); ++i) 
+        volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
+    
+    for (Size i = 0; i < volstepdates.size() + 1; ++i) 
+        eurVols.push_back(0.0000003);
+
+    Array eurVols_a;
+    Array notimes_a, eurKappa_a;
+    eurVols_a = Array(eurVols.begin(), eurVols.end());
+    notimes_a = Array(0);
+    eurKappa_a = Array(1, 0.00002);
+
+    Handle<YieldTermStructure> eurYtsHandle(eurYts);
+    auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
+
+    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
+    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
+
+    double Annuity=0.0;
+
+    for (int i=3;i<5;++i)
+        Annuity+=0.5*exp(-(double)i*0.5*0.02);
+
+    BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
+
+    for (double strike = 0.2; strike <= 0.3; strike += 0.05)
+    {
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());        
+        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+
+        swaption->setPricingEngine(eurSwEng1);
+        Real npv = swaption->NPV();
+        double limitValue = exp(-0.02 * 1.5) * (strike - fixedRate) * Annuity;
+        BOOST_TEST_MESSAGE("Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
+        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0<< " bp. "<< "Annuity: " << Annuity);
+        BOOST_TEST_MESSAGE(" --------- ");
+        BOOST_CHECK(std::fabs(npv-limitValue)<150e-4);
+    }
+
+    BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
+
+    for (double strike = -0.3; strike < -0.2; strike += 0.05)
+    {
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());
+        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+
+        swaption->setPricingEngine(eurSwEng1);
+        Real npv = swaption->NPV();
+        double limitValue = exp(-0.02 * 1.5) * (fixedRate - strike) * Annuity;
+        BOOST_TEST_MESSAGE("Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
+        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp. " << "Annuity: " << Annuity);
+        BOOST_TEST_MESSAGE(" --------- ");
+        BOOST_CHECK(std::fabs(npv-limitValue)<150e-4);
+    }
+    
+    BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
