@@ -80,29 +80,6 @@ protected:
     }
 };
 
-//! Engine Builder for Single Currency Swaps
-/*! This builder uses QuantExt::DiscountingSwapEngineMultiCurve
-    \ingroup builders
-*/
-class SwapEngineBuilderOptimised : public SwapEngineBuilderBase {
-public:
-    SwapEngineBuilderOptimised() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngineOptimised") {}
-
-protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
-                                                                const std::string& securitySpread,
-                                                                const std::set<std::string>& eqNames) override {
-
-        Handle<YieldTermStructure> yts =
-            discountCurve.empty() ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
-                                  : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
-        if (!securitySpread.empty())
-            yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
-                yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
-        return QuantLib::ext::make_shared<QuantExt::DiscountingSwapEngineMultiCurve>(yts);
-    }
-};
-
 //! Engine Builder base class for Cross Currency Swaps
 /*! Pricing engines are cached by currencies (represented as a string list)
 
