@@ -295,7 +295,9 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
                 auto v = workingContext_->arrays.find(r.second);
                 if (v != workingContext_->arrays.end()) {
                     for (Size i = 0; i < v->second.size(); ++i) {
-                        keepNodes[cg_var(*g, r.second + "_" + std::to_string(i))] = true;
+                        if (v->second[i].which() == ValueTypeWhich::Number) {
+                            keepNodes[cg_var(*g, r.second + "_" + std::to_string(i))] = true;
+                        }
                     }
                 }
             }

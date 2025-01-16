@@ -529,6 +529,7 @@ void dataBuilders() {
     ORE_REGISTER_ENGINE_BUILDER(FormulaBasedCouponPricerBuilder, false)
 
     ORE_REGISTER_ENGINE_BUILDER(SwapEngineBuilderDeltaGamma, false)
+    ORE_REGISTER_ENGINE_BUILDER(EuropeanSwaptionEngineBuilderDeltaGamma, false)
     ORE_REGISTER_ENGINE_BUILDER(CurrencySwapEngineBuilderDeltaGamma, false)
     ORE_REGISTER_ENGINE_BUILDER(FxEuropeanOptionEngineBuilderDeltaGamma, false)
     ORE_REGISTER_ENGINE_BUILDER(EquityEuropeanOptionEngineBuilderDeltaGamma, false)

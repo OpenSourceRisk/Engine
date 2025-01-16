@@ -506,6 +506,7 @@ currencies/configurablecurrency.hpp
 currencies/currencycomparator.hpp
 currencies/europe.hpp
 currencies/metals.hpp
+gitversion.hpp
 indexes/behicp.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
@@ -1019,7 +1020,6 @@ utilities/savedobservablesettings.hpp
 utilities/serializationdate.hpp
 utilities/serializationperiod.hpp
 utilities/time.hpp
-gitversion.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")

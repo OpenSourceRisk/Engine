@@ -1,0 +1,3 @@
+#TradeId,TradeType,NettingSet,Asset,MaturityDate,Maturity,NPV,SignedNotional,RiskWeight
+Swap_EUR,Swap,CPTY_A,EUR-EURIBOR-6M,2036-03-03,20.073770,-363.32,-10000000.00,0.0550
+Swap_USD,Swap,CPTY_A,USD-LIBOR-3M,2036-03-03,20.073770,78074.43,-8831293.16,0.0550
