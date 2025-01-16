@@ -10,17 +10,9 @@ oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
 oreex.print_headline("Run ORE to produce classic exposures")
 oreex.run("Input/ore_classic.xml")
-oreex.save_output_to_subdir(
-    "classic", ["log.txt", "npv.csv", "flows.csv"]
-    + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
-)
 
 oreex.print_headline("Run ORE to produce AMC exposure")
 oreex.run("Input/ore_amc.xml")
-oreex.save_output_to_subdir(
-    "amc", ["log.txt", "npv.csv", "flows.csv"]
-    + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
-)
 
 oreex.print_headline("Plot results: Simulated exposure")
 
