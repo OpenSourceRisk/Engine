@@ -4772,7 +4772,6 @@ Available Model/Engine pairs:
 
 \begin{itemize}
 \item DiscountedCashflows/DiscountingSwapEngine
-\item DiscountedCashflows/DiscountingSwapEngineOptimised  
 \item CrossAssetModel/AMC
 \end{itemize}
 
@@ -4800,31 +4799,6 @@ The parameters have the following meaning:
 \end{minted}
 \caption{Configuration for Product Swap, Model DiscountedCashflows, Engine DiscountingSwapEngine}
 \label{lst:peconfig_Swap_DiscountedCashflows_DiscountingSwapEngine}
-\end{longlisting}
-
-DiscountedCashflows/DiscountingSwapEngineOptimised builds a DiscountingSwapEngineOptimised. This is a speed-optimized
-version of the DiscountingSwapEngine. In general, results should be validated against DiscountingSwapEngine.A sample
-configuration is shown in listing \ref{lst:peconfig_Swap_DiscountedCashflows_DiscountingSwapEngineOptimised}
-
-The parameters have the following meaning:
-
-\begin{itemize}
-\item SensitivityTemplate [optional]: the sensitivity template to use 
-\end{itemize}
-
-\begin{longlisting}
-\begin{minted}[fontsize=\footnotesize]{xml}
-<Product type="Swap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingSwapEngineOptimised</Engine>
-    <EngineParameters>
-        <Parameter name="SensitivityTemplate">IR_Analytical</Parameter>
-    </EngineParameters>
-</Product>
-\end{minted}
-\caption{Configuration for Product Swap, Model DiscountedCashflows, Engine DiscountingSwapEngineOptimised}
-\label{lst:peconfig_Swap_DiscountedCashflows_DiscountingSwapEngineOptimised}
 \end{longlisting}
 
 CrossAssetModel/AMC builds a McLgmSwapEngine for use in AMC simulations. We refer to the AMC module documentation for
