@@ -38,10 +38,11 @@ using namespace std;
 namespace QuantExt {
 
 IndexConstituentDefaultCurveCalibration::CalibrationResults IndexConstituentDefaultCurveCalibration::calibratedCurves(
+    const std::vector<std::string>& names,
     const std::vector<double>& remainingNotionals,
     const std::vector<Handle<DefaultProbabilityTermStructure>>& creditCurves,
     const std::vector<double>& recoveryRates) const {
-    
+
     CalibrationResults results;
     results.success = false;
     results.curves = creditCurves;
@@ -129,8 +130,9 @@ QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> IndexConstituentDefa
     for(const auto& d : maturities){
         const auto maturityTime = curve->timeFromReference(d);
         QL_REQUIRE(maturityTime >0, "Maturity time must be positive");
+        curveTimes.push_back(curve->timeFromReference(d - 1 * Days));
         curveTimes.push_back(maturityTime);
-        curveTimes.push_back(curve->timeFromReference(d + 2 * Days));
+        curveTimes.push_back(curve->timeFromReference(d + 1 * Days));
         indexCdsMaturityTimes.push_back(maturityTime);
     }
     std::sort(curveTimes.begin(), curveTimes.end());
@@ -144,17 +146,20 @@ QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> IndexConstituentDefa
         size_t i = 0;
         for (size_t timeIdx = 0; timeIdx < curveTimes.size(); ++timeIdx) {
             auto time = curveTimes[timeIdx];
-            while (indexCdsMaturityTimes[i] < time && !close_enough(indexCdsMaturityTimes[i], time)&& (i+1) < indexCdsMaturityTimes.size()) { 
-                i++; 
+            while (indexCdsMaturityTimes[i]  < time && (i + 1) < indexCdsMaturityTimes.size()) {
+                i++;
             }
-            auto sp = curve->survivalProbability(curveTimes[timeIdx]);
+            
+            auto sp = curve->survivalProbability(curveTimes[timeIdx], true);
+
             auto compQuote = QuantLib::ext::make_shared<CompositeQuote<std::function<double(double, double)>>>(
                 Handle<Quote>(calibrationFactors[i]), Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(sp)),
                 [](const double q1, const double q2) -> double { return std::exp(-(1 - q1) * std::log(q2)); });
             spreads.push_back(Handle<Quote>(compQuote));
         }
         Handle<DefaultProbabilityTermStructure> targetCurve = Handle<DefaultProbabilityTermStructure>(
-            QuantLib::ext::make_shared<SpreadedSurvivalProbabilityTermStructure>(curve, curveTimes, spreads,));
+            QuantLib::ext::make_shared<SpreadedSurvivalProbabilityTermStructure>(
+                curve, curveTimes, spreads, SpreadedSurvivalProbabilityTermStructure::Extrapolation::flatFwd, false));
         if (curve->allowsExtrapolation()) {
             targetCurve->enableExtrapolation();
         }
@@ -343,19 +348,22 @@ std::vector<Probability> Basket::remainingProbabilities(const Date& d) const {
     
     const std::vector<Size>& alive = liveList();
     if (calibration_ != nullptr) {
+        
         vector<Handle<DefaultProbabilityTermStructure>> curves;
         for (Size i = 0; i < alive.size(); i++)
             curves.push_back(pool_->get(pool_->names()[i]).defaultProbability(pool_->defaultKeys()[i]));
-    
+
         const vector<double> remainingNtls = this->remainingNotionals(d);
+        const vector<string> remainingNames = this->remainingNames(d);
         QL_REQUIRE(recoveryRates_.size() == remainingNtls.size(), "Mismatch between recovery rates and ");
-        auto res = calibration_->calibratedCurves(remainingNtls, curves, recoveryRates_);
+        auto res = calibration_->calibratedCurves(remainingNames, remainingNtls, curves, recoveryRates_);
         if(res.success){
             curves = res.curves;
         }
         for (const auto& curve : curves) {
             prob.push_back(curve->defaultProbability(d, true));
         }
+        
     } else {
         for (Size i = 0; i < alive.size(); i++)
             prob.push_back(pool_->get(pool_->names()[i]).defaultProbability(pool_->defaultKeys()[i])->defaultProbability(d));

@@ -410,42 +410,44 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
 
     QuoteData newQuoteData;
     newQuoteData.dps = dps;
-    for (const auto& term : terms) {
-        try{
-        vector<Real> tmpDps(dps.begin(), dps.end());
-        auto basketData = adjustForLosses(tmpDps);
-        std::vector<std::pair<double, double>> attachPoints = {{0.0, 0.0}};
-        std::vector<std::pair<double, double>> detachPoints;
-        for (size_t i = 0; i < tmpDps.size(); ++i) {
-            attachPoints.push_back(std::make_pair(tmpDps[i], basketData.adjDetachmentPoints[i]));
-            detachPoints.push_back(std::make_pair(tmpDps[i], basketData.adjDetachmentPoints[i]));
-        }
-        attachPoints.pop_back();
-        QL_REQUIRE(attachPoints.size() == dps.size(), "Mismatch size");
-        QL_REQUIRE(detachPoints.size() == dps.size(), "Mismatch size");
 
-        std::vector<double> trancheNpvs;
+    vector<Real> tmpDps(dps.begin(), dps.end());
+    auto basketData = adjustForLosses(tmpDps);
+    std::vector<std::pair<double, double>> attachPoints = {{0.0, 0.0}};
+    std::vector<std::pair<double, double>> detachPoints;
+    for (size_t i = 0; i < tmpDps.size(); ++i) {
+        attachPoints.push_back(std::make_pair(tmpDps[i], basketData.adjDetachmentPoints[i]));
+        detachPoints.push_back(std::make_pair(tmpDps[i], basketData.adjDetachmentPoints[i]));
+    }
+    attachPoints.pop_back();
+    QL_REQUIRE(attachPoints.size() == dps.size(), "Mismatch size");
+    QL_REQUIRE(detachPoints.size() == dps.size(), "Mismatch size");
 
+
+    // Build curve calibration
+    std::vector<Handle<DefaultProbabilityTermStructure>> indexCurves;
+    std::vector<Handle<Quote>> indexRecoveries;
+    Handle<YieldTermStructure> discountCurve;
+    std::vector<Period> indexTerms = {3 * Years, 5 * Years};
+
+    for (const auto& term : indexTerms) {
         std::string indexNameWithTerm = config.curveID() + "_" + to_string(term);
         auto mappedIndexCurveName = creditCurveNameMapping(indexNameWithTerm);
         auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
         QL_REQUIRE(indexCreditCurve != nullptr, "can not imply base correlation from upfront, index cds curve for "
                                                     << indexNameWithTerm << " missing");
 
-        const auto discountCurve = indexCreditCurve->rateCurve();
-        const auto indexCurve = indexCreditCurve->curve();
-        const auto indexRecovery = indexCreditCurve->recovery();
-        QL_REQUIRE(!discountCurve.empty(), "can not imply base correlation curve from upfront, discount curve missing");
-        QL_REQUIRE(!indexCurve.empty(),
-                   "can not imply base correlation curve from upfronts, index credit curve missing");
-        QL_REQUIRE(!indexRecovery.empty(),
-                   "can not imply base correlation curve from upfronts, index recovery missing");
+        discountCurve = indexCreditCurve->rateCurve();
+        indexCurves.push_back(indexCreditCurve->curve());
+        indexRecoveries.push_back(indexCreditCurve->recovery());
+    }
+    auto curveCalibration = ext::make_shared<QuantExt::IndexConstituentDefaultCurveCalibration>(
+        config.startDate(), indexTerms, config.indexSpread(), indexRecoveries, indexCurves, discountCurve);
 
-        auto pool = QuantLib::ext::make_shared<Pool>();
+    auto pool = QuantLib::ext::make_shared<Pool>();
         std::vector<double> recoveryRates;
         Currency ccy = parseCurrency(config.currency());
-        auto curveCalibration = ext::make_shared<QuantExt::IndexConstituentDefaultCurveCalibration>(
-            config.startDate(), term, config.indexSpread(), indexRecovery, indexCurve, discountCurve);
+        
         std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
         for (const auto& name : basketData.remainingNames) {
             auto mappedName = creditCurveNameMapping(name);
@@ -455,41 +457,44 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             dpts.push_back(creditCurve->curve());
         }
 
-        auto calibrationResults = curveCalibration->calibratedCurves(basketData.remainingWeights, dpts, recoveryRates);
+    auto calibrationResults = curveCalibration->calibratedCurves(basketData.remainingNames, basketData.remainingWeights, dpts, recoveryRates);
 
-        LOG("Maturity CalibrationFacotr MarketNPV ImpliedNPV Error");
-        LOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
-        for (size_t i = 0; i < calibrationResults.cdsMaturity.size(); ++i) {
-            LOG(io::iso_date(calibrationResults.cdsMaturity[i])
-                << ";" << std::fixed << std::setprecision(8) << calibrationResults.calibrationFactor[i] << ";"
-                << calibrationResults.marketNpv[i] << ";" << calibrationResults.impliedNpv[i] << ";"
-                << calibrationResults.marketNpv[i] - calibrationResults.impliedNpv[i]);
-        }
-        auto uncalibratedCurve = dpts.front();
-        auto debugCurve = calibrationResults.curves.front();
+    LOG("Maturity CalibrationFacotr MarketNPV ImpliedNPV Error");
+    LOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
+    for (size_t i = 0; i < calibrationResults.cdsMaturity.size(); ++i) {
+        LOG(io::iso_date(calibrationResults.cdsMaturity[i])
+            << ";" << std::fixed << std::setprecision(8) << calibrationResults.calibrationFactor[i] << ";"
+            << calibrationResults.marketNpv[i] << ";" << calibrationResults.impliedNpv[i] << ";"
+            << calibrationResults.marketNpv[i] - calibrationResults.impliedNpv[i]);
+    }
+    auto uncalibratedCurve = dpts.front();
+    auto debugCurve = calibrationResults.curves.front();
+    
+    for(const auto& time : {0.5, 1., 1.5, 2., 3.5, 4., 5., 6.}){
+        LOG("Time: " << time << " Uncalibrated: " << uncalibratedCurve->defaultProbability(time, true) << " Calibrated: " << debugCurve->defaultProbability(time, true));
+        auto hazardRateUncalibrated = uncalibratedCurve->hazardRate(time, true);
+        auto hazardRateCalibrated = debugCurve->hazardRate(time, true);
+        LOG("Time: " << time << " Uncalibrated: " << hazardRateUncalibrated << " Calibrated: " << hazardRateCalibrated << " alpha " << hazardRateCalibrated / hazardRateUncalibrated);
+    }   
+
+    for (size_t i = 0; i < basketData.remainingNames.size(); i++) {
+        std::string name = basketData.remainingNames[i];
+        Handle<DefaultProbabilityTermStructure> curve =
+            calibrationResults.success ? calibrationResults.curves[i] : dpts[i];
+        DefaultProbKey key = NorthAmericaCorpDefaultKey(ccy, SeniorSec, Period(), 1.0);
+        std::pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>> p(key, curve);
+        vector<pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>>> probabilities(1, p);
+        // Empty default set. Adjustments have been made above to account for existing credit events.
+        Issuer issuer(probabilities, DefaultEventSet());
+        pool->add(name, issuer, key);
+    }
+
+
+    for (const auto& term : terms) {
+        try{
         
-        for(const auto& time : {0.5, 1., 1.5, 2., 3.5, 4., 5., 6.}){
-            LOG("Time: " << time << " Uncalibrated: " << uncalibratedCurve->defaultProbability(time, true) << " Calibrated: " << debugCurve->defaultProbability(time, true));
-            auto hazardRateUncalibrated = uncalibratedCurve->hazardRate(time, true);
-            auto hazardRateCalibrated = debugCurve->hazardRate(time, true);
-            LOG("Time: " << time << " Uncalibrated: " << hazardRateUncalibrated << " Calibrated: " << hazardRateCalibrated << " alpha " << hazardRateCalibrated / hazardRateUncalibrated);
-        }
 
-
-        
-
-        for (size_t i = 0; i < basketData.remainingNames.size(); i++) {
-            std::string name = basketData.remainingNames[i];
-            Handle<DefaultProbabilityTermStructure> curve =
-                calibrationResults.success ? calibrationResults.curves[i] : dpts[i];
-            DefaultProbKey key = NorthAmericaCorpDefaultKey(ccy, SeniorSec, Period(), 1.0);
-            std::pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>> p(key, curve);
-            vector<pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>>> probabilities(1, p);
-            // Empty default set. Adjustments have been made above to account for existing credit events.
-            Issuer issuer(probabilities, DefaultEventSet());
-            pool->add(name, issuer, key);
-        }
-
+        std::vector<double> trancheNpvs;
         std::vector<double> trancheNPV;
         std::vector<double> baseCorrelations;
 

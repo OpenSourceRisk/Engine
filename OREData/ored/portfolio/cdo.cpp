@@ -415,8 +415,9 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         auto it = engineFactory->engineData()->globalParameters().find("RunType");
         if (it != engineFactory->engineData()->globalParameters().end() && it->second != "PortfolioAnalyser" && curveCalibration != nullptr) {
             try{
-                auto result = curveCalibration->calibratedCurves(basketNotionals, dpts, recoveryRates);
+                auto result = curveCalibration->calibratedCurves(creditCurves, basketNotionals, dpts, recoveryRates);
                 if (result.success){
+                    LOG("Credit Curve " << creditCurves.front());
                     auto uncalibratedCurve = dpts.front();
                     auto calibratedCurve = result.curves.front();
                     dpts = std::move(result.curves);
@@ -431,14 +432,16 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
                     }
                     std::set<double> times{0.5, 1., 1.5, 2., 3.5, 4., 5., 6.};
                     for(auto& maturity : result.cdsMaturity){
+                        
                         times.insert(uncalibratedCurve->timeFromReference(maturity-1));
                         times.insert(uncalibratedCurve->timeFromReference(maturity));
                         times.insert(uncalibratedCurve->timeFromReference(maturity+1));
+                        
                     }
-
+                    
                     for (const auto& time : times) {
-                        LOG("Time: " << time << " Uncalibrated: " << uncalibratedCurve->defaultProbability(time, true)
-                                     << " Calibrated: " << calibratedCurve->defaultProbability(time, true));
+                        LOG("Time: " << time << " Uncalibrated: " << uncalibratedCurve->survivalProbability(time, true)
+                                     << " Calibrated: " << calibratedCurve->survivalProbability(time, true));
                         auto hazardRateUncalibrated = uncalibratedCurve->hazardRate(time, true);
                         auto hazardRateCalibrated = calibratedCurve->hazardRate(time, true);
                         LOG("Time: " << time << " Uncalibrated: " << hazardRateUncalibrated

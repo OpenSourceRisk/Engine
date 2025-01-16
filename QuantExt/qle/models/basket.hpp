@@ -63,7 +63,8 @@ public:
           indexRecoveryRates_(indexRecoveryRates), indexCurves_(indexCurves), discountCurve_(discountCurve) {}
 
 
-    CalibrationResults calibratedCurves(const std::vector<double>& remainingNotionals,
+    CalibrationResults calibratedCurves(const std::vector<std::string>& names,
+                                        const std::vector<double>& remainingNotionals,
                                         const std::vector<Handle<DefaultProbabilityTermStructure>>& creditCurves,
                                         const std::vector<double>& recoveryRates) const;
     const std::vector<Handle<QuantLib::DefaultProbabilityTermStructure>>& indexCurve() const { return indexCurves_; }
