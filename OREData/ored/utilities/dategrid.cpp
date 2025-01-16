@@ -30,8 +30,9 @@ namespace ore {
 namespace data {
 
 DateGrid::DateGrid()
-    : today_(Settings::instance().evaluationDate()), dates_(1, today_), tenors_(1, 0 * Days), times_(1, 0.0),
-      timeGrid_(times_.begin(), times_.end()), isValuationDate_(1, true), isCloseOutDate_(1, false) {}
+    : today_(Settings::instance().evaluationDate()), dates_(1, today_), valuationDates_(1, today_),
+      tenors_(1, 0 * Days), times_(1, 0.0), timeGrid_(times_.begin(), times_.end()), isValuationDate_(1, true),
+      isCloseOutDate_(1, false) {}
 
 DateGrid::DateGrid(const string& grid, const QuantLib::Calendar& gridCalendar, const QuantLib::DayCounter& dayCounter)
     : calendar_(gridCalendar), dayCounter_(dayCounter) {
