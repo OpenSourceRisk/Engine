@@ -1143,7 +1143,7 @@ Example & Description \\
 \hline
 67 &  XVA Stress Testing \\
 \hline
-68 &  XVA Bump \& Revalue Sensitivities \\
+68 &  XVA Sensitivities and Capital Analytics\\
 \hline
 69 &  Convert Zero Rate Shifts into Par Rate Shifts \\
 \hline
@@ -3846,23 +3846,59 @@ or use only the ATM volatilities. It is recommended to activate UseSpreadedTermS
 XVA stress run.
 
 %--------------------------------------------------------------------
-\subsection{XVA Bump \& Revalue Sensitivities}% Example 68
+\subsection{XVA Sensitivities and Capital Analytics}% Example 68
 \label{example:68}
 %--------------------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_68} demonstrates the XVA sensitivity analysis with the AMC XVA engine.
-The new analytic type \emph{XVA\_SENSITIVITY} applies zero shifts as specified in the sensitivity.xml and 
-computes the xva and exposure measures under each shifted market condition.
+The example in folder {\tt Examples/Example\_68} demonstrates several additional analytics
+\begin{enumerate}
+\item {\bf XVA Sensitivity} calculation in the form of a new analytic type which computes XVA sensitivities by
+  bump \& revalue and generates the sensitivity scenarios from a sensitivity configuration similar to the one used
+  in NPV sensitivity calculation; the new analytic utilises the existing XVA machinery ``under the hood'',
+  supports XVA calculation using both ``classic'' and AMC simulation; the analytic generates sensitivities in the ``raw''
+  (e.g. zero rate) domain as well as in the par domain which is needed by the next analytic
+\item {\bf CVA Capital} calculation using the Standard Approach ({\bf SA-CVA}) - this analytic utilises the former
+  XVA sensitivity analytic, in particular its CVA par sensitivity output; alternatively, CVA sensitivity can passed as an input
+\item {\bf SA-CCR} calculation, the Standard Approach for Counterparty Credit Risk - this is a stand-aloone analytic that takes
+  variation and initial margin balances as input
+\item {\bf BA-CVA} calculation, the Basic CVA Capital approach which is based on the SA-CCR Exposure At Default implementation,
+  hence calls the former as a sub-analytic
+  \item {\bf SMRC} calculation - a basic Market Risk Capital method 
+\end{enumerate}
 
-The aggregation of the results to sensitivites need to handled outside of ORE. 
-These external computed sensitivites can be converted to par sensitivities with the 
-zero-to-par conversion analytic (see \ref{example:50}).
+All analytics can be kicked off by calling
+\medskip
+\centerline{\tt python run.py}
 
-The XVA sensitivity analytic replaces the todaysMarket with a SimulationMarket during the XVA calculation. For some risk factors the simulationMarket behaves 
-different as the todaysMarket. Depending on the simulation and sensitivity settings it could use different tenors when building curves 
-or use only the ATM volatilities. It is recommended to activate UseSpreadedTermStructures and simulate SwaptionVolatilities for the 
-XVA Sensitivity run.
+\medskip
+This runs all analytics twice, with ``classic'' and AMC simulation for the XVA sensitivity part, for a small proof-of-concept
+``portfolio'' consisting of two swaps. For methodology summaries and the current scope of the implementations see
+appendix \ref{sec:app_capital}.
 
+Key results in the respective {\tt Output/classic} and {\tt Output/amc} folders are
+\begin{itemize}
+\item sensitivities in {\tt xva\_zero\_sensitivity\_*.csv} and {\tt xva\_par\_sensitivity\_*.csv}
+\item XVAs for all sensitivity scenarios in {\tt xva.csv}
+\item exposure profiles for all sensitivity scenaros in {\tt exposure\_nettingset\_*.csv}  
+\item SA-CVA results in {\tt sacva.csv}, {\tt sacvadetail.csv}
+\item SA-CCR reports in {\tt saccr.csv} and {\tt saccr\_detail.csv}
+\item BA-CVA report in {\tt bacva.csv} 
+\item SMRC reports in {\tt smrc.csv} and {\tt smrcdetail.csv}
+\end{itemize}
+
+Note that we are running an (unusual) uncollateralised case here. You can activate both VM and IM as shown in previous examples,
+which will reduce CVA and cause significantly larger difference between SA-CVA and SA-CCR capital results. 
+
+Note:
+\begin{itemize}
+\item The XVA sensitivity analytic replaces the TodaysMarket with a SimulationMarket during
+  the XVA calculation. This is a template for extending other ORE analytics (such as VaR) for allow their evaluation under
+  stressed markets.
+\item Realistic portfolios may require large numbers of sensitivity scenarios and hence XVA simulations which makes SA-CVA
+  computationally challenging in practice. AMC simulation for XVA instead of ``classic'' simulation helps performance here.
+  As a further performance enhancement we are working on a computation graph framework for XVA which supports GPU parallelization
+  and AAD for XVA sensitivity, see example sections \ref{example:56} and \ref{example:61}.
+\end{itemize}
 
 %--------------------------------------------------------------------
 \subsection{Zero Rate Shifts To Par Shifts}% Example 69
@@ -8032,6 +8068,18 @@ distribution generated by the Monte Carlo samples. Apart from the Monte Carlo Er
 method, so that albeit slow it is well suited to produce values against which any other approximate approaches can be tested. Numerically, the simulation is implemented using a Cholesky Decomposition
 of the covariance matrix $C$ in conjunction with a pseudo random number generator (Mersenne Twister) and an
 implementation of the inverse cumulative normal distribution to transform $U[0,1]$ variates to $N(0,1)$ variates.
+
+
+\subsection{Standrad Capital Approaches}\label{sec:app_capital}
+
+\subsubsection{SA-CCR}\label{sec:app_saccr}
+
+\subsubsection{SA-CVA}\label{sec:app_sacva}
+
+\subsubsection{BA-CVA}\label{sec:app_bacva}
+
+\subsubsection{SMRC}\label{sec:app_smrc}
+
 
 \end{appendix}
 

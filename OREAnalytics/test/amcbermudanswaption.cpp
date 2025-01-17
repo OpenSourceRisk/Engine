@@ -52,7 +52,6 @@
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 #include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 
 #include <qle/pricingengines/mclgmswaptionengine.hpp>

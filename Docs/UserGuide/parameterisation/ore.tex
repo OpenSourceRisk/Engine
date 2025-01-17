@@ -31,6 +31,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
   <Parameter name="portfolioFile">portfolio.xml</Parameter>
+  <Parameter name="counterpartyFile">counterparty.xml</Parameter>
   <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
   <Parameter name="currencyConfiguration">../../Input/currencies.xml</Parameter>
   <Parameter name="referenceDataFile">../../Input/referencedata.xml</Parameter>
@@ -62,7 +63,9 @@ The logMask allows filtering subsets of these categories and controlling the ver
 
 When ORE starts, it will initialise today's market, i.e. load market data, fixings and dividends, and build all term
 structures as specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link
-them with pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt implyTodaysFixings} is set to Y,
+them with pricing engines as specified in {\tt pricingengine.xml}. The counterpaty information in {\tt counterparty.xml} covers
+minimal counterarty-level information needed in a few capital analytics as shown in example section \ref{example68}.
+When parameter {\tt implyTodaysFixings} is set to Y,
 today's fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as
 e.g. in scenario analysis and stress testing. The curveConfigFile {\tt curveconfig.xml}, the conventionsFile {\tt
   conventions.xml}, the referenceDataFile {\tt referencedata.xml}, the iborFallbackConfig, the marketDataFile and the
@@ -148,19 +151,17 @@ applies to all term structure types.
 The {\tt Analytics} section lists all permissible analytics using tags {\tt <Analytic type="..."> ... </Analytic>} where
 type can be (so far) in
 \begin{itemize}
-\item npv
-\item cashflow
-\item additionalResults
-\item todaysMarketCalibration
-\item curves
-\item simulation
-\item calibration
+\item npv, cashflow, todaysMarketCalibration, curves
+\item calibration, simulation
 \item xva
 \item sensitivity
 \item stress
-\item xva stress
-\item xva bump and revaluation sensitivities
-\item xva explain
+\item par conversion, par stress conversion, par scenario
+\item xva stress, xva sensitivities, xva explain
+\item var, imschedule, ISDA simm
+\item sacva, saccr, bacva, smrc
+\item scenario statistics
+\item portfolio details
 \end{itemize}
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
@@ -176,6 +177,8 @@ the list above.
     <Parameter name="active">Y</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="outputFileName">npv.csv</Parameter>
+    <Parameter name="additionalResults">Y</Parameter>
+    <Parameter name="additionalResultsReportPrecision">12</Parameter>
   </Analytic>      
   <Analytic type="cashflow">
     <Parameter name="active">Y</Parameter>
@@ -186,14 +189,7 @@ the list above.
     <Parameter name="configuration">default</Parameter>
     <Parameter name="grid">240,1M</Parameter>
     <Parameter name="outputFileName">curves.csv</Parameter>
-  </Analytic>
-  <Analytic type="additionalResults">
-    <Parameter name="active">Y</Parameter>
-    <Parameter name="outputFileName">additional_results.csv</Parameter>
-  </Analytic> 
-  <Analytic type="todaysMarketCalibration">
-    <Parameter name="active">Y</Parameter>
-    <Parameter name="outputFileName">todaysmarketcalibration.csv</Parameter>
+    <Parameter name="outputTodaysMarketCalibration">Y</Parameter>
   </Analytic>
   <Analytic type="...">
     <!-- ... -->
@@ -722,6 +718,89 @@ The parameters have the following interpretation:
   \item {\tt mporCalendar:} Calendar used to ensure that $t_1$ is a valid business day. 
 \end{itemize}
 
-ORE reuses the parameterisations of the exposure and XVA analtyic. One need to setup those analytics as usual but one can deactivate them. See listings 
+ORE reuses the parameterisations of the exposure and XVA analtyic. One needs to setup those analytics as usual but one can deactivate them. See listings 
 \ref{lst:ore_xva} and \ref{lst:ore_simulation}. If set to active, ORE will run the 
 regular XVA analytic and the XVA sensitivity or XVA stress analytic respectively.
+
+\medskip The {\tt sacva} 'analytic' provides computation of SA-CVA capital calculation based on CVA sensitivities.
+These can be computed on-the-fly or can be externally provided, see listing \ref{lst:ore_sacva}. In the former case,
+the {\tt xvaSensitivity} analytic needs to be specified with all reqired inputs as shown in Listing \ref{lst:ore_xva_sensi} above,
+likewise the {\tt simulation} and {\tt xva} analytic which are utilised under the hood.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+ <Analytic type="sacva">
+    <Parameter name="active">Y</Parameter>
+      <!-- If none of the following is provided, ORE builds on-the-fly sensis using
+           the configuration above -->
+      <!-- Load net sensitivities that can be passed into the SA-CVA calculator directly -->
+      <!--<Parameter name="saCvaNetSensitivitiesFile">sacva_sensitivity.csv</Parameter>-->
+      <!-- Load CVA sensitivities, output of the xva sensi analytic, that needs mapping
+	   and aggregation -->
+      <!--<Parameter name="cvaSensitivitiesFile">xva_par_sensitivity_cva.csv</Parameter>-->
+  </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: SA-CVA}
+\label{lst:ore_sacva}
+\end{listing}
+
+\medskip The {\tt saccr} 'analytic' provides computation of SA-CCR capital calculation, see \ref{lst:ore_saccr}. The required input in
+addition to the setup section is a {\tt csaFile} (as in XVA analytics) and a {\tt collateralBalancesFile} which provides variation and initial margin balances as of today.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+    <Analytic type="saccr">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
+    </Analytic>
+  </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: SA-CCR}
+\label{lst:ore_saccr}
+\end{listing}
+
+\medskip The {\tt bacva} 'analytic' provides computation of BA-CVA capital calculation, see \ref{lst:ore_bacva}.
+The required input in addition to the setup section is a {\tt csaFile} (as in XVA analytics) and a {\tt collateralBalancesFile}
+which provides variation and initial margin balances as of today, the same as in the {\tt saccr} analytic which is
+used under the hood to compute exposures at default.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+    <Analytic type="bacva">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="collateralBalancesFile">collateralbalances.xml</Parameter>
+    </Analytic>
+  </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: BA-CVA}
+\label{lst:ore_sacva}
+\end{listing}
+
+\medskip The {\tt smrc} 'analytic' provides computation of the basic SMRC market risk captial calculation, without additional inputs,
+see \ref{lst:ore_smrc}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+    <Analytic type="smrc">
+      <Parameter name="active">Y</Parameter>
+    </Analytic>
+  </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: SMRC}
+\label{lst:ore_smrc}
+\end{listing}
+
