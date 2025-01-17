@@ -135,18 +135,21 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(LgmPricingEdgeCases)
  
 BOOST_AUTO_TEST_CASE(testHighStrike) {
-    // This test checks the LGM model price against the forward price in case of very high strikes.
-    // In these cases the receiver swaptions will be in the money such that the forward price is a limit.
-    // The payer swaptions will be out of the money so there value can be assumed zero.
+    // This test checks the LGM model price in case of very high strikes.
+    // In these cases the receiver swaptions will be in the money such that the forward price is equal
+    // to the forward price D*(K-S). The payer swaptions will be out of the money so there value can
+    // be assumed zero. That is the contrast to TestLowVolatility, where the very small volatility 
+    // causes the limit cases to be valid. There, the difference between the atm rate
+    // and the strike is allowed to be smaller.
 
     BOOST_TEST_MESSAGE("Testing pricing in edge cases with very high strike...");
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(5, July, 2016));
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(10, July, 2016));
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
-    Date maturityDate = calendar.advance(settlementDate, 2, Years);
+    Date maturityDate = calendar.advance(settlementDate, 5, Years);
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
@@ -167,7 +170,7 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
         volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
     
     for (Size i = 0; i < volstepdates.size() + 1; ++i) 
-        eurVols.push_back(0.03);
+        eurVols.push_back(0.005);
 
     Array eurVols_a;
     Array notimes_a, eurKappa_a;
@@ -184,31 +187,30 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
 
     double Annuity=0.0;
 
-    for (int i=3;i<5;++i)
+    for (int i=2;i<10;++i)
         Annuity+=0.5*exp(-(double)i*0.5*0.02);
 
+    // Starting at 5% which is 3% above the market atm rate
     BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
-
-    for (double strike = 0.05; strike <= 0.10; strike += 0.01)
+    for (double strike = 0.05; strike < 0.11; strike += 0.01)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());        
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
         boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
-
         double limitValue = exp(-0.02 * 1.5) * (strike - fixedRate) * Annuity;
-        BOOST_TEST_MESSAGE("Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
-        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0<< " bp. "<< "Annuity: " << Annuity);
-        BOOST_TEST_MESSAGE(" --------- ");
-        BOOST_CHECK(std::fabs(npv-limitValue)<150e-4);
+        BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
+        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
+        BOOST_TEST_MESSAGE("------------");
+        BOOST_CHECK_CLOSE(npv, limitValue, 3.0); // Up to 3% tolerance
     }
 
+    // Starting at 10% which is 7% above the market atm rate
     BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
-
-    for (double strike = 0.05; strike <= 0.10; strike += 0.01)
+    for (double strike = 0.10; strike < 0.16; strike += 0.01)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
         boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
@@ -216,27 +218,30 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
 
         double limitValue = 0.0;
         BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
-        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp. " << "Annuity: " << Annuity);
-        BOOST_TEST_MESSAGE(" --------- ");
-        BOOST_CHECK(std::fabs(npv-limitValue)<150e-4);
+        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
+        BOOST_TEST_MESSAGE("------------");
+        BOOST_CHECK(std::fabs(npv-limitValue)<5e-4); // Five basis points tolerance
     }
     
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
 }
 
 BOOST_AUTO_TEST_CASE(testLowStrike) {
-    // This test checks the LGM model price against the forward price in case of very high strikes.
-    // In these cases the payer swaptions will be in the money such that the forward price is a limit.
-    // The receiver swaptions will be out of the money so there value can be assumed zero.
+    // This test checks the LGM model price in case of very low strikes.
+    // In these cases the payer swaptions will be in the money such that the forward price is equal
+    // to the forward price D*(S-K). The receiver swaptions will be out of the money so there value can
+    // be assumed zero. That is the contrast to TestLowVolatility, where the very small volatility 
+    // causes the limit cases to be valid. There, the difference between the atm rate
+    // and the strike is allowed to be smaller.
 
     BOOST_TEST_MESSAGE("Testing pricing in edge cases with very low strike...");
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(5, July, 2016));
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(10, July, 2016));
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
-    Date maturityDate = calendar.advance(settlementDate, 2, Years);
+    Date maturityDate = calendar.advance(settlementDate, 5, Years);
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
@@ -257,7 +262,7 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
         volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
     
     for (Size i = 0; i < volstepdates.size() + 1; ++i) 
-        eurVols.push_back(0.03);
+        eurVols.push_back(0.005);
 
     Array eurVols_a;
     Array notimes_a, eurKappa_a;
@@ -274,41 +279,40 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
 
     double Annuity=0.0;
 
-    for (int i=3;i<5;++i)
+    for (int i=2;i<10;++i)
         Annuity+=0.5*exp(-(double)i*0.5*0.02);
 
-    BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
-
-    for (double strike = -0.05; strike >= -0.10; strike -= 0.01)
+    // Starting at -1% which is 3% below the market atm rate
+    BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
+    for (double strike = -0.01; strike > -0.07; strike -= 0.01)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());        
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
+        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+
+        swaption->setPricingEngine(eurSwEng1);
+        Real npv = swaption->NPV();
+        double limitValue = exp(-0.02 * 1.5) * (fixedRate - strike) * Annuity;
+        BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
+        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
+        BOOST_TEST_MESSAGE("------------");
+        BOOST_CHECK_CLOSE(npv, limitValue, 3.0); // Up to 3% tolerance
+    }
+
+    // Starting at -5% which is 7% below the market atm rate
+    BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
+    for (double strike = -0.05; strike > -0.11; strike -= 0.01)
+    {
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
         boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
 
         double limitValue = 0.0;
-        BOOST_TEST_MESSAGE("Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
-        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0<< " bp. "<< "Annuity: " << Annuity);
-        BOOST_TEST_MESSAGE(" --------- ");
-        BOOST_CHECK(std::fabs(npv-limitValue)<150e-4);
-    }
-
-    BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
-
-    for (double strike = -0.05; strike >= -0.10; strike -= 0.01)
-    {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
-
-        swaption->setPricingEngine(eurSwEng1);
-        Real npv = swaption->NPV();
-
-        double limitValue = exp(-0.02 * 1.5) * (fixedRate - strike) * Annuity;
         BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
-        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp. " << "Annuity: " << Annuity);
-        BOOST_TEST_MESSAGE(" --------- ");
-        BOOST_CHECK(std::fabs(npv-limitValue)<150e-4);
+        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
+        BOOST_TEST_MESSAGE("------------");
+        BOOST_CHECK(std::fabs(npv-limitValue)<5e-4); // Five basis points tolerance
     }
     
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
@@ -447,17 +451,22 @@ BOOST_AUTO_TEST_CASE(testLgmEdgeCases4) {
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
 }
 
-
 BOOST_AUTO_TEST_CASE(testLowVolatility) {
+    // This test checks the LGM model pricing routine in case of a model with very low volatility values.
+    // In these cases the swaption prices will either equal the inner value (which is D*(S-K) or D*(K-S) depending
+    // on the option type, i.e. "payer" or "receiver") or be zero. Even if the strike is only a little
+    // different from the atm rate, the very low volatility will ensure that there are only these two
+    // edge cases. That is the difference to testHighStrike and testLowStrike, where the big difference between
+    // the strike and the atm rate causes the limit cases to be valid.
 
     BOOST_TEST_MESSAGE("Testing pricing in edge cases with very low volatility...");
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(5, July, 2016));
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(10, July, 2016));
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
-    Date maturityDate = calendar.advance(settlementDate, 2, Years);
+    Date maturityDate = calendar.advance(settlementDate, 5, Years);
     Real notional = 1.0;
     Rate fixedRate = 0.02;
 
@@ -478,7 +487,7 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
         volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
     
     for (Size i = 0; i < volstepdates.size() + 1; ++i) 
-        eurVols.push_back(0.0000003);
+        eurVols.push_back(0.00003);
 
     Array eurVols_a;
     Array notimes_a, eurKappa_a;
@@ -495,45 +504,43 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
 
     double Annuity=0.0;
 
-    for (int i=3;i<5;++i)
+    for (int i=2;i<10;++i)
         Annuity+=0.5*exp(-(double)i*0.5*0.02);
 
+    // Starting 1% above market rate level of 2%
     BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
-
-    for (double strike = 0.2; strike <= 0.3; strike += 0.05)
+    for (double strike = 0.03; strike < 0.07; strike += 0.005)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());        
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
         boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
         double limitValue = exp(-0.02 * 1.5) * (strike - fixedRate) * Annuity;
-        BOOST_TEST_MESSAGE("Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
-        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0<< " bp. "<< "Annuity: " << Annuity);
-        BOOST_TEST_MESSAGE(" --------- ");
-        BOOST_CHECK(std::fabs(npv-limitValue)<150e-4);
+        BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
+        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
+        BOOST_TEST_MESSAGE("------------");
+        BOOST_CHECK_CLOSE(npv, limitValue, 4.0); // Up to 4% tolerance
     }
 
+    // Starting 1% below market rate level of 2%
     BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
-
-    for (double strike = -0.3; strike < -0.2; strike += 0.05)
+    for (double strike = 0.01; strike > -0.03; strike -= 0.005)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
         boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
         double limitValue = exp(-0.02 * 1.5) * (fixedRate - strike) * Annuity;
-        BOOST_TEST_MESSAGE("Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
-        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp. " << "Annuity: " << Annuity);
-        BOOST_TEST_MESSAGE(" --------- ");
-        BOOST_CHECK(std::fabs(npv-limitValue)<150e-4);
+        BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
+        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
+        BOOST_TEST_MESSAGE("------------");
+        BOOST_CHECK_CLOSE(npv, limitValue, 4.0);// Up to 4% tolerance
     }
     
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
 }
 
-
 BOOST_AUTO_TEST_SUITE_END()
-
 BOOST_AUTO_TEST_SUITE_END()
