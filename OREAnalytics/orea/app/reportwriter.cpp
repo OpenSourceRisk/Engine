@@ -30,6 +30,8 @@
 
 #include <qle/currencies/currencycomparator.hpp>
 
+#include <ql/cashflows/floatingratecoupon.hpp>
+
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/framework/accumulator_set.hpp>
 #include <boost/accumulators/statistics.hpp>
@@ -900,6 +902,7 @@ void ReportWriter::writeSensitivityConfigReport(ore::data::Report& report,
     LOG("Sensitivity Config report finished.");
 }
 
+namespace {
 template <class T>
 void addMapResults(boost::any resultMap, const std::string& tradeId, const std::string& resultName, Report& report) {
     T map = boost::any_cast<T>(resultMap);
@@ -910,6 +913,24 @@ void addMapResults(boost::any resultMap, const std::string& tradeId, const std::
         report.next().add(tradeId).add(name).add(p.first).add(p.second);
     }
 }
+
+void addAnyResults(Report& report, const std::string& tradeId, const std::string& field, const boost::any& result,
+                 const std::size_t precision) {
+    auto p = parseBoostAny(result, precision);
+    if (boost::starts_with(p.first, "vector")) {
+        vector<std::string> tokens;
+        string vect = p.second;
+        vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
+        boost::split(tokens, vect, boost::is_any_of(","));
+        for (Size i = 0; i < tokens.size(); ++i) {
+            boost::trim(tokens[i]);
+            report.next().add(tradeId).add(field + "[" + std::to_string(i) + "]").add(p.first.substr(7)).add(tokens[i]);
+        }
+    } else {
+        report.next().add(tradeId).add(field).add(p.first).add(p.second);
+    }
+}
+} // namespace
 
 void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::shared_ptr<Portfolio> portfolio,
                                                 QuantLib::ext::shared_ptr<Market> market,
@@ -933,22 +954,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
             // Get the additional data for the current instrument.
             auto additionalData = trade->additionalData();
             for (const auto& kv : additionalData) {
-                auto p = parseBoostAny(kv.second, precision);
-                if (boost::starts_with(p.first, "vector")) {
-                    vector<std::string> tokens;
-                    string vect = p.second;
-                    vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
-                    boost::split(tokens, vect, boost::is_any_of(","));
-                    for (Size i = 0; i < tokens.size(); i++) {
-                        boost::trim(tokens[i]);
-                        report.next()
-                            .add(tradeId)
-                            .add(kv.first + "[" + std::to_string(i) + "]")
-                            .add(p.first.substr(7))
-                            .add(tokens[i]);
-                    }
-                } else
-                    report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                addAnyResults(report, tradeId, kv.first, kv.second, precision);
             }
             // if the 'notional[2]' has been provided convert it to base currency
             if (additionalData.count("notional[2]") != 0 && additionalData.count("notionalCurrency[2]") != 0) {
@@ -1010,22 +1016,25 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, QuantLib::ext::s
                     } else if (kv.second.type() == typeid(result_type_scalar)) {
                         addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
                     } else {
-                        auto p = parseBoostAny(kv.second, precision);
-                        if (boost::starts_with(p.first, "vector")) {
-                            vector<std::string> tokens;
-                            string vect = p.second;
-                            vect.erase(remove(vect.begin(), vect.end(), '\"'), vect.end());
-                            boost::split(tokens, vect, boost::is_any_of(","));
-                            for (Size i = 0; i < tokens.size(); i++) {
-                                boost::trim(tokens[i]);
-                                report.next()
-                                    .add(tradeId)
-                                    .add(kv.first + "[" + std::to_string(i) + "]")
-                                    .add(p.first.substr(7))
-                                    .add(tokens[i]);
+                        addAnyResults(report, tradeId, kv.first, kv.second, precision);
+                    }
+                }
+            }
+
+            // add coupon additional results
+
+            for (Size i = 0; i < trade->legs().size(); ++i) {
+                for (Size j = 0; j < trade->legs()[i].size(); ++j) {
+                    if (auto c = QuantLib::ext::dynamic_pointer_cast<FloatingRateCoupon>(trade->legs()[i][j])) {
+                        try {
+                            c->rate(); // ensure the additional results results are available
+                            for (auto const& kv : c->additionalResults()) {
+                                addAnyResults(report, tradeId,
+                                              kv.first + "[" + std::to_string(i) + "][" + std::to_string(j) + "]",
+                                              kv.second, precision);
                             }
-                        } else
-                            report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                        } catch (...) {
+                        }
                     }
                 }
             }
@@ -2426,5 +2435,109 @@ void ReportWriter::writeXmlReport(ore::data::Report& report, std::string header,
     report.end();
 }
 
+void ReportWriter::writeBaCvaReport(const QuantLib::ext::shared_ptr<BaCvaCalculator>& baCvaCalculator,
+                                    ore::data::Report& reportOut) {
+
+    reportOut.addColumn("Counterparty", string())
+        .addColumn("NettingSet", string())
+        .addColumn("Analytic", string())
+        .addColumn("Value", double(), 6);
+
+    std::map<std::string, std::set<std::string>> counterpartyNettingSets = baCvaCalculator->counterpartyNettingSets();
+
+    reportOut.next().add("All").add("All").add("BA_CVA_CAPITAL").add(baCvaCalculator->cvaResult());
+
+    for (auto it = counterpartyNettingSets.begin(); it != counterpartyNettingSets.end(); it++) {
+        reportOut.next().add(it->first).add("All").add("sCVA").add(baCvaCalculator->counterpartySCVA(it->first));
+        reportOut.next().add(it->first).add("All").add("RiskWeight").add(baCvaCalculator->riskWeight(it->first));
+        for (auto n : it->second) {
+            reportOut.next().add(it->first).add(n).add("EAD").add(baCvaCalculator->EAD(n));
+            reportOut.next().add(it->first).add(n).add("EffMaturity").add(baCvaCalculator->effectiveMaturity(n));
+            reportOut.next().add(it->first).add(n).add("DiscountFactor").add(baCvaCalculator->discountFactor(n));
+        }
+    }
+
+    reportOut.end();
+}
+
+void ReportWriter::writeCvaSensiReport(const QuantLib::ext::shared_ptr<CvaSensitivityCubeStream>& ss,
+                                       ore::data::Report& reportOut) {
+
+    LOG("Writing CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("ShiftType", string())
+        .addColumn("ShiftSize", double(), 6)
+        .addColumn("Currency", string())
+        .addColumn("BaseCva", double(), 2)
+        .addColumn("Delta", double(), 4);
+
+    ss->reset();
+    while (CvaSensitivityRecord sr = ss->next()) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.key));
+        reportOut.add(to_string(sr.shiftType));
+        reportOut.add(sr.shiftSize);
+        reportOut.add(sr.currency);
+        reportOut.add(sr.baseCva);
+        reportOut.add(sr.delta);
+    }
+
+    reportOut.end();
+}
+
+void ReportWriter::writeCvaSensiReport(const std::vector<CvaSensitivityRecord>& records,
+                                       ore::data::Report& reportOut) {
+
+    LOG("Writing CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("ShiftType", string())
+        .addColumn("ShiftSize", double(), 6)
+        .addColumn("Currency", string())
+        .addColumn("BaseCva", double(), 2)
+        .addColumn("Delta", double(), 4);
+
+    for (auto sr : records) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.key));
+        reportOut.add(to_string(sr.shiftType));
+        reportOut.add(sr.shiftSize);
+        reportOut.add(sr.currency);
+        reportOut.add(sr.baseCva);
+        reportOut.add(sr.delta);
+    }
+
+    reportOut.end();
+}
+
+void ReportWriter::writeSaCvaSensiReport(const SaCvaNetSensitivities& sensis,
+                                         ore::data::Report& reportOut) {
+
+    LOG("Writing SA CVA Sensitivity Report");
+    reportOut.addColumn("NettingSet", string())
+        .addColumn("RiskType", string())
+        .addColumn("CvaType", string())
+        .addColumn("MarginType", string())
+        .addColumn("RiskFactor", string())
+        .addColumn("Bucket", string())
+        .addColumn("Value", double(), 4);
+
+    for (auto sr : sensis) {
+        reportOut.next();
+        reportOut.add(sr.nettingSetId);
+        reportOut.add(to_string(sr.riskType));
+        reportOut.add(to_string(sr.cvaType));
+        reportOut.add(to_string(sr.marginType));
+        reportOut.add(sr.riskFactor);
+        reportOut.add(sr.bucket);
+        reportOut.add(sr.value);
+    }
+
+    reportOut.end();
+}
+  
 } // namespace analytics
 } // namespace ore

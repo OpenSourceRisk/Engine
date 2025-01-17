@@ -216,15 +216,24 @@ void saveCube(const std::string& filename, const NPVCubeWithMetaData& cube, cons
 
     // write cube data
 
+    std::size_t len0, len1, len2;
+    constexpr std::size_t maxLen = std::numeric_limits<std::size_t>::digits10 + 1;
+    char buf[4 * maxLen + 1];
+
     out << "#id,date,sample,depth,value\n";
     for (Size i = 0; i < cube.cube->numIds(); ++i) {
         out << i << ",0,0,0," << cube.cube->getT0(i) << "\n";
+        len0 = snprintf(buf, maxLen, "%u,", (unsigned int)i);
         for (Size j = 0; j < cube.cube->numDates(); ++j) {
+            len1 = snprintf(buf + len0, maxLen, "%u,", (unsigned int)(j + 1));
             for (Size k = 0; k < cube.cube->samples(); ++k) {
+                len2 = snprintf(buf + len0 + len1, maxLen, "%u,", (unsigned int)k);
                 for (Size d = 0; d < cube.cube->depth(); ++d) {
                     double value = cube.cube->get(i, j, k, d);
-                    if (value != 0.0)
-                        out << i << "," << (j + 1) << "," << k << "," << d << "," << value << "\n";
+                    if (value != 0.0) {
+                        snprintf(buf + len0 + len1 + len2, maxLen, "%u,", (unsigned int)d);
+                        out << buf << value << "\n";
+                    }
                 }
             }
         }
