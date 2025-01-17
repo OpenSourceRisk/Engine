@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/app/analytics/xvasensitivityanalytic.hpp>
 #include <orea/app/reportwriter.hpp>
@@ -143,7 +144,7 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
 
     std::string marketConfig = inputs_->marketConfig("pricing"); // FIXME
 
-    auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
+    //auto xvaAnalytic = dependentAnalytic<XvaAnalytic>("XVA");
 
     // build t0, sim market, stress scenario generator
 
@@ -158,19 +159,20 @@ void XvaSensitivityAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore
     CONSOLE("XVA_SENSI: Running sensi scenarios");
 
     // run stress test
-    LOG("Run XVA Zero Sensitivity Sensitivity")
+    LOG("Run XVA Zero Sensitivity")
     auto zeroCubes = computeZeroXvaSensitivity(loader);
+    LOG("Create Zero Sensitivity reports");
     createZeroReports(zeroCubes);
+    
     if (inputs_->xvaSensiParSensi()) {
         LOG("Run Par Conversion")
         auto parCubes = parConversion(zeroCubes);
         createParReports(parCubes, zeroCubes.tradeNettingSetMap_);
-        LOG("Running XVA Sensitivity analytic finished.");
-        
+        LOG("Running XVA Sensitivity analytic finished.");        
     }
 }
 
-XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::computeZeroXvaSensitivity(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
+ZeroSensiResults XvaSensitivityAnalyticImpl::computeZeroXvaSensitivity(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) {
     auto simMarket = buildSimMarket(false);
     auto scenarioGenerator = buildScenarioGenerator(simMarket, false);
     std::map<size_t, ext::shared_ptr<XvaResults>> xvaResults;
@@ -179,7 +181,7 @@ XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::compute
     return convertXvaResultsToSensiCubes(xvaResults, scenarioGenerator);
 }
 
-XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::convertXvaResultsToSensiCubes(
+ZeroSensiResults XvaSensitivityAnalyticImpl::convertXvaResultsToSensiCubes(
     const std::map<size_t, QuantLib::ext::shared_ptr<XvaResults>>& xvaResults,
     const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
     static const std::vector<XvaResults::Adjustment> adjustments = {
@@ -320,11 +322,14 @@ XvaSensitivityAnalyticImpl::ZeroSensiResults XvaSensitivityAnalyticImpl::convert
     return results;
 }
 
-void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::shared_ptr<XvaResults>>& xvaResults, const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
+void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::shared_ptr<XvaResults>>& xvaResults, 
+    const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader, 
+    const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator) {
     // Used for the raw report
     QL_REQUIRE(scenarioGenerator != nullptr,
                "Internal error: Can not compute XVA sensi without valid scenario generator.");
     std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>>> xvaReports;
+    auto simMarketParams = analytic()->configurations().simMarketParams;
 
     for (size_t i = 0; i < scenarioGenerator->samples(); ++i) {
         auto scenario = scenarioGenerator->next(inputs_->asof());
@@ -333,9 +338,15 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
         try {
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
-            auto newAnalytic =
-                ext::make_shared<XvaAnalytic>(inputs_, scenario, analytic()->configurations().simMarketParams);
-            CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
+            // auto newAnalytic =
+            //     ext::make_shared<XvaAnalytic>(inputs_, scenario, analytic()->configurations().simMarketParams);
+            auto xvaAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager());
+            auto newAnalytic = xvaAnalytic.second;
+            auto xvaImpl = static_cast<XvaAnalyticImpl*>(newAnalytic->impl().get());
+            xvaImpl->setOffsetScenario(scenario);
+            xvaImpl->setOffsetSimMarketParams(simMarketParams);
+	    
+	        CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
             for (auto& [name, rpt] : newAnalytic->reports()["XVA"]) {
@@ -358,6 +369,7 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
 }
 
 void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSensiResults& xvaZeroSeniCubes){
+    LOG("XvaSensitivityAnalyticImpl::createZeroReports called");
     for(const auto& [valueAdjustment, cube] : xvaZeroSeniCubes.tradeCubes_){
         auto ssTrade = QuantLib::ext::make_shared<SensitivityCubeStream>(cube, inputs_->baseCurrency());
         auto nettingCube = xvaZeroSeniCubes.nettingCubes_[valueAdjustment];
@@ -369,9 +381,10 @@ void XvaSensitivityAnalyticImpl::createZeroReports(ZeroSensiResults& xvaZeroSeni
                                        inputs_->sensiThreshold());
         analytic()->reports()[label()]["xva_zero_sensitivity_" + to_string(valueAdjustment)] = zeroSensiReport;
     }
+    LOG("XvaSensitivityAnalyticImpl::createZeroReports done");
 }
 
-XvaSensitivityAnalyticImpl::ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zeroResults) {
+ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zeroResults) {
     set<RiskFactorKey::KeyType> typesDisabled{RiskFactorKey::KeyType::OptionletVolatility};
 
     auto parAnalysis = QuantLib::ext::make_shared<ParSensitivityAnalysis>(
@@ -413,6 +426,13 @@ XvaSensitivityAnalyticImpl::ParSensiResults XvaSensitivityAnalyticImpl::parConve
             QuantLib::ext::make_shared<ZeroToParCube>(zeroCube, parConverter, typesDisabled, true);
     }
 
+    // Store the par sensi stream in the base anlytics class in case we want to post process later (e.g. for SACVA)
+    auto nettingSetCube = results.nettingParSensiCube_[XvaResults::Adjustment::CVA];
+    analytic()->parCvaSensiCubeStream() =
+        QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingSetCube, inputs_->baseCurrency());
+
+    QL_REQUIRE(analytic()->parCvaSensiCubeStream(), "xva sensitivity analytic failed to populate a parCvaSensiCubeStream");
+
     return results;
 }
 
@@ -426,7 +446,7 @@ void XvaSensitivityAnalyticImpl::createParReports(ParSensiResults& xvaParSensiCu
             QuantLib::ext::make_shared<ore::data::InMemoryReport>(inputs_->reportBufferSize());
         ReportWriter(inputs_->reportNaString())
             .writeXvaSensitivityReport(*report, pssTrade, pssNetting, tradeNettingSetMap,
-                                       inputs_->sensiThreshold());
+                                       inputs_->sensiThreshold(), inputs_->xvaSensiOutputPrecision());
         analytic()->reports()[label()]["xva_par_sensitivity_" + to_string(valueAdjustment)] = report;
     }
 }
@@ -479,12 +499,6 @@ void XvaSensitivityAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->xvaSensiSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->xvaSensiScenarioData();
-}
-
-XvaSensitivityAnalytic::XvaSensitivityAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<XvaSensitivityAnalyticImpl>(inputs), {"XVA_SENSITIVITY"}, inputs, true, false, false,
-               false) {
-    impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
 }
 
 } // namespace analytics

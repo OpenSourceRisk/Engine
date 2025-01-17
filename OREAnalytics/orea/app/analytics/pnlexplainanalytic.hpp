@@ -39,11 +39,11 @@ public:
         : Analytic::Impl(inputs) {
         setLabel(LABEL);
         
-        auto sensiAnalytic = AnalyticFactory::instance().build("SENSITIVITY", inputs_);
+        auto sensiAnalytic = AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), true);
         if (sensiAnalytic.second)
             addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
 
-        auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_);
+        auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_, analytic()->analyticsManager(), true);
         if (pnlAnalytic.second)
             addDependentAnalytic(pnlLookupKey, pnlAnalytic.second);
     }
@@ -55,10 +55,10 @@ public:
 
 class PnlExplainAnalytic : public Analytic {
 public:
-    PnlExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PnlExplainAnalyticImpl>(inputs), {"PNL_EXPLAIN"}, inputs, true, true) {
-
-    }
+    PnlExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                       const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+        : Analytic(std::make_unique<PnlExplainAnalyticImpl>(inputs), {"PNL_EXPLAIN"}, inputs, analyticsManager, true,
+                   true) {}
 };
 
 } // namespace analytics

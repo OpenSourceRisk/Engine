@@ -42,10 +42,6 @@ void PnlAnalyticImpl::setUpConfigurations() {
 
 void PnlAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
     const std::set<std::string>& runTypes) {
-    
-    if (!analytic()->match(runTypes))
-        return;
-
     Settings::instance().evaluationDate() = inputs_->asof();
     analytic()->configurations().asofDate = inputs_->asof();
     ObservationMode::instance().setMode(inputs_->observationModel());

@@ -48,9 +48,6 @@ void StressTestAnalyticImpl::setUpConfigurations() {
 
 void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                          const std::set<std::string>& runTypes) {
-    if (!analytic()->match(runTypes))
-        return;
-
     LOG("StressTestAnalytic::runAnalytic called");
 
     Settings::instance().evaluationDate() = inputs_->asof();
@@ -111,9 +108,6 @@ void StressTestAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
 
     CONSOLE("OK");
 }
-
-StressTestAnalytic::StressTestAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-    : Analytic(std::make_unique<StressTestAnalyticImpl>(inputs), {"STRESS"}, inputs, false, false, false, false) {}
 
 } // namespace analytics
 } // namespace ore

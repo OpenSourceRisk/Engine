@@ -41,7 +41,7 @@ public:
         LOG("ASOF date " << io::iso_date(inputs_->asof()));
         LOG("MPOR date " << io::iso_date(mporDate_));
     
-        auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs);
+        auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs, analytic()->analyticsManager());
         if (mporAnalytic.second) {
             mporAnalytic.second->configurations().curveConfig = inputs->curveConfigs().get("mpor");
             auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic.second->impl().get());
@@ -93,9 +93,10 @@ private:
 */
 class PnlAnalytic : public Analytic {
 public:
-    PnlAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<PnlAnalyticImpl>(inputs), {"PNL"}, inputs, false, false, false, false) {}
-
+    PnlAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+        : Analytic(std::make_unique<PnlAnalyticImpl>(inputs), {"PNL"}, inputs, analyticsManager, false, false, false,
+                   false) {}
 };
 
 } // namespace analytics

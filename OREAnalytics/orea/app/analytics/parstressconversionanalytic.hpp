@@ -29,7 +29,9 @@ class ParStressConversionAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "PARSTRESSCONVERSION";
 
-    ParStressConversionAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+    ParStressConversionAnalyticImpl(
+        const QuantLib::ext::shared_ptr<InputParameters>& inputs)
+        : Analytic::Impl(inputs) {
         setLabel(LABEL);
     }
 
@@ -41,7 +43,10 @@ public:
 
 class ParStressConversionAnalytic : public Analytic {
 public:
-    ParStressConversionAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
+    ParStressConversionAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+        : Analytic(std::make_unique<ParStressConversionAnalyticImpl>(inputs), {"PARSTRESSCONVERSION"}, inputs,
+                   analyticsManager, false, false, false, false) {}
 };
 
 } // namespace analytics

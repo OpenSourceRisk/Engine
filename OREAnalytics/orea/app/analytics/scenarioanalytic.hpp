@@ -59,9 +59,10 @@ private:
 
 class ScenarioAnalytic : public Analytic {
 public:
-    ScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
-        : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs), {"SCENARIO"}, inputs,
-                   true, false, false, false) {}
+    ScenarioAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                     const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+        : Analytic(std::make_unique<ScenarioAnalyticImpl>(inputs), {"SCENARIO"}, inputs, analyticsManager, true, false,
+                   false, false) {}
 };
 
 } // namespace analytics

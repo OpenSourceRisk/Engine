@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/analyticsmanager.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/marketdataloader.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
@@ -53,11 +54,12 @@ namespace analytics {
 Analytic::Analytic(std::unique_ptr<Impl> impl,
          const std::set<std::string>& analyticTypes,
          const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+         const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager,
          bool simulationConfig,
          bool sensitivityConfig,
          bool scenarioGeneratorConfig,
          bool crossAssetModelConfig)
-    : impl_(std::move(impl)), types_(analyticTypes), inputs_(inputs) {
+    : impl_(std::move(impl)), types_(analyticTypes), inputs_(inputs), analyticsManager_(analyticsManager) {
 
     configurations().asofDate = inputs->asof();
 

@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/analytics/analyticfactory.hpp>
+#include <orea/app/analyticsmanager.hpp>
 
 #include <ql/errors.hpp>
 
@@ -27,7 +28,7 @@ namespace analytics {
 
 std::map<std::string, std::pair<std::set<std::string>, QuantLib::ext::shared_ptr<AbstractAnalyticBuilder>>> AnalyticFactory::getBuilders() const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    return builders_;
+    return builders_; 
 }
 
 std::pair<std::string,
@@ -58,12 +59,25 @@ void AnalyticFactory::addBuilder(const std::string& className, const std::set<st
                "AnalyticFactory: duplicate builder for className '" << className << "'.");
 }
 
-std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>> AnalyticFactory::build(const string& subAnalytic,
-    const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs) const {
+std::pair<std::string, QuantLib::ext::shared_ptr<Analytic>>
+AnalyticFactory::build(const string& subAnalytic,
+    const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
+    const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager, const bool useCache) const {
     auto builder = getBuilder(subAnalytic);
     QuantLib::ext::shared_ptr<Analytic> a;
-    if (builder.second)
-        a = builder.second->build(inputs);
+    if (useCache && analyticsManager && analyticsManager->analytics().size() > 0) {
+        // if not buildNew then we first check if we already have this analytic in the AnalyticsManager
+        const auto& it = analyticsManager->analytics().find(builder.first);
+        if (it != analyticsManager->analytics().end())
+            a = it->second;
+    }
+
+    if (!a && builder.second) {
+        a = builder.second->build(inputs, analyticsManager);
+        if (useCache && analyticsManager)
+            analyticsManager->addAnalytic(builder.first, a);
+    }
+
     return std::make_pair(builder.first, a);
 }
 

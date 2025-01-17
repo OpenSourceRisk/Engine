@@ -74,9 +74,12 @@ private:
 };
 
 class XvaExplainAnalytic : public Analytic {
-    public:
-        explicit XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
-    };
+public:
+    explicit XvaExplainAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+        : Analytic(std::make_unique<XvaExplainAnalyticImpl>(inputs), {"XVA_EXPLAIN"}, inputs, analyticsManager, true,
+                   false, false, false) {}
+};
 
 } // namespace analytics
 } // namespace ore

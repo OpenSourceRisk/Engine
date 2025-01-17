@@ -16,43 +16,39 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytics/simmanalytic.hpp
-    \brief ORE SIMM Analytic
+/*! \file orea/app/analytics/saccranalytic.hpp
+    \brief ORE SACCR Analytic
 */
 #pragma once
 
 #include <orea/app/analytic.hpp>
-#include <orea/app/zerosensitivityloader.hpp>
+#include <orea/engine/saccr.hpp>
 
 namespace ore {
 namespace analytics {
-class ParConversionAnalyticImpl : public Analytic::Impl {
-public:
-    static constexpr const char* LABEL = "PARCONVERSION";
 
-    ParConversionAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
-        setLabel(LABEL);
-    }
+class SaCcrAnalyticImpl : public Analytic::Impl {
+public:
+    static constexpr const char* LABEL = "SA_CCR";
+
+    SaCcrAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs);
+
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
 };
 
-class ParConversionAnalytic : public Analytic {
+class SaCcrAnalytic : public Analytic {
 public:
-    ParConversionAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                          const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
-        : Analytic(std::make_unique<ParConversionAnalyticImpl>(inputs), {"PARCONVERSION"}, inputs, analyticsManager,
-                   false, false, false,
-                   false) {}
+    SaCcrAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
+                  const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+        : Analytic(std::make_unique<SaCcrAnalyticImpl>(inputs), {"SA_CCR"}, inputs, analyticsManager) {}
 
-    std::map<std::string, std::vector<ZeroSensitivityLoader::ZeroSensitivity>> loadZeroSensitivities() const { 
-        ZeroSensitivityLoader loader(inputs_->parConversionInputFile());
-        return loader.sensitivities();
-    }
+    const QuantLib::ext::shared_ptr<SACCR> saccr() const { return saccr_; }
+    void setSaccr(QuantLib::ext::shared_ptr<SACCR> saccr) { saccr_ = saccr; }
 
 private:
-
+    QuantLib::ext::shared_ptr<SACCR> saccr_;
 };
 
 } // namespace analytics

@@ -19,6 +19,7 @@
 #include <orea/app/analytics/xvastressanalytic.hpp>
 
 #include <orea/app/analytics/xvaanalytic.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
 #include <orea/app/structuredanalyticserror.hpp>
 #include <orea/app/structuredanalyticswarning.hpp>
 #include <orea/cube/cube_io.hpp>
@@ -31,7 +32,7 @@ namespace ore {
 namespace analytics {
 
 void XvaStressAnalyticImpl::writeCubes(const std::string& label,
-                                       const QuantLib::ext::shared_ptr<XvaAnalytic>& xvaAnalytic) {
+                                       const QuantLib::ext::shared_ptr<Analytic>& xvaAnalytic) {
     if (!inputs_->xvaStressWriteCubes() || xvaAnalytic == nullptr) {
         return;
     }
@@ -166,9 +167,11 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
         try {
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_STRESS: Apply scenario " << label);
-            auto newAnalytic = ext::make_shared<XvaAnalytic>(
-                inputs_, scenario,
-                analytic()->configurations().simMarketParams);
+            auto newAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager()).second;
+            auto xvaImpl = static_cast<XvaAnalyticImpl*>(newAnalytic->impl().get());
+            xvaImpl->setOffsetScenario(scenario);
+            xvaImpl->setOffsetSimMarketParams(analytic()->configurations().simMarketParams);
+
             CONSOLE("XVA_STRESS: Calculate Exposure and XVA")
             newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
@@ -208,14 +211,6 @@ void XvaStressAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().todaysMarketParams = inputs_->todaysMarketParams();
     analytic()->configurations().simMarketParams = inputs_->xvaStressSimMarketParams();
     analytic()->configurations().sensiScenarioData = inputs_->xvaStressSensitivityScenarioData();
-}
-
-XvaStressAnalytic::XvaStressAnalytic(
-    const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-    const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios)
-    : Analytic(std::make_unique<XvaStressAnalyticImpl>(inputs, scenarios), {"XVA_STRESS"}, inputs, true, false, false,
-               false) {
-    impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
 }
 
 } // namespace analytics

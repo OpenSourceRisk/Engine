@@ -16,43 +16,39 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/analytics/simmanalytic.hpp
-    \brief ORE SIMM Analytic
+/*! \file oreap/app/analytics/bacvaanalytic.hpp
+    \brief ORE BACVA Analytic
 */
 #pragma once
 
 #include <orea/app/analytic.hpp>
-#include <orea/app/zerosensitivityloader.hpp>
+#include <orea/app/analytics/analyticfactory.hpp>
+#include <orea/app/analytics/saccranalytic.hpp>
 
 namespace ore {
 namespace analytics {
-class ParConversionAnalyticImpl : public Analytic::Impl {
-public:
-    static constexpr const char* LABEL = "PARCONVERSION";
 
-    ParConversionAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
+class BaCvaAnalyticImpl : public Analytic::Impl {
+public:
+    static constexpr const char* LABEL = "BA_CVA";
+    static constexpr const char* saccrLookupKey = "SA_CCR";
+
+    BaCvaAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs)
+        : Analytic::Impl(inputs) {
         setLabel(LABEL);
+        dependentAnalytics_[saccrLookupKey] = QuantLib::ext::make_shared<SaCcrAnalytic>(inputs_);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
+
     void setUpConfigurations() override;
 };
 
-class ParConversionAnalytic : public Analytic {
+class BaCvaAnalytic : public Analytic {
 public:
-    ParConversionAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
-                          const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
-        : Analytic(std::make_unique<ParConversionAnalyticImpl>(inputs), {"PARCONVERSION"}, inputs, analyticsManager,
-                   false, false, false,
-                   false) {}
-
-    std::map<std::string, std::vector<ZeroSensitivityLoader::ZeroSensitivity>> loadZeroSensitivities() const { 
-        ZeroSensitivityLoader loader(inputs_->parConversionInputFile());
-        return loader.sensitivities();
-    }
-
-private:
-
+    BaCvaAnalytic(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
+                  const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+        : Analytic(std::make_unique<BaCvaAnalyticImpl>(inputs), {"BA_CVA"}, inputs, analyticsManager) {}
 };
 
 } // namespace analytics

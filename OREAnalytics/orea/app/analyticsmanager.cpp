@@ -33,15 +33,10 @@ using ore::data::InMemoryReport;
 namespace ore {
 namespace analytics {
     
-AnalyticsManager::AnalyticsManager(const QuantLib::ext::shared_ptr<InputParameters>& inputs, 
-                                   const QuantLib::ext::shared_ptr<MarketDataLoader>& marketDataLoader)
-    : inputs_(inputs), marketDataLoader_(marketDataLoader) {
-
-    for (const auto& a : inputs_->analytics()) {
-        auto ap = AnalyticFactory::instance().build(a, inputs);
-        if (ap.second)
-            addAnalytic(ap.first, ap.second);
-    }
+void AnalyticsManager::initialise() {
+    for (const auto& a : inputs_->analytics()) 
+        auto ap = AnalyticFactory::instance().build(a, inputs_, shared_from_this(), true);
+    initialised_ = true;
 }
 
 void AnalyticsManager::clear() {
@@ -97,6 +92,7 @@ std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analyt
 }
 
 void AnalyticsManager::runAnalytics(const QuantLib::ext::shared_ptr<MarketCalibrationReportBase>& marketCalibrationReport) {
+    QL_REQUIRE(initialised_, "AnalyticsManager has not been initialised");
     if (analytics_.size() == 0)
         return;
 

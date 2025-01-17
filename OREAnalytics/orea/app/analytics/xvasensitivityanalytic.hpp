@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/app/analytics/xvaanalytic.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <orea/engine/parsensitivityanalysis.hpp>
@@ -62,6 +63,16 @@ private:
 //! Write FrtbCorrelationScenario to stream
 std::ostream& operator<<(std::ostream& os, const XvaResults::Adjustment adjustment);
 
+struct ZeroSensiResults {
+    std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<SensitivityCube>> tradeCubes_;
+    std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<SensitivityCube>> nettingCubes_;
+    std::map<std::string, std::string> tradeNettingSetMap_;
+};
+struct ParSensiResults {
+    std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<ZeroToParCube>> tradeParSensiCube_;
+    std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<ZeroToParCube>> nettingParSensiCube_;
+};
+
 class XvaSensitivityAnalyticImpl : public Analytic::Impl {
 public:
     static constexpr const char* LABEL = "XVA_SENSITIVITY";
@@ -71,16 +82,6 @@ public:
     void setUpConfigurations() override;
 
 private:
-    struct ZeroSensiResults{
-        std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<SensitivityCube>> tradeCubes_;
-        std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<SensitivityCube>> nettingCubes_;
-        std::map<std::string, std::string> tradeNettingSetMap_;
-    };
-    struct ParSensiResults{
-        std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<ZeroToParCube>> tradeParSensiCube_;
-        std::map<XvaResults::Adjustment, QuantLib::ext::shared_ptr<ZeroToParCube>> nettingParSensiCube_;
-    };
-
     QuantLib::ext::shared_ptr<ScenarioSimMarket> buildSimMarket(bool overrideTenors);
     
     QuantLib::ext::shared_ptr<SensitivityScenarioGenerator> buildScenarioGenerator(QuantLib::ext::shared_ptr<ScenarioSimMarket>& simMarket, bool overrideTenors);
@@ -106,15 +107,18 @@ private:
     void createDetailReport(
     const QuantLib::ext::shared_ptr<SensitivityScenarioGenerator>& scenarioGenerator,
     const std::map<std::string, std::vector<ext::shared_ptr<InMemoryReport>>>& xvaReports);
-
 };
 
 class XvaSensitivityAnalytic : public Analytic {
 public:
-    explicit XvaSensitivityAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs);
-
+    explicit XvaSensitivityAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
+                                    const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
+        : Analytic(std::make_unique<XvaSensitivityAnalyticImpl>(inputs), {"XVA_SENSITIVITY"}, inputs, analyticsManager,
+                   true, false, false, false) {
+        // impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
+    }
 };
-
 
 } // namespace analytics
 } // namespace ore
+
