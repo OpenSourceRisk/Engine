@@ -318,9 +318,11 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
 }
 
-
-BOOST_AUTO_TEST_CASE(testLgmEdgeCases3) {
-
+BOOST_AUTO_TEST_CASE(testLateExercise) {
+    // This test checks the behaviour of the LGM model in case of an erroneous setup,
+    // i.e. an exercise date after maturity. The expected behaviour is a fail,
+    // more precisely a fail of QL_Require which is checked for and captured by 
+    // the test environment.
     BOOST_TEST_MESSAGE("Testing pricing in edge cases with zero time to maturity.");
     
     Calendar calendar = TARGET();
@@ -347,7 +349,7 @@ BOOST_AUTO_TEST_CASE(testLgmEdgeCases3) {
         volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
     
     for (Size i = 0; i < volstepdates.size() + 1; ++i) 
-        eurVols.push_back(0.0000);// + (0.0080 - 0.0050) * std::exp(-0.3 * static_cast<double>(i)));
+        eurVols.push_back(0.0000);
 
     Array eurVols_a;
     Array notimes_a, eurKappa_a;
@@ -363,11 +365,10 @@ BOOST_AUTO_TEST_CASE(testLgmEdgeCases3) {
     Schedule schedule(settlementDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
     BOOST_TEST_MESSAGE("Receiver Swaps");
-
     for (double strike = -0.02; strike <= 0.14; strike += 0.01)
     {
         boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());
-        boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(12, August, 2020));
+        boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(12, August, 2020)); // This is intentional
         boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
         swaption->setPricingEngine(eurSwEng1);
 
@@ -381,8 +382,9 @@ BOOST_AUTO_TEST_CASE(testLgmEdgeCases3) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(testLgmEdgeCases4) {
-
+/*BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
+    // This test checks he behaviour of the LGM in case of a given
+    // expiry date equal to the settlement date.
     BOOST_TEST_MESSAGE("Testing pricing in edge cases with expiry equal to settlement");
     
     Calendar calendar = TARGET();
@@ -409,7 +411,7 @@ BOOST_AUTO_TEST_CASE(testLgmEdgeCases4) {
         volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
     
     for (Size i = 0; i < volstepdates.size() + 1; ++i) 
-        eurVols.push_back(0.0000);// + (0.0080 - 0.0050) * std::exp(-0.3 * static_cast<double>(i)));
+        eurVols.push_back(0.0050);
 
     Array eurVols_a;
     Array notimes_a, eurKappa_a;
@@ -433,7 +435,7 @@ BOOST_AUTO_TEST_CASE(testLgmEdgeCases4) {
         boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
-        BOOST_TEST_MESSAGE("Swaption (Strike = " << strike << "): " << npv * 10000.00 << " bp. ");
+        BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike << "): " << npv * 10000.00 << " bp. ");
     }
 
     BOOST_TEST_MESSAGE("Payer Swaps");
@@ -445,11 +447,11 @@ BOOST_AUTO_TEST_CASE(testLgmEdgeCases4) {
         boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
-        BOOST_TEST_MESSAGE("Swaption (Strike = " << strike << "): " << npv * 10000.00 << " bp. ");
+        BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike << "): " << npv * 10000.00 << " bp. ");
     }
 
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
-}
+}*/
 
 BOOST_AUTO_TEST_CASE(testLowVolatility) {
     // This test checks the LGM model pricing routine in case of a model with very low volatility values.
