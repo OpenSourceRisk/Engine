@@ -68,6 +68,9 @@ public:
        the model should be using training paths only temporarily and reset to normal model via RAII */
     virtual void toggleTrainingPaths() const {}
 
+    // if true use sticky close out date impmlied market for all subsequent calls;
+    virtual void useStickyCloseOutDates(const bool b) const;
+
     // the eval date
     virtual const Date& referenceDate() const = 0;
 

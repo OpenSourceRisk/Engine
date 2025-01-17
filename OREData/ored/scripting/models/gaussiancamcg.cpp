@@ -40,11 +40,13 @@ GaussianCamCG::GaussianCamCG(
     const std::vector<std::string>& indices, const std::vector<std::string>& indexCurrencies,
     const std::set<Date>& simulationDates, const Size timeStepsPerYear, const IborFallbackConfig& iborFallbackConfig,
     const std::vector<Size>& projectedStateProcessIndices,
-    const std::vector<std::string>& conditionalExpectationModelStates, const bool sloppySimDates)
+    const std::vector<std::string>& conditionalExpectationModelStates, const bool sloppySimDates,
+    const std::vector<Date>& stickyCloseOutDates)
     : ModelCGImpl(curves.front()->dayCounter(), paths, currencies, irIndices, infIndices, indices, indexCurrencies,
                   simulationDates, iborFallbackConfig),
       cam_(cam), curves_(curves), fxSpots_(fxSpots), timeStepsPerYear_(timeStepsPerYear),
-      projectedStateProcessIndices_(projectedStateProcessIndices), sloppySimDates_(sloppySimDates) {
+      projectedStateProcessIndices_(projectedStateProcessIndices), sloppySimDates_(sloppySimDates),
+      stickyCloseOutDates_(stickyCloseOutDates) {
 
     // check inputs
 
@@ -123,6 +125,11 @@ void GaussianCamCG::performCalculations() const {
         effectiveSimulationDates_.clear();
         effectiveSimulationDates_.insert(referenceDate());
         for (auto const& d : simulationDates_) {
+            if (d >= referenceDate())
+                effectiveSimulationDates_.insert(d);
+        }
+
+        for (auto const& d : stickyCloseOutDates_) {
             if (d >= referenceDate())
                 effectiveSimulationDates_.insert(d);
         }
@@ -428,10 +435,23 @@ void GaussianCamCG::performCalculations() const {
                "GaussianCamCG:internal error, did not populate all irState time steps.");
 }
 
+Date GaussianCamCG::adjustForStickyCloseOut(const Date& d) const {
+    if (useStickyCloseOutDates_) {
+        std::size_t idx =
+            std::distance(simulationDates_.begin(), simulationDates_.find(getSloppyDate(d, true, simulationDates_)));
+        QL_REQUIRE(stickyCloseOutDates_.size() > idx,
+                   "GaussianCamCG::adjustForStickyCloseOut("
+                       << d << "): internal error, idx = " << idx << ", simulationDates size = "
+                       << simulationDates_.size() << ", stickyCloseOutDates size = " << stickyCloseOutDates_.size());
+        return stickyCloseOutDates_[idx];
+    }
+    return d;
+}
+
 std::size_t GaussianCamCG::getIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
     QL_REQUIRE(fwd == Null<Date>(), "GaussianCamCG::getIndexValue(): fwd != null not implemented ("
                                         << indexNo << "," << d << "," << fwd << ")");
-    Date sd = getSloppyDate(d, sloppySimDates_, effectiveSimulationDates_);
+    Date sd = getSloppyDate(adjustForStickyCloseOut(d), sloppySimDates_, effectiveSimulationDates_);
     return underlyingPaths_.at(sd).at(indexNo);
 }
 
@@ -443,10 +463,10 @@ std::size_t GaussianCamCG::getIrIndexValue(const Size indexNo, const Date& d, co
     fixingDate = irIndices_[indexNo].second->fixingCalendar().adjust(fixingDate);
     Size currencyIdx = irIndexPositionInCam_[indexNo];
     auto cam(cam_);
-    Date sd = getSloppyDate(d, sloppySimDates_, effectiveSimulationDates_);
+    Date sd = getSloppyDate(adjustForStickyCloseOut(d), sloppySimDates_, effectiveSimulationDates_);
     LgmCG lgmcg(
         currencies_[currencyIdx], *g_, [cam, currencyIdx] { return cam->irlgm1f(currencyIdx); }, modelParameters_);
-    return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, d, irStates_.at(sd).at(currencyIdx));
+    return lgmcg.fixing(irIndices_[indexNo].second, fixingDate, d, irStates_.at(sd).at(currencyIdx), sd);
 }
 
 std::size_t GaussianCamCG::getInfIndexValue(const Size indexNo, const Date& d, const Date& fwd) const {
@@ -465,19 +485,19 @@ std::size_t GaussianCamCG::fwdCompAvg(const bool isAvg, const std::string& index
 std::size_t GaussianCamCG::getDiscount(const Size idx, const Date& s, const Date& t) const {
     auto cam(cam_);
     Size cpidx = currencyPositionInCam_[idx];
-    Date sd = getSloppyDate(s, sloppySimDates_, effectiveSimulationDates_);
+    Date sd = getSloppyDate(adjustForStickyCloseOut(s), sloppySimDates_, effectiveSimulationDates_);
     LgmCG lgmcg(
         currencies_[idx], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_);
-    return lgmcg.discountBond(s, t, irStates_.at(sd)[idx]);
+    return lgmcg.discountBond(s, t, irStates_.at(sd)[idx], Handle<YieldTermStructure>(), "default", sd);
 }
 
 std::size_t GaussianCamCG::numeraire(const Date& s) const {
     auto cam(cam_);
     Size cpidx = currencyPositionInCam_[0];
-    Date sd = getSloppyDate(s, sloppySimDates_, effectiveSimulationDates_);
+    Date sd = getSloppyDate(adjustForStickyCloseOut(s), sloppySimDates_, effectiveSimulationDates_);
     LgmCG lgmcg(
         currencies_[0], *g_, [cam, cpidx] { return cam->irlgm1f(cpidx); }, modelParameters_);
-    return lgmcg.numeraire(s, irStates_.at(sd)[0]);
+    return lgmcg.numeraire(s, irStates_.at(sd)[0], Handle<YieldTermStructure>(), "default", sd);
 }
 
 std::size_t GaussianCamCG::getFxSpot(const Size idx) const {
@@ -518,7 +538,7 @@ GaussianCamCG::npvRegressors(const Date& obsdate,
         return state;
     }
 
-    Date sd = getSloppyDate(obsdate, sloppySimDates_, effectiveSimulationDates_);
+    Date sd = getSloppyDate(adjustForStickyCloseOut(obsdate), sloppySimDates_, effectiveSimulationDates_);
 
     if (conditionalExpectationUseAsset_ && !underlyingPaths_.empty()) {
         for (Size i = 0; i < indices_.size(); ++i) {
@@ -586,6 +606,8 @@ std::size_t GaussianCamCG::npv(const std::size_t amount, const Date& obsdate, co
 
     return cg_conditionalExpectation(*g_, amount, state, filter);
 }
+
+void GaussianCamCG::useStickyCloseOutDates(const bool b) const { useStickyCloseOutDates_ = b; }
 
 } // namespace data
 } // namespace ore

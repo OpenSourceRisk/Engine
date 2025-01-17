@@ -32,7 +32,7 @@ public:
                   const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                   const std::vector<Size>& projectedStateProcessIndices = {},
                   const std::vector<std::string>& conditionalExpectationModelStates = {},
-                  const bool sloppySimDates = false);
+                  const bool sloppySimDates = false, const std::vector<Date>& stickyCloseOutDates = {});
 
     // Model interface implementation
     Type type() const override { return Type::MC; }
@@ -53,6 +53,8 @@ public:
     Real getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const override;
     Real getDirectDiscountT0(const Date& paydate, const std::string& currency) const override;
 
+    void useStickyCloseOutDates(const bool b) const override;
+
 protected:
     // ModelCGImpl interface implementation
     virtual std::size_t getFutureBarrierProb(const std::string& index, const Date& obsdate1, const Date& obsdate2,
@@ -67,13 +69,17 @@ protected:
     std::size_t getDiscount(const Size idx, const Date& s, const Date& t) const override;
     std::size_t getFxSpot(const Size idx) const override;
 
+    // helper methods
+    Date adjustForStickyCloseOut(const Date& d) const;
+
     // input parameters
-    const Handle<CrossAssetModel> cam_;
-    const std::vector<Handle<YieldTermStructure>> curves_;
-    const std::vector<Handle<Quote>> fxSpots_;
-    const Size timeStepsPerYear_;
-    const std::vector<Size> projectedStateProcessIndices_;
-    const bool sloppySimDates_;
+    Handle<CrossAssetModel> cam_;
+    std::vector<Handle<YieldTermStructure>> curves_;
+    std::vector<Handle<Quote>> fxSpots_;
+    Size timeStepsPerYear_;
+    std::vector<Size> projectedStateProcessIndices_;
+    bool sloppySimDates_;
+    std::vector<Date> stickyCloseOutDates_;
 
     // updated in performCalculations()
     mutable Date referenceDate_;                      // the model reference date
@@ -96,6 +102,9 @@ protected:
     mutable bool conditionalExpectationUseAsset_; // derived from input conditionalExpectationModelState
 
     mutable std::size_t underlyingPathsCgVersion_ = 0;
+
+    // state
+    mutable bool useStickyCloseOutDates_ = false;
 };
 
 } // namespace data

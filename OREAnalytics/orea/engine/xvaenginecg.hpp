@@ -121,6 +121,8 @@ private:
     std::size_t createPortfolioExposureNode(const std::size_t dateIndex, const bool isValuationDate);
     std::size_t createTradeExposureNode(const std::size_t dateIndex, const std::size_t tradeIndex,
                                         const bool isValuationDate);
+    std::size_t getAmcNpvIndexForValuationDate(const std::size_t i) const;
+    std::size_t getAmcNpvIndexForCloseOutDate(const std::size_t i) const;
 
     // set via additional methods
 
@@ -165,10 +167,10 @@ private:
     QuantLib::ext::shared_ptr<CrossAssetModelBuilder> camBuilder_;
     QuantLib::ext::shared_ptr<GaussianCamCG> model_;
 
-    std::set<Date> modelSimulationDates_;
-    std::set<Date> valuationDates_;
+    std::set<Date> simulationDates_;
+    std::vector<Date> stickyCloseOutDates_;
+    std::vector<Date> valuationDates_;
     std::vector<Date> closeOutDates_;
-    bool useStickyCloseOutDates_;
 
     std::vector<std::pair<std::size_t, double>> baseModelParams_;
     std::vector<RandomVariableOpNodeRequirements> opNodeRequirements_;
@@ -182,7 +184,7 @@ private:
     bool generateTradeLevelExposure_ = false;
     // FIXME: we don't have a close-out time for the time zero valuation
     //        we set this to the time zero npv itself for the time being
-    std::vector<std::vector<std::size_t>> amcNpvNodes_;                // includes time zero npv
+    std::vector<std::vector<std::size_t>> amcNpvNodes_;                // valuation date npv nodes
     std::vector<std::vector<std::size_t>> amcNpvCloseOutNodes_;        // includes time zero npv (FIXME)
     std::vector<std::vector<std::size_t>> tradeExposureNodes_;         // includes time zero npv
     std::vector<std::vector<std::size_t>> tradeExposureCloseOutNodes_; // includes time zero npv (FIXME)

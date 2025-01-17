@@ -32,8 +32,9 @@
 namespace ore::data {
 
 std::size_t LgmCG::numeraire(const Date& d, const std::size_t x, const Handle<YieldTermStructure>& discountCurve,
-                             const std::string& discountCurveId) const {
-    std::string id = "__lgm_" + qualifier_ + "_N_" + ore::data::to_string(d) + "_" + discountCurveId;
+                             const std::string& discountCurveId, const Date& stateDate) const {
+    std::string id = "__lgm_" + qualifier_ + "_N_" + ore::data::to_string(d) + "_" + discountCurveId +
+                     (stateDate != Date() ? "_" + ore::data::to_string(stateDate) : "");
     std::size_t n;
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan); n == ComputationGraph::nan) {
         auto p(p_);
@@ -56,12 +57,12 @@ std::size_t LgmCG::numeraire(const Date& d, const std::size_t x, const Handle<Yi
 }
 
 std::size_t LgmCG::discountBond(const Date& d, const Date& e, const std::size_t x,
-                                const Handle<YieldTermStructure>& discountCurve,
-                                const std::string& discountCurveId) const {
+                                const Handle<YieldTermStructure>& discountCurve, const std::string& discountCurveId,
+                                const Date& stateDate) const {
     if (d == e)
         return cg_const(g_, 1.0);
-    std::string id =
-        "__lgm_" + qualifier_ + "_P_" + ore::data::to_string(d) + "_" + ore::data::to_string(e) + "_" + discountCurveId;
+    std::string id = "__lgm_" + qualifier_ + "_P_" + ore::data::to_string(d) + "_" + ore::data::to_string(e) + "_" +
+                     discountCurveId + (stateDate != Date() ? "_" + ore::data::to_string(stateDate) : "");
     std::size_t n;
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan), n == ComputationGraph::nan) {
         n = cg_mult(g_, numeraire(d, x, discountCurve, discountCurveId),
@@ -72,12 +73,12 @@ std::size_t LgmCG::discountBond(const Date& d, const Date& e, const std::size_t 
 
 std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t x,
                                        const Handle<YieldTermStructure>& discountCurve,
-                                       const std::string& discountCurveId) const {
+                                       const std::string& discountCurveId, const Date& stateDate) const {
     e = std::max(d, e);
     if (d == e)
         return numeraire(d, x, discountCurve, discountCurveId);
     std::string id = "__lgm_" + qualifier_ + "_Pr_" + ore::data::to_string(d) + "_" + ore::data::to_string(e) + "_" +
-                     discountCurveId;
+                     discountCurveId + (stateDate != Date() ? "_" + ore::data::to_string(stateDate) : "");
     std::size_t n;
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan), n == ComputationGraph::nan) {
         auto p = p_;
@@ -101,10 +102,10 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
 
 /* Handles IborIndex and SwapIndex. Requires observation time t <= fixingDate */
 std::size_t LgmCG::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& index, const Date& fixingDate,
-                          const Date& t, const std::size_t x) const {
+                          const Date& t, const std::size_t x, const Date& stateDate) const {
 
-    std::string id =
-        "__irFix_" + index->name() + "_" + ore::data::to_string(fixingDate) + "_" + ore::data::to_string(t);
+    std::string id = "__irFix_" + index->name() + "_" + ore::data::to_string(fixingDate) + "_" +
+                     ore::data::to_string(t) + (stateDate != Date() ? "_" + ore::data::to_string(stateDate) : "");
     std::size_t n;
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan); n == ComputationGraph::nan) {
 
