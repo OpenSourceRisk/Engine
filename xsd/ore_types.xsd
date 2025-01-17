@@ -359,7 +359,7 @@
       <xs:enumeration value="30E/360 (Eurobond Basis)"/>
       <xs:enumeration value="30/360 AIBD (Euro)"/>
       <xs:enumeration value="30E/360.ICMA"/>
-      <xs:enumeration value="30E/360 ICAM"/>
+      <xs:enumeration value="30E/360 ICMA"/>
       <xs:enumeration value="30E/360"/>
       <xs:enumeration value="30E/360E"/>
       <xs:enumeration value="30E/360.ISDA"/>
