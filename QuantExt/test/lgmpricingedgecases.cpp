@@ -382,14 +382,17 @@ BOOST_AUTO_TEST_CASE(testLateExercise) {
     }
 }
 
-/*BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
+BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
     // This test checks he behaviour of the LGM in case of a given
-    // expiry date equal to the settlement date.
+    // expiry date nearly equal to the settlement date. Since the decision is trivial
+    // we compare again to the limit cases.
     BOOST_TEST_MESSAGE("Testing pricing in edge cases with expiry equal to settlement");
     
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    Settings::instance().evaluationDate() = settlementDate;
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(20, July, 2015));
+    Date startDate(15, July, 2016);
+    Settings::instance().evaluationDate() = settlementDate;    
     Date maturityDate = calendar.advance(settlementDate, 5, Years);
     Real notional = 1.0;
     Rate fixedRate = 0.02;
@@ -424,34 +427,49 @@ BOOST_AUTO_TEST_CASE(testLateExercise) {
 
     QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
     boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
-    Schedule schedule(settlementDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
+    Schedule schedule(startDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
 
-    BOOST_TEST_MESSAGE("Receiver Swaps");
+    double Annuity=0.0;
 
-    for (double strike = -0.02; strike <= 0.14; strike += 0.01)
+    for (int i=2;i<10;++i)
+        Annuity+=0.5*exp(-(double)i*0.5*0.02);
+
+    // Starting 1% above market rate level of 2%
+    BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
+    for (double strike = 0.03; strike < 0.07; strike += 0.005)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());
-        boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(settlementDate);
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());        
         boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
-        BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike << "): " << npv * 10000.00 << " bp. ");
+        double limitValue = exp(-0.02 * 1.5) * std::fmax((strike - fixedRate),0.0) * Annuity;
+        BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
+        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
+        BOOST_TEST_MESSAGE("------------");
+
+        BOOST_CHECK_CLOSE(npv, limitValue, 5.0); // Up to 4% tolerance
     }
 
-    BOOST_TEST_MESSAGE("Payer Swaps");
-
-    for (double strike = -0.02; strike <= 0.14; strike += 0.01)
+    // Starting 1% below market rate level of 2%
+    BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
+    for (double strike = 0.01; strike > -0.03; strike -= 0.005)
     {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());
-        boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(settlementDate);
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, strike, Actual365Fixed(), schedule, EURIBOR6m,  0.0, Actual365Fixed());
         boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
-        BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike << "): " << npv * 10000.00 << " bp. ");
+        double limitValue = exp(-0.02 * 1.5) * (fixedRate - strike) * Annuity;
+        BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
+        BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
+        BOOST_TEST_MESSAGE("------------");
+         
+        BOOST_CHECK_CLOSE(npv, limitValue, 5.0); // Up to 4% tolerance
     }
-
+    
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
-}*/
+}
 
 BOOST_AUTO_TEST_CASE(testLowVolatility) {
     // This test checks the LGM model pricing routine in case of a model with very low volatility values.
