@@ -179,7 +179,7 @@ protected:
     void getTradesFromReferenceData(const QuantLib::ext::shared_ptr<PortfolioBasketReferenceDatum>& ptfReferenceDatum) const;
     std::string portfolioId_;
     bool portfolioDeriv_;
-    double indexShares_;
+    double indexQuantity_;
 };
 
 TRS::FundingData::NotionalType parseTrsFundingNotionalType(const std::string& s);

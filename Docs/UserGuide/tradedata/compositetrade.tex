@@ -31,7 +31,7 @@ Listing \ref{lst:compositetrade_data}.
 		  <NotionalCalculation>Sum</NotionalCalculation>
 		  <PortfolioBasket>true</PortfolioBasket>
 		  <BasketName>NAME</BasketName>
-          <IndexShares>100</IndexShares>
+          <IndexQuantity>100</IndexQuantity>
 		</CompositeTradeData>
 	\end{minted}
 	\caption{Composite trade data with Portfolio Reference Data}
@@ -61,5 +61,5 @@ The meanings and allowable values of the elements in the \lstinline!CompositeTra
     Allowable values: Boolean true or false.
     \item BasketName [Optional]: The portfolio Id. \\
     Allowable values: Any string. Note that if PortfolioBasket is True then there must be a BasketName. We look up the Basket within the reference data.
-    \item IndexShares [Optional]: Number of shares of the index.
+    \item IndexQuantity [Optional]: Number of shares of the index.
 \end{itemize}

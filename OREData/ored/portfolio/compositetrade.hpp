@@ -60,9 +60,9 @@ public:
     //! Fully-specified Constructor
     CompositeTrade(const string currency, const vector<QuantLib::ext::shared_ptr<Trade>>& trades,
                    const string notionalCalculation = "", const Real notionalOverride = 0.0,
-                   const Envelope& env = Envelope(), const TradeActions& ta = TradeActions())
+                   const Envelope& env = Envelope(), const TradeActions& ta = TradeActions(), const double indexQuantity=Null<Real>())
         : Trade("CompositeTrade", env, ta), currency_(currency), notionalOverride_(notionalOverride),
-          notionalCalculation_(notionalCalculation), trades_(trades) {}
+          notionalCalculation_(notionalCalculation), trades_(trades), indexQuantity_(indexQuantity) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const QuantLib::ext::shared_ptr<EngineFactory>&) override;
@@ -111,7 +111,7 @@ private:
     vector<Handle<Quote>> fxRates_, fxRatesNotional_;
     string portfolioId_;
     bool portfolioBasket_;
-    double indexShares_;
+    double indexQuantity_;
 };
 
 } // namespace data

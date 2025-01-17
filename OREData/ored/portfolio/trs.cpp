@@ -191,7 +191,7 @@ void TRS::fromXML(XMLNode* node) {
     if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(underlyingDataNode, "PortfolioIndexTradeData")) {
         portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
         portfolioDeriv_ = true;
-        indexShares_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexShares", false, 1);
+        indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
         returnData_.setPortfolioId(portfolioId_);
     }
     QL_REQUIRE(!underlyingTradeNodes.empty() || !underlyingTradeNodes2.empty() || !portfolioId_.empty(),
@@ -219,7 +219,7 @@ void TRS::fromXML(XMLNode* node) {
         if (auto underlyingTradeNodes3 = XMLUtils::getChildNode(t, "CompositeTradeData")) {
             if (XMLUtils::getChildNode(underlyingTradeNodes3, "BasketName")) {
                 portfolioId_ = XMLUtils::getChildValue(underlyingTradeNodes3, "BasketName", true);
-                indexShares_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexShares", false, 1);
+                indexQuantity_ = XMLUtils::getChildValueAsDouble(underlyingTradeNodes3, "IndexQuantity", false, 1);
                 returnData_.setPortfolioId(portfolioId_);
                 portfolioDeriv_ = false;
             }
@@ -465,7 +465,7 @@ void TRS::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
 
     for (int i = 0; i < underlyingMultiplier.size(); i++) {
         if (!portfolioId_.empty()) {
-            underlyingMultiplier[i] = indexShares_;
+            underlyingMultiplier[i] = indexQuantity_;
         } else {
             underlyingMultiplier[i] = 1;
         }
