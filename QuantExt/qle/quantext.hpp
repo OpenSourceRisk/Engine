@@ -408,7 +408,6 @@
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <qle/pricingengines/discountingriskybondenginemultistate.hpp>
 #include <qle/pricingengines/discountingswapenginedeltagamma.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 #include <qle/pricingengines/discretizedconvertible.hpp>
 #include <qle/pricingengines/fdconvertiblebondevents.hpp>
 #include <qle/pricingengines/fddefaultableequityjumpdiffusionconvertiblebondengine.hpp>
