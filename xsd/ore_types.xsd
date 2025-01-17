@@ -460,7 +460,7 @@
       <xs:enumeration value="Compounded"/>
       <xs:enumeration value="Continuous"/>
       <xs:enumeration value="SimpleThenCompounded"/>
-                <xs:enumeration value=""/>
+      <xs:enumeration value=""/>
     </xs:restriction>
   </xs:simpleType>
 
