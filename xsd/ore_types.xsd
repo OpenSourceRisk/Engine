@@ -20,14 +20,14 @@
       <xs:pattern value="(\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01]))?"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="period">
     <!-- period can be 1D, 5M, 10w, 20Y etc -->
     <xs:restriction base="xs:string">
       <xs:pattern value="(\d*(d|D|w|W|m|M|y|Y))?"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="paymentLag">
     <!-- paymentLag can be either integer or a period 1D, 5M, 10w, 20Y etc -->
     <xs:restriction base="xs:string">
@@ -254,7 +254,7 @@
       <xs:enumeration value="ZUG"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="premiumCurrencyCode">
     <xs:union memberTypes="currencyCode">
       <xs:simpleType>
@@ -267,24 +267,24 @@
 
   <xs:simpleType name="extendedCurrencyCode">
      <xs:union memberTypes="currencyCode">
-		<xs:simpleType>
-			<xs:restriction base="xs:string">
-				<xs:enumeration value="GBp" />
-				<xs:enumeration value="GBX" />
-				<xs:enumeration value="ILa" />
+                <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                                <xs:enumeration value="GBp" />
+                                <xs:enumeration value="GBX" />
+                                <xs:enumeration value="ILa" />
                                 <xs:enumeration value="ILA" />
-				<xs:enumeration value="ILX" />
+                                <xs:enumeration value="ILX" />
                                 <xs:enumeration value="ILs" />
-				<xs:enumeration value="KWf" />
-				<xs:enumeration value="ZAc" />
-				<xs:enumeration value="ZAC" />
-				<xs:enumeration value="ZAX" />
-				<xs:enumeration value="USc" />
-			</xs:restriction>
-		</xs:simpleType>
+                                <xs:enumeration value="KWf" />
+                                <xs:enumeration value="ZAc" />
+                                <xs:enumeration value="ZAC" />
+                                <xs:enumeration value="ZAX" />
+                                <xs:enumeration value="USc" />
+                        </xs:restriction>
+                </xs:simpleType>
      </xs:union>
   </xs:simpleType>
-  
+
   <xs:simpleType name="currencyPair">
     <xs:restriction base="xs:string">
       <xs:length value="6"/>
@@ -460,7 +460,7 @@
       <xs:enumeration value="Compounded"/>
       <xs:enumeration value="Continuous"/>
       <xs:enumeration value="SimpleThenCompounded"/>
-		<xs:enumeration value=""/>
+                <xs:enumeration value=""/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -552,7 +552,7 @@
   <xs:simpleType name="correlationType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="CMSSpread"/>
-      <xs:enumeration value="Generic"/> 
+      <xs:enumeration value="Generic"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -875,14 +875,14 @@
       <xs:enumeration value="AfterPublicationDate"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="averagingDataPeriodType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="PreviousMonth"/>
       <xs:enumeration value="ExpiryToExpiry"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:simpleType name="priceSegmentTypeType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Future"/>
@@ -927,7 +927,7 @@
       <xs:enumeration value="EndOfMonth"/>
     </xs:restriction>
    </xs:simpleType>
-    
+
   <xs:simpleType name="CurrencyHedgedIndexRehedgingStrategy">
     <xs:restriction base="xs:string">
       <xs:enumeration value="None"/>
@@ -967,5 +967,5 @@
       <xs:enumeration value="Implied"/>
     </xs:restriction>
   </xs:simpleType>
-    
+
 </xs:schema>
