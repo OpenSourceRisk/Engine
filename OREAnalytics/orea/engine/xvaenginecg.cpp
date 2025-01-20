@@ -625,19 +625,18 @@ void XvaEngineCG::doForwardEvaluation() {
 void XvaEngineCG::buildAsdNodes() {
     DLOG("XvaEngineCG: build asd nodes.");
 
-    if (asd_ == nullptr)
+    // we need the numeraire to populate the npv output cube
+    if (asd_ == nullptr && npvOutputCube_ == nullptr)
         return;
 
-    for (Size k = 1; k < scenarioGeneratorData_->getGrid()->timeGrid().size(); ++k) {
-
-        // only write asd on valuation dates
-        if (!scenarioGeneratorData_->getGrid()->isValuationDate()[k - 1])
-            continue;
-
-        Date date = scenarioGeneratorData_->getGrid()->dates()[k - 1];
+    for (auto const& date : valuationDates_) {
 
         // numeraire
         asdNumeraire_.push_back(model_->numeraire(date));
+
+        // see above, we have set the numeraire node now, the rest is needed for asd only
+        if(asd_ == nullptr)
+            continue;
 
         // fx spots
         for (auto const& ccy : simMarketData_->additionalScenarioDataCcys()) {
@@ -672,21 +671,17 @@ void XvaEngineCG::populateAsd() {
 
     boost::timer::cpu_timer timer;
 
-    for (Size k = 1; k < scenarioGeneratorData_->getGrid()->timeGrid().size(); ++k) {
-        // only write asd on valuation dates
-        if (!scenarioGeneratorData_->getGrid()->isValuationDate()[k - 1])
-            continue;
-
+    for (Size k = 0; k < valuationDates_.size(); ++k) {
         // set numeraire
         for (std::size_t i = 0; i < model_->size(); ++i) {
-            asd_->set(k - 1, i, values_[asdNumeraire_[k - 1]][i], AggregationScenarioDataType::Numeraire);
+            asd_->set(k, i, values_[asdNumeraire_[k]][i], AggregationScenarioDataType::Numeraire);
         }
 
         // set fx spots
         for (auto const& ccy : simMarketData_->additionalScenarioDataCcys()) {
             if (ccy != simMarketData_->baseCcy()) {
                 for (std::size_t i = 0; i < model_->size(); ++i) {
-                    asd_->set(k - 1, i, values_[asdFx_[k - 1]][i], AggregationScenarioDataType::FXSpot, ccy);
+                    asd_->set(k, i, values_[asdFx_[k]][i], AggregationScenarioDataType::FXSpot, ccy);
                 }
             }
         }
@@ -694,7 +689,7 @@ void XvaEngineCG::populateAsd() {
         // set index fixings
         for (auto const& ind : simMarketData_->additionalScenarioDataIndices()) {
             for (std::size_t i = 0; i < model_->size(); ++i) {
-                asd_->set(k - 1, i, values_[asdIndex_[k - 1]][i], AggregationScenarioDataType::IndexFixing, ind);
+                asd_->set(k, i, values_[asdIndex_[k]][i], AggregationScenarioDataType::IndexFixing, ind);
             }
         }
     }
@@ -724,8 +719,11 @@ void XvaEngineCG::populateNpvOutputCube() {
     std::size_t tradePos = 0;
     for (const auto& [id, index] : portfolio_->trades()) {
 
-        auto getNode = [this, tradePos](std::size_t dateIndex) {
-            return generateTradeLevelExposure_ ? tradeExposureNodes_[dateIndex][tradePos] : pfExposureNodes_[dateIndex];
+        auto getNode = [this, tradePos](std::size_t dateIndex, bool isCloseOut) {
+            return generateTradeLevelExposure_
+                       ? (isCloseOut ? tradeExposureCloseOutNodes_[dateIndex][tradePos]
+                                     : tradeExposureNodes_[dateIndex][tradePos])
+                       : (isCloseOut ? pfExposureCloseOutNodes_[dateIndex] : pfExposureNodes_[dateIndex]);
         };
 
         auto cubeTradeIdx = npvOutputCube_->idsAndIndexes().find(id);
@@ -733,10 +731,18 @@ void XvaEngineCG::populateNpvOutputCube() {
                    "XvaEngineCG::populateNpvOutputCube(): trade id '"
                        << id << "' from portfolio is not present in output cube - internal error.");
 
-        npvOutputCube_->setT0(values_[getNode(0)][0] * multiplier, cubeTradeIdx->second);
+        npvOutputCube_->setT0(values_[getNode(0, false)][0] * multiplier, cubeTradeIdx->second);
         for (Size i = 0; i < valuationDates_.size(); ++i) {
             for (Size j = 0; j < npvOutputCube_->samples(); ++j) {
-                npvOutputCube_->set(values_[getNode(i + 1)][j] * multiplier, cubeTradeIdx->second, i, j);
+                npvOutputCube_->set(values_[getNode(i + 1,false)][j] * multiplier, cubeTradeIdx->second, i, j);
+            }
+        }
+        for (Size i = 0; i < closeOutDates_.size(); ++i) {
+            for (Size j = 0; j < npvOutputCube_->samples(); ++j) {
+                /* ore convention: the close-out value in the output cube should be multiplied by the numeraire value at
+                 * the associated valuation date */
+                npvOutputCube_->set(values_[getNode(i + 1, true)][j] * values_[asdNumeraire_[i]][j] * multiplier,
+                                    cubeTradeIdx->second, i, j);
             }
         }
         ++tradePos;
