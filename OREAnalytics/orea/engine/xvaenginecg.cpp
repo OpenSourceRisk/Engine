@@ -307,7 +307,7 @@ void XvaEngineCG::buildCgPartB() {
 
         if (!closeOutDates_.empty()) {
 
-            // note: hardcode reevaluate exercise decision -> false (expose to config?)
+            // note: hardcode reevaluate exercise decision to false (expose to config?)
             model_->useStickyCloseOutDates(true);
             engine->buildComputationGraph(true, false);
             model_->useStickyCloseOutDates(false);
