@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
     // causes the limit cases to be valid. There, the difference between the atm rate
     // and the strike is allowed to be smaller.
 
-    BOOST_TEST_MESSAGE("Testing pricing in edge cases with very high strike...");
+    BOOST_TEST_MESSAGE("Testing pricing in edge cases with very high strike ...");
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
     // causes the limit cases to be valid. There, the difference between the atm rate
     // and the strike is allowed to be smaller.
 
-    BOOST_TEST_MESSAGE("Testing pricing in edge cases with very low strike...");
+    BOOST_TEST_MESSAGE("Testing pricing in edge cases with very low strike ...");
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(testLateExercise) {
     // i.e. an exercise date after maturity. The expected behaviour is a fail,
     // more precisely a fail of QL_Require which is checked for and captured by 
     // the test environment.
-    BOOST_TEST_MESSAGE("Testing pricing in edge cases with zero time to maturity.");
+    BOOST_TEST_MESSAGE("Testing pricing in degenerate cases with expiry after maturity ...");
     
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
     // edge cases. That is the difference to testHighStrike and testLowStrike, where the big difference between
     // the strike and the atm rate causes the limit cases to be valid.
 
-    BOOST_TEST_MESSAGE("Testing pricing in edge cases with very low volatility...");
+    BOOST_TEST_MESSAGE("Testing pricing in edge cases with very low volatility ...");
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
@@ -575,7 +575,7 @@ BOOST_AUTO_TEST_CASE(testLowVolatilityLongTerm) {
     // edge cases. That is the difference to testHighStrike and testLowStrike, where the big difference between
     // the strike and the atm rate causes the limit cases to be valid.
 
-    BOOST_TEST_MESSAGE("Testing pricing in edge cases with very low volatility...");
+    BOOST_TEST_MESSAGE("Testing pricing in edge cases with very low volatility and long maturity ...");
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
