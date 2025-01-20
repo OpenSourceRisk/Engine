@@ -646,7 +646,8 @@ void LgmBuilder::buildSwaptionBasket() const {
             averagingMethod = on->averagingMethod();
         }
         
-        auto volQuote = QuantLib::ext::make_shared<SimpleQuote>(0);
+         Real dummyQuote = svts_->volatilityType() == Normal ? 0.0020 : 0.10;
+        auto volQuote = QuantLib::ext::make_shared<SimpleQuote>(dummyQuote);
         Handle<Quote> vol = Handle<Quote>(volQuote);
         QuantLib::ext::shared_ptr<SwaptionHelper> helper;
         Real updatedStrike;
