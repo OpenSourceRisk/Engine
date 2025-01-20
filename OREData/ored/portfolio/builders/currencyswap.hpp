@@ -51,7 +51,6 @@ private:
 
 class AmcCgCurrencySwapEngineBuilder : public CrossCurrencySwapEngineBuilderBase {
 public:
-    // for external cam, with additional simulation dates (AMC)
     AmcCgCurrencySwapEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
                                    const std::vector<Date>& simulationDates)
         : CrossCurrencySwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg),
