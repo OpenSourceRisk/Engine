@@ -181,8 +181,7 @@ class EngineBuilderFactory : public QuantLib::Singleton<EngineBuilderFactory, st
         const std::vector<Date>& stickyCloseOutDates)>>
         amcEngineBuilderBuilders_;
     std::vector<std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
-        const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& grid,
-        const std::vector<Date>& stickyCloseOutDates)>>
+        const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& grid)>>
         amcCgEngineBuilderBuilders_;
     std::vector<std::function<QuantLib::ext::shared_ptr<LegBuilder>()>> legBuilderBuilders_;
     mutable boost::shared_mutex mutex_;
@@ -197,8 +196,7 @@ public:
                         const bool allowOverwrite = false);
     void addAmcCgEngineBuilder(
         const std::function<QuantLib::ext::shared_ptr<EngineBuilder>(
-            const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates,
-            const std::vector<Date>& stickyCloseOutDates)>& builder,
+            const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model, const std::vector<Date>& simDates)>& builder,
         const bool allowOverwrite = false);
     void addLegBuilder(const std::function<QuantLib::ext::shared_ptr<LegBuilder>()>& builder,
                        const bool allowOverwrite = false);
@@ -209,7 +207,7 @@ public:
                               const std::vector<Date>& simDates, const std::vector<Date>& stickyCloseOutDates) const;
     std::vector<QuantLib::ext::shared_ptr<EngineBuilder>>
     generateAmcCgEngineBuilders(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& model,
-                                const std::vector<Date>& simDates, const std::vector<Date>& stickyCloseOutDates) const;
+                                const std::vector<Date>& simDates) const;
     std::vector<QuantLib::ext::shared_ptr<LegBuilder>> generateLegBuilders() const;
 };
 

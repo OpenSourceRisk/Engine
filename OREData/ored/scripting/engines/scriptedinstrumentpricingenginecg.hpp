@@ -41,22 +41,22 @@ namespace data {
 class ScriptedInstrumentPricingEngineCG : public QuantExt::ScriptedInstrument::engine,
                                           public AmcCgPricingEngine {
 public:
-    ScriptedInstrumentPricingEngineCG(const std::string& npv,
-                                      const std::vector<std::pair<std::string, std::string>>& additionalResults,
-                                      const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
-                                      const QuantLib::ext::shared_ptr<Context>& context,
-                                      const Model::McParams& mcParams, const double indicatorSmoothingForValues,
-                                      const double indicatorSmoothingForDerivatives, const std::string& script = "",
-                                      const bool interactive = false, const bool generateAdditionalResults = false,
-                                      const bool includePastCashflows = false, const bool useCachedSensis = false,
-                                      const bool useExternalComputeFramework = false,
-                                      const bool useDoublePrecisionForExternalCalculation = false);
+    ScriptedInstrumentPricingEngineCG(
+        const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
+        const QuantLib::ext::shared_ptr<ModelCG>& model, const std::set<std::string>& minimalModelCcys,
+        const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context, const Model::McParams& mcParams,
+        const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives,
+        const std::string& script = "", const bool interactive = false, const bool generateAdditionalResults = false,
+        const bool includePastCashflows = false, const bool useCachedSensis = false,
+        const bool useExternalComputeFramework = false, const bool useDoublePrecisionForExternalCalculation = false);
     ~ScriptedInstrumentPricingEngineCG();
 
     bool lastCalculationWasValid() const { return lastCalculationWasValid_; }
     std::string npvName() const override { return npv_; }
+    virtual std::set<std::string> relevantCurrencies() const override { return minimalModelCcys_; };
 
-    void buildComputationGraph() const override;
+    void buildComputationGraph(const bool stickyCloseOutDateRun,
+                               const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
 
 private:
     void calculate() const override;
@@ -106,6 +106,7 @@ private:
     std::string npv_;
     std::vector<std::pair<std::string, std::string>> additionalResults_;
     QuantLib::ext::shared_ptr<ModelCG> model_;
+    std::set<std::string> minimalModelCcys_;
     ASTNodePtr ast_;
     QuantLib::ext::shared_ptr<Context> context_;
     Model::McParams mcParams_;
@@ -118,6 +119,9 @@ private:
     bool useCachedSensis_;
     bool useExternalComputeFramework_;
     bool useDoublePrecisionForExternalCalculation_;
+
+    // state
+    mutable bool cgForStickyCloseOutDateRunIsBuilt_ = false;
 };
 
 } // namespace data

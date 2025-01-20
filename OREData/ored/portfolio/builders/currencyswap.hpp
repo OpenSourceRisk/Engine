@@ -29,7 +29,6 @@
 namespace ore {
 namespace data {
 
-//! Multileg option engine builder for external cam, with additional simulation dates (AMC)
 class CamAmcCurrencySwapEngineBuilder : public CrossCurrencySwapEngineBuilderBase {
 public:
     // for external cam, with additional simulation dates (AMC)
@@ -48,6 +47,24 @@ private:
     const QuantLib::ext::shared_ptr<QuantExt::CrossAssetModel> cam_;
     const std::vector<Date> simulationDates_;
     const std::vector<Date> stickyCloseOutDates_;
+};
+
+class AmcCgCurrencySwapEngineBuilder : public CrossCurrencySwapEngineBuilderBase {
+public:
+    // for external cam, with additional simulation dates (AMC)
+    AmcCgCurrencySwapEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
+                                   const std::vector<Date>& simulationDates)
+        : CrossCurrencySwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg),
+          simulationDates_(simulationDates) {}
+
+protected:
+    QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const std::vector<Currency>& ccys, const Currency& base,
+                                                        bool useXccyYieldCurves,
+                                                        const std::set<std::string>& eqNames) override;
+
+private:
+    const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
+    const std::vector<Date> simulationDates_;
 };
 
 } // namespace data

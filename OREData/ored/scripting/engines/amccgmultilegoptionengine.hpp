@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file amccgswapengine.hpp
-    \brief MC LGM swap engines
+/*! \file amccgmultilegoptionengine.hpp
+    \brief AMC CG multileg option engine
     \ingroup engines
 */
 
@@ -25,18 +25,18 @@
 
 #include <ored/scripting/engines/amccgbaseengine.hpp>
 
-#include <ql/instruments/swap.hpp>
+#include <qle/instruments/multilegoption.hpp>
 
 namespace ore {
 namespace data {
 
-class AmcCgSwapEngine : public QuantLib::GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>,
-                        public AmcCgBaseEngine {
+class AmcCgMultiLegOptionEngine
+    : public QuantLib::GenericEngine<QuantExt::MultiLegOption::arguments, QuantExt::MultiLegOption::results>,
+      public AmcCgBaseEngine {
 public:
-    AmcCgSwapEngine(const std::string& ccy, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                    const std::vector<Date>& simulationDates)
-        : QuantLib::GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
-          AmcCgBaseEngine(modelCg, simulationDates), ccy_(ccy) {
+    AmcCgMultiLegOptionEngine(const std::vector<std::string>& ccys, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
+                              const std::vector<Date>& simulationDates)
+        : AmcCgBaseEngine(modelCg, simulationDates), ccys_(ccys) {
         registerWith(modelCg);
     }
 
@@ -45,7 +45,7 @@ public:
     void calculate() const override;
 
 private:
-    std::string ccy_;
+    std::vector<std::string> ccys_;
 };
 
 } // namespace data
