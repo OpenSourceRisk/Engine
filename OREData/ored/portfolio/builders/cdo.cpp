@@ -85,33 +85,12 @@ std::vector<Handle<DefaultProbabilityTermStructure>> buildPerformanceOptimizedDe
 }
 
 QuantLib::ext::shared_ptr<PricingEngine>
-CdoEngineBuilder::engineImpl(const Currency& ccy, bool isIndexCDS, const vector<string>& creditCurves,
-                             const QuantLib::ext::shared_ptr<SimpleQuote>& calibrationFactor,
-                             const QuantLib::Real fixedRecovery) {
-    if (isIndexCDS) {
+CdoEngineBuilder::engineImpl(const Currency& ccy, bool isIndex, const std::string& qualifier,
+                             const std::vector<std::string>& creditCurves,
+                             const std::vector<Handle<DefaultProbabilityTermStructure>>& dpts, const std::vector<double>& recovery,
+                             const bool calibrated, const Real fixedRecovery) {
+    if (isIndex) {
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
-        std::vector<Real> recovery;
-        for (auto& c : creditCurves) {
-            Real recoveryRate = market_->recoveryRate(c, configuration(MarketContext::pricing))->value();
-            Handle<DefaultProbabilityTermStructure> targetCurve;
-            /*
-            auto it = globalParameters_.find("RunType");
-            if (calibrateConstituentCurve() &&  it != globalParameters_.end() && it->second != "PortfolioAnalyser") {
-                auto orgCurve = market_->defaultCurve(c, configuration(MarketContext::pricing))->curve();
-                targetCurve =
-                    SyntheticCDO::buildCalibratedConstiuentCurve(orgCurve, calibrationFactor);
-            } else {
-            targetCurve = market_->defaultCurve(c, configuration(MarketContext::pricing))->curve();
-            }
-            */
-            targetCurve = market_->defaultCurve(c, configuration(MarketContext::pricing))->curve();
-            recovery.push_back(fixedRecovery != Null<Real>() ? fixedRecovery : recoveryRate);
-            dpts.push_back(targetCurve);
-        }
-        if (optimizedSensitivityCalculation()) {
-            dpts = buildPerformanceOptimizedDefaultCurves(dpts);
-        }
         return QuantLib::ext::make_shared<QuantExt::MidPointIndexCdsEngine>(dpts, recovery, yts);
     } else {
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));

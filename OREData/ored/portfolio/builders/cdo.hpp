@@ -58,9 +58,11 @@ std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>>
 buildPerformanceOptimizedDefaultCurves(const std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>>& curves);
 
 class CdoEngineBuilder
-    : public CachingPricingEngineBuilder<vector<string>, const Currency&, bool, const vector<string>&,
-                                         const QuantLib::ext::shared_ptr<QuantLib::SimpleQuote>&,
-                                         const QuantLib::Real> {
+    : public CachingPricingEngineBuilder<vector<string>, const Currency&, bool, 
+                                         const std::string&,
+                                         const std::vector<std::string>&,
+                                         const std::vector<Handle<DefaultProbabilityTermStructure>> &,
+                                         const std::vector<double>&, const bool, const Real> {
 public:
     CdoEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"SyntheticCDO"}) {}
@@ -91,27 +93,31 @@ public:
     }
 
 protected:
-    virtual vector<string> keyImpl(const Currency& ccy, bool isIndexCDS, const vector<string>& creditCurves,
-                                   const QuantLib::ext::shared_ptr<QuantLib::SimpleQuote>& calibrationFactor,
-                                   const QuantLib::Real fixedRecovery) override {
+    virtual vector<string> keyImpl(const Currency& ccy, bool isIndex, 
+                                   const std::string& qualifier,
+                                   const std::vector<std::string>& creditCurves,
+                                   const std::vector<Handle<DefaultProbabilityTermStructure>>&,
+                                   const std::vector<double>&,
+                                   const bool calibrated = false,
+                                   const Real fixedRecovery = Null<Real>()) override {
         vector<string> res;
-        res.reserve(creditCurves.size() + 4);
+        res.reserve(creditCurves.size() + 5);
         res.emplace_back(ccy.code());
-        if (isIndexCDS)
+        res.emplace_back(qualifier);
+        if (isIndex) {
             res.emplace_back("_indexCDS");
-        res.insert(res.end(), creditCurves.begin(), creditCurves.end());
-        if (!close_enough(calibrationFactor->value(), 1.0) && calibrationFactor->value() != QuantLib::Null<Real>()) {
-            res.emplace_back(to_string(calibrationFactor->value()));
-        }            
-        if (fixedRecovery != QuantLib::Null<QuantLib::Real>()) {
-            res.emplace_back(to_string(fixedRecovery));
         }
+        res.insert(res.end(), creditCurves.begin(), creditCurves.end());
+        res.emplace_back(to_string(calibrated));
+        if(fixedRecovery != Null<Real>())
+            res.emplace_back(to_string(fixedRecovery));
         return res;
     }
     virtual QuantLib::ext::shared_ptr<PricingEngine>
-    engineImpl(const Currency& ccy, bool isIndexCDS, const vector<string>& creditCurves,
-               const QuantLib::ext::shared_ptr<QuantLib::SimpleQuote>& calibrationFactor,
-               const QuantLib::Real fixedRecovery = QuantLib::Null<QuantLib::Real>()) override;
+    engineImpl(const Currency&, bool isIndex, const std::string& qualifier,
+               const std::vector<std::string>& creditCurves,
+               const std::vector<Handle<DefaultProbabilityTermStructure>> &, const std::vector<double>&,
+               const bool calibrated = false, const Real fixedRecovery = Null<Real>()) override;
 };
 
 class LossModelBuilder {

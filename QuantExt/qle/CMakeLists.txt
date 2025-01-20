@@ -418,6 +418,7 @@ time/yearcounter.cpp
 utilities/cashflows.cpp
 utilities/commodity.cpp
 utilities/creditcurves.cpp
+utilities/creditindexconstituentcurvecalibration.cpp
 utilities/inflation.cpp
 utilities/time.cpp)
 
@@ -1018,6 +1019,7 @@ time/yearcounter.hpp
 utilities/cashflows.hpp
 utilities/commodity.hpp
 utilities/creditcurves.hpp
+utilities/creditindexconstituentcurvecalibration.hpp
 utilities/inflation.hpp
 utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp

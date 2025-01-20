@@ -35,6 +35,7 @@
 #include <qle/pricingengines/indexcdstrancheengine.hpp>
 #include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/time.hpp>
+#include <qle/utilities/creditindexconstituentcurvecalibration.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -429,20 +430,22 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
     std::vector<Handle<Quote>> indexRecoveries;
     Handle<YieldTermStructure> discountCurve;
     std::vector<Period> indexTerms = {3 * Years, 5 * Years};
-
+    std::vector<Period> useIndexTerms;
     for (const auto& term : indexTerms) {
         std::string indexNameWithTerm = config.curveID() + "_" + to_string(term);
         auto mappedIndexCurveName = creditCurveNameMapping(indexNameWithTerm);
         auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
-        QL_REQUIRE(indexCreditCurve != nullptr, "can not imply base correlation from upfront, index cds curve for "
-                                                    << indexNameWithTerm << " missing");
-
+        if(indexCreditCurve == nullptr){
+            WLOG("Error getting index curve " << indexNameWithTerm << " exclude term");
+            continue;
+        }
         discountCurve = indexCreditCurve->rateCurve();
         indexCurves.push_back(indexCreditCurve->curve());
         indexRecoveries.push_back(indexCreditCurve->recovery());
+        useIndexTerms.push_back(term);
     }
-    auto curveCalibration = ext::make_shared<QuantExt::IndexConstituentDefaultCurveCalibration>(
-        config.startDate(), indexTerms, config.indexSpread(), indexRecoveries, indexCurves, discountCurve);
+    auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(
+        config.startDate(), useIndexTerms, config.indexSpread(), indexRecoveries, indexCurves, discountCurve);
 
     auto pool = QuantLib::ext::make_shared<Pool>();
         std::vector<double> recoveryRates;
@@ -467,15 +470,6 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             << calibrationResults.marketNpv[i] << ";" << calibrationResults.impliedNpv[i] << ";"
             << calibrationResults.marketNpv[i] - calibrationResults.impliedNpv[i]);
     }
-    auto uncalibratedCurve = dpts.front();
-    auto debugCurve = calibrationResults.curves.front();
-    
-    for(const auto& time : {0.5, 1., 1.5, 2., 3.5, 4., 5., 6.}){
-        LOG("Time: " << time << " Uncalibrated: " << uncalibratedCurve->defaultProbability(time, true) << " Calibrated: " << debugCurve->defaultProbability(time, true));
-        auto hazardRateUncalibrated = uncalibratedCurve->hazardRate(time, true);
-        auto hazardRateCalibrated = debugCurve->hazardRate(time, true);
-        LOG("Time: " << time << " Uncalibrated: " << hazardRateUncalibrated << " Calibrated: " << hazardRateCalibrated << " alpha " << hazardRateCalibrated / hazardRateUncalibrated);
-    }   
 
     for (size_t i = 0; i < basketData.remainingNames.size(); i++) {
         std::string name = basketData.remainingNames[i];
@@ -492,8 +486,6 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
 
     for (const auto& term : terms) {
         try{
-        
-
         std::vector<double> trancheNpvs;
         std::vector<double> trancheNPV;
         std::vector<double> baseCorrelations;

@@ -35,78 +35,6 @@ namespace data {
 //! Serializable CDS Index Tranche (Synthetic CDO)
 /*! \ingroup tradedata
  */
-
-//! Helper class to compute the index factor for index cds from a given basket and adjusted tranche Notional 
-// and adjustment points
-class IndexTrancheNotionalCalculator {
-    public:
-    //! Constructor using weights, weights plus losses need to sum up to 1
-        IndexTrancheNotionalCalculator(std::vector<std::string>& constituentQualifier, std::vector<double>& weight,
-                                       std::vector<double>& loss, std::vector<double>& recovery,
-                                       double origIndexNotional) {
-            QL_REQUIRE(constituentQualifier.size() == weight.size(),
-                       "weight and constituent vector doesnt have same lenght");
-            QL_REQUIRE(constituentQualifier.size() == loss.size(),
-                       "loss and constituent vector doesnt have same lenght");
-            QL_REQUIRE(constituentQualifier.size() == recovery.size(),
-                       "recovery and constituent vector doesnt have same lenght");
-
-            double totalWeight = 0.0;
-            double totalLoss = 0.0;
-            for (size_t i = 0; i < constituentQualifier.size(); ++i) {
-                std::string& name = constituentQualifier[i];
-                double w = weight[i];
-                double l = loss[i];
-                double r = recovery[i];
-                if(w > 0.0 && !QuantLib::close_enough(w, 0.0)){
-                    remainingConstituents_.push_back(name);
-                    remainingWeights_.push_back(w);
-                    totalWeight += w;
-                } else if (QuantLib::close_enough(w, 0.0)) {
-                    QL_REQUIRE(l > 0.0 && !QuantLib::close_enough(l, 0.0), "default of name " << name << " with zero loss");
-                    defaultedConstituents_.push_back(name);
-                    defaultedWeights_.push_back(l);
-                    defaultedRecoveryRates_.push_back(r);
-                    totalLossBeforeRecoveryWeight_ += l;
-                    totalLossAfterRecoveryWeight_ += l * (1.0 - r);
-                    totalRecoveryWeight_ += l * r;
-                } else{
-                    QL_FAIL("negative weight provided, check basketdata");
-                }
-            }
-            QL_REQUIRE(QuantLib::close_enough(totalLoss + totalWeight, 1.0), "weights not adding up to 100%.");
-        }
-    // Alive constitiuents
-        const std::vector<std::string>& remainingConstituents() const { return remainingConstituents_; }
-        std::vector<double>& remainingsWeights() const;
-        std::vector<double>& remainingNotionals(double originalNotional) const;
-        // Inspection of defaulted constituents
-        const std::vector<std::string>& defaultedConstituents() const{ return defaultedConstituents_; }
-        const std::vector<double>& defaultedWeights() const { return defaultedWeights_; }
-        const std::vector<double>& defaultedRecoveryRate() const { return defaultedRecoveryRates_; }
-        // Tranche notionals after defaults
-        double remainingTrancheNotional(double originalNotional, const double attach, const double detach) const;
-        std::pair<double, double> adjustedAttachmentDetachment(double originalNotional, const double attach,
-                                                               const double detach) const;
-        // Index factor
-        double indexFactor() const;
-        double weightCorrectionFactor() const { return weightCorrectionFactor_; }
-
-    private:
-        double originalTrancheNotional_;
-        std::vector<std::string> remainingConstituents_;
-        std::vector<double> remainingWeights_;
-        std::vector<std::string> defaultedConstituents_;
-        std::vector<double> defaultedWeights_;
-        std::vector<double> defaultedRecoveryRates_;
-        double totalLossBeforeRecoveryWeight_;
-        double totalLossAfterRecoveryWeight_;
-        double totalRecoveryWeight_;
-        double weightCorrectionFactor_ = 1.0;
-};
-
-
-
 class SyntheticCDO : public Trade {
 public:
   SyntheticCDO() : Trade("SyntheticCDO"),
@@ -154,6 +82,10 @@ public:
        this is used. Otherwise we try to imply it from the schedule. If that is not possible, the
        creditCurveId without tenor is returned. */
     std::string creditCurveIdWithTerm() const;
+
+
+    /*! IndexTerms and IndexCDSCurvenames used to calibrate the constituent curves*/
+    std::vector<std::pair<Period, std::string>> curveCalibrationBasket() const;
 
     /*! If set this is used to derive the term instead of the schedule start date. A concession to bad
         trade setups really, where the start date is not set to the index effective date */
