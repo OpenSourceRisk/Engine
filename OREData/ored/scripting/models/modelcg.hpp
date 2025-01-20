@@ -68,6 +68,9 @@ public:
        the model should be using training paths only temporarily and reset to normal model via RAII */
     virtual void toggleTrainingPaths() const {}
 
+    // if true use sticky close out date impmlied market for all subsequent calls;
+    virtual void useStickyCloseOutDates(const bool b) const;
+
     // the eval date
     virtual const Date& referenceDate() const = 0;
 
@@ -85,9 +88,15 @@ public:
     virtual std::size_t discount(const Date& obsdate, const Date& paydate, const std::string& currency) const = 0;
 
     // refdate <= obsdate required
+    // overwriteRegressors - if given - replaces the automatically generated regressor node set
     virtual std::size_t npv(const std::size_t amount, const Date& obsdate, const std::size_t filter,
-                            const boost::optional<long>& memSlot, const std::size_t addRegressor1,
-                            const std::size_t addRegressor2) const = 0;
+                            const std::optional<long>& memSlot, const std::set<std::size_t> addRegressors,
+                            const std::optional<std::set<std::size_t>>& overwriteRegressors) const = 0;
+
+    // default regressors used in npv()
+    // relevant currencies - if not none - restrict the set of currencies for which regressors are generated
+    virtual std::set<std::size_t>
+    npvRegressors(const Date& obsdate, const std::optional<std::set<std::string>>& relevantCurrencies) const = 0;
 
     /* eval index at (past or future) obsdate:
        - if fwddate != null, fwddate > obsdate is required. A check must be implemented that the obsdate allows for

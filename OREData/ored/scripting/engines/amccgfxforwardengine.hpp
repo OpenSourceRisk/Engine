@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file amccgswapengine.hpp
-    \brief MC LGM swap engines
+/*! \file amccgfxforwardengine.hpp
+    \brief AMC CG fx forward engine
     \ingroup engines
 */
 
@@ -25,18 +25,16 @@
 
 #include <ored/scripting/engines/amccgbaseengine.hpp>
 
-#include <ql/instruments/swap.hpp>
+#include <qle/instruments/fxforward.hpp>
 
 namespace ore {
 namespace data {
 
-class AmcCgSwapEngine : public QuantLib::GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>,
-                        public AmcCgBaseEngine {
+class AmcCgFxForwardEngine : public QuantExt::FxForward::engine, public AmcCgBaseEngine {
 public:
-    AmcCgSwapEngine(const std::string& ccy, const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                    const std::vector<Date>& simulationDates)
-        : QuantLib::GenericEngine<QuantLib::Swap::arguments, QuantLib::Swap::results>(),
-          AmcCgBaseEngine(modelCg, simulationDates), ccy_(ccy) {
+    AmcCgFxForwardEngine(const std::string& domCcy, const std::string& forCcy,
+                         const QuantLib::ext::shared_ptr<ModelCG>& modelCg, const std::vector<Date>& simulationDates)
+        : AmcCgBaseEngine(modelCg, simulationDates), domCcy_(domCcy), forCcy_(forCcy) {
         registerWith(modelCg);
     }
 
@@ -45,7 +43,7 @@ public:
     void calculate() const override;
 
 private:
-    std::string ccy_;
+    std::string domCcy_, forCcy_;
 };
 
 } // namespace data

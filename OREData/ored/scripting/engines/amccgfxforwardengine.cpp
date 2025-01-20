@@ -16,31 +16,27 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file amccgswapengine.hpp
-    \brief AMC CG swap engine
-    \ingroup engines
-*/
+#include <ored/scripting/engines/amccgfxforwardengine.hpp>
 
-#include <ored/scripting/engines/amccgswapengine.hpp>
-
-#include <ql/exercise.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 
 namespace ore {
 namespace data {
 
-void AmcCgSwapEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
-                                            const bool reevaluateExerciseInStickyCloseOutDateRun) const {
+void AmcCgFxForwardEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
+                                                 const bool reevaluateExerciseInStickyCloseOutDateRun) const {
     AmcCgBaseEngine::buildComputationGraph(stickyCloseOutDateRun, reevaluateExerciseInStickyCloseOutDateRun);
 }
 
-void AmcCgSwapEngine::calculate() const {
-    leg_ = arguments_.legs;
-    currency_ = std::vector<std::string>(leg_.size(), ccy_);
-    payer_.resize(arguments_.payer.size());
-    for (Size i = 0; i < arguments_.payer.size(); ++i) {
-        payer_[i] = QuantLib::close_enough(arguments_.payer[i], -1.0);
-    }
+void AmcCgFxForwardEngine::calculate() const {
+    QuantLib::Leg foreignLeg{QuantLib::ext::make_shared<QuantLib::SimpleCashFlow>(arguments_.nominal1, arguments_.payDate)};
+    QuantLib::Leg domesticLeg{QuantLib::ext::make_shared<QuantLib::SimpleCashFlow>(arguments_.nominal2, arguments_.payDate)};
+
+    leg_ = {foreignLeg, domesticLeg};
+    currency_ = {forCcy_, domCcy_};
+    payer_ = {false, true};
     exercise_ = nullptr;
+
     AmcCgBaseEngine::calculate();
 }
 

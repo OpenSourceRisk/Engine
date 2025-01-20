@@ -35,8 +35,8 @@
 #include <boost/accumulators/statistics/variates/covariate.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+#include <boost/functional/hash.hpp>
 
-#include <iostream>
 #include <map>
 
 // if defined, RandomVariableStats are updated (this might impact perfomance!), default is undefined
@@ -1381,20 +1381,32 @@ std::function<void(RandomVariable&)> RandomVariable::deleter =
     std::function<void(RandomVariable&)>([](RandomVariable& x) { x.clear(); });
 
 std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>
-multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type, Size basisSystemSizeBound) {
-    thread_local static std::map<std::pair<Size, Size>,
+multiPathBasisSystem(Size dim, Size order, QuantLib::LsmBasisSystem::PolynomialType type,
+                     const std::set<std::set<Size>>& varGroups, Size basisSystemSizeBound) {
+
+    thread_local static std::map<std::size_t,
                                  std::vector<std::function<RandomVariable(const std::vector<const RandomVariable*>&)>>>
         cache;
+
     QL_REQUIRE(order > 0, "multiPathBasisSystem: order must be > 0");
     if (basisSystemSizeBound != Null<Size>()) {
-        while (RandomVariableLsmBasisSystem::size(dim, order) > static_cast<Real>(basisSystemSizeBound) && order > 1) {
+        while (RandomVariableLsmBasisSystem::size(dim, order, varGroups) > static_cast<Real>(basisSystemSizeBound) &&
+               order > 1) {
             --order;
         }
     }
-    if (auto c = cache.find(std::make_pair(dim, order)); c != cache.end())
+
+    std::size_t h = 0;
+    boost::hash_combine(h, dim);
+    boost::hash_combine(h, order);
+    for (auto const& g : varGroups)
+        for (auto const& v : g)
+            boost::hash_combine(h, v);
+
+    if (auto c = cache.find(h); c != cache.end())
         return c->second;
-    auto tmp = RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order, type);
-    cache[std::make_pair(dim, order)] = tmp;
+    auto tmp = RandomVariableLsmBasisSystem::multiPathBasisSystem(dim, order, type, varGroups);
+    cache[h] = tmp;
     return tmp;
 }
 

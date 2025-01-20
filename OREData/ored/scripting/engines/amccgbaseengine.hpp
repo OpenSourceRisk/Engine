@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file mclgmswapengine.hpp
-    \brief MC LGM swap engines
+/*! \file amccgbaseengine.hpp
+    \brief AMC CG base engine
     \ingroup engines
 */
 
@@ -33,27 +33,25 @@
 namespace ore {
 namespace data {
 
+using QuantLib::Date;
+using QuantLib::Null;
 using QuantLib::Real;
 using QuantLib::Size;
-using QuantLib::Null;
 
 class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
     AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                    const std::vector<QuantLib::Date>& simulationDates,
-                    const std::vector<QuantLib::Date>& stickyCloseOutDates,
-                    const bool recalibrateOnStickyCloseOutDates = false,
-                    const bool reevaluateExerciseInStickyRun = false);
+                    const std::vector<QuantLib::Date>& simulationDates);
     std::string npvName() const override;
-    void buildComputationGraph() const override;
+    std::set<std::string> relevantCurrencies() const override;
+    void buildComputationGraph(const bool stickyCloseOutDateRun,
+                               const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
     void calculate() const;
 
 protected:
+    // input to this class via ctor
     QuantLib::ext::shared_ptr<ModelCG> modelCg_;
     std::vector<QuantLib::Date> simulationDates_;
-    std::vector<QuantLib::Date> stickyCloseOutDates_;
-    bool recalibrateOnStickyCloseOutDates_;
-    bool reevaluateExerciseInStickyRun_;
 
     // input data from the derived pricing engines, to be set in these engines
     mutable std::vector<QuantLib::Leg> leg_;
@@ -61,20 +59,28 @@ protected:
     mutable std::vector<bool> payer_;
     mutable QuantLib::ext::shared_ptr<QuantLib::Exercise> exercise_; // may be empty, if underlying is the actual trade
     mutable QuantLib::Settlement::Type optionSettlement_ = QuantLib::Settlement::Physical;
-    mutable bool includeSettlementDateFlows_ = false;
+    mutable std::vector<QuantLib::Date> cashSettlementDates_;
+    mutable bool exerciseIntoIncludeSameDayFlows_ = false;
+
+    // set from global settings
+    mutable bool includeTodaysCashflows_;
+    mutable bool includeReferenceDateEvents_;
 
     // set by engine
     std::string npvName_;
+    mutable std::set<std::string> relevantCurrencies_;
+
+    // cached exercise indicators to be used in sticky close-out date run
+    mutable std::vector<std::size_t> cachedExerciseIndicators_;
 
 private:
-    static constexpr Real tinyTime = 1E-10;
-
     // data structure storing info needed to generate the amount for a cashflow
     struct CashflowInfo {
         Size legNo = Null<Size>(), cfNo = Null<Size>();
-        Real payTime = Null<Real>();
-        Real exIntoCriterionTime = Null<Real>();
+        Date payDate = Null<Date>();
+        Date exIntoCriterionDate = Null<Date>();
         std::string payCcy;
+        std::set<std::string> addCcys; // from index, fx linked etc.
         bool payer = false;
         std::size_t flowNode;
     };
@@ -85,6 +91,12 @@ private:
     // create the info for a given flow
     CashflowInfo createCashflowInfo(QuantLib::ext::shared_ptr<QuantLib::CashFlow> flow, const std::string& payCcy,
                                     bool payer, Size legNo, Size cfNo) const;
+
+    // create a regression model (i.e. an npv - node in the graph)
+    std::size_t createRegressionModel(const std::size_t amount, const Date& d,
+                                      const std::vector<CashflowInfo>& cashflowInfo,
+                                      const std::function<bool(std::size_t)>& cashflowRelevant,
+                                      const std::size_t filter) const;
 };
 
 } // namespace data
