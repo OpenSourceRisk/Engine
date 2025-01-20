@@ -33,7 +33,8 @@ public:
     virtual ~AmcCgPricingEngine() {}
     virtual std::string npvName() const = 0;
     virtual std::set<std::string> relevantCurrencies() const = 0;
-    virtual void buildComputationGraph() const = 0;
+    virtual void buildComputationGraph(const bool stickyCloseOutDateRun,
+                                       const bool reevaluateExerciseInStickyCloseOutDateRun) const = 0;
 };
 
 } // namespace data

@@ -55,7 +55,8 @@ public:
     std::string npvName() const override { return npv_; }
     virtual std::set<std::string> relevantCurrencies() const override { return minimalModelCcys_; };
 
-    void buildComputationGraph() const override;
+    void buildComputationGraph(const bool stickyCloseOutDateRun,
+                               const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
 
 private:
     void calculate() const override;
@@ -118,6 +119,9 @@ private:
     bool useCachedSensis_;
     bool useExternalComputeFramework_;
     bool useDoublePrecisionForExternalCalculation_;
+
+    // state
+    mutable bool cgForStickyCloseOutDateRunIsBuilt_ = false;
 };
 
 } // namespace data

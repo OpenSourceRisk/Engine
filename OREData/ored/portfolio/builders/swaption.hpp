@@ -141,9 +141,8 @@ private:
 class AmcCgSwaptionEngineBuilder final : public LGMSwaptionEngineBuilder {
 public:
     AmcCgSwaptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
-                               const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
-        : LGMSwaptionEngineBuilder("AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates),
-          stickyCloseOutDates_(stickyCloseOutDates) {}
+                               const std::vector<Date>& simulationDates)
+        : LGMSwaptionEngineBuilder("AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates) {}
 
 private:
     string keyImpl(const string& id, const string& ccy, const std::vector<Date>& dates, const Date& maturity,
@@ -160,7 +159,6 @@ private:
 
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
-    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data

@@ -88,9 +88,9 @@ class AmcCgFxForwardEngineBuilder : public FxForwardEngineBuilderBase {
 public:
     // for external cam, with additional simulation dates (AMC)
     AmcCgFxForwardEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
-                                const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
-        : FxForwardEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates),
-          stickyCloseOutDates_(stickyCloseOutDates) {}
+                                const std::vector<Date>& simulationDates)
+        : FxForwardEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates) {
+    }
 
 protected:
     QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override;
@@ -98,7 +98,6 @@ protected:
 private:
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
-    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data

@@ -23,7 +23,10 @@
 namespace ore {
 namespace data {
 
-void AmcCgFxForwardEngine::buildComputationGraph() const { AmcCgBaseEngine::buildComputationGraph(); }
+void AmcCgFxForwardEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
+                                                 const bool reevaluateExerciseInStickyCloseOutDateRun) const {
+    AmcCgBaseEngine::buildComputationGraph(stickyCloseOutDateRun, reevaluateExerciseInStickyCloseOutDateRun);
+}
 
 void AmcCgFxForwardEngine::calculate() const {
     QuantLib::Leg foreignLeg{QuantLib::ext::make_shared<QuantLib::SimpleCashFlow>(arguments_.nominal1, arguments_.payDate)};

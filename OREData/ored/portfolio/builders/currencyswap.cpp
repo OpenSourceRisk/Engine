@@ -110,10 +110,7 @@ AmcCgCurrencySwapEngineBuilder::engineImpl(const std::vector<Currency>& ccys, co
     QL_REQUIRE(modelCg_ != nullptr, "AmcCgSwapEngineBuilder::engineImpl: modelcg is null");
     std::vector<std::string> ccysStr;
     std::transform(ccys.begin(), ccys.end(), std::back_inserter(ccysStr), [](const Currency& c) { return c.code(); });
-    return QuantLib::ext::make_shared<AmcCgCurrencySwapEngine>(
-        ccysStr, modelCg_, simulationDates_, stickyCloseOutDates_,
-        parseBool(engineParameter("RecalibrateOnStickyCloseOutDates", {}, false, "false")),
-        parseBool(engineParameter("ReevaluateExerciseInStickyRun", {}, false, "false")));
+    return QuantLib::ext::make_shared<AmcCgCurrencySwapEngine>(ccysStr, modelCg_, simulationDates_);
 }
 
 } // namespace data

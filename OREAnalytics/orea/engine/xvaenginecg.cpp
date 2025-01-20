@@ -234,7 +234,7 @@ void XvaEngineCG::buildPortfolio() {
     auto factory = QuantLib::ext::make_shared<EngineFactory>(
         edCopy, simMarket_, configurations, referenceData_, iborFallbackConfig_,
         EngineBuilderFactory::instance().generateAmcCgEngineBuilders(
-            model_, std::vector<Date>(simulationDates_.begin(), simulationDates_.end()), stickyCloseOutDates_),
+            model_, std::vector<Date>(simulationDates_.begin(), simulationDates_.end())),
         true);
 
     portfolio_->build(factory, "xva engine cg", true);
@@ -245,10 +245,10 @@ void XvaEngineCG::buildPortfolio() {
 
 std::size_t XvaEngineCG::getAmcNpvIndexForValuationDate(const std::size_t i) const {
     if (closeOutDates_.empty()) {
-        // no close-out dates -> __AMC_NPV_i is refering to the valuation date
+        // there are no close-out dates -> __AMC_NPV_i is refering to the valuation date
         return i;
     } else if (stickyCloseOutDates_.empty()) {
-        // close-out dates, not sticky -> __AMC_NPV_i refers to the simulation date i
+        // we have close-out dates, but not sticky -> __AMC_NPV_i refers to the simulation date i
         if (auto s = simulationDates_.find(valuationDates_[i]); s != simulationDates_.end()) {
             return std::distance(simulationDates_.begin(), s);
         }
@@ -262,10 +262,10 @@ std::size_t XvaEngineCG::getAmcNpvIndexForValuationDate(const std::size_t i) con
 
 std::size_t XvaEngineCG::getAmcNpvIndexForCloseOutDate(const std::size_t i) const {
     if (closeOutDates_.empty()) {
-        // no close-out dates -> error
+        // there are no close-out dates -> error
         QL_FAIL("XvaEngineCG::getAmcNpvIndexForCloseOutDate(i): internal error, no close-out dates are given.");
     } else if (stickyCloseOutDates_.empty()) {
-        // close-out dates, not sticky -> __AMC_NPV_i refers to the simulation date i
+        // we have close-out dates, but not sticky -> __AMC_NPV_i refers to the simulation date i
         if (auto s = simulationDates_.find(closeOutDates_[i]); s != simulationDates_.end()) {
             return std::distance(simulationDates_.begin(), s);
         }
@@ -294,7 +294,7 @@ void XvaEngineCG::buildCgPartB() {
         g->startRedBlock();
         if (!trade->instrument()->qlInstrument()->isCalculated())
             trade->instrument()->qlInstrument()->recalculate(); // trigger setupArguments
-        engine->buildComputationGraph();
+        engine->buildComputationGraph(false, false);
 
         {
             std::vector<std::size_t> tmp;
@@ -306,6 +306,12 @@ void XvaEngineCG::buildCgPartB() {
         }
 
         if (!closeOutDates_.empty()) {
+
+            // note: hardcode reevaluate exercise decision -> false (expose to config?)
+            model_->useStickyCloseOutDates(true);
+            engine->buildComputationGraph(true, false);
+            model_->useStickyCloseOutDates(false);
+
             std::vector<std::size_t> tmp;
             tmp.push_back(g->variable(engine->npvName() + "_0"));
             for (std::size_t i = 0; i < closeOutDates_.size(); ++i) {

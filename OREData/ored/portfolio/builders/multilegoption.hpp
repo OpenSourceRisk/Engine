@@ -100,10 +100,9 @@ private:
 class AmcCgMultiLegOptionEngineBuilder : public MultiLegOptionEngineBuilderBase {
 public:
     AmcCgMultiLegOptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
-                                      const std::vector<Date>& simulationDates,
-                                      const std::vector<Date>& stickyCloseOutDates)
-        : MultiLegOptionEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates),
-          stickyCloseOutDates_(stickyCloseOutDates) {}
+                                     const std::vector<Date>& simulationDates)
+        : MultiLegOptionEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg),
+          simulationDates_(simulationDates) {}
 
 protected:
     string keyImpl(const string& id, const std::vector<Date>& exDates, const Date& maturityDate,
@@ -124,7 +123,6 @@ protected:
 private:
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
-    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data

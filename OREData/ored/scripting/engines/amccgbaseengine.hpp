@@ -41,22 +41,17 @@ using QuantLib::Size;
 class AmcCgBaseEngine : public AmcCgPricingEngine {
 public:
     AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                    const std::vector<QuantLib::Date>& simulationDates,
-                    const std::vector<QuantLib::Date>& stickyCloseOutDates,
-                    const bool recalibrateOnStickyCloseOutDates = false,
-                    const bool reevaluateExerciseInStickyRun = false);
+                    const std::vector<QuantLib::Date>& simulationDates);
     std::string npvName() const override;
     std::set<std::string> relevantCurrencies() const override;
-    void buildComputationGraph() const override;
+    void buildComputationGraph(const bool stickyCloseOutDateRun,
+                               const bool reevaluateExerciseInStickyCloseOutDateRun) const override;
     void calculate() const;
 
 protected:
     // input to this class via ctor
     QuantLib::ext::shared_ptr<ModelCG> modelCg_;
     std::vector<QuantLib::Date> simulationDates_;
-    std::vector<QuantLib::Date> stickyCloseOutDates_;
-    bool recalibrateOnStickyCloseOutDates_;
-    bool reevaluateExerciseInStickyRun_;
 
     // input data from the derived pricing engines, to be set in these engines
     mutable std::vector<QuantLib::Leg> leg_;
@@ -74,6 +69,9 @@ protected:
     // set by engine
     std::string npvName_;
     mutable std::set<std::string> relevantCurrencies_;
+
+    // cached exercise indicators to be used in sticky close-out date run
+    mutable std::vector<std::size_t> cachedExerciseIndicators_;
 
 private:
     // data structure storing info needed to generate the amount for a cashflow

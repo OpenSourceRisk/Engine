@@ -145,10 +145,9 @@ class AmcCgFxOptionEngineBuilderBase : public VanillaOptionEngineBuilder {
 public:
     AmcCgFxOptionEngineBuilderBase(const std::set<std::string>& tradeTypes,
                                    const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
-                                   const std::vector<Date>& simulationDates,
-                                   const std::vector<Date>& stickyCloseOutDates)
+                                   const std::vector<Date>& simulationDates)
         : VanillaOptionEngineBuilder("CrossAssetModel", "AMCCG", tradeTypes, AssetClass::FX, Date()), modelCg_(modelCg),
-          simulationDates_(simulationDates), stickyCloseOutDates_(stickyCloseOutDates) {}
+          simulationDates_(simulationDates) {}
 
 protected:
     template <typename E>
@@ -158,15 +157,13 @@ protected:
 
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
-    const std::vector<Date> stickyCloseOutDates_;
 };
 
 class AmcCgFxEuropeanOptionEngineBuilder : public AmcCgFxOptionEngineBuilderBase {
 public:
     AmcCgFxEuropeanOptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
-                                       const std::vector<Date>& simulationDates,
-                                       const std::vector<Date>& stickyCloseOutDates)
-        : AmcCgFxOptionEngineBuilderBase({"FxOption"}, modelCg, simulationDates, stickyCloseOutDates) {}
+                                       const std::vector<Date>& simulationDates)
+        : AmcCgFxOptionEngineBuilderBase({"FxOption"}, modelCg, simulationDates) {}
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
@@ -177,9 +174,8 @@ private:
 class AmcCgFxEuropeanForwardOptionEngineBuilder : public AmcCgFxOptionEngineBuilderBase {
 public:
     AmcCgFxEuropeanForwardOptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
-                                              const std::vector<Date>& simulationDates,
-                                              const std::vector<Date>& stickyCloseOutDates)
-        : AmcCgFxOptionEngineBuilderBase({"FxOptionForward"}, modelCg, simulationDates, stickyCloseOutDates) {}
+                                              const std::vector<Date>& simulationDates)
+        : AmcCgFxOptionEngineBuilderBase({"FxOptionForward"}, modelCg, simulationDates) {}
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
@@ -190,9 +186,8 @@ private:
 class AmcCgFxEuropeanCSOptionEngineBuilder : public AmcCgFxOptionEngineBuilderBase {
 public:
     AmcCgFxEuropeanCSOptionEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
-                                         const std::vector<Date>& simulationDates,
-                                         const std::vector<Date>& stickyCloseOutDates)
-        : AmcCgFxOptionEngineBuilderBase({"FxOptionEuropeanCS"}, modelCg, simulationDates, stickyCloseOutDates) {}
+                                         const std::vector<Date>& simulationDates)
+        : AmcCgFxOptionEngineBuilderBase({"FxOptionEuropeanCS"}, modelCg, simulationDates) {}
 
 private:
     QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,

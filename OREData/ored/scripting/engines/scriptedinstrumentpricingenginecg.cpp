@@ -102,9 +102,18 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     }
 }
 
-void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
+void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
+    const bool stickyCloseOutDateRun, const bool reevaluateExerciseInStickyCloseOutDateRun) const {
 
-    if (cgVersion_ != model_->cgVersion()) {
+    // TODO: rename _AMC_NPV_i indices (i -> valuationDates.size() + i)
+    //       handle reevaluateExercise == false: (?!)
+    QL_REQUIRE(
+        !stickyCloseOutDateRun,
+        "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): stickyCloseOutDateRun is not yet supported.");
+
+    if (cgVersion_ != model_->cgVersion() || (stickyCloseOutDateRun && !cgForStickyCloseOutDateRunIsBuilt_)) {
+
+        cgForStickyCloseOutDateRunIsBuilt_ = stickyCloseOutDateRun;
 
         auto g = model_->computationGraph();
 
@@ -178,7 +187,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
     lastCalculationWasValid_ = false;
 
-    buildComputationGraph();
+    buildComputationGraph(false, false);
 
     if (!haveBaseValues_ || !useCachedSensis_) {
 

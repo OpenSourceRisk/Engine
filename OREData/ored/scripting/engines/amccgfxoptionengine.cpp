@@ -25,7 +25,10 @@ namespace data {
 
 using namespace QuantLib;
 
-void AmcCgFxOptionEngineBase::buildComputationGraph() const { AmcCgBaseEngine::buildComputationGraph(); }
+void AmcCgFxOptionEngineBase::buildComputationGraph(const bool stickyCloseOutDateRun,
+                                                    const bool reevaluateExerciseInStickyCloseOutDateRun) const {
+    AmcCgBaseEngine::buildComputationGraph(stickyCloseOutDateRun, reevaluateExerciseInStickyCloseOutDateRun);
+}
 
 void AmcCgFxOptionEngineBase::setupLegs() const {
     QL_REQUIRE(payoff_, "AmcCgFxOptionEngineBase: payoff has unexpected type");
