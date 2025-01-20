@@ -268,7 +268,9 @@ Real Basket::remainingDetachmentAmount(const Date& endDate) const {
 Real Basket::remainingAttachmentAmount(const Date& endDate) const {
     calculate();
     // maybe return zero directly instead?:
-    QL_REQUIRE(endDate >= refDate_, "remainingAttchementAmount: Target date " << io::iso_date(endDate) << " lies before basket inception " << io::iso_date(refDate_));
+    QL_REQUIRE(endDate >= refDate_, "remainingAttchementAmount: Target date " << io::iso_date(endDate)
+                                                                              << " lies before basket inception "
+                                                                              << io::iso_date(refDate_));
     Real loss = settledLoss(endDate);
     return std::min(detachmentAmount_, attachmentAmount_ + std::max(0.0, loss - attachmentAmount_));
 }

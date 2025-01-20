@@ -59,9 +59,6 @@ public:
     const std::vector<Handle<QuantLib::DefaultProbabilityTermStructure>>& indexCurve() const { return indexCurves_; }
     const Handle<QuantLib::YieldTermStructure>& discountCurve() const { return discountCurve_; }
 
-    static std::vector<Period> getIndexTermsForCalibration(const std::vector<Period>& terms, const Date& indexStartDate,
-                                       const Date& calibrationDate);
-
 protected:
     double targetNpv(const ext::shared_ptr<Instrument>& indexCds, size_t i) const;
 

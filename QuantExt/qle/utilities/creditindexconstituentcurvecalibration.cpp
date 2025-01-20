@@ -152,16 +152,4 @@ QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> CreditIndexConstitue
     }
 }
 
-std::vector<Period> CreditIndexConstituentCurveCalibration::getIndexTermsForCalibration(
-    const std::vector<Period>& terms, const Date& indexStartDate, const Date& calibrationDate) {
-    std::vector<Period> calibrationTerms;
-    for (const auto& term : terms) {
-        auto maturity = cdsMaturity(indexStartDate, term, DateGeneration::CDS2015);
-        if (maturity <= Settings::instance().evaluationDate()) {
-            continue;
-        }
-        calibrationTerms.push_back(term);
-    }
-    return calibrationTerms;
-}
 } // namespace QuantExt

@@ -364,20 +364,7 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         recoveryRates.push_back(fixedRecovery != Null<Real>() ? fixedRecovery : mktRecoveryRate);
         auto originalCurve = market->defaultCurve(cc, config)->curve();
         dpts.push_back(originalCurve);
-        /*
-        Handle<DefaultProbabilityTermStructure> indexCreditCurve =
-        indexCdsDefaultCurve(market, creditCurveIdWithTerm(), config)->curve();
-        Handle<Quote> indexCdsRecovery = market->recoveryRate(creditCurveIdWithTerm(), config);
-        recoveryRates.push_back(indexCdsRecovery->value());
-        dpts.push_back(indexCreditCurve);
-        */
     }
-
-    
-
-   
-
-    // TODO check if underlying is index cds
 
     // Calibrate the underlying constituent curves so that the index cds pricing with underlying curves matches the
     // prices of the index cds with flat index curve.
@@ -390,8 +377,6 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         indexCdsMaturity = cdsMaturity(indexCdsStartDate, tenor, DateGeneration::CDS2015);
     }
 
-
-    
     bool calibrateConstiuentCurves = cdoEngineBuilder->calibrateConstituentCurve() && isIndexTranche();
 
     ext::shared_ptr<CreditIndexConstituentCurveCalibration> curveCalibration;
@@ -399,42 +384,24 @@ void SyntheticCDO::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineF
         // Adjustment factor is a simplified version of the O'Kane's Forward Default Probability Multiplier 
         // O'Kane 2008 - Modelling Single-name and Multi-name Credit Derivatives
         // Chapter 10.6
-        
-        try {            
-            //const auto& [_, indexTerm] = ore::data::splitCurveIdWithTenor(creditCurveIdWithTerm());
-            std::vector<Period> useIndexTerms;
-            std::vector<Period> indexTerms = {3 * Years, 5 * Years};
-            std::vector<Handle<DefaultProbabilityTermStructure>> indexCurves;
-            std::vector<Handle<Quote>> indexRecoveries;
-            Handle<YieldTermStructure> yts =
-                    market->discountCurve(ccy.code(), config);
-            for (const auto& period : indexTerms) {
-                auto calibrationCdsMaturity = cdsMaturity(indexCdsStartDate, period, DateGeneration::CDS2015);
-                if (calibrationCdsMaturity < Settings::instance().evaluationDate()) {
-                    LOG("exclude from curve calibration, term " << period << " as it is in the past");
-                    continue;
-                }
-                auto indexCurveName = qualifier() + "_" + to_string(period);
+        try {
+            // const auto& [_, indexTerm] = ore::data::splitCurveIdWithTenor(creditCurveIdWithTerm());
+            const auto indexCurveName = creditCurveIdWithTerm();
 
-                LOG("Build index calibration for " <<indexCurveName);
-                LOG("Index maturity " << calibrationCdsMaturity);
-                Handle<DefaultProbabilityTermStructure> indexCurve;
-                Handle<Quote> indexRecovery;
-                try{
-                    indexCurve = market->defaultCurve(indexCurveName, config)->curve();
-                    indexRecovery = market->recoveryRate(indexCurveName, config);
-                } catch(const std::exception& e){
-                    WLOG("Error getting index curve " << indexCurveName <<" got " << e.what() << ", exclude term");
-                    continue;
-                }
-                if(!indexCurve.empty() && !indexRecovery.empty()){
-                    indexCurves.push_back(indexCurve);
-                    indexRecoveries.push_back(indexRecovery);
-                    useIndexTerms.push_back(period);
-                }
-            }
+            Handle<YieldTermStructure> yts = market->discountCurve(ccy.code(), config);
+            const auto [name, period] = splitCurveIdWithTenor(indexCurveName);
+
+            auto calibrationCdsMaturity = cdsMaturity(indexCdsStartDate, period, DateGeneration::CDS2015);
+
+            LOG("Build index calibration for " << creditCurveIdWithTerm());
+            LOG("Index maturity " << calibrationCdsMaturity);
+
+            Handle<DefaultProbabilityTermStructure> indexCurve = market->defaultCurve(indexCurveName, config)->curve();
+            Handle<Quote> indexRecovery = market->recoveryRate(indexCurveName, config);
+
             curveCalibration = ext::make_shared<CreditIndexConstituentCurveCalibration>(
-                indexCdsStartDate, useIndexTerms, runningRate, indexRecoveries, indexCurves, yts);
+                indexCdsStartDate, period, runningRate, indexRecovery, indexCurve, yts);
+
         } catch (const std::exception& e) {
             WLOG("Error building the calibration got " << e.what());
         }
@@ -803,27 +770,6 @@ std::string SyntheticCDO::creditCurveIdWithTerm() const {
     return p.first;
 }
 
-std::vector<std::pair<Period, std::string>> SyntheticCDO::curveCalibrationBasket() const {
-    // TODO get from pricing engine config
-    if (!isIndexTranche()) {
-        return std::vector<std::pair<Period, std::string>>();
-    }
-    const auto [qualifier, indexTerm] = splitCurveIdWithTenor(qualifier_);
-    static std::vector<Period> tenors = {3 * Years, 5 * Years};
-    tenors.push_back(indexTerm);
-    auto it = std::unique(tenors.begin(), tenors.end());
-    tenors.erase(it, tenors.end());
-    QuantLib::Schedule s = makeSchedule(leg().schedule());
-    QL_REQUIRE(!s.empty(), "No valid schedule given, can not imply a valid calibration basket for the constituent curves");
-    Date indexStart = indexStartDateHint_ == Date() ? s.dates().front() : indexStartDateHint_;
-    auto terms = CreditIndexConstituentCurveCalibration::getIndexTermsForCalibration( tenors, indexStart,
-        Settings::instance().evaluationDate());
-    std::vector<std::pair<Period, std::string>> results;
-    for (const auto& term : terms) {
-        results.emplace_back(term, qualifier_ + "_" + ore::data::to_string(term));
-    }
-    return results;
-}
 
 
 } // namespace data
