@@ -146,7 +146,8 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(10, July, 2016));
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(13, July, 2016)); // T=1
+    double T = 1.0;
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
     Date maturityDate = calendar.advance(settlementDate, 5, Years);
@@ -187,8 +188,8 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
 
     double Annuity=0.0;
 
-    for (int i=2;i<10;++i)
-        Annuity+=0.5*exp(-(double)i*0.5*0.02);
+    for (int i=2; i<10; ++i)
+        Annuity +=0.5 * exp(-(double)i * 0.5 * fixedRate);
 
     // Starting at 5% which is 3% above the market atm rate
     BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
@@ -199,14 +200,14 @@ BOOST_AUTO_TEST_CASE(testHighStrike) {
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
-        double limitValue = exp(-0.02 * 1.5) * (strike - fixedRate) * Annuity;
+        double limitValue = exp(-fixedRate * T) * (strike - fixedRate) * Annuity;
         BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
         BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
         BOOST_TEST_MESSAGE("------------");
-        BOOST_CHECK_CLOSE(npv, limitValue, 3.0); // Up to 3% tolerance
+        BOOST_CHECK_CLOSE(npv, limitValue, 1.0); // Tolerance of 1%
     }
 
-    // Starting at 10% which is 7% above the market atm rate
+    // Starting at 10% which is 8% above the market atm rate
     BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
     for (double strike = 0.10; strike < 0.16; strike += 0.01)
     {
@@ -238,7 +239,8 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(10, July, 2016));
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(13, July, 2016)); // T=1
+    double T = 1.0;
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
     Date maturityDate = calendar.advance(settlementDate, 5, Years);
@@ -279,8 +281,8 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
 
     double Annuity=0.0;
 
-    for (int i=2;i<10;++i)
-        Annuity+=0.5*exp(-(double)i*0.5*0.02);
+    for (int i=2; i<10; ++i)
+        Annuity += 0.5 * exp(-(double)i * 0.5 * fixedRate);
 
     // Starting at -1% which is 3% below the market atm rate
     BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
@@ -291,11 +293,11 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
-        double limitValue = exp(-0.02 * 1.5) * (fixedRate - strike) * Annuity;
+        double limitValue = exp(-fixedRate * T) * (fixedRate - strike) * Annuity;
         BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
         BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
         BOOST_TEST_MESSAGE("------------");
-        BOOST_CHECK_CLOSE(npv, limitValue, 3.0); // Up to 3% tolerance
+        BOOST_CHECK_CLOSE(npv, limitValue, 2.0); // Tolerance of 2%
     }
 
     // Starting at -5% which is 7% below the market atm rate
@@ -390,7 +392,8 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
     
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(20, July, 2015));
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(20, July, 2015)); // T=0
+    double T = 0.0;
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
     Date maturityDate = calendar.advance(settlementDate, 5, Years);
@@ -420,7 +423,7 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
     Array notimes_a, eurKappa_a;
     eurVols_a = Array(eurVols.begin(), eurVols.end());
     notimes_a = Array(0);
-    eurKappa_a = Array(1, 0.02);
+    eurKappa_a = Array(1, fixedRate);
 
     Handle<YieldTermStructure> eurYtsHandle(eurYts);
     auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
@@ -432,7 +435,7 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
     double Annuity=0.0;
 
     for (int i=2;i<10;++i)
-        Annuity+=0.5*exp(-(double)i*0.5*0.02);
+        Annuity += 0.5 * exp(-(double)i * 0.5 * fixedRate);
 
     // Starting 1% above market rate level of 2%
     BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
@@ -443,12 +446,12 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
-        double limitValue = exp(-0.02 * 1.5) * std::fmax((strike - fixedRate),0.0) * Annuity;
+        double limitValue = exp(-fixedRate * T) * std::fmax((strike - fixedRate), 0.0) * Annuity;
         BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
         BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
         BOOST_TEST_MESSAGE("------------");
 
-        BOOST_CHECK_CLOSE(npv, limitValue, 5.0); // Up to 4% tolerance
+        BOOST_CHECK_CLOSE(npv, limitValue, 2.0); // Tolerance of 2%
     }
 
     // Starting 1% below market rate level of 2%
@@ -460,12 +463,12 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
-        double limitValue = exp(-0.02 * 1.5) * (fixedRate - strike) * Annuity;
+        double limitValue = exp(-fixedRate * T) * (fixedRate - strike) * Annuity;
         BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
         BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
         BOOST_TEST_MESSAGE("------------");
          
-        BOOST_CHECK_CLOSE(npv, limitValue, 5.0); // Up to 4% tolerance
+        BOOST_CHECK_CLOSE(npv, limitValue, 1.0); // Tolerance of 1%
     }
     
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
@@ -483,7 +486,8 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
 
     Calendar calendar = TARGET();
     Date settlementDate(15, July, 2015);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(10, July, 2016));
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(10, July, 2016)); // T=1
+    double T = 1.0;
     Date startDate(15, July, 2016);
     Settings::instance().evaluationDate() = settlementDate;    
     Date maturityDate = calendar.advance(settlementDate, 5, Years);
@@ -525,7 +529,7 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
     double Annuity=0.0;
 
     for (int i=2;i<10;++i)
-        Annuity+=0.5*exp(-(double)i*0.5*0.02);
+        Annuity += 0.5 * exp(-(double) i * 0.5*  fixedRate);
 
     // Starting 1% above market rate level of 2%
     BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
@@ -536,11 +540,11 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
-        double limitValue = exp(-0.02 * 1.5) * (strike - fixedRate) * Annuity;
+        double limitValue = exp(-fixedRate * T) * (strike - fixedRate) * Annuity;
         BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
         BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
         BOOST_TEST_MESSAGE("------------");
-        BOOST_CHECK_CLOSE(npv, limitValue, 4.0); // Up to 4% tolerance
+        BOOST_CHECK_CLOSE(npv, limitValue, 2.0); // Tolerance of 2%
     }
 
     // Starting 1% below market rate level of 2%
@@ -552,15 +556,16 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
 
         swaption->setPricingEngine(eurSwEng1);
         Real npv = swaption->NPV();
-        double limitValue = exp(-0.02 * 1.5) * (fixedRate - strike) * Annuity;
+        double limitValue = exp(-fixedRate * T) * (fixedRate - strike) * Annuity;
         BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike * 100.0 << "%): " << npv * 10000.00 << " bp. ");
         BOOST_TEST_MESSAGE("Limit Value: " << limitValue * 10000.0 << " bp., " << "Annuity: " << Annuity);
         BOOST_TEST_MESSAGE("------------");
-        BOOST_CHECK_CLOSE(npv, limitValue, 4.0);// Up to 4% tolerance
+        BOOST_CHECK_CLOSE(npv, limitValue, 3.0); // Tolerance of 3%
     }
     
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
