@@ -162,7 +162,18 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
                       << std::setw(15) << static_cast<double>(timing.second) / 1.0E6 << " ms (avg = "
                       << static_cast<double>(timing.second) / static_cast<double>(timing.first) / 1.0E6 << ")");
     }
-
+    LOG("FARAH: initial size is: " << initialSize);
+    LOG("FARAH: failedTrades is: " << failedTrades);
+    if (initialSize == failedTrades) {
+        map<string, string> subfields;
+        //for (auto failedTrade : trades_)
+            //subfields.insert({"tradeId", failedTrade.first});
+        DLOG("FARAH: initial size is: " << initialSize);
+        DLOG("FARAH: failedTrades is: " << failedTrades);
+        StructuredMessage(StructuredMessage::Category::Error, StructuredMessage::Group::Trade,
+                          "All trades in portfolio failed to build.", subfields)
+            .log();
+    }
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades, context is '" + context + "'");
 }
 

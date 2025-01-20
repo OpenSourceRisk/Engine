@@ -187,6 +187,7 @@ public:
     const std::map<string, Size> tradeIds() {
         return cube()->idsAndIndexes();
     }
+    const QuantLib::ext::shared_ptr<Portfolio> portfolio() { return portfolio_; }
     //! Return list of netting set IDs in the portfolio
     const std::map<string, Size> nettingSetIds() {
         return netCube()->idsAndIndexes();
