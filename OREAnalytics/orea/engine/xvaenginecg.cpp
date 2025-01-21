@@ -298,7 +298,7 @@ void XvaEngineCG::buildCgPartB() {
 
         {
             std::vector<std::size_t> tmp;
-            tmp.push_back(g->variable(engine->npvName() + "_0"));
+            tmp.push_back(g->variable("__AMCCG_NPV"));
             for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
                 tmp.push_back(g->variable("_AMC_NPV_" + std::to_string(getAmcNpvIndexForValuationDate(i))));
             }
@@ -313,7 +313,7 @@ void XvaEngineCG::buildCgPartB() {
             model_->useStickyCloseOutDates(false);
 
             std::vector<std::size_t> tmp;
-            tmp.push_back(g->variable(engine->npvName() + "_0"));
+            tmp.push_back(g->variable("__AMCCG_NPV"));
             for (std::size_t i = 0; i < closeOutDates_.size(); ++i) {
                 tmp.push_back(g->variable("_AMC_NPV_" + std::to_string(getAmcNpvIndexForCloseOutDate(i))));
             }

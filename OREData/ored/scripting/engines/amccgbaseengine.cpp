@@ -55,19 +55,7 @@ using namespace QuantExt;
 
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                                  const std::vector<QuantLib::Date>& simulationDates)
-    : modelCg_(modelCg), simulationDates_(simulationDates) {
-
-    // determine name of npv node, we can use anything that is not yet taken
-
-    npvName_ = "__AMCCG_NPV_";
-    std::size_t counter = (std::size_t)this;
-    while (modelCg_->computationGraph()->variables().find(npvName_ + std::to_string(counter)) !=
-           modelCg_->computationGraph()->variables().end())
-        ++counter;
-    npvName_ += std::to_string(counter);
-}
-
-std::string AmcCgBaseEngine::npvName() const { return npvName_; }
+    : modelCg_(modelCg), simulationDates_(simulationDates) {}
 
 Real AmcCgBaseEngine::time(const Date& d) const {
     return QuantLib::ActualActual(QuantLib::ActualActual::ISDA).yearFraction(modelCg_->referenceDate(), d);
@@ -663,7 +651,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 
     // set the npv at t0
 
-    g.setVariable(npvName() + "_0", exercise_ == nullptr ? pathValueUndDirtyRunning : pathValueOption[0]);
+    g.setVariable("__AMCCG_NPV", exercise_ == nullptr ? pathValueUndDirtyRunning : pathValueOption[0]);
 
     // generate the exposure at simulation dates
 
