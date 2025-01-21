@@ -211,6 +211,10 @@
       <Index>GBP-LIBOR-3M</Index>
       <Index>CHF-LIBOR-6M</Index>
       <Index>JPY-LIBOR-6M</Index>
+      <Index>USD-FedFunds</Index>
+      <Index>CHF-TOIS</Index>
+      <Index>GBP-SONIA</Index>
+      <Index>JPY-TONAR</Index>
     </Indices>
     <SwapIndices>
       <SwapIndex>
@@ -220,6 +224,38 @@
       <SwapIndex>
         <Name>EUR-CMS-30Y</Name>
         <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-1Y</Name>
+        <DiscountingIndex>USD-FedFunds</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>USD-CMS-30Y</Name>
+        <DiscountingIndex>USD-FedFunds</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>GBP-CMS-1Y</Name>
+        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>GBP-CMS-30Y</Name>
+        <DiscountingIndex>GBP-SONIA</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>CHF-CMS-1Y</Name>
+        <DiscountingIndex>CHF-TOIS</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>CHF-CMS-30Y</Name>
+        <DiscountingIndex>CHF-TOIS</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>JPY-CMS-1Y</Name>
+        <DiscountingIndex>JPY-TONAR</DiscountingIndex>
+      </SwapIndex>
+      <SwapIndex>
+        <Name>JPY-CMS-30Y</Name>
+        <DiscountingIndex>JPY-TONAR</DiscountingIndex>
       </SwapIndex>
     </SwapIndices>
     <DefaultCurves>
