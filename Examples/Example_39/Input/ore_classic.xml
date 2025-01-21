@@ -6,7 +6,7 @@
     <Parameter name="outputPath">Output/classic</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">31</Parameter>
-    <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
+    <Parameter name="marketDataFile">market_20160205_flat_fixed_fxfwd.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
