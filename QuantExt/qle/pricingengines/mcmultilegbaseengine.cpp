@@ -1694,7 +1694,8 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
             RandomVariable futureOptionValue =
                 exerciseCounter == exerciseTimes_.size()
                     ? RandomVariable(samples, 0.0)
-                    : regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_);
+                    : max(RandomVariable(samples, 0.0),
+                          regModelOption_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
 
             /* Physical Settlement:
 
@@ -1725,7 +1726,6 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
                     regModelUndExInto_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_),
                     regModelUndDirty_[regModelIndex][counter].apply(initialState_, effPaths, xvaTimes_));
             } else {
-                exercisedValue.setAll(0.0);
                 for (auto it = cashSettlements.begin(); it != cashSettlements.end();) {
                     if (t < it->first + (includeTodaysCashflows_ ? tinyTime : -tinyTime)) {
                         exercisedValue += it->second;
@@ -1736,8 +1736,7 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
                 }
             }
 
-            result[xvaCounter + 1] =
-                max(RandomVariable(samples, 0.0), conditionalResult(wasExercised, exercisedValue, futureOptionValue));
+            result[xvaCounter + 1] = conditionalResult(wasExercised, exercisedValue, futureOptionValue);
 
             ++xvaCounter;
         }
