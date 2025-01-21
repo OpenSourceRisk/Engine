@@ -651,7 +651,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 
     // set the npv at t0
 
-    g.setVariable("__AMCCG_NPV", exercise_ == nullptr ? pathValueUndDirtyRunning : pathValueOption[0]);
+    g.setVariable(npvName() + "_0", exercise_ == nullptr ? pathValueUndDirtyRunning : pathValueOption[0]);
 
     // generate the exposure at simulation dates
 
