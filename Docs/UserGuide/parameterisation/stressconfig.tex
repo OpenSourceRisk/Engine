@@ -1,4 +1,4 @@
-a%--------------------------------------------------------
+%--------------------------------------------------------
 \subsection{Stress Scenario Analysis: {\tt stressconfig.xml}}\label{sec:stress}
 %--------------------------------------------------------
 
@@ -8,7 +8,7 @@ Stress tests can be applied in ORE to the same market segments and with same gra
 This file {\tt stressconfig.xml} specifies how stress tests can be configured. The general structure is shown in listing
 \ref{lst:stress_config}.
 
-In this example, two zero stress scenarios ``parallel\_rates'' and ``twist'' and one par rate ``par_parallel'' are defined. 
+In this example, two zero stress scenarios ``parallel\_rates'' and ``twist'' and one par rate ``par\_parallel'' are defined. 
 Each scenario definition contains
 the market components to be shifted in this scenario in a similar syntax that is also used for the sensitivitya
 configuration, see \ref{sec:sensitivity}. Components that should not be shifted, can just be omitted in the definition
@@ -25,7 +25,8 @@ different shift sizes applied to each point of the curve (or surface / cube).
 In case of the swaption volatility shifts, the single value given as {\tt Shift} (without the attributes {\tt expiry}
 and {\tt term}) represents a default value that is used whenever no explicit value is given for a expiry / term pair.
 
-For FX volatility shifts, the configuration can be specified either explicitly or using a weighting schema. In the explicit approach, exact shift values for each expiry and tenor can be provided, as demonstrated in listing \ref{lst:stress_config_fxvol_explicit}}. 
+For FX volatility shifts, the configuration can be specified either explicitly or using a weighting schema.
+In the explicit approach, exact shift values for each expiry and tenor can be provided, as demonstrated in listing \ref{lst:stress_config_fxvol_explicit}}. 
 If only one tenor and shift value are provided, a parallel shift will be applied across all other tenors.
 
 Two weighting schemas are supported for FX volatility shifts: 
@@ -35,6 +36,7 @@ Two weighting schemas are supported for FX volatility shifts:
 \end{itemize}
 
 \begin{listing}
+\begin{minted}[fontsize=\footnotesize]{xml}
   <FxVolatilities>
       <FxVolatility ccypair="USDEUR">
         <ShiftType>Absolute</ShiftType>
@@ -42,11 +44,14 @@ Two weighting schemas are supported for FX volatility shifts:
         <ShiftExpiries>6M, 1Y, 2Y, 4Y, 5Y, 7Y, 10Y</ShiftExpiries>
       </FxVolatility>
     </FxVolatilities>
-\end{lisiting}
+\end{minted}
 \label{lst:stress_config_fxvol_explicit}
+\caption{Stress configuration with explicit shifts}
+\end{listing}
 
 
 \begin{listing}
+\begin{minted}[fontsize=\footnotesize]{xml}
   <FxVolatilities>
       <FxVolatility ccypair="USDEUR">
         <ShiftType>Absolute</ShiftType>
@@ -58,10 +63,13 @@ Two weighting schemas are supported for FX volatility shifts:
           <WeightTenors>6M,1Y,2Y,4Y,5Y,7Y,10Y</WeightTenors>
         </WeightedShifts>
       </FxVolatility>
-\end{listing}
+\end{minted}
 \label{lst:stress_config_fxvol_weighting}
+\caption{Stress configuration with weighted shifts}
+\end{listing}
 
 \begin{listing}
+\begin{minted}[fontsize=\footnotesize]{xml}
   <FxVolatilities>
       <FxVolatility ccypair="USDEUR">
         <ShiftType>Absolute</ShiftType>
@@ -72,9 +80,10 @@ Two weighting schemas are supported for FX volatility shifts:
         </WeightedShifts>
       </FxVolatility>
     </FxVolatilities>
-\end{listing}
+\end{minted}
 \label{lst:stress_config_fxvol_weighting_off}
-
+\caption{Stress configuration with unadjusted weighting schema}
+\end{listing}
 
 UseSpreadedTermStructures: If set to true, spreaded termstructures over t0 will be used for the scenario calculation, to
 improve the alignment of the scenario sim market and t0 curves.

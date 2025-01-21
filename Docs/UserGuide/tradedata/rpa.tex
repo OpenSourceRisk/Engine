@@ -1,8 +1,22 @@
 \subsubsection{Risk Participation Agreement (RPA)}
 \label{input:cr_rpa}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A RPA is a credit derivative between two counterparties. The protection buyer pays a premium to the protection
+seller. In return the protection seller agrees to pay a percentage share (the ``participation rate'') of all liabilities
+of a referenced underlying swap transaction payable by a one of counterparties of that transaction (the ``reference
+entity'') in case of the default of this entity. The protection is granted for a defined period of time, which often
+coincides with the lifetime of the underlying swap. The premium payments may comprise only one upfront payment or a
+periodic series of payments. In case of a credit event premiums to be paid after the event are cancelled.
+
+In a fixed recovery RPA, the recovery rate that is used to determine the payment on the occurence of a credit event is
+specified up front in the contract.
+
+{\bf Input}}\fi
+
 A risk participation agreement is set up using the trade type {\tt RiskParticipationAgreement} and a {\tt
-  RiskParticipationAgreementData} block as shown in listing \ref{lst:rpadata}. The block contains a {\tt ProtectionFee}
+ RiskParticipationAgreementData} block as shown in listing \ref{lst:rpadata}. The block contains a {\tt ProtectionFee}
 block that can include one or more legs representing the fees paid by the protection buyer and an {\tt Underlying} block
 containing either the legs of the underlying swap or the Treasury-Lock data that the contract references.
 

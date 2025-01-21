@@ -167,3 +167,85 @@ Additional flags:
 \caption{Sensitivity configuration}
 \label{lst:sensitivity_config}
 \end{longlisting}
+
+\subsubsection*{Par Sensitivity Analysis}
+
+To perform a par sensitivity analysis, additional sensitivity configuration is required that describes the assumed par instruments and related conventions.
+This additional data is required for:
+\begin{itemize}
+\item DiscountCurves
+\item IndexCurves
+\item CapFloorVolatilities
+\item CreditCurves
+\item ZeroInflationIndexCurves
+\item YYInflationIndexCurves
+\item YYCapFloorVolatilities
+\end{itemize}
+
+By default, par conversion is applied to all risk factor types listed above. However, it is possible to exclude
+selected risk factor types by adding an optional block to the sensitivity configuration as shown in listing \ref{lst:par_conversion_excludes}. Uncomment the risk factor type(s) here that should be excluded from par conversion.
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+<SensitivityAnalysis>
+
+  <ParConversionExcludes>
+    <!--<Type>DiscountCurve</Type>-->
+    <!--<Type>YieldCurve</Type>-->
+    <!--<Type>IndexCurve</Type>-->
+    <!--<Type>OptionletVolatility</Type>-->
+    <!--<Type>SurvivalProbability</Type>-->
+    <!--<Type>ZeroInflationCurve</Type>-->
+    <!--<Type>YearOnYearInflationCurve</Type>-->
+    <!--<Type>YoYInflationCapFloorVolatility</Type>-->
+  </ParConversionExcludes>
+
+  ...
+  
+</SensitivityAnalysis>
+\end{minted}
+\caption{Par conversion excludes}
+\label{lst:par_conversion_excludes}
+\end{longlisting}
+
+Using DiscountCurves as an example, the full sensitivity specification including par conversion data is as follows:
+
+\begin{longlisting}
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>2W,1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</ShiftTenors>
+      <ParConversion>
+        <!--DEP, FRA, IRS, OIS, FXF, XBS -->
+	<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>   
+\end{minted}
+\caption{Par sensitivity configuration}
+\label{lst:par_sensitivity_config}
+\end{longlisting}
+
+Note
+\begin{itemize}
+\item The list of shift tenors needs to match the list of tenors matches the corresponding grid in the simulation (market) configuration
+\item The length of list of (par) instruments needs to match the length of the list of shift tenors
+\item Permissible codes for the assumed par instruments:
+	\begin{itemize}
+	\item DEP, FRA, IRS, OIS, TBS, FXF, XBS in the case of DiscountCurves 
+	\item DEP, FRA, IRS, OIS, TBS in the case of IndexCurves
+	\item DEP, FRA, IRS, OIS, TBS, XBS in the case of YieldCurves 
+	\item ZIS, YYS for YYInflationIndexCurves, interpreted as Year-on-Year Inflation Swaps linked to Zero Inflation resp. YoY Inflation curves
+	\item ZIS, YYS for YYCapFloorVolatilities, interpreted as Year-on-Year Inflation Cap Floor linked to Zero Inflation resp. YoY Inflation curves
+	\item Any code for CreditCurves, interpreted as CDS
+	\item Any code for ZeroInflationIndexCurves, interpreted as CPI Swaps linked to Zero Inflation curves
+	\item Any code for CapFloorVolatilities, interpreted as flat Cap/Floor
+	\end{itemize}
+\item One convention needs to be referenced for each of the instrument codes	
+\end{itemize}

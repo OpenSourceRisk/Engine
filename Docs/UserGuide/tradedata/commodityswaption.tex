@@ -1,6 +1,12 @@
 \subsubsection{Commodity Swaption}
 \label{ss:input_commodityswaption}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A Commodity Swaption is a European option on a forward starting Commodity Swap \ref{sec:prod_com_swap} consisting of a sequence of calculation periods. The exercise decision is made once before the Swap starts. In a Payer Swaption, the holder of the option has the right to pay the fixed prices and to receive the floating prices. In a Receiver Swaption, the holder of the option has the right to receive the fixed prices and to pay the floating prices.
+
+{\bf Input}}\fi
+
 The structure of a trade node representing a commodity swaption is shown in listing \ref{lst:commodity_swaption}. It consists of the generic \lstinline!Envelope! and the specific \lstinline!CommoditySwaptionData! node.
 
 The \lstinline!CommoditySwaptionData! node contains an \lstinline!OptionData! node described in \ref{ss:option_data}. The relevant fields in the \lstinline!OptionData! node for a CommoditySwaption are:

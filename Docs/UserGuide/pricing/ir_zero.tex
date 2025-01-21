@@ -1,0 +1,33 @@
+\subsubsection{Zero Coupon Swap}
+\label{pricing:ir_zero}
+
+On compounding swaps, the floating rate is applied to the notional amount plus 
+accrued interest caused by the previous floating rate(s). On payment date, the 
+accrued amounts for multiple accrual periods are summed. Both 
+straight\footnote{The spread compounds (i.e. is applied to the notional amount 
+plus accrued interest).} and flat compounding is supported for zero-coupon swaps. 
+
+\medskip
+A zero-coupon swap compounds at the tenor of the swap and pays only at maturity. 
+There are zero-coupon fixed and zero-coupon floating legs:
+\begin{align*}
+\NPV &= P(T)\,\sum_{i=1}^n A_i \\
+A_i &= \left\{\begin{array}{lcl}
+\displaystyle N\,c\,\delta_i + \left(\sum_{j=1}^{i-1} A_j\right)\,c\,\delta_i 
+&;& \mbox{for a fixed ZC leg} \\
+\displaystyle N\,(f_i+s_i)\,\delta_i + \left(\sum_{j=1}^{i-1} A_j\right)\,(f_i+s_i)\,\delta_i 
+&;& \mbox{for a floating ZC leg} \\
+\end{array}
+\right.
+\end{align*}
+where:
+\begin{itemize}
+\item $N$: notional
+\item $c$: the fixed rate
+\item $f_i$: the forward projected IBOR rate for period $i$ from $t_{i-1}$ to $t_i$ 
+\item $s_i$: floating spread for period $i$ 
+\item $\delta_i$: the daycount fraction in years for the period from $t_{i-1}$ to $t_i$ 
+\item $P(T)$: the discount factor for maturity $T$
+\item $A_i$: the accrued interest up to period $u$ 
+\end{itemize}
+

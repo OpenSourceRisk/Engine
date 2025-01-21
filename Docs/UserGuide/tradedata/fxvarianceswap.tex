@@ -1,6 +1,44 @@
 \subsubsection{FX Variance and Volatility Swap}
 \label{SubSectionFxVarianceSwap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+An {\bf FX Variance Swap} has a payoff, similar to an Equity Variance Swap's
+payoff \ref{prod:eq_varianceswap}, that depends on the volatility of an underlying 
+FX rate. The swap counterparties agree to exchange a pre-agreed variance level (the strike) for 
+the actual amount of variance realized over an observation period. 
+
+The strike is typically set at ATM so the swap initially has zero value. If the 
+subsequent realized volatility is above the strike level, the buyer of a variance 
+swap who is long volatility will have a positive NPV, and the seller who is short 
+volatility, will have a negative NPV. 
+
+Payoff:
+$$
+N\cdot \left(\mbox{RealisedVol}^2-K^2\right)
+$$
+
+where
+\begin{itemize}
+\item $N$: Notional, also called Variance Notional, determined as $\mbox{Vega Notional}/(2K)$.
+\item Vega Notional: Notional in terms of volatility units.
+\item RealisedVol: 
+$$
+\sqrt{252\cdot \sum_{t=1}^N \frac{1}{\mbox{TradingDays}}\left(\ln\frac{P_t}{P_{t-1}} \right)^2} \cdot 100
+$$
+\item TradingDays: the number of days which are expected to be scheduled trading days in the observation period
+\item $P_0$: the official closing of the underlying at the observation start date
+\item $P_t$: the official closing of the underlying at any observation date t, or at observation end date 
+\item $K$: the strike volatility
+\end{itemize}
+
+An {\bf FX Volatility Swap} is closely related to the FX Variance Swap with payoff
+$$
+N\cdot \left(\mbox{RealisedVol}-K\right).
+$$
+
+{\bf Input}}\fi
+
 The \lstinline!FxVarianceSwapData! node is the trade data container for the \emph{FxVarianceSwap} trade type. Only vanilla variance swaps are supported by this trade type - exotic variance swaps are supported by ScriptedTrade\ifdefined\ProductCatalogueBuild, see  \ref{SubSectionExoticVarianceSwap}. \else. \fi
 The structure of an example \lstinline!VarianceSwapData! node for an FX variance swap is shown in Listing \ref{lst:fxvarswap_data}.
 

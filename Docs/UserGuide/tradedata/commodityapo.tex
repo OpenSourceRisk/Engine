@@ -1,6 +1,23 @@
 \subsubsection{Commodity Average Price Option}
 \label{ss:input_commodityapo}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+The (Arithmetic) Average Price Option (APO) is an Asian option with
+a single-period Commodity Swap as an underlying which observes daily
+price fixings in the calculation period. Option exercise is at calculation 
+period end, typically on the last floating price fixing date - in
+contrast to a Commodity Swaption \ref{sec:prod_com_swaption} 
+where expiry is before underlying start. In a call option, the owner
+of the option has the right to receive average floating prices and to
+pay fixed prices. In a put option it is the other way around.
+
+APOs can occur in combinations, e.g. series of put and call options
+for different strike prices, and for a series of consecutive
+calculation periods.
+
+{\bf Input}}\fi
+
 The structure of a trade node representing a commodity average price option (APO) is shown in listing \ref{lst:commodity_apo}. It consists of the generic \lstinline!Envelope! and the specific \lstinline[literate={\\\-}{}{0\discretionary{}{}{}}]!Commodity\-Average\-Price\-Option\-Data! node. A strip of these options may be booked using the commodity option strip trade outlined in section \ref{ss:commodityoptionstrip}. The meanings and allowable values of the elements in the \lstinline!CommodityAveragePriceOptionData! are as follows:
 
 \begin{itemize}

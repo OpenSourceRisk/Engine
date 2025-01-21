@@ -1,0 +1,117 @@
+\subsubsection{RPA}
+\label{pricing:cr_rpa}
+
+The premium leg of a RPA is priced by discounting premium payments adjusted for default probability, its net present
+value can be written
+
+\begin{equation}
+F = \sum_{i=1}^{n} f_i P_{OIS}(T_i) S(T_i) + A
+\end{equation}
+
+with
+
+\begin{itemize}
+\item $f_i$ the future payable fee amounts, $i=1,\ldots,n$
+\item $T_i$ the payment time of the fee $f_i$, $i=1,\ldots,n$
+\item $P_{OIS}(t)$ the discount factor on the relevant OIS curve (in a collateralised RPA)
+\item $S(T_i)$ the survival probability of the reference entity between today and $T_i$
+\item $A$ is the value of the fee accruals, see below
+\end{itemize}
+
+If the premium payments are given as simple cashflows, $A=0$. If on the other hand the premium payments are {\em
+  coupons} and the RPA agreement specifies the payment of accruals in case of a default event, the value of the fee
+accruals is computed as
+
+\begin{equation}
+  A = \sum_{i=1}^{n} a_i P_{OIS}(T_i^{\text{mid}}) P_{\text{def}}(A^s_i,A^e_i)
+\end{equation}
+
+using the mid-point rule, where
+
+\begin{itemize}
+\item $T_i^{\text{mid}}$ is the mid point between
+\begin{itemize}
+\item $A^s_i$ defined as the greater of the accrual start date and the evaluation date and
+\item $A^e_i$ the accrual end date
+\end{itemize}
+\item $a_i$ are the accruals of $f_i$ between $A^s_i$ and the date corresponding to $T_i^{\text{mid}}$
+\item $P_{\text{def}}(A^s_i,A^e_i)$ is the probably of default of the reference entity between $A^s_i$ and $A^e_i$
+\end{itemize}
+
+The protection leg of a RPA is priced using different methods, depending on the structure of the underlying. See section
+\ref{input:cr_rpa} for the detailled criteria that are used to pick the pricing method depending on the trade xml
+representation:
+
+\begin{itemize}
+\item Vanilla Swap: Analytic Pricer using a European swaption representation of the underlying EPE profile
+\item Strucutred Swap: Numeric LGM Pricer
+\item Callable Swap / Swaption: Numeric LGM Pricer
+\item Cross Currency Swap: Analytic Pricer using a FX Option representation of the underlying EPE profile
+\item Treasury Lock: Numeric LGM Pricer
+\end{itemize}
+
+\underline{Analytic Pricer using European swaption representation:}
+
+The protection leg is priced as a weighted sum over European swaptions
+
+\begin{equation}
+P = \sum_{i=1}^{N} p (1-R) P_{\text{def}}(W^s_i,W^e_i) \nu(W_i)
+\end{equation}
+
+where
+
+\begin{itemize}
+\item $W_i$ is a swaption with expiry $t_i$ representing the option to enter into the cashflows of the underlying swap
+  with payment date greater than $t_i$. The swaption is found by matching the NPV, Delta and Gamma of the exercise-into
+  underlying swap within a LGM1F model at a suitable expansion point for the LGM state with the NPV, Delta and Gamma of
+  a standard underlying.
+\item $P_{\text{def}}(W^si, W^e_i)$ is the probability of default of the reference entity between $W^s_i$ and $W^e_i$
+\item $R$ is the assumed recovery rate, or the fixed recovery rate from the RPA termsheet, if given
+\item $p$ is the participation rate
+\item $\nu(W_i)$ is the NPV as of the evaluation date of the swaption $W_i$
+\end{itemize}
+
+The intervals $[W^s_i, W^e_i]$ and swaption expiries $t_i \in [W^s_i, W^e_i]$, $i=1,\ldots,N$ are chosen such that the
+intervals cover the interval between
+
+\begin{itemize}
+\item the greater of the protection start and evaluation date and
+\item the earlier of the protection end date and the latest underlying swap payment date
+\end{itemize}
+
+One possible concrete choice in the case of a vanilla fix versus float underlying (with a float
+coupon frequency being a multiple of the fixed coupon frequency) is
+
+\begin{itemize}
+\item $W^s_i$ the maximum of the evaluation date, protection start date and $i$th underlying float accrual start date
+\item $W^e_i$ the minimum of the protection end date and the $i$th underlying accrual end date
+\item $t_i$ is the mid point between suitable dates $W^s_i$ and $W^e_i$ (see below)
+\end{itemize}
+
+where only non-empty periods $[W^s_i, W^e_i]$ are kept.
+
+Notice that the protection leg of a RPA is identical to a protection leg of a CDS with nominal $V$ if $\nu(W_i)$ is
+replaced by a constant amount $V$. The total NPV of an RPA is given as
+
+\begin{equation}
+\text{NPV}_{\text{RPA}} = F - P
+\end{equation}
+
+for a protection seller position resp.
+
+\begin{equation}
+\text{NPV}_{\text{RPA}} = P - F
+\end{equation}
+
+for a protection buyer position.
+
+\underline{Analytic Pricer using FX Option representation:}
+
+The approach is similar to ``Analytic Pricer using European swaption representation'', but in this case the
+exercise-into flows of the underlying are matched with FX Spot Trades using the NPV and FX Delta. This matching can be
+performed in a model independent way, interest rates are assumed to be deterministic here.
+
+\underline{Numeric LGM Pricer}
+
+The EPE is computed in a LGM1F model. The approach is very similar to the pricing of bermudan swaptions. The calibration
+approach is also the same for swap underlyings. For ``Treasury Lock'' underlying a Coterminal ATM calibration is used.

@@ -1,5 +1,17 @@
 \subsubsection{FX Digital Option}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A Digital FX Option is an option whose payout is either zero or a fixed 
+predetermined amount (Cash-or-Nothing). Payout depends on whether the underlying 
+FX spot rate expires in-the-money at the expiration date. 
+\begin{itemize}
+\item Digital FX Options have European exercise with payout at expiry.
+\item The buyer of a Digital FX Option pays a premium to the seller.
+\end{itemize}
+
+{\bf Input}}\fi
+
 The \lstinline!FxDigitalOptionData!  node is the trade data container for the \emph{FxDigitalOption} trade type.   The \lstinline!FxDigitalOptionData!  node includes one  \lstinline!OptionData! trade component sub-node  plus elements
 specific to the FX Digital  Option. The structure of an example \lstinline!FxDigitalOptionData! node for a FX Digital  Option is shown in Listing
 \ref{lst:fxdigitaloption_data}.

@@ -1,6 +1,49 @@
 \subsubsection{Commodity Swap and Basis Swap}
 \label{ss:input_commodityswap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A Commodity Swap involves the exchange of floating commodity prices
+against a fixed known commodity price, with cash settlement either at 
+the end of the swap or on a monthly basis. A long position in a
+commodity swap involves computing the arithmetic average of the 
+difference between the variable fixing and the fixed strike $K$ at
+each of the fixing dates $t_i$ ($i=1, ..., n$) 
+$$
+V_i = S_{t_i} - K
+$$
+in the calculation period. $S_{t_i}$ denotes the relevant fixing on price date
+$t_i$, which may be a commodity spot price (if available), possibly
+the average of high and low values on that day in a given source.
+Or the relevant fixing  $S_{t_i}$ may be the price of the {\em prompt future} 
+$f_{t_i,T(t_i)}$ where $T(t_i)$ is the earliest futures expiry after
+$t_i$. 
+
+The final payoff at calculation period end will be known at period end
+and given by the arithmetic average
+$$
+V = \frac{1}{n}\sum_{i=1}^n V_i.
+$$
+This amount is settled in cash with a delay after the end of the
+calculation period or rolled up into a single payment after swap end.
+
+A Commodity {\bf Basis Swap} involves the exchange of the spread between 
+floating commodity prices against a fixed known spread $K$, with cash
+settlement either at the end of the swap or on a monthly basis. 
+Generalizing the Commodity Swap in Section \ref{sec:prod_com_swap},
+the payoff contribution on each pricing date is now
+$$
+V_i = S^{(1)}_{t_i} - S^{(2)}_{t_i} - K
+$$
+ where $S^{(1,2)}$ may be spot or prompt futures prices.
+The final payoff at period end will be
+known at period end and given by the arithmetic average
+$$
+V = \frac{1}{n}\sum_{i=1}^n V_i.
+$$
+
+{\bf Input}}\fi
+
 The structure of a \lstinline!CommoditySwap! trade node is shown in listing \ref{lst:commodityswap_data}. This trade node can be used to represent commodity swaps and commodity basis swaps. It consists of the generic \lstinline!Envelope! and the specific \lstinline!SwapData! section. 
 
 The \lstinline!SwapData! node may contain two or more \lstinline!LegData! nodes. There must be at least one \lstinline!LegData! node of a commodity  \lstinline!LegType!, i.e. \lstinline!CommodityFixed! or \lstinline!CommodityFloating!, but non-commodity leg types are also allowed. The commodity leg types are described in sections \ref{ss:commodityfixedleg} and \ref{ss:commodityfloatingleg} respectively.

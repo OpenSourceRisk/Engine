@@ -1,0 +1,32 @@
+\subsubsection{Interest Rate Swap}
+\label{pricing:ir_irs}
+
+The present value of a Vanilla Interest rate Swap receiving fixed and paying 
+variable interest is
+
+\begin{align*}
+\NPV &= \NPV_{\fix} - \NPV_{flt} \\
+\intertext{with fixed leg NPV}
+\NPV_{\fix} &= \sum_{i=1}^{n^{\fix}} N^{\fix}_i \, c_i \,\delta^{\fix}_i\, P(t^{\fix}_i)
+\intertext{and floating leg NPV}
+\NPV_{\flt} &= \sum_{i=1}^{n^{\flt}} N^{\flt}_i\,(f_i + s_i)\,\delta^{\flt}_i\,P(t^{\flt}_i)
+\end{align*}
+and
+\begin{itemize}
+\item $n^{\fix/\flt}$: the number of coupons for the fixed resp. floating leg - note that period length/tenor generally differ between legs
+\item $N^{\fix/\flt}_i$: fixed resp. floating leg notional for period $i$, possibly constant
+\item $c_i$: the fixed rate for period $i$, possibly constant
+\item $f_i$: the forward projected IBOR rate for period from $t^{\flt}_{i-1}$ to $t^{\flt}_i$ - note that for the current period, this will be a fixing instead of a forward rate (assuming fixing in advance)
+\item $s_i$: spread for floating leg period $i$
+\item $\delta^{\fix}_i$: the daycount fraction in years for the fixed leg period $i$ from $t^{\fix}_{i-1}$ to $t^{\fix}_i$
+\item $\delta^{\flt}_i$: the daycount fraction in years for the floating leg period $i$ from $t^{\flt}_{i-1}$ to $t^{\flt}_i$
+\item $P(t)$: the discount factor for time $t$
+\end{itemize}
+
+Note that the forward rate $f(t_{i-1},t_i)$ above is derived from a forward curve $P^f(t)$ via
+$$
+f(t_{i-1},t_i)\,\delta(t_{i-1},t_i) = \frac{P^f(t_{i-1})}{P^f(t_i)} - 1
+$$
+where the forward curve $P^f(t)$ is generally different from the discount curve $P(t)$, see section
+\ref{sec:curves}.
+
