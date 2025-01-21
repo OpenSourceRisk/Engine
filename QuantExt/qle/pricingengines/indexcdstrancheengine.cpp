@@ -96,6 +96,7 @@ void IndexCdsTrancheEngine::calculate() const {
     std::vector<double> zeroRecoveryExpectedLoss;
     std::vector<double> accrualsDefault;
     // Value the premium and protection leg.
+    effectiveNotionals.push_back(inceptionTrancheNotional); // ensure at least one effective notional theree
     for (Size i = 0; i < arguments_.normalizedLeg.size(); i++) {
 
         // Zero expected loss on coupon end dates that have already occured.
