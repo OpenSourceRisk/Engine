@@ -532,6 +532,11 @@ std::set<std::size_t>
 GaussianCamCG::npvRegressors(const Date& obsdate,
                              const std::optional<std::set<std::string>>& relevantCurrencies) const {
 
+    std::optional<std::set<std::string>> effectiveRelevantCurrencies = relevantCurrencies;
+    if (effectiveRelevantCurrencies) {
+        effectiveRelevantCurrencies->insert(baseCcy());
+    }
+
     std::set<std::size_t> state;
 
     if (obsdate == referenceDate()) {
@@ -542,8 +547,9 @@ GaussianCamCG::npvRegressors(const Date& obsdate,
 
     if (conditionalExpectationUseAsset_ && !underlyingPaths_.empty()) {
         for (Size i = 0; i < indices_.size(); ++i) {
-            if (relevantCurrencies && indices_[i].isFx()) {
-                if (relevantCurrencies->find(indices_[i].fx()->sourceCurrency().code()) == relevantCurrencies->end())
+            if (effectiveRelevantCurrencies && indices_[i].isFx()) {
+                if (effectiveRelevantCurrencies->find(indices_[i].fx()->sourceCurrency().code()) ==
+                    effectiveRelevantCurrencies->end())
                     continue;
             }
             state.insert(underlyingPaths_.at(sd).at(i));
@@ -553,8 +559,10 @@ GaussianCamCG::npvRegressors(const Date& obsdate,
     // TODO we include zero vol ir states here, we could exclude them
     if (conditionalExpectationUseIr_) {
         for (Size ccy = 0; ccy < currencies_.size(); ++ccy) {
-            if (!relevantCurrencies || relevantCurrencies->find(currencies_[ccy]) != relevantCurrencies->end())
+            if (!effectiveRelevantCurrencies ||
+                effectiveRelevantCurrencies->find(currencies_[ccy]) != effectiveRelevantCurrencies->end()) {
                 state.insert(irStates_.at(sd)[ccy]);
+            }
         }
     }
 
