@@ -5,7 +5,7 @@
 	given the model defined below.
     -->
   <Parameters>
-    <Discretization>Exact</Discretization>
+    <Discretization>Euler</Discretization>
     <Grid>88,3M</Grid>
     <Calendar>EUR,USD,GBP,CHF</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>

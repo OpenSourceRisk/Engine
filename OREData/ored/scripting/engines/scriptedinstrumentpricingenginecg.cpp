@@ -106,7 +106,7 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
     const bool stickyCloseOutDateRun, const bool reevaluateExerciseInStickyCloseOutDateRun) const {
 
     // TODO: rename _AMC_NPV_i indices (i -> valuationDates.size() + i)
-    //       handle reevaluateExercise == false: (?!)
+    //       handle reevaluateExercise == false: (via sticky states)
     QL_REQUIRE(
         !stickyCloseOutDateRun,
         "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): stickyCloseOutDateRun is not yet supported.");
