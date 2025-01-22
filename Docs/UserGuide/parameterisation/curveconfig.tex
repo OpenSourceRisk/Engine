@@ -948,7 +948,13 @@ When the CDS volatility surface is configured as in Listing \ref{lst:cdsvol_surf
 
 \subsubsection{Base Correlations}
 
-Listing \ref{lst:basecorr_configuration} shows the configuration of a Base Correlation curve.
+Base correlations can be configured using either quoted base correlations directly or by implying them from quoted upfront quotes.
+When using quoted base correlations, the market quotes are directly used to construct the base correlation curve. 
+Alternatively, base correlations can be implied from upfront quotes of tranches, which involves a calibration process to
+derive the base correlation values that best fit the observed market prices of the tranches.
+
+
+Listing \ref{lst:basecorr_configuration} shows the configuration of a Base Correlation curve from quoted correlations.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -985,6 +991,55 @@ Allowable values: Any positive number less than one
 \item BusinessDayConvention: The term structure's business day convention used in tenor to date conversion
 \item Extrapolate: Boolean to indicate whether the correlation curve shall be extrapolated or not
 \end{itemize}
+
+Listing \ref{lst:basecorr_upfront_configuration} shows the configuration of a Base Correlation curve from upfront quotes.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<BaseCorrelation>
+  <CurveId>RED:2I666VDI3</CurveId>
+  <CurveDescription />
+  <Terms>*</Terms>
+  <DetachmentPoints>*</DetachmentPoints>
+  <SettlementDays>0</SettlementDays>
+  <Calendar>weekends only</Calendar>
+  <BusinessDayConvention>Following</BusinessDayConvention>
+  <DayCounter>Actual/365 (Fixed)</DayCounter>
+  <Extrapolate>true</Extrapolate>
+  <QuoteName>2I666VDI3</QuoteName>
+  <StartDate>2023-09-20</StartDate>
+  <Rule>CDS2015</Rule>
+  <AdjustForLosses>true</AdjustForLosses>
+  <QuoteType>TRANCHE_UPFRONT</QuoteType>
+  <IndexSpread>0.01</IndexSpread>
+  <Currency>EUR</Currency>
+</BaseCorrelation>
+\end{minted}
+\caption{Base Correlation Configuration from Upfront Quotes}
+\label{lst:basecorr_upfront_configuration}
+\end{longlisting}
+
+The meaning of each of the elements in Listing \ref{lst:basecorr_upfront_configuration} is given below.
+
+\begin{itemize}
+\item CurveId: Unique identifier of the base correlation structure.
+\item CurveDescription [Optional]: A description of the base correlation structure, may be left blank.
+\item Terms: Comma-separated list of tenors, sorted in increasing order, possibly a single term to represent a flat term structure in the time direction. A wildcard (*) can be used to include all terms.
+\item DetachmentPoints: Comma-separated list of equity tranche detachment points, sorted in increasing order. A wildcard (*) can be used to include all detachment points.
+\item SettlementDays: The floating term structure's settlement days argument used in the reference date calculation.
+\item Calendar: The term structure's calendar used in tenor to date conversions.
+\item BusinessDayConvention: The term structure's business day convention used in tenor to date conversion.
+\item DayCounter: The term structure's day counter used in date to time conversions.
+\item Extrapolate: Boolean to indicate whether the correlation curve shall be extrapolated or not.
+\item QuoteName: The name of the quote used for the base correlation.
+\item StartDate: The start date for the base correlation curve.
+\item Rule: The rule used for the base correlation curve, e.g., CDS2015.
+\item AdjustForLosses: Boolean to indicate whether to adjust for losses.
+\item QuoteType: The type of quote used for the base correlation, e.g., TRANCHE_UPFRONT.
+\item IndexSpread: The spread of the index.
+\item Currency: The currency of the base correlation curve.
+\end{itemize}
+
 
 \subsubsection{FXSpots}
 
