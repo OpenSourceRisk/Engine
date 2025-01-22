@@ -748,7 +748,7 @@ void XvaEngineCG::populateNpvOutputCube() {
                 /* ore convention: the close-out value in the output cube should be multiplied by the numeraire value at
                  * the associated valuation date */
                 npvOutputCube_->set(values_[getNode(i + 1, true)][j] * values_[asdNumeraire_[i]][j] * multiplier,
-                                    cubeTradeIdx->second, i, j);
+                                    cubeTradeIdx->second, i, j, 1);
             }
         }
         ++tradePos;
