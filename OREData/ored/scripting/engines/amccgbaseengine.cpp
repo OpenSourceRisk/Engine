@@ -695,11 +695,14 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 
             if (isExerciseDate) {
 
+                ++exerciseCounter; // early increment here to be able to set futureOptionValue below correctly!
+
                 // update was exercised based on exercise at the exercise time
 
                 isExercisedNow =
-                    cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), exerciseIndicator[exerciseCounter]);
-                wasExercised = cg_min(g, cg_add(g, wasExercised, exerciseIndicator[exerciseCounter]), cg_const(g, 1.0));
+                    cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), exerciseIndicator[exerciseCounter - 1]);
+                wasExercised =
+                    cg_min(g, cg_add(g, wasExercised, exerciseIndicator[exerciseCounter - 1]), cg_const(g, 1.0));
 
                 // if cash settled, determine the amount on exercise and until when it is to be included in exposure
 
@@ -707,11 +710,9 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                     auto reg = createRegressionModel(
                         pathValueUndExInto[counter], d, cashflowInfo,
                         [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0));
-                    cashSettlements[cashSettlementDates_[exerciseCounter]] =
-                        cg_mult(g, reg, isExercisedNow);
+                    cashSettlements[cashSettlementDates_[exerciseCounter - 1]] = cg_mult(g, reg, isExercisedNow);
                 }
 
-                ++exerciseCounter;
             }
 
             if (isSimDate) {
@@ -719,7 +720,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                 // there is no continuation value on the last exercise date
 
                 std::size_t futureOptionValue =
-                    exerciseCounter == exerciseDates.size() - 1 ? cg_const(g, 0.0) : pathValueOption[counter];
+                    exerciseCounter == exerciseDates.size() ? cg_const(g, 0.0) : pathValueOption[counter];
 
                 /* Physical Settlement:
 
