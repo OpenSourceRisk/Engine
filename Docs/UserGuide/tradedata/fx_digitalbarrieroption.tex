@@ -1,10 +1,33 @@
 \subsubsection{FX Digital Barrier Option}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+This product has a continuously monitored single barrier with an Cash-or-Nothing
+digital underlying option.
+
+At expiry a digital FX Barrier option pays either the payoff of a digital Cash-or-Nothing underlying option depending
+upon an FX spot rate reaching a pre-set barrier level.
+\begin{itemize}
+\item Can be of the same four main types as a regular Barrier FX Option: 
+Up-and-out, Down-and-out, Up-and-in, Down-and-in. 
+\item A Knock-In or One-Touch option pays the underlying option payoff if the barrier is
+breached, and no payout otherwise. 
+\item A Knock-Out or No-Touch option has no payout if the barrier is breached, 
+and pays the underlying option payoff otherwise.
+\item The buyer of a Digital FX Barrier Option pays a premium to the seller.
+\end{itemize}
+
+{\bf Input}}
+
+\else
+
+An FX Digital Barrier Option pays a given cash amount in domestic currency at expiry, if the underlying fx rate has hit (or not hit) a continuously monitored barrier (as for the FxTouchOption) and the fx rate at the expiry date is above (call) or below (put) a given strike.
+
+\fi
+
 The \lstinline!FxDigitalBarrierOptionData!  node is the trade data container for the \emph{FxDigitalBarrierOption} trade type.   The
 \lstinline!FxDigitalBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
 specific to the FX Digital Barrier Option. 
-
-An FX Digital Barrier Option pays a given cash amount in domestic currency at expiry, if the underlying fx rate has hit (or not hit) a continuously monitored barrier (as for the FxTouchOption) and the fx rate at the expiry date is above (call) or below (put) a given strike.
 
 The structure of an example \lstinline!FxDigitalBarrierOptionData! node for a FX Digital Barrier Option is shown in Listing
 \ref{lst:fxdigitalbarrieroption_data}.

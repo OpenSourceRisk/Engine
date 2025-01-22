@@ -1,0 +1,27 @@
+\subsubsection{Credit Linked Swap}
+
+A credit linked swap is priced using a discounted cashflow approach assuming independent interest and credit rates.
+
+Payments that are made independent of credit events for the reference CDS are priced just as in a vanilla interest rate
+swap, see \ref{pricing:ir_irs}.
+
+The NPV of payments that are only made if no credit event has occured until the payment date are weighted in addition
+with the survival probability for the payment date. If accruals are settled on the event date, it is assumed that
+defaults occur on the midpoint of the coupon period, i.e. that (on average) half of the accruals are paid and discounted
+from the midpoint of the coupon period. This is in analogy to premium payment pricing in CDS, see \ref{pricing:cr_cds}.
+
+Payments that are made in case of a credit event are priced in analogy to protection payments in CDS, see
+\ref{pricing:cr_cds}. The discretisation grid is given by the payment dates of the respective legs, refined by
+additional points to ensure a minimum number of grid points per year as specified in the pricing engine parameter
+\verb+TimeStepsPerYear+.
+
+The pricing engine provides the following additional results:
+
+\begin{itemize}
+\item npv\_independent: The NPV of the payments that are made independent of credit events.
+\item npv\_credit\_linked: The NPV of the payments that are made only if no credit event has occured until the payment date.
+\item npv\_credit\_linked\_accruals: The NPV of the accruals of the credit linked payments, if accruals are settled.
+\item npv\_default\_payments: The NPV of the payments triggered by a credit event, weighted by $(1-rr)$ where $rr$ is
+  the applicable recovery rate.
+\item npv\_recovery\_payments: The NPV of the payments triggered by a credit event, weighted by $rr$.
+\end{itemize}

@@ -1,0 +1,12 @@
+\subsubsection{Worst Of Basket Swap}
+\label{pricing::worstofbasketswap}
+
+A Worst Of Basket Swap is priced in a Hull White model calibrated to ATM coterminal swaptions.
+The valuation is done using a Monte Carlo simulation.
+
+The final equity amount is determined by the strike price of the worst-performing asset at the final
+valuation date, taking FX conversions into the payoff currency into account.
+
+See \ref{pricing::scriptedtrade_mc} for more details, the relevant product classification is MultiUnderlyingIrOption if
+the basket consists only of InterestRate underlyings. Otherwise (if the basket consists of Equity, FX or Commodity) the
+product classification is IrHybrid.
