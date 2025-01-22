@@ -107,7 +107,7 @@ public:
 
     // we can build configurations here (today's market params, scenario sim market params, sensitivity scenasrio data)
     virtual void buildConfigurations(const bool = false){};
-    virtual void setUpConfigurations();
+    void initialise();
     
     virtual void buildMarket(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const bool marketRequired = true);
@@ -203,6 +203,10 @@ public:
         const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes = {}) = 0;
     
+    void initialise();
+    const bool initialised() { return initialised_; };
+    virtual void buildDependencies(){};
+    virtual void buildConfigurations(){};
     virtual void setUpConfigurations(){};
 
     //! build an engine factory
@@ -245,6 +249,7 @@ protected:
 private:
     Analytic* analytic_;
     bool generateAdditionalResults_ = false;
+    bool initialised_ = false;
 };
 
 /*! Market analytics

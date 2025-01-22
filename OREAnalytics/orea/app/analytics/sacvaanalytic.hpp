@@ -35,15 +35,10 @@ public:
     static constexpr const char* sensiLookupKey = "SENSI";
 
     SaCvaAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs) : Analytic::Impl(inputs) {
-        setLabel(LABEL);
-
-        auto sensiAnalytic =
-            AnalyticFactory::instance().build("XVA_SENSITIVITY", inputs_, analytic()->analyticsManager(), true);
-        if (sensiAnalytic.second)
-            addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
-    }
+        setLabel(LABEL);}
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
+    void buildDependencies() override;
     void setUpConfigurations() override;
 };
 

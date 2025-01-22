@@ -61,7 +61,9 @@ public:
     virtual QuantLib::ext::shared_ptr<Analytic> build(
         const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs,
         const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager) const override {
-        return QuantLib::ext::make_shared<T>(inputs, analyticsManager);
+        auto a = QuantLib::ext::make_shared<T>(inputs, analyticsManager);
+        a->initialise();
+        return a;
     }
 };
 

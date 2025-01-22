@@ -428,10 +428,9 @@ ParSensiResults XvaSensitivityAnalyticImpl::parConversion(ZeroSensiResults& zero
 
     // Store the par sensi stream in the base anlytics class in case we want to post process later (e.g. for SACVA)
     auto nettingSetCube = results.nettingParSensiCube_[XvaResults::Adjustment::CVA];
-    analytic()->parCvaSensiCubeStream() =
-        QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingSetCube, inputs_->baseCurrency());
+    setParCvaSensiCubeStream(QuantLib::ext::make_shared<ParSensitivityCubeStream>(nettingSetCube, inputs_->baseCurrency()));
 
-    QL_REQUIRE(analytic()->parCvaSensiCubeStream(), "xva sensitivity analytic failed to populate a parCvaSensiCubeStream");
+    QL_REQUIRE(parCvaSensiCubeStream(), "xva sensitivity analytic failed to populate a parCvaSensiCubeStream");
 
     return results;
 }

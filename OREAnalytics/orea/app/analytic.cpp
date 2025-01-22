@@ -78,22 +78,32 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
         impl_->setAnalytic(this);
         impl_->setGenerateAdditionalResults(inputs_->outputAdditionalResults());
     }
-
-    setUpConfigurations();
 }
 
 void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                            const std::set<std::string>& runTypes) {
     MEM_LOG_USING_LEVEL(ORE_WARNING, "Starting " << label() << " Analytic::runAnalytic()");
     if (impl_) {
+        if (!impl_->initialised())
+            QL_FAIL("Analytic " + label() + " is not initialed.");
         impl_->runAnalytic(loader, runTypes);
         MEM_LOG_USING_LEVEL(ORE_WARNING, "Finishing " << label() << " Analytic::runAnalytic()")
     }
 }
 
-void Analytic::setUpConfigurations() {
-    if (impl_)
-        impl_->setUpConfigurations();
+void Analytic::initialise() {
+    if (impl())
+        impl()->initialise();
+}
+
+void Analytic::Impl::initialise() {
+    if (!initialised_) {
+        buildDependencies();
+        setUpConfigurations();
+        for (const auto& [_, a] : dependentAnalytics_)
+            a->initialise();
+        initialised_ = true;
+    }
 }
 
 std::vector<QuantLib::ext::shared_ptr<Analytic>> Analytic::Impl::allDependentAnalytics() const {
