@@ -71,14 +71,14 @@ ScriptedInstrumentPricingEngineCG::~ScriptedInstrumentPricingEngineCG() {
 
 ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     const std::string& npv, const std::vector<std::pair<std::string, std::string>>& additionalResults,
-    const QuantLib::ext::shared_ptr<ModelCG>& model, const ASTNodePtr ast,
-    const QuantLib::ext::shared_ptr<Context>& context, const Model::McParams& mcParams,
+    const QuantLib::ext::shared_ptr<ModelCG>& model, const std::set<std::string>& minimalModelCcys,
+    const ASTNodePtr ast, const QuantLib::ext::shared_ptr<Context>& context, const Model::McParams& mcParams,
     const double indicatorSmoothingForValues, const double indicatorSmoothingForDerivatives, const std::string& script,
     const bool interactive, const bool generateAdditionalResults, const bool includePastCashflows,
     const bool useCachedSensis, const bool useExternalComputeFramework,
     const bool useDoublePrecisionForExternalCalculation)
-    : npv_(npv), additionalResults_(additionalResults), model_(model), ast_(ast), context_(context),
-      mcParams_(mcParams), indicatorSmoothingForValues_(indicatorSmoothingForValues),
+    : npv_(npv), additionalResults_(additionalResults), model_(model), minimalModelCcys_(minimalModelCcys), ast_(ast),
+      context_(context), mcParams_(mcParams), indicatorSmoothingForValues_(indicatorSmoothingForValues),
       indicatorSmoothingForDerivatives_(indicatorSmoothingForDerivatives), script_(script), interactive_(interactive),
       generateAdditionalResults_(generateAdditionalResults), includePastCashflows_(includePastCashflows),
       useCachedSensis_(useCachedSensis), useExternalComputeFramework_(useExternalComputeFramework),
@@ -102,9 +102,18 @@ ScriptedInstrumentPricingEngineCG::ScriptedInstrumentPricingEngineCG(
     }
 }
 
-void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
+void ScriptedInstrumentPricingEngineCG::buildComputationGraph(
+    const bool stickyCloseOutDateRun, const bool reevaluateExerciseInStickyCloseOutDateRun) const {
 
-    if (cgVersion_ != model_->cgVersion()) {
+    // TODO: rename _AMC_NPV_i indices (i -> valuationDates.size() + i)
+    //       handle reevaluateExercise == false: (via sticky states)
+    QL_REQUIRE(
+        !stickyCloseOutDateRun,
+        "ScriptedInstrumentPricingEngineCG::buildComputationGraph(): stickyCloseOutDateRun is not yet supported.");
+
+    if (cgVersion_ != model_->cgVersion() || (stickyCloseOutDateRun && !cgForStickyCloseOutDateRunIsBuilt_)) {
+
+        cgForStickyCloseOutDateRunIsBuilt_ = stickyCloseOutDateRun;
 
         auto g = model_->computationGraph();
 
@@ -149,7 +158,8 @@ void ScriptedInstrumentPricingEngineCG::buildComputationGraph() const {
 
         // build graph
 
-        ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_);
+        ComputationGraphBuilder cgBuilder(*g, getRandomVariableOpLabels(), ast_, workingContext_, model_,
+                                          minimalModelCcys_);
         cgBuilder.run(generateAdditionalResults_, includePastCashflows_, script_, interactive_);
         cgVersion_ = model_->cgVersion();
         DLOG("Built computation graph version " << cgVersion_ << " size is " << g->size());
@@ -177,7 +187,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
     lastCalculationWasValid_ = false;
 
-    buildComputationGraph();
+    buildComputationGraph(false, false);
 
     if (!haveBaseValues_ || !useCachedSensis_) {
 

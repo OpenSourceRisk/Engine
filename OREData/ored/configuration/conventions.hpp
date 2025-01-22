@@ -165,7 +165,7 @@ class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions, 
     friend class QuantLib::Singleton<InstrumentConventions, std::integral_constant<bool, true>>;
 
 private:
-    InstrumentConventions() { conventions_[Date()] = QuantLib::ext::make_shared<ore::data::Conventions>(); }
+    InstrumentConventions() { clear(); }
 
     mutable std::map<QuantLib::Date, QuantLib::ext::shared_ptr<ore::data::Conventions>> conventions_;
     mutable boost::shared_mutex mutex_;
@@ -175,7 +175,7 @@ public:
     const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions(QuantLib::Date d = QuantLib::Date()) const;
     void setConventions(const QuantLib::ext::shared_ptr<ore::data::Conventions>& conventions,
                         QuantLib::Date d = QuantLib::Date());
-    void clear() { conventions_.clear(); }
+    void clear() { conventions_[Date()] = QuantLib::ext::make_shared<ore::data::Conventions>(); }
 };
 
 //! Container for storing Zero Rate conventions

@@ -23,6 +23,7 @@
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/scripting/engines/amccgfxoptionengine.hpp>
 
 #include <qle/models/projectedcrossassetmodel.hpp>
 #include <qle/pricingengines/mccamfxoptionengine.hpp>
@@ -97,6 +98,47 @@ CamAmcFxEuropeanCSOptionEngineBuilder::engineImpl(const string& assetName, const
                                                   const AssetClass& assetClassUnderlying, const Date& expiryDate,
                                                   const bool useFxSpot) {
     return engineImplBase<McCamFxEuropeanCSOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate,
+                                                         useFxSpot);
+}
+
+template <typename E>
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgFxOptionEngineBuilderBase::engineImplBase(const string& assetName, const Currency& domCcy,
+                                               const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                               const bool useFxSpot) {
+
+    QL_REQUIRE(assetClassUnderlying == AssetClass::FX, "FX Option required");
+    Currency forCcy = parseCurrency(assetName);
+
+    std::string ccysStr = forCcy.code() + "_" + domCcy.code();
+
+    DLOG("Building AMC FX option engine for ccys " << ccysStr << " (from externally given CAM)");
+
+    QL_REQUIRE(domCcy != forCcy, "AmcCgFxOptionEngineBuilder: domCcy = forCcy = " << domCcy.code());
+
+    return QuantLib::ext::make_shared<E>(domCcy.code(), forCcy.code(), modelCg_, simulationDates_);
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgFxEuropeanOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy,
+                                               const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                               const bool useFxSpot) {
+    return engineImplBase<AmcCgFxOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate, useFxSpot);
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgFxEuropeanForwardOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy,
+                                                      const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                      const bool useFxSpot) {
+    return engineImplBase<AmcCgFxEuropeanForwardOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate,
+                                                              useFxSpot);
+}
+
+QuantLib::ext::shared_ptr<PricingEngine>
+AmcCgFxEuropeanCSOptionEngineBuilder::engineImpl(const string& assetName, const Currency& domCcy,
+                                                 const AssetClass& assetClassUnderlying, const Date& expiryDate,
+                                                 const bool useFxSpot) {
+    return engineImplBase<AmcCgFxEuropeanCSOptionEngine>(assetName, domCcy, assetClassUnderlying, expiryDate,
                                                          useFxSpot);
 }
 

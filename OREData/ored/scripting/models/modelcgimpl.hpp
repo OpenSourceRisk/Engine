@@ -125,6 +125,9 @@ protected:
     // convenience function to add model parameters
     std::size_t addModelParameter(const std::string& id, std::function<double(void)> f) const;
 
+    // dump model parameters to console, mostly for debugging purposes
+    void dumpModelParameters() const;
+
     // manages cg version and triggers recalculations of random variate / model parameter nodes
     void performCalculations() const override;
 
