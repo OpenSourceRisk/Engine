@@ -1211,7 +1211,7 @@ void OpenClContext::finalizeCalculation(std::vector<double*>& output) {
 
                     ce = conditionalExpectation(regressand, vec2vecptr(regressor),
                                                 multiPathBasisSystem(regressor.size(), settings_.regressionOrder,
-                                                                     QuantLib::LsmBasisSystem::Monomial,
+                                                                     QuantLib::LsmBasisSystem::Monomial, {},
                                                                      regressand.size()),
                                                 filter);
                 }

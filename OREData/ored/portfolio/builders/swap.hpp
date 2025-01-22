@@ -30,7 +30,6 @@
 
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
@@ -77,29 +76,6 @@ protected:
             yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
                 yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
         return QuantLib::ext::make_shared<QuantLib::DiscountingSwapEngine>(yts);
-    }
-};
-
-//! Engine Builder for Single Currency Swaps
-/*! This builder uses QuantExt::DiscountingSwapEngineMultiCurve
-    \ingroup builders
-*/
-class SwapEngineBuilderOptimised : public SwapEngineBuilderBase {
-public:
-    SwapEngineBuilderOptimised() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngineOptimised") {}
-
-protected:
-    virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
-                                                                const std::string& securitySpread,
-                                                                const std::set<std::string>& eqNames) override {
-
-        Handle<YieldTermStructure> yts =
-            discountCurve.empty() ? market_->discountCurve(ccy.code(), configuration(MarketContext::pricing))
-                                  : indexOrYieldCurve(market_, discountCurve, configuration(MarketContext::pricing));
-        if (!securitySpread.empty())
-            yts = Handle<YieldTermStructure>(QuantLib::ext::make_shared<ZeroSpreadedTermStructure>(
-                yts, market_->securitySpread(securitySpread, configuration(MarketContext::pricing))));
-        return QuantLib::ext::make_shared<QuantExt::DiscountingSwapEngineMultiCurve>(yts);
     }
 };
 
@@ -189,9 +165,8 @@ private:
 class AmcCgSwapEngineBuilder : public SwapEngineBuilderBase {
 public:
     AmcCgSwapEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
-                           const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
-        : SwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates),
-          stickyCloseOutDates_(stickyCloseOutDates) {}
+                           const std::vector<Date>& simulationDates)
+        : SwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates) {}
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
@@ -201,7 +176,6 @@ protected:
 private:
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
-    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data

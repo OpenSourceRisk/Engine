@@ -48,9 +48,9 @@ public:
 
     //! constructor that builds an AMCCG pricing engine
     ScriptedTradeEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& amcCgModel,
-                               const std::vector<Date>& amcSimDates, const std::vector<Date>& amcStickyCloseOutDates)
+                               const std::vector<Date>& amcSimDates)
         : EngineBuilder("Generic", "Generic", {"ScriptedTrade"}), buildingAmc_(true), amcCgModel_(amcCgModel),
-          amcSimDates_(amcSimDates), amcStickyCloseOutDates_(amcStickyCloseOutDates) {}
+          amcSimDates_(amcSimDates) {}
 
     QuantLib::ext::shared_ptr<QuantExt::ScriptedInstrument::engine>
     engine(const std::string& id, const ScriptedTrade& scriptedTrade,
