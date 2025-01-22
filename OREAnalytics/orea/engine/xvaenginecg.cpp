@@ -641,7 +641,7 @@ void XvaEngineCG::buildAsdNodes() {
         asdNumeraire_.push_back(model_->numeraire(date));
 
         // see above, we have set the numeraire node now, the rest is needed for asd only
-        if(asd_ == nullptr)
+        if (asd_ == nullptr)
             continue;
 
         // fx spots
@@ -740,7 +740,7 @@ void XvaEngineCG::populateNpvOutputCube() {
         npvOutputCube_->setT0(values_[getNode(0, false)][0] * multiplier, cubeTradeIdx->second);
         for (Size i = 0; i < valuationDates_.size(); ++i) {
             for (Size j = 0; j < npvOutputCube_->samples(); ++j) {
-                npvOutputCube_->set(values_[getNode(i + 1,false)][j] * multiplier, cubeTradeIdx->second, i, j);
+                npvOutputCube_->set(values_[getNode(i + 1, false)][j] * multiplier, cubeTradeIdx->second, i, j);
             }
         }
         for (Size i = 0; i < closeOutDates_.size(); ++i) {
