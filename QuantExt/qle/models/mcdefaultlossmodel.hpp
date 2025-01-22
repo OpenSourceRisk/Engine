@@ -68,7 +68,6 @@ public:
     }
 
     void update() override {
-        resetModel();
         notifyObservers();
     }
 
@@ -92,17 +91,6 @@ protected:
         for (size_t i = 0; i < pds.size(); ++i) {
             TLOG(i << "," << names[i] << "," << io::iso_date(d) << "," << pds[i] << "," << notionals[i] << ","
                    << recoveryRates_[i][0] << "," << recoveryRates_[i][1] << "," << recoveryRates_[i][2]);
-        }
-        if (recoveryRate != Null<Real>()){
-            auto it = expectedTrancheLossZeroRecovery_.find(d);
-            if (it != expectedTrancheLossZeroRecovery_.end()) {
-                return it->second;
-            }
-        }
-
-        auto it = expectedTrancheLoss_.find(d);
-        if (it != expectedTrancheLoss_.end()) {
-            return it->second;
         }
         InverseCumulativeRng<MersenneTwisterUniformRng, InverseCumulativeNormal> normal(MersenneTwisterUniformRng(123));
 
@@ -177,8 +165,6 @@ protected:
         }
         TLOG("Expected Tranche Loss = " << trancheLoss / n);
         TLOG("Expected Index Loss " << expectedLossIndex / n);
-        expectedTrancheLoss_[d] = trancheLoss / n;
-        expectedTrancheLossZeroRecovery_[d] = zeroTrancheLoss / n;
         if (recoveryRate != Null<Real>()) {
             return zeroTrancheLoss / n;
 
@@ -192,15 +178,11 @@ protected:
     //! Concrete models do now any updates/inits they need on basket reset
 private:
     void resetModel() override {
-        expectedTrancheLoss_.clear();
-        expectedTrancheLossZeroRecovery_.clear();
     };
     Handle<Quote> baseCorrelation_;
     std::vector<std::vector<double>> recoveryRates_;
     std::vector<double> recoveryProbabilities_;
     std::vector<double> cumRecoveryProbabilities_;
-    mutable std::map<QuantLib::Date, double> expectedTrancheLoss_;
-    mutable std::map<QuantLib::Date, double> expectedTrancheLossZeroRecovery_;
     size_t nSamples_;
 };
 
