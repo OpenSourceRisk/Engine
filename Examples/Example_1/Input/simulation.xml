@@ -17,7 +17,7 @@
       <Samples>1000</Samples>
       <Ordering>Steps</Ordering>
       <DirectionIntegers>JoeKuoD7</DirectionIntegers>
-
+      <DayCounter>A365F</DayCounter>
     </Parameters>
 
     <!--
@@ -64,7 +64,7 @@
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
-          <ShiftHorizon>0.0</ShiftHorizon>
+          <ShiftHorizon>10.0</ShiftHorizon>
           <Scaling>1.0</Scaling>
         </ParameterTransformation>
       </LGM>
@@ -90,7 +90,7 @@
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
-          <ShiftHorizon>0.0</ShiftHorizon>
+          <ShiftHorizon>10.0</ShiftHorizon>
           <Scaling>1.0</Scaling>
         </ParameterTransformation>
       </LGM>
