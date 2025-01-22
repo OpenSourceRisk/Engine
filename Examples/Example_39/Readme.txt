@@ -16,7 +16,7 @@
 
 4) Analytics
 
-   EPE and ENE computed with AMC valuation engine
+   EPE and ENE computed with AMC valuation engine and AMC-CG engine (cube generation only)
 
 5) Run Example
 
