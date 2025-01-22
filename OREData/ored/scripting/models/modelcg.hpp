@@ -31,6 +31,7 @@
 #include <ql/time/daycounters/actualactual.hpp>
 
 #include <boost/any.hpp>
+#include <optional>
 
 namespace QuantExt {
 class ComputationGraph;
