@@ -669,10 +669,11 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
 
         // train coefficients
 
-        coeff = regressionCoefficients(amount, state,
-                                       multiPathBasisSystem(state.size(), mcParams_.regressionOrder,
-                                                            mcParams_.polynomType, std::min(size(), trainingSamples())),
-                                       filter, RandomVariableRegressionMethod::QR);
+        coeff =
+            regressionCoefficients(amount, state,
+                                   multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
+                                                        {}, std::min(size(), trainingSamples())),
+                                   filter, RandomVariableRegressionMethod::QR);
         DLOG("GaussianCam::npv(" << ore::data::to_string(obsdate) << "): regression coefficients are " << coeff
                                  << " (got model state size " << nModelStates << " and " << nAddReg
                                  << " additional regressors, coordinate transform " << coordinateTransform.columns()
@@ -698,7 +699,7 @@ RandomVariable GaussianCam::npv(const RandomVariable& amount, const Date& obsdat
 
     return conditionalExpectation(state,
                                   multiPathBasisSystem(state.size(), mcParams_.regressionOrder, mcParams_.polynomType,
-                                                       std::min(size(), trainingSamples())),
+                                                       {}, std::min(size(), trainingSamples())),
                                   coeff);
 }
 

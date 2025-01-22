@@ -16,31 +16,29 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file amccgswapengine.hpp
-    \brief AMC CG swap engine
-    \ingroup engines
-*/
+#include <ored/scripting/engines/amccgcurrencyswapengine.hpp>
 
-#include <ored/scripting/engines/amccgswapengine.hpp>
-
-#include <ql/exercise.hpp>
+#include <qle/instruments/currencyswap.hpp>
 
 namespace ore {
 namespace data {
 
-void AmcCgSwapEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
-                                            const bool reevaluateExerciseInStickyCloseOutDateRun) const {
+void AmcCgCurrencySwapEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
+                                                    const bool reevaluateExerciseInStickyCloseOutDateRun) const {
     AmcCgBaseEngine::buildComputationGraph(stickyCloseOutDateRun, reevaluateExerciseInStickyCloseOutDateRun);
 }
 
-void AmcCgSwapEngine::calculate() const {
+void AmcCgCurrencySwapEngine::calculate() const {
     leg_ = arguments_.legs;
-    currency_ = std::vector<std::string>(leg_.size(), ccy_);
+    currency_.clear();
+    std::transform(arguments_.currency.begin(), arguments_.currency.end(), std::back_inserter(currency_),
+                   [](const QuantLib::Currency& c) { return c.code(); });
     payer_.resize(arguments_.payer.size());
     for (Size i = 0; i < arguments_.payer.size(); ++i) {
         payer_[i] = QuantLib::close_enough(arguments_.payer[i], -1.0);
     }
     exercise_ = nullptr;
+
     AmcCgBaseEngine::calculate();
 }
 

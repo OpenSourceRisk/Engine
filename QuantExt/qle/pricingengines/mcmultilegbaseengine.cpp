@@ -1238,11 +1238,16 @@ void McMultiLegBaseEngine::calculateModels(
         }
 
         if (isXvaTime) {
+
             regModelUndDirty[counter] = RegressionModel(
                 *t, cashflowInfo, [&cfStatus](std::size_t i) { return cfStatus[i] != CfStatus::open; }, **model_,
                 regressorModel_, regressionVarianceCutoff_);
-            regModelUndDirty[counter].train(polynomOrder_, polynomType_, pathValueUndDirty, pathValuesRef,
-                                            simulationTimes);
+            regModelUndDirty[counter].train(
+                polynomOrder_, polynomType_,
+                useOverwritePathValueUndDirty()
+                    ? overwritePathValueUndDirty(*t, pathValueUndDirty, exerciseXvaTimes, pathValues)
+                    : pathValueUndDirty,
+                pathValuesRef, simulationTimes);
         }
 
         if (exercise_ != nullptr) {
@@ -1661,7 +1666,6 @@ std::vector<QuantExt::RandomVariable> McMultiLegBaseEngine::MultiLegBaseAmcCalcu
     Size exerciseCounter = 0;
 
     Filter wasExercised(samples, false);
-    RandomVariable cashExerciseValue(samples, 0.0);
     std::map<Real, RandomVariable> cashSettlements;
 
     for (auto t : exerciseXvaTimes_) {
@@ -1855,7 +1859,7 @@ void McMultiLegBaseEngine::RegressionModel::train(const Size polynomOrder,
         basisType_ = polynomType;
         basisSystemSizeBound_ = Null<Size>();
 
-        basisFns_ = multiPathBasisSystem(regressor.size(), polynomOrder, polynomType, Null<Size>());
+        basisFns_ = multiPathBasisSystem(regressor.size(), polynomOrder, polynomType, {}, Null<Size>());
 
         // compute the regression coefficients
 
@@ -1990,7 +1994,7 @@ template <class Archive> void McMultiLegBaseEngine::RegressionModel::serialize(A
     // if deserialising, recreate the basisFns_ by passing the individual parameters to the function
     if (Archive::is_loading::value) {
         if (basisDim_ > 0)
-            basisFns_ = multiPathBasisSystem(basisDim_, basisOrder_, basisType_, basisSystemSizeBound_);
+            basisFns_ = multiPathBasisSystem(basisDim_, basisOrder_, basisType_, {}, basisSystemSizeBound_);
     }
 }
 

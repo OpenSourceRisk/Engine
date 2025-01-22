@@ -45,6 +45,7 @@
 #include <ql/exercise.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/indexes/swapindex.hpp>
+#include <ql/rebatedexercise.hpp>
 
 namespace ore {
 namespace data {
@@ -53,17 +54,13 @@ using namespace QuantLib;
 using namespace QuantExt;
 
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
-                                 const std::vector<QuantLib::Date>& simulationDates,
-                                 const std::vector<QuantLib::Date>& stickyCloseOutDates,
-                                 const bool recalibrateOnStickyCloseOutDates, const bool reevaluateExerciseInStickyRun)
-    : modelCg_(modelCg), simulationDates_(simulationDates), stickyCloseOutDates_(stickyCloseOutDates),
-      recalibrateOnStickyCloseOutDates_(recalibrateOnStickyCloseOutDates),
-      reevaluateExerciseInStickyRun_(reevaluateExerciseInStickyRun) {
+                                 const std::vector<QuantLib::Date>& simulationDates)
+    : modelCg_(modelCg), simulationDates_(simulationDates) {
 
     // determine name of npv node, we can use anything that is not yet taken
 
     npvName_ = "__AMCCG_NPV_";
-    std::size_t counter = 0;
+    std::size_t counter = (std::size_t)this;
     while (modelCg_->computationGraph()->variables().find(npvName_ + std::to_string(counter)) !=
            modelCg_->computationGraph()->variables().end())
         ++counter;
@@ -87,21 +84,17 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 
     info.legNo = legNo;
     info.cfNo = cfNo;
-    info.payTime = time(flow->date());
+    info.payDate = flow->date();
     info.payCcy = payCcy;
     info.payer = payer;
 
     Real payMult = payer ? -1.0 : 1.0;
 
-    if (auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow)) {
-        QL_REQUIRE(cpn->accrualStartDate() < flow->date(),
-                   "AmcCgBaseEngine::createCashflowInfo(): coupon leg "
-                       << legNo << " cashflow " << cfNo << " has accrual start date (" << cpn->accrualStartDate()
-                       << ") >= pay date (" << flow->date()
-                       << "), which breaks an assumption in the engine. This situation is unexpected.");
-        info.exIntoCriterionTime = time(cpn->accrualStartDate()) + tinyTime;
+    auto cpn = QuantLib::ext::dynamic_pointer_cast<Coupon>(flow);
+    if (cpn && cpn->accrualStartDate() < flow->date()) {
+        info.exIntoCriterionDate = cpn->accrualStartDate() + 1;
     } else {
-        info.exIntoCriterionTime = info.payTime;
+        info.exIntoCriterionDate = info.payDate + (exerciseIntoIncludeSameDayFlows_ ? 1 : 0);
     }
 
     // handle SimpleCashflow
@@ -117,6 +110,8 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         info.flowNode = modelCg_->pay(
             cg_mult(g, cg_const(g, fxl->foreignAmount()), modelCg_->eval(fxIndex, fxLinkedFixingDate, Null<Date>())),
             flow->date(), flow->date(), payCcy);
+        info.addCcys.insert(fxl->fxIndex()->sourceCurrency().code());
+        info.addCcys.insert(fxl->fxIndex()->targetCurrency().code());
         return info;
     }
 
@@ -134,6 +129,8 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
             fxLinkedFixingDate = indexCpn->fixingDate();
             fxLinkedIndex = IndexNameTranslator::instance().oreName(fxIndex->name());
             flow = indexCpn->underlying();
+            info.addCcys.insert(fxIndex->sourceCurrency().code());
+            info.addCcys.insert(fxIndex->targetCurrency().code());
         }
     } else if (auto fxl = QuantLib::ext::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(flow)) {
         isFxLinked = true;
@@ -141,6 +138,8 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         fxLinkedIndex = IndexNameTranslator::instance().oreName(fxl->fxIndex()->name());
         flow = fxl->underlying();
         fxLinkedForeignNominal = fxl->foreignAmount();
+        info.addCcys.insert(fxl->fxIndex()->sourceCurrency().code());
+        info.addCcys.insert(fxl->fxIndex()->targetCurrency().code());
     }
 
     std::size_t fxLinkedNode = ComputationGraph::nan;
@@ -174,6 +173,8 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         std::string indexName = IndexNameTranslator::instance().oreName(ibor->index()->name());
         std::size_t fixing = modelCg_->eval(indexName, ibor->fixingDate(), Null<Date>());
 
+        info.addCcys.insert(ibor->index()->currency().code());
+
         std::size_t effectiveRate;
         if (isCapFloored) {
             std::size_t swapletRate = ComputationGraph::nan;
@@ -204,12 +205,12 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
             effectiveRate = cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), fixing), cg_const(g, ibor->spread()));
         }
 
-        info.flowNode = modelCg_->pay(
-            cg_mult(
-                g,
-                cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) * ibor->accrualPeriod()),
-                cg_add(g, cg_mult(g, cg_const(g, ibor->gearing()), effectiveRate), cg_const(g, ibor->spread()))),
-            flow->date(), flow->date(), payCcy);
+        info.flowNode =
+            modelCg_->pay(cg_mult(g,
+                                  cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : ibor->nominal()) *
+                                                  ibor->accrualPeriod()),
+                                  effectiveRate),
+                          flow->date(), flow->date(), payCcy);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
         }
@@ -219,6 +220,8 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     if (auto cms = QuantLib::ext::dynamic_pointer_cast<CmsCoupon>(flow)) {
         std::string indexName = IndexNameTranslator::instance().oreName(cms->index()->name());
         std::size_t fixing = modelCg_->eval(indexName, cms->fixingDate(), Null<Date>());
+
+        info.addCcys.insert(cms->index()->currency().code());
 
         std::size_t effectiveRate;
         if (isCapFloored) {
@@ -253,7 +256,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         info.flowNode = modelCg_->pay(
             cg_mult(
                 g, cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : cms->nominal()) * cms->accrualPeriod()),
-                cg_add(g, cg_mult(g, cg_const(g, cms->gearing()), effectiveRate), cg_const(g, cms->spread()))),
+                effectiveRate),
             flow->date(), flow->date(), payCcy);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
@@ -263,6 +266,9 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 
     if (auto on = QuantLib::ext::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(flow)) {
         std::string indexName = IndexNameTranslator::instance().oreName(on->index()->name());
+
+        info.addCcys.insert(on->index()->currency().code());
+
         QL_REQUIRE(on->lookback().units() == QuantLib::Days,
                    "AmcCgBaseEngine::createCashflowInfo(): on coupon has lookback with units != Days ("
                        << on->lookback() << "), this is not allowed.");
@@ -284,6 +290,9 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     if (auto cfon = QuantLib::ext::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(flow)) {
         auto on = cfon->underlying();
         std::string indexName = IndexNameTranslator::instance().oreName(on->index()->name());
+
+        info.addCcys.insert(on->index()->currency().code());
+
         QL_REQUIRE(on->lookback().units() == QuantLib::Days,
                    "AmcCgBaseEngine::createCashflowInfo(): cfon coupon has lookback with units != Days ("
                        << on->lookback() << "), this is not allowed.");
@@ -304,6 +313,9 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 
     if (auto av = QuantLib::ext::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(flow)) {
         std::string indexName = IndexNameTranslator::instance().oreName(av->index()->name());
+
+        info.addCcys.insert(av->index()->currency().code());
+
         QL_REQUIRE(av->lookback().units() == QuantLib::Days,
                    "AmcCgBaseEngine::createCashflowInfo(): av coupon has lookback with units != Days ("
                        << av->lookback() << "), this is not allowed.");
@@ -325,6 +337,9 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     if (auto cfav = QuantLib::ext::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(flow)) {
         auto av = cfav->underlying();
         std::string indexName = IndexNameTranslator::instance().oreName(av->index()->name());
+
+        info.addCcys.insert(av->index()->currency().code());
+
         QL_REQUIRE(av->lookback().units() == QuantLib::Days,
                    "AmcCgBaseEngine::createCashflowInfo(): cfon coupon has lookback with units != Days ("
                        << av->lookback() << "), this is not allowed.");
@@ -345,13 +360,16 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 
     if (auto bma = QuantLib::ext::dynamic_pointer_cast<AverageBMACoupon>(flow)) {
         std::string indexName = IndexNameTranslator::instance().oreName(bma->index()->name());
+
+        info.addCcys.insert(bma->index()->currency().code());
+
         std::size_t fixing = modelCg_->eval(indexName, bma->fixingDates().front(), Null<Date>());
         std::size_t effectiveRate =
             cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), fixing), cg_const(g, bma->spread()));
         info.flowNode = modelCg_->pay(
             cg_mult(
                 g, cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : bma->nominal()) * bma->accrualPeriod()),
-                cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), effectiveRate), cg_const(g, bma->spread()))),
+                effectiveRate),
             flow->date(), flow->date(), payCcy);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
@@ -363,6 +381,8 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         auto bma = cfbma->underlying();
         std::string indexName = IndexNameTranslator::instance().oreName(bma->index()->name());
         std::size_t fixing = modelCg_->eval(indexName, bma->fixingDates().front(), Null<Date>());
+
+        info.addCcys.insert(bma->index()->currency().code());
 
         effFloor = cfbma->effectiveFloor();
         effCap = cfbma->effectiveFloor();
@@ -397,7 +417,7 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
         info.flowNode = modelCg_->pay(
             cg_mult(
                 g, cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : bma->nominal()) * bma->accrualPeriod()),
-                cg_add(g, cg_mult(g, cg_const(g, bma->gearing()), effectiveRate), cg_const(g, bma->spread()))),
+                effectiveRate),
             flow->date(), flow->date(), payCcy);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
@@ -407,13 +427,16 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
 
     if (auto sub = QuantLib::ext::dynamic_pointer_cast<SubPeriodsCoupon1>(flow)) {
         std::string indexName = IndexNameTranslator::instance().oreName(sub->index()->name());
+
+        info.addCcys.insert(sub->index()->currency().code());
+
         std::size_t fixing = modelCg_->eval(indexName, sub->fixingDates().front(), Null<Date>());
         std::size_t effectiveRate =
             cg_add(g, cg_mult(g, cg_const(g, sub->gearing()), fixing), cg_const(g, sub->spread()));
         info.flowNode = modelCg_->pay(
             cg_mult(
                 g, cg_const(g, payMult * (isFxLinked ? fxLinkedForeignNominal : sub->nominal()) * sub->accrualPeriod()),
-                cg_add(g, cg_mult(g, cg_const(g, sub->gearing()), effectiveRate), cg_const(g, sub->spread()))),
+                effectiveRate),
             flow->date(), flow->date(), payCcy);
         if (isFxLinked || isFxIndexed) {
             info.flowNode = cg_mult(g, info.flowNode, fxLinkedNode);
@@ -424,7 +447,17 @@ AmcCgBaseEngine::CashflowInfo AmcCgBaseEngine::createCashflowInfo(QuantLib::ext:
     QL_FAIL("McMultiLegBaseEngine::createCashflowInfo(): unhandled coupon leg " << legNo << " cashflow " << cfNo);
 }
 
-void AmcCgBaseEngine::buildComputationGraph() const {
+void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
+                                            const bool reevaluateExerciseInStickyCloseOutDateRun) const {
+
+    QuantExt::ComputationGraph& g = *modelCg_->computationGraph();
+
+    includeReferenceDateEvents_ = Settings::instance().includeReferenceDateEvents();
+    includeTodaysCashflows_ = Settings::instance().includeTodaysCashFlows()
+                                  ? *Settings::instance().includeTodaysCashFlows()
+                                  : includeReferenceDateEvents_;
+
+    relevantCurrencies_.clear();
 
     // check data set by derived engines
 
@@ -445,7 +478,7 @@ void AmcCgBaseEngine::buildComputationGraph() const {
         for (auto const& cashflow : leg) {
             // we can skip cashflows that are paid
             if (cashflow->date() < modelCg_->referenceDate() ||
-                (!includeSettlementDateFlows_ && cashflow->date() == modelCg_->referenceDate()))
+                (!includeTodaysCashflows_ && cashflow->date() == modelCg_->referenceDate()))
                 continue;
             // for an alive cashflow, populate the data
             cashflowInfo.push_back(createCashflowInfo(cashflow, currency_[legNo], payer_[legNo], legNo, cashflowNo));
@@ -455,60 +488,298 @@ void AmcCgBaseEngine::buildComputationGraph() const {
         ++legNo;
     }
 
-    // create the amc npv nodes
+    // populate relevant currency set
 
-    QuantExt::ComputationGraph& g = *modelCg_->computationGraph();
+    for (auto const& c : cashflowInfo) {
+        relevantCurrencies_.insert(c.payCcy);
+        relevantCurrencies_.insert(c.addCcys.begin(), c.addCcys.end());
+    }
+
+    /* build set of relevant exercise dates and corresponding cash settlement times (if applicable) */
+
+    std::set<Date> exerciseDates;
+    std::vector<Date> cashSettlementDates;
+
+    if (exercise_ != nullptr) {
+
+        QL_REQUIRE(exercise_->type() != Exercise::American,
+                   "McMultiLegBaseEngine::calculate(): exercise style American is not supported yet.");
+
+        Size counter = 0;
+        for (auto const& d : exercise_->dates()) {
+            if (d < modelCg_->referenceDate() || (!includeReferenceDateEvents_ && d == modelCg_->referenceDate()))
+                continue;
+            exerciseDates.insert(d);
+            if (optionSettlement_ == Settlement::Type::Cash)
+                cashSettlementDates.push_back(cashSettlementDates_[counter++]);
+        }
+    }
+
+    // build the set of simulation dates and union of simulation and exercise dates
+
+    std::set<Date> simDates(simulationDates_.begin(), simulationDates_.end());
+    std::set<Date> simExDates;
+    std::set_union(simDates.begin(), simDates.end(), exerciseDates.begin(), exerciseDates.end(),
+                   std::inserter(simExDates, simExDates.end()));
+
+    // create the path values
+
+    std::size_t pathValueUndDirtyRunning = cg_const(g, 0.0);
+    std::size_t pathValueUndExIntoRunning = cg_const(g, 0.0);
+
+    std::vector<std::size_t> pathValueUndDirty(simExDates.size(), cg_const(g, 0.0));
+    std::vector<std::size_t> pathValueUndExInto(simExDates.size(), cg_const(g, 0.0));
+    std::vector<std::size_t> pathValueOption(simExDates.size(), cg_const(g, 0.0));
+    std::vector<std::size_t> exerciseIndicator(exerciseDates.size());
+
+    cachedExerciseIndicators_.resize(exerciseIndicator.size(), ComputationGraph::nan);
 
     enum class CfStatus { open, cached, done };
     std::vector<CfStatus> cfStatus(cashflowInfo.size(), CfStatus::open);
 
-    std::size_t pathValueUndDirty = cg_const(g, 0.0);
+    std::vector<std::size_t> amountCache(cashflowInfo.size(), ComputationGraph::nan);
+    Size counter = simExDates.size() - 1;
+    Size exerciseCounter = exerciseDates.size() - 1;
+    auto previousExerciseDate = exerciseDates.rbegin();
 
-    for (int i = simulationDates_.size() - 1; i >= 0; --i) {
+    for (auto d = simExDates.rbegin(); d != simExDates.rend(); ++d) {
 
-        Real t = time(simulationDates_[i]);
+        bool isExerciseDate = exerciseDates.find(*d) != exerciseDates.end();
 
-        std::vector<std::size_t> pathValueUndDirtyContribution(1, pathValueUndDirty);
+        // collect the contributions so that we can generate a single add node in the graph
+        std::vector<std::size_t> pathValueUndDirtyContribution(1, pathValueUndDirtyRunning);
+        std::vector<std::size_t> pathValueUndExIntoContribution(1, pathValueUndExIntoRunning);
 
-        for (Size j = 0; j < cashflowInfo.size(); ++j) {
+        for (Size i = 0; i < cashflowInfo.size(); ++i) {
 
-            /* we assume here that exIntoCriterionTime > t implies payTime > t, this must be ensured by the
-               createCashflowInfo method */
+            if (cfStatus[i] == CfStatus::done)
+                continue;
 
-            if (cfStatus[j] == CfStatus::open) {
-                if (cashflowInfo[j].exIntoCriterionTime > t) {
-                    pathValueUndDirtyContribution.push_back(cashflowInfo[j].flowNode);
-                    cfStatus[j] = CfStatus::done;
-                } else if (cashflowInfo[j].payTime > t - (includeSettlementDateFlows_ ? tinyTime : 0.0)) {
-                    pathValueUndDirtyContribution.push_back(cashflowInfo[j].flowNode);
-                    cfStatus[j] = CfStatus::cached;
+            /* We assume here that for each time t below the following condition holds: If a cashflow belongs to the
+              "exercise into" part of the underlying, it also belongs to the underlying itself on each time t.
+
+              Apart from that we allow for the possibility that a cashflow belongs to the underlying npv without
+              belonging to the exercise into underlying at a time t. Such a cashflow would be marked as "cached" at time
+              t and transferred to the exercise-into value at the appropriate time t' < t.
+            */
+
+            bool isPartOfExercise =
+                cashflowInfo[i].payDate > *d - (includeTodaysCashflows_ || exerciseIntoIncludeSameDayFlows_ ? 1 : 0) &&
+                (previousExerciseDate == exerciseDates.rend() ||
+                 cashflowInfo[i].exIntoCriterionDate > *previousExerciseDate);
+
+            bool isPartOfUnderlying = cashflowInfo[i].payDate > *d - (includeTodaysCashflows_ ? 1 : 0);
+
+            if (cfStatus[i] == CfStatus::open) {
+                if (isPartOfExercise) {
+                    pathValueUndDirtyContribution.push_back(cashflowInfo[i].flowNode);
+                    pathValueUndExIntoContribution.push_back(cashflowInfo[i].flowNode);
+                    cfStatus[i] = CfStatus::done;
+                } else if (isPartOfUnderlying) {
+                    pathValueUndDirtyContribution.push_back(cashflowInfo[i].flowNode);
+                    amountCache[i] = cashflowInfo[i].flowNode;
+                    cfStatus[i] = CfStatus::cached;
                 }
-            } else if (cfStatus[j] == CfStatus::cached) {
-                if (cashflowInfo[j].exIntoCriterionTime > t) {
-                    cfStatus[j] = CfStatus::done;
+            } else if (cfStatus[i] == CfStatus::cached) {
+                if (isPartOfExercise) {
+                    pathValueUndExIntoContribution.push_back(amountCache[i]);
+                    cfStatus[i] = CfStatus::done;
+                    amountCache[i] = ComputationGraph::nan;
                 }
             }
         }
 
-        pathValueUndDirty = cg_add(g, pathValueUndDirtyContribution);
+        pathValueUndDirtyRunning = cg_add(g, pathValueUndDirtyContribution);
+        pathValueUndExIntoRunning = cg_add(g, pathValueUndExIntoContribution);
 
-        g.setVariable("_AMC_NPV_" + std::to_string(i), pathValueUndDirty);
+        if (isExerciseDate) {
+
+            // calculate rebate (exercise fees) if existent
+
+            std::size_t pvRebate = cg_const(g, 0.0);
+            if (auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
+                Size exerciseTimes_idx = std::distance(exerciseDates.begin(), exerciseDates.find(*d));
+                if (rebatedExercise->rebate(exerciseTimes_idx) != 0.0) {
+                    // note: the silent assumption is that the rebate is paid in the first leg's currency!
+                    pvRebate = modelCg_->pay(cg_const(g, rebatedExercise->rebate(exerciseTimes_idx)), *d,
+                                             rebatedExercise->rebatePaymentDate(exerciseTimes_idx), currency_.front());
+                }
+            }
+
+            if (stickyCloseOutDateRun && !reevaluateExerciseInStickyCloseOutDateRun) {
+
+                // reuse exercise indicator from previous run on valuation dates
+
+                exerciseIndicator[exerciseCounter] = cachedExerciseIndicators_[exerciseCounter];
+
+            } else {
+
+                // determine exercise decision
+
+                // calculate exercise and continuation value and derive exercise decision
+
+                auto reg = createRegressionModel(
+                    pathValueUndExIntoRunning, *d, cashflowInfo,
+                    [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0));
+
+                auto exerciseValue = cg_add(g, reg, pvRebate);
+                std::size_t filter = cg_indicatorGt(g, exerciseValue, cg_const(g, 0.0));
+                auto continuationValue = createRegressionModel(
+                    pathValueOption[counter], *d, cashflowInfo,
+                    [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, filter);
+
+                exerciseIndicator[exerciseCounter] = cg_indicatorGt(g, exerciseValue, continuationValue) *
+                                                     cg_indicatorGt(g, exerciseValue, cg_const(g, 0.0));
+
+                cachedExerciseIndicators_[exerciseCounter] = exerciseIndicator[exerciseCounter];
+            }
+
+            pathValueOption[counter] = cg_add(
+                g, cg_mult(g, exerciseIndicator[exerciseCounter], cg_add(g, pathValueUndExIntoRunning, pvRebate)),
+                cg_mult(g, cg_subtract(g, cg_const(g, 1.0), exerciseIndicator[exerciseCounter]),
+                        pathValueOption[counter]));
+
+            if (isExerciseDate && previousExerciseDate != exerciseDates.rend())
+                std::advance(previousExerciseDate, 1);
+
+            --exerciseCounter;
+        }
+
+        pathValueUndDirty[counter] = pathValueUndDirtyRunning;
+        pathValueUndExInto[counter] = pathValueUndExIntoRunning;
+
+        --counter;
     }
 
     // add the remaining live cashflows to get the underlying value
 
-    std::vector<std::size_t> pathValueUndDirtyContribution(1, pathValueUndDirty);
+    std::vector<std::size_t> pathValueUndDirtyContribution(1, pathValueUndDirtyRunning);
     for (Size i = 0; i < cashflowInfo.size(); ++i) {
         if (cfStatus[i] == CfStatus::open)
             pathValueUndDirtyContribution.push_back(cashflowInfo[i].flowNode);
     }
 
-    pathValueUndDirty = cg_add(g, pathValueUndDirtyContribution);
+    pathValueUndDirtyRunning = cg_add(g, pathValueUndDirtyContribution);
 
-    g.setVariable(npvName() + "_0", pathValueUndDirty);
+    // set the npv at t0
+
+    g.setVariable(npvName() + "_0", exercise_ == nullptr ? pathValueUndDirtyRunning : pathValueOption[0]);
+
+    // generate the exposure at simulation dates
+
+    if (exerciseDates.empty()) {
+
+        // if we don't have an exercise, we return the dirty npv of the underlying at all times
+
+        for (Size counter = 0; counter < simDates.size(); ++counter) {
+            g.setVariable("_AMC_NPV_" + std::to_string(counter + (stickyCloseOutDateRun ? simulationDates_.size() : 0)),
+                          pathValueUndDirty[counter]);
+        }
+
+    } else {
+
+        // iterative through simulation + exercise dates in forward direction
+
+        Size counter = 0;
+        Size simCounter = 0;
+        Size exerciseCounter = 0;
+
+        std::size_t isExercisedNow = cg_const(g, 0.0);
+        std::size_t wasExercised = cg_const(g, 0.0);
+        std::map<Date, std::size_t> cashSettlements;
+
+        for (auto const& d : simExDates) {
+
+            bool isExerciseDate = exerciseDates.find(d) != exerciseDates.end();
+            bool isSimDate = simDates.find(d) != simDates.end();
+
+            if (isExerciseDate) {
+
+                // update was exercised based on exercise at the exercise time
+
+                isExercisedNow = cg_subtract(g, cg_const(g, 1.0), wasExercised) * exerciseIndicator[exerciseCounter];
+                wasExercised = cg_min(g, cg_add(g, wasExercised, exerciseIndicator[exerciseCounter]), cg_const(g, 1.0));
+
+                // if cash settled, determine the amount on exercise and until when it is to be included in exposure
+
+                if (optionSettlement_ == Settlement::Type::Cash) {
+                    cashSettlements[cashSettlementDates_[exerciseCounter]] =
+                        cg_mult(g, pathValueUndExInto[counter], isExercisedNow);
+                }
+
+                ++exerciseCounter;
+            }
+
+            if (isSimDate) {
+
+                // there is no continuation value on the last exercise date
+
+                std::size_t futureOptionValue =
+                    exerciseCounter == exerciseDates.size() - 1 ? cg_const(g, 0.0) : pathValueOption[counter];
+
+                /* Physical Settlement:
+
+                   Exercise value is "undExInto" if we are in the period between the date on which the exercise happend
+                   and the next exercise date after that, otherwise it is the full dirty npv. This assumes that two
+                   exercise dates d1, d2 are not so close together that a coupon
+
+                   - pays after d1, d2
+                   - but does not belong to the exercise-into underlying for both d1 and d2
+
+                   This assumption seems reasonable, since we would never exercise on d1 but wait until d2 since the
+                   underlying which we exercise into is the same in both cases.
+                   We don't introduce a hard check for this, but we rather assume that the exercise dates are set up
+                   appropriately adjusted to the coupon periods. The worst that can happen is that the exercised value
+                   uses the full dirty npv at a too early time.
+
+                   Cash Settlement:
+
+                   We use the cashSettlements map constructed on each exercise date.
+
+                */
+
+                std::size_t exercisedValue = cg_const(g, 0.0);
+
+                if (optionSettlement_ == Settlement::Type::Physical) {
+                    exercisedValue = cg_add(
+                        g, cg_mult(g, isExercisedNow, pathValueUndExInto[counter]),
+                        cg_mult(g, cg_subtract(g, cg_const(g, 1.0), isExercisedNow), pathValueUndDirty[counter]));
+                } else {
+                    for (auto it = cashSettlements.begin(); it != cashSettlements.end();) {
+                        if (d < it->first + (includeTodaysCashflows_ ? 1 : 0)) {
+                            exercisedValue = cg_add(g, exercisedValue, it->second);
+                            ++it;
+                        } else {
+                            it = cashSettlements.erase(it);
+                        }
+                    }
+                }
+
+                g.setVariable(
+                    "_AMC_NPV_" + std::to_string(simCounter + (stickyCloseOutDateRun ? simulationDates_.size() : 0)),
+                    cg_max(g, cg_const(g, 0.0),
+                           cg_add(g, cg_mult(g, wasExercised, exercisedValue),
+                                  cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValue))));
+
+                ++simCounter;
+            }
+
+            ++counter;
+        }
+    }
+}
+
+std::size_t AmcCgBaseEngine::createRegressionModel(const std::size_t amount, const Date& d,
+                                                   const std::vector<CashflowInfo>& cashflowInfo,
+                                                   const std::function<bool(std::size_t)>& cashflowRelevant,
+                                                   const std::size_t filter) const {
+    // TODO use relevant cashflow info to refine regressor if regressor model == LaggedFX
+    return modelCg_->npv(amount, d, filter, std::nullopt, {}, modelCg_->npvRegressors(d, relevantCurrencies()));
 }
 
 void AmcCgBaseEngine::calculate() const {}
+
+std::set<std::string> AmcCgBaseEngine::relevantCurrencies() const { return relevantCurrencies_; }
 
 } // namespace data
 } // namespace ore

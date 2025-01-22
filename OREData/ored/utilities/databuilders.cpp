@@ -410,8 +410,16 @@ void dataBuilders() {
     ORE_REGISTER_AMC_ENGINE_BUILDER(CamAmcEquityForwardEngineBuilder, false)
     ORE_REGISTER_AMC_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
 
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgCurrencySwapEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgSwaptionEngineBuilder, false)
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgSwapEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgFxEuropeanOptionEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgFxEuropeanForwardOptionEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgFxEuropeanCSOptionEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgFxForwardEngineBuilder, false)
+    ORE_REGISTER_AMCCG_ENGINE_BUILDER(AmcCgMultiLegOptionEngineBuilder, false)
     ORE_REGISTER_AMCCG_ENGINE_BUILDER(ScriptedTradeEngineBuilder, false)
+    // (Bond, FwdBond, EquityForward missing compared to "AMC" variants)
 
     ORE_REGISTER_ENGINE_BUILDER(CommoditySpreadOptionEngineBuilder, false)
     ORE_REGISTER_ENGINE_BUILDER(CpiCapFloorEngineBuilder, false)

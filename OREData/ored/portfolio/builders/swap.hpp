@@ -165,9 +165,8 @@ private:
 class AmcCgSwapEngineBuilder : public SwapEngineBuilderBase {
 public:
     AmcCgSwapEngineBuilder(const QuantLib::ext::shared_ptr<ore::data::ModelCG>& modelCg,
-                           const std::vector<Date>& simulationDates, const std::vector<Date>& stickyCloseOutDates)
-        : SwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates),
-          stickyCloseOutDates_(stickyCloseOutDates) {}
+                           const std::vector<Date>& simulationDates)
+        : SwapEngineBuilderBase("CrossAssetModel", "AMCCG"), modelCg_(modelCg), simulationDates_(simulationDates) {}
 
 protected:
     virtual QuantLib::ext::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const std::string& discountCurve,
@@ -177,7 +176,6 @@ protected:
 private:
     const QuantLib::ext::shared_ptr<ore::data::ModelCG> modelCg_;
     const std::vector<Date> simulationDates_;
-    const std::vector<Date> stickyCloseOutDates_;
 };
 
 } // namespace data
