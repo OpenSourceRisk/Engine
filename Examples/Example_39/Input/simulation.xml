@@ -209,6 +209,7 @@
       <Index>USD-LIBOR-6M</Index>
       <Index>GBP-LIBOR-6M</Index>
       <Index>GBP-LIBOR-3M</Index>
+      <Index>CHF-LIBOR-3M</Index>
       <Index>CHF-LIBOR-6M</Index>
       <Index>JPY-LIBOR-6M</Index>
       <Index>USD-FedFunds</Index>
