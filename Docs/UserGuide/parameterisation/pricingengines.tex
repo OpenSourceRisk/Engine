@@ -1847,12 +1847,14 @@ Hagan/Analytic, Hagan/Numerical build AnalyticHaganPricer, NumericHaganPricer (T
 
 Used by trade type: SyntheticCDO
 
-Available Model/Engine pairs: GaussCopula/Bucketing
+Available Model/Engine pairs: GaussCopula/Bucketing and GaussCopula/MonteCarlo
 
 Engine description:
 
 GaussCopula/Bucketing builds a IndexCdsTrancheEngine. A sample configuration is shown in listing
-\ref{lst:peconfig_SyntheticCDO_GaussCopula_Bucketing}
+\ref{lst:peconfig_SyntheticCDO_GaussCopula_Bucketing} It uses a Bucketing Algorithm  to compute the expected tranche loss
+
+GaussCopula/MonteCarlo builds a IndexCdsTrancheEngine. The expected tranche loss is computed using a Monte Carlo simulation.
 
 The parameters have the following meaning:
 
@@ -1863,13 +1865,15 @@ The parameters have the following meaning:
 \item recoveryRateGrid: Constant (flat market recovery rate R), Markit2020 (3-pillar recovery grid $[0.1, R, 2R-0.1]$
 \item reocveryRateProbabilities: recovery rate probabilities for the recovery rate grid
 \item buckets: number of buckets in Hull-White bucketing
+\item nSimulations: number of simulations in the Monte Carlo Simulation
 \item SensitivityDecomposition: Underlying, NotionalWeighted, LossWeighted, DeltaWeighted
 \item useLossDistWhenJustified: whether to use QuantLib::LossDist for determinisitc recovery instead of HulWhiteBucketing
 \item homogeneousPoolWhenJustified: whether to use homogeneous pool if possible, applies to QuantLib::LossDist
 \item useQuadrature: whether to use quadrature
 \item calibrateConstituentCurves: whether to calibrate constituent curves to index level
-\item calibrationIndexTerms: terms for constituent curve calibration
 \item SensitivityTemplate [optional]: the sensitivity template to use 
+\item useIndexCDSPricer [optional]: whether to use the index CDS pricer for tranches with detachment point at 100 percent, defaults to true
+\item useIndexCurveForIndexCDS [optional]: use the index curve for the 100 tranche instead of the constituent curve, defaults to false
 \end{itemize}
 
 \begin{longlisting}
@@ -1893,6 +1897,8 @@ The parameters have the following meaning:
         <Parameter name="calibrateConstituentCurves">N</Parameter>
         <Parameter name="calibrationIndexTerms">3Y,5Y</Parameter>
         <Parameter name="SensitivityTemplate">CR_Semianalytical</Parameter>
+        <Parameter name="useIndexCDSPricer">Y</Parameter>
+        <Parameter name="useIndexCurveForIndexCDS">N</Parameter>
     </EngineParameters>
 </Product>
 \end{minted}
