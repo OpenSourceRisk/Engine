@@ -28,17 +28,78 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/termstructures/blackdeltautilities.hpp>
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 
 using namespace QuantLib;
+using namespace QuantExt;
 
 namespace ore {
 namespace data {
 
 void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory) {
+
+    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
+
+    auto it = engineFactory->engineData()->globalParameters().find("RunType");
+    if (it != engineFactory->engineData()->globalParameters().end() && it->second != "PortfolioAnalyser" && delta_!=0.0) {
+
+        std::string conventionName = assetName_ + "-" + currency_ + "-FXOPTION";
+        QuantLib::ext::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        auto fxOptConv = QuantLib::ext::dynamic_pointer_cast<FxOptionConvention>(conventions->get(conventionName));
+        QL_REQUIRE(fxOptConv, "unable to cast convention '" << conventionName << "' into FxOptionConvention");
+        Period switchTenor = fxOptConv->switchTenor();
+
+        
+        std::string fxConvId = fxOptConv->fxConventionID();
+        auto fxConv = QuantLib::ext::dynamic_pointer_cast<FXConvention>(conventions->get(fxConvId));
+        QL_REQUIRE(fxConv, "unable to cast convention '" << fxConvId << "' into FxConvention");
+        
+        std::string engineConfiguration = engineFactory->configuration(MarketContext::pricing);
+        Handle<Quote> pairSpot = market->fxSpot(assetName_ + currency_, engineConfiguration);
+        auto domYts = market->discountCurve(assetName_, engineConfiguration).currentLink();
+        auto forYts = market->discountCurve(currency_, engineConfiguration).currentLink();
+        auto volSurface = market->fxVol(assetName_ + currency_, engineConfiguration).currentLink();
+
+
+        Time t = volSurface->timeFromReference(parseDate(option_.exerciseDates().front()));
+        
+        Calendar spotCalendar_ = fxConv->advanceCalendar();
+        QuantLib::BusinessDayConvention bDayConvention=fxConv->convention();
+        Date maturity = parseDate(option_.exerciseDates().front());
+        Natural spotDays_ = fxConv->spotDays();
+        Date switchDate = spotCalendar_.advance(Settings::instance().evaluationDate(), switchTenor, bDayConvention);
+
+        DeltaVolQuote::DeltaType dt = maturity < switchDate ? fxOptConv->deltaType() : fxOptConv->longTermDeltaType();
+
+        Date settl = spotCalendar_.advance(Settings::instance().evaluationDate(), spotDays_ * Days);
+        Date settlFwd = spotCalendar_.advance(maturity, spotDays_ * Days);
+        double domDisc = domYts->discount(settlFwd) / domYts->discount(settl);
+        double forDisc = forYts->discount(settlFwd) / forYts->discount(settl);
+
+        if (option_.callPut() == "Call"){
+            // If delta is negative but it is a call option, we switch sign.
+            if (delta_ < 0) {
+                delta_ = -delta_;
+            }
+            Real strikeFromDelta = QuantExt::getStrikeFromDelta(Option::Call, delta_, dt, pairSpot->value(), domDisc,
+                                                                forDisc, volSurface, t);
+            strike_.setValue(strikeFromDelta);
+
+        } else {
+            // If delta is positive but it is a put option, we switch sign. 
+            if (delta_ > 0) {
+                delta_ = -delta_;
+            }    
+            Real strikeFromDelta = QuantExt::getStrikeFromDelta(Option::Put, delta_, dt, pairSpot->value(), domDisc,
+                                                                forDisc, volSurface, t);
+            strike_.setValue(strikeFromDelta);
+        }
+        
+    }
 
     // ISDA taxonomy
     additionalData_["isdaAssetClass"] = string("Foreign Exchange");
@@ -52,7 +113,6 @@ void FxOption::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFacto
     additionalData_["soldAmount"] = quantity_ * strike_.value();
 
     QuantLib::Date today = Settings::instance().evaluationDate();
-    const QuantLib::ext::shared_ptr<Market>& market = engineFactory->market();
 
     // If automatic exercise, check that we have a non-empty FX index string, parse it and attach curves from market.
     if (option_.isAutomaticExercise()) {
@@ -154,12 +214,13 @@ void FxOption::fromXML(XMLNode* node) {
     assetName_ = XMLUtils::getChildValue(fxNode, "BoughtCurrency", true);
     currency_ = XMLUtils::getChildValue(fxNode, "SoldCurrency", true);
     double boughtAmount = XMLUtils::getChildValueAsDouble(fxNode, "BoughtAmount", true);
-    double soldAmount = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", true);
+    double soldAmount = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", false);
+    delta_ = XMLUtils::getChildValueAsDouble(fxNode, "Delta", false);
+    QL_REQUIRE(delta_ != 0.0 || soldAmount != 0.0, "Either a non zero delta or soldAmount must be given.");
     strike_ = TradeStrike(soldAmount / boughtAmount, currency_);
     quantity_ = boughtAmount;
     fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", false);
     QL_REQUIRE(boughtAmount > 0.0, "positive BoughtAmount required");
-    QL_REQUIRE(soldAmount > 0.0, "positive SoldAmount required");
 }
 
 XMLNode* FxOption::toXML(XMLDocument& doc) const {
@@ -172,7 +233,11 @@ XMLNode* FxOption::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, fxNode, "BoughtCurrency", boughtCurrency());
     XMLUtils::addChild(doc, fxNode, "BoughtAmount", boughtAmount());
     XMLUtils::addChild(doc, fxNode, "SoldCurrency", soldCurrency());
-    XMLUtils::addChild(doc, fxNode, "SoldAmount", soldAmount());
+    if (deltaAmount() != 0) {
+        XMLUtils::addChild(doc, fxNode, "Delta", deltaAmount());
+    } else {
+        XMLUtils::addChild(doc, fxNode, "SoldAmount", soldAmount());
+    }  
 
     if (!fxIndex_.empty())
         XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);

@@ -214,6 +214,9 @@ portfolio/compositetrade.cpp
 portfolio/convertiblebond.cpp
 portfolio/convertiblebonddata.cpp
 portfolio/convertiblebondreferencedata.cpp
+portfolio/counterpartycorrelationmatrix.cpp
+portfolio/counterpartyinformation.cpp
+portfolio/counterpartymanager.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
 portfolio/creditdefaultswapoption.cpp
@@ -321,6 +324,10 @@ scripting/asttoscriptconverter.cpp
 scripting/computationgraphbuilder.cpp
 scripting/context.cpp
 scripting/engines/amccgbaseengine.cpp
+scripting/engines/amccgcurrencyswapengine.cpp
+scripting/engines/amccgfxforwardengine.cpp
+scripting/engines/amccgfxoptionengine.cpp
+scripting/engines/amccgmultilegoptionengine.cpp
 scripting/engines/amccgswapengine.cpp
 scripting/engines/analyticblackriskparticipationagreementengine.cpp
 scripting/engines/analyticxccyblackriskparticipationagreementengine.cpp
@@ -610,6 +617,9 @@ portfolio/compositetrade.hpp
 portfolio/convertiblebond.hpp
 portfolio/convertiblebonddata.hpp
 portfolio/convertiblebondreferencedata.hpp
+portfolio/counterpartycorrelationmatrix.hpp
+portfolio/counterpartyinformation.hpp
+portfolio/counterpartymanager.hpp
 portfolio/creditdefaultswap.hpp
 portfolio/creditdefaultswapdata.hpp
 portfolio/creditdefaultswapoption.hpp
@@ -726,6 +736,10 @@ scripting/asttoscriptconverter.hpp
 scripting/computationgraphbuilder.hpp
 scripting/context.hpp
 scripting/engines/amccgbaseengine.hpp
+scripting/engines/amccgcurrencyswapengine.hpp
+scripting/engines/amccgfxforwardengine.hpp
+scripting/engines/amccgfxoptionengine.hpp
+scripting/engines/amccgmultilegoptionengine.hpp
 scripting/engines/amccgpricingengine.hpp
 scripting/engines/amccgswapengine.hpp
 scripting/engines/analyticblackriskparticipationagreementengine.hpp

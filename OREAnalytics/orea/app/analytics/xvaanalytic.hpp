@@ -23,6 +23,8 @@
 #pragma once
 
 #include <orea/app/analytic.hpp>
+#include <orea/engine/valuationcalculator.hpp>
+#include <orea/engine/sensitivitystoragemanager.hpp>
 
 namespace ore {
 namespace analytics {
@@ -54,6 +56,7 @@ protected:
 
     void initCubeDepth();
     void initCube(QuantLib::ext::shared_ptr<NPVCube>& cube, const std::set<std::string>& ids, Size cubeDepth);
+    std::set<std::string> getNettingSetIds(const QuantLib::ext::shared_ptr<Portfolio>& portfolio) const;
 
     void initClassicRun(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
     void buildClassicCube(const QuantLib::ext::shared_ptr<Portfolio>& portfolio);
@@ -83,6 +86,7 @@ protected:
     QuantLib::ext::shared_ptr<PostProcess> postProcess_;
     QuantLib::ext::shared_ptr<Scenario> offsetScenario_;
     QuantLib::ext::shared_ptr<ScenarioSimMarketParameters> offsetSimMarketParams_;
+    QuantLib::ext::shared_ptr<SensitivityStorageManager> sensitivityStorageManager_;
     Size cubeDepth_ = 0;
     QuantLib::ext::shared_ptr<DateGrid> grid_;
     Size samples_ = 0;

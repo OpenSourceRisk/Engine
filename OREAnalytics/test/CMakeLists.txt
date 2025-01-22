@@ -8,6 +8,8 @@ nettedexpsoure.cpp
 observationmode.cpp
 parsensitivityanalysis.cpp
 parsensitivityanalysismanual.cpp
+saccr.cpp
+sacva.cpp
 scenario.cpp
 scenariogenerator.cpp
 scenarioshiftcalculator.cpp

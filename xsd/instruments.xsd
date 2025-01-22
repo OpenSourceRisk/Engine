@@ -1362,7 +1362,8 @@
       <xs:element type="currencyCode" name="BoughtCurrency"/>
       <xs:element type="xs:float" name="BoughtAmount"/>
       <xs:element type="currencyCode" name="SoldCurrency"/>
-      <xs:element type="xs:float" name="SoldAmount"/>
+      <xs:element type="xs:float" name="SoldAmount" minOccurs="0"/>
+      <xs:element type="xs:float" name="Delta" minOccurs="0"/>
       <xs:element type="xs:string" name="FXIndex" minOccurs="0"/>
     </xs:all>
   </xs:complexType>

@@ -48,6 +48,7 @@
 #include <ql/models/model.hpp>
 
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/unordered_map.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;

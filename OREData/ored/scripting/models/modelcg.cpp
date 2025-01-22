@@ -29,5 +29,9 @@ std::size_t ModelCG::dt(const Date& d1, const Date& d2) const {
     return cg_const(*g_, QuantLib::ActualActual(QuantLib::ActualActual::ISDA).yearFraction(d1, d2));
 }
 
+void ModelCG::useStickyCloseOutDates(const bool b) const {
+    QL_FAIL("ModelCG::useStickyCloseOutDates(): not supported by this model instance");
+}
+
 } // namespace data
 } // namespace ore

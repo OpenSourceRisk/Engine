@@ -231,6 +231,9 @@
 #include <ored/portfolio/convertiblebond.hpp>
 #include <ored/portfolio/convertiblebonddata.hpp>
 #include <ored/portfolio/convertiblebondreferencedata.hpp>
+#include <ored/portfolio/counterpartycorrelationmatrix.hpp>
+#include <ored/portfolio/counterpartyinformation.hpp>
+#include <ored/portfolio/counterpartymanager.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>
@@ -347,6 +350,10 @@
 #include <ored/scripting/computationgraphbuilder.hpp>
 #include <ored/scripting/context.hpp>
 #include <ored/scripting/engines/amccgbaseengine.hpp>
+#include <ored/scripting/engines/amccgcurrencyswapengine.hpp>
+#include <ored/scripting/engines/amccgfxforwardengine.hpp>
+#include <ored/scripting/engines/amccgfxoptionengine.hpp>
+#include <ored/scripting/engines/amccgmultilegoptionengine.hpp>
 #include <ored/scripting/engines/amccgpricingengine.hpp>
 #include <ored/scripting/engines/amccgswapengine.hpp>
 #include <ored/scripting/engines/analyticblackriskparticipationagreementengine.hpp>
