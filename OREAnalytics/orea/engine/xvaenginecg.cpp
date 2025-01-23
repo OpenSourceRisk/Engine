@@ -287,20 +287,25 @@ void XvaEngineCG::buildCgPartB() {
     auto g = model_->computationGraph();
 
     for (auto const& [id, trade] : portfolio_->trades()) {
+
+        std::size_t multiplier = cg_const(*g, trade->instrument()->multiplier() * trade->instrument()->multiplier2());
+
         auto engine = QuantLib::ext::dynamic_pointer_cast<AmcCgPricingEngine>(
             trade->instrument()->qlInstrument()->pricingEngine());
         QL_REQUIRE(engine, "XvaEngineCG: expected to get AmcCgPricingEngine, trade '"
                                << id << "' has a different or no engine attached.");
         g->startRedBlock();
+
         if (!trade->instrument()->qlInstrument()->isCalculated())
             trade->instrument()->qlInstrument()->recalculate(); // trigger setupArguments
         engine->buildComputationGraph(false, false);
 
         {
             std::vector<std::size_t> tmp;
-            tmp.push_back(g->variable(engine->npvName() + "_0"));
+            tmp.push_back(cg_mult(*g, multiplier, g->variable(engine->npvName() + "_0")));
             for (std::size_t i = 0; i < valuationDates_.size(); ++i) {
-                tmp.push_back(g->variable("_AMC_NPV_" + std::to_string(getAmcNpvIndexForValuationDate(i))));
+                tmp.push_back(cg_mult(*g, multiplier,
+                                      g->variable("_AMC_NPV_" + std::to_string(getAmcNpvIndexForValuationDate(i)))));
             }
             amcNpvNodes_.push_back(tmp);
         }
@@ -313,9 +318,10 @@ void XvaEngineCG::buildCgPartB() {
             model_->useStickyCloseOutDates(false);
 
             std::vector<std::size_t> tmp;
-            tmp.push_back(g->variable(engine->npvName() + "_0"));
+            tmp.push_back(cg_mult(*g, multiplier, g->variable(engine->npvName() + "_0")));
             for (std::size_t i = 0; i < closeOutDates_.size(); ++i) {
-                tmp.push_back(g->variable("_AMC_NPV_" + std::to_string(getAmcNpvIndexForCloseOutDate(i))));
+                tmp.push_back(cg_mult(*g, multiplier,
+                                      g->variable("_AMC_NPV_" + std::to_string(getAmcNpvIndexForCloseOutDate(i)))));
             }
             amcNpvCloseOutNodes_.push_back(tmp);
         }
@@ -635,7 +641,7 @@ void XvaEngineCG::buildAsdNodes() {
         asdNumeraire_.push_back(model_->numeraire(date));
 
         // see above, we have set the numeraire node now, the rest is needed for asd only
-        if(asd_ == nullptr)
+        if (asd_ == nullptr)
             continue;
 
         // fx spots
@@ -734,7 +740,7 @@ void XvaEngineCG::populateNpvOutputCube() {
         npvOutputCube_->setT0(values_[getNode(0, false)][0] * multiplier, cubeTradeIdx->second);
         for (Size i = 0; i < valuationDates_.size(); ++i) {
             for (Size j = 0; j < npvOutputCube_->samples(); ++j) {
-                npvOutputCube_->set(values_[getNode(i + 1,false)][j] * multiplier, cubeTradeIdx->second, i, j);
+                npvOutputCube_->set(values_[getNode(i + 1, false)][j] * multiplier, cubeTradeIdx->second, i, j);
             }
         }
         for (Size i = 0; i < closeOutDates_.size(); ++i) {
@@ -742,7 +748,7 @@ void XvaEngineCG::populateNpvOutputCube() {
                 /* ore convention: the close-out value in the output cube should be multiplied by the numeraire value at
                  * the associated valuation date */
                 npvOutputCube_->set(values_[getNode(i + 1, true)][j] * values_[asdNumeraire_[i]][j] * multiplier,
-                                    cubeTradeIdx->second, i, j);
+                                    cubeTradeIdx->second, i, j, 1);
             }
         }
         ++tradePos;

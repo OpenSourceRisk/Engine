@@ -180,6 +180,8 @@ public:
         // pathTimes do not need to contain the observation time or the relevant cashflow simulation times
         RandomVariable apply(const Array& initialState, const std::vector<std::vector<const RandomVariable*>>& paths,
                              const std::set<Real>& pathTimes) const;
+        // is this model initialized and trained?
+        bool isTrained() const { return isTrained_; }
 
     private:
         Real observationTime_ = Null<Real>();
@@ -210,6 +212,7 @@ public:
             const std::set<Real>& exerciseTimes, const std::set<Real>& xvaTimes,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndDirty,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelUndExInto,
+            const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelRebate,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelContinuationValue,
             const std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2>& regModelOption,
             const Real resultValue, const Array& initialState, const Currency& baseCurrency,
@@ -232,6 +235,7 @@ public:
         std::set<Real> xvaTimes_;
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelUndDirty_;
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelUndExInto_;
+        std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelRebate_;
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelContinuationValue_;
         std::array<std::vector<McMultiLegBaseEngine::RegressionModel>, 2> regModelOption_;
         Real resultValue_;
@@ -262,7 +266,7 @@ public:
                          const std::vector<std::vector<RandomVariable>>& pathValues,
                          const std::vector<std::vector<const RandomVariable*>>& pathValuesRef,
                          std::vector<RegressionModel>& regModelUndDirty,
-                         std::vector<RegressionModel>& regModelUndExInto,
+                         std::vector<RegressionModel>& regModelUndExInto, std::vector<RegressionModel>& regModelRebate,
                          std::vector<RegressionModel>& regModelContinuationValue,
                          std::vector<RegressionModel>& regModelOption, RandomVariable& pathValueUndDirty,
                          RandomVariable& pathValueUndExInto, RandomVariable& pathValueOption) const;
