@@ -83,17 +83,20 @@ Analytic::Analytic(std::unique_ptr<Impl> impl,
 void Analytic::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                            const std::set<std::string>& runTypes) {
     MEM_LOG_USING_LEVEL(ORE_WARNING, "Starting " << label() << " Analytic::runAnalytic()");
-    if (impl_) {
+    if (!analyticComplete_ && impl_) {
         if (!impl_->initialised())
             QL_FAIL("Analytic " + label() + " is not initialed.");
         impl_->runAnalytic(loader, runTypes);
         MEM_LOG_USING_LEVEL(ORE_WARNING, "Finishing " << label() << " Analytic::runAnalytic()")
     }
+    analyticComplete_ = true;
 }
 
 void Analytic::initialise() {
-    if (impl())
+    if (impl() && !impl()->initialised()) {
         impl()->initialise();
+        buildConfigurations();
+    }
 }
 
 void Analytic::Impl::initialise() {
@@ -166,7 +169,6 @@ std::set<QuantLib::Date> Analytic::marketDates() const {
 }
 
 std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> Analytic::todaysMarketParams() {
-    buildConfigurations();
     std::vector<QuantLib::ext::shared_ptr<ore::data::TodaysMarketParameters>> tmps;
     if (configurations().todaysMarketParams)
         tmps.push_back(configurations().todaysMarketParams);
