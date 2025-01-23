@@ -1,0 +1,235 @@
+\subsubsection{Cap/Floor}
+\label{pricing:ir_capfloor}
+
+Interest rate caps, floors, and collars are supported for underlyings of type
+
+\begin{itemize}
+\item Ibor (e.g. USD-LIBOR-3M)
+\item USD-SIFMA
+\item forward looking RFR term rate, e.g. USD-SOFR-3M
+\item backward looking RFR rates, e.g. USD-SOFR compounded over 3M periods
+\end{itemize}
+
+We use the Black model for log-normal and shifted log-normal volatilities, and the Bachelier model for normal
+volatilities. To price a cap which is a series of caplets we price the individual caplets and add up the NPVs of the
+caplets\footnote{Here and in what follows we often refer to ``cap'' and ``caplet'' but mean both caps / floors resp. caplets /
+floorlets}.
+
+\subsubsection{Pricing of an Ibor or forward looking RFR term rate caplet}
+
+A caplet on an Ibor or forward looking RFR term rate $F(t, t_s, t_e)$ as seen from $t$ with fixing time $t_f > t \geq
+0$, index rate projection period $[t_s, t_e]$ and pay time $t_p$ has the price $\nu_F$
+
+\begin{equation}
+\label{pricing:ir_capfloor_ibor_caplet}
+\nu_F = N \cdot P(0,t_p) \cdot \text{Black/Bachelier}(K, F(0, t_s, t_e), \sigma(t_f) \sqrt{t_f}, \omega)
+\end{equation}
+
+where ``Black/Bachelier'' refers to the well-known pricing formulas \ref{models:black} resp. \ref{models:bachelier} and
+
+\begin{itemize}
+\item $N$ is the notional of the caplet
+\item $P(0,t_p)$ is the applicable discount factor, usually the discount factor on an overnight curve corresponding to
+  the collateralization of the cap
+\item $K$ is the strike of the caplet
+\item $F0,t_s,t_e)$ is the projected forward rate as seen from the valuation time $t=0$
+\item $\sigma = \sigma(t_f)$ is the volatility of the caplet. The volatility is read from the interpolated caplet
+  volatility surface for the underlying Ibor / term rate index at time $t_f$ and strike $K$. The caplet volatility
+  surface is either
+   \begin{itemize}
+   \item bootstrapped from quoted market volatilities as described in \ref{pricing:ir_capfloor_bootstrap} or
+   \item proxied by a another caplet volatility surface as described in \ref{pricing:ir_capfloor_proxying}. This is
+     useful if no direct market quotes are available for the underlying index. For example, we might use liquid market
+     quotes to boostrap a volatility surface for backward looking USD-SOFR caplets and use the resuling caplet surface
+     to proxy caplet volatilities for forward looking USD-SOFR-3M term rates.
+   \end{itemize}
+\item $\sigma^2 t_f$ is the accrued variance from $t=0$ to the fixing time $t_f$ of the caplet. The square root of the
+  accrued variance is the input to the Black / Bachelier model (\ref{models:black}, \ref{models:bachelier}) and called
+  ``terminal volatility'' in the context there
+\item $\omega \in \{-1,+1\}$ is $1$ for a caplet and $-1$ for a floorlet
+\end{itemize}
+
+We mention that if the caplet uses a non-standard timing, i.e. a fixing time $t_f$ such that $t_e \neq t_p$, the forward
+rate $F(0,t_s,t_e)$ entering the Black / Bachelier formula \ref{pricing:ir_capfloor_ibor_caplet} is replaced by a
+timing-adjusted forward rate. We do not go into further details on this point here.
+
+\subsubsection{Pricing of an backward looking RFR caplet}
+
+The general framework to price backward looking RFR caplet is outlined in \cite{Lyashenko_Mercurio_2019}. In the Forward
+Market Model (FMM) we consider the term rate $R$ spanning the accrual period $[S,T]$ with length $\tau$
+
+\begin{equation}
+R(S,T) := \frac{1}{\tau} \left( e^{\int_S^T r(u) du} - 1 \right)
+\end{equation}
+
+$R(S,T)$ is the continuous version of the daily compounded rate. Denote $R(T_{j-1}, T_j)$ as seen from $t$ as $R_j(t)$
+on a forward rate grid $T_0, \ldots, T_n$, then $R_j(t)$ is a martingale in the $T$-forward measure and gives rise to
+the (normal) FMM dynamics
+
+\begin{equation}\label{pricing:ir_capfloor_FMM}
+dR_j(t) = \sigma_j(t) g_j(t) dW_j(t)
+\end{equation}
+
+where
+
+\begin{itemize}
+\item $\sigma_j(\cdot)$ is an adapted process
+\item $g$ is a scaling function that accounts for the decreasing volatility of $R_j$ in $[T_{j-1},T_{j}]$:
+  \begin{itemize}
+  \item $g$ is piecewise differentiable (technical requirement)
+  \item $g(t) = 1$ for $t < T_{j-1}$, i.e. no scaling before the start of the accrual period of $R(t,T_j)$
+  \item $g(t)$ is monotonically decreasing in $[T_{j-1}, T_j]$
+  \item $g(t) = 0$ for $t \geq T_j$
+  \item In the following we use a linear decay: $g_j(t) = \min \left( \frac{(T_j-t)^+}{T_j-T_{j-1}}, 1 \right)$
+  \end{itemize}
+\end{itemize}
+
+We note that It is straightforward to modify \ref{pricing:ir_capfloor_FMM} to use lognormal or shifted lognormal
+dynamics. We do not go into further details here.
+
+In the FMM framework, a (backward looking) cap with strike $K$ has payoff
+
+\begin{equation}
+\max( \omega (R_j(T_j) - K) , 0)
+\end{equation}
+
+Assuming $\sigma_j(\cdot)$ to be deterministic we get a Bachelier formula for the caplet price $\nu_B$
+
+\begin{equation}
+\nu_B = N \cdot P(0,T_j) \cdot \text{Black/Bachelier}( K, R_j(0), v, \omega )
+\end{equation}
+
+where the variance $v^2$ is given by
+
+\begin{equation}
+v^2 = \int_0^{T_j} \sigma_j(s)^2 g(s)^2 ds
+\end{equation}
+
+We use the explicit formula for $v^2$ from \cite{Lyashenko_Mercurio_2019} in section 6.3
+
+\begin{equation}
+v^2 = \sigma_j^2 \left[ T_{j-1}^+ + \frac{1}{3} \frac{(T_j - T_{j-1}^+)^3}{(T_j - T_{j-1})^2} \right]
+\end{equation}
+
+Summarizing, this leads to the following price $\nu_B$ for a backward looking RFR caplet:
+
+\begin{equation}
+\label{pricing:ir_capfloor_rfr_caplet}
+\nu_B = N \cdot P(0,t_p) \cdot \text{Black/Bachelier}(K, F(0, t_s, t_e), v, \omega)
+\end{equation}
+
+where
+
+\begin{itemize}
+\item $N$ is the notional of the caplet
+\item $P(0,t_p)$ is the applicable discount factor for the payment time $t_p$
+\item $K$ is the strike of the caplet
+\item $F(0,t_s,t_e)$ is the projected forward rate as seen from $t=0$ for the compounding period $[t_s, t_e]$.
+\item $v^2$ is the accrued variance from $t=0$. As above, the square root of the accrued variance, i.e. $v$ is the input
+  to the Black / Bachelier model (\ref{models:black}, \ref{models:bachelier}) and called ``terminal volatility''
+  there. Following the derivation above, we have
+\begin{equation}
+v^2 = \sigma(t_0)^2 \left[ t_0^+ + \frac{1}{3} \frac{(t_1 - t_0^+)^3}{(t_1 - t_0)^2} \right]
+\end{equation}
+with
+  \begin{itemize}
+  \item $t_0$, $t_1$ denoting the first and last relevant fixing times of the overnight fixings underlying the compounded
+    RFR rate. Notice that $t_0$ might be negative, i.e. part of the underlying overnight fixings are already known.
+  \item $\sigma(t_0)$ is the volatility of the RFR caplet. This is read from the interpolated caplet volatility surface
+    for the underlying Ibor / term rate index at time $t_0$ and strike $K$ (we set $\sigma(t) = \sigma(0)$ for $t<0$).
+  \end{itemize}
+\item $\omega \in \{-1,+1\}$ is $1$ for a caplet and $-1$ for a floorlet
+\end{itemize}
+
+Notice the important difference between $\sigma(t_0)$ and the effective Black / Bachelier caplet volatility
+$\sigma_\text{eff}(t_1)$ which can be defined by
+
+\begin{equation}\label{pricing:ir_capfloor_effvol}
+\sigma_\text{eff}(t_1)^2 t_1 = v^2
+\end{equation}
+
+and which allows to price an RFR caplet as if it was a standard Ibor caplet with caplet volatility
+$\sigma_\text{eff}(t_1)$ and fixing time $t_1$. We do not use $\sigma_\text{eff}$ to represent caplet volatilities in
+bootstrapped or proxied caplet volatility surfaces for RFR underlyings. We also do not report $\sigma_\text{eff}$ as the
+pricing vol in the cashflow report. Instead we use $\sigma(t_0)$ in all cases (where we set $\sigma(t_0) := \sigma(0)$
+for $t_0 < 0$).
+
+\subsubsection{Pricing of a SIFMA caplet}
+
+The methodology to price a SIFMA caplet is similar to a backward looking arithmetic average overnight caplet.
+
+\subsubsection{Bootstrap of caplet volatilities}
+\label{pricing:ir_capfloor_bootstrap}
+
+Quoted par market volatilities for caps are not directly used for pricing. Instead we build an interpolated caplet
+surface with nodes
+
+\begin{equation}
+  \sigma(t_i, K_j)
+\end{equation}
+
+for caplet expiries $t_i$, $i=1,\ldots,n$ and strikes $K_j$, $j=1,\ldots,m$. The caplet volatilities $\sigma(t_i, K_j)$
+are determined in a bootstrap procedure such that the premiums of the quoted market caps are reproduced. The pricing of
+the caplets both on the interpolated caplet surface and to generate the benchmark market premiums follow the methods
+outlined in \ref{pricing:ir_capfloor_ibor_caplet} and \ref{pricing:ir_capfloor_rfr_caplet} for Ibor / forward looking
+term rates and backward looking RFR rates. We further note:
+
+\begin{itemize}
+\item for Ibor / forward looking term rates the first caplet of a cap is excluded for the purpose of the bootstrap
+\item for backward looking RFR rates the first caplet of a cap is included for the purposes of the bootstrap
+\item the bootstrapped volatility for an Ibor / forward looking term rate caplet is stored at node $(t_f, K)$ where
+  $t_f$ is the fixing time of the caplet and $K$ is the strike.
+\item the bootstrapped volatility for a backward looking RFR caplet is stored at node $(t_0, K)$ where $t_0$ is the
+  fixing time of the first relevant overnight fixing entering the compounded RFR rate and $K$ is the strike. The stored
+  volatility is the value $\sigma(t_0)$ in the sense of the RFR caplet pricing model description above (i.e. it is {\em
+    not} the effective volatility $\sigma_\text{eff}$ defined in \ref{pricing:ir_capfloor_effvol}).
+\end{itemize}
+
+\subsubsection{Volatility Proxies for caps}
+\label{pricing:ir_capfloor_proxying}
+
+For underlyings for which no direct market volatility quotes exist, a proxy caplet volatility surface can be
+defined. The proxy surface is based on a bootstrapped caplet volatility surface for another underlying. For example,
+
+\begin{itemize}
+\item a USD-SOFR-3M term rate caplet volatility surface can be proxied by a USD-SOFR backward looking RFR caplet surface
+  with 3M compounding periods, where the latter is bootstrapped from market quotes
+\item a USD-SOFR backward looking RFR caplet surface with 3M compounding periods can be proxied by a USD-LIBOR-3M Ibor
+  caplet volatility surface
+  \item etc. ... all combinations of Ibor / forward looking and RFR backward looking surface types are allowed to derive
+    a proxy caplet surface from a bootstrapped surface
+\end{itemize}
+
+When deriving a proxy surface, the base surface is bootstrapped first and the proxy surface is based on the resulting
+caplet volatilities of the base surface. The volatility $\sigma_P(t, K)$ for a time $t$ and strike $K$ on the proxy
+surface is then given as
+
+$$
+\sigma_P(t, K) = \sigma_B(t, K + \Delta K)
+$$
+
+where $\sigma_B(\cdot)$ is the caplet volatility function on the base surface and $\Delta K$ is a strike adjustment. The
+strike adjustment is computed as
+
+\begin{equation}
+F_B(t) - F_P(t)
+\end{equation}
+
+where $F_B$ and $F_P$ are the fair forward rates for the base resp. proxy underlying at the ``anchor time'' $t$, which
+is given as
+
+\begin{itemize}
+\item the fixing time of the unique fixing date for an Ibor / forward looking RFR term rate
+\item the time of the first relevant overnight fixing for an backward looking RFR rate
+\end{itemize}
+
+For example, if the base surface is a USD-SOFR backward looking RFR caplet volatility surface (with 3M compounding
+periods) and the proxy surface is a USD-SOFR-3M term rate surface, the volatility $\sigma_T$ for a USD-SOFR-3M term rate
+caplet for strike $K$ with and fixing time $t_f$ and fair rate $F_T$ will be given as
+
+\begin{equation}
+\sigma_R(t_f, K + (F_R - F_T))
+\end{equation}
+
+where $F_R$ is the fair backward looking USD-SOFR rate for the period $[t_f, t_f + 3M]$ and $\sigma_R(\cdot)$ is the
+volatility on the backward looking RFR caplet surface.

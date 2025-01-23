@@ -1,16 +1,45 @@
 \subsubsection{FX KIKO Barrier Option}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+An FX KIKO Barrier option is an option with both a knock-out and a knock-in barrier. 
+The knock-out barrier can happen at any time, and once the knock-in barrier is hit
+the trade becomes a single barrier knock-out trade. 
+The KIKO option can only be exercised if the knock-out
+barrier is never touched and the knock-in barrier is touched at least
+once.
+
+The barriers can be any of the four main barrier types:
+\begin{itemize}
+\item Up-and-out: The FX spot price starts below the barrier level and has to 
+move up for the option to be knocked out.
+\item Down-and-out: The FX spot price starts above the barrier level and has 
+to move down for the option to become knocked out.
+\item Up-and-in: The FX spot price starts below the barrier level and has to 
+move up for the option to become activated.
+\item Down-and-in: The FX spot price starts above the barrier level and has 
+to move down for the option to become activated.
+\end{itemize}
+
+However, one of the barriers must be a knock-in and the other a knock-out.
+
+{\bf Input}}
+
+\else
+
 European exercise, American barriers.
 
-The \lstinline!FXKIKOBarrierOptionData! node is the trade data container for the \emph{FxKIKOBarrierOption} trade type.   
-
 An FX KIKO Barrier option is an option with both a knock-out and a knock-in barrier.
-The knock-out barrier can be happen at any time (American barrier), and once the knock-in barrier is
+The knock-out barrier can happen at any time (American barrier), and once the knock-in barrier is
 hit the trade becomes a single (American) barrier knock-out trade. The KIKO option can only be
 exercised (one time, European style)  if the knock-out barrier is never touched and the knock-in barrier is touched
 at least once.
 
 The strike rate and barrier levels of an FX KIKO Barrier Option are expressed as amount in SoldCurrency per unit BoughtCurrency. 
+
+\fi
+
+The \lstinline!FXKIKOBarrierOptionData! node is the trade data container for the \emph{FxKIKOBarrierOption} trade type.   
 
 The \lstinline!FXKIKOBarrierOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and two \lstinline!BarrierData! trade component sub-nodes plus elements
 specific to the FX KIKO Barrier Option. The structure of an example \lstinline!FXKIKOBarrierOptionData! node for a FX KIKO Barrier Option is shown in Listing

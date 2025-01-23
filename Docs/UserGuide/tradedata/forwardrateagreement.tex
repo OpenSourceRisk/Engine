@@ -1,5 +1,19 @@
 \subsubsection{Forward Rate Agreement}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A Forward Rate Agreement is a contract between two counterparties that determines 
+a fixed forward interest rate benchmarked to a reference IBOR index rate and tenor. 
+\begin{itemize}
+\item Difference between the forward rate and the reference rate is to be 
+paid/received at the end of the contract. 
+\item Interest is accrued on a predetermined notional amount from an agreed upon 
+start date to the end of the FRA contract.
+\item There are no exchanges of notional.
+\end{itemize}
+
+{\bf Input}}\fi
+
 A forward rate agreement (trade type \emph{ForwardRateAgreement} is set up using a \\
 {\tt ForwardRateAgreementData} block as shown in listing \ref{lst:ForwardRateAgreementdata}. The forward rate agreement specific elements
 are:

@@ -1,0 +1,149 @@
+%========================================================
+\section{Release Notes}\label{sec:releasenotes}
+%========================================================
+
+See the full history of release notes in {\tt News.txt} in the top level directory of the ORE's github repository.
+
+\medskip
+This section summarises the notable changes between release 11 (October 2023) and 12 (May 2024).
+
+\bigskip
+INSTRUMENTS \& PRICING
+\begin{itemize}
+\item add formula-based leg (ticket 12263), see Example 64
+\item add Callable Swap (ticket 12370), Example, see extended Example 5
+\item add Flexi Swap (ticket 12370), see Example 65
+\item add Balance Guaranteed Swap (ticket 12370), see Example 66
+\item add American Swaption with finite difference pricing in LGM (ticket 11618), see extended Example 4
+\item add Equity Outperformance Option (ticket 12456)
+\item add Pairwise Variance Swap (ticket 12456)
+\item add analytic pricer for Overnight Index Swaptions (ticket 11974)
+\item add finite difference LGM pricers for Bermudan and European Swaptions
+\item add numerical integration LGM pricer for European Swaptions
+\item support indexed cashflows in AMC (ticket 12206)
+\item scripted trades: support LGM1F using finite difference and numerical integration (ticket 12306)
+\item scripted trades: support generating past cashflows (ticket 12417)
+\item scripted trades: handle near-collinear predictor variables in linear regression for AMC (ticket 12419)
+\item support for rules-based Bermudan exercise dates (ticket 11947)
+\item improved AMC regression model for resetting XCCY Swaps (ticket 12119)
+\item add Burley 2020 scrambled Sobol sequence (ticket 12140), used in Example 56
+\item rates curve building: support mixed interpolations (ticket 12159), used in Example 53
+\item add priorities to yield curve segments (ticket 9557)
+\item configurable settlement date flows handling (ticket 12372)
+\item introduce notional payment lag for resetting Cross Currency Swaps (ticket 12379)
+\item support security spreads over discount in Single Currency Swaps, Swaptions and Scripted Trades
+  (ticket 12201 and 12275)
+\item add pricing engines that provide analytical deltas and gammas for Swaps, Swaptions, FX Forwards,
+  FX Options (ticket 12456)
+\end{itemize}
+
+\bigskip
+MARKETS \& TERMSTRUCTURES
+\begin{itemize}
+\item SABR pricing for Swaptions and Caps/Floors (ticket 12325), see Example 59
+\item allow importing external SABR parameters (ticket 12491)
+\end{itemize}
+
+\bigskip
+ANALYTICS
+\begin{itemize}
+\item add XVA Sensitivitiy Proof of Concept using AAD (ticket 12028), see Example 56
+\item support overlapping close-out date grid in exposure/XVA (ticket 9859), see Example 60
+\item add scenario analytic (ticket 11990), see Example 57
+\item add historical simulation VaR analytic (ticket 9793), see Example 58
+\item add IM Schedule analytic (ticket 11730), see extended Example 44
+\item add P\&L and P\&L Explain analytics (ticket 12458), see Example 62
+\item add par stress test support (ticket 12148), see Example 63
+\item add XVA stress testing (ticket 12376), see Example 67
+\item add XVA bump \& revalue sensitivities (ticket 12437), see Example 68
+\item add bond spread imply to ORE (ticket 12370)
+\item add market risk backtest analytic (ticket 12370)
+\item add calculation of stoplight bounds for backtests (ticket 12370)
+\item feed t0 Variation Margin into xVA calculation (ticket 12241)
+\item support flat Initial Margin projection in exposure calculations (ticket 12318)
+\item fix the Independent Amount implementation in exposure calculations (ticket 12277)
+\item introduce configurable shift size and difference scheme per product for sensitivity analysis (ticket 12014)
+\item improve performance of SIMM calculations for large CRIF files (ticket 12397)
+\item output effective SOFR / RFR cap volatilities in reports (ticket 12192)
+\end{itemize}
+
+\bigskip
+TESTS
+\begin{itemize}
+\item add a test suite for ORE-SWIG (ticket 11823)
+\item add AD unit tests (ticket 12188)
+\item add delta/gamma engine tests (ticket 12370)
+\item add pairwise variance swap tests (ticket 12370)
+\item add equity outperformance option tests (ticket 12370)
+\item QuantExt: 298 test functions (vs 272 in the previous release)
+\item OREData: 264 test functions (vs. 257 in the previous release)
+\item OREAnalytics: 79 test functions (vs. 78 in the previous release)
+\end{itemize}
+
+\bigskip
+DOCUMENTATION
+\begin{itemize}
+\item add documentation of pricing engine configuration (ticket 12337)
+\item add documentation for added instruments (ticket 12317)
+\item add supported compiler and boost versions (ticket 11431) TODO update user guide
+\item clean up ORE cmake build flags (ticket 12048) TODO and update user guide
+\item update the ORE Design document (ticket 12375)
+\item the user guide has grown significantly to about 820 pages, due to the migration of more instruments
+  into ORE, additional examples, and especially the added documentation of pricing engine configurations.
+\end{itemize}
+
+\bigskip
+LANGUAGE BINDINGS \& PYTHON MODULE
+\begin{itemize}
+\item add NPV Cube and joint cube to the swig interface (ticket 12421)
+\item refactor OREApp to allow repeated run() calls (ticket 12317)
+\item add Python wheels workflow on github (ticket 12436)
+\end{itemize}
+
+ORE SERVICE
+\begin{itemize}
+\item add a restful API to ORE, based on ORE-Python, see Example 0 (Examples/API)
+\end{itemize}
+
+\bigskip
+GPU
+\begin{itemize}
+\item The external device interface based on the scripted trade and in particular its computation
+  graph implementation is progressing. This release has several notable changes
+  \begin{itemize}
+    \item an option to use double precision in opencl (ticket 12386)
+    \item a mersenne twister random number generator implementation for opencl (ticket 12387)
+    \item a working example that parallelizes bump \& reval sensitivity analysis on a GPU, see Example 61
+    \item smoke test are passing on several external devices 
+  \end{itemize}
+\item Next steps
+  \begin{itemize}
+    \item implementation of the conditional expectation operator on the GPU
+    \item implementation of several coupon types to cover IR/FX products more broadly
+    \item implementation of a computation graph version of the post processor
+  \end{itemize}
+\end{itemize}
+
+\bigskip
+NEW \& EXTENDED EXAMPLES
+\begin{itemize}
+\item  0: ORE Web Service
+\item  4: American Swaption added
+\item  5: Callable Swap instrument added  
+\item 44: IM Schedule added
+\item 54: Scripted Trade exposure with AMC: Bermudan Swaption and LPI Swap
+\item 55: Scripted Trade exposure with AMC: TaRF
+\item 56: Proof of Concept: CVA Sensitivities using AAD
+\item 57: Base Scenario Analytic
+\item 58: Historical Simulation VaR
+\item 59: SABR model for Swaptions and Caps/Floors
+\item 60: Exposure and XVA with Overlapping Close-Out Grid
+\item 61: Fast Sensitivities using AAD and GPUs
+\item 62: P\&L and P\&L Explain Analytic
+\item 63: Stresstest with shifts in the par-rate domain
+\item 64: Formual-based Coupon
+\item 65: Flexi Swap
+\item 66: Balance Guaranteed Swap 
+\item 67: XVA Stress Testing
+\item 68: XVA Bump \& Revalue Sensitivities
+\end{itemize}
