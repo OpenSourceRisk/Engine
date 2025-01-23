@@ -164,8 +164,10 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
     }
     if (initialSize == failedTrades && initialSize > 0) {
         map<string, string> subfields;
-        for (auto failedTrade : trades_)
+        for (auto failedTrade : trades_) {
             subfields.insert({"tradeId", failedTrade.first});
+            subfields.insert({"tradeType", failedTrade.second->tradeType()});
+        }
         StructuredMessage(StructuredMessage::Category::Error, StructuredMessage::Group::Trade,
                           "All trades in portfolio failed to build.", subfields)
             .log();
