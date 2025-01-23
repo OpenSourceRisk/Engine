@@ -48,9 +48,7 @@ class SaCvaAnalytic : public Analytic {
 public:
     SaCvaAnalytic(const QuantLib::ext::shared_ptr<InputParameters>& inputs,
                   const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
-        : Analytic(std::make_unique<SaCvaAnalyticImpl>(inputs), {"SA_CVA"}, inputs, analyticsManager, true, true) {
-        impl()->addDependentAnalytic(SaCvaAnalyticImpl::sensiLookupKey, QuantLib::ext::make_shared<XvaSensitivityAnalytic>(inputs));
-    }
+        : Analytic(std::make_unique<SaCvaAnalyticImpl>(inputs), {"SA_CVA"}, inputs, analyticsManager, true, true) {}
 };
 
 } // namespace analytics

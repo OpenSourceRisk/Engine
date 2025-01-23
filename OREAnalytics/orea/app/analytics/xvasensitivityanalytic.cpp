@@ -340,16 +340,15 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
             // auto newAnalytic =
             //     ext::make_shared<XvaAnalytic>(inputs_, scenario, analytic()->configurations().simMarketParams);
-            auto xvaAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager());
-            auto newAnalytic = xvaAnalytic.second;
-            auto xvaImpl = static_cast<XvaAnalyticImpl*>(newAnalytic->impl().get());
+            auto xvaAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager()).second;
+            XvaAnalyticImpl* xvaImpl = static_cast<XvaAnalyticImpl*>(xvaAnalytic->impl().get());
             xvaImpl->setOffsetScenario(scenario);
             xvaImpl->setOffsetSimMarketParams(simMarketParams);
 	    
 	        CONSOLE("XVA_SENSITIVITY: Calculate Exposure and XVA")
-            newAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
+            xvaAnalytic->runAnalytic(loader, {"EXPOSURE", "XVA"});
             // Collect exposure and xva reports
-            for (auto& [name, rpt] : newAnalytic->reports()["XVA"]) {
+            for (auto& [name, rpt] : xvaAnalytic->reports()["XVA"]) {
                 // add scenario column to report and copy it, concat it later
                 if (boost::starts_with(name, "exposure") || boost::starts_with(name, "xva")) {
                     xvaReports[name].push_back(rpt);

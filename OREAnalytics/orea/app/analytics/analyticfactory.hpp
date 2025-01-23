@@ -53,7 +53,8 @@ public:
 };
 
 //! Template AnalyticBuilder class
-/*!
+/*!+		pn	{pi_=0x0000019632613460 {ptr=0x0000000000000000 <NULL> del={initialized_=true storage_={...} } } }	boost::detail::shared_count
+
   \ingroup analytics
 */
 template <class T> class AnalyticBuilder : public AbstractAnalyticBuilder {
