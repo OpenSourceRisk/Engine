@@ -24,22 +24,10 @@
 
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/trade.hpp>
-
-enum FutureType { UB, ZB, TWE, TN, ZN, ZF, Z3N, ZT };
-
-//                      Deliverable Maturities	    CME Globex  Bloomberg
-// 2-Year T-Note	        1 3/4 to 2 years	        ZT          TU
-// 3-Year T-Note         9/12 to 3 years	            Z3N         3Y
-// 5-Year T-Note	        4 1/6 to 5 1/4 years	    ZF          FV
-// 10-Year T-Note	    6 1/2 to 8 years	        ZN          TY
-// Ultra 10-Year T-Note	9 5/12 to 10 Years	        TN          UXY
-// T-Bond	            15 years up to 25 years	    ZB          US
-// 20-Year T-Bond	    19 2/12 to 19 11/12 years	TWE         TWE
-// Ultra T-Bond	        25 years to 30 years	    UB          WN
-// source: https://www.cmegroup.com/trading/interest-rates/basics-of-us-treasury-futures.html
-
 namespace ore {
 namespace data {
+
+enum FutureType { ShortTenor, LongTenor };
 
 class BondFuture : public Trade {
 public:
@@ -56,25 +44,36 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) const override;
 
     //! Add underlying Bond names
-    std::map<AssetClass, std::set<std::string>>
-    underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    //std::map<AssetClass, std::set<std::string>>
+    //underlyingIndices(const QuantLib::ext::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! inspectors
-    const std::vector<std::string>& secList() const { return secList_; }
+    //const std::vector<std::string>& secList() const { return secList_; }
 
 
 protected:
 
     BondData identifyCtdBond(const QuantLib::ext::shared_ptr<EngineFactory>& engineFactory);
 
+private:
+
+    //mandatory first tier information
+    std::string contractName_; //can be used to identify tier 2/3 info
     std::vector<std::string> secList_;
-    std::string contractName_;
-    double notional_;
-    //optional
-    std::string expiry_;
-    std::string underlyingType_; //futureType differentiating the underlying
+    // std::string currency_; --> use Trade::notionalCurrency_;
+    // double notional_; --> use Trade::notional_;
 
+    //second tier information - both can be used in conjunction to identify tier 3 info
+    std::string contractMonths_;
+    std::string deliverableGrade_; //futureType differentiating the underlying
 
+    //thirdt tier information
+    std::string lastTrading_; //expiry
+    std::string lastDelivery_; //settlement date
+
+    //transformed dates
+    Date expiry_;
+    Date settlement_;
 };
 } // namespace data
 } // namespace ore
