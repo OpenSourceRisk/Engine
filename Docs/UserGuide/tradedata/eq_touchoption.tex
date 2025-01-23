@@ -1,10 +1,34 @@
 \subsubsection{Equity Touch Option}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+This product has a continuously monitored single barrier with a Cash-or-Nothing 
+digital underlying.
+
+At expiry an Equity Touch Option pays either a fixed predetermined payoff amount or
+zero (Cash-or-Nothing) depending upon an Equity spot rate reaching a pre-set barrier 
+level.
+\begin{itemize}
+\item Can be of the same four main types as a regular Barrier Equity Option: 
+Up-and-out, Down-and-out, Up-and-in, Down-and-in. 
+\item A Knock-In or One-Touch option has a fixed payout if the barrier is 
+breached, and no payout otherwise. The payout can be at expiry or at hit.
+\item A Knock-Out or No-Touch option has no payout if the barrier is breached, 
+and fixed payout at expiry otherwise.
+\item The buyer of a Equity Touch Option pays a premium to the seller.
+\end{itemize}
+
+{\bf Input}}
+
+\else
+
+An Equity Touch Option pays a given cash amount (PayoffAmount) at expiry or at hit if the underlying equity price or index has hit a barrier (UpAndIn, DownAndIn) resp. has not hit a barrier (UpAndOut, DownAndOut) using continuous monitoring between start and expiry date. No rebates are supported. 
+
+\fi
+
 The \lstinline!EquityTouchOptionData!  node is the trade data container for the \emph{EquityTouchOption} trade type. The
 \lstinline!EquityTouchOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
 specific to the Equity Touch Option. 
-
-An Equity Touch Option pays a given cash amount (PayoffAmount) at expiry or at hit if the underlying equity price or index has hit a barrier (UpAndIn, DownAndIn) resp. has not hit a barrier (UpAndOut, DownAndOut) using continuous monitoring between start and expiry date. No rebates are supported. 
 
 The structure of an example \lstinline!EquityTouchOptionData! node for an Equity Touch Option is shown in Listing
 \ref{lst:eqtouchoption_data}.

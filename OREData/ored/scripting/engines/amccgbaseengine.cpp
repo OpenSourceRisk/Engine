@@ -55,19 +55,7 @@ using namespace QuantExt;
 
 AmcCgBaseEngine::AmcCgBaseEngine(const QuantLib::ext::shared_ptr<ModelCG>& modelCg,
                                  const std::vector<QuantLib::Date>& simulationDates)
-    : modelCg_(modelCg), simulationDates_(simulationDates) {
-
-    // determine name of npv node, we can use anything that is not yet taken
-
-    npvName_ = "__AMCCG_NPV_";
-    std::size_t counter = (std::size_t)this;
-    while (modelCg_->computationGraph()->variables().find(npvName_ + std::to_string(counter)) !=
-           modelCg_->computationGraph()->variables().end())
-        ++counter;
-    npvName_ += std::to_string(counter);
-}
-
-std::string AmcCgBaseEngine::npvName() const { return npvName_; }
+    : modelCg_(modelCg), simulationDates_(simulationDates) {}
 
 Real AmcCgBaseEngine::time(const Date& d) const {
     return QuantLib::ActualActual(QuantLib::ActualActual::ISDA).yearFraction(modelCg_->referenceDate(), d);
@@ -529,7 +517,8 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 
     std::vector<std::size_t> pathValueUndDirty(simExDates.size(), cg_const(g, 0.0));
     std::vector<std::size_t> pathValueUndExInto(simExDates.size(), cg_const(g, 0.0));
-    std::vector<std::size_t> pathValueOption(simExDates.size(), cg_const(g, 0.0));
+    std::vector<std::size_t> pathValueOption(simExDates.size() + 1, cg_const(g, 0.0)); // +1 for convenience
+    std::vector<std::size_t> pathValueRebate(simExDates.size() + 1, cg_const(g, 0.0)); // +1 for convenience
     std::vector<std::size_t> exerciseIndicator(exerciseDates.size());
 
     cachedExerciseIndicators_.resize(exerciseIndicator.size(), ComputationGraph::nan);
@@ -541,6 +530,8 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
     Size counter = simExDates.size() - 1;
     Size exerciseCounter = exerciseDates.size() - 1;
     auto previousExerciseDate = exerciseDates.rbegin();
+
+    auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
 
     for (auto d = simExDates.rbegin(); d != simExDates.rend(); ++d) {
 
@@ -596,13 +587,13 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 
             // calculate rebate (exercise fees) if existent
 
-            std::size_t pvRebate = cg_const(g, 0.0);
-            if (auto rebatedExercise = QuantLib::ext::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_)) {
+            if (rebatedExercise) {
                 Size exerciseTimes_idx = std::distance(exerciseDates.begin(), exerciseDates.find(*d));
                 if (rebatedExercise->rebate(exerciseTimes_idx) != 0.0) {
                     // note: the silent assumption is that the rebate is paid in the first leg's currency!
-                    pvRebate = modelCg_->pay(cg_const(g, rebatedExercise->rebate(exerciseTimes_idx)), *d,
-                                             rebatedExercise->rebatePaymentDate(exerciseTimes_idx), currency_.front());
+                    pathValueRebate[counter] =
+                        modelCg_->pay(cg_const(g, rebatedExercise->rebate(exerciseTimes_idx)), *d,
+                                      rebatedExercise->rebatePaymentDate(exerciseTimes_idx), currency_.front());
                 }
             }
 
@@ -622,27 +613,36 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                     pathValueUndExIntoRunning, *d, cashflowInfo,
                     [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0));
 
-                auto exerciseValue = cg_add(g, reg, pvRebate);
+                auto exerciseValue = cg_add(g, reg, pathValueRebate[counter]);
                 std::size_t filter = cg_indicatorGt(g, exerciseValue, cg_const(g, 0.0));
                 auto continuationValue = createRegressionModel(
-                    pathValueOption[counter], *d, cashflowInfo,
+                    pathValueOption[counter + 1], *d, cashflowInfo,
                     [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, filter);
 
-                exerciseIndicator[exerciseCounter] = cg_indicatorGt(g, exerciseValue, continuationValue) *
-                                                     cg_indicatorGt(g, exerciseValue, cg_const(g, 0.0));
+                exerciseIndicator[exerciseCounter] = cg_mult(g, cg_indicatorGt(g, exerciseValue, continuationValue),
+                                                             cg_indicatorGt(g, exerciseValue, cg_const(g, 0.0)));
 
                 cachedExerciseIndicators_[exerciseCounter] = exerciseIndicator[exerciseCounter];
             }
 
-            pathValueOption[counter] = cg_add(
-                g, cg_mult(g, exerciseIndicator[exerciseCounter], cg_add(g, pathValueUndExIntoRunning, pvRebate)),
-                cg_mult(g, cg_subtract(g, cg_const(g, 1.0), exerciseIndicator[exerciseCounter]),
-                        pathValueOption[counter]));
+            pathValueOption[counter] =
+                cg_add(g,
+                       cg_mult(g, exerciseIndicator[exerciseCounter],
+                               cg_add(g, pathValueUndExIntoRunning, pathValueRebate[counter])),
+                       cg_mult(g, cg_subtract(g, cg_const(g, 1.0), exerciseIndicator[exerciseCounter]),
+                               pathValueOption[counter + 1]));
 
-            if (isExerciseDate && previousExerciseDate != exerciseDates.rend())
+            if (previousExerciseDate != exerciseDates.rend())
                 std::advance(previousExerciseDate, 1);
 
             --exerciseCounter;
+
+        } else {
+
+            // populate pathValueOption and pathValueRebate on non-exercise dates
+
+            pathValueOption[counter] = pathValueOption[counter + 1];
+            pathValueRebate[counter] = pathValueRebate[counter + 1];
         }
 
         pathValueUndDirty[counter] = pathValueUndDirtyRunning;
@@ -695,19 +695,24 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
 
             if (isExerciseDate) {
 
+                ++exerciseCounter; // early increment here to be able to set futureOptionValue below correctly!
+
                 // update was exercised based on exercise at the exercise time
 
-                isExercisedNow = cg_subtract(g, cg_const(g, 1.0), wasExercised) * exerciseIndicator[exerciseCounter];
-                wasExercised = cg_min(g, cg_add(g, wasExercised, exerciseIndicator[exerciseCounter]), cg_const(g, 1.0));
+                isExercisedNow =
+                    cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), exerciseIndicator[exerciseCounter - 1]);
+                wasExercised =
+                    cg_min(g, cg_add(g, wasExercised, exerciseIndicator[exerciseCounter - 1]), cg_const(g, 1.0));
 
                 // if cash settled, determine the amount on exercise and until when it is to be included in exposure
 
                 if (optionSettlement_ == Settlement::Type::Cash) {
-                    cashSettlements[cashSettlementDates_[exerciseCounter]] =
-                        cg_mult(g, pathValueUndExInto[counter], isExercisedNow);
+                    auto reg = createRegressionModel(
+                        pathValueUndExInto[counter], d, cashflowInfo,
+                        [&cfStatus](std::size_t i) { return cfStatus[i] == CfStatus::done; }, cg_const(g, 1.0));
+                    cashSettlements[cashSettlementDates_[exerciseCounter - 1]] = cg_mult(g, reg, isExercisedNow);
                 }
 
-                ++exerciseCounter;
             }
 
             if (isSimDate) {
@@ -715,7 +720,7 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                 // there is no continuation value on the last exercise date
 
                 std::size_t futureOptionValue =
-                    exerciseCounter == exerciseDates.size() - 1 ? cg_const(g, 0.0) : pathValueOption[counter];
+                    exerciseCounter == exerciseDates.size() ? cg_const(g, 0.0) : pathValueOption[counter];
 
                 /* Physical Settlement:
 
@@ -755,11 +760,15 @@ void AmcCgBaseEngine::buildComputationGraph(const bool stickyCloseOutDateRun,
                     }
                 }
 
-                g.setVariable(
-                    "_AMC_NPV_" + std::to_string(simCounter + (stickyCloseOutDateRun ? simulationDates_.size() : 0)),
-                    cg_max(g, cg_const(g, 0.0),
-                           cg_add(g, cg_mult(g, wasExercised, exercisedValue),
-                                  cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValue))));
+                // update for rebate
+
+                if (rebatedExercise)
+                    exercisedValue = cg_add(g, exercisedValue, cg_mult(g, isExercisedNow, pathValueUndExInto[counter]));
+
+                g.setVariable("_AMC_NPV_" +
+                                  std::to_string(simCounter + (stickyCloseOutDateRun ? simulationDates_.size() : 0)),
+                              cg_add(g, cg_mult(g, wasExercised, exercisedValue),
+                                     cg_mult(g, cg_subtract(g, cg_const(g, 1.0), wasExercised), futureOptionValue)));
 
                 ++simCounter;
             }

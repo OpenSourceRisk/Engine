@@ -1,5 +1,7 @@
 \subsubsection{Flexi Swap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
 A Flexi Swap is an amortizing swap in which one party has the option to further 
 reduce the notional in each period to each value between the current notional and 
 a specified lower bound for that period.
@@ -10,6 +12,8 @@ global calibration for all swaptions derived from the flexi swap structure.
 Prepayment option types ``ReductionByAbsoluteAmount'' and ``ReductionUpToAbsoluteAmount'' are both treated approximately
 by generating a schedule of deterministic, lower notional bounds from assuming that all earlier prepayment options
 were executed.
+
+{\bf Input}}\fi
 
 The \lstinline!FlexiSwapData! node is the trade data container for trade type Flexi Swap. A Flexi Swap is a two-legged
 swap with optional and customisable pre-payments. Flexi Swaps are typically used for representing swaps linked to Asset

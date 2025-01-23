@@ -711,11 +711,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                         isAtm = QuantLib::ext::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr ||
                                 QuantLib::ext::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr;
 
+                        DLOG("YieldVol T0  source is atm     : " << (isAtm ? "True" : "False"));
+                        DLOG("YieldVol ssm target is cube    : " << (isCube ? "True" : "False"));
+
                         Handle<SwaptionVolatilityStructure> svp;
                         if (param.second.first) {
-                            LOG("Simulating yield vols for ccy " << name);
-                            DLOG("YieldVol T0  source is atm     : " << (isAtm ? "True" : "False"));
-                            DLOG("YieldVol ssm target is cube    : " << (isCube ? "True" : "False"));
+                            DLOG("Simulating yield vols for ccy " << name);
                             DLOG("YieldVol simulate atm only     : " << (simulateAtmOnly ? "True" : "False"));
                             if (simulateAtmOnly) {
                                 QL_REQUIRE(strikeSpreads.size() == 1 && close_enough(strikeSpreads[0], 0),

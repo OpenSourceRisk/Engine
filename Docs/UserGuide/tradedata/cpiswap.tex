@@ -1,5 +1,45 @@
 \subsubsection{CPI Swap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A CPI swap is an inflation swap where one of the legs has a floating rate with 
+coupon payments linked to a supported inflation index.  
+
+Coupons on the inflation leg are calculated starting by the contractual real 
+coupon rate and adjusting it to a nominal rate using the change from the relevant 
+inflation index fixing before issue date to the index fixing at coupon reset date, 
+taking into account observation lag, and if necessary, interpolation between 
+inflation index fixings.
+
+Note that the amount to be disbursed on the maturity date of the inflation leg 
+(excluding the last coupon) is calculated by multiplying the initial notional 
+(face value) value by the increase in the relevant inflation index over the life 
+of the swap. A CPI Swap coupon payment at time i:
+$$
+N\,r\,\frac{I(T_i)}{I(T_0)}\,\delta(T_{i-1}, T_i)
+$$
+where:
+\begin{itemize}
+\item $N$: notional
+\item $r$: the contractual real rate
+\item $I(T_i)$: the relevant CPI fixing for time $T_i$
+\item $I(T_0)$: the relevant CPI fixing before issue date
+\item $\delta(T_{i-1}, T_i)$: the day count fraction for the accrual period up to 
+time $T_i$
+\end{itemize}
+
+The flow at maturity excluding the last coupons can be either no flow on both legs, 
+or the notional on the non-inflation leg and the following on the inflation leg:
+$$
+N\,\frac{I(T)}{I(T_0)}
+$$
+where $I(T)$ is the relevant CPI fixing for the maturity date.
+
+\medskip
+CPI linked coupons and maturity cashflows can be capped/floored. 
+
+{\bf Input}}\fi
+
 A CPI inflation swap can be set up using the \emph{InflationSwap} trade type, with one leg of type {\tt CPI}. and the other leg(s) can be of any leg type. Listing \ref{lst:cpiinflationswap} shows an example. The CPI leg contains an additional {\tt CPILegData} block. See \ref{ss:cpilegdata} for details on the
 CPI leg specification. 
 

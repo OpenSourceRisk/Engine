@@ -1,5 +1,25 @@
 \subsubsection{FX Option}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A European FX option gives the buyer the right, but not the obligation, to 
+exchange a set amount of one currency for another, at a predetermined exchange 
+rate, at one predetermined time in the future. For this right the buyer pays a 
+premium to the seller. Settlement can be either cash or physical delivery.
+
+An American FX option gives the buyer the right, but not the obligation, to 
+exchange a set amount of one currency for another, at a predetermined exchange 
+rate, at any time during the life of the option up until the expiration date. 
+The right to exchange of one currency for another can only be exercised once. 
+For this right the buyer pays a premium to the seller.
+\begin{itemize}
+\item Settlement can be either cash or physical delivery.
+\item Payoff, i.e. the FX exchange or cash settlement, can take place at 
+exercise or expiry. 
+\end{itemize}
+
+{\bf Input}}\fi
+
 The \lstinline!FXOptionData! node is the trade data container for the \emph{FxOption} trade type. FX options with exercise styles \emph{European} or \emph{American} are supported. 
 The \lstinline!FXOptionData! node includes one and only one \lstinline!OptionData! trade
 component sub-node plus elements specific to the FX Option. The structure of an \lstinline!FXOptionData! node
@@ -81,9 +101,14 @@ Allowable values: Any positive real number.
 
 Allowable values: See Table \ref{tab:currency}.
 
-\item SoldAmount: The amount in the SoldCurrency.
+\item SoldAmount [Optional]: The amount in the SoldCurrency.
 
 Allowable values: Any positive real number.
+
+\item Delta [Optional]: The fx option delta. The SoldAmount is computed by deriving the strike from the delta.
+
+Allowable values: Any non null real number. A SoldAmount or a Delta node is required.
+Note: The delta to strike conversion is based on the valuation date. Therefore the strike will change day to day based on the market data variation.
 
 \item FXIndex [Optional]: If the option \textit{European}, has cash settlement and is subject to \textit{Automatic Exercise}, as indicated by the \lstinline!AutomaticExercise! node under \lstinline!OptionData!, this node must be populated with a valid FX index. The FX index is used to retrieve an FX rate on the expiry date that is in turn used to determine the payoff on the cash settlement date. The payoff is in the \lstinline!SoldCurrency! i.e.\ the domestic currency.
 

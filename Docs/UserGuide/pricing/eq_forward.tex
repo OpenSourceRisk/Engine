@@ -1,0 +1,17 @@
+\subsubsection{Equity Forward}
+\label{pricing::eq_forward}
+
+The equity forwarding curve is used for respective underlying equity. The net 
+present value of an equity forward can be priced discounting the cashflows at 
+maturity as:
+$$
+\NPV = \mbox{Quantity}\cdot\omega (S(0,T)-K)\cdot P(T)
+$$
+where:
+\begin{itemize}
+\item Quantity : number of shares of the underlying equity
+\item $K$: Strike price
+\item $S(0,T)$: the forward equity price for maturity T at valuation time 0 (calibrated to incorporate dividends, (Lichters, Stamm, \& Gallagher, 2015) Ch 14.1
+\item $P(t)$: the discount factor for maturity time $T$
+\item $\omega$: 1 for a forward to buy equity, -1 for a forward to sell equity 
+\end{itemize}

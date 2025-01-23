@@ -1,5 +1,14 @@
 \subsubsection{FX Swap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+An FX Swap is a contract that involves the exchange of a set amount of one 
+currency for another at the start of the contract, and then the reverse exchange 
+at the end of the contract. The exchange at the start uses the FX spot rate, 
+whereas the exchange at the end uses the FX forward rate at the start. 
+
+{\bf Input}}\fi
+
 The \lstinline!FXSwapData!  node is the trade data container for the \emph{FxSwap} trade type.  The structure -
 including example values - of the \lstinline!FXSwapData!  node is shown in Listing 
 \ref{lst:fxswap_data}. 
