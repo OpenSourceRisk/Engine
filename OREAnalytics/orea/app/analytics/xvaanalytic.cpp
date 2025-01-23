@@ -512,7 +512,8 @@ void XvaAnalyticImpl::buildAmcPortfolio() {
     ProgressMessage(msg, 0, 1).log();
 
     std::vector<Date> simDates, stickyCloseOutDates;
-    if (analytic()->configurations().scenarioGeneratorData->withMporStickyDate()) {
+    if (analytic()->configurations().scenarioGeneratorData->withCloseOutLag() &&
+        analytic()->configurations().scenarioGeneratorData->withMporStickyDate()) {
         simDates = analytic()->configurations().scenarioGeneratorData->getGrid()->valuationDates();
         stickyCloseOutDates = analytic()->configurations().scenarioGeneratorData->getGrid()->closeOutDates();
     } else {

@@ -1,0 +1,34 @@
+\subsubsection{European Commodity Option}
+\label{pricing:com_option}
+
+European Commodity Options are priced using the Black-Scholes model with log-normal 
+volatilities. Volatility structures with smile are taken into account where available. 
+The commodity forwarding curve is used for respective commodity.
+
+The Black-Scholes model assumes that the spot commodity price C follows Geometric 
+Brownian Motion:
+$$
+dC/C=\mu(t)dt + \sigma(t)\,dW
+$$
+The model?s drift is calibrated such that the expected future spot commodity price 
+agrees with today?s fair forward commodity price for time T. This means that the 
+commodity forward rate $F(t,T)$ follows drift-free GBM under the T-forward measure:
+$$
+dF(t,T)) = \sigma(t)\,F(t,T)\,dW
+$$
+This leads a Black76 analytical solution for the present value of a European FX option:
+$$
+\NPV = N\cdot \mbox{Black}(K, F(0,T), \sigma\sqrt{T},\omega)\cdot?P(T)
+$$
+where:
+\begin{itemize}
+\item $N$: notional
+\item $K$: strike price
+\item $F(0,T)$: the forward commodity price for maturity $T$ at time 0 (start)
+\item $\sigma$: the volatility of the commodity forward price
+\item $\omega$: 1 for a call option, -1 for a put option
+\item $P(T)$: the discount factor for maturity time $T$
+\end{itemize}
+
+See Black Model, Section \ref{sec:models}, for more details.
+

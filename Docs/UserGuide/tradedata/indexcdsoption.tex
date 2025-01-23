@@ -1,6 +1,34 @@
 \subsubsection{Index Credit Default Swap Option}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A CDS Option is an option to buy or sell protection 
+as a credit default swap on a specific reference
+credit with a specific maturity. The option is usually European,
+ exercisable only at one date in the future at a specific strike price 
+defined as a coupon rate on the credit default swap.
+
+Credit default options can be options on single name credits
+or credit indices such as iTraxx or CDX. CDS Options
+on single credits are extinguished upon default
+without any cashflows, other than the upfront premium paid by the
+buyer of the option. Options on credit indices include any 
+defaulted entities in the intrinsic value of the option when
+exercised. 
+
+CDS Options can come with or without {\em front end protection},
+i.e. the protection seller may either have to pay the contract notional if
+default happens before option expiry, or not (knock out).
+
+{\bf Input}}
+
+An index CDS option has trade type \lstinline!IndexCreditDefaultSwapOption! in ORE. The Index CDS Option is set up using an \lstinline!IndexCreditDefaultSwapOptionData! node as shown in Listing \ref{lst:indexcdsoptiondata}. Its child nodes have the following meanings:
+
+\else
+
 An index CDS option, trade type \lstinline!IndexCreditDefaultSwapOption!, is an option to enter into an index CDS at a specified strike spread or strike price. The Index CDS Option is set up using an \lstinline!IndexCreditDefaultSwapOptionData! node as shown in Listing \ref{lst:indexcdsoptiondata}. Its child nodes have the following meanings:
+
+\fi
 
 \begin{itemize}
 

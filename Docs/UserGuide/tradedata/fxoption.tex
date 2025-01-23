@@ -1,5 +1,25 @@
 \subsubsection{FX Option}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A European FX option gives the buyer the right, but not the obligation, to 
+exchange a set amount of one currency for another, at a predetermined exchange 
+rate, at one predetermined time in the future. For this right the buyer pays a 
+premium to the seller. Settlement can be either cash or physical delivery.
+
+An American FX option gives the buyer the right, but not the obligation, to 
+exchange a set amount of one currency for another, at a predetermined exchange 
+rate, at any time during the life of the option up until the expiration date. 
+The right to exchange of one currency for another can only be exercised once. 
+For this right the buyer pays a premium to the seller.
+\begin{itemize}
+\item Settlement can be either cash or physical delivery.
+\item Payoff, i.e. the FX exchange or cash settlement, can take place at 
+exercise or expiry. 
+\end{itemize}
+
+{\bf Input}}\fi
+
 The \lstinline!FXOptionData! node is the trade data container for the \emph{FxOption} trade type. FX options with exercise styles \emph{European} or \emph{American} are supported. 
 The \lstinline!FXOptionData! node includes one and only one \lstinline!OptionData! trade
 component sub-node plus elements specific to the FX Option. The structure of an \lstinline!FXOptionData! node

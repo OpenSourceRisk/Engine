@@ -1,5 +1,7 @@
 \subsubsection{Performance Option Type 01}
 
+{\bf Payoff}
+
 The performace option of type ``01'' is characterized by the following data
 
 \begin{itemize}
@@ -26,6 +28,8 @@ The above payoff includes the strike in the performance calculation. There is an
 $$
 P = \max\left( \left[ \sum_{i=1}^n w_i \frac{U_i(V)}{s_i} \right] - K, 0 \right)
 $$
+
+{\bf Input}
 
 The \verb+PerformanceOption_01+ node is the trade data container for the PerformanceOption\_01 trade type, listing
 \ref{lst:performanceoption01_data} shows the structure of an example.

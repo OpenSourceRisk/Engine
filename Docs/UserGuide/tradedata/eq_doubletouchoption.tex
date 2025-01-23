@@ -1,10 +1,37 @@
 \subsubsection{Equity Double Touch Option}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+This product has two continuously monitored barriers with a Cash-or-Nothing
+digital underlying.
+
+An Equity Double Touch option pays either a fixed predetermined payoff amount or
+zero (Cash-or-Nothing) depending upon an Equity spot rate reaching one of the
+pre-set barrier levels.
+\begin{itemize}
+\item Can be of the same two main types as a regular Barrier Equity Option:
+Knock-In, Knock-Out.
+\item A Knock-In or Double One-Touch option has a fixed payout if one of the
+barriers is breached, and no payout otherwise.
+\item A Knock-Out or Double No-Touch option has no payout if one of the
+barriers is breached, and fixed payout otherwise.
+\item The buyer of a Equity Double Touch Option pays a premium to the seller.
+\end{itemize}
+
+Note that the current implementation supports Equity Double Touch
+options with payout at expiry only.
+
+{\bf Input}}
+
+\else
+
+An Equity Double Touch Option pays a given cash amount (PayoffAmount) at expiry or at hit if the underlying equity price or index has hit either of the barriers (KnockIn) resp. has not hit any of barriers (KnockOut) using continuous monitoring between start and expiry date. No rebates are supported. 
+
+\fi
+
 The \lstinline!EquityDoubleTouchOptionData!  node is the trade data container for the \emph{EquityDoubleTouchOption} trade type.   The
 \lstinline!EquityDoubleTouchOptionData!  node includes one  \lstinline!OptionData! trade component sub-node and one \lstinline!BarrierData! trade component sub-node plus elements
 specific to the Equity Double Touch Option. 
-
-An Equity Double Touch Option pays a given cash amount (PayoffAmount) at expiry or at hit if the underlying equity price or index has hit either of the barriers (KnockIn) resp. has not hit any of barriers (KnockOut) using continuous monitoring between start and expiry date. No rebates are supported. 
 
 The structure of an example \lstinline!EquityDoubleTouchOptionData! node for an Equity Double Touch Option is shown in Listing
 \ref{lst:eqdoubletouchoption_data}.

@@ -1,6 +1,33 @@
 \subsubsection{Swaption}
 \label{ss:swaption} 
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A swaption is an option which gives the buyer the right, but not the obligation, 
+to enter into an underlying interest rate swap. The underlying swap may have varying 
+notional, rates, and spreads during its lifetime.
+
+With a {\bf European Swaption}, the buyer is only allowed to exercise the option and enter 
+into the swap on the expiration date of the swaption.
+There are two types of swaptions, payer and receiver:
+\begin{itemize}	
+\item Payer swaptions: the underlying swap pays fixed rate and receives floating 
+rate.
+\item Receiver swaptions: the underlying swap receives fixed and pays floating 
+rate.
+\end{itemize}
+European Swaption settlement can be either cash or physical delivery of the underlying swap.
+For cash settlement there are different methods to compute the settlement price (collateralized
+cash price, par yield curve).
+
+In a {\bf Bermudan Swaption}, the buyer is allowed to exercise the option and enter into the underlying
+swap on a predetermined set of dates rather than a single expiration
+date. The underlying swap may have varying notional, rates, and spreads during its lifetime.
+
+For an {\bf American Swaption} the buyer is allowed to exercise the option any time between two specified dates.
+
+{\bf Input}}\fi
+
 The \lstinline!SwaptionData!  node is the trade data container for the \emph{Swaption} trade type. The \lstinline!SwaptionData!
 node has one and exactly one \lstinline!OptionData! trade component sub-node, and at least one \lstinline!LegData! trade
 component sub-node.  These trade components are outlined in section \ref{ss:option_data} and section

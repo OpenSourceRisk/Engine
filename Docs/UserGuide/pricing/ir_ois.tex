@@ -1,0 +1,56 @@
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+\subsubsection{Overnight Index Swap}
+\label{pricing:ir_ois}
+
+An OIS Swap has a floating leg that compounds on a daily basis using an overnight 
+index. The present value of a floating OIS leg can be calculated by summing the 
+NPVs for each coupon payment including spread (if any). 
+Flat compounding is implemented for OIS Swaps (i.e. the spread does not compound).
+The  OIS leg's present value can be written
+$$
+\NPV_{\OIS}= N \, \sum_{i=1}^n (f_i + s_i)\,\delta_i \,P_{\OIS}(t^p_i)
+$$
+where
+\begin{itemize}
+\item $N$: notional, assumed constant
+\item $f_i$: forward rate for future starting period $i$ computed as 
+$$
+f_i = \frac{1}{\delta_i} \left(\frac{P_{\OIS}(t^s_i)}{P_{\OIS}(t^e_i)} - 1\right)
+$$ 
+\item $t^{s,e,p}_i$: the value dates associated to the first and last fixing dates in period $i$, and the payment date of period $i$
+\item $\delta_i$: year fraction of period $i$
+\item $P_{\OIS}(t)$: the discount factor for time $t$ bootstrapped from the OIS curve
+\item $s_i$: the spread applicable to coupon $i$
+\end{itemize}
+
+When the valuation date $t$ falls into the accrual period then we replace the forward $f_i$ as follows, to take the
+compounded accrued interest from period start to today into account:
+$$
+f_i = \frac{1}{\delta_i} \left[\prod_{j=0}^{j=m-1} \left(1 + \ON(t^f_j)\,\delta(t^f_j, t^f_{j+1})\right) \frac{P_{\OIS}(t^v_m)}{P_{\OIS}(t^e_i)} - 1\right]
+$$
+where $\ON(t^f_j)$ is the overnight fixing for fixing date $t^f_j$ with $t^f_0$, ..., $t^f_m$ denoting the fixing dates
+in period $i$ with associated value dates $t^v_j$. Here $t^f_m$ is either equal to today if today's fixing is known or to
+the last fixing date before today if today's fixing is not known.
+
+\medskip
+The payment frequency on OIS legs with maturities up to a year is typically once 
+at maturity, for maturities beyond a year it is annually.
+
+\medskip
+In an Overnight Index Swap one typically swaps an OIS leg for fixed leg.
+
+\subsubsection*{US Overnight Index Swap}
+
+In the US OIS market another flavour of Overnight Index Swaps is more common, where
+an OIS leg is exchanged for a floating, USD-LIBOR-3M linked, leg. Moreover,
+the OIS leg is not a compounded OIS leg as discussed above, but the OIS leg pays
+a weighted arithmetic average of overnight (FedFunds) fixings quarterly, 
+see e.g. \cite{Takada_2011}. Apart from conventions, this changes the accrued 
+interest calculation for the case when the valuation date $t$ falls into coupon
+period $i$ to
+$$
+f_i = \frac{1}{\delta_i} \left[\sum_{j=0}^{j=m-1} \ON(t^f_j)\,\delta(t^f_j, t^f_{j+1}) + \ln\left(\frac{P_{\OIS}(t^v_m)}{P_{\OIS}(t^e_i)}\right) \right]
+$$
+using Takada's approximation for efficient forecasting from today to the coupon period end, see \cite{Takada_2011},
+formula 3. As in \ref{pricing:ir_ois} $t^f_m$ is either equal to today or the last fixing date before today depending on
+whether today's fixing is known.

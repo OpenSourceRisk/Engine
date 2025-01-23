@@ -1,0 +1,36 @@
+\subsubsection{European FX Option}
+\label{pricing:fx_option}
+
+Vanilla European FX Options are priced analytically using the Garman-Kohlhagen 
+model and log-normal volatilities.  Deterministic IR rates are assumed. Volatility 
+structures with smile are used where available.
+
+The Garman-Kohlhagen model assumes that the spot FX rate $X$ follows Geometric 
+Brownian Motion:
+$$
+dX/X=\mu(t)\,dt+\sigma(t)\,dW
+$$
+
+The model?s drift is calibrated such that the expected future spot rate agrees 
+with today?s fair FX forward rate for exchange at time $T$. This means that the 
+FX forward rate $F(t,T)$ follows drift free GBM under the $T$-forward measure:
+$$
+dF(t,T)/F(t,T)=\sigma(t)\,F(t,T)\,dW
+$$
+
+This leads to a Black76 analytical solution for the present value of a European 
+FX option:
+$$
+\NPV = N\cdot \mbox{Black}(K,F(0,T),\sigma\sqrt{T},\omega)\cdot P(T)
+$$
+where:
+\begin{itemize}
+\item $N$: notional
+\item $K$: strike FX rate
+\item $F(0,T)$: the forward projected FX rate for maturity T at time 0 (valuation date)
+\item $\sigma$: the volatility of the FX forward rate
+\item $\omega$: 1 for a call option (ie receiving spot FX and paying strike), -1 for a put option
+\item $P(T)$: the discount factor for maturity time $T$
+\end{itemize}
+
+See Black Model, Section \ref{models:black}, for more details.

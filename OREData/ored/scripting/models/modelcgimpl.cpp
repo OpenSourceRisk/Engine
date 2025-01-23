@@ -476,6 +476,14 @@ std::size_t ModelCGImpl::addModelParameter(const std::string& id, std::function<
     return ::ore::data::addModelParameter(*g_, modelParameters_, id, f);
 }
 
+void ModelCGImpl::dumpModelParameters() const {
+    std::map<std::size_t, std::string> varLabels;
+    for (auto const& [k, v] : g_->variables())
+        varLabels[v] = k;
+    for (auto const& [k, v] : modelParameters_)
+        std::cout << std::setw(50) << std::left << varLabels.at(k) << v() << std::endl;
+}
+
 std::size_t addModelParameter(ComputationGraph& g, std::vector<std::pair<std::size_t, std::function<double(void)>>>& m,
                               const std::string& id, std::function<double(void)> f) {
     std::size_t n;

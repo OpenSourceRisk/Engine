@@ -1,5 +1,14 @@
 \subsubsection{Callable Swap}\label{ss:callable_swap}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A Callable Swap can be terminated by one of the parties on specific dates and thus can
+be decomposed into a swap and a physically settled swaption, the latter representing the call
+right. The underlying swap must be fixed versus float and may have varying notional, rates,
+and spreads during its lifetime.
+
+{\bf Input}}\fi
+
 The \lstinline!CallableSwapData! node is the trade data container for the \emph{CallableSwap} trade type. A Callable Swap is a
  swap that can be cancelled at predefined dates by one of the counterparties. A Callable Swap must have at least one leg, each leg described by a \lstinline!LegData! trade component sub-node as described in section
 \ref{ss:leg_data}.  

@@ -1,6 +1,23 @@
 \subsubsection{Bond Total Return Swap}
 \label{ss:TRS}
 
+\ifdefined\IncludePayoff{{\bf Payoff}
+
+A total return swap is a derivative contract in which one counterparty
+(short) pays out the total returns of an underlying asset and receives
+a regular fixed or floating cash flow from the other counterparty
+(long). Here we describe total return swaps with an underlying bond. 
+The total return of the bond is comprised of
+%
+\begin{itemize}
+\item coupon, redemption and amortization payments of the bond,
+  including recovery payments in case of default
+\item compensation payments that reflect changes of the clean bond
+  value along the TRS schedule.
+\end{itemize}
+
+{\bf Input}}\fi
+
 A vanilla Bond Total Return Swap (Trade type: \emph{BondTRS}) is set up using a {\tt BondTRSData} block as shown in listing \ref{lst:bondtrsdata}. The block is comprised of three sub-blocks, which
 are {\tt BondData}, {\tt TotalReturnData} and {\tt FundingData}.
 
