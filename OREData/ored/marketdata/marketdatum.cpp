@@ -66,8 +66,6 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) 
         return out << "TRANSITION_PROBABILITY";
     case MarketDatum::QuoteType::CONVERSION_FACTOR:
         return out << "CONVERSION_FACTOR";
-    case MarketDatum::QuoteType::TRANCHE_UPFRONT:
-        return out << "TRANCHE_UPFRONT";
     case MarketDatum::QuoteType::NONE:
         return out << "NULL";
     default:
@@ -143,6 +141,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::InstrumentType& t
         return out << "BOND_OPTION";
     case MarketDatum::InstrumentType::INDEX_CDS_OPTION:
         return out << "INDEX_CDS_OPTION";
+    case MarketDatum::InstrumentType::INDEX_CDS_TRANCHE:
+        return out << "INDEX_CDS_TRANCHE";
     case MarketDatum::InstrumentType::COMMODITY_SPOT:
         return out << "COMMODITY_SPOT";
     case MarketDatum::InstrumentType::COMMODITY_FWD:

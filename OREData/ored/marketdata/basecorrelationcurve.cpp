@@ -159,23 +159,26 @@ BaseCorrelationCurve::BaseCorrelationCurve(
 
     DLOG("BaseCorrelationCurve: start building base correlation structure with ID " << spec_.curveConfigID());
 
-    try {
-        const auto& config = *curveConfigs.baseCorrelationCurveConfig(spec_.curveConfigID());
+    const auto& config = *curveConfigs.baseCorrelationCurveConfig(spec_.curveConfigID());
+    for (const auto& quoteType : config.quoteTypes()) {
         const auto qData = loadQuotes(asof, config, loader);
-
-        if (config.quoteType() == MarketDatum::QuoteType::BASE_CORRELATION) {
-            buildFromCorrelations(config, qData);
-        } else if (config.quoteType() == MarketDatum::QuoteType::TRANCHE_UPFRONT) {
-            buildFromUpfronts(asof, config, qData);
-        } else {
-            QL_FAIL("Unexpected quoteType, expect BASE_CORRELATION or TRANCHE_UPFRONT");
+        DLOG("BaseCorrelationCurve try to build from " << quoteType);
+        try {
+            if (quoteType == MarketDatum::QuoteType::BASE_CORRELATION) {
+                buildFromCorrelations(config, qData);
+            } else if (quoteType == MarketDatum::QuoteType::PRICE) {
+                buildFromUpfronts(asof, config, qData);
+            } else {
+                QL_FAIL("Unexpected quoteType, expect BASE_CORRELATION or TRANCHE_UPFRONT");
+            }
+            break;
+        } catch (std::exception& e) {
+            QL_FAIL("BaseCorrelationCurve: curve building failed :" << e.what());
+        } catch (...) {
+            QL_FAIL("BaseCorrelationCurve: curve building failed: unknown error");
         }
-    } catch (std::exception& e) {
-        QL_FAIL("BaseCorrelationCurve: curve building failed :" << e.what());
-    } catch (...) {
-        QL_FAIL("BaseCorrelationCurve: curve building failed: unknown error");
     }
-
+    QL_REQUIRE(baseCorrelation_ != nullptr, "BaseCorrelationCurve: curve building failed.");
     DLOG("BaseCorrelationCurve: finished building base correlation structure with ID " << spec_.curveConfigID());
 }
 
@@ -413,6 +416,27 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
     newQuoteData.dps = dps;
 
     vector<Real> tmpDps(dps.begin(), dps.end());
+    // Validate market quotes
+    for (const auto& term : terms) {
+        for (Size i = 0; i < tmpDps.size(); i++) {
+            auto dp = tmpDps[i];
+            auto key = std::make_pair(term, dp);
+            auto it = data.find(key);
+            QL_REQUIRE(it != data.end(), "No data found for " << term << " and detachmentPoint" << dp);
+            auto q = ext::dynamic_pointer_cast<BaseCorrelationQuote>(it->second.currentLink());
+            double attachmentPoint = q->attachmentPoint();
+            double detachmentPoint = q->detachmentPoint();
+            QL_REQUIRE(detachmentPoint == dp, "");
+            if (i == 0)
+                QL_REQUIRE(attachmentPoint == 0,
+                           "First Upfront Quote should be a base tranche, but got " << attachmentPoint);
+            else
+                QL_REQUIRE(attachmentPoint == tmpDps[i - 1],
+                           "Attachment Point of tranche should be detachment point of the previous tranche");
+        }
+    }
+
+    // Compute adjusted attachment and detachment points
     auto basketData = adjustForLosses(tmpDps);
     std::vector<std::pair<double, double>> attachPoints = {{0.0, 0.0}};
     std::vector<std::pair<double, double>> detachPoints;
@@ -437,132 +461,126 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
         dpts.push_back(creditCurve->curve());
     }
 
+
     for (const auto& term : terms) {
-        try {
-            Handle<DefaultProbabilityTermStructure> indexCurve;
-            Handle<Quote> indexRecovery;
-            Handle<YieldTermStructure> discountCurve;
-            std::string indexNameWithTerm = config.curveID() + "_" + to_string(term);
-            auto mappedIndexCurveName = creditCurveNameMapping(indexNameWithTerm);
-            auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
-            if (indexCreditCurve == nullptr) {
-                WLOG("Error getting index curve " << indexNameWithTerm << " exclude term");
-                continue;
-            }
-            discountCurve = indexCreditCurve->rateCurve();
-            indexCurve = indexCreditCurve->curve();
-            indexRecovery = indexCreditCurve->recovery();
 
-            auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(
-                config.startDate(), term, config.indexSpread(), indexRecovery, indexCurve, discountCurve);
+        Handle<DefaultProbabilityTermStructure> indexCurve;
+        Handle<Quote> indexRecovery;
+        Handle<YieldTermStructure> discountCurve;
+        std::string indexNameWithTerm = config.curveID() + "_" + to_string(term);
+        auto mappedIndexCurveName = creditCurveNameMapping(indexNameWithTerm);
+        auto indexCreditCurve = getDefaultProbCurveAndRecovery(mappedIndexCurveName);
+        QL_REQUIRE(indexCreditCurve != nullptr,
+                   "Can not imply base correlation, index credit curve " << indexNameWithTerm << " missing");
+        discountCurve = indexCreditCurve->rateCurve();
+        indexCurve = indexCreditCurve->curve();
+        indexRecovery = indexCreditCurve->recovery();
 
-            auto pool = QuantLib::ext::make_shared<Pool>();
+        auto curveCalibration = ext::make_shared<QuantExt::CreditIndexConstituentCurveCalibration>(
+            config.startDate(), term, config.indexSpread(), indexRecovery, indexCurve, discountCurve);
 
-            auto calibrationResults = curveCalibration->calibratedCurves(
-                basketData.remainingNames, basketData.remainingWeights, dpts, recoveryRates);
+        auto pool = QuantLib::ext::make_shared<Pool>();
 
-            LOG("Maturity CalibrationFacotr MarketNPV ImpliedNPV Error");
-            LOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
-            for (size_t i = 0; i < calibrationResults.cdsMaturity.size(); ++i) {
-                LOG(io::iso_date(calibrationResults.cdsMaturity[i])
-                    << ";" << std::fixed << std::setprecision(8) << calibrationResults.calibrationFactor[i] << ";"
-                    << calibrationResults.marketNpv[i] << ";" << calibrationResults.impliedNpv[i] << ";"
-                    << calibrationResults.marketNpv[i] - calibrationResults.impliedNpv[i]);
-            }
+        auto calibrationResults = curveCalibration->calibratedCurves(basketData.remainingNames,
+                                                                     basketData.remainingWeights, dpts, recoveryRates);
 
-            for (size_t i = 0; i < basketData.remainingNames.size(); i++) {
-                std::string name = basketData.remainingNames[i];
-                Handle<DefaultProbabilityTermStructure> curve =
-                    calibrationResults.success ? calibrationResults.curves[i] : dpts[i];
-                DefaultProbKey key = NorthAmericaCorpDefaultKey(ccy, SeniorSec, Period(), 1.0);
-                std::pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>> p(key, curve);
-                vector<pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>>> probabilities(1, p);
-                // Empty default set. Adjustments have been made above to account for existing credit events.
-                Issuer issuer(probabilities, DefaultEventSet());
-                pool->add(name, issuer, key);
-            }
-
-            std::vector<double> trancheNpvs;
-            std::vector<double> trancheNPV;
-            std::vector<double> baseCorrelations;
-
-            Schedule schedule = MakeSchedule()
-                                    .from(config.startDate())
-                                    .to(cdsMaturity(config.startDate(), term, DateGeneration::CDS2015))
-                                    .withTenor(3 * Months)
-                                    .withCalendar(WeekendsOnly())
-                                    .withConvention(Unadjusted)
-                                    .withTerminationDateConvention(Unadjusted)
-                                    .withRule(DateGeneration::CDS2015);
-
-            for (size_t i = 0; i < dps.size(); i++) {
-                double inceptionAttachPoint = attachPoints[i].first;
-                double adjustedAttachPoint = attachPoints[i].second;
-                double inceptionDetachPoint = detachPoints[i].first;
-                double adjustedDetachPoint = detachPoints[i].second;
-                double trancheWidth = (adjustedDetachPoint - adjustedAttachPoint) * basketData.indexFactor;
-                double inceptionTrancheWidth = (inceptionDetachPoint - inceptionAttachPoint);
-                double previousTrancheCleanNPV = (i == 0) ? 0 : trancheNPV.back();
-                // LOG("previous Tranche clean NPV" << previousTrancheCleanNPV);
-                //  Build Tranche
-                auto baseCorrelQuote = QuantLib::ext::make_shared<SimpleQuote>(0.5);
-                RelinkableHandle<Quote> baseCorrelation = RelinkableHandle<Quote>(baseCorrelQuote);
-                GaussCopulaBucketingLossModelBuilder modelBuilder{
-                    -5., 5, 64, false, 372, false, true, {0.35, 0.3, 0.35}, "Markit2020"};
-                auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false);
-
-                auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
-                    config.startDate(), basketData.remainingNames, basketData.remainingWeights, pool, 0.0,
-                    adjustedDetachPoint, QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
-                // Build model with model builder
-                basket->setLossModel(lossModel);
-
-                auto cdo = ext::make_shared<QuantExt::SyntheticCDO>(
-                    basket, Protection::Side::Buyer, schedule, 0.0, config.indexSpread(), Actual360(), Following, true,
-                    QuantLib::CreditDefaultSwap::ProtectionPaymentTime::atDefault, asof, Date(), boost::none,
-                    Null<Real>(), Actual360(true));
-
-                auto pricingEngine = QuantLib::ext::make_shared<QuantExt::IndexCdsTrancheEngine>(discountCurve);
-                cdo->setPricingEngine(pricingEngine);
-                auto key = make_pair(term, inceptionDetachPoint);
-                auto it = data.find(key);
-                double mktUpfront = it->second->value();
-                auto targetFunction = [&cdo, &mktUpfront, &baseCorrelQuote, &previousTrancheCleanNPV,
-                                       &trancheWidth](const double correlation) {
-                    baseCorrelQuote->setValue(correlation);
-                    double implyUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
-                    return mktUpfront - implyUpfront;
-                };
-
-                Brent solver;
-
-                double targetCorrelation = baseCorrelations.empty() ? 0.5 : baseCorrelations.back();
-                if (inceptionDetachPoint < 1.0 || !close_enough(inceptionDetachPoint, 1.0)) {
-                    targetCorrelation = solver.solve(targetFunction, 0.000001, 0.5, 0 + QL_EPSILON, 1 - QL_EPSILON);
-                    baseCorrelations.push_back(targetCorrelation);
-                }
-                double error = targetFunction(targetCorrelation);
-                double impliedUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
-                LOG("CurveId" << "," << "term" << "," << "inceptionAttachPoint" << "," << "inceptionDetachPoint" << ","
-                              << "inceptionTrancheWidth" << ","
-                              << "adjustedAttachPoint" << "," << "adjustedDetachPoint" << "," << "trancheWidth"
-                              << "," << "mktUpfront" << "," << "impliedUpfront" << "," << "error" << ","
-                              << "targetCorrelation");
-                LOG(config.curveID() << "," << term << "," << inceptionAttachPoint << "," << inceptionDetachPoint << ","
-                                     << inceptionTrancheWidth << "," << adjustedAttachPoint << ","
-                                     << adjustedDetachPoint << "," << trancheWidth << "," << mktUpfront << ","
-                                     << impliedUpfront << "," << error << "," << targetCorrelation);
-                trancheNPV.push_back(cdo->cleanNPV());
-                newQuoteData.data[key] = Handle<Quote>(ext::make_shared<SimpleQuote>(targetCorrelation));
-            }
-            newQuoteData.terms.insert(term);
-
-            baseCorrelations.push_back(1.0);
-        } catch (std::exception& e) {
-            ALOG("Error building base correlation curve from upfronts for term " << term << ": " << e.what());
-        } catch (...) {
-            ALOG("Error building base correlation curve from upfronts for term " << term << ": unknown error");
+        DLOG("Maturity CalibrationFacotr MarketNPV ImpliedNPV Error");
+        DLOG("Expiry;CalibrationFactor;MarketNpv;ImpliedNpv;Error");
+        for (size_t i = 0; i < calibrationResults.cdsMaturity.size(); ++i) {
+            DLOG(io::iso_date(calibrationResults.cdsMaturity[i])
+                << ";" << std::fixed << std::setprecision(8) << calibrationResults.calibrationFactor[i] << ";"
+                << calibrationResults.marketNpv[i] << ";" << calibrationResults.impliedNpv[i] << ";"
+                << calibrationResults.marketNpv[i] - calibrationResults.impliedNpv[i]);
         }
+
+        for (size_t i = 0; i < basketData.remainingNames.size(); i++) {
+            std::string name = basketData.remainingNames[i];
+            Handle<DefaultProbabilityTermStructure> curve =
+                calibrationResults.success ? calibrationResults.curves[i] : dpts[i];
+            DefaultProbKey key = NorthAmericaCorpDefaultKey(ccy, SeniorSec, Period(), 1.0);
+            std::pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>> p(key, curve);
+            vector<pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>>> probabilities(1, p);
+            // Empty default set. Adjustments have been made above to account for existing credit events.
+            Issuer issuer(probabilities, DefaultEventSet());
+            pool->add(name, issuer, key);
+        }
+
+        std::vector<double> trancheNpvs;
+        std::vector<double> trancheNPV;
+        std::vector<double> baseCorrelations;
+
+        Schedule schedule = MakeSchedule()
+                                .from(config.startDate())
+                                .to(cdsMaturity(config.startDate(), term, DateGeneration::CDS2015))
+                                .withTenor(3 * Months)
+                                .withCalendar(WeekendsOnly())
+                                .withConvention(Unadjusted)
+                                .withTerminationDateConvention(Unadjusted)
+                                .withRule(DateGeneration::CDS2015);
+
+        for (size_t i = 0; i < dps.size(); i++) {
+            double inceptionAttachPoint = attachPoints[i].first;
+            double adjustedAttachPoint = attachPoints[i].second;
+            double inceptionDetachPoint = detachPoints[i].first;
+            double adjustedDetachPoint = detachPoints[i].second;
+            double trancheWidth = (adjustedDetachPoint - adjustedAttachPoint) * basketData.indexFactor;
+            double inceptionTrancheWidth = (inceptionDetachPoint - inceptionAttachPoint);
+            double previousTrancheCleanNPV = (i == 0) ? 0 : trancheNPV.back();
+            // LOG("previous Tranche clean NPV" << previousTrancheCleanNPV);
+            //  Build Tranche
+            auto baseCorrelQuote = QuantLib::ext::make_shared<SimpleQuote>(0.5);
+            RelinkableHandle<Quote> baseCorrelation = RelinkableHandle<Quote>(baseCorrelQuote);
+            GaussCopulaBucketingLossModelBuilder modelBuilder{
+                -5., 5, 64, false, 372, false, true, {0.35, 0.3, 0.35}, "Markit2020"};
+            auto lossModel = modelBuilder.lossModel(recoveryRates, baseCorrelation, false);
+
+            auto basket = QuantLib::ext::make_shared<QuantExt::Basket>(
+                config.startDate(), basketData.remainingNames, basketData.remainingWeights, pool, 0.0,
+                adjustedDetachPoint, QuantLib::ext::shared_ptr<Claim>(new FaceValueClaim()));
+            // Build model with model builder
+            basket->setLossModel(lossModel);
+
+            auto cdo = ext::make_shared<QuantExt::SyntheticCDO>(
+                basket, Protection::Side::Buyer, schedule, 0.0, config.indexSpread(), Actual360(), Following, true,
+                QuantLib::CreditDefaultSwap::ProtectionPaymentTime::atDefault, asof, Date(), boost::none, Null<Real>(),
+                Actual360(true));
+
+            auto pricingEngine = QuantLib::ext::make_shared<QuantExt::IndexCdsTrancheEngine>(discountCurve);
+            cdo->setPricingEngine(pricingEngine);
+            auto key = make_pair(term, inceptionDetachPoint);
+            auto it = data.find(key);
+            double mktUpfront = it->second->value();
+            auto targetFunction = [&cdo, &mktUpfront, &baseCorrelQuote, &previousTrancheCleanNPV,
+                                   &trancheWidth](const double correlation) {
+                baseCorrelQuote->setValue(correlation);
+                double implyUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
+                return mktUpfront - implyUpfront;
+            };
+
+            Brent solver;
+
+            double targetCorrelation = baseCorrelations.empty() ? 0.5 : baseCorrelations.back();
+            if (inceptionDetachPoint < 1.0 || !close_enough(inceptionDetachPoint, 1.0)) {
+                targetCorrelation = solver.solve(targetFunction, 0.000001, 0.5, 0 + QL_EPSILON, 1 - QL_EPSILON);
+                baseCorrelations.push_back(targetCorrelation);
+            }
+            double error = targetFunction(targetCorrelation);
+            double impliedUpfront = (cdo->cleanNPV() - previousTrancheCleanNPV) / trancheWidth;
+            LOG("CurveId" << "," << "term" << "," << "inceptionAttachPoint" << "," << "inceptionDetachPoint" << ","
+                          << "inceptionTrancheWidth" << ","
+                          << "adjustedAttachPoint" << "," << "adjustedDetachPoint" << "," << "trancheWidth"
+                          << "," << "mktUpfront" << "," << "impliedUpfront" << "," << "error" << ","
+                          << "targetCorrelation");
+            LOG(config.curveID() << "," << term << "," << inceptionAttachPoint << "," << inceptionDetachPoint << ","
+                                 << inceptionTrancheWidth << "," << adjustedAttachPoint << "," << adjustedDetachPoint
+                                 << "," << trancheWidth << "," << mktUpfront << "," << impliedUpfront << "," << error
+                                 << "," << targetCorrelation);
+            trancheNPV.push_back(cdo->cleanNPV());
+            newQuoteData.data[key] = Handle<Quote>(ext::make_shared<SimpleQuote>(targetCorrelation));
+        }
+        newQuoteData.terms.insert(term);
+
+        baseCorrelations.push_back(1.0);
     }
 
     buildFromCorrelations(config, newQuoteData);

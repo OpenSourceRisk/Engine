@@ -48,7 +48,7 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     boost::optional<DateGeneration::Rule> rule,
     bool adjustForLosses,
     MarketDatum::QuoteType quoteType,
-    double indexSpread)
+    double indexSpread, const std::string& currency)
     : CurveConfig(curveID, curveDescription),
       detachmentPoints_(detachmentPoints),
       terms_(terms),
@@ -63,7 +63,8 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
       rule_(rule),
       adjustForLosses_(adjustForLosses),
       quoteType_(quoteType),
-      indexSpread_(indexSpread) {
+      indexSpread_(indexSpread),
+      currency_(currency) {
     bool validQuoteType =
         quoteType_ == MarketDatum::QuoteType::BASE_CORRELATION || quoteType_ == MarketDatum::QuoteType::TRANCHE_UPFRONT;
     QL_REQUIRE(validQuoteType, "unexpected QuoteType " << quoteType_ << ", allowed values are BASE_CORRELATION or TRANCHE_UPFRONT");
