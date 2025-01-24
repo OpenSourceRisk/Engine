@@ -285,8 +285,29 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     Brent b;
     Real yStar;
     try {
-        yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
-                        0.0, 0.01);
+        try { 
+            yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+                            0.0, 0.01);
+            } catch (const std::exception& e) {
+                Real aa=-3.0;
+                Real bb=3.0;
+                Real tol=0.001;
+
+                Real cc = aa;
+                while ((bb - aa) / 2.0 > tol) {  
+                    cc = (aa + bb) / 2.0;
+
+                    if (AnalyticLgmSwaptionEngine::yStarHelper(cc) == 0.0) 
+                        break;
+                    
+                    if (AnalyticLgmSwaptionEngine::yStarHelper(cc) * AnalyticLgmSwaptionEngine::yStarHelper(aa) < 0.0) 
+                        bb = cc;  
+                    else 
+                        aa = cc;                  
+                }
+                yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+                            cc, 0.01); 
+            } 
     } catch (const std::exception& e) {
         std::ostringstream os;
         os << "AnalyticLgmSwaptionEngine: failed to compute yStar (" << e.what() << "), parameter details: [";
