@@ -20,6 +20,7 @@
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/math/solvers1d/brent.hpp>
+#include <ql/math/solvers1d/bisection.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
 #include <boost/bind/bind.hpp>
@@ -283,31 +284,31 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     }
 
     Brent b;
+    Bisection b2;
     Real yStar;
+
+    // Try three optimization routines to find yStar (as root of a given function yStarHelper).
+    // First, try to run the Brent solver. If it does not succeed for numerical reasons,
+    // try to find a better starting point via bisection and run the Brent again.
+    // If that fails again, try to find another starting point again, this time
+    // in an even larger interval of starting values.
     try {
         try { 
-            yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
-                            0.0, 0.01);
-            } catch (const std::exception& e) {
-                Real aa=-3.0;
-                Real bb=3.0;
-                Real tol=0.001;
-
-                Real cc = aa;
-                while ((bb - aa) / 2.0 > tol) {  
-                    cc = (aa + bb) / 2.0;
-
-                    if (AnalyticLgmSwaptionEngine::yStarHelper(cc) == 0.0) 
-                        break;
-                    
-                    if (AnalyticLgmSwaptionEngine::yStarHelper(cc) * AnalyticLgmSwaptionEngine::yStarHelper(aa) < 0.0) 
-                        bb = cc;  
-                    else 
-                        aa = cc;                  
-                }
+            try { // Try Brent
                 yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
-                            cc, 0.01); 
-            } 
+                    0.0, -3.0, 3.0 );
+            } catch (const std::exception& e) { // Try Brent with optimized starting point
+                double startValue=b2.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-2,
+                            -3.0, 3.0);
+                yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+                            startValue, 0.01); 
+            }
+        } catch (const std::exception& e) { // Try Brent with another optimized starting point
+            double startValue2=b2.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-2,
+                    -10.0, 10.0);
+            yStar = b.solve(QuantLib::ext::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, QuantLib::ext::placeholders::_1), 1.0E-6,
+                    startValue2, 0.01); 
+        } 
     } catch (const std::exception& e) {
         std::ostringstream os;
         os << "AnalyticLgmSwaptionEngine: failed to compute yStar (" << e.what() << "), parameter details: [";
