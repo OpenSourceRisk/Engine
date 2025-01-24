@@ -56,12 +56,12 @@ using namespace QuantExt;
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-BOOST_AUTO_TEST_SUITE(LocalVolTest)
+BOOST_AUTO_TEST_SUITE(LgmBuilderTest)
 
 namespace {
 
-    BOOST_AUTO_TEST_CASE(testLgmBuilder) {
-        BOOST_TEST_MESSAGE("Testing LGM Builder calibration error  ...");
+    BOOST_AUTO_TEST_CASE(testLgmBuilderCalibrationError) {
+        BOOST_TEST_MESSAGE("Testing LGM builder calibration error types ...");
 
         const QuantLib::ext::shared_ptr<ore::data::Market> market; //TODO fill data        
         const QuantLib::ext::shared_ptr<IrLgmData> data;//TODO fill data
@@ -87,6 +87,28 @@ namespace {
         p2->printParameters(0.0); // Read calibrated parameters
 
         // Comparison
+        // TODO
+    }
+
+    BOOST_AUTO_TEST_CASE(testCreateSwaptionHelper) {
+        BOOST_TEST_MESSAGE("Testing ability of LGM builder to clean degenerate input values  ...");
+
+        const QuantLib::ext::shared_ptr<ore::data::Market> market; //TODO fill data        
+        const QuantLib::ext::shared_ptr<IrLgmData> data;//TODO fill data
+        const std::string& configuration = Market::defaultConfiguration;
+        Real bootstrapTolerance = 0.001;
+        const bool continueOnError = false; 
+        const std::string& referenceCalibrationGrid = "";
+        const bool setCalibrationInfo = false; 
+        const std::string& id = "unknwon";
+
+        // Absolute Error
+        auto error1 = BlackCalibrationHelper::PriceError;
+        LgmBuilder lgmb1(market, data, configuration, bootstrapTolerance, continueOnError, referenceCalibrationGrid, setCalibrationInfo, id, error1);
+        lgmb1.recalibrate(); // Calibration should be run automatically, just to be sure
+        QuantLib::ext::shared_ptr<QuantExt::IrLgm1fParametrization> p1 = lgmb1.parametrization(); // Read calibrated parameters
+        p1->printParameters(0.0); // Read calibrated parameters
+
         // TODO
     }
 }
