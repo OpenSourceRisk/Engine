@@ -136,7 +136,7 @@ using std::vector;
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-BOOST_AUTO_TEST_SUITE(CrossAssetModelTest)
+BOOST_AUTO_TEST_SUITE(CrossAssetModelVega)
 
 namespace {
 
@@ -246,140 +246,126 @@ struct Lgm5fTestDataV {
 
 } // anonymous namespace
 
-// Issue #1 from the validation report.
 BOOST_AUTO_TEST_CASE(testLgmCalibrationVegaBump) {
+    // This test shows that the iterative LGM calibration procedure allows to calculate vega values for
+    // swaptions via bump and revalue. Therefore, one of the input data swaptions is assigned a slightly higher
+    // volatiltiy quote. It turns out that after successfull calibration this change only affects one
+    // data point, i.e. the pricing of swaptions with the affected maturity. The prices of swaptions with
+    // different maturities remain unchanged. 
 
-    BOOST_TEST_MESSAGE("Testing full calibration of Ccy LGM 5F model with bump...");
-
-    cout<< "345 Test";
+    BOOST_TEST_MESSAGE("Testing vega calculation by LGM via bump and revalue ...");
 
     Lgm5fTestDataV d1;
     Lgm5fTestDataV d2;
-
     Real h=0.000001;
-
-    // calibration baskets
-    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basketEur1, basketEur2, basketGbp, basketEurUsd, basketEurGbp;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basketEur1, basketEur2;
 
     QuantLib::ext::shared_ptr<IborIndex> euribor6m = QuantLib::ext::make_shared<Euribor>(6 * Months, d1.eurYts);
 
     for (Size i = 0; i <= d1.volstepdates.size(); ++i) {
         Date tmp = i < d1.volstepdates.size() ? d1.volstepdates[i] : d1.volstepdates.back() + 365;
-        // EUR: atm+200bp, 150bp normal vol
-
-        BOOST_TEST_MESSAGE("Input Swaption " << i << ": From " << tmp << " to " << "10Y");
 
         basketEur1.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.015)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
+            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.015)), 
+            euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
             Actual360(), d1.eurYts, BlackCalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
 
         basketEur2.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.015+(i==3?h:0.0))), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
+            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.015+(i==3?h:0.0))),  // Bump third data point by h
+            euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
             Actual360(), d2.eurYts, BlackCalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
     }
 
-    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d1.ccLgmExact, 0);
-    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng2 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d2.ccLgmExact, 0);
+    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact1=d1.ccLgmExact;
+    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact2=d2.ccLgmExact;
+
+    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(ccLgmExact1, 0);
+    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng2 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(ccLgmExact2, 0);
 
     // assign engines to calibration instruments
     for (Size i = 0; i < basketEur1.size(); ++i) {
         basketEur1[i]->setPricingEngine(eurSwEng);
-    }
-
-    for (Size i = 0; i < basketEur2.size(); ++i) {
         basketEur2[i]->setPricingEngine(eurSwEng2);
     }
 
     LevenbergMarquardt lm1(1E-14, 1E-14, 1E-14);
     EndCriteria ec1(1000, 500, 1E-14, 1E-14, 1E-14);
-    d1.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur1, lm1, ec1);
-
-    BOOST_TEST_MESSAGE("--------------------" );
+    ccLgmExact1->calibrateIrLgm1fVolatilitiesIterative(0, basketEur1, lm1, ec1);
 
     LevenbergMarquardt lm2(1E-14, 1E-14, 1E-14);
     EndCriteria ec2(1000, 500, 1E-14, 1E-14, 1E-14);
-    d2.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur2, lm2, ec2);
+    ccLgmExact2->calibrateIrLgm1fVolatilitiesIterative(0, basketEur2, lm2, ec2);
 
     for (Size i = 0; i < basketEur1.size(); ++i) {
         Real model1 = basketEur1[i]->modelValue();
         Real model2 = basketEur2[i]->modelValue();
         Real vega=std::abs(model1 - model2) / h;
-        
+
+        if (i==3)
+            BOOST_CHECK(vega>0);  // Third swaptions price will change after bumping and recalibration
+        else
+            BOOST_CHECK(std::fabs(vega)<1e-4); // Swaptions with different maturites must no be affected
+
         BOOST_TEST_MESSAGE("Vega Swaption "<<i<<": " << vega);
     }
 }
 
-// Issue #5 from the validation report.
-BOOST_AUTO_TEST_CASE(testLgmCalibrationWings) {
+//TODO
+BOOST_AUTO_TEST_CASE(testIterativeCalibrationParameter) {
+    // This test checks the effect of the input swaption data on the output of the iterative calibration
+    // routine. Since there is one Swaption helper decisive for one point in time, the resulting
+    // model parameter kappa should equal the input value for the volatility everywhere.
 
-    BOOST_TEST_MESSAGE("The LGM deal strike smile calibration can have a discontinuity at the smile wings where the calibration may jump back to ATM vol.");
+    BOOST_TEST_MESSAGE("Testing LGM model calibration by parameter identification ...");
 
     Lgm5fTestDataV d1;
-    Lgm5fTestDataV d2;
-
-    // calibration baskets
-    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basketEur1, basketEur2, basketGbp, basketEurUsd, basketEurGbp;
+    std::vector<QuantLib::ext::shared_ptr<BlackCalibrationHelper> > basketEur1;
 
     QuantLib::ext::shared_ptr<IborIndex> euribor6m = QuantLib::ext::make_shared<Euribor>(6 * Months, d1.eurYts);
 
     for (Size i = 0; i <= d1.volstepdates.size(); ++i) {
         Date tmp = i < d1.volstepdates.size() ? d1.volstepdates[i] : d1.volstepdates.back() + 365;
-   
-        BOOST_TEST_MESSAGE("Input Swaption " << i << ": From " << tmp << " to " << "10Y");
 
         basketEur1.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
+            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.01*(double)(i+1))), 
+            euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
             Actual360(), d1.eurYts, BlackCalibrationHelper::RelativePriceError, 0.02, 1.0, Normal)));
-            BOOST_TEST_MESSAGE("Input Swaption a" << i << ": From " << tmp << " to " << "10Y");
-
-        /*basketEur1.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.021)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
-            Actual360(), d1.eurYts, BlackCalibrationHelper::RelativePriceError, 0.03, 1.0, Normal)));
-            BOOST_TEST_MESSAGE("Input Swaption b" << i << ": From " << tmp << " to " << "10Y");*/
-
-        basketEur2.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
-            Actual360(), d2.eurYts, BlackCalibrationHelper::PriceError, 0.001, 1.0, Normal)));
-            BOOST_TEST_MESSAGE("Input Swaption c" << i << ": From " << tmp << " to " << "10Y");
-            
-        /*basketEur2.push_back(QuantLib::ext::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(QuantLib::ext::make_shared<SimpleQuote>(0.02)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
-            Actual360(), d2.eurYts, BlackCalibrationHelper::PriceError, 0.01, 1.0, Normal)));*/
     }
 
-    BOOST_TEST_MESSAGE("InYc");
-    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d1.ccLgmExact, 0);
-    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng2 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(d2.ccLgmExact, 0);
+    QuantLib::ext::shared_ptr<CrossAssetModel> ccLgmExact1 = d1.ccLgmExact;
+    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(ccLgmExact1, 0);
 
     // assign engines to calibration instruments
     for (Size i = 0; i < basketEur1.size(); ++i) {
         basketEur1[i]->setPricingEngine(eurSwEng);
     }
 
-    BOOST_TEST_MESSAGE("InYd");
-    for (Size i = 0; i < basketEur2.size(); ++i) {
-        basketEur2[i]->setPricingEngine(eurSwEng2);
-    }
-
-    BOOST_TEST_MESSAGE("InYdd");
     LevenbergMarquardt lm1(1E-14, 1E-14, 1E-14);
     EndCriteria ec1(1000, 500, 1E-14, 1E-14, 1E-14);
-    d1.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur1, lm1, ec1);
+    ccLgmExact1 -> calibrateIrLgm1fVolatilitiesIterative(0, basketEur1, lm1, ec1);
 
-    BOOST_TEST_MESSAGE("InYe");
-    LevenbergMarquardt lm2(1E-14, 1E-14, 1E-14);
-    EndCriteria ec2(1000, 500, 1E-14, 1E-14, 1E-14);
-    d2.ccLgmExact->calibrateIrLgm1fVolatilitiesIterative(0, basketEur2, lm2, ec2);
+    //std::cout << " Kappa " << ccLgmExact1 -> lgm(0) -> parametrization() -> kappa(1.0) << std::endl;
 
-    for (Size i = 0; i < basketEur1.size(); ++i) {
-        Real model1 = basketEur1[i]->modelValue();
-        Real model2 = basketEur2[i]->modelValue();
-        Real diff=std::abs(model1 - model2);
-        
-        BOOST_TEST_MESSAGE("Diff Swaption "<<i<<": " << diff*10000.00<< " bp.");
-    }
+   // Date tmp = i < d1.volstepdates.size() ? d1.volstepdates[i] : d1.volstepdates.back() + 365;
+    std::cout << "T = 0.0: " << ": Alpha = " << ccLgmExact1 -> lgm(0)->parametrization() -> alpha(0.0)<< std::endl;
+    std::cout << "T = 0.0: " << ": Kappa = " << ccLgmExact1 -> lgm(0)->parametrization() -> kappa(0.0)<< std::endl;
+
+    std::cout << "T = 1.0: " << ": Alpha = " << ccLgmExact1 -> lgm(0)->parametrization() -> alpha(1.0)<< std::endl;
+    std::cout << "T = 1.0: " << ": Kappa = " << ccLgmExact1 -> lgm(0)->parametrization() -> kappa(1.0)<< std::endl;
+
+    std::cout << "T = 2.0: " << ": Alpha = " << ccLgmExact1 -> lgm(0)->parametrization() -> alpha(2.0)<< std::endl;
+    std::cout << "T = 2.0: " << ": Kappa = " << ccLgmExact1 -> lgm(0)->parametrization() -> kappa(2.0)<< std::endl;
+
+    std::cout << "T = 3.0: " << ": Alpha = " << ccLgmExact1 -> lgm(0)->parametrization() -> alpha(3.0)<< std::endl;
+    std::cout << "T = 3.0: " << ": Kappa = " << ccLgmExact1 -> lgm(0)->parametrization() -> kappa(3.0)<< std::endl;
+
+    //for (Size i = 0; i < basketEur1.size(); ++i) {
+    //    Date tmp = i < d1.volstepdates.size() ? d1.volstepdates[i] : d1.volstepdates.back() + 365;
+    //    std::cout << "T = : " << tmp << ": Alpha =" << ccLgmExact1 -> lgm(0)->parametrization() -> alpha((double)i)<< std::endl;
+    //    std::cout << "T = : " << tmp << ": Kappa =" << ccLgmExact1 -> lgm(0)->parametrization() -> kappa((double)i)<< std::endl;
+    //}
+    // TODO insert checks
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 
