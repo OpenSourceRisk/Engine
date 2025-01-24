@@ -142,6 +142,14 @@ Note that for CallableSwaps, contrary to the above, the payer and receiver legs 
 \emph{CollateralizedCashPrice} = Cash settled swaptions with settlement price calculation using zero coupon curve discounting \\
 \emph{ParYieldCurve}  = Cash settled swaptions with settlement price calculation using par yield discounting \footnote{https://www.isda.org/book/2006-isda-definitions/} \footnote{https://www.isda.org/a/TlAEE/Supplement-No-58-to-ISDA-2006-Definitions.pdf} \\
 
+\item \lstinline!MidCouponExercise! [Optional]:   If \emph{false}, the exercise-into underlying comprises all coupons with accrual start date greater or equal to notification date. I.e. one exercises into the next coupon, not the current one.\\
+If \emph{true}, the exercise-into underlying 
+comprises all coupons with accrual end date greater than the effective exercise date which is computed from the notification date by adding the notice period. 
+The accrual paid for such coupons on exercise is calculated from the effective exercise date to the accrual end date (short coupon).
+
+Allowable values: \emph{true}, \emph{false}. If omitted, defaults to \emph{false} for \emph{European} and \emph{Bermudan} swaptions and \emph{true} for \emph{American} swaptions.
+
+
 \item \lstinline!ExerciseFees![Optional]: This node contains child elements of type \lstinline!ExerciseFee!. Similar to a list of notionals
   (see \ref{ss:leg_data}) the fees can be given either
 
