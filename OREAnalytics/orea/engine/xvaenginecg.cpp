@@ -552,7 +552,7 @@ void XvaEngineCG::doForwardEvaluation() {
             keepNodes_[c.second] = true;
         }
 
-        for (auto const& [n, v] : baseModelParams_) {
+        for (auto const& [l, n, v] : baseModelParams_) {
             keepNodes_[n] = true;
         }
 
@@ -801,7 +801,7 @@ void XvaEngineCG::calculateSensitivities() {
 
             std::vector<bool> keepNodesDerivatives(g->size(), false);
 
-            for (auto const& [n, _] : baseModelParams_)
+            for (auto const& [l, n, _] : baseModelParams_)
                 keepNodesDerivatives[n] = true;
 
             // backward derivatives run
@@ -813,7 +813,7 @@ void XvaEngineCG::calculateSensitivities() {
             // read model param derivatives
 
             Size i = 0;
-            for (auto const& [n, v] : baseModelParams_) {
+            for (auto const& [l, n, v] : baseModelParams_) {
                 modelParamDerivatives[i++] = expectation(derivatives_[n]).at(0);
             }
 
@@ -881,8 +881,8 @@ void XvaEngineCG::calculateSensitivities() {
                     boost::accumulators::accumulator_set<
                         double, boost::accumulators::stats<boost::accumulators::tag::weighted_sum>, double>
                         acc;
-                    for (auto const& [n, v0] : baseModelParams_) {
-                        Real v1 = modelParameters[i].second;
+                    for (auto const& [l, n, v0] : baseModelParams_) {
+                        Real v1 = std::get<2>(modelParameters[i]);
                         acc(modelParamDerivatives[i], boost::accumulators::weight = (v1 - v0));
                         ++i;
                     }
@@ -1016,6 +1016,7 @@ void XvaEngineCG::run() {
 
     if (firstRun_) {
         outputGraphStats();
+        // model_->dumpModelParameters(); // for debugging only
     }
 
     getExternalContext();
@@ -1126,13 +1127,13 @@ void XvaEngineCG::populateConstants(std::vector<RandomVariable>& values,
     DLOG("XvaEngineCG: set " << g->constants().size() << " constants");
 }
 
-void XvaEngineCG::populateModelParameters(const std::vector<std::pair<std::size_t, double>>& modelParameters,
-                                          std::vector<RandomVariable>& values,
-                                          std::vector<ExternalRandomVariable>& valuesExternal) const {
+void XvaEngineCG::populateModelParameters(
+    const std::vector<std::tuple<std::string, std::size_t, double>>& modelParameters,
+    std::vector<RandomVariable>& values, std::vector<ExternalRandomVariable>& valuesExternal) const {
 
     DLOG("XvaEngineCG: populate model parameters");
 
-    for (auto const& [n, v] : modelParameters) {
+    for (auto const& [l, n, v] : modelParameters) {
         if (useExternalComputeDevice_) {
             valuesExternal[n] = ExternalRandomVariable(v);
         } else {
