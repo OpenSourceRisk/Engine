@@ -40,17 +40,10 @@ public:
         mporDate_ = inputs_->mporDate();
         LOG("ASOF date " << io::iso_date(inputs_->asof()));
         LOG("MPOR date " << io::iso_date(mporDate_));
-    
-        auto mporAnalytic = AnalyticFactory::instance().build("SCENARIO", inputs, analytic()->analyticsManager());
-        if (mporAnalytic.second) {
-            mporAnalytic.second->configurations().curveConfig = inputs->curveConfigs().get("mpor");
-            auto sai = static_cast<ScenarioAnalyticImpl*>(mporAnalytic.second->impl().get());
-            sai->setUseSpreadedTermStructures(true);
-            addDependentAnalytic(mporLookupKey, mporAnalytic.second);
-        }
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
+    void buildDependencies() override;
     void setUpConfigurations() override;
 
     bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }

@@ -38,19 +38,12 @@ public:
     PnlExplainAnalyticImpl(const QuantLib::ext::shared_ptr<InputParameters>& inputs)
         : Analytic::Impl(inputs) {
         setLabel(LABEL);
-        
-        auto sensiAnalytic = AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), true);
-        if (sensiAnalytic.second)
-            addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
-
-        auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_, analytic()->analyticsManager(), true);
-        if (pnlAnalytic.second)
-            addDependentAnalytic(pnlLookupKey, pnlAnalytic.second);
     }
 
     virtual void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                              const std::set<std::string>& runTypes = {}) override;
-    virtual void setUpConfigurations() override;
+    void setUpConfigurations() override;
+    void buildDependencies() override;
 };
 
 class PnlExplainAnalytic : public Analytic {

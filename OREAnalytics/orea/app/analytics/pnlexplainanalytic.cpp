@@ -40,6 +40,17 @@ void PnlExplainAnalyticImpl::setUpConfigurations() {
     analytic()->configurations().sensiScenarioData = inputs_->sensiScenarioData();
 }
 
+void PnlExplainAnalyticImpl::buildDependencies() {
+    auto sensiAnalytic =
+        AnalyticFactory::instance().build("SENSITIVITY", inputs_, analytic()->analyticsManager(), true);
+    if (sensiAnalytic.second)
+        addDependentAnalytic(sensiLookupKey, sensiAnalytic.second);
+
+    auto pnlAnalytic = AnalyticFactory::instance().build("PNL", inputs_, analytic()->analyticsManager(), true);
+    if (pnlAnalytic.second)
+        addDependentAnalytic(pnlLookupKey, pnlAnalytic.second);
+}
+
 void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
         const std::set<std::string>& runTypes) {
     
