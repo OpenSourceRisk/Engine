@@ -13,7 +13,7 @@ The \lstinline!CallableSwapData! node is the trade data container for the \emph{
  swap that can be cancelled at predefined dates by one of the counterparties. A Callable Swap must have at least one leg, each leg described by a \lstinline!LegData! trade component sub-node as described in section
 \ref{ss:leg_data}.  
 
-There must be at least one full coupon period after the exercise date for European Callable Swaps, and after the last exercise date for Bermudan and American Callable Swaps. 
+Unless MidCouponExercise is \emph{true}, there must be at least one full coupon period after the exercise date for European Callable Swaps, and after the last exercise date for Bermudan and American Callable Swaps. 
 
 The \lstinline!CallableSwapData! node also contains an \lstinline!OptionData! node which describes
 the exercise dates and specifies which party holds the call right, see \ref{ss:option_data}. An example structure of a
@@ -27,6 +27,7 @@ the exercise dates and specifies which party holds the call right, see \ref{ss:o
       <LongShort>Short</LongShort>
       <Style>Bermudan</Style>
       <Settlement>Physical</Settlement>
+      <MidCouponExercise>true<MidCouponExercise>
       <ExerciseDates>
         <ExerciseDate>2031-10-01</ExerciseDate>
         <ExerciseDate>2032-10-01</ExerciseDate>
