@@ -154,6 +154,9 @@ public:
     // calculate the model
     void calculate() const override { LazyObject::calculate(); }
 
+    // dump model parameters to console, mostly for debugging purposes
+    virtual void dumpModelParameters() const = 0;
+
 protected:
     // map with additional results provided by this model instance
     mutable std::map<std::string, boost::any> additionalResults_;

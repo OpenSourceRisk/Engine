@@ -91,6 +91,9 @@ public:
     std::vector<std::pair<std::size_t, double>> modelParameters() const override;
     std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameterFunctors() const override;
 
+    // dump model parameters to console, mostly for debugging purposes
+    void dumpModelParameters() const override;
+
 protected:
     // get (non-ir) index (forward) value for index[indexNo] for (fwd >=) d >= reference date
     virtual std::size_t getIndexValue(const Size indexNo, const Date& d, const Date& fwd = Null<Date>()) const = 0;
@@ -124,9 +127,6 @@ protected:
 
     // convenience function to add model parameters
     std::size_t addModelParameter(const std::string& id, std::function<double(void)> f) const;
-
-    // dump model parameters to console, mostly for debugging purposes
-    void dumpModelParameters() const;
 
     // manages cg version and triggers recalculations of random variate / model parameter nodes
     void performCalculations() const override;
