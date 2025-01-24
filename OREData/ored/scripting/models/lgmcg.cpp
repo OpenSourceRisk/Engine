@@ -67,6 +67,7 @@ std::size_t LgmCG::discountBond(const Date& d, const Date& e, const std::size_t 
     if (n = cg_var(g_, id, ComputationGraph::VarDoesntExist::Nan), n == ComputationGraph::nan) {
         n = cg_mult(g_, numeraire(d, x, discountCurve, discountCurveId),
                     reducedDiscountBond(d, e, x, discountCurve, discountCurveId));
+        g_.setVariable(id, n);
     }
     return n;
 }
@@ -96,6 +97,7 @@ std::size_t LgmCG::reducedDiscountBond(const Date& d, Date e, const std::size_t 
             g_, P0T,
             cg_exp(g_, cg_negative(g_, cg_add(g_, cg_mult(g_, H, x),
                                               cg_mult(g_, cg_mult(g_, cg_const(g_, 0.5), zeta), cg_mult(g_, H, H))))));
+        g_.setVariable(id, n);
     }
     return n;
 }
@@ -136,6 +138,7 @@ std::size_t LgmCG::fixing(const QuantLib::ext::shared_ptr<InterestRateIndex>& in
         } else {
             QL_FAIL("LgmCG::fixing(): only ibor indices handled so far, index = " << index->name());
         }
+        g_.setVariable(id, n);
     }
     return n;
 }
