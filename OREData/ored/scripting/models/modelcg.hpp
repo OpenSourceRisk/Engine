@@ -142,8 +142,9 @@ public:
     // CG / AD part of the interface
     virtual std::size_t cgVersion() const = 0;
     virtual const std::vector<std::vector<std::size_t>>& randomVariates() const = 0; // dim / steps
-    virtual std::vector<std::pair<std::size_t, double>> modelParameters() const = 0;
-    virtual std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameterFunctors() const = 0;
+    virtual std::vector<std::tuple<std::string, std::size_t, double>> modelParameters() const = 0;
+    virtual std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>>&
+    modelParameterFunctors() const = 0;
 
     // get fx spot as of today directly, i.e. bypassing the cg
     virtual Real getDirectFxSpotT0(const std::string& forCcy, const std::string& domCcy) const = 0;

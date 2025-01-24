@@ -459,16 +459,17 @@ const std::vector<std::vector<std::size_t>>& ModelCGImpl::randomVariates() const
     return randomVariates_;
 }
 
-std::vector<std::pair<std::size_t, double>> ModelCGImpl::modelParameters() const {
+std::vector<std::tuple<std::string, std::size_t, double>> ModelCGImpl::modelParameters() const {
     calculate();
-    std::vector<std::pair<std::size_t, double>> res;
-    for (auto const& f : modelParameters_) {
-        res.push_back(std::make_pair(f.first, f.second()));
+    std::vector<std::tuple<std::string, std::size_t, double>> res;
+    for (auto const& [l, n, f] : modelParameters_) {
+        res.push_back(std::make_tuple(l, n, f()));
     }
     return res;
 }
 
-std::vector<std::pair<std::size_t, std::function<double(void)>>>& ModelCGImpl::modelParameterFunctors() const {
+std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>>&
+ModelCGImpl::modelParameterFunctors() const {
     return modelParameters_;
 }
 
@@ -477,19 +478,17 @@ std::size_t ModelCGImpl::addModelParameter(const std::string& id, std::function<
 }
 
 void ModelCGImpl::dumpModelParameters() const {
-    std::map<std::size_t, std::string> varLabels;
-    for (auto const& [k, v] : g_->variables())
-        varLabels[v] = k;
-    for (auto const& [k, v] : modelParameters_)
-        std::cout << std::setw(50) << std::left << varLabels.at(k) << v() << std::endl;
+    for (auto const& [l, n, f] : modelParameters_)
+        std::cout << std::setw(50) << std::left << l << std::setw(10) << n << f() << std::endl;
 }
 
-std::size_t addModelParameter(ComputationGraph& g, std::vector<std::pair<std::size_t, std::function<double(void)>>>& m,
+std::size_t addModelParameter(ComputationGraph& g,
+                              std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>>& m,
                               const std::string& id, std::function<double(void)> f) {
     std::size_t n;
     if (n = g.variable(id, ComputationGraph::VarDoesntExist::Nan); n == ComputationGraph::nan) {
         n = cg_var(g, id, ComputationGraph::VarDoesntExist::Create);
-        m.push_back(std::make_pair(n, f));
+        m.push_back(std::make_tuple(id, n, f));
     }
     return n;
 }

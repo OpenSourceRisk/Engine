@@ -88,8 +88,9 @@ public:
     // CG / AD part of the interface
     std::size_t cgVersion() const override;
     const std::vector<std::vector<std::size_t>>& randomVariates() const override; // dim / steps
-    std::vector<std::pair<std::size_t, double>> modelParameters() const override;
-    std::vector<std::pair<std::size_t, std::function<double(void)>>>& modelParameterFunctors() const override;
+    std::vector<std::tuple<std::string, std::size_t, double>> modelParameters() const override;
+    std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>>&
+    modelParameterFunctors() const override;
 
     // dump model parameters to console, mostly for debugging purposes
     void dumpModelParameters() const override;
@@ -123,7 +124,7 @@ protected:
 
     // to be populated by derived classes when building the computation graph
     mutable std::vector<std::vector<size_t>> randomVariates_;
-    mutable std::vector<std::pair<std::size_t, std::function<double(void)>>> modelParameters_;
+    mutable std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>> modelParameters_;
 
     // convenience function to add model parameters
     std::size_t addModelParameter(const std::string& id, std::function<double(void)> f) const;
@@ -143,7 +144,8 @@ private:
 };
 
 // convenience function to add model parameters, standalone variant
-std::size_t addModelParameter(ComputationGraph& g, std::vector<std::pair<std::size_t, std::function<double(void)>>>& m,
+std::size_t addModelParameter(ComputationGraph& g,
+                              std::vector<std::tuple<std::string, std::size_t, std::function<double(void)>>>& m,
                               const std::string& id, std::function<double(void)> f);
 
 // map date to a coarser grid if sloppyDates = true, otherwise just return d

@@ -232,12 +232,12 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
         // set model parameters
 
         baseModelParams_ = model_->modelParameters();
-        for (auto const& p : baseModelParams_) {
-            TLOG("setting model parameter at node " << p.first << " to value " << std::setprecision(16) << p.second);
+        for (auto const& [l, n, v] : baseModelParams_) {
+            TLOG("setting model parameter " << l << "  at node " << n << " to value " << std::setprecision(16) << v);
             if (useExternalComputeFramework_) {
-                valuesExternal[p.first] = ExternalRandomVariable(p.second);
+                valuesExternal[n] = ExternalRandomVariable(v);
             } else {
-                values[p.first] = RandomVariable(model_->size(), p.second);
+                values[n] = RandomVariable(model_->size(), v);
             }
         }
         DLOG("set " << baseModelParams_.size() << " model parameters");
@@ -293,8 +293,8 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
         keepNodes[cg_var(*g, npv_ + "_0")] = true;
 
-        for (auto const& p : baseModelParams_)
-            keepNodes[p.first] = true;
+        for (auto const& [l, n, v] : baseModelParams_)
+            keepNodes[n] = true;
 
         if (generateAdditionalResults_) {
             for (auto const& r : additionalResults_) {
@@ -465,7 +465,7 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
 
             sensis_.resize(baseModelParams_.size());
             for (Size i = 0; i < baseModelParams_.size(); ++i) {
-                sensis_[i] = model_->extractT0Result(derivatives[baseModelParams_[i].first]);
+                sensis_[i] = model_->extractT0Result(derivatives[std::get<1>(baseModelParams_[i])]);
             }
             DLOG("got backward sensitivities");
 
@@ -484,14 +484,15 @@ void ScriptedInstrumentPricingEngineCG::calculate() const {
         DLOG("computing npv using baseNpv " << baseNpv_ << " and sensis.");
 
         for (Size i = 0; i < baseModelParams_.size(); ++i) {
-            QL_REQUIRE(modelParams[i].first == baseModelParams_[i].first, "internal error: modelParams["
-                                                                              << i << "] node " << modelParams[i].first
-                                                                              << " does not match baseModelParams node "
-                                                                              << baseModelParams_[i].first);
-            Real tmp = sensis_[i] * (modelParams[i].second - baseModelParams_[i].second);
+            QL_REQUIRE(std::get<1>(modelParams[i]) == std::get<1>(baseModelParams_[i]),
+                       "internal error: modelParams["
+                           << i << "] node " << std::get<1>(modelParams[i]) << " (" << std::get<0>(modelParams[i])
+                           << ") does not match baseModelParams node " << std::get<1>(baseModelParams_[i]) << " ("
+                           << std::get<0>(modelParams[i]) << ")");
+            Real tmp = sensis_[i] * (std::get<2>(modelParams[i]) - std::get<2>(baseModelParams_[i]));
             npv += tmp;
-            TLOG("node " << modelParams[i].first << ": [" << modelParams[i].second << " (current) - "
-                         << baseModelParams_[i].second << " (base) ] * " << sensis_[i] << " (delta) => " << tmp);
+            TLOG("node " << std::get<0>(modelParams[i]) << ": " << std::get<2>(modelParams[i]) << " (current) - "
+                         << std::get<2>(baseModelParams_[i]) << " (base) ] * " << sensis_[i] << " (delta) => " << tmp);
         }
 
         results_.value = npv;
