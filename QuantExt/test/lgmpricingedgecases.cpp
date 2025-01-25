@@ -997,5 +997,88 @@ BOOST_AUTO_TEST_CASE(testHighMeanReversion) {
 }
 
 
+BOOST_AUTO_TEST_CASE(testSmallMaturity) {
+    // This test checks the LGM pricing fnctionality in case of a very small maturity of 5 days.
+    // The pricing routine shall be stable and return values smaller than five basis points.
+
+    BOOST_TEST_MESSAGE("Testing LGM pricing in edge cases with very small maturity ...");
+
+    DayCounter dc = Actual360();
+    Calendar calendar = TARGET();
+    Date settlementDate(15, July, 2015);
+    Date ex = Date(18, July, 2015);
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(ex); 
+    Date startDate(15, July, 2015);
+    Settings::instance().evaluationDate() = settlementDate;    
+    Date maturityDate = calendar.advance(settlementDate, 5, Days);
+    Real notional = 1.0;
+    Rate fixedRate = 0.02;
+
+    auto eurYts = QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
+   
+    std::vector<Date> volstepdates;
+    volstepdates.push_back(Date(15, July, 2016));
+    volstepdates.push_back(Date(15, July, 2017));
+    volstepdates.push_back(Date(15, July, 2018));
+    volstepdates.push_back(Date(15, July, 2019));
+    volstepdates.push_back(Date(15, July, 2020));
+
+    std::vector<Real> eurVols;
+
+    auto  volsteptimes_a = Array(volstepdates.size());
+
+    for (Size i = 0; i < volstepdates.size(); ++i) 
+        volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
+    
+    for (Size i = 0; i < volstepdates.size() + 1; ++i) 
+        eurVols.push_back(0.3);
+
+    Array eurVols_a;
+    Array notimes_a, eurKappa_a;
+    eurVols_a = Array(eurVols.begin(), eurVols.end());
+    notimes_a = Array(0);
+    eurKappa_a = Array(1, 4.0);
+
+    Handle<YieldTermStructure> eurYtsHandle(eurYts);
+    auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
+
+    QuantLib::ext::shared_ptr<PricingEngine> swaptionEngine = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
+   
+    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
+    Schedule schedule(startDate, maturityDate, Period(Daily), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
+
+    BOOST_TEST_MESSAGE("Checking Receiver Swaps ...");
+    for (int strike = -2; strike < 6; strike ++)
+    {
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, (double)strike/100.0, dc, schedule, EURIBOR6m, 0.0, dc);        
+        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+
+        swaption->setPricingEngine(swaptionEngine);
+        Real npv = swaption->NPV();
+
+        BOOST_TEST_MESSAGE("Receiver Swaption (Strike = " << strike  << "%): " << npv * 10000.00 << " bp. ");
+        double limitValue = 0.0;
+        BOOST_TEST_MESSAGE("------------");
+        BOOST_CHECK(std::fabs(npv-limitValue) < 6e-4); // Tolerane of five basis points
+    }
+
+    BOOST_TEST_MESSAGE("Checking Payer Swaps ...");
+    for (int strike = -2; strike <=6; strike ++)
+    {
+        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Payer, notional, schedule, (double)strike/100.0, dc, schedule, EURIBOR6m, 0.0, dc);
+        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
+
+        swaption->setPricingEngine(swaptionEngine);
+        Real npv = swaption->NPV();
+        BOOST_TEST_MESSAGE("Payer Swaption (Strike = " << strike  << "%): " << npv * 10000.00 << " bp. ");
+        
+        double limitValue = 0.0;
+        BOOST_TEST_MESSAGE("------------");
+        BOOST_CHECK(std::fabs(npv-limitValue) < 6e-4); // Tolerane of five basis points
+    }
+    
+    BOOST_TEST_MESSAGE(" T = 1: Model - " << model -> printParameters(1.0));    
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
