@@ -142,6 +142,7 @@ BaseCorrelationCurve::QuoteData BaseCorrelationCurve::loadQuotes(const Date& aso
             res.dps.insert(q->detachmentPoint());
 
         // Add to the data that we will use.
+        res.atp[q->detachmentPoint()] = q->attachmentPoint();
         res.data[key] = q->quote();
 
         TLOG("Added quote " << q->name() << ": (" << q->term() << "," << fixed << setprecision(9)
@@ -425,10 +426,9 @@ void BaseCorrelationCurve::buildFromUpfronts(const Date& asof, const BaseCorrela
             auto key = std::make_pair(term, dp);
             auto it = data.find(key);
             QL_REQUIRE(it != data.end(), "No data found for " << term << " and detachmentPoint" << dp);
-            auto q = ext::dynamic_pointer_cast<BaseCorrelationQuote>(it->second.currentLink());
-            double attachmentPoint = q->attachmentPoint();
-            double detachmentPoint = q->detachmentPoint();
-            QL_REQUIRE(detachmentPoint == dp, "");
+            auto attachmentPointIt = qData.atp.find(dp);
+            QL_REQUIRE(attachmentPointIt != qData.atp.end(),"No attachment point found for detachmentPoint " << dp);
+            double attachmentPoint = attachmentPointIt->second;
             if (i == 0)
                 QL_REQUIRE(attachmentPoint == 0,
                            "First Upfront Quote should be a base tranche, but got " << attachmentPoint);

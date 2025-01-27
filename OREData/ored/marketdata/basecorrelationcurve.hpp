@@ -71,7 +71,7 @@ private:
     };
 
     struct QuoteData {
-            struct LessSetKey {
+            struct LessReal {
                 bool operator()(const Real& lhs, const Real& rhs) const {
                 return !close_enough(lhs, rhs) && lhs < rhs;
                 }
@@ -86,7 +86,8 @@ private:
                 }
             }; 
             std::set<Period> terms;        
-            set<Real, LessSetKey> dps;
+            set<Real, LessReal> dps;
+            map<Real, Real, LessReal> atp;
             map<pair<Period, Real>, Handle<Quote>, LessDataKey> data;
     };
 
