@@ -84,7 +84,7 @@ Allowable values: Any string that evaluates to true or false as outlined in Tabl
 \item \lstinline!PaymentDate! [Optional]: If \lstinline!PhysicallySettled! is set to \emph{false}, this gives the cash settlement date. It must be greater than or equal to the \lstinline!Maturity! date. If omitted and the forward is cash settled, the \lstinline!Maturity! date is used. \\
 Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
-\item \lstinline!SettlementData! [Optional]: This node is used to specify  the settlement of the cash flows for non-deliverable futures, i.e. when \lstinline!PhysicallySettled! is \emph{false}.
+\item \lstinline!SettlementData! [Optional]: This node is used to specify  the settlement of the cash flows for cash settled forwards, and the payment flow for physically settled ones.
 \end{itemize}
 
 A \lstinline!SettlementData! node is shown in Listing \ref{lst:comm_ndf_settlement_data_node}, and the meanings and allowable values of its elements follow below.
