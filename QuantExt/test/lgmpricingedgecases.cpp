@@ -319,72 +319,6 @@ BOOST_AUTO_TEST_CASE(testLowStrike) {
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model -> printParameters(1));    
 }
 
-
-BOOST_AUTO_TEST_CASE(testLateExercise) {
-    // This test checks the behaviour of the LGM model in case of an erroneous setup,
-    // i.e. an exercise date after maturity. The expected behaviour is a software fail,
-    // more precisely a fail of QL_Require which is checked for and captured by 
-    // the test environment.
-    BOOST_TEST_MESSAGE("Testing LGM pricing in edge case of expiry after maturity ...");
-    
-    Calendar calendar = TARGET();
-    Date settlementDate(15, July, 2015);
-    Settings::instance().evaluationDate() = settlementDate;
-    Date maturityDate = calendar.advance(settlementDate, 5, Years);
-    Real notional = 1.0;
-    Rate fixedRate = 0.02;
-
-    auto eurYts= QuantLib::ext::make_shared<FlatForward>(settlementDate, fixedRate, Actual365Fixed());
-   
-    std::vector<Date> volstepdates;
-    volstepdates.push_back(Date(15, July, 2016));
-    volstepdates.push_back(Date(15, July, 2017));
-    volstepdates.push_back(Date(15, July, 2018));
-    volstepdates.push_back(Date(15, July, 2019));
-    volstepdates.push_back(Date(15, July, 2020));
-
-    std::vector<Real> eurVols;
-
-    auto  volsteptimes_a = Array(volstepdates.size());
-
-    for (Size i = 0; i < volstepdates.size(); ++i) 
-        volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
-    
-    for (Size i = 0; i < volstepdates.size() + 1; ++i) 
-        eurVols.push_back(0.0000);
-
-    Array eurVols_a;
-    Array notimes_a, eurKappa_a;
-    eurVols_a = Array(eurVols.begin(), eurVols.end());
-    notimes_a = Array(0);
-    eurKappa_a = Array(1, 0.02);
-
-    Handle<YieldTermStructure> eurYtsHandle(eurYts);
-    auto model = QuantLib::ext::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYtsHandle, volsteptimes_a, eurVols_a, notimes_a, eurKappa_a);
-
-    QuantLib::ext::shared_ptr<PricingEngine> eurSwEng1 = QuantLib::ext::make_shared<AnalyticLgmSwaptionEngine>(model);
-    boost::shared_ptr<IborIndex> EURIBOR6m = boost::make_shared<Euribor6M>(eurYtsHandle);
-    Schedule schedule(settlementDate, maturityDate, Period(Semiannual), calendar, Unadjusted, Unadjusted, DateGeneration::Backward, false);
-
-    BOOST_TEST_MESSAGE("Receiver Swaps");
-    // Covering the whole range of strikes that matters
-    for (int strike = -2; strike <= 14; strike ++)
-    {
-        boost::shared_ptr<VanillaSwap> swap = boost::make_shared<VanillaSwap>(VanillaSwap::Receiver, notional, schedule, (double)strike/100.0, Actual360(), schedule, EURIBOR6m,  0.0, Actual360());
-        boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(Date(15, July, 2020)); // This is intentional
-        boost::shared_ptr<Swaption> swaption = boost::make_shared<Swaption>(swap, exercise);
-        swaption->setPricingEngine(eurSwEng1);
-
-        try {
-            swaption->NPV();
-            BOOST_FAIL("QL_Require failed.");
-        } catch (const std::exception& e) {
-            BOOST_TEST_MESSAGE(std::string(e.what()));
-            BOOST_CHECK_EQUAL(std::string(e.what()), "fixed leg's periods are all before expiry.");
-        }
-    }
-}
-
 BOOST_AUTO_TEST_CASE(testTooLateExercise) {
     // This test checks the behaviour of the LGM model in case of an erroneous setup,
     // i.e. an exercise date after maturity. The expected behaviour is a software fail,
@@ -541,13 +475,13 @@ BOOST_AUTO_TEST_CASE(testImmediateExpiry) {
 }
 
 BOOST_AUTO_TEST_CASE(testLowVolatility) {
-    // This test checks the LGM model pricing in case of with very low volatility values. 
+    // This test checks the LGM model pricing in case of very low given volatility values. 
     // Again, the swaption prices will either equal the inner value (which is D*(S-K) or D*(K-S) depending
     // on the option type, i.e. "payer" or "receiver") or be zero. Even if the strike is only a little
     // different from the atm rate, the very low volatility will ensure that there are only these two
     // edge cases. That is the difference to testHighStrike and testLowStrike, where the big difference between
     // the strike and the atm rate causes the limit cases to be valid. The numerical results will equal the
-    // underlying swap value, which is used as a benchmark here. It is approximated
+    // underlying swap value, which is used as a benchmark here.
 
     BOOST_TEST_MESSAGE("Testing pricing in edge cases with very low volatility and long maturity ...");
 
@@ -643,16 +577,11 @@ BOOST_AUTO_TEST_CASE(testLowVolatility) {
     BOOST_TEST_MESSAGE(" T = 1: Model - "<< model->printParameters(1));    
 }
 
-
 BOOST_AUTO_TEST_CASE(testLowVolatilityLongTerm) {
     // This test checks the LGM model pricing routine in case of a model with very low volatility values and
-    // a very high maturity of one hundred years. These cases may occur in case of government bonds.
-    // Again, the swaption prices will either equal the inner value (which is D*(S-K) or D*(K-S) depending
-    // on the option type, i.e. "payer" or "receiver") or be zero. Even if the strike is only a little
-    // different from the atm rate, the very low volatility will ensure that there are only these two
-    // edge cases. That is the difference to testHighStrike and testLowStrike, where the big difference between
-    // the strike and the atm rate causes the limit cases to be valid. The numerical results will equal the
-    // underlying swap value, which is used as a benchmark here. It is approximated
+    // a high maturity of fifty years. Again, the swaption prices will equal the inner value D*(S-K) or
+    // D*(K-S) as before. The numerical results will equal the underlying swap value, which is used as a 
+    // benchmark in this example. 
 
     BOOST_TEST_MESSAGE("Testing pricing in edge cases with very low volatility and long maturity ...");
 
@@ -750,17 +679,13 @@ BOOST_AUTO_TEST_CASE(testLowVolatilityLongTerm) {
 
 BOOST_AUTO_TEST_CASE(testLowVolatilityLongTerm2) {
     // This test checks the LGM model pricing routine in case of a model with very low volatility values and
-    // a very high maturity of one hundred years. These cases may occur in case of government bonds.
-    // Again, the swaption prices will either equal the inner value (which is D*(S-K) or D*(K-S) depending
-    // on the option type, i.e. "payer" or "receiver") or be zero. Even if the strike is only a little
-    // different from the atm rate, the very low volatility will ensure that there are only these two
-    // edge cases. That is the difference to testHighStrike and testLowStrike, where the big difference between
-    // the strike and the atm rate causes the limit cases to be valid. The numerical results will equal the
-    // underlying swap value, which is used as a benchmark here.
+    // a very high maturity of one hundred years. These cases may occur e.g. in case of government bonds.
+    // Again, the swaption prices will equal their inner value as before. 
     //
-    // This long term version with a hundred years maturity check the bisection method before the 
+    // This long term version with a hundred years maturity checks the bisection method before the 
     // optimization of yStarHelper in analyticlgmswaptionengine.cpp. It covers a wide range of strike inputs
-    // as well to check the optimization in cases with unusual inputs.
+    // as well to check the optimization in cases with unusual inputs. In the other version 
+    // "testLowVolatilityLongTerm" that bisection is not in use.
 
     BOOST_TEST_MESSAGE("Testing pricing in edge cases with very low volatility and long maturity ...");
 
@@ -998,7 +923,7 @@ BOOST_AUTO_TEST_CASE(testHighMeanReversion) {
 
 
 BOOST_AUTO_TEST_CASE(testSmallMaturity) {
-    // This test checks the LGM pricing fnctionality in case of a very small maturity of 5 days.
+    // This test checks the LGM pricing functionality in case of a very small maturity of 5 days.
     // The pricing routine shall be stable and return values smaller than five basis points.
 
     BOOST_TEST_MESSAGE("Testing LGM pricing in edge cases with very small maturity ...");
