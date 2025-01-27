@@ -57,7 +57,7 @@ Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_
 \item Name: The name of the underlying commodity. \\
 Allowable values:  See \lstinline!Name! for commodity trades in Table \ref{tab:commodity_data}. \\
 
-\item Currency: The  currency of the commodity forward. \\
+\item Currency: The  currency the underlying commodity is quoted in. The Strike and the Forward price of the underlying commodity are both considered to be in this currency.   \\
 Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.	
 
 \item Strike: The agreed buy/sell price of the commodity forward. \\
@@ -78,23 +78,23 @@ Allowable values: Any string that can be parsed as a period e.g.\ \lstinline!2D!
 \item \lstinline!FutureExpiryOffsetCalendar! [Optional]: If \lstinline!FutureExpiryOffset! is provided and is being used, this gives the calendar that should be used when generating the underlying commodity future contract expiration date from the \lstinline!Maturity! date. If omitted, all days are considered good business days when generating the commodity future contract expiration date which is generally not what is desired. \\
 Allowable values: Any calendar string, see \lstinline!Calendar! in Table \ref{tab:calendar}.
 
-\item \lstinline!PhysicallySettled! [Optional]: A value of \lstinline!true! indicates that the forward contract is physically settled e.g.\ if the underlying is a future contract, that future contract is entered into on the \lstinline!Maturity! date. A value of \lstinline!false! indicates that the forward contract is cash settled e.g.\ if the underlying is a future contract, that future contract settlement price is observed on the \lstinline!Maturity! date (or the \lstinline!FutureExpiryDate!, when given) and the net amount due is exchanged on the cash settlement date. If omitted, it defaults to \lstinline!true!. \\
+\item \lstinline!PhysicallySettled! [Optional]: A value of \lstinline!true! indicates that the forward contract is physically settled e.g.\ if the underlying is a future contract, that future contract is entered into on the \lstinline!Maturity! date. A value of \lstinline!false! indicates that the forward contract is cash settled e.g.\ if the underlying is a future contract, that future contract settlement price is observed on the \lstinline!Maturity! date (or the \lstinline!FutureExpiryDate!, when given) and the net amount due is exchanged on the cash settlement date. If omitted, it defaults to \emph{true}. \\
 Allowable values: Any string that evaluates to true or false as outlined in Table \ref{tab:boolean_allowable}.
 
-\item \lstinline!PaymentDate! [Optional]: If \lstinline!PhysicallySettled! is set to \lstinline!false!, this gives the cash settlement date. It must be greater than or equal to the \lstinline!Maturity! date. If omitted and the forward is cash settled, the \lstinline!Maturity! date is used. \\
+\item \lstinline!PaymentDate! [Optional]: If \lstinline!PhysicallySettled! is set to \emph{false}, this gives the cash settlement date. It must be greater than or equal to the \lstinline!Maturity! date. If omitted and the forward is cash settled, the \lstinline!Maturity! date is used. \\
 Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
-\item SettlementData [Optional]: This node is used to specify  the settlement of the cash flows for non-deliverable futures.
+\item \lstinline!SettlementData! [Optional]: This node is used to specify  the settlement of the cash flows for non-deliverable futures, i.e. when \lstinline!PhysicallySettled! is \emph{false}.
 \end{itemize}
 
 A \lstinline!SettlementData! node is shown in Listing \ref{lst:comm_ndf_settlement_data_node}, and the meanings and allowable values of its elements follow below.
 
 \begin{itemize}
-\item PayCurrency: The settlement currency for the payment cashflow. \\
+\item \lstinline!PayCurrency!: The settlement currency for the payment cashflow. \\
 Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
-\item FXIndex: The FX reference index for determining the FX fixing at the value date. This field is required if settlement is \emph{Cash} and the payment date is greater than the value date. \\
+\item \lstinline!FXIndex!: The FX reference index for determining the FX fixing at the value date. The Forward Price will be observed at maturity date (or future expiry date if it’s a future), the NPV is converted to \lstinline!PayCurrency! with the \lstinline!FXIndex! using an FX fixing on \lstinline!FixingDate! (settlement date) discounted from \lstinline!PaymentDate!. \\
 Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}.
-\item FixingDate: The date on which the \emph{FXIndex} is observed.
+\item \lstinline!FixingDate!: The date on which the \emph{FXIndex} is observed.
 Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 \end{itemize}
 
