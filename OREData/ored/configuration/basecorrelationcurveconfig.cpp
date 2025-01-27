@@ -75,7 +75,7 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
 const vector<string>& BaseCorrelationCurveConfig::quotes() {
     if (quotes_.size() == 0) {
         for (const auto& quoteType : quoteTypes_) {
-            string base = "CDS_INDEX/" + to_string(quoteType) + "/" + quoteName_ + "/";
+            string base = "INDEX_CDS_TRANCHE/" + to_string(quoteType) + "/" + quoteName_ + "/";
             for (auto t : terms_) {
                 for (auto dp : detachmentPoints_) {
                     quotes_.push_back(base + t + "/" + dp);
