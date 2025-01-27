@@ -59,6 +59,7 @@ namespace data {
 
 BaseCorrelationCurve::QuoteData BaseCorrelationCurve::loadQuotes(const Date& asof,
                                                                  const BaseCorrelationCurveConfig& config,
+                                                                 const MarketDatum::QuoteType quoteType,
                                                                  const Loader& loader) const {
     BaseCorrelationCurve::QuoteData res;
     const auto& termStrs = config.terms();
@@ -92,8 +93,9 @@ BaseCorrelationCurve::QuoteData BaseCorrelationCurve::loadQuotes(const Date& aso
     // Read in quotes relevant for the base correlation surface. The points that will be used are stored in data
     // where the key is the term, detachment point pair and value is the base correlation quote.
     std::ostringstream ss;
-    ss << MarketDatum::InstrumentType::CDS_INDEX << "/" << config.quoteType() << "/*";
+    ss << MarketDatum::InstrumentType::INDEX_CDS_TRANCHE << "/" << quoteType << "/*";
     Wildcard w(ss.str());
+    TLOG("Load BaseCorrelationQuotes: Have wildcard pattern " << ss.str());
     for (const auto& md : loader.get(w, asof)) {
 
         QL_REQUIRE(md->asofDate() == asof, "MarketDatum asofDate '" << md->asofDate() << "' <> asof '" << asof << "'");
@@ -161,7 +163,7 @@ BaseCorrelationCurve::BaseCorrelationCurve(
 
     const auto& config = *curveConfigs.baseCorrelationCurveConfig(spec_.curveConfigID());
     for (const auto& quoteType : config.quoteTypes()) {
-        const auto qData = loadQuotes(asof, config, loader);
+        const auto qData = loadQuotes(asof, config, quoteType, loader);
         DLOG("BaseCorrelationCurve try to build from " << quoteType);
         try {
             if (quoteType == MarketDatum::QuoteType::BASE_CORRELATION) {
@@ -173,9 +175,9 @@ BaseCorrelationCurve::BaseCorrelationCurve(
             }
             break;
         } catch (std::exception& e) {
-            QL_FAIL("BaseCorrelationCurve: curve building failed :" << e.what());
+            DLOG("BaseCorrelationCurve: curve building failed :" << e.what());
         } catch (...) {
-            QL_FAIL("BaseCorrelationCurve: curve building failed: unknown error");
+            DLOG("BaseCorrelationCurve: curve building failed: unknown error");
         }
     }
     QL_REQUIRE(baseCorrelation_ != nullptr, "BaseCorrelationCurve: curve building failed.");

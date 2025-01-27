@@ -693,7 +693,7 @@ QuantLib::ext::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const 
                                                         0.0, detachmentPoint);
     }
     case MarketDatum::InstrumentType::INDEX_CDS_TRANCHE: {
-        bool validQuoteType = quoteType == MarketDatum::QuoteType::BASE_CORRELATION || quoteType == MarketDatum::QuoteType::BASE_CORRELATION;
+        bool validQuoteType = quoteType == MarketDatum::QuoteType::BASE_CORRELATION || quoteType == MarketDatum::QuoteType::PRICE;
         QL_REQUIRE(validQuoteType, "unexpected quote type " << quoteType << " for " << datumName
                                                             << ", allowed values are BASE_CORRELATION or PRICE");
         bool isBaseCorrelationQuote  = quoteType == MarketDatum::QuoteType::BASE_CORRELATION;

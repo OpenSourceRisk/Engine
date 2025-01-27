@@ -17,10 +17,10 @@
 */
 
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
-#include <ored/marketdata/marketdatumparser.hpp>
 
 using ore::data::XMLUtils;
 
@@ -31,7 +31,7 @@ namespace data {
 
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig()
     : settlementDays_(0), businessDayConvention_(Following), extrapolate_(true), adjustForLosses_(true),
-    quoteType_(MarketDatum::QuoteType::BASE_CORRELATION), indexSpread_(Null<Real>()) {}
+    quoteTypes_({MarketDatum::QuoteType::BASE_CORRELATION}), indexSpread_(Null<Real>()) {}
 
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     const string& curveDescription,
@@ -47,7 +47,7 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     const Period& indexTerm,
     boost::optional<DateGeneration::Rule> rule,
     bool adjustForLosses,
-    MarketDatum::QuoteType quoteType,
+    const std::vector<MarketDatum::QuoteType>& quoteTypes,
     double indexSpread, const std::string& currency)
     : CurveConfig(curveID, curveDescription),
       detachmentPoints_(detachmentPoints),
@@ -62,20 +62,24 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
       indexTerm_(indexTerm),
       rule_(rule),
       adjustForLosses_(adjustForLosses),
-      quoteType_(quoteType),
+      quoteTypes_(quoteTypes),
       indexSpread_(indexSpread),
       currency_(currency) {
-    bool validQuoteType =
-        quoteType_ == MarketDatum::QuoteType::BASE_CORRELATION || quoteType_ == MarketDatum::QuoteType::TRANCHE_UPFRONT;
-    QL_REQUIRE(validQuoteType, "unexpected QuoteType " << quoteType_ << ", allowed values are BASE_CORRELATION or TRANCHE_UPFRONT");
+    QL_REQUIRE(!quoteTypes_.empty(), "Required at least one valid quote type");
+    for (const auto& quoteType : quoteTypes) {
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::BASE_CORRELATION || quoteType == MarketDatum::QuoteType::PRICE,
+            "Invalid quote type" << quoteType << " in BaseCorrelationCurveConfig");
+    }
 }
 
 const vector<string>& BaseCorrelationCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        string base = "CDS_INDEX/" + to_string(quoteType_) + "/" + quoteName_ + "/";
-        for (auto t : terms_) {
-            for (auto dp : detachmentPoints_) {
-                quotes_.push_back(base + t + "/" + dp);
+        for (const auto& quoteType : quoteTypes_) {
+            string base = "CDS_INDEX/" + to_string(quoteType) + "/" + quoteName_ + "/";
+            for (auto t : terms_) {
+                for (auto dp : detachmentPoints_) {
+                    quotes_.push_back(base + t + "/" + dp);
+                }
             }
         }
     }
@@ -98,11 +102,20 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     if (quoteName_.empty())
         quoteName_ = curveID_;
 
-    std::string quoteTypeStr = XMLUtils::getChildValue(node, "QuoteType", false);
-    if (quoteTypeStr.empty()) {
-        quoteType_ = MarketDatum::QuoteType::BASE_CORRELATION;
-    } else {
-        quoteType_ = parseQuoteType(quoteTypeStr);
+    quoteTypes_.clear();
+    auto quoteTypesStr = XMLUtils::getChildrenValues(node, "QuoteTypes", "QuoteType", false);
+    for (auto t : quoteTypesStr) {
+        quoteTypes_.push_back(parseQuoteType(t));
+    }
+
+    if (quoteTypes_.empty()) {
+        std::string quoteTypeStr = XMLUtils::getChildValue(node, "QuoteType", false);
+        if (!quoteTypeStr.empty()) {
+            WLOG("Quote type is deprecated, use <QuoteTypes><QuoteType>QUOTE_TYPE<QuoteType></QuoteTypes> instead.");
+            quoteTypes_.push_back(parseQuoteType(quoteTypeStr));
+        } else {
+            quoteTypes_.push_back(MarketDatum::QuoteType::BASE_CORRELATION);
+        }
     }
 
     startDate_ = Date();
@@ -137,7 +150,12 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) const {
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "Extrapolate", extrapolate_);
     XMLUtils::addChild(doc, node, "QuoteName", quoteName_);
-    XMLUtils::addChild(doc, node, "QuoteType", to_string(quoteType_));
+
+
+    auto quoteTypesNode = XMLUtils::addChild(doc, node, "QuoteTypes");
+    for (auto t : quoteTypes_) {
+        XMLUtils::addChild(doc, quoteTypesNode, "QuoteType", to_string(t));
+    }
     
     if (startDate_ != Date())
         XMLUtils::addChild(doc, node, "StartDate", to_string(startDate_));

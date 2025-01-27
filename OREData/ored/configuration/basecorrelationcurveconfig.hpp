@@ -63,7 +63,7 @@ public:
         const QuantLib::Period& indexTerm = 0 * QuantLib::Days,
         boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none,
         bool adjustForLosses = true,
-        std::vector<MarketDatum::QuoteType> quoteTypes = {MarketDatum::QuoteType::BASE_CORRELATION},
+        const std::vector<MarketDatum::QuoteType>& quoteTypes = {MarketDatum::QuoteType::BASE_CORRELATION},
         const Real indexSpread = QuantLib::Null<Real>(), const std::string& currency = "");
     //@}
 

@@ -90,9 +90,8 @@ private:
             map<pair<Period, Real>, Handle<Quote>, LessDataKey> data;
     };
 
-    QuoteData loadQuotes(const QuantLib::Date& asof, const BaseCorrelationCurveConfig& config, const Loader& loader) const;
-
-    
+    QuoteData loadQuotes(const QuantLib::Date& asof, const BaseCorrelationCurveConfig& config,
+        const MarketDatum::QuoteType quoteType, const Loader& loader) const;
 
     void buildFromCorrelations(const BaseCorrelationCurveConfig& config, const QuoteData& qdata) const;
     void buildFromUpfronts(const Date& asof, const BaseCorrelationCurveConfig& config, const QuoteData& qdata) const;
