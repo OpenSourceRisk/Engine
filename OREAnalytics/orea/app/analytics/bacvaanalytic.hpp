@@ -36,12 +36,12 @@ public:
     BaCvaAnalyticImpl(const QuantLib::ext::shared_ptr<ore::analytics::InputParameters>& inputs)
         : Analytic::Impl(inputs) {
         setLabel(LABEL);
-        dependentAnalytics_[saccrLookupKey] = QuantLib::ext::make_shared<SaCcrAnalytic>(inputs_);
     }
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
 
     void setUpConfigurations() override;
+    void buildDependencies() override;
 };
 
 class BaCvaAnalytic : public Analytic {
