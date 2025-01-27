@@ -338,8 +338,6 @@ void XvaSensitivityAnalyticImpl::computeXvaUnderScenarios(std::map<size_t, ext::
         try {
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_SENSITIVITY: Apply scenario " << label);
-            // auto newAnalytic =
-            //     ext::make_shared<XvaAnalytic>(inputs_, scenario, analytic()->configurations().simMarketParams);
             auto xvaAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager()).second;
             XvaAnalyticImpl* xvaImpl = static_cast<XvaAnalyticImpl*>(xvaAnalytic->impl().get());
             xvaImpl->setOffsetScenario(scenario);

@@ -212,7 +212,11 @@ void XvaExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
     analytic()->stressTests()[label()]["xvaExplain_zeroStressTest"] = zeroScenarioData;
     CONSOLE("OK");
     
-    auto stressAnalytic = QuantLib::ext::make_shared<XvaStressAnalytic>(inputs_, analytic()->analyticsManager(), zeroScenarioData);
+    auto stressAnalytic =
+        AnalyticFactory::instance().build("XVA_STRESS", inputs_, analytic()->analyticsManager(), false).second;
+    auto stImpl = static_cast<XvaStressAnalyticImpl*>(stressAnalytic->impl().get());
+    stImpl->setStressScenarios(zeroScenarioData);
+
     stressAnalytic->configurations().asofDate = inputs_->asof();
     stressAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
     stressAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
@@ -239,26 +243,28 @@ QuantLib::ext::shared_ptr<StressTestScenarioData>
 XvaExplainAnalyticImpl::createStressTestData(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader) const {
 
     CONSOLEW("XVA_EXPLAIN: Compute t0 par rates");
-    ParScenarioAnalytic todayParAnalytic(inputs_);
-    todayParAnalytic.configurations().asofDate = inputs_->asof();
-    todayParAnalytic.configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
-    todayParAnalytic.configurations().simMarketParams = analytic()->configurations().simMarketParams;
-    todayParAnalytic.configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
-    todayParAnalytic.runAnalytic(loader);
-    auto todaysRates = dynamic_cast<ParScenarioAnalyticImpl*>(todayParAnalytic.impl().get())->parRates();
+    auto todayParAnalytic = 
+        AnalyticFactory::instance().build("PAR_SCENARIO", inputs_, analytic()->analyticsManager(), false).second;
+    todayParAnalytic->configurations().asofDate = inputs_->asof();
+    todayParAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    todayParAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+    todayParAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+    todayParAnalytic->runAnalytic(loader);
+    auto todaysRates = dynamic_cast<ParScenarioAnalyticImpl*>(todayParAnalytic->impl().get())->parRates();
     CONSOLE("OK");
 
     CONSOLEW("XVA_EXPLAIN: Compute t1 par rates");
-    ParScenarioAnalytic mporParAnalytic(inputs_);
+    auto mporParAnalytic =
+        AnalyticFactory::instance().build("PAR_SCENARIO", inputs_, analytic()->analyticsManager(), false).second;
     Settings::instance().evaluationDate() = mporDate_;
-    mporParAnalytic.configurations().asofDate = mporDate_;
-    mporParAnalytic.configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
-    mporParAnalytic.configurations().simMarketParams = analytic()->configurations().simMarketParams;
-    mporParAnalytic.configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
-    mporParAnalytic.runAnalytic(loader);
+    mporParAnalytic->configurations().asofDate = mporDate_;
+    mporParAnalytic->configurations().todaysMarketParams = analytic()->configurations().todaysMarketParams;
+    mporParAnalytic->configurations().simMarketParams = analytic()->configurations().simMarketParams;
+    mporParAnalytic->configurations().sensiScenarioData = analytic()->configurations().sensiScenarioData;
+    mporParAnalytic->runAnalytic(loader);
     CONSOLE("OK");
     CONSOLEW("XVA_EXPLAIN: Generate Stresstests");
-    auto mporRates = dynamic_cast<ParScenarioAnalyticImpl*>(mporParAnalytic.impl().get())->parRates();
+    auto mporRates = dynamic_cast<ParScenarioAnalyticImpl*>(mporParAnalytic->impl().get())->parRates();
     Settings::instance().evaluationDate() = inputs_->asof();
     const auto& simParameters = analytic()->configurations().simMarketParams;
     const auto& sensitivityData = analytic()->configurations().sensiScenarioData;

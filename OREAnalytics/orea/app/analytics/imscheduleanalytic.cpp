@@ -58,7 +58,6 @@ void IMScheduleAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
 
     auto imAnalytic = static_cast<IMScheduleAnalytic*>(analytic());
     QL_REQUIRE(imAnalytic, "Analytic must be of type IMScheduleAnalytic");
-
     
     imAnalytic->loadCrifRecords(loader);
 

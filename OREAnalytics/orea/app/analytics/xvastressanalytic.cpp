@@ -82,6 +82,12 @@ XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<Inp
     setLabel(LABEL);
 }
 
+void XvaStressAnalyticImpl::buildDependencies() {
+    auto xvaAnalytic =
+        AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager(), true).second;
+    addDependentAnalytic("XVA", xvaAnalytic);
+}
+
 void XvaStressAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                                         const std::set<std::string>& runTypes) {
 

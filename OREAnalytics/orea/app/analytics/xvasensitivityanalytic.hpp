@@ -126,7 +126,6 @@ public:
                                     const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr)
         : Analytic(std::make_unique<XvaSensitivityAnalyticImpl>(inputs), {"XVA_SENSITIVITY"}, inputs, analyticsManager,
                    true, false, false, false) {
-        // impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
     }
 };
 

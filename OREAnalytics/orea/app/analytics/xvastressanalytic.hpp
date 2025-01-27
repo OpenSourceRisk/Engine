@@ -36,6 +36,8 @@ public:
     void runAnalytic(const QuantLib::ext::shared_ptr<ore::data::InMemoryLoader>& loader,
                      const std::set<std::string>& runTypes = {}) override;
     void setUpConfigurations() override;
+    void buildDependencies() override;
+    void setStressScenarios(const QuantLib::ext::shared_ptr<StressTestScenarioData>& stressScenarios) { stressScenarios_ = stressScenarios; }
 
 private:
     void runStressTest(const QuantLib::ext::shared_ptr<ore::analytics::StressScenarioGenerator>& scenarioGenerator,
@@ -52,9 +54,7 @@ public:
                                const QuantLib::ext::shared_ptr<ore::analytics::AnalyticsManager>& analyticsManager = nullptr,
         const boost::optional<QuantLib::ext::shared_ptr<StressTestScenarioData>>& scenarios = {})
         : Analytic(std::make_unique<XvaStressAnalyticImpl>(inputs, scenarios), {"XVA_STRESS"}, inputs, analyticsManager,
-                   true, false, false, false) {
-        impl()->addDependentAnalytic("XVA", QuantLib::ext::make_shared<XvaAnalytic>(inputs));
-    }
+                   true, false, false, false) {}
 };
 
 } // namespace analytics
