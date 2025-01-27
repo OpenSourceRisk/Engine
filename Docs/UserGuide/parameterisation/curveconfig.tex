@@ -992,7 +992,7 @@ Allowable values: Any positive number less than one
 \item Extrapolate: Boolean to indicate whether the correlation curve shall be extrapolated or not
 \end{itemize}
 
-Listing \ref{lst:basecorr_upfront_configuration} shows the configuration of a Base Correlation curve from upfront quotes.
+Listing \ref{lst:basecorr_upfront_configuration} shows the configuration of a Base Correlation curve from upfront quotes or base correlations if it fails to imply the base correlations.
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -1010,7 +1010,10 @@ Listing \ref{lst:basecorr_upfront_configuration} shows the configuration of a Ba
   <StartDate>2023-09-20</StartDate>
   <Rule>CDS2015</Rule>
   <AdjustForLosses>true</AdjustForLosses>
-  <QuoteType>TRANCHE_UPFRONT</QuoteType>
+  <QuoteTypes>
+    <QuoteType>PRICE</QuoteType>
+    <QuoteType>BASE_CORRELATION</QuoteType>
+  <QuoteTypes>
   <IndexSpread>0.01</IndexSpread>
   <Currency>EUR</Currency>
 </BaseCorrelation>
@@ -1035,7 +1038,7 @@ The meaning of each of the elements in Listing \ref{lst:basecorr_upfront_configu
 \item StartDate: The start date for the base correlation curve.
 \item Rule: The rule used for the base correlation curve, e.g., CDS2015.
 \item AdjustForLosses: Boolean to indicate whether to adjust for losses.
-\item QuoteType: The type of quote used for the base correlation, e.g., TRANCHE_UPFRONT.
+\item QuoteTypes: A priority list of quote types to use for the base correlation curve. If it fails to build a base correlation from the first quote type it will try the next one.
 \item IndexSpread: The spread of the index.
 \item Currency: The currency of the base correlation curve.
 \end{itemize}
