@@ -88,7 +88,6 @@ void PnlExplainAnalyticImpl::runAnalytic(const QuantLib::ext::shared_ptr<ore::da
         sensireport = sensiAnalytic->reports().at("SENSITIVITY").at("sensitivity");
     }
 
-    analytic()->reports()[label_]["sensitivity"] = sensireport;
     QuantLib::ext::shared_ptr<SensitivityStream> ss = ext::make_shared<SensitivityReportStream>(sensireport);
     ss = QuantLib::ext::make_shared<FilteredSensitivityStream>(ss, 1e-6);
 
