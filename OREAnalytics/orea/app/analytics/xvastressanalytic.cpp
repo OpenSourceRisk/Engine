@@ -173,7 +173,7 @@ void XvaStressAnalyticImpl::runStressTest(const QuantLib::ext::shared_ptr<Stress
         try {
             DLOG("Calculate XVA for scenario " << label);
             CONSOLE("XVA_STRESS: Apply scenario " << label);
-            auto newAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager()).second;
+            auto newAnalytic = AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager(), false).second;
             auto xvaImpl = static_cast<XvaAnalyticImpl*>(newAnalytic->impl().get());
             xvaImpl->setOffsetScenario(scenario);
             xvaImpl->setOffsetSimMarketParams(analytic()->configurations().simMarketParams);
