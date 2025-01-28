@@ -84,7 +84,7 @@ XvaStressAnalyticImpl::XvaStressAnalyticImpl(const QuantLib::ext::shared_ptr<Inp
 
 void XvaStressAnalyticImpl::buildDependencies() {
     auto xvaAnalytic =
-        AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager(), true).second;
+        AnalyticFactory::instance().build("XVA", inputs_, analytic()->analyticsManager(), false).second;
     addDependentAnalytic("XVA", xvaAnalytic);
 }
 
