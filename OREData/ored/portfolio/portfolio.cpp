@@ -162,7 +162,16 @@ void Portfolio::build(const QuantLib::ext::shared_ptr<EngineFactory>& engineFact
                       << std::setw(15) << static_cast<double>(timing.second) / 1.0E6 << " ms (avg = "
                       << static_cast<double>(timing.second) / static_cast<double>(timing.first) / 1.0E6 << ")");
     }
-
+    if (initialSize == failedTrades && initialSize > 0) {
+        map<string, string> subfields;
+        for (auto failedTrade : trades_) {
+            subfields.insert({"tradeId", failedTrade.first});
+            subfields.insert({"tradeType", failedTrade.second->tradeType()});
+        }
+        StructuredMessage(StructuredMessage::Category::Error, StructuredMessage::Group::Trade,
+                          "All trades in portfolio failed to build.", subfields)
+            .log();
+    }
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades, context is '" + context + "'");
 }
 
