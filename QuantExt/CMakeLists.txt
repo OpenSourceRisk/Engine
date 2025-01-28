@@ -19,7 +19,7 @@ endif()
 
 find_package (Eigen3 3.3 NO_MODULE)
 if (TARGET Eigen3::Eigen)
-    if(EXISTS ${Eigen3_INCLUDE_DIRS})
+    if(MSVC AND EXISTS ${Eigen3_INCLUDE_DIRS})
         # for conan configuration
         include_directories(${Eigen3_INCLUDE_DIRS})
         add_compile_definitions(ORE_USE_EIGEN)
